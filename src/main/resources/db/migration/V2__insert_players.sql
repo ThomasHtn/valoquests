@@ -1,0 +1,2 @@
+-- Replace these placeholders with the six tracked Riot accounts before first production startup.
+-- INSERT INTO player (riot_puuid, game_name, tag_line, display_name, portrait) VALUES (...);
