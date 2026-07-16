@@ -19,7 +19,7 @@ public class Player extends AuditableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "riot_puuid", nullable = false, unique = true, length = 100)
+    @Column(name = "riot_puuid", unique = true, length = 100)
     private String riotPuuid;
 
     @Column(name = "game_name", nullable = false, length = 32)

@@ -42,6 +42,9 @@ public class ValorantMatch extends AuditableEntity {
     @Column(name = "game_mode", nullable = false, length = 32)
     private GameMode gameMode;
 
+    @Column(name = "queue_id", length = 64)
+    private String queueId;
+
     @Column(name = "red_score")
     private Integer redScore;
 

@@ -29,6 +29,9 @@ public class PlayerMatch extends AuditableEntity {
     @JoinColumn(name = "match_id", nullable = false)
     private ValorantMatch match;
 
+    @Column(name = "team_id", length = 32)
+    private String teamId;
+
     @Column(name = "agent_id", length = 64)
     private String agentId;
 
