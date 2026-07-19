@@ -1,0 +1,2 @@
+ALTER TABLE player_match
+ALTER COLUMN team_id TYPE VARCHAR(100);

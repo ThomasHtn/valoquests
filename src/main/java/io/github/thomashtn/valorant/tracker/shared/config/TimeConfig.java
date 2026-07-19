@@ -5,15 +5,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Provides the clock used by time-dependent application components.
+ * Configures application-wide time-related dependencies.
  */
 @Configuration
 public class TimeConfig {
 
     /**
-     * Creates a UTC system clock that can be replaced in tests.
+     * Provides the system UTC clock used by services.
      *
-     * @return the application clock
+     * @return application clock
      */
     @Bean
     Clock applicationClock() {

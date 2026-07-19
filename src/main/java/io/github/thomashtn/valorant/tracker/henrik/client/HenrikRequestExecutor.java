@@ -1,115 +1,72 @@
 package io.github.thomashtn.valorant.tracker.henrik.client;
 
-import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikApiException;
-import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikRequestTimeoutException;
-import io.netty.handler.timeout.ReadTimeoutException;
-import java.util.Objects;
-import java.util.function.Supplier;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+import java.util.function.Supplier;
+
 /**
- * Executes Henrik HTTP operations with consistent transport-error conversion
- * and retry behavior.
+ * Executes Henrik HTTP operations using the shared retry and rate-limit
+ * strategies.
  */
 @Component
 public class HenrikRequestExecutor {
 
     /**
-     * Retry policy factory shared by every Henrik API operation.
+     * Shared retry-strategy factory.
      */
     private final HenrikRetryStrategy retryStrategy;
 
     /**
+     * Global API-key request limiter.
+     */
+    private final HenrikRequestLimiter requestLimiter;
+
+    /**
      * Creates the Henrik request executor.
      *
-     * @param retryStrategy retry policy factory
+     * @param retryStrategy  retry strategy used for temporary failures
+     * @param requestLimiter global Henrik API rate limiter
      */
     public HenrikRequestExecutor(
-        HenrikRetryStrategy retryStrategy
+        HenrikRetryStrategy retryStrategy,
+        HenrikRequestLimiter requestLimiter
     ) {
         this.retryStrategy = retryStrategy;
+        this.requestLimiter = requestLimiter;
     }
 
     /**
-     * Executes a Henrik request and returns its decoded response synchronously.
+     * Executes one Henrik HTTP operation.
      *
-     * <p>The business layer remains synchronous because the application uses
-     * Spring MVC and JPA. Reactor types are therefore contained within the
-     * external HTTP infrastructure.</p>
+     * <p>The supplier must create the reactive HTTP request. Wrapping its
+     * invocation in {@link Mono#defer(Supplier)} ensures that every physical
+     * request, including a retry, acquires a rate-limit permit.</p>
      *
-     * @param operationName operation description used in logs and errors
-     * @param request supplier creating a new HTTP publisher for each attempt
-     * @param <T> expected response type
-     * @return decoded non-null Henrik response
-     * @throws HenrikApiException when the external operation ultimately fails
+     * @param operationName   operation name used in retry logs
+     * @param requestSupplier supplier creating the HTTP request
+     * @param <T>             expected response type
+     * @return Henrik response
      */
     public <T> T execute(
         String operationName,
-        Supplier<Mono<T>> request
+        Supplier<Mono<T>> requestSupplier
     ) {
-        T result = request.get()
-            .onErrorMap(
-                WebClientRequestException.class,
-                exception -> convertTransportFailure(
-                    operationName,
-                    exception
-                )
-            )
+        Objects.requireNonNull(
+            operationName,
+            "operationName must not be null"
+        );
+        Objects.requireNonNull(
+            requestSupplier,
+            "requestSupplier must not be null"
+        );
+
+        return Mono.defer(() -> {
+                requestLimiter.acquire();
+                return requestSupplier.get();
+            })
             .retryWhen(retryStrategy.create(operationName))
             .block();
-
-        return Objects.requireNonNull(
-            result,
-            () -> "Henrik API operation returned no response: "
-                + operationName
-        );
-    }
-
-    /**
-     * Converts a WebClient transport exception into a typed Henrik exception.
-     *
-     * @param operationName operation being executed
-     * @param exception original WebClient transport exception
-     * @return retryable Henrik exception
-     */
-    private HenrikApiException convertTransportFailure(
-        String operationName,
-        WebClientRequestException exception
-    ) {
-        if (containsReadTimeout(exception)) {
-            return new HenrikRequestTimeoutException(
-                "Henrik API operation timed out: " + operationName,
-                exception
-            );
-        }
-
-        return new HenrikApiException(
-            "Unable to communicate with Henrik API during operation: "
-                + operationName,
-            exception,
-            true
-        );
-    }
-
-    /**
-     * Searches the complete exception cause chain for a Netty read timeout.
-     *
-     * @param throwable exception whose causes must be inspected
-     * @return {@code true} when a read timeout exists in the cause chain
-     */
-    private boolean containsReadTimeout(Throwable throwable) {
-        Throwable currentCause = throwable;
-
-        while (currentCause != null) {
-            if (currentCause instanceof ReadTimeoutException) {
-                return true;
-            }
-
-            currentCause = currentCause.getCause();
-        }
-
-        return false;
     }
 }

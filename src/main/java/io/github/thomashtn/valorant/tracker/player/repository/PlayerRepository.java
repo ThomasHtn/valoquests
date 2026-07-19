@@ -3,8 +3,28 @@ package io.github.thomashtn.valorant.tracker.player.repository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 /**
- * Provides persistence operations for player entities.
+ * Provides persistence operations for tracked Valorant players.
  */
 public interface PlayerRepository extends JpaRepository<Player, Long> {
+
+    /**
+     * Determines whether a player already owns the given Riot PUUID.
+     *
+     * @param riotPuuid stable Riot account identifier
+     * @return {@code true} when the PUUID is already stored
+     */
+    boolean existsByRiotPuuid(String riotPuuid);
+
+    /**
+     * Returns every tracked player in a deterministic order.
+     *
+     * <p>Every player present in the database is currently considered
+     * eligible for synchronization.</p>
+     *
+     * @return tracked players ordered by identifier
+     */
+    List<Player> findAllByOrderByIdAsc();
 }

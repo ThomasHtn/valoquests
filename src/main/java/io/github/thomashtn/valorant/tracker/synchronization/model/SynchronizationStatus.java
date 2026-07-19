@@ -1,8 +1,37 @@
 package io.github.thomashtn.valorant.tracker.synchronization.model;
 
 /**
- * Defines the supported synchronization status values.
+ * Describes the lifecycle state of a synchronization execution.
  */
 public enum SynchronizationStatus {
-    PENDING, RUNNING, PARTIAL, COMPLETED, FAILED, CANCELLED
+
+    /**
+     * Execution has been created but has not started yet.
+     */
+    PENDING,
+
+    /**
+     * Execution is currently processing data.
+     */
+    RUNNING,
+
+    /**
+     * Some players succeeded while other players failed.
+     */
+    PARTIAL,
+
+    /**
+     * Execution completed successfully.
+     */
+    COMPLETED,
+
+    /**
+     * Execution did not complete successfully.
+     */
+    FAILED,
+
+    /**
+     * Execution was explicitly cancelled.
+     */
+    CANCELLED
 }

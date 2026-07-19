@@ -1,5 +1,7 @@
 package io.github.thomashtn.valorant.tracker.shared.exception;
 
+import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikApiException;
+import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikRateLimitException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.Instant;
@@ -10,6 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikApiException;
+import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikRateLimitException;
 
 /**
  * Converts application exceptions into consistent HTTP problem responses.
@@ -17,12 +23,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger LOGGER =
+        LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     /**
      * Handles requests targeting an unknown application resource.
      *
      * @param exception raised resource-not-found exception
      * @param request current HTTP request
-     * @return a standardized HTTP 404 response
+     * @return standardized HTTP 404 response
      */
     @ExceptionHandler(ResourceNotFoundException.class)
     ResponseEntity<ApiErrorResponse> handleResourceNotFound(
@@ -43,7 +52,7 @@ public class GlobalExceptionHandler {
      *
      * @param exception validation exception containing field errors
      * @param request current HTTP request
-     * @return a standardized HTTP 400 response
+     * @return standardized HTTP 400 response
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ApiErrorResponse> handleValidationFailure(
@@ -69,6 +78,84 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles Henrik rate-limit failures.
+     *
+     * @param exception rate-limit exception
+     * @param request current HTTP request
+     * @return HTTP 429 response
+     */
+    @ExceptionHandler(HenrikRateLimitException.class)
+    ResponseEntity<ApiErrorResponse> handleHenrikRateLimit(
+        HenrikRateLimitException exception,
+        HttpServletRequest request
+    ) {
+        LOGGER.warn(
+            "Henrik rate limit reached while processing {} {}: {}",
+            request.getMethod(),
+            request.getRequestURI(),
+            exception.getMessage()
+        );
+
+        return buildResponse(
+            HttpStatus.TOO_MANY_REQUESTS,
+            "HENRIK_RATE_LIMIT_EXCEEDED",
+            exception.getMessage(),
+            request,
+            Map.of()
+        );
+    }
+
+    /**
+     * Handles Henrik API communication failures.
+     *
+     * @param exception Henrik API exception
+     * @param request current HTTP request
+     * @return HTTP 502 response
+     */
+    @ExceptionHandler(HenrikApiException.class)
+    ResponseEntity<ApiErrorResponse> handleHenrikApiFailure(
+        HenrikApiException exception,
+        HttpServletRequest request
+    ) {
+        LOGGER.error(
+            "Henrik API failure while processing {} {}",
+            request.getMethod(),
+            request.getRequestURI(),
+            exception
+        );
+
+        return buildResponse(
+            HttpStatus.BAD_GATEWAY,
+            "HENRIK_API_ERROR",
+            exception.getMessage(),
+            request,
+            Map.of()
+        );
+    }
+
+    /**
+     * Converts an intentionally unimplemented application feature into HTTP
+     * 501.
+     *
+     * @param exception exception raised for an unfinished feature
+     * @param request current HTTP request
+     * @return standardized HTTP 501 response
+     */
+    @ExceptionHandler(FeatureNotImplementedException.class)
+    ResponseEntity<ApiErrorResponse> handleFeatureNotImplemented(
+        FeatureNotImplementedException exception,
+        HttpServletRequest request
+    ) {
+        return buildResponse(
+            HttpStatus.NOT_IMPLEMENTED,
+            "FEATURE_NOT_IMPLEMENTED",
+            exception.getMessage(),
+            request,
+            Map.of()
+        );
+    }
+
+    /**
      * Handles unexpected exceptions not covered by a more specific handler.
      *
      * @param exception unexpected exception
@@ -80,6 +167,13 @@ public class GlobalExceptionHandler {
         Exception exception,
         HttpServletRequest request
     ) {
+        LOGGER.error(
+            "Unexpected error while processing {} {}",
+            request.getMethod(),
+            request.getRequestURI(),
+            exception
+        );
+
         return buildResponse(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "INTERNAL_ERROR",
@@ -97,7 +191,7 @@ public class GlobalExceptionHandler {
      * @param detail human-readable error detail
      * @param request current HTTP request
      * @param errors optional validation errors indexed by field name
-     * @return a complete error response entity
+     * @return complete error response entity
      */
     private ResponseEntity<ApiErrorResponse> buildResponse(
         HttpStatus status,
@@ -119,26 +213,4 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(status).body(body);
     }
-
-    /**
-     * Converts an intentionally unimplemented application feature into HTTP 501.
-     *
-     * @param exception exception raised by a controller without a service implementation
-     * @param request current HTTP request
-     * @return structured API error response
-     */
-    @ExceptionHandler(FeatureNotImplementedException.class)
-    public ResponseEntity<ApiErrorResponse> handleFeatureNotImplemented(
-        FeatureNotImplementedException exception,
-        HttpServletRequest request
-    ) {
-        return buildResponse(
-            HttpStatus.NOT_IMPLEMENTED,
-            "FEATURE_NOT_IMPLEMENTED",
-            exception.getMessage(),
-            request,
-            Map.of()
-        );
-    }
-
 }

@@ -24,10 +24,10 @@ public class Season extends AuditableEntity {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(name = "starts_at", nullable = false)
+    @Column(name = "starts_at")
     private Instant startsAt;
 
-    @Column(name = "ends_at", nullable = false)
+    @Column(name = "ends_at")
     private Instant endsAt;
 
     @Column(nullable = false)
