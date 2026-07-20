@@ -2,14 +2,16 @@ package io.github.thomashtn.valorant.tracker.synchronization.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import io.github.thomashtn.valorant.tracker.synchronization.model.*;
-import java.time.*;
-import java.util.*;
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
+import java.time.Instant;
+import java.util.List;
 
 /**
- * Represents the API response payload for synchronization details response.
+ * Exposes one synchronization execution and its player-level outcomes.
  */
-@Schema(description = "API response model documented by the Valorant Tracker OpenAPI specification.")
+@Schema(description = "Detailed synchronization execution.")
 public record SynchronizationDetailsResponse(
     Long id,
     SynchronizationType type,

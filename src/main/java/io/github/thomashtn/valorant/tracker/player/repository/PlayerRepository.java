@@ -1,6 +1,7 @@
 package io.github.thomashtn.valorant.tracker.player.repository;
 
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
+import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -19,12 +20,11 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     boolean existsByRiotPuuid(String riotPuuid);
 
     /**
-     * Returns every tracked player in a deterministic order.
+     * Returns tracked players having the requested status in deterministic
+     * identifier order.
      *
-     * <p>Every player present in the database is currently considered
-     * eligible for synchronization.</p>
-     *
-     * @return tracked players ordered by identifier
+     * @param status player lifecycle status
+     * @return matching players ordered by identifier
      */
-    List<Player> findAllByOrderByIdAsc();
+    List<Player> findAllByStatusOrderByIdAsc(PlayerStatus status);
 }

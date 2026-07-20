@@ -5,6 +5,7 @@ import io.github.thomashtn.valorant.tracker.henrik.client.HenrikMmrClient;
 import io.github.thomashtn.valorant.tracker.henrik.dto.mmr.HenrikMmrResponse;
 import io.github.thomashtn.valorant.tracker.henrik.mapper.HenrikMmrMapper;
 import io.github.thomashtn.valorant.tracker.henrik.dto.match.HenrikMatchHistoryResponse;
+import io.github.thomashtn.valorant.tracker.match.model.MatchImportResult;
 import io.github.thomashtn.valorant.tracker.match.service.MatchImportService;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
@@ -14,7 +15,6 @@ import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerSynchron
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -127,7 +127,7 @@ class PlayerSynchronizationServiceTest {
         HenrikMatchHistoryResponse response =
             new HenrikMatchHistoryResponse(
                 200,
-                List.of()
+                java.util.Collections.nCopies(IMPORTED_MATCH_COUNT, null)
             );
 
         when(playerRepository.findById(playerId))
@@ -153,11 +153,18 @@ class PlayerSynchronizationServiceTest {
         ).thenReturn(response);
 
         when(
-            matchImportService.importMatches(
+            matchImportService.importMatchesWithSummary(
                 resolvedPlayer,
                 response
             )
-        ).thenReturn(IMPORTED_MATCH_COUNT);
+        ).thenReturn(
+            new MatchImportResult(
+                IMPORTED_MATCH_COUNT,
+                IMPORTED_MATCH_COUNT,
+                0,
+                0
+            )
+        );
 
         when(playerRepository.save(resolvedPlayer))
             .thenReturn(resolvedPlayer);
@@ -201,7 +208,7 @@ class PlayerSynchronizationServiceTest {
         );
 
         verify(matchImportService)
-            .importMatches(resolvedPlayer, response);
+            .importMatchesWithSummary(resolvedPlayer, response);
 
         verify(playerRepository)
             .save(resolvedPlayer);
@@ -372,7 +379,7 @@ class PlayerSynchronizationServiceTest {
         HenrikMatchHistoryResponse response =
             new HenrikMatchHistoryResponse(
                 200,
-                List.of()
+                java.util.Collections.singletonList(null)
             );
 
         IllegalStateException importFailure =
@@ -395,7 +402,7 @@ class PlayerSynchronizationServiceTest {
         ).thenReturn(response);
 
         when(
-            matchImportService.importMatches(
+            matchImportService.importMatchesWithSummary(
                 resolvedPlayer,
                 response
             )
@@ -423,7 +430,7 @@ class PlayerSynchronizationServiceTest {
         );
 
         verify(matchImportService)
-            .importMatches(resolvedPlayer, response);
+            .importMatchesWithSummary(resolvedPlayer, response);
 
         verify(
             playerRepository,
@@ -431,6 +438,53 @@ class PlayerSynchronizationServiceTest {
         ).save(
             org.mockito.ArgumentMatchers.any(Player.class)
         );
+    }
+
+    /**
+     * Verifies that standard synchronization continues beyond the first page
+     * and advances Henrik's item offset by the number of received matches.
+     */
+    @Test
+    void shouldImportSeveralRecentMatchPages() {
+        Long playerId = 1L;
+        Player player = createPlayer(playerId);
+        Player resolvedPlayer = createPlayer(playerId);
+        resolvedPlayer.setRiotPuuid("resolved-puuid");
+
+        HenrikMatchHistoryResponse firstPage =
+            new HenrikMatchHistoryResponse(
+                200,
+                java.util.Collections.nCopies(10, null)
+            );
+        HenrikMatchHistoryResponse secondPage =
+            new HenrikMatchHistoryResponse(
+                200,
+                java.util.Collections.singletonList(null)
+            );
+
+        when(playerRepository.findById(playerId))
+            .thenReturn(Optional.of(player));
+        when(accountResolutionService.resolvePuuid(player))
+            .thenReturn(resolvedPlayer);
+        when(mmrClient.getCurrentMmr("resolved-puuid"))
+            .thenReturn(new HenrikMmrResponse(200, null));
+        when(matchClient.getMatches("resolved-puuid", 0, 10))
+            .thenReturn(firstPage);
+        when(matchClient.getMatches("resolved-puuid", 10, 10))
+            .thenReturn(secondPage);
+        when(matchImportService.importMatchesWithSummary(resolvedPlayer, firstPage))
+            .thenReturn(new MatchImportResult(10, 10, 0, 0));
+        when(matchImportService.importMatchesWithSummary(resolvedPlayer, secondPage))
+            .thenReturn(new MatchImportResult(1, 1, 0, 0));
+        when(playerRepository.save(resolvedPlayer))
+            .thenReturn(resolvedPlayer);
+
+        PlayerSynchronizationResult result = service.synchronize(playerId);
+
+        assertThat(result.pagesFetched()).isEqualTo(2);
+        assertThat(result.matchesImported()).isEqualTo(11);
+        verify(matchClient).getMatches("resolved-puuid", 0, 10);
+        verify(matchClient).getMatches("resolved-puuid", 10, 10);
     }
 
     /**

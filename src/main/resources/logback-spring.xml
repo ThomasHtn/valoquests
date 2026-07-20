@@ -1,1 +1,14 @@
-<configuration><include resource="org/springframework/boot/logging/logback/defaults.xml"/><include resource="org/springframework/boot/logging/logback/console-appender.xml"/><root level="INFO"><appender-ref ref="CONSOLE"/></root></configuration>
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- Spring Boot defaults provide consistent timestamps and level formatting. -->
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+  <!-- Keep framework noise at INFO while allowing targeted package overrides. -->
+  <logger name="io.github.thomashtn.valorant.tracker" level="INFO"/>
+  <logger name="io.github.thomashtn.valorant.tracker.match.service.MatchImportService" level="INFO"/>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>

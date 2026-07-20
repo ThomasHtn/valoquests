@@ -4,37 +4,35 @@ import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import java.time.Instant;
 
 /**
- * Contains the result of a successful synchronization for one player.
+ * Contains the result of a successful standard synchronization.
  *
  * @param player synchronized player
+ * @param pagesFetched number of Henrik match-history pages retrieved
  * @param matchesImported number of newly imported player matches
  * @param completedAt completion timestamp
  */
 public record PlayerSynchronizationResult(
     Player player,
+    int pagesFetched,
     int matchesImported,
     Instant completedAt
 ) {
 
-    /**
-     * Creates a synchronization result.
-     *
-     * @throws IllegalArgumentException when the imported match count is
-     *                                  negative
-     */
+    /** Validates the immutable result. */
     public PlayerSynchronizationResult {
         if (player == null) {
+            throw new IllegalArgumentException("player must not be null");
+        }
+        if (pagesFetched < 0) {
             throw new IllegalArgumentException(
-                "player must not be null"
+                "pagesFetched must not be negative"
             );
         }
-
         if (matchesImported < 0) {
             throw new IllegalArgumentException(
                 "matchesImported must not be negative"
             );
         }
-
         if (completedAt == null) {
             throw new IllegalArgumentException(
                 "completedAt must not be null"

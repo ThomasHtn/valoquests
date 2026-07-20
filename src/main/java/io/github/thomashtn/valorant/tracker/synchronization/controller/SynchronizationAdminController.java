@@ -4,13 +4,12 @@ import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationDetailsResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationCommandService;
+import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static io.github.thomashtn.valorant.tracker.shared.config.OpenApiConfig.ADMIN_KEY_SECURITY_SCHEME;
-import static io.github.thomashtn.valorant.tracker.shared.web.RequiredService.get;
 
 /**
  * Exposes protected synchronization commands and monitoring endpoints.
@@ -37,24 +35,31 @@ import static io.github.thomashtn.valorant.tracker.shared.web.RequiredService.ge
 @SecurityRequirement(name = ADMIN_KEY_SECURITY_SCHEME)
 public class SynchronizationAdminController {
 
-    private final ObjectProvider<SynchronizationCommandService> serviceProvider;
+    /**
+     * Application service used to execute synchronization commands.
+     */
+    private final SynchronizationCommandService synchronizationService;
+    /**
+     * Application service used to query synchronization history.
+     */
+    private final SynchronizationQueryService synchronizationQueryService;
 
     /**
      * Creates the administrative synchronization controller.
      *
-     * @param serviceProvider synchronization command-service provider
+     * @param synchronizationService synchronization command service
+     * @param synchronizationQueryService synchronization query service
      */
     public SynchronizationAdminController(
-        ObjectProvider<SynchronizationCommandService> serviceProvider
+        SynchronizationCommandService synchronizationService,
+        SynchronizationQueryService synchronizationQueryService
     ) {
-        this.serviceProvider = serviceProvider;
+        this.synchronizationService = synchronizationService;
+        this.synchronizationQueryService = synchronizationQueryService;
     }
 
     /**
      * Synchronizes all active players.
-     *
-     * <p>This operation is intentionally unavailable until the
-     * single-player workflow has been validated.</p>
      *
      * @return synchronization summary
      */
@@ -62,33 +67,24 @@ public class SynchronizationAdminController {
     @Operation(
         summary = "Synchronize all active players",
         description = """
-            Imports recent data for all active players and then recalculates
-            challenge progress and ranking.
+            Resolves account data, updates current ranks and imports new recent
+            matches for every active tracked player.
             """
     )
-    @ApiResponses({
-        @ApiResponse(
+    @ApiResponse(
             responseCode = "200",
-            description = "Synchronization completed."
-        ),
-        @ApiResponse(
+        description = "Synchronization completed."
+    )
+    @ApiResponse(
             responseCode = "401",
-            description = "X-Admin-Key header is missing."
-        ),
-        @ApiResponse(
+        description = "X-Admin-Key header is missing."
+    )
+    @ApiResponse(
             responseCode = "403",
-            description = "X-Admin-Key value is invalid."
-        ),
-        @ApiResponse(
-            responseCode = "501",
-            description = "Global synchronization is not implemented yet."
-        )
-    })
+        description = "X-Admin-Key value is invalid."
+    )
     public SynchronizationResponse synchronizeAllPlayers() {
-        return get(
-            serviceProvider,
-            "Standard synchronization"
-        ).synchronizeAllPlayers();
+        return synchronizationService.synchronizeAllPlayers();
     }
 
     /**
@@ -105,44 +101,39 @@ public class SynchronizationAdminController {
             imports recent completed matches and records the synchronization.
             """
     )
-    @ApiResponses({
-        @ApiResponse(
+    @ApiResponse(
             responseCode = "200",
-            description = "Player synchronization completed."
-        ),
-        @ApiResponse(
+        description = "Player synchronization completed."
+    )
+    @ApiResponse(
             responseCode = "401",
-            description = "X-Admin-Key header is missing."
-        ),
-        @ApiResponse(
+        description = "X-Admin-Key header is missing."
+    )
+    @ApiResponse(
             responseCode = "403",
-            description = "X-Admin-Key value is invalid."
-        ),
-        @ApiResponse(
+        description = "X-Admin-Key value is invalid."
+    )
+    @ApiResponse(
             responseCode = "404",
-            description = "Tracked player not found."
-        ),
-        @ApiResponse(
+        description = "Tracked player not found."
+    )
+    @ApiResponse(
             responseCode = "429",
-            description = "Henrik rate limit reached."
-        ),
-        @ApiResponse(
+        description = "Henrik rate limit reached."
+    )
+    @ApiResponse(
             responseCode = "502",
-            description = "Henrik API request failed."
-        )
-    })
+        description = "Henrik API request failed."
+    )
     public SynchronizationResponse synchronizePlayer(
         @Parameter(
             description = "Internal player identifier.",
             example = "3",
             required = true
-        )
+    )
         @PathVariable long playerId
     ) {
-        return get(
-            serviceProvider,
-            "Single-player synchronization"
-        ).synchronizePlayer(playerId);
+        return synchronizationService.synchronizePlayer(playerId);
     }
 
     /**
@@ -159,10 +150,7 @@ public class SynchronizationAdminController {
             """
     )
     public SynchronizationResponse requestDeepSynchronizationForAllPlayers() {
-        return get(
-            serviceProvider,
-            "Deep synchronization"
-        ).requestDeepSynchronizationForAllPlayers();
+        return synchronizationService.requestDeepSynchronizationForAllPlayers();
     }
 
     /**
@@ -184,13 +172,10 @@ public class SynchronizationAdminController {
             description = "Internal player identifier.",
             example = "3",
             required = true
-        )
+    )
         @PathVariable long playerId
     ) {
-        return get(
-            serviceProvider,
-            "Single-player deep synchronization"
-        ).requestDeepSynchronizationForPlayer(playerId);
+        return synchronizationService.requestDeepSynchronizationForPlayer(playerId);
     }
 
     /**
@@ -207,10 +192,7 @@ public class SynchronizationAdminController {
             """
     )
     public SynchronizationResponse getLatestSynchronization() {
-        return get(
-            serviceProvider,
-            "Latest synchronization consultation"
-        ).findLatest();
+        return synchronizationQueryService.findLatest();
     }
 
     /**
@@ -229,19 +211,16 @@ public class SynchronizationAdminController {
         @Parameter(
             description = "Zero-based page index.",
             example = "0"
-        )
+    )
         @RequestParam(defaultValue = "0") int page,
 
         @Parameter(
             description = "Number of executions returned per page.",
             example = "20"
-        )
+    )
         @RequestParam(defaultValue = "20") int size
     ) {
-        return get(
-            serviceProvider,
-            "Synchronization history consultation"
-        ).findHistory(page, size);
+        return synchronizationQueryService.findHistory(page, size);
     }
 
     /**
@@ -263,12 +242,9 @@ public class SynchronizationAdminController {
             description = "Internal synchronization identifier.",
             example = "25",
             required = true
-        )
+    )
         @PathVariable long synchronizationId
     ) {
-        return get(
-            serviceProvider,
-            "Synchronization detail consultation"
-        ).findById(synchronizationId);
+        return synchronizationQueryService.findById(synchronizationId);
     }
 }

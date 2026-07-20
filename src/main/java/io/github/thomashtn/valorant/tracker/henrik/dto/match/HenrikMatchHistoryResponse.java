@@ -1,6 +1,8 @@
 package io.github.thomashtn.valorant.tracker.henrik.dto.match;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -20,10 +22,16 @@ public record HenrikMatchHistoryResponse(
 ) {
 
     /**
-     * Prevents the match collection from being null or mutable.
+     * Normalizes the match collection while preserving possible null entries
+     * returned by the remote API.
+     *
+     * <p>{@link List#copyOf(java.util.Collection)} cannot be used here because
+     * it rejects null elements. Null match entries are intentionally preserved
+     * so that the import layer can count and log them as rejected data instead
+     * of failing during DTO construction.</p>
      */
     public HenrikMatchHistoryResponse {
-        data = data == null ? List.of() : List.copyOf(data);
+        data = immutableNullableElementList(data);
     }
 
     /**
@@ -41,11 +49,28 @@ public record HenrikMatchHistoryResponse(
     ) {
 
         /**
-         * Prevents nested collections from being null or mutable.
+         * Normalizes nested collections while preserving possible null
+         * entries returned by the remote API.
          */
         public HenrikMatchData {
-            players = players == null ? List.of() : List.copyOf(players);
-            teams = teams == null ? List.of() : List.copyOf(teams);
+            players = immutableNullableElementList(players);
+            teams = immutableNullableElementList(teams);
         }
+    }
+
+    /**
+     * Returns an immutable defensive copy that accepts null elements.
+     *
+     * @param values source collection, possibly {@code null}
+     * @param <T> element type
+     * @return an immutable empty list when the source is null, otherwise an
+     *         immutable defensive copy preserving every element
+     */
+    private static <T> List<T> immutableNullableElementList(List<T> values) {
+        if (values == null) {
+            return List.of();
+        }
+
+        return Collections.unmodifiableList(new ArrayList<>(values));
     }
 }

@@ -5,6 +5,8 @@ import io.github.thomashtn.valorant.tracker.henrik.model.HenrikAccount;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerAccountConflictException;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,6 +14,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class PlayerAccountResolutionService {
+
+    /**
+     * Logger used to report operational and diagnostic information.
+     */
+    private static final Logger LOGGER =
+        LoggerFactory.getLogger(PlayerAccountResolutionService.class);
 
     /**
      * External client used to resolve Riot accounts through Henrik.
@@ -55,8 +63,18 @@ public class PlayerAccountResolutionService {
         }
 
         if (hasPuuid(player)) {
+            LOGGER.debug(
+                "Skipping Riot account resolution for player {} because the PUUID is already known",
+                player.getId()
+            );
             return player;
         }
+
+        LOGGER.info(
+            "Resolving Riot account for player {} ({})",
+            player.getId(),
+            player.getDisplayName()
+        );
 
         HenrikAccount account = accountClient.getAccount(
             player.getGameName(),
@@ -66,8 +84,14 @@ public class PlayerAccountResolutionService {
         verifyPuuidAvailability(account.puuid());
 
         player.setRiotPuuid(account.puuid());
+        Player savedPlayer = playerRepository.save(player);
 
-        return playerRepository.save(player);
+        LOGGER.info(
+            "Resolved Riot account for player {}",
+            savedPlayer.getId()
+        );
+
+        return savedPlayer;
     }
 
     /**
@@ -88,6 +112,12 @@ public class PlayerAccountResolutionService {
      * @throws PlayerAccountConflictException when the PUUID already exists
      */
     private void verifyPuuidAvailability(String riotPuuid) {
+        if (riotPuuid == null || riotPuuid.isBlank()) {
+            throw new IllegalStateException(
+                "Henrik account response does not contain a Riot PUUID"
+            );
+        }
+
         if (playerRepository.existsByRiotPuuid(riotPuuid)) {
             throw new PlayerAccountConflictException(
                 "Riot PUUID is already assigned to another tracked player"

@@ -183,7 +183,9 @@ public class HenrikMatchMapper {
         if (team == null || team.won() == null) {
             return MatchResult.UNKNOWN;
         }
-        return team.won() ? MatchResult.WIN : MatchResult.LOSS;
+        return Boolean.TRUE.equals(team.won())
+            ? MatchResult.WIN
+            : MatchResult.LOSS;
     }
 
     private CompetitiveTier toCompetitiveTier(
@@ -202,7 +204,7 @@ public class HenrikMatchMapper {
 
         try {
             return CompetitiveTier.valueOf(normalized);
-        } catch (IllegalArgumentException ignored) {
+        } catch (IllegalArgumentException _) {
             return CompetitiveTier.UNRANKED;
         }
     }

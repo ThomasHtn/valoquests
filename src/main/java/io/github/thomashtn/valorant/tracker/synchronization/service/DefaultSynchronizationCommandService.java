@@ -2,16 +2,16 @@ package io.github.thomashtn.valorant.tracker.synchronization.service;
 
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
-import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
-import io.github.thomashtn.valorant.tracker.shared.exception.FeatureNotImplementedException;
-import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationDetailsResponse;
+import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.entity.Synchronization;
+import io.github.thomashtn.valorant.tracker.synchronization.entity.SynchronizationPlayerResult;
 import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerDeepSynchronizationResult;
 import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerSynchronizationResult;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
+import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationPlayerResultRepository;
 import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,16 +32,38 @@ import java.util.List;
 public class DefaultSynchronizationCommandService
     implements SynchronizationCommandService {
 
+    /**
+     * Logger used to report operational and diagnostic information.
+     */
     private static final Logger LOGGER =
         LoggerFactory.getLogger(DefaultSynchronizationCommandService.class);
 
+    /** Maximum length persisted for aggregated synchronization errors. */
     private static final int MAXIMUM_ERROR_MESSAGE_LENGTH = 2_000;
 
+    /**
+     * Service used to run standard player synchronizations.
+     */
     private final PlayerSynchronizationService playerSynchronizationService;
+
+    /** Service used to run deep player synchronizations. */
     private final PlayerDeepSynchronizationService
         playerDeepSynchronizationService;
+    /**
+     * Repository used to load and persist tracked players.
+     */
     private final PlayerRepository playerRepository;
+    /**
+     * Repository used to persist synchronization executions.
+     */
     private final SynchronizationRepository synchronizationRepository;
+    /**
+     * Repository used to persist and query per-player synchronization results.
+     */
+    private final SynchronizationPlayerResultRepository playerResultRepository;
+    /**
+     * Clock used to produce deterministic timestamps.
+     */
     private final Clock clock;
 
     /**
@@ -58,12 +80,14 @@ public class DefaultSynchronizationCommandService
         PlayerDeepSynchronizationService playerDeepSynchronizationService,
         PlayerRepository playerRepository,
         SynchronizationRepository synchronizationRepository,
+        SynchronizationPlayerResultRepository playerResultRepository,
         Clock clock
     ) {
         this.playerSynchronizationService = playerSynchronizationService;
         this.playerDeepSynchronizationService = playerDeepSynchronizationService;
         this.playerRepository = playerRepository;
         this.synchronizationRepository = synchronizationRepository;
+        this.playerResultRepository = playerResultRepository;
         this.clock = clock;
     }
 
@@ -83,7 +107,7 @@ public class DefaultSynchronizationCommandService
         );
 
         List<Player> players =
-            playerRepository.findAllByOrderByIdAsc();
+            playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE);
 
         int successfulPlayers = 0;
         int failureCount = 0;
@@ -98,6 +122,14 @@ public class DefaultSynchronizationCommandService
 
                 successfulPlayers++;
                 matchesImported += result.matchesImported();
+                savePlayerResult(
+                    synchronization,
+                    result.player(),
+                    SynchronizationStatus.COMPLETED,
+                    result.pagesFetched(),
+                    result.matchesImported(),
+                    null
+                );
 
                 lastSuccessfulSynchronizationAt = latestInstant(
                     lastSuccessfulSynchronizationAt,
@@ -110,6 +142,15 @@ public class DefaultSynchronizationCommandService
                     "Player synchronization failed for player {}",
                     player.getId(),
                     exception
+                );
+
+                savePlayerResult(
+                    synchronization,
+                    player,
+                    SynchronizationStatus.FAILED,
+                    0,
+                    0,
+                    safeErrorMessage(exception)
                 );
 
                 appendPlayerError(
@@ -166,6 +207,15 @@ public class DefaultSynchronizationCommandService
             PlayerSynchronizationResult result =
                 playerSynchronizationService.synchronize(playerId);
 
+            savePlayerResult(
+                synchronization,
+                result.player(),
+                SynchronizationStatus.COMPLETED,
+                result.pagesFetched(),
+                result.matchesImported(),
+                null
+            );
+
             completeSinglePlayerSynchronization(
                 synchronization,
                 result
@@ -196,8 +246,6 @@ public class DefaultSynchronizationCommandService
         Synchronization synchronization = new Synchronization();
 
         synchronization.setType(type);
-
-        synchronization.setType(SynchronizationType.STANDARD);
         synchronization.setTrigger(SynchronizationTrigger.MANUAL);
         synchronization.setStatus(SynchronizationStatus.RUNNING);
         synchronization.setStartedAt(clock.instant());
@@ -400,7 +448,7 @@ public class DefaultSynchronizationCommandService
         );
 
         List<Player> players =
-            playerRepository.findAllByOrderByIdAsc();
+            playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE);
 
         int successfulPlayers = 0;
         int failureCount = 0;
@@ -417,6 +465,14 @@ public class DefaultSynchronizationCommandService
 
                 successfulPlayers++;
                 matchesImported += result.matchesImported();
+                savePlayerResult(
+                    synchronization,
+                    result.player(),
+                    SynchronizationStatus.COMPLETED,
+                    result.pagesFetched(),
+                    result.matchesImported(),
+                    null
+                );
 
                 lastSuccessfulSynchronizationAt = latestInstant(
                     lastSuccessfulSynchronizationAt,
@@ -429,6 +485,15 @@ public class DefaultSynchronizationCommandService
                     "Deep synchronization failed for player {}",
                     player.getId(),
                     exception
+                );
+
+                savePlayerResult(
+                    synchronization,
+                    player,
+                    SynchronizationStatus.FAILED,
+                    0,
+                    0,
+                    safeErrorMessage(exception)
                 );
 
                 appendPlayerError(
@@ -482,6 +547,15 @@ public class DefaultSynchronizationCommandService
             PlayerDeepSynchronizationResult result =
                 playerDeepSynchronizationService.synchronize(playerId);
 
+            savePlayerResult(
+                synchronization,
+                result.player(),
+                SynchronizationStatus.COMPLETED,
+                result.pagesFetched(),
+                result.matchesImported(),
+                null
+            );
+
             synchronization.setStatus(
                 SynchronizationStatus.COMPLETED
             );
@@ -509,53 +583,25 @@ public class DefaultSynchronizationCommandService
         }
     }
 
-    /**
-     * Synchronization monitoring will be implemented in the next lot.
-     *
-     * @return never returns normally
-     */
-    @Override
-    public SynchronizationResponse findLatest() {
-        throw notImplemented("Latest synchronization consultation");
-    }
-
-    /**
-     * Synchronization monitoring will be implemented in the next lot.
-     *
-     * @param page zero-based page index
-     * @param size requested page size
-     * @return never returns normally
-     */
-    @Override
-    public PageResponse<SynchronizationResponse> findHistory(
-        int page,
-        int size
+    /** Persists the outcome of one player within a synchronization. */
+    private void savePlayerResult(
+        Synchronization synchronization,
+        Player player,
+        SynchronizationStatus status,
+        int pagesFetched,
+        int matchesImported,
+        String errorMessage
     ) {
-        throw notImplemented("Synchronization history consultation");
-    }
-
-    /**
-     * Synchronization monitoring will be implemented in the next lot.
-     *
-     * @param synchronizationId synchronization identifier
-     * @return never returns normally
-     */
-    @Override
-    public SynchronizationDetailsResponse findById(
-        long synchronizationId
-    ) {
-        throw notImplemented("Synchronization details consultation");
-    }
-
-    /**
-     * Creates a consistent exception for an unfinished feature.
-     *
-     * @param feature feature name
-     * @return feature-not-implemented exception
-     */
-    private FeatureNotImplementedException notImplemented(String feature) {
-        return new FeatureNotImplementedException(
-            feature + " is not implemented yet"
+        SynchronizationPlayerResult result =
+            new SynchronizationPlayerResult();
+        result.setSynchronization(synchronization);
+        result.setPlayer(player);
+        result.setStatus(status);
+        result.setPagesFetched(pagesFetched);
+        result.setMatchesImported(matchesImported);
+        result.setErrorMessage(
+            errorMessage == null ? null : truncateErrorMessage(errorMessage)
         );
+        playerResultRepository.save(result);
     }
 }

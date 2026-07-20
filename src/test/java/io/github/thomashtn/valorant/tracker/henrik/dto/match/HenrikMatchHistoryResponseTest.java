@@ -425,4 +425,24 @@ class HenrikMatchHistoryResponseTest {
                 .teams()
         ).isEmpty();
     }
+
+    /**
+     * Verifies that null entries returned inside Henrik arrays are preserved
+     * for the import layer while the exposed collection remains immutable.
+     */
+    @Test
+    void shouldPreserveNullMatchEntriesInImmutableList() {
+        HenrikMatchHistoryResponse response =
+            new HenrikMatchHistoryResponse(
+                200,
+                java.util.Collections.singletonList(null)
+            );
+
+        assertThat(response.data())
+            .hasSize(1)
+            .containsExactly((HenrikMatchHistoryResponse.HenrikMatchData) null);
+        assertThat(response.data())
+            .isUnmodifiable();
+    }
+
 }

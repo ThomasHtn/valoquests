@@ -3,14 +3,15 @@ package io.github.thomashtn.valorant.tracker.ranking.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import io.github.thomashtn.valorant.tracker.player.model.CompetitiveTier;
-import java.math.*;
-import java.time.*;
-import java.util.*;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 
 /**
- * Represents the API response payload for current ranking response.
+ * Exposes the current weekly ranking and per-challenge progress.
  */
-@Schema(description = "API response model documented by the Valorant Tracker OpenAPI specification.")
+@Schema(description = "Current weekly player ranking.")
 public record CurrentRankingResponse(
     LocalDate weekStart,
     LocalDate weekEnd,

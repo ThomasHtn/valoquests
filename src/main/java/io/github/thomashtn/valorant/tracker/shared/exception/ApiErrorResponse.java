@@ -7,9 +7,9 @@ import java.time.Instant;
 import java.util.Map;
 
 /**
- * Represents the API response payload for api error response.
+ * Represents the problem-details payload returned for API failures.
  */
-@Schema(description = "API response model documented by the Valorant Tracker OpenAPI specification.")
+@Schema(description = "Standard API problem response.")
 public record ApiErrorResponse(
     URI type,
     String title,

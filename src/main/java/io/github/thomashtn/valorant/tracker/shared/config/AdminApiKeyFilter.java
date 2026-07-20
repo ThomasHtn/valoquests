@@ -18,6 +18,9 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     /** Header expected on every administrative request. */
     public static final String HEADER_NAME = "X-Admin-Key";
 
+    /**
+     * Administrative API key expected in protected requests.
+     */
     private final String expectedApiKey;
 
     /**

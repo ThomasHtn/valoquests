@@ -2,15 +2,16 @@ package io.github.thomashtn.valorant.tracker.match.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import io.github.thomashtn.valorant.tracker.match.model.*;
+import io.github.thomashtn.valorant.tracker.match.model.GameMode;
+import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
 import io.github.thomashtn.valorant.tracker.player.model.CompetitiveTier;
-import java.math.*;
-import java.time.*;
+import java.math.BigDecimal;
+import java.time.Instant;
 
 /**
- * Represents the API response payload for match response.
+ * Exposes one player match in the paginated match-history API.
  */
-@Schema(description = "API response model documented by the Valorant Tracker OpenAPI specification.")
+@Schema(description = "Player-centric match history entry.")
 public record MatchResponse(
     Long id,
     Instant startedAt,

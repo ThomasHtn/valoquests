@@ -2,15 +2,16 @@ package io.github.thomashtn.valorant.tracker.challenge.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import io.github.thomashtn.valorant.tracker.challenge.model.*;
-import java.math.*;
-import java.time.*;
-import java.util.*;
+import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDifficulty;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 
 /**
- * Represents the API response payload for current challenges response.
+ * Exposes collective progress for the challenges selected for the current week.
  */
-@Schema(description = "API response model documented by the Valorant Tracker OpenAPI specification.")
+@Schema(description = "Current weekly challenges and their collective completion progress.")
 public record CurrentChallengesResponse(
     LocalDate weekStart,
     LocalDate weekEnd,

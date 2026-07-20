@@ -23,6 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Matches", description = "Paginated and filterable match history for one tracked player.")
 public class MatchController {
 
+    /**
+     * Provider used to access the optional feature service when implemented.
+     */
     private final ObjectProvider<MatchQueryService> serviceProvider;
 
     /** @param serviceProvider provider for the future match query implementation */

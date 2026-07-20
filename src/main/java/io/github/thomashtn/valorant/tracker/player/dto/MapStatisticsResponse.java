@@ -2,12 +2,12 @@ package io.github.thomashtn.valorant.tracker.player.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.math.*;
+import java.math.BigDecimal;
 
 /**
- * Represents the API response payload for map statistics response.
+ * Exposes aggregated statistics for one map played by a player.
  */
-@Schema(description = "API response model documented by the Valorant Tracker OpenAPI specification.")
+@Schema(description = "Aggregated player statistics for one Valorant map.")
 public record MapStatisticsResponse(
     String mapId,
     String mapName,

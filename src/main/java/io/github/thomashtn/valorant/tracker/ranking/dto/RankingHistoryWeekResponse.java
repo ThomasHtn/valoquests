@@ -2,13 +2,14 @@ package io.github.thomashtn.valorant.tracker.ranking.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.*;
-import java.util.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 
 /**
- * Represents the API response payload for ranking history week response.
+ * Exposes the finalized ranking for one historical week.
  */
-@Schema(description = "API response model documented by the Valorant Tracker OpenAPI specification.")
+@Schema(description = "Finalized ranking for one week.")
 public record RankingHistoryWeekResponse(
     LocalDate weekStart,
     LocalDate weekEnd,

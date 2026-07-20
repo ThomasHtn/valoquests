@@ -51,7 +51,7 @@ public class HenrikMmrMapper {
 
         try {
             return CompetitiveTier.valueOf(normalized);
-        } catch (IllegalArgumentException ignored) {
+        } catch (IllegalArgumentException _) {
             return CompetitiveTier.UNRANKED;
         }
     }

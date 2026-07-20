@@ -1,36 +1,54 @@
-# Valorant Tracker Backend
+# Valorant Tracker
 
-Backend foundation for the Valorant Tracker portfolio project. The project provides the technical structure, persistence model, API DTOs, repositories, database migrations, configuration, administrative API protection, and shared error handling. Business rules are intentionally left unimplemented.
+Valorant Tracker is a personal full-stack portfolio project used to collect, store, analyse and compare Valorant statistics for a fixed group of players.
+
+The backend retrieves account, rank and match-history data from the Henrik API, stores normalized data in PostgreSQL and exposes REST endpoints for the Angular application. Weekly challenge progression and ranking calculation are the next functional milestone; the synchronization and persistence foundation is implemented first so those calculations can rely on stable, reproducible data.
 
 ## Technology stack
 
 - Java 25
 - Spring Boot 4.0.6
+- Spring MVC and WebClient
+- Spring Data JPA and Hibernate
 - PostgreSQL 17
-- Spring Data JPA
-- Spring Validation
+- Flyway
 - Spring Security
 - Spring Boot Actuator
-- Flyway
+- Springdoc OpenAPI
 - MapStruct
 - Lombok
-- Maven
+- Maven Wrapper
+- JUnit 5, Mockito, AssertJ and MockWebServer
 
-## Project scope
+## Current status
 
-The backend is prepared to support:
+Implemented:
 
-- incremental and deep synchronization with the Henrik API;
-- storage of players, matches, weekly challenges, progress snapshots, rankings, and synchronization history;
-- weekly statistics and challenge progress without a dedicated `week` table;
-- public endpoints consumed by the Angular frontend;
-- protected administrative endpoints used by schedulers and manual operations.
+- tracked-player persistence and Riot PUUID resolution;
+- current competitive rank synchronization;
+- idempotent match and player-match import;
+- standard synchronization with incremental pagination;
+- deep synchronization for the current season or all available history;
+- global and per-player manual synchronization endpoints;
+- synchronization execution persistence and monitoring endpoints;
+- Henrik request throttling, retry handling and response mapping;
+- PostgreSQL schema and reference data through Flyway;
+- administrator API-key protection;
+- OpenAPI and Swagger UI configuration;
+- centralized exception handling and operational logging.
 
-No business service implementation or REST controller is included yet. Service interfaces and DTOs define the expected boundaries for future implementation.
+Prepared but intentionally not implemented yet:
 
-## Package organization
+- public player statistics queries;
+- challenge selection and progression calculation;
+- weekly ranking calculation and history;
+- scheduled synchronization execution.
 
-The code is organized by feature:
+Endpoints for unfinished functional areas currently return `501 Not Implemented`. This keeps the API contract visible without hiding incomplete business behaviour behind placeholder data.
+
+## Architecture
+
+The backend uses feature-oriented packages. A feature owns its controllers, services, repositories, entities, DTOs and domain models.
 
 ```text
 io.github.thomashtn.valorant.tracker
@@ -43,102 +61,242 @@ io.github.thomashtn.valorant.tracker
 └── shared
 ```
 
-Each feature owns its persistence entities, repositories, DTOs, models, and service contracts. Cross-cutting configuration, exceptions, shared DTOs, and common persistence behavior belong to `shared`.
+Main responsibilities:
 
-## Local setup
+- `henrik`: HTTP clients, retry and rate-limit policies, external DTOs and mappings;
+- `player`: tracked accounts, current rank and Riot account resolution;
+- `match`: seasons, matches, player statistics per match and idempotent imports;
+- `synchronization`: standard/deep orchestration, execution history and admin routes;
+- `challenge`: challenge catalogue and future weekly progression logic;
+- `ranking`: future weekly score and ranking logic;
+- `shared`: cross-cutting configuration, security, errors, pagination and auditing.
 
-### Prerequisites
+## Synchronization behaviour
+
+### Standard synchronization
+
+A standard synchronization is optimized for frequent execution:
+
+1. load the tracked player;
+2. resolve the Riot PUUID when necessary;
+3. retrieve and map the current competitive rank;
+4. retrieve match-history pages in batches of 10;
+5. import completed matches idempotently;
+6. stop when Henrik returns an empty page, an incomplete page, or a full page containing no new player-match association;
+7. update the player's last successful synchronization timestamp.
+
+This behaviour imports more than the first page on an empty database while avoiding a complete history scan on every scheduled execution.
+
+### Deep synchronization
+
+A deep synchronization browses older Henrik match-history pages. Its scope is configured with `DEEP_SYNC_SCOPE`:
+
+- `CURRENT_SEASON`: stop at the first older-season boundary;
+- `ALL_HISTORY`: continue until Henrik returns no more complete pages.
+
+A safety page limit prevents infinite loops caused by an unexpected external API response.
+
+### Import idempotence
+
+The database and services prevent duplicates through the following constraints:
+
+- `valorant_match.external_match_id` is unique;
+- `(player_id, match_id)` is unique in `player_match`;
+- existing player-match associations are skipped;
+- invalid, incomplete and unrelated Henrik match payloads are ignored and logged.
+
+## Logs
+
+Synchronization logs provide enough context to diagnose missing pages without enabling verbose HTTP-body logging. Each imported page records:
+
+- player identifier;
+- page index and Henrik `start` offset;
+- requested and received match counts;
+- matches eligible for import;
+- matches actually imported;
+- cumulative imported count;
+- explicit pagination stop reason.
+
+Default application logs use `INFO`. Detailed import decisions are available at `DEBUG` for the match import service.
+
+Example temporary configuration:
+
+```properties
+logging.level.io.github.thomashtn.valorant.tracker.match.service.MatchImportService=DEBUG
+```
+
+Never enable full Henrik response-body logging in production because payloads are large and may expose account data.
+
+## Prerequisites
 
 - JDK 25
-- Maven 3.9 or later
-- Docker and Docker Compose, or a local PostgreSQL 17 instance
+- Docker and Docker Compose, or PostgreSQL 17
+- a Henrik API key
 
-### Environment variables
+The Maven Wrapper downloads Maven 3.8.7 on first use. An internet connection is therefore required the first time `./mvnw` is executed.
 
-Copy the example environment file and replace the development values when required:
+## Local configuration
+
+Copy the environment template:
 
 ```bash
 cp .env.example .env
 ```
 
-Main variables:
+Required values:
 
-```text
-DB_URL
-DB_USERNAME
-DB_PASSWORD
-ADMIN_API_KEY
-HENRIK_API_BASE_URL
-HENRIK_API_KEY
-FRONTEND_ORIGIN
+```dotenv
+DB_URL=jdbc:postgresql://localhost:5432/valorant_tracker
+DB_USERNAME=valorant
+DB_PASSWORD=change-me
+ADMIN_API_KEY=replace-with-a-long-random-secret
+HENRIK_API_KEY=your-henrik-api-key
 ```
 
-The administrative key must never be committed to the repository.
+The `.env` file is ignored by Git. IntelliJ IDEA can load it with an environment-file plugin, or the variables can be exported in the shell.
 
-### Start PostgreSQL
+## Start PostgreSQL
 
 ```bash
 docker compose up -d
 ```
 
-### Run the application
+Check the container:
 
 ```bash
-mvn spring-boot:run
+docker compose ps
 ```
 
-### Run verification
+## Run the backend
 
 ```bash
-mvn clean verify
+./mvnw spring-boot:run
 ```
 
-## Database management
+The backend starts on `http://localhost:8080`.
 
-Flyway is the only source of truth for the database schema. Hibernate uses `ddl-auto=validate` and therefore validates mappings without creating or modifying tables.
+Useful URLs:
 
-Available migrations:
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/api-docs`
+- Health endpoint: `http://localhost:8080/actuator/health`
 
-1. `V1__create_schema.sql` creates the complete schema and idempotency constraints.
-2. `V2__insert_players.sql` is the placeholder for the predefined tracked players.
-3. `V3__insert_challenges.sql` inserts the challenge library supplied with the project.
+Use Swagger's **Authorize** action to provide the configured `X-Admin-Key` value for administrative routes.
 
-Weekly records are identified by `week_start`. The application does not use a dedicated `week` entity or table.
+## Build and tests
 
-## Administrative API protection
+Run the complete verification pipeline:
 
-Every request under `/api/admin/**` must include the following header:
+```bash
+./mvnw clean verify
+```
+
+Run unit tests only:
+
+```bash
+./mvnw test
+```
+
+Run one test class:
+
+```bash
+./mvnw -Dtest=PlayerSynchronizationServiceTest test
+```
+
+## Database migrations
+
+Flyway is the only schema-management mechanism. Hibernate uses `ddl-auto=validate` and must never create or update production tables.
+
+Current migrations:
+
+```text
+V1__create_schema.sql
+V2__insert_players.sql
+V3__insert_challenges.sql
+V4__prepare_henrik_synchronization.sql
+V5__insert_players.sql
+V6__allow_unresolved_season_dates.sql
+V7__increase_player_match_team_id_length.sql
+V8__remove_unused_deep_synchronization_task.sql
+```
+
+Do not edit an applied migration. Add a new versioned migration for every schema or reference-data change.
+
+To reset the local database completely:
+
+```sql
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
+GRANT ALL ON SCHEMA public TO valorant;
+GRANT ALL ON SCHEMA public TO public;
+```
+
+Restart the application afterward so Flyway can replay every migration.
+
+## Administrative synchronization endpoints
+
+All routes below require `X-Admin-Key`.
 
 ```http
-X-Admin-Key: <ADMIN_API_KEY>
+POST /api/admin/synchronizations
+POST /api/admin/players/{playerId}/synchronizations
+POST /api/admin/synchronizations/deep
+POST /api/admin/players/{playerId}/synchronizations/deep
+GET  /api/admin/synchronizations/latest
+GET  /api/admin/synchronizations?page=0&size=20
+GET  /api/admin/synchronizations/{synchronizationId}
 ```
 
-The key is loaded from an environment variable. Missing and invalid keys are rejected before the request reaches a controller.
+Example:
 
-## Code quality conventions
+```bash
+curl -X POST \
+  -H "X-Admin-Key: ${ADMIN_API_KEY}" \
+  http://localhost:8080/api/admin/players/1/synchronizations
+```
 
-- All source code, comments, JavaDoc, configuration comments, and documentation are written in English.
-- Every declared function must include JavaDoc explaining its responsibility.
-- Formatting uses four spaces and avoids compressed declarations.
-- Business rules belong in services, not controllers or repositories.
-- Database changes require a new Flyway migration.
-- Public API payloads use dedicated DTOs rather than persistence entities.
-- Time-dependent code should use the configured `Clock` bean to remain testable.
+## Configuration reference
 
-## Suggested implementation order
+| Variable | Default | Purpose |
+|---|---|---|
+| `DB_URL` | `jdbc:postgresql://localhost:5432/valorant_tracker` | PostgreSQL JDBC URL |
+| `DB_USERNAME` | `valorant` | Database user |
+| `DB_PASSWORD` | `valorant` | Database password |
+| `ADMIN_API_KEY` | local development value | Protects `/api/admin/**` |
+| `FRONTEND_ORIGIN` | `http://localhost:4200` | Allowed Angular origin |
+| `HENRIK_API_BASE_URL` | `https://api.henrikdev.xyz` | Henrik API base URL |
+| `HENRIK_API_KEY` | empty | Henrik API key |
+| `HENRIK_API_REGION` | `eu` | Shared Valorant region |
+| `HENRIK_API_PLATFORM` | `pc` | Shared platform |
+| `HENRIK_API_MAX_ATTEMPTS` | `2` | Initial request plus retry count |
+| `HENRIK_API_RETRY_DELAY` | `PT60S` | Minimum retry delay |
+| `HENRIK_API_REQUESTS_PER_MINUTE` | `28` | Shared request limiter |
+| `HENRIK_API_RATE_LIMIT_SAFETY_MARGIN` | `PT0.1S` | Additional request spacing |
+| `DEEP_SYNC_SCOPE` | `CURRENT_SEASON` | Deep import range |
 
-1. Complete the six predefined players migration.
-2. Add Henrik API response DTOs and client operations.
-3. Implement incremental match synchronization.
-4. Implement statistics and challenge calculators.
-5. Implement ranking snapshots and weekly finalization.
-6. Add REST controllers for the agreed API routes.
-7. Add integration tests with Testcontainers.
+## Development rules
 
-## Current limitations
+- keep code, comments, Javadoc, logs and documentation in English;
+- use feature packages and preserve domain boundaries;
+- prefer constructor injection;
+- keep controllers thin and business rules in services;
+- use records for immutable API DTOs when appropriate;
+- never expose JPA entities directly from controllers;
+- make external imports idempotent;
+- add tests for every bug fix and business rule;
+- avoid broad `catch (Exception)` blocks and silent failures;
+- log identifiers and counts, not secrets or complete external payloads;
+- use a new Flyway migration instead of changing an applied migration.
 
-- Business services are contracts only.
-- The Henrik client contains only the minimum placeholder models.
-- REST controllers are not implemented.
-- Player seed values must be completed.
-- The project requires JDK 25 to build with the configured compiler release.
+## Next milestone
+
+The next development lot is weekly challenge progression:
+
+1. select the active weekly challenge set;
+2. calculate each player's progress from persisted matches;
+3. store progress snapshots;
+4. calculate weekly scores and ranking positions;
+5. expose current challenges and ranking endpoints;
+6. add scheduler orchestration after successful match synchronization.
+
+The synchronization layer should remain independent from individual challenge calculators so new challenge rules can be added without changing the Henrik import workflow.

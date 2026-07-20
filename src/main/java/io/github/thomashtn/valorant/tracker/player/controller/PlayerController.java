@@ -23,6 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Players", description = "Tracked Valorant player identities and aggregated statistics.")
 public class PlayerController {
 
+    /**
+     * Provider used to access the optional feature service when implemented.
+     */
     private final ObjectProvider<PlayerQueryService> serviceProvider;
 
     /** @param serviceProvider provider for the future player query implementation */

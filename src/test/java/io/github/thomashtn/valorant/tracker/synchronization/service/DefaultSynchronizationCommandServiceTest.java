@@ -3,12 +3,14 @@ package io.github.thomashtn.valorant.tracker.synchronization.service;
 import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikServiceUnavailableException;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
+import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.entity.Synchronization;
 import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerSynchronizationResult;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
+import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationPlayerResultRepository;
 import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -54,6 +57,9 @@ class DefaultSynchronizationCommandServiceTest {
     private SynchronizationRepository synchronizationRepository;
 
     @Mock
+    private SynchronizationPlayerResultRepository playerResultRepository;
+
+    @Mock
     private PlayerDeepSynchronizationService
         playerDeepSynchronizationService;
 
@@ -74,6 +80,7 @@ class DefaultSynchronizationCommandServiceTest {
             playerDeepSynchronizationService,
             playerRepository,
             synchronizationRepository,
+            playerResultRepository,
             clock
         );
 
@@ -98,7 +105,7 @@ class DefaultSynchronizationCommandServiceTest {
         Player firstPlayer = player(1L);
         Player secondPlayer = player(2L);
 
-        when(playerRepository.findAllByOrderByIdAsc())
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
             .thenReturn(List.of(firstPlayer, secondPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
@@ -153,7 +160,7 @@ class DefaultSynchronizationCommandServiceTest {
         Player firstPlayer = player(1L);
         Player secondPlayer = player(2L);
 
-        when(playerRepository.findAllByOrderByIdAsc())
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
             .thenReturn(List.of(firstPlayer, secondPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
@@ -198,7 +205,7 @@ class DefaultSynchronizationCommandServiceTest {
         Player firstPlayer = player(1L);
         Player secondPlayer = player(2L);
 
-        when(playerRepository.findAllByOrderByIdAsc())
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
             .thenReturn(List.of(firstPlayer, secondPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
@@ -229,7 +236,7 @@ class DefaultSynchronizationCommandServiceTest {
      */
     @Test
     void shouldCompleteWhenNoActivePlayerExists() {
-        when(playerRepository.findAllByOrderByIdAsc())
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
             .thenReturn(List.of());
 
         SynchronizationResponse response =
@@ -297,7 +304,7 @@ class DefaultSynchronizationCommandServiceTest {
 
         verify(
             synchronizationRepository,
-            org.mockito.Mockito.times(2)
+            times(2)
         ).save(any(Synchronization.class));
     }
 
@@ -328,6 +335,7 @@ class DefaultSynchronizationCommandServiceTest {
     ) {
         return new PlayerSynchronizationResult(
             player,
+            1,
             matchesImported,
             completedAt
         );

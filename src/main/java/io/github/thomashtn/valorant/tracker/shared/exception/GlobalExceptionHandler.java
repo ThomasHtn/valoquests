@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikApiException;
-import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikRateLimitException;
 
 /**
  * Converts application exceptions into consistent HTTP problem responses.
@@ -23,6 +21,9 @@ import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikRateLimitExce
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * Logger used to report operational and diagnostic information.
+     */
     private static final Logger LOGGER =
         LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
@@ -74,6 +75,27 @@ public class GlobalExceptionHandler {
             "One or more fields are invalid.",
             request,
             errors
+        );
+    }
+
+    /**
+     * Handles invalid request parameters detected by application services.
+     *
+     * @param exception invalid-argument exception
+     * @param request current HTTP request
+     * @return standardized HTTP 400 response
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    ResponseEntity<ApiErrorResponse> handleIllegalArgument(
+        IllegalArgumentException exception,
+        HttpServletRequest request
+    ) {
+        return buildResponse(
+            HttpStatus.BAD_REQUEST,
+            "INVALID_ARGUMENT",
+            exception.getMessage(),
+            request,
+            Map.of()
         );
     }
 

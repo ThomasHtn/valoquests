@@ -23,6 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Rankings", description = "Current weekly standings and finalized historical standings.")
 public class RankingController {
 
+    /**
+     * Provider used to access the optional feature service when implemented.
+     */
     private final ObjectProvider<RankingQueryService> serviceProvider;
 
     /** @param serviceProvider provider for the future ranking query implementation */

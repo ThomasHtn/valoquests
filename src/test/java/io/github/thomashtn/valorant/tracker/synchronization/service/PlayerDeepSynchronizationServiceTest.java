@@ -20,7 +20,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -509,11 +508,7 @@ class PlayerDeepSynchronizationServiceTest {
         return new ApplicationProperties(
             "http://localhost:4200",
             "test-admin-key",
-            new ApplicationProperties.Scheduling(
-                Duration.ofHours(4),
-                Duration.ofMinutes(10),
-                scope
-            )
+            new ApplicationProperties.Scheduling(scope)
         );
     }
 

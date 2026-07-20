@@ -7,8 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import java.time.Duration;
-
 /**
  * Contains the global application configuration.
  *
@@ -29,13 +27,9 @@ public record ApplicationProperties(
     /**
      * Contains synchronization-related configuration.
      *
-     * @param standardSynchronizationDelay delay between standard synchronizations
-     * @param deepSynchronizationDelay     delay between deep synchronizations
-     * @param deepSynchronizationScope     history range imported by deep synchronization
+     * @param deepSynchronizationScope history range imported by deep synchronization
      */
     public record Scheduling(
-        @NotNull Duration standardSynchronizationDelay,
-        @NotNull Duration deepSynchronizationDelay,
         @NotNull DeepSynchronizationScope deepSynchronizationScope
     ) {
     }

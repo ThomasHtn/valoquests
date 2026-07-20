@@ -2,12 +2,12 @@ package io.github.thomashtn.valorant.tracker.player.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.math.*;
+import java.math.BigDecimal;
 
 /**
- * Represents the API response payload for agent statistics response.
+ * Exposes aggregated statistics for one agent played by a player.
  */
-@Schema(description = "API response model documented by the Valorant Tracker OpenAPI specification.")
+@Schema(description = "Aggregated player statistics for one Valorant agent.")
 public record AgentStatisticsResponse(
     String agentId,
     String agentName,

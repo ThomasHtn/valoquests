@@ -2,12 +2,12 @@ package io.github.thomashtn.valorant.tracker.shared.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.util.*;
+import java.util.List;
 
 /**
- * Represents the API response payload for page response.
+ * Generic immutable representation of a paginated API result.
  */
-@Schema(description = "API response model documented by the Valorant Tracker OpenAPI specification.")
+@Schema(description = "Paginated API response.")
 public record PageResponse<T>(
     List<T> content,
     int page,

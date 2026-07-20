@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = ADMIN_KEY_SECURITY_SCHEME)
 public class ChallengeAdminController {
 
+    /**
+     * Provider used to access the optional feature service when implemented.
+     */
     private final ObjectProvider<ChallengeRecalculationService> serviceProvider;
 
     /** @param serviceProvider provider for the future recalculation implementation */

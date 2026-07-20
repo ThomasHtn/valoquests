@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Challenges", description = "Active weekly challenge consultation.")
 public class ChallengeController {
 
+    /**
+     * Provider used to access the optional feature service when implemented.
+     */
     private final ObjectProvider<ChallengeQueryService> serviceProvider;
 
     /**

@@ -2,14 +2,15 @@ package io.github.thomashtn.valorant.tracker.player.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import io.github.thomashtn.valorant.tracker.player.model.*;
-import java.math.*;
-import java.time.*;
+import io.github.thomashtn.valorant.tracker.player.model.CompetitiveTier;
+import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
+import java.math.BigDecimal;
+import java.time.Instant;
 
 /**
- * Represents the API response payload for player summary response.
+ * Exposes the compact player information used by list screens.
  */
-@Schema(description = "API response model documented by the Valorant Tracker OpenAPI specification.")
+@Schema(description = "Compact tracked-player summary.")
 public record PlayerSummaryResponse(
     Long id,
     String riotId,

@@ -12,12 +12,27 @@ import reactor.core.publisher.Mono;
 @Component
 public class DefaultHenrikMmrClient implements HenrikMmrClient {
 
+    /**
+     * Relative Henrik endpoint used to retrieve the current MMR.
+     */
     private static final String CURRENT_MMR_ENDPOINT =
         "/valorant/v3/by-puuid/mmr/{region}/{platform}/{puuid}";
 
+    /**
+     * Configured WebClient used for Henrik HTTP requests.
+     */
     private final WebClient henrikWebClient;
+    /**
+     * Typed configuration required by this component.
+     */
     private final HenrikApiProperties properties;
+    /**
+     * Handler used to convert Henrik error responses into typed exceptions.
+     */
     private final HenrikResponseHandler responseHandler;
+    /**
+     * Executor that applies rate limiting, retries and error handling.
+     */
     private final HenrikRequestExecutor requestExecutor;
 
     public DefaultHenrikMmrClient(
