@@ -1,8 +1,12 @@
 # Valorant Tracker
 
-Valorant Tracker is a personal full-stack portfolio project used to collect, store, analyse and compare Valorant statistics for a fixed group of players.
+Valorant Tracker is a personal full-stack portfolio project used to collect, store, analyse and compare Valorant
+statistics for a fixed group of players.
 
-The backend retrieves account, rank and match-history data from the Henrik API, stores normalized data in PostgreSQL and exposes REST endpoints for the Angular application. Weekly challenge progression and ranking calculation are the next functional milestone; the synchronization and persistence foundation is implemented first so those calculations can rely on stable, reproducible data.
+The backend retrieves account, rank and match-history data from the Henrik API, stores normalized data in PostgreSQL and
+exposes REST endpoints for the Angular application. Weekly challenge progression and ranking calculation are the next
+functional milestone; the synchronization and persistence foundation is implemented first so those calculations can rely
+on stable, reproducible data.
 
 ## Technology stack
 
@@ -20,35 +24,10 @@ The backend retrieves account, rank and match-history data from the Henrik API, 
 - Maven Wrapper
 - JUnit 5, Mockito, AssertJ and MockWebServer
 
-## Current status
-
-Implemented:
-
-- tracked-player persistence and Riot PUUID resolution;
-- current competitive rank synchronization;
-- idempotent match and player-match import;
-- standard synchronization with incremental pagination;
-- deep synchronization for the current season or all available history;
-- global and per-player manual synchronization endpoints;
-- synchronization execution persistence and monitoring endpoints;
-- Henrik request throttling, retry handling and response mapping;
-- PostgreSQL schema and reference data through Flyway;
-- administrator API-key protection;
-- OpenAPI and Swagger UI configuration;
-- centralized exception handling and operational logging.
-
-Prepared but intentionally not implemented yet:
-
-- public player statistics queries;
-- challenge selection and progression calculation;
-- weekly ranking calculation and history;
-- scheduled synchronization execution.
-
-Endpoints for unfinished functional areas currently return `501 Not Implemented`. This keeps the API contract visible without hiding incomplete business behaviour behind placeholder data.
-
 ## Architecture
 
-The backend uses feature-oriented packages. A feature owns its controllers, services, repositories, entities, DTOs and domain models.
+The backend uses feature-oriented packages. A feature owns its controllers, services, repositories, entities, DTOs and
+domain models.
 
 ```text
 io.github.thomashtn.valorant.tracker
@@ -82,10 +61,12 @@ A standard synchronization is optimized for frequent execution:
 3. retrieve and map the current competitive rank;
 4. retrieve match-history pages in batches of 10;
 5. import completed matches idempotently;
-6. stop when Henrik returns an empty page, an incomplete page, or a full page containing no new player-match association;
+6. stop when Henrik returns an empty page, an incomplete page, or a full page containing no new player-match
+   association;
 7. update the player's last successful synchronization timestamp.
 
-This behaviour imports more than the first page on an empty database while avoiding a complete history scan on every scheduled execution.
+This behaviour imports more than the first page on an empty database while avoiding a complete history scan on every
+scheduled execution.
 
 ### Deep synchronization
 
@@ -107,7 +88,8 @@ The database and services prevent duplicates through the following constraints:
 
 ## Logs
 
-Synchronization logs provide enough context to diagnose missing pages without enabling verbose HTTP-body logging. Each imported page records:
+Synchronization logs provide enough context to diagnose missing pages without enabling verbose HTTP-body logging. Each
+imported page records:
 
 - player identifier;
 - page index and Henrik `start` offset;
@@ -133,7 +115,8 @@ Never enable full Henrik response-body logging in production because payloads ar
 - Docker and Docker Compose, or PostgreSQL 17
 - a Henrik API key
 
-The Maven Wrapper downloads Maven 3.8.7 on first use. An internet connection is therefore required the first time `./mvnw` is executed.
+The Maven Wrapper downloads Maven 3.8.7 on first use. An internet connection is therefore required the first time
+`./mvnw` is executed.
 
 ## Local configuration
 
@@ -153,7 +136,8 @@ ADMIN_API_KEY=replace-with-a-long-random-secret
 HENRIK_API_KEY=your-henrik-api-key
 ```
 
-The `.env` file is ignored by Git. IntelliJ IDEA can load it with an environment-file plugin, or the variables can be exported in the shell.
+The `.env` file is ignored by Git. IntelliJ IDEA can load it with an environment-file plugin, or the variables can be
+exported in the shell.
 
 ## Start PostgreSQL
 
@@ -205,7 +189,8 @@ Run one test class:
 
 ## Database migrations
 
-Flyway is the only schema-management mechanism. Hibernate uses `ddl-auto=validate` and must never create or update production tables.
+Flyway is the only schema-management mechanism. Hibernate uses `ddl-auto=validate` and must never create or update
+production tables.
 
 Current migrations:
 
@@ -227,8 +212,11 @@ To reset the local database completely:
 ```sql
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
-GRANT ALL ON SCHEMA public TO valorant;
-GRANT ALL ON SCHEMA public TO public;
+GRANT
+ALL
+ON SCHEMA public TO valorant;
+GRANT ALL
+ON SCHEMA public TO public;
 ```
 
 Restart the application afterward so Flyway can replay every migration.
@@ -257,22 +245,22 @@ curl -X POST \
 
 ## Configuration reference
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/valorant_tracker` | PostgreSQL JDBC URL |
-| `DB_USERNAME` | `valorant` | Database user |
-| `DB_PASSWORD` | `valorant` | Database password |
-| `ADMIN_API_KEY` | local development value | Protects `/api/admin/**` |
-| `FRONTEND_ORIGIN` | `http://localhost:4200` | Allowed Angular origin |
-| `HENRIK_API_BASE_URL` | `https://api.henrikdev.xyz` | Henrik API base URL |
-| `HENRIK_API_KEY` | empty | Henrik API key |
-| `HENRIK_API_REGION` | `eu` | Shared Valorant region |
-| `HENRIK_API_PLATFORM` | `pc` | Shared platform |
-| `HENRIK_API_MAX_ATTEMPTS` | `2` | Initial request plus retry count |
-| `HENRIK_API_RETRY_DELAY` | `PT60S` | Minimum retry delay |
-| `HENRIK_API_REQUESTS_PER_MINUTE` | `28` | Shared request limiter |
-| `HENRIK_API_RATE_LIMIT_SAFETY_MARGIN` | `PT0.1S` | Additional request spacing |
-| `DEEP_SYNC_SCOPE` | `CURRENT_SEASON` | Deep import range |
+| Variable                              | Default                                             | Purpose                          |
+|---------------------------------------|-----------------------------------------------------|----------------------------------|
+| `DB_URL`                              | `jdbc:postgresql://localhost:5432/valorant_tracker` | PostgreSQL JDBC URL              |
+| `DB_USERNAME`                         | `valorant`                                          | Database user                    |
+| `DB_PASSWORD`                         | `valorant`                                          | Database password                |
+| `ADMIN_API_KEY`                       | local development value                             | Protects `/api/admin/**`         |
+| `FRONTEND_ORIGIN`                     | `http://localhost:4200`                             | Allowed Angular origin           |
+| `HENRIK_API_BASE_URL`                 | `https://api.henrikdev.xyz`                         | Henrik API base URL              |
+| `HENRIK_API_KEY`                      | empty                                               | Henrik API key                   |
+| `HENRIK_API_REGION`                   | `eu`                                                | Shared Valorant region           |
+| `HENRIK_API_PLATFORM`                 | `pc`                                                | Shared platform                  |
+| `HENRIK_API_MAX_ATTEMPTS`             | `2`                                                 | Initial request plus retry count |
+| `HENRIK_API_RETRY_DELAY`              | `PT60S`                                             | Minimum retry delay              |
+| `HENRIK_API_REQUESTS_PER_MINUTE`      | `28`                                                | Shared request limiter           |
+| `HENRIK_API_RATE_LIMIT_SAFETY_MARGIN` | `PT0.1S`                                            | Additional request spacing       |
+| `DEEP_SYNC_SCOPE`                     | `CURRENT_SEASON`                                    | Deep import range                |
 
 ## Development rules
 
@@ -287,16 +275,3 @@ curl -X POST \
 - avoid broad `catch (Exception)` blocks and silent failures;
 - log identifiers and counts, not secrets or complete external payloads;
 - use a new Flyway migration instead of changing an applied migration.
-
-## Next milestone
-
-The next development lot is weekly challenge progression:
-
-1. select the active weekly challenge set;
-2. calculate each player's progress from persisted matches;
-3. store progress snapshots;
-4. calculate weekly scores and ranking positions;
-5. expose current challenges and ranking endpoints;
-6. add scheduler orchestration after successful match synchronization.
-
-The synchronization layer should remain independent from individual challenge calculators so new challenge rules can be added without changing the Henrik import workflow.

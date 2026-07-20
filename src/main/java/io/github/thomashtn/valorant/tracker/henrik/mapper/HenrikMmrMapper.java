@@ -6,7 +6,9 @@ import io.github.thomashtn.valorant.tracker.player.model.CompetitiveTier;
 import java.util.Locale;
 import org.springframework.stereotype.Component;
 
-/** Applies Henrik MMR data to a tracked player entity. */
+/**
+ * Applies Henrik MMR data to a tracked player entity.
+ */
 @Component
 public class HenrikMmrMapper {
 

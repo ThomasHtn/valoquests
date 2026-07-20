@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Exposes paginated match history for tracked players. */
+/**
+ * Exposes paginated match history for tracked players.
+ */
 @RestController
 @RequestMapping(value = "/api/players/{playerId}/matches", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Matches", description = "Paginated and filterable match history for one tracked player.")
@@ -28,7 +30,9 @@ public class MatchController {
      */
     private final ObjectProvider<MatchQueryService> serviceProvider;
 
-    /** @param serviceProvider provider for the future match query implementation */
+    /**
+     * @param serviceProvider provider for the future match query implementation
+     */
     public MatchController(ObjectProvider<MatchQueryService> serviceProvider) {
         this.serviceProvider = serviceProvider;
     }
@@ -39,7 +43,13 @@ public class MatchController {
      * @return one page of matching player-match records
      */
     @GetMapping
-    @Operation(summary = "Get player match history", description = "Returns a page of matches. Every filter is optional and can be combined with the others.")
+    @Operation(
+        summary = "Get a player's match history",
+        description = """
+            Returns the tracked player's matches from newest to oldest. Pagination and optional
+            season, map, agent and result filters can be combined in the same request.
+            """
+    )
     @ApiResponse(responseCode = "200", description = "Match page returned successfully.")
     @ApiResponse(responseCode = "400", description = "A pagination value or filter is invalid.")
     @ApiResponse(responseCode = "404", description = "The requested player does not exist.")

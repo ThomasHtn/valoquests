@@ -29,7 +29,13 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "player_match", uniqueConstraints = @UniqueConstraint(name = "uk_player_match_player_match", columnNames = {"player_id", "match_id"}))
+@Table(
+    name = "player_match",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_player_match_player_match",
+        columnNames = {"player_id", "match_id"}
+    )
+)
 public class PlayerMatch extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -18,7 +18,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Stores match-level metadata shared by every tracked participant. */
+/**
+ * Stores match-level metadata shared by every tracked participant.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,12 +28,16 @@ import lombok.Setter;
 @Table(name = "valorant_match")
 public class ValorantMatch extends AuditableEntity {
 
-    /** Internal database identifier. */
+    /**
+     * Internal database identifier.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Stable match identifier returned by Henrik. */
+    /**
+     * Stable match identifier returned by Henrik.
+     */
     @Column(
         name = "external_match_id",
         nullable = false,
@@ -40,41 +46,59 @@ public class ValorantMatch extends AuditableEntity {
     )
     private String externalMatchId;
 
-    /** Season containing the match. */
+    /**
+     * Season containing the match.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "season_id", nullable = false)
     private Season season;
 
-    /** UTC timestamp at which the match started. */
+    /**
+     * UTC timestamp at which the match started.
+     */
     @Column(name = "started_at", nullable = false)
     private Instant startedAt;
 
-    /** Match duration in seconds. */
+    /**
+     * Match duration in seconds.
+     */
     @Column(name = "duration_seconds")
     private Integer durationSeconds;
 
-    /** Stable map identifier when provided by Henrik. */
+    /**
+     * Stable map identifier when provided by Henrik.
+     */
     @Column(name = "map_id", length = 64)
     private String mapId;
 
-    /** Human-readable map name. */
+    /**
+     * Human-readable map name.
+     */
     @Column(name = "map_name", nullable = false, length = 100)
     private String mapName;
 
-    /** Normalized game mode used by statistics and challenge filters. */
+    /**
+     * Normalized game mode used by statistics and challenge filters.
+     */
     @Enumerated(EnumType.STRING)
     @Column(name = "game_mode", nullable = false, length = 32)
     private GameMode gameMode;
 
-    /** Raw Henrik queue identifier retained for diagnostics. */
+    /**
+     * Raw Henrik queue identifier retained for diagnostics.
+     */
     @Column(name = "queue_id", length = 64)
     private String queueId;
 
-    /** Final red-team score when available. */
+    /**
+     * Final red-team score when available.
+     */
     @Column(name = "red_score")
     private Integer redScore;
 
-    /** Final blue-team score when available. */
+    /**
+     * Final blue-team score when available.
+     */
     @Column(name = "blue_score")
     private Integer blueScore;
 }

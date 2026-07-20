@@ -8,7 +8,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Resolves local seasons from Henrik match metadata. */
+/**
+ * Resolves local seasons from Henrik match metadata.
+ */
 @Service
 public class SeasonResolutionService {
 
@@ -23,7 +25,9 @@ public class SeasonResolutionService {
      */
     private final SeasonRepository seasonRepository;
 
-    /** Creates the season resolution service. */
+    /**
+     * Creates the season resolution service.
+     */
     public SeasonResolutionService(SeasonRepository seasonRepository) {
         this.seasonRepository = seasonRepository;
     }
@@ -47,7 +51,9 @@ public class SeasonResolutionService {
             .orElseGet(() -> create(source));
     }
 
-    /** Creates a local season from external metadata. */
+    /**
+     * Creates a local season from external metadata.
+     */
     private Season create(HenrikMatchMetadata.HenrikSeason source) {
         Season season = new Season();
         season.setExternalId(source.id());
@@ -63,7 +69,9 @@ public class SeasonResolutionService {
         return savedSeason;
     }
 
-    /** Updates a season name when Henrik provides a newer usable value. */
+    /**
+     * Updates a season name when Henrik provides a newer usable value.
+     */
     private Season updateName(Season season, String name) {
         if (name != null && !name.isBlank() && !name.equals(season.getName())) {
             LOGGER.debug(
@@ -77,7 +85,9 @@ public class SeasonResolutionService {
         return season;
     }
 
-    /** Uses the external identifier when Henrik does not provide a short name. */
+    /**
+     * Uses the external identifier when Henrik does not provide a short name.
+     */
     private String normalizeName(HenrikMatchMetadata.HenrikSeason source) {
         return source.shortName() == null || source.shortName().isBlank()
             ? source.id()

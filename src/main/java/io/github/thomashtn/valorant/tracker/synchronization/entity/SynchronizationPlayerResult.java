@@ -19,7 +19,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Stores the result of one player within a synchronization execution. */
+/**
+ * Stores the result of one player within a synchronization execution.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,35 +35,49 @@ import lombok.Setter;
 )
 public class SynchronizationPlayerResult extends AuditableEntity {
 
-    /** Internal database identifier. */
+    /**
+     * Internal database identifier.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Parent synchronization execution. */
+    /**
+     * Parent synchronization execution.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "synchronization_id", nullable = false)
     private Synchronization synchronization;
 
-    /** Player processed by the execution. */
+    /**
+     * Player processed by the execution.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
     private Player player;
 
-    /** Final player-level execution status. */
+    /**
+     * Final player-level execution status.
+     */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private SynchronizationStatus status;
 
-    /** Number of Henrik match-history pages retrieved. */
+    /**
+     * Number of Henrik match-history pages retrieved.
+     */
     @Column(name = "pages_fetched", nullable = false)
     private int pagesFetched;
 
-    /** Number of newly imported player-match associations. */
+    /**
+     * Number of newly imported player-match associations.
+     */
     @Column(name = "matches_imported", nullable = false)
     private int matchesImported;
 
-    /** Player-level error description when processing failed. */
+    /**
+     * Player-level error description when processing failed.
+     */
     @Column(name = "error_message", length = 2000)
     private String errorMessage;
 }

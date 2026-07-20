@@ -16,11 +16,15 @@ import java.math.RoundingMode;
 import java.util.Locale;
 import org.springframework.stereotype.Component;
 
-/** Maps Henrik match transport objects to persistence entities. */
+/**
+ * Maps Henrik match transport objects to persistence entities.
+ */
 @Component
 public class HenrikMatchMapper {
 
-    /** Maps shared match metadata to the persisted match entity. */
+    /**
+     * Maps shared match metadata to the persisted match entity.
+     */
     public ValorantMatch toValorantMatch(
         HenrikMatchData source,
         Season season
@@ -52,7 +56,9 @@ public class HenrikMatchMapper {
         return target;
     }
 
-    /** Maps the tracked player's statistics for one persisted match. */
+    /**
+     * Maps the tracked player's statistics for one persisted match.
+     */
     public PlayerMatch toPlayerMatch(
         HenrikMatchData source,
         HenrikMatchPlayer sourcePlayer,

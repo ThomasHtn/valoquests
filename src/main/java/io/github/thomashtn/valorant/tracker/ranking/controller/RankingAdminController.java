@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Exposes the protected ranking-only recalculation operation. */
+/**
+ * Exposes the protected ranking-only recalculation operation.
+ */
 @RestController
 @RequestMapping("/api/admin/rankings")
 @Tag(name = "Administration - Rankings", description = "Manual weekly-ranking maintenance.")
@@ -27,15 +29,25 @@ public class RankingAdminController {
      */
     private final ObjectProvider<RankingRecalculationService> serviceProvider;
 
-    /** @param serviceProvider provider for the future ranking recalculation implementation */
+    /**
+     * @param serviceProvider provider for the future ranking recalculation implementation
+     */
     public RankingAdminController(ObjectProvider<RankingRecalculationService> serviceProvider) {
         this.serviceProvider = serviceProvider;
     }
 
-    /** Recalculates scores and positions without recalculating challenge progress. */
+    /**
+     * Recalculates scores and positions without recalculating challenge progress.
+     */
     @PostMapping("/recalculation")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Recalculate current ranking", description = "Uses stored progress values only and never contacts the Henrik API.")
+    @Operation(
+        summary = "Recalculate the current weekly ranking",
+        description = """
+            Rebuilds points, positions, completed-challenge counters and position variations from
+            stored challenge progress. This operation never contacts the Henrik API.
+            """
+    )
     @ApiResponse(responseCode = "204", description = "Ranking recalculated successfully.")
     public void recalculateRanking() {
         get(serviceProvider, "Ranking recalculation").recalculateCurrentRanking();

@@ -15,7 +15,9 @@ public record HenrikMmrResponse(
     HenrikMmrData data
 ) {
 
-    /** Contains the current competitive state. */
+    /**
+     * Contains the current competitive state.
+     */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikMmrData(
         HenrikCurrentMmr current
@@ -35,7 +37,9 @@ public record HenrikMmrResponse(
         Integer elo
     ) {}
 
-    /** Valorant competitive tier metadata. */
+    /**
+     * Valorant competitive tier metadata.
+     */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikTier(
         Integer id,

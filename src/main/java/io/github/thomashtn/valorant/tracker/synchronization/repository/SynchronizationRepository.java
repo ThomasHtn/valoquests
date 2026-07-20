@@ -4,10 +4,14 @@ import io.github.thomashtn.valorant.tracker.synchronization.entity.Synchronizati
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-/** Provides persistence operations for synchronization executions. */
+/**
+ * Provides persistence operations for synchronization executions.
+ */
 public interface SynchronizationRepository
     extends JpaRepository<Synchronization, Long> {
 
-    /** Returns the most recently started synchronization execution. */
+    /**
+     * Returns the most recently started synchronization execution.
+     */
     Optional<Synchronization> findFirstByOrderByStartedAtDescIdDesc();
 }

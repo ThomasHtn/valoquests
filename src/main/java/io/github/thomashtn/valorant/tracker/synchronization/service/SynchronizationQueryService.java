@@ -18,12 +18,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Provides read-only access to persisted synchronization executions. */
+/**
+ * Provides read-only access to persisted synchronization executions.
+ */
 @Service
 @Transactional(readOnly = true)
 public class SynchronizationQueryService {
 
-    /** Maximum page size accepted by the administrative history endpoint. */
+    /**
+     * Maximum page size accepted by the administrative history endpoint.
+     */
     private static final int MAXIMUM_PAGE_SIZE = 100;
 
     /**
@@ -39,7 +43,9 @@ public class SynchronizationQueryService {
      */
     private final PlayerRepository playerRepository;
 
-    /** Creates the synchronization query service. */
+    /**
+     * Creates the synchronization query service.
+     */
     public SynchronizationQueryService(
         SynchronizationRepository synchronizationRepository,
         SynchronizationPlayerResultRepository playerResultRepository,
@@ -50,7 +56,9 @@ public class SynchronizationQueryService {
         this.playerRepository = playerRepository;
     }
 
-    /** Returns the most recently started synchronization execution. */
+    /**
+     * Returns the most recently started synchronization execution.
+     */
     public SynchronizationResponse findLatest() {
         Synchronization synchronization = synchronizationRepository
             .findFirstByOrderByStartedAtDescIdDesc()
@@ -64,7 +72,9 @@ public class SynchronizationQueryService {
         );
     }
 
-    /** Returns synchronization history ordered from newest to oldest. */
+    /**
+     * Returns synchronization history ordered from newest to oldest.
+     */
     public PageResponse<SynchronizationResponse> findHistory(
         int page,
         int size
@@ -94,7 +104,9 @@ public class SynchronizationQueryService {
         );
     }
 
-    /** Returns one execution and every persisted per-player result. */
+    /**
+     * Returns one execution and every persisted per-player result.
+     */
     public SynchronizationDetailsResponse findById(long synchronizationId) {
         Synchronization synchronization = synchronizationRepository
             .findById(synchronizationId)
@@ -135,7 +147,9 @@ public class SynchronizationQueryService {
         );
     }
 
-    /** Maps one persisted execution to its summary API representation. */
+    /**
+     * Maps one persisted execution to its summary API representation.
+     */
     private SynchronizationResponse toResponse(
         Synchronization synchronization,
         Instant lastSuccessfulSynchronizationAt
@@ -156,7 +170,9 @@ public class SynchronizationQueryService {
         );
     }
 
-    /** Returns the latest successful synchronization timestamp among players. */
+    /**
+     * Returns the latest successful synchronization timestamp among players.
+     */
     private Instant findLatestSuccessfulPlayerSynchronizationAt() {
         return playerRepository.findAll().stream()
             .map(Player::getLastSuccessfulSynchronizationAt)
@@ -165,7 +181,9 @@ public class SynchronizationQueryService {
             .orElse(null);
     }
 
-    /** Validates public pagination parameters before creating a page request. */
+    /**
+     * Validates public pagination parameters before creating a page request.
+     */
     private void validatePagination(int page, int size) {
         if (page < 0) {
             throw new IllegalArgumentException(

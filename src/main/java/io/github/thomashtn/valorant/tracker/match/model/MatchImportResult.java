@@ -15,7 +15,9 @@ public record MatchImportResult(
     int rejected
 ) {
 
-    /** Validates all counters. */
+    /**
+     * Validates all counters.
+     */
     public MatchImportResult {
         if (received < 0 || imported < 0 || alreadyKnown < 0 || rejected < 0) {
             throw new IllegalArgumentException(

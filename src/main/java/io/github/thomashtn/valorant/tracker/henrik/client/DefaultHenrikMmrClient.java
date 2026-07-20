@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-/** WebClient implementation of Henrik's Valorant MMR v3 endpoint. */
+/**
+ * WebClient implementation of Henrik's Valorant MMR v3 endpoint.
+ */
 @Component
 public class DefaultHenrikMmrClient implements HenrikMmrClient {
 

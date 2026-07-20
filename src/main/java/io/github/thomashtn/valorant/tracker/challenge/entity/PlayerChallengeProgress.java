@@ -18,7 +18,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Stores a player's calculated progress for one weekly challenge. */
+/**
+ * Stores a player's calculated progress for one weekly challenge.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,38 +34,54 @@ import lombok.Setter;
 )
 public class PlayerChallengeProgress extends AuditableEntity {
 
-    /** Internal database identifier. */
+    /**
+     * Internal database identifier.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Player whose progress is represented. */
+    /**
+     * Player whose progress is represented.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
     private Player player;
 
-    /** Weekly challenge being evaluated. */
+    /**
+     * Weekly challenge being evaluated.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "weekly_challenge_id", nullable = false)
     private WeeklyChallenge weeklyChallenge;
 
-    /** Current calculated metric value. */
+    /**
+     * Current calculated metric value.
+     */
     @Column(name = "current_value", nullable = false, precision = 14, scale = 4)
     private BigDecimal currentValue = BigDecimal.ZERO;
 
-    /** Target metric value copied from the selected challenge rule. */
+    /**
+     * Target metric value copied from the selected challenge rule.
+     */
     @Column(name = "target_value", nullable = false, precision = 14, scale = 4)
     private BigDecimal targetValue;
 
-    /** Whether the target has been reached. */
+    /**
+     * Whether the target has been reached.
+     */
     @Column(nullable = false)
     private boolean completed;
 
-    /** First timestamp at which the challenge was completed. */
+    /**
+     * First timestamp at which the challenge was completed.
+     */
     @Column(name = "completed_at")
     private Instant completedAt;
 
-    /** Timestamp of the latest progress calculation. */
+    /**
+     * Timestamp of the latest progress calculation.
+     */
     @Column(name = "calculated_at", nullable = false)
     private Instant calculatedAt;
 }

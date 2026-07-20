@@ -17,7 +17,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    /** Name referenced by {@code @SecurityRequirement} annotations. */
+    /**
+     * Name referenced by {@code @SecurityRequirement} annotations.
+     */
     public static final String ADMIN_KEY_SECURITY_SCHEME = "adminKey";
 
     /**

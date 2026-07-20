@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Exposes the protected challenge-progress maintenance operation. */
+/**
+ * Exposes the protected challenge-progress maintenance operation.
+ */
 @RestController
 @RequestMapping("/api/admin/challenges/progress")
 @Tag(name = "Administration - Challenges", description = "Manual challenge-progress maintenance.")
@@ -27,15 +29,26 @@ public class ChallengeAdminController {
      */
     private final ObjectProvider<ChallengeRecalculationService> serviceProvider;
 
-    /** @param serviceProvider provider for the future recalculation implementation */
+    /**
+     * @param serviceProvider provider for the future recalculation implementation
+     */
     public ChallengeAdminController(ObjectProvider<ChallengeRecalculationService> serviceProvider) {
         this.serviceProvider = serviceProvider;
     }
 
-    /** Recalculates progress exclusively from matches already stored in PostgreSQL. */
+    /**
+     * Recalculates progress exclusively from matches already stored in PostgreSQL.
+     */
     @PostMapping("/recalculation")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Recalculate current challenge progress", description = "Does not call Henrik. Recalculates active-week progress and then refreshes the ranking.")
+    @Operation(
+        summary = "Recalculate current challenge progress",
+        description = """
+            Rebuilds the active-week challenge progress from matches already stored in PostgreSQL.
+            This operation does not call the Henrik API and refreshes the weekly ranking after the
+            progress calculation completes.
+            """
+    )
     @ApiResponse(responseCode = "204", description = "Progress and ranking recalculated successfully.")
     public void recalculateChallengeProgress() {
         get(serviceProvider, "Challenge progress recalculation").recalculateCurrentWeekProgress();

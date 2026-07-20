@@ -38,7 +38,9 @@ public class DefaultSynchronizationCommandService
     private static final Logger LOGGER =
         LoggerFactory.getLogger(DefaultSynchronizationCommandService.class);
 
-    /** Maximum length persisted for aggregated synchronization errors. */
+    /**
+     * Maximum length persisted for aggregated synchronization errors.
+     */
     private static final int MAXIMUM_ERROR_MESSAGE_LENGTH = 2_000;
 
     /**
@@ -46,7 +48,9 @@ public class DefaultSynchronizationCommandService
      */
     private final PlayerSynchronizationService playerSynchronizationService;
 
-    /** Service used to run deep player synchronizations. */
+    /**
+     * Service used to run deep player synchronizations.
+     */
     private final PlayerDeepSynchronizationService
         playerDeepSynchronizationService;
     /**
@@ -583,7 +587,9 @@ public class DefaultSynchronizationCommandService
         }
     }
 
-    /** Persists the outcome of one player within a synchronization. */
+    /**
+     * Persists the outcome of one player within a synchronization.
+     */
     private void savePlayerResult(
         Synchronization synchronization,
         Player player,

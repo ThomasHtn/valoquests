@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Exposes the active ranking and finalized weekly ranking history. */
+/**
+ * Exposes the active ranking and finalized weekly ranking history.
+ */
 @RestController
 @RequestMapping(value = "/api/rankings", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Rankings", description = "Current weekly standings and finalized historical standings.")
@@ -28,23 +30,41 @@ public class RankingController {
      */
     private final ObjectProvider<RankingQueryService> serviceProvider;
 
-    /** @param serviceProvider provider for the future ranking query implementation */
+    /**
+     * @param serviceProvider provider for the future ranking query implementation
+     */
     public RankingController(ObjectProvider<RankingQueryService> serviceProvider) {
         this.serviceProvider = serviceProvider;
     }
 
-    /** @return active-week ranking with exact progress for every player and challenge */
+    /**
+     * @return active-week ranking with exact progress for every player and challenge
+     */
     @GetMapping("/current")
-    @Operation(summary = "Get current weekly ranking", description = "Returns player positions, points and exact per-challenge progress for the active week.")
+    @Operation(
+        summary = "Get the current weekly ranking",
+        description = """
+            Returns each player's current position, score, completed-challenge count and exact
+            progress toward every challenge selected for the active calendar week.
+            """
+    )
     @ApiResponse(responseCode = "200", description = "Current ranking returned successfully.")
     @ApiResponse(responseCode = "501", description = "Ranking query service has not been implemented yet.")
     public CurrentRankingResponse getCurrentRanking() {
         return get(serviceProvider, "Current ranking consultation").findCurrent();
     }
 
-    /** @return one page of finalized weekly rankings */
+    /**
+     * @return one page of finalized weekly rankings
+     */
     @GetMapping("/history")
-    @Operation(summary = "Get ranking history", description = "Returns past finalized weeks ordered from the most recent to the oldest.")
+    @Operation(
+        summary = "Get finalized weekly rankings",
+        description = """
+            Returns a page of immutable rankings for completed calendar weeks, ordered from the most
+            recent week to the oldest one. Pagination applies to weeks rather than players.
+            """
+    )
     @ApiResponse(responseCode = "200", description = "Ranking history returned successfully.")
     @ApiResponse(responseCode = "400", description = "Pagination values are invalid.")
     @ApiResponse(responseCode = "501", description = "Ranking query service has not been implemented yet.")

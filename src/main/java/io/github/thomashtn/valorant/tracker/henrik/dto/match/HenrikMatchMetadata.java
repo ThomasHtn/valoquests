@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 
-/** Contains the general metadata of a Valorant match returned by Henrik. */
+/**
+ * Contains the general metadata of a Valorant match returned by Henrik.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HenrikMatchMetadata(
     @JsonProperty("match_id") String matchId,

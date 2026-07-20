@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Exposes read-only operations for active weekly challenges. */
+/**
+ * Exposes read-only operations for active weekly challenges.
+ */
 @RestController
 @RequestMapping(value = "/api/challenges", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Challenges", description = "Active weekly challenge consultation.")
@@ -41,7 +43,11 @@ public class ChallengeController {
     @GetMapping("/current")
     @Operation(
         summary = "Get current weekly challenges",
-        description = "Returns active challenges and global completion values. Individual player progress is intentionally excluded."
+        description = """
+            Returns the challenges selected for the active calendar week with collective completion
+            values. Individual player progress is deliberately excluded and is available from the
+            current ranking endpoint.
+            """
     )
     @ApiResponse(responseCode = "200", description = "Current challenges returned successfully.")
     @ApiResponse(responseCode = "501", description = "Challenge query service has not been implemented yet.")

@@ -28,32 +28,50 @@ import org.springframework.stereotype.Service;
 @Service
 public class PlayerDeepSynchronizationService {
 
-    /** Logger used to report synchronization progress and stop reasons. */
+    /**
+     * Logger used to report synchronization progress and stop reasons.
+     */
     private static final Logger LOGGER =
         LoggerFactory.getLogger(PlayerDeepSynchronizationService.class);
 
-    /** Maximum number of matches requested from Henrik per page. */
+    /**
+     * Maximum number of matches requested from Henrik per page.
+     */
     private static final int PAGE_SIZE = 10;
 
-    /** Safety guard preventing an accidental infinite pagination loop. */
+    /**
+     * Safety guard preventing an accidental infinite pagination loop.
+     */
     private static final int MAXIMUM_PAGE_COUNT = 1_000;
 
-    /** Repository used to load and persist tracked players. */
+    /**
+     * Repository used to load and persist tracked players.
+     */
     private final PlayerRepository playerRepository;
 
-    /** Service used to resolve a missing Riot PUUID before synchronization. */
+    /**
+     * Service used to resolve a missing Riot PUUID before synchronization.
+     */
     private final PlayerAccountResolutionService accountResolutionService;
 
-    /** Henrik client used to retrieve paginated match history. */
+    /**
+     * Henrik client used to retrieve paginated match history.
+     */
     private final HenrikMatchClient matchClient;
 
-    /** Service responsible for idempotent match persistence. */
+    /**
+     * Service responsible for idempotent match persistence.
+     */
     private final MatchImportService matchImportService;
 
-    /** Typed application configuration used to select the import scope. */
+    /**
+     * Typed application configuration used to select the import scope.
+     */
     private final ApplicationProperties applicationProperties;
 
-    /** Clock used to produce deterministic completion timestamps. */
+    /**
+     * Clock used to produce deterministic completion timestamps.
+     */
     private final Clock clock;
 
     /**
@@ -313,7 +331,8 @@ public class PlayerDeepSynchronizationService {
         int importedOnPage
     ) {
         LOGGER.info(
-            "Imported deep synchronization page for player {}: page={} start={} received={} eligible={} imported={} totalImported={} season={}",
+            "Imported deep synchronization page for player {}: page={} start={} received={} "
+                + "eligible={} imported={} totalImported={} season={}",
             player.getId(),
             state.currentPageNumber(),
             state.startOffset(),
@@ -441,58 +460,86 @@ public class PlayerDeepSynchronizationService {
         return value != null && !value.isBlank();
     }
 
-    /** Aggregate result produced by the pagination loop. */
+    /**
+     * Aggregate result produced by the pagination loop.
+     */
     private record DeepImportSummary(int pagesFetched, int matchesImported) {}
 
-    /** Mutable state kept private to one deep-synchronization execution. */
+    /**
+     * Mutable state kept private to one deep-synchronization execution.
+     */
     private static final class DeepPaginationState {
 
-        /** Offset sent to Henrik for the next request. */
+        /**
+         * Offset sent to Henrik for the next request.
+         */
         private int startOffset;
 
-        /** Number of non-empty pages fetched so far. */
+        /**
+         * Number of non-empty pages fetched so far.
+         */
         private int pagesFetched;
 
-        /** Total number of newly imported matches. */
+        /**
+         * Total number of newly imported matches.
+         */
         private int matchesImported;
 
-        /** Season retained when the scope is {@code CURRENT_SEASON}. */
+        /**
+         * Season retained when the scope is {@code CURRENT_SEASON}.
+         */
         private String currentSeasonId;
 
-        /** Indicates whether the pagination loop must stop. */
+        /**
+         * Indicates whether the pagination loop must stop.
+         */
         private boolean complete;
 
-        /** @return offset used for the next Henrik request */
+        /**
+         * @return offset used for the next Henrik request
+         */
         private int startOffset() {
             return startOffset;
         }
 
-        /** @return number of non-empty pages fetched */
+        /**
+         * @return number of non-empty pages fetched
+         */
         private int pagesFetched() {
             return pagesFetched;
         }
 
-        /** @return total number of newly imported matches */
+        /**
+         * @return total number of newly imported matches
+         */
         private int matchesImported() {
             return matchesImported;
         }
 
-        /** @return current season identifier, or {@code null} when unresolved */
+        /**
+         * @return current season identifier, or {@code null} when unresolved
+         */
         private String currentSeasonId() {
             return currentSeasonId;
         }
 
-        /** @return zero-based page number used in logs */
+        /**
+         * @return zero-based page number used in logs
+         */
         private int currentPageNumber() {
             return Math.max(0, pagesFetched - 1);
         }
 
-        /** @return whether pagination has completed */
+        /**
+         * @return whether pagination has completed
+         */
         private boolean isComplete() {
             return complete;
         }
 
-        /** Increments the fetched-page counter. */
+        /**
+         * Increments the fetched-page counter.
+         */
         private void incrementPagesFetched() {
             pagesFetched++;
         }
@@ -524,7 +571,9 @@ public class PlayerDeepSynchronizationService {
             currentSeasonId = seasonId;
         }
 
-        /** Marks the pagination loop as complete. */
+        /**
+         * Marks the pagination loop as complete.
+         */
         private void complete() {
             complete = true;
         }

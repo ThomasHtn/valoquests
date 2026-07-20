@@ -15,7 +15,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 public class AdminApiKeyFilter extends OncePerRequestFilter {
 
-    /** Header expected on every administrative request. */
+    /**
+     * Header expected on every administrative request.
+     */
     public static final String HEADER_NAME = "X-Admin-Key";
 
     /**

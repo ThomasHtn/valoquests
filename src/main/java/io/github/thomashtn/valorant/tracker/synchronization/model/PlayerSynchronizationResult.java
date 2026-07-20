@@ -18,7 +18,9 @@ public record PlayerSynchronizationResult(
     Instant completedAt
 ) {
 
-    /** Validates the immutable result. */
+    /**
+     * Validates the immutable result.
+     */
     public PlayerSynchronizationResult {
         if (player == null) {
             throw new IllegalArgumentException("player must not be null");

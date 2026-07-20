@@ -1,5 +1,7 @@
 package io.github.thomashtn.valorant.tracker.synchronization.controller;
 
+import static io.github.thomashtn.valorant.tracker.shared.config.OpenApiConfig.ADMIN_KEY_SECURITY_SCHEME;
+
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationDetailsResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
@@ -17,8 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import static io.github.thomashtn.valorant.tracker.shared.config.OpenApiConfig.ADMIN_KEY_SECURITY_SCHEME;
 
 /**
  * Exposes protected synchronization commands and monitoring endpoints.
@@ -39,6 +39,7 @@ public class SynchronizationAdminController {
      * Application service used to execute synchronization commands.
      */
     private final SynchronizationCommandService synchronizationService;
+
     /**
      * Application service used to query synchronization history.
      */
@@ -67,8 +68,10 @@ public class SynchronizationAdminController {
     @Operation(
         summary = "Synchronize all active players",
         description = """
-            Resolves account data, updates current ranks and imports new recent
-            matches for every active tracked player.
+            Runs the standard synchronization for every active tracked player. The operation resolves
+            missing Riot account identifiers, refreshes competitive ranks, imports recent completed
+            matches idempotently and records one global result with a result per player. A failure for
+            one player does not prevent the remaining players from being processed.
             """
     )
     @ApiResponse(
@@ -97,8 +100,9 @@ public class SynchronizationAdminController {
     @Operation(
         summary = "Synchronize one player",
         description = """
-            Resolves the Riot account, updates the current competitive rank,
-            imports recent completed matches and records the synchronization.
+            Runs the standard synchronization for one tracked player. The operation resolves the Riot
+            account when necessary, refreshes the competitive rank, imports recent completed matches
+            idempotently and stores the execution result.
             """
     )
     @ApiResponse(
@@ -145,8 +149,9 @@ public class SynchronizationAdminController {
     @Operation(
         summary = "Deep synchronize all players",
         description = """
-            Retrieves every match-history page currently available through Henrik
-            for all tracked players. One player failure does not stop the others.
+            Runs the configured deep-synchronization scope for every active player. Match-history pages
+            are requested sequentially, imported idempotently and stopped according to the configured
+            season scope. A failure for one player does not stop the remaining players.
             """
     )
     public SynchronizationResponse requestDeepSynchronizationForAllPlayers() {
@@ -163,8 +168,9 @@ public class SynchronizationAdminController {
     @Operation(
         summary = "Deep synchronize one player",
         description = """
-            Retrieves every match-history page currently available through Henrik
-            for one tracked player.
+            Runs a deep synchronization for one tracked player. The service retrieves match-history
+            pages sequentially, respects Henrik rate limiting, imports only missing completed matches
+            and stops according to the configured current-season or all-history scope.
             """
     )
     public SynchronizationResponse requestDeepSynchronizationForPlayer(
@@ -187,8 +193,8 @@ public class SynchronizationAdminController {
     @Operation(
         summary = "Get latest synchronization",
         description = """
-            Returns the last attempt and the timestamp of the last successful
-            synchronization.
+            Returns the most recently created synchronization execution, including its type, trigger,
+            status, counters, error message and the latest successful synchronization timestamp.
             """
     )
     public SynchronizationResponse getLatestSynchronization() {
@@ -205,7 +211,10 @@ public class SynchronizationAdminController {
     @GetMapping("/synchronizations")
     @Operation(
         summary = "Get synchronization history",
-        description = "Returns automatic and manual synchronization executions."
+        description = """
+            Returns a page of manual and scheduled synchronization executions ordered from newest to
+            oldest. Each item contains execution status, processed-player counters and imported matches.
+            """
     )
     public PageResponse<SynchronizationResponse> getSynchronizationHistory(
         @Parameter(
@@ -233,8 +242,8 @@ public class SynchronizationAdminController {
     @Operation(
         summary = "Get synchronization details",
         description = """
-            Returns global synchronization data and one result entry for every
-            processed player.
+            Returns one synchronization execution with its global counters and one detailed result for
+            every processed player, including imported matches and any failure message.
             """
     )
     public SynchronizationDetailsResponse getSynchronizationDetails(

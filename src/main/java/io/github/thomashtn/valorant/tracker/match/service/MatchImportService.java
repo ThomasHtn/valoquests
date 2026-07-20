@@ -18,7 +18,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Imports completed Henrik matches idempotently for one tracked player. */
+/**
+ * Imports completed Henrik matches idempotently for one tracked player.
+ */
 @Service
 public class MatchImportService {
 
@@ -45,7 +47,9 @@ public class MatchImportService {
      */
     private final HenrikMatchMapper mapper;
 
-    /** Creates the idempotent match import service. */
+    /**
+     * Creates the idempotent match import service.
+     */
     public MatchImportService(
         ValorantMatchRepository matchRepository,
         PlayerMatchRepository playerMatchRepository,
@@ -136,7 +140,9 @@ public class MatchImportService {
         return result;
     }
 
-    /** Imports one match and classifies the processing outcome. */
+    /**
+     * Imports one match and classifies the processing outcome.
+     */
     private ImportOutcome importMatch(
         Player player,
         HenrikMatchData source
@@ -182,7 +188,9 @@ public class MatchImportService {
         return ImportOutcome.IMPORTED;
     }
 
-    /** Validates the minimum payload required to persist a match. */
+    /**
+     * Validates the minimum payload required to persist a match.
+     */
     private boolean isImportable(HenrikMatchData source) {
         if (source == null || source.metadata() == null) {
             return false;
@@ -198,7 +206,9 @@ public class MatchImportService {
             && !metadata.season().id().isBlank();
     }
 
-    /** Finds the tracked player in the Henrik match participant list. */
+    /**
+     * Finds the tracked player in the Henrik match participant list.
+     */
     private HenrikMatchPlayer findTrackedPlayer(
         Player player,
         HenrikMatchData source
@@ -215,7 +225,9 @@ public class MatchImportService {
             .orElse(null);
     }
 
-    /** Creates and persists a match that is not already stored. */
+    /**
+     * Creates and persists a match that is not already stored.
+     */
     private ValorantMatch createMatch(HenrikMatchData source) {
         Season season = seasonResolutionService.resolve(
             source.metadata().season()
@@ -225,7 +237,9 @@ public class MatchImportService {
         );
     }
 
-    /** Internal outcome used to build import counters. */
+    /**
+     * Internal outcome used to build import counters.
+     */
     private enum ImportOutcome {
         IMPORTED,
         ALREADY_KNOWN,

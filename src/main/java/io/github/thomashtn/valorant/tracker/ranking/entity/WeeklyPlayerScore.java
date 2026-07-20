@@ -25,7 +25,13 @@ import lombok.NoArgsConstructor;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "weekly_player_score", uniqueConstraints = @UniqueConstraint(name = "uk_weekly_score_player_week", columnNames = {"player_id", "week_start"}))
+@Table(
+    name = "weekly_player_score",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_weekly_score_player_week",
+        columnNames = {"player_id", "week_start"}
+    )
+)
 public class WeeklyPlayerScore extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

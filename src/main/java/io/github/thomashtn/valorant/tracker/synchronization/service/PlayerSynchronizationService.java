@@ -18,7 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-/** Orchestrates the standard synchronization of one tracked player. */
+/**
+ * Orchestrates the standard synchronization of one tracked player.
+ */
 @Service
 public class PlayerSynchronizationService {
 
@@ -28,10 +30,14 @@ public class PlayerSynchronizationService {
     private static final Logger LOGGER =
         LoggerFactory.getLogger(PlayerSynchronizationService.class);
 
-    /** Number of matches requested from Henrik per HTTP call. */
+    /**
+     * Number of matches requested from Henrik per HTTP call.
+     */
     private static final int MATCH_PAGE_SIZE = 10;
 
-    /** Safety guard preventing an infinite loop if Henrik repeats pages. */
+    /**
+     * Safety guard preventing an infinite loop if Henrik repeats pages.
+     */
     private static final int MAXIMUM_PAGE_COUNT = 100;
 
     /**
@@ -130,7 +136,9 @@ public class PlayerSynchronizationService {
         );
     }
 
-    /** Imports consecutive match-history pages until existing data is reached. */
+    /**
+     * Imports consecutive match-history pages until existing data is reached.
+     */
     private MatchImportSummary importRecentMatches(Player player) {
         int startOffset = 0;
         int pagesFetched = 0;
@@ -154,7 +162,8 @@ public class PlayerSynchronizationService {
                 totalImported += importResult.imported();
 
                 LOGGER.info(
-                    "Imported Henrik match page for player {}: page={} start={} requested={} received={} imported={} alreadyKnown={} rejected={} totalImported={}",
+                    "Imported Henrik match page for player {}: page={} start={} requested={} received={} "
+                        + "imported={} alreadyKnown={} rejected={} totalImported={}",
                     player.getId(), pagesFetched, startOffset, MATCH_PAGE_SIZE,
                     received, importResult.imported(), importResult.alreadyKnown(),
                     importResult.rejected(), totalImported
@@ -185,7 +194,9 @@ public class PlayerSynchronizationService {
         return new MatchImportSummary(pagesFetched, totalImported);
     }
 
-    /** Logs the reason why standard match pagination stopped. */
+    /**
+     * Logs the reason why standard match pagination stopped.
+     */
     private void logStandardStop(
         Player player,
         int pageNumber,
@@ -198,7 +209,9 @@ public class PlayerSynchronizationService {
         );
     }
 
-    /** Internal pagination result kept private to the orchestration service. */
+    /**
+     * Internal pagination result kept private to the orchestration service.
+     */
     private record MatchImportSummary(int pagesFetched, int matchesImported) {
     }
 }
