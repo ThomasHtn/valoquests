@@ -6,6 +6,7 @@ import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.entity.Synchronization;
+import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerDeepSynchronizationResult;
 import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerSynchronizationResult;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
@@ -306,6 +307,73 @@ class DefaultSynchronizationCommandServiceTest {
             synchronizationRepository,
             times(2)
         ).save(any(Synchronization.class));
+    }
+
+    /**
+     * Verifies that the deep single-player command uses the shared orchestration.
+     */
+    @Test
+    void shouldRecordCompletedDeepPlayerSynchronization() {
+        Player player = player(4L);
+
+        when(playerDeepSynchronizationService.synchronize(4L))
+            .thenReturn(
+                new PlayerDeepSynchronizationResult(
+                    player,
+                    6,
+                    24,
+                    PLAYER_TWO_COMPLETED_AT
+                )
+            );
+
+        SynchronizationResponse response =
+            service.requestDeepSynchronizationForPlayer(4L);
+
+        assertThat(response.type()).isEqualTo(SynchronizationType.DEEP);
+        assertThat(response.status())
+            .isEqualTo(SynchronizationStatus.COMPLETED);
+        assertThat(response.playersProcessed()).isEqualTo(1);
+        assertThat(response.failureCount()).isZero();
+        assertThat(response.matchesImported()).isEqualTo(24);
+        assertThat(response.lastSuccessfulSynchronizationAt())
+            .isEqualTo(PLAYER_TWO_COMPLETED_AT);
+    }
+
+    /**
+     * Verifies that deep batch failures do not interrupt later players.
+     */
+    @Test
+    void shouldReturnPartialStatusForDeepSynchronization() {
+        Player firstPlayer = player(1L);
+        Player secondPlayer = player(2L);
+
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+            .thenReturn(List.of(firstPlayer, secondPlayer));
+        when(playerDeepSynchronizationService.synchronize(1L))
+            .thenThrow(new IllegalStateException());
+        when(playerDeepSynchronizationService.synchronize(2L))
+            .thenReturn(
+                new PlayerDeepSynchronizationResult(
+                    secondPlayer,
+                    3,
+                    12,
+                    PLAYER_TWO_COMPLETED_AT
+                )
+            );
+
+        SynchronizationResponse response =
+            service.requestDeepSynchronizationForAllPlayers();
+
+        assertThat(response.type()).isEqualTo(SynchronizationType.DEEP);
+        assertThat(response.status())
+            .isEqualTo(SynchronizationStatus.PARTIAL);
+        assertThat(response.failureCount()).isEqualTo(1);
+        assertThat(response.matchesImported()).isEqualTo(12);
+        assertThat(response.errorMessage())
+            .contains("Player 1")
+            .contains("IllegalStateException");
+
+        verify(playerDeepSynchronizationService).synchronize(2L);
     }
 
     /**

@@ -6,6 +6,7 @@ import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valorant.tracker.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -22,6 +23,7 @@ import java.util.Objects;
  * persistence to avoid one lookup and one write per challenge.</p>
  */
 @Service
+@Transactional
 public class PlayerChallengeProgressPersistenceService {
 
     /**

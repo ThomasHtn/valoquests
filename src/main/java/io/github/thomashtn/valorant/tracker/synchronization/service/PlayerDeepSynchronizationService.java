@@ -19,59 +19,40 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
- * Imports a player's match history using Henrik pagination.
+ * Imports a player's Henrik match history page by page.
  *
- * <p>By default, only matches belonging to the most recent season are
- * imported. The service can also be configured to import the complete
- * history exposed by Henrik.</p>
+ * <p>The service orchestrates account resolution, pagination and completion persistence. Match
+ * storage remains delegated to {@link MatchImportService}, which preserves import idempotence.</p>
  */
 @Service
 public class PlayerDeepSynchronizationService {
 
-    /**
-     * Logger used to report synchronization progress and stop reasons.
-     */
+    /** Logger used to report synchronization progress and stop decisions. */
     private static final Logger LOGGER =
         LoggerFactory.getLogger(PlayerDeepSynchronizationService.class);
 
-    /**
-     * Maximum number of matches requested from Henrik per page.
-     */
+    /** Maximum number of matches requested from Henrik per page. */
     private static final int PAGE_SIZE = 10;
 
-    /**
-     * Safety guard preventing an accidental infinite pagination loop.
-     */
+    /** Safety guard preventing an accidental infinite pagination loop. */
     private static final int MAXIMUM_PAGE_COUNT = 1_000;
 
-    /**
-     * Repository used to load and persist tracked players.
-     */
+    /** Repository used to load and persist tracked players. */
     private final PlayerRepository playerRepository;
 
-    /**
-     * Service used to resolve a missing Riot PUUID before synchronization.
-     */
+    /** Service used to resolve a missing Riot PUUID before synchronization. */
     private final PlayerAccountResolutionService accountResolutionService;
 
-    /**
-     * Henrik client used to retrieve paginated match history.
-     */
+    /** Henrik client used to retrieve paginated match history. */
     private final HenrikMatchClient matchClient;
 
-    /**
-     * Service responsible for idempotent match persistence.
-     */
+    /** Service responsible for idempotent match persistence. */
     private final MatchImportService matchImportService;
 
-    /**
-     * Typed application configuration used to select the import scope.
-     */
+    /** Typed application configuration used to select the import scope. */
     private final ApplicationProperties applicationProperties;
 
-    /**
-     * Clock used to produce deterministic completion timestamps.
-     */
+    /** Clock used to produce deterministic completion timestamps. */
     private final Clock clock;
 
     /**
@@ -107,18 +88,18 @@ public class PlayerDeepSynchronizationService {
      * @return completed deep-synchronization result
      */
     public PlayerDeepSynchronizationResult synchronize(long playerId) {
-        Player resolvedPlayer = resolvePlayer(playerId);
+        Player player = resolvePlayer(playerId);
         DeepSynchronizationScope scope = resolveScope();
 
         LOGGER.info(
             "Starting deep synchronization for player {} with scope {}",
-            resolvedPlayer.getId(),
+            player.getId(),
             scope
         );
 
-        DeepImportSummary summary = importHistory(resolvedPlayer, scope);
+        DeepImportSummary summary = importHistory(player, scope);
         Instant completedAt = clock.instant();
-        Player savedPlayer = saveCompletion(resolvedPlayer, completedAt);
+        Player savedPlayer = saveCompletion(player, completedAt);
 
         LOGGER.info(
             "Completed deep synchronization for player {}: pagesFetched={} matchesImported={}",
@@ -153,240 +134,76 @@ public class PlayerDeepSynchronizationService {
      * @return active synchronization scope
      */
     private DeepSynchronizationScope resolveScope() {
-        return applicationProperties
-            .scheduling()
-            .deepSynchronizationScope();
+        return applicationProperties.scheduling().deepSynchronizationScope();
     }
 
     /**
-     * Imports all eligible Henrik pages for a player.
+     * Imports eligible pages until Henrik returns no more useful data.
      *
      * @param player resolved tracked player
      * @param scope configured import scope
      * @return aggregate pagination result
      */
-    private DeepImportSummary importHistory(
-        Player player,
-        DeepSynchronizationScope scope
-    ) {
-        DeepPaginationState state = new DeepPaginationState();
+    private DeepImportSummary importHistory(Player player, DeepSynchronizationScope scope) {
+        DeepImportSummary summary = DeepImportSummary.empty();
+        String currentSeasonId = null;
+        int startOffset = 0;
 
-        while (!state.isComplete()) {
-            verifyMaximumPageCount(state.pagesFetched());
-            processNextPage(player, scope, state);
+        for (int pageNumber = 0; pageNumber < MAXIMUM_PAGE_COUNT; pageNumber++) {
+            HenrikMatchHistoryResponse response = fetchPage(player, startOffset);
+            List<HenrikMatchData> receivedMatches = response.data();
+
+            if (receivedMatches.isEmpty()) {
+                logStop(player, pageNumber, startOffset, "empty-page", currentSeasonId);
+                return summary;
+            }
+
+            currentSeasonId = resolveCurrentSeasonId(scope, currentSeasonId, receivedMatches);
+            PageImportResult pageResult = importPage(player, response, scope, currentSeasonId);
+            summary = summary.addPage(pageResult.importedMatchCount());
+
+            logPage(player, pageNumber, startOffset, receivedMatches.size(), pageResult, summary, currentSeasonId);
+
+            String stopReason = resolveStopReason(receivedMatches, scope, currentSeasonId);
+            if (stopReason != null) {
+                logStop(player, pageNumber, startOffset, stopReason, currentSeasonId);
+                return summary;
+            }
+
+            startOffset += receivedMatches.size();
         }
 
-        return new DeepImportSummary(
-            state.pagesFetched(),
-            state.matchesImported()
-        );
+        throw new IllegalStateException("Deep synchronization exceeded the maximum page count");
     }
 
     /**
-     * Fetches, filters and imports the next Henrik page.
+     * Retrieves one Henrik page for the resolved player.
      *
-     * @param player resolved tracked player
-     * @param scope configured import scope
-     * @param state mutable pagination state
+     * @param player synchronized player
+     * @param startOffset item offset sent to Henrik
+     * @return Henrik match-history response
      */
-    private void processNextPage(
-        Player player,
-        DeepSynchronizationScope scope,
-        DeepPaginationState state
-    ) {
-        HenrikMatchHistoryResponse response = matchClient.getMatches(
-            player.getRiotPuuid(),
-            state.startOffset(),
-            PAGE_SIZE
-        );
-        List<HenrikMatchData> receivedMatches = response.data();
-
-        if (receivedMatches.isEmpty()) {
-            stopPagination(player, state, "empty-page");
-            return;
-        }
-
-        state.incrementPagesFetched();
-        initializeCurrentSeason(scope, state, receivedMatches);
-
-        List<HenrikMatchData> eligibleMatches = filterMatchesByScope(
-            receivedMatches,
-            scope,
-            state.currentSeasonId()
-        );
-        int importedOnPage = importEligibleMatches(
-            player,
-            response,
-            eligibleMatches
-        );
-        state.addImportedMatches(importedOnPage);
-
-        logImportedPage(
-            player,
-            state,
-            receivedMatches.size(),
-            eligibleMatches.size(),
-            importedOnPage
-        );
-        updatePaginationState(player, scope, state, receivedMatches);
+    private HenrikMatchHistoryResponse fetchPage(Player player, int startOffset) {
+        return matchClient.getMatches(player.getRiotPuuid(), startOffset, PAGE_SIZE);
     }
 
     /**
-     * Initializes the current season from the first valid page when required.
+     * Resolves the season retained by current-season synchronization.
      *
      * @param scope configured import scope
-     * @param state mutable pagination state
+     * @param currentSeasonId previously resolved season identifier
      * @param matches current Henrik page
+     * @return retained season identifier, or {@code null} for all-history mode
      */
-    private void initializeCurrentSeason(
+    private String resolveCurrentSeasonId(
         DeepSynchronizationScope scope,
-        DeepPaginationState state,
+        String currentSeasonId,
         List<HenrikMatchData> matches
     ) {
-        if (scope == DeepSynchronizationScope.CURRENT_SEASON
-            && state.currentSeasonId() == null) {
-            state.setCurrentSeasonId(resolveMostRecentSeasonId(matches));
-        }
-    }
-
-    /**
-     * Updates pagination after one non-empty Henrik page.
-     *
-     * @param player synchronized player
-     * @param scope configured import scope
-     * @param state mutable pagination state
-     * @param matches current Henrik page
-     */
-    private void updatePaginationState(
-        Player player,
-        DeepSynchronizationScope scope,
-        DeepPaginationState state,
-        List<HenrikMatchData> matches
-    ) {
-        boolean seasonBoundaryReached =
-            scope == DeepSynchronizationScope.CURRENT_SEASON
-                && containsAnotherSeason(matches, state.currentSeasonId());
-        boolean incompletePage = matches.size() < PAGE_SIZE;
-
-        if (seasonBoundaryReached) {
-            stopPagination(player, state, "season-boundary");
-        } else if (incompletePage) {
-            stopPagination(player, state, "incomplete-page");
-        } else {
-            state.advanceOffset(matches.size());
-        }
-    }
-
-    /**
-     * Persists the last successful synchronization timestamp.
-     *
-     * @param player synchronized player
-     * @param completedAt completion timestamp
-     * @return persisted player
-     */
-    private Player saveCompletion(Player player, Instant completedAt) {
-        player.setLastSuccessfulSynchronizationAt(completedAt);
-        return playerRepository.save(player);
-    }
-
-    /**
-     * Imports a filtered page when at least one match is eligible.
-     *
-     * @param player synchronized player
-     * @param sourceResponse original Henrik response
-     * @param eligibleMatches matches retained by the synchronization scope
-     * @return number of newly imported matches
-     */
-    private int importEligibleMatches(
-        Player player,
-        HenrikMatchHistoryResponse sourceResponse,
-        List<HenrikMatchData> eligibleMatches
-    ) {
-        if (eligibleMatches.isEmpty()) {
-            return 0;
+        if (scope == DeepSynchronizationScope.ALL_HISTORY || currentSeasonId != null) {
+            return currentSeasonId;
         }
 
-        HenrikMatchHistoryResponse filteredResponse =
-            new HenrikMatchHistoryResponse(
-                sourceResponse.status(),
-                eligibleMatches
-            );
-        return matchImportService.importMatches(player, filteredResponse);
-    }
-
-    /**
-     * Logs the metrics of one imported Henrik page.
-     *
-     * @param player synchronized player
-     * @param state current pagination state
-     * @param receivedMatchCount number of matches received
-     * @param eligibleMatchCount number of matches retained
-     * @param importedOnPage number of matches imported
-     */
-    private void logImportedPage(
-        Player player,
-        DeepPaginationState state,
-        int receivedMatchCount,
-        int eligibleMatchCount,
-        int importedOnPage
-    ) {
-        LOGGER.info(
-            "Imported deep synchronization page for player {}: page={} start={} received={} "
-                + "eligible={} imported={} totalImported={} season={}",
-            player.getId(),
-            state.currentPageNumber(),
-            state.startOffset(),
-            receivedMatchCount,
-            eligibleMatchCount,
-            importedOnPage,
-            state.matchesImported(),
-            state.currentSeasonId()
-        );
-    }
-
-    /**
-     * Marks pagination as complete and logs the stop reason.
-     *
-     * @param player synchronized player
-     * @param state current pagination state
-     * @param reason machine-readable stop reason
-     */
-    private void stopPagination(
-        Player player,
-        DeepPaginationState state,
-        String reason
-    ) {
-        state.complete();
-        LOGGER.info(
-            "Stopping deep synchronization for player {}: page={} start={} reason={} season={}",
-            player.getId(),
-            state.currentPageNumber(),
-            state.startOffset(),
-            reason,
-            state.currentSeasonId()
-        );
-    }
-
-    /**
-     * Ensures that the pagination safety limit has not been exceeded.
-     *
-     * @param pagesFetched number of pages already fetched
-     */
-    private void verifyMaximumPageCount(int pagesFetched) {
-        if (pagesFetched >= MAXIMUM_PAGE_COUNT) {
-            throw new IllegalStateException(
-                "Deep synchronization exceeded the maximum page count"
-            );
-        }
-    }
-
-    /**
-     * Resolves the season identifier from the most recent valid match.
-     *
-     * @param matches matches returned by Henrik
-     * @return identifier of the most recent season
-     */
-    private String resolveMostRecentSeasonId(List<HenrikMatchData> matches) {
         return matches.stream()
             .map(this::extractSeasonId)
             .filter(this::hasText)
@@ -394,6 +211,63 @@ public class PlayerDeepSynchronizationService {
             .orElseThrow(() -> new IllegalStateException(
                 "Unable to determine the current season from Henrik matches"
             ));
+    }
+
+    /**
+     * Filters and imports one non-empty Henrik page.
+     *
+     * @param player synchronized player
+     * @param response original Henrik response
+     * @param scope configured synchronization scope
+     * @param currentSeasonId season retained by current-season mode
+     * @return metrics produced for the page
+     */
+    private PageImportResult importPage(
+        Player player,
+        HenrikMatchHistoryResponse response,
+        DeepSynchronizationScope scope,
+        String currentSeasonId
+    ) {
+        List<HenrikMatchData> eligibleMatches = filterMatchesByScope(
+            response.data(),
+            scope,
+            currentSeasonId
+        );
+
+        if (eligibleMatches.isEmpty()) {
+            return new PageImportResult(0, 0);
+        }
+
+        HenrikMatchHistoryResponse filteredResponse = new HenrikMatchHistoryResponse(
+            response.status(),
+            eligibleMatches
+        );
+        int importedMatchCount = matchImportService.importMatches(player, filteredResponse);
+
+        return new PageImportResult(eligibleMatches.size(), importedMatchCount);
+    }
+
+    /**
+     * Determines whether pagination must stop after the current page.
+     *
+     * @param matches complete Henrik page
+     * @param scope configured synchronization scope
+     * @param currentSeasonId season retained by current-season mode
+     * @return machine-readable stop reason, or {@code null} when pagination continues
+     */
+    private String resolveStopReason(
+        List<HenrikMatchData> matches,
+        DeepSynchronizationScope scope,
+        String currentSeasonId
+    ) {
+        if (scope == DeepSynchronizationScope.CURRENT_SEASON
+            && containsAnotherSeason(matches, currentSeasonId)) {
+            return "season-boundary";
+        }
+        if (matches.size() < PAGE_SIZE) {
+            return "incomplete-page";
+        }
+        return null;
     }
 
     /**
@@ -442,9 +316,7 @@ public class PlayerDeepSynchronizationService {
      * @return season identifier, or {@code null} when unavailable
      */
     private String extractSeasonId(HenrikMatchData match) {
-        if (match == null
-            || match.metadata() == null
-            || match.metadata().season() == null) {
+        if (match == null || match.metadata() == null || match.metadata().season() == null) {
             return null;
         }
         return match.metadata().season().id();
@@ -461,121 +333,78 @@ public class PlayerDeepSynchronizationService {
     }
 
     /**
-     * Aggregate result produced by the pagination loop.
+     * Persists the last successful synchronization timestamp.
+     *
+     * @param player synchronized player
+     * @param completedAt completion timestamp
+     * @return persisted player
      */
-    private record DeepImportSummary(int pagesFetched, int matchesImported) {}
+    private Player saveCompletion(Player player, Instant completedAt) {
+        player.setLastSuccessfulSynchronizationAt(completedAt);
+        return playerRepository.save(player);
+    }
 
-    /**
-     * Mutable state kept private to one deep-synchronization execution.
-     */
-    private static final class DeepPaginationState {
+    /** Logs the metrics produced by one Henrik page. */
+    private void logPage(
+        Player player,
+        int pageNumber,
+        int startOffset,
+        int receivedMatchCount,
+        PageImportResult pageResult,
+        DeepImportSummary summary,
+        String currentSeasonId
+    ) {
+        LOGGER.info(
+            "Imported deep synchronization page for player {}: page={} start={} received={} "
+                + "eligible={} imported={} totalImported={} season={}",
+            player.getId(),
+            pageNumber,
+            startOffset,
+            receivedMatchCount,
+            pageResult.eligibleMatchCount(),
+            pageResult.importedMatchCount(),
+            summary.matchesImported(),
+            currentSeasonId
+        );
+    }
 
-        /**
-         * Offset sent to Henrik for the next request.
-         */
-        private int startOffset;
+    /** Logs why pagination has stopped. */
+    private void logStop(
+        Player player,
+        int pageNumber,
+        int startOffset,
+        String reason,
+        String currentSeasonId
+    ) {
+        LOGGER.info(
+            "Stopping deep synchronization for player {}: page={} start={} reason={} season={}",
+            player.getId(),
+            pageNumber,
+            startOffset,
+            reason,
+            currentSeasonId
+        );
+    }
 
-        /**
-         * Number of non-empty pages fetched so far.
-         */
-        private int pagesFetched;
+    /** Metrics produced while processing one Henrik page. */
+    private record PageImportResult(int eligibleMatchCount, int importedMatchCount) {}
 
-        /**
-         * Total number of newly imported matches.
-         */
-        private int matchesImported;
+    /** Aggregate result produced by the pagination loop. */
+    private record DeepImportSummary(int pagesFetched, int matchesImported) {
 
-        /**
-         * Season retained when the scope is {@code CURRENT_SEASON}.
-         */
-        private String currentSeasonId;
-
-        /**
-         * Indicates whether the pagination loop must stop.
-         */
-        private boolean complete;
-
-        /**
-         * @return offset used for the next Henrik request
-         */
-        private int startOffset() {
-            return startOffset;
+        /** @return empty pagination summary */
+        private static DeepImportSummary empty() {
+            return new DeepImportSummary(0, 0);
         }
 
         /**
-         * @return number of non-empty pages fetched
-         */
-        private int pagesFetched() {
-            return pagesFetched;
-        }
-
-        /**
-         * @return total number of newly imported matches
-         */
-        private int matchesImported() {
-            return matchesImported;
-        }
-
-        /**
-         * @return current season identifier, or {@code null} when unresolved
-         */
-        private String currentSeasonId() {
-            return currentSeasonId;
-        }
-
-        /**
-         * @return zero-based page number used in logs
-         */
-        private int currentPageNumber() {
-            return Math.max(0, pagesFetched - 1);
-        }
-
-        /**
-         * @return whether pagination has completed
-         */
-        private boolean isComplete() {
-            return complete;
-        }
-
-        /**
-         * Increments the fetched-page counter.
-         */
-        private void incrementPagesFetched() {
-            pagesFetched++;
-        }
-
-        /**
-         * Adds newly imported matches to the aggregate count.
+         * Returns the summary after processing one additional page.
          *
-         * @param importedOnPage number imported from the current page
+         * @param importedMatchCount number of matches imported from the page
+         * @return updated immutable summary
          */
-        private void addImportedMatches(int importedOnPage) {
-            matchesImported += importedOnPage;
-        }
-
-        /**
-         * Advances the Henrik offset after a complete page.
-         *
-         * @param receivedMatchCount number of matches returned by Henrik
-         */
-        private void advanceOffset(int receivedMatchCount) {
-            startOffset += receivedMatchCount;
-        }
-
-        /**
-         * Stores the season inferred from the most recent valid match.
-         *
-         * @param seasonId season identifier
-         */
-        private void setCurrentSeasonId(String seasonId) {
-            currentSeasonId = seasonId;
-        }
-
-        /**
-         * Marks the pagination loop as complete.
-         */
-        private void complete() {
-            complete = true;
+        private DeepImportSummary addPage(int importedMatchCount) {
+            return new DeepImportSummary(pagesFetched + 1, matchesImported + importedMatchCount);
         }
     }
 }

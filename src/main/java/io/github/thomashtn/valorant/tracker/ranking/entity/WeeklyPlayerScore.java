@@ -15,11 +15,14 @@ import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import java.time.LocalDate;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
- * Represents the weekly player score component.
+ * Stores one player's calculated score and position for a calendar week.
+ *
+ * <p>Current rows are recalculated from challenge progress. Finalized rows act as immutable
+ * snapshots used by ranking history.</p>
  */
 @Getter
 @Setter
@@ -33,32 +36,60 @@ import lombok.NoArgsConstructor;
     )
 )
 public class WeeklyPlayerScore extends AuditableEntity {
+
+    /**
+     * Internal database identifier.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Player represented by the weekly score.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
     private Player player;
 
+    /**
+     * Monday identifying the ranking week.
+     */
     @Column(name = "week_start", nullable = false)
     private LocalDate weekStart;
 
+    /**
+     * Total points awarded for completed weekly challenges.
+     */
     @Column(nullable = false)
     private int points;
 
+    /**
+     * Number of weekly challenges completed by the player.
+     */
     @Column(name = "completed_challenges", nullable = false)
     private int completedChallenges;
 
+    /**
+     * Current or final one-based ranking position.
+     */
     @Column(nullable = false)
     private int position;
 
+    /**
+     * Position stored before the latest recalculation.
+     */
     @Column(name = "previous_position")
     private Integer previousPosition;
 
+    /**
+     * Timestamp of the latest ranking calculation.
+     */
     @Column(name = "calculated_at", nullable = false)
     private Instant calculatedAt;
 
+    /**
+     * Timestamp at which the weekly score became immutable.
+     */
     @Column(name = "finalized_at")
     private Instant finalizedAt;
 }

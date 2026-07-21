@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.inOrder;
@@ -422,6 +423,79 @@ class PlayerDeepSynchronizationServiceTest {
                     HenrikMatchHistoryResponse.class
                 )
             );
+    }
+
+    /**
+     * Verifies that current-season synchronization fails clearly when Henrik
+     * does not expose any season identifier.
+     */
+    @Test
+    void shouldFailWhenCurrentSeasonCannotBeResolved() {
+        HenrikMatchData matchWithoutSeason = new HenrikMatchData(
+            new HenrikMatchMetadata(
+                "match-without-season",
+                null,
+                1_000L,
+                Instant.parse("2026-07-18T10:00:00Z"),
+                true,
+                null,
+                null
+            ),
+            List.of(),
+            List.of()
+        );
+
+        preparePlayerResolution();
+
+        when(matchClient.getMatches(RIOT_PUUID, 0, 10))
+            .thenReturn(new HenrikMatchHistoryResponse(200, List.of(matchWithoutSeason)));
+
+        assertThatThrownBy(() -> service.synchronize(PLAYER_ID))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Unable to determine the current season from Henrik matches");
+
+        verify(matchImportService, never())
+            .importMatches(same(player), any(HenrikMatchHistoryResponse.class));
+        verify(playerRepository, never()).save(player);
+    }
+
+    /**
+     * Verifies that all-history synchronization does not require season
+     * metadata to import a page.
+     */
+    @Test
+    void shouldImportMatchesWithoutSeasonInAllHistoryMode() {
+        service = createService(DeepSynchronizationScope.ALL_HISTORY);
+
+        HenrikMatchData matchWithoutSeason = new HenrikMatchData(
+            new HenrikMatchMetadata(
+                "match-without-season",
+                null,
+                1_000L,
+                Instant.parse("2026-07-18T10:00:00Z"),
+                true,
+                null,
+                null
+            ),
+            List.of(),
+            List.of()
+        );
+        HenrikMatchHistoryResponse response = new HenrikMatchHistoryResponse(
+            200,
+            List.of(matchWithoutSeason)
+        );
+
+        preparePlayerResolution();
+
+        when(matchClient.getMatches(RIOT_PUUID, 0, 10)).thenReturn(response);
+        when(matchImportService.importMatches(player, response)).thenReturn(1);
+        when(playerRepository.save(player)).thenReturn(player);
+
+        PlayerDeepSynchronizationResult result = service.synchronize(PLAYER_ID);
+
+        assertThat(result.pagesFetched()).isEqualTo(1);
+        assertThat(result.matchesImported()).isEqualTo(1);
+        verify(matchImportService).importMatches(player, response);
     }
 
     /**
