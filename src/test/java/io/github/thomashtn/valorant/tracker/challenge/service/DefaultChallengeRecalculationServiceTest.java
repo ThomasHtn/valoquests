@@ -11,7 +11,6 @@ import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.ObjectProvider;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -64,10 +63,9 @@ class DefaultChallengeRecalculationServiceTest {
         persistenceService;
 
     /**
-     * Ranking service provider dependency.
+     * Ranking recalculation dependency.
      */
-    private ObjectProvider<RankingRecalculationService>
-        rankingServiceProvider;
+    private RankingRecalculationService rankingRecalculationService;
 
     /**
      * Service under test.
@@ -88,7 +86,8 @@ class DefaultChallengeRecalculationServiceTest {
             mock(ChallengeProgressCalculationService.class);
         persistenceService =
             mock(PlayerChallengeProgressPersistenceService.class);
-        rankingServiceProvider = mock(ObjectProvider.class);
+        rankingRecalculationService =
+            mock(RankingRecalculationService.class);
 
         Clock clock = Clock.fixed(
             Instant.parse("2026-07-20T12:00:00Z"),
@@ -100,7 +99,7 @@ class DefaultChallengeRecalculationServiceTest {
             contextFactory,
             calculationService,
             persistenceService,
-            rankingServiceProvider,
+            rankingRecalculationService,
             weeklyChallengeSelectionService,
             clock
         );
@@ -127,9 +126,6 @@ class DefaultChallengeRecalculationServiceTest {
                 BigDecimal.valueOf(100)
             );
 
-        RankingRecalculationService rankingService =
-            mock(RankingRecalculationService.class);
-
         when(
             weeklyChallengeSelectionService.selectWeekChallenges(
                 WEEK_START
@@ -155,9 +151,6 @@ class DefaultChallengeRecalculationServiceTest {
             )
         ).thenReturn(result);
 
-        when(rankingServiceProvider.getIfAvailable())
-            .thenReturn(rankingService);
-
         service.recalculateCurrentWeekProgress();
 
         verify(
@@ -174,13 +167,14 @@ class DefaultChallengeRecalculationServiceTest {
             context
         );
 
-        verify(persistenceService).save(
+        verify(persistenceService).saveAll(
             player,
-            weeklyChallenge,
-            result
+            List.of(weeklyChallenge),
+            List.of(result)
         );
 
-        verify(rankingService).recalculateCurrentRanking();
+        verify(rankingRecalculationService)
+            .recalculateCurrentRanking();
     }
 
     /**
@@ -194,9 +188,6 @@ class DefaultChallengeRecalculationServiceTest {
         WeeklyChallenge weeklyChallenge =
             createWeeklyChallenge(challenge);
 
-        RankingRecalculationService rankingService =
-            mock(RankingRecalculationService.class);
-
         when(
             weeklyChallengeSelectionService.selectWeekChallenges(
                 WEEK_START
@@ -208,9 +199,6 @@ class DefaultChallengeRecalculationServiceTest {
                 PlayerStatus.ACTIVE
             )
         ).thenReturn(List.of());
-
-        when(rankingServiceProvider.getIfAvailable())
-            .thenReturn(rankingService);
 
         service.recalculateCurrentWeekProgress();
 
@@ -239,48 +227,14 @@ class DefaultChallengeRecalculationServiceTest {
         verify(
             persistenceService,
             never()
-        ).save(
+        ).saveAll(
             org.mockito.ArgumentMatchers.any(Player.class),
-            org.mockito.ArgumentMatchers.any(
-                WeeklyChallenge.class
-            ),
-            org.mockito.ArgumentMatchers.any(
-                ChallengeProgressResult.class
-            )
+            org.mockito.ArgumentMatchers.anyList(),
+            org.mockito.ArgumentMatchers.anyList()
         );
 
-        verify(rankingService).recalculateCurrentRanking();
-    }
-
-    /**
-     * Verifies that ranking recalculation is safely skipped when no ranking
-     * service implementation is available.
-     */
-    @Test
-    void shouldSkipRankingWhenNoImplementationIsAvailable() {
-        Challenge challenge = createChallenge();
-
-        WeeklyChallenge weeklyChallenge =
-            createWeeklyChallenge(challenge);
-
-        when(
-            weeklyChallengeSelectionService.selectWeekChallenges(
-                WEEK_START
-            )
-        ).thenReturn(List.of(weeklyChallenge));
-
-        when(
-            playerRepository.findAllByStatusOrderByIdAsc(
-                PlayerStatus.ACTIVE
-            )
-        ).thenReturn(List.of());
-
-        when(rankingServiceProvider.getIfAvailable())
-            .thenReturn(null);
-
-        service.recalculateCurrentWeekProgress();
-
-        verify(rankingServiceProvider).getIfAvailable();
+        verify(rankingRecalculationService)
+            .recalculateCurrentRanking();
     }
 
     /**

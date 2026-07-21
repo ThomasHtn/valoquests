@@ -1,14 +1,11 @@
 package io.github.thomashtn.valorant.tracker.ranking.controller;
 
 import static io.github.thomashtn.valorant.tracker.shared.config.OpenApiConfig.ADMIN_KEY_SECURITY_SCHEME;
-import static io.github.thomashtn.valorant.tracker.shared.web.RequiredService.get;
-
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,15 +22,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class RankingAdminController {
 
     /**
-     * Provider used to access the optional feature service when implemented.
+     * Service used to rebuild the current weekly ranking.
      */
-    private final ObjectProvider<RankingRecalculationService> serviceProvider;
+    private final RankingRecalculationService rankingRecalculationService;
 
     /**
-     * @param serviceProvider provider for the future ranking recalculation implementation
+     * @param rankingRecalculationService ranking recalculation service
      */
-    public RankingAdminController(ObjectProvider<RankingRecalculationService> serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public RankingAdminController(
+        RankingRecalculationService rankingRecalculationService
+    ) {
+        this.rankingRecalculationService = rankingRecalculationService;
     }
 
     /**
@@ -50,6 +49,6 @@ public class RankingAdminController {
     )
     @ApiResponse(responseCode = "204", description = "Ranking recalculated successfully.")
     public void recalculateRanking() {
-        get(serviceProvider, "Ranking recalculation").recalculateCurrentRanking();
+        rankingRecalculationService.recalculateCurrentRanking();
     }
 }

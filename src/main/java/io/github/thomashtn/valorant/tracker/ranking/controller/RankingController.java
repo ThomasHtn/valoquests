@@ -1,7 +1,5 @@
 package io.github.thomashtn.valorant.tracker.ranking.controller;
 
-import static io.github.thomashtn.valorant.tracker.shared.web.RequiredService.get;
-
 import io.github.thomashtn.valorant.tracker.ranking.dto.CurrentRankingResponse;
 import io.github.thomashtn.valorant.tracker.ranking.dto.RankingHistoryWeekResponse;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingQueryService;
@@ -10,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,15 +23,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class RankingController {
 
     /**
-     * Provider used to access the optional feature service when implemented.
+     * Service used to query current and historical rankings.
      */
-    private final ObjectProvider<RankingQueryService> serviceProvider;
+    private final RankingQueryService rankingQueryService;
 
     /**
-     * @param serviceProvider provider for the future ranking query implementation
+     * @param rankingQueryService ranking query service
      */
-    public RankingController(ObjectProvider<RankingQueryService> serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public RankingController(RankingQueryService rankingQueryService) {
+        this.rankingQueryService = rankingQueryService;
     }
 
     /**
@@ -49,9 +46,8 @@ public class RankingController {
             """
     )
     @ApiResponse(responseCode = "200", description = "Current ranking returned successfully.")
-    @ApiResponse(responseCode = "501", description = "Ranking query service has not been implemented yet.")
     public CurrentRankingResponse getCurrentRanking() {
-        return get(serviceProvider, "Current ranking consultation").findCurrent();
+        return rankingQueryService.findCurrent();
     }
 
     /**
@@ -67,13 +63,12 @@ public class RankingController {
     )
     @ApiResponse(responseCode = "200", description = "Ranking history returned successfully.")
     @ApiResponse(responseCode = "400", description = "Pagination values are invalid.")
-    @ApiResponse(responseCode = "501", description = "Ranking query service has not been implemented yet.")
     public PageResponse<RankingHistoryWeekResponse> getRankingHistory(
         @Parameter(description = "Zero-based page index.", example = "0")
         @RequestParam(defaultValue = "0") int page,
         @Parameter(description = "Number of finalized weeks returned per page.", example = "10")
         @RequestParam(defaultValue = "10") int size
     ) {
-        return get(serviceProvider, "Ranking history consultation").findHistory(page, size);
+        return rankingQueryService.findHistory(page, size);
     }
 }

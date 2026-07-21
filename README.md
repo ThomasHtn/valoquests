@@ -4,7 +4,7 @@ Valorant Tracker is a personal full-stack portfolio project used to collect, sto
 statistics for a fixed group of players.
 
 The backend retrieves account, rank and match-history data from the Henrik API, stores normalized data in PostgreSQL and
-exposes REST endpoints for the Angular application. Weekly challenge progression and ranking calculation are the next
+exposes REST endpoints for the Angular application. Weekly challenge selection, progression calculation and persistence are implemented; ranking calculation remains the next
 functional milestone; the synchronization and persistence foundation is implemented first so those calculations can rely
 on stable, reproducible data.
 
@@ -46,7 +46,7 @@ Main responsibilities:
 - `player`: tracked accounts, current rank and Riot account resolution;
 - `match`: seasons, matches, player statistics per match and idempotent imports;
 - `synchronization`: standard/deep orchestration, execution history and admin routes;
-- `challenge`: challenge catalogue and future weekly progression logic;
+- `challenge`: challenge catalogue, weekly selection, calculation engine and persisted player progression;
 - `ranking`: future weekly score and ranking logic;
 - `shared`: cross-cutting configuration, security, errors, pagination and auditing.
 
@@ -204,6 +204,10 @@ V6__allow_unresolved_season_dates.sql
 V7__increase_player_match_team_id_length.sql
 V8__remove_unused_deep_synchronization_task.sql
 ```
+
+The challenge catalogue currently contains 78 definitions. Every declared progress mode is covered by a dedicated
+calculator: `SUM`, `COUNT_MATCHES`, `DISTINCT_COUNT`, `MAX_GROUP`, `ALL`, `RATIO` and `MAX_STREAK`. A compatibility test
+parses the production migration and executes every definition to detect unsupported catalogue changes during the build.
 
 Do not edit an applied migration. Add a new versioned migration for every schema or reference-data change.
 

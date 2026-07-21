@@ -10,7 +10,6 @@ import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,10 +57,9 @@ public class DefaultChallengeRecalculationService
         persistenceService;
 
     /**
-     * Provider for the ranking recalculation feature.
+     * Service used to rebuild the current weekly ranking.
      */
-    private final ObjectProvider<RankingRecalculationService>
-        rankingServiceProvider;
+    private final RankingRecalculationService rankingRecalculationService;
 
     /**
      * Service used to prepare the active weekly challenge pack.
@@ -81,7 +79,7 @@ public class DefaultChallengeRecalculationService
      * @param contextFactory                  player challenge context factory
      * @param calculationService              challenge calculation service
      * @param persistenceService              progress persistence service
-     * @param rankingServiceProvider          optional ranking service provider
+     * @param rankingRecalculationService     ranking recalculation service
      * @param weeklyChallengeSelectionService weekly selection service
      * @param clock                           application clock
      */
@@ -90,8 +88,7 @@ public class DefaultChallengeRecalculationService
         PlayerChallengeContextFactory contextFactory,
         ChallengeProgressCalculationService calculationService,
         PlayerChallengeProgressPersistenceService persistenceService,
-        ObjectProvider<RankingRecalculationService>
-            rankingServiceProvider,
+        RankingRecalculationService rankingRecalculationService,
         WeeklyChallengeSelectionService
             weeklyChallengeSelectionService,
         Clock clock
@@ -100,7 +97,7 @@ public class DefaultChallengeRecalculationService
         this.contextFactory = contextFactory;
         this.calculationService = calculationService;
         this.persistenceService = persistenceService;
-        this.rankingServiceProvider = rankingServiceProvider;
+        this.rankingRecalculationService = rankingRecalculationService;
         this.weeklyChallengeSelectionService =
             weeklyChallengeSelectionService;
         this.clock = clock;
@@ -161,7 +158,7 @@ public class DefaultChallengeRecalculationService
             progressCount
         );
 
-        recalculateRankingWhenAvailable();
+        rankingRecalculationService.recalculateCurrentRanking();
     }
 
     /**
@@ -190,31 +187,54 @@ public class DefaultChallengeRecalculationService
             context.playerMatches().size()
         );
 
-        for (WeeklyChallenge weeklyChallenge : weeklyChallenges) {
-            ChallengeProgressResult result =
-                calculationService.calculate(
-                    weeklyChallenge.getChallenge(),
+        List<ChallengeProgressResult> results = weeklyChallenges.stream()
+            .map(
+                weeklyChallenge -> calculateProgress(
+                    player,
+                    weeklyChallenge,
                     context
-                );
+                )
+            )
+            .toList();
 
-            persistenceService.save(
-                player,
-                weeklyChallenge,
-                result
-            );
+        persistenceService.saveAll(
+            player,
+            weeklyChallenges,
+            results
+        );
 
-            LOGGER.debug(
-                "Calculated challenge {} for player {}: current={}, "
-                    + "target={}, completed={}.",
-                weeklyChallenge.getChallenge().getCode(),
-                player.getDisplayName(),
-                result.currentValue(),
-                result.targetValue(),
-                result.completed()
-            );
-        }
+        return results.size();
+    }
 
-        return weeklyChallenges.size();
+    /**
+     * Calculates and logs one weekly challenge result for a player.
+     *
+     * @param player          player being recalculated
+     * @param weeklyChallenge evaluated weekly challenge
+     * @param context         weekly player context
+     * @return calculated progress result
+     */
+    private ChallengeProgressResult calculateProgress(
+        Player player,
+        WeeklyChallenge weeklyChallenge,
+        PlayerChallengeContext context
+    ) {
+        ChallengeProgressResult result = calculationService.calculate(
+            weeklyChallenge.getChallenge(),
+            context
+        );
+
+        LOGGER.debug(
+            "Calculated challenge {} for player {}: current={}, "
+                + "target={}, completed={}.",
+            weeklyChallenge.getChallenge().getCode(),
+            player.getDisplayName(),
+            result.currentValue(),
+            result.targetValue(),
+            result.completed()
+        );
+
+        return result;
     }
 
     /**
@@ -232,25 +252,4 @@ public class DefaultChallengeRecalculationService
             );
     }
 
-    /**
-     * Recalculates the ranking when its implementation is available.
-     *
-     * <p>The ranking module currently exposes an interface but no concrete
-     * implementation in the supplied project archive.</p>
-     */
-    private void recalculateRankingWhenAvailable() {
-        RankingRecalculationService rankingService =
-            rankingServiceProvider.getIfAvailable();
-
-        if (rankingService == null) {
-            LOGGER.debug(
-                "Ranking recalculation skipped because no implementation "
-                    + "is currently registered."
-            );
-
-            return;
-        }
-
-        rankingService.recalculateCurrentRanking();
-    }
 }
