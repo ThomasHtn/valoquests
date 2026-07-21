@@ -108,9 +108,12 @@ public class DefaultSynchronizationCommandService
      * @return persisted synchronization summary
      */
     @Override
-    public SynchronizationResponse synchronizeAllPlayers() {
+    public SynchronizationResponse synchronizeAllPlayers(
+        SynchronizationTrigger trigger
+    ) {
         return executeForAllPlayers(
             SynchronizationType.STANDARD,
+            trigger,
             playerId -> toExecutionResult(
                 playerSynchronizationService.synchronize(playerId)
             )
@@ -143,6 +146,7 @@ public class DefaultSynchronizationCommandService
     public SynchronizationResponse requestDeepSynchronizationForAllPlayers() {
         return executeForAllPlayers(
             SynchronizationType.DEEP,
+            SynchronizationTrigger.MANUAL,
             playerId -> toExecutionResult(
                 playerDeepSynchronizationService.synchronize(playerId)
             )
@@ -177,9 +181,10 @@ public class DefaultSynchronizationCommandService
      */
     private SynchronizationResponse executeForAllPlayers(
         SynchronizationType type,
+        SynchronizationTrigger trigger,
         PlayerSynchronizationOperation operation
     ) {
-        Synchronization synchronization = startSynchronization(type);
+        Synchronization synchronization = startSynchronization(type, trigger);
         List<Player> players =
             playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE);
         BatchSummary summary = BatchSummary.empty();
@@ -233,7 +238,10 @@ public class DefaultSynchronizationCommandService
         long playerId,
         PlayerSynchronizationOperation operation
     ) {
-        Synchronization synchronization = startSynchronization(type);
+        Synchronization synchronization = startSynchronization(
+            type,
+            SynchronizationTrigger.MANUAL
+        );
 
         LOGGER.info(
             "Starting {} synchronization for player {}",
@@ -324,12 +332,13 @@ public class DefaultSynchronizationCommandService
      * @return persisted execution
      */
     private Synchronization startSynchronization(
-        SynchronizationType type
+        SynchronizationType type,
+        SynchronizationTrigger trigger
     ) {
         Synchronization synchronization = new Synchronization();
 
         synchronization.setType(type);
-        synchronization.setTrigger(SynchronizationTrigger.MANUAL);
+        synchronization.setTrigger(trigger);
         synchronization.setStatus(SynchronizationStatus.RUNNING);
         synchronization.setStartedAt(clock.instant());
         synchronization.setPlayersProcessed(0);

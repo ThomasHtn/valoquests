@@ -232,6 +232,22 @@ class DefaultSynchronizationCommandServiceTest {
     }
 
     /**
+     * Verifies that an automatic batch execution keeps its scheduled origin.
+     */
+    @Test
+    void shouldRecordScheduledSynchronizationTrigger() {
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+            .thenReturn(List.of());
+
+        SynchronizationResponse response = service.synchronizeAllPlayers(
+            SynchronizationTrigger.SCHEDULED
+        );
+
+        assertThat(response.trigger())
+            .isEqualTo(SynchronizationTrigger.SCHEDULED);
+    }
+
+    /**
      * Verifies that an empty active-player list is treated as a successful
      * no-op.
      */
