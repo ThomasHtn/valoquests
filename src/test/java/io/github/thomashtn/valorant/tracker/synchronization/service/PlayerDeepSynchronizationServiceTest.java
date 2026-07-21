@@ -582,7 +582,9 @@ class PlayerDeepSynchronizationServiceTest {
         return new ApplicationProperties(
             "http://localhost:4200",
             "test-admin-key",
-            new ApplicationProperties.Scheduling(scope)
+            new ApplicationProperties.DeepSynchronization(
+                scope
+            )
         );
     }
 

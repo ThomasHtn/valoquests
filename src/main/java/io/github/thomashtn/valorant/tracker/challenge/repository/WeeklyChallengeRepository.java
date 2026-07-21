@@ -35,4 +35,12 @@ public interface WeeklyChallengeRepository
     findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(
         LocalDate weekStart
     );
+
+    /**
+     * Checks whether at least one challenge exists for a week.
+     *
+     * @param weekStart Monday identifying the requested week
+     * @return {@code true} when the weekly pack already exists
+     */
+    boolean existsByWeekStart(LocalDate weekStart);
 }

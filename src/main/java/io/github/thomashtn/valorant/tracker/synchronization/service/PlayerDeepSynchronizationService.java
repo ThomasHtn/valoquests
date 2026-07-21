@@ -11,12 +11,13 @@ import io.github.thomashtn.valorant.tracker.player.service.PlayerAccountResoluti
 import io.github.thomashtn.valorant.tracker.shared.config.ApplicationProperties;
 import io.github.thomashtn.valorant.tracker.synchronization.model.DeepSynchronizationScope;
 import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerDeepSynchronizationResult;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
 
 /**
  * Imports a player's Henrik match history page by page.
@@ -27,43 +28,61 @@ import org.springframework.stereotype.Service;
 @Service
 public class PlayerDeepSynchronizationService {
 
-    /** Logger used to report synchronization progress and stop decisions. */
+    /**
+     * Logger used to report synchronization progress and stop decisions.
+     */
     private static final Logger LOGGER =
         LoggerFactory.getLogger(PlayerDeepSynchronizationService.class);
 
-    /** Maximum number of matches requested from Henrik per page. */
+    /**
+     * Maximum number of matches requested from Henrik per page.
+     */
     private static final int PAGE_SIZE = 10;
 
-    /** Safety guard preventing an accidental infinite pagination loop. */
+    /**
+     * Safety guard preventing an accidental infinite pagination loop.
+     */
     private static final int MAXIMUM_PAGE_COUNT = 1_000;
 
-    /** Repository used to load and persist tracked players. */
+    /**
+     * Repository used to load and persist tracked players.
+     */
     private final PlayerRepository playerRepository;
 
-    /** Service used to resolve a missing Riot PUUID before synchronization. */
+    /**
+     * Service used to resolve a missing Riot PUUID before synchronization.
+     */
     private final PlayerAccountResolutionService accountResolutionService;
 
-    /** Henrik client used to retrieve paginated match history. */
+    /**
+     * Henrik client used to retrieve paginated match history.
+     */
     private final HenrikMatchClient matchClient;
 
-    /** Service responsible for idempotent match persistence. */
+    /**
+     * Service responsible for idempotent match persistence.
+     */
     private final MatchImportService matchImportService;
 
-    /** Typed application configuration used to select the import scope. */
+    /**
+     * Typed application configuration used to select the import scope.
+     */
     private final ApplicationProperties applicationProperties;
 
-    /** Clock used to produce deterministic completion timestamps. */
+    /**
+     * Clock used to produce deterministic completion timestamps.
+     */
     private final Clock clock;
 
     /**
      * Creates the deep-synchronization service.
      *
-     * @param playerRepository tracked-player repository
+     * @param playerRepository         tracked-player repository
      * @param accountResolutionService Riot account resolution service
-     * @param matchClient Henrik match-history client
-     * @param matchImportService idempotent match-import service
-     * @param applicationProperties application synchronization configuration
-     * @param clock application clock
+     * @param matchClient              Henrik match-history client
+     * @param matchImportService       idempotent match-import service
+     * @param applicationProperties    application synchronization configuration
+     * @param clock                    application clock
      */
     public PlayerDeepSynchronizationService(
         PlayerRepository playerRepository,
@@ -134,14 +153,14 @@ public class PlayerDeepSynchronizationService {
      * @return active synchronization scope
      */
     private DeepSynchronizationScope resolveScope() {
-        return applicationProperties.scheduling().deepSynchronizationScope();
+        return applicationProperties.deepSynchronization().scope();
     }
 
     /**
      * Imports eligible pages until Henrik returns no more useful data.
      *
      * @param player resolved tracked player
-     * @param scope configured import scope
+     * @param scope  configured import scope
      * @return aggregate pagination result
      */
     private DeepImportSummary importHistory(Player player, DeepSynchronizationScope scope) {
@@ -179,7 +198,7 @@ public class PlayerDeepSynchronizationService {
     /**
      * Retrieves one Henrik page for the resolved player.
      *
-     * @param player synchronized player
+     * @param player      synchronized player
      * @param startOffset item offset sent to Henrik
      * @return Henrik match-history response
      */
@@ -190,9 +209,9 @@ public class PlayerDeepSynchronizationService {
     /**
      * Resolves the season retained by current-season synchronization.
      *
-     * @param scope configured import scope
+     * @param scope           configured import scope
      * @param currentSeasonId previously resolved season identifier
-     * @param matches current Henrik page
+     * @param matches         current Henrik page
      * @return retained season identifier, or {@code null} for all-history mode
      */
     private String resolveCurrentSeasonId(
@@ -216,9 +235,9 @@ public class PlayerDeepSynchronizationService {
     /**
      * Filters and imports one non-empty Henrik page.
      *
-     * @param player synchronized player
-     * @param response original Henrik response
-     * @param scope configured synchronization scope
+     * @param player          synchronized player
+     * @param response        original Henrik response
+     * @param scope           configured synchronization scope
      * @param currentSeasonId season retained by current-season mode
      * @return metrics produced for the page
      */
@@ -250,8 +269,8 @@ public class PlayerDeepSynchronizationService {
     /**
      * Determines whether pagination must stop after the current page.
      *
-     * @param matches complete Henrik page
-     * @param scope configured synchronization scope
+     * @param matches         complete Henrik page
+     * @param scope           configured synchronization scope
      * @param currentSeasonId season retained by current-season mode
      * @return machine-readable stop reason, or {@code null} when pagination continues
      */
@@ -273,8 +292,8 @@ public class PlayerDeepSynchronizationService {
     /**
      * Filters matches according to the configured deep-synchronization scope.
      *
-     * @param matches matches returned by Henrik
-     * @param scope configured synchronization scope
+     * @param matches         matches returned by Henrik
+     * @param scope           configured synchronization scope
      * @param currentSeasonId current season identifier
      * @return matches eligible for import
      */
@@ -295,7 +314,7 @@ public class PlayerDeepSynchronizationService {
     /**
      * Determines whether a page contains a match from another season.
      *
-     * @param matches complete Henrik page
+     * @param matches         complete Henrik page
      * @param currentSeasonId current season identifier
      * @return {@code true} when another season is present
      */
@@ -335,7 +354,7 @@ public class PlayerDeepSynchronizationService {
     /**
      * Persists the last successful synchronization timestamp.
      *
-     * @param player synchronized player
+     * @param player      synchronized player
      * @param completedAt completion timestamp
      * @return persisted player
      */
@@ -344,7 +363,9 @@ public class PlayerDeepSynchronizationService {
         return playerRepository.save(player);
     }
 
-    /** Logs the metrics produced by one Henrik page. */
+    /**
+     * Logs the metrics produced by one Henrik page.
+     */
     private void logPage(
         Player player,
         int pageNumber,
@@ -368,7 +389,9 @@ public class PlayerDeepSynchronizationService {
         );
     }
 
-    /** Logs why pagination has stopped. */
+    /**
+     * Logs why pagination has stopped.
+     */
     private void logStop(
         Player player,
         int pageNumber,
@@ -386,13 +409,20 @@ public class PlayerDeepSynchronizationService {
         );
     }
 
-    /** Metrics produced while processing one Henrik page. */
-    private record PageImportResult(int eligibleMatchCount, int importedMatchCount) {}
+    /**
+     * Metrics produced while processing one Henrik page.
+     */
+    private record PageImportResult(int eligibleMatchCount, int importedMatchCount) {
+    }
 
-    /** Aggregate result produced by the pagination loop. */
+    /**
+     * Aggregate result produced by the pagination loop.
+     */
     private record DeepImportSummary(int pagesFetched, int matchesImported) {
 
-        /** @return empty pagination summary */
+        /**
+         * @return empty pagination summary
+         */
         private static DeepImportSummary empty() {
             return new DeepImportSummary(0, 0);
         }

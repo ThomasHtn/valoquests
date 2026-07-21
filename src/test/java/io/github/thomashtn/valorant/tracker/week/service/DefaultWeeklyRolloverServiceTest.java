@@ -1,0 +1,323 @@
+package io.github.thomashtn.valorant.tracker.week.service;
+
+import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
+import io.github.thomashtn.valorant.tracker.challenge.service.WeeklyChallengeSelectionService;
+import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
+import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * Tests atomic and idempotent weekly rollover orchestration.
+ */
+class DefaultWeeklyRolloverServiceTest {
+
+    /**
+     * Previous week resolved from the fixed clock.
+     */
+    private static final LocalDate PREVIOUS_WEEK_START =
+        LocalDate.of(2026, 7, 13);
+
+    /**
+     * Current week resolved from the fixed clock.
+     */
+    private static final LocalDate CURRENT_WEEK_START =
+        LocalDate.of(2026, 7, 20);
+
+    /**
+     * Fixed rollover timestamp.
+     */
+    private static final Instant ROLLOVER_TIME =
+        Instant.parse("2026-07-20T00:05:00Z");
+
+    /**
+     * Weekly challenge repository dependency.
+     */
+    private WeeklyChallengeRepository
+        weeklyChallengeRepository;
+
+    /**
+     * Weekly score repository dependency.
+     */
+    private WeeklyPlayerScoreRepository
+        weeklyPlayerScoreRepository;
+
+    /**
+     * Ranking recalculation dependency.
+     */
+    private RankingRecalculationService
+        rankingRecalculationService;
+
+    /**
+     * Weekly challenge selection dependency.
+     */
+    private WeeklyChallengeSelectionService
+        weeklyChallengeSelectionService;
+
+    /**
+     * Service under test.
+     */
+    private DefaultWeeklyRolloverService service;
+
+    /**
+     * Creates mocked dependencies before each test.
+     */
+    @BeforeEach
+    void setUp() {
+        weeklyChallengeRepository =
+            mock(WeeklyChallengeRepository.class);
+
+        weeklyPlayerScoreRepository =
+            mock(WeeklyPlayerScoreRepository.class);
+
+        rankingRecalculationService =
+            mock(RankingRecalculationService.class);
+
+        weeklyChallengeSelectionService =
+            mock(WeeklyChallengeSelectionService.class);
+
+        Clock clock = Clock.fixed(
+            ROLLOVER_TIME,
+            ZoneOffset.UTC
+        );
+
+        service = new DefaultWeeklyRolloverService(
+            weeklyChallengeRepository,
+            weeklyPlayerScoreRepository,
+            rankingRecalculationService,
+            weeklyChallengeSelectionService,
+            clock
+        );
+    }
+
+    /**
+     * Verifies that the previous ranking and challenges are finalized before
+     * the new challenge pack is prepared.
+     */
+    @Test
+    void shouldFinalizePreviousWeekAndPrepareCurrentWeek() {
+        WeeklyChallenge firstChallenge =
+            new WeeklyChallenge();
+
+        WeeklyChallenge secondChallenge =
+            new WeeklyChallenge();
+
+        WeeklyPlayerScore firstScore =
+            new WeeklyPlayerScore();
+
+        WeeklyPlayerScore secondScore =
+            new WeeklyPlayerScore();
+
+        when(
+            weeklyChallengeRepository
+                .findAllByWeekStartOrderByIdAsc(
+                    PREVIOUS_WEEK_START
+                )
+        ).thenReturn(
+            List.of(
+                firstChallenge,
+                secondChallenge
+            )
+        );
+
+        when(
+            weeklyPlayerScoreRepository
+                .findAllByWeekStartOrderByPositionAsc(
+                    PREVIOUS_WEEK_START
+                )
+        ).thenReturn(
+            List.of(
+                firstScore,
+                secondScore
+            )
+        );
+
+        service.rolloverIfNeeded();
+
+        verify(rankingRecalculationService)
+            .recalculateWeek(PREVIOUS_WEEK_START);
+
+        verify(weeklyChallengeRepository)
+            .saveAll(
+                List.of(
+                    firstChallenge,
+                    secondChallenge
+                )
+            );
+
+        verify(weeklyPlayerScoreRepository)
+            .saveAll(
+                List.of(
+                    firstScore,
+                    secondScore
+                )
+            );
+
+        verify(weeklyChallengeSelectionService)
+            .selectWeekChallenges(
+                CURRENT_WEEK_START
+            );
+
+        assertThat(firstChallenge.getFinalizedAt())
+            .isEqualTo(ROLLOVER_TIME);
+
+        assertThat(secondChallenge.getFinalizedAt())
+            .isEqualTo(ROLLOVER_TIME);
+
+        assertThat(firstScore.getFinalizedAt())
+            .isEqualTo(ROLLOVER_TIME);
+
+        assertThat(secondScore.getFinalizedAt())
+            .isEqualTo(ROLLOVER_TIME);
+    }
+
+    /**
+     * Verifies that an already finalized week is not recalculated.
+     */
+    @Test
+    void shouldRemainIdempotentWhenPreviousWeekIsFinalized() {
+        WeeklyChallenge firstChallenge =
+            new WeeklyChallenge();
+
+        WeeklyChallenge secondChallenge =
+            new WeeklyChallenge();
+
+        firstChallenge.setFinalizedAt(ROLLOVER_TIME);
+        secondChallenge.setFinalizedAt(ROLLOVER_TIME);
+
+        when(
+            weeklyChallengeRepository
+                .findAllByWeekStartOrderByIdAsc(
+                    PREVIOUS_WEEK_START
+                )
+        ).thenReturn(
+            List.of(
+                firstChallenge,
+                secondChallenge
+            )
+        );
+
+        service.rolloverIfNeeded();
+
+        verify(
+            rankingRecalculationService,
+            never()
+        ).recalculateWeek(PREVIOUS_WEEK_START);
+
+        verify(
+            weeklyChallengeRepository,
+            never()
+        ).saveAll(
+            List.of(
+                firstChallenge,
+                secondChallenge
+            )
+        );
+
+        verify(
+            weeklyPlayerScoreRepository,
+            never()
+        ).saveAll(
+            org.mockito.ArgumentMatchers.anyList()
+        );
+
+        verify(weeklyChallengeSelectionService)
+            .selectWeekChallenges(
+                CURRENT_WEEK_START
+            );
+    }
+
+    /**
+     * Verifies that the first application week can be created without a
+     * previous challenge pack.
+     */
+    @Test
+    void shouldPrepareCurrentWeekWhenPreviousWeekDoesNotExist() {
+        when(
+            weeklyChallengeRepository
+                .findAllByWeekStartOrderByIdAsc(
+                    PREVIOUS_WEEK_START
+                )
+        ).thenReturn(List.of());
+
+        service.rolloverIfNeeded();
+
+        verify(
+            rankingRecalculationService,
+            never()
+        ).recalculateWeek(PREVIOUS_WEEK_START);
+
+        verify(weeklyChallengeSelectionService)
+            .selectWeekChallenges(
+                CURRENT_WEEK_START
+            );
+    }
+
+    /**
+     * Verifies that a partially finalized pack is rejected instead of being
+     * silently repaired.
+     */
+    @Test
+    void shouldRejectPartiallyFinalizedPreviousWeek() {
+        WeeklyChallenge finalizedChallenge =
+            new WeeklyChallenge();
+
+        finalizedChallenge.setFinalizedAt(
+            ROLLOVER_TIME
+        );
+
+        WeeklyChallenge activeChallenge =
+            new WeeklyChallenge();
+
+        when(
+            weeklyChallengeRepository
+                .findAllByWeekStartOrderByIdAsc(
+                    PREVIOUS_WEEK_START
+                )
+        ).thenReturn(
+            List.of(
+                finalizedChallenge,
+                activeChallenge
+            )
+        );
+
+        assertThatThrownBy(
+            service::rolloverIfNeeded
+        )
+            .isInstanceOf(
+                IllegalStateException.class
+            )
+            .hasMessageContaining(
+                PREVIOUS_WEEK_START.toString()
+            );
+
+        verify(
+            rankingRecalculationService,
+            never()
+        ).recalculateWeek(
+            PREVIOUS_WEEK_START
+        );
+
+        verify(
+            weeklyChallengeSelectionService,
+            never()
+        ).selectWeekChallenges(
+            CURRENT_WEEK_START
+        );
+    }
+}

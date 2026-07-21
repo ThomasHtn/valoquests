@@ -10,9 +10,9 @@ import org.springframework.validation.annotation.Validated;
 /**
  * Contains the global application configuration.
  *
- * @param frontendOrigin Angular frontend origin allowed by CORS
- * @param adminApiKey    secret protecting administrative endpoints
- * @param scheduling     synchronization scheduling configuration
+ * @param frontendOrigin      Angular frontend origin allowed by CORS
+ * @param adminApiKey         secret protecting administrative endpoints
+ * @param deepSynchronization deep-synchronization business configuration
  */
 @Validated
 @ConfigurationProperties("app")
@@ -21,16 +21,16 @@ public record ApplicationProperties(
     @NotBlank String adminApiKey,
     @Valid
     @NotNull
-    Scheduling scheduling
+    DeepSynchronization deepSynchronization
 ) {
 
     /**
-     * Contains synchronization-related configuration.
+     * Contains deep-synchronization business configuration.
      *
-     * @param deepSynchronizationScope history range imported by deep synchronization
+     * @param scope history range imported during deep synchronization
      */
-    public record Scheduling(
-        @NotNull DeepSynchronizationScope deepSynchronizationScope
+    public record DeepSynchronization(
+        @NotNull DeepSynchronizationScope scope
     ) {
     }
 }

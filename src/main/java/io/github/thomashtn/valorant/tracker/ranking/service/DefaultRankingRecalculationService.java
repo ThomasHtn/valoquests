@@ -23,11 +23,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Rebuilds the current weekly ranking from persisted challenge progress.
+ * Rebuilds weekly rankings from persisted challenge progress.
  */
 @Service
 public class DefaultRankingRecalculationService
@@ -62,6 +63,11 @@ public class DefaultRankingRecalculationService
 
     /**
      * Creates the ranking recalculation service.
+     *
+     * @param playerRepository   player repository
+     * @param progressRepository challenge progress repository
+     * @param scoreRepository    weekly score repository
+     * @param clock              application clock
      */
     public DefaultRankingRecalculationService(
         PlayerRepository playerRepository,
@@ -76,25 +82,44 @@ public class DefaultRankingRecalculationService
     }
 
     /**
-     * Recalculates scores and deterministic positions for the current UTC week.
+     * Recalculates scores and positions for the current UTC week.
      */
     @Override
     @Transactional
     public void recalculateCurrentRanking() {
-        LocalDate weekStart = resolveCurrentWeekStart();
+        recalculateWeek(resolveCurrentWeekStart());
+    }
+
+    /**
+     * Recalculates scores and deterministic positions for one UTC week.
+     *
+     * @param weekStart Monday identifying the week to recalculate
+     */
+    @Override
+    @Transactional
+    public void recalculateWeek(LocalDate weekStart) {
+        validateWeekStart(weekStart);
+
         Instant calculatedAt = clock.instant();
+
         List<Player> activePlayers = playerRepository
             .findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE);
 
         if (activePlayers.isEmpty()) {
             scoreRepository.deleteAllByWeekStart(weekStart);
-            LOGGER.info("Ranking cleared for week {} because no player is active.", weekStart);
+
+            LOGGER.info(
+                "Ranking cleared for week {} because no player is active.",
+                weekStart
+            );
+
             return;
         }
 
         List<Long> activePlayerIds = activePlayers.stream()
             .map(Player::getId)
             .toList();
+
         scoreRepository.deleteAllByWeekStartAndPlayerIdNotIn(
             weekStart,
             activePlayerIds
@@ -108,13 +133,18 @@ public class DefaultRankingRecalculationService
                 Function.identity()
             ));
 
-        Map<Long, RankingAggregate> aggregates = aggregateProgress(weekStart);
+        Map<Long, RankingAggregate> aggregates =
+            aggregateProgress(weekStart);
+
         List<WeeklyPlayerScore> scores = activePlayers.stream()
             .map(player -> buildScore(
                 player,
                 weekStart,
                 calculatedAt,
-                aggregates.getOrDefault(player.getId(), RankingAggregate.EMPTY),
+                aggregates.getOrDefault(
+                    player.getId(),
+                    RankingAggregate.EMPTY
+                ),
                 existingByPlayerId.get(player.getId())
             ))
             .sorted(rankingComparator())
@@ -125,6 +155,7 @@ public class DefaultRankingRecalculationService
         }
 
         scoreRepository.saveAll(scores);
+
         LOGGER.info(
             "Ranking recalculated for week {} with {} player(s).",
             weekStart,
@@ -134,22 +165,33 @@ public class DefaultRankingRecalculationService
 
     /**
      * Aggregates completed challenge points by player.
+     *
+     * @param weekStart week being recalculated
+     * @return player aggregations indexed by player identifier
      */
-    private Map<Long, RankingAggregate> aggregateProgress(LocalDate weekStart) {
+    private Map<Long, RankingAggregate> aggregateProgress(
+        LocalDate weekStart
+    ) {
         Map<Long, RankingAggregate> aggregates = new HashMap<>();
 
-        for (PlayerChallengeProgress progress : progressRepository
-            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
-                weekStart
-            )) {
+        List<PlayerChallengeProgress> progressRows =
+            progressRepository
+                .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
+                    weekStart
+                );
+
+        for (PlayerChallengeProgress progress : progressRows) {
             if (!progress.isCompleted()) {
                 continue;
             }
 
             long playerId = progress.getPlayer().getId();
-            int challengePoints = progress.getWeeklyChallenge()
+
+            int challengePoints = progress
+                .getWeeklyChallenge()
                 .getChallenge()
                 .getPoints();
+
             aggregates.merge(
                 playerId,
                 new RankingAggregate(challengePoints, 1),
@@ -161,7 +203,14 @@ public class DefaultRankingRecalculationService
     }
 
     /**
-     * Creates or refreshes one score while preserving the former position.
+     * Creates or refreshes one score while preserving its former position.
+     *
+     * @param player       ranked player
+     * @param weekStart    ranking week
+     * @param calculatedAt calculation timestamp
+     * @param aggregate    calculated player aggregation
+     * @param existing     existing score, when available
+     * @return score ready to persist
      */
     private WeeklyPlayerScore buildScore(
         Player player,
@@ -177,52 +226,101 @@ public class DefaultRankingRecalculationService
         score.setPlayer(player);
         score.setWeekStart(weekStart);
         score.setPoints(aggregate.points());
-        score.setCompletedChallenges(aggregate.completedChallenges());
-        score.setPreviousPosition(existing == null ? null : existing.getPosition());
+        score.setCompletedChallenges(
+            aggregate.completedChallenges()
+        );
+        score.setPreviousPosition(
+            existing == null
+                ? null
+                : existing.getPosition()
+        );
         score.setCalculatedAt(calculatedAt);
+
         return score;
     }
 
     /**
      * Defines stable ranking order and deterministic tie breaking.
+     *
+     * @return ranking comparator
      */
     private Comparator<WeeklyPlayerScore> rankingComparator() {
-        return Comparator.comparingInt(WeeklyPlayerScore::getPoints)
+        return Comparator
+            .comparingInt(WeeklyPlayerScore::getPoints)
             .reversed()
             .thenComparing(
                 Comparator.comparingInt(
                     WeeklyPlayerScore::getCompletedChallenges
                 ).reversed()
             )
-            .thenComparing(score -> score.getPlayer().getId());
+            .thenComparing(
+                score -> score.getPlayer().getId()
+            );
     }
 
     /**
      * Resolves the Monday beginning the current UTC calendar week.
+     *
+     * @return current UTC week start
      */
     private LocalDate resolveCurrentWeekStart() {
-        return LocalDate.now(clock.withZone(ZoneOffset.UTC)).with(
-            TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)
+        return LocalDate
+            .now(clock.withZone(ZoneOffset.UTC))
+            .with(
+                TemporalAdjusters.previousOrSame(
+                    DayOfWeek.MONDAY
+                )
+            );
+    }
+
+    /**
+     * Ensures that the supplied date identifies a Monday.
+     *
+     * @param weekStart week identifier to validate
+     */
+    private void validateWeekStart(LocalDate weekStart) {
+        Objects.requireNonNull(
+            weekStart,
+            "weekStart must not be null"
         );
+
+        if (weekStart.getDayOfWeek() != DayOfWeek.MONDAY) {
+            throw new IllegalArgumentException(
+                "weekStart must be a Monday"
+            );
+        }
     }
 
     /**
      * Immutable score aggregation for one player.
+     *
+     * @param points              completed challenge points
+     * @param completedChallenges number of completed challenges
      */
-    private record RankingAggregate(int points, int completedChallenges) {
+    private record RankingAggregate(
+        int points,
+        int completedChallenges
+    ) {
 
         /**
          * Empty aggregation used when no challenge is completed.
          */
-        private static final RankingAggregate EMPTY = new RankingAggregate(0, 0);
+        private static final RankingAggregate EMPTY =
+            new RankingAggregate(0, 0);
 
         /**
-         * Combines two aggregations.
+         * Combines two player aggregations.
+         *
+         * @param other aggregation to add
+         * @return combined aggregation
          */
-        private RankingAggregate add(RankingAggregate other) {
+        private RankingAggregate add(
+            RankingAggregate other
+        ) {
             return new RankingAggregate(
                 points + other.points,
-                completedChallenges + other.completedChallenges
+                completedChallenges
+                    + other.completedChallenges
             );
         }
     }
