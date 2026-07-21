@@ -2,6 +2,9 @@ package io.github.thomashtn.valorant.tracker.match.repository;
 
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -52,4 +55,32 @@ public interface PlayerMatchRepository
         @Param("periodStart") Instant periodStart,
         @Param("periodEnd") Instant periodEnd
     );
+
+    /** Returns a filtered page of matches for one tracked player. */
+    @EntityGraph(attributePaths = {"player", "match", "match.season"})
+    @Query(
+        """
+            SELECT playerMatch
+            FROM PlayerMatch playerMatch
+            JOIN playerMatch.match valorantMatch
+            WHERE playerMatch.player.id = :playerId
+              AND (:seasonId IS NULL OR valorantMatch.season.id = :seasonId)
+              AND (:map IS NULL OR LOWER(valorantMatch.mapName) = LOWER(:map))
+              AND (:agent IS NULL OR LOWER(playerMatch.agentName) = LOWER(:agent))
+              AND (:result IS NULL OR playerMatch.result = :result)
+            """
+    )
+    Page<PlayerMatch> findHistory(
+        @Param("playerId") Long playerId,
+        @Param("seasonId") Long seasonId,
+        @Param("map") String map,
+        @Param("agent") String agent,
+        @Param("result") io.github.thomashtn.valorant.tracker.match.model.MatchResult result,
+        Pageable pageable
+    );
+
+    /** Returns all matches required to calculate one player's profile statistics. */
+    @EntityGraph(attributePaths = {"match", "match.season"})
+    List<PlayerMatch> findAllByPlayerIdOrderByMatchStartedAtDesc(Long playerId);
 }
+

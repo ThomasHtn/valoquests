@@ -1,13 +1,10 @@
 package io.github.thomashtn.valorant.tracker.challenge.controller;
 
-import static io.github.thomashtn.valorant.tracker.shared.web.RequiredService.get;
-
 import io.github.thomashtn.valorant.tracker.challenge.dto.CurrentChallengesResponse;
 import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,15 +21,15 @@ public class ChallengeController {
     /**
      * Provider used to access the optional feature service when implemented.
      */
-    private final ObjectProvider<ChallengeQueryService> serviceProvider;
+    private final ChallengeQueryService service;
 
     /**
      * Creates the controller with an optional business-service implementation.
      *
      * @param serviceProvider provider resolved when the business layer is implemented
      */
-    public ChallengeController(ObjectProvider<ChallengeQueryService> serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public ChallengeController(ChallengeQueryService service) {
+        this.service = service;
     }
 
     /**
@@ -50,8 +47,7 @@ public class ChallengeController {
             """
     )
     @ApiResponse(responseCode = "200", description = "Current challenges returned successfully.")
-    @ApiResponse(responseCode = "501", description = "Challenge query service has not been implemented yet.")
-    public CurrentChallengesResponse getCurrentChallenges() {
-        return get(serviceProvider, "Current challenge consultation").findCurrent();
+        public CurrentChallengesResponse getCurrentChallenges() {
+        return service.findCurrent();
     }
 }

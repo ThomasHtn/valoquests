@@ -324,3 +324,38 @@ GET  /api/admin/synchronizations/{synchronizationId}
 Built as a portfolio project, tested as a real application.
 
 </div>
+
+## Quality gate
+
+The project uses two complementary test levels:
+
+- fast unit tests for challenge rules, Henrik mapping, synchronization orchestration and ranking calculations;
+- PostgreSQL integration tests powered by Testcontainers for Flyway, repositories, HTTP security and end-to-end persistence workflows.
+
+Run the complete suite with Docker available:
+
+```bash
+./mvnw verify
+```
+
+Run only integration tests from IntelliJ with the `integration` JUnit tag, or from Maven:
+
+```bash
+./mvnw test -Dgroups=integration
+```
+
+The integration suite starts an isolated PostgreSQL 17 container, applies every production Flyway migration and validates Hibernate against the resulting schema. No local development database is modified.
+
+### Release-candidate validation
+
+Before publishing a release, verify the following flows against a dedicated PostgreSQL database and a valid Henrik API key:
+
+1. standard synchronization for one player;
+2. standard synchronization for all active players, including one simulated player failure;
+3. deep synchronization and idempotent re-import of the latest page;
+4. manual challenge recalculation followed by ranking recalculation;
+5. all public routes, empty responses, pagination, filters and unknown-player errors;
+6. week change on a fixed clock, ensuring a new challenge pack is selected without modifying finalized history;
+7. all 78 catalogue rules on a representative week containing Competitive, Team Deathmatch and Swiftplay matches.
+
+External Henrik calls are intentionally excluded from automated CI tests. They belong to a controlled smoke-test environment because they depend on credentials, rate limits and live upstream data.

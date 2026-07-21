@@ -1,7 +1,5 @@
 package io.github.thomashtn.valorant.tracker.player.controller;
 
-import static io.github.thomashtn.valorant.tracker.shared.web.RequiredService.get;
-
 import io.github.thomashtn.valorant.tracker.player.dto.PlayerDetailsResponse;
 import io.github.thomashtn.valorant.tracker.player.dto.PlayerSummaryResponse;
 import io.github.thomashtn.valorant.tracker.player.service.PlayerQueryService;
@@ -10,7 +8,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,13 +25,13 @@ public class PlayerController {
     /**
      * Provider used to access the optional feature service when implemented.
      */
-    private final ObjectProvider<PlayerQueryService> serviceProvider;
+    private final PlayerQueryService service;
 
     /**
      * @param serviceProvider provider for the future player query implementation
      */
-    public PlayerController(ObjectProvider<PlayerQueryService> serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public PlayerController(PlayerQueryService service) {
+        this.service = service;
     }
 
     /**
@@ -49,9 +46,8 @@ public class PlayerController {
             """
     )
     @ApiResponse(responseCode = "200", description = "Players returned successfully.")
-    @ApiResponse(responseCode = "501", description = "Player query service has not been implemented yet.")
-    public List<PlayerSummaryResponse> getPlayers() {
-        return get(serviceProvider, "Player list consultation").findAll();
+        public List<PlayerSummaryResponse> getPlayers() {
+        return service.findAll();
     }
 
     /**
@@ -68,11 +64,10 @@ public class PlayerController {
     )
     @ApiResponse(responseCode = "200", description = "Player profile returned successfully.")
     @ApiResponse(responseCode = "404", description = "No tracked player exists for the supplied identifier.")
-    @ApiResponse(responseCode = "501", description = "Player query service has not been implemented yet.")
-    public PlayerDetailsResponse getPlayer(
+        public PlayerDetailsResponse getPlayer(
         @Parameter(description = "Internal player identifier.", example = "3", required = true)
         @PathVariable long playerId
     ) {
-        return get(serviceProvider, "Player profile consultation").findById(playerId);
+        return service.findById(playerId);
     }
 }

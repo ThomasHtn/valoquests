@@ -1,7 +1,5 @@
 package io.github.thomashtn.valorant.tracker.match.controller;
 
-import static io.github.thomashtn.valorant.tracker.shared.web.RequiredService.get;
-
 import io.github.thomashtn.valorant.tracker.match.dto.MatchResponse;
 import io.github.thomashtn.valorant.tracker.match.service.MatchQueryService;
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
@@ -9,7 +7,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,13 +25,13 @@ public class MatchController {
     /**
      * Provider used to access the optional feature service when implemented.
      */
-    private final ObjectProvider<MatchQueryService> serviceProvider;
+    private final MatchQueryService service;
 
     /**
      * @param serviceProvider provider for the future match query implementation
      */
-    public MatchController(ObjectProvider<MatchQueryService> serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public MatchController(MatchQueryService service) {
+        this.service = service;
     }
 
     /**
@@ -53,8 +50,7 @@ public class MatchController {
     @ApiResponse(responseCode = "200", description = "Match page returned successfully.")
     @ApiResponse(responseCode = "400", description = "A pagination value or filter is invalid.")
     @ApiResponse(responseCode = "404", description = "The requested player does not exist.")
-    @ApiResponse(responseCode = "501", description = "Match query service has not been implemented yet.")
-    public PageResponse<MatchResponse> getPlayerMatches(
+        public PageResponse<MatchResponse> getPlayerMatches(
         @Parameter(description = "Internal player identifier.", example = "3", required = true)
         @PathVariable long playerId,
         @Parameter(description = "Zero-based page index.", example = "0")
@@ -70,7 +66,6 @@ public class MatchController {
         @Parameter(description = "Optional result filter: WIN, LOSS or DRAW.", example = "WIN")
         @RequestParam(required = false) String result
     ) {
-        return get(serviceProvider, "Player match history consultation")
-            .findByPlayer(playerId, page, size, seasonId, map, agent, result);
+        return service.findByPlayer(playerId, page, size, seasonId, map, agent, result);
     }
 }
