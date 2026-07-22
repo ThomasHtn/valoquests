@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DefaultPlayerQueryService implements PlayerQueryService {
 
     private final PlayerRepository playerRepository;
+
     private final PlayerMatchRepository playerMatchRepository;
 
     public DefaultPlayerQueryService(
@@ -93,8 +94,11 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
 
     private AgentStatisticsResponse toAgentStatistics(String agentName, List<PlayerMatch> matches) {
         Statistics statistics = Statistics.from(matches);
-        String agentId = matches.stream().map(PlayerMatch::getAgentId).filter(value -> value != null && !value.isBlank())
-            .findFirst().orElse(null);
+        String agentId = matches.stream()
+            .map(PlayerMatch::getAgentId)
+            .filter(value -> value != null && !value.isBlank())
+            .findFirst()
+            .orElse(null);
         return new AgentStatisticsResponse(
             agentId,
             agentName,

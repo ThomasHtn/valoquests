@@ -17,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties("app")
 public record ApplicationProperties(
+
     @NotBlank String frontendOrigin,
     @NotBlank String adminApiKey,
     @Valid
@@ -30,6 +31,7 @@ public record ApplicationProperties(
      * @param scope history range imported during deep synchronization
      */
     public record DeepSynchronization(
+
         @NotNull DeepSynchronizationScope scope
     ) {
     }

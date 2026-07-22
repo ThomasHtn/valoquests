@@ -4,14 +4,16 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
 /**
- * Protects administrative routes with a static API key supplied through an HTTP header.
+ * Protects administrative routes with a static API key supplied through an
+ * HTTP header.
  */
 public class AdminApiKeyFilter extends OncePerRequestFilter {
 
@@ -46,13 +48,29 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     }
 
     /**
+     * Prevents the filter from executing again during an ERROR dispatch.
+     *
+     * <p>
+     * Once the request has been authenticated, the filter must not run again
+     * while Spring renders an error response. Otherwise the original HTTP
+     * status (for example 404) may be replaced by a new authentication error.
+     * </p>
+     *
+     * @return always {@code true}
+     */
+    @Override
+    protected boolean shouldNotFilterErrorDispatch() {
+        return true;
+    }
+
+    /**
      * Validates the administrative key before continuing the filter chain.
      *
-     * @param request current HTTP request
-     * @param response current HTTP response
+     * @param request     current HTTP request
+     * @param response    current HTTP response
      * @param filterChain remaining servlet filter chain
      * @throws ServletException when the filter chain fails
-     * @throws IOException when the error response cannot be written
+     * @throws IOException      when the error response cannot be written
      */
     @Override
     protected void doFilterInternal(
@@ -60,6 +78,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
         HttpServletResponse response,
         FilterChain filterChain
     ) throws ServletException, IOException {
+
         String providedApiKey = request.getHeader(HEADER_NAME);
 
         if (providedApiKey == null) {
@@ -92,7 +111,10 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
      * @param expectedApiKey key configured by the application
      * @return {@code true} when both keys are equal
      */
-    private boolean keysMatch(String providedApiKey, String expectedApiKey) {
+    private boolean keysMatch(
+        String providedApiKey,
+        String expectedApiKey
+    ) {
         return MessageDigest.isEqual(
             providedApiKey.getBytes(StandardCharsets.UTF_8),
             expectedApiKey.getBytes(StandardCharsets.UTF_8)
@@ -103,9 +125,9 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
      * Writes a minimal RFC 7807-compatible problem response.
      *
      * @param response current HTTP response
-     * @param status HTTP status code
-     * @param code application error code
-     * @param detail human-readable error detail
+     * @param status   HTTP status code
+     * @param code     application error code
+     * @param detail   human-readable error detail
      * @throws IOException when the response body cannot be written
      */
     private void writeProblemResponse(
@@ -114,17 +136,21 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
         String code,
         String detail
     ) throws IOException {
+
         response.setStatus(status);
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.getWriter().write("""
-            {
-              "type": "about:blank",
-              "title": "Unauthorized administration request",
-              "status": %d,
-              "code": "%s",
-              "detail": "%s"
-            }
-            """.formatted(status, code, detail));
+
+        String responseBody = (
+            "{%n"
+                + "  \"type\": \"about:blank\",%n"
+                + "  \"title\": \"Unauthorized administration request\",%n"
+                + "  \"status\": %d,%n"
+                + "  \"code\": \"%s\",%n"
+                + "  \"detail\": \"%s\"%n"
+                + "}%n"
+        ).formatted(status, code, detail);
+
+        response.getWriter().write(responseBody);
     }
 }

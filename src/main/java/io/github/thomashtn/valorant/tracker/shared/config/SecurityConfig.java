@@ -1,6 +1,6 @@
 package io.github.thomashtn.valorant.tracker.shared.config;
 
-import java.util.List;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,6 +12,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.List;
+
 /**
  * Configures stateless HTTP security and CORS rules for the application.
  */
@@ -21,12 +23,20 @@ public class SecurityConfig {
     /**
      * Builds the application security filter chain.
      *
-     * @param http Spring Security HTTP configuration
+     * @param http       Spring Security HTTP configuration
      * @param properties application-level configuration properties
      * @return the configured security filter chain
      * @throws Exception when Spring Security cannot build the chain
      */
     @Bean
+    @SuppressFBWarnings(
+        value = "THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION",
+        justification = """
+            Spring Security's HttpSecurity configuration and build API declares
+            Exception. Narrowing the checked exception is not possible without
+            wrapping framework exceptions and losing their original semantics.
+            """
+    )
     SecurityFilterChain securityFilterChain(
         HttpSecurity http,
         ApplicationProperties properties

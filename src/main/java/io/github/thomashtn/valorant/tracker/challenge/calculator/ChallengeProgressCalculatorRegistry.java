@@ -13,7 +13,7 @@ import java.util.Map;
  * supported progress mode.
  */
 @Component
-public class ChallengeProgressCalculatorRegistry {
+public final class ChallengeProgressCalculatorRegistry {
 
     /**
      * Calculators indexed by their supported progress mode.

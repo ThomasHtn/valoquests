@@ -13,6 +13,7 @@ import java.util.Objects;
  * @param completed          whether the target has been reached
  */
 public record ChallengeProgressResult(
+
     BigDecimal currentValue,
     BigDecimal targetValue,
     BigDecimal progressPercentage,

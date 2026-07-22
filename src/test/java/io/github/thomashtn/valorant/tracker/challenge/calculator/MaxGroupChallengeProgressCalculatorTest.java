@@ -31,18 +31,21 @@ class MaxGroupChallengeProgressCalculatorTest {
      * Metric evaluator used by the calculator.
      */
     private final ChallengeMetricEvaluator metricEvaluator =
+
         new ChallengeMetricEvaluator();
 
     /**
      * Match filter used by the calculator.
      */
     private final ChallengeMatchFilter matchFilter =
+
         new ChallengeMatchFilter();
 
     /**
      * Calculator under test.
      */
     private final MaxGroupChallengeProgressCalculator calculator =
+
         new MaxGroupChallengeProgressCalculator(
             metricEvaluator,
             matchFilter

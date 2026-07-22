@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HenrikAccountResponse(
+
     Integer status,
     HenrikAccountData data
 ) {
@@ -28,6 +29,7 @@ public record HenrikAccountResponse(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikAccountData(
+
         String puuid,
         @JsonProperty("name") String gameName,
         @JsonProperty("tag") String tagLine

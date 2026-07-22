@@ -9,10 +9,18 @@ import java.util.List;
  */
 @Schema(description = "Paginated API response.")
 public record PageResponse<T>(
+
     List<T> content,
     int page,
     int size,
     long totalElements,
     int totalPages
 ) {
+    /**
+     * Creates an immutable page response.
+     */
+    public PageResponse {
+        content = List.copyOf(content);
+    }
+
 }

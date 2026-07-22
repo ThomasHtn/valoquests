@@ -1,5 +1,6 @@
 package io.github.thomashtn.valorant.tracker.challenge.parser;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.challenge.entity.Challenge;
 import io.github.thomashtn.valorant.tracker.challenge.exception.InvalidChallengeDefinitionException;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeCondition;
@@ -43,6 +44,10 @@ public class JacksonChallengeDefinitionParser
      *
      * @param objectMapper application JSON mapper
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public JacksonChallengeDefinitionParser(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }

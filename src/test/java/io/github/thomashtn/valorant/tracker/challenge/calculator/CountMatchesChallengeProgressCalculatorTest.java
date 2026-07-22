@@ -29,6 +29,7 @@ class CountMatchesChallengeProgressCalculatorTest {
      * Calculator under test.
      */
     private final CountMatchesChallengeProgressCalculator calculator =
+
         new CountMatchesChallengeProgressCalculator(
             new ChallengeMetricEvaluator(),
             new ChallengeMatchFilter()

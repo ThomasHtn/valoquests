@@ -8,10 +8,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HenrikMatchTeam(
+
     @JsonProperty("team_id") String teamId,
     Boolean won,
     HenrikRounds rounds
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikRounds(Integer won, Integer lost) {}
+
 }

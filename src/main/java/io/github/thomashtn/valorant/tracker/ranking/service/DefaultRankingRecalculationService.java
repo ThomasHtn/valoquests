@@ -1,5 +1,6 @@
 package io.github.thomashtn.valorant.tracker.ranking.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valorant.tracker.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
@@ -69,6 +70,10 @@ public class DefaultRankingRecalculationService
      * @param scoreRepository    weekly score repository
      * @param clock              application clock
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public DefaultRankingRecalculationService(
         PlayerRepository playerRepository,
         PlayerChallengeProgressRepository progressRepository,

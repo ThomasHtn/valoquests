@@ -9,6 +9,7 @@ package io.github.thomashtn.valorant.tracker.match.model;
  * @param rejected number of malformed, incomplete or unrelated entries
  */
 public record MatchImportResult(
+
     int received,
     int imported,
     int alreadyKnown,

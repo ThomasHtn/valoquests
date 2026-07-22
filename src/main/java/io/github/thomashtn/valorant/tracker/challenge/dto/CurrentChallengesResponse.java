@@ -13,12 +13,14 @@ import java.util.List;
  */
 @Schema(description = "Current weekly challenges and their collective completion progress.")
 public record CurrentChallengesResponse(
+
     LocalDate weekStart,
     LocalDate weekEnd,
     Instant lastSuccessfulSynchronizationAt,
     List<ChallengeProgressResponse> challenges
 ) {
     public record ChallengeProgressResponse(
+
         Long id,
         String name,
         String description,
@@ -31,4 +33,12 @@ public record CurrentChallengesResponse(
         BigDecimal completionPercentage
     ) {
     }
+
+    /**
+     * Creates an immutable current-challenges response.
+     */
+    public CurrentChallengesResponse {
+        challenges = List.copyOf(challenges);
+    }
+
 }

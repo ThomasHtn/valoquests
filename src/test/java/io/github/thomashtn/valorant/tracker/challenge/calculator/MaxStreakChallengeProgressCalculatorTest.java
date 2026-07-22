@@ -31,6 +31,7 @@ class MaxStreakChallengeProgressCalculatorTest {
      * Calculator under test.
      */
     private final MaxStreakChallengeProgressCalculator calculator =
+
         new MaxStreakChallengeProgressCalculator(
             new ChallengeMetricEvaluator(),
             new ChallengeMatchFilter()

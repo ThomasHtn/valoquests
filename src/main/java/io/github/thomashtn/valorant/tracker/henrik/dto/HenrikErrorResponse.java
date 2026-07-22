@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HenrikErrorResponse(
+
     Integer status,
     String message,
     @JsonProperty("errors") Object errors

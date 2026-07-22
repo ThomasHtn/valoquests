@@ -27,6 +27,7 @@ import java.time.Duration;
 @Validated
 @ConfigurationProperties(prefix = "henrik.api")
 public record HenrikApiProperties(
+
     @NotBlank String baseUrl,
     @NotBlank String key,
     @NotBlank String region,

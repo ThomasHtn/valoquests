@@ -22,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class DefaultMatchQueryService implements MatchQueryService {
 
     private static final int MAXIMUM_PAGE_SIZE = 100;
+
     private final PlayerRepository playerRepository;
+
     private final PlayerMatchRepository playerMatchRepository;
 
     public DefaultMatchQueryService(

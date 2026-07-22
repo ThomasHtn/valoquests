@@ -1,5 +1,6 @@
 package io.github.thomashtn.valorant.tracker.henrik.client;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.henrik.config.HenrikApiProperties;
 import io.github.thomashtn.valorant.tracker.henrik.dto.match.HenrikMatchHistoryResponse;
 import java.util.Objects;
@@ -61,6 +62,10 @@ public class DefaultHenrikMatchClient implements HenrikMatchClient {
      * @param responseHandler external response error handler
      * @param requestExecutor shared Henrik request executor
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public DefaultHenrikMatchClient(
         WebClient henrikWebClient,
         HenrikApiProperties properties,

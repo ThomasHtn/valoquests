@@ -12,6 +12,7 @@ import java.time.Instant;
  */
 @Schema(description = "Compact tracked-player summary.")
 public record PlayerSummaryResponse(
+
     Long id,
     String riotId,
     String displayName,

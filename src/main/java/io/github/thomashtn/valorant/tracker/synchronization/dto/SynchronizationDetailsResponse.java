@@ -13,6 +13,7 @@ import java.util.List;
  */
 @Schema(description = "Detailed synchronization execution.")
 public record SynchronizationDetailsResponse(
+
     Long id,
     SynchronizationType type,
     SynchronizationTrigger trigger,
@@ -26,6 +27,7 @@ public record SynchronizationDetailsResponse(
     List<PlayerResultResponse> players
 ) {
     public record PlayerResultResponse(
+
         Long playerId,
         String displayName,
         SynchronizationStatus status,
@@ -34,4 +36,12 @@ public record SynchronizationDetailsResponse(
         String errorMessage
     ) {
     }
+
+    /**
+     * Creates an immutable synchronization-details response.
+     */
+    public SynchronizationDetailsResponse {
+        players = List.copyOf(players);
+    }
+
 }

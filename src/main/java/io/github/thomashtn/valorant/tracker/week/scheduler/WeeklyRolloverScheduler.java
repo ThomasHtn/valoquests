@@ -30,6 +30,7 @@ public class WeeklyRolloverScheduler {
      * Service executing the transactional weekly rollover.
      */
     private final WeeklyRolloverService
+
         weeklyRolloverService;
 
     /**

@@ -18,6 +18,7 @@ import java.util.Objects;
  * @param playerMatches immutable chronological list of eligible matches
  */
 public record PlayerChallengeContext(
+
     Long playerId,
     LocalDate weekStart,
     Instant periodStart,

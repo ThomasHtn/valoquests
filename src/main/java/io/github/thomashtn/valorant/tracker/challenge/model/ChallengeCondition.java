@@ -16,6 +16,7 @@ import java.math.BigDecimal;
  * @param minimumMatches optional minimum number of eligible matches
  */
 public record ChallengeCondition(
+
     ChallengeMetric metric,
     ChallengeOperator operator,
     BigDecimal target,

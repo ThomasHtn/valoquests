@@ -11,6 +11,7 @@ import java.util.List;
  */
 @Schema(description = "Finalized ranking for one week.")
 public record RankingHistoryWeekResponse(
+
     LocalDate weekStart,
     LocalDate weekEnd,
     Instant finalizedAt,
@@ -18,6 +19,7 @@ public record RankingHistoryWeekResponse(
     List<FinalRankingEntryResponse> ranking
 ) {
     public record FinalRankingEntryResponse(
+
         int position,
         Long playerId,
         String displayName,
@@ -25,4 +27,12 @@ public record RankingHistoryWeekResponse(
         int completedChallenges
     ) {
     }
+
+    /**
+     * Creates an immutable historical ranking response.
+     */
+    public RankingHistoryWeekResponse {
+        ranking = List.copyOf(ranking);
+    }
+
 }

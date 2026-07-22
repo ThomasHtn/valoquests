@@ -20,6 +20,14 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     boolean existsByRiotPuuid(String riotPuuid);
 
     /**
+     * Counts tracked players having the requested lifecycle status.
+     *
+     * @param status player lifecycle status
+     * @return number of matching players
+     */
+    long countByStatus(PlayerStatus status);
+
+    /**
      * Returns tracked players having the requested status in deterministic
      * identifier order.
      *

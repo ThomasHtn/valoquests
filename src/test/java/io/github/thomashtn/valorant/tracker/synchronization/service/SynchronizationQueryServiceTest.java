@@ -34,8 +34,10 @@ class SynchronizationQueryServiceTest {
 
     private static final Instant STARTED_AT =
         Instant.parse("2026-07-20T08:00:00Z");
+
     private static final Instant FINISHED_AT =
         Instant.parse("2026-07-20T08:00:05Z");
+
     private static final Instant LAST_SUCCESSFUL_AT =
         Instant.parse("2026-07-20T08:00:04Z");
 

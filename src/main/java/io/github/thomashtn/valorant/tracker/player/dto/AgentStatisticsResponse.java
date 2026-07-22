@@ -9,6 +9,7 @@ import java.math.BigDecimal;
  */
 @Schema(description = "Aggregated player statistics for one Valorant agent.")
 public record AgentStatisticsResponse(
+
     String agentId,
     String agentName,
     long matchesPlayed,

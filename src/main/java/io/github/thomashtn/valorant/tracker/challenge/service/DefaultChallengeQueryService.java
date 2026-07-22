@@ -28,9 +28,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class DefaultChallengeQueryService implements ChallengeQueryService {
 
     private final WeeklyChallengeRepository weeklyChallengeRepository;
+
     private final PlayerChallengeProgressRepository progressRepository;
+
     private final PlayerRepository playerRepository;
+
     private final ChallengeDefinitionParser definitionParser;
+
     private final Clock clock;
 
     public DefaultChallengeQueryService(
@@ -56,7 +60,9 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             .findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(weekStart);
         List<PlayerChallengeProgress> progressRows = progressRepository
             .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(weekStart);
-        int totalPlayers = playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE).size();
+        int totalPlayers = Math.toIntExact(
+            playerRepository.countByStatus(PlayerStatus.ACTIVE)
+        );
         var progressByChallenge = progressRows.stream().collect(Collectors.groupingBy(
             row -> row.getWeeklyChallenge().getId()
         ));
@@ -82,7 +88,11 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
                     .collect(Collectors.joining(" + "));
                 BigDecimal target = definition.conditions().size() == 1
                     ? definition.singleCondition().target()
-                    : rows.stream().map(PlayerChallengeProgress::getTargetValue).filter(Objects::nonNull).findFirst().orElse(null);
+                    : rows.stream()
+                        .map(PlayerChallengeProgress::getTargetValue)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null);
                 return new CurrentChallengesResponse.ChallengeProgressResponse(
                     weekly.getId(),
                     weekly.getChallenge().getName(),

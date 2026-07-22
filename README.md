@@ -359,3 +359,32 @@ Before publishing a release, verify the following flows against a dedicated Post
 7. all 78 catalogue rules on a representative week containing Competitive, Team Deathmatch and Swiftplay matches.
 
 External Henrik calls are intentionally excluded from automated CI tests. They belong to a controlled smoke-test environment because they depend on credentials, rate limits and live upstream data.
+
+## Quality gate and synchronization benchmark
+
+The hardening profile is executed with:
+
+```bash
+./mvnw clean verify
+```
+
+The build runs Checkstyle, the complete test suite, JaCoCo report generation and SpotBugs. The JaCoCo XML report is
+ready for SonarQube through `sonar.coverage.jacoco.xmlReportPaths`. A typical SonarQube analysis can be launched with:
+
+```bash
+./mvnw clean verify sonar:sonar \
+  -Dsonar.projectKey=valorant-tracker \
+  -Dsonar.host.url="$SONAR_HOST_URL" \
+  -Dsonar.token="$SONAR_TOKEN"
+```
+
+A real end-to-end benchmark of the six-player standard synchronization is available once the application and
+PostgreSQL are running:
+
+```bash
+ADMIN_KEY="$ADMIN_KEY" RUNS=3 ./scripts/benchmark-full-synchronization.sh
+```
+
+Results are written to `target/full-synchronization-benchmark.csv`. The benchmark includes Henrik API latency, rate
+limiting, match persistence, challenge recalculation and ranking recalculation, so it should be run with the same
+configuration used in the target environment.

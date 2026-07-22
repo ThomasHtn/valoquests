@@ -1,5 +1,6 @@
 package io.github.thomashtn.valorant.tracker.synchronization.model;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import java.time.Instant;
 
@@ -11,7 +12,12 @@ import java.time.Instant;
  * @param matchesImported number of newly imported player matches
  * @param completedAt completion timestamp
  */
+@SuppressFBWarnings(
+    value = "EI_EXPOSE_REP",
+    justification = "This internal result intentionally carries the managed player aggregate to the command layer."
+)
 public record PlayerSynchronizationResult(
+
     Player player,
     int pagesFetched,
     int matchesImported,

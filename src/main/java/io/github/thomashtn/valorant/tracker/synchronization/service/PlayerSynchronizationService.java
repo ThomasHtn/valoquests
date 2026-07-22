@@ -44,26 +44,32 @@ public class PlayerSynchronizationService {
      * Repository used to load and persist tracked players.
      */
     private final PlayerRepository playerRepository;
+
     /**
      * Service used to resolve missing Riot account identifiers.
      */
     private final PlayerAccountResolutionService accountResolutionService;
+
     /**
      * Henrik client used to retrieve the current competitive rank.
      */
     private final HenrikMmrClient mmrClient;
+
     /**
      * Mapper used to apply Henrik rank data to tracked players.
      */
     private final HenrikMmrMapper mmrMapper;
+
     /**
      * Henrik client used to retrieve match-history pages.
      */
     private final HenrikMatchClient matchClient;
+
     /**
      * Service used to persist Henrik matches idempotently.
      */
     private final MatchImportService matchImportService;
+
     /**
      * Clock used to produce deterministic timestamps.
      */

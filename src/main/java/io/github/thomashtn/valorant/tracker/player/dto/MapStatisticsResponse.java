@@ -9,6 +9,7 @@ import java.math.BigDecimal;
  */
 @Schema(description = "Aggregated player statistics for one Valorant map.")
 public record MapStatisticsResponse(
+
     String mapId,
     String mapName,
     long matchesPlayed,

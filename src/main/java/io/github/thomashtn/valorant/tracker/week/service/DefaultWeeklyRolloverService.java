@@ -1,5 +1,6 @@
 package io.github.thomashtn.valorant.tracker.week.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valorant.tracker.challenge.service.WeeklyChallengeSelectionService;
@@ -45,24 +46,28 @@ public class DefaultWeeklyRolloverService
      * Repository used to load and finalize weekly challenges.
      */
     private final WeeklyChallengeRepository
+
         weeklyChallengeRepository;
 
     /**
      * Repository used to load and finalize weekly score snapshots.
      */
     private final WeeklyPlayerScoreRepository
+
         weeklyPlayerScoreRepository;
 
     /**
      * Service used to calculate the final previous-week ranking.
      */
     private final RankingRecalculationService
+
         rankingRecalculationService;
 
     /**
      * Service used to create the current weekly challenge pack.
      */
     private final WeeklyChallengeSelectionService
+
         weeklyChallengeSelectionService;
 
     /**
@@ -79,6 +84,10 @@ public class DefaultWeeklyRolloverService
      * @param weeklyChallengeSelectionService challenge selection service
      * @param clock                           application clock
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public DefaultWeeklyRolloverService(
         WeeklyChallengeRepository weeklyChallengeRepository,
         WeeklyPlayerScoreRepository weeklyPlayerScoreRepository,

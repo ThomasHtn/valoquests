@@ -12,6 +12,7 @@ import java.util.Objects;
  * @param conditions    immutable list of challenge conditions
  */
 public record ChallengeDefinition(
+
     int schemaVersion,
     ChallengeRuleType ruleType,
     ProgressMode progressMode,

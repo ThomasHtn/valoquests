@@ -13,6 +13,7 @@ import java.time.Instant;
  */
 @Schema(description = "Player-centric match history entry.")
 public record MatchResponse(
+
     Long id,
     Instant startedAt,
     String mapName,

@@ -34,10 +34,12 @@ public class SynchronizationQueryService {
      * Repository used to persist synchronization executions.
      */
     private final SynchronizationRepository synchronizationRepository;
+
     /**
      * Repository used to persist and query per-player synchronization results.
      */
     private final SynchronizationPlayerResultRepository playerResultRepository;
+
     /**
      * Repository used to load and persist tracked players.
      */

@@ -15,6 +15,7 @@ class HenrikMatchHistoryResponseTest {
      * Jackson mapper configured with Java time support.
      */
     private final ObjectMapper objectMapper =
+
         new ObjectMapper().findAndRegisterModules();
 
     /**

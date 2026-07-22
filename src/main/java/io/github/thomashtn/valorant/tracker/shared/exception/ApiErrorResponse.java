@@ -11,6 +11,7 @@ import java.util.Map;
  */
 @Schema(description = "Standard API problem response.")
 public record ApiErrorResponse(
+
     URI type,
     String title,
     int status,
@@ -20,4 +21,11 @@ public record ApiErrorResponse(
     Instant timestamp,
     Map<String, String> errors
 ) {
+    /**
+     * Creates an immutable API error response.
+     */
+    public ApiErrorResponse {
+        errors = Map.copyOf(errors);
+    }
+
 }

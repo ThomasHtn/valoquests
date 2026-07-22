@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HenrikMmrResponse(
+
     Integer status,
     HenrikMmrData data
 ) {
@@ -20,6 +21,7 @@ public record HenrikMmrResponse(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikMmrData(
+
         HenrikCurrentMmr current
     ) {}
 
@@ -32,6 +34,7 @@ public record HenrikMmrResponse(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikCurrentMmr(
+
         HenrikTier tier,
         @JsonProperty("rr") Integer rankRating,
         Integer elo
@@ -42,6 +45,7 @@ public record HenrikMmrResponse(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikTier(
+
         Integer id,
         String name
     ) {}

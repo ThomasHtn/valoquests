@@ -13,12 +13,21 @@ import java.util.List;
  */
 @Schema(description = "Current weekly player ranking.")
 public record CurrentRankingResponse(
+
     LocalDate weekStart,
     LocalDate weekEnd,
     Instant calculatedAt,
     List<RankingEntryResponse> ranking
 ) {
+    /**
+     * Creates an immutable current-ranking response.
+     */
+    public CurrentRankingResponse {
+        ranking = List.copyOf(ranking);
+    }
+
     public record RankingEntryResponse(
+
         int position,
         Integer previousPosition,
         int positionVariation,
@@ -28,8 +37,16 @@ public record CurrentRankingResponse(
         int totalChallenges,
         List<ChallengeProgressResponse> challengeProgress
     ) {
+        /**
+         * Creates an immutable ranking entry.
+         */
+        public RankingEntryResponse {
+            challengeProgress = List.copyOf(challengeProgress);
+        }
     }
+
     public record PlayerRankingResponse(
+
         Long id,
         String displayName,
         String portrait,
@@ -37,7 +54,9 @@ public record CurrentRankingResponse(
         Integer rankRating
     ) {
     }
+
     public record ChallengeProgressResponse(
+
         Long challengeId,
         String challengeName,
         String metric,

@@ -1,5 +1,6 @@
 package io.github.thomashtn.valorant.tracker.ranking.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeMetric;
@@ -55,6 +56,10 @@ public class DefaultRankingQueryService implements RankingQueryService {
     /**
      * Creates the ranking query service.
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public DefaultRankingQueryService(
         WeeklyPlayerScoreRepository scoreRepository,
         PlayerChallengeProgressRepository progressRepository,

@@ -13,6 +13,7 @@ import io.github.thomashtn.valorant.tracker.synchronization.model.Synchronizatio
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
 import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationPlayerResultRepository;
 import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationRepository;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -105,6 +106,7 @@ public class DefaultSynchronizationCommandService
     /**
      * Executes a standard synchronization for every active player.
      *
+     * @param trigger synchronization trigger
      * @return persisted synchronization summary
      */
     @Override
@@ -176,6 +178,7 @@ public class DefaultSynchronizationCommandService
      * Executes one synchronization operation for all active players.
      *
      * @param type      synchronization type
+     * @param trigger   synchronization trigger
      * @param operation player-level operation
      * @return persisted global summary
      */
@@ -228,11 +231,23 @@ public class DefaultSynchronizationCommandService
     /**
      * Executes one synchronization operation and records its outcome.
      *
+     * <p>The original runtime exception is deliberately propagated after the
+     * failed execution has been persisted. Preserving the same exception
+     * instance keeps its concrete type, stack trace and diagnostic context.</p>
+     *
      * @param type      synchronization type
      * @param playerId  player identifier
      * @param operation player-level operation
      * @return persisted synchronization summary
      */
+    @SuppressFBWarnings(
+        value = "THROWS_METHOD_THROWS_RUNTIMEEXCEPTION",
+        justification = """
+            The original synchronization exception is deliberately propagated
+            after the failed execution has been persisted. Preserving the original
+            instance keeps its concrete type, stack trace and diagnostic context.
+            """
+    )
     private SynchronizationResponse executeForPlayer(
         SynchronizationType type,
         long playerId,
@@ -328,7 +343,8 @@ public class DefaultSynchronizationCommandService
     /**
      * Creates and persists a running synchronization execution.
      *
-     * @param type synchronization type
+     * @param type    synchronization type
+     * @param trigger synchronization trigger
      * @return persisted execution
      */
     private Synchronization startSynchronization(
@@ -643,11 +659,11 @@ public class DefaultSynchronizationCommandService
     /**
      * Immutable aggregate of all player outcomes in one batch.
      *
-     * @param successfulPlayers             successful player count
-     * @param failureCount                  failed player count
-     * @param matchesImported               total imported match count
+     * @param successfulPlayers               successful player count
+     * @param failureCount                    failed player count
+     * @param matchesImported                 total imported match count
      * @param lastSuccessfulSynchronizationAt latest successful timestamp
-     * @param errorMessages                 aggregated failure descriptions
+     * @param errorMessages                   aggregated failure descriptions
      */
     private record BatchSummary(
         int successfulPlayers,
@@ -664,6 +680,30 @@ public class DefaultSynchronizationCommandService
          */
         private static BatchSummary empty() {
             return new BatchSummary(0, 0, 0, null, null);
+        }
+
+        /**
+         * Returns the most recent non-null timestamp.
+         *
+         * @param current   retained timestamp
+         * @param candidate candidate timestamp
+         * @return latest timestamp
+         */
+        private static Instant latestInstant(
+            Instant current,
+            Instant candidate
+        ) {
+            if (current == null) {
+                return candidate;
+            }
+
+            if (candidate == null) {
+                return current;
+            }
+
+            return candidate.isAfter(current)
+                ? candidate
+                : current;
         }
 
         /**
@@ -711,30 +751,6 @@ public class DefaultSynchronizationCommandService
                 lastSuccessfulSynchronizationAt,
                 updatedErrors
             );
-        }
-
-        /**
-         * Returns the most recent non-null timestamp.
-         *
-         * @param current   retained timestamp
-         * @param candidate candidate timestamp
-         * @return latest timestamp
-         */
-        private static Instant latestInstant(
-            Instant current,
-            Instant candidate
-        ) {
-            if (current == null) {
-                return candidate;
-            }
-
-            if (candidate == null) {
-                return current;
-            }
-
-            return candidate.isAfter(current)
-                ? candidate
-                : current;
         }
     }
 }

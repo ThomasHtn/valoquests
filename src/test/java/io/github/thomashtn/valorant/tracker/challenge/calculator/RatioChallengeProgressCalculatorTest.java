@@ -31,12 +31,14 @@ class RatioChallengeProgressCalculatorTest {
      * Match filter used by the calculator.
      */
     private final ChallengeMatchFilter matchFilter =
+
         new ChallengeMatchFilter();
 
     /**
      * Calculator under test.
      */
     private final RatioChallengeProgressCalculator calculator =
+
         new RatioChallengeProgressCalculator(matchFilter);
 
     /**

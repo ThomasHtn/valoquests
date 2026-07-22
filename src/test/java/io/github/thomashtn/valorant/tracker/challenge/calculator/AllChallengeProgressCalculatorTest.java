@@ -30,18 +30,21 @@ class AllChallengeProgressCalculatorTest {
      * Metric evaluator used by the calculator.
      */
     private final ChallengeMetricEvaluator metricEvaluator =
+
         new ChallengeMetricEvaluator();
 
     /**
      * Match filter used by the calculator.
      */
     private final ChallengeMatchFilter matchFilter =
+
         new ChallengeMatchFilter();
 
     /**
      * Calculator under test.
      */
     private final AllChallengeProgressCalculator calculator =
+
         new AllChallengeProgressCalculator(
             metricEvaluator,
             matchFilter

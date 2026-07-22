@@ -9,6 +9,7 @@ package io.github.thomashtn.valorant.tracker.henrik.model;
  * @param tagLine current Riot tag line
  */
 public record HenrikAccount(
+
     String puuid,
     String gameName,
     String tagLine

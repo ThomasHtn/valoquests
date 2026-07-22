@@ -12,6 +12,7 @@ import java.util.List;
  */
 @Schema(description = "Detailed tracked-player profile and aggregated statistics.")
 public record PlayerDetailsResponse(
+
     Long id,
     String riotId,
     String displayName,
@@ -24,6 +25,7 @@ public record PlayerDetailsResponse(
     List<MapStatisticsResponse> maps
 ) {
     public record PlayerStatistics(
+
         BigDecimal kda,
         BigDecimal winRate,
         BigDecimal adr,
@@ -38,4 +40,13 @@ public record PlayerDetailsResponse(
         long mvps
     ) {
     }
+
+    /**
+     * Creates an immutable player-details response.
+     */
+    public PlayerDetailsResponse {
+        agents = List.copyOf(agents);
+        maps = List.copyOf(maps);
+    }
+
 }

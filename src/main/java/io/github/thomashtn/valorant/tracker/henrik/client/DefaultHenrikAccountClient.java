@@ -1,5 +1,6 @@
 package io.github.thomashtn.valorant.tracker.henrik.client;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.henrik.dto.account.HenrikAccountResponse;
 import io.github.thomashtn.valorant.tracker.henrik.mapper.HenrikAccountMapper;
 import io.github.thomashtn.valorant.tracker.henrik.model.HenrikAccount;
@@ -49,6 +50,10 @@ public class DefaultHenrikAccountClient implements HenrikAccountClient {
      * @param requestExecutor shared Henrik request executor
      * @param accountMapper external account response mapper
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public DefaultHenrikAccountClient(
         WebClient henrikWebClient,
         HenrikResponseHandler responseHandler,

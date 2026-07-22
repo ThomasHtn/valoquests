@@ -1,6 +1,7 @@
 package io.github.thomashtn.valorant.tracker.henrik.dto.match;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.List;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HenrikMatchHistoryResponse(
+
     Integer status,
     List<HenrikMatchData> data
 ) {
@@ -35,6 +37,20 @@ public record HenrikMatchHistoryResponse(
     }
 
     /**
+     * Returns the immutable match collection created by the canonical constructor.
+     *
+     * @return immutable matches returned by Henrik
+     */
+    @Override
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP",
+        justification = "The canonical constructor stores an unmodifiable defensive copy."
+    )
+    public List<HenrikMatchData> data() {
+        return data;
+    }
+
+    /**
      * Represents one match returned by Henrik.
      *
      * @param metadata general information about the match
@@ -43,6 +59,7 @@ public record HenrikMatchHistoryResponse(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikMatchData(
+
         HenrikMatchMetadata metadata,
         List<HenrikMatchPlayer> players,
         List<HenrikMatchTeam> teams
@@ -55,6 +72,34 @@ public record HenrikMatchHistoryResponse(
         public HenrikMatchData {
             players = immutableNullableElementList(players);
             teams = immutableNullableElementList(teams);
+        }
+
+        /**
+         * Returns the immutable player collection created by the canonical constructor.
+         *
+         * @return immutable match players
+         */
+        @Override
+        @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP",
+            justification = "The canonical constructor stores an unmodifiable defensive copy."
+        )
+        public List<HenrikMatchPlayer> players() {
+            return players;
+        }
+
+        /**
+         * Returns the immutable team collection created by the canonical constructor.
+         *
+         * @return immutable match teams
+         */
+        @Override
+        @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP",
+            justification = "The canonical constructor stores an unmodifiable defensive copy."
+        )
+        public List<HenrikMatchTeam> teams() {
+            return teams;
         }
     }
 

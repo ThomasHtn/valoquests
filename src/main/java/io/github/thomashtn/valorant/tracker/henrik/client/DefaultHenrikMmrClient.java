@@ -1,5 +1,6 @@
 package io.github.thomashtn.valorant.tracker.henrik.client;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.henrik.config.HenrikApiProperties;
 import io.github.thomashtn.valorant.tracker.henrik.dto.mmr.HenrikMmrResponse;
 import java.util.Objects;
@@ -24,19 +25,26 @@ public class DefaultHenrikMmrClient implements HenrikMmrClient {
      * Configured WebClient used for Henrik HTTP requests.
      */
     private final WebClient henrikWebClient;
+
     /**
      * Typed configuration required by this component.
      */
     private final HenrikApiProperties properties;
+
     /**
      * Handler used to convert Henrik error responses into typed exceptions.
      */
     private final HenrikResponseHandler responseHandler;
+
     /**
      * Executor that applies rate limiting, retries and error handling.
      */
     private final HenrikRequestExecutor requestExecutor;
 
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public DefaultHenrikMmrClient(
         WebClient henrikWebClient,
         HenrikApiProperties properties,

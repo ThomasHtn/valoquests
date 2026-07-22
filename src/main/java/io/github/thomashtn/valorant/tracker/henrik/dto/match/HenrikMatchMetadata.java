@@ -9,6 +9,7 @@ import java.time.Instant;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HenrikMatchMetadata(
+
     @JsonProperty("match_id") String matchId,
     HenrikMap map,
     @JsonProperty("game_length_in_ms") Long gameLengthInMilliseconds,
@@ -22,6 +23,7 @@ public record HenrikMatchMetadata(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikQueue(
+
         String id,
         String name,
         @JsonProperty("mode_type") String modeType
@@ -29,6 +31,7 @@ public record HenrikMatchMetadata(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikSeason(
+
         String id,
         @JsonProperty("short") String shortName
     ) {}

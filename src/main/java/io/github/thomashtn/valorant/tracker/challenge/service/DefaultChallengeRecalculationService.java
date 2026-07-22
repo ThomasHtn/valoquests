@@ -54,6 +54,7 @@ public class DefaultChallengeRecalculationService
      * Service used to persist calculated challenge progress.
      */
     private final PlayerChallengeProgressPersistenceService
+
         persistenceService;
 
     /**
@@ -65,6 +66,7 @@ public class DefaultChallengeRecalculationService
      * Service used to prepare the active weekly challenge pack.
      */
     private final WeeklyChallengeSelectionService
+
         weeklyChallengeSelectionService;
 
     /**

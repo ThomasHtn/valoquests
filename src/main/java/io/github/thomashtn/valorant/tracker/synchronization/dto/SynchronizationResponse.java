@@ -27,6 +27,7 @@ import java.time.Instant;
     description = "Summary of a synchronization execution."
 )
 public record SynchronizationResponse(
+
     Long id,
     SynchronizationType type,
     SynchronizationTrigger trigger,
