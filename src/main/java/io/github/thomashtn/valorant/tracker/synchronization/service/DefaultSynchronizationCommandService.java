@@ -6,8 +6,6 @@ import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.entity.Synchronization;
 import io.github.thomashtn.valorant.tracker.synchronization.entity.SynchronizationPlayerResult;
-import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerDeepSynchronizationResult;
-import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerSynchronizationResult;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
@@ -116,7 +114,7 @@ public class DefaultSynchronizationCommandService
         return executeForAllPlayers(
             SynchronizationType.STANDARD,
             trigger,
-            playerId -> toExecutionResult(
+            playerId -> SynchronizationExecutionResult.from(
                 playerSynchronizationService.synchronize(playerId)
             )
         );
@@ -133,7 +131,7 @@ public class DefaultSynchronizationCommandService
         return executeForPlayer(
             SynchronizationType.STANDARD,
             playerId,
-            id -> toExecutionResult(
+            id -> SynchronizationExecutionResult.from(
                 playerSynchronizationService.synchronize(id)
             )
         );
@@ -149,7 +147,7 @@ public class DefaultSynchronizationCommandService
         return executeForAllPlayers(
             SynchronizationType.DEEP,
             SynchronizationTrigger.MANUAL,
-            playerId -> toExecutionResult(
+            playerId -> SynchronizationExecutionResult.from(
                 playerDeepSynchronizationService.synchronize(playerId)
             )
         );
@@ -168,7 +166,7 @@ public class DefaultSynchronizationCommandService
         return executeForPlayer(
             SynchronizationType.DEEP,
             playerId,
-            id -> toExecutionResult(
+            id -> SynchronizationExecutionResult.from(
                 playerDeepSynchronizationService.synchronize(id)
             )
         );
@@ -185,12 +183,12 @@ public class DefaultSynchronizationCommandService
     private SynchronizationResponse executeForAllPlayers(
         SynchronizationType type,
         SynchronizationTrigger trigger,
-        PlayerSynchronizationOperation operation
+        SynchronizationPlayerOperation operation
     ) {
         Synchronization synchronization = startSynchronization(type, trigger);
         List<Player> players =
             playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE);
-        BatchSummary summary = BatchSummary.empty();
+        SynchronizationBatchSummary summary = SynchronizationBatchSummary.empty();
 
         LOGGER.info(
             "Starting {} synchronization for {} active players",
@@ -251,7 +249,7 @@ public class DefaultSynchronizationCommandService
     private SynchronizationResponse executeForPlayer(
         SynchronizationType type,
         long playerId,
-        PlayerSynchronizationOperation operation
+        SynchronizationPlayerOperation operation
     ) {
         Synchronization synchronization = startSynchronization(
             type,
@@ -265,7 +263,7 @@ public class DefaultSynchronizationCommandService
         );
 
         try {
-            PlayerExecutionResult result = operation.synchronize(playerId);
+            SynchronizationExecutionResult result = operation.synchronize(playerId);
 
             saveSuccessfulPlayerResult(synchronization, result);
             completeSinglePlayerSynchronization(synchronization, result);
@@ -306,15 +304,15 @@ public class DefaultSynchronizationCommandService
      * @param summary         current batch summary
      * @return updated immutable batch summary
      */
-    private BatchSummary synchronizePlayerWithinBatch(
+    private SynchronizationBatchSummary synchronizePlayerWithinBatch(
         Synchronization synchronization,
         SynchronizationType type,
         Player player,
-        PlayerSynchronizationOperation operation,
-        BatchSummary summary
+        SynchronizationPlayerOperation operation,
+        SynchronizationBatchSummary summary
     ) {
         try {
-            PlayerExecutionResult result = operation.synchronize(player.getId());
+            SynchronizationExecutionResult result = operation.synchronize(player.getId());
             saveSuccessfulPlayerResult(synchronization, result);
             return summary.withSuccess(result);
         } catch (RuntimeException exception) {
@@ -375,7 +373,7 @@ public class DefaultSynchronizationCommandService
     private void completeBatchSynchronization(
         Synchronization synchronization,
         int playerCount,
-        BatchSummary summary
+        SynchronizationBatchSummary summary
     ) {
         synchronization.setStatus(
             determineGlobalStatus(
@@ -403,7 +401,7 @@ public class DefaultSynchronizationCommandService
      */
     private void completeSinglePlayerSynchronization(
         Synchronization synchronization,
-        PlayerExecutionResult result
+        SynchronizationExecutionResult result
     ) {
         synchronization.setStatus(SynchronizationStatus.COMPLETED);
         synchronization.setFinishedAt(result.completedAt());
@@ -445,7 +443,7 @@ public class DefaultSynchronizationCommandService
      */
     private void saveSuccessfulPlayerResult(
         Synchronization synchronization,
-        PlayerExecutionResult result
+        SynchronizationExecutionResult result
     ) {
         savePlayerResult(
             synchronization,
@@ -533,40 +531,6 @@ public class DefaultSynchronizationCommandService
     }
 
     /**
-     * Maps a standard synchronization result to the shared internal model.
-     *
-     * @param result standard result
-     * @return shared result
-     */
-    private PlayerExecutionResult toExecutionResult(
-        PlayerSynchronizationResult result
-    ) {
-        return new PlayerExecutionResult(
-            result.player(),
-            result.pagesFetched(),
-            result.matchesImported(),
-            result.completedAt()
-        );
-    }
-
-    /**
-     * Maps a deep synchronization result to the shared internal model.
-     *
-     * @param result deep result
-     * @return shared result
-     */
-    private PlayerExecutionResult toExecutionResult(
-        PlayerDeepSynchronizationResult result
-    ) {
-        return new PlayerExecutionResult(
-            result.player(),
-            result.pagesFetched(),
-            result.matchesImported(),
-            result.completedAt()
-        );
-    }
-
-    /**
      * Maps a persisted execution to its API representation.
      *
      * @param synchronization                 persisted execution
@@ -623,134 +587,5 @@ public class DefaultSynchronizationCommandService
         }
 
         return message.substring(0, MAXIMUM_ERROR_MESSAGE_LENGTH);
-    }
-
-    /**
-     * Executes one player-level synchronization operation.
-     */
-    @FunctionalInterface
-    private interface PlayerSynchronizationOperation {
-
-        /**
-         * Synchronizes one player.
-         *
-         * @param playerId player identifier
-         * @return successful synchronization result
-         */
-        PlayerExecutionResult synchronize(long playerId);
-    }
-
-    /**
-     * Shared internal representation of standard and deep results.
-     *
-     * @param player          synchronized player
-     * @param pagesFetched    retrieved page count
-     * @param matchesImported imported match count
-     * @param completedAt     completion timestamp
-     */
-    private record PlayerExecutionResult(
-        Player player,
-        int pagesFetched,
-        int matchesImported,
-        Instant completedAt
-    ) {
-    }
-
-    /**
-     * Immutable aggregate of all player outcomes in one batch.
-     *
-     * @param successfulPlayers               successful player count
-     * @param failureCount                    failed player count
-     * @param matchesImported                 total imported match count
-     * @param lastSuccessfulSynchronizationAt latest successful timestamp
-     * @param errorMessages                   aggregated failure descriptions
-     */
-    private record BatchSummary(
-        int successfulPlayers,
-        int failureCount,
-        int matchesImported,
-        Instant lastSuccessfulSynchronizationAt,
-        String errorMessages
-    ) {
-
-        /**
-         * Creates an empty summary.
-         *
-         * @return empty summary
-         */
-        private static BatchSummary empty() {
-            return new BatchSummary(0, 0, 0, null, null);
-        }
-
-        /**
-         * Returns the most recent non-null timestamp.
-         *
-         * @param current   retained timestamp
-         * @param candidate candidate timestamp
-         * @return latest timestamp
-         */
-        private static Instant latestInstant(
-            Instant current,
-            Instant candidate
-        ) {
-            if (current == null) {
-                return candidate;
-            }
-
-            if (candidate == null) {
-                return current;
-            }
-
-            return candidate.isAfter(current)
-                ? candidate
-                : current;
-        }
-
-        /**
-         * Adds a successful player outcome.
-         *
-         * @param result successful outcome
-         * @return updated summary
-         */
-        private BatchSummary withSuccess(PlayerExecutionResult result) {
-            return new BatchSummary(
-                successfulPlayers + 1,
-                failureCount,
-                matchesImported + result.matchesImported(),
-                latestInstant(
-                    lastSuccessfulSynchronizationAt,
-                    result.completedAt()
-                ),
-                errorMessages
-            );
-        }
-
-        /**
-         * Adds a failed player outcome.
-         *
-         * @param player       failed player
-         * @param errorMessage failure description
-         * @return updated summary
-         */
-        private BatchSummary withFailure(
-            Player player,
-            String errorMessage
-        ) {
-            String playerError = "Player "
-                + player.getId()
-                + ": "
-                + errorMessage;
-            String updatedErrors = errorMessages == null
-                ? playerError
-                : errorMessages + System.lineSeparator() + playerError;
-
-            return new BatchSummary(
-                successfulPlayers,
-                failureCount + 1,
-                matchesImported,
-                lastSuccessfulSynchronizationAt,
-                updatedErrors
-            );
-        }
     }
 }
