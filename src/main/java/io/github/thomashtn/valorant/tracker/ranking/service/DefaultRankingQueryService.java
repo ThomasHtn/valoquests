@@ -12,6 +12,11 @@ import io.github.thomashtn.valorant.tracker.ranking.dto.RankingHistoryWeekRespon
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -23,10 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Provides optimized read-only access to current and historical rankings.
@@ -35,22 +36,34 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class DefaultRankingQueryService implements RankingQueryService {
 
-    /** Maximum number of historical weeks accepted by one request. */
+    /**
+     * Maximum number of historical weeks accepted by one request.
+     */
     private static final int MAXIMUM_PAGE_SIZE = 100;
 
-    /** Repository used to load weekly score snapshots. */
+    /**
+     * Repository used to read weekly ranking snapshots.
+     */
     private final WeeklyPlayerScoreRepository scoreRepository;
 
-    /** Repository used to load exact per-challenge progress. */
+    /**
+     * Repository used to read per-player challenge progress.
+     */
     private final PlayerChallengeProgressRepository progressRepository;
 
-    /** Repository used to count selected challenges. */
+    /**
+     * Repository used to read challenges assigned to each week.
+     */
     private final WeeklyChallengeRepository weeklyChallengeRepository;
 
-    /** Parser used to expose readable metric information. */
+    /**
+     * Parser used to resolve challenge targets and display units.
+     */
     private final ChallengeDefinitionParser definitionParser;
 
-    /** Application clock used to resolve the current UTC week. */
+    /**
+     * Clock used to determine the active week consistently.
+     */
     private final Clock clock;
 
     /**
@@ -137,9 +150,9 @@ public class DefaultRankingQueryService implements RankingQueryService {
         List<WeeklyPlayerScore> scores = weekPage.isEmpty()
             ? List.of()
             : scoreRepository
-                .findAllByWeekStartInOrderByWeekStartDescPositionAsc(
-                    weekPage.getContent()
-                );
+            .findAllByWeekStartInOrderByWeekStartDescPositionAsc(
+                weekPage.getContent()
+            );
         Map<LocalDate, List<WeeklyPlayerScore>> scoresByWeek = scores.stream()
             .collect(Collectors.groupingBy(WeeklyPlayerScore::getWeekStart));
 
@@ -160,7 +173,9 @@ public class DefaultRankingQueryService implements RankingQueryService {
         );
     }
 
-    /** Maps one score and its progress rows to the current API contract. */
+    /**
+     * Maps one score and its progress rows to the current API contract.
+     */
     private CurrentRankingResponse.RankingEntryResponse toCurrentEntry(
         WeeklyPlayerScore score,
         int totalChallenges,
@@ -196,7 +211,9 @@ public class DefaultRankingQueryService implements RankingQueryService {
         );
     }
 
-    /** Maps one exact persisted progress row to the current API contract. */
+    /**
+     * Maps one exact persisted progress row to the current API contract.
+     */
     private CurrentRankingResponse.ChallengeProgressResponse
     toChallengeProgress(PlayerChallengeProgress progress) {
         ChallengeDefinition definition = definitionParser.parse(
@@ -221,7 +238,9 @@ public class DefaultRankingQueryService implements RankingQueryService {
         );
     }
 
-    /** Maps one finalized week to its immutable history representation. */
+    /**
+     * Maps one finalized week to its immutable history representation.
+     */
     private RankingHistoryWeekResponse toHistoryWeek(
         LocalDate weekStart,
         List<WeeklyPlayerScore> scores
@@ -262,7 +281,9 @@ public class DefaultRankingQueryService implements RankingQueryService {
         );
     }
 
-    /** Returns the display unit associated with one challenge metric. */
+    /**
+     * Returns the display unit associated with one challenge metric.
+     */
     private String resolveUnit(ChallengeMetric metric) {
         return switch (metric) {
             case DAMAGE_DEALT, SCORE -> "points";
@@ -276,14 +297,18 @@ public class DefaultRankingQueryService implements RankingQueryService {
         };
     }
 
-    /** Resolves the Monday beginning the current UTC calendar week. */
+    /**
+     * Resolves the Monday beginning the current UTC calendar week.
+     */
     private LocalDate resolveCurrentWeekStart() {
         return LocalDate.now(clock.withZone(ZoneOffset.UTC)).with(
             TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)
         );
     }
 
-    /** Validates public pagination parameters. */
+    /**
+     * Validates public pagination parameters.
+     */
     private void validatePagination(int page, int size) {
         if (page < 0) {
             throw new IllegalArgumentException(

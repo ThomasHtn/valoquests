@@ -24,10 +24,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class DefaultPlayerQueryService implements PlayerQueryService {
 
+    /**
+     * Repository used to load tracked players.
+     */
     private final PlayerRepository playerRepository;
 
+    /**
+     * Repository used to query persisted player matches.
+     */
     private final PlayerMatchRepository playerMatchRepository;
 
+    /**
+     * Creates the persisted player query service.
+     *
+     * @param playerRepository repository used to load tracked players
+     * @param playerMatchRepository repository used to query persisted player matches
+     */
     public DefaultPlayerQueryService(
         PlayerRepository playerRepository,
         PlayerMatchRepository playerMatchRepository
@@ -36,6 +48,11 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
         this.playerMatchRepository = playerMatchRepository;
     }
 
+    /**
+     * Returns every tracked player with aggregate match statistics.
+     *
+     * @return tracked player summaries
+     */
     @Override
     public List<PlayerSummaryResponse> findAll() {
         return playerRepository.findAll().stream()
@@ -46,6 +63,12 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
             .toList();
     }
 
+    /**
+     * Returns the detailed profile and aggregate statistics of one player.
+     *
+     * @param playerId internal player identifier
+     * @return player details
+     */
     @Override
     public PlayerDetailsResponse findById(long playerId) {
         Player player = playerRepository.findById(playerId)

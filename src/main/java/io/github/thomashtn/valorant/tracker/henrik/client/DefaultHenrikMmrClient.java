@@ -41,6 +41,14 @@ public class DefaultHenrikMmrClient implements HenrikMmrClient {
      */
     private final HenrikRequestExecutor requestExecutor;
 
+    /**
+     * Creates the Henrik MMR client.
+     *
+     * @param henrikWebClient configured Henrik HTTP client
+     * @param properties Henrik API configuration properties
+     * @param responseHandler external response error handler
+     * @param requestExecutor shared Henrik request executor
+     */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
         justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
@@ -57,6 +65,12 @@ public class DefaultHenrikMmrClient implements HenrikMmrClient {
         this.requestExecutor = requestExecutor;
     }
 
+    /**
+     * Retrieves the current competitive rating for the supplied player PUUID.
+     *
+     * @param puuid Riot player PUUID
+     * @return current MMR response
+     */
     @Override
     public HenrikMmrResponse getCurrentMmr(String puuid) {
         validatePuuid(puuid);

@@ -7,26 +7,44 @@ import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchReposito
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Locale;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Implements filtered and paginated player match-history consultation. */
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Locale;
+
+/**
+ * Implements filtered and paginated player match-history consultation.
+ */
 @Service
 @Transactional(readOnly = true)
 public class DefaultMatchQueryService implements MatchQueryService {
 
+    /**
+     * Maximum number of historical weeks accepted by one request.
+     */
     private static final int MAXIMUM_PAGE_SIZE = 100;
 
+    /**
+     * Repository used to load tracked players.
+     */
     private final PlayerRepository playerRepository;
 
+    /**
+     * Repository used to query persisted player matches.
+     */
     private final PlayerMatchRepository playerMatchRepository;
 
+    /**
+     * Creates the persisted match query service.
+     *
+     * @param playerRepository      repository used to validate tracked players
+     * @param playerMatchRepository repository used to query persisted player matches
+     */
     public DefaultMatchQueryService(
         PlayerRepository playerRepository,
         PlayerMatchRepository playerMatchRepository
@@ -35,6 +53,18 @@ public class DefaultMatchQueryService implements MatchQueryService {
         this.playerMatchRepository = playerMatchRepository;
     }
 
+    /**
+     * Returns one filtered page of matches for a tracked player.
+     *
+     * @param playerId internal player identifier
+     * @param page     zero-based page index
+     * @param size     requested page size
+     * @param seasonId optional season identifier
+     * @param map      optional map name
+     * @param agent    optional agent name
+     * @param result   optional match result
+     * @return requested page of player matches
+     */
     @Override
     public PageResponse<MatchResponse> findByPlayer(
         long playerId,
