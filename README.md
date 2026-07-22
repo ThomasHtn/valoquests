@@ -4,10 +4,12 @@
 
 **Turn match history into weekly rivalries.**
 
-A full-stack portfolio project that imports Valorant match data, calculates player statistics,
-tracks weekly challenges and builds a live ranking for a fixed group of players.
+A full-stack portfolio project that imports Valorant match data, calculates player statistics, tracks weekly challenges
+and builds a live ranking for a fixed group of players.
 
 `Java 25` · `Spring Boot 4` · `Angular 22` · `PostgreSQL` · `Henrik API`
+
+[![Backend CI](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/backend-ci.yml)
 
 </div>
 
@@ -19,34 +21,32 @@ Valorant Tracker started from a simple question:
 
 > Who actually had the best week?
 
-The application follows a small group of players, imports their matches several times a day and
-turns raw game data into player statistics, match history, weekly challenges and a ranking that
-evolves after every synchronization.
+The application follows a small group of players, imports their matches several times a day and turns raw game data into
+player statistics, match history, weekly challenges and a ranking that evolves after every synchronization.
 
-The project is also a practical playground for modern full-stack architecture, external API
-integration, scheduled processing, data normalization and automated testing.
+The project is also a practical playground for modern full-stack architecture, external API integration, scheduled
+processing, data normalization and automated testing.
 
 ## What the application does
 
 ### Player tracking
 
-Each tracked account has a detailed profile containing its current competitive rank, match
-history and aggregated statistics such as KDA, win rate, headshot percentage, ACS and ADR.
+Each tracked account has a detailed profile containing its current competitive rank, match history and aggregated
+statistics such as KDA, win rate, headshot percentage, ACS and ADR.
 
 ### Weekly challenges
 
 Every week, the application selects a balanced challenge set from a catalogue of 78 definitions.
 
-Challenges cover volume, performance, streaks, ratios, game modes, distinct agents and grouped
-objectives. Progress is recalculated from persisted matches, making results deterministic and
-reproducible.
+Challenges cover volume, performance, streaks, ratios, game modes, distinct agents and grouped objectives. Progress is
+recalculated from persisted matches, making results deterministic and reproducible.
 
 ### Live ranking
 
 Completed challenges award points and feed a weekly ranking.
 
-The backend stores current and previous positions, completed challenge counts and detailed
-per-player progress so the frontend can show both the leaderboard and the story behind it.
+The backend stores current and previous positions, completed challenge counts and detailed per-player progress so the
+frontend can show both the leaderboard and the story behind it.
 
 ### Automatic synchronization
 
@@ -62,8 +62,7 @@ Imports are incremental and idempotent:
 
 ## Main screens
 
-The interface keeps the weekly competition readable at a glance while still allowing deeper
-analysis when needed.
+The interface keeps the weekly competition readable at a glance while still allowing deeper analysis when needed.
 
 ### Weekly overview
 
@@ -119,8 +118,8 @@ Closed weeks remain available so previous results and winners can be reviewed la
 
 ## Architecture
 
-The backend follows a feature-oriented architecture. Each domain owns its controllers, services,
-repositories, entities, DTOs and business models.
+The backend follows a feature-oriented architecture. Each domain owns its controllers, services, repositories, entities,
+DTOs and business models.
 
 ```text
 io.github.thomashtn.valorant.tracker
@@ -133,8 +132,8 @@ io.github.thomashtn.valorant.tracker
 └── shared           Security, errors, auditing and common web components
 ```
 
-The project favors thin controllers, explicit transactions, constructor injection, immutable API
-DTOs and database constraints for critical invariants.
+The project favors thin controllers, explicit transactions, constructor injection, immutable API DTOs and database
+constraints for critical invariants.
 
 ## Synchronization flow
 
@@ -164,11 +163,11 @@ A page limit and request delay prevent runaway processing and reduce pressure on
 
 Challenge definitions are stored as versioned JSON rules in PostgreSQL.
 
-The engine supports sums, occurrence counts, distinct values, grouped maximums, composite
-objectives, ratios and consecutive streaks.
+The engine supports sums, occurrence counts, distinct values, grouped maximums, composite objectives, ratios and
+consecutive streaks.
 
-A compatibility test parses every production challenge and verifies that its rule can be executed
-by the calculator registry. This prevents unsupported catalogue changes from reaching production.
+A compatibility test parses every production challenge and verifies that its rule can be executed by the calculator
+registry. This prevents unsupported catalogue changes from reaching production.
 
 ## Getting started
 
@@ -178,8 +177,7 @@ by the calculator registry. This prevents unsupported catalogue changes from rea
 - Docker and Docker Compose, or PostgreSQL 17
 - a Henrik API key
 
-The Maven Wrapper downloads Maven on its first execution, so an internet connection is required
-the first time it runs.
+The Maven Wrapper downloads Maven on its first execution, so an internet connection is required the first time it runs.
 
 ### Configure the environment
 
@@ -226,8 +224,8 @@ Run the complete quality gate:
 ./mvnw clean verify
 ```
 
-This command runs Checkstyle, unit and integration tests, JaCoCo report generation and SpotBugs.
-Docker must be available because the integration suite starts an isolated PostgreSQL 17 container.
+This command runs Checkstyle, unit and integration tests, JaCoCo report generation and SpotBugs. Docker must be
+available because the integration suite starts an isolated PostgreSQL 17 container.
 
 Run only the fast test suite:
 
@@ -280,8 +278,11 @@ To reset the local database:
 ```sql
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
-GRANT ALL ON SCHEMA public TO valorant;
-GRANT ALL ON SCHEMA public TO public;
+GRANT
+ALL
+ON SCHEMA public TO valorant;
+GRANT ALL
+ON SCHEMA public TO public;
 ```
 
 ## Main API routes
@@ -315,21 +316,21 @@ GET  /api/admin/synchronizations/{synchronizationId}
 
 ## Configuration reference
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/valorant_tracker` | PostgreSQL JDBC URL |
-| `DB_USERNAME` | `valorant` | Database user |
-| `DB_PASSWORD` | `valorant` | Database password |
-| `ADMIN_API_KEY` | required, at least 32 characters | Protects `/api/admin/**` |
-| `FRONTEND_ORIGIN` | `http://localhost:4200` | Allowed Angular origin |
-| `HENRIK_API_BASE_URL` | `https://api.henrikdev.xyz` | Henrik API base URL |
-| `HENRIK_API_KEY` | required | Henrik API key |
-| `HENRIK_API_REGION` | `eu` | Valorant region |
-| `HENRIK_API_PLATFORM` | `pc` | Valorant platform |
-| `HENRIK_API_MAX_ATTEMPTS` | `2` | Total request attempts |
-| `HENRIK_API_RETRY_DELAY` | `PT60S` | Minimum retry delay |
-| `HENRIK_API_REQUESTS_PER_MINUTE` | `28` | Shared request limit |
-| `DEEP_SYNC_SCOPE` | `CURRENT_SEASON` | Historical import range |
+| Variable                         | Default                                             | Purpose                  |
+|----------------------------------|-----------------------------------------------------|--------------------------|
+| `DB_URL`                         | `jdbc:postgresql://localhost:5432/valorant_tracker` | PostgreSQL JDBC URL      |
+| `DB_USERNAME`                    | `valorant`                                          | Database user            |
+| `DB_PASSWORD`                    | `valorant`                                          | Database password        |
+| `ADMIN_API_KEY`                  | required, at least 32 characters                    | Protects `/api/admin/**` |
+| `FRONTEND_ORIGIN`                | `http://localhost:4200`                             | Allowed Angular origin   |
+| `HENRIK_API_BASE_URL`            | `https://api.henrikdev.xyz`                         | Henrik API base URL      |
+| `HENRIK_API_KEY`                 | required                                            | Henrik API key           |
+| `HENRIK_API_REGION`              | `eu`                                                | Valorant region          |
+| `HENRIK_API_PLATFORM`            | `pc`                                                | Valorant platform        |
+| `HENRIK_API_MAX_ATTEMPTS`        | `2`                                                 | Total request attempts   |
+| `HENRIK_API_RETRY_DELAY`         | `PT60S`                                             | Minimum retry delay      |
+| `HENRIK_API_REQUESTS_PER_MINUTE` | `28`                                                | Shared request limit     |
+| `DEEP_SYNC_SCOPE`                | `CURRENT_SEASON`                                    | Historical import range  |
 
 ## Release-candidate validation
 
@@ -344,20 +345,20 @@ Before publishing a release, validate these flows against a dedicated PostgreSQL
 7. parse and execute all 78 production challenge definitions;
 8. verify Swagger authorization and every protected administrative route.
 
-External Henrik calls are intentionally excluded from automated tests because they depend on credentials,
-rate limits and live upstream data.
+External Henrik calls are intentionally excluded from automated tests because they depend on credentials, rate limits
+and live upstream data.
 
 ## Synchronization benchmark
 
-A real end-to-end benchmark of the six-player standard synchronization is available once the application and
-PostgreSQL are running:
+A real end-to-end benchmark of the six-player standard synchronization is available once the application and PostgreSQL
+are running:
 
 ```bash
 ADMIN_KEY="$ADMIN_API_KEY" RUNS=3 ./scripts/benchmark-full-synchronization.sh
 ```
 
-Results are written to `target/full-synchronization-benchmark.csv`. Any non-200 response stops the benchmark and
-prints the upstream error body.
+Results are written to `target/full-synchronization-benchmark.csv`. Any non-200 response stops the benchmark and prints
+the upstream error body.
 
 ## Development conventions
 
