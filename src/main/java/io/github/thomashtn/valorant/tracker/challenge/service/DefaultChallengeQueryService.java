@@ -3,6 +3,7 @@ package io.github.thomashtn.valorant.tracker.challenge.service;
 import io.github.thomashtn.valorant.tracker.challenge.dto.CurrentChallengesResponse;
 import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valorant.tracker.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valorant.tracker.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
@@ -17,26 +18,53 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Provides the collective progress exposed by the current challenges endpoint. */
+/**
+ * Provides the collective progress exposed by the current challenges endpoint.
+ */
 @Service
 @Transactional(readOnly = true)
 public class DefaultChallengeQueryService implements ChallengeQueryService {
 
+    /**
+     * Repository used to retrieve the challenges selected for a week.
+     */
     private final WeeklyChallengeRepository weeklyChallengeRepository;
 
+    /**
+     * Repository used to retrieve persisted player progress.
+     */
     private final PlayerChallengeProgressRepository progressRepository;
 
+    /**
+     * Repository used to count players and resolve the latest synchronization.
+     */
     private final PlayerRepository playerRepository;
 
+    /**
+     * Parser used to expose typed challenge-definition values.
+     */
     private final ChallengeDefinitionParser definitionParser;
 
+    /**
+     * Application clock used to resolve the current week deterministically.
+     */
     private final Clock clock;
 
+    /**
+     * Creates the current-challenge query service.
+     *
+     * @param weeklyChallengeRepository weekly challenge repository
+     * @param progressRepository        player progress repository
+     * @param playerRepository          tracked-player repository
+     * @param definitionParser          challenge-definition parser
+     * @param clock                     application clock
+     */
     public DefaultChallengeQueryService(
         WeeklyChallengeRepository weeklyChallengeRepository,
         PlayerChallengeProgressRepository progressRepository,
@@ -51,68 +79,192 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
         this.clock = clock;
     }
 
+    /**
+     * Returns collective progress for every challenge of the current week.
+     *
+     * @return current-week challenge response
+     */
     @Override
     public CurrentChallengesResponse findCurrent() {
-        LocalDate weekStart = LocalDate.now(clock).with(
-            TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)
-        );
-        List<WeeklyChallenge> weeklyChallenges = weeklyChallengeRepository
-            .findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(weekStart);
-        List<PlayerChallengeProgress> progressRows = progressRepository
-            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(weekStart);
+        LocalDate weekStart = resolveCurrentWeekStart();
+        List<WeeklyChallenge> weeklyChallenges = findWeeklyChallenges(weekStart);
+        Map<Long, List<PlayerChallengeProgress>> progressByChallenge =
+            groupProgressByChallenge(weekStart);
         int totalPlayers = Math.toIntExact(
             playerRepository.countByStatus(PlayerStatus.ACTIVE)
         );
-        var progressByChallenge = progressRows.stream().collect(Collectors.groupingBy(
-            row -> row.getWeeklyChallenge().getId()
-        ));
-        Instant lastSuccessfulAt = playerRepository.findAll().stream()
-            .map(Player::getLastSuccessfulSynchronizationAt)
-            .filter(Objects::nonNull)
-            .max(Instant::compareTo)
-            .orElse(null);
 
-        List<CurrentChallengesResponse.ChallengeProgressResponse> challenges = weeklyChallenges.stream()
-            .map(weekly -> {
-                var definition = definitionParser.parse(weekly.getChallenge());
-                List<PlayerChallengeProgress> rows = progressByChallenge.getOrDefault(weekly.getId(), List.of());
-                int completedPlayers = (int) rows.stream().filter(PlayerChallengeProgress::isCompleted).count();
-                BigDecimal percentage = totalPlayers == 0
-                    ? BigDecimal.ZERO
-                    : BigDecimal.valueOf(completedPlayers)
-                        .multiply(BigDecimal.valueOf(100))
-                        .divide(BigDecimal.valueOf(totalPlayers), 2, RoundingMode.HALF_UP);
-                String metric = definition.conditions().stream()
-                    .map(condition -> condition.metric().name())
-                    .distinct()
-                    .collect(Collectors.joining(" + "));
-                BigDecimal target = definition.conditions().size() == 1
-                    ? definition.singleCondition().target()
-                    : rows.stream()
-                        .map(PlayerChallengeProgress::getTargetValue)
-                        .filter(Objects::nonNull)
-                        .findFirst()
-                        .orElse(null);
-                return new CurrentChallengesResponse.ChallengeProgressResponse(
-                    weekly.getId(),
-                    weekly.getChallenge().getName(),
-                    weekly.getChallenge().getDescription(),
-                    weekly.getChallenge().getDifficulty(),
-                    metric,
-                    target,
-                    weekly.getChallenge().getPoints(),
-                    completedPlayers,
-                    totalPlayers,
-                    percentage
-                );
-            })
-            .toList();
+        List<CurrentChallengesResponse.ChallengeProgressResponse> challenges =
+            weeklyChallenges.stream()
+                .map(weeklyChallenge -> toChallengeResponse(
+                    weeklyChallenge,
+                    progressByChallenge,
+                    totalPlayers
+                ))
+                .toList();
 
         return new CurrentChallengesResponse(
             weekStart,
             weekStart.plusDays(6),
-            lastSuccessfulAt,
+            findLastSuccessfulSynchronizationAt(),
             challenges
         );
+    }
+
+    /**
+     * Resolves the Monday identifying the current week.
+     *
+     * @return current week start
+     */
+    private LocalDate resolveCurrentWeekStart() {
+        return LocalDate.now(clock).with(
+            TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)
+        );
+    }
+
+    /**
+     * Retrieves active challenges for the requested week.
+     *
+     * @param weekStart Monday identifying the requested week
+     * @return ordered weekly challenges
+     */
+    private List<WeeklyChallenge> findWeeklyChallenges(LocalDate weekStart) {
+        return weeklyChallengeRepository
+            .findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(weekStart);
+    }
+
+    /**
+     * Groups persisted progress rows by weekly challenge identifier.
+     *
+     * @param weekStart Monday identifying the requested week
+     * @return progress rows indexed by weekly challenge identifier
+     */
+    private Map<Long, List<PlayerChallengeProgress>> groupProgressByChallenge(
+        LocalDate weekStart
+    ) {
+        return progressRepository
+            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
+                weekStart
+            )
+            .stream()
+            .collect(Collectors.groupingBy(
+                progress -> progress.getWeeklyChallenge().getId()
+            ));
+    }
+
+    /**
+     * Converts a weekly challenge and its progress into an API response.
+     *
+     * @param weeklyChallenge    weekly challenge to convert
+     * @param progressByChallenge progress rows indexed by challenge identifier
+     * @param totalPlayers       number of active players
+     * @return challenge response
+     */
+    private CurrentChallengesResponse.ChallengeProgressResponse toChallengeResponse(
+        WeeklyChallenge weeklyChallenge,
+        Map<Long, List<PlayerChallengeProgress>> progressByChallenge,
+        int totalPlayers
+    ) {
+        ChallengeDefinition definition = definitionParser.parse(
+            weeklyChallenge.getChallenge()
+        );
+        List<PlayerChallengeProgress> progressRows = progressByChallenge
+            .getOrDefault(weeklyChallenge.getId(), List.of());
+        int completedPlayers = countCompletedPlayers(progressRows);
+
+        return new CurrentChallengesResponse.ChallengeProgressResponse(
+            weeklyChallenge.getId(),
+            weeklyChallenge.getChallenge().getName(),
+            weeklyChallenge.getChallenge().getDescription(),
+            weeklyChallenge.getChallenge().getDifficulty(),
+            resolveMetricLabel(definition),
+            resolveTargetValue(definition, progressRows),
+            weeklyChallenge.getChallenge().getPoints(),
+            completedPlayers,
+            totalPlayers,
+            calculateCompletionPercentage(completedPlayers, totalPlayers)
+        );
+    }
+
+    /**
+     * Counts completed progress rows.
+     *
+     * @param progressRows progress rows to inspect
+     * @return number of completed rows
+     */
+    private int countCompletedPlayers(List<PlayerChallengeProgress> progressRows) {
+        return Math.toIntExact(
+            progressRows.stream()
+                .filter(PlayerChallengeProgress::isCompleted)
+                .count()
+        );
+    }
+
+    /**
+     * Builds the metric label exposed by the endpoint.
+     *
+     * @param definition parsed challenge definition
+     * @return distinct metric names joined in definition order
+     */
+    private String resolveMetricLabel(ChallengeDefinition definition) {
+        return definition.conditions().stream()
+            .map(condition -> condition.metric().name())
+            .distinct()
+            .collect(Collectors.joining(" + "));
+    }
+
+    /**
+     * Resolves the target displayed for a simple or composite challenge.
+     *
+     * @param definition   parsed challenge definition
+     * @param progressRows persisted progress rows
+     * @return target value, or {@code null} when no composite target is stored
+     */
+    private BigDecimal resolveTargetValue(
+        ChallengeDefinition definition,
+        List<PlayerChallengeProgress> progressRows
+    ) {
+        if (definition.conditions().size() == 1) {
+            return definition.singleCondition().target();
+        }
+
+        return progressRows.stream()
+            .map(PlayerChallengeProgress::getTargetValue)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElse(null);
+    }
+
+    /**
+     * Calculates collective challenge completion as a percentage.
+     *
+     * @param completedPlayers number of players who completed the challenge
+     * @param totalPlayers     number of active players
+     * @return completion percentage rounded to two decimal places
+     */
+    private BigDecimal calculateCompletionPercentage(
+        int completedPlayers,
+        int totalPlayers
+    ) {
+        if (totalPlayers == 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return BigDecimal.valueOf(completedPlayers)
+            .multiply(BigDecimal.valueOf(100))
+            .divide(BigDecimal.valueOf(totalPlayers), 2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Resolves the most recent successful synchronization timestamp.
+     *
+     * @return latest timestamp, or {@code null} when no player was synchronized
+     */
+    private Instant findLastSuccessfulSynchronizationAt() {
+        return playerRepository.findAll().stream()
+            .map(Player::getLastSuccessfulSynchronizationAt)
+            .filter(Objects::nonNull)
+            .max(Instant::compareTo)
+            .orElse(null);
     }
 }
