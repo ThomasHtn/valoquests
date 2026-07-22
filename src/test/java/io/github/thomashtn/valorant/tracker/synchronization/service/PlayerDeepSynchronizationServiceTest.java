@@ -581,7 +581,7 @@ class PlayerDeepSynchronizationServiceTest {
     ) {
         return new ApplicationProperties(
             "http://localhost:4200",
-            "test-admin-key",
+            "test-admin-key-0123456789abcdef0",
             new ApplicationProperties.DeepSynchronization(
                 scope
             )

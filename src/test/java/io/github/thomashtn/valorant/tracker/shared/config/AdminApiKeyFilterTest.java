@@ -68,7 +68,7 @@ class AdminApiKeyFilterTest {
                 post(SYNCHRONIZATION_ENDPOINT)
                     .header(
                         AdminApiKeyFilter.HEADER_NAME,
-                        "test-admin-key"
+                        "test-admin-key-0123456789abcdef0"
                     )
             )
             .andExpect(status().isNotFound());

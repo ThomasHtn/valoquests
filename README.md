@@ -220,16 +220,40 @@ Use Swagger's **Authorize** action to provide `X-Admin-Key` for administrative r
 
 ## Build and tests
 
+Run the complete quality gate:
+
 ```bash
 ./mvnw clean verify
 ```
 
+This command runs Checkstyle, unit and integration tests, JaCoCo report generation and SpotBugs.
+Docker must be available because the integration suite starts an isolated PostgreSQL 17 container.
+
+Run only the fast test suite:
+
 ```bash
-./mvnw test
+./mvnw test -DexcludedGroups=integration
 ```
+
+Run only integration tests:
+
+```bash
+./mvnw test -Dgroups=integration
+```
+
+Run one test class:
 
 ```bash
 ./mvnw -Dtest=PlayerSynchronizationServiceTest test
+```
+
+The JaCoCo XML report is generated at `target/site/jacoco/jacoco.xml` and is ready for SonarQube:
+
+```bash
+./mvnw clean verify sonar:sonar \
+  -Dsonar.projectKey=valorant-tracker \
+  -Dsonar.host.url="$SONAR_HOST_URL" \
+  -Dsonar.token="$SONAR_TOKEN"
 ```
 
 ## Database migrations
@@ -237,15 +261,16 @@ Use Swagger's **Authorize** action to provide `X-Admin-Key` for administrative r
 Flyway is the only schema-management mechanism. Hibernate uses `ddl-auto=validate`.
 
 ```text
-V1  Initial schema
-V2  Initial player placeholder
-V3  Challenge catalogue
-V4  Henrik synchronization preparation
-V5  Tracked players
-V6  Optional season dates
-V7  Extended team identifier
-V8  Removal of the obsolete deep-sync task
-V9  Query-supporting indexes
+V1   Initial schema
+V2   Initial player placeholder
+V3   Challenge catalogue
+V4   Henrik synchronization preparation
+V5   Tracked players
+V6   Optional season dates
+V7   Extended team identifier
+V8   Removal of the obsolete deep-sync task
+V9   Query-supporting indexes
+V10  Read-query optimizations
 ```
 
 Never edit an applied migration. Add a new migration for every schema or reference-data change.
@@ -295,16 +320,44 @@ GET  /api/admin/synchronizations/{synchronizationId}
 | `DB_URL` | `jdbc:postgresql://localhost:5432/valorant_tracker` | PostgreSQL JDBC URL |
 | `DB_USERNAME` | `valorant` | Database user |
 | `DB_PASSWORD` | `valorant` | Database password |
-| `ADMIN_API_KEY` | local development value | Protects `/api/admin/**` |
+| `ADMIN_API_KEY` | required, at least 32 characters | Protects `/api/admin/**` |
 | `FRONTEND_ORIGIN` | `http://localhost:4200` | Allowed Angular origin |
 | `HENRIK_API_BASE_URL` | `https://api.henrikdev.xyz` | Henrik API base URL |
-| `HENRIK_API_KEY` | empty | Henrik API key |
+| `HENRIK_API_KEY` | required | Henrik API key |
 | `HENRIK_API_REGION` | `eu` | Valorant region |
 | `HENRIK_API_PLATFORM` | `pc` | Valorant platform |
 | `HENRIK_API_MAX_ATTEMPTS` | `2` | Total request attempts |
 | `HENRIK_API_RETRY_DELAY` | `PT60S` | Minimum retry delay |
 | `HENRIK_API_REQUESTS_PER_MINUTE` | `28` | Shared request limit |
 | `DEEP_SYNC_SCOPE` | `CURRENT_SEASON` | Historical import range |
+
+## Release-candidate validation
+
+Before publishing a release, validate these flows against a dedicated PostgreSQL database and a valid Henrik API key:
+
+1. synchronize one player, then all active players;
+2. verify that one player failure does not interrupt the remaining synchronizations;
+3. run deep synchronization twice and confirm that no match is duplicated;
+4. recalculate challenge progress and confirm that ranking recalculation follows;
+5. exercise public pagination, filters, empty responses and unknown-resource errors;
+6. execute a week rollover with a fixed clock and verify that finalized history remains unchanged;
+7. parse and execute all 78 production challenge definitions;
+8. verify Swagger authorization and every protected administrative route.
+
+External Henrik calls are intentionally excluded from automated tests because they depend on credentials,
+rate limits and live upstream data.
+
+## Synchronization benchmark
+
+A real end-to-end benchmark of the six-player standard synchronization is available once the application and
+PostgreSQL are running:
+
+```bash
+ADMIN_KEY="$ADMIN_API_KEY" RUNS=3 ./scripts/benchmark-full-synchronization.sh
+```
+
+Results are written to `target/full-synchronization-benchmark.csv`. Any non-200 response stops the benchmark and
+prints the upstream error body.
 
 ## Development conventions
 
@@ -324,67 +377,3 @@ GET  /api/admin/synchronizations/{synchronizationId}
 Built as a portfolio project, tested as a real application.
 
 </div>
-
-## Quality gate
-
-The project uses two complementary test levels:
-
-- fast unit tests for challenge rules, Henrik mapping, synchronization orchestration and ranking calculations;
-- PostgreSQL integration tests powered by Testcontainers for Flyway, repositories, HTTP security and end-to-end persistence workflows.
-
-Run the complete suite with Docker available:
-
-```bash
-./mvnw verify
-```
-
-Run only integration tests from IntelliJ with the `integration` JUnit tag, or from Maven:
-
-```bash
-./mvnw test -Dgroups=integration
-```
-
-The integration suite starts an isolated PostgreSQL 17 container, applies every production Flyway migration and validates Hibernate against the resulting schema. No local development database is modified.
-
-### Release-candidate validation
-
-Before publishing a release, verify the following flows against a dedicated PostgreSQL database and a valid Henrik API key:
-
-1. standard synchronization for one player;
-2. standard synchronization for all active players, including one simulated player failure;
-3. deep synchronization and idempotent re-import of the latest page;
-4. manual challenge recalculation followed by ranking recalculation;
-5. all public routes, empty responses, pagination, filters and unknown-player errors;
-6. week change on a fixed clock, ensuring a new challenge pack is selected without modifying finalized history;
-7. all 78 catalogue rules on a representative week containing Competitive, Team Deathmatch and Swiftplay matches.
-
-External Henrik calls are intentionally excluded from automated CI tests. They belong to a controlled smoke-test environment because they depend on credentials, rate limits and live upstream data.
-
-## Quality gate and synchronization benchmark
-
-The hardening profile is executed with:
-
-```bash
-./mvnw clean verify
-```
-
-The build runs Checkstyle, the complete test suite, JaCoCo report generation and SpotBugs. The JaCoCo XML report is
-ready for SonarQube through `sonar.coverage.jacoco.xmlReportPaths`. A typical SonarQube analysis can be launched with:
-
-```bash
-./mvnw clean verify sonar:sonar \
-  -Dsonar.projectKey=valorant-tracker \
-  -Dsonar.host.url="$SONAR_HOST_URL" \
-  -Dsonar.token="$SONAR_TOKEN"
-```
-
-A real end-to-end benchmark of the six-player standard synchronization is available once the application and
-PostgreSQL are running:
-
-```bash
-ADMIN_KEY="$ADMIN_KEY" RUNS=3 ./scripts/benchmark-full-synchronization.sh
-```
-
-Results are written to `target/full-synchronization-benchmark.csv`. The benchmark includes Henrik API latency, rate
-limiting, match persistence, challenge recalculation and ranking recalculation, so it should be run with the same
-configuration used in the target environment.

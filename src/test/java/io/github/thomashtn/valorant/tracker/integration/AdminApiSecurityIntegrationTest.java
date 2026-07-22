@@ -15,7 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
     properties = {
-        "app.admin-api-key=test-admin-key"
+        "app.admin-api-key=test-admin-key-0123456789abcdef0"
     }
 )
 @AutoConfigureMockMvc

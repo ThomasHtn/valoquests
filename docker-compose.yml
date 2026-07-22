@@ -2,15 +2,20 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: valorant_tracker
-      POSTGRES_USER: valorant
-      POSTGRES_PASSWORD: valorant
-    ports: ["5432:5432"]
-    volumes: ["valorant-postgres-data:/var/lib/postgresql/data"]
+      POSTGRES_DB: ${DB_NAME:-valorant_tracker}
+      POSTGRES_USER: ${DB_USERNAME:-valorant}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-valorant}
+    ports:
+      - "5432:5432"
+    volumes:
+      - valorant-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U valorant -d valorant_tracker"]
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${DB_USERNAME:-valorant} -d ${DB_NAME:-valorant_tracker}
       interval: 5s
       timeout: 5s
       retries: 10
+
 volumes:
   valorant-postgres-data:
