@@ -19,6 +19,10 @@ concurrency:
   group: backend-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    working-directory: backend
+
 jobs:
   verify:
     name: Build, test and analyze
@@ -35,6 +39,7 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+          cache-dependency-path: backend/pom.xml
 
       - name: Grant execute permission to Maven Wrapper
         run: chmod +x mvnw
@@ -51,8 +56,8 @@ jobs:
         with:
           name: backend-test-reports
           path: |
-            target/surefire-reports/
-            target/failsafe-reports/
+            backend/target/surefire-reports/
+            backend/target/failsafe-reports/
           if-no-files-found: ignore
           retention-days: 7
 
@@ -61,7 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage-report
-          path: target/site/jacoco/
+          path: backend/target/site/jacoco/
           if-no-files-found: ignore
           retention-days: 7
 
@@ -71,8 +76,8 @@ jobs:
         with:
           name: valorant-tracker-backend
           path: |
-            target/*.jar
-            !target/*-sources.jar
-            !target/*-javadoc.jar
+            backend/target/*.jar
+            !backend/target/*-sources.jar
+            !backend/target/*-javadoc.jar
           if-no-files-found: error
           retention-days: 14

@@ -116,6 +116,20 @@ Closed weeks remain available so previous results and winners can be reviewed la
 - H2 in PostgreSQL compatibility mode
 - MockWebServer
 
+## Repository structure
+
+The project is organized as a monorepo:
+
+```text
+valorant-tracker
+├── backend    Java 25 / Spring Boot API (Maven project)
+├── frontend   Angular 22 application
+├── docs       UI mockups and images
+└── scripts    Operational scripts
+```
+
+Backend commands in this document assume `backend/` as the working directory. Frontend commands assume `frontend/`.
+
 ## Architecture
 
 The backend follows a feature-oriented architecture. Each domain owns its controllers, services, repositories, entities,
@@ -205,6 +219,7 @@ docker compose ps
 ### Run the backend
 
 ```bash
+cd backend
 ./mvnw spring-boot:run
 ```
 
@@ -221,6 +236,7 @@ Use Swagger's **Authorize** action to provide `X-Admin-Key` for administrative r
 Run the complete quality gate:
 
 ```bash
+cd backend
 ./mvnw clean verify
 ```
 
