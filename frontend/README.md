@@ -1,6 +1,12 @@
 # Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.8.
+Angular 22 application for Valorant Tracker. See the [root README](../README.md) for the project overview and the
+[backend README](../backend/README.md) for the Spring Boot API.
+
+## UI mockups
+
+The [`docs/images`](docs/images) directory contains the mockups used as the source of truth for the application's
+screens. Inspect the relevant mockup before implementing or changing a screen.
 
 ## Development server
 
@@ -10,7 +16,9 @@ To start a local development server, run:
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will
+automatically reload whenever you modify any of the source files. The backend must be running separately
+(see the [backend README](../backend/README.md)) for API calls to succeed.
 
 ## Code scaffolding
 
