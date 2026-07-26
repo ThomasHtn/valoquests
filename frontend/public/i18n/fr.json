@@ -1,0 +1,25 @@
+{
+  "sidebar": {
+    "expand": "Déplier la barre latérale",
+    "collapse": "Réduire la barre latérale",
+    "nav": {
+      "overview": "Vue d'ensemble",
+      "players": "Joueurs",
+      "comparison": "Comparaison",
+      "challenges": "Défis",
+      "weeklyChallenges": "Défis hebdomadaires",
+      "ranking": "Classement",
+      "settings": "Paramètres"
+    },
+    "lastSync": {
+      "label": "Dernière mise à jour",
+      "tooltip": "Dernière mise à jour : {{value}}"
+    },
+    "language": {
+      "label": "Langue"
+    }
+  },
+  "overview": {
+    "title": "Vue d'ensemble"
+  }
+}

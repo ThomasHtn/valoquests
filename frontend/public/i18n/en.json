@@ -1,0 +1,25 @@
+{
+  "sidebar": {
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar",
+    "nav": {
+      "overview": "Overview",
+      "players": "Players",
+      "comparison": "Comparison",
+      "challenges": "Challenges",
+      "weeklyChallenges": "Weekly challenges",
+      "ranking": "Ranking",
+      "settings": "Settings"
+    },
+    "lastSync": {
+      "label": "Last update",
+      "tooltip": "Last update: {{value}}"
+    },
+    "language": {
+      "label": "Language"
+    }
+  },
+  "overview": {
+    "title": "Overview"
+  }
+}

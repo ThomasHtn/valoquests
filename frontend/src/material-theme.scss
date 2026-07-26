@@ -1,0 +1,17 @@
+// CDK/Material theme tokens (`--mat-sys-*`) consumed by Material components such as `matTooltip`.
+// The rest of the application's visuals are driven by Tailwind (see `src/styles/colors.css`);
+// this file only exists to satisfy Material's theming requirement.
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$red-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}

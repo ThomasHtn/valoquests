@@ -3,6 +3,13 @@
 Angular 22 application for Valorant Tracker. See the [root README](../README.md) for the project overview and the
 [backend README](../backend/README.md) for the Spring Boot API.
 
+## Technology stack
+
+- Angular 22
+- TypeScript
+- Tailwind CSS
+- [Lucide](https://lucide.dev/) for icons, via `@lucide/angular`
+
 ## UI mockups
 
 The [`docs/images`](docs/images) directory contains the mockups used as the source of truth for the application's
@@ -19,6 +26,26 @@ ng serve
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will
 automatically reload whenever you modify any of the source files. The backend must be running separately
 (see the [backend README](../backend/README.md)) for API calls to succeed.
+
+## Icons
+
+Icons are provided by Lucide. Import each icon's standalone component directly in the consuming component's
+`imports` array, then apply it via its selector attribute on an `<svg>` element:
+
+```typescript
+import { Component } from '@angular/core';
+import { LucideHouse } from '@lucide/angular';
+
+@Component({
+  selector: 'app-example',
+  imports: [LucideHouse],
+  template: `<svg lucideHouse class="h-5 w-5"></svg>`,
+})
+export class Example {}
+```
+
+Size and color icons with Tailwind utilities (`h-*`/`w-*` for size, `text-*` for color via `currentColor`). Do not
+register a global icon library unless a demonstrated need arises.
 
 ## Code scaffolding
 

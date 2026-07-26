@@ -1,5 +1,9 @@
-<div class="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
-  <h1 class="text-2xl font-semibold">{{ title() }}</h1>
-</div>
+<div class="flex min-h-screen bg-surface-950">
+  <!-- Persistent navigation sidebar, shown on every route. -->
+  <app-sidebar />
 
-<router-outlet />
+  <!-- Routed page content. -->
+  <main class="flex-1 p-6">
+    <router-outlet />
+  </main>
+</div>
