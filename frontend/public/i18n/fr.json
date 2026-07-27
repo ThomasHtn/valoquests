@@ -16,6 +16,7 @@
       "tooltip": "Dernière mise à jour : {{value}}"
     },
     "language": {
+      "label": "Langue",
       "tooltip": "Passer en {{language}}",
       "names": {
         "fr": "Français",
