@@ -22,14 +22,17 @@ export class Translation {
    * Currently active language.
    */
   public readonly language = signal<Language>(this.detectInitialLanguage());
+
   /**
    * Languages the application can be translated into.
    */
   public readonly supportedLanguages = SUPPORTED_LANGUAGES;
+
   /**
    * HTTP client used to fetch language dictionaries.
    */
   private readonly http = inject(HttpClient);
+
   /**
    * Currently loaded translation dictionary, keyed by nested dot-separated paths.
    */

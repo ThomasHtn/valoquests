@@ -1,0 +1,8 @@
+/*
+ * Typography tokens.
+ * Defines the display font used for the application wordmark (`font-display`).
+ */
+
+@theme {
+  --font-display: 'Rajdhani', ui-sans-serif, system-ui, sans-serif;
+}

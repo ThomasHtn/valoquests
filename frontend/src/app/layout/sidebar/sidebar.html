@@ -8,14 +8,15 @@
       @if (collapsed()) {
         <!-- Collapsed rail: the "V" mark doubles as the expand trigger, swapping to a chevron
              on hover instead of showing a separate always-visible button (ChatGPT-style). -->
-        <div class="flex justify-center px-1">
+        <div class="flex justify-center">
           <button
             (click)="toggleCollapsed()"
             [attr.aria-label]="'sidebar.expand' | translate"
-            class="group relative flex h-10 w-14 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-surface-800"
+            class="group relative flex h-11 w-14 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/15 to-transparent ring-1 ring-brand-500/25 transition-colors hover:bg-surface-800 hover:ring-surface-700"
             type="button"
           >
-            <span class="text-2xl font-bold text-brand-500 transition-opacity group-hover:opacity-0"
+            <span
+              class="font-display text-2xl font-bold tracking-tight text-brand-500 transition-opacity group-hover:opacity-0"
               >V</span
             >
             <svg
@@ -25,17 +26,33 @@
           </button>
         </div>
       } @else {
-        <!-- Expanded rail: full "VALORANT TRACKER" wordmark alongside the collapse trigger. -->
-        <div class="flex items-center justify-between gap-1 px-1">
-          <div class="flex flex-col leading-tight">
-            <span class="text-2xl font-bold tracking-wide text-brand-500">VALORANT</span>
-            <span class="text-sm font-bold tracking-wide text-text-primary">TRACKER</span>
+        <!-- Expanded rail: full "VALORANT QUESTS" wordmark alongside the collapse trigger. -->
+        <div class="flex items-center justify-between gap-1">
+          <div class="flex flex-col leading-none">
+            <span
+              class="font-display inline-flex -skew-x-6 items-baseline text-4xl font-bold tracking-tight"
+            >
+              <span class="text-brand-500 drop-shadow-[0_0_10px_rgba(255,70,85,0.45)]">V</span>
+              <span
+                class="bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent"
+                >ALORANT</span
+              >
+            </span>
+            <div class="mt-0.5 flex items-center gap-1.5">
+              <span
+                class="h-[3px] w-5 shrink-0 bg-gradient-to-r from-brand-500 to-brand-400 [clip-path:polygon(15%_0,100%_0,85%_100%,0_100%)]"
+              ></span>
+              <span
+                class="font-display text-[11px] font-semibold tracking-[0.35em] text-text-secondary"
+                >QUESTS</span
+              >
+            </div>
           </div>
 
           <button
             (click)="toggleCollapsed()"
             [attr.aria-label]="'sidebar.collapse' | translate"
-            class="flex h-10 w-14 shrink-0 cursor-pointer items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-800 hover:text-text-primary"
+            class="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-800 hover:text-text-primary"
             type="button"
           >
             <svg class="block h-5 w-5 shrink-0" lucidePanelLeftClose></svg>
@@ -64,118 +81,75 @@
         }
       </a>
 
-      <!-- Remaining sections have no page yet: rendered without routerLink so the menu, icon
-           set and sizing can be reviewed as a whole ahead of their implementation. -->
-      <a
-        [class.justify-center]="collapsed()"
-        [matTooltipDisabled]="!collapsed()"
-        [matTooltip]="'sidebar.nav.players' | translate"
-        class="flex w-full cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary"
-        matTooltipPosition="right"
-      >
-        <svg class="block h-5 w-5 shrink-0" lucideUsers></svg>
-        @if (!collapsed()) {
-          <span>{{ 'sidebar.nav.players' | translate }}</span>
-        }
-      </a>
-
-      <a
-        [class.justify-center]="collapsed()"
-        [matTooltipDisabled]="!collapsed()"
-        [matTooltip]="'sidebar.nav.comparison' | translate"
-        class="flex w-full cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary"
-        matTooltipPosition="right"
-      >
-        <svg class="block h-5 w-5 shrink-0" lucideChartColumn></svg>
-        @if (!collapsed()) {
-          <span>{{ 'sidebar.nav.comparison' | translate }}</span>
-        }
-      </a>
-
-      <a
-        [class.justify-center]="collapsed()"
-        [matTooltipDisabled]="!collapsed()"
-        [matTooltip]="'sidebar.nav.challenges' | translate"
-        class="flex w-full cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary"
-        matTooltipPosition="right"
-      >
-        <svg class="block h-5 w-5 shrink-0" lucideTarget></svg>
-        @if (!collapsed()) {
-          <span>{{ 'sidebar.nav.challenges' | translate }}</span>
-        }
-      </a>
-
-      <a
-        [class.justify-center]="collapsed()"
-        [matTooltipDisabled]="!collapsed()"
-        [matTooltip]="'sidebar.nav.weeklyChallenges' | translate"
-        class="flex w-full cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary"
-        matTooltipPosition="right"
-      >
-        <svg class="block h-5 w-5 shrink-0" lucideCalendarDays></svg>
-        @if (!collapsed()) {
-          <span>{{ 'sidebar.nav.weeklyChallenges' | translate }}</span>
-        }
-      </a>
-
-      <a
-        [class.justify-center]="collapsed()"
-        [matTooltipDisabled]="!collapsed()"
-        [matTooltip]="'sidebar.nav.ranking' | translate"
-        class="flex w-full cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary"
-        matTooltipPosition="right"
-      >
-        <svg class="block h-5 w-5 shrink-0" lucideTrophy></svg>
-        @if (!collapsed()) {
-          <span>{{ 'sidebar.nav.ranking' | translate }}</span>
-        }
-      </a>
-
-      <a
-        [class.justify-center]="collapsed()"
-        [matTooltipDisabled]="!collapsed()"
-        [matTooltip]="'sidebar.nav.settings' | translate"
-        class="flex w-full cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary"
-        matTooltipPosition="right"
-      >
-        <svg class="block h-5 w-5 shrink-0" lucideSettings></svg>
-        @if (!collapsed()) {
-          <span>{{ 'sidebar.nav.settings' | translate }}</span>
-        }
-      </a>
+      <!-- Remaining sections have no page yet: rendered without routerLink from a single
+           template block so the shared markup isn't duplicated per section. -->
+      @for (item of pendingNavItems; track item.labelKey) {
+        <a
+          [class.justify-center]="collapsed()"
+          [matTooltipDisabled]="!collapsed()"
+          [matTooltip]="'sidebar.nav.' + item.labelKey | translate"
+          class="flex w-full cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary"
+          matTooltipPosition="right"
+        >
+          @switch (item.icon) {
+            @case ('users') {
+              <svg class="block h-5 w-5 shrink-0" lucideUsers></svg>
+            }
+            @case ('chart-column') {
+              <svg class="block h-5 w-5 shrink-0" lucideChartColumn></svg>
+            }
+            @case ('target') {
+              <svg class="block h-5 w-5 shrink-0" lucideTarget></svg>
+            }
+            @case ('calendar-days') {
+              <svg class="block h-5 w-5 shrink-0" lucideCalendarDays></svg>
+            }
+            @case ('trophy') {
+              <svg class="block h-5 w-5 shrink-0" lucideTrophy></svg>
+            }
+            @case ('settings') {
+              <svg class="block h-5 w-5 shrink-0" lucideSettings></svg>
+            }
+          }
+          @if (!collapsed()) {
+            <span>{{ 'sidebar.nav.' + item.labelKey | translate }}</span>
+          }
+        </a>
+      }
     </nav>
   </div>
 
   <!-- Footer: language switcher and last synchronization time, shown as tooltips when collapsed. -->
   <div class="flex flex-col gap-4 border-t border-surface-700 pt-4">
     <!-- Language switcher -->
-    <div
-      [class.justify-center]="collapsed()"
-      [matTooltipDisabled]="!collapsed()"
-      [matTooltip]="'sidebar.language.label' | translate"
-      class="flex items-start gap-2 px-1"
-      matTooltipPosition="right"
-    >
-      <svg class="mt-0.5 block h-4 w-4 shrink-0 text-brand-500" lucideLanguages></svg>
-      @if (!collapsed()) {
-        <div class="flex flex-col gap-1 text-xs">
-          <span class="font-medium text-brand-500">{{ 'sidebar.language.label' | translate }}</span>
-          <div class="flex gap-1">
-            @for (language of translation.supportedLanguages; track language) {
-              <button
-                (click)="setLanguage(language)"
-                [class.bg-surface-800]="translation.language() === language"
-                [class.text-text-primary]="translation.language() === language"
-                class="cursor-pointer rounded-md px-2 py-0.5 text-xs font-semibold uppercase text-text-muted transition-colors hover:bg-surface-800 hover:text-text-primary"
-                type="button"
-              >
-                {{ language }}
-              </button>
-            }
-          </div>
-        </div>
-      }
-    </div>
+    @if (collapsed()) {
+      <button
+        (click)="cycleLanguage()"
+        [matTooltip]="'sidebar.language.tooltip' | translate: { language: nextLanguageName() }"
+        class="flex w-full cursor-pointer items-center justify-center rounded-lg py-1 text-sm transition-colors hover:bg-surface-800"
+        matTooltipPosition="right"
+        type="button"
+      >
+        <span aria-hidden="true">{{ currentFlag() }}</span>
+      </button>
+    } @else {
+      <div class="flex items-center gap-1 px-1">
+        @for (language of translation.supportedLanguages; track language) {
+          <button
+            (click)="setLanguage(language)"
+            [attr.aria-label]="'sidebar.language.names.' + language | translate"
+            [attr.aria-pressed]="translation.language() === language"
+            [class.opacity-40]="translation.language() !== language"
+            [matTooltip]="'sidebar.language.names.' + language | translate"
+            class="cursor-pointer rounded-md px-1 py-0.5 text-sm transition-opacity hover:opacity-100"
+            matTooltipPosition="right"
+            type="button"
+          >
+            <span aria-hidden="true">{{ flag(language) }}</span>
+          </button>
+        }
+      </div>
+    }
 
     <!-- Last synchronization time -->
     <div

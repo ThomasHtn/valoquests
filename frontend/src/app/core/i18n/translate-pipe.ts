@@ -17,6 +17,7 @@ export class TranslatePipe implements PipeTransform {
    * i18n service providing the active language and dictionary lookups.
    */
   private readonly translation = inject(Translation);
+
   /**
    * Used to mark the host view for check when the active language changes.
    */
