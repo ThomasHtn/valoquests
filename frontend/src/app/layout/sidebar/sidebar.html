@@ -17,7 +17,7 @@
           >
             <span
               class="font-display text-2xl font-bold tracking-tight text-brand-500 transition-opacity group-hover:opacity-0"
-            >V</span
+              >V</span
             >
             <svg
               class="absolute h-5 w-5 rotate-180 text-text-primary opacity-0 transition-opacity group-hover:opacity-100"
@@ -44,7 +44,7 @@
               <span class="text-brand-500 drop-shadow-[0_0_10px_rgba(255,70,85,0.45)]">V</span>
               <span
                 class="bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent"
-              >ALORANT</span
+                >ALORANT</span
               >
             </span>
             <div class="mt-0.5 flex items-center justify-end gap-1.5">
@@ -53,7 +53,7 @@
               ></span>
               <span
                 class="font-display text-[11px] font-semibold tracking-[0.35em] text-text-secondary"
-              >QUESTS</span
+                >QUESTS</span
               >
             </div>
           </div>
@@ -119,15 +119,18 @@
     </nav>
   </div>
 
-  <!-- Footer: language switcher and last synchronization time, shown as tooltips when collapsed. -->
+  <!-- Footer: language switcher and last synchronization time -->
   <div class="flex flex-col gap-3 border-t border-surface-700 pt-4">
     <!-- Language switcher -->
     @if (collapsed()) {
       <div class="flex w-full justify-center">
         <button
           (click)="cycleLanguage()"
+          [attr.aria-label]="
+            'sidebar.language.tooltip' | translate: { language: nextLanguageName() }
+          "
           [matTooltip]="'sidebar.language.tooltip' | translate: { language: nextLanguageName() }"
-          class="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-800 text-xl transition-colors hover:bg-surface-700"
+          class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-xl transition-colors hover:bg-surface-800/50"
           matTooltipPosition="right"
           type="button"
         >
@@ -135,23 +138,22 @@
         </button>
       </div>
     } @else {
-      <div class="flex flex-col gap-2 px-0.5">
+      <div class="flex flex-col gap-2 px-1">
         <div class="flex items-center gap-1.5">
           <svg class="h-3.5 w-3.5 text-text-muted" lucideGlobe></svg>
           <span class="text-xs font-medium text-text-muted uppercase tracking-wider">{{
-              'sidebar.language.label' | translate
-            }}</span>
+            'sidebar.language.label' | translate
+          }}</span>
         </div>
-        <div class="flex flex-wrap gap-2 pl-5">
+        <div class="flex gap-2 pl-5">
           @for (language of translation.supportedLanguages; track language) {
             <button
               (click)="setLanguage(language)"
               [attr.aria-label]="'sidebar.language.names.' + language | translate"
               [attr.aria-pressed]="translation.language() === language"
-              [class.bg-surface-800]="translation.language() === language"
-              [class.opacity-40]="translation.language() !== language"
+              [class]="languageButtonClass(language)"
               [matTooltip]="'sidebar.language.names.' + language | translate"
-              class="flex h-9 w-9 items-center justify-center rounded-md text-lg transition-all hover:opacity-100"
+              class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-base font-semibold transition-all hover:bg-surface-700/50"
               matTooltipPosition="right"
               type="button"
             >
@@ -166,28 +168,29 @@
     <div
       [class.justify-center]="collapsed()"
       [matTooltipDisabled]="!collapsed()"
-      [matTooltip]="'sidebar.lastSync.tooltip' | translate: { value: '08/07/2025 - 10:30' }"
-      class="flex flex-col gap-1 px-0.5"
+      [matTooltip]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel }"
+      class="flex flex-col gap-1 px-1"
       matTooltipPosition="right"
     >
       @if (collapsed()) {
-        <div class="flex w-full justify-center ">
+        <div class="flex w-full justify-center">
           <button
-            class="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-800 text-brand-500 transition-colors hover:bg-surface-700"
+            [attr.aria-label]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel }"
+            class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-800/50 hover:text-text-primary"
             type="button"
           >
             <svg class="block h-5 w-5 shrink-0" lucideRefreshCw></svg>
           </button>
         </div>
       } @else {
-        <div class="flex items-center gap-1.5 ">
+        <div class="flex items-center gap-1.5">
           <svg class="h-3.5 w-3.5 text-text-muted" lucideRefreshCw></svg>
           <span class="text-xs font-medium text-text-muted uppercase tracking-wider">{{
-              'sidebar.lastSync.label' | translate
-            }}</span>
+            'sidebar.lastSync.label' | translate
+          }}</span>
         </div>
-        <div class="flex items-center gap-1.5 rounded-md px-2 py-1.5 pl-5">
-          <span class="text-xs text-text-muted">08/07/2025 - 10:30</span>
+        <div class="flex items-center gap-2 pl-5">
+          <span class="text-xs text-text-muted">{{ lastSyncLabel }}</span>
         </div>
       }
     </div>

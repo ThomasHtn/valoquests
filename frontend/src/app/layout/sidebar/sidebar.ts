@@ -63,6 +63,13 @@ export class Sidebar {
   protected readonly pendingNavItems = PENDING_NAV_ITEMS;
 
   /**
+   * Timestamp of the last player synchronization, shown in the footer.
+   *
+   * Placeholder until synchronization status is wired to a data-access service.
+   */
+  protected readonly lastSyncLabel = '08/07/2025 - 10:30';
+
+  /**
    * Language the footer switcher would activate on the next click.
    */
   protected readonly nextLanguage = computed<Language>(() => {
@@ -120,5 +127,17 @@ export class Sidebar {
    */
   protected flag(language: Language): string {
     return FLAG_BY_LANGUAGE[language];
+  }
+
+  /**
+   * Resolves the footer switcher's active/inactive styling for `language`.
+   *
+   * @param language - The language whose button classes should be resolved.
+   * @returns The Tailwind classes highlighting `language` when it is active.
+   */
+  protected languageButtonClass(language: Language): string {
+    return this.translation.language() === language
+      ? 'bg-surface-700 text-text-primary opacity-100'
+      : 'bg-surface-800/20 text-text-muted opacity-50';
   }
 }

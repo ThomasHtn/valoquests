@@ -4,7 +4,9 @@ import { firstValueFrom } from 'rxjs';
 
 export type Language = 'fr' | 'en';
 
-type TranslationDictionary = { readonly [key: string]: string | TranslationDictionary };
+interface TranslationDictionary {
+  readonly [key: string]: string | TranslationDictionary;
+}
 
 const SUPPORTED_LANGUAGES: readonly Language[] = ['fr', 'en'];
 const DEFAULT_LANGUAGE: Language = 'fr';
@@ -110,13 +112,21 @@ export class Translation {
   /**
    * Fetches the dictionary for `language` from `public/i18n` and stores it.
    *
+   * Errors are caught rather than rethrown: {@link initialize} is awaited by an
+   * app initializer, so a failed request would otherwise block bootstrap and
+   * leave the application on a blank page instead of degrading to raw keys.
+   *
    * @param language - The language whose dictionary should be loaded.
    */
   private async load(language: Language): Promise<void> {
-    const dictionary = await firstValueFrom(
-      this.http.get<TranslationDictionary>(`i18n/${language}.json`),
-    );
-    this.dictionary.set(dictionary);
+    try {
+      const dictionary = await firstValueFrom(
+        this.http.get<TranslationDictionary>(`i18n/${language}.json`),
+      );
+      this.dictionary.set(dictionary);
+    } catch (error) {
+      console.error(`Failed to load the "${language}" translation dictionary.`, error);
+    }
   }
 
   /**
