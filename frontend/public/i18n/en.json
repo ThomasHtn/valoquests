@@ -102,5 +102,68 @@
       "next": "Next",
       "page": "Page {{page}} of {{total}}"
     }
+  },
+  "playerProfile": {
+    "breadcrumb": {
+      "players": "Players"
+    },
+    "loading": "Loading player profile…",
+    "error": "Failed to load this player's profile.",
+    "stats": {
+      "winRate": "Win rate",
+      "record": "{{wins}} W / {{losses}} L",
+      "kda": "K/D",
+      "headshotPercentage": "HS%",
+      "adr": "ADR",
+      "acs": "ACS",
+      "matchesPlayed": "Matches"
+    },
+    "filters": {
+      "resultLabel": "Filter by result",
+      "allResults": "All results",
+      "win": "Wins",
+      "loss": "Losses",
+      "seasonLabel": "Filter by season",
+      "allSeasons": "All seasons"
+    },
+    "matches": {
+      "loading": "Loading match history…",
+      "error": "Failed to load match history.",
+      "empty": "No match found for these filters.",
+      "columns": {
+        "map": "Map",
+        "mode": "Mode",
+        "result": "Result",
+        "score": "Score",
+        "kda": "K/D/A",
+        "kd": "K/D",
+        "headshotPercentage": "HS%",
+        "acs": "ACS"
+      },
+      "result": {
+        "WIN": "Win",
+        "LOSS": "Loss",
+        "DRAW": "Draw",
+        "REMAKE": "Remake",
+        "UNKNOWN": "Unknown"
+      },
+      "gameMode": {
+        "COMPETITIVE": "Competitive",
+        "UNRATED": "Unrated",
+        "SWIFTPLAY": "Swiftplay",
+        "SPIKE_RUSH": "Spike Rush",
+        "DEATHMATCH": "Deathmatch",
+        "TEAM_DEATHMATCH": "Team Deathmatch",
+        "ESCALATION": "Escalation",
+        "PREMIER": "Premier",
+        "CUSTOM": "Custom",
+        "OTHER": "Other"
+      }
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {{page}} of {{total}}"
+    }
   }
 }

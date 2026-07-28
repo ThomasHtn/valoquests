@@ -1,6 +1,7 @@
-import { httpResource } from '@angular/common/http';
-import { Service } from '@angular/core';
+import { httpResource, HttpResourceRef } from '@angular/common/http';
+import { Service, Signal } from '@angular/core';
 
+import { PlayerDetails } from './player-details.model';
 import { PlayerSummary } from './player-summary.model';
 
 /**
@@ -17,4 +18,16 @@ export class PlayersApi {
   public readonly players = httpResource<readonly PlayerSummary[]>(() => '/api/players', {
     defaultValue: [],
   });
+
+  /**
+   * Detailed profile and aggregated statistics of one tracked player.
+   *
+   * Created per caller, unlike {@link players}, since it is parameterized by the requested player.
+   *
+   * @param id - Reactive internal player identifier.
+   * @returns The reactive resource fetching the requested player's detailed profile.
+   */
+  public details(id: Signal<number>): HttpResourceRef<PlayerDetails | undefined> {
+    return httpResource<PlayerDetails>(() => `/api/players/${id()}`);
+  }
 }

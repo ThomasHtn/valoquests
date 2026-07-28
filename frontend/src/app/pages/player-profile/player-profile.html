@@ -1,0 +1,255 @@
+<!-- Breadcrumb -->
+<nav aria-label="Breadcrumb" class="mb-4 flex items-center gap-2 text-sm text-text-secondary">
+  <a class="transition-colors hover:text-text-primary" routerLink="/players">
+    {{ 'playerProfile.breadcrumb.players' | translate }}
+  </a>
+  <svg class="h-3.5 w-3.5" lucideChevronRight></svg>
+  <span aria-current="page" class="font-semibold text-text-primary">
+    {{ details()?.displayName ?? '…' }}
+  </span>
+</nav>
+
+<app-resource-state
+  [errorText]="'playerProfile.error' | translate"
+  [isError]="!!detailsResource.error()"
+  [isLoading]="detailsResource.isLoading()"
+  [loadingText]="'playerProfile.loading' | translate"
+  padding="px-1 py-6"
+>
+  @if (details(); as playerDetails) {
+    <!-- Player identity -->
+    <section
+      class="mb-6 flex flex-col gap-6 rounded-xl border border-surface-700 bg-surface-900 p-5 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div class="flex items-center gap-5">
+        <app-avatar [src]="avatarUrl()" size="lg" />
+        <div>
+          <h1 class="text-2xl font-bold tracking-wide text-text-primary uppercase">
+            {{ playerDetails.displayName }}
+          </h1>
+          @if (tag()) {
+            <p class="mt-1 text-sm text-text-secondary">#{{ tag() }}</p>
+          }
+        </div>
+      </div>
+
+      @if (tier(); as tierVisual) {
+        <div class="flex items-center gap-3">
+          <span
+            [class]="tierVisual.colorClass"
+            class="flex h-14 w-14 shrink-0 items-center justify-center bg-current/15 [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+          >
+            <span
+              [class]="tierVisual.colorClass"
+              class="h-7 w-7 bg-current [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+            ></span>
+          </span>
+          <div>
+            <p [class]="tierVisual.colorClass" class="text-lg font-bold">{{ tierVisual.label }}</p>
+            @if (playerDetails.rankRating !== null) {
+              <p class="text-xs text-text-secondary">{{ playerDetails.rankRating }} RR</p>
+            }
+          </div>
+        </div>
+      }
+    </section>
+
+    <!-- Stat tiles -->
+    <section class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
+        <div class="mb-3 flex items-center gap-2 text-text-secondary">
+          <svg class="h-4 w-4 text-accent-green" lucideTarget></svg>
+          <span class="text-xs font-semibold tracking-wide uppercase">
+            {{ 'playerProfile.stats.winRate' | translate }}
+          </span>
+        </div>
+        <p [class]="winRateColorClass(playerDetails.statistics.winRate)" class="text-2xl font-bold">
+          {{ formatWinRate(playerDetails.statistics.winRate) }}
+        </p>
+        <p class="mt-1 text-xs text-text-secondary">
+          {{
+            'playerProfile.stats.record'
+              | translate
+                : { wins: playerDetails.statistics.wins, losses: playerDetails.statistics.losses }
+          }}
+        </p>
+      </div>
+
+      <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
+        <div class="mb-3 flex items-center gap-2 text-text-secondary">
+          <svg class="h-4 w-4 text-accent-purple" lucideSwords></svg>
+          <span class="text-xs font-semibold tracking-wide uppercase">
+            {{ 'playerProfile.stats.kda' | translate }}
+          </span>
+        </div>
+        <p [class]="kdaColorClass(playerDetails.statistics.kda)" class="text-2xl font-bold">
+          {{ formatKda(playerDetails.statistics.kda) }}
+        </p>
+      </div>
+
+      <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
+        <div class="mb-3 flex items-center gap-2 text-text-secondary">
+          <svg class="h-4 w-4 text-accent-gold" lucideCrosshair></svg>
+          <span class="text-xs font-semibold tracking-wide uppercase">
+            {{ 'playerProfile.stats.headshotPercentage' | translate }}
+          </span>
+        </div>
+        <p class="text-2xl font-bold text-text-primary">
+          {{ formatHeadshotPercentage(playerDetails.statistics.headshotPercentage) }}
+        </p>
+      </div>
+
+      <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
+        <div class="mb-3 flex items-center gap-2 text-text-secondary">
+          <svg class="h-4 w-4 text-accent-blue" lucideActivity></svg>
+          <span class="text-xs font-semibold tracking-wide uppercase">
+            {{ 'playerProfile.stats.adr' | translate }}
+          </span>
+        </div>
+        <p class="text-2xl font-bold text-text-primary">
+          {{ formatScore(playerDetails.statistics.adr) }}
+        </p>
+      </div>
+
+      <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
+        <div class="mb-3 flex items-center gap-2 text-text-secondary">
+          <svg class="h-4 w-4 text-accent-cyan" lucideZap></svg>
+          <span class="text-xs font-semibold tracking-wide uppercase">
+            {{ 'playerProfile.stats.acs' | translate }}
+          </span>
+        </div>
+        <p class="text-2xl font-bold text-text-primary">
+          {{ formatScore(playerDetails.statistics.acs) }}
+        </p>
+      </div>
+
+      <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
+        <div class="mb-3 flex items-center gap-2 text-text-secondary">
+          <svg class="h-4 w-4 text-accent-pink" lucideGamepad2></svg>
+          <span class="text-xs font-semibold tracking-wide uppercase">
+            {{ 'playerProfile.stats.matchesPlayed' | translate }}
+          </span>
+        </div>
+        <p class="text-2xl font-bold text-text-primary">
+          {{ playerDetails.statistics.matchesPlayed }}
+        </p>
+      </div>
+    </section>
+
+    <!-- Filters -->
+    <div class="mb-4 flex flex-wrap gap-3">
+      <app-select
+        [ariaLabel]="'playerProfile.filters.resultLabel' | translate"
+        [options]="resultFilterOptions()"
+        [value]="resultFilter()"
+        (valueChange)="onResultFilterChange($event)"
+      />
+
+      <app-select
+        [ariaLabel]="'playerProfile.filters.seasonLabel' | translate"
+        [options]="seasonFilterOptions()"
+        [value]="seasonId()"
+        (valueChange)="onSeasonFilterChange($event)"
+      />
+    </div>
+
+    <!-- Match history -->
+    <section class="overflow-hidden rounded-xl border border-surface-700 bg-surface-900">
+      <app-resource-state
+        [emptyText]="'playerProfile.matches.empty' | translate"
+        [errorText]="'playerProfile.matches.error' | translate"
+        [isEmpty]="rows().length === 0"
+        [isError]="!!matchesResource.error()"
+        [isLoading]="matchesResource.isLoading()"
+        [loadingText]="'playerProfile.matches.loading' | translate"
+      >
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr
+                class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase"
+              >
+                <th class="px-5 py-3 text-left font-semibold" scope="col">
+                  {{ 'playerProfile.matches.columns.map' | translate }}
+                </th>
+                <th class="px-4 py-3 text-left font-semibold" scope="col">
+                  {{ 'playerProfile.matches.columns.mode' | translate }}
+                </th>
+                <th class="px-4 py-3 text-left font-semibold" scope="col">
+                  {{ 'playerProfile.matches.columns.result' | translate }}
+                </th>
+                <th class="px-4 py-3 text-left font-semibold" scope="col">
+                  {{ 'playerProfile.matches.columns.score' | translate }}
+                </th>
+                <th class="px-4 py-3 text-left font-semibold" scope="col">
+                  {{ 'playerProfile.matches.columns.kda' | translate }}
+                </th>
+                <th class="px-4 py-3 text-left font-semibold" scope="col">
+                  {{ 'playerProfile.matches.columns.kd' | translate }}
+                </th>
+                <th class="px-4 py-3 text-left font-semibold" scope="col">
+                  {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
+                </th>
+                <th class="px-5 py-3 text-left font-semibold" scope="col">
+                  {{ 'playerProfile.matches.columns.acs' | translate }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows(); track row.id) {
+                <tr
+                  [class]="resultBorderClass(row.result)"
+                  class="border-b border-l-4 border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800"
+                >
+                  <th class="px-5 py-3 text-left font-semibold text-text-primary" scope="row">
+                    {{ row.mapName }}
+                  </th>
+                  <td class="px-4 py-3 text-text-secondary">
+                    {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }}
+                  </td>
+                  <td [class]="resultTextClass(row.result)" class="px-4 py-3 font-bold">
+                    {{ 'playerProfile.matches.result.' + row.result | translate }}
+                  </td>
+                  <td class="px-4 py-3 tabular-nums text-text-primary">
+                    @if (row.allyScore !== null && row.enemyScore !== null) {
+                      {{ row.allyScore }} : {{ row.enemyScore }}
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td class="px-4 py-3 tabular-nums text-text-primary">
+                    {{ row.kills }} / {{ row.deaths }} / {{ row.assists }}
+                  </td>
+                  <td [class]="kdaColorClass(row.kda)" class="px-4 py-3 font-bold tabular-nums">
+                    {{ formatKda(row.kda) }}
+                  </td>
+                  <td class="px-4 py-3 tabular-nums text-text-primary">
+                    {{ formatHeadshotPercentage(row.headshotPercentage) }}
+                  </td>
+                  <td class="px-5 py-3 tabular-nums text-text-primary">
+                    {{ formatScore(row.acs) }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </app-resource-state>
+    </section>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <app-pagination
+        class="mt-6"
+        [nextLabel]="'playerProfile.pagination.next' | translate"
+        (pageChange)="page.set($event)"
+        [page]="page()"
+        [pageLabel]="
+          'playerProfile.pagination.page' | translate: { page: page() + 1, total: totalPages() }
+        "
+        [previousLabel]="'playerProfile.pagination.previous' | translate"
+        [totalPages]="totalPages()"
+      />
+    }
+  }
+</app-resource-state>

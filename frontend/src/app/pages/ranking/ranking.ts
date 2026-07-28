@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { LucideChevronLeft, LucideChevronRight, LucideUser } from '@lucide/angular';
 
 import { formatDateRange, isoWeekNumber } from '../../core/date/week-period';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
@@ -8,6 +7,9 @@ import { resolvePlayerAvatarUrl } from '../../core/players/player-avatar';
 import { PlayersApi } from '../../core/players/players-api';
 import { RankingApi } from '../../core/ranking/ranking-api';
 import { resolvePositionBadgeClass } from '../../core/ranking/ranking.constants';
+import { Avatar } from '../../shared/avatar/avatar';
+import { Pagination } from '../../shared/pagination/pagination';
+import { ResourceState } from '../../shared/resource-state/resource-state';
 import { RankingHistoryWeekView } from './ranking.model';
 
 /**
@@ -18,7 +20,7 @@ import { RankingHistoryWeekView } from './ranking.model';
  */
 @Component({
   selector: 'app-ranking',
-  imports: [TranslatePipe, LucideUser, LucideChevronLeft, LucideChevronRight],
+  imports: [TranslatePipe, Avatar, Pagination, ResourceState],
   templateUrl: './ranking.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -102,18 +104,4 @@ export class Ranking {
       })) ?? []
     );
   });
-
-  /**
-   * Moves to the previous (more recent) page of ranking history.
-   */
-  protected goToPreviousPage(): void {
-    this.page.update((current) => Math.max(0, current - 1));
-  }
-
-  /**
-   * Moves to the next (older) page of ranking history.
-   */
-  protected goToNextPage(): void {
-    this.page.update((current) => Math.min(this.totalPages() - 1, current + 1));
-  }
 }

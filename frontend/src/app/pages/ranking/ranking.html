@@ -8,16 +8,15 @@
   </p>
 </header>
 
-@if (isLoading()) {
-  <!-- Loading state -->
-  <p class="px-1 py-6 text-sm text-text-secondary">{{ 'ranking.loading' | translate }}</p>
-} @else if (hasError()) {
-  <!-- Error state -->
-  <p class="px-1 py-6 text-sm text-danger">{{ 'ranking.error' | translate }}</p>
-} @else if (weeks().length === 0) {
-  <!-- Empty state -->
-  <p class="px-1 py-6 text-sm text-text-secondary">{{ 'ranking.empty' | translate }}</p>
-} @else {
+<app-resource-state
+  [emptyText]="'ranking.empty' | translate"
+  [errorText]="'ranking.error' | translate"
+  [isEmpty]="weeks().length === 0"
+  [isError]="hasError()"
+  [isLoading]="isLoading()"
+  [loadingText]="'ranking.loading' | translate"
+  padding="px-1 py-6"
+>
   <!-- Weekly ranking history -->
   <div class="flex flex-col gap-6">
     @for (week of weeks(); track week.weekStart) {
@@ -32,22 +31,22 @@
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-            <tr
-              class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase"
-            >
-              <th class="px-5 py-3 text-left font-semibold" scope="col">
-                {{ 'ranking.columns.position' | translate }}
-              </th>
-              <th class="px-2 py-3 text-left font-semibold" scope="col">
-                {{ 'ranking.columns.player' | translate }}
-              </th>
-              <th class="px-4 py-3 text-left font-semibold" scope="col">
-                {{ 'ranking.columns.points' | translate }}
-              </th>
-              <th class="px-4 py-3 text-left font-semibold" scope="col">
-                {{ 'ranking.columns.completedChallenges' | translate }}
-              </th>
-            </tr>
+              <tr
+                class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase"
+              >
+                <th class="px-5 py-3 text-left font-semibold" scope="col">
+                  {{ 'ranking.columns.position' | translate }}
+                </th>
+                <th class="px-2 py-3 text-left font-semibold" scope="col">
+                  {{ 'ranking.columns.player' | translate }}
+                </th>
+                <th class="px-4 py-3 text-left font-semibold" scope="col">
+                  {{ 'ranking.columns.points' | translate }}
+                </th>
+                <th class="px-4 py-3 text-left font-semibold" scope="col">
+                  {{ 'ranking.columns.completedChallenges' | translate }}
+                </th>
+              </tr>
             </thead>
             <tbody>
               @for (row of week.rows; track row.playerId) {
@@ -64,19 +63,7 @@
                   </td>
                   <th class="px-2 py-3 text-left font-normal" scope="row">
                     <div class="flex items-center gap-3">
-                      @if (row.avatarUrl) {
-                        <img
-                          [src]="row.avatarUrl"
-                          alt=""
-                          class="h-9 w-9 shrink-0 rounded-full object-cover"
-                        />
-                      } @else {
-                        <span
-                          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-700 text-text-secondary"
-                        >
-                          <svg class="h-5 w-5" lucideUser></svg>
-                        </span>
-                      }
+                      <app-avatar [src]="row.avatarUrl" size="sm" />
                       <span class="font-semibold text-text-primary">{{ row.displayName }}</span>
                     </div>
                   </th>
@@ -95,28 +82,13 @@
     }
   </div>
 
-  <!-- Pagination -->
-  <div class="mt-6 flex items-center justify-center gap-4">
-    <button
-      (click)="goToPreviousPage()"
-      [disabled]="page() === 0"
-      class="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
-      type="button"
-    >
-      <svg class="h-4 w-4" lucideChevronLeft></svg>
-      {{ 'ranking.pagination.previous' | translate }}
-    </button>
-    <span class="text-sm text-text-secondary">
-      {{ 'ranking.pagination.page' | translate: { page: page() + 1, total: totalPages() } }}
-    </span>
-    <button
-      (click)="goToNextPage()"
-      [disabled]="page() >= totalPages() - 1"
-      class="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
-      type="button"
-    >
-      {{ 'ranking.pagination.next' | translate }}
-      <svg class="h-4 w-4" lucideChevronRight></svg>
-    </button>
-  </div>
-}
+  <app-pagination
+    class="mt-6"
+    [nextLabel]="'ranking.pagination.next' | translate"
+    (pageChange)="page.set($event)"
+    [page]="page()"
+    [pageLabel]="'ranking.pagination.page' | translate: { page: page() + 1, total: totalPages() }"
+    [previousLabel]="'ranking.pagination.previous' | translate"
+    [totalPages]="totalPages()"
+  />
+</app-resource-state>

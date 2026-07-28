@@ -1,26 +1,32 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { LucideChevronRight, LucideUser } from '@lucide/angular';
+import { RouterLink } from '@angular/router';
+import { LucideChevronRight } from '@lucide/angular';
 
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { Translation } from '../../core/i18n/translation';
-import { resolvePlayerAvatarUrl } from '../../core/players/player-avatar';
-import { PlayerSummary } from '../../core/players/player-summary.model';
-import { PlayersApi } from '../../core/players/players-api';
-import { PlayerRow } from './players.model';
 import {
-  resolveKdaColorClass,
   resolveTierColorClass,
   resolveTierGroup,
   resolveTierOrdinal,
-  resolveWinRateBarClass,
-  resolveWinRateColorClass,
-} from './players.constants';
+} from '../../core/players/competitive-tier.constants';
+import { resolvePlayerAvatarUrl } from '../../core/players/player-avatar';
 import {
   extractRiotTag,
   formatHeadshotPercentage,
   formatKda,
   formatWinRate,
-} from './players.utils';
+} from '../../core/players/player-format.utils';
+import {
+  resolveKdaColorClass,
+  resolveWinRateBarClass,
+  resolveWinRateColorClass,
+} from '../../core/players/player-stats.constants';
+import { PlayerSummary } from '../../core/players/player-summary.model';
+import { PlayersApi } from '../../core/players/players-api';
+import { Avatar } from '../../shared/avatar/avatar';
+import { ProgressBar } from '../../shared/progress-bar/progress-bar';
+import { ResourceState } from '../../shared/resource-state/resource-state';
+import { PlayerRow } from './players.model';
 
 /**
  * Players list page.
@@ -30,7 +36,7 @@ import {
  */
 @Component({
   selector: 'app-players',
-  imports: [TranslatePipe, LucideChevronRight, LucideUser],
+  imports: [TranslatePipe, RouterLink, LucideChevronRight, Avatar, ProgressBar, ResourceState],
   templateUrl: './players.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

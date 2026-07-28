@@ -65,8 +65,8 @@ public interface PlayerMatchRepository
             JOIN playerMatch.match valorantMatch
             WHERE playerMatch.player.id = :playerId
               AND (:seasonId IS NULL OR valorantMatch.season.id = :seasonId)
-              AND (:map IS NULL OR LOWER(valorantMatch.mapName) = LOWER(:map))
-              AND (:agent IS NULL OR LOWER(playerMatch.agentName) = LOWER(:agent))
+              AND (:map IS NULL OR LOWER(valorantMatch.mapName) = LOWER(CAST(:map AS string)))
+              AND (:agent IS NULL OR LOWER(playerMatch.agentName) = LOWER(CAST(:agent AS string)))
               AND (:result IS NULL OR playerMatch.result = :result)
             """
     )

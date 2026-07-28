@@ -102,5 +102,68 @@
       "next": "Suivant",
       "page": "Page {{page}} sur {{total}}"
     }
+  },
+  "playerProfile": {
+    "breadcrumb": {
+      "players": "Joueurs"
+    },
+    "loading": "Chargement du profil du joueur…",
+    "error": "Impossible de charger le profil de ce joueur.",
+    "stats": {
+      "winRate": "Winrate",
+      "record": "{{wins}} V / {{losses}} D",
+      "kda": "K/D",
+      "headshotPercentage": "HS%",
+      "adr": "ADR",
+      "acs": "ACS",
+      "matchesPlayed": "Matches"
+    },
+    "filters": {
+      "resultLabel": "Filtrer par résultat",
+      "allResults": "Tous les résultats",
+      "win": "Victoires",
+      "loss": "Défaites",
+      "seasonLabel": "Filtrer par saison",
+      "allSeasons": "Toutes les saisons"
+    },
+    "matches": {
+      "loading": "Chargement de l'historique des matchs…",
+      "error": "Impossible de charger l'historique des matchs.",
+      "empty": "Aucun match ne correspond à ces filtres.",
+      "columns": {
+        "map": "Map",
+        "mode": "Mode",
+        "result": "Résultat",
+        "score": "Score",
+        "kda": "K/D/A",
+        "kd": "K/D",
+        "headshotPercentage": "HS%",
+        "acs": "ACS"
+      },
+      "result": {
+        "WIN": "Victoire",
+        "LOSS": "Défaite",
+        "DRAW": "Nul",
+        "REMAKE": "Annulé",
+        "UNKNOWN": "Inconnu"
+      },
+      "gameMode": {
+        "COMPETITIVE": "Compétitif",
+        "UNRATED": "Non classé",
+        "SWIFTPLAY": "Swiftplay",
+        "SPIKE_RUSH": "Spike Rush",
+        "DEATHMATCH": "Deathmatch",
+        "TEAM_DEATHMATCH": "Deathmatch par équipe",
+        "ESCALATION": "Escalade",
+        "PREMIER": "Premier",
+        "CUSTOM": "Personnalisée",
+        "OTHER": "Autre"
+      }
+    },
+    "pagination": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "page": "Page {{page}} sur {{total}}"
+    }
   }
 }

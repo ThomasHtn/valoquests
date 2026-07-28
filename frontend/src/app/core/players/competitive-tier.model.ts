@@ -30,3 +30,12 @@ export type CompetitiveTier =
   | 'IMMORTAL_2'
   | 'IMMORTAL_3'
   | 'RADIANT';
+
+/**
+ * Resolved visual treatment for a player's competitive tier: a translated label (e.g.
+ * `"Diamond 1"`) paired with the color class shared by its badge and text.
+ */
+export interface CompetitiveTierVisual {
+  readonly label: string;
+  readonly colorClass: string;
+}

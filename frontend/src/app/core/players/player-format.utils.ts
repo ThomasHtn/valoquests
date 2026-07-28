@@ -39,3 +39,14 @@ export function formatKda(kda: number | null): string {
 export function formatHeadshotPercentage(headshotPercentage: number | null): string {
   return headshotPercentage === null ? '—' : `${headshotPercentage.toFixed(1)}%`;
 }
+
+/**
+ * Formats an average combat/damage score (ACS or ADR) for display, rounded to the nearest whole
+ * number.
+ *
+ * @param value - The score to format, or `null` when not yet synchronized.
+ * @returns The formatted score, or an em dash when not yet synchronized.
+ */
+export function formatScore(value: number | null): string {
+  return value === null ? '—' : `${Math.round(value)}`;
+}

@@ -6,6 +6,8 @@ import { ChallengeIconView } from '../../../core/challenges/challenge-icon-view/
 import { resolveChallengeVisual } from '../../../core/challenges/challenge-visual.constants';
 import { ChallengesApi } from '../../../core/challenges/challenges-api';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
+import { ProgressBar } from '../../../shared/progress-bar/progress-bar';
+import { ResourceState } from '../../../shared/resource-state/resource-state';
 import { ChallengeRow } from './weekly-challenges.model';
 
 /**
@@ -19,6 +21,8 @@ import { ChallengeRow } from './weekly-challenges.model';
     TranslatePipe,
     ChallengeIconView,
     MatTooltip,
+    ProgressBar,
+    ResourceState,
     LucideChevronDown,
     LucideTarget,
     LucideTrophy,

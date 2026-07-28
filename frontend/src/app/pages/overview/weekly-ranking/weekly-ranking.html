@@ -23,22 +23,14 @@
 
   @if (isExpanded()) {
     <div id="weekly-ranking-content">
-      <!-- Loading state -->
-      @if (isLoading()) {
-        <p class="px-5 py-6 text-sm text-text-secondary">
-          {{ 'overview.weeklyRanking.loading' | translate }}
-        </p>
-      } @else if (hasError()) {
-        <!-- Error state -->
-        <p class="px-5 py-6 text-sm text-danger">
-          {{ 'overview.weeklyRanking.error' | translate }}
-        </p>
-      } @else if (rows().length === 0) {
-        <!-- Empty state -->
-        <p class="px-5 py-6 text-sm text-text-secondary">
-          {{ 'overview.weeklyRanking.empty' | translate }}
-        </p>
-      } @else {
+      <app-resource-state
+        [emptyText]="'overview.weeklyRanking.empty' | translate"
+        [errorText]="'overview.weeklyRanking.error' | translate"
+        [isEmpty]="rows().length === 0"
+        [isError]="hasError()"
+        [isLoading]="isLoading()"
+        [loadingText]="'overview.weeklyRanking.loading' | translate"
+      >
         <!-- Ranking table -->
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -85,19 +77,7 @@
                   </td>
                   <th class="px-2 py-3 text-left font-normal" scope="row">
                     <div class="flex items-center gap-3">
-                      @if (row.avatarUrl) {
-                        <img
-                          [src]="row.avatarUrl"
-                          alt=""
-                          class="h-9 w-9 shrink-0 rounded-full object-cover"
-                        />
-                      } @else {
-                        <span
-                          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-700 text-text-secondary"
-                        >
-                          <svg class="h-5 w-5" lucideUser></svg>
-                        </span>
-                      }
+                      <app-avatar [src]="row.avatarUrl" size="sm" />
                       <span class="font-semibold text-text-primary">{{ row.displayName }}</span>
                     </div>
                   </th>
@@ -119,13 +99,11 @@
                             }}</span>
                           }
                         </span>
-                        <div class="h-1 w-16 overflow-hidden rounded-full bg-surface-700">
-                          <div
-                            [class]="cell.visual.barClass"
-                            [style.width.%]="cell.completionPercentage"
-                            class="h-full rounded-full"
-                          ></div>
-                        </div>
+                        <app-progress-bar
+                          class="w-16"
+                          [colorClass]="cell.visual.barClass"
+                          [percentage]="cell.completionPercentage"
+                        />
                       </div>
                     </td>
                   }
@@ -134,7 +112,7 @@
             </tbody>
           </table>
         </div>
-      }
+      </app-resource-state>
     </div>
   }
 </section>

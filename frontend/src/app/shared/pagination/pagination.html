@@ -1,0 +1,22 @@
+<!-- Pagination -->
+<div class="flex items-center justify-center gap-4">
+  <button
+    (click)="goToPreviousPage()"
+    [disabled]="page() === 0"
+    class="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
+    type="button"
+  >
+    <svg class="h-4 w-4" lucideChevronLeft></svg>
+    {{ previousLabel() }}
+  </button>
+  <span class="text-sm text-text-secondary">{{ pageLabel() }}</span>
+  <button
+    (click)="goToNextPage()"
+    [disabled]="page() >= totalPages() - 1"
+    class="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
+    type="button"
+  >
+    {{ nextLabel() }}
+    <svg class="h-4 w-4" lucideChevronRight></svg>
+  </button>
+</div>

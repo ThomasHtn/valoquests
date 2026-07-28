@@ -2,12 +2,8 @@ import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal } from '@angular/core';
 
 import { PageResponse } from '../shared/page-response.model';
+import { RANKING_HISTORY_PAGE_SIZE } from './ranking-api.constants';
 import { CurrentRanking, RankingHistoryWeek } from './ranking.model';
-
-/**
- * Number of finalized weeks requested per page of ranking history.
- */
-const RANKING_HISTORY_PAGE_SIZE = 5;
 
 /**
  * Data-access service for the weekly player ranking.

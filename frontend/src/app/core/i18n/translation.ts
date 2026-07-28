@@ -2,15 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { effect, inject, Service, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-export type Language = 'fr' | 'en';
-
-interface TranslationDictionary {
-  readonly [key: string]: string | TranslationDictionary;
-}
-
-const SUPPORTED_LANGUAGES: readonly Language[] = ['fr', 'en'];
-const DEFAULT_LANGUAGE: Language = 'fr';
-const STORAGE_KEY = 'valorant-tracker.language';
+import { DEFAULT_LANGUAGE, STORAGE_KEY, SUPPORTED_LANGUAGES } from './translation.constants';
+import { Language, TranslationDictionary } from './translation.model';
 
 /**
  * Application-wide i18n service.

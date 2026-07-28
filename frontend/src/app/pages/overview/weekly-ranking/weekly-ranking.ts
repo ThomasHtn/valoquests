@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
-import { LucideChevronDown, LucideTrophy, LucideUser } from '@lucide/angular';
+import { LucideChevronDown, LucideTrophy } from '@lucide/angular';
 
 import { ChallengeIconView } from '../../../core/challenges/challenge-icon-view/challenge-icon-view';
 import { resolveChallengeVisual } from '../../../core/challenges/challenge-visual.constants';
@@ -9,6 +9,9 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
 import { resolvePlayerAvatarUrl } from '../../../core/players/player-avatar';
 import { RankingApi } from '../../../core/ranking/ranking-api';
 import { resolvePositionBadgeClass } from '../../../core/ranking/ranking.constants';
+import { Avatar } from '../../../shared/avatar/avatar';
+import { ProgressBar } from '../../../shared/progress-bar/progress-bar';
+import { ResourceState } from '../../../shared/resource-state/resource-state';
 import { RankingCell, RankingColumn, RankingRow } from './weekly-ranking.model';
 import {
   buildCurrentValueLabel,
@@ -29,9 +32,11 @@ import {
     TranslatePipe,
     ChallengeIconView,
     MatTooltip,
+    Avatar,
+    ProgressBar,
+    ResourceState,
     LucideChevronDown,
     LucideTrophy,
-    LucideUser,
   ],
   templateUrl: './weekly-ranking.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

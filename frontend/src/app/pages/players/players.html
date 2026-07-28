@@ -10,13 +10,14 @@
 
 <!-- Players table -->
 <section class="overflow-hidden rounded-xl border border-surface-700 bg-surface-900">
-  @if (playersResource.isLoading()) {
-    <p class="px-5 py-6 text-sm text-text-secondary">{{ 'players.loading' | translate }}</p>
-  } @else if (playersResource.error()) {
-    <p class="px-5 py-6 text-sm text-danger">{{ 'players.error' | translate }}</p>
-  } @else if (rows().length === 0) {
-    <p class="px-5 py-6 text-sm text-text-secondary">{{ 'players.empty' | translate }}</p>
-  } @else {
+  <app-resource-state
+    [emptyText]="'players.empty' | translate"
+    [errorText]="'players.error' | translate"
+    [isEmpty]="rows().length === 0"
+    [isError]="!!playersResource.error()"
+    [isLoading]="playersResource.isLoading()"
+    [loadingText]="'players.loading' | translate"
+  >
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
@@ -52,27 +53,18 @@
               class="border-b border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800"
             >
               <th class="px-5 py-3 text-left font-normal" scope="row">
-                <div class="flex items-center gap-3">
-                  @if (row.avatarUrl) {
-                    <img
-                      [src]="row.avatarUrl"
-                      alt=""
-                      class="h-11 w-11 shrink-0 rounded-full object-cover"
-                    />
-                  } @else {
-                    <span
-                      class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-700 text-text-secondary"
-                    >
-                      <svg class="h-6 w-6" lucideUser></svg>
-                    </span>
-                  }
+                <a
+                  [routerLink]="['/players', row.id]"
+                  class="flex items-center gap-3 hover:underline"
+                >
+                  <app-avatar [src]="row.avatarUrl" size="md" />
                   <div>
                     <p class="font-semibold text-text-primary">{{ row.displayName }}</p>
                     @if (row.tag) {
                       <p class="text-xs text-text-secondary">#{{ row.tag }}</p>
                     }
                   </div>
-                </div>
+                </a>
               </th>
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
@@ -93,13 +85,11 @@
                   <span [class]="winRateColorClass(row.winRate)" class="font-bold tabular-nums">
                     {{ formatWinRate(row.winRate) }}
                   </span>
-                  <div class="h-1 w-16 overflow-hidden rounded-full bg-surface-700">
-                    <div
-                      [class]="winRateBarClass(row.winRate)"
-                      [style.width.%]="row.winRate ?? 0"
-                      class="h-full rounded-full"
-                    ></div>
-                  </div>
+                  <app-progress-bar
+                    class="w-16"
+                    [colorClass]="winRateBarClass(row.winRate)"
+                    [percentage]="row.winRate ?? 0"
+                  />
                 </div>
               </td>
               <td [class]="kdaColorClass(row.kda)" class="px-4 py-3 font-bold tabular-nums">
@@ -117,5 +107,5 @@
         </tbody>
       </table>
     </div>
-  }
+  </app-resource-state>
 </section>

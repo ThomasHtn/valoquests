@@ -1,11 +1,4 @@
-/**
- * Resolved visual treatment for a player's competitive tier: a translated label (e.g.
- * `"Diamond 1"`) paired with the color class shared by its badge and text.
- */
-export interface CompetitiveTierVisual {
-  readonly label: string;
-  readonly colorClass: string;
-}
+import { CompetitiveTierVisual } from '../../core/players/competitive-tier.model';
 
 /**
  * Single row of the players table: a tracked player mapped to display-ready fields.

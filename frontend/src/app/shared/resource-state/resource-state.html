@@ -1,0 +1,12 @@
+@if (isLoading()) {
+  <!-- Loading state -->
+  <p [class]="padding()" class="text-sm text-text-secondary">{{ loadingText() }}</p>
+} @else if (isError()) {
+  <!-- Error state -->
+  <p [class]="padding()" class="text-sm text-danger">{{ errorText() }}</p>
+} @else if (isEmpty()) {
+  <!-- Empty state -->
+  <p [class]="padding()" class="text-sm text-text-secondary">{{ emptyText() }}</p>
+} @else {
+  <ng-content />
+}

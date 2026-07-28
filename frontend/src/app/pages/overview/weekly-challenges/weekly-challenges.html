@@ -23,22 +23,14 @@
 
   @if (isExpanded()) {
     <div id="weekly-challenges-content">
-      <!-- Loading state -->
-      @if (challengesResource.isLoading()) {
-        <p class="px-5 py-6 text-sm text-text-secondary">
-          {{ 'overview.weeklyChallenges.loading' | translate }}
-        </p>
-      } @else if (challengesResource.error()) {
-        <!-- Error state -->
-        <p class="px-5 py-6 text-sm text-danger">
-          {{ 'overview.weeklyChallenges.error' | translate }}
-        </p>
-      } @else if (rows().length === 0) {
-        <!-- Empty state -->
-        <p class="px-5 py-6 text-sm text-text-secondary">
-          {{ 'overview.weeklyChallenges.empty' | translate }}
-        </p>
-      } @else {
+      <app-resource-state
+        [emptyText]="'overview.weeklyChallenges.empty' | translate"
+        [errorText]="'overview.weeklyChallenges.error' | translate"
+        [isEmpty]="rows().length === 0"
+        [isError]="!!challengesResource.error()"
+        [isLoading]="challengesResource.isLoading()"
+        [loadingText]="'overview.weeklyChallenges.loading' | translate"
+      >
         <!-- Challenge rows -->
         <ul>
           @for (row of rows(); track row.id) {
@@ -71,13 +63,12 @@
                 <span class="text-sm font-semibold opacity-75">{{ row.totalPlayers }}</span>
               </p>
 
-              <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-700">
-                <div
-                  [class]="row.visual.barClass"
-                  [style.width.%]="row.completionPercentage"
-                  class="h-full rounded-full"
-                ></div>
-              </div>
+              <app-progress-bar
+                class="flex-1"
+                heightClass="h-1.5"
+                [colorClass]="row.visual.barClass"
+                [percentage]="row.completionPercentage"
+              />
 
               <p
                 [class]="row.visual.iconClass"
@@ -90,7 +81,7 @@
             </li>
           }
         </ul>
-      }
+      </app-resource-state>
     </div>
   }
 </section>
