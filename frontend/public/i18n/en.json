@@ -22,6 +22,17 @@
     }
   },
   "overview": {
-    "title": "Overview"
+    "title": "Overview",
+    "subtitle": "Track the weekly challenges and the player ranking.",
+    "week": {
+      "label": "Week {{number}}",
+      "countdown": "Ends in {{days}}d {{hours}}h {{minutes}}m"
+    },
+    "weeklyChallenges": {
+      "title": "Weekly challenges",
+      "loading": "Loading challenges…",
+      "error": "Failed to load the weekly challenges.",
+      "empty": "No challenge is active this week."
+    }
   }
 }

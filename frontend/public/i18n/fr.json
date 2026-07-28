@@ -22,6 +22,17 @@
     }
   },
   "overview": {
-    "title": "Vue d'ensemble"
+    "title": "Vue d'ensemble",
+    "subtitle": "Suivez les défis de la semaine et le classement des joueurs.",
+    "week": {
+      "label": "Semaine {{number}}",
+      "countdown": "Fin dans {{days}}j {{hours}}h {{minutes}}m"
+    },
+    "weeklyChallenges": {
+      "title": "Défis de la semaine",
+      "loading": "Chargement des défis…",
+      "error": "Impossible de charger les défis de la semaine.",
+      "empty": "Aucun défi n'est actif cette semaine."
+    }
   }
 }
