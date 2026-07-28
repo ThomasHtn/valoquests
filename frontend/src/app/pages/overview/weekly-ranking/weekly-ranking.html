@@ -58,9 +58,9 @@
                 @for (column of columns(); track column.challengeId) {
                   <th class="px-4 py-3 text-center font-semibold" scope="col">
                     <span
-                      [class]="column.visual.iconClass"
+                      [class]="[column.visual.iconClass, column.visual.badgeClass]"
                       [matTooltip]="column.tooltip"
-                      class="mx-auto flex h-7 w-7 items-center justify-center rounded-full border border-current"
+                      class="mx-auto flex h-7 w-7 items-center justify-center rounded-full"
                       matTooltipPosition="above"
                     >
                       <span class="sr-only">{{ column.name }}</span>
@@ -109,9 +109,15 @@
                       <div class="flex flex-col items-center gap-1.5">
                         <span
                           [class]="cell.visual.iconClass"
-                          class="text-xs font-semibold tabular-nums"
+                          class="flex items-baseline gap-0.5 tabular-nums"
                         >
-                          {{ cell.valueLabel }}
+                          <span class="text-xs font-bold">{{ cell.currentValueLabel }}</span>
+                          @if (cell.targetValueLabel) {
+                            <span class="text-xs font-normal opacity-50">/</span>
+                            <span class="text-xs font-semibold opacity-75">{{
+                              cell.targetValueLabel
+                            }}</span>
+                          }
                         </span>
                         <div class="h-1 w-16 overflow-hidden rounded-full bg-surface-700">
                           <div

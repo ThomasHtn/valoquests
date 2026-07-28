@@ -9,7 +9,7 @@ import { NavItem } from './sidebar.model';
  */
 export const NAV_ITEMS: readonly NavItem[] = [
   { icon: 'house', labelKey: 'overview', routerLink: '/' },
-  { icon: 'users', labelKey: 'players' },
+  { icon: 'users', labelKey: 'players', routerLink: '/players' },
   { icon: 'chart-column', labelKey: 'comparison' },
   { icon: 'trophy', labelKey: 'ranking' },
 ];

@@ -32,17 +32,24 @@ export function formatMetricValue(value: number): string {
 }
 
 /**
- * Builds the display label for a challenge progress cell, e.g. `"42/100"`, or just the current
- * value when the challenge has no stored target (composite challenges).
+ * Builds the current value label for a challenge progress cell, e.g. `"42"`.
  *
  * @param progress - The player's progress toward the challenge, or `undefined` if not started.
- * @returns The pre-formatted progress label.
+ * @returns The pre-formatted current value label.
  */
-export function buildValueLabel(progress: RankingChallengeProgress | undefined): string {
-  if (!progress) {
-    return formatMetricValue(0);
-  }
-  return progress.targetValue
-    ? `${formatMetricValue(progress.currentValue)}/${formatMetricValue(progress.targetValue)}`
-    : formatMetricValue(progress.currentValue);
+export function buildCurrentValueLabel(progress: RankingChallengeProgress | undefined): string {
+  return formatMetricValue(progress?.currentValue ?? 0);
+}
+
+/**
+ * Builds the target value label for a challenge progress cell, e.g. `"100"`.
+ *
+ * @param progress - The player's progress toward the challenge, or `undefined` if not started.
+ * @returns The pre-formatted target value label, or `null` for composite challenges with no
+ * stored target.
+ */
+export function buildTargetValueLabel(
+  progress: RankingChallengeProgress | undefined,
+): string | null {
+  return progress?.targetValue ? formatMetricValue(progress.targetValue) : null;
 }

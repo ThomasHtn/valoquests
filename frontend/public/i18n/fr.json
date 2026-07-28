@@ -53,5 +53,33 @@
         "points": "Points"
       }
     }
+  },
+  "players": {
+    "title": "Joueurs",
+    "subtitle": "Consultez les statistiques détaillées de tous les joueurs suivis.",
+    "loading": "Chargement des joueurs…",
+    "error": "Impossible de charger les joueurs.",
+    "empty": "Aucun joueur suivi pour le moment.",
+    "columns": {
+      "player": "Joueur",
+      "rank": "Rang",
+      "winRate": "Winrate",
+      "kda": "KDA",
+      "headshotPercentage": "Précision",
+      "matchesPlayed": "Matchs",
+      "details": "Détails"
+    },
+    "tiers": {
+      "unranked": "Non classé",
+      "iron": "Fer",
+      "bronze": "Bronze",
+      "silver": "Argent",
+      "gold": "Or",
+      "platinum": "Platine",
+      "diamond": "Diamant",
+      "ascendant": "Ascendant",
+      "immortal": "Immortel",
+      "radiant": "Radiant"
+    }
   }
 }

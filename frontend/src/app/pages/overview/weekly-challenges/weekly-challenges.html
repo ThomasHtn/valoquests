@@ -64,9 +64,11 @@
               <p
                 [class]="row.visual.iconClass"
                 [matTooltip]="'overview.weeklyChallenges.completedPlayersTooltip' | translate"
-                class="w-16 shrink-0 text-right text-lg font-bold tabular-nums"
+                class="flex w-16 shrink-0 items-baseline justify-end tabular-nums"
               >
-                {{ row.completedPlayers }}/{{ row.totalPlayers }}
+                <span class="text-lg font-bold">{{ row.completedPlayers }}</span>
+                <span class="mx-1 font-normal opacity-50">/</span>
+                <span class="text-sm font-semibold opacity-75">{{ row.totalPlayers }}</span>
               </p>
 
               <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-700">
@@ -82,7 +84,8 @@
                 class="flex w-24 shrink-0 items-center justify-end gap-1.5 text-sm font-semibold tabular-nums"
               >
                 <svg class="h-4 w-4 shrink-0" lucideTrophy></svg>
-                {{ row.points }} XP
+                <span class="w-[4ch] text-right">{{ row.points }}</span>
+                <span>XP</span>
               </p>
             </li>
           }

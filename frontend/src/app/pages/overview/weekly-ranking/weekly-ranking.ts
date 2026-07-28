@@ -10,7 +10,11 @@ import { resolvePlayerAvatarUrl } from '../../../core/players/player-avatar';
 import { RankingApi } from '../../../core/ranking/ranking-api';
 import { resolvePositionBadgeClass } from './weekly-ranking.constants';
 import { RankingCell, RankingColumn, RankingRow } from './weekly-ranking.model';
-import { buildValueLabel, computeCompletionPercentage } from './weekly-ranking.utils';
+import {
+  buildCurrentValueLabel,
+  buildTargetValueLabel,
+  computeCompletionPercentage,
+} from './weekly-ranking.utils';
 
 /**
  * "Weekly ranking" card of the overview page.
@@ -101,7 +105,8 @@ export class WeeklyRanking {
           );
           return {
             challengeId: column.challengeId,
-            valueLabel: buildValueLabel(progress),
+            currentValueLabel: buildCurrentValueLabel(progress),
+            targetValueLabel: buildTargetValueLabel(progress),
             completionPercentage: computeCompletionPercentage(progress),
             visual: column.visual,
           };

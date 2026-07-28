@@ -1,7 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { Service } from '@angular/core';
 
-import { PlayerSynchronizationStatus } from './player-summary.model';
+import { PlayerSummary } from './player-summary.model';
 
 /**
  * Data-access service for tracked players.
@@ -9,13 +9,12 @@ import { PlayerSynchronizationStatus } from './player-summary.model';
 @Service()
 export class PlayersApi {
   /**
-   * Every tracked player's synchronization status.
+   * Every tracked player's compact summary.
    *
    * Shared as a single reactive resource so every consumer reads the same in-flight request
    * instead of triggering its own call to `GET /api/players`.
    */
-  public readonly players = httpResource<readonly PlayerSynchronizationStatus[]>(
-    () => '/api/players',
-    { defaultValue: [] },
-  );
+  public readonly players = httpResource<readonly PlayerSummary[]>(() => '/api/players', {
+    defaultValue: [],
+  });
 }

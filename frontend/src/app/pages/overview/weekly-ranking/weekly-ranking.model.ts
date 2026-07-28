@@ -23,10 +23,15 @@ export interface RankingCell {
   readonly challengeId: number;
 
   /**
-   * Pre-formatted progress label, e.g. `"42/100"`, or just `"3"` for composite challenges with no
-   * stored target.
+   * Pre-formatted current value, e.g. `"42"`.
    */
-  readonly valueLabel: string;
+  readonly currentValueLabel: string;
+
+  /**
+   * Pre-formatted target value, e.g. `"100"`, or `null` for composite challenges with no stored
+   * target, in which case only {@link currentValueLabel} is shown.
+   */
+  readonly targetValueLabel: string | null;
   readonly completionPercentage: number;
   readonly visual: ChallengeVisual;
 }

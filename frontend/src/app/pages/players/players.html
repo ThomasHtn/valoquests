@@ -1,0 +1,121 @@
+<!-- Header -->
+<header class="mb-6">
+  <h1 class="text-2xl font-bold tracking-wide text-text-primary uppercase">
+    {{ 'players.title' | translate }}
+  </h1>
+  <p class="mt-1 text-sm text-text-secondary">
+    {{ 'players.subtitle' | translate }}
+  </p>
+</header>
+
+<!-- Players table -->
+<section class="overflow-hidden rounded-xl border border-surface-700 bg-surface-900">
+  @if (playersResource.isLoading()) {
+    <p class="px-5 py-6 text-sm text-text-secondary">{{ 'players.loading' | translate }}</p>
+  } @else if (playersResource.error()) {
+    <p class="px-5 py-6 text-sm text-danger">{{ 'players.error' | translate }}</p>
+  } @else if (rows().length === 0) {
+    <p class="px-5 py-6 text-sm text-text-secondary">{{ 'players.empty' | translate }}</p>
+  } @else {
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr
+            class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase"
+          >
+            <th class="px-5 py-3 text-left font-semibold" scope="col">
+              {{ 'players.columns.player' | translate }}
+            </th>
+            <th class="px-4 py-3 text-left font-semibold" scope="col">
+              {{ 'players.columns.rank' | translate }}
+            </th>
+            <th class="px-4 py-3 text-left font-semibold" scope="col">
+              {{ 'players.columns.winRate' | translate }}
+            </th>
+            <th class="px-4 py-3 text-left font-semibold" scope="col">
+              {{ 'players.columns.kda' | translate }}
+            </th>
+            <th class="px-4 py-3 text-left font-semibold" scope="col">
+              {{ 'players.columns.headshotPercentage' | translate }}
+            </th>
+            <th class="px-4 py-3 text-left font-semibold" scope="col">
+              {{ 'players.columns.matchesPlayed' | translate }}
+            </th>
+            <th class="px-5 py-3" scope="col">
+              <span class="sr-only">{{ 'players.columns.details' | translate }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.id) {
+            <tr
+              class="border-b border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800"
+            >
+              <th class="px-5 py-3 text-left font-normal" scope="row">
+                <div class="flex items-center gap-3">
+                  @if (row.avatarUrl) {
+                    <img
+                      [src]="row.avatarUrl"
+                      alt=""
+                      class="h-11 w-11 shrink-0 rounded-full object-cover"
+                    />
+                  } @else {
+                    <span
+                      class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-700 text-text-secondary"
+                    >
+                      <svg class="h-6 w-6" lucideUser></svg>
+                    </span>
+                  }
+                  <div>
+                    <p class="font-semibold text-text-primary">{{ row.displayName }}</p>
+                    @if (row.tag) {
+                      <p class="text-xs text-text-secondary">#{{ row.tag }}</p>
+                    }
+                  </div>
+                </div>
+              </th>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2">
+                  <span
+                    [class]="row.tier.colorClass"
+                    class="h-3 w-3 shrink-0 bg-current [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+                  ></span>
+                  <div>
+                    <p [class]="row.tier.colorClass" class="font-semibold">{{ row.tier.label }}</p>
+                    @if (row.rankRating !== null) {
+                      <p class="text-xs text-text-secondary">{{ row.rankRating }} RR</p>
+                    }
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex flex-col gap-1.5">
+                  <span [class]="winRateColorClass(row.winRate)" class="font-bold tabular-nums">
+                    {{ formatWinRate(row.winRate) }}
+                  </span>
+                  <div class="h-1 w-16 overflow-hidden rounded-full bg-surface-700">
+                    <div
+                      [class]="winRateBarClass(row.winRate)"
+                      [style.width.%]="row.winRate ?? 0"
+                      class="h-full rounded-full"
+                    ></div>
+                  </div>
+                </div>
+              </td>
+              <td [class]="kdaColorClass(row.kda)" class="px-4 py-3 font-bold tabular-nums">
+                {{ formatKda(row.kda) }}
+              </td>
+              <td class="px-4 py-3 tabular-nums text-text-primary">
+                {{ formatHeadshotPercentage(row.headshotPercentage) }}
+              </td>
+              <td class="px-4 py-3 tabular-nums text-text-primary">{{ row.matchesPlayed }}</td>
+              <td class="px-5 py-3 text-right text-text-secondary">
+                <svg class="ml-auto h-4 w-4" lucideChevronRight></svg>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
