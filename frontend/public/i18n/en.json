@@ -81,5 +81,26 @@
       "immortal": "Immortal",
       "radiant": "Radiant"
     }
+  },
+  "ranking": {
+    "title": "Ranking",
+    "subtitle": "Review the points earned by each player, week after week.",
+    "loading": "Loading the ranking history…",
+    "error": "Failed to load the ranking history.",
+    "empty": "No week has been finalized yet.",
+    "week": {
+      "label": "Week {{number}}"
+    },
+    "columns": {
+      "position": "#",
+      "player": "Player",
+      "points": "Points",
+      "completedChallenges": "Completed challenges"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {{page}} of {{total}}"
+    }
   }
 }

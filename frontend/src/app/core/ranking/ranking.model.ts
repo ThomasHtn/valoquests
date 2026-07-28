@@ -71,3 +71,34 @@ export interface CurrentRanking {
   readonly calculatedAt: string;
   readonly ranking: readonly RankingEntry[];
 }
+
+/**
+ * Single player's finalized result within one historical week.
+ *
+ * Mirrors `RankingHistoryWeekResponse.FinalRankingEntryResponse` from the backend.
+ */
+export interface RankingHistoryEntry {
+  readonly position: number;
+  readonly playerId: number;
+  readonly displayName: string;
+  readonly points: number;
+  readonly completedChallenges: number;
+}
+
+/**
+ * Finalized, immutable ranking for one completed calendar week.
+ *
+ * Mirrors `RankingHistoryWeekResponse` from the backend.
+ */
+export interface RankingHistoryWeek {
+  /**
+   * Monday identifying the week, as an ISO-8601 date (`YYYY-MM-DD`).
+   */
+  readonly weekStart: string;
+
+  /**
+   * Sunday identifying the week, as an ISO-8601 date (`YYYY-MM-DD`).
+   */
+  readonly weekEnd: string;
+  readonly ranking: readonly RankingHistoryEntry[];
+}

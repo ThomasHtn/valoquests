@@ -1,0 +1,122 @@
+<!-- Header -->
+<header class="mb-6">
+  <h1 class="flex items-center gap-2 text-2xl font-bold tracking-wide text-text-primary uppercase">
+    {{ 'ranking.title' | translate }}
+  </h1>
+  <p class="mt-1 text-sm text-text-secondary">
+    {{ 'ranking.subtitle' | translate }}
+  </p>
+</header>
+
+@if (isLoading()) {
+  <!-- Loading state -->
+  <p class="px-1 py-6 text-sm text-text-secondary">{{ 'ranking.loading' | translate }}</p>
+} @else if (hasError()) {
+  <!-- Error state -->
+  <p class="px-1 py-6 text-sm text-danger">{{ 'ranking.error' | translate }}</p>
+} @else if (weeks().length === 0) {
+  <!-- Empty state -->
+  <p class="px-1 py-6 text-sm text-text-secondary">{{ 'ranking.empty' | translate }}</p>
+} @else {
+  <!-- Weekly ranking history -->
+  <div class="flex flex-col gap-6">
+    @for (week of weeks(); track week.weekStart) {
+      <section class="overflow-hidden rounded-xl border border-surface-700 bg-surface-900">
+        <header class="flex items-center gap-3 border-b border-surface-700 px-5 py-4">
+          <h2 class="text-sm font-bold tracking-wide text-text-primary uppercase">
+            {{ week.weekLabel }}
+          </h2>
+          <span class="text-sm text-text-secondary">{{ week.dateRangeLabel }}</span>
+        </header>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+            <tr
+              class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase"
+            >
+              <th class="px-5 py-3 text-left font-semibold" scope="col">
+                {{ 'ranking.columns.position' | translate }}
+              </th>
+              <th class="px-2 py-3 text-left font-semibold" scope="col">
+                {{ 'ranking.columns.player' | translate }}
+              </th>
+              <th class="px-4 py-3 text-left font-semibold" scope="col">
+                {{ 'ranking.columns.points' | translate }}
+              </th>
+              <th class="px-4 py-3 text-left font-semibold" scope="col">
+                {{ 'ranking.columns.completedChallenges' | translate }}
+              </th>
+            </tr>
+            </thead>
+            <tbody>
+              @for (row of week.rows; track row.playerId) {
+                <tr
+                  class="border-b border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800"
+                >
+                  <td class="px-5 py-3">
+                    <span
+                      [class]="positionBadgeClass(row.position)"
+                      class="flex h-8 w-8 items-center justify-center border text-sm font-bold tabular-nums [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+                    >
+                      {{ row.position }}
+                    </span>
+                  </td>
+                  <th class="px-2 py-3 text-left font-normal" scope="row">
+                    <div class="flex items-center gap-3">
+                      @if (row.avatarUrl) {
+                        <img
+                          [src]="row.avatarUrl"
+                          alt=""
+                          class="h-9 w-9 shrink-0 rounded-full object-cover"
+                        />
+                      } @else {
+                        <span
+                          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-700 text-text-secondary"
+                        >
+                          <svg class="h-5 w-5" lucideUser></svg>
+                        </span>
+                      }
+                      <span class="font-semibold text-text-primary">{{ row.displayName }}</span>
+                    </div>
+                  </th>
+                  <td class="px-4 py-3 font-bold tabular-nums text-accent-gold">
+                    {{ row.points }} XP
+                  </td>
+                  <td class="px-4 py-3 tabular-nums text-text-primary">
+                    {{ row.completedChallenges }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  </div>
+
+  <!-- Pagination -->
+  <div class="mt-6 flex items-center justify-center gap-4">
+    <button
+      (click)="goToPreviousPage()"
+      [disabled]="page() === 0"
+      class="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
+      type="button"
+    >
+      <svg class="h-4 w-4" lucideChevronLeft></svg>
+      {{ 'ranking.pagination.previous' | translate }}
+    </button>
+    <span class="text-sm text-text-secondary">
+      {{ 'ranking.pagination.page' | translate: { page: page() + 1, total: totalPages() } }}
+    </span>
+    <button
+      (click)="goToNextPage()"
+      [disabled]="page() >= totalPages() - 1"
+      class="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
+      type="button"
+    >
+      {{ 'ranking.pagination.next' | translate }}
+      <svg class="h-4 w-4" lucideChevronRight></svg>
+    </button>
+  </div>
+}

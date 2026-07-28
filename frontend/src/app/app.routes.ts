@@ -15,4 +15,8 @@ export const routes: Routes = [
     path: 'players',
     loadComponent: () => import('./pages/players/players').then((m) => m.Players),
   },
+  {
+    path: 'ranking',
+    loadComponent: () => import('./pages/ranking/ranking').then((m) => m.Ranking),
+  },
 ];

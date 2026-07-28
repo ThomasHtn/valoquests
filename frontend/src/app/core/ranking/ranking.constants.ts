@@ -17,6 +17,8 @@ const DEFAULT_BADGE_CLASS = 'border-surface-600 bg-surface-700 text-text-seconda
  * Resolves the badge classes for a ranking row's position, highlighting the podium (1st to 3rd)
  * with a distinct color per rank.
  *
+ * Shared by the current-week ranking and the ranking history page so both read as one system.
+ *
  * @param position - The player's 1-based ranking position.
  * @returns The Tailwind utility classes to apply to the position badge.
  */

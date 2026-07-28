@@ -81,5 +81,26 @@
       "immortal": "Immortel",
       "radiant": "Radiant"
     }
+  },
+  "ranking": {
+    "title": "Classement",
+    "subtitle": "Retrouvez les points obtenus par chaque joueur, semaine après semaine.",
+    "loading": "Chargement de l'historique du classement…",
+    "error": "Impossible de charger l'historique du classement.",
+    "empty": "Aucune semaine n'a encore été finalisée.",
+    "week": {
+      "label": "Semaine {{number}}"
+    },
+    "columns": {
+      "position": "#",
+      "player": "Joueur",
+      "points": "Points",
+      "completedChallenges": "Défis complétés"
+    },
+    "pagination": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "page": "Page {{page}} sur {{total}}"
+    }
   }
 }
