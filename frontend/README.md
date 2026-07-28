@@ -15,6 +15,11 @@ Angular 22 application for Valorant Tracker. See the [root README](../README.md)
 The [`docs/images`](docs/images) directory contains the mockups used as the source of truth for the application's
 screens. Inspect the relevant mockup before implementing or changing a screen.
 
+## Previews
+
+The [`docs/preview`](docs/preview) directory contains up-to-date screenshots of the currently implemented screens,
+captured from the running application. Update the relevant screenshot whenever a previewed screen changes visibly.
+
 ## Development server
 
 To start a local development server, run:

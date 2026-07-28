@@ -16,6 +16,7 @@ io.github.thomashtn.valorant.tracker
 ├── player           Tracked accounts, profiles and Riot account resolution
 ├── ranking          Weekly scores, positions and ranking history
 ├── synchronization  Standard and deep synchronization orchestration
+├── week             Weekly rollover scheduling
 └── shared           Security, errors, auditing and common web components
 ```
 
@@ -205,21 +206,30 @@ GET  /api/admin/synchronizations/{synchronizationId}
 
 ## Configuration reference
 
-| Variable                         | Default                                             | Purpose                  |
-|----------------------------------|-----------------------------------------------------|--------------------------|
-| `DB_URL`                         | `jdbc:postgresql://localhost:5432/valorant_tracker` | PostgreSQL JDBC URL      |
-| `DB_USERNAME`                    | `valorant`                                          | Database user            |
-| `DB_PASSWORD`                    | `valorant`                                          | Database password        |
-| `ADMIN_API_KEY`                  | required, at least 32 characters                    | Protects `/api/admin/**` |
-| `FRONTEND_ORIGIN`                | `http://localhost:4200`                             | Allowed Angular origin   |
-| `HENRIK_API_BASE_URL`            | `https://api.henrikdev.xyz`                         | Henrik API base URL      |
-| `HENRIK_API_KEY`                 | required                                            | Henrik API key           |
-| `HENRIK_API_REGION`              | `eu`                                                | Valorant region          |
-| `HENRIK_API_PLATFORM`            | `pc`                                                | Valorant platform        |
-| `HENRIK_API_MAX_ATTEMPTS`        | `2`                                                 | Total request attempts   |
-| `HENRIK_API_RETRY_DELAY`         | `PT60S`                                             | Minimum retry delay      |
-| `HENRIK_API_REQUESTS_PER_MINUTE` | `28`                                                | Shared request limit     |
-| `DEEP_SYNC_SCOPE`                | `CURRENT_SEASON`                                    | Historical import range  |
+| Variable                              | Default                                             | Purpose                               |
+| ------------------------------------- | --------------------------------------------------- | ------------------------------------- |
+| `DB_URL`                              | `jdbc:postgresql://localhost:5432/valorant_tracker` | PostgreSQL JDBC URL                   |
+| `DB_USERNAME`                         | `valorant`                                          | Database user                         |
+| `DB_PASSWORD`                         | `valorant`                                          | Database password                     |
+| `ADMIN_API_KEY`                       | required, at least 32 characters                    | Protects `/api/admin/**`              |
+| `FRONTEND_ORIGIN`                     | `http://localhost:4200`                             | Allowed Angular origin                |
+| `HENRIK_API_BASE_URL`                 | `https://api.henrikdev.xyz`                         | Henrik API base URL                   |
+| `HENRIK_API_KEY`                      | required                                            | Henrik API key                        |
+| `HENRIK_API_REGION`                   | `eu`                                                | Valorant region                       |
+| `HENRIK_API_PLATFORM`                 | `pc`                                                | Valorant platform                     |
+| `HENRIK_API_MAX_ATTEMPTS`             | `2`                                                 | Total request attempts                |
+| `HENRIK_API_RETRY_DELAY`              | `PT60S`                                             | Minimum retry delay                   |
+| `HENRIK_API_REQUESTS_PER_MINUTE`      | `28`                                                | Shared request limit                  |
+| `HENRIK_API_CONNECT_TIMEOUT`          | `PT5S`                                              | HTTP connect timeout                  |
+| `HENRIK_API_READ_TIMEOUT`             | `PT20S`                                             | HTTP read timeout                     |
+| `HENRIK_API_RATE_LIMIT_SAFETY_MARGIN` | `PT0.1S`                                            | Rate-limit safety margin              |
+| `DEEP_SYNC_SCOPE`                     | `CURRENT_SEASON`                                    | Historical import range               |
+| `STANDARD_SYNC_ENABLED`               | `true`                                              | Enables the standard sync scheduler   |
+| `STANDARD_SYNC_CRON`                  | `0 0 6,12,18 * * *`                                 | Standard sync schedule                |
+| `SCHEDULING_ZONE`                     | `Europe/Paris`                                      | Time zone for scheduled jobs          |
+| `WEEK_ROLLOVER_ENABLED`               | `true`                                              | Enables the weekly rollover scheduler |
+| `WEEK_ROLLOVER_CRON`                  | `0 5 0 * * MON`                                     | Weekly rollover schedule              |
+| `WEEK_ROLLOVER_ZONE`                  | `UTC`                                               | Time zone for the weekly rollover     |
 
 ## Release-candidate validation
 

@@ -63,30 +63,22 @@ Imports are incremental and idempotent:
 ## Main screens
 
 The interface keeps the weekly competition readable at a glance while still allowing deeper analysis when needed.
+Screenshots below are live captures of the running application (see [`frontend/docs/preview`](frontend/docs/preview)).
 
 ### Weekly overview
 
 Active challenges, collective progress and the current leaderboard are gathered on the main page.
 
-![Weekly overview](frontend/docs/images/overview.png)
+![Weekly overview](frontend/docs/preview/overview.png)
 
-### Player profile
+### Player list
 
-Each player page combines key statistics with a paginated and filterable match history.
+Every tracked player is listed with rank, win rate, KDA and match count at a glance.
 
-![Player profile](frontend/docs/images/player-profile.png)
+![Player list](frontend/docs/preview/player-list.png)
 
-### Player comparison
-
-Several tracked players can be compared through complementary performance indicators.
-
-![Player comparison](frontend/docs/images/player-comparison.png)
-
-### Ranking history
-
-Closed weeks remain available so previous results and winners can be reviewed later.
-
-![Ranking history](frontend/docs/images/ranking-history.png)
+Player profile, player comparison and ranking history screens are designed (see [`frontend/docs/images`](frontend/docs/images))
+and scheduled for upcoming iterations.
 
 ## Technology stack
 
