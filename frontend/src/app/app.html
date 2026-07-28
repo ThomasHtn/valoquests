@@ -1,9 +1,9 @@
-<div class="flex min-h-screen bg-surface-950">
+<div class="flex h-screen overflow-hidden bg-surface-950">
   <!-- Persistent navigation sidebar, shown on every route. -->
   <app-sidebar />
 
   <!-- Routed page content. -->
-  <main class="flex-1 p-6">
+  <main class="flex-1 overflow-y-auto p-6">
     <router-outlet />
   </main>
 </div>

@@ -6,12 +6,9 @@ import { interval } from 'rxjs';
 import { ChallengesApi } from '../../core/challenges/challenges-api';
 import { formatDateRange, isoWeekNumber, remainingWeekTime } from '../../core/date/week-period';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
+import { COUNTDOWN_REFRESH_INTERVAL_MS } from './overview.constants';
 import { WeeklyChallenges } from './weekly-challenges/weekly-challenges';
-
-/**
- * Interval at which the "time remaining" countdown is refreshed.
- */
-const COUNTDOWN_REFRESH_INTERVAL_MS = 60_000;
+import { WeeklyRanking } from './weekly-ranking/weekly-ranking';
 
 /**
  * Overview page.
@@ -22,9 +19,8 @@ const COUNTDOWN_REFRESH_INTERVAL_MS = 60_000;
  */
 @Component({
   selector: 'app-overview',
-  imports: [TranslatePipe, WeeklyChallenges, LucideCalendar, LucideClock],
+  imports: [TranslatePipe, WeeklyChallenges, WeeklyRanking, LucideCalendar, LucideClock],
   templateUrl: './overview.html',
-  styleUrl: './overview.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Overview {
@@ -43,10 +39,12 @@ export class Overview {
    * Active week's number, date range and remaining time, or `null` while loading.
    */
   protected readonly week = computed(() => {
-    const currentWeek = this.challengesApi.current.value();
-    if (!currentWeek) {
+    const currentChallenges = this.challengesApi.current;
+    if (!currentChallenges.hasValue()) {
       return null;
     }
+
+    const currentWeek = currentChallenges.value();
 
     return {
       number: isoWeekNumber(currentWeek.weekStart),

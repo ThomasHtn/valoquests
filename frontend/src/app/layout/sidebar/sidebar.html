@@ -1,7 +1,7 @@
 <aside
   [class.w-20]="collapsed()"
   [class.w-64]="!collapsed()"
-  class="flex h-screen shrink-0 flex-col justify-between bg-surface-900 px-3 py-6 transition-[width] duration-200"
+  class="flex h-full shrink-0 flex-col justify-between bg-surface-900 px-3 py-6 transition-[width] duration-200"
 >
   <div>
     <div class="mb-4 border-b border-surface-700 pb-5">
@@ -104,8 +104,8 @@
     @if (collapsed()) {
       <div class="flex w-full justify-center">
         <button
-          [attr.aria-label]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel }"
-          [matTooltip]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel }"
+          [attr.aria-label]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
+          [matTooltip]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
           class="flex h-9 w-9 cursor-default items-center justify-center rounded-lg text-text-muted"
           matTooltipPosition="right"
           type="button"
@@ -118,8 +118,17 @@
         <svg class="h-5 w-5 shrink-0 text-text-muted" lucideRefreshCw></svg>
         <div class="flex flex-col text-xs text-text-muted">
           <span>{{ 'sidebar.lastSync.label' | translate }}</span>
-          <span>{{ lastSyncLabel }}</span>
+          <span>{{ lastSyncLabel() }}</span>
         </div>
+        <span
+          [attr.aria-label]="apiStatusLabel()"
+          [class.bg-success]="apiStatus() === 'online'"
+          [class.bg-danger]="apiStatus() === 'offline'"
+          [matTooltip]="apiStatusLabel()"
+          class="ml-auto h-2 w-2 shrink-0 rounded-full"
+          matTooltipPosition="left"
+          role="status"
+        ></span>
       </div>
     }
   </div>

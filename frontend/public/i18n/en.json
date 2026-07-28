@@ -10,7 +10,14 @@
     },
     "lastSync": {
       "label": "Last update",
-      "tooltip": "Last update: {{value}}"
+      "tooltip": "Last update: {{value}}",
+      "loading": "Loading…",
+      "error": "Unavailable",
+      "unknown": "Never synchronized",
+      "status": {
+        "online": "API available",
+        "offline": "API unavailable"
+      }
     },
     "language": {
       "label": "Language",
@@ -32,7 +39,19 @@
       "title": "Weekly challenges",
       "loading": "Loading challenges…",
       "error": "Failed to load the weekly challenges.",
-      "empty": "No challenge is active this week."
+      "empty": "No challenge is active this week.",
+      "completedPlayersTooltip": "Number of players who completed the challenge"
+    },
+    "weeklyRanking": {
+      "title": "Weekly ranking",
+      "loading": "Loading ranking…",
+      "error": "Failed to load the weekly ranking.",
+      "empty": "No ranking is available this week.",
+      "columns": {
+        "position": "#",
+        "player": "Player",
+        "points": "Points"
+      }
     }
   }
 }

@@ -1,22 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import {
-  LucideActivity,
-  LucideCalendar,
-  LucideChevronDown,
-  LucideCrosshair,
-  LucideShield,
-  LucideSkull,
-  LucideStar,
-  LucideSwords,
-  LucideTarget,
-  LucideTrendingUp,
-  LucideTrophy,
-  LucideUsers,
-} from '@lucide/angular';
+import { MatTooltip } from '@angular/material/tooltip';
+import { LucideChevronDown, LucideTarget, LucideTrophy } from '@lucide/angular';
 
+import { ChallengeIconView } from '../../../core/challenges/challenge-icon-view/challenge-icon-view';
+import { resolveChallengeVisual } from '../../../core/challenges/challenge-visual.constants';
 import { ChallengesApi } from '../../../core/challenges/challenges-api';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
-import { resolveChallengeVisual } from './weekly-challenges.constants';
 import { ChallengeRow } from './weekly-challenges.model';
 
 /**
@@ -28,21 +17,13 @@ import { ChallengeRow } from './weekly-challenges.model';
   selector: 'app-weekly-challenges',
   imports: [
     TranslatePipe,
-    LucideActivity,
-    LucideCalendar,
+    ChallengeIconView,
+    MatTooltip,
     LucideChevronDown,
-    LucideCrosshair,
-    LucideShield,
-    LucideSkull,
-    LucideStar,
-    LucideSwords,
     LucideTarget,
-    LucideTrendingUp,
     LucideTrophy,
-    LucideUsers,
   ],
   templateUrl: './weekly-challenges.html',
-  styleUrl: './weekly-challenges.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WeeklyChallenges {

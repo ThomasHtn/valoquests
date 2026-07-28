@@ -1,5 +1,5 @@
-import { ChallengeDifficulty } from '../../../core/challenges/challenge.model';
-import { ChallengeIcon, ChallengeVisual } from './weekly-challenges.model';
+import { ChallengeDifficulty } from './challenge.model';
+import { ChallengeIcon, ChallengeVisual } from './challenge-visual.model';
 
 /**
  * Icon shown per challenge metric.
@@ -59,15 +59,16 @@ const CHALLENGE_DIFFICULTY_COLORS: Readonly<
 };
 
 /**
- * Resolves the icon and color treatment for a challenge row.
+ * Resolves the icon and color treatment for a challenge.
  *
  * The icon reflects the challenge's metric (e.g. `"HEADSHOTS"` or `"KILLS + MATCHES_PLAYED"`,
  * matched on the first metric only), while the color reflects its difficulty tier so harder
- * challenges stand out.
+ * challenges stand out. Shared by the weekly challenges card and the weekly ranking table so both
+ * widgets read as one system.
  *
  * @param metric - The challenge's metric string.
  * @param difficulty - The challenge's difficulty tier.
- * @returns The visual treatment to apply to the challenge row.
+ * @returns The visual treatment to apply for the challenge.
  */
 export function resolveChallengeVisual(
   metric: string,

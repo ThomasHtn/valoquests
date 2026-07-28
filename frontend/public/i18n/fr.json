@@ -10,7 +10,14 @@
     },
     "lastSync": {
       "label": "Dernière mise à jour",
-      "tooltip": "Dernière mise à jour : {{value}}"
+      "tooltip": "Dernière mise à jour : {{value}}",
+      "loading": "Chargement…",
+      "error": "Indisponible",
+      "unknown": "Jamais synchronisé",
+      "status": {
+        "online": "API disponible",
+        "offline": "API indisponible"
+      }
     },
     "language": {
       "label": "Langue",
@@ -32,7 +39,19 @@
       "title": "Défis de la semaine",
       "loading": "Chargement des défis…",
       "error": "Impossible de charger les défis de la semaine.",
-      "empty": "Aucun défi n'est actif cette semaine."
+      "empty": "Aucun défi n'est actif cette semaine.",
+      "completedPlayersTooltip": "Nombre de joueurs ayant complété le défi"
+    },
+    "weeklyRanking": {
+      "title": "Classement de la semaine",
+      "loading": "Chargement du classement…",
+      "error": "Impossible de charger le classement de la semaine.",
+      "empty": "Aucun classement n'est disponible cette semaine.",
+      "columns": {
+        "position": "#",
+        "player": "Joueur",
+        "points": "Points"
+      }
     }
   }
 }
