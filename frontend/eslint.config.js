@@ -31,11 +31,41 @@ module.exports = defineConfig([
           style: 'kebab-case',
         },
       ],
+
+      // Every member states its visibility, so the public surface of a class is explicit rather
+      // than inferred from the absence of a keyword.
+      '@typescript-eslint/explicit-member-accessibility': [
+        'error',
+        { accessibility: 'explicit', overrides: { constructors: 'no-public' } },
+      ],
+
+      // Keeps declaration order predictable: state first, then the constructor, then behaviour.
+      // Deliberately not ordered by accessibility, because `inject()`-initialized fields must be
+      // declared before the public signals derived from them.
+      '@typescript-eslint/member-ordering': [
+        'error',
+        { default: { memberTypes: ['signature', 'field', 'constructor', 'method'] } },
+      ],
+
+      // Diagnostics are fine; stray debug logging is not.
+      'no-console': ['error', { allow: ['error', 'warn'] }],
     },
   },
   {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],
-    rules: {},
+    rules: {
+      // Static images go through NgOptimizedImage.
+      '@angular-eslint/template/prefer-ngsrc': 'error',
+
+      // Buttons always declare their type so they never submit a surrounding form by accident.
+      '@angular-eslint/template/button-has-type': 'error',
+
+      // Native control flow only; no residual structural directives.
+      '@angular-eslint/template/prefer-control-flow': 'error',
+
+      '@angular-eslint/template/eqeqeq': 'error',
+      '@angular-eslint/template/no-positive-tabindex': 'error',
+    },
   },
 ]);

@@ -1,4 +1,4 @@
-import { CompetitiveTier } from '../players/competitive-tier.model';
+import { CompetitiveTier } from '@core/players/competitive-tier.model';
 import { GameMode } from './game-mode.model';
 import { MatchResult } from './match-result.model';
 

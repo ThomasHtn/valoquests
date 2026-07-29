@@ -1,12 +1,19 @@
 <!-- Portrait -->
 @if (src(); as portraitUrl) {
-  <img [class]="sizeClasses().container" [src]="portraitUrl" alt="" class="shrink-0 object-cover" />
+  <img
+    [class]="metrics().containerClass"
+    [height]="metrics().pixels"
+    [ngSrc]="portraitUrl"
+    [width]="metrics().pixels"
+    alt=""
+    class="shrink-0 object-cover"
+  />
 } @else {
   <!-- Fallback -->
   <span
-    [class]="sizeClasses().container"
+    [class]="metrics().containerClass"
     class="flex shrink-0 items-center justify-center bg-surface-700 text-text-secondary"
   >
-    <svg [class]="sizeClasses().icon" lucideUser></svg>
+    <svg [class]="metrics().iconClass" lucideUser></svg>
   </span>
 }

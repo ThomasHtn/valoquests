@@ -1,118 +1,92 @@
-<!-- Weekly ranking card -->
-<section class="overflow-hidden rounded-xl border border-surface-700 bg-surface-900">
-  <!-- Card header -->
-  <header [class.border-b]="isExpanded()" class="border-surface-700">
-    <button
-      type="button"
-      class="flex w-full cursor-pointer items-center gap-2 px-5 py-4 text-left transition-colors hover:bg-surface-800"
-      [attr.aria-expanded]="isExpanded()"
-      aria-controls="weekly-ranking-content"
-      (click)="toggleExpanded()"
-    >
-      <svg class="h-5 w-5 shrink-0 text-brand-500" lucideTrophy></svg>
-      <h2 class="text-sm font-bold tracking-wide text-text-primary uppercase">
-        {{ 'overview.weeklyRanking.title' | translate }}
-      </h2>
-      <svg
-        class="ml-auto h-4 w-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none"
-        [class.-rotate-90]="!isExpanded()"
-        lucideChevronDown
-      ></svg>
-    </button>
-  </header>
+<app-collapsible-card [heading]="'overview.weeklyRanking.title' | translate">
+  <svg cardIcon class="h-5 w-5 shrink-0 text-brand-500" lucideTrophy></svg>
 
-  @if (isExpanded()) {
-    <div id="weekly-ranking-content">
-      <app-resource-state
-        [emptyText]="'overview.weeklyRanking.empty' | translate"
-        [errorText]="'overview.weeklyRanking.error' | translate"
-        [isEmpty]="rows().length === 0"
-        [isError]="hasError()"
-        [isLoading]="isLoading()"
-        [loadingText]="'overview.weeklyRanking.loading' | translate"
-      >
-        <!-- Ranking table -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr
-                class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase"
-              >
-                <th class="px-5 py-3 text-left font-semibold" scope="col">
-                  {{ 'overview.weeklyRanking.columns.position' | translate }}
-                </th>
-                <th class="px-2 py-3 text-left font-semibold" scope="col">
-                  {{ 'overview.weeklyRanking.columns.player' | translate }}
-                </th>
-                <th class="px-4 py-3 text-left font-semibold" scope="col">
-                  {{ 'overview.weeklyRanking.columns.points' | translate }}
-                </th>
-                @for (column of columns(); track column.challengeId) {
-                  <th class="px-4 py-3 text-center font-semibold" scope="col">
-                    <span
-                      [class]="[column.visual.iconClass, column.visual.badgeClass]"
-                      [matTooltip]="column.tooltip"
-                      class="mx-auto flex h-7 w-7 items-center justify-center rounded-full"
-                      matTooltipPosition="above"
-                    >
-                      <span class="sr-only">{{ column.name }}</span>
-                      <app-challenge-icon-view [icon]="column.visual.icon" class="h-4 w-4" />
-                    </span>
-                  </th>
-                }
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of rows(); track row.playerId) {
-                <tr
-                  class="border-b border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800"
+  <app-resource-state
+    [emptyText]="'overview.weeklyRanking.empty' | translate"
+    [errorText]="'overview.weeklyRanking.error' | translate"
+    [isEmpty]="rows().length === 0"
+    [isError]="hasError()"
+    [isLoading]="isLoading()"
+    [loadingText]="'overview.weeklyRanking.loading' | translate"
+  >
+    <!-- Ranking table -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr
+            class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase"
+          >
+            <th class="px-5 py-3 text-left font-semibold" scope="col">
+              {{ 'overview.weeklyRanking.columns.position' | translate }}
+            </th>
+            <th class="px-2 py-3 text-left font-semibold" scope="col">
+              {{ 'overview.weeklyRanking.columns.player' | translate }}
+            </th>
+            <th class="px-4 py-3 text-left font-semibold" scope="col">
+              {{ 'overview.weeklyRanking.columns.points' | translate }}
+            </th>
+            @for (column of columns(); track column.challengeId) {
+              <th class="px-4 py-3 text-center font-semibold" scope="col">
+                <span
+                  [class]="[column.visual.iconClass, column.visual.badgeClass]"
+                  [matTooltip]="column.tooltip"
+                  class="mx-auto flex h-7 w-7 items-center justify-center rounded-full"
+                  matTooltipPosition="above"
                 >
-                  <td class="px-5 py-3">
+                  <span class="sr-only">{{ column.name }}</span>
+                  <app-challenge-icon-view [icon]="column.visual.icon" class="h-4 w-4" />
+                </span>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.playerId) {
+            <tr
+              class="border-b border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800"
+            >
+              <td class="px-5 py-3">
+                <span
+                  [class]="positionBadgeClass(row.position)"
+                  class="flex h-8 w-8 items-center justify-center border text-sm font-bold tabular-nums [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+                >
+                  {{ row.position }}
+                </span>
+              </td>
+              <th class="px-2 py-3 text-left font-normal" scope="row">
+                <div class="flex items-center gap-3">
+                  <app-avatar [src]="row.avatarUrl" size="sm" />
+                  <span class="font-semibold text-text-primary">{{ row.displayName }}</span>
+                </div>
+              </th>
+              <td class="px-4 py-3 font-bold tabular-nums text-accent-gold">{{ row.points }} XP</td>
+              @for (cell of row.cells; track cell.challengeId) {
+                <td class="px-4 py-3">
+                  <div class="flex flex-col items-center gap-1.5">
                     <span
-                      [class]="positionBadgeClass(row.position)"
-                      class="flex h-8 w-8 items-center justify-center border text-sm font-bold tabular-nums [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+                      [class]="cell.visual.iconClass"
+                      class="flex items-baseline gap-0.5 tabular-nums"
                     >
-                      {{ row.position }}
+                      <span class="text-xs font-bold">{{ cell.currentValueLabel }}</span>
+                      @if (cell.targetValueLabel) {
+                        <span class="text-xs font-normal opacity-50">/</span>
+                        <span class="text-xs font-semibold opacity-75">{{
+                          cell.targetValueLabel
+                        }}</span>
+                      }
                     </span>
-                  </td>
-                  <th class="px-2 py-3 text-left font-normal" scope="row">
-                    <div class="flex items-center gap-3">
-                      <app-avatar [src]="row.avatarUrl" size="sm" />
-                      <span class="font-semibold text-text-primary">{{ row.displayName }}</span>
-                    </div>
-                  </th>
-                  <td class="px-4 py-3 font-bold tabular-nums text-accent-gold">
-                    {{ row.points }} XP
-                  </td>
-                  @for (cell of row.cells; track cell.challengeId) {
-                    <td class="px-4 py-3">
-                      <div class="flex flex-col items-center gap-1.5">
-                        <span
-                          [class]="cell.visual.iconClass"
-                          class="flex items-baseline gap-0.5 tabular-nums"
-                        >
-                          <span class="text-xs font-bold">{{ cell.currentValueLabel }}</span>
-                          @if (cell.targetValueLabel) {
-                            <span class="text-xs font-normal opacity-50">/</span>
-                            <span class="text-xs font-semibold opacity-75">{{
-                              cell.targetValueLabel
-                            }}</span>
-                          }
-                        </span>
-                        <app-progress-bar
-                          class="w-16"
-                          [colorClass]="cell.visual.barClass"
-                          [percentage]="cell.completionPercentage"
-                        />
-                      </div>
-                    </td>
-                  }
-                </tr>
+                    <app-progress-bar
+                      class="w-16"
+                      [colorClass]="cell.visual.barClass"
+                      [percentage]="cell.completionPercentage"
+                    />
+                  </div>
+                </td>
               }
-            </tbody>
-          </table>
-        </div>
-      </app-resource-state>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
-  }
-</section>
+  </app-resource-state>
+</app-collapsible-card>

@@ -1,4 +1,4 @@
-import { RankingChallengeProgress } from '../../../core/ranking/ranking.model';
+import { RankingChallengeProgress } from '@core/ranking/ranking.model';
 
 /**
  * Computes how close a player's progress is to a challenge's target, as a percentage clamped

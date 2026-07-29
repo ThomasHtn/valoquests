@@ -1,4 +1,4 @@
-import { PlayerSummary } from '../../core/players/player-summary.model';
+import { PlayerSummary } from '@core/players/player-summary.model';
 
 /**
  * Resolves the most recent successful synchronization among `players`.

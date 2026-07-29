@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
 /**
@@ -12,7 +12,6 @@ import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
   imports: [LucideChevronLeft, LucideChevronRight],
   templateUrl: './pagination.html',
   host: { class: 'block' },
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pagination {
   /**

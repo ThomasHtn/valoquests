@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 /**
  * Thin, rounded progress track with a colored fill.
@@ -15,7 +15,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     class: 'block overflow-hidden rounded-full bg-surface-700',
     '[class]': 'heightClass()',
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProgressBar {
   /**

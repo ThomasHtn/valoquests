@@ -1,9 +1,15 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal } from '@angular/core';
 
-import { PageResponse } from '../shared/page-response.model';
-import { RANKING_HISTORY_PAGE_SIZE } from './ranking-api.constants';
+import { API_ENDPOINTS } from '@core/http/api-endpoints';
+
+import { PageResponse } from '@core/http/page-response.model';
 import { CurrentRanking, RankingHistoryWeek } from './ranking.model';
+
+/**
+ * Number of finalized weeks requested per page of ranking history.
+ */
+const RANKING_HISTORY_PAGE_SIZE = 5;
 
 /**
  * Data-access service for the weekly player ranking.
@@ -16,7 +22,7 @@ export class RankingApi {
    * Shared as a single reactive resource so every consumer reads the same in-flight request
    * instead of triggering its own call to `GET /api/rankings/current`.
    */
-  public readonly current = httpResource<CurrentRanking>(() => '/api/rankings/current');
+  public readonly current = httpResource<CurrentRanking>(() => API_ENDPOINTS.currentRanking);
 
   /**
    * Finalized weekly rankings, paginated by week and ordered from the most recent completed week
@@ -31,7 +37,7 @@ export class RankingApi {
     page: Signal<number>,
   ): HttpResourceRef<PageResponse<RankingHistoryWeek> | undefined> {
     return httpResource<PageResponse<RankingHistoryWeek>>(() => ({
-      url: '/api/rankings/history',
+      url: API_ENDPOINTS.rankingHistory,
       params: { page: page(), size: RANKING_HISTORY_PAGE_SIZE },
     }));
   }

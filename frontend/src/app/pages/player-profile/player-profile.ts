@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucideActivity,
@@ -10,38 +10,29 @@ import {
   LucideZap,
 } from '@lucide/angular';
 
-import {
-  resolveResultBorderClass,
-  resolveResultTextClass,
-} from '../../core/matches/match-visual.constants';
-import { Match } from '../../core/matches/match.model';
-import { MatchResult } from '../../core/matches/match-result.model';
-import { MatchesApi } from '../../core/matches/matches-api';
-import { SeasonsApi } from '../../core/matches/seasons-api';
-import { TranslatePipe } from '../../core/i18n/translate-pipe';
-import { Translation } from '../../core/i18n/translation';
-import {
-  resolveTierColorClass,
-  resolveTierGroup,
-} from '../../core/players/competitive-tier.constants';
-import { resolvePlayerAvatarUrl } from '../../core/players/player-avatar';
+import { resolveResultBorderClass, resolveResultTextClass } from '@core/matches/match-visual.utils';
+import { Match } from '@core/matches/match.model';
+import { MatchResult } from '@core/matches/match-result.model';
+import { MatchesApi } from '@core/matches/matches-api';
+import { SeasonsApi } from '@core/matches/seasons-api';
+import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
+import { resolveCompetitiveTierVisual } from '@core/players/competitive-tier.utils';
+import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import {
   extractRiotTag,
   formatHeadshotPercentage,
   formatKda,
   formatScore,
   formatWinRate,
-} from '../../core/players/player-format.utils';
-import {
-  resolveKdaColorClass,
-  resolveWinRateColorClass,
-} from '../../core/players/player-stats.constants';
-import { PlayersApi } from '../../core/players/players-api';
-import { Avatar } from '../../shared/avatar/avatar';
-import { Pagination } from '../../shared/pagination/pagination';
-import { ResourceState } from '../../shared/resource-state/resource-state';
-import { Select } from '../../shared/select/select';
-import { SelectOption } from '../../shared/select/select.model';
+} from '@core/players/player-format.utils';
+import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/player-stats.utils';
+import { PlayersApi } from '@core/players/players-api';
+import { Avatar } from '@shared/avatar/avatar';
+import { Pagination } from '@shared/pagination/pagination';
+import { ResourceState } from '@shared/resource-state/resource-state';
+import { Select } from '@shared/select/select';
+import { SelectOption } from '@shared/select/select.model';
 
 /**
  * Player-profile page.
@@ -67,7 +58,6 @@ import { SelectOption } from '../../shared/select/select.model';
     LucideZap,
   ],
   templateUrl: './player-profile.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayerProfile {
   /**
@@ -216,24 +206,20 @@ export class PlayerProfile {
       return null;
     }
 
-    const group = resolveTierGroup(details.competitiveTier);
-    const groupLabel = this.translation.translate(`players.tiers.${group.key}`);
-
-    return {
-      label: group.number ? `${groupLabel} ${group.number}` : groupLabel,
-      colorClass: resolveTierColorClass(group.key),
-    };
+    return resolveCompetitiveTierVisual(details.competitiveTier, (key) =>
+      this.translation.translate(key),
+    );
   });
 
   /**
-   * Resolves the color class for the win-rate stat tile, exposed to the template.
+   * Resolves the colors for the win-rate stat tile, exposed to the template.
    */
-  protected readonly winRateColorClass = resolveWinRateColorClass;
+  protected readonly winRateVisual = resolveWinRateVisual;
 
   /**
-   * Resolves the color class for the K/D stat tile, exposed to the template.
+   * Resolves the colors for the K/D stat tile and match rows, exposed to the template.
    */
-  protected readonly kdaColorClass = resolveKdaColorClass;
+  protected readonly kdaVisual = resolveKdaVisual;
 
   /**
    * Resolves a match row's left border color, exposed to the template.

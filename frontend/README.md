@@ -10,6 +10,71 @@ Angular 22 application for Valorant Tracker. See the [root README](../README.md)
 - Tailwind CSS
 - [Lucide](https://lucide.dev/) for icons, via `@lucide/angular`
 
+## Architecture
+
+The application is organized by **domain**, not by technical type. A feature's model, data access and
+presentation live next to each other, so adding one means touching one folder rather than four.
+
+```text
+src/
+├── app/
+│   ├── core/        Domain logic and data access. No components.
+│   │   ├── challenges/  players/  ranking/  matches/   One folder per domain
+│   │   ├── date/        Calendar-week helpers
+│   │   ├── http/        Endpoint catalogue, pagination model, resource helpers
+│   │   └── i18n/        Translation service, pipe and title strategy
+│   ├── shared/      Reusable presentational components (avatar, pagination, select…)
+│   ├── layout/      Application shell (sidebar)
+│   └── pages/       Routed screens, each lazy-loaded
+└── environments/    Build-time configuration
+```
+
+### Layering rules
+
+- `core/` never contains components. It holds models, data-access services and pure functions.
+- `shared/` contains components reused by more than one page. It may import **types** from `core/`,
+  never services.
+- `pages/` compose `core/` and `shared/`. Pages never import from one another.
+- Anything used by exactly one page stays inside that page's folder.
+
+### File naming
+
+The suffix states what a module exports, so the contents are predictable from the file tree:
+
+| Suffix           | Contains                                                         |
+| ---------------- | ---------------------------------------------------------------- |
+| `*.model.ts`     | Types only — usually mirroring a backend DTO                     |
+| `*.utils.ts`     | Pure functions (formatters, resolvers of Tailwind classes, math) |
+| `*.constants.ts` | Constant values only                                             |
+| `*-api.ts`       | A `@Service` exposing `httpResource`-backed data access          |
+
+Components, pipes and services are named after the class they export (`sidebar.ts`, `players-api.ts`).
+
+### Path aliases
+
+Cross-folder imports use aliases rather than `../../../` chains. Same-folder imports stay relative.
+
+```typescript
+import { PlayersApi } from '@core/players/players-api';
+import { Avatar } from '@shared/avatar/avatar';
+import { environment } from '@env/environment';
+```
+
+Available aliases: `@core/*`, `@shared/*`, `@layout/*`, `@pages/*`, `@env/*`.
+
+### Configuration
+
+`src/environments/environment.ts` holds the production configuration; `environment.development.ts`
+replaces it in the `development` build configuration via `fileReplacements` in `angular.json`.
+Endpoints are declared once in `core/http/api-endpoints.ts` and resolved against `apiBaseUrl`.
+
+### Conventions worth knowing
+
+- Change detection is **not** declared on components: `OnPush` is the default in Angular v22+.
+- The application runs **zoneless** — `zone.js` is not a dependency.
+- State is signal-based; derived state uses `computed()`.
+- Every screen renders its loading, error and empty states through `shared/resource-state`.
+
 ## UI mockups
 
 The [`docs/images`](docs/images) directory contains the mockups used as the source of truth for the application's

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
@@ -10,9 +10,9 @@ import {
   LucideUsers,
 } from '@lucide/angular';
 
-import { TranslatePipe } from '../../core/i18n/translate-pipe';
-import { Translation } from '../../core/i18n/translation';
-import { PlayersApi } from '../../core/players/players-api';
+import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
+import { PlayersApi } from '@core/players/players-api';
 import { NAV_ITEMS } from './sidebar.constants';
 import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './sidebar.utils';
 
@@ -37,7 +37,6 @@ import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './
     MatTooltip,
   ],
   templateUrl: './sidebar.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Sidebar {
   /**

@@ -63,7 +63,10 @@
             {{ 'playerProfile.stats.winRate' | translate }}
           </span>
         </div>
-        <p [class]="winRateColorClass(playerDetails.statistics.winRate)" class="text-2xl font-bold">
+        <p
+          [class]="winRateVisual(playerDetails.statistics.winRate).textClass"
+          class="text-2xl font-bold"
+        >
           {{ formatWinRate(playerDetails.statistics.winRate) }}
         </p>
         <p class="mt-1 text-xs text-text-secondary">
@@ -82,7 +85,7 @@
             {{ 'playerProfile.stats.kda' | translate }}
           </span>
         </div>
-        <p [class]="kdaColorClass(playerDetails.statistics.kda)" class="text-2xl font-bold">
+        <p [class]="kdaVisual(playerDetails.statistics.kda).textClass" class="text-2xl font-bold">
           {{ formatKda(playerDetails.statistics.kda) }}
         </p>
       </div>
@@ -220,7 +223,10 @@
                   <td class="px-4 py-3 tabular-nums text-text-primary">
                     {{ row.kills }} / {{ row.deaths }} / {{ row.assists }}
                   </td>
-                  <td [class]="kdaColorClass(row.kda)" class="px-4 py-3 font-bold tabular-nums">
+                  <td
+                    [class]="kdaVisual(row.kda).textClass"
+                    class="px-4 py-3 font-bold tabular-nums"
+                  >
                     {{ formatKda(row.kda) }}
                   </td>
                   <td class="px-4 py-3 tabular-nums text-text-primary">

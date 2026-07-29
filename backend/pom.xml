@@ -120,6 +120,15 @@
     </dependency>
 
     <!--
+        Loads environment variables from .env file at startup.
+    -->
+    <dependency>
+      <groupId>me.paulschwarz</groupId>
+      <artifactId>spring-dotenv</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+
+    <!--
         Flyway integration managed by Spring Boot.
     -->
     <dependency>

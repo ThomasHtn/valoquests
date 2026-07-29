@@ -1,4 +1,4 @@
-import { CompetitiveTier } from './competitive-tier.model';
+import { CompetitiveTier, CompetitiveTierVisual } from './competitive-tier.model';
 
 /**
  * Rank group a {@link CompetitiveTier} belongs to (e.g. `DIAMOND_2` belongs to `"diamond"`), paired
@@ -96,16 +96,6 @@ const TIER_GROUP_COLOR_CLASSES: Readonly<Record<string, string>> = {
 };
 
 /**
- * Resolves the rank group and sub-rank number for a competitive tier.
- *
- * @param tier - The player's competitive tier.
- * @returns The tier's rank group and sub-rank number.
- */
-export function resolveTierGroup(tier: CompetitiveTier): TierGroup {
-  return COMPETITIVE_TIER_GROUPS[tier];
-}
-
-/**
  * Resolves a competitive tier's position among all tiers, from lowest (`0`) to highest, so players
  * can be ranked by tier before their in-tier rank rating.
  *
@@ -117,11 +107,25 @@ export function resolveTierOrdinal(tier: CompetitiveTier): number {
 }
 
 /**
- * Resolves the color class for a rank group.
+ * Resolves the translated label and color class for a player's competitive tier, e.g.
+ * `"Diamant 2"` paired with the color shared by the rank's badge and text.
  *
- * @param groupKey - A rank group key, as returned by {@link resolveTierGroup}.
- * @returns The Tailwind text color utility to apply.
+ * Takes a translator rather than injecting the i18n service so it stays a pure function of its
+ * inputs, and so both the players list and the player profile render ranks identically.
+ *
+ * @param tier - The player's competitive tier.
+ * @param translate - Resolves a `players.tiers.*` key into the active language.
+ * @returns The tier's display-ready label and color class.
  */
-export function resolveTierColorClass(groupKey: string): string {
-  return TIER_GROUP_COLOR_CLASSES[groupKey] ?? TIER_GROUP_COLOR_CLASSES['unranked'];
+export function resolveCompetitiveTierVisual(
+  tier: CompetitiveTier,
+  translate: (key: string) => string,
+): CompetitiveTierVisual {
+  const group = COMPETITIVE_TIER_GROUPS[tier];
+  const groupLabel = translate(`players.tiers.${group.key}`);
+
+  return {
+    label: group.number ? `${groupLabel} ${group.number}` : groupLabel,
+    colorClass: TIER_GROUP_COLOR_CLASSES[group.key] ?? TIER_GROUP_COLOR_CLASSES['unranked'],
+  };
 }

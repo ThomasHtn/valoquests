@@ -1,4 +1,5 @@
 <aside
+  [attr.aria-label]="'sidebar.label' | translate"
   [class.w-20]="collapsed()"
   [class.w-64]="!collapsed()"
   class="flex h-full shrink-0 flex-col justify-between bg-surface-900 px-3 py-6 transition-[width] duration-200"
@@ -64,9 +65,10 @@
     <!-- Primary navigation. Each link shows a CDK/Material tooltip for its label so the collapsed
          (icon-only) state stays usable. Entries without a routerLink have no page yet and render
          as inert. -->
-    <nav class="flex flex-col gap-1">
+    <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex flex-col gap-1">
       @for (item of navItems; track item.labelKey) {
         <a
+          [attr.aria-disabled]="item.routerLink ? null : 'true'"
           [class.cursor-default]="!item.routerLink"
           [class.justify-center]="collapsed()"
           [matTooltipDisabled]="!collapsed()"
@@ -121,14 +123,15 @@
           <span>{{ lastSyncLabel() }}</span>
         </div>
         <span
-          [attr.aria-label]="apiStatusLabel()"
           [class.bg-success]="apiStatus() === 'online'"
           [class.bg-danger]="apiStatus() === 'offline'"
           [matTooltip]="apiStatusLabel()"
           class="ml-auto h-2 w-2 shrink-0 rounded-full"
           matTooltipPosition="left"
           role="status"
-        ></span>
+        >
+          <span class="sr-only">{{ apiStatusLabel() }}</span>
+        </span>
       </div>
     }
   </div>

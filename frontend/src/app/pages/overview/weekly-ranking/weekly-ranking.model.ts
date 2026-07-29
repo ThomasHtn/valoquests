@@ -1,4 +1,4 @@
-import { ChallengeVisual } from '../../../core/challenges/challenge-visual.model';
+import { ChallengeVisual } from '@core/challenges/challenge-visual.model';
 
 /**
  * Column header of the ranking table: a challenge paired with the visual treatment shared with the

@@ -1,6 +1,8 @@
 import { httpResource } from '@angular/common/http';
 import { Service } from '@angular/core';
 
+import { API_ENDPOINTS } from '@core/http/api-endpoints';
+
 import { CurrentChallenges } from './challenge.model';
 
 /**
@@ -14,5 +16,5 @@ export class ChallengesApi {
    * Shared as a single reactive resource so every consumer reads the same in-flight request
    * instead of triggering its own call to `GET /api/challenges/current`.
    */
-  public readonly current = httpResource<CurrentChallenges>(() => '/api/challenges/current');
+  public readonly current = httpResource<CurrentChallenges>(() => API_ENDPOINTS.currentChallenges);
 }
