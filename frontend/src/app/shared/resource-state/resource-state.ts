@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 /**
  * Loading / error / empty / content switch for a resource-backed view.
@@ -11,7 +11,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   selector: 'app-resource-state',
   templateUrl: './resource-state.html',
   host: { class: 'contents' },
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ResourceState {
   /**

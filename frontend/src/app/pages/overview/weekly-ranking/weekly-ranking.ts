@@ -1,17 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
-import { LucideChevronDown, LucideTrophy } from '@lucide/angular';
+import { LucideTrophy } from '@lucide/angular';
 
-import { ChallengeIconView } from '../../../core/challenges/challenge-icon-view/challenge-icon-view';
-import { resolveChallengeVisual } from '../../../core/challenges/challenge-visual.constants';
-import { ChallengesApi } from '../../../core/challenges/challenges-api';
-import { TranslatePipe } from '../../../core/i18n/translate-pipe';
-import { resolvePlayerAvatarUrl } from '../../../core/players/player-avatar';
-import { RankingApi } from '../../../core/ranking/ranking-api';
-import { resolvePositionBadgeClass } from '../../../core/ranking/ranking.constants';
-import { Avatar } from '../../../shared/avatar/avatar';
-import { ProgressBar } from '../../../shared/progress-bar/progress-bar';
-import { ResourceState } from '../../../shared/resource-state/resource-state';
+import { ChallengeIconView } from '@shared/challenge-icon-view/challenge-icon-view';
+import { resolveChallengeVisual } from '@core/challenges/challenge-visual.utils';
+import { ChallengesApi } from '@core/challenges/challenges-api';
+import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
+import { RankingApi } from '@core/ranking/ranking-api';
+import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
+import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
+import { Avatar } from '@shared/avatar/avatar';
+import { CollapsibleCard } from '@shared/collapsible-card/collapsible-card';
+import { ProgressBar } from '@shared/progress-bar/progress-bar';
+import { ResourceState } from '@shared/resource-state/resource-state';
 import { RankingCell, RankingColumn, RankingRow } from './weekly-ranking.model';
 import {
   buildCurrentValueLabel,
@@ -31,15 +33,14 @@ import {
   imports: [
     TranslatePipe,
     ChallengeIconView,
+    CollapsibleCard,
     MatTooltip,
     Avatar,
     ProgressBar,
     ResourceState,
-    LucideChevronDown,
     LucideTrophy,
   ],
   templateUrl: './weekly-ranking.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WeeklyRanking {
   /**
@@ -65,36 +66,26 @@ export class WeeklyRanking {
   private readonly challengesResource = this.challengesApi.current;
 
   /**
-   * Whether the card's content is currently visible, toggled by the accordion header.
-   */
-  protected readonly isExpanded = signal(true);
-
-  /**
    * Whether either backing resource is still loading.
    */
-  protected readonly isLoading = computed(
-    () => this.rankingResource.isLoading() || this.challengesResource.isLoading(),
-  );
+  protected readonly isLoading = anyLoading(this.rankingResource, this.challengesResource);
 
   /**
    * Whether either backing resource failed to load.
    */
-  protected readonly hasError = computed(
-    () => !!this.rankingResource.error() || !!this.challengesResource.error(),
-  );
+  protected readonly hasError = anyError(this.rankingResource, this.challengesResource);
 
   /**
    * Challenges selected for the active week, paired with their resolved icon and color treatment,
    * used both as table columns and to resolve each row's per-challenge cell visual.
    */
-  protected readonly columns = computed<readonly RankingColumn[]>(
-    () =>
-      this.challengesResource.value()?.challenges.map((challenge) => ({
-        challengeId: challenge.id,
-        name: challenge.name,
-        tooltip: `${challenge.name} — ${challenge.description}`,
-        visual: resolveChallengeVisual(challenge.metric, challenge.difficulty),
-      })) ?? [],
+  protected readonly columns = computed<readonly RankingColumn[]>(() =>
+    (resourceValue(this.challengesResource, null)?.challenges ?? []).map((challenge) => ({
+      challengeId: challenge.id,
+      name: challenge.name,
+      tooltip: `${challenge.name} — ${challenge.description}`,
+      visual: resolveChallengeVisual(challenge.metric, challenge.difficulty),
+    })),
   );
 
   /**
@@ -102,42 +93,33 @@ export class WeeklyRanking {
    */
   protected readonly rows = computed<readonly RankingRow[]>(() => {
     const columns = this.columns();
-    return (
-      this.rankingResource.value()?.ranking.map((entry) => {
-        const cells: RankingCell[] = columns.map((column) => {
-          const progress = entry.challengeProgress.find(
-            (candidate) => candidate.challengeId === column.challengeId,
-          );
-          return {
-            challengeId: column.challengeId,
-            currentValueLabel: buildCurrentValueLabel(progress),
-            targetValueLabel: buildTargetValueLabel(progress),
-            completionPercentage: computeCompletionPercentage(progress),
-            visual: column.visual,
-          };
-        });
-
+    return (resourceValue(this.rankingResource, null)?.ranking ?? []).map((entry) => {
+      const cells: RankingCell[] = columns.map((column) => {
+        const progress = entry.challengeProgress.find(
+          (candidate) => candidate.challengeId === column.challengeId,
+        );
         return {
-          position: entry.position,
-          playerId: entry.player.id,
-          displayName: entry.player.displayName,
-          avatarUrl: resolvePlayerAvatarUrl(entry.player.portrait),
-          points: entry.points,
-          cells,
+          challengeId: column.challengeId,
+          currentValueLabel: buildCurrentValueLabel(progress),
+          targetValueLabel: buildTargetValueLabel(progress),
+          completionPercentage: computeCompletionPercentage(progress),
+          visual: column.visual,
         };
-      }) ?? []
-    );
+      });
+
+      return {
+        position: entry.position,
+        playerId: entry.player.id,
+        displayName: entry.player.displayName,
+        avatarUrl: resolvePlayerAvatarUrl(entry.player.portrait),
+        points: entry.points,
+        cells,
+      };
+    });
   });
 
   /**
    * Resolves the badge classes for a row's position, exposed to the template.
    */
   protected readonly positionBadgeClass = resolvePositionBadgeClass;
-
-  /**
-   * Toggles the card's content between expanded and collapsed.
-   */
-  protected toggleExpanded(): void {
-    this.isExpanded.update((expanded) => !expanded);
-  }
 }

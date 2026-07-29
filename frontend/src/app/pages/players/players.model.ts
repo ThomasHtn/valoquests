@@ -1,4 +1,4 @@
-import { CompetitiveTierVisual } from '../../core/players/competitive-tier.model';
+import { CompetitiveTierVisual } from '@core/players/competitive-tier.model';
 
 /**
  * Single row of the players table: a tracked player mapped to display-ready fields.

@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LucideCalendar, LucideClock } from '@lucide/angular';
 import { interval } from 'rxjs';
 
-import { ChallengesApi } from '../../core/challenges/challenges-api';
-import { formatDateRange, isoWeekNumber, remainingWeekTime } from '../../core/date/week-period';
-import { TranslatePipe } from '../../core/i18n/translate-pipe';
+import { ChallengesApi } from '@core/challenges/challenges-api';
+import { formatDateRange, isoWeekNumber, remainingWeekTime } from '@core/date/week-period.utils';
+import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { COUNTDOWN_REFRESH_INTERVAL_MS } from './overview.constants';
 import { WeeklyChallenges } from './weekly-challenges/weekly-challenges';
 import { WeeklyRanking } from './weekly-ranking/weekly-ranking';
@@ -21,7 +21,6 @@ import { WeeklyRanking } from './weekly-ranking/weekly-ranking';
   selector: 'app-overview',
   imports: [TranslatePipe, WeeklyChallenges, WeeklyRanking, LucideCalendar, LucideClock],
   templateUrl: './overview.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Overview {
   /**

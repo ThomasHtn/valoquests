@@ -1,169 +1,178 @@
 {
-  "sidebar": {
-    "expand": "Expand sidebar",
-    "collapse": "Collapse sidebar",
-    "nav": {
-      "overview": "Overview",
-      "players": "Players",
-      "comparison": "Comparison",
-      "ranking": "Ranking"
-    },
-    "lastSync": {
-      "label": "Last update",
-      "tooltip": "Last update: {{value}}",
-      "loading": "Loading…",
-      "error": "Unavailable",
-      "unknown": "Never synchronized",
-      "status": {
-        "online": "API available",
-        "offline": "API unavailable"
-      }
-    },
-    "language": {
-      "label": "Language",
-      "tooltip": "Switch to {{language}}",
-      "names": {
-        "fr": "French",
-        "en": "English"
-      }
-    }
+  "notFound": {
+    "backToOverview": "Back to overview",
+    "description": "The requested page does not exist or has been moved.",
+    "title": "Page not found"
   },
   "overview": {
-    "title": "Overview",
     "subtitle": "Track the weekly challenges and the player ranking.",
+    "title": "Overview",
     "week": {
-      "label": "Week {{number}}",
-      "countdown": "Ends in {{days}}d {{hours}}h {{minutes}}m"
-    },
-    "weeklyChallenges": {
-      "title": "Weekly challenges",
-      "loading": "Loading challenges…",
-      "error": "Failed to load the weekly challenges.",
-      "empty": "No challenge is active this week.",
-      "completedPlayersTooltip": "Number of players who completed the challenge"
-    },
-    "weeklyRanking": {
-      "title": "Weekly ranking",
-      "loading": "Loading ranking…",
-      "error": "Failed to load the weekly ranking.",
-      "empty": "No ranking is available this week.",
-      "columns": {
-        "position": "#",
-        "player": "Player",
-        "points": "Points"
-      }
-    }
-  },
-  "players": {
-    "title": "Players",
-    "subtitle": "View detailed statistics for every tracked player.",
-    "loading": "Loading players…",
-    "error": "Failed to load players.",
-    "empty": "No player is tracked yet.",
-    "columns": {
-      "player": "Player",
-      "rank": "Rank",
-      "winRate": "Win rate",
-      "kda": "KDA",
-      "headshotPercentage": "Headshot %",
-      "matchesPlayed": "Matches",
-      "details": "Details"
-    },
-    "tiers": {
-      "unranked": "Unranked",
-      "iron": "Iron",
-      "bronze": "Bronze",
-      "silver": "Silver",
-      "gold": "Gold",
-      "platinum": "Platinum",
-      "diamond": "Diamond",
-      "ascendant": "Ascendant",
-      "immortal": "Immortal",
-      "radiant": "Radiant"
-    }
-  },
-  "ranking": {
-    "title": "Ranking",
-    "subtitle": "Review the points earned by each player, week after week.",
-    "loading": "Loading the ranking history…",
-    "error": "Failed to load the ranking history.",
-    "empty": "No week has been finalized yet.",
-    "week": {
+      "countdown": "Ends in {{days}}d {{hours}}h {{minutes}}m",
       "label": "Week {{number}}"
     },
-    "columns": {
-      "position": "#",
-      "player": "Player",
-      "points": "Points",
-      "completedChallenges": "Completed challenges"
+    "weeklyChallenges": {
+      "completedPlayersTooltip": "Number of players who completed the challenge",
+      "empty": "No challenge is active this week.",
+      "error": "Failed to load the weekly challenges.",
+      "loading": "Loading challenges…",
+      "title": "Weekly challenges"
     },
-    "pagination": {
-      "previous": "Previous",
-      "next": "Next",
-      "page": "Page {{page}} of {{total}}"
+    "weeklyRanking": {
+      "columns": {
+        "player": "Player",
+        "points": "Points",
+        "position": "#"
+      },
+      "empty": "No ranking is available this week.",
+      "error": "Failed to load the weekly ranking.",
+      "loading": "Loading ranking…",
+      "title": "Weekly ranking"
     }
   },
   "playerProfile": {
     "breadcrumb": {
       "players": "Players"
     },
-    "loading": "Loading player profile…",
     "error": "Failed to load this player's profile.",
-    "stats": {
-      "winRate": "Win rate",
-      "record": "{{wins}} W / {{losses}} L",
-      "kda": "K/D",
-      "headshotPercentage": "HS%",
-      "adr": "ADR",
-      "acs": "ACS",
-      "matchesPlayed": "Matches"
-    },
     "filters": {
-      "resultLabel": "Filter by result",
       "allResults": "All results",
-      "win": "Wins",
+      "allSeasons": "All seasons",
       "loss": "Losses",
+      "resultLabel": "Filter by result",
       "seasonLabel": "Filter by season",
-      "allSeasons": "All seasons"
+      "win": "Wins"
     },
+    "loading": "Loading player profile…",
     "matches": {
-      "loading": "Loading match history…",
-      "error": "Failed to load match history.",
-      "empty": "No match found for these filters.",
       "columns": {
+        "acs": "ACS",
+        "headshotPercentage": "HS%",
+        "kd": "K/D",
+        "kda": "K/D/A",
         "map": "Map",
         "mode": "Mode",
         "result": "Result",
-        "score": "Score",
-        "kda": "K/D/A",
-        "kd": "K/D",
-        "headshotPercentage": "HS%",
-        "acs": "ACS"
+        "score": "Score"
       },
-      "result": {
-        "WIN": "Win",
-        "LOSS": "Loss",
-        "DRAW": "Draw",
-        "REMAKE": "Remake",
-        "UNKNOWN": "Unknown"
-      },
+      "empty": "No match found for these filters.",
+      "error": "Failed to load match history.",
       "gameMode": {
         "COMPETITIVE": "Competitive",
-        "UNRATED": "Unrated",
-        "SWIFTPLAY": "Swiftplay",
-        "SPIKE_RUSH": "Spike Rush",
-        "DEATHMATCH": "Deathmatch",
-        "TEAM_DEATHMATCH": "Team Deathmatch",
-        "ESCALATION": "Escalation",
-        "PREMIER": "Premier",
         "CUSTOM": "Custom",
-        "OTHER": "Other"
+        "DEATHMATCH": "Deathmatch",
+        "ESCALATION": "Escalation",
+        "OTHER": "Other",
+        "PREMIER": "Premier",
+        "SPIKE_RUSH": "Spike Rush",
+        "SWIFTPLAY": "Swiftplay",
+        "TEAM_DEATHMATCH": "Team Deathmatch",
+        "UNRATED": "Unrated"
+      },
+      "loading": "Loading match history…",
+      "result": {
+        "DRAW": "Draw",
+        "LOSS": "Loss",
+        "REMAKE": "Remake",
+        "UNKNOWN": "Unknown",
+        "WIN": "Win"
       }
     },
     "pagination": {
-      "previous": "Previous",
       "next": "Next",
-      "page": "Page {{page}} of {{total}}"
+      "page": "Page {{page}} of {{total}}",
+      "previous": "Previous"
+    },
+    "stats": {
+      "acs": "ACS",
+      "adr": "ADR",
+      "headshotPercentage": "HS%",
+      "kda": "K/D",
+      "matchesPlayed": "Matches",
+      "record": "{{wins}} W / {{losses}} L",
+      "winRate": "Win rate"
+    },
+    "title": "Player profile"
+  },
+  "players": {
+    "columns": {
+      "details": "Details",
+      "headshotPercentage": "Headshot %",
+      "kda": "KDA",
+      "matchesPlayed": "Matches",
+      "player": "Player",
+      "rank": "Rank",
+      "winRate": "Win rate"
+    },
+    "empty": "No player is tracked yet.",
+    "error": "Failed to load players.",
+    "loading": "Loading players…",
+    "subtitle": "View detailed statistics for every tracked player.",
+    "tiers": {
+      "ascendant": "Ascendant",
+      "bronze": "Bronze",
+      "diamond": "Diamond",
+      "gold": "Gold",
+      "immortal": "Immortal",
+      "iron": "Iron",
+      "platinum": "Platinum",
+      "radiant": "Radiant",
+      "silver": "Silver",
+      "unranked": "Unranked"
+    },
+    "title": "Players"
+  },
+  "ranking": {
+    "columns": {
+      "completedChallenges": "Completed challenges",
+      "player": "Player",
+      "points": "Points",
+      "position": "#"
+    },
+    "empty": "No week has been finalized yet.",
+    "error": "Failed to load the ranking history.",
+    "loading": "Loading the ranking history…",
+    "pagination": {
+      "next": "Next",
+      "page": "Page {{page}} of {{total}}",
+      "previous": "Previous"
+    },
+    "subtitle": "Review the points earned by each player, week after week.",
+    "title": "Ranking",
+    "week": {
+      "label": "Week {{number}}"
     }
-  }
+  },
+  "sidebar": {
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "label": "Sidebar",
+    "language": {
+      "label": "Language",
+      "names": {
+        "en": "English",
+        "fr": "French"
+      },
+      "tooltip": "Switch to {{language}}"
+    },
+    "lastSync": {
+      "error": "Unavailable",
+      "label": "Last update",
+      "loading": "Loading…",
+      "status": {
+        "offline": "API unavailable",
+        "online": "API available"
+      },
+      "tooltip": "Last update: {{value}}",
+      "unknown": "Never synchronized"
+    },
+    "nav": {
+      "comparison": "Comparison",
+      "overview": "Overview",
+      "players": "Players",
+      "ranking": "Ranking"
+    },
+    "navLabel": "Main navigation"
+  },
+  "skipToContent": "Skip to main content"
 }

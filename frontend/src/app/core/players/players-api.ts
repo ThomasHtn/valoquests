@@ -1,6 +1,8 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal } from '@angular/core';
 
+import { API_ENDPOINTS } from '@core/http/api-endpoints';
+
 import { PlayerDetails } from './player-details.model';
 import { PlayerSummary } from './player-summary.model';
 
@@ -15,7 +17,7 @@ export class PlayersApi {
    * Shared as a single reactive resource so every consumer reads the same in-flight request
    * instead of triggering its own call to `GET /api/players`.
    */
-  public readonly players = httpResource<readonly PlayerSummary[]>(() => '/api/players', {
+  public readonly players = httpResource<readonly PlayerSummary[]>(() => API_ENDPOINTS.players, {
     defaultValue: [],
   });
 
@@ -28,6 +30,6 @@ export class PlayersApi {
    * @returns The reactive resource fetching the requested player's detailed profile.
    */
   public details(id: Signal<number>): HttpResourceRef<PlayerDetails | undefined> {
-    return httpResource<PlayerDetails>(() => `/api/players/${id()}`);
+    return httpResource<PlayerDetails>(() => API_ENDPOINTS.playerDetails(id()));
   }
 }

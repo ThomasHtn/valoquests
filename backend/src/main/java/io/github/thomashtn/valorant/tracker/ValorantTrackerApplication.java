@@ -5,12 +5,14 @@ import io.github.thomashtn.valorant.tracker.shared.config.ApplicationProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.PropertySource;
 
 /**
  * Main entry point for the Valorant Tracker backend application.
  */
 @SpringBootApplication
 @EnableConfigurationProperties({ApplicationProperties.class, HenrikApiProperties.class})
+@PropertySource("file:.env")
 public class ValorantTrackerApplication {
 
     /**

@@ -1,87 +1,63 @@
-<!-- Weekly challenges card -->
-<section class="overflow-hidden rounded-xl border border-surface-700 bg-surface-900">
-  <!-- Card header -->
-  <header [class.border-b]="isExpanded()" class="border-surface-700">
-    <button
-      type="button"
-      class="flex w-full cursor-pointer items-center gap-2 px-5 py-4 text-left transition-colors hover:bg-surface-800"
-      [attr.aria-expanded]="isExpanded()"
-      aria-controls="weekly-challenges-content"
-      (click)="toggleExpanded()"
-    >
-      <svg class="h-5 w-5 shrink-0 text-brand-500" lucideTarget></svg>
-      <h2 class="text-sm font-bold tracking-wide text-text-primary uppercase">
-        {{ 'overview.weeklyChallenges.title' | translate }}
-      </h2>
-      <svg
-        class="ml-auto h-4 w-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none"
-        [class.-rotate-90]="!isExpanded()"
-        lucideChevronDown
-      ></svg>
-    </button>
-  </header>
+<app-collapsible-card [heading]="'overview.weeklyChallenges.title' | translate">
+  <svg cardIcon class="h-5 w-5 shrink-0 text-brand-500" lucideTarget></svg>
 
-  @if (isExpanded()) {
-    <div id="weekly-challenges-content">
-      <app-resource-state
-        [emptyText]="'overview.weeklyChallenges.empty' | translate"
-        [errorText]="'overview.weeklyChallenges.error' | translate"
-        [isEmpty]="rows().length === 0"
-        [isError]="!!challengesResource.error()"
-        [isLoading]="challengesResource.isLoading()"
-        [loadingText]="'overview.weeklyChallenges.loading' | translate"
-      >
-        <!-- Challenge rows -->
-        <ul>
-          @for (row of rows(); track row.id) {
-            <li
-              class="flex items-center gap-4 border-b border-surface-700 px-5 py-4 transition-colors last:border-b-0 hover:bg-surface-800"
-            >
-              <div
-                [class]="row.visual.badgeClass"
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-              >
-                <app-challenge-icon-view
-                  [icon]="row.visual.icon"
-                  [class]="row.visual.iconClass"
-                  class="h-5 w-5"
-                />
-              </div>
+  <app-resource-state
+    [emptyText]="'overview.weeklyChallenges.empty' | translate"
+    [errorText]="'overview.weeklyChallenges.error' | translate"
+    [isEmpty]="rows().length === 0"
+    [isError]="!!challengesResource.error()"
+    [isLoading]="challengesResource.isLoading()"
+    [loadingText]="'overview.weeklyChallenges.loading' | translate"
+  >
+    <!-- Challenge rows -->
+    <ul>
+      @for (row of rows(); track row.id) {
+        <li
+          class="flex items-center gap-4 border-b border-surface-700 px-5 py-4 transition-colors last:border-b-0 hover:bg-surface-800"
+        >
+          <div
+            [class]="row.visual.badgeClass"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+          >
+            <app-challenge-icon-view
+              [icon]="row.visual.icon"
+              [class]="row.visual.iconClass"
+              class="h-5 w-5"
+            />
+          </div>
 
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-semibold text-text-primary">{{ row.name }}</p>
-                <p class="truncate text-xs text-text-secondary">{{ row.description }}</p>
-              </div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-semibold text-text-primary">{{ row.name }}</p>
+            <p class="truncate text-xs text-text-secondary">{{ row.description }}</p>
+          </div>
 
-              <p
-                [class]="row.visual.iconClass"
-                [matTooltip]="'overview.weeklyChallenges.completedPlayersTooltip' | translate"
-                class="flex w-16 shrink-0 items-baseline justify-end tabular-nums"
-              >
-                <span class="text-lg font-bold">{{ row.completedPlayers }}</span>
-                <span class="mx-1 font-normal opacity-50">/</span>
-                <span class="text-sm font-semibold opacity-75">{{ row.totalPlayers }}</span>
-              </p>
+          <p
+            [class]="row.visual.iconClass"
+            [matTooltip]="'overview.weeklyChallenges.completedPlayersTooltip' | translate"
+            class="flex w-16 shrink-0 items-baseline justify-end tabular-nums"
+          >
+            <span class="text-lg font-bold">{{ row.completedPlayers }}</span>
+            <span class="mx-1 font-normal opacity-50">/</span>
+            <span class="text-sm font-semibold opacity-75">{{ row.totalPlayers }}</span>
+          </p>
 
-              <app-progress-bar
-                class="flex-1"
-                heightClass="h-1.5"
-                [colorClass]="row.visual.barClass"
-                [percentage]="row.completionPercentage"
-              />
+          <app-progress-bar
+            class="flex-1"
+            heightClass="h-1.5"
+            [colorClass]="row.visual.barClass"
+            [percentage]="row.completionPercentage"
+          />
 
-              <p
-                [class]="row.visual.iconClass"
-                class="flex w-24 shrink-0 items-center justify-end gap-1.5 text-sm font-semibold tabular-nums"
-              >
-                <svg class="h-4 w-4 shrink-0" lucideTrophy></svg>
-                <span class="w-[4ch] text-right">{{ row.points }}</span>
-                <span>XP</span>
-              </p>
-            </li>
-          }
-        </ul>
-      </app-resource-state>
-    </div>
-  }
-</section>
+          <p
+            [class]="row.visual.iconClass"
+            class="flex w-24 shrink-0 items-center justify-end gap-1.5 text-sm font-semibold tabular-nums"
+          >
+            <svg class="h-4 w-4 shrink-0" lucideTrophy></svg>
+            <span class="w-[4ch] text-right">{{ row.points }}</span>
+            <span>XP</span>
+          </p>
+        </li>
+      }
+    </ul>
+  </app-resource-state>
+</app-collapsible-card>

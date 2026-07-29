@@ -1,10 +1,16 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal } from '@angular/core';
 
-import { PageResponse } from '../shared/page-response.model';
-import { MATCH_HISTORY_PAGE_SIZE } from './matches-api.constants';
+import { API_ENDPOINTS } from '@core/http/api-endpoints';
+
+import { PageResponse } from '@core/http/page-response.model';
 import { Match } from './match.model';
 import { MatchResult } from './match-result.model';
+
+/**
+ * Number of matches requested per page of a player's match history.
+ */
+const MATCH_HISTORY_PAGE_SIZE = 10;
 
 /**
  * Data-access service for tracked players' match history.
@@ -33,7 +39,7 @@ export class MatchesApi {
       const selectedSeasonId = seasonId();
 
       return {
-        url: `/api/players/${playerId()}/matches`,
+        url: API_ENDPOINTS.playerMatches(playerId()),
         params: {
           page: page(),
           size: MATCH_HISTORY_PAGE_SIZE,

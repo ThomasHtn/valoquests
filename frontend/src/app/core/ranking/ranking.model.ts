@@ -1,4 +1,4 @@
-import { CompetitiveTier } from '../players/competitive-tier.model';
+import { CompetitiveTier } from '@core/players/competitive-tier.model';
 
 /**
  * Player identity and rank data attached to a ranking entry.

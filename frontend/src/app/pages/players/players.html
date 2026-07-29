@@ -82,17 +82,20 @@
               </td>
               <td class="px-4 py-3">
                 <div class="flex flex-col gap-1.5">
-                  <span [class]="winRateColorClass(row.winRate)" class="font-bold tabular-nums">
+                  <span
+                    [class]="winRateVisual(row.winRate).textClass"
+                    class="font-bold tabular-nums"
+                  >
                     {{ formatWinRate(row.winRate) }}
                   </span>
                   <app-progress-bar
                     class="w-16"
-                    [colorClass]="winRateBarClass(row.winRate)"
+                    [colorClass]="winRateVisual(row.winRate).barClass"
                     [percentage]="row.winRate ?? 0"
                   />
                 </div>
               </td>
-              <td [class]="kdaColorClass(row.kda)" class="px-4 py-3 font-bold tabular-nums">
+              <td [class]="kdaVisual(row.kda).textClass" class="px-4 py-3 font-bold tabular-nums">
                 {{ formatKda(row.kda) }}
               </td>
               <td class="px-4 py-3 tabular-nums text-text-primary">

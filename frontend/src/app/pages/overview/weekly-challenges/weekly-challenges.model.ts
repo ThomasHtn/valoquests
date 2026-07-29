@@ -1,4 +1,4 @@
-import { ChallengeVisual } from '../../../core/challenges/challenge-visual.model';
+import { ChallengeVisual } from '@core/challenges/challenge-visual.model';
 
 /**
  * Single row of the weekly challenges list: a challenge paired with its resolved visual treatment.

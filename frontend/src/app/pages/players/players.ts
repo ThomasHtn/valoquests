@@ -1,31 +1,27 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideChevronRight } from '@lucide/angular';
 
-import { TranslatePipe } from '../../core/i18n/translate-pipe';
-import { Translation } from '../../core/i18n/translation';
+import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
 import {
-  resolveTierColorClass,
-  resolveTierGroup,
+  resolveCompetitiveTierVisual,
   resolveTierOrdinal,
-} from '../../core/players/competitive-tier.constants';
-import { resolvePlayerAvatarUrl } from '../../core/players/player-avatar';
+} from '@core/players/competitive-tier.utils';
+import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import {
   extractRiotTag,
   formatHeadshotPercentage,
   formatKda,
   formatWinRate,
-} from '../../core/players/player-format.utils';
-import {
-  resolveKdaColorClass,
-  resolveWinRateBarClass,
-  resolveWinRateColorClass,
-} from '../../core/players/player-stats.constants';
-import { PlayerSummary } from '../../core/players/player-summary.model';
-import { PlayersApi } from '../../core/players/players-api';
-import { Avatar } from '../../shared/avatar/avatar';
-import { ProgressBar } from '../../shared/progress-bar/progress-bar';
-import { ResourceState } from '../../shared/resource-state/resource-state';
+} from '@core/players/player-format.utils';
+import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/player-stats.utils';
+import { resourceValue } from '@core/http/resource-state.utils';
+import { PlayerSummary } from '@core/players/player-summary.model';
+import { PlayersApi } from '@core/players/players-api';
+import { Avatar } from '@shared/avatar/avatar';
+import { ProgressBar } from '@shared/progress-bar/progress-bar';
+import { ResourceState } from '@shared/resource-state/resource-state';
 import { PlayerRow } from './players.model';
 
 /**
@@ -38,7 +34,6 @@ import { PlayerRow } from './players.model';
   selector: 'app-players',
   imports: [TranslatePipe, RouterLink, LucideChevronRight, Avatar, ProgressBar, ResourceState],
   templateUrl: './players.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Players {
   /**
@@ -62,7 +57,7 @@ export class Players {
    * since rating resets per tier and is not otherwise comparable across tiers.
    */
   protected readonly rows = computed<readonly PlayerRow[]>(() =>
-    [...this.playersResource.value()]
+    [...resourceValue(this.playersResource, [])]
       .sort((a, b) => {
         const tierComparison =
           resolveTierOrdinal(b.competitiveTier) - resolveTierOrdinal(a.competitiveTier);
@@ -72,19 +67,14 @@ export class Players {
   );
 
   /**
-   * Resolves the color class for a row's win rate, exposed to the template.
+   * Resolves the text and bar colors for a row's win rate, exposed to the template.
    */
-  protected readonly winRateColorClass = resolveWinRateColorClass;
+  protected readonly winRateVisual = resolveWinRateVisual;
 
   /**
-   * Resolves the progress bar fill color for a row's win rate, exposed to the template.
+   * Resolves the text color for a row's KDA, exposed to the template.
    */
-  protected readonly winRateBarClass = resolveWinRateBarClass;
-
-  /**
-   * Resolves the color class for a row's KDA, exposed to the template.
-   */
-  protected readonly kdaColorClass = resolveKdaColorClass;
+  protected readonly kdaVisual = resolveKdaVisual;
 
   /**
    * Formats a row's win rate, exposed to the template.
@@ -109,18 +99,14 @@ export class Players {
    * @returns The corresponding display-ready row.
    */
   private toRow(player: PlayerSummary): PlayerRow {
-    const group = resolveTierGroup(player.competitiveTier);
-    const groupLabel = this.translation.translate(`players.tiers.${group.key}`);
-
     return {
       id: player.id,
       displayName: player.displayName,
       tag: extractRiotTag(player.riotId),
       avatarUrl: resolvePlayerAvatarUrl(player.portrait),
-      tier: {
-        label: group.number ? `${groupLabel} ${group.number}` : groupLabel,
-        colorClass: resolveTierColorClass(group.key),
-      },
+      tier: resolveCompetitiveTierVisual(player.competitiveTier, (key) =>
+        this.translation.translate(key),
+      ),
       rankRating: player.rankRating,
       winRate: player.winRate,
       kda: player.kda,

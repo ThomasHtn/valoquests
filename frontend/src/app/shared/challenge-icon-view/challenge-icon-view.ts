@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import {
   LucideActivity,
   LucideCalendar,
@@ -13,7 +13,7 @@ import {
   LucideUsers,
 } from '@lucide/angular';
 
-import { ChallengeIcon } from '../challenge-visual.model';
+import { ChallengeIcon } from '@core/challenges/challenge-visual.model';
 
 /**
  * Renders the Lucide icon matching a challenge's resolved {@link ChallengeIcon} key.
@@ -39,11 +39,10 @@ import { ChallengeIcon } from '../challenge-visual.model';
   ],
   templateUrl: './challenge-icon-view.html',
   styleUrl: './challenge-icon-view.css',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChallengeIconView {
   /**
    * Icon key to render, resolved from a challenge's metric and difficulty.
    */
-  readonly icon = input.required<ChallengeIcon>();
+  public readonly icon = input.required<ChallengeIcon>();
 }
