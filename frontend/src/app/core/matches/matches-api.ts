@@ -4,8 +4,8 @@ import { Service, Signal } from '@angular/core';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
 import { PageResponse } from '@core/http/page-response.model';
+import { GameMode } from './game-mode.model';
 import { Match } from './match.model';
-import { MatchResult } from './match-result.model';
 
 /**
  * Number of matches requested per page of a player's match history.
@@ -24,18 +24,18 @@ export class MatchesApi {
    *
    * @param playerId - Reactive internal player identifier.
    * @param page - Reactive zero-based page index.
-   * @param result - Reactive result filter, or `null` to include every result.
+   * @param gameMode - Reactive game mode filter, or `null` to include every mode.
    * @param seasonId - Reactive season filter, or `null` to include every season.
    * @returns The reactive resource fetching the requested page of match history.
    */
   public history(
     playerId: Signal<number>,
     page: Signal<number>,
-    result: Signal<MatchResult | null>,
+    gameMode: Signal<GameMode | null>,
     seasonId: Signal<number | null>,
   ): HttpResourceRef<PageResponse<Match> | undefined> {
     return httpResource<PageResponse<Match>>(() => {
-      const selectedResult = result();
+      const selectedGameMode = gameMode();
       const selectedSeasonId = seasonId();
 
       return {
@@ -43,7 +43,7 @@ export class MatchesApi {
         params: {
           page: page(),
           size: MATCH_HISTORY_PAGE_SIZE,
-          ...(selectedResult ? { result: selectedResult } : {}),
+          ...(selectedGameMode ? { gameMode: selectedGameMode } : {}),
           ...(selectedSeasonId !== null ? { seasonId: selectedSeasonId } : {}),
         },
       };

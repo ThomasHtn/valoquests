@@ -80,3 +80,25 @@ export function resolveChallengeVisual(
     ...CHALLENGE_DIFFICULTY_COLORS[difficulty],
   };
 }
+
+/**
+ * Resolves the short category label shown for a challenge in place of its full name (e.g.
+ * `"Kills"` rather than `"Élimination express"`), so the weekly challenges card and the weekly
+ * ranking table both stay scannable at a glance.
+ *
+ * Composite challenges (e.g. `"KILLS + MATCHES_PLAYED"`) get every one of their metrics
+ * translated and joined the same way the backend joins the raw metric string.
+ *
+ * @param metric - The challenge's metric string.
+ * @param translate - Translation function resolving an `overview.weeklyChallenges.metric.*` key.
+ * @returns The translated category label.
+ */
+export function resolveChallengeMetricLabel(
+  metric: string,
+  translate: (key: string) => string,
+): string {
+  return metric
+    .split(' + ')
+    .map((part) => translate(`overview.weeklyChallenges.metric.${part}`))
+    .join(' + ');
+}

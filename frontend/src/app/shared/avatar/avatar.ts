@@ -32,6 +32,15 @@ export class Avatar {
   public readonly size = input<AvatarSize>('md');
 
   /**
+   * Whether the portrait should be fetched eagerly, ahead of the rest of the page.
+   *
+   * Enable it on the single avatar that is the page's largest contentful paint (today, the profile
+   * header portrait). `NgOptimizedImage` otherwise logs `NG02955` and the browser discovers the
+   * image late. Left off by default: marking several images as priority defeats the purpose.
+   */
+  public readonly priority = input(false);
+
+  /**
    * Rendering metrics matching the current {@link size}.
    */
   protected readonly metrics = computed(() => AVATAR_SIZES[this.size()]);

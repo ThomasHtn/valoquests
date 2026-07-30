@@ -14,7 +14,8 @@ let instanceCount = 0;
  *
  * Shared by the overview widgets so they render the same disclosure affordance and expose the
  * same `aria-expanded`/`aria-controls` wiring. The header icon is projected through a `cardIcon`
- * attribute; everything else is projected into the collapsible body.
+ * attribute and an optional summary beside the heading through a `cardMeta` one; everything else
+ * is projected into the collapsible body.
  *
  * The body stays in the DOM and is hidden with the `hidden` attribute rather than removed with
  * `@if`, so `aria-controls` always resolves to a real element (an `aria-controls` pointing at a

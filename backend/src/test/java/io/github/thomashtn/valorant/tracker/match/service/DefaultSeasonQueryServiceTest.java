@@ -39,19 +39,47 @@ class DefaultSeasonQueryServiceTest {
     }
 
     /**
-     * Verifies that persisted seasons are mapped to responses in the repository's order.
+     * Verifies that seasons are returned most recent first, whatever order they were created in.
+     *
+     * <p>Insertion order is deliberately the reverse of the chronological one here: seasons are
+     * created as matches are imported, so an older season can easily carry a greater
+     * identifier.</p>
      */
     @Test
-    void shouldMapSeasonsInRepositoryOrder() {
-        Season recent = season(2L, "2025 Act 2", false);
-        Season older = season(1L, "2025 Act 1", false);
-        when(seasonRepository.findAllByOrderByIdDesc()).thenReturn(List.of(recent, older));
+    void shouldOrderSeasonsByEpisodeAndActDescending() {
+        when(seasonRepository.findAllByOrderByIdDesc()).thenReturn(List.of(
+            season(4L, "e9a1", false),
+            season(3L, "e10a3", false),
+            season(2L, "e10a1", false),
+            season(1L, "e11a2", true)
+        ));
 
         List<SeasonResponse> result = service.findAll();
 
         assertThat(result).containsExactly(
-            new SeasonResponse(2L, "2025 Act 2", false),
-            new SeasonResponse(1L, "2025 Act 1", false)
+            new SeasonResponse(1L, "e11a2", true),
+            new SeasonResponse(3L, "e10a3", false),
+            new SeasonResponse(2L, "e10a1", false),
+            new SeasonResponse(4L, "e9a1", false)
+        );
+    }
+
+    /**
+     * Verifies that a season whose name carries no episode and act is kept, after every season
+     * that can be placed chronologically.
+     */
+    @Test
+    void shouldPlaceUndatableSeasonsLast() {
+        when(seasonRepository.findAllByOrderByIdDesc()).thenReturn(List.of(
+            season(2L, "0df9ce4a-4d1e-1234-9ba5-a1b2c3d4e5f6", false),
+            season(1L, "e11a1", true)
+        ));
+
+        List<SeasonResponse> result = service.findAll();
+
+        assertThat(result).containsExactly(
+            new SeasonResponse(1L, "e11a1", true),
+            new SeasonResponse(2L, "0df9ce4a-4d1e-1234-9ba5-a1b2c3d4e5f6", false)
         );
     }
 

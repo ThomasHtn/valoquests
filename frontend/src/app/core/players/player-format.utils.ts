@@ -44,9 +44,14 @@ export function formatHeadshotPercentage(headshotPercentage: number | null): str
  * Formats an average combat/damage score (ACS or ADR) for display, rounded to the nearest whole
  * number.
  *
- * @param value - The score to format, or `null` when not yet synchronized.
- * @returns The formatted score, or an em dash when not yet synchronized.
+ * Renders an em dash when the score is unavailable, as {@link formatWinRate} and {@link formatKda}
+ * already do: some game modes do not report one, and an empty cell cannot be told apart from data
+ * that has not loaded. The guard is on finiteness rather than on `null`, since the field is absent
+ * from the payload for those modes and `Math.round(undefined)` would otherwise print `NaN`.
+ *
+ * @param value - The score to format, when reported.
+ * @returns The formatted score, or an em dash when unavailable.
  */
 export function formatScore(value: number | null): string {
-  return value === null ? '—' : `${Math.round(value)}`;
+  return Number.isFinite(value) ? `${Math.round(value as number)}` : '—';
 }

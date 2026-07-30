@@ -14,9 +14,10 @@ public interface SeasonRepository extends JpaRepository<Season, Long> {
     /**
      * Returns every season, most recently discovered first.
      *
-     * <p>Ordered by identifier rather than {@code startsAt}/{@code endsAt}: seasons are created
-     * on demand from Henrik match metadata and those two fields are never populated, so insertion
-     * order is the only reliable signal of chronological recency.</p>
+     * <p>Ordered by identifier rather than {@code startsAt}/{@code endsAt}, which are never
+     * populated: seasons are created on demand from Henrik match metadata. Insertion order is not
+     * chronological either, so this only provides a deterministic order for callers to sort;
+     * {@code DefaultSeasonQueryService} reorders by episode and act before exposing them.</p>
      */
     List<Season> findAllByOrderByIdDesc();
 }

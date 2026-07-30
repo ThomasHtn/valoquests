@@ -44,7 +44,7 @@ public class MatchController {
         summary = "Get a player's match history",
         description = """
             Returns the tracked player's matches from newest to oldest. Pagination and optional
-            season, map, agent and result filters can be combined in the same request.
+            season, map, agent, result and game mode filters can be combined in the same request.
             """
     )
     @ApiResponse(responseCode = "200", description = "Match page returned successfully.")
@@ -64,8 +64,10 @@ public class MatchController {
         @Parameter(description = "Optional exact agent name.", example = "Omen")
         @RequestParam(required = false) String agent,
         @Parameter(description = "Optional result filter: WIN, LOSS or DRAW.", example = "WIN")
-        @RequestParam(required = false) String result
+        @RequestParam(required = false) String result,
+        @Parameter(description = "Optional game mode filter.", example = "COMPETITIVE")
+        @RequestParam(required = false) String gameMode
     ) {
-        return service.findByPlayer(playerId, page, size, seasonId, map, agent, result);
+        return service.findByPlayer(playerId, page, size, seasonId, map, agent, result, gameMode);
     }
 }

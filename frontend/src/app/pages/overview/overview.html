@@ -1,5 +1,5 @@
 <!-- Header -->
-<header class="mb-6 flex flex-wrap items-start justify-between gap-4">
+<header class="flex flex-wrap items-start justify-between gap-4">
   <div>
     <h1 class="text-2xl font-bold tracking-wide text-text-primary uppercase">
       {{ 'overview.title' | translate }}
@@ -15,7 +15,7 @@
         <svg class="h-4 w-4 text-accent-purple" lucideCalendar></svg>
         {{ 'overview.week.label' | translate: { number: week.number } }}
       </span>
-      <span class="h-4 w-px bg-surface-700"></span>
+      <span aria-hidden="true" class="shrink-0 text-text-muted">·</span>
       <span>{{ week.dateRange }}</span>
       <span class="h-4 w-px bg-surface-700"></span>
       <span class="flex items-center gap-1.5">
@@ -23,11 +23,11 @@
         {{
           'overview.week.countdown'
             | translate
-              : {
-                  days: week.remaining.days,
-                  hours: week.remaining.hours,
-                  minutes: week.remaining.minutes,
-                }
+            : {
+              days: week.remaining.days,
+              hours: week.remaining.hours,
+              minutes: week.remaining.minutes,
+            }
         }}
       </span>
     </div>

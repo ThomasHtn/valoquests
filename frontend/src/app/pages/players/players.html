@@ -1,15 +1,17 @@
 <!-- Header -->
-<header class="mb-6">
+<header>
   <h1 class="text-2xl font-bold tracking-wide text-text-primary uppercase">
     {{ 'players.title' | translate }}
   </h1>
   <p class="mt-1 text-sm text-text-secondary">
-    {{ 'players.subtitle' | translate }}
+    {{ 'players.subtitleCount' | translate: { count: rows().length } }}
   </p>
 </header>
 
-<!-- Players table -->
-<section class="overflow-hidden rounded-xl border border-surface-700 bg-surface-900">
+<!-- Players list. `overflow-clip` rather than `overflow-hidden`: it rounds the table's corners
+     without establishing a scroll container, which would otherwise anchor the sticky header to
+     this card instead of to the scrolling page. -->
+<section class="overflow-clip rounded-xl border border-surface-700 bg-surface-900">
   <app-resource-state
     [emptyText]="'players.empty' | translate"
     [errorText]="'players.error' | translate"
@@ -17,98 +19,180 @@
     [isError]="!!playersResource.error()"
     [isLoading]="playersResource.isLoading()"
     [loadingText]="'players.loading' | translate"
+    (retry)="playersResource.reload()"
   >
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead>
+    <ul skeleton>
+      @for (placeholder of skeletonRows; track $index) {
+        <li class="flex items-center gap-4 border-b border-surface-700 px-5 py-4 last:border-b-0">
+          <span class="h-11 w-11 shrink-0 rounded-full bg-surface-700"></span>
+          <span class="flex flex-1 flex-col gap-2">
+            <span class="h-3 rounded-full bg-surface-700" [style.width.%]="placeholder"></span>
+            <span class="h-2.5 w-1/4 rounded-full bg-surface-700"></span>
+          </span>
+          <span class="hidden h-3 w-40 shrink-0 rounded-full bg-surface-700 lg:block"></span>
+        </li>
+      }
+    </ul>
+
+    <!-- Table, from `lg` up. Below that the same data is stacked into cards, since seven columns
+         cannot be read on a phone without scrolling the page sideways. -->
+    <table class="hidden w-full text-sm lg:table">
+      <thead class="sticky top-0 z-10 bg-surface-800">
+        <tr class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase">
+          <th class="px-5 py-3 text-left font-semibold" scope="col">
+            {{ 'players.columns.player' | translate }}
+          </th>
+          <th class="px-4 py-3 text-left font-semibold" scope="col">
+            {{ 'players.columns.rank' | translate }}
+          </th>
+          <th class="px-4 py-3 text-right font-semibold" scope="col">
+            {{ 'players.columns.winRate' | translate }}
+          </th>
+          <th class="px-4 py-3 text-right font-semibold" scope="col">
+            {{ 'players.columns.kda' | translate }}
+          </th>
+          <th class="px-4 py-3 text-right font-semibold" scope="col">
+            {{ 'players.columns.headshotPercentage' | translate }}
+          </th>
+          <th class="px-4 py-3 text-right font-semibold" scope="col">
+            {{ 'players.columns.matchesPlayed' | translate }}
+          </th>
+          <th class="px-5 py-3" scope="col">
+            <span class="sr-only">{{ 'players.columns.details' | translate }}</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.id) {
+          <!-- The row is navigable as a whole: the name cell's link stretches over it through an
+               `::after` overlay, so the chevron's promise of navigation matches the actual target.
+               Focus stays on the link, and the row draws the indicator on its behalf. -->
           <tr
-            class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase"
+            class="relative cursor-pointer border-b border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800 has-[a:focus-visible]:bg-surface-800 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
           >
-            <th class="px-5 py-3 text-left font-semibold" scope="col">
-              {{ 'players.columns.player' | translate }}
+            <th class="px-5 py-3 text-left font-normal" scope="row">
+              <a
+                [routerLink]="['/players', row.id]"
+                class="flex items-center gap-3 after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+              >
+                <app-avatar [src]="row.avatarUrl" size="md" />
+                <div>
+                  <p class="font-semibold text-text-primary">{{ row.displayName }}</p>
+                  @if (row.tag) {
+                    <p class="text-xs text-text-secondary">#{{ row.tag }}</p>
+                  }
+                </div>
+              </a>
             </th>
-            <th class="px-4 py-3 text-left font-semibold" scope="col">
-              {{ 'players.columns.rank' | translate }}
-            </th>
-            <th class="px-4 py-3 text-left font-semibold" scope="col">
-              {{ 'players.columns.winRate' | translate }}
-            </th>
-            <th class="px-4 py-3 text-left font-semibold" scope="col">
-              {{ 'players.columns.kda' | translate }}
-            </th>
-            <th class="px-4 py-3 text-left font-semibold" scope="col">
-              {{ 'players.columns.headshotPercentage' | translate }}
-            </th>
-            <th class="px-4 py-3 text-left font-semibold" scope="col">
-              {{ 'players.columns.matchesPlayed' | translate }}
-            </th>
-            <th class="px-5 py-3" scope="col">
-              <span class="sr-only">{{ 'players.columns.details' | translate }}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of rows(); track row.id) {
-            <tr
-              class="border-b border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800"
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-2">
+                <span
+                  [class]="row.tier.colorClass"
+                  class="h-3 w-3 shrink-0 bg-current [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+                ></span>
+                <div>
+                  <p [class]="row.tier.colorClass" class="font-semibold">{{ row.tier.label }}</p>
+                  @if (row.rankRating !== null) {
+                    <p class="text-xs text-text-secondary">{{ row.rankRating }} RR</p>
+                  }
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex flex-col items-end gap-1.5">
+                <span [class]="winRateVisual(row.winRate).textClass" class="font-bold tabular-nums">
+                  {{ formatWinRate(row.winRate) }}
+                </span>
+                <app-progress-bar
+                  class="w-16"
+                  [colorClass]="winRateVisual(row.winRate).barClass"
+                  [percentage]="row.winRate ?? 0"
+                />
+              </div>
+            </td>
+            <td
+              [class]="kdaVisual(row.kda).textClass"
+              class="px-4 py-3 text-right font-bold tabular-nums"
             >
-              <th class="px-5 py-3 text-left font-normal" scope="row">
-                <a
-                  [routerLink]="['/players', row.id]"
-                  class="flex items-center gap-3 hover:underline"
+              {{ formatKda(row.kda) }}
+            </td>
+            <td class="px-4 py-3 text-right tabular-nums text-text-primary">
+              {{ formatHeadshotPercentage(row.headshotPercentage) }}
+            </td>
+            <td class="px-4 py-3 text-right tabular-nums text-text-primary">
+              {{ row.matchesPlayed }}
+            </td>
+            <td class="px-5 py-3 text-right text-text-secondary">
+              <svg class="ml-auto h-4 w-4" lucideChevronRight></svg>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Card list, below `lg`. Carries the three statistics that rank players against each other;
+         the rest stays one tap away on the profile. -->
+    <ul class="lg:hidden">
+      @for (row of rows(); track row.id) {
+        <li class="border-b border-surface-700 last:border-b-0">
+          <a
+            [routerLink]="['/players', row.id]"
+            class="focus-ring-inset flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-surface-800"
+          >
+            <div class="flex items-center gap-3">
+              <app-avatar [src]="row.avatarUrl" size="md" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate font-semibold text-text-primary">{{ row.displayName }}</p>
+                <p class="truncate text-xs text-text-secondary">
+                  @if (row.tag) {
+                    #{{ row.tag }} ·
+                  }
+                  {{ row.matchesPlayed }} {{ 'players.columns.matchesPlayed' | translate }}
+                </p>
+              </div>
+              <div class="flex shrink-0 items-center gap-2">
+                <span
+                  [class]="row.tier.colorClass"
+                  class="h-3 w-3 shrink-0 bg-current [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+                ></span>
+                <p [class]="row.tier.colorClass" class="text-sm font-semibold">
+                  {{ row.tier.label }}
+                </p>
+              </div>
+            </div>
+
+            <dl class="grid grid-cols-3 gap-3 border-t border-surface-700 pt-3">
+              <div>
+                <dt class="text-xs tracking-wide text-text-secondary uppercase">
+                  {{ 'players.columns.winRate' | translate }}
+                </dt>
+                <dd
+                  [class]="winRateVisual(row.winRate).textClass"
+                  class="mt-0.5 font-bold tabular-nums"
                 >
-                  <app-avatar [src]="row.avatarUrl" size="md" />
-                  <div>
-                    <p class="font-semibold text-text-primary">{{ row.displayName }}</p>
-                    @if (row.tag) {
-                      <p class="text-xs text-text-secondary">#{{ row.tag }}</p>
-                    }
-                  </div>
-                </a>
-              </th>
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-2">
-                  <span
-                    [class]="row.tier.colorClass"
-                    class="h-3 w-3 shrink-0 bg-current [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
-                  ></span>
-                  <div>
-                    <p [class]="row.tier.colorClass" class="font-semibold">{{ row.tier.label }}</p>
-                    @if (row.rankRating !== null) {
-                      <p class="text-xs text-text-secondary">{{ row.rankRating }} RR</p>
-                    }
-                  </div>
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <div class="flex flex-col gap-1.5">
-                  <span
-                    [class]="winRateVisual(row.winRate).textClass"
-                    class="font-bold tabular-nums"
-                  >
-                    {{ formatWinRate(row.winRate) }}
-                  </span>
-                  <app-progress-bar
-                    class="w-16"
-                    [colorClass]="winRateVisual(row.winRate).barClass"
-                    [percentage]="row.winRate ?? 0"
-                  />
-                </div>
-              </td>
-              <td [class]="kdaVisual(row.kda).textClass" class="px-4 py-3 font-bold tabular-nums">
-                {{ formatKda(row.kda) }}
-              </td>
-              <td class="px-4 py-3 tabular-nums text-text-primary">
-                {{ formatHeadshotPercentage(row.headshotPercentage) }}
-              </td>
-              <td class="px-4 py-3 tabular-nums text-text-primary">{{ row.matchesPlayed }}</td>
-              <td class="px-5 py-3 text-right text-text-secondary">
-                <svg class="ml-auto h-4 w-4" lucideChevronRight></svg>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+                  {{ formatWinRate(row.winRate) }}
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs tracking-wide text-text-secondary uppercase">
+                  {{ 'players.columns.kda' | translate }}
+                </dt>
+                <dd [class]="kdaVisual(row.kda).textClass" class="mt-0.5 font-bold tabular-nums">
+                  {{ formatKda(row.kda) }}
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs tracking-wide text-text-secondary uppercase">
+                  {{ 'players.columns.headshotPercentage' | translate }}
+                </dt>
+                <dd class="mt-0.5 font-bold tabular-nums text-text-primary">
+                  {{ formatHeadshotPercentage(row.headshotPercentage) }}
+                </dd>
+              </div>
+            </dl>
+          </a>
+        </li>
+      }
+    </ul>
   </app-resource-state>
 </section>

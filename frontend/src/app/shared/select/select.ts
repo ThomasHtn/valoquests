@@ -1,4 +1,5 @@
 import {
+  afterRenderEffect,
   Component,
   computed,
   ElementRef,
@@ -108,6 +109,26 @@ export class Select<T> {
     const index = this.activeIndex();
     return this.isOpen() && index >= 0 ? this.optionId(index) : null;
   });
+
+  /**
+   * Registers the effect keeping the highlighted option visible once the panel scrolls.
+   *
+   * The panel only exposes `aria-activedescendant`, so nothing moves DOM focus and nothing scrolls
+   * the list on its own; without this, arrowing past the visible options would silently highlight
+   * something off-screen. Registered as an after-render effect rather than a plain one because the
+   * panel cannot be measured until its `hidden` attribute has been written to the DOM.
+   */
+  constructor() {
+    afterRenderEffect(() => {
+      const index = this.activeIndex();
+      if (!this.isOpen() || index < 0) {
+        return;
+      }
+
+      const host: HTMLElement = this.elementRef.nativeElement;
+      host.querySelector(`#${this.optionId(index)}`)?.scrollIntoView({ block: 'nearest' });
+    });
+  }
 
   /**
    * Builds the element id of the option at `index`.

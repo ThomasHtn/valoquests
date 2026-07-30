@@ -7,12 +7,18 @@
   {{ 'skipToContent' | translate }}
 </a>
 
-<div class="flex h-screen overflow-hidden bg-surface-950">
-  <!-- Persistent navigation sidebar, shown on every route. -->
+<!-- Navigation sits beside the content on desktop and below it on small screens, hence the
+     direction switch: the sidebar orders itself last under `lg` so it renders as a bottom tab bar
+     within the same DOM order. -->
+<div class="flex h-screen flex-col overflow-hidden bg-surface-950 lg:flex-row">
+  <!-- Persistent navigation, shown on every route. -->
   <app-sidebar />
 
-  <!-- Routed page content. -->
-  <main class="flex-1 overflow-y-auto p-6" id="main-content" tabindex="-1">
-    <router-outlet />
+  <!-- Routed page content. Capped in width so that on wide displays the eye is not dragged across
+       the full viewport between a table's first and last column. -->
+  <main class="flex-1 overflow-y-auto" id="main-content" tabindex="-1">
+    <div class="mx-auto w-full max-w-[1440px] p-4 sm:p-6">
+      <router-outlet />
+    </div>
   </main>
 </div>

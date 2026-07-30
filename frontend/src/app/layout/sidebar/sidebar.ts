@@ -19,11 +19,15 @@ import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './
 /**
  * Persistent navigation sidebar.
  *
- * Displays the primary navigation and the last synchronization time. Can be
- * collapsed to an icon-only rail.
+ * Displays the primary navigation and the last synchronization time. Renders as a vertical rail on
+ * `lg` and above, where it can be collapsed to icons only, and as a bottom tab bar below it.
+ *
+ * The host is `display: contents` so the inner `<aside>` is itself the flex item of the
+ * application shell, which is what lets it reorder from first (rail) to last (tab bar).
  */
 @Component({
   selector: 'app-sidebar',
+  host: { class: 'contents' },
   imports: [
     RouterLink,
     RouterLinkActive,
@@ -59,6 +63,36 @@ export class Sidebar {
    * Primary navigation entries.
    */
   protected readonly navItems = NAV_ITEMS;
+
+  /**
+   * Width utility applied to the rail, reflecting {@link collapsed}.
+   *
+   * Resolved here rather than through `[class.lg:w-20]` bindings because Angular class bindings
+   * cannot express a Tailwind variant prefix. Only applies from `lg` up, since below that
+   * breakpoint the navigation is a full-width tab bar.
+   */
+  protected readonly railWidthClass = computed(() => (this.collapsed() ? 'lg:w-20' : 'lg:w-64'));
+
+  /**
+   * Alignment utility applied to each navigation entry on the rail: centered once collapsed, so
+   * the icon sits in the middle of the icon-only rail, and leading otherwise.
+   *
+   * Both sides are resolved here rather than pairing a static `lg:justify-start` with a bound
+   * `lg:justify-center`, since two utilities of equal specificity would be settled by their order
+   * in the stylesheet instead of by the collapsed state. Never applies to the tab bar, whose
+   * entries are always centered.
+   */
+  protected readonly navItemClass = computed(() =>
+    this.collapsed() ? 'lg:justify-center' : 'lg:justify-start',
+  );
+
+  /**
+   * Visibility utility applied to each navigation label, hiding it on a collapsed rail.
+   *
+   * The label stays in the DOM rather than behind an `@if` so the tab bar, which always shows it,
+   * shares the same markup.
+   */
+  protected readonly navLabelClass = computed(() => (this.collapsed() ? 'lg:hidden' : ''));
 
   /**
    * Reactive resource fetching every tracked player's synchronization status.

@@ -32,14 +32,14 @@ public class SeasonController {
     }
 
     /**
-     * @return every known season, most recently discovered first
+     * @return every known season, most recent first
      */
     @GetMapping
     @Operation(
         summary = "List known seasons",
         description = """
-            Returns every season discovered from synchronized matches, most recently discovered
-            first, so clients can populate a match-history season filter.
+            Returns every season discovered from synchronized matches, most recent first, so
+            clients can populate a match-history season filter.
             """
     )
     @ApiResponse(responseCode = "200", description = "Seasons returned successfully.")

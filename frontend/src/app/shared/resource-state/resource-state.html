@@ -1,12 +1,38 @@
 @if (isLoading()) {
-  <!-- Loading state -->
-  <p [class]="padding()" class="text-sm text-text-secondary">{{ loadingText() }}</p>
+  <!-- Loading state. The projected skeleton mirrors the loaded layout so arriving data does not
+       shift the page; the status text carries the same information non-visually. -->
+  <div aria-busy="true">
+    <ng-content select="[skeleton]" />
+    <p class="sr-only" role="status">{{ loadingText() }}</p>
+  </div>
 } @else if (isError()) {
-  <!-- Error state -->
-  <p [class]="padding()" class="text-sm text-danger">{{ errorText() }}</p>
+  <!-- Error state, with the retry affordance the backing resource exposes through `reload()`. -->
+  <div [class]="padding()" class="flex flex-col items-center gap-3 text-center" role="alert">
+    <span
+      class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-danger/12 text-danger"
+    >
+      <svg class="h-5 w-5" lucideTriangleAlert></svg>
+    </span>
+    <p class="text-sm font-semibold text-text-primary">{{ errorText() }}</p>
+    <button
+      (click)="retry.emit()"
+      class="focus-ring flex min-h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-brand-500/45 bg-brand-500/12 px-3 py-1.5 text-sm font-semibold text-brand-400 transition-colors hover:bg-brand-500/20"
+      type="button"
+    >
+      <svg class="h-4 w-4 shrink-0" lucideRefreshCw></svg>
+      {{ retryLabel() }}
+    </button>
+  </div>
 } @else if (isEmpty()) {
   <!-- Empty state -->
-  <p [class]="padding()" class="text-sm text-text-secondary">{{ emptyText() }}</p>
+  <div [class]="padding()" class="flex flex-col items-center gap-3 text-center">
+    <span
+      class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-800 text-text-secondary"
+    >
+      <svg class="h-5 w-5" lucideInbox></svg>
+    </span>
+    <p class="text-sm text-text-secondary">{{ emptyText() }}</p>
+  </div>
 } @else {
   <ng-content />
 }

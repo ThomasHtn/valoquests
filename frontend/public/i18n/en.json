@@ -12,22 +12,50 @@
       "label": "Week {{number}}"
     },
     "weeklyChallenges": {
-      "completedPlayersTooltip": "Number of players who completed the challenge",
+      "completedCount": "{{completed}} of {{total}} completed",
+      "difficulty": {
+        "EASY": "Easy",
+        "HARD": "Hard",
+        "MEDIUM": "Medium",
+        "NORMAL": "Normal",
+        "VERY_HARD": "Very hard"
+      },
       "empty": "No challenge is active this week.",
       "error": "Failed to load the weekly challenges.",
       "loading": "Loading challenges…",
+      "metric": {
+        "ASSISTS": "Assists",
+        "DAMAGE_DEALT": "Damage",
+        "HEADSHOTS": "Headshots",
+        "KD": "K/D",
+        "KILLS": "Kills",
+        "MATCHES_PLAYED": "Matches",
+        "MATCHES_WON": "Wins",
+        "PLAY_DAY": "Days",
+        "ROUNDS_PLAYED": "Rounds",
+        "SCORE": "Score"
+      },
+      "playersUnit": "players",
+      "pointsTooltip": "Points awarded once the challenge is completed",
+      "progressTooltip": "{{completed}} of {{total}} players have completed this challenge",
       "title": "Weekly challenges"
     },
     "weeklyRanking": {
       "columns": {
         "player": "Player",
         "points": "Points",
-        "position": "#"
+        "position": "#",
+        "target": "Target {{value}}"
       },
+      "completed": "Challenge completed",
       "empty": "No ranking is available this week.",
       "error": "Failed to load the weekly ranking.",
       "loading": "Loading ranking…",
-      "title": "Weekly ranking"
+      "title": "Weekly ranking",
+      "variation": {
+        "down": "{{count}} place(s) lost",
+        "up": "{{count}} place(s) gained"
+      }
     }
   },
   "playerProfile": {
@@ -36,23 +64,21 @@
     },
     "error": "Failed to load this player's profile.",
     "filters": {
-      "allResults": "All results",
       "allSeasons": "All seasons",
-      "loss": "Losses",
-      "resultLabel": "Filter by result",
-      "seasonLabel": "Filter by season",
-      "win": "Wins"
+      "gameModeLabel": "Filter by game mode",
+      "reset": "Reset",
+      "seasonLabel": "Filter by season"
     },
     "loading": "Loading player profile…",
     "matches": {
       "columns": {
         "acs": "ACS",
+        "adr": "ADR",
         "headshotPercentage": "HS%",
         "kd": "K/D",
         "kda": "K/D/A",
         "map": "Map",
-        "mode": "Mode",
-        "result": "Result",
+        "match": "Match",
         "score": "Score"
       },
       "empty": "No match found for these filters.",
@@ -70,6 +96,7 @@
         "UNRATED": "Unrated"
       },
       "loading": "Loading match history…",
+      "loadingMore": "Loading more matches…",
       "result": {
         "DRAW": "Draw",
         "LOSS": "Loss",
@@ -77,11 +104,6 @@
         "UNKNOWN": "Unknown",
         "WIN": "Win"
       }
-    },
-    "pagination": {
-      "next": "Next",
-      "page": "Page {{page}} of {{total}}",
-      "previous": "Previous"
     },
     "stats": {
       "acs": "ACS",
@@ -107,7 +129,7 @@
     "empty": "No player is tracked yet.",
     "error": "Failed to load players.",
     "loading": "Loading players…",
-    "subtitle": "View detailed statistics for every tracked player.",
+    "subtitleCount": "{{count}} tracked players · all-season statistics",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -143,6 +165,7 @@
       "label": "Week {{number}}"
     }
   },
+  "retry": "Retry",
   "sidebar": {
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",

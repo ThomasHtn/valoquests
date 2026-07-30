@@ -68,6 +68,7 @@ class PlayerMatchRepositoryIntegrationTest
             null,
             null,
             null,
+            null,
             PageRequest.of(0, 10)
         );
 
@@ -90,10 +91,44 @@ class PlayerMatchRepositoryIntegrationTest
             "ascent",
             "jett",
             null,
+            null,
             PageRequest.of(0, 10)
         );
 
         assertThat(history.getTotalElements()).isEqualTo(1);
+    }
+
+    /**
+     * Ensures the {@code gameMode} filter keeps matching modes and excludes the others.
+     */
+    @Test
+    void shouldFilterHistoryByGameMode() {
+        Player player = createPlayer();
+        Season season = createSeason();
+        ValorantMatch match = createMatch(season);
+        playerMatchRepository.save(createPlayerMatch(player, match));
+
+        Page<PlayerMatch> competitive = playerMatchRepository.findHistory(
+            player.getId(),
+            null,
+            null,
+            null,
+            null,
+            GameMode.COMPETITIVE,
+            PageRequest.of(0, 10)
+        );
+        Page<PlayerMatch> deathmatch = playerMatchRepository.findHistory(
+            player.getId(),
+            null,
+            null,
+            null,
+            null,
+            GameMode.DEATHMATCH,
+            PageRequest.of(0, 10)
+        );
+
+        assertThat(competitive.getTotalElements()).isEqualTo(1);
+        assertThat(deathmatch.getTotalElements()).isZero();
     }
 
     private Player createPlayer() {

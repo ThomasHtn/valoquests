@@ -1,4 +1,4 @@
-import { computed, Resource, Signal } from '@angular/core';
+import { computed, Resource, ResourceRef, Signal } from '@angular/core';
 
 /**
  * Combines the loading state of several resources a single view depends on.
@@ -21,6 +21,18 @@ export function anyLoading(...resources: readonly Resource<unknown>[]): Signal<b
  */
 export function anyError(...resources: readonly Resource<unknown>[]): Signal<boolean> {
   return computed(() => resources.some((resource) => resource.error() !== undefined));
+}
+
+/**
+ * Reloads every resource a single view depends on.
+ *
+ * Counterpart to {@link anyLoading} and {@link anyError}: a view that reports the combined state of
+ * several resources must also retry all of them, since it cannot tell which one failed.
+ *
+ * @param resources - The resources backing the view.
+ */
+export function reloadAll(...resources: readonly ResourceRef<unknown>[]): void {
+  resources.forEach((resource) => resource.reload());
 }
 
 /**

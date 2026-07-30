@@ -19,7 +19,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
       </h1>
       <p class="text-sm text-text-secondary">{{ 'notFound.description' | translate }}</p>
       <a
-        class="mt-2 rounded-lg border border-surface-700 px-4 py-2 text-sm font-semibold text-text-primary transition-colors hover:bg-surface-800"
+        class="focus-ring mt-2 inline-flex min-h-10 items-center rounded-lg border border-surface-700 px-4 py-2 text-sm font-semibold text-text-primary transition-colors hover:bg-surface-800"
         routerLink="/"
       >
         {{ 'notFound.backToOverview' | translate }}

@@ -3,6 +3,59 @@
 @import './styles/colors.css';
 @import './styles/typography.css';
 
+@layer base {
+  html,
+  body {
+    /* `app.html`'s root layout already scrolls its own routed content (`main`) within a
+       `h-screen` shell; without this, `html` also grows to fit that content and gains its own
+       browser scrollbar alongside it. */
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    /* Dark grounds render text optically heavier; antialiasing keeps it crisp. */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/*
+ * Visible keyboard focus indicator.
+ *
+ * The user-agent default outline is nearly invisible against the `surface-950` ground, so every
+ * interactive element (link, button, row, listbox option) carries this utility instead. Uses
+ * `outline` rather than `box-shadow` so the indicator survives inside `overflow-clip` containers
+ * and never participates in layout.
+ */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+}
+
+/*
+ * Focus indicator for an element whose visible bounds are its own edges, such as a table row or a
+ * card filling its container. Drawn inside so it is not clipped by the surrounding surface.
+ */
+@utility focus-ring-inset {
+  &:focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: -2px;
+  }
+}
+
 /* Scrollbars, styled to match the dark surface palette instead of the OS default. */
 * {
   scrollbar-width: thin;

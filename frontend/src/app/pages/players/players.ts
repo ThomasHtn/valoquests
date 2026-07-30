@@ -22,7 +22,9 @@ import { PlayersApi } from '@core/players/players-api';
 import { Avatar } from '@shared/avatar/avatar';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ResourceState } from '@shared/resource-state/resource-state';
+import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { PlayerRow } from './players.model';
+import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 
 /**
  * Players list page.
@@ -34,6 +36,7 @@ import { PlayerRow } from './players.model';
   selector: 'app-players',
   imports: [TranslatePipe, RouterLink, LucideChevronRight, Avatar, ProgressBar, ResourceState],
   templateUrl: './players.html',
+  host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Players {
   /**
@@ -50,6 +53,11 @@ export class Players {
    * Reactive resource fetching every tracked player's summary.
    */
   protected readonly playersResource = this.playersApi.players;
+
+  /**
+   * Placeholder line widths driving the loading skeleton.
+   */
+  protected readonly skeletonRows = SKELETON_ROWS;
 
   /**
    * Tracked players mapped to display-ready rows, sorted by competitive tier (highest first) and,

@@ -7,6 +7,12 @@ import { Component, input } from '@angular/core';
  * and ranking progress) so they all render the exact same track. The host element is the track
  * itself; callers control its width with a plain `class` attribute (e.g. `class="w-16"` or
  * `class="flex-1"`) since that varies with the surrounding layout.
+ *
+ * Hidden from assistive technology: every call site renders the same value as adjacent text (for
+ * example `"61 %"` beside a win-rate bar, or `"3 / 7 joueurs"` beside a challenge bar), so the bar
+ * is a redundant visual encoding. Exposing it as a `progressbar` would make screen readers
+ * announce the same number twice. Any future call site that renders a bar *without* an adjacent
+ * textual value must expose the value itself rather than relying on this component.
  */
 @Component({
   selector: 'app-progress-bar',
@@ -14,6 +20,7 @@ import { Component, input } from '@angular/core';
   host: {
     class: 'block overflow-hidden rounded-full bg-surface-700',
     '[class]': 'heightClass()',
+    'aria-hidden': 'true',
   },
 })
 export class ProgressBar {

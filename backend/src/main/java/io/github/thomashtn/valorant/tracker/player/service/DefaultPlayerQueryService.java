@@ -1,6 +1,7 @@
 package io.github.thomashtn.valorant.tracker.player.service;
 
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
+import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valorant.tracker.player.dto.AgentStatisticsResponse;
@@ -12,7 +13,9 @@ import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundExcep
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -67,14 +70,16 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
      * Returns the detailed profile and aggregate statistics of one player.
      *
      * @param playerId internal player identifier
+     * @param seasonId optional season identifier restricting the statistics; {@code null} for every season
+     * @param gameMode optional game mode restricting the statistics; {@code null} for every mode
      * @return player details
      */
     @Override
-    public PlayerDetailsResponse findById(long playerId) {
+    public PlayerDetailsResponse findById(long playerId, Long seasonId, String gameMode) {
         Player player = playerRepository.findById(playerId)
             .orElseThrow(() -> new PlayerNotFoundException(playerId));
         List<PlayerMatch> matches = playerMatchRepository
-            .findAllByPlayerIdOrderByMatchStartedAtDesc(playerId);
+            .findAllByPlayerIdAndSeasonAndGameMode(playerId, seasonId, parseGameMode(gameMode));
         Statistics statistics = Statistics.from(matches);
 
         return new PlayerDetailsResponse(
@@ -162,6 +167,20 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
 
     private String riotId(Player player) {
         return player.getGameName() + "#" + player.getTagLine();
+    }
+
+    private GameMode parseGameMode(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return GameMode.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException(
+                "gameMode must be one of " + Arrays.toString(GameMode.values()),
+                exception
+            );
+        }
     }
 
     private record Statistics(

@@ -2,6 +2,7 @@ package io.github.thomashtn.valorant.tracker.match.service;
 
 import io.github.thomashtn.valorant.tracker.match.dto.MatchResponse;
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
+import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Arrays;
 import java.util.Locale;
 
 /**
@@ -63,6 +65,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
      * @param map      optional map name
      * @param agent    optional agent name
      * @param result   optional match result
+     * @param gameMode optional game mode
      * @return requested page of player matches
      */
     @Override
@@ -73,19 +76,22 @@ public class DefaultMatchQueryService implements MatchQueryService {
         Long seasonId,
         String map,
         String agent,
-        String result
+        String result,
+        String gameMode
     ) {
         validatePagination(page, size);
         if (!playerRepository.existsById(playerId)) {
             throw new PlayerNotFoundException(playerId);
         }
         MatchResult parsedResult = parseResult(result);
+        GameMode parsedGameMode = parseGameMode(gameMode);
         Page<PlayerMatch> matches = playerMatchRepository.findHistory(
             playerId,
             seasonId,
             normalize(map),
             normalize(agent),
             parsedResult,
+            parsedGameMode,
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "match.startedAt", "id"))
         );
         return new PageResponse<>(
@@ -136,6 +142,20 @@ public class DefaultMatchQueryService implements MatchQueryService {
             return MatchResult.valueOf(value.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
             throw new IllegalArgumentException("result must be WIN, LOSS or DRAW", exception);
+        }
+    }
+
+    private GameMode parseGameMode(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return GameMode.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException(
+                "gameMode must be one of " + Arrays.toString(GameMode.values()),
+                exception
+            );
         }
     }
 

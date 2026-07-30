@@ -3,7 +3,7 @@
   <button
     (click)="goToPreviousPage()"
     [disabled]="page() === 0"
-    class="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
+    class="focus-ring flex min-h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-sm font-semibold text-text-secondary transition-[background-color,color,scale] hover:bg-surface-800 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40 motion-safe:active:scale-[0.96]"
     type="button"
   >
     <svg class="h-4 w-4" lucideChevronLeft></svg>
@@ -13,7 +13,7 @@
   <button
     (click)="goToNextPage()"
     [disabled]="page() >= totalPages() - 1"
-    class="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
+    class="focus-ring flex min-h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-sm font-semibold text-text-secondary transition-[background-color,color,scale] hover:bg-surface-800 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40 motion-safe:active:scale-[0.96]"
     type="button"
   >
     {{ nextLabel() }}

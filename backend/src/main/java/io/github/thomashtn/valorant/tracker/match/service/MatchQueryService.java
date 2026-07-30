@@ -18,6 +18,7 @@ public interface MatchQueryService {
      * @param map optional map filter
      * @param agent optional agent filter
      * @param result optional match result filter
+     * @param gameMode optional game mode filter
      * @return a page containing matching player matches
      */
     PageResponse<MatchResponse> findByPlayer(
@@ -27,6 +28,7 @@ public interface MatchQueryService {
         Long seasonId,
         String map,
         String agent,
-        String result
+        String result,
+        String gameMode
     );
 }

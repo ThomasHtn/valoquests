@@ -1,11 +1,13 @@
+<!-- Navigation rail on `lg` and above, bottom tab bar below it. The two presentations share one
+     markup: only spacing, direction and the visibility of the wordmark and footer differ, so the
+     nav order and the active-route wiring are written once. -->
 <aside
   [attr.aria-label]="'sidebar.label' | translate"
-  [class.w-20]="collapsed()"
-  [class.w-64]="!collapsed()"
-  class="flex h-full shrink-0 flex-col justify-between bg-surface-900 px-3 py-6 transition-[width] duration-200"
+  [class]="railWidthClass()"
+  class="order-last flex shrink-0 flex-col border-t border-surface-700 bg-surface-900 lg:order-first lg:h-full lg:justify-between lg:border-t-0 lg:px-3 lg:py-6 lg:transition-[width] lg:duration-200 motion-reduce:lg:transition-none"
 >
   <div>
-    <div class="mb-4 border-b border-surface-700 pb-5">
+    <div class="mb-4 hidden border-b border-surface-700 pb-5 lg:block">
       @if (collapsed()) {
         <!-- Collapsed rail: the "V" mark doubles as the expand trigger, swapping to a chevron
              on hover instead of showing a separate always-visible button (ChatGPT-style). -->
@@ -13,7 +15,7 @@
           <button
             (click)="toggleCollapsed()"
             [attr.aria-label]="'sidebar.expand' | translate"
-            class="group relative flex h-11 w-14 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-linear-to-br from-brand-500/15 to-transparent transition-colors hover:bg-surface-800"
+            class="focus-ring group relative flex h-11 w-14 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-linear-to-br from-brand-500/15 to-transparent transition-colors hover:bg-surface-800"
             type="button"
           >
             <span
@@ -32,7 +34,7 @@
           <button
             (click)="toggleCollapsed()"
             [attr.aria-label]="'sidebar.collapse' | translate"
-            class="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-surface-800 text-text-primary transition-colors hover:bg-surface-700"
+            class="focus-ring flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-surface-800 text-text-primary transition-colors hover:bg-surface-700"
             type="button"
           >
             <svg class="block h-5 w-5 shrink-0" lucideMenu></svg>
@@ -63,21 +65,21 @@
     </div>
 
     <!-- Primary navigation. Each link shows a CDK/Material tooltip for its label so the collapsed
-         (icon-only) state stays usable. Entries without a routerLink have no page yet and render
-         as inert. -->
-    <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex flex-col gap-1">
+         (icon-only) rail stays usable; the tab bar always shows its labels instead. Entries without
+         a routerLink have no page yet and render as inert. -->
+    <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex lg:flex-col lg:gap-1">
       @for (item of navItems; track item.labelKey) {
         <a
           [attr.aria-disabled]="item.routerLink ? null : 'true'"
           [class.cursor-default]="!item.routerLink"
-          [class.justify-center]="collapsed()"
+          [class]="navItemClass()"
           [matTooltipDisabled]="!collapsed()"
           [matTooltip]="'sidebar.nav.' + item.labelKey | translate"
-          [routerLinkActiveOptions]="{ exact: true }"
+          [routerLinkActiveOptions]="{ exact: !!item.exactMatch }"
           [routerLink]="item.routerLink"
-          class="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary"
+          class="focus-ring-inset flex min-h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-2 py-2 text-[11px] font-medium text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary lg:min-h-0 lg:w-full lg:flex-none lg:flex-row lg:gap-3 lg:rounded-lg lg:px-3 lg:py-2.5 lg:text-sm"
           matTooltipPosition="right"
-          routerLinkActive="bg-surface-800 text-accent-purple"
+          routerLinkActive="text-accent-purple lg:bg-surface-800"
         >
           @switch (item.icon) {
             @case ('house') {
@@ -93,22 +95,20 @@
               <svg class="block h-5 w-5 shrink-0" lucideTrophy></svg>
             }
           }
-          @if (!collapsed()) {
-            <span>{{ 'sidebar.nav.' + item.labelKey | translate }}</span>
-          }
+          <span [class]="navLabelClass()">{{ 'sidebar.nav.' + item.labelKey | translate }}</span>
         </a>
       }
     </nav>
   </div>
 
-  <!-- Footer: last synchronization time -->
-  <div class="flex flex-col gap-3 pt-4">
+  <!-- Footer: last synchronization time. Rail only; the tab bar has no room for it. -->
+  <div class="hidden flex-col gap-3 pt-4 lg:flex">
     @if (collapsed()) {
       <div class="flex w-full justify-center">
         <button
           [attr.aria-label]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
           [matTooltip]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
-          class="flex h-9 w-9 cursor-default items-center justify-center rounded-lg text-text-muted"
+          class="focus-ring flex h-10 w-10 cursor-default items-center justify-center rounded-lg text-text-muted"
           matTooltipPosition="right"
           type="button"
         >

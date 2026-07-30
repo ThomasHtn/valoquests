@@ -2,6 +2,7 @@ import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal } from '@angular/core';
 
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
+import { GameMode } from '@core/matches/game-mode.model';
 
 import { PlayerDetails } from './player-details.model';
 import { PlayerSummary } from './player-summary.model';
@@ -22,14 +23,31 @@ export class PlayersApi {
   });
 
   /**
-   * Detailed profile and aggregated statistics of one tracked player.
+   * Detailed profile and aggregated statistics of one tracked player, scoped to one game mode and,
+   * optionally, one season.
    *
    * Created per caller, unlike {@link players}, since it is parameterized by the requested player.
    *
    * @param id - Reactive internal player identifier.
+   * @param gameMode - Reactive game mode the statistics are scoped to.
+   * @param seasonId - Reactive season filter, or `null` to include every season.
    * @returns The reactive resource fetching the requested player's detailed profile.
    */
-  public details(id: Signal<number>): HttpResourceRef<PlayerDetails | undefined> {
-    return httpResource<PlayerDetails>(() => API_ENDPOINTS.playerDetails(id()));
+  public details(
+    id: Signal<number>,
+    gameMode: Signal<GameMode>,
+    seasonId: Signal<number | null>,
+  ): HttpResourceRef<PlayerDetails | undefined> {
+    return httpResource<PlayerDetails>(() => {
+      const selectedSeasonId = seasonId();
+
+      return {
+        url: API_ENDPOINTS.playerDetails(id()),
+        params: {
+          gameMode: gameMode(),
+          ...(selectedSeasonId !== null ? { seasonId: selectedSeasonId } : {}),
+        },
+      };
+    });
   }
 }

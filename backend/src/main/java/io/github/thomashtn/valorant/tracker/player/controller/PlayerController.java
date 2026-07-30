@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -52,6 +53,8 @@ public class PlayerController {
 
     /**
      * @param playerId internal database identifier of the requested player
+     * @param seasonId optional season identifier restricting the statistics
+     * @param gameMode optional game mode restricting the statistics
      * @return complete player profile and aggregated statistics
      */
     @GetMapping("/{playerId}")
@@ -59,15 +62,20 @@ public class PlayerController {
         summary = "Get a player profile",
         description = """
             Returns a complete player profile containing Riot identity, current competitive rank,
-            global performance indicators and aggregated statistics by agent and map.
+            global performance indicators and aggregated statistics by agent and map, optionally
+            scoped to one season and/or one game mode.
             """
     )
     @ApiResponse(responseCode = "200", description = "Player profile returned successfully.")
     @ApiResponse(responseCode = "404", description = "No tracked player exists for the supplied identifier.")
         public PlayerDetailsResponse getPlayer(
         @Parameter(description = "Internal player identifier.", example = "3", required = true)
-        @PathVariable long playerId
+        @PathVariable long playerId,
+        @Parameter(description = "Restricts statistics to one season. Omit for every season.")
+        @RequestParam(required = false) Long seasonId,
+        @Parameter(description = "Restricts statistics to one game mode. Omit for every mode.")
+        @RequestParam(required = false) String gameMode
     ) {
-        return service.findById(playerId);
+        return service.findById(playerId, seasonId, gameMode);
     }
 }

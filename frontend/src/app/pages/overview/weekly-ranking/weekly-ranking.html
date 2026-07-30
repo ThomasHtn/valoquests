@@ -8,65 +8,214 @@
     [isError]="hasError()"
     [isLoading]="isLoading()"
     [loadingText]="'overview.weeklyRanking.loading' | translate"
+    (retry)="reload()"
   >
-    <!-- Ranking table -->
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead>
-          <tr
-            class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase"
-          >
-            <th class="px-5 py-3 text-left font-semibold" scope="col">
-              {{ 'overview.weeklyRanking.columns.position' | translate }}
-            </th>
-            <th class="px-2 py-3 text-left font-semibold" scope="col">
-              {{ 'overview.weeklyRanking.columns.player' | translate }}
-            </th>
-            <th class="px-4 py-3 text-left font-semibold" scope="col">
-              {{ 'overview.weeklyRanking.columns.points' | translate }}
-            </th>
-            @for (column of columns(); track column.challengeId) {
-              <th class="px-4 py-3 text-center font-semibold" scope="col">
-                <span
-                  [class]="[column.visual.iconClass, column.visual.badgeClass]"
-                  [matTooltip]="column.tooltip"
-                  class="mx-auto flex h-7 w-7 items-center justify-center rounded-full"
-                  matTooltipPosition="above"
-                >
-                  <span class="sr-only">{{ column.name }}</span>
-                  <app-challenge-icon-view [icon]="column.visual.icon" class="h-4 w-4" />
+    <ul skeleton>
+      @for (placeholder of skeletonRows; track $index) {
+        <li class="flex items-center gap-4 border-b border-surface-700 px-5 py-4 last:border-b-0">
+          <span class="h-8 w-8 shrink-0 rounded-md bg-surface-700"></span>
+          <span class="h-9 w-9 shrink-0 rounded-full bg-surface-700"></span>
+          <span class="h-3 rounded-full bg-surface-700" [style.width.%]="placeholder"></span>
+          <span class="ml-auto h-3 w-16 shrink-0 rounded-full bg-surface-700"></span>
+        </li>
+      }
+    </ul>
+
+    <!-- Ranking table, from `lg` up. -->
+    <table class="hidden w-full text-sm lg:table">
+      <thead class="bg-surface-800">
+        <tr class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase">
+          <th class="px-5 py-3 text-left font-semibold" scope="col">
+            {{ 'overview.weeklyRanking.columns.position' | translate }}
+          </th>
+          <th class="px-2 py-3 text-left font-semibold" scope="col">
+            {{ 'overview.weeklyRanking.columns.player' | translate }}
+          </th>
+          <th class="px-4 py-3 text-right font-semibold" scope="col">
+            {{ 'overview.weeklyRanking.columns.points' | translate }}
+          </th>
+          <!-- The challenge is named in the header rather than hidden in a tooltip: the tooltip sat
+               on a non-focusable span, so the only way to learn what a column measured was to hover
+               it with a mouse. It is kept as a supplement, since it also carries the description. -->
+          @for (column of columns(); track column.challengeId) {
+            <th class="px-4 py-3 text-center font-semibold" scope="col">
+              <span
+                [matTooltip]="column.tooltip"
+                class="flex flex-col items-center gap-1"
+                matTooltipPosition="above"
+              >
+                <span class="flex max-w-40 items-center justify-center gap-1.5">
+                  <span
+                    [class]="[column.visual.iconClass, column.visual.badgeClass]"
+                    class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+                  >
+                    <app-challenge-icon-view [icon]="column.visual.icon" class="h-3 w-3" />
+                  </span>
+                  <span [class]="column.visual.iconClass" class="truncate">{{
+                    column.categoryLabel
+                  }}</span>
                 </span>
-              </th>
-            }
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of rows(); track row.playerId) {
-            <tr
-              class="border-b border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800"
-            >
-              <td class="px-5 py-3">
+                @if (column.targetLabel) {
+                  <span class="font-normal text-text-muted normal-case tabular-nums">
+                    {{
+                      'overview.weeklyRanking.columns.target'
+                        | translate: { value: column.targetLabel }
+                    }}
+                  </span>
+                }
+              </span>
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.playerId) {
+          <!-- The row navigates to the player's profile as a whole, through the name cell's link
+               stretched over it by an `::after` overlay. Same pattern as the players table, so a
+               row means the same thing on both screens. -->
+          <tr
+            class="relative cursor-pointer border-b border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800 has-[a:focus-visible]:bg-surface-800 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
+          >
+            <td class="px-5 py-3">
+              <span class="flex items-center gap-2">
                 <span
                   [class]="positionBadgeClass(row.position)"
-                  class="flex h-8 w-8 items-center justify-center border text-sm font-bold tabular-nums [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+                  class="flex h-8 w-8 shrink-0 items-center justify-center border text-sm font-bold tabular-nums [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
                 >
                   {{ row.position }}
                 </span>
-              </td>
-              <th class="px-2 py-3 text-left font-normal" scope="row">
-                <div class="flex items-center gap-3">
-                  <app-avatar [src]="row.avatarUrl" size="sm" />
-                  <span class="font-semibold text-text-primary">{{ row.displayName }}</span>
-                </div>
-              </th>
-              <td class="px-4 py-3 font-bold tabular-nums text-accent-gold">{{ row.points }} XP</td>
-              @for (cell of row.cells; track cell.challengeId) {
-                <td class="px-4 py-3">
-                  <div class="flex flex-col items-center gap-1.5">
+                <ng-container
+                  [ngTemplateOutlet]="positionVariation"
+                  [ngTemplateOutletContext]="{ $implicit: row.positionVariation }"
+                />
+              </span>
+            </td>
+            <th class="px-2 py-3 text-left font-normal" scope="row">
+              <a
+                [routerLink]="['/players', row.playerId]"
+                class="flex items-center gap-3 after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+              >
+                <app-avatar [src]="row.avatarUrl" size="sm" />
+                <span class="font-semibold text-text-primary">{{ row.displayName }}</span>
+              </a>
+            </th>
+            <td class="px-4 py-3 text-right">
+              <app-points-badge [points]="row.points" />
+            </td>
+            <!-- The target is written once in the column header, so the cell keeps only the value
+                 the player is at. -->
+            @for (cell of row.cells; track cell.challengeId) {
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-center">
+                  @if (cell.completed) {
+                    <!-- Completion is carried by the value itself, as a badge, rather than by a
+                         separate check beside it: the number is what a player scans for, so that
+                         is where the "done" signal belongs. -->
                     <span
-                      [class]="cell.visual.iconClass"
-                      class="flex items-baseline gap-0.5 tabular-nums"
+                      [class]="[cell.visual.iconClass, cell.visual.badgeClass]"
+                      class="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums"
                     >
+                      {{ cell.currentValueLabel }}
+                      <svg aria-hidden="true" class="h-3 w-3" lucideCheck></svg>
+                      <span class="sr-only">{{
+                        'overview.weeklyRanking.completed' | translate
+                      }}</span>
+                    </span>
+                  } @else {
+                    <!-- The value sits inside the ring rather than above it: a separate badge
+                         only repeated the number the ring was already illustrating. The ring is
+                         sized up from the previous `h-8 w-8` so a two- or three-character value
+                         keeps a comfortable margin from the stroke. -->
+                    <div class="relative flex h-11 w-11 shrink-0 items-center justify-center">
+                      <app-progress-circle
+                        class="absolute inset-0 h-full w-full"
+                        [colorClass]="cell.visual.iconClass"
+                        [percentage]="cell.completionPercentage"
+                      />
+                      <span
+                        [class]="cell.visual.iconClass"
+                        class="relative text-xs font-bold tabular-nums"
+                      >
+                        {{ cell.currentValueLabel }}
+                      </span>
+                    </div>
+                  }
+                </div>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Card list, below `lg`. One card per player: the challenge columns become a labelled list,
+         since a column per weekly challenge cannot fit on a phone. -->
+    <ul class="lg:hidden">
+      @for (row of rows(); track row.playerId) {
+        <li
+          class="relative flex flex-col gap-3 border-b border-surface-700 px-4 py-4 transition-colors last:border-b-0 has-[a:focus-visible]:bg-surface-800 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              [class]="positionBadgeClass(row.position)"
+              class="flex h-8 w-8 shrink-0 items-center justify-center border text-sm font-bold tabular-nums [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+            >
+              {{ row.position }}
+            </span>
+            <ng-container
+              [ngTemplateOutlet]="positionVariation"
+              [ngTemplateOutletContext]="{ $implicit: row.positionVariation }"
+            />
+            <a
+              [routerLink]="['/players', row.playerId]"
+              class="flex min-w-0 flex-1 items-center gap-3 after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+            >
+              <app-avatar [src]="row.avatarUrl" size="sm" />
+              <span class="min-w-0 flex-1 truncate font-semibold text-text-primary">
+                {{ row.displayName }}
+              </span>
+            </a>
+            <app-points-badge class="shrink-0" [points]="row.points" />
+          </div>
+
+          <dl class="flex flex-col gap-2 border-t border-surface-700 pt-3">
+            @for (cell of row.cells; track cell.challengeId) {
+              <div class="flex items-center gap-3">
+                <span
+                  [class]="[cell.visual.iconClass, cell.visual.badgeClass]"
+                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+                >
+                  <app-challenge-icon-view [icon]="cell.visual.icon" class="h-3.5 w-3.5" />
+                </span>
+                <dt class="min-w-0 flex-1 truncate text-xs text-text-secondary">
+                  {{ cell.categoryLabel }}
+                </dt>
+                <!-- Fixed width, regardless of whether the bar is shown or of the badge's own
+                     content width: the bar's leading edge and the badge's trailing edge must both
+                     land at the same offset on every row, or the stacked bars read as misaligned. -->
+                <dd class="flex w-40 shrink-0 items-center gap-2">
+                  <!-- Dropped once completed: the badge already carries the "done" signal, and a
+                       full bar next to it would only repeat it. -->
+                  @if (!cell.completed) {
+                    <app-progress-bar
+                      class="w-14"
+                      [colorClass]="cell.visual.barClass"
+                      [percentage]="cell.completionPercentage"
+                    />
+                  }
+                  <!-- Completion is carried by the value itself, as a badge, rather than by a
+                       separate check beside the bar: the number is what a player scans for, so
+                       that is where the "done" signal belongs. `ms-auto` keeps it pinned to the
+                       trailing edge whether or not the bar above is present. -->
+                  <span
+                    [class]="
+                      cell.completed
+                        ? [cell.visual.iconClass, cell.visual.badgeClass]
+                        : cell.visual.iconClass
+                    "
+                    class="ms-auto flex items-center gap-1 rounded-full px-1.5 py-0.5"
+                  >
+                    <span class="flex items-baseline gap-0.5 tabular-nums">
                       <span class="text-xs font-bold">{{ cell.currentValueLabel }}</span>
                       @if (cell.targetValueLabel) {
                         <span class="text-xs font-normal opacity-50">/</span>
@@ -75,18 +224,45 @@
                         }}</span>
                       }
                     </span>
-                    <app-progress-bar
-                      class="w-16"
-                      [colorClass]="cell.visual.barClass"
-                      [percentage]="cell.completionPercentage"
-                    />
-                  </div>
-                </td>
-              }
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+                    @if (cell.completed) {
+                      <svg aria-hidden="true" class="h-3 w-3" lucideCheck></svg>
+                      <span class="sr-only">{{
+                        'overview.weeklyRanking.completed' | translate
+                      }}</span>
+                    }
+                  </span>
+                </dd>
+              </div>
+            }
+          </dl>
+        </li>
+      }
+    </ul>
   </app-resource-state>
 </app-collapsible-card>
+
+<!-- Places gained or lost since last week, shared by the table and the card list so a row means the
+     same thing at every width. The glyph and the count are hidden from assistive technology and
+     restated as a sentence; an unchanged position renders nothing at all, visually or for
+     assistive technology, since the position itself is announced right beside it. -->
+<ng-template #positionVariation let-variation>
+  @if (variation > 0) {
+    <span class="flex shrink-0 items-center text-xs font-bold tabular-nums text-accent-green">
+      <span aria-hidden="true" class="flex items-center">
+        <svg class="h-3 w-3" lucideChevronUp></svg>{{ variation }}
+      </span>
+      <span class="sr-only">
+        {{ 'overview.weeklyRanking.variation.up' | translate: { count: variation } }}
+      </span>
+    </span>
+  } @else if (variation < 0) {
+    <span class="flex shrink-0 items-center text-xs font-bold tabular-nums text-accent-red">
+      <span aria-hidden="true" class="flex items-center">
+        <svg class="h-3 w-3" lucideChevronDown></svg>{{ -variation }}
+      </span>
+      <span class="sr-only">
+        {{ 'overview.weeklyRanking.variation.down' | translate: { count: -variation } }}
+      </span>
+    </span>
+  }
+</ng-template>

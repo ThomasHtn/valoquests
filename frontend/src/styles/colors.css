@@ -32,6 +32,9 @@
   --color-accent-cyan: #2dd4bf;
   --color-accent-pink: #ec4899;
 
+  /* Podium (ranking positions) */
+  --color-podium-bronze: #c88a5a;
+
   /* Semantic states */
   --color-success: #34d399;
   --color-danger: #f87171;

@@ -20,7 +20,9 @@ public interface PlayerQueryService {
      * Returns the detailed profile of one tracked player.
      *
      * @param playerId internal player identifier
+     * @param seasonId optional season identifier restricting the statistics; {@code null} for every season
+     * @param gameMode optional game mode restricting the statistics; {@code null} for every mode
      * @return detailed player data
      */
-    PlayerDetailsResponse findById(long playerId);
+    PlayerDetailsResponse findById(long playerId, Long seasonId, String gameMode);
 }

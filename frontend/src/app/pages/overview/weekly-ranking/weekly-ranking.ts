@@ -1,24 +1,34 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
-import { LucideTrophy } from '@lucide/angular';
+import { RouterLink } from '@angular/router';
+import { LucideCheck, LucideChevronDown, LucideChevronUp, LucideTrophy } from '@lucide/angular';
 
 import { ChallengeIconView } from '@shared/challenge-icon-view/challenge-icon-view';
-import { resolveChallengeVisual } from '@core/challenges/challenge-visual.utils';
+import {
+  resolveChallengeMetricLabel,
+  resolveChallengeVisual,
+} from '@core/challenges/challenge-visual.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
-import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
+import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { CollapsibleCard } from '@shared/collapsible-card/collapsible-card';
+import { PointsBadge } from '@shared/points-badge/points-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
+import { ProgressCircle } from '@shared/progress-circle/progress-circle';
 import { ResourceState } from '@shared/resource-state/resource-state';
+import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { RankingCell, RankingColumn, RankingRow } from './weekly-ranking.model';
 import {
   buildCurrentValueLabel,
   buildTargetValueLabel,
   computeCompletionPercentage,
+  formatMetricValue,
 } from './weekly-ranking.utils';
 
 /**
@@ -32,12 +42,19 @@ import {
   selector: 'app-weekly-ranking',
   imports: [
     TranslatePipe,
+    NgTemplateOutlet,
+    RouterLink,
     ChallengeIconView,
     CollapsibleCard,
     MatTooltip,
     Avatar,
+    PointsBadge,
     ProgressBar,
+    ProgressCircle,
     ResourceState,
+    LucideCheck,
+    LucideChevronDown,
+    LucideChevronUp,
     LucideTrophy,
   ],
   templateUrl: './weekly-ranking.html',
@@ -53,6 +70,11 @@ export class WeeklyRanking {
    * column's icon and color treatment from its difficulty tier.
    */
   private readonly challengesApi = inject(ChallengesApi);
+
+  /**
+   * i18n service used to resolve each challenge's translated category label.
+   */
+  private readonly translation = inject(Translation);
 
   /**
    * Reactive resource fetching the current week's ranking.
@@ -82,7 +104,10 @@ export class WeeklyRanking {
   protected readonly columns = computed<readonly RankingColumn[]>(() =>
     (resourceValue(this.challengesResource, null)?.challenges ?? []).map((challenge) => ({
       challengeId: challenge.id,
-      name: challenge.name,
+      categoryLabel: resolveChallengeMetricLabel(challenge.metric, (key) =>
+        this.translation.translate(key),
+      ),
+      targetLabel: challenge.targetValue ? formatMetricValue(challenge.targetValue) : null,
       tooltip: `${challenge.name} — ${challenge.description}`,
       visual: resolveChallengeVisual(challenge.metric, challenge.difficulty),
     })),
@@ -100,15 +125,18 @@ export class WeeklyRanking {
         );
         return {
           challengeId: column.challengeId,
+          categoryLabel: column.categoryLabel,
           currentValueLabel: buildCurrentValueLabel(progress),
           targetValueLabel: buildTargetValueLabel(progress),
           completionPercentage: computeCompletionPercentage(progress),
+          completed: progress?.completed ?? false,
           visual: column.visual,
         };
       });
 
       return {
         position: entry.position,
+        positionVariation: entry.positionVariation,
         playerId: entry.player.id,
         displayName: entry.player.displayName,
         avatarUrl: resolvePlayerAvatarUrl(entry.player.portrait),
@@ -122,4 +150,19 @@ export class WeeklyRanking {
    * Resolves the badge classes for a row's position, exposed to the template.
    */
   protected readonly positionBadgeClass = resolvePositionBadgeClass;
+
+  /**
+   * Placeholder line widths driving the loading skeleton.
+   */
+  protected readonly skeletonRows = SKELETON_ROWS;
+
+  /**
+   * Reloads both backing resources after a failure.
+   *
+   * Both are retried because {@link hasError} reports their combined state and cannot tell which
+   * one failed.
+   */
+  protected reload(): void {
+    reloadAll(this.rankingResource, this.challengesResource);
+  }
 }

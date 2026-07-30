@@ -9,6 +9,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { COUNTDOWN_REFRESH_INTERVAL_MS } from './overview.constants';
 import { WeeklyChallenges } from './weekly-challenges/weekly-challenges';
 import { WeeklyRanking } from './weekly-ranking/weekly-ranking';
+import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 
 /**
  * Overview page.
@@ -21,6 +22,7 @@ import { WeeklyRanking } from './weekly-ranking/weekly-ranking';
   selector: 'app-overview',
   imports: [TranslatePipe, WeeklyChallenges, WeeklyRanking, LucideCalendar, LucideClock],
   templateUrl: './overview.html',
+  host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Overview {
   /**

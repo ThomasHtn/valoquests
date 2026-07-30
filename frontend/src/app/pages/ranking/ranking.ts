@@ -3,15 +3,18 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { formatDateRange, isoWeekNumber } from '@core/date/week-period.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
+import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { Pagination } from '@shared/pagination/pagination';
+import { PointsBadge } from '@shared/points-badge/points-badge';
 import { ResourceState } from '@shared/resource-state/resource-state';
+import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { RankingHistoryWeekView } from './ranking.model';
+import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 
 /**
  * Ranking history page.
@@ -21,8 +24,9 @@ import { RankingHistoryWeekView } from './ranking.model';
  */
 @Component({
   selector: 'app-ranking',
-  imports: [TranslatePipe, Avatar, Pagination, ResourceState],
+  imports: [TranslatePipe, Avatar, Pagination, PointsBadge, ResourceState],
   templateUrl: './ranking.html',
+  host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Ranking {
   /**
@@ -111,4 +115,19 @@ export class Ranking {
    * Resolves the badge classes for a row's position, exposed to the template.
    */
   protected readonly positionBadgeClass = resolvePositionBadgeClass;
+
+  /**
+   * Placeholder line widths driving the loading skeleton.
+   */
+  protected readonly skeletonRows = SKELETON_ROWS;
+
+  /**
+   * Reloads both backing resources after a failure.
+   *
+   * Both are retried because {@link hasError} reports their combined state and cannot tell which
+   * one failed.
+   */
+  protected reload(): void {
+    reloadAll(this.historyResource, this.playersResource);
+  }
 }

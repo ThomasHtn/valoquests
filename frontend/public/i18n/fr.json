@@ -12,22 +12,50 @@
       "label": "Semaine {{number}}"
     },
     "weeklyChallenges": {
-      "completedPlayersTooltip": "Nombre de joueurs ayant complété le défi",
+      "completedCount": "{{completed}} terminés sur {{total}}",
+      "difficulty": {
+        "EASY": "Facile",
+        "HARD": "Difficile",
+        "MEDIUM": "Moyen",
+        "NORMAL": "Normal",
+        "VERY_HARD": "Très difficile"
+      },
       "empty": "Aucun défi n'est actif cette semaine.",
       "error": "Impossible de charger les défis de la semaine.",
       "loading": "Chargement des défis…",
+      "metric": {
+        "ASSISTS": "Assists",
+        "DAMAGE_DEALT": "Dégâts",
+        "HEADSHOTS": "Headshots",
+        "KD": "K/D",
+        "KILLS": "Kills",
+        "MATCHES_PLAYED": "Matchs",
+        "MATCHES_WON": "Victoires",
+        "PLAY_DAY": "Jours",
+        "ROUNDS_PLAYED": "Rounds",
+        "SCORE": "Score"
+      },
+      "playersUnit": "joueurs",
+      "pointsTooltip": "Points accordés une fois le défi terminé",
+      "progressTooltip": "{{completed}} joueur(s) sur {{total}} ont terminé ce défi",
       "title": "Défis de la semaine"
     },
     "weeklyRanking": {
       "columns": {
         "player": "Joueur",
         "points": "Points",
-        "position": "#"
+        "position": "#",
+        "target": "Objectif {{value}}"
       },
+      "completed": "Défi terminé",
       "empty": "Aucun classement n'est disponible cette semaine.",
       "error": "Impossible de charger le classement de la semaine.",
       "loading": "Chargement du classement…",
-      "title": "Classement de la semaine"
+      "title": "Classement de la semaine",
+      "variation": {
+        "down": "{{count}} place(s) perdue(s)",
+        "up": "{{count}} place(s) gagnée(s)"
+      }
     }
   },
   "playerProfile": {
@@ -36,23 +64,21 @@
     },
     "error": "Impossible de charger le profil de ce joueur.",
     "filters": {
-      "allResults": "Tous les résultats",
       "allSeasons": "Toutes les saisons",
-      "loss": "Défaites",
-      "resultLabel": "Filtrer par résultat",
-      "seasonLabel": "Filtrer par saison",
-      "win": "Victoires"
+      "gameModeLabel": "Filtrer par mode de jeu",
+      "reset": "Réinitialiser",
+      "seasonLabel": "Filtrer par saison"
     },
     "loading": "Chargement du profil du joueur…",
     "matches": {
       "columns": {
         "acs": "ACS",
+        "adr": "ADR",
         "headshotPercentage": "HS%",
         "kd": "K/D",
         "kda": "K/D/A",
         "map": "Map",
-        "mode": "Mode",
-        "result": "Résultat",
+        "match": "Match",
         "score": "Score"
       },
       "empty": "Aucun match ne correspond à ces filtres.",
@@ -70,6 +96,7 @@
         "UNRATED": "Non classé"
       },
       "loading": "Chargement de l'historique des matchs…",
+      "loadingMore": "Chargement d'autres matchs…",
       "result": {
         "DRAW": "Nul",
         "LOSS": "Défaite",
@@ -77,11 +104,6 @@
         "UNKNOWN": "Inconnu",
         "WIN": "Victoire"
       }
-    },
-    "pagination": {
-      "next": "Suivant",
-      "page": "Page {{page}} sur {{total}}",
-      "previous": "Précédent"
     },
     "stats": {
       "acs": "ACS",
@@ -107,7 +129,7 @@
     "empty": "Aucun joueur suivi pour le moment.",
     "error": "Impossible de charger les joueurs.",
     "loading": "Chargement des joueurs…",
-    "subtitle": "Consultez les statistiques détaillées de tous les joueurs suivis.",
+    "subtitleCount": "{{count}} joueurs suivis · statistiques toutes saisons",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -143,6 +165,7 @@
       "label": "Semaine {{number}}"
     }
   },
+  "retry": "Réessayer",
   "sidebar": {
     "collapse": "Réduire la barre latérale",
     "expand": "Déplier la barre latérale",

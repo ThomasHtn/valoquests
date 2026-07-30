@@ -1,11 +1,14 @@
 /**
  * Border, background and text classes applied to a ranking row's position badge, from 1st place to
  * the neutral treatment used from 4th place onward.
+ *
+ * Third place uses its own bronze token rather than `accent-red`: that hue is the exact value of
+ * `--color-danger`, so a podium place was reading as an error state.
  */
 const PODIUM_BADGE_CLASSES: readonly string[] = [
   'border-accent-gold bg-accent-gold/20 text-accent-gold',
   'border-text-secondary bg-text-secondary/15 text-text-secondary',
-  'border-accent-red bg-accent-red/20 text-accent-red',
+  'border-podium-bronze bg-podium-bronze/20 text-podium-bronze',
 ];
 
 /**

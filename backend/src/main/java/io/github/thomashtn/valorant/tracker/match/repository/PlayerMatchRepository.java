@@ -68,6 +68,7 @@ public interface PlayerMatchRepository
               AND (:map IS NULL OR LOWER(valorantMatch.mapName) = LOWER(CAST(:map AS string)))
               AND (:agent IS NULL OR LOWER(playerMatch.agentName) = LOWER(CAST(:agent AS string)))
               AND (:result IS NULL OR playerMatch.result = :result)
+              AND (:gameMode IS NULL OR valorantMatch.gameMode = :gameMode)
             """
     )
     Page<PlayerMatch> findHistory(
@@ -76,11 +77,31 @@ public interface PlayerMatchRepository
         @Param("map") String map,
         @Param("agent") String agent,
         @Param("result") io.github.thomashtn.valorant.tracker.match.model.MatchResult result,
+        @Param("gameMode") io.github.thomashtn.valorant.tracker.match.model.GameMode gameMode,
         Pageable pageable
     );
 
     /** Returns all matches required to calculate one player's profile statistics. */
     @EntityGraph(attributePaths = {"match", "match.season"})
     List<PlayerMatch> findAllByPlayerIdOrderByMatchStartedAtDesc(Long playerId);
+
+    /** Returns the matches used to calculate one player's profile statistics, filtered by season and game mode. */
+    @EntityGraph(attributePaths = {"match", "match.season"})
+    @Query(
+        """
+            SELECT playerMatch
+            FROM PlayerMatch playerMatch
+            JOIN playerMatch.match valorantMatch
+            WHERE playerMatch.player.id = :playerId
+              AND (:seasonId IS NULL OR valorantMatch.season.id = :seasonId)
+              AND (:gameMode IS NULL OR valorantMatch.gameMode = :gameMode)
+            ORDER BY valorantMatch.startedAt DESC
+            """
+    )
+    List<PlayerMatch> findAllByPlayerIdAndSeasonAndGameMode(
+        @Param("playerId") Long playerId,
+        @Param("seasonId") Long seasonId,
+        @Param("gameMode") io.github.thomashtn.valorant.tracker.match.model.GameMode gameMode
+    );
 }
 
