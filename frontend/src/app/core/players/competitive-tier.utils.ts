@@ -129,3 +129,23 @@ export function resolveCompetitiveTierVisual(
     colorClass: TIER_GROUP_COLOR_CLASSES[group.key] ?? TIER_GROUP_COLOR_CLASSES['unranked'],
   };
 }
+
+/**
+ * Resolves the SVG icon path for a competitive tier, used by rank icon components to display
+ * tier badge visuals via NgOptimizedImage.
+ *
+ * Returns a path to `public/ranks/{tier-key}[-{number}].svg` matching the tier's group key
+ * and optional sub-rank number, or `null` if the tier cannot be resolved.
+ *
+ * @param tier - The player's competitive tier.
+ * @returns The relative path to the tier's SVG icon in the public folder, or `null` if unresolvable.
+ */
+export function resolveCompetitiveTierIconUrl(tier: CompetitiveTier): string | null {
+  const group = COMPETITIVE_TIER_GROUPS[tier];
+  if (!group) {
+    return null;
+  }
+
+  const filename = group.number ? `${group.key}-${group.number}` : group.key;
+  return `/ranks/${filename}.svg`;
+}

@@ -7,10 +7,10 @@ import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resou
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
-import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { Pagination } from '@shared/pagination/pagination';
 import { PointsBadge } from '@shared/points-badge/points-badge';
+import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { RankingHistoryWeekView } from './ranking.model';
@@ -24,7 +24,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
  */
 @Component({
   selector: 'app-ranking',
-  imports: [TranslatePipe, Avatar, Pagination, PointsBadge, ResourceState],
+  imports: [TranslatePipe, Avatar, Pagination, PointsBadge, PositionBadge, ResourceState],
   templateUrl: './ranking.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })
@@ -110,11 +110,6 @@ export class Ranking {
       })),
     }));
   });
-
-  /**
-   * Resolves the badge classes for a row's position, exposed to the template.
-   */
-  protected readonly positionBadgeClass = resolvePositionBadgeClass;
 
   /**
    * Placeholder line widths driving the loading skeleton.

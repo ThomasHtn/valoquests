@@ -5,6 +5,7 @@ import { LucideChevronRight } from '@lucide/angular';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import {
+  resolveCompetitiveTierIconUrl,
   resolveCompetitiveTierVisual,
   resolveTierOrdinal,
 } from '@core/players/competitive-tier.utils';
@@ -21,6 +22,7 @@ import { PlayerSummary } from '@core/players/player-summary.model';
 import { PlayersApi } from '@core/players/players-api';
 import { Avatar } from '@shared/avatar/avatar';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
+import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { PlayerRow } from './players.model';
@@ -34,7 +36,15 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
  */
 @Component({
   selector: 'app-players',
-  imports: [TranslatePipe, RouterLink, LucideChevronRight, Avatar, ProgressBar, ResourceState],
+  imports: [
+    TranslatePipe,
+    RouterLink,
+    LucideChevronRight,
+    Avatar,
+    ProgressBar,
+    RankIconView,
+    ResourceState,
+  ],
   templateUrl: './players.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })
@@ -100,8 +110,8 @@ export class Players {
   protected readonly formatHeadshotPercentage = formatHeadshotPercentage;
 
   /**
-   * Maps a tracked player's summary to a display-ready row, resolving its avatar and translated
-   * rank label.
+   * Maps a tracked player's summary to a display-ready row, resolving its avatar, rank icon,
+   * and translated rank label.
    *
    * @param player - The tracked player's summary.
    * @returns The corresponding display-ready row.
@@ -115,6 +125,7 @@ export class Players {
       tier: resolveCompetitiveTierVisual(player.competitiveTier, (key) =>
         this.translation.translate(key),
       ),
+      rankIconUrl: resolveCompetitiveTierIconUrl(player.competitiveTier),
       rankRating: player.rankRating,
       winRate: player.winRate,
       kda: player.kda,

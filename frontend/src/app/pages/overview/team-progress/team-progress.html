@@ -1,0 +1,91 @@
+<section
+  class="rounded-2xl border border-surface-700 bg-surface-900 bg-linear-to-br from-accent-green/10 to-transparent p-6 sm:p-8"
+>
+  <app-resource-state
+    (retry)="reload()"
+    [emptyText]="'overview.weeklyChallenges.empty' | translate"
+    [errorText]="'overview.weeklyChallenges.error' | translate"
+    [isEmpty]="totalCount() === 0"
+    [isError]="hasError()"
+    [isLoading]="isLoading()"
+    [loadingText]="'overview.weeklyChallenges.loading' | translate"
+    padding="py-10"
+  >
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <p class="text-xs font-bold tracking-widest text-accent-green uppercase">
+          {{ 'overview.teamProgress.eyebrow' | translate }}
+          @if (week(); as week) {
+            <span aria-hidden="true">·</span>
+            {{ 'overview.week.label' | translate: { number: week.number } }}
+          }
+        </p>
+        <h2 class="mt-1 max-w-prose text-xl font-extrabold text-text-primary sm:text-2xl">
+          {{ 'overview.teamProgress.heading' | translate }}
+        </h2>
+      </div>
+
+      @if (week(); as week) {
+        <p
+          class="flex shrink-0 items-center gap-1.5 text-sm font-bold tabular-nums text-text-primary"
+        >
+          <svg class="h-4 w-4 text-accent-purple" lucideClock></svg>
+          {{
+            'overview.week.countdown'
+              | translate
+                : {
+                    days: week.remaining.days,
+                    hours: week.remaining.hours,
+                    minutes: week.remaining.minutes,
+                  }
+          }}
+        </p>
+      }
+    </div>
+
+    <div class="mt-6">
+      <div class="flex items-baseline justify-between text-sm">
+        <span class="text-text-secondary">{{
+          'overview.teamProgress.progressLabel' | translate
+        }}</span>
+        <strong class="tabular-nums text-text-primary">
+          {{
+            'overview.weeklyChallenges.completedCount'
+              | translate: { completed: completedCount(), total: totalCount() }
+          }}
+        </strong>
+      </div>
+      <app-progress-bar
+        class="mt-2"
+        colorClass="bg-linear-to-r from-brand-500 to-accent-gold"
+        heightClass="h-3"
+        [percentage]="progressPercentage()"
+      />
+    </div>
+
+    @if (contributors().length) {
+      <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-surface-700 pt-5">
+        <ul class="flex -space-x-2">
+          @for (contributor of contributors(); track contributor.playerId) {
+            <li
+              [class.opacity-40]="!contributor.contributed"
+              class="relative rounded-full ring-2 ring-surface-900"
+            >
+              <app-avatar [src]="contributor.avatarUrl" size="sm" />
+              @if (contributor.contributed) {
+                <span
+                  class="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent-green ring-2 ring-surface-900"
+                >
+                  <svg class="h-2 w-2 text-surface-950" lucideCheck></svg>
+                </span>
+              }
+            </li>
+          }
+        </ul>
+        <span class="text-sm text-text-secondary">
+          {{ 'overview.teamProgress.contributors' | translate: { count: contributorsCount() } }}
+        </span>
+      </div>
+    }
+  </app-resource-state>
+</section>

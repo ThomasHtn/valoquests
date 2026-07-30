@@ -1,6 +1,11 @@
-<app-collapsible-card [heading]="'overview.weeklyRanking.title' | translate">
-  <svg cardIcon class="h-5 w-5 shrink-0 text-brand-500" lucideTrophy></svg>
+<div class="mb-6 flex items-center justify-center gap-2">
+  <svg class="h-6 w-6 shrink-0 text-brand-500" lucideTrophy></svg>
+  <h2 class="text-lg font-bold tracking-wide text-text-primary uppercase">
+    {{ 'overview.weeklyRanking.title' | translate }}
+  </h2>
+</div>
 
+<div class="overflow-hidden rounded-xl border border-surface-700 bg-surface-900">
   <app-resource-state
     [emptyText]="'overview.weeklyRanking.empty' | translate"
     [errorText]="'overview.weeklyRanking.error' | translate"
@@ -78,12 +83,7 @@
           >
             <td class="px-5 py-3">
               <span class="flex items-center gap-2">
-                <span
-                  [class]="positionBadgeClass(row.position)"
-                  class="flex h-8 w-8 shrink-0 items-center justify-center border text-sm font-bold tabular-nums [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
-                >
-                  {{ row.position }}
-                </span>
+                <app-position-badge [position]="row.position" />
                 <ng-container
                   [ngTemplateOutlet]="positionVariation"
                   [ngTemplateOutletContext]="{ $implicit: row.positionVariation }"
@@ -156,12 +156,7 @@
           class="relative flex flex-col gap-3 border-b border-surface-700 px-4 py-4 transition-colors last:border-b-0 has-[a:focus-visible]:bg-surface-800 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
         >
           <div class="flex items-center gap-3">
-            <span
-              [class]="positionBadgeClass(row.position)"
-              class="flex h-8 w-8 shrink-0 items-center justify-center border text-sm font-bold tabular-nums [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
-            >
-              {{ row.position }}
-            </span>
+            <app-position-badge [position]="row.position" />
             <ng-container
               [ngTemplateOutlet]="positionVariation"
               [ngTemplateOutletContext]="{ $implicit: row.positionVariation }"
@@ -239,7 +234,7 @@
       }
     </ul>
   </app-resource-state>
-</app-collapsible-card>
+</div>
 
 <!-- Places gained or lost since last week, shared by the table and the card list so a row means the
      same thing at every width. The glyph and the count are hidden from assistive technology and

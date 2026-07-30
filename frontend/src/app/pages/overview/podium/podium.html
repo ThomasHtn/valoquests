@@ -1,0 +1,73 @@
+<section
+  [attr.aria-label]="'overview.podium.title' | translate"
+  class="rounded-2xl border border-surface-700 bg-surface-950 bg-radial-[at_top] from-brand-900/50 to-transparent p-6 sm:p-8"
+>
+  <app-resource-state
+    (retry)="reload()"
+    [emptyText]="'overview.weeklyRanking.empty' | translate"
+    [errorText]="'overview.weeklyRanking.error' | translate"
+    [isEmpty]="entries().length === 0"
+    [isError]="!!rankingResource.error()"
+    [isLoading]="rankingResource.isLoading()"
+    [loadingText]="'overview.weeklyRanking.loading' | translate"
+    padding="py-10"
+  >
+    <!-- Podium spotlight: 1st place rendered larger and centered via `order`, so the DOM keeps its
+         natural reading order (1st, 2nd, 3rd) for assistive technology while the visual layout
+         reads as a podium. -->
+    <div class="flex items-end justify-center gap-4 sm:gap-10">
+      @for (entry of top3(); track entry.player.id) {
+        <a
+          [class.order-1]="entry.position === 2"
+          [class.order-2]="entry.position === 1"
+          [class.order-3]="entry.position === 3"
+          [routerLink]="['/players', entry.player.id]"
+          class="focus-ring flex flex-col items-center gap-2 rounded-xl px-2 py-1 text-center"
+        >
+          <div
+            [class.h-11]="entry.position !== 1"
+            [class.h-24]="entry.position === 1"
+            [class.w-11]="entry.position !== 1"
+            [class.w-24]="entry.position === 1"
+            class="flex shrink-0 items-center justify-center overflow-hidden [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+          >
+            <app-avatar
+              [priority]="entry.position === 1"
+              [size]="entry.position === 1 ? 'lg' : 'md'"
+              [src]="resolveAvatarUrl(entry.player.portrait)"
+            />
+          </div>
+          <p
+            [class]="podiumTextAccent(entry.position)"
+            class="text-xs font-bold tracking-wide uppercase"
+          >
+            {{ 'overview.podium.rank.' + entry.position | translate }}
+          </p>
+          <p class="text-sm font-extrabold text-text-primary sm:text-base">
+            {{ entry.player.displayName }}
+          </p>
+          <app-points-badge [points]="entry.points" />
+        </a>
+      }
+    </div>
+
+    <!-- Rest of the field: a compact preview of positions 4 and below, reusing the same hexagon
+         position badge as the full ranking table so the two widgets read as one system. -->
+    @if (rest().length) {
+      <ul class="mt-6 flex flex-wrap justify-center gap-2 border-t border-surface-700 pt-5">
+        @for (entry of rest(); track entry.player.id) {
+          <li>
+            <a
+              [routerLink]="['/players', entry.player.id]"
+              class="focus-ring-inset flex items-center gap-2 rounded-lg border border-surface-700 bg-surface-900 px-3 py-1.5 text-sm transition-colors hover:bg-surface-800"
+            >
+              <app-position-badge [position]="entry.position" size="sm" />
+              <span class="text-text-secondary">{{ entry.player.displayName }}</span>
+              <span class="font-bold tabular-nums text-accent-gold">{{ entry.points }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  </app-resource-state>
+</section>

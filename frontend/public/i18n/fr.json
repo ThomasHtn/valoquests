@@ -5,7 +5,33 @@
     "title": "Page introuvable"
   },
   "overview": {
-    "subtitle": "Suivez les défis de la semaine et le classement des joueurs.",
+    "podium": {
+      "rank": {
+        "1": "1re place",
+        "2": "2e place",
+        "3": "3e place"
+      },
+      "title": "Podium de la semaine"
+    },
+    "sections": {
+      "challenges": {
+        "ariaLabel": "Aller aux défis de la semaine"
+      },
+      "hero": {
+        "ariaLabel": "Aller à l'objectif de la semaine"
+      },
+      "navLabel": "Navigation de la vue d'ensemble",
+      "ranking": {
+        "ariaLabel": "Aller au classement"
+      }
+    },
+    "subtitle": "Affrontez les joueurs et vos amis à travers des défis Valorant, et complétez-les en équipe.",
+    "teamProgress": {
+      "contributors": "{{count}} joueur(s) ont contribué cette semaine",
+      "eyebrow": "Objectif d'équipe",
+      "heading": "Terminez les défis ensemble avant la fin de la semaine",
+      "progressLabel": "Progression collective"
+    },
     "title": "Vue d'ensemble",
     "week": {
       "countdown": "Fin dans {{days}}j {{hours}}h {{minutes}}m",

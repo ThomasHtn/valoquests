@@ -14,6 +14,7 @@ export interface PlayerRow {
   readonly tag: string | null;
   readonly avatarUrl: string | null;
   readonly tier: CompetitiveTierVisual;
+  readonly rankIconUrl: string | null;
   readonly rankRating: number | null;
   readonly winRate: number | null;
   readonly kda: number | null;

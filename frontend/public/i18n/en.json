@@ -5,7 +5,33 @@
     "title": "Page not found"
   },
   "overview": {
-    "subtitle": "Track the weekly challenges and the player ranking.",
+    "podium": {
+      "rank": {
+        "1": "1st place",
+        "2": "2nd place",
+        "3": "3rd place"
+      },
+      "title": "This week's podium"
+    },
+    "sections": {
+      "challenges": {
+        "ariaLabel": "Go to the weekly challenges"
+      },
+      "hero": {
+        "ariaLabel": "Go to the weekly objective"
+      },
+      "navLabel": "Overview navigation",
+      "ranking": {
+        "ariaLabel": "Go to the ranking"
+      }
+    },
+    "subtitle": "Face off against players and friends through Valorant challenges, and complete them as a team.",
+    "teamProgress": {
+      "contributors": "{{count}} player(s) contributed this week",
+      "eyebrow": "Team objective",
+      "heading": "Finish the challenges together before the week ends",
+      "progressLabel": "Collective progress"
+    },
     "title": "Overview",
     "week": {
       "countdown": "Ends in {{days}}d {{hours}}h {{minutes}}m",

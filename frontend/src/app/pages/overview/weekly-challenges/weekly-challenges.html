@@ -1,126 +1,96 @@
-<app-collapsible-card [heading]="'overview.weeklyChallenges.title' | translate">
-  <svg cardIcon class="h-5 w-5 shrink-0 text-brand-500" lucideTarget></svg>
+<div class="mb-6 flex items-center justify-center gap-2">
+  <svg class="h-6 w-6 shrink-0 text-brand-500" lucideTarget></svg>
+  <h2 class="text-lg font-bold tracking-wide text-text-primary uppercase">
+    {{ 'overview.weeklyChallenges.title' | translate }}
+  </h2>
+</div>
 
-  <span cardMeta class="text-xs font-medium text-text-secondary">
-    @if (rows().length) {
-      {{
-        'overview.weeklyChallenges.completedCount'
-          | translate: { completed: completedCount(), total: rows().length }
-      }}
-    }
-  </span>
-
-  <app-resource-state
-    (retry)="challengesResource.reload()"
-    [emptyText]="'overview.weeklyChallenges.empty' | translate"
-    [errorText]="'overview.weeklyChallenges.error' | translate"
-    [isEmpty]="rows().length === 0"
-    [isError]="!!challengesResource.error()"
-    [isLoading]="challengesResource.isLoading()"
-    [loadingText]="'overview.weeklyChallenges.loading' | translate"
-  >
-    <!-- Skeleton mirroring the loaded row grid, so data arriving does not shift the page. -->
-    <ul skeleton>
-      @for (placeholder of skeletonRows; track $index) {
-        <li
-          class="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 border-b border-surface-700 px-5 py-4 last:border-b-0 sm:grid-cols-[2.5rem_minmax(0,1fr)_5.5rem_1fr_16rem]"
-        >
-          <span class="col-start-1 row-start-1 h-10 w-10 rounded-full bg-surface-700"></span>
-          <span class="col-start-2 row-start-1 flex flex-col gap-2">
+<app-resource-state
+  (retry)="challengesResource.reload()"
+  [emptyText]="'overview.weeklyChallenges.empty' | translate"
+  [errorText]="'overview.weeklyChallenges.error' | translate"
+  [isEmpty]="rows().length === 0"
+  [isError]="!!challengesResource.error()"
+  [isLoading]="challengesResource.isLoading()"
+  [loadingText]="'overview.weeklyChallenges.loading' | translate"
+>
+  <!-- Skeleton mirroring the loaded vignette grid, so data arriving does not shift the page. -->
+  <ul class="grid grid-cols-1 gap-5 sm:grid-cols-2" skeleton>
+    @for (placeholder of skeletonRows; track $index) {
+      <li class="rounded-xl border border-surface-700 bg-surface-900 p-6">
+        <div class="flex items-start gap-4">
+          <span class="h-14 w-14 shrink-0 rounded-full bg-surface-700"></span>
+          <span class="flex min-w-0 flex-1 flex-col gap-2">
             <span [style.width.%]="placeholder" class="h-3 rounded-full bg-surface-700"></span>
             <span class="h-2.5 w-3/4 rounded-full bg-surface-700"></span>
           </span>
-          <span
-            class="col-span-2 col-start-2 row-start-2 flex flex-col items-end gap-1 sm:col-span-1 sm:col-start-5 sm:row-start-1"
-          >
-            <span class="hidden h-1.5 w-full rounded-full bg-surface-700 sm:block"></span>
-            <span class="h-2.5 w-20 rounded-full bg-surface-700"></span>
-          </span>
-          <span
-            class="col-start-3 row-start-1 h-6 w-full rounded-full bg-surface-700 sm:col-start-3"
-          ></span>
-        </li>
-      }
-    </ul>
+          <span class="h-6 w-16 shrink-0 rounded-full bg-surface-700"></span>
+        </div>
+        <span class="mt-5 block h-2 w-full rounded-full bg-surface-700"></span>
+      </li>
+    }
+  </ul>
 
-    <!-- Challenge rows. The points badge and the progress column both have a fixed width, with a
-         spacer between them absorbing the leftover space: the badge stays close to the title while
-         the completion count trails at the row's edge, and both land at the same offset on every
-         row. A content-sized track cannot be used here: each row is its own grid, so it would
-         resolve per row and stagger the bars. -->
-    <ul>
-      @for (row of rows(); track row.id) {
-        <li
-          class="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 border-b border-surface-700 px-5 py-4 transition-colors last:border-b-0 hover:bg-surface-800 sm:grid-cols-[2.5rem_minmax(0,1fr)_5.5rem_1fr_16rem]"
-        >
+  <!-- One vignette per challenge, two to a row from `sm` up. -->
+  <ul class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+    @for (row of rows(); track row.id) {
+      <li
+        class="rounded-xl border border-surface-700 bg-surface-900 p-6 transition-colors hover:bg-surface-800"
+      >
+        <div class="flex items-start gap-4">
           <div
             [class]="row.visual.badgeClass"
-            class="col-start-1 row-start-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
           >
             <app-challenge-icon-view
               [class]="row.visual.iconClass"
               [icon]="row.visual.icon"
-              class="h-5 w-5"
+              class="h-7 w-7"
             />
           </div>
 
-          <div class="col-start-2 row-start-1 min-w-0">
-            <p class="flex min-w-0 items-baseline gap-1.5">
-              <span class="text-sm font-semibold text-text-primary sm:truncate">{{
-                  row.name
-                }}</span>
+          <div class="min-w-0 flex-1">
+            <p class="flex flex-wrap items-baseline gap-1.5">
+              <span class="text-base font-semibold text-text-primary">{{ row.name }}</span>
               <span aria-hidden="true" class="shrink-0 text-text-muted">·</span>
-              <span [class]="row.visual.iconClass" class="shrink-0 text-[11px] font-medium">
+              <span [class]="row.visual.iconClass" class="shrink-0 text-xs font-medium">
                 {{ 'overview.weeklyChallenges.difficulty.' + row.difficulty | translate }}
               </span>
             </p>
-            <!-- Wraps below `sm`, where the bar is dropped and the description is what the row is
-                 for; truncates from `sm` up, where it shares its line with the progress column. -->
-            <p class="text-xs text-text-secondary sm:truncate">{{ row.description }}</p>
+            <p class="mt-1 text-sm text-text-secondary">{{ row.description }}</p>
           </div>
 
-          <div
-            class="col-span-2 col-start-2 row-start-2 flex flex-col items-end gap-3 sm:col-span-1 sm:col-start-5 sm:row-start-1"
-          >
-            <!-- The bar is hidden below `sm` so the description gets the row's width back. The
-                 count stays: it is the information the bar only illustrates. Wrapped rather than
-                 carrying `hidden sm:block` itself, since the component's host is already `block`
-                 and two display utilities of equal specificity would be settled by their order in
-                 the stylesheet. -->
-            <span
-              [matTooltip]="
-                'overview.weeklyChallenges.progressTooltip'
-                  | translate: { completed: row.completedPlayers, total: row.totalPlayers }
-              "
-              class="hidden w-full sm:block"
-              matTooltipPosition="above"
-            >
-              <app-progress-bar
-                [colorClass]="row.visual.barClass"
-                [percentage]="row.completionPercentage"
-                heightClass="h-1.5"
-              />
+          <app-points-badge
+            [matTooltip]="'overview.weeklyChallenges.pointsTooltip' | translate"
+            [points]="row.points"
+            class="shrink-0"
+            matTooltipPosition="above"
+          />
+        </div>
+
+        <div
+          [matTooltip]="
+            'overview.weeklyChallenges.progressTooltip'
+              | translate: { completed: row.completedPlayers, total: row.totalPlayers }
+          "
+          class="mt-5 flex items-center gap-3"
+          matTooltipPosition="above"
+        >
+          <app-progress-bar
+            [colorClass]="row.visual.barClass"
+            [percentage]="row.completionPercentage"
+            class="flex-1"
+            heightClass="h-2"
+          />
+          <p class="shrink-0 text-sm tabular-nums text-text-secondary">
+            <span class="font-bold">{{ row.completedPlayers }}</span>
+            <span>
+              / {{ row.totalPlayers }}
+              {{ 'overview.weeklyChallenges.playersUnit' | translate }}
             </span>
-            <!-- Sits under the bar, aligned on its right edge, and takes the description's colour:
-                 it reads as a caption of the row rather than as a second difficulty signal. -->
-            <p class="text-xs tabular-nums text-text-secondary">
-              <span class="font-bold">{{ row.completedPlayers }}</span>
-              <span>
-                / {{ row.totalPlayers }}
-                {{ 'overview.weeklyChallenges.playersUnit' | translate }}
-              </span>
-            </p>
-          </div>
-
-          <p class="col-start-3 row-start-1 flex justify-end sm:col-start-3">
-            <app-points-badge
-              [matTooltip]="'overview.weeklyChallenges.pointsTooltip' | translate"
-              [points]="row.points"
-              matTooltipPosition="above"
-            />
           </p>
-        </li>
-      }
-    </ul>
-  </app-resource-state>
-</app-collapsible-card>
+        </div>
+      </li>
+    }
+  </ul>
+</app-resource-state>

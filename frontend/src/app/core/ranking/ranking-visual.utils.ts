@@ -1,30 +1,32 @@
 /**
- * Border, background and text classes applied to a ranking row's position badge, from 1st place to
- * the neutral treatment used from 4th place onward.
+ * Text color applied to a ranking row's position badge, from 1st place to the neutral treatment
+ * used from 4th place onward. Drives the badge's hexagon fill and stroke too, through
+ * `currentColor`.
  *
  * Third place uses its own bronze token rather than `accent-red`: that hue is the exact value of
  * `--color-danger`, so a podium place was reading as an error state.
  */
-const PODIUM_BADGE_CLASSES: readonly string[] = [
-  'border-accent-gold bg-accent-gold/20 text-accent-gold',
-  'border-text-secondary bg-text-secondary/15 text-text-secondary',
-  'border-podium-bronze bg-podium-bronze/20 text-podium-bronze',
+const PODIUM_TEXT_CLASSES: readonly string[] = [
+  'text-accent-gold',
+  'text-text-secondary',
+  'text-podium-bronze',
 ];
 
 /**
  * Default badge treatment for positions outside the podium.
  */
-const DEFAULT_BADGE_CLASS = 'border-surface-600 bg-surface-700 text-text-secondary';
+const DEFAULT_TEXT_CLASS = 'text-text-secondary';
 
 /**
- * Resolves the badge classes for a ranking row's position, highlighting the podium (1st to 3rd)
- * with a distinct color per rank.
+ * Resolves the text color for a ranking row's position badge, highlighting the podium (1st to
+ * 3rd) with a distinct color per rank.
  *
- * Shared by the current-week ranking and the ranking history page so both read as one system.
+ * Shared by the position badge used on the podium, the current-week ranking and the ranking
+ * history page so all three read as one system.
  *
  * @param position - The player's 1-based ranking position.
- * @returns The Tailwind utility classes to apply to the position badge.
+ * @returns The Tailwind text color utility to apply to the position badge.
  */
 export function resolvePositionBadgeClass(position: number): string {
-  return PODIUM_BADGE_CLASSES[position - 1] ?? DEFAULT_BADGE_CLASS;
+  return PODIUM_TEXT_CLASSES[position - 1] ?? DEFAULT_TEXT_CLASS;
 }

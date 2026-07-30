@@ -14,11 +14,10 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
-import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Avatar } from '@shared/avatar/avatar';
-import { CollapsibleCard } from '@shared/collapsible-card/collapsible-card';
 import { PointsBadge } from '@shared/points-badge/points-badge';
+import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ProgressCircle } from '@shared/progress-circle/progress-circle';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -45,10 +44,10 @@ import {
     NgTemplateOutlet,
     RouterLink,
     ChallengeIconView,
-    CollapsibleCard,
     MatTooltip,
     Avatar,
     PointsBadge,
+    PositionBadge,
     ProgressBar,
     ProgressCircle,
     ResourceState,
@@ -145,11 +144,6 @@ export class WeeklyRanking {
       };
     });
   });
-
-  /**
-   * Resolves the badge classes for a row's position, exposed to the template.
-   */
-  protected readonly positionBadgeClass = resolvePositionBadgeClass;
 
   /**
    * Placeholder line widths driving the loading skeleton.

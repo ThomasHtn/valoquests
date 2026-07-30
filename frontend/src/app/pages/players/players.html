@@ -86,10 +86,11 @@
             </th>
             <td class="px-4 py-3">
               <div class="flex items-center gap-2">
-                <span
-                  [class]="row.tier.colorClass"
-                  class="h-3 w-3 shrink-0 bg-current [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
-                ></span>
+                <app-rank-icon-view
+                  [src]="row.rankIconUrl"
+                  [tierLabel]="row.tier.label"
+                  size="sm"
+                />
                 <div>
                   <p [class]="row.tier.colorClass" class="font-semibold">{{ row.tier.label }}</p>
                   @if (row.rankRating !== null) {
@@ -151,10 +152,11 @@
                 </p>
               </div>
               <div class="flex shrink-0 items-center gap-2">
-                <span
-                  [class]="row.tier.colorClass"
-                  class="h-3 w-3 shrink-0 bg-current [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
-                ></span>
+                <app-rank-icon-view
+                  [src]="row.rankIconUrl"
+                  [tierLabel]="row.tier.label"
+                  size="sm"
+                />
                 <p [class]="row.tier.colorClass" class="text-sm font-semibold">
                   {{ row.tier.label }}
                 </p>

@@ -54,15 +54,7 @@
 
       @if (tier(); as tierVisual) {
         <div class="flex items-center gap-3">
-          <span
-            [class]="tierVisual.colorClass"
-            class="flex h-14 w-14 shrink-0 items-center justify-center bg-current/15 [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
-          >
-            <span
-              [class]="tierVisual.colorClass"
-              class="h-7 w-7 bg-current [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
-            ></span>
-          </span>
+          <app-rank-icon-view [src]="rankIconUrl()" [tierLabel]="tierVisual.label" size="lg" />
           <div>
             <p [class]="tierVisual.colorClass" class="text-lg font-bold">{{ tierVisual.label }}</p>
             @if (playerDetails.rankRating !== null) {

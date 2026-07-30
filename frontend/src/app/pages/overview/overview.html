@@ -1,41 +1,69 @@
-<!-- Header -->
-<header class="flex flex-wrap items-start justify-between gap-4">
-  <div>
-    <h1 class="text-2xl font-bold tracking-wide text-text-primary uppercase">
-      {{ 'overview.title' | translate }}
-    </h1>
-    <p class="mt-1 text-sm text-text-secondary">
-      {{ 'overview.subtitle' | translate }}
-    </p>
+<h1 class="sr-only">{{ 'overview.title' | translate }}</h1>
+
+<!-- Outer column sized against the viewport (`dvh`) rather than `h-full`, since the ancestor
+     wrapper this page renders into (`app.html`'s `<main>` padding) has no definite height of its
+     own for a percentage to resolve against. The subtracted amount matches that ancestor's own
+     `p-4`/`sm:p-6` padding exactly. On mobile, where the sidebar collapses into a bottom tab bar
+     and shares height with `<main>`, this slightly overshoots `<main>`'s actual content height;
+     `<main>` already scrolls, so the only effect is a few extra pixels of scroll to fully reveal
+     the last section, not lost or clipped content. -->
+<div class="flex h-[calc(100dvh_-_2rem)] flex-col sm:h-[calc(100dvh_-_3rem)]">
+  <!-- Negative right margin cancels the ancestor's padding so this element's own box — and
+       therefore its scrollbar — reaches the true edge of the viewport, matching every other
+       page's scrollbar (rendered by `<main>` itself). The padding readded below restores the
+       equivalent visual inset for the content, plus extra room at `lg` for the dot rail. -->
+  <div
+    #scrollContainer
+    class="-mr-4 flex min-h-0 flex-1 snap-y snap-mandatory flex-col overflow-y-auto pr-4 motion-safe:scroll-smooth sm:-mr-6 sm:pr-6 lg:pr-20"
+    tabindex="0"
+  >
+    <section
+      #sectionRef
+      class="flex min-h-full shrink-0 flex-col justify-center gap-6 py-6 snap-start snap-always"
+      id="overview-hero"
+    >
+      <p
+        class="mx-auto max-w-2xl text-center text-lg font-bold tracking-tight text-text-secondary sm:text-xl md:text-2xl"
+      >
+        {{ 'overview.subtitle' | translate }}
+      </p>
+      <app-podium />
+      <app-team-progress [week]="week()" />
+    </section>
+
+    <section
+      #sectionRef
+      class="flex min-h-full shrink-0 flex-col justify-center py-6 snap-start snap-always"
+      id="overview-challenges"
+    >
+      <app-weekly-challenges />
+    </section>
+
+    <section
+      #sectionRef
+      class="flex min-h-full shrink-0 flex-col justify-center py-6 snap-start snap-always"
+      id="overview-ranking"
+    >
+      <app-weekly-ranking />
+    </section>
   </div>
-
-  @if (week(); as week) {
-    <div class="flex flex-wrap items-center gap-3 text-sm text-text-secondary">
-      <span class="flex items-center gap-1.5">
-        <svg class="h-4 w-4 text-accent-purple" lucideCalendar></svg>
-        {{ 'overview.week.label' | translate: { number: week.number } }}
-      </span>
-      <span aria-hidden="true" class="shrink-0 text-text-muted">·</span>
-      <span>{{ week.dateRange }}</span>
-      <span class="h-4 w-px bg-surface-700"></span>
-      <span class="flex items-center gap-1.5">
-        <svg class="h-4 w-4 text-accent-purple" lucideClock></svg>
-        {{
-          'overview.week.countdown'
-            | translate
-            : {
-              days: week.remaining.days,
-              hours: week.remaining.hours,
-              minutes: week.remaining.minutes,
-            }
-        }}
-      </span>
-    </div>
-  }
-</header>
-
-<!-- Weekly widgets -->
-<div class="flex flex-col gap-6">
-  <app-weekly-challenges />
-  <app-weekly-ranking />
 </div>
+
+<!-- Desktop-only: on touch devices, the same sections are already reachable with a natural swipe
+     per section, so a second, more cramped navigation aid is not added there. -->
+<nav
+  [attr.aria-label]="'overview.sections.navLabel' | translate"
+  class="pointer-events-none absolute top-1/2 right-2 hidden -translate-y-1/2 flex-col gap-3 sm:right-4 lg:flex"
+>
+  @for (section of sections; track section.id) {
+    <button
+      (click)="scrollToSection(section.id)"
+      [attr.aria-current]="activeSectionId() === section.id ? 'true' : null"
+      [attr.aria-label]="section.ariaLabelKey | translate"
+      [class.bg-brand-500]="activeSectionId() === section.id"
+      [class.bg-surface-600]="activeSectionId() !== section.id"
+      class="focus-ring pointer-events-auto h-2.5 w-2.5 shrink-0 rounded-full transition-colors hover:bg-brand-400"
+      type="button"
+    ></button>
+  }
+</nav>

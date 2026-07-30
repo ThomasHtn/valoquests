@@ -1,0 +1,9 @@
+@if (src(); as iconUrl) {
+  <img
+    [height]="metrics().pixels"
+    [ngSrc]="iconUrl"
+    [width]="metrics().pixels"
+    [alt]="tierLabel()"
+    class="shrink-0"
+  />
+}

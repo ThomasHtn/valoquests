@@ -33,7 +33,10 @@ import { Season } from '@core/matches/season.model';
 import { SeasonsApi } from '@core/matches/seasons-api';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { resolveCompetitiveTierVisual } from '@core/players/competitive-tier.utils';
+import {
+  resolveCompetitiveTierIconUrl,
+  resolveCompetitiveTierVisual,
+} from '@core/players/competitive-tier.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import {
   extractRiotTag,
@@ -46,6 +49,7 @@ import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/player-sta
 import { PlayersApi } from '@core/players/players-api';
 import { Avatar } from '@shared/avatar/avatar';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
+import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { Select } from '@shared/select/select';
@@ -68,6 +72,7 @@ import { groupMatchesByDay } from './match-day.utils';
     RouterLink,
     Avatar,
     ProgressBar,
+    RankIconView,
     ResourceState,
     Select,
     LucideActivity,
@@ -309,6 +314,14 @@ export class PlayerProfile {
     return resolveCompetitiveTierVisual(details.competitiveTier, (key) =>
       this.translation.translate(key),
     );
+  });
+
+  /**
+   * SVG icon path for the player's current competitive rank, or `null` if unavailable.
+   */
+  protected readonly rankIconUrl = computed(() => {
+    const details = this.details();
+    return details ? resolveCompetitiveTierIconUrl(details.competitiveTier) : null;
   });
 
   /**

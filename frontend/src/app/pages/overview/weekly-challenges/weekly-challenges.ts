@@ -7,7 +7,6 @@ import { resolveChallengeVisual } from '@core/challenges/challenge-visual.utils'
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { CollapsibleCard } from '@shared/collapsible-card/collapsible-card';
 import { PointsBadge } from '@shared/points-badge/points-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -17,14 +16,14 @@ import { ChallengeRow } from './weekly-challenges.model';
 /**
  * "Weekly challenges" card of the overview page.
  *
- * Displays the collective completion progress of every challenge selected for the active week.
+ * Displays the collective completion progress of every challenge selected for the active week, one
+ * vignette per challenge.
  */
 @Component({
   selector: 'app-weekly-challenges',
   imports: [
     TranslatePipe,
     ChallengeIconView,
-    CollapsibleCard,
     MatTooltip,
     PointsBadge,
     ProgressBar,
@@ -64,17 +63,5 @@ export class WeeklyChallenges {
       points: challenge.points,
       visual: resolveChallengeVisual(challenge.metric, challenge.difficulty),
     })),
-  );
-
-  /**
-   * Number of challenges every tracked player has completed, shown as a summary in the card header.
-   *
-   * A challenge counts as done only once the whole group has cleared it, since the card reports
-   * collective rather than individual progress.
-   */
-  protected readonly completedCount = computed(
-    () =>
-      this.rows().filter((row) => row.totalPlayers > 0 && row.completedPlayers === row.totalPlayers)
-        .length,
   );
 }
