@@ -87,7 +87,7 @@ class CountMatchesChallengeProgressCalculatorTest {
             ChallengeMetric.KD,
             ChallengeOperator.GTE,
             BigDecimal.ONE,
-            ChallengeGameMode.SWIFTPLAY,
+            ChallengeGameMode.DEATHMATCH,
             null,
             ChallengeScope.PER_MATCH,
             1,
@@ -103,7 +103,7 @@ class CountMatchesChallengeProgressCalculatorTest {
         );
 
         PlayerChallengeContext context = createContext(
-            createMatch(GameMode.SWIFTPLAY, 5, 0)
+            createMatch(GameMode.DEATHMATCH, 5, 0)
         );
 
         ChallengeProgressResult result =

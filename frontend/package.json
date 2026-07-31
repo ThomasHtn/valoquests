@@ -14,12 +14,10 @@
   "private": true,
   "packageManager": "npm@10.9.8",
   "dependencies": {
-    "@angular/cdk": "^22.0.6",
     "@angular/common": "^22.0.0",
     "@angular/compiler": "^22.0.0",
     "@angular/core": "^22.0.0",
     "@angular/forms": "^22.0.0",
-    "@angular/material": "^22.0.6",
     "@angular/platform-browser": "^22.0.0",
     "@angular/router": "^22.0.0",
     "@lucide/angular": "^1.27.0",

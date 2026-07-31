@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,21 +158,50 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Converts an intentionally unimplemented application feature into HTTP
-     * 501.
+     * Handles a request addressed to a route this API does not expose.
      *
-     * @param exception exception raised for an unfinished feature
+     * <p>Without this handler an unknown path falls through to the catch-all below and is reported
+     * as an internal error, telling a caller the server broke when it merely asked for something
+     * that does not exist.
+     *
+     * @param exception exception raised for an unmapped path
      * @param request current HTTP request
-     * @return standardized HTTP 501 response
+     * @return standardized HTTP 404 response
      */
-    @ExceptionHandler(FeatureNotImplementedException.class)
-    ResponseEntity<ApiErrorResponse> handleFeatureNotImplemented(
-        FeatureNotImplementedException exception,
+    @ExceptionHandler(NoResourceFoundException.class)
+    ResponseEntity<ApiErrorResponse> handleNoResourceFound(
+        NoResourceFoundException exception,
         HttpServletRequest request
     ) {
         return buildResponse(
-            HttpStatus.NOT_IMPLEMENTED,
-            "FEATURE_NOT_IMPLEMENTED",
+            HttpStatus.NOT_FOUND,
+            "RESOURCE_NOT_FOUND",
+            "The requested resource does not exist.",
+            request,
+            Map.of()
+        );
+    }
+
+    /**
+     * Handles a request whose HTTP method the matched route does not accept.
+     *
+     * <p>Without this handler the request falls through to the catch-all below and is reported as an
+     * internal error, blaming the server for a caller mistake. It surfaced when the deep
+     * synchronization routes were removed: {@code POST /api/admin/synchronizations/deep} now matches
+     * the synchronization-details route, which only serves GET.
+     *
+     * @param exception exception raised for an unsupported HTTP method
+     * @param request current HTTP request
+     * @return standardized HTTP 405 response
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    ResponseEntity<ApiErrorResponse> handleMethodNotSupported(
+        HttpRequestMethodNotSupportedException exception,
+        HttpServletRequest request
+    ) {
+        return buildResponse(
+            HttpStatus.METHOD_NOT_ALLOWED,
+            "METHOD_NOT_ALLOWED",
             exception.getMessage(),
             request,
             Map.of()

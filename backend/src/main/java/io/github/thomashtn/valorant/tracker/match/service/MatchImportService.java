@@ -7,6 +7,7 @@ import io.github.thomashtn.valorant.tracker.henrik.dto.match.HenrikMatchPlayer;
 import io.github.thomashtn.valorant.tracker.henrik.mapper.HenrikMatchMapper;
 import io.github.thomashtn.valorant.tracker.match.entity.Season;
 import io.github.thomashtn.valorant.tracker.match.entity.ValorantMatch;
+import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 import io.github.thomashtn.valorant.tracker.match.model.MatchImportResult;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valorant.tracker.match.repository.ValorantMatchRepository;
@@ -66,21 +67,6 @@ public class MatchImportService {
     }
 
     /**
-     * Imports every valid match and returns the number of inserted associations.
-     *
-     * @param player tracked player
-     * @param response Henrik match-history response
-     * @return number of newly imported player-match associations
-     */
-    @Transactional
-    public int importMatches(
-        Player player,
-        HenrikMatchHistoryResponse response
-    ) {
-        return processMatches(player, response).imported();
-    }
-
-    /**
      * Imports a Henrik page and exposes enough detail for safe pagination.
      *
      * @param player tracked player
@@ -92,29 +78,14 @@ public class MatchImportService {
         Player player,
         HenrikMatchHistoryResponse response
     ) {
-        return processMatches(player, response);
-    }
-
-    /**
-     * Performs the shared import algorithm for both public transactional entry points.
-     *
-     * @param player tracked player
-     * @param response Henrik match-history response
-     * @return detailed import counters
-     */
-    private MatchImportResult processMatches(
-        Player player,
-        HenrikMatchHistoryResponse response
-    ) {
         Objects.requireNonNull(player, "player must not be null");
         Objects.requireNonNull(response, "response must not be null");
 
-        List<HenrikMatchData> matches = response.data() == null
-            ? List.of()
-            : response.data();
+        List<HenrikMatchData> matches = response.data();
         int imported = 0;
         int alreadyKnown = 0;
         int rejected = 0;
+        int skipped = 0;
 
         for (HenrikMatchData source : matches) {
             ImportOutcome outcome = importMatch(player, source);
@@ -122,6 +93,7 @@ public class MatchImportService {
                 case IMPORTED -> imported++;
                 case ALREADY_KNOWN -> alreadyKnown++;
                 case REJECTED -> rejected++;
+                case SKIPPED -> skipped++;
             }
         }
 
@@ -129,16 +101,19 @@ public class MatchImportService {
             matches.size(),
             imported,
             alreadyKnown,
-            rejected
+            rejected,
+            skipped
         );
 
         LOGGER.debug(
-            "Processed Henrik response for player {}: received={} imported={} alreadyKnown={} rejected={}",
+            "Processed Henrik response for player {}: received={} imported={} alreadyKnown={} "
+                + "rejected={} skipped={}",
             player.getId(),
             result.received(),
             result.imported(),
             result.alreadyKnown(),
-            result.rejected()
+            result.rejected(),
+            result.skipped()
         );
         return result;
     }
@@ -150,10 +125,12 @@ public class MatchImportService {
         Player player,
         HenrikMatchData source
     ) {
-        if (!isImportable(source)) {
+        String rejectionReason = findRejectionReason(source);
+        if (rejectionReason != null) {
             LOGGER.debug(
-                "Ignoring malformed or incomplete Henrik match for player {}",
-                player.getId()
+                "Ignoring Henrik match for player {}: {}",
+                player.getId(),
+                rejectionReason
             );
             return ImportOutcome.REJECTED;
         }
@@ -169,6 +146,20 @@ public class MatchImportService {
         }
 
         HenrikMatchMetadata metadata = source.metadata();
+
+        // Checked before any lookup so an ignored mode never creates a match row. An unresolved
+        // queue is eligible on purpose: see GameMode.OTHER.
+        GameMode gameMode = mapper.resolveGameMode(metadata);
+        if (!gameMode.isImportEligible()) {
+            LOGGER.debug(
+                "Skipping Henrik match {} for player {}: game mode {} is not imported",
+                metadata.matchId(),
+                player.getId(),
+                gameMode
+            );
+            return ImportOutcome.SKIPPED;
+        }
+
         ValorantMatch match = matchRepository
             .findByExternalMatchId(metadata.matchId())
             .orElseGet(() -> createMatch(source));
@@ -193,20 +184,35 @@ public class MatchImportService {
 
     /**
      * Validates the minimum payload required to persist a match.
+     *
+     * <p>Names the failed precondition rather than returning a bare boolean: a whole game mode
+     * disappearing because Henrik systematically omits one field is otherwise indistinguishable from
+     * the player simply not having played it.
+     *
+     * @param source Henrik match payload
+     * @return the unmet precondition, or {@code null} when the match can be persisted
      */
-    private boolean isImportable(HenrikMatchData source) {
+    private String findRejectionReason(HenrikMatchData source) {
         if (source == null || source.metadata() == null) {
-            return false;
+            return "the payload carries no metadata";
         }
 
         HenrikMatchMetadata metadata = source.metadata();
-        return Boolean.TRUE.equals(metadata.completed())
-            && metadata.matchId() != null
-            && !metadata.matchId().isBlank()
-            && metadata.startedAt() != null
-            && metadata.season() != null
-            && metadata.season().id() != null
-            && !metadata.season().id().isBlank();
+        if (!Boolean.TRUE.equals(metadata.completed())) {
+            return "the match is not completed";
+        }
+        if (metadata.matchId() == null || metadata.matchId().isBlank()) {
+            return "the match identifier is missing";
+        }
+        if (metadata.startedAt() == null) {
+            return "the start instant is missing";
+        }
+        if (metadata.season() == null
+            || metadata.season().id() == null
+            || metadata.season().id().isBlank()) {
+            return "the season identifier is missing for match " + metadata.matchId();
+        }
+        return null;
     }
 
     /**
@@ -246,6 +252,7 @@ public class MatchImportService {
     private enum ImportOutcome {
         IMPORTED,
         ALREADY_KNOWN,
-        REJECTED
+        REJECTED,
+        SKIPPED
     }
 }

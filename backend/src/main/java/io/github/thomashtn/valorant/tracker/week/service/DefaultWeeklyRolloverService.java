@@ -3,6 +3,7 @@ package io.github.thomashtn.valorant.tracker.week.service;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
+import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valorant.tracker.challenge.service.WeeklyChallengeSelectionService;
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
@@ -71,6 +72,13 @@ public class DefaultWeeklyRolloverService
         weeklyChallengeSelectionService;
 
     /**
+     * Service used to refresh the closing week's progress before it is frozen.
+     */
+    private final ChallengeRecalculationService
+
+        challengeRecalculationService;
+
+    /**
      * Application clock used for deterministic week calculations.
      */
     private final Clock clock;
@@ -82,6 +90,7 @@ public class DefaultWeeklyRolloverService
      * @param weeklyPlayerScoreRepository     weekly score repository
      * @param rankingRecalculationService     ranking recalculation service
      * @param weeklyChallengeSelectionService challenge selection service
+     * @param challengeRecalculationService   challenge progress recalculation service
      * @param clock                           application clock
      */
     @SuppressFBWarnings(
@@ -93,6 +102,7 @@ public class DefaultWeeklyRolloverService
         WeeklyPlayerScoreRepository weeklyPlayerScoreRepository,
         RankingRecalculationService rankingRecalculationService,
         WeeklyChallengeSelectionService weeklyChallengeSelectionService,
+        ChallengeRecalculationService challengeRecalculationService,
         Clock clock
     ) {
         this.weeklyChallengeRepository =
@@ -106,6 +116,9 @@ public class DefaultWeeklyRolloverService
 
         this.weeklyChallengeSelectionService =
             weeklyChallengeSelectionService;
+
+        this.challengeRecalculationService =
+            challengeRecalculationService;
 
         this.clock = clock;
     }
@@ -197,6 +210,13 @@ public class DefaultWeeklyRolloverService
                     + " is only partially finalized"
             );
         }
+
+        // Rebuilt before the ranking that freezes it: the last synchronization of the week runs
+        // hours before this rollover, so matches played in that gap are only imported now. Without
+        // this refresh they would land in a week that is already finalized and count for nothing.
+        challengeRecalculationService.recalculateWeekProgress(
+            previousWeekStart
+        );
 
         rankingRecalculationService.recalculateWeek(
             previousWeekStart

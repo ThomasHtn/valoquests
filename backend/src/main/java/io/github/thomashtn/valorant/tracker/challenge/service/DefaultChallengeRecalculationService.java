@@ -4,6 +4,7 @@ import io.github.thomashtn.valorant.tracker.challenge.calculator.ChallengeProgre
 import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallengeContext;
 import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallengeContextFactory;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
@@ -70,6 +71,11 @@ public class DefaultChallengeRecalculationService
         weeklyChallengeSelectionService;
 
     /**
+     * Repository used to load the pack of a week that already owns one.
+     */
+    private final WeeklyChallengeRepository weeklyChallengeRepository;
+
+    /**
      * Application clock used to resolve the current UTC week.
      */
     private final Clock clock;
@@ -83,6 +89,7 @@ public class DefaultChallengeRecalculationService
      * @param persistenceService              progress persistence service
      * @param rankingRecalculationService     ranking recalculation service
      * @param weeklyChallengeSelectionService weekly selection service
+     * @param weeklyChallengeRepository       weekly challenge repository
      * @param clock                           application clock
      */
     public DefaultChallengeRecalculationService(
@@ -93,6 +100,7 @@ public class DefaultChallengeRecalculationService
         RankingRecalculationService rankingRecalculationService,
         WeeklyChallengeSelectionService
             weeklyChallengeSelectionService,
+        WeeklyChallengeRepository weeklyChallengeRepository,
         Clock clock
     ) {
         this.playerRepository = playerRepository;
@@ -102,6 +110,7 @@ public class DefaultChallengeRecalculationService
         this.rankingRecalculationService = rankingRecalculationService;
         this.weeklyChallengeSelectionService =
             weeklyChallengeSelectionService;
+        this.weeklyChallengeRepository = weeklyChallengeRepository;
         this.clock = clock;
     }
 
@@ -116,11 +125,43 @@ public class DefaultChallengeRecalculationService
     public void recalculateCurrentWeekProgress() {
         LocalDate weekStart = resolveCurrentWeekStart();
 
+        // Selected rather than loaded: the current pack is created when it does not exist yet.
         List<WeeklyChallenge> weeklyChallenges =
             weeklyChallengeSelectionService.selectWeekChallenges(
                 weekStart
             );
 
+        recalculateWeek(weekStart, weeklyChallenges);
+
+        rankingRecalculationService.recalculateCurrentRanking();
+    }
+
+    /**
+     * Recalculates one week's progress from the challenge pack it already owns.
+     *
+     * <p>The pack is loaded rather than selected, so a week that never had one keeps none. The
+     * ranking is deliberately left to the caller: the closing week's ranking is rebuilt by the
+     * rollover, inside the transaction that also freezes it.
+     */
+    @Override
+    @Transactional
+    public void recalculateWeekProgress(LocalDate weekStart) {
+        recalculateWeek(
+            weekStart,
+            weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(weekStart)
+        );
+    }
+
+    /**
+     * Rebuilds every active player's progress against one week's challenge pack.
+     *
+     * @param weekStart        Monday identifying the recalculated week
+     * @param weeklyChallenges challenge pack assigned to that week
+     */
+    private void recalculateWeek(
+        LocalDate weekStart,
+        List<WeeklyChallenge> weeklyChallenges
+    ) {
         if (weeklyChallenges.isEmpty()) {
             LOGGER.info(
                 "No active weekly challenges found for week {}.",
@@ -159,8 +200,6 @@ public class DefaultChallengeRecalculationService
             weekStart,
             progressCount
         );
-
-        rankingRecalculationService.recalculateCurrentRanking();
     }
 
     /**

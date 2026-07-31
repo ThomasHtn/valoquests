@@ -1,12 +1,17 @@
 package io.github.thomashtn.valorant.tracker.week.scheduler;
 
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
+import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationCommandService;
 import io.github.thomashtn.valorant.tracker.week.service.WeeklyRolloverService;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests weekly rollover scheduler delegation and error isolation.
@@ -14,19 +19,70 @@ import static org.mockito.Mockito.verify;
 class WeeklyRolloverSchedulerTest {
 
     /**
-     * Verifies that a scheduled execution delegates to the rollover service.
+     * Verifies that the closing week is synchronized before it is finalized.
+     *
+     * <p>The last scheduled synchronization of the week ends hours before the rollover. Finalizing
+     * first would freeze the week without the matches played in that gap, and no later run ever
+     * revisits a finalized week.
      */
     @Test
-    void shouldDelegateScheduledRollover() {
+    void shouldSynchronizeBeforeFinalizingTheWeek() {
         WeeklyRolloverService rolloverService =
             mock(WeeklyRolloverService.class);
 
+        SynchronizationCommandService synchronizationService =
+            mock(SynchronizationCommandService.class);
+
         WeeklyRolloverScheduler scheduler =
             new WeeklyRolloverScheduler(
-                rolloverService
+                rolloverService,
+                synchronizationService
             );
 
         scheduler.rolloverWeek();
+
+        InOrder rolloverOrder = inOrder(
+            synchronizationService,
+            rolloverService
+        );
+
+        rolloverOrder.verify(synchronizationService)
+            .synchronizeAllPlayers(SynchronizationTrigger.SCHEDULED);
+
+        rolloverOrder.verify(rolloverService).rolloverIfNeeded();
+    }
+
+    /**
+     * Verifies that a failed pre-rollover synchronization still finalizes the week.
+     *
+     * <p>Skipping the rollover would leave the week open forever, since the next execution only
+     * ever looks at the week that just ended.
+     */
+    @Test
+    void shouldFinalizeWeekWhenPreRolloverSynchronizationFails() {
+        WeeklyRolloverService rolloverService =
+            mock(WeeklyRolloverService.class);
+
+        SynchronizationCommandService synchronizationService =
+            mock(SynchronizationCommandService.class);
+
+        when(
+            synchronizationService.synchronizeAllPlayers(
+                SynchronizationTrigger.SCHEDULED
+            )
+        ).thenThrow(
+            new IllegalStateException("Henrik unavailable")
+        );
+
+        WeeklyRolloverScheduler scheduler =
+            new WeeklyRolloverScheduler(
+                rolloverService,
+                synchronizationService
+            );
+
+        assertThatCode(
+            scheduler::rolloverWeek
+        ).doesNotThrowAnyException();
 
         verify(rolloverService).rolloverIfNeeded();
     }
@@ -40,6 +96,9 @@ class WeeklyRolloverSchedulerTest {
         WeeklyRolloverService rolloverService =
             mock(WeeklyRolloverService.class);
 
+        SynchronizationCommandService synchronizationService =
+            mock(SynchronizationCommandService.class);
+
         doThrow(
             new IllegalStateException(
                 "Database unavailable"
@@ -50,7 +109,8 @@ class WeeklyRolloverSchedulerTest {
 
         WeeklyRolloverScheduler scheduler =
             new WeeklyRolloverScheduler(
-                rolloverService
+                rolloverService,
+                synchronizationService
             );
 
         assertThatCode(

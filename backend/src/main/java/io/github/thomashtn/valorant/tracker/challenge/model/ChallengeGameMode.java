@@ -4,6 +4,9 @@ import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 
 /**
  * Defines the game-mode filters supported by challenge conditions.
+ *
+ * <p>Restricted to modes synchronization actually imports: a filter on a mode the tracker does not
+ * store would define a challenge that can never progress. See {@link GameMode#isImportEligible()}.
  */
 public enum ChallengeGameMode {
 
@@ -25,17 +28,7 @@ public enum ChallengeGameMode {
     /**
      * Includes team deathmatch matches.
      */
-    TEAM_DEATHMATCH,
-
-    /**
-     * Includes swiftplay matches.
-     */
-    SWIFTPLAY,
-
-    /**
-     * Includes escalation matches.
-     */
-    ESCALATION;
+    TEAM_DEATHMATCH;
 
     /**
      * Determines whether the supplied persisted game mode matches this filter.

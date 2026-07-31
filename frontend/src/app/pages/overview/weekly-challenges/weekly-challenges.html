@@ -61,20 +61,20 @@
           </div>
 
           <app-points-badge
-            [matTooltip]="'overview.weeklyChallenges.pointsTooltip' | translate"
+            [appTooltip]="'overview.weeklyChallenges.pointsTooltip' | translate"
             [points]="row.points"
             class="shrink-0"
-            matTooltipPosition="above"
+            appTooltipPosition="above"
           />
         </div>
 
         <div
-          [matTooltip]="
+          [appTooltip]="
             'overview.weeklyChallenges.progressTooltip'
               | translate: { completed: row.completedPlayers, total: row.totalPlayers }
           "
           class="mt-5 flex items-center gap-3"
-          matTooltipPosition="above"
+          appTooltipPosition="above"
         >
           <app-progress-bar
             [colorClass]="row.visual.barClass"

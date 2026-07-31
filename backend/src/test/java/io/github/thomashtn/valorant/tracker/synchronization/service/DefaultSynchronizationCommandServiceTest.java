@@ -1,14 +1,16 @@
 package io.github.thomashtn.valorant.tracker.synchronization.service;
 
+import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikServiceUnavailableException;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.entity.Synchronization;
-import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerDeepSynchronizationResult;
+import io.github.thomashtn.valorant.tracker.synchronization.entity.SynchronizationPlayerResult;
 import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerSynchronizationResult;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStopReason;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
 import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationPlayerResultRepository;
@@ -16,6 +18,7 @@ import io.github.thomashtn.valorant.tracker.synchronization.repository.Synchroni
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,10 +30,13 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -61,8 +67,7 @@ class DefaultSynchronizationCommandServiceTest {
     private SynchronizationPlayerResultRepository playerResultRepository;
 
     @Mock
-    private PlayerDeepSynchronizationService
-        playerDeepSynchronizationService;
+    private ChallengeRecalculationService challengeRecalculationService;
 
     private DefaultSynchronizationCommandService service;
 
@@ -78,10 +83,10 @@ class DefaultSynchronizationCommandServiceTest {
 
         service = new DefaultSynchronizationCommandService(
             playerSynchronizationService,
-            playerDeepSynchronizationService,
             playerRepository,
             synchronizationRepository,
             playerResultRepository,
+            challengeRecalculationService,
             clock
         );
 
@@ -326,70 +331,138 @@ class DefaultSynchronizationCommandServiceTest {
     }
 
     /**
-     * Verifies that the deep single-player command uses the shared orchestration.
+     * Verifies that each persisted player result records why its match-history walk stopped.
+     *
+     * <p>This is what makes a short import self-explanatory: without it, a run that simply reached
+     * the end of the player's current season is indistinguishable from one that was truncated. A
+     * failed player never completed a walk, so it reports no stop reason at all.
      */
     @Test
-    void shouldRecordCompletedDeepPlayerSynchronization() {
-        Player player = player(4L);
-
-        when(playerDeepSynchronizationService.synchronize(4L))
-            .thenReturn(
-                new PlayerDeepSynchronizationResult(
-                    player,
-                    6,
-                    24,
-                    PLAYER_TWO_COMPLETED_AT
-                )
-            );
-
-        SynchronizationResponse response =
-            service.requestDeepSynchronizationForPlayer(4L);
-
-        assertThat(response.type()).isEqualTo(SynchronizationType.DEEP);
-        assertThat(response.status())
-            .isEqualTo(SynchronizationStatus.COMPLETED);
-        assertThat(response.playersProcessed()).isEqualTo(1);
-        assertThat(response.failureCount()).isZero();
-        assertThat(response.matchesImported()).isEqualTo(24);
-        assertThat(response.lastSuccessfulSynchronizationAt())
-            .isEqualTo(PLAYER_TWO_COMPLETED_AT);
-    }
-
-    /**
-     * Verifies that deep batch failures do not interrupt later players.
-     */
-    @Test
-    void shouldReturnPartialStatusForDeepSynchronization() {
+    void shouldRecordWhyEachPlayerWalkStopped() {
         Player firstPlayer = player(1L);
         Player secondPlayer = player(2L);
 
         when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
             .thenReturn(List.of(firstPlayer, secondPlayer));
-        when(playerDeepSynchronizationService.synchronize(1L))
-            .thenThrow(new IllegalStateException());
-        when(playerDeepSynchronizationService.synchronize(2L))
-            .thenReturn(
-                new PlayerDeepSynchronizationResult(
-                    secondPlayer,
-                    3,
-                    12,
-                    PLAYER_TWO_COMPLETED_AT
+
+        when(playerSynchronizationService.synchronize(1L))
+            .thenThrow(
+                new HenrikServiceUnavailableException(
+                    "Henrik unavailable"
                 )
             );
 
-        SynchronizationResponse response =
-            service.requestDeepSynchronizationForAllPlayers();
+        when(playerSynchronizationService.synchronize(2L))
+            .thenReturn(
+                new PlayerSynchronizationResult(
+                    secondPlayer,
+                    1,
+                    5,
+                    PLAYER_TWO_COMPLETED_AT,
+                    SynchronizationStopReason.PAGE_LIMIT_REACHED
+                )
+            );
 
-        assertThat(response.type()).isEqualTo(SynchronizationType.DEEP);
+        service.synchronizeAllPlayers();
+
+        ArgumentCaptor<SynchronizationPlayerResult> results =
+            ArgumentCaptor.forClass(SynchronizationPlayerResult.class);
+        verify(playerResultRepository, times(2)).save(results.capture());
+
+        assertThat(results.getAllValues())
+            .extracting(
+                result -> result.getPlayer().getId(),
+                SynchronizationPlayerResult::getStopReason
+            )
+            .containsExactly(
+                tuple(1L, null),
+                tuple(2L, SynchronizationStopReason.PAGE_LIMIT_REACHED)
+            );
+    }
+
+    /**
+     * Verifies that importing matches rebuilds the current week's challenge progress.
+     *
+     * <p>Progress and the weekly ranking are derived from the stored matches, so without this step
+     * a scheduled run would import matches the challenges never count.
+     */
+    @Test
+    void shouldRecalculateChallengeProgressAfterImportingMatches() {
+        Player firstPlayer = player(1L);
+
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+            .thenReturn(List.of(firstPlayer));
+
+        when(playerSynchronizationService.synchronize(1L))
+            .thenReturn(result(firstPlayer, 3, PLAYER_ONE_COMPLETED_AT));
+
+        service.synchronizeAllPlayers();
+
+        verify(challengeRecalculationService).recalculateCurrentWeekProgress();
+    }
+
+    /**
+     * Verifies that a run importing nothing leaves challenge progress untouched.
+     *
+     * <p>Progress depends only on stored matches, so recalculating without a new one would burn a
+     * full pass over every player and challenge to rewrite identical values.
+     */
+    @Test
+    void shouldNotRecalculateChallengeProgressWhenNothingWasImported() {
+        Player firstPlayer = player(1L);
+
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+            .thenReturn(List.of(firstPlayer));
+
+        when(playerSynchronizationService.synchronize(1L))
+            .thenReturn(result(firstPlayer, 0, PLAYER_ONE_COMPLETED_AT));
+
+        service.synchronizeAllPlayers();
+
+        verifyNoInteractions(challengeRecalculationService);
+    }
+
+    /**
+     * Verifies that a failed recalculation does not fail an otherwise successful import.
+     *
+     * <p>The matches are already committed when recalculation runs. Propagating its failure would
+     * report a successful import as failed and discard the summary of every processed player.
+     */
+    @Test
+    void shouldReportSuccessWhenChallengeRecalculationFails() {
+        Player firstPlayer = player(1L);
+
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+            .thenReturn(List.of(firstPlayer));
+
+        when(playerSynchronizationService.synchronize(1L))
+            .thenReturn(result(firstPlayer, 3, PLAYER_ONE_COMPLETED_AT));
+
+        doThrow(new IllegalStateException("recalculation failed"))
+            .when(challengeRecalculationService)
+            .recalculateCurrentWeekProgress();
+
+        SynchronizationResponse response = service.synchronizeAllPlayers();
+
         assertThat(response.status())
-            .isEqualTo(SynchronizationStatus.PARTIAL);
-        assertThat(response.failureCount()).isEqualTo(1);
-        assertThat(response.matchesImported()).isEqualTo(12);
-        assertThat(response.errorMessage())
-            .contains("Player 1")
-            .contains("IllegalStateException");
+            .isEqualTo(SynchronizationStatus.COMPLETED);
+        assertThat(response.matchesImported()).isEqualTo(3);
+        assertThat(response.errorMessage()).isNull();
+    }
 
-        verify(playerDeepSynchronizationService).synchronize(2L);
+    /**
+     * Verifies that a single-player import also rebuilds the challenge progress.
+     */
+    @Test
+    void shouldRecalculateChallengeProgressAfterSinglePlayerImport() {
+        Player firstPlayer = player(1L);
+
+        when(playerSynchronizationService.synchronize(1L))
+            .thenReturn(result(firstPlayer, 7, PLAYER_ONE_COMPLETED_AT));
+
+        service.synchronizePlayer(1L);
+
+        verify(challengeRecalculationService).recalculateCurrentWeekProgress();
     }
 
     /**
@@ -421,7 +494,8 @@ class DefaultSynchronizationCommandServiceTest {
             player,
             1,
             matchesImported,
-            completedAt
+            completedAt,
+            SynchronizationStopReason.SEASON_BOUNDARY
         );
     }
 }

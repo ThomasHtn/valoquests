@@ -68,10 +68,27 @@ public class SynchronizationAdminController {
     @Operation(
         summary = "Synchronize all active players",
         description = """
-            Runs the standard synchronization for every active tracked player. The operation resolves
-            missing Riot account identifiers, refreshes competitive ranks, imports recent completed
-            matches idempotently and records one global result with a result per player. A failure for
-            one player does not prevent the remaining players from being processed.
+            Imports every match of the current Valorant season for each active tracked player. The
+            operation resolves missing Riot account identifiers, refreshes competitive ranks and walks
+            the Henrik match history backwards until it leaves the current season, importing matches
+            idempotently. Modes the tracker does not follow, such as Swiftplay, Escalation, New Map
+            and custom games, are skipped; a queue this application cannot classify is imported so it
+            is never lost. Once a season has been walked in full, later runs stop at the first
+            already-stored match. A season left unfinished by an interruption, or a season the player
+            was still catching up when Riot rolled the act over, is walked again in full rather than
+            stopped early, so the history can never keep a hole. A failure for one player does not
+            prevent the remaining players from being processed.
+
+            Matches played in an act older than the current one are never imported, and no command
+            backfills them: a player's stored history therefore starts at the current act, and its
+            match counts are expected to be lower than the lifetime totals shown by external trackers.
+            Every player result reports the condition that ended its walk, which tells a run that
+            exhausted the current act apart from one truncated by the safety page limit.
+
+            When the run imported at least one match, the current week's challenge progress and the
+            weekly ranking are rebuilt from the stored matches before the response is returned. A
+            failure of that step is logged without failing the synchronization, since the matches are
+            already stored and the next run recalculates from scratch.
             """
     )
     @ApiResponse(
@@ -100,9 +117,12 @@ public class SynchronizationAdminController {
     @Operation(
         summary = "Synchronize one player",
         description = """
-            Runs the standard synchronization for one tracked player. The operation resolves the Riot
-            account when necessary, refreshes the competitive rank, imports recent completed matches
-            idempotently and stores the execution result.
+            Imports every match of the current Valorant season for one tracked player, applying the
+            same season scope, mode filter and early-stop rules as the batch operation. Useful to
+            catch up a single player that failed during a scheduled run, without replaying the others.
+            Older acts are out of scope here too, so this command cannot deepen an existing history.
+            Challenge progress and the weekly ranking are rebuilt for every player when the run
+            imported at least one match.
             """
     )
     @ApiResponse(
@@ -138,50 +158,6 @@ public class SynchronizationAdminController {
         @PathVariable long playerId
     ) {
         return synchronizationService.synchronizePlayer(playerId);
-    }
-
-    /**
-     * Requests a deep synchronization for every active player.
-     *
-     * @return accepted synchronization request
-     */
-    @PostMapping("/synchronizations/deep")
-    @Operation(
-        summary = "Deep synchronize all players",
-        description = """
-            Runs the configured deep-synchronization scope for every active player. Match-history pages
-            are requested sequentially, imported idempotently and stopped according to the configured
-            season scope. A failure for one player does not stop the remaining players.
-            """
-    )
-    public SynchronizationResponse requestDeepSynchronizationForAllPlayers() {
-        return synchronizationService.requestDeepSynchronizationForAllPlayers();
-    }
-
-    /**
-     * Requests a deep synchronization for one player.
-     *
-     * @param playerId internal player identifier
-     * @return accepted synchronization request
-     */
-    @PostMapping("/players/{playerId}/synchronizations/deep")
-    @Operation(
-        summary = "Deep synchronize one player",
-        description = """
-            Runs a deep synchronization for one tracked player. The service retrieves match-history
-            pages sequentially, respects Henrik rate limiting, imports only missing completed matches
-            and stops according to the configured current-season or all-history scope.
-            """
-    )
-    public SynchronizationResponse requestDeepSynchronizationForPlayer(
-        @Parameter(
-            description = "Internal player identifier.",
-            example = "3",
-            required = true
-    )
-        @PathVariable long playerId
-    ) {
-        return synchronizationService.requestDeepSynchronizationForPlayer(playerId);
     }
 
     /**

@@ -73,12 +73,12 @@
           [attr.aria-disabled]="item.routerLink ? null : 'true'"
           [class.cursor-default]="!item.routerLink"
           [class]="navItemClass()"
-          [matTooltipDisabled]="!collapsed()"
-          [matTooltip]="'sidebar.nav.' + item.labelKey | translate"
+          [appTooltipDisabled]="!collapsed()"
+          [appTooltip]="'sidebar.nav.' + item.labelKey | translate"
           [routerLinkActiveOptions]="{ exact: !!item.exactMatch }"
           [routerLink]="item.routerLink"
           class="focus-ring-inset flex min-h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-2 py-2 text-[11px] font-medium text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary lg:min-h-0 lg:w-full lg:flex-none lg:flex-row lg:gap-3 lg:rounded-lg lg:px-3 lg:py-2.5 lg:text-sm"
-          matTooltipPosition="right"
+          appTooltipPosition="right"
           routerLinkActive="text-accent-purple lg:bg-surface-800"
         >
           @switch (item.icon) {
@@ -107,9 +107,9 @@
       <div class="flex w-full justify-center">
         <button
           [attr.aria-label]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
-          [matTooltip]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
+          [appTooltip]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
           class="focus-ring flex h-10 w-10 cursor-default items-center justify-center rounded-lg text-text-muted"
-          matTooltipPosition="right"
+          appTooltipPosition="right"
           type="button"
         >
           <svg class="block h-5 w-5 shrink-0" lucideRefreshCw></svg>
@@ -125,9 +125,9 @@
         <span
           [class.bg-success]="apiStatus() === 'online'"
           [class.bg-danger]="apiStatus() === 'offline'"
-          [matTooltip]="apiStatusLabel()"
+          [appTooltip]="apiStatusLabel()"
           class="ml-auto h-2 w-2 shrink-0 rounded-full"
-          matTooltipPosition="left"
+          appTooltipPosition="left"
           role="status"
         >
           <span class="sr-only">{{ apiStatusLabel() }}</span>

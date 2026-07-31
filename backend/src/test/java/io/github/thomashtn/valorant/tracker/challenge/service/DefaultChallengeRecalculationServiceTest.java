@@ -5,6 +5,7 @@ import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallenge
 import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallengeContextFactory;
 import io.github.thomashtn.valorant.tracker.challenge.entity.Challenge;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
@@ -68,6 +69,11 @@ class DefaultChallengeRecalculationServiceTest {
     private RankingRecalculationService rankingRecalculationService;
 
     /**
+     * Weekly challenge repository dependency.
+     */
+    private WeeklyChallengeRepository weeklyChallengeRepository;
+
+    /**
      * Service under test.
      */
     private DefaultChallengeRecalculationService service;
@@ -88,6 +94,8 @@ class DefaultChallengeRecalculationServiceTest {
             mock(PlayerChallengeProgressPersistenceService.class);
         rankingRecalculationService =
             mock(RankingRecalculationService.class);
+        weeklyChallengeRepository =
+            mock(WeeklyChallengeRepository.class);
 
         Clock clock = Clock.fixed(
             Instant.parse("2026-07-20T12:00:00Z"),
@@ -101,6 +109,7 @@ class DefaultChallengeRecalculationServiceTest {
             persistenceService,
             rankingRecalculationService,
             weeklyChallengeSelectionService,
+            weeklyChallengeRepository,
             clock
         );
     }

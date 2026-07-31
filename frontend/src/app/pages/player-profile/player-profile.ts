@@ -26,7 +26,7 @@ import {
 import { formatLocalTime } from '@core/date/date-time.utils';
 import { resolveAgentInitial, resolveMatchScore } from '@core/matches/match-format.utils';
 import { resolveResultAccentClass, resolveResultTextClass } from '@core/matches/match-visual.utils';
-import { GAME_MODES, GameMode } from '@core/matches/game-mode.model';
+import { FILTERABLE_GAME_MODES, GameMode } from '@core/matches/game-mode.model';
 import { Match } from '@core/matches/match.model';
 import { MatchesApi } from '@core/matches/matches-api';
 import { Season } from '@core/matches/season.model';
@@ -214,11 +214,14 @@ export class PlayerProfile {
   /**
    * Options offered by the game-mode filter.
    *
-   * Every known mode is offered rather than only those the player has played, since narrowing the
-   * list would require an extra endpoint; a mode with no match simply yields the empty state.
+   * Restricted to the modes synchronization imports rather than every mode the backend enum
+   * declares: the others are never stored, so they would be permanently dead options. Within that
+   * set, every mode is offered rather than only those the player has played, since narrowing the
+   * list further would require an extra endpoint; a mode with no match simply yields the empty
+   * state.
    */
   protected readonly gameModeFilterOptions = computed<readonly SelectOption<GameMode>[]>(() =>
-    GAME_MODES.map((mode) => ({
+    FILTERABLE_GAME_MODES.map((mode) => ({
       value: mode,
       label: this.translation.translate(`playerProfile.matches.gameMode.${mode}`),
     })),

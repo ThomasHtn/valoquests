@@ -1,6 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
-import { MatTooltip } from '@angular/material/tooltip';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { RouterLink } from '@angular/router';
 import { LucideCheck, LucideChevronDown, LucideChevronUp, LucideTrophy } from '@lucide/angular';
 
@@ -44,7 +44,7 @@ import {
     NgTemplateOutlet,
     RouterLink,
     ChallengeIconView,
-    MatTooltip,
+    Tooltip,
     Avatar,
     PointsBadge,
     PositionBadge,

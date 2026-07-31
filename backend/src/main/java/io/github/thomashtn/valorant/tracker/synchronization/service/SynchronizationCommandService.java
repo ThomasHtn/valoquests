@@ -9,17 +9,17 @@ import io.github.thomashtn.valorant.tracker.synchronization.model.Synchronizatio
 public interface SynchronizationCommandService {
 
     /**
-     * @return completed standard synchronization summary
+     * @return completed synchronization summary
      */
     default SynchronizationResponse synchronizeAllPlayers() {
         return synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
     }
 
     /**
-     * Executes a standard synchronization for every active player.
+     * Executes a synchronization for every active player.
      *
      * @param trigger origin of the synchronization request
-     * @return completed standard synchronization summary
+     * @return completed synchronization summary
      */
     SynchronizationResponse synchronizeAllPlayers(
         SynchronizationTrigger trigger
@@ -29,14 +29,4 @@ public interface SynchronizationCommandService {
      * @param playerId player to synchronize @return synchronization summary
      */
     SynchronizationResponse synchronizePlayer(long playerId);
-
-    /**
-     * @return accepted deep-synchronization request
-     */
-    SynchronizationResponse requestDeepSynchronizationForAllPlayers();
-
-    /**
-     * @param playerId player to import deeply @return accepted synchronization request
-     */
-    SynchronizationResponse requestDeepSynchronizationForPlayer(long playerId);
 }

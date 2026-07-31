@@ -1,6 +1,5 @@
 package io.github.thomashtn.valorant.tracker.synchronization.service;
 
-import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
 import io.github.thomashtn.valorant.tracker.shared.exception.ResourceNotFoundException;
@@ -11,7 +10,6 @@ import io.github.thomashtn.valorant.tracker.synchronization.repository.Synchroni
 import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationRepository;
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -129,7 +127,8 @@ public class SynchronizationQueryService {
                         result.getStatus(),
                         result.getPagesFetched(),
                         result.getMatchesImported(),
-                        result.getErrorMessage()
+                        result.getErrorMessage(),
+                        result.getStopReason()
                     )
                 )
                 .toList();
@@ -176,10 +175,8 @@ public class SynchronizationQueryService {
      * Returns the latest successful synchronization timestamp among players.
      */
     private Instant findLatestSuccessfulPlayerSynchronizationAt() {
-        return playerRepository.findAll().stream()
-            .map(Player::getLastSuccessfulSynchronizationAt)
-            .filter(Objects::nonNull)
-            .max(Instant::compareTo)
+        return playerRepository
+            .findLatestSuccessfulSynchronizationAt()
             .orElse(null);
     }
 

@@ -45,9 +45,9 @@
           @for (column of columns(); track column.challengeId) {
             <th class="px-4 py-3 text-center font-semibold" scope="col">
               <span
-                [matTooltip]="column.tooltip"
+                [appTooltip]="column.tooltip"
                 class="flex flex-col items-center gap-1"
-                matTooltipPosition="above"
+                appTooltipPosition="above"
               >
                 <span class="flex max-w-40 items-center justify-center gap-1.5">
                   <span

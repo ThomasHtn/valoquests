@@ -2,12 +2,14 @@ package io.github.thomashtn.valorant.tracker.week.service;
 
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
+import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valorant.tracker.challenge.service.WeeklyChallengeSelectionService;
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -17,6 +19,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -70,6 +73,12 @@ class DefaultWeeklyRolloverServiceTest {
         weeklyChallengeSelectionService;
 
     /**
+     * Challenge progress recalculation dependency.
+     */
+    private ChallengeRecalculationService
+        challengeRecalculationService;
+
+    /**
      * Service under test.
      */
     private DefaultWeeklyRolloverService service;
@@ -91,6 +100,9 @@ class DefaultWeeklyRolloverServiceTest {
         weeklyChallengeSelectionService =
             mock(WeeklyChallengeSelectionService.class);
 
+        challengeRecalculationService =
+            mock(ChallengeRecalculationService.class);
+
         Clock clock = Clock.fixed(
             ROLLOVER_TIME,
             ZoneOffset.UTC
@@ -101,6 +113,7 @@ class DefaultWeeklyRolloverServiceTest {
             weeklyPlayerScoreRepository,
             rankingRecalculationService,
             weeklyChallengeSelectionService,
+            challengeRecalculationService,
             clock
         );
     }
@@ -149,7 +162,17 @@ class DefaultWeeklyRolloverServiceTest {
 
         service.rolloverIfNeeded();
 
-        verify(rankingRecalculationService)
+        // Progress before ranking: the ranking is derived from the progress, so rebuilding it
+        // first would freeze the week on values that ignore the matches just imported.
+        InOrder rebuildOrder = inOrder(
+            challengeRecalculationService,
+            rankingRecalculationService
+        );
+
+        rebuildOrder.verify(challengeRecalculationService)
+            .recalculateWeekProgress(PREVIOUS_WEEK_START);
+
+        rebuildOrder.verify(rankingRecalculationService)
             .recalculateWeek(PREVIOUS_WEEK_START);
 
         verify(weeklyChallengeRepository)

@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { MatTooltip } from '@angular/material/tooltip';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   LucideChartColumn,
@@ -38,7 +38,7 @@ import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './
     LucideMenu,
     LucideRefreshCw,
     TranslatePipe,
-    MatTooltip,
+    Tooltip,
   ],
   templateUrl: './sidebar.html',
 })

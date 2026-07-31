@@ -182,7 +182,7 @@ class DistinctCountChallengeProgressCalculatorTest {
             createMatch(
                 "agent-neon",
                 "Neon",
-                GameMode.SWIFTPLAY,
+                GameMode.SPIKE_RUSH,
                 MatchResult.WIN,
                 "2026-07-21T00:30:00Z"
             )
@@ -234,7 +234,7 @@ class DistinctCountChallengeProgressCalculatorTest {
             createMatch(
                 "agent-omen",
                 "Omen",
-                GameMode.SWIFTPLAY,
+                GameMode.SPIKE_RUSH,
                 MatchResult.WIN,
                 "2026-07-23T08:00:00Z"
             )

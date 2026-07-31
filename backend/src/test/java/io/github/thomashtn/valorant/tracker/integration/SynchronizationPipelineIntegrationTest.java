@@ -223,9 +223,8 @@ class SynchronizationPipelineIntegrationTest
                 player.getId()
             );
 
-        challengeRecalculationService
-            .recalculateCurrentWeekProgress();
-
+        // No explicit recalculation: importing matches is what triggers it. Calling it here as well
+        // would rebuild the ranking twice and shift the previous position on the very first run.
         flushAndClear();
 
         assertFirstSynchronization(firstSynchronization, player);
@@ -259,6 +258,9 @@ class SynchronizationPipelineIntegrationTest
                 player.getId()
             );
 
+        // The second synchronization imports nothing, so it deliberately skips the recalculation.
+        // This call stands in for the administrative repair route and proves the calculation is
+        // idempotent: it rewrites the same values in place and only shifts the previous position.
         challengeRecalculationService
             .recalculateCurrentWeekProgress();
 

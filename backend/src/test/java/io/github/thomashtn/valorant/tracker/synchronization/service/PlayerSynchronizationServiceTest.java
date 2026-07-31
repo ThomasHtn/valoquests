@@ -1,17 +1,15 @@
 package io.github.thomashtn.valorant.tracker.synchronization.service;
 
-import io.github.thomashtn.valorant.tracker.henrik.client.HenrikMatchClient;
 import io.github.thomashtn.valorant.tracker.henrik.client.HenrikMmrClient;
 import io.github.thomashtn.valorant.tracker.henrik.dto.mmr.HenrikMmrResponse;
 import io.github.thomashtn.valorant.tracker.henrik.mapper.HenrikMmrMapper;
-import io.github.thomashtn.valorant.tracker.henrik.dto.match.HenrikMatchHistoryResponse;
-import io.github.thomashtn.valorant.tracker.match.model.MatchImportResult;
-import io.github.thomashtn.valorant.tracker.match.service.MatchImportService;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.player.service.PlayerAccountResolutionService;
+import io.github.thomashtn.valorant.tracker.synchronization.model.MatchHistoryWalkResult;
 import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerSynchronizationResult;
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStopReason;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -19,27 +17,25 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link PlayerSynchronizationService}.
+ *
+ * <p>Only orchestration is covered here. Pagination, season scope and stop conditions belong to
+ * {@link SeasonMatchHistoryWalker} and are asserted in its own test.
  */
 @ExtendWith(MockitoExtension.class)
 class PlayerSynchronizationServiceTest {
-
-    /**
-     * Expected number of recent matches requested during a standard
-     * synchronization.
-     */
-    private static final int RECENT_MATCH_PAGE_SIZE = 10;
 
     /**
      * Fixed synchronization completion time used by the tests.
@@ -48,25 +44,16 @@ class PlayerSynchronizationServiceTest {
         Instant.parse("2026-07-18T10:00:00Z");
 
     /**
-     * Number of matches reported as newly imported.
+     * Riot identifier of the synchronized player.
      */
-    private static final int IMPORTED_MATCH_COUNT = 3;
+    private static final String PUUID = "puuid-1";
 
-    /**
-     * Mocked player repository.
-     */
     @Mock
     private PlayerRepository playerRepository;
 
-    /**
-     * Mocked Riot account resolution service.
-     */
     @Mock
     private PlayerAccountResolutionService accountResolutionService;
 
-    /**
-     * Mocked Henrik match-history client.
-     */
     @Mock
     private HenrikMmrClient mmrClient;
 
@@ -74,18 +61,7 @@ class PlayerSynchronizationServiceTest {
     private HenrikMmrMapper mmrMapper;
 
     @Mock
-    private HenrikMatchClient matchClient;
-
-    /**
-     * Mocked match import service.
-     */
-    @Mock
-    private MatchImportService matchImportService;
-
-    /**
-     * Fixed clock used to make time assertions deterministic.
-     */
-    private Clock clock;
+    private SeasonMatchHistoryWalker matchHistoryWalker;
 
     /**
      * Service under test.
@@ -97,409 +73,111 @@ class PlayerSynchronizationServiceTest {
      */
     @BeforeEach
     void setUp() {
-        clock = Clock.fixed(
-            SYNCHRONIZED_AT,
-            ZoneOffset.UTC
-        );
-
         service = new PlayerSynchronizationService(
             playerRepository,
             accountResolutionService,
             mmrClient,
             mmrMapper,
-            matchClient,
-            matchImportService,
-            clock
+            matchHistoryWalker,
+            Clock.fixed(SYNCHRONIZED_AT, ZoneOffset.UTC)
         );
     }
 
     /**
-     * Verifies the complete synchronization pipeline for an existing player.
+     * Verifies the full successful orchestration, in order.
      */
     @Test
-    void shouldSynchronizeExistingPlayer() {
-        Long playerId = 1L;
+    void shouldResolveAccountRefreshRankThenWalkMatchHistory() {
+        Player player = player();
+        HenrikMmrResponse mmrResponse = new HenrikMmrResponse(200, null);
 
-        Player player = createPlayer(playerId);
-        Player resolvedPlayer = createPlayer(playerId);
-        resolvedPlayer.setRiotPuuid("resolved-puuid");
-
-        HenrikMatchHistoryResponse response =
-            new HenrikMatchHistoryResponse(
-                200,
-                java.util.Collections.nCopies(IMPORTED_MATCH_COUNT, null)
-            );
-
-        when(playerRepository.findById(playerId))
-            .thenReturn(Optional.of(player));
-
-        when(accountResolutionService.resolvePuuid(player))
-            .thenReturn(resolvedPlayer);
-
-        HenrikMmrResponse mmrResponse = new HenrikMmrResponse(
-            200,
-            null
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+        when(accountResolutionService.resolvePuuid(player)).thenReturn(player);
+        when(mmrClient.getCurrentMmr(PUUID)).thenReturn(mmrResponse);
+        when(matchHistoryWalker.walk(player)).thenReturn(
+            new MatchHistoryWalkResult(4, 12, SynchronizationStopReason.SEASON_BOUNDARY)
         );
+        when(playerRepository.save(player)).thenReturn(player);
 
-        when(mmrClient.getCurrentMmr("resolved-puuid"))
-            .thenReturn(mmrResponse);
+        PlayerSynchronizationResult result = service.synchronize(1L);
 
-        when(
-            matchClient.getMatches(
-                "resolved-puuid",
-                0,
-                RECENT_MATCH_PAGE_SIZE
-            )
-        ).thenReturn(response);
+        assertThat(result.player()).isSameAs(player);
+        assertThat(result.pagesFetched()).isEqualTo(4);
+        assertThat(result.matchesImported()).isEqualTo(12);
+        assertThat(result.completedAt()).isEqualTo(SYNCHRONIZED_AT);
+        assertThat(result.stopReason())
+            .isEqualTo(SynchronizationStopReason.SEASON_BOUNDARY);
 
-        when(
-            matchImportService.importMatchesWithSummary(
-                resolvedPlayer,
-                response
-            )
-        ).thenReturn(
-            new MatchImportResult(
-                IMPORTED_MATCH_COUNT,
-                IMPORTED_MATCH_COUNT,
-                0,
-                0
-            )
+        InOrder ordered = inOrder(accountResolutionService, mmrMapper, matchHistoryWalker);
+        ordered.verify(accountResolutionService).resolvePuuid(player);
+        ordered.verify(mmrMapper).updatePlayer(mmrResponse, player);
+        ordered.verify(matchHistoryWalker).walk(player);
+    }
+
+    /**
+     * Verifies that the incremental watermark is stored once the walk succeeded.
+     */
+    @Test
+    void shouldRecordTheSuccessfulSynchronizationInstant() {
+        Player player = player();
+
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+        when(accountResolutionService.resolvePuuid(player)).thenReturn(player);
+        when(mmrClient.getCurrentMmr(PUUID)).thenReturn(new HenrikMmrResponse(200, null));
+        when(matchHistoryWalker.walk(player)).thenReturn(
+            new MatchHistoryWalkResult(1, 0, SynchronizationStopReason.KNOWN_HISTORY_REACHED)
         );
+        when(playerRepository.save(player)).thenReturn(player);
 
-        when(playerRepository.save(resolvedPlayer))
-            .thenReturn(resolvedPlayer);
+        service.synchronize(1L);
 
-        PlayerSynchronizationResult result =
-            service.synchronize(playerId);
-
-        assertThat(result.player())
-            .isSameAs(resolvedPlayer);
-
-        assertThat(result.player().getRiotPuuid())
-            .isEqualTo("resolved-puuid");
-
-        assertThat(result.matchesImported())
-            .isEqualTo(IMPORTED_MATCH_COUNT);
-
-        assertThat(result.completedAt())
+        assertThat(player.getLastSuccessfulSynchronizationAt())
             .isEqualTo(SYNCHRONIZED_AT);
-
-        assertThat(
-            result.player()
-                .getLastSuccessfulSynchronizationAt()
-        ).isEqualTo(SYNCHRONIZED_AT);
-
-        verify(playerRepository)
-            .findById(playerId);
-
-        verify(accountResolutionService)
-            .resolvePuuid(player);
-
-        verify(mmrClient).getCurrentMmr("resolved-puuid");
-        verify(mmrMapper).updatePlayer(
-            org.mockito.ArgumentMatchers.any(HenrikMmrResponse.class),
-            org.mockito.ArgumentMatchers.same(resolvedPlayer)
-        );
-
-        verify(matchClient).getMatches(
-            "resolved-puuid",
-            0,
-            RECENT_MATCH_PAGE_SIZE
-        );
-
-        verify(matchImportService)
-            .importMatchesWithSummary(resolvedPlayer, response);
-
-        verify(playerRepository)
-            .save(resolvedPlayer);
+        verify(playerRepository).save(player);
     }
 
     /**
-     * Verifies that a missing player produces a clear domain exception.
+     * Verifies that a player with no match is reported rather than failed.
      */
     @Test
-    void shouldThrowExceptionWhenPlayerDoesNotExist() {
-        Long playerId = 99L;
+    void shouldReportAPlayerWithoutAnyMatch() {
+        Player player = player();
 
-        when(playerRepository.findById(playerId))
-            .thenReturn(Optional.empty());
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+        when(accountResolutionService.resolvePuuid(player)).thenReturn(player);
+        when(mmrClient.getCurrentMmr(PUUID)).thenReturn(new HenrikMmrResponse(200, null));
+        when(matchHistoryWalker.walk(player)).thenReturn(MatchHistoryWalkResult.empty());
+        when(playerRepository.save(player)).thenReturn(player);
 
-        assertThatThrownBy(
-            () -> service.synchronize(playerId)
-        )
-            .isInstanceOf(PlayerNotFoundException.class)
-            .hasMessage("Player not found with id: 99");
+        PlayerSynchronizationResult result = service.synchronize(1L);
 
-        verify(playerRepository)
-            .findById(playerId);
-
-        verifyNoInteractions(
-            accountResolutionService,
-            mmrClient,
-            mmrMapper,
-            matchClient,
-            matchImportService
-        );
-
-        verify(
-            playerRepository,
-            never()
-        ).save(
-            org.mockito.ArgumentMatchers.any(Player.class)
-        );
+        assertThat(result.pagesFetched()).isZero();
+        assertThat(result.matchesImported()).isZero();
+        assertThat(result.stopReason())
+            .isEqualTo(SynchronizationStopReason.EMPTY_PAGE);
     }
 
     /**
-     * Verifies that exceptions raised by account resolution are propagated
-     * and stop the synchronization pipeline.
+     * Verifies that an unknown player fails before any Henrik call is made.
      */
     @Test
-    void shouldPropagateAccountResolutionFailure() {
-        Long playerId = 1L;
-        Player player = createPlayer(playerId);
+    void shouldRejectAnUnknownPlayer() {
+        when(playerRepository.findById(99L)).thenReturn(Optional.empty());
 
-        IllegalStateException resolutionFailure =
-            new IllegalStateException(
-                "Henrik account resolution failed"
-            );
+        assertThatThrownBy(() -> service.synchronize(99L))
+            .isInstanceOf(PlayerNotFoundException.class);
 
-        when(playerRepository.findById(playerId))
-            .thenReturn(Optional.of(player));
-
-        when(accountResolutionService.resolvePuuid(player))
-            .thenThrow(resolutionFailure);
-
-        assertThatThrownBy(
-            () -> service.synchronize(playerId)
-        ).isSameAs(resolutionFailure);
-
-        verify(playerRepository)
-            .findById(playerId);
-
-        verify(accountResolutionService)
-            .resolvePuuid(player);
-
-        verifyNoInteractions(
-            mmrClient,
-            mmrMapper,
-            matchClient,
-            matchImportService
-        );
-
-        verify(
-            playerRepository,
-            never()
-        ).save(
-            org.mockito.ArgumentMatchers.any(Player.class)
-        );
+        verifyNoInteractions(accountResolutionService, mmrClient, matchHistoryWalker);
     }
 
     /**
-     * Verifies that a Henrik match retrieval failure is propagated and
-     * prevents match import and final player persistence.
+     * Creates the synchronized player.
      */
-    @Test
-    void shouldPropagateMatchRetrievalFailure() {
-        Long playerId = 1L;
-
-        Player player = createPlayer(playerId);
-        Player resolvedPlayer = createPlayer(playerId);
-        resolvedPlayer.setRiotPuuid("resolved-puuid");
-
-        IllegalStateException retrievalFailure =
-            new IllegalStateException(
-                "Henrik match retrieval failed"
-            );
-
-        when(playerRepository.findById(playerId))
-            .thenReturn(Optional.of(player));
-
-        when(accountResolutionService.resolvePuuid(player))
-            .thenReturn(resolvedPlayer);
-
-        HenrikMmrResponse mmrResponse = new HenrikMmrResponse(
-            200,
-            null
-        );
-
-        when(mmrClient.getCurrentMmr("resolved-puuid"))
-            .thenReturn(mmrResponse);
-
-        when(
-            matchClient.getMatches(
-                "resolved-puuid",
-                0,
-                RECENT_MATCH_PAGE_SIZE
-            )
-        ).thenThrow(retrievalFailure);
-
-        assertThatThrownBy(
-            () -> service.synchronize(playerId)
-        ).isSameAs(retrievalFailure);
-
-        assertThat(
-            resolvedPlayer
-                .getLastSuccessfulSynchronizationAt()
-        ).isNull();
-
-        verify(playerRepository)
-            .findById(playerId);
-
-        verify(accountResolutionService)
-            .resolvePuuid(player);
-
-        verify(matchClient).getMatches(
-            "resolved-puuid",
-            0,
-            RECENT_MATCH_PAGE_SIZE
-        );
-
-        verifyNoInteractions(matchImportService);
-
-        verify(
-            playerRepository,
-            never()
-        ).save(
-            org.mockito.ArgumentMatchers.any(Player.class)
-        );
-    }
-
-    /**
-     * Verifies that a match import failure is propagated and prevents the
-     * synchronization date from being persisted.
-     */
-    @Test
-    void shouldPropagateMatchImportFailure() {
-        Long playerId = 1L;
-
-        Player player = createPlayer(playerId);
-        Player resolvedPlayer = createPlayer(playerId);
-        resolvedPlayer.setRiotPuuid("resolved-puuid");
-
-        HenrikMatchHistoryResponse response =
-            new HenrikMatchHistoryResponse(
-                200,
-                java.util.Collections.singletonList(null)
-            );
-
-        IllegalStateException importFailure =
-            new IllegalStateException(
-                "Match import failed"
-            );
-
-        when(playerRepository.findById(playerId))
-            .thenReturn(Optional.of(player));
-
-        when(accountResolutionService.resolvePuuid(player))
-            .thenReturn(resolvedPlayer);
-
-        when(
-            matchClient.getMatches(
-                "resolved-puuid",
-                0,
-                RECENT_MATCH_PAGE_SIZE
-            )
-        ).thenReturn(response);
-
-        when(
-            matchImportService.importMatchesWithSummary(
-                resolvedPlayer,
-                response
-            )
-        ).thenThrow(importFailure);
-
-        assertThatThrownBy(
-            () -> service.synchronize(playerId)
-        ).isSameAs(importFailure);
-
-        assertThat(
-            resolvedPlayer
-                .getLastSuccessfulSynchronizationAt()
-        ).isNull();
-
-        verify(playerRepository)
-            .findById(playerId);
-
-        verify(accountResolutionService)
-            .resolvePuuid(player);
-
-        verify(matchClient).getMatches(
-            "resolved-puuid",
-            0,
-            RECENT_MATCH_PAGE_SIZE
-        );
-
-        verify(matchImportService)
-            .importMatchesWithSummary(resolvedPlayer, response);
-
-        verify(
-            playerRepository,
-            never()
-        ).save(
-            org.mockito.ArgumentMatchers.any(Player.class)
-        );
-    }
-
-    /**
-     * Verifies that standard synchronization continues beyond the first page
-     * and advances Henrik's item offset by the number of received matches.
-     */
-    @Test
-    void shouldImportSeveralRecentMatchPages() {
-        Long playerId = 1L;
-        Player player = createPlayer(playerId);
-        Player resolvedPlayer = createPlayer(playerId);
-        resolvedPlayer.setRiotPuuid("resolved-puuid");
-
-        HenrikMatchHistoryResponse firstPage =
-            new HenrikMatchHistoryResponse(
-                200,
-                java.util.Collections.nCopies(10, null)
-            );
-        HenrikMatchHistoryResponse secondPage =
-            new HenrikMatchHistoryResponse(
-                200,
-                java.util.Collections.singletonList(null)
-            );
-
-        when(playerRepository.findById(playerId))
-            .thenReturn(Optional.of(player));
-        when(accountResolutionService.resolvePuuid(player))
-            .thenReturn(resolvedPlayer);
-        when(mmrClient.getCurrentMmr("resolved-puuid"))
-            .thenReturn(new HenrikMmrResponse(200, null));
-        when(matchClient.getMatches("resolved-puuid", 0, 10))
-            .thenReturn(firstPage);
-        when(matchClient.getMatches("resolved-puuid", 10, 10))
-            .thenReturn(secondPage);
-        when(matchImportService.importMatchesWithSummary(resolvedPlayer, firstPage))
-            .thenReturn(new MatchImportResult(10, 10, 0, 0));
-        when(matchImportService.importMatchesWithSummary(resolvedPlayer, secondPage))
-            .thenReturn(new MatchImportResult(1, 1, 0, 0));
-        when(playerRepository.save(resolvedPlayer))
-            .thenReturn(resolvedPlayer);
-
-        PlayerSynchronizationResult result = service.synchronize(playerId);
-
-        assertThat(result.pagesFetched()).isEqualTo(2);
-        assertThat(result.matchesImported()).isEqualTo(11);
-        verify(matchClient).getMatches("resolved-puuid", 0, 10);
-        verify(matchClient).getMatches("resolved-puuid", 10, 10);
-    }
-
-    /**
-     * Creates a player used by the tests.
-     *
-     * @param playerId internal player identifier
-     * @return configured player
-     */
-    private Player createPlayer(Long playerId) {
+    private Player player() {
         Player player = new Player();
-        player.setId(playerId);
-        player.setGameName("Psilonnix");
-        player.setTagLine("EUW");
-        player.setDisplayName("Psilonnix");
-
+        player.setId(1L);
+        player.setDisplayName("Player One");
+        player.setRiotPuuid(PUUID);
         return player;
     }
 }

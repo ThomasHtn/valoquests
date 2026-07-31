@@ -66,12 +66,11 @@ class SynchronizationQueryServiceTest {
     @Test
     void shouldReturnLatestSynchronization() {
         Synchronization synchronization = synchronization(12L);
-        Player player = player(1L, "Psilonnix");
-        player.setLastSuccessfulSynchronizationAt(LAST_SUCCESSFUL_AT);
 
         when(synchronizationRepository.findFirstByOrderByStartedAtDescIdDesc())
             .thenReturn(Optional.of(synchronization));
-        when(playerRepository.findAll()).thenReturn(List.of(player));
+        when(playerRepository.findLatestSuccessfulSynchronizationAt())
+            .thenReturn(Optional.of(LAST_SUCCESSFUL_AT));
 
         SynchronizationResponse response = service.findLatest();
 
@@ -99,7 +98,8 @@ class SynchronizationQueryServiceTest {
         Synchronization synchronization = synchronization(13L);
         when(synchronizationRepository.findAll(any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(synchronization)));
-        when(playerRepository.findAll()).thenReturn(List.of());
+        when(playerRepository.findLatestSuccessfulSynchronizationAt())
+            .thenReturn(Optional.empty());
 
         var response = service.findHistory(0, 20);
 

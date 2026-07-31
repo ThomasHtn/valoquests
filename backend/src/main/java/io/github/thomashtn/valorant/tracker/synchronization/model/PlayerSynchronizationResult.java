@@ -5,12 +5,13 @@ import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import java.time.Instant;
 
 /**
- * Contains the result of a successful standard synchronization.
+ * Contains the result of a successful synchronization.
  *
  * @param player synchronized player
  * @param pagesFetched number of Henrik match-history pages retrieved
  * @param matchesImported number of newly imported player matches
  * @param completedAt completion timestamp
+ * @param stopReason condition that ended the match-history walk
  */
 @SuppressFBWarnings(
     value = "EI_EXPOSE_REP",
@@ -21,7 +22,8 @@ public record PlayerSynchronizationResult(
     Player player,
     int pagesFetched,
     int matchesImported,
-    Instant completedAt
+    Instant completedAt,
+    SynchronizationStopReason stopReason
 ) {
 
     /**
@@ -44,6 +46,11 @@ public record PlayerSynchronizationResult(
         if (completedAt == null) {
             throw new IllegalArgumentException(
                 "completedAt must not be null"
+            );
+        }
+        if (stopReason == null) {
+            throw new IllegalArgumentException(
+                "stopReason must not be null"
             );
         }
     }

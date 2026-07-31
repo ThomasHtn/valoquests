@@ -3,6 +3,7 @@ package io.github.thomashtn.valorant.tracker.synchronization.entity;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.shared.entity.AuditableEntity;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStopReason;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -80,4 +81,14 @@ public class SynchronizationPlayerResult extends AuditableEntity {
      */
     @Column(name = "error_message", length = 2000)
     private String errorMessage;
+
+    /**
+     * Condition that ended the match-history walk, or {@code null} when no walk completed.
+     *
+     * <p>Reported so a short import is self-explanatory: {@code SEASON_BOUNDARY} means the player's
+     * current season was exhausted, while {@code PAGE_LIMIT_REACHED} means the history was truncated.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "stop_reason", length = 30)
+    private SynchronizationStopReason stopReason;
 }

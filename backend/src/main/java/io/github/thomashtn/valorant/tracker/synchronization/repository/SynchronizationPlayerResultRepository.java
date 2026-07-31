@@ -2,6 +2,7 @@ package io.github.thomashtn.valorant.tracker.synchronization.repository;
 
 import io.github.thomashtn.valorant.tracker.synchronization.entity.SynchronizationPlayerResult;
 import java.util.List;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
@@ -12,7 +13,11 @@ public interface SynchronizationPlayerResultRepository
 
     /**
      * Returns player results in deterministic player order.
+     *
+     * <p>The player is fetched alongside its results because every caller reads its display name.
+     * The association is lazy, which would otherwise issue one extra query per returned row.
      */
+    @EntityGraph(attributePaths = "player")
     List<SynchronizationPlayerResult>
         findAllBySynchronizationIdOrderByPlayerIdAsc(Long synchronizationId);
 }

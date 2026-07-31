@@ -14,6 +14,8 @@ import io.github.thomashtn.valorant.tracker.player.model.CompetitiveTier;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Locale;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -21,6 +23,9 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class HenrikMatchMapper {
+
+    private static final Logger LOGGER =
+        LoggerFactory.getLogger(HenrikMatchMapper.class);
 
     /**
      * Maps shared match metadata to the persisted match entity.
@@ -30,7 +35,7 @@ public class HenrikMatchMapper {
         Season season
     ) {
         HenrikMatchMetadata metadata = requireMetadata(source);
-        GameMode gameMode = toGameMode(metadata.queue());
+        GameMode gameMode = toGameMode(metadata);
 
         ValorantMatch target = new ValorantMatch();
         target.setExternalMatchId(metadata.matchId());
@@ -73,9 +78,14 @@ public class HenrikMatchMapper {
         );
 
         int rounds = roundsPlayed(team);
-        boolean roundBasedMode = supportsRoundAverages(
-            match.getGameMode()
-        );
+        boolean roundBasedMode = match.getGameMode().isRoundBased();
+
+        // Henrik omits the damage breakdown for some modes, Skirmish among them. The persisted
+        // total then falls back to zero because the column is not nullable, so ADR must stay unset
+        // rather than report a zero average that would drag the player's statistics down.
+        boolean damageReported = stats != null
+            && stats.damage() != null
+            && stats.damage().dealt() != null;
 
         PlayerMatch target = new PlayerMatch();
         target.setPlayer(player);
@@ -116,7 +126,7 @@ public class HenrikMatchMapper {
             roundBasedMode ? average(target.getScore(), rounds) : null
         );
         target.setAdr(
-            roundBasedMode
+            roundBasedMode && damageReported
                 ? average(target.getDamageDealt(), rounds)
                 : null
         );
@@ -148,41 +158,72 @@ public class HenrikMatchMapper {
         return Math.toIntExact(milliseconds / 1_000);
     }
 
-    private GameMode toGameMode(
-        HenrikMatchMetadata.HenrikQueue queue
-    ) {
+    /**
+     * Resolves the game mode from the identifiers Henrik exposes, most specific first.
+     *
+     * <p>The queue slug is authoritative. The display name covers matches where Henrik returns a
+     * blank slug, as it does for some custom games. The mode type comes last and is only a safety
+     * net for a queue renamed by Riot: it names the <em>ruleset</em>, not the queue, so a custom
+     * game played with the Skirmish ruleset reports {@code Skirmish} while belonging to the custom
+     * queue. It is also ambiguous for bomb-based queues, which all report {@code Standard}.
+     *
+     * <p>Neither of the first two levels is reliable on its own: Henrik returns no display name for
+     * the Skirmish queue, and it returns the map name rather than a mode label for the new-map
+     * queue. Only their combination classifies every queue observed so far.
+     *
+     * <p>Deliberately silent, so the import layer can classify a match to decide whether to store it
+     * without emitting a diagnostic for every page. The warning belongs to {@link #toGameMode},
+     * which runs once per persisted match.
+     *
+     * @param metadata Henrik match metadata
+     * @return the resolved mode, or {@link GameMode#OTHER} when no identifier matches
+     */
+    public GameMode resolveGameMode(HenrikMatchMetadata metadata) {
+        HenrikMatchMetadata.HenrikQueue queue = metadata.queue();
+
         if (queue == null) {
             return GameMode.OTHER;
         }
 
-        String rawValue = queue.id() == null
-            ? queue.name()
-            : queue.id();
+        return GameMode.fromIdentifier(queue.id())
+            .or(() -> GameMode.fromIdentifier(queue.name()))
+            .or(() -> GameMode.fromIdentifier(queue.modeType()))
+            .orElse(GameMode.OTHER);
+    }
 
-        if (rawValue == null) {
+    /**
+     * Resolves the game mode and reports the queues this application cannot classify.
+     *
+     * <p>An unresolved queue is logged rather than silently bucketed into {@link GameMode#OTHER}, so
+     * a newly released Valorant mode surfaces in the synchronization logs. Called only from
+     * {@link #toValorantMatch}, which runs on the creation path alone: the warning is therefore
+     * emitted exactly once per persisted match, never per page and never for a match already stored.
+     */
+    private GameMode toGameMode(
+        HenrikMatchMetadata metadata
+    ) {
+        HenrikMatchMetadata.HenrikQueue queue = metadata.queue();
+
+        if (queue == null) {
+            LOGGER.warn(
+                "Match {} has no queue: game mode set to OTHER",
+                metadata.matchId()
+            );
             return GameMode.OTHER;
         }
 
-        String value = normalize(rawValue);
-
-        return switch (value) {
-            case "competitive" -> GameMode.COMPETITIVE;
-            case "unrated" -> GameMode.UNRATED;
-            case "swiftplay" -> GameMode.SWIFTPLAY;
-            case "spikerush" -> GameMode.SPIKE_RUSH;
-            case "deathmatch" -> GameMode.DEATHMATCH;
-            case "teamdeathmatch", "hurm" ->
-                GameMode.TEAM_DEATHMATCH;
-
-            // Henrik/Riot naming may vary. In this project SKIRMISH is
-            // intentionally considered equivalent to ESCALATION.
-            case "escalation", "skirmish", "ggteam" ->
-                GameMode.ESCALATION;
-
-            case "premier" -> GameMode.PREMIER;
-            case "custom" -> GameMode.CUSTOM;
-            default -> GameMode.OTHER;
-        };
+        GameMode gameMode = resolveGameMode(metadata);
+        if (gameMode == GameMode.OTHER) {
+            LOGGER.warn(
+                "Unresolved game mode for match {}: queue id={}, "
+                    + "name={}, modeType={}. Falling back to OTHER.",
+                metadata.matchId(),
+                queue.id(),
+                queue.name(),
+                queue.modeType()
+            );
+        }
+        return gameMode;
     }
 
     private MatchResult toResult(HenrikMatchTeam team) {
@@ -248,21 +289,6 @@ public class HenrikMatchMapper {
             + value(team.rounds().lost());
     }
 
-    private boolean supportsRoundAverages(GameMode gameMode) {
-        return switch (gameMode) {
-            case COMPETITIVE,
-                 UNRATED,
-                 SWIFTPLAY,
-                 SPIKE_RUSH,
-                 PREMIER,
-                 CUSTOM -> true;
-            case DEATHMATCH,
-                 TEAM_DEATHMATCH,
-                 ESCALATION,
-                 OTHER -> false;
-        };
-    }
-
     private boolean isMvp(
         HenrikMatchData source,
         HenrikMatchPlayer player
@@ -294,14 +320,6 @@ public class HenrikMatchMapper {
                 2,
                 RoundingMode.HALF_UP
             );
-    }
-
-    private String normalize(String value) {
-        return value
-            .toLowerCase(Locale.ROOT)
-            .replace("_", "")
-            .replace("-", "")
-            .replace(" ", "");
     }
 
     private int value(Integer value) {

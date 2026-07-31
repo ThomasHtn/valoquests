@@ -56,8 +56,22 @@ class ChallengeCatalogueCompatibilityTest {
 
     /**
      * Expected number of active catalogue entries.
+     *
+     * <p>V3 seeds 78 rows, of which V14 deletes the 16 filtered on a game mode synchronization no
+     * longer imports.
      */
-    private static final int EXPECTED_CHALLENGE_COUNT = 78;
+    private static final int EXPECTED_CHALLENGE_COUNT = 62;
+
+    /**
+     * Game-mode filters removed from the catalogue by V14.
+     *
+     * <p>The migration deletes the rows still present in V3, so this test must skip them the same
+     * way: mirroring the migration's predicate rather than listing challenge codes keeps the two in
+     * step if another challenge with the same filter is ever added.
+     */
+    private static final Pattern REMOVED_GAME_MODE_PATTERN = Pattern.compile(
+        "\"gameMode\"\\s*:\\s*\"(SWIFTPLAY|ESCALATION)\""
+    );
 
     /**
      * Pattern extracting one challenge row from the production migration.
@@ -244,6 +258,9 @@ class ChallengeCatalogueCompatibilityTest {
         List<Challenge> challenges = new ArrayList<>();
 
         while (matcher.find()) {
+            if (REMOVED_GAME_MODE_PATTERN.matcher(matcher.group(9)).find()) {
+                continue;
+            }
             challenges.add(toChallenge(matcher));
         }
 

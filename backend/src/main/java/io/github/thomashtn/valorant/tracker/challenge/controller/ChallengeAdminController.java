@@ -1,14 +1,12 @@
 package io.github.thomashtn.valorant.tracker.challenge.controller;
 
 import static io.github.thomashtn.valorant.tracker.shared.config.OpenApiConfig.ADMIN_KEY_SECURITY_SCHEME;
-import static io.github.thomashtn.valorant.tracker.shared.web.RequiredService.get;
 
 import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,15 +23,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChallengeAdminController {
 
     /**
-     * Provider used to access the optional feature service when implemented.
+     * Service rebuilding the active-week progress and the weekly ranking.
      */
-    private final ObjectProvider<ChallengeRecalculationService> serviceProvider;
+    private final ChallengeRecalculationService recalculationService;
 
     /**
-     * @param serviceProvider provider for the future recalculation implementation
+     * @param recalculationService challenge progress recalculation service
      */
-    public ChallengeAdminController(ObjectProvider<ChallengeRecalculationService> serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public ChallengeAdminController(ChallengeRecalculationService recalculationService) {
+        this.recalculationService = recalculationService;
     }
 
     /**
@@ -47,10 +45,14 @@ public class ChallengeAdminController {
             Rebuilds the active-week challenge progress from matches already stored in PostgreSQL.
             This operation does not call the Henrik API and refreshes the weekly ranking after the
             progress calculation completes.
+
+            Synchronization already runs this recalculation whenever it imports a match, so this
+            route is a repair tool: it is what replays the calculation after a challenge definition
+            changed, or after a recalculation failed at the end of a synchronization.
             """
     )
     @ApiResponse(responseCode = "204", description = "Progress and ranking recalculated successfully.")
     public void recalculateChallengeProgress() {
-        get(serviceProvider, "Challenge progress recalculation").recalculateCurrentWeekProgress();
+        recalculationService.recalculateCurrentWeekProgress();
     }
 }

@@ -1,5 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
-import { MatTooltip } from '@angular/material/tooltip';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { LucideTarget } from '@lucide/angular';
 
 import { ChallengeIconView } from '@shared/challenge-icon-view/challenge-icon-view';
@@ -24,7 +24,7 @@ import { ChallengeRow } from './weekly-challenges.model';
   imports: [
     TranslatePipe,
     ChallengeIconView,
-    MatTooltip,
+    Tooltip,
     PointsBadge,
     ProgressBar,
     ResourceState,

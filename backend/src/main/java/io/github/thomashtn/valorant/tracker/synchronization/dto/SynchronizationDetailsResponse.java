@@ -3,6 +3,7 @@ package io.github.thomashtn.valorant.tracker.synchronization.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStopReason;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
 import java.time.Instant;
@@ -26,6 +27,12 @@ public record SynchronizationDetailsResponse(
     String errorMessage,
     List<PlayerResultResponse> players
 ) {
+    /**
+     * Exposes one player's outcome within an execution.
+     *
+     * @param stopReason condition that ended the match-history walk, {@code null} when the player
+     *     failed before completing one. Explains a short import without inspecting the logs.
+     */
     public record PlayerResultResponse(
 
         Long playerId,
@@ -33,7 +40,8 @@ public record SynchronizationDetailsResponse(
         SynchronizationStatus status,
         int pagesFetched,
         int matchesImported,
-        String errorMessage
+        String errorMessage,
+        SynchronizationStopReason stopReason
     ) {
     }
 
