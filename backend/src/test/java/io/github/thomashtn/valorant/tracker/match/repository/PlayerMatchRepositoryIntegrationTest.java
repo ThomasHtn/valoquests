@@ -7,6 +7,7 @@ import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.entity.Season;
 import io.github.thomashtn.valorant.tracker.match.entity.ValorantMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
+import io.github.thomashtn.valorant.tracker.match.model.GameModeSource;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
@@ -164,6 +165,7 @@ class PlayerMatchRepositoryIntegrationTest
         match.setMapId("ascent");
         match.setMapName("Ascent");
         match.setGameMode(GameMode.COMPETITIVE);
+        match.setGameModeSource(GameModeSource.PROVIDED);
         match.setQueueId("competitive");
         match.setRedScore(13);
         match.setBlueScore(10);

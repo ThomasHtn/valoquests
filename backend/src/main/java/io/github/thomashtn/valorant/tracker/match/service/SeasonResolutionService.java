@@ -5,11 +5,21 @@ import io.github.thomashtn.valorant.tracker.match.entity.Season;
 import io.github.thomashtn.valorant.tracker.match.repository.SeasonRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Resolves local seasons from Henrik match metadata.
+ *
+ * <p><strong>Concurrency.</strong> Two different tracked players can both encounter the same new
+ * season for the first time in concurrent synchronizations. {@code external_id} is a database-enforced
+ * unique constraint, so the loser of that race fails with a constraint violation. Creation runs in its
+ * own transaction so that failure can be caught and resolved by reusing the winner's row, regardless
+ * of whether the caller already holds an open transaction.
  */
 @Service
 public class SeasonResolutionService {
@@ -26,12 +36,27 @@ public class SeasonResolutionService {
     private final SeasonRepository seasonRepository;
 
     /**
+     * Runs one creation attempt in its own transaction, independent from any transaction the caller
+     * may already be running in.
+     */
+    private final TransactionTemplate newRowTransactionTemplate;
+
+    /**
      * Creates the season resolution service.
      *
-     * @param seasonRepository repository holding the seasons discovered so far
+     * @param seasonRepository   repository holding the seasons discovered so far
+     * @param transactionManager transaction manager used to isolate racy row creation
      */
-    public SeasonResolutionService(SeasonRepository seasonRepository) {
+    public SeasonResolutionService(
+        SeasonRepository seasonRepository,
+        PlatformTransactionManager transactionManager
+    ) {
         this.seasonRepository = seasonRepository;
+
+        this.newRowTransactionTemplate = new TransactionTemplate(transactionManager);
+        this.newRowTransactionTemplate.setPropagationBehavior(
+            TransactionDefinition.PROPAGATION_REQUIRES_NEW
+        );
     }
 
     /**
@@ -50,7 +75,24 @@ public class SeasonResolutionService {
 
         return seasonRepository.findByExternalId(source.id())
             .map(existing -> updateName(existing, source.shortName()))
-            .orElseGet(() -> create(source));
+            .orElseGet(() -> createOrReuse(source));
+    }
+
+    /**
+     * Creates a local season from external metadata, reusing the row a concurrent resolution already
+     * committed when this call loses the race.
+     */
+    private Season createOrReuse(HenrikMatchMetadata.HenrikSeason source) {
+        try {
+            return newRowTransactionTemplate.execute(status -> create(source));
+        } catch (DataIntegrityViolationException raceLost) {
+            LOGGER.debug(
+                "Season {} was created concurrently by another synchronization: reusing it",
+                source.id()
+            );
+            return seasonRepository.findByExternalId(source.id())
+                .orElseThrow(() -> raceLost);
+        }
     }
 
     /**

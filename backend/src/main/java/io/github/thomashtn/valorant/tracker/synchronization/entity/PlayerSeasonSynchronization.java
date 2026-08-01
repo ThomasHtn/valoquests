@@ -78,4 +78,13 @@ public class PlayerSeasonSynchronization extends AuditableEntity {
      */
     @Column(name = "completed_at")
     private Instant completedAt;
+
+    /**
+     * Pagination offset proven, by a page already durably imported, to still belong to this season.
+     *
+     * <p>A resumed walk of an incomplete season starts here instead of zero, skipping only the range a
+     * previous execution already confirmed. Meaningless once {@link #complete} is {@code true}.
+     */
+    @Column(name = "next_start_offset", nullable = false)
+    private int nextStartOffset;
 }

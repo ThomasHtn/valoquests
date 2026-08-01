@@ -8,9 +8,11 @@ import io.github.thomashtn.valorant.tracker.henrik.config.HenrikApiProperties;
 import io.github.thomashtn.valorant.tracker.henrik.config.HenrikClientConfig;
 import io.github.thomashtn.valorant.tracker.henrik.dto.match.HenrikMatchHistoryResponse;
 import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikRateLimitException;
+import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikRequestTimeoutException;
 import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikServiceUnavailableException;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -185,6 +187,59 @@ class DefaultHenrikMatchClientTest {
     }
 
     @Test
+    @DisplayName("retries a rate-limited page beyond the generic failure attempt budget")
+    void shouldRetryRateLimitedPageBeyondTheGenericAttemptBudget() {
+        mockWebServer.enqueue(rateLimitResponse());
+        mockWebServer.enqueue(rateLimitResponse());
+        mockWebServer.enqueue(jsonResponse(200, """
+            { "status": 200, "data": [] }
+            """));
+
+        // A single attempt would abort on the first genuine failure, but a rate-limit response is
+        // expected during a long walk and gets its own, larger budget.
+        DefaultHenrikMatchClient client = createClient(1, 3);
+
+        assertThat(client.getMatches(PUUID, 0, 10).data()).isEmpty();
+        assertThat(mockWebServer.getRequestCount()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("retries a read timeout as a transient failure and eventually succeeds")
+    void shouldRetryAReadTimeoutAndSucceed() {
+        mockWebServer.enqueue(
+            new MockResponse()
+                .setHeadersDelay(500, TimeUnit.MILLISECONDS)
+                .setBody("{ \"status\": 200, \"data\": [] }")
+        );
+        mockWebServer.enqueue(jsonResponse(200, """
+            { "status": 200, "data": [] }
+            """));
+
+        DefaultHenrikMatchClient client = createClient(2, 2, Duration.ofMillis(100));
+
+        assertThat(client.getMatches(PUUID, 0, 10).data()).isEmpty();
+        assertThat(mockWebServer.getRequestCount()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("gives up after repeated read timeouts")
+    void shouldGiveUpAfterRepeatedReadTimeouts() {
+        mockWebServer.enqueue(
+            new MockResponse().setHeadersDelay(500, TimeUnit.MILLISECONDS).setBody("{}")
+        );
+        mockWebServer.enqueue(
+            new MockResponse().setHeadersDelay(500, TimeUnit.MILLISECONDS).setBody("{}")
+        );
+
+        DefaultHenrikMatchClient client = createClient(2, 2, Duration.ofMillis(100));
+
+        assertThatThrownBy(() -> client.getMatches(PUUID, 0, 10))
+            .isInstanceOf(HenrikRequestTimeoutException.class);
+
+        assertThat(mockWebServer.getRequestCount()).isEqualTo(2);
+    }
+
+    @Test
     @DisplayName("gives up after the configured number of attempts")
     void shouldGiveUpAfterTheConfiguredNumberOfAttempts() {
         mockWebServer.enqueue(jsonResponse(503, """
@@ -203,21 +258,52 @@ class DefaultHenrikMatchClientTest {
     }
 
     /**
-     * Creates a match client targeting the local server.
+     * Creates a match client targeting the local server, using the same attempt budget for genuine
+     * failures and rate-limit responses.
      *
      * @param maxAttempts maximum request attempts, including the first
      * @return the client under test
      */
     private DefaultHenrikMatchClient createClient(int maxAttempts) {
+        return createClient(maxAttempts, maxAttempts);
+    }
+
+    /**
+     * Creates a match client targeting the local server.
+     *
+     * @param maxAttempts          maximum request attempts for a genuine failure, including the first
+     * @param rateLimitMaxAttempts maximum request attempts for a rate-limit response, including the
+     *                             first
+     * @return the client under test
+     */
+    private DefaultHenrikMatchClient createClient(int maxAttempts, int rateLimitMaxAttempts) {
+        return createClient(maxAttempts, rateLimitMaxAttempts, Duration.ofSeconds(2));
+    }
+
+    /**
+     * Creates a match client targeting the local server with a configurable read timeout.
+     *
+     * @param maxAttempts          maximum request attempts for a genuine failure, including the first
+     * @param rateLimitMaxAttempts maximum request attempts for a rate-limit response, including the
+     *                             first
+     * @param readTimeout          maximum duration allowed for a response
+     * @return the client under test
+     */
+    private DefaultHenrikMatchClient createClient(
+        int maxAttempts,
+        int rateLimitMaxAttempts,
+        Duration readTimeout
+    ) {
         HenrikApiProperties properties = new HenrikApiProperties(
             mockWebServer.url("/").toString(),
             "test-api-key",
             "eu",
             "pc",
             Duration.ofSeconds(2),
-            Duration.ofSeconds(2),
+            readTimeout,
             maxAttempts,
             Duration.ofMillis(1),
+            rateLimitMaxAttempts,
             30,
             Duration.ZERO
         );

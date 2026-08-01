@@ -8,6 +8,7 @@ import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.entity.Season;
 import io.github.thomashtn.valorant.tracker.match.entity.ValorantMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
+import io.github.thomashtn.valorant.tracker.match.model.GameModeSource;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.model.CompetitiveTier;
@@ -42,7 +43,7 @@ public class HenrikMatchMapper {
         Season season
     ) {
         HenrikMatchMetadata metadata = requireMetadata(source);
-        GameMode gameMode = toGameMode(metadata);
+        GameModeResolution resolution = toGameModeResolution(metadata);
 
         ValorantMatch target = new ValorantMatch();
         target.setExternalMatchId(metadata.matchId());
@@ -62,7 +63,8 @@ public class HenrikMatchMapper {
         target.setQueueId(
             metadata.queue() == null ? null : metadata.queue().id()
         );
-        target.setGameMode(gameMode);
+        target.setGameMode(resolution.gameMode());
+        target.setGameModeSource(resolution.source());
         target.setRedScore(teamScore(source, "Red"));
         target.setBlueScore(teamScore(source, "Blue"));
         return target;
@@ -196,36 +198,50 @@ public class HenrikMatchMapper {
     }
 
     /**
-     * Resolves the game mode from the identifiers Henrik exposes, most specific first.
+     * Resolves the game mode from the identifiers Henrik exposes, most specific first, along with the
+     * source that classifies how confidently it was resolved.
      *
-     * <p>The queue slug is authoritative. The display name covers matches where Henrik returns a
-     * blank slug, as it does for some custom games. The mode type comes last and is only a safety
-     * net for a queue renamed by Riot: it names the <em>ruleset</em>, not the queue, so a custom
-     * game played with the Skirmish ruleset reports {@code Skirmish} while belonging to the custom
-     * queue. It is also ambiguous for bomb-based queues, which all report {@code Standard}.
+     * <p>The queue slug is authoritative and yields {@link GameModeSource#PROVIDED}. The display name
+     * and mode type are fallbacks covering matches where Henrik returns a blank slug, as it does for
+     * some custom games, or renames a queue; both yield {@link GameModeSource#INFERRED}. The mode type
+     * is also ambiguous for bomb-based queues, which all report {@code Standard}, so it is tried last.
      *
-     * <p>Neither of the first two levels is reliable on its own: Henrik returns no display name for
-     * the Skirmish queue, and it returns the map name rather than a mode label for the new-map
-     * queue. Only their combination classifies every queue observed so far.
+     * <p>Neither fallback is reliable on its own: Henrik returns no display name for the Skirmish
+     * queue, and it returns the map name rather than a mode label for the new-map queue. Only their
+     * combination classifies every queue observed so far.
      *
-     * <p>Deliberately silent, so the import layer can classify a match to decide whether to store it
-     * without emitting a diagnostic for every page. The warning belongs to {@link #toGameMode},
-     * which runs once per persisted match.
+     * <p>Deliberately silent, so the import layer can classify a match to decide whether to store it,
+     * and enrichment can compare sources, without emitting a diagnostic for every page. The warning
+     * belongs to {@link #toGameModeResolution}, which runs once per persisted match.
      *
      * @param metadata Henrik match metadata
-     * @return the resolved mode, or {@link GameMode#OTHER} when no identifier matches
+     * @return the resolved mode and the source that classified it
      */
-    public GameMode resolveGameMode(HenrikMatchMetadata metadata) {
+    public GameModeResolution resolveGameModeWithSource(HenrikMatchMetadata metadata) {
         HenrikMatchMetadata.HenrikQueue queue = metadata.queue();
 
         if (queue == null) {
-            return GameMode.OTHER;
+            return new GameModeResolution(GameMode.OTHER, GameModeSource.UNKNOWN);
         }
 
         return GameMode.fromIdentifier(queue.id())
-            .or(() -> GameMode.fromIdentifier(queue.name()))
-            .or(() -> GameMode.fromIdentifier(queue.modeType()))
-            .orElse(GameMode.OTHER);
+            .map(gameMode -> new GameModeResolution(gameMode, GameModeSource.PROVIDED))
+            .or(() -> GameMode.fromIdentifier(queue.name())
+                .map(gameMode -> new GameModeResolution(gameMode, GameModeSource.INFERRED)))
+            .or(() -> GameMode.fromIdentifier(queue.modeType())
+                .map(gameMode -> new GameModeResolution(gameMode, GameModeSource.INFERRED)))
+            .orElseGet(() -> new GameModeResolution(GameMode.OTHER, GameModeSource.UNKNOWN));
+    }
+
+    /**
+     * Resolves the game mode, ignoring its source.
+     *
+     * @param metadata Henrik match metadata
+     * @return the resolved mode, or {@link GameMode#OTHER} when no identifier matches
+     * @see #resolveGameModeWithSource(HenrikMatchMetadata)
+     */
+    public GameMode resolveGameMode(HenrikMatchMetadata metadata) {
+        return resolveGameModeWithSource(metadata).gameMode();
     }
 
     /**
@@ -236,7 +252,7 @@ public class HenrikMatchMapper {
      * {@link #toValorantMatch}, which runs on the creation path alone: the warning is therefore
      * emitted exactly once per persisted match, never per page and never for a match already stored.
      */
-    private GameMode toGameMode(
+    private GameModeResolution toGameModeResolution(
         HenrikMatchMetadata metadata
     ) {
         HenrikMatchMetadata.HenrikQueue queue = metadata.queue();
@@ -246,11 +262,11 @@ public class HenrikMatchMapper {
                 "Match {} has no queue: game mode set to OTHER",
                 metadata.matchId()
             );
-            return GameMode.OTHER;
+            return new GameModeResolution(GameMode.OTHER, GameModeSource.UNKNOWN);
         }
 
-        GameMode gameMode = resolveGameMode(metadata);
-        if (gameMode == GameMode.OTHER) {
+        GameModeResolution resolution = resolveGameModeWithSource(metadata);
+        if (resolution.gameMode() == GameMode.OTHER) {
             LOGGER.warn(
                 "Unresolved game mode for match {}: queue id={}, "
                     + "name={}, modeType={}. Falling back to OTHER.",
@@ -260,7 +276,7 @@ public class HenrikMatchMapper {
                 queue.modeType()
             );
         }
-        return gameMode;
+        return resolution;
     }
 
     private MatchResult toResult(HenrikMatchTeam team) {
@@ -361,5 +377,14 @@ public class HenrikMatchMapper {
 
     private int value(Integer value) {
         return value == null ? 0 : value;
+    }
+
+    /**
+     * A resolved game mode paired with how confidently it was determined.
+     *
+     * @param gameMode resolved mode
+     * @param source   identifier tier that resolved it
+     */
+    public record GameModeResolution(GameMode gameMode, GameModeSource source) {
     }
 }

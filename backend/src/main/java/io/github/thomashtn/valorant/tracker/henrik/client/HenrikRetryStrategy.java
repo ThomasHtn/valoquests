@@ -52,8 +52,6 @@ public class HenrikRetryStrategy {
      * @return configured Reactor retry policy
      */
     public Retry create(String operationName) {
-        long maximumRetries = properties.maxAttempts() - 1L;
-
         return Retry.from(retrySignals ->
             retrySignals.concatMap(retrySignal -> {
                 Throwable failure = retrySignal.failure();
@@ -62,7 +60,8 @@ public class HenrikRetryStrategy {
                     return Mono.error(failure);
                 }
 
-                if (retrySignal.totalRetries() >= maximumRetries) {
+                long configuredAttempts = maximumAttempts(failure);
+                if (retrySignal.totalRetries() >= configuredAttempts - 1L) {
                     return Mono.error(failure);
                 }
 
@@ -74,7 +73,7 @@ public class HenrikRetryStrategy {
                         + "Attempt {}/{} in {} ms. Cause: {}",
                     operationName,
                     nextAttempt,
-                    properties.maxAttempts(),
+                    configuredAttempts,
                     delay.toMillis(),
                     failure.getMessage()
                 );
@@ -82,6 +81,23 @@ public class HenrikRetryStrategy {
                 return Mono.delay(delay);
             })
         );
+    }
+
+    /**
+     * Determines the attempt budget for a failure.
+     *
+     * <p>A rate-limit response is Henrik's own advertised, expected condition during a long
+     * pagination walk, not a genuine failure: it gets a far more generous budget than a real error
+     * such as a timeout or an upstream outage, so a burst of 429 responses does not abort a walk that
+     * would otherwise have completed.
+     *
+     * @param failure retryable Henrik failure
+     * @return maximum number of HTTP attempts, including the first
+     */
+    private long maximumAttempts(Throwable failure) {
+        return failure instanceof HenrikRateLimitException
+            ? properties.rateLimitMaxAttempts()
+            : properties.maxAttempts();
     }
 
     /**

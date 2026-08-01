@@ -10,6 +10,7 @@ import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.entity.Season;
 import io.github.thomashtn.valorant.tracker.match.entity.ValorantMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
+import io.github.thomashtn.valorant.tracker.match.model.GameModeSource;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -83,6 +84,71 @@ class HenrikMatchMapperTest {
         );
 
         assertThat(result.getGameMode()).isEqualTo(expected);
+    }
+
+    /**
+     * Verifies that a mode resolved from the canonical queue slug is attributed to
+     * {@link GameModeSource#PROVIDED}.
+     */
+    @Test
+    void shouldAttributeQueueSlugResolutionToProvided() {
+        ValorantMatch result = mapper.toValorantMatch(
+            matchWithQueue(new HenrikMatchMetadata.HenrikQueue("deathmatch", null, null)),
+            season
+        );
+
+        assertThat(result.getGameModeSource()).isEqualTo(GameModeSource.PROVIDED);
+    }
+
+    /**
+     * Verifies that a mode resolved from the display name fallback is attributed to
+     * {@link GameModeSource#INFERRED}, not {@link GameModeSource#PROVIDED}.
+     */
+    @Test
+    void shouldAttributeQueueNameFallbackToInferred() {
+        ValorantMatch result = mapper.toValorantMatch(
+            matchWithQueue(new HenrikMatchMetadata.HenrikQueue(null, "Skirmish", null)),
+            season
+        );
+
+        assertThat(result.getGameModeSource()).isEqualTo(GameModeSource.INFERRED);
+    }
+
+    /**
+     * Verifies that a mode resolved from the mode-type fallback is attributed to
+     * {@link GameModeSource#INFERRED}.
+     */
+    @Test
+    void shouldAttributeModeTypeFallbackToInferred() {
+        ValorantMatch result = mapper.toValorantMatch(
+            matchWithQueue(new HenrikMatchMetadata.HenrikQueue(null, null, "Team Deathmatch")),
+            season
+        );
+
+        assertThat(result.getGameModeSource()).isEqualTo(GameModeSource.INFERRED);
+    }
+
+    /**
+     * Verifies that an unresolved queue is attributed to {@link GameModeSource#UNKNOWN}.
+     */
+    @Test
+    void shouldAttributeUnresolvedQueueToUnknown() {
+        ValorantMatch result = mapper.toValorantMatch(
+            matchWithQueue(new HenrikMatchMetadata.HenrikQueue("mystery", "Mystery", "Mystery")),
+            season
+        );
+
+        assertThat(result.getGameModeSource()).isEqualTo(GameModeSource.UNKNOWN);
+    }
+
+    /**
+     * Verifies that a missing queue is attributed to {@link GameModeSource#UNKNOWN}.
+     */
+    @Test
+    void shouldAttributeMissingQueueToUnknown() {
+        ValorantMatch result = mapper.toValorantMatch(matchWithQueue(null), season);
+
+        assertThat(result.getGameModeSource()).isEqualTo(GameModeSource.UNKNOWN);
     }
 
     /**

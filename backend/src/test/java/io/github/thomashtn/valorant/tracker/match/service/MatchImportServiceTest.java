@@ -3,6 +3,7 @@ package io.github.thomashtn.valorant.tracker.match.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -17,6 +18,7 @@ import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.entity.Season;
 import io.github.thomashtn.valorant.tracker.match.entity.ValorantMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
+import io.github.thomashtn.valorant.tracker.match.model.GameModeSource;
 import io.github.thomashtn.valorant.tracker.match.model.MatchImportResult;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valorant.tracker.match.repository.ValorantMatchRepository;
@@ -35,6 +37,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * Unit tests for {@link MatchImportService}, focused on the game-mode filter.
@@ -66,6 +70,9 @@ class MatchImportServiceTest {
     @Mock
     private SeasonResolutionService seasonResolutionService;
 
+    @Mock
+    private PlatformTransactionManager transactionManager;
+
     /**
      * Service under test, driven by the production mapper.
      */
@@ -85,7 +92,8 @@ class MatchImportServiceTest {
             matchRepository,
             playerMatchRepository,
             seasonResolutionService,
-            new HenrikMatchMapper()
+            new HenrikMatchMapper(),
+            transactionManager
         );
 
         player = new Player();
@@ -170,6 +178,8 @@ class MatchImportServiceTest {
     void shouldReportAnAlreadyStoredMatch() {
         ValorantMatch existing = new ValorantMatch();
         existing.setId(100L);
+        existing.setGameMode(GameMode.COMPETITIVE);
+        existing.setGameModeSource(GameModeSource.PROVIDED);
 
         when(matchRepository.findByExternalMatchId("match-1"))
             .thenReturn(Optional.of(existing));
@@ -181,6 +191,84 @@ class MatchImportServiceTest {
         assertThat(result.imported()).isZero();
         assertThat(result.knownHistoryReached()).isTrue();
         verify(playerMatchRepository, never()).save(any(PlayerMatch.class));
+    }
+
+    /**
+     * Verifies that a match under-classified by an earlier synchronization is enriched once a more
+     * confident resolution becomes available.
+     *
+     * <p>Henrik's queue slug is not always populated; a run that only had the display name to work
+     * with stores {@link GameModeSource#INFERRED}. A later run that gets the canonical slug must
+     * upgrade the stored value rather than leaving it at its first, weaker guess.
+     */
+    @Test
+    void shouldEnrichAnExistingMatchWhenAMoreConfidentSourceResolves() {
+        ValorantMatch existing = new ValorantMatch();
+        existing.setId(100L);
+        existing.setGameMode(GameMode.SKIRMISH);
+        existing.setGameModeSource(GameModeSource.INFERRED);
+
+        when(matchRepository.findByExternalMatchId("match-1"))
+            .thenReturn(Optional.of(existing));
+
+        importMatchWithQueue("match-1", new HenrikMatchMetadata.HenrikQueue("deathmatch", null, null));
+
+        assertThat(existing.getGameMode()).isEqualTo(GameMode.DEATHMATCH);
+        assertThat(existing.getGameModeSource()).isEqualTo(GameModeSource.PROVIDED);
+        verify(matchRepository).save(existing);
+    }
+
+    /**
+     * Verifies that a weaker resolution never downgrades an already stored, more confident one.
+     */
+    @Test
+    void shouldNotDowngradeAProvidedGameModeWithAnInferredOne() {
+        ValorantMatch existing = new ValorantMatch();
+        existing.setId(100L);
+        existing.setGameMode(GameMode.DEATHMATCH);
+        existing.setGameModeSource(GameModeSource.PROVIDED);
+
+        when(matchRepository.findByExternalMatchId("match-1"))
+            .thenReturn(Optional.of(existing));
+
+        importMatchWithQueue("match-1", new HenrikMatchMetadata.HenrikQueue(null, "Skirmish", null));
+
+        assertThat(existing.getGameMode()).isEqualTo(GameMode.DEATHMATCH);
+        assertThat(existing.getGameModeSource()).isEqualTo(GameModeSource.PROVIDED);
+        verify(matchRepository, never()).save(existing);
+    }
+
+    /**
+     * Verifies that a manual correction is never replaced by a value from a synchronization, however
+     * confidently that value was resolved.
+     */
+    @Test
+    void shouldNeverReplaceAManualCorrectionWithASynchronizedValue() {
+        ValorantMatch existing = new ValorantMatch();
+        existing.setId(100L);
+        existing.setGameMode(GameMode.CUSTOM);
+        existing.setGameModeSource(GameModeSource.MANUALLY_CORRECTED);
+
+        when(matchRepository.findByExternalMatchId("match-1"))
+            .thenReturn(Optional.of(existing));
+
+        importMatchWithQueue("match-1", new HenrikMatchMetadata.HenrikQueue("deathmatch", null, null));
+
+        assertThat(existing.getGameMode()).isEqualTo(GameMode.CUSTOM);
+        assertThat(existing.getGameModeSource()).isEqualTo(GameModeSource.MANUALLY_CORRECTED);
+        verify(matchRepository, never()).save(existing);
+    }
+
+    /**
+     * Verifies that a freshly created match is never redundantly re-saved by the enrichment step: its
+     * just-persisted value already matches what enrichment would resolve.
+     */
+    @Test
+    void shouldNotRedundantlySaveAFreshlyCreatedMatch() {
+        importOne("competitive");
+
+        // Once by createMatch, never again by enrichment.
+        verify(matchRepository, times(1)).save(any(ValorantMatch.class));
     }
 
     /**
@@ -245,6 +333,54 @@ class MatchImportServiceTest {
     }
 
     /**
+     * Verifies that losing the race to create a shared match reuses the winner's row instead of
+     * failing the whole page.
+     *
+     * <p>Two tracked players who both took part in the same match can be synchronized concurrently,
+     * or the same player can be caught up manually while a scheduled run is still in progress. Either
+     * way, the loser must recover by reusing the row the winner committed, not by propagating the
+     * database's unique-constraint violation.
+     */
+    @Test
+    void shouldReuseAMatchCreatedConcurrently() {
+        ValorantMatch winnerRow = new ValorantMatch();
+        winnerRow.setId(200L);
+        winnerRow.setGameMode(GameMode.COMPETITIVE);
+        winnerRow.setGameModeSource(GameModeSource.PROVIDED);
+
+        when(matchRepository.findByExternalMatchId("match-1"))
+            .thenReturn(Optional.empty())
+            .thenReturn(Optional.of(winnerRow));
+        when(matchRepository.save(any(ValorantMatch.class)))
+            .thenThrow(new DataIntegrityViolationException("duplicate external_match_id"));
+
+        MatchImportResult result = importOne("competitive");
+
+        assertThat(result.imported()).isEqualTo(1);
+        assertThat(result.rejected()).isZero();
+
+        ArgumentCaptor<PlayerMatch> saved = ArgumentCaptor.forClass(PlayerMatch.class);
+        verify(playerMatchRepository).save(saved.capture());
+        assertThat(saved.getValue().getMatch()).isSameAs(winnerRow);
+    }
+
+    /**
+     * Verifies that losing the race to create a player-match association reports it as already known
+     * instead of failing the whole page.
+     */
+    @Test
+    void shouldReportAnAssociationCreatedConcurrently() {
+        when(playerMatchRepository.save(any(PlayerMatch.class)))
+            .thenThrow(new DataIntegrityViolationException("duplicate player_id, match_id"));
+
+        MatchImportResult result = importOne("competitive");
+
+        assertThat(result.imported()).isZero();
+        assertThat(result.alreadyKnown()).isEqualTo(1);
+        assertThat(result.rejected()).isZero();
+    }
+
+    /**
      * Verifies that every counter of a mixed page adds up to the received count.
      */
     @Test
@@ -280,9 +416,29 @@ class MatchImportServiceTest {
     }
 
     /**
+     * Imports a single match carrying the given raw queue payload.
+     */
+    private MatchImportResult importMatchWithQueue(
+        String matchId,
+        HenrikMatchMetadata.HenrikQueue queue
+    ) {
+        return service.importMatchesWithSummary(
+            player,
+            new HenrikMatchHistoryResponse(200, List.of(match(matchId, queue)))
+        );
+    }
+
+    /**
      * Creates a completed Henrik match the tracked player took part in.
      */
     private HenrikMatchData match(String matchId, String queueId) {
+        return match(matchId, new HenrikMatchMetadata.HenrikQueue(queueId, null, null));
+    }
+
+    /**
+     * Creates a completed Henrik match the tracked player took part in.
+     */
+    private HenrikMatchData match(String matchId, HenrikMatchMetadata.HenrikQueue queue) {
         return new HenrikMatchData(
             new HenrikMatchMetadata(
                 matchId,
@@ -290,7 +446,7 @@ class MatchImportServiceTest {
                 1_800_000L,
                 Instant.parse("2026-07-20T18:00:00Z"),
                 true,
-                new HenrikMatchMetadata.HenrikQueue(queueId, null, null),
+                queue,
                 new HenrikMatchMetadata.HenrikSeason(SEASON_ID, "V26 Act 4")
             ),
             List.of(new HenrikMatchPlayer(

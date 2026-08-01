@@ -281,13 +281,29 @@ class DefaultHenrikAccountClientTest {
     }
 
     /**
-     * Creates a fully configured account client targeting the local server.
+     * Creates a fully configured account client targeting the local server, using the same attempt
+     * budget for genuine failures and rate-limit responses.
      *
      * @param maxAttempts maximum request attempts including the first request
      * @return Henrik account client under test
      */
     private DefaultHenrikAccountClient createClient(
         int maxAttempts
+    ) {
+        return createClient(maxAttempts, maxAttempts);
+    }
+
+    /**
+     * Creates a fully configured account client targeting the local server.
+     *
+     * @param maxAttempts          maximum request attempts for a genuine failure, including the first
+     * @param rateLimitMaxAttempts maximum request attempts for a rate-limit response, including the
+     *                             first
+     * @return Henrik account client under test
+     */
+    private DefaultHenrikAccountClient createClient(
+        int maxAttempts,
+        int rateLimitMaxAttempts
     ) {
         HenrikApiProperties properties =
             new HenrikApiProperties(
@@ -299,6 +315,7 @@ class DefaultHenrikAccountClientTest {
                 Duration.ofSeconds(2),
                 maxAttempts,
                 Duration.ofMillis(1),
+                rateLimitMaxAttempts,
                 30,
                 Duration.ZERO
             );

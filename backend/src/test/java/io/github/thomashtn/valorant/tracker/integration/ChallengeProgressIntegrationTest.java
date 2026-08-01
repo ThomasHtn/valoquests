@@ -17,6 +17,7 @@ import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.entity.Season;
 import io.github.thomashtn.valorant.tracker.match.entity.ValorantMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
+import io.github.thomashtn.valorant.tracker.match.model.GameModeSource;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valorant.tracker.match.repository.SeasonRepository;
@@ -499,6 +500,7 @@ class ChallengeProgressIntegrationTest
         match.setMapId("integration-map");
         match.setMapName("Ascent");
         match.setGameMode(gameMode);
+        match.setGameModeSource(GameModeSource.PROVIDED);
         match.setQueueId(
             gameMode.name().toLowerCase()
         );

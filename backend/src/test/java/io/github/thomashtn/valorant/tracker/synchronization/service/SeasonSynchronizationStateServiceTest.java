@@ -85,9 +85,11 @@ class SeasonSynchronizationStateServiceTest {
         when(stateRepository.findByPlayerIdAndSeasonId(1L, 7L))
             .thenReturn(Optional.empty());
 
-        Long seasonId = service.startSeason(player, season);
+        SeasonSynchronizationStateService.SeasonWalkStart walkStart =
+            service.startSeason(player, season);
 
-        assertThat(seasonId).isEqualTo(7L);
+        assertThat(walkStart.seasonId()).isEqualTo(7L);
+        assertThat(walkStart.resumeOffset()).isZero();
 
         ArgumentCaptor<PlayerSeasonSynchronization> saved =
             ArgumentCaptor.forClass(PlayerSeasonSynchronization.class);
@@ -106,12 +108,16 @@ class SeasonSynchronizationStateServiceTest {
      */
     @Test
     void shouldPreserveTheStateOfAnAlreadyTrackedSeason() {
+        PlayerSeasonSynchronization existing = state(true);
+        existing.setNextStartOffset(120);
         when(stateRepository.findByPlayerIdAndSeasonId(1L, 7L))
-            .thenReturn(Optional.of(state(true)));
+            .thenReturn(Optional.of(existing));
 
-        Long seasonId = service.startSeason(player, season);
+        SeasonSynchronizationStateService.SeasonWalkStart walkStart =
+            service.startSeason(player, season);
 
-        assertThat(seasonId).isEqualTo(7L);
+        assertThat(walkStart.seasonId()).isEqualTo(7L);
+        assertThat(walkStart.resumeOffset()).isEqualTo(120);
         verify(stateRepository, never()).save(any());
     }
 
@@ -223,6 +229,52 @@ class SeasonSynchronizationStateServiceTest {
             .thenReturn(Optional.empty());
 
         assertThat(service.findResumableSeasonId(1L, "season-0")).isEmpty();
+    }
+
+    /**
+     * Verifies that progress is recorded when it advances the checkpoint.
+     */
+    @Test
+    void shouldRecordAdvancingProgress() {
+        PlayerSeasonSynchronization state = state(false);
+        state.setNextStartOffset(10);
+        when(stateRepository.findByPlayerIdAndSeasonId(1L, 7L))
+            .thenReturn(Optional.of(state));
+
+        service.recordProgress(1L, 7L, 30);
+
+        assertThat(state.getNextStartOffset()).isEqualTo(30);
+        verify(stateRepository).save(state);
+    }
+
+    /**
+     * Verifies that progress never moves backward, so a slower concurrent execution cannot regress
+     * the checkpoint recorded by one that ran further ahead.
+     */
+    @Test
+    void shouldNeverRegressProgress() {
+        PlayerSeasonSynchronization state = state(false);
+        state.setNextStartOffset(50);
+        when(stateRepository.findByPlayerIdAndSeasonId(1L, 7L))
+            .thenReturn(Optional.of(state));
+
+        service.recordProgress(1L, 7L, 30);
+
+        assertThat(state.getNextStartOffset()).isEqualTo(50);
+        verify(stateRepository, never()).save(any());
+    }
+
+    /**
+     * Verifies that recording progress for an untracked season is a no-op.
+     */
+    @Test
+    void shouldIgnoreProgressOfAnUntrackedSeason() {
+        when(stateRepository.findByPlayerIdAndSeasonId(1L, 7L))
+            .thenReturn(Optional.empty());
+
+        service.recordProgress(1L, 7L, 30);
+
+        verify(stateRepository, never()).save(any());
     }
 
     /**

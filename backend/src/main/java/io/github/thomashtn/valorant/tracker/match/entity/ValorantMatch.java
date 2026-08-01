@@ -1,6 +1,7 @@
 package io.github.thomashtn.valorant.tracker.match.entity;
 
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
+import io.github.thomashtn.valorant.tracker.match.model.GameModeSource;
 import io.github.thomashtn.valorant.tracker.shared.entity.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -83,6 +84,13 @@ public class ValorantMatch extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "game_mode", nullable = false, length = 32)
     private GameMode gameMode;
+
+    /**
+     * Source that resolved {@link #gameMode}, governing whether a later synchronization may enrich it.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "game_mode_source", nullable = false, length = 20)
+    private GameModeSource gameModeSource;
 
     /**
      * Raw Henrik queue identifier retained for diagnostics.

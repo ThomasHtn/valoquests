@@ -67,11 +67,15 @@ public class SeasonMatchHistoryWalker {
     /**
      * Safety guard against a walk that never advances, for instance if Henrik repeats a page.
      *
-     * <p>Sized well beyond a normal run: a heavy player reaches roughly ninety pages over an act,
-     * and a run chaining two seasons about twice that. Reaching this limit signals an anomaly, not a
-     * busy player, which is why it stops the walk instead of raising the limit.
+     * <p>Sized well beyond a normal run: live Henrik data for one of this application's tracked
+     * players showed over 400 matches, mostly Deathmatch, within the first sixteen days of an act
+     * alone, meaning a heavy player can approach a much lower limit well before the act ends. Reaching
+     * this limit signals an anomaly, not a busy player, which is why it stops the walk instead of
+     * raising the limit further. It is not the only thing keeping a truncated run cheap to finish:
+     * {@link SeasonSynchronizationStateService#recordProgress} persists a checkpoint after every page,
+     * so a run stopped here resumes near this point next time rather than from the season's start.
      */
-    private static final int MAXIMUM_PAGE_COUNT = 300;
+    private static final int MAXIMUM_PAGE_COUNT = 1_000;
 
     /**
      * Henrik client used to retrieve match-history pages.
@@ -157,6 +161,12 @@ public class SeasonMatchHistoryWalker {
         int pagesFetched = 1;
         int matchesImported = 0;
 
+        // Applied at most once, right after the mandatory first page: a resumed walk skips only the
+        // range a previous execution already proved belongs to this season and committed. Zeroed
+        // immediately after use so a season crossed into later in this same run, which is already
+        // positioned correctly in the continuous Henrik offset stream, is never jumped a second time.
+        int pendingResumeOffset = scope.resumeOffset();
+
         while (true) {
             List<HenrikMatchData> page = response.data();
             PageImport pageImport =
@@ -176,7 +186,7 @@ public class SeasonMatchHistoryWalker {
                     // most recent end. Resuming at the boundary index rather than at zero keeps the
                     // already-walked newer matches out of scope, which would otherwise read as a
                     // boundary again and stop the walk immediately.
-                    scope = new SeasonScope(resumableSeasonId.get(), foreignSeasonId, false);
+                    scope = new SeasonScope(resumableSeasonId.get(), foreignSeasonId, false, 0);
                     fromIndex = foreignIndex;
                     LOGGER.info(
                         "Resuming an unfinished season for player {}: season={} externalId={}",
@@ -209,6 +219,19 @@ public class SeasonMatchHistoryWalker {
             }
 
             startOffset += page.size();
+            if (pendingResumeOffset > startOffset) {
+                LOGGER.info(
+                    "Resuming match history walk for player {} from checkpoint: season={} "
+                        + "offset={} instead of {}",
+                    player.getId(), scope.externalId(), pendingResumeOffset, startOffset
+                );
+                startOffset = pendingResumeOffset;
+            }
+            pendingResumeOffset = 0;
+
+            // Only reached once this page's matches are durably imported, so the checkpoint never
+            // advances past what a crash right after this line would actually leave committed.
+            stateService.recordProgress(player.getId(), scope.seasonId(), startOffset);
 
             if (pagesFetched >= MAXIMUM_PAGE_COUNT) {
                 // Deliberately not marked complete: the season is truncated, and freezing it here
@@ -239,16 +262,24 @@ public class SeasonMatchHistoryWalker {
      * Declares the season being walked and reports whether an early stop may be trusted.
      */
     private SeasonScope startScope(Player player, Season season, String externalId) {
-        Long seasonId = stateService.startSeason(player, season);
-        boolean earlyStopAllowed = stateService.isComplete(player.getId(), seasonId);
+        SeasonSynchronizationStateService.SeasonWalkStart walkStart =
+            stateService.startSeason(player, season);
+        boolean earlyStopAllowed = stateService.isComplete(player.getId(), walkStart.seasonId());
         if (!earlyStopAllowed) {
             LOGGER.info(
-                "Season {} is not fully synchronized for player {}: walking it in full",
+                "Season {} is not fully synchronized for player {}: walking it in full "
+                    + "from checkpoint offset {}",
                 externalId,
-                player.getId()
+                player.getId(),
+                walkStart.resumeOffset()
             );
         }
-        return new SeasonScope(seasonId, externalId, earlyStopAllowed);
+        return new SeasonScope(
+            walkStart.seasonId(),
+            externalId,
+            earlyStopAllowed,
+            walkStart.resumeOffset()
+        );
     }
 
     /**
@@ -389,8 +420,14 @@ public class SeasonMatchHistoryWalker {
      * @param seasonId local season identifier
      * @param externalId Henrik season identifier
      * @param earlyStopAllowed whether the stored history of this season is known to be contiguous
+     * @param resumeOffset checkpoint offset to apply once, right after the mandatory first page
      */
-    private record SeasonScope(Long seasonId, String externalId, boolean earlyStopAllowed) {
+    private record SeasonScope(
+        Long seasonId,
+        String externalId,
+        boolean earlyStopAllowed,
+        int resumeOffset
+    ) {
     }
 
     /**

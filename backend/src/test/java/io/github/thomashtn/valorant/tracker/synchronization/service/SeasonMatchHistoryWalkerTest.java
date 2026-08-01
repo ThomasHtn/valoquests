@@ -132,7 +132,10 @@ class SeasonMatchHistoryWalkerTest {
             return season;
         });
         when(stateService.startSeason(any(), any()))
-            .thenAnswer(invocation -> ((Season) invocation.getArgument(1)).getId());
+            .thenAnswer(invocation -> new SeasonSynchronizationStateService.SeasonWalkStart(
+                ((Season) invocation.getArgument(1)).getId(),
+                0
+            ));
         when(stateService.isComplete(anyLong(), anyLong())).thenReturn(false);
         when(stateService.findResumableSeasonId(anyLong(), anyString()))
             .thenReturn(Optional.empty());
@@ -397,7 +400,8 @@ class SeasonMatchHistoryWalkerTest {
     }
 
     /**
-     * Verifies that the safety limit stops the walk without declaring the season complete.
+     * Verifies that the safety limit stops the walk without declaring the season complete, but still
+     * leaves a checkpoint so the next run resumes near this point instead of from the season's start.
      *
      * <p>The season is truncated: marking it complete would freeze the truncation into a permanent
      * hole that no later run would ever repair.
@@ -411,8 +415,9 @@ class SeasonMatchHistoryWalkerTest {
 
         assertThat(result.stopReason())
             .isEqualTo(SynchronizationStopReason.PAGE_LIMIT_REACHED);
-        assertThat(result.pagesFetched()).isEqualTo(300);
+        assertThat(result.pagesFetched()).isEqualTo(1_000);
         verify(stateService, never()).markSeasonComplete(anyLong(), anyLong());
+        verify(stateService).recordProgress(1L, CURRENT_SEASON_ID, 1_000 * PAGE_SIZE);
     }
 
     /**
@@ -429,6 +434,56 @@ class SeasonMatchHistoryWalkerTest {
             .isInstanceOf(IllegalStateException.class);
 
         verify(stateService, never()).markSeasonComplete(anyLong(), anyLong());
+    }
+
+    /**
+     * Verifies that a fresh execution resuming an incomplete season skips straight to the persisted
+     * checkpoint instead of re-walking every page a previous execution already confirmed.
+     *
+     * <p>This is what keeps a heavy player's season from perpetually restarting at offset zero on
+     * every retry: only the mandatory first page and the pages beyond the checkpoint cost a Henrik
+     * call.
+     */
+    @Test
+    void shouldResumeFromThePersistedCheckpointInsteadOfOffsetZero() {
+        doAnswer(invocation -> new SeasonSynchronizationStateService.SeasonWalkStart(
+            ((Season) invocation.getArgument(1)).getId(),
+            30
+        )).when(stateService).startSeason(any(), any());
+        givenPages(
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, 4)
+        );
+
+        walker.walk(player);
+
+        verify(matchClient, times(1)).getMatches(PUUID, 0, PAGE_SIZE);
+        verify(matchClient, never()).getMatches(PUUID, 10, PAGE_SIZE);
+        verify(matchClient, never()).getMatches(PUUID, 20, PAGE_SIZE);
+        verify(matchClient, times(1)).getMatches(PUUID, 30, PAGE_SIZE);
+    }
+
+    /**
+     * Verifies that the checkpoint is only ever advanced, never applied a second time once a season
+     * boundary is crossed within the same run.
+     */
+    @Test
+    void shouldRecordProgressAfterEachDurablyImportedPage() {
+        givenPages(
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, PAGE_SIZE),
+            straddlingPage(4)
+        );
+
+        walker.walk(player);
+
+        InOrder ordered = inOrder(stateService);
+        ordered.verify(stateService).recordProgress(1L, CURRENT_SEASON_ID, 10);
+        ordered.verify(stateService).recordProgress(1L, CURRENT_SEASON_ID, 20);
+        ordered.verify(stateService, never())
+            .recordProgress(anyLong(), eq(CURRENT_SEASON_ID), eq(30));
     }
 
     /**

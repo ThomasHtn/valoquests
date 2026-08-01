@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -61,8 +62,8 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Verifies the standard synchronization pipeline against PostgreSQL.
@@ -71,6 +72,11 @@ import org.springframework.transaction.annotation.Transactional;
  * import, season resolution, challenge calculation, ranking calculation and
  * synchronization persistence use production components and the real migrated
  * PostgreSQL schema.</p>
+ *
+ * <p>Deliberately <strong>not</strong> {@code @Transactional}: match creation races are resolved by
+ * committing in their own transaction (see {@code MatchImportService}), which cannot see the
+ * uncommitted fixture data an ambient test transaction would otherwise hold. Fixture rows are
+ * committed for real and removed in {@link #tearDown()} instead.
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -83,7 +89,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(
     SynchronizationPipelineIntegrationTest.FixedClockConfiguration.class
 )
-@Transactional
 class SynchronizationPipelineIntegrationTest
     extends PostgreSqlIntegrationTest {
 
@@ -194,6 +199,31 @@ class SynchronizationPipelineIntegrationTest
      */
     @MockitoBean
     private HenrikMatchClient matchClient;
+
+    /**
+     * Used to clean up committed fixture data, since nothing here rolls back.
+     */
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    /**
+     * Removes every row this test committed and restores seeded players.
+     */
+    @AfterEach
+    void tearDown() {
+        jdbcTemplate.update("DELETE FROM player_challenge_progress");
+        jdbcTemplate.update("DELETE FROM weekly_player_score");
+        jdbcTemplate.update("DELETE FROM weekly_challenge");
+        jdbcTemplate.update("DELETE FROM challenge WHERE code LIKE 'PIPELINE_%'");
+        jdbcTemplate.update("DELETE FROM player_season_synchronization");
+        jdbcTemplate.update("DELETE FROM synchronization_player_result");
+        jdbcTemplate.update("DELETE FROM synchronization");
+        jdbcTemplate.update("DELETE FROM player_match");
+        jdbcTemplate.update("DELETE FROM valorant_match WHERE external_match_id LIKE 'pipeline-match-%'");
+        jdbcTemplate.update("DELETE FROM season WHERE external_id = 'pipeline-season'");
+        jdbcTemplate.update("DELETE FROM player WHERE riot_puuid = ?", PLAYER_PUUID);
+        jdbcTemplate.update("UPDATE player SET status = ?", PlayerStatus.ACTIVE.name());
+    }
 
     /**
      * Verifies first import, production calculations and repeated idempotent
@@ -887,10 +917,12 @@ class SynchronizationPipelineIntegrationTest
     }
 
     /**
-     * Flushes pending statements and clears managed entity state.
+     * Clears managed entity state so the next read hits PostgreSQL.
+     *
+     * <p>No explicit flush: every write already commits on its own, through the repository call or
+     * service transaction that issued it, since this test is deliberately not wrapped in one.
      */
     private void flushAndClear() {
-        entityManager.flush();
         entityManager.clear();
     }
 

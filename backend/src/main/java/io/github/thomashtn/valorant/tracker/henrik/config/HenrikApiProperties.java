@@ -18,8 +18,9 @@ import org.springframework.validation.annotation.Validated;
  * @param platform              Valorant platform
  * @param connectTimeout        maximum connection duration
  * @param readTimeout           maximum response duration
- * @param maxAttempts           maximum number of HTTP attempts
+ * @param maxAttempts           maximum number of HTTP attempts for a non-rate-limit failure
  * @param retryDelay            fallback delay before retrying a request
+ * @param rateLimitMaxAttempts  maximum number of HTTP attempts when Henrik responds with a rate limit
  * @param requestsPerMinute     maximum number of Henrik requests per minute
  * @param rateLimitSafetyMargin additional delay added between two requests
  */
@@ -34,9 +35,13 @@ public record HenrikApiProperties(
     @NotNull Duration connectTimeout,
     @NotNull Duration readTimeout,
     @Min(1)
-    @Max(5)
+    @Max(10)
     int maxAttempts,
     @NotNull Duration retryDelay,
+    @Min(1)
+    @Max(50)
+    @DefaultValue("25")
+    int rateLimitMaxAttempts,
     @Min(1)
     @DefaultValue("30")
     int requestsPerMinute,
