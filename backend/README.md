@@ -1,71 +1,38 @@
 # Backend
 
-Java 25 / Spring Boot API for Valorant Tracker. See the [root README](../README.md) for the project overview and the
-[frontend README](../frontend/README.md) for the Angular application.
+The API server for Valorant Tracker. It stores data in a PostgreSQL database, fetches match data from the Henrik
+API, and exposes everything to the [frontend](../frontend/README.md) over HTTP.
 
-## Documentation
+See the [root README](../README.md) for what the whole project does.
 
-This README covers setup, build and operations. The design is documented in [`docs/`](docs):
+## 1. What the backend does
 
-| Document                                            | Covers                                                                     |
-| --------------------------------------------------- | -------------------------------------------------------------------------- |
-| [Architecture](docs/architecture.md)                | Package layout, layering, transactions, configuration, error handling       |
-| [Synchronization](docs/synchronization.md)          | The Henrik import pipeline, season scope, idempotency, failure isolation    |
-| [Challenge engine](docs/challenge-engine.md)        | Rule format, the seven calculators, weekly selection, progress rules        |
-| [API](docs/api.md)                                  | Every route, its parameters, its response shape and its failure modes       |
+- talks to **Henrik** (an external service that provides Valorant match data) to import matches several times a day;
+- stores players, matches, weekly challenges and rankings in a **PostgreSQL** database;
+- calculates challenge progress and the weekly ranking;
+- exposes this data through a **REST API** consumed by the frontend.
 
-Project-wide context is in [`../docs/`](../docs): [architecture](../docs/architecture.md),
-[domain model](../docs/domain-model.md), [data model](../docs/data-model.md) and the
-[decision records](../docs/adr/README.md).
+## 2. Requirements
 
-## Architecture at a glance
+Before starting, make sure you have:
 
-Code is organized by business feature. Each domain owns its controllers, services, repositories, entities, DTOs and
-business models.
+- **JDK 25** installed;
+- **Docker and Docker Compose** (recommended, to run PostgreSQL easily), or a PostgreSQL 17 server already running;
+- a **Henrik API key** (a free key from the Henrik API service, used to fetch Valorant data).
 
-```text
-io.github.thomashtn.valorant.tracker
-├── challenge        Weekly selection, rule parsing and progress calculation
-├── henrik           External API clients, mapping, retry and rate limiting
-├── match            Seasons, matches, statistics and idempotent imports
-├── player           Tracked accounts, profiles and Riot account resolution
-├── ranking          Weekly scores, positions and ranking history
-├── synchronization  Import orchestration, scheduling and monitoring
-├── week             Week calendar and weekly rollover
-└── shared           Security, errors, auditing and common web components
-```
+All commands below assume you are in the `backend/` folder.
 
-Thin controllers, explicit transaction boundaries, constructor injection, immutable API DTOs, and database constraints
-for every critical invariant. Full details in [`docs/architecture.md`](docs/architecture.md).
+## 3. Installation and configuration
 
-Two behaviors surprise readers often enough to be worth stating here:
+### 3.1 Create your configuration file
 
-- **Synchronization is deliberately non-transactional.** Adding `@Transactional` above the walk would look like an
-  improvement and would break the guarantee that an interrupted import leaves no permanent hole. See
-  [ADR 0005](../docs/adr/0005-non-transactional-synchronization.md).
-- **Match history is bounded to the current act.** A player's stored history begins there, so match counts read lower
-  than the lifetime totals shown by external trackers such as tracker.gg. Every player result records why its walk
-  stopped, so a short history explains itself. See [ADR 0008](../docs/adr/0008-season-scoped-history.md).
-
-## Getting started
-
-### Requirements
-
-- JDK 25
-- Docker and Docker Compose, or PostgreSQL 17
-- a Henrik API key
-
-The Maven Wrapper downloads Maven on its first execution, so an internet connection is required the first time it runs.
-
-Commands below assume `backend/` as the working directory.
-
-### Configure the environment
+Copy the example configuration file:
 
 ```bash
 cp .env.example .env
 ```
 
-Set at least:
+Then open `.env` and fill in at least these values:
 
 ```dotenv
 DB_URL=jdbc:postgresql://localhost:5432/valorant_tracker
@@ -75,110 +42,78 @@ ADMIN_API_KEY=replace-with-a-long-random-secret
 HENRIK_API_KEY=your-henrik-api-key
 ```
 
-### Start PostgreSQL
+- `ADMIN_API_KEY` protects administrative actions (like triggering a manual synchronization). Choose a long random
+  value; it is not provided by Henrik, you invent it yourself.
+- `HENRIK_API_KEY` is required for the application to fetch any Valorant data. Without it, synchronization fails.
+
+### 3.2 Start the database
+
+If you use Docker:
 
 ```bash
 docker compose up -d
-docker compose ps
+docker compose ps   # check that the "postgres" service is healthy
 ```
 
-### Run the backend
+If you already run your own PostgreSQL 17 instance, make sure `DB_URL`, `DB_USERNAME` and `DB_PASSWORD` in `.env`
+match it instead.
+
+## 4. Running the backend
+
+The first run downloads Maven automatically, so an internet connection is required at least once.
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Useful URLs:
+Once it is running:
 
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- OpenAPI document: `http://localhost:8080/api-docs`
-- Health check: `http://localhost:8080/actuator/health`
+| Purpose            | URL                                          |
+| ------------------- | --------------------------------------------- |
+| API                 | `http://localhost:8080/api/...`               |
+| Interactive API docs (Swagger) | `http://localhost:8080/swagger-ui.html`  |
+| Raw API description | `http://localhost:8080/api-docs`             |
+| Health check        | `http://localhost:8080/actuator/health`       |
 
-Use Swagger's **Authorize** action to provide `X-Admin-Key` for administrative routes.
+In Swagger UI, use the **Authorize** button to enter your `ADMIN_API_KEY` and test administrative routes.
 
-## Build and tests
-
-Run the complete quality gate:
-
-```bash
-./mvnw clean verify
-```
-
-This command runs Checkstyle, unit and integration tests, the JaCoCo report and its coverage gate (90 % line, 70 %
-branch) and SpotBugs. Docker must be available for the integration suite, which starts an isolated PostgreSQL 17
-container; without Docker those tests are skipped rather than failed, so a green build without Docker proves less than
-it appears to.
-
-Run only the fast test suite:
+## 5. Running tests
 
 ```bash
-./mvnw test -DexcludedGroups=integration
+./mvnw test              # fast tests only
+./mvnw verify             # full quality gate: tests, coverage check, code style, static analysis
 ```
 
-Run only integration tests:
+`./mvnw verify` needs Docker to be available, because part of the test suite starts a temporary PostgreSQL
+container. Without Docker, those tests are skipped rather than failed.
 
-```bash
-./mvnw test -Dgroups=integration
-```
-
-Run one test class:
+To run a single test class:
 
 ```bash
 ./mvnw -Dtest=PlayerSynchronizationServiceTest test
 ```
 
-The JaCoCo XML report is generated at `target/site/jacoco/jacoco.xml` and is ready for SonarQube:
+## 6. Database changes
 
-```bash
-./mvnw clean verify sonar:sonar \
-  -Dsonar.projectKey=valorant-tracker \
-  -Dsonar.host.url="$SONAR_HOST_URL" \
-  -Dsonar.token="$SONAR_TOKEN"
-```
+Every change to the database structure is done through a **Flyway migration** (a numbered SQL file). Migrations that
+have already run must never be edited — a new migration is added instead. This keeps every environment's database in
+sync and history accurate.
 
-## Database migrations
-
-Flyway is the only schema-management mechanism. Hibernate uses `ddl-auto=validate`.
-
-```text
-V1   Initial schema
-V2   Initial player placeholder
-V3   Challenge catalogue (78 definitions)
-V4   Henrik synchronization preparation
-V5   Tracked players
-V6   Optional season dates
-V7   Extended team identifier
-V8   Removal of the obsolete deep-sync task
-V9   Query-supporting indexes
-V10  Read-query optimizations
-V11  Re-categorization of newly recognized game modes
-V12  Backfill of round averages for the re-categorized modes
-V13  Reset of every table derived from Henrik data
-V14  Removal of challenges filtered on a retired game mode (78 → 62)
-V15  Per-player, per-season synchronization completion flag
-V16  Stop reason on per-player synchronization results
-```
-
-Never edit an applied migration. Add a new migration for every schema or reference-data change. Column-level detail is
-in [`../docs/data-model.md`](../docs/data-model.md).
-
-To reset the local database:
+To fully reset your local database (destroys all local data):
 
 ```sql
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
-GRANT
-ALL
-ON SCHEMA public TO valorant;
-GRANT ALL
-ON SCHEMA public TO public;
+GRANT ALL ON SCHEMA public TO valorant;
+GRANT ALL ON SCHEMA public TO public;
 ```
 
-## Main API routes
+## 7. Main API routes
 
-Parameters, response shapes and failure modes are documented in [`docs/api.md`](docs/api.md).
+Full details (parameters, response shape, error cases) are available in the interactive Swagger UI
+(`http://localhost:8080/swagger-ui.html`) once the backend is running.
 
-### Public routes
+### Public routes (no key required)
 
 ```http
 GET /api/challenges/current
@@ -190,9 +125,7 @@ GET /api/players/{playerId}/matches?page&size&seasonId&map&agent&result&gameMode
 GET /api/seasons
 ```
 
-### Administrative routes
-
-All administrative routes require `X-Admin-Key`.
+### Administrative routes (require the `X-Admin-Key` header)
 
 ```http
 POST /api/admin/synchronizations
@@ -204,57 +137,46 @@ GET  /api/admin/synchronizations?page&size
 GET  /api/admin/synchronizations/{synchronizationId}
 ```
 
-## Configuration reference
+## 8. Configuration reference
 
-| Variable                              | Default                                             | Purpose                               |
-| ------------------------------------- | --------------------------------------------------- | ------------------------------------- |
-| `DB_URL`                              | `jdbc:postgresql://localhost:5432/valorant_tracker` | PostgreSQL JDBC URL                   |
-| `DB_USERNAME`                         | `valorant`                                          | Database user                         |
-| `DB_PASSWORD`                         | `valorant`                                          | Database password                     |
-| `ADMIN_API_KEY`                       | required, at least 32 characters                    | Protects `/api/admin/**`              |
-| `FRONTEND_ORIGIN`                     | `http://localhost:4200`                             | Allowed Angular origin                |
-| `HENRIK_API_BASE_URL`                 | `https://api.henrikdev.xyz`                         | Henrik API base URL                   |
-| `HENRIK_API_KEY`                      | required                                            | Henrik API key                        |
-| `HENRIK_API_REGION`                   | `eu`                                                | Valorant region                       |
-| `HENRIK_API_PLATFORM`                 | `pc`                                                | Valorant platform                     |
-| `HENRIK_API_MAX_ATTEMPTS`             | `2`                                                 | Total request attempts                |
-| `HENRIK_API_RETRY_DELAY`              | `PT60S`                                             | Minimum retry delay                   |
-| `HENRIK_API_REQUESTS_PER_MINUTE`      | `28`                                                | Shared request limit                  |
-| `HENRIK_API_CONNECT_TIMEOUT`          | `PT5S`                                              | HTTP connect timeout                  |
-| `HENRIK_API_READ_TIMEOUT`             | `PT20S`                                             | HTTP read timeout                     |
-| `HENRIK_API_RATE_LIMIT_SAFETY_MARGIN` | `PT0.1S`                                            | Rate-limit safety margin              |
-| `STANDARD_SYNC_ENABLED`               | `true`                                              | Enables the standard sync scheduler   |
-| `STANDARD_SYNC_CRON`                  | `0 0 6,12,18 * * *`                                 | Standard sync schedule                |
-| `SCHEDULING_ZONE`                     | `Europe/Paris`                                      | Time zone for scheduled jobs          |
-| `WEEK_ROLLOVER_ENABLED`               | `true`                                              | Enables the weekly rollover scheduler |
-| `WEEK_ROLLOVER_CRON`                  | `0 5 0 * * MON`                                     | Weekly rollover schedule              |
-| `WEEK_ROLLOVER_ZONE`                  | `UTC`                                               | Time zone for all weekly calculations |
+| Variable                              | Default                                             | What it controls                        |
+| -------------------------------------- | ---------------------------------------------------- | ----------------------------------------- |
+| `DB_URL`                               | `jdbc:postgresql://localhost:5432/valorant_tracker` | Database connection address              |
+| `DB_USERNAME`                          | `valorant`                                          | Database user                            |
+| `DB_PASSWORD`                          | `valorant`                                          | Database password                        |
+| `ADMIN_API_KEY`                        | required, at least 32 characters                    | Protects `/api/admin/**` routes          |
+| `FRONTEND_ORIGIN`                      | `http://localhost:4200`                             | The only website address allowed to call this API |
+| `HENRIK_API_BASE_URL`                  | `https://api.henrikdev.xyz`                         | Address of the Henrik API                |
+| `HENRIK_API_KEY`                       | required                                            | Your Henrik API key                      |
+| `HENRIK_API_REGION`                    | `eu`                                                | Valorant region used for all players     |
+| `HENRIK_API_PLATFORM`                  | `pc`                                                | Valorant platform used for all players   |
+| `HENRIK_API_MAX_ATTEMPTS`              | `4`                                                  | Retries on a temporary Henrik failure    |
+| `HENRIK_API_RETRY_DELAY`               | `PT60S`                                             | Minimum wait before retrying             |
+| `HENRIK_API_RATE_LIMIT_MAX_ATTEMPTS`   | `25`                                                 | Retries when Henrik enforces rate limiting |
+| `HENRIK_API_REQUESTS_PER_MINUTE`       | `28`                                                 | Maximum requests sent to Henrik per minute |
+| `HENRIK_API_CONNECT_TIMEOUT`           | `PT5S`                                              | Connection timeout                       |
+| `HENRIK_API_READ_TIMEOUT`              | `PT20S`                                             | Response timeout                         |
+| `HENRIK_API_RATE_LIMIT_SAFETY_MARGIN`  | `PT0.1S`                                            | Small extra delay between requests       |
+| `STANDARD_SYNC_ENABLED`                | `true`                                              | Turns automatic synchronization on/off   |
+| `STANDARD_SYNC_CRON`                   | `0 0 6,12,18 * * *`                                 | When automatic synchronization runs (06:00, 12:00, 18:00) |
+| `SCHEDULING_ZONE`                      | `Europe/Paris`                                      | Time zone for the schedule above         |
+| `WEEK_ROLLOVER_ENABLED`                | `true`                                              | Turns the automatic weekly reset on/off  |
+| `WEEK_ROLLOVER_CRON`                   | `0 5 0 * * MON`                                     | When the week resets (Monday 00:05)      |
+| `WEEK_ROLLOVER_ZONE`                   | `UTC`                                               | Time zone used for weekly calculations   |
 
-## Release-candidate validation
+`PT5S`, `PT60S`, etc. are ISO-8601 durations (`PT5S` = 5 seconds, `PT60S` = 60 seconds).
 
-Before publishing a release, validate these flows against a dedicated PostgreSQL database and a valid Henrik API key:
+## 9. Common problems
 
-1. synchronize one player, then all active players;
-2. verify that one player failure does not interrupt the remaining synchronizations;
-3. run the same synchronization twice and confirm that no match is duplicated;
-4. interrupt a synchronization mid-walk and confirm the next run re-walks the incomplete season in full;
-5. recalculate challenge progress and confirm that ranking recalculation follows;
-6. exercise public pagination, filters, empty responses and unknown-resource errors;
-7. execute a week rollover with a fixed clock and verify that finalized history remains unchanged;
-8. parse and execute every enabled production challenge definition;
-9. verify Swagger authorization and every protected administrative route.
+| Problem                                                      | Likely cause / fix                                                                    |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `./mvnw spring-boot:run` fails with a database connection error | PostgreSQL is not running or `.env` values don't match it. Run `docker compose ps`.       |
+| Requests to `/api/admin/**` return an authorization error       | The `X-Admin-Key` header is missing, or does not match `ADMIN_API_KEY` in `.env`.        |
+| No player data appears after starting                          | Nothing has been synchronized yet, or `HENRIK_API_KEY` is missing/invalid.               |
+| `./mvnw verify` skips some tests                                | Docker is not available; part of the test suite needs it to start a test database.        |
+| The frontend can't reach the API (CORS error)                  | `FRONTEND_ORIGIN` in `.env` doesn't match the address the frontend runs on.               |
 
-External Henrik calls are intentionally excluded from automated tests because they depend on credentials, rate limits
-and live upstream data.
+## 10. Going further
 
-## Synchronization benchmark
-
-A real end-to-end benchmark of the six-player standard synchronization is available once the application and PostgreSQL
-are running. Run it from the repository root:
-
-```bash
-ADMIN_KEY="$ADMIN_API_KEY" RUNS=3 ./scripts/benchmark-full-synchronization.sh
-```
-
-Results are written to `target/full-synchronization-benchmark.csv`. Any non-200 response stops the benchmark and prints
-the upstream error body.
+This README covers setup and day-to-day commands. For the big picture (what the whole project does, how the
+backend and frontend fit together), see the [root README](../README.md).

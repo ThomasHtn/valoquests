@@ -2,12 +2,7 @@
 
 # Valorant Tracker
 
-**Turn match history into weekly rivalries.**
-
-A full-stack portfolio project that imports Valorant match data, calculates player statistics, tracks weekly challenges
-and builds a live ranking for a fixed group of players.
-
-`Java 25` · `Spring Boot 4` · `Angular 22` · `PostgreSQL` · `Henrik API`
+**A weekly Valorant competition for a group of friends, tracked automatically.**
 
 [![Backend CI](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/backend-ci.yml)
 
@@ -15,149 +10,104 @@ and builds a live ranking for a fixed group of players.
 
 ---
 
-## The idea
+## 1. What is this project?
 
-Valorant Tracker started from a simple question:
+Valorant Tracker follows a fixed group of seven Valorant players. Several times a day, it downloads their match
+history from Riot Games (through a service called the Henrik API), then:
 
-> Who actually had the best week?
+- builds each player's profile: rank, match history, win rate, KDA, headshots, and more;
+- picks five weekly challenges, one per difficulty level (from a catalogue of 46), and tracks who completes them;
+- turns completed challenges into points and keeps a live ranking, week after week.
 
-The application follows a small group of players, imports their matches several times a day and turns raw game data into
-player statistics, match history, weekly challenges and a ranking that evolves after every synchronization.
+It answers one simple question every week: **who actually had the best week?**
 
-The project is also a practical playground for modern full-stack architecture, external API integration, scheduled
-processing, data normalization and automated testing.
+This is a personal, portfolio-style project. It is not designed to scale beyond a small, predefined group of players.
 
-## What the application does
+## 2. How the project is organized
 
-### Player tracking
-
-Each tracked account has a detailed profile containing its current competitive rank, match history and aggregated
-statistics such as KDA, win rate, headshot percentage, ACS and ADR.
-
-### Weekly challenges
-
-Every week, the application selects a balanced pack of five challenges - one per difficulty tier - from a catalogue of
-62 definitions.
-
-Challenges cover volume, performance, streaks, ratios, game modes, distinct agents and grouped objectives. Selection is
-deterministic and enforces exclusion groups; progress is recalculated from persisted matches rather than accumulated,
-so results are reproducible.
-
-### Live ranking
-
-Completed challenges award points and feed a weekly ranking.
-
-The backend stores current and previous positions, completed challenge counts and detailed per-player progress so the
-frontend can show both the leaderboard and the story behind it.
-
-### Automatic synchronization
-
-Scheduled jobs retrieve account, rank and match-history data from the Henrik API.
-
-Imports are incremental and idempotent:
-
-- existing matches are not duplicated;
-- player-match associations are protected by database constraints;
-- one player failure does not block the others;
-- retries and request spacing protect the integration from temporary failures and rate limits;
-- the walk is bounded to the current act, and records why it stopped so a short history explains itself.
-
-## Main screens
-
-The interface keeps the weekly competition readable at a glance while still allowing deeper analysis when needed.
-Screenshots below are live captures of the running application (see [`frontend/docs/preview`](frontend/docs/preview)).
-
-### Weekly overview
-
-Active challenges, collective progress and the current leaderboard are gathered on the main page.
-
-![Weekly overview](frontend/docs/preview/overview.png)
-
-### Player list
-
-Every tracked player is listed with rank, win rate, KDA and match count at a glance.
-
-![Player list](frontend/docs/preview/player-list.png)
-
-The player profile - identity, rank, aggregated statistics and a filterable match history loaded by infinite scroll -
-and the ranking history are implemented as well; their screenshots are not captured yet. Player comparison is designed
-(see [`frontend/docs/images`](frontend/docs/images)) and scheduled for an upcoming iteration.
-
-Each screen is documented in [`frontend/docs/pages.md`](frontend/docs/pages.md).
-
-## Technology stack
-
-### Backend
-
-- Java 25
-- Spring Boot 4.0.6
-- Spring MVC and WebClient
-- Spring Data JPA and Hibernate
-- Spring Security
-- Spring Boot Actuator
-- Springdoc OpenAPI
-- MapStruct and Lombok
-
-### Data and tooling
-
-- PostgreSQL 17
-- Flyway
-- Maven Wrapper
-- Docker Compose
-
-### Frontend
-
-- Angular 22, zoneless, signal-based
-- TypeScript
-- Tailwind CSS v4
-- Lucide icons
-
-### Tests and quality
-
-- JUnit 5, Mockito, AssertJ
-- H2 in PostgreSQL compatibility mode for unit tests
-- Testcontainers (PostgreSQL 17) for integration tests
-- MockWebServer for the Henrik client
-- Checkstyle, SpotBugs and JaCoCo (90 % line, 70 % branch)
-- Vitest, ESLint and Prettier on the frontend
-
-## Repository structure
-
-The project is organized as a monorepo:
+The project has two applications that work together:
 
 ```text
 valorant-tracker
-├── backend    Java 25 / Spring Boot API (Maven project) - see backend/README.md
-├── frontend   Angular 22 application, including UI mockups - see frontend/README.md
-├── scripts    Operational scripts
-└── docs       Project-wide documentation
+├── backend    The server (API). Talks to the database and to the Henrik API.
+├── frontend   The website. Shows player profiles, challenges and rankings.
+└── scripts    Small operational scripts (e.g. a synchronization benchmark).
 ```
 
-Each module owns its own environment configuration, Docker Compose file (backend) and detailed setup, build and test
-instructions. Start with `backend/README.md` and `frontend/README.md`.
+- The **backend** must be running for the **frontend** to display any real data.
+- Each application has its own setup guide:
+  - [`backend/README.md`](backend/README.md)
+  - [`frontend/README.md`](frontend/README.md)
 
-## Documentation
+## 3. Technology used (short version)
 
-| Scope    | Where                                                                                       |
-| -------- | ------------------------------------------------------------------------------------------- |
-| Global   | [`docs/`](docs) - [architecture](docs/architecture.md), [domain model](docs/domain-model.md), [data model](docs/data-model.md), [decisions](docs/adr/README.md) |
-| Backend  | [`backend/docs/`](backend/docs) - [architecture](backend/docs/architecture.md), [synchronization](backend/docs/synchronization.md), [challenge engine](backend/docs/challenge-engine.md), [API](backend/docs/api.md) |
-| Frontend | [`frontend/docs/`](frontend/docs) - [architecture](frontend/docs/architecture.md), [conventions](frontend/docs/conventions.md), [data access](frontend/docs/data-access.md), [pages](frontend/docs/pages.md) |
+| Part     | Main technologies                                    |
+| -------- | ----------------------------------------------------- |
+| Backend  | Java 25, Spring Boot, PostgreSQL, Flyway              |
+| Frontend | Angular, TypeScript, Tailwind CSS                     |
+| Tests    | JUnit (backend), Vitest (frontend)                    |
 
-The [decision records](docs/adr/README.md) are the fastest way to understand why the code looks the way it does: why
-synchronization runs outside any transaction, why challenge rules are data rather than code, why derived values are
-recomputed instead of accumulated, and why the frontend is zoneless.
+See [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md) for full setup details.
 
-## Development conventions
+## 4. Getting started (quick overview)
 
-- code, comments, Javadoc, logs and technical documentation are written in English;
-- lines remain within 120 characters;
-- feature boundaries are preserved;
-- controllers delegate business decisions to services;
-- external imports remain idempotent;
-- logs include identifiers and counts, never secrets or complete payloads;
-- bug fixes and business rules are covered by tests;
-- applied Flyway migrations are immutable.
+Running the whole application means starting the backend and the frontend separately, in two terminals.
+
+1. **Get the code**
+
+   ```bash
+   git clone <repository-url>
+   cd valorant-tracker
+   ```
+
+2. **Start the backend** (API + database) — see [`backend/README.md`](backend/README.md) for full details:
+
+   ```bash
+   cd backend
+   cp .env.example .env   # then fill in the required values, see backend/README.md
+   docker compose up -d   # starts the PostgreSQL database
+   ./mvnw spring-boot:run # starts the API on http://localhost:8080
+   ```
+
+3. **Start the frontend** (website), in a second terminal — see [`frontend/README.md`](frontend/README.md):
+
+   ```bash
+   cd frontend
+   npm install
+   npm start               # starts the website on http://localhost:4200
+   ```
+
+4. Open `http://localhost:4200` in a browser.
+
+## 5. What you can do in the application
+
+| Screen           | What it shows                                                                   |
+| ----------------- | -------------------------------------------------------------------------------- |
+| Overview          | The current week's challenges, team progress and the live ranking, at a glance   |
+| Player list       | Every tracked player, with rank, win rate, KDA and match count                   |
+| Player profile     | One player's rank, stats and full match history (filterable by mode and season) |
+| Ranking history   | The ranking of every completed week, most recent first                          |
+
+## 6. Common problems
+
+| Problem                                             | Likely cause                                                                |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------- |
+| The website loads but shows no data / errors         | The backend is not running, or is not reachable on `http://localhost:8080`  |
+| The backend fails to start with a database error     | PostgreSQL is not running — check `docker compose ps` in `backend/`         |
+| Player data never updates                            | The Henrik API key is missing or invalid — see `backend/README.md`         |
+| An admin action returns an authorization error        | The `X-Admin-Key` header is missing or does not match `ADMIN_API_KEY`       |
+
+Module-specific troubleshooting is in [`backend/README.md`](backend/README.md) and
+[`frontend/README.md`](frontend/README.md).
+
+## 7. Going further
+
+This README only covers the essentials. For more detail on each part of the project:
+
+| Scope    | Where to look                                |
+| -------- | --------------------------------------------- |
+| Backend  | [`backend/README.md`](backend/README.md)      |
+| Frontend | [`frontend/README.md`](frontend/README.md)    |
 
 ---
 
