@@ -4,12 +4,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.MediaType;
-import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import org.springframework.http.MediaType;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Protects administrative routes with a static API key supplied through an
@@ -91,7 +90,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (!keysMatch(providedApiKey, expectedApiKey)) {
+        if (!matchesExpectedKey(providedApiKey)) {
             writeProblemResponse(
                 response,
                 HttpServletResponse.SC_FORBIDDEN,
@@ -105,16 +104,15 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Compares two API keys using a constant-time byte comparison.
+     * Compares the supplied key against the configured one in constant time.
+     *
+     * <p>A plain {@code equals} would return as soon as two bytes differ, letting a caller time
+     * repeated requests to recover the key one character at a time.
      *
      * @param providedApiKey key supplied by the caller
-     * @param expectedApiKey key configured by the application
      * @return {@code true} when both keys are equal
      */
-    private boolean keysMatch(
-        String providedApiKey,
-        String expectedApiKey
-    ) {
+    private boolean matchesExpectedKey(String providedApiKey) {
         return MessageDigest.isEqual(
             providedApiKey.getBytes(StandardCharsets.UTF_8),
             expectedApiKey.getBytes(StandardCharsets.UTF_8)

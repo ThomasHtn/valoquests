@@ -8,17 +8,10 @@ import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -27,6 +20,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Rebuilds weekly rankings from persisted challenge progress.
@@ -63,12 +60,18 @@ public class DefaultRankingRecalculationService
     private final Clock clock;
 
     /**
+     * Calendar resolving the current week.
+     */
+    private final WeekCalendar weekCalendar;
+
+    /**
      * Creates the ranking recalculation service.
      *
      * @param playerRepository   player repository
      * @param progressRepository challenge progress repository
      * @param scoreRepository    weekly score repository
      * @param clock              application clock
+     * @param weekCalendar       calendar resolving the current week
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -78,12 +81,14 @@ public class DefaultRankingRecalculationService
         PlayerRepository playerRepository,
         PlayerChallengeProgressRepository progressRepository,
         WeeklyPlayerScoreRepository scoreRepository,
-        Clock clock
+        Clock clock,
+        WeekCalendar weekCalendar
     ) {
         this.playerRepository = playerRepository;
         this.progressRepository = progressRepository;
         this.scoreRepository = scoreRepository;
         this.clock = clock;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -92,7 +97,7 @@ public class DefaultRankingRecalculationService
     @Override
     @Transactional
     public void recalculateCurrentRanking() {
-        recalculateWeek(resolveCurrentWeekStart());
+        recalculateWeek(weekCalendar.currentWeekStart());
     }
 
     /**
@@ -264,21 +269,6 @@ public class DefaultRankingRecalculationService
     }
 
     /**
-     * Resolves the Monday beginning the current UTC calendar week.
-     *
-     * @return current UTC week start
-     */
-    private LocalDate resolveCurrentWeekStart() {
-        return LocalDate
-            .now(clock.withZone(ZoneOffset.UTC))
-            .with(
-                TemporalAdjusters.previousOrSame(
-                    DayOfWeek.MONDAY
-                )
-            );
-    }
-
-    /**
      * Ensures that the supplied date identifies a Monday.
      *
      * @param weekStart week identifier to validate
@@ -289,7 +279,7 @@ public class DefaultRankingRecalculationService
             "weekStart must not be null"
         );
 
-        if (weekStart.getDayOfWeek() != DayOfWeek.MONDAY) {
+        if (!weekCalendar.isWeekStart(weekStart)) {
             throw new IllegalArgumentException(
                 "weekStart must be a Monday"
             );

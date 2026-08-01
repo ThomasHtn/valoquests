@@ -1,9 +1,9 @@
 package io.github.thomashtn.valorant.tracker.match.model;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link MatchImportResult}. */
 class MatchImportResultTest {

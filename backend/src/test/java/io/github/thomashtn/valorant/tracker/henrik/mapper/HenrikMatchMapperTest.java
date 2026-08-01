@@ -1,5 +1,7 @@
 package io.github.thomashtn.valorant.tracker.henrik.mapper;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.thomashtn.valorant.tracker.henrik.dto.match.HenrikMatchHistoryResponse.HenrikMatchData;
 import io.github.thomashtn.valorant.tracker.henrik.dto.match.HenrikMatchMetadata;
 import io.github.thomashtn.valorant.tracker.henrik.dto.match.HenrikMatchPlayer;
@@ -18,8 +20,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Unit tests for {@link HenrikMatchMapper}, focused on game mode resolution.

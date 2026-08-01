@@ -1,7 +1,6 @@
 package io.github.thomashtn.valorant.tracker.shared.exception;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.net.URI;
 import java.time.Instant;
 import java.util.Map;

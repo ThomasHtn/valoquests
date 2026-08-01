@@ -7,16 +7,13 @@ import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valorant.tracker.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valorant.tracker.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
-import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,9 +49,9 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
     private final ChallengeDefinitionParser definitionParser;
 
     /**
-     * Application clock used to resolve the current week deterministically.
+     * Calendar resolving the current week.
      */
-    private final Clock clock;
+    private final WeekCalendar weekCalendar;
 
     /**
      * Creates the current-challenge query service.
@@ -63,20 +60,20 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
      * @param progressRepository        player progress repository
      * @param playerRepository          tracked-player repository
      * @param definitionParser          challenge-definition parser
-     * @param clock                     application clock
+     * @param weekCalendar       calendar resolving the current week
      */
     public DefaultChallengeQueryService(
         WeeklyChallengeRepository weeklyChallengeRepository,
         PlayerChallengeProgressRepository progressRepository,
         PlayerRepository playerRepository,
         ChallengeDefinitionParser definitionParser,
-        Clock clock
+        WeekCalendar weekCalendar
     ) {
         this.weeklyChallengeRepository = weeklyChallengeRepository;
         this.progressRepository = progressRepository;
         this.playerRepository = playerRepository;
         this.definitionParser = definitionParser;
-        this.clock = clock;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -86,7 +83,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
      */
     @Override
     public CurrentChallengesResponse findCurrent() {
-        LocalDate weekStart = resolveCurrentWeekStart();
+        LocalDate weekStart = weekCalendar.currentWeekStart();
         List<WeeklyChallenge> weeklyChallenges = findWeeklyChallenges(weekStart);
         Map<Long, List<PlayerChallengeProgress>> progressByChallenge =
             groupProgressByChallenge(weekStart);
@@ -108,17 +105,6 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             weekStart.plusDays(6),
             findLastSuccessfulSynchronizationAt(),
             challenges
-        );
-    }
-
-    /**
-     * Resolves the Monday identifying the current week.
-     *
-     * @return current week start
-     */
-    private LocalDate resolveCurrentWeekStart() {
-        return LocalDate.now(clock).with(
-            TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)
         );
     }
 
@@ -261,10 +247,8 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
      * @return latest timestamp, or {@code null} when no player was synchronized
      */
     private Instant findLastSuccessfulSynchronizationAt() {
-        return playerRepository.findAll().stream()
-            .map(Player::getLastSuccessfulSynchronizationAt)
-            .filter(Objects::nonNull)
-            .max(Instant::compareTo)
+        return playerRepository
+            .findLatestSuccessfulSynchronizationAt()
             .orElse(null);
     }
 }

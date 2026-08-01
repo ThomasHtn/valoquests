@@ -1,7 +1,6 @@
 package io.github.thomashtn.valorant.tracker.ranking.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -18,6 +17,18 @@ public record RankingHistoryWeekResponse(
     Long winnerPlayerId,
     List<FinalRankingEntryResponse> ranking
 ) {
+    /**
+     * Exposes one player's frozen result for a finalized week.
+     *
+     * <p>These values are a snapshot, not a live projection: a finalized week is immutable, so they
+     * never move again even if the matches behind them are recalculated.
+     *
+     * @param position            final rank, starting at 1
+     * @param playerId            internal player identifier
+     * @param displayName         player name shown in the ranking
+     * @param points              points awarded for the week
+     * @param completedChallenges challenges the player completed that week
+     */
     public record FinalRankingEntryResponse(
 
         int position,

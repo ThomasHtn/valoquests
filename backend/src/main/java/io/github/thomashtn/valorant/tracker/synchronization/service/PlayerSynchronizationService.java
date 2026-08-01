@@ -66,6 +66,13 @@ public class PlayerSynchronizationService {
 
     /**
      * Creates the player synchronization service.
+     *
+     * @param playerRepository         repository holding tracked players
+     * @param accountResolutionService service resolving missing Riot account identifiers
+     * @param mmrClient                Henrik client returning competitive ranks
+     * @param mmrMapper                mapper turning Henrik rank payloads into player fields
+     * @param matchHistoryWalker       walker importing the current season's match history
+     * @param clock                    clock producing deterministic timestamps
      */
     public PlayerSynchronizationService(
         PlayerRepository playerRepository,

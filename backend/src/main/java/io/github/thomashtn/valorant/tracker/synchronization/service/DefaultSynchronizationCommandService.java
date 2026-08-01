@@ -1,5 +1,6 @@
 package io.github.thomashtn.valorant.tracker.synchronization.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
@@ -14,14 +15,12 @@ import io.github.thomashtn.valorant.tracker.synchronization.model.Synchronizatio
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
 import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationPlayerResultRepository;
 import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationRepository;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 /**
  * Executes and records scheduled and manual synchronizations.

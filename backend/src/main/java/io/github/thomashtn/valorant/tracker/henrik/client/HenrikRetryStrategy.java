@@ -3,13 +3,12 @@ package io.github.thomashtn.valorant.tracker.henrik.client;
 import io.github.thomashtn.valorant.tracker.henrik.config.HenrikApiProperties;
 import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikApiException;
 import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikRateLimitException;
+import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
-
-import java.time.Duration;
 
 /**
  * Creates retry policies for Henrik API operations.

@@ -1,5 +1,9 @@
 package io.github.thomashtn.valorant.tracker.henrik.client;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.github.thomashtn.valorant.tracker.henrik.config.HenrikApiProperties;
 import io.github.thomashtn.valorant.tracker.henrik.config.HenrikClientConfig;
 import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikRateLimitException;
@@ -7,6 +11,8 @@ import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikResourceNotFo
 import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikServiceUnavailableException;
 import io.github.thomashtn.valorant.tracker.henrik.mapper.HenrikAccountMapper;
 import io.github.thomashtn.valorant.tracker.henrik.model.HenrikAccount;
+import java.io.IOException;
+import java.time.Duration;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -16,13 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import java.io.IOException;
-import java.time.Duration;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * HTTP integration tests for {@link DefaultHenrikAccountClient}.

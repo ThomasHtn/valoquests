@@ -24,18 +24,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class PlayerController {
 
     /**
-     * Provider used to access the optional feature service when implemented.
+     * Application service resolving tracked players and their statistics.
      */
     private final PlayerQueryService service;
 
     /**
-     * @param serviceProvider provider for the future player query implementation
+     * Creates the player controller.
+     *
+     * @param service player query service
      */
     public PlayerController(PlayerQueryService service) {
         this.service = service;
     }
 
     /**
+     * Lists every tracked player.
+     *
      * @return every active or inactive player followed by the application
      */
     @GetMapping

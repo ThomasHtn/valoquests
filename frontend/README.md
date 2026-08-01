@@ -3,104 +3,107 @@
 Angular 22 application for Valorant Tracker. See the [root README](../README.md) for the project overview and the
 [backend README](../backend/README.md) for the Spring Boot API.
 
+## Documentation
+
+This README covers setup and commands. The design is documented in [`docs/`](docs):
+
+| Document                             | Covers                                                                        |
+| ------------------------------------ | ------------------------------------------------------------------------------ |
+| [Architecture](docs/architecture.md) | Directory layout, layering rules, routing, i18n, styling                        |
+| [Conventions](docs/conventions.md)   | Naming, signals, templates, accessibility and the rules a reviewer will apply    |
+| [Data access](docs/data-access.md)   | `httpResource`, shared vs. parameterized resources, and the state-handling guards |
+| [Pages](docs/pages.md)               | What each of the four screens shows, what it fetches and how it behaves          |
+
+Project-wide context is in [`../docs/`](../docs), and the API this module consumes is documented in
+[`../backend/docs/api.md`](../backend/docs/api.md).
+
 ## Technology stack
 
-- Angular 22
-- TypeScript
-- Tailwind CSS
+- Angular 22, running **zoneless** - `zone.js` is not a dependency
+- TypeScript, strict, with `strictTemplates`
+- Tailwind CSS v4, configured through CSS `@theme` tokens
 - [Lucide](https://lucide.dev/) for icons, via `@lucide/angular`
+- Vitest for unit tests, ESLint and Prettier for quality
 
-## Architecture
+## Architecture at a glance
 
-The application is organized by **domain**, not by technical type. A feature's model, data access and
-presentation live next to each other, so adding one means touching one folder rather than four.
+The application is organized by **domain**, not by technical type. A feature's model, data access and presentation live
+next to each other, so adding one means touching one folder rather than four.
 
 ```text
 src/
 ├── app/
 │   ├── core/        Domain logic and data access. No components.
-│   │   ├── challenges/  players/  ranking/  matches/   One folder per domain
-│   │   ├── date/        Calendar-week helpers
-│   │   ├── http/        Endpoint catalogue, pagination model, resource helpers
+│   │   ├── challenges/  players/  matches/  ranking/   One folder per domain
+│   │   ├── date/        Calendar-week and local date-time helpers
+│   │   ├── http/        Endpoint catalogue, pagination model, resource-state guards
 │   │   └── i18n/        Translation service, pipe and title strategy
 │   ├── shared/      Reusable presentational components (avatar, pagination, select…)
 │   ├── layout/      Application shell (sidebar)
 │   └── pages/       Routed screens, each lazy-loaded
-└── environments/    Build-time configuration
+├── environments/    Build-time configuration
+└── styles/          Tailwind theme tokens
 ```
 
-### Layering rules
+Four rules carry the structure. They are conventions enforced by review, not by tooling:
 
 - `core/` never contains components. It holds models, data-access services and pure functions.
-- `shared/` contains components reused by more than one page. It may import **types** from `core/`,
-  never services.
-- `pages/` compose `core/` and `shared/`. Pages never import from one another.
+- `shared/` contains components reused by more than one page. It may import **types** from `core/`, never services.
+- `pages/` compose `core/` and `shared/`. **Pages never import from one another.**
 - Anything used by exactly one page stays inside that page's folder.
 
-### File naming
+Cross-folder imports use the aliases `@core/*`, `@shared/*`, `@layout/*`, `@pages/*` and `@env/*`; same-folder imports
+stay relative.
 
-The suffix states what a module exports, so the contents are predictable from the file tree:
+Full details, including file-naming conventions and the reasoning behind the zoneless signal architecture, are in
+[`docs/architecture.md`](docs/architecture.md) and
+[ADR 0010](../docs/adr/0010-signal-based-zoneless-frontend.md).
 
-| Suffix           | Contains                                                         |
-| ---------------- | ---------------------------------------------------------------- |
-| `*.model.ts`     | Types only — usually mirroring a backend DTO                     |
-| `*.utils.ts`     | Pure functions (formatters, resolvers of Tailwind classes, math) |
-| `*.constants.ts` | Constant values only                                             |
-| `*-api.ts`       | A `@Service` exposing `httpResource`-backed data access          |
-
-Components, pipes and services are named after the class they export (`sidebar.ts`, `players-api.ts`).
-
-### Path aliases
-
-Cross-folder imports use aliases rather than `../../../` chains. Same-folder imports stay relative.
-
-```typescript
-import { PlayersApi } from '@core/players/players-api';
-import { Avatar } from '@shared/avatar/avatar';
-import { environment } from '@env/environment';
-```
-
-Available aliases: `@core/*`, `@shared/*`, `@layout/*`, `@pages/*`, `@env/*`.
-
-### Configuration
-
-`src/environments/environment.ts` holds the production configuration; `environment.development.ts`
-replaces it in the `development` build configuration via `fileReplacements` in `angular.json`.
-Endpoints are declared once in `core/http/api-endpoints.ts` and resolved against `apiBaseUrl`.
-
-### Conventions worth knowing
+### Conventions worth knowing up front
 
 - Change detection is **not** declared on components: `OnPush` is the default in Angular v22+.
-- The application runs **zoneless** — `zone.js` is not a dependency.
 - State is signal-based; derived state uses `computed()`.
 - Every screen renders its loading, error and empty states through `shared/resource-state`.
-
-## UI mockups
-
-The [`docs/images`](docs/images) directory contains the mockups used as the source of truth for the application's
-screens. Inspect the relevant mockup before implementing or changing a screen.
-
-## Previews
-
-The [`docs/preview`](docs/preview) directory contains up-to-date screenshots of the currently implemented screens,
-captured from the running application. Update the relevant screenshot whenever a previewed screen changes visibly.
+- `Resource.value()` **throws** in an error state, even with a `defaultValue`. Always read through
+  `resourceValue()` or a `hasValue()` guard.
 
 ## Development server
 
-To start a local development server, run:
-
 ```bash
-ng serve
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will
-automatically reload whenever you modify any of the source files. The backend must be running separately
-(see the [backend README](../backend/README.md)) for API calls to succeed.
+The application is served on `http://localhost:4200/` and reloads on source changes. `proxy.conf.json` forwards `/api`
+to `localhost:8080`, so the backend must be running separately (see the [backend README](../backend/README.md)) and no
+CORS configuration is required in development.
+
+## Configuration
+
+`src/environments/environment.ts` holds the production configuration; `environment.development.ts` replaces it in the
+`development` build configuration through `fileReplacements` in `angular.json`. Both currently set `apiBaseUrl` to the
+relative `/api`. Endpoints are declared once in `core/http/api-endpoints.ts` and resolved against it.
+
+## Commands
+
+| Command                | Effect                                                        |
+| ---------------------- | ------------------------------------------------------------- |
+| `npm start`            | Dev server on `:4200` with the `/api` proxy                    |
+| `npm run build`        | Production build into `dist/`, hashed output                   |
+| `npm run watch`        | Development build in watch mode                                |
+| `npm test`             | Unit tests (Vitest, through the Angular `unit-test` builder)   |
+| `npm run lint`         | ESLint over `src/**/*.ts` and `src/**/*.html`                  |
+| `npm run format`       | Prettier over `src/**/*.{ts,html,css,scss}`                    |
+| `npm run format:check` | Prettier in check mode                                         |
+
+Run `npm run format` and `npm run lint` after every change.
+
+No end-to-end framework is configured, and test coverage is currently thin - one spec, on `Tooltip`. Unlike the
+backend, the frontend has no coverage gate and no CI workflow; both are open gaps rather than deliberate omissions.
 
 ## Icons
 
-Icons are provided by Lucide. Import each icon's standalone component directly in the consuming component's
-`imports` array, then apply it via its selector attribute on an `<svg>` element:
+Icons are provided by Lucide. Import each icon's standalone component directly in the consuming component's `imports`
+array, then apply it via its selector attribute on an `<svg>` element:
 
 ```typescript
 import { Component } from '@angular/core';
@@ -117,48 +120,20 @@ export class Example {}
 Size and color icons with Tailwind utilities (`h-*`/`w-*` for size, `text-*` for color via `currentColor`). Do not
 register a global icon library unless a demonstrated need arises.
 
-## Code scaffolding
+## Design material
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- [`docs/images`](docs/images) - UI mockups, the source of truth for each screen. Inspect the relevant mockup before
+  implementing or changing a screen.
+- [`docs/preview`](docs/preview) - screenshots of the implemented screens, captured from the running application.
+  Update the relevant screenshot whenever a previewed screen changes visibly.
+- [`docs/boss.md`](docs/boss.md) - specification of a weekly-boss scoring model. A design document for a future
+  iteration; no part of it is implemented.
+
+## Code scaffolding
 
 ```bash
 ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
 ng generate --help
 ```
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+See the [Angular CLI reference](https://angular.dev/tools/cli) for the full command list.

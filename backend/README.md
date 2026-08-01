@@ -3,59 +3,49 @@
 Java 25 / Spring Boot API for Valorant Tracker. See the [root README](../README.md) for the project overview and the
 [frontend README](../frontend/README.md) for the Angular application.
 
-## Architecture
+## Documentation
 
-The backend follows a feature-oriented architecture. Each domain owns its controllers, services, repositories, entities,
-DTOs and business models.
+This README covers setup, build and operations. The design is documented in [`docs/`](docs):
+
+| Document                                            | Covers                                                                     |
+| --------------------------------------------------- | -------------------------------------------------------------------------- |
+| [Architecture](docs/architecture.md)                | Package layout, layering, transactions, configuration, error handling       |
+| [Synchronization](docs/synchronization.md)          | The Henrik import pipeline, season scope, idempotency, failure isolation    |
+| [Challenge engine](docs/challenge-engine.md)        | Rule format, the seven calculators, weekly selection, progress rules        |
+| [API](docs/api.md)                                  | Every route, its parameters, its response shape and its failure modes       |
+
+Project-wide context is in [`../docs/`](../docs): [architecture](../docs/architecture.md),
+[domain model](../docs/domain-model.md), [data model](../docs/data-model.md) and the
+[decision records](../docs/adr/README.md).
+
+## Architecture at a glance
+
+Code is organized by business feature. Each domain owns its controllers, services, repositories, entities, DTOs and
+business models.
 
 ```text
 io.github.thomashtn.valorant.tracker
-├── challenge        Weekly selection and progress calculation
+├── challenge        Weekly selection, rule parsing and progress calculation
 ├── henrik           External API clients, mapping, retry and rate limiting
 ├── match            Seasons, matches, statistics and idempotent imports
 ├── player           Tracked accounts, profiles and Riot account resolution
 ├── ranking          Weekly scores, positions and ranking history
-├── synchronization  Standard and deep synchronization orchestration
-├── week             Weekly rollover scheduling
+├── synchronization  Import orchestration, scheduling and monitoring
+├── week             Week calendar and weekly rollover
 └── shared           Security, errors, auditing and common web components
 ```
 
-The project favors thin controllers, explicit transactions, constructor injection, immutable API DTOs and database
-constraints for critical invariants.
+Thin controllers, explicit transaction boundaries, constructor injection, immutable API DTOs, and database constraints
+for every critical invariant. Full details in [`docs/architecture.md`](docs/architecture.md).
 
-## Synchronization flow
+Two behaviors surprise readers often enough to be worth stating here:
 
-### Standard synchronization
-
-1. Load an active tracked player.
-2. Resolve the Riot PUUID when necessary.
-3. Update the current competitive rank.
-4. Retrieve recent match-history pages.
-5. Import completed and previously unknown matches.
-6. Recalculate weekly challenge progress.
-7. Recalculate the ranking.
-8. Store the successful synchronization timestamp.
-
-### Deep synchronization
-
-Deep synchronization explores older pages for initial imports or data recovery.
-
-Its range is controlled by `DEEP_SYNC_SCOPE`:
-
-- `CURRENT_SEASON` imports the current competitive season;
-- `ALL_HISTORY` explores every available page.
-
-A page limit and request delay prevent runaway processing and reduce pressure on the Henrik API.
-
-## Challenge engine
-
-Challenge definitions are stored as versioned JSON rules in PostgreSQL.
-
-The engine supports sums, occurrence counts, distinct values, grouped maximums, composite objectives, ratios and
-consecutive streaks.
-
-A compatibility test parses every production challenge and verifies that its rule can be executed by the calculator
-registry. This prevents unsupported catalogue changes from reaching production.
+- **Synchronization is deliberately non-transactional.** Adding `@Transactional` above the walk would look like an
+  improvement and would break the guarantee that an interrupted import leaves no permanent hole. See
+  [ADR 0005](../docs/adr/0005-non-transactional-synchronization.md).
+- **Match history is bounded to the current act.** A player's stored history begins there, so match counts read lower
+  than the lifetime totals shown by external trackers such as tracker.gg. Every player result records why its walk
+  stopped, so a short history explains itself. See [ADR 0008](../docs/adr/0008-season-scoped-history.md).
 
 ## Getting started
 
@@ -114,8 +104,10 @@ Run the complete quality gate:
 ./mvnw clean verify
 ```
 
-This command runs Checkstyle, unit and integration tests, JaCoCo report generation and SpotBugs. Docker must be
-available because the integration suite starts an isolated PostgreSQL 17 container.
+This command runs Checkstyle, unit and integration tests, the JaCoCo report and its coverage gate (90 % line, 70 %
+branch) and SpotBugs. Docker must be available for the integration suite, which starts an isolated PostgreSQL 17
+container; without Docker those tests are skipped rather than failed, so a green build without Docker proves less than
+it appears to.
 
 Run only the fast test suite:
 
@@ -151,7 +143,7 @@ Flyway is the only schema-management mechanism. Hibernate uses `ddl-auto=validat
 ```text
 V1   Initial schema
 V2   Initial player placeholder
-V3   Challenge catalogue
+V3   Challenge catalogue (78 definitions)
 V4   Henrik synchronization preparation
 V5   Tracked players
 V6   Optional season dates
@@ -159,9 +151,16 @@ V7   Extended team identifier
 V8   Removal of the obsolete deep-sync task
 V9   Query-supporting indexes
 V10  Read-query optimizations
+V11  Re-categorization of newly recognized game modes
+V12  Backfill of round averages for the re-categorized modes
+V13  Reset of every table derived from Henrik data
+V14  Removal of challenges filtered on a retired game mode (78 → 62)
+V15  Per-player, per-season synchronization completion flag
+V16  Stop reason on per-player synchronization results
 ```
 
-Never edit an applied migration. Add a new migration for every schema or reference-data change.
+Never edit an applied migration. Add a new migration for every schema or reference-data change. Column-level detail is
+in [`../docs/data-model.md`](../docs/data-model.md).
 
 To reset the local database:
 
@@ -177,15 +176,18 @@ ON SCHEMA public TO public;
 
 ## Main API routes
 
+Parameters, response shapes and failure modes are documented in [`docs/api.md`](docs/api.md).
+
 ### Public routes
 
 ```http
 GET /api/challenges/current
 GET /api/rankings/current
-GET /api/rankings/history
+GET /api/rankings/history?page&size
 GET /api/players
-GET /api/players/{playerId}
-GET /api/players/{playerId}/matches
+GET /api/players/{playerId}?seasonId&gameMode
+GET /api/players/{playerId}/matches?page&size&seasonId&map&agent&result&gameMode
+GET /api/seasons
 ```
 
 ### Administrative routes
@@ -195,12 +197,10 @@ All administrative routes require `X-Admin-Key`.
 ```http
 POST /api/admin/synchronizations
 POST /api/admin/players/{playerId}/synchronizations
-POST /api/admin/synchronizations/deep
-POST /api/admin/players/{playerId}/synchronizations/deep
 POST /api/admin/challenges/progress/recalculation
 POST /api/admin/rankings/recalculation
 GET  /api/admin/synchronizations/latest
-GET  /api/admin/synchronizations
+GET  /api/admin/synchronizations?page&size
 GET  /api/admin/synchronizations/{synchronizationId}
 ```
 
@@ -223,13 +223,12 @@ GET  /api/admin/synchronizations/{synchronizationId}
 | `HENRIK_API_CONNECT_TIMEOUT`          | `PT5S`                                              | HTTP connect timeout                  |
 | `HENRIK_API_READ_TIMEOUT`             | `PT20S`                                             | HTTP read timeout                     |
 | `HENRIK_API_RATE_LIMIT_SAFETY_MARGIN` | `PT0.1S`                                            | Rate-limit safety margin              |
-| `DEEP_SYNC_SCOPE`                     | `CURRENT_SEASON`                                    | Historical import range               |
 | `STANDARD_SYNC_ENABLED`               | `true`                                              | Enables the standard sync scheduler   |
 | `STANDARD_SYNC_CRON`                  | `0 0 6,12,18 * * *`                                 | Standard sync schedule                |
 | `SCHEDULING_ZONE`                     | `Europe/Paris`                                      | Time zone for scheduled jobs          |
 | `WEEK_ROLLOVER_ENABLED`               | `true`                                              | Enables the weekly rollover scheduler |
 | `WEEK_ROLLOVER_CRON`                  | `0 5 0 * * MON`                                     | Weekly rollover schedule              |
-| `WEEK_ROLLOVER_ZONE`                  | `UTC`                                               | Time zone for the weekly rollover     |
+| `WEEK_ROLLOVER_ZONE`                  | `UTC`                                               | Time zone for all weekly calculations |
 
 ## Release-candidate validation
 
@@ -237,12 +236,13 @@ Before publishing a release, validate these flows against a dedicated PostgreSQL
 
 1. synchronize one player, then all active players;
 2. verify that one player failure does not interrupt the remaining synchronizations;
-3. run deep synchronization twice and confirm that no match is duplicated;
-4. recalculate challenge progress and confirm that ranking recalculation follows;
-5. exercise public pagination, filters, empty responses and unknown-resource errors;
-6. execute a week rollover with a fixed clock and verify that finalized history remains unchanged;
-7. parse and execute all 78 production challenge definitions;
-8. verify Swagger authorization and every protected administrative route.
+3. run the same synchronization twice and confirm that no match is duplicated;
+4. interrupt a synchronization mid-walk and confirm the next run re-walks the incomplete season in full;
+5. recalculate challenge progress and confirm that ranking recalculation follows;
+6. exercise public pagination, filters, empty responses and unknown-resource errors;
+7. execute a week rollover with a fixed clock and verify that finalized history remains unchanged;
+8. parse and execute every enabled production challenge definition;
+9. verify Swagger authorization and every protected administrative route.
 
 External Henrik calls are intentionally excluded from automated tests because they depend on credentials, rate limits
 and live upstream data.

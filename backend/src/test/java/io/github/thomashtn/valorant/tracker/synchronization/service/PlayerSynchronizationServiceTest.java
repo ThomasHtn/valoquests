@@ -1,5 +1,12 @@
 package io.github.thomashtn.valorant.tracker.synchronization.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
 import io.github.thomashtn.valorant.tracker.henrik.client.HenrikMmrClient;
 import io.github.thomashtn.valorant.tracker.henrik.dto.mmr.HenrikMmrResponse;
 import io.github.thomashtn.valorant.tracker.henrik.mapper.HenrikMmrMapper;
@@ -20,13 +27,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link PlayerSynchronizationService}.

@@ -5,19 +5,28 @@ on:
     branches:
       - main
       - develop
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
 
   pull_request:
     branches:
       - main
+      - develop
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
 
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# Superseded pull-request runs are cancelled; runs on shared branches are always
+# allowed to finish so every merged commit keeps a conclusive build status.
 concurrency:
-  group: backend-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
@@ -44,9 +53,8 @@ jobs:
       - name: Grant execute permission to Maven Wrapper
         run: chmod +x mvnw
 
-      - name: Verify Maven Wrapper
-        run: ./mvnw --version
-
+      # Runs Checkstyle, the unit and Testcontainers suites, SpotBugs and the
+      # JaCoCo coverage gate. Docker is preinstalled on the runner image.
       - name: Build, test and analyze
         run: ./mvnw --batch-mode --no-transfer-progress clean verify
 

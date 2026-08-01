@@ -48,6 +48,9 @@ public class SeasonSynchronizationStateService {
 
     /**
      * Creates the season synchronization state service.
+     *
+     * @param stateRepository repository holding per-player season completion rows
+     * @param clock           clock producing deterministic completion timestamps
      */
     public SeasonSynchronizationStateService(
         PlayerSeasonSynchronizationRepository stateRepository,

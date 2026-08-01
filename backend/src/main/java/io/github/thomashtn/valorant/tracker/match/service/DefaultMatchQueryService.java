@@ -3,21 +3,22 @@ package io.github.thomashtn.valorant.tracker.match.service;
 import io.github.thomashtn.valorant.tracker.match.dto.MatchResponse;
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
+import io.github.thomashtn.valorant.tracker.match.model.MatchHistoryFilter;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
+import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Arrays;
+import java.util.Locale;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.Locale;
 
 /**
  * Implements filtered and paginated player match-history consultation.
@@ -61,11 +62,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
      * @param playerId internal player identifier
      * @param page     zero-based page index
      * @param size     requested page size
-     * @param seasonId optional season identifier
-     * @param map      optional map name
-     * @param agent    optional agent name
-     * @param result   optional match result
-     * @param gameMode optional game mode
+     * @param filter   optional season, map, agent, result and game mode filters
      * @return requested page of player matches
      */
     @Override
@@ -73,23 +70,19 @@ public class DefaultMatchQueryService implements MatchQueryService {
         long playerId,
         int page,
         int size,
-        Long seasonId,
-        String map,
-        String agent,
-        String result,
-        String gameMode
+        MatchHistoryFilter filter
     ) {
         validatePagination(page, size);
         if (!playerRepository.existsById(playerId)) {
             throw new PlayerNotFoundException(playerId);
         }
-        MatchResult parsedResult = parseResult(result);
-        GameMode parsedGameMode = parseGameMode(gameMode);
+        MatchResult parsedResult = parseResult(filter.result());
+        GameMode parsedGameMode = parseGameMode(filter.gameMode());
         Page<PlayerMatch> matches = playerMatchRepository.findHistory(
             playerId,
-            seasonId,
-            normalize(map),
-            normalize(agent),
+            filter.seasonId(),
+            normalize(filter.map()),
+            normalize(filter.agent()),
             parsedResult,
             parsedGameMode,
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "match.startedAt", "id"))
@@ -141,7 +134,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
         try {
             return MatchResult.valueOf(value.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
-            throw new IllegalArgumentException("result must be WIN, LOSS or DRAW", exception);
+            throw new InvalidRequestException("result must be WIN, LOSS or DRAW", exception);
         }
     }
 
@@ -152,7 +145,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
         try {
             return GameMode.valueOf(value.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
-            throw new IllegalArgumentException(
+            throw new InvalidRequestException(
                 "gameMode must be one of " + Arrays.toString(GameMode.values()),
                 exception
             );
@@ -165,10 +158,10 @@ public class DefaultMatchQueryService implements MatchQueryService {
 
     private void validatePagination(int page, int size) {
         if (page < 0) {
-            throw new IllegalArgumentException("page must be greater than or equal to 0");
+            throw new InvalidRequestException("page must be greater than or equal to 0");
         }
         if (size < 1 || size > MAXIMUM_PAGE_SIZE) {
-            throw new IllegalArgumentException("size must be between 1 and " + MAXIMUM_PAGE_SIZE);
+            throw new InvalidRequestException("size must be between 1 and " + MAXIMUM_PAGE_SIZE);
         }
     }
 }

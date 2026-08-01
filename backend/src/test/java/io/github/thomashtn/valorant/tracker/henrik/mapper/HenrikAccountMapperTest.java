@@ -1,12 +1,12 @@
 package io.github.thomashtn.valorant.tracker.henrik.mapper;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+
 import io.github.thomashtn.valorant.tracker.henrik.dto.account.HenrikAccountResponse;
 import io.github.thomashtn.valorant.tracker.henrik.model.HenrikAccount;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 /**
  * Unit tests for {@link HenrikAccountMapper}.

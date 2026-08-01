@@ -3,9 +3,8 @@ package io.github.thomashtn.valorant.tracker.challenge.calculator;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valorant.tracker.challenge.model.ProgressMode;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
+import org.springframework.stereotype.Component;
 
 /**
  * Calculates challenges whose progress is the sum of one metric across all

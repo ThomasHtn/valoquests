@@ -1,5 +1,7 @@
 package io.github.thomashtn.valorant.tracker.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.thomashtn.valorant.tracker.challenge.entity.Challenge;
 import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
@@ -24,15 +26,6 @@ import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
@@ -43,8 +36,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Verifies the complete weekly challenge-progress pipeline against PostgreSQL.
@@ -262,8 +261,7 @@ class ChallengeProgressIntegrationTest
      *
      * @return progress rows indexed by challenge code
      */
-    private Map<String, PlayerChallengeProgress>
-    loadProgressByChallengeCode() {
+    private Map<String, PlayerChallengeProgress> loadProgressByChallengeCode() {
         return progressRepository
             .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
                 WEEK_START

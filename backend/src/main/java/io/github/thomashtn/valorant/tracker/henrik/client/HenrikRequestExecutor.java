@@ -1,10 +1,9 @@
 package io.github.thomashtn.valorant.tracker.henrik.client;
 
-import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
-
 import java.util.Objects;
 import java.util.function.Supplier;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 /**
  * Executes Henrik HTTP operations using the shared retry and rate-limit
@@ -63,9 +62,9 @@ public class HenrikRequestExecutor {
         );
 
         return Mono.defer(() -> {
-                requestLimiter.acquire();
-                return requestSupplier.get();
-            })
+            requestLimiter.acquire();
+            return requestSupplier.get();
+        })
             .retryWhen(retryStrategy.create(operationName))
             .block();
     }

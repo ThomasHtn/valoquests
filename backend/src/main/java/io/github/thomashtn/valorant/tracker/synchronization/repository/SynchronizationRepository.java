@@ -12,6 +12,8 @@ public interface SynchronizationRepository
 
     /**
      * Returns the most recently started synchronization execution.
+     *
+     * @return the latest execution, or empty when none has ever run
      */
     Optional<Synchronization> findFirstByOrderByStartedAtDescIdDesc();
 }

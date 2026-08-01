@@ -2,6 +2,7 @@ package io.github.thomashtn.valorant.tracker.synchronization.service;
 
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
+import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
 import io.github.thomashtn.valorant.tracker.shared.exception.ResourceNotFoundException;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationDetailsResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
@@ -45,6 +46,10 @@ public class SynchronizationQueryService {
 
     /**
      * Creates the synchronization query service.
+     *
+     * @param synchronizationRepository repository holding synchronization executions
+     * @param playerResultRepository    repository holding per-player results
+     * @param playerRepository          repository holding tracked players
      */
     public SynchronizationQueryService(
         SynchronizationRepository synchronizationRepository,
@@ -58,6 +63,10 @@ public class SynchronizationQueryService {
 
     /**
      * Returns the most recently started synchronization execution.
+     *
+     * @return the latest execution summary
+     * @throws io.github.thomashtn.valorant.tracker.shared.exception.ResourceNotFoundException when
+     *     no execution has ever been recorded
      */
     public SynchronizationResponse findLatest() {
         Synchronization synchronization = synchronizationRepository
@@ -74,6 +83,10 @@ public class SynchronizationQueryService {
 
     /**
      * Returns synchronization history ordered from newest to oldest.
+     *
+     * @param page zero-based page index
+     * @param size number of executions returned per page
+     * @return the requested page of execution summaries
      */
     public PageResponse<SynchronizationResponse> findHistory(
         int page,
@@ -106,6 +119,11 @@ public class SynchronizationQueryService {
 
     /**
      * Returns one execution and every persisted per-player result.
+     *
+     * @param synchronizationId internal synchronization identifier
+     * @return the execution with one detailed result per processed player
+     * @throws io.github.thomashtn.valorant.tracker.shared.exception.ResourceNotFoundException when
+     *     no execution carries that identifier
      */
     public SynchronizationDetailsResponse findById(long synchronizationId) {
         Synchronization synchronization = synchronizationRepository
@@ -185,12 +203,12 @@ public class SynchronizationQueryService {
      */
     private void validatePagination(int page, int size) {
         if (page < 0) {
-            throw new IllegalArgumentException(
+            throw new InvalidRequestException(
                 "page must be greater than or equal to 0"
             );
         }
         if (size < 1 || size > MAXIMUM_PAGE_SIZE) {
-            throw new IllegalArgumentException(
+            throw new InvalidRequestException(
                 "size must be between 1 and " + MAXIMUM_PAGE_SIZE
             );
         }

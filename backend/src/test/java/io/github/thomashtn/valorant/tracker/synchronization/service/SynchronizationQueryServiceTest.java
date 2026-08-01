@@ -1,7 +1,13 @@
 package io.github.thomashtn.valorant.tracker.synchronization.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
+import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
 import io.github.thomashtn.valorant.tracker.shared.exception.ResourceNotFoundException;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationDetailsResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
@@ -22,11 +28,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 /** Unit tests for {@link SynchronizationQueryService}. */
 @ExtendWith(MockitoExtension.class)
@@ -84,11 +85,11 @@ class SynchronizationQueryServiceTest {
     @Test
     void shouldRejectInvalidPagination() {
         assertThatThrownBy(() -> service.findHistory(-1, 20))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(InvalidRequestException.class)
             .hasMessageContaining("page");
 
         assertThatThrownBy(() -> service.findHistory(0, 101))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(InvalidRequestException.class)
             .hasMessageContaining("size");
     }
 

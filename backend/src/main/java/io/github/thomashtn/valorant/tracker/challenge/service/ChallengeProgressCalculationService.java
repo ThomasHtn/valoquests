@@ -7,9 +7,8 @@ import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallenge
 import io.github.thomashtn.valorant.tracker.challenge.entity.Challenge;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valorant.tracker.challenge.parser.ChallengeDefinitionParser;
-import org.springframework.stereotype.Service;
-
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * Coordinates the parsing and calculation of one challenge for one player.

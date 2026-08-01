@@ -1,5 +1,8 @@
 package io.github.thomashtn.valorant.tracker.challenge;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
 import io.github.thomashtn.valorant.tracker.challenge.calculator.AllChallengeProgressCalculator;
 import io.github.thomashtn.valorant.tracker.challenge.calculator.ChallengeMatchFilter;
 import io.github.thomashtn.valorant.tracker.challenge.calculator.ChallengeMetricEvaluator;
@@ -21,16 +24,15 @@ import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valorant.tracker.challenge.model.ProgressMode;
 import io.github.thomashtn.valorant.tracker.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valorant.tracker.challenge.parser.JacksonChallengeDefinitionParser;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import tools.jackson.databind.json.JsonMapper;
-
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -38,9 +40,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Verifies that the production challenge catalogue remains compatible with
@@ -118,11 +120,13 @@ class ChallengeCatalogueCompatibilityTest {
             ),
             new DistinctCountChallengeProgressCalculator(
                 metricEvaluator,
-                matchFilter
+                matchFilter,
+                new WeekCalendar(Clock.systemUTC(), ZoneOffset.UTC)
             ),
             new MaxGroupChallengeProgressCalculator(
                 metricEvaluator,
-                matchFilter
+                matchFilter,
+                new WeekCalendar(Clock.systemUTC(), ZoneOffset.UTC)
             ),
             new AllChallengeProgressCalculator(
                 metricEvaluator,

@@ -1,5 +1,7 @@
 package io.github.thomashtn.valorant.tracker.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.thomashtn.valorant.tracker.challenge.entity.Challenge;
 import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
@@ -17,15 +19,6 @@ import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -34,8 +27,14 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Verifies weekly ranking recalculation against a real PostgreSQL database.

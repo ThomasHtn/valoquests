@@ -36,10 +36,12 @@ statistics such as KDA, win rate, headshot percentage, ACS and ADR.
 
 ### Weekly challenges
 
-Every week, the application selects a balanced challenge set from a catalogue of 78 definitions.
+Every week, the application selects a balanced pack of five challenges - one per difficulty tier - from a catalogue of
+62 definitions.
 
-Challenges cover volume, performance, streaks, ratios, game modes, distinct agents and grouped objectives. Progress is
-recalculated from persisted matches, making results deterministic and reproducible.
+Challenges cover volume, performance, streaks, ratios, game modes, distinct agents and grouped objectives. Selection is
+deterministic and enforces exclusion groups; progress is recalculated from persisted matches rather than accumulated,
+so results are reproducible.
 
 ### Live ranking
 
@@ -58,7 +60,7 @@ Imports are incremental and idempotent:
 - player-match associations are protected by database constraints;
 - one player failure does not block the others;
 - retries and request spacing protect the integration from temporary failures and rate limits;
-- standard and deep synchronization modes cover daily updates and historical imports.
+- the walk is bounded to the current act, and records why it stopped so a short history explains itself.
 
 ## Main screens
 
@@ -77,8 +79,11 @@ Every tracked player is listed with rank, win rate, KDA and match count at a gla
 
 ![Player list](frontend/docs/preview/player-list.png)
 
-Player profile, player comparison and ranking history screens are designed (see [`frontend/docs/images`](frontend/docs/images))
-and scheduled for upcoming iterations.
+The player profile - identity, rank, aggregated statistics and a filterable match history loaded by infinite scroll -
+and the ranking history are implemented as well; their screenshots are not captured yet. Player comparison is designed
+(see [`frontend/docs/images`](frontend/docs/images)) and scheduled for an upcoming iteration.
+
+Each screen is documented in [`frontend/docs/pages.md`](frontend/docs/pages.md).
 
 ## Technology stack
 
@@ -100,13 +105,21 @@ and scheduled for upcoming iterations.
 - Maven Wrapper
 - Docker Compose
 
-### Tests
+### Frontend
 
-- JUnit 5
-- Mockito
-- AssertJ
-- H2 in PostgreSQL compatibility mode
-- MockWebServer
+- Angular 22, zoneless, signal-based
+- TypeScript
+- Tailwind CSS v4
+- Lucide icons
+
+### Tests and quality
+
+- JUnit 5, Mockito, AssertJ
+- H2 in PostgreSQL compatibility mode for unit tests
+- Testcontainers (PostgreSQL 17) for integration tests
+- MockWebServer for the Henrik client
+- Checkstyle, SpotBugs and JaCoCo (90 % line, 70 % branch)
+- Vitest, ESLint and Prettier on the frontend
 
 ## Repository structure
 
@@ -114,13 +127,26 @@ The project is organized as a monorepo:
 
 ```text
 valorant-tracker
-├── backend    Java 25 / Spring Boot API (Maven project) — see backend/README.md
-├── frontend   Angular 22 application, including UI mockups — see frontend/README.md
-└── scripts    Operational scripts
+├── backend    Java 25 / Spring Boot API (Maven project) - see backend/README.md
+├── frontend   Angular 22 application, including UI mockups - see frontend/README.md
+├── scripts    Operational scripts
+└── docs       Project-wide documentation
 ```
 
 Each module owns its own environment configuration, Docker Compose file (backend) and detailed setup, build and test
 instructions. Start with `backend/README.md` and `frontend/README.md`.
+
+## Documentation
+
+| Scope    | Where                                                                                       |
+| -------- | ------------------------------------------------------------------------------------------- |
+| Global   | [`docs/`](docs) - [architecture](docs/architecture.md), [domain model](docs/domain-model.md), [data model](docs/data-model.md), [decisions](docs/adr/README.md) |
+| Backend  | [`backend/docs/`](backend/docs) - [architecture](backend/docs/architecture.md), [synchronization](backend/docs/synchronization.md), [challenge engine](backend/docs/challenge-engine.md), [API](backend/docs/api.md) |
+| Frontend | [`frontend/docs/`](frontend/docs) - [architecture](frontend/docs/architecture.md), [conventions](frontend/docs/conventions.md), [data access](frontend/docs/data-access.md), [pages](frontend/docs/pages.md) |
+
+The [decision records](docs/adr/README.md) are the fastest way to understand why the code looks the way it does: why
+synchronization runs outside any transaction, why challenge rules are data rather than code, why derived values are
+recomputed instead of accumulated, and why the frontend is zoneless.
 
 ## Development conventions
 

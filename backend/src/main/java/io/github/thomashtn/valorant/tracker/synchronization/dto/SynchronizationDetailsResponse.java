@@ -1,11 +1,10 @@
 package io.github.thomashtn.valorant.tracker.synchronization.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStopReason;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.List;
 

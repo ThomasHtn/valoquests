@@ -4,22 +4,17 @@ import io.github.thomashtn.valorant.tracker.challenge.calculator.ChallengeProgre
 import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallengeContext;
 import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallengeContextFactory;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
+import java.time.LocalDate;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Clock;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.temporal.TemporalAdjusters;
-import java.util.List;
 
 /**
  * Recalculates the current weekly challenge progress from persisted matches.
@@ -54,9 +49,7 @@ public class DefaultChallengeRecalculationService
     /**
      * Service used to persist calculated challenge progress.
      */
-    private final PlayerChallengeProgressPersistenceService
-
-        persistenceService;
+    private final PlayerChallengeProgressPersistenceService persistenceService;
 
     /**
      * Service used to rebuild the current weekly ranking.
@@ -66,19 +59,12 @@ public class DefaultChallengeRecalculationService
     /**
      * Service used to prepare the active weekly challenge pack.
      */
-    private final WeeklyChallengeSelectionService
-
-        weeklyChallengeSelectionService;
+    private final WeeklyChallengeSelectionService weeklyChallengeSelectionService;
 
     /**
-     * Repository used to load the pack of a week that already owns one.
+     * Calendar resolving the current week.
      */
-    private final WeeklyChallengeRepository weeklyChallengeRepository;
-
-    /**
-     * Application clock used to resolve the current UTC week.
-     */
-    private final Clock clock;
+    private final WeekCalendar weekCalendar;
 
     /**
      * Creates the current-week challenge recalculation service.
@@ -89,8 +75,7 @@ public class DefaultChallengeRecalculationService
      * @param persistenceService              progress persistence service
      * @param rankingRecalculationService     ranking recalculation service
      * @param weeklyChallengeSelectionService weekly selection service
-     * @param weeklyChallengeRepository       weekly challenge repository
-     * @param clock                           application clock
+     * @param weekCalendar                    calendar resolving the current week
      */
     public DefaultChallengeRecalculationService(
         PlayerRepository playerRepository,
@@ -98,20 +83,16 @@ public class DefaultChallengeRecalculationService
         ChallengeProgressCalculationService calculationService,
         PlayerChallengeProgressPersistenceService persistenceService,
         RankingRecalculationService rankingRecalculationService,
-        WeeklyChallengeSelectionService
-            weeklyChallengeSelectionService,
-        WeeklyChallengeRepository weeklyChallengeRepository,
-        Clock clock
+        WeeklyChallengeSelectionService weeklyChallengeSelectionService,
+        WeekCalendar weekCalendar
     ) {
         this.playerRepository = playerRepository;
         this.contextFactory = contextFactory;
         this.calculationService = calculationService;
         this.persistenceService = persistenceService;
         this.rankingRecalculationService = rankingRecalculationService;
-        this.weeklyChallengeSelectionService =
-            weeklyChallengeSelectionService;
-        this.weeklyChallengeRepository = weeklyChallengeRepository;
-        this.clock = clock;
+        this.weeklyChallengeSelectionService = weeklyChallengeSelectionService;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -123,7 +104,7 @@ public class DefaultChallengeRecalculationService
     @Override
     @Transactional
     public void recalculateCurrentWeekProgress() {
-        LocalDate weekStart = resolveCurrentWeekStart();
+        LocalDate weekStart = weekCalendar.currentWeekStart();
 
         // Selected rather than loaded: the current pack is created when it does not exist yet.
         List<WeeklyChallenge> weeklyChallenges =
@@ -148,7 +129,7 @@ public class DefaultChallengeRecalculationService
     public void recalculateWeekProgress(LocalDate weekStart) {
         recalculateWeek(
             weekStart,
-            weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(weekStart)
+            weeklyChallengeSelectionService.findExistingWeekChallenges(weekStart)
         );
     }
 
@@ -276,21 +257,6 @@ public class DefaultChallengeRecalculationService
         );
 
         return result;
-    }
-
-    /**
-     * Resolves the Monday beginning the current UTC calendar week.
-     *
-     * @return current week start
-     */
-    private LocalDate resolveCurrentWeekStart() {
-        return LocalDate
-            .now(clock.withZone(ZoneOffset.UTC))
-            .with(
-                TemporalAdjusters.previousOrSame(
-                    DayOfWeek.MONDAY
-                )
-            );
     }
 
 }

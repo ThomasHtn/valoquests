@@ -1,6 +1,7 @@
 package io.github.thomashtn.valorant.tracker.ranking.controller;
 
 import static io.github.thomashtn.valorant.tracker.shared.config.OpenApiConfig.ADMIN_KEY_SECURITY_SCHEME;
+
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

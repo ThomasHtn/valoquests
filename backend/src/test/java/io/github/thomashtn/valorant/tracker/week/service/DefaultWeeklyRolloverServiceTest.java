@@ -1,22 +1,5 @@
 package io.github.thomashtn.valorant.tracker.week.service;
 
-import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
-import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
-import io.github.thomashtn.valorant.tracker.challenge.service.WeeklyChallengeSelectionService;
-import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
-import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
-import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InOrder;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.inOrder;
@@ -24,6 +7,23 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
+import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
+import io.github.thomashtn.valorant.tracker.challenge.service.WeeklyChallengeSelectionService;
+import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
+import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 
 /**
  * Tests atomic and idempotent weekly rollover orchestration.
@@ -114,7 +114,8 @@ class DefaultWeeklyRolloverServiceTest {
             rankingRecalculationService,
             weeklyChallengeSelectionService,
             challengeRecalculationService,
-            clock
+            clock,
+            new WeekCalendar(clock, ZoneOffset.UTC)
         );
     }
 

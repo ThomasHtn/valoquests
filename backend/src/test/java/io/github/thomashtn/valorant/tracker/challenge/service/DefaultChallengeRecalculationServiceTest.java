@@ -1,29 +1,28 @@
 package io.github.thomashtn.valorant.tracker.challenge.service;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import io.github.thomashtn.valorant.tracker.challenge.calculator.ChallengeProgressResult;
 import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallengeContext;
 import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallengeContextFactory;
 import io.github.thomashtn.valorant.tracker.challenge.entity.Challenge;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests current-week challenge progress orchestration.
@@ -69,11 +68,6 @@ class DefaultChallengeRecalculationServiceTest {
     private RankingRecalculationService rankingRecalculationService;
 
     /**
-     * Weekly challenge repository dependency.
-     */
-    private WeeklyChallengeRepository weeklyChallengeRepository;
-
-    /**
      * Service under test.
      */
     private DefaultChallengeRecalculationService service;
@@ -94,9 +88,6 @@ class DefaultChallengeRecalculationServiceTest {
             mock(PlayerChallengeProgressPersistenceService.class);
         rankingRecalculationService =
             mock(RankingRecalculationService.class);
-        weeklyChallengeRepository =
-            mock(WeeklyChallengeRepository.class);
-
         Clock clock = Clock.fixed(
             Instant.parse("2026-07-20T12:00:00Z"),
             ZoneOffset.UTC
@@ -109,8 +100,7 @@ class DefaultChallengeRecalculationServiceTest {
             persistenceService,
             rankingRecalculationService,
             weeklyChallengeSelectionService,
-            weeklyChallengeRepository,
-            clock
+            new WeekCalendar(clock, ZoneOffset.UTC)
         );
     }
 

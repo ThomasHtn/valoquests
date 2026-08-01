@@ -1,12 +1,12 @@
 package io.github.thomashtn.valorant.tracker.challenge.repository;
 
 import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProgress;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Provides persistence operations for player challenge progress entities.
@@ -21,8 +21,7 @@ public interface PlayerChallengeProgressRepository
      * @param weeklyChallengeId weekly challenge identifier
      * @return matching progress when it already exists
      */
-    Optional<PlayerChallengeProgress>
-    findByPlayerIdAndWeeklyChallengeId(
+    Optional<PlayerChallengeProgress> findByPlayerIdAndWeeklyChallengeId(
         Long playerId,
         Long weeklyChallengeId
     );
@@ -40,8 +39,7 @@ public interface PlayerChallengeProgressRepository
      * @return existing progress rows
      */
     @EntityGraph(attributePaths = "weeklyChallenge")
-    List<PlayerChallengeProgress>
-    findAllByPlayerIdAndWeeklyChallengeIdIn(
+    List<PlayerChallengeProgress> findAllByPlayerIdAndWeeklyChallengeIdIn(
         Long playerId,
         Collection<Long> weeklyChallengeIds
     );
@@ -62,9 +60,8 @@ public interface PlayerChallengeProgressRepository
             "weeklyChallenge.challenge"
         }
     )
-    List<PlayerChallengeProgress>
-    findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
-        java.time.LocalDate weekStart
+    List<PlayerChallengeProgress> findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
+        LocalDate weekStart
     );
 
 }

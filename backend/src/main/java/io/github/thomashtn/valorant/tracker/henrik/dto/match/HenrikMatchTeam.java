@@ -13,6 +13,12 @@ public record HenrikMatchTeam(
     Boolean won,
     HenrikRounds rounds
 ) {
+    /**
+     * Reports how many rounds a team won and lost.
+     *
+     * @param won  rounds won by the team
+     * @param lost rounds lost by the team
+     */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikRounds(Integer won, Integer lost) {}
 

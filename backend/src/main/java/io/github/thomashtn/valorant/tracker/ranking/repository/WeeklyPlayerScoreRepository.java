@@ -34,8 +34,7 @@ public interface WeeklyPlayerScoreRepository
      * @return matching scores ordered by week and position
      */
     @EntityGraph(attributePaths = "player")
-    List<WeeklyPlayerScore>
-    findAllByWeekStartInOrderByWeekStartDescPositionAsc(
+    List<WeeklyPlayerScore> findAllByWeekStartInOrderByWeekStartDescPositionAsc(
         Collection<LocalDate> weekStarts
     );
 

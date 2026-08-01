@@ -1,12 +1,14 @@
 package io.github.thomashtn.valorant.tracker.match.controller;
 
 import io.github.thomashtn.valorant.tracker.match.dto.MatchResponse;
+import io.github.thomashtn.valorant.tracker.match.model.MatchHistoryFilter;
 import io.github.thomashtn.valorant.tracker.match.service.MatchQueryService;
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,12 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class MatchController {
 
     /**
-     * Provider used to access the optional feature service when implemented.
+     * Application service resolving the filtered match history.
      */
     private final MatchQueryService service;
 
     /**
-     * @param serviceProvider provider for the future match query implementation
+     * Creates the match history controller.
+     *
+     * @param service match query service
      */
     public MatchController(MatchQueryService service) {
         this.service = service;
@@ -37,6 +41,11 @@ public class MatchController {
     /**
      * Returns player matches from newest to oldest.
      *
+     * @param playerId internal player identifier
+     * @param page     zero-based page index
+     * @param size     maximum number of matches returned in one page
+     * @param filter   optional season, map, agent, result and game mode filters, bound from the
+     *     query string
      * @return one page of matching player-match records
      */
     @GetMapping
@@ -50,24 +59,15 @@ public class MatchController {
     @ApiResponse(responseCode = "200", description = "Match page returned successfully.")
     @ApiResponse(responseCode = "400", description = "A pagination value or filter is invalid.")
     @ApiResponse(responseCode = "404", description = "The requested player does not exist.")
-        public PageResponse<MatchResponse> getPlayerMatches(
+    public PageResponse<MatchResponse> getPlayerMatches(
         @Parameter(description = "Internal player identifier.", example = "3", required = true)
         @PathVariable long playerId,
         @Parameter(description = "Zero-based page index.", example = "0")
         @RequestParam(defaultValue = "0") int page,
         @Parameter(description = "Maximum number of matches returned in one page.", example = "10")
         @RequestParam(defaultValue = "10") int size,
-        @Parameter(description = "Optional internal season identifier.", example = "8")
-        @RequestParam(required = false) Long seasonId,
-        @Parameter(description = "Optional exact map name.", example = "Ascent")
-        @RequestParam(required = false) String map,
-        @Parameter(description = "Optional exact agent name.", example = "Omen")
-        @RequestParam(required = false) String agent,
-        @Parameter(description = "Optional result filter: WIN, LOSS or DRAW.", example = "WIN")
-        @RequestParam(required = false) String result,
-        @Parameter(description = "Optional game mode filter.", example = "COMPETITIVE")
-        @RequestParam(required = false) String gameMode
+        @ParameterObject MatchHistoryFilter filter
     ) {
-        return service.findByPlayer(playerId, page, size, seasonId, map, agent, result, gameMode);
+        return service.findByPlayer(playerId, page, size, filter);
     }
 }

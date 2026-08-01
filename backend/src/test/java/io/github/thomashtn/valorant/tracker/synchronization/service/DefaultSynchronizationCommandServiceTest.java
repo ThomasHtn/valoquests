@@ -1,33 +1,5 @@
 package io.github.thomashtn.valorant.tracker.synchronization.service;
 
-import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
-import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikServiceUnavailableException;
-import io.github.thomashtn.valorant.tracker.player.entity.Player;
-import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
-import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
-import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
-import io.github.thomashtn.valorant.tracker.synchronization.entity.Synchronization;
-import io.github.thomashtn.valorant.tracker.synchronization.entity.SynchronizationPlayerResult;
-import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerSynchronizationResult;
-import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
-import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStopReason;
-import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
-import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
-import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationPlayerResultRepository;
-import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InOrder;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
@@ -38,6 +10,33 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+
+import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
+import io.github.thomashtn.valorant.tracker.henrik.exception.HenrikServiceUnavailableException;
+import io.github.thomashtn.valorant.tracker.player.entity.Player;
+import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
+import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
+import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
+import io.github.thomashtn.valorant.tracker.synchronization.entity.Synchronization;
+import io.github.thomashtn.valorant.tracker.synchronization.entity.SynchronizationPlayerResult;
+import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerSynchronizationResult;
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStopReason;
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
+import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationPlayerResultRepository;
+import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationRepository;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Unit tests for {@link DefaultSynchronizationCommandService}.

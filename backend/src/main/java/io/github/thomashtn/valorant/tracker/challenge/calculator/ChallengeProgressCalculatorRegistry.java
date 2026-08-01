@@ -2,11 +2,10 @@ package io.github.thomashtn.valorant.tracker.challenge.calculator;
 
 import io.github.thomashtn.valorant.tracker.challenge.exception.UnsupportedChallengeProgressModeException;
 import io.github.thomashtn.valorant.tracker.challenge.model.ProgressMode;
-import org.springframework.stereotype.Component;
-
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
 /**
  * Provides access to challenge progress calculators according to their

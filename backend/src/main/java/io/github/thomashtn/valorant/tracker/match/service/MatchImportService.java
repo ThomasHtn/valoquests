@@ -53,6 +53,11 @@ public class MatchImportService {
 
     /**
      * Creates the idempotent match import service.
+     *
+     * @param matchRepository         repository holding Valorant matches
+     * @param playerMatchRepository   repository holding player-to-match associations
+     * @param seasonResolutionService service resolving the season a match belongs to
+     * @param mapper                  mapper turning Henrik payloads into entities
      */
     public MatchImportService(
         ValorantMatchRepository matchRepository,

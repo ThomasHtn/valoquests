@@ -1,11 +1,10 @@
 package io.github.thomashtn.valorant.tracker.henrik.client;
 
 import io.github.thomashtn.valorant.tracker.henrik.config.HenrikApiProperties;
-import org.springframework.stereotype.Component;
-
 import java.time.Duration;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
+import org.springframework.stereotype.Component;
 
 /**
  * Globally regulates calls sent through the Henrik API clients.

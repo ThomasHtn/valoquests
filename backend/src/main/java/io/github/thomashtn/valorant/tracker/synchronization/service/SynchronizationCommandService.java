@@ -26,7 +26,10 @@ public interface SynchronizationCommandService {
     );
 
     /**
-     * @param playerId player to synchronize @return synchronization summary
+     * Synchronizes one tracked player.
+     *
+     * @param playerId player to synchronize
+     * @return completed synchronization summary
      */
     SynchronizationResponse synchronizePlayer(long playerId);
 }

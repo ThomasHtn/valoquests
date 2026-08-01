@@ -1,12 +1,12 @@
 package io.github.thomashtn.valorant.tracker.challenge.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Unit tests for {@link ChallengeGameMode}.

@@ -52,6 +52,9 @@ public class RankingController {
 
     /**
      * @return one page of finalized weekly rankings
+     *
+     * @param page zero-based page index
+     * @param size number of finalized weeks returned per page
      */
     @GetMapping("/history")
     @Operation(

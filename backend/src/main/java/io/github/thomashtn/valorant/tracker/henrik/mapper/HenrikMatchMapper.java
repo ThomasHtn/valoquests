@@ -24,11 +24,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class HenrikMatchMapper {
 
+    /**
+     * Logger used to report unmapped Henrik payload values.
+     */
     private static final Logger LOGGER =
         LoggerFactory.getLogger(HenrikMatchMapper.class);
 
     /**
      * Maps shared match metadata to the persisted match entity.
+     *
+     * @param source Henrik match payload
+     * @param season season the match belongs to, already resolved
+     * @return the match entity, not yet persisted
      */
     public ValorantMatch toValorantMatch(
         HenrikMatchData source,
@@ -63,6 +70,12 @@ public class HenrikMatchMapper {
 
     /**
      * Maps the tracked player's statistics for one persisted match.
+     *
+     * @param source       Henrik match payload
+     * @param sourcePlayer the tracked player's entry in that payload
+     * @param player       tracked player the statistics belong to
+     * @param match        persisted match the statistics attach to
+     * @return the player-match association, not yet persisted
      */
     public PlayerMatch toPlayerMatch(
         HenrikMatchData source,
@@ -70,66 +83,17 @@ public class HenrikMatchMapper {
         Player player,
         ValorantMatch match
     ) {
-        HenrikMatchPlayer.HenrikPlayerStats stats =
-            sourcePlayer.stats();
         HenrikMatchTeam team = findTeam(
             source,
             sourcePlayer.teamId()
         );
 
-        int rounds = roundsPlayed(team);
-        boolean roundBasedMode = match.getGameMode().isRoundBased();
-
-        // Henrik omits the damage breakdown for some modes, Skirmish among them. The persisted
-        // total then falls back to zero because the column is not nullable, so ADR must stay unset
-        // rather than report a zero average that would drag the player's statistics down.
-        boolean damageReported = stats != null
-            && stats.damage() != null
-            && stats.damage().dealt() != null;
-
         PlayerMatch target = new PlayerMatch();
         target.setPlayer(player);
         target.setMatch(match);
         target.setTeamId(sourcePlayer.teamId());
-        target.setAgentId(
-            sourcePlayer.agent() == null
-                ? null
-                : sourcePlayer.agent().id()
-        );
-        target.setAgentName(
-            sourcePlayer.agent() == null
-                || sourcePlayer.agent().name() == null
-                ? "Unknown"
-                : sourcePlayer.agent().name()
-        );
         target.setResult(toResult(team));
-        target.setKills(stats == null ? 0 : value(stats.kills()));
-        target.setDeaths(stats == null ? 0 : value(stats.deaths()));
-        target.setAssists(stats == null ? 0 : value(stats.assists()));
-        target.setScore(stats == null ? 0 : value(stats.score()));
-        target.setHeadshots(
-            stats == null ? 0 : value(stats.headshots())
-        );
-        target.setBodyshots(
-            stats == null ? 0 : value(stats.bodyshots())
-        );
-        target.setLegshots(
-            stats == null ? 0 : value(stats.legshots())
-        );
-        target.setDamageDealt(
-            stats == null || stats.damage() == null
-                ? 0
-                : value(stats.damage().dealt())
-        );
-        target.setRoundsPlayed(rounds);
-        target.setAcs(
-            roundBasedMode ? average(target.getScore(), rounds) : null
-        );
-        target.setAdr(
-            roundBasedMode && damageReported
-                ? average(target.getDamageDealt(), rounds)
-                : null
-        );
+        target.setRoundsPlayed(roundsPlayed(team));
         target.setCompetitiveTier(
             toCompetitiveTier(sourcePlayer.tier())
         );
@@ -137,7 +101,80 @@ public class HenrikMatchMapper {
         // Match history v4 does not reliably expose historical RR.
         target.setRankRating(null);
         target.setMvp(isMvp(source, sourcePlayer));
+
+        applyAgent(target, sourcePlayer.agent());
+        applyScoreboard(target, sourcePlayer.stats());
+        applyRoundAverages(target, sourcePlayer.stats(), match.getGameMode());
         return target;
+    }
+
+    /**
+     * Copies the agent a player used, falling back to a placeholder name.
+     */
+    private void applyAgent(
+        PlayerMatch target,
+        HenrikMatchPlayer.HenrikAgent agent
+    ) {
+        target.setAgentId(agent == null ? null : agent.id());
+        target.setAgentName(
+            agent == null || agent.name() == null
+                ? "Unknown"
+                : agent.name()
+        );
+    }
+
+    /**
+     * Copies the scoreboard counters reported for one player.
+     *
+     * <p>Henrik omits the whole block for some payloads. The counters then keep the zero every
+     * column already defaults to, which is what an absent scoreboard means here.
+     */
+    private void applyScoreboard(
+        PlayerMatch target,
+        HenrikMatchPlayer.HenrikPlayerStats stats
+    ) {
+        if (stats == null) {
+            return;
+        }
+
+        target.setKills(value(stats.kills()));
+        target.setDeaths(value(stats.deaths()));
+        target.setAssists(value(stats.assists()));
+        target.setScore(value(stats.score()));
+        target.setHeadshots(value(stats.headshots()));
+        target.setBodyshots(value(stats.bodyshots()));
+        target.setLegshots(value(stats.legshots()));
+        target.setDamageDealt(
+            stats.damage() == null ? 0 : value(stats.damage().dealt())
+        );
+    }
+
+    /**
+     * Derives the per-round averages, which only mean something in a round-based mode.
+     *
+     * <p>Must run after the scoreboard and round count are set, since it averages them.
+     */
+    private void applyRoundAverages(
+        PlayerMatch target,
+        HenrikMatchPlayer.HenrikPlayerStats stats,
+        GameMode gameMode
+    ) {
+        if (!gameMode.isRoundBased()) {
+            return;
+        }
+
+        int rounds = target.getRoundsPlayed();
+        target.setAcs(average(target.getScore(), rounds));
+
+        // Henrik omits the damage breakdown for some modes, Skirmish among them. The persisted
+        // total then falls back to zero because the column is not nullable, so ADR must stay unset
+        // rather than report a zero average that would drag the player's statistics down.
+        boolean damageReported = stats != null
+            && stats.damage() != null
+            && stats.damage().dealt() != null;
+        target.setAdr(
+            damageReported ? average(target.getDamageDealt(), rounds) : null
+        );
     }
 
     private HenrikMatchMetadata requireMetadata(

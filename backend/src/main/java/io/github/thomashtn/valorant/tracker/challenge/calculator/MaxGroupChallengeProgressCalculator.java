@@ -5,13 +5,12 @@ import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeGroupBy;
 import io.github.thomashtn.valorant.tracker.challenge.model.ProgressMode;
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
-import org.springframework.stereotype.Component;
-
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.math.BigDecimal;
-import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
 /**
  * Calculates challenges whose progress corresponds to the highest accumulated
@@ -36,17 +35,25 @@ public class MaxGroupChallengeProgressCalculator
     private final ChallengeMatchFilter matchFilter;
 
     /**
+     * Calendar placing a match on the calendar day it counts towards.
+     */
+    private final WeekCalendar weekCalendar;
+
+    /**
      * Creates the maximum-group challenge-progress calculator.
      *
      * @param metricEvaluator metric evaluator
      * @param matchFilter     condition match filter
+     * @param weekCalendar    calendar resolving the day a match belongs to
      */
     public MaxGroupChallengeProgressCalculator(
         ChallengeMetricEvaluator metricEvaluator,
-        ChallengeMatchFilter matchFilter
+        ChallengeMatchFilter matchFilter,
+        WeekCalendar weekCalendar
     ) {
         this.metricEvaluator = metricEvaluator;
         this.matchFilter = matchFilter;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -129,11 +136,9 @@ public class MaxGroupChallengeProgressCalculator
         return switch (groupBy) {
             case AGENT -> extractAgentValue(playerMatch);
             case GAME_MODE -> playerMatch.getMatch().getGameMode();
-            case PLAY_DAY -> playerMatch
-                .getMatch()
-                .getStartedAt()
-                .atZone(ZoneOffset.UTC)
-                .toLocalDate();
+            case PLAY_DAY -> weekCalendar.dayOf(
+                playerMatch.getMatch().getStartedAt()
+            );
         };
     }
 

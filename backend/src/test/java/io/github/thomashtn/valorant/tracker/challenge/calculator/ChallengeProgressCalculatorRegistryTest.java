@@ -1,15 +1,14 @@
 package io.github.thomashtn.valorant.tracker.challenge.calculator;
 
-import io.github.thomashtn.valorant.tracker.challenge.exception.UnsupportedChallengeProgressModeException;
-import io.github.thomashtn.valorant.tracker.challenge.model.ProgressMode;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import io.github.thomashtn.valorant.tracker.challenge.exception.UnsupportedChallengeProgressModeException;
+import io.github.thomashtn.valorant.tracker.challenge.model.ProgressMode;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests challenge calculator registration and selection.

@@ -1,26 +1,25 @@
 package io.github.thomashtn.valorant.tracker.challenge.service;
 
-import io.github.thomashtn.valorant.tracker.challenge.calculator.ChallengeProgressResult;
-import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valorant.tracker.challenge.repository.PlayerChallengeProgressRepository;
-import io.github.thomashtn.valorant.tracker.player.entity.Player;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import io.github.thomashtn.valorant.tracker.challenge.calculator.ChallengeProgressResult;
+import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProgress;
+import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valorant.tracker.challenge.repository.PlayerChallengeProgressRepository;
+import io.github.thomashtn.valorant.tracker.player.entity.Player;
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests player challenge progress persistence.

@@ -95,6 +95,11 @@ public class SeasonMatchHistoryWalker {
 
     /**
      * Creates the season-scoped match history walker.
+     *
+     * @param matchClient             Henrik client returning pages of match history
+     * @param matchImportService      service persisting the matches of one page
+     * @param seasonResolutionService service resolving the season a match belongs to
+     * @param stateService            service owning the per-player season completion state
      */
     public SeasonMatchHistoryWalker(
         HenrikMatchClient matchClient,

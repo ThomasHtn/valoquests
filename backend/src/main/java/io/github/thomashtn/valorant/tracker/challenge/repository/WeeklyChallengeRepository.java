@@ -1,11 +1,10 @@
 package io.github.thomashtn.valorant.tracker.challenge.repository;
 
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Provides persistence operations for weekly challenge entities.
@@ -31,8 +30,7 @@ public interface WeeklyChallengeRepository
      * @return active weekly challenges ordered by identifier
      */
     @EntityGraph(attributePaths = "challenge")
-    List<WeeklyChallenge>
-    findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(
+    List<WeeklyChallenge> findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(
         LocalDate weekStart
     );
 

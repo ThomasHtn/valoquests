@@ -4,9 +4,8 @@ import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeOperator;
 import io.github.thomashtn.valorant.tracker.challenge.model.ProgressMode;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
+import org.springframework.stereotype.Component;
 
 /**
  * Counts weekly matches that independently satisfy one challenge condition.

@@ -1,15 +1,15 @@
 package io.github.thomashtn.valorant.tracker.synchronization.scheduler;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+
 import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
 import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationCommandService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
 
 /**
  * Unit tests for {@link StandardSynchronizationScheduler}.

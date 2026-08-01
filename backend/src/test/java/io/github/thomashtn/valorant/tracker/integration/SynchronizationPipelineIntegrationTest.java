@@ -1,5 +1,11 @@
 package io.github.thomashtn.valorant.tracker.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import io.github.thomashtn.valorant.tracker.challenge.entity.Challenge;
 import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
@@ -40,6 +46,14 @@ import io.github.thomashtn.valorant.tracker.synchronization.repository.Synchroni
 import io.github.thomashtn.valorant.tracker.synchronization.repository.SynchronizationRepository;
 import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationCommandService;
 import jakarta.persistence.EntityManager;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,23 +63,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Verifies the standard synchronization pipeline against PostgreSQL.

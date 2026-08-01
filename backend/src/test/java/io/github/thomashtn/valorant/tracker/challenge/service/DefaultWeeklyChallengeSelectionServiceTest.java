@@ -1,5 +1,13 @@
 package io.github.thomashtn.valorant.tracker.challenge.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import io.github.thomashtn.valorant.tracker.challenge.calculator.ChallengeProgressCalculatorRegistry;
 import io.github.thomashtn.valorant.tracker.challenge.entity.Challenge;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
@@ -9,24 +17,16 @@ import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valorant.tracker.challenge.model.ProgressMode;
 import io.github.thomashtn.valorant.tracker.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 /**
  * Tests deterministic weekly challenge selection and validation rules.
@@ -80,7 +80,8 @@ class DefaultWeeklyChallengeSelectionServiceTest {
             challengeRepository,
             weeklyChallengeRepository,
             calculatorRegistry,
-            Clock.fixed(SELECTION_TIME, ZoneOffset.UTC)
+            Clock.fixed(SELECTION_TIME, ZoneOffset.UTC),
+            new WeekCalendar(Clock.fixed(SELECTION_TIME, ZoneOffset.UTC), ZoneOffset.UTC)
         );
     }
 

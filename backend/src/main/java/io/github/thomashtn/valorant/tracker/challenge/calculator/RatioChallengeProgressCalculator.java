@@ -5,11 +5,10 @@ import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valorant.tracker.challenge.model.ProgressMode;
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 /**
  * Calculates ratio-based weekly challenges.

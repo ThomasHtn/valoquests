@@ -2,7 +2,6 @@ package io.github.thomashtn.valorant.tracker.synchronization.service;
 
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerSynchronizationResult;
-
 import java.time.Instant;
 
 /**

@@ -8,18 +8,15 @@ import io.github.thomashtn.valorant.tracker.challenge.service.WeeklyChallengeSel
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Clock;
-import java.time.DayOfWeek;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.temporal.TemporalAdjusters;
-import java.util.List;
 
 /**
  * Atomically finalizes the previous week and prepares the current week.
@@ -84,6 +81,11 @@ public class DefaultWeeklyRolloverService
     private final Clock clock;
 
     /**
+     * Calendar resolving the current week.
+     */
+    private final WeekCalendar weekCalendar;
+
+    /**
      * Creates the weekly rollover service.
      *
      * @param weeklyChallengeRepository       weekly challenge repository
@@ -92,6 +94,7 @@ public class DefaultWeeklyRolloverService
      * @param weeklyChallengeSelectionService challenge selection service
      * @param challengeRecalculationService   challenge progress recalculation service
      * @param clock                           application clock
+     * @param weekCalendar                    calendar resolving the current week
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -103,7 +106,8 @@ public class DefaultWeeklyRolloverService
         RankingRecalculationService rankingRecalculationService,
         WeeklyChallengeSelectionService weeklyChallengeSelectionService,
         ChallengeRecalculationService challengeRecalculationService,
-        Clock clock
+        Clock clock,
+        WeekCalendar weekCalendar
     ) {
         this.weeklyChallengeRepository =
             weeklyChallengeRepository;
@@ -121,6 +125,7 @@ public class DefaultWeeklyRolloverService
             challengeRecalculationService;
 
         this.clock = clock;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -133,7 +138,7 @@ public class DefaultWeeklyRolloverService
     @Transactional
     public void rolloverIfNeeded() {
         LocalDate currentWeekStart =
-            resolveCurrentWeekStart();
+            weekCalendar.currentWeekStart();
 
         LocalDate previousWeekStart =
             currentWeekStart.minusWeeks(1);
@@ -279,21 +284,6 @@ public class DefaultWeeklyRolloverService
         }
 
         return FinalizationState.INCONSISTENT;
-    }
-
-    /**
-     * Resolves the Monday beginning the current UTC calendar week.
-     *
-     * @return current UTC week start
-     */
-    private LocalDate resolveCurrentWeekStart() {
-        return LocalDate
-            .now(clock.withZone(ZoneOffset.UTC))
-            .with(
-                TemporalAdjusters.previousOrSame(
-                    DayOfWeek.MONDAY
-                )
-            );
     }
 
     /**

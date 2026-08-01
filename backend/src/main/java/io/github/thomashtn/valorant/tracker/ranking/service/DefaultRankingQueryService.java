@@ -12,22 +12,19 @@ import io.github.thomashtn.valorant.tracker.ranking.dto.RankingHistoryWeekRespon
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Clock;
-import java.time.DayOfWeek;
+import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.temporal.TemporalAdjusters;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Provides optimized read-only access to current and historical rankings.
@@ -62,12 +59,18 @@ public class DefaultRankingQueryService implements RankingQueryService {
     private final ChallengeDefinitionParser definitionParser;
 
     /**
-     * Clock used to determine the active week consistently.
+     * Calendar resolving the current week.
      */
-    private final Clock clock;
+    private final WeekCalendar weekCalendar;
 
     /**
      * Creates the ranking query service.
+     *
+     * @param scoreRepository           repository holding weekly player scores
+     * @param progressRepository        repository holding per-player challenge progress
+     * @param weeklyChallengeRepository repository holding the challenges selected for a week
+     * @param definitionParser          parser turning stored challenge rules into definitions
+     * @param weekCalendar              calendar resolving the current week
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -78,13 +81,13 @@ public class DefaultRankingQueryService implements RankingQueryService {
         PlayerChallengeProgressRepository progressRepository,
         WeeklyChallengeRepository weeklyChallengeRepository,
         ChallengeDefinitionParser definitionParser,
-        Clock clock
+        WeekCalendar weekCalendar
     ) {
         this.scoreRepository = scoreRepository;
         this.progressRepository = progressRepository;
         this.weeklyChallengeRepository = weeklyChallengeRepository;
         this.definitionParser = definitionParser;
-        this.clock = clock;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -92,7 +95,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
      */
     @Override
     public CurrentRankingResponse findCurrent() {
-        LocalDate weekStart = resolveCurrentWeekStart();
+        LocalDate weekStart = weekCalendar.currentWeekStart();
         List<WeeklyPlayerScore> scores = scoreRepository
             .findAllByWeekStartOrderByPositionAsc(weekStart);
         List<PlayerChallengeProgress> progressRows = progressRepository
@@ -214,8 +217,9 @@ public class DefaultRankingQueryService implements RankingQueryService {
     /**
      * Maps one exact persisted progress row to the current API contract.
      */
-    private CurrentRankingResponse.ChallengeProgressResponse
-    toChallengeProgress(PlayerChallengeProgress progress) {
+    private CurrentRankingResponse.ChallengeProgressResponse toChallengeProgress(
+        PlayerChallengeProgress progress
+    ) {
         ChallengeDefinition definition = definitionParser.parse(
             progress.getWeeklyChallenge().getChallenge()
         );
@@ -298,25 +302,16 @@ public class DefaultRankingQueryService implements RankingQueryService {
     }
 
     /**
-     * Resolves the Monday beginning the current UTC calendar week.
-     */
-    private LocalDate resolveCurrentWeekStart() {
-        return LocalDate.now(clock.withZone(ZoneOffset.UTC)).with(
-            TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)
-        );
-    }
-
-    /**
      * Validates public pagination parameters.
      */
     private void validatePagination(int page, int size) {
         if (page < 0) {
-            throw new IllegalArgumentException(
+            throw new InvalidRequestException(
                 "page must be greater than or equal to 0"
             );
         }
         if (size < 1 || size > MAXIMUM_PAGE_SIZE) {
-            throw new IllegalArgumentException(
+            throw new InvalidRequestException(
                 "size must be between 1 and " + MAXIMUM_PAGE_SIZE
             );
         }

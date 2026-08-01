@@ -1,9 +1,8 @@
 package io.github.thomashtn.valorant.tracker.player.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import io.github.thomashtn.valorant.tracker.player.model.CompetitiveTier;
 import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.Instant;
 

@@ -5,15 +5,14 @@ import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProg
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valorant.tracker.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Persists calculated progress for player weekly challenges.

@@ -3,14 +3,13 @@ package io.github.thomashtn.valorant.tracker.challenge.calculator;
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Builds challenge-calculation contexts from matches already persisted in the
@@ -25,21 +24,29 @@ public class PlayerChallengeContextFactory {
     private final PlayerMatchRepository playerMatchRepository;
 
     /**
+     * Calendar resolving the instants a week spans.
+     */
+    private final WeekCalendar weekCalendar;
+
+    /**
      * Creates the context factory.
      *
      * @param playerMatchRepository player-match repository
+     * @param weekCalendar          calendar resolving the instants a week spans
      */
     public PlayerChallengeContextFactory(
-        PlayerMatchRepository playerMatchRepository
+        PlayerMatchRepository playerMatchRepository,
+        WeekCalendar weekCalendar
     ) {
         this.playerMatchRepository = playerMatchRepository;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
      * Creates the challenge context for one player and one week.
      *
-     * <p>The supplied date must represent the Monday beginning the week.
-     * Dates are converted to UTC because match timestamps are persisted as
+     * <p>The supplied date must represent the Monday beginning the week. It is resolved to the
+     * half-open instant range the week spans, because match timestamps are persisted as
      * {@link Instant} values.</p>
      *
      * @param player    player whose challenges must be evaluated
@@ -63,14 +70,8 @@ public class PlayerChallengeContextFactory {
             );
         }
 
-        Instant periodStart = weekStart
-            .atStartOfDay(ZoneOffset.UTC)
-            .toInstant();
-
-        Instant periodEnd = weekStart
-            .plusWeeks(1)
-            .atStartOfDay(ZoneOffset.UTC)
-            .toInstant();
+        Instant periodStart = weekCalendar.startOf(weekStart);
+        Instant periodEnd = weekCalendar.endOf(weekStart);
 
         List<PlayerMatch> playerMatches =
             playerMatchRepository.findForChallengePeriod(

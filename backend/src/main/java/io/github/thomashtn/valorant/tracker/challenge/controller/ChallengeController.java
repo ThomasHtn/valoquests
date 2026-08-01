@@ -19,14 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChallengeController {
 
     /**
-     * Provider used to access the optional feature service when implemented.
+     * Application service resolving the current week's challenges.
      */
     private final ChallengeQueryService service;
 
     /**
-     * Creates the controller with an optional business-service implementation.
+     * Creates the challenge controller.
      *
-     * @param serviceProvider provider resolved when the business layer is implemented
+     * @param service challenge query service
      */
     public ChallengeController(ChallengeQueryService service) {
         this.service = service;

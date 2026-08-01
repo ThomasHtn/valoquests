@@ -15,6 +15,7 @@ import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -58,7 +59,8 @@ class DefaultRankingRecalculationServiceTest {
             playerRepository,
             progressRepository,
             scoreRepository,
-            clock
+            clock,
+            new WeekCalendar(clock, ZoneOffset.UTC)
         );
     }
 

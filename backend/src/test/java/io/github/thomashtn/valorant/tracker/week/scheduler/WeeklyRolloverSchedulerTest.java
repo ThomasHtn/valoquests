@@ -1,17 +1,17 @@
 package io.github.thomashtn.valorant.tracker.week.scheduler;
 
-import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
-import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationCommandService;
-import io.github.thomashtn.valorant.tracker.week.service.WeeklyRolloverService;
-import org.junit.jupiter.api.Test;
-import org.mockito.InOrder;
-
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
+import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationCommandService;
+import io.github.thomashtn.valorant.tracker.week.service.WeeklyRolloverService;
+import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 
 /**
  * Tests weekly rollover scheduler delegation and error isolation.

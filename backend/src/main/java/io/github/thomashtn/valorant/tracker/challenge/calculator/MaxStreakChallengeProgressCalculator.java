@@ -7,11 +7,10 @@ import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeOperator;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeScope;
 import io.github.thomashtn.valorant.tracker.challenge.model.ProgressMode;
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 /**
  * Calculates the longest consecutive sequence of eligible matches satisfying

@@ -1,5 +1,8 @@
 package io.github.thomashtn.valorant.tracker.match.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
 import io.github.thomashtn.valorant.tracker.match.dto.SeasonResponse;
 import io.github.thomashtn.valorant.tracker.match.entity.Season;
 import io.github.thomashtn.valorant.tracker.match.repository.SeasonRepository;
@@ -9,9 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link DefaultSeasonQueryService}.

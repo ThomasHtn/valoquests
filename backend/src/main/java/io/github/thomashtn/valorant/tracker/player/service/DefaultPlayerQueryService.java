@@ -11,6 +11,7 @@ import io.github.thomashtn.valorant.tracker.player.dto.PlayerSummaryResponse;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
+import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
@@ -176,7 +177,7 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
         try {
             return GameMode.valueOf(value.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
-            throw new IllegalArgumentException(
+            throw new InvalidRequestException(
                 "gameMode must be one of " + Arrays.toString(GameMode.values()),
                 exception
             );

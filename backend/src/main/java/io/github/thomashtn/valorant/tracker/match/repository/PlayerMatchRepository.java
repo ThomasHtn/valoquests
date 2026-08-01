@@ -1,15 +1,16 @@
 package io.github.thomashtn.valorant.tracker.match.repository;
 
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
-import org.springframework.data.jpa.repository.JpaRepository;
+import io.github.thomashtn.valorant.tracker.match.model.GameMode;
+import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
+import java.time.Instant;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.time.Instant;
-import java.util.List;
 
 /**
  * Provides persistence operations for player match entities.
@@ -56,7 +57,21 @@ public interface PlayerMatchRepository
         @Param("periodEnd") Instant periodEnd
     );
 
-    /** Returns a filtered page of matches for one tracked player. */
+    /**
+     * Returns a filtered page of matches for one tracked player.
+     *
+     * <p>Every filter is optional and ignored when {@code null}, so one query serves the unfiltered
+     * history and every combination the match page offers.
+     *
+     * @param playerId internal player identifier
+     * @param seasonId internal season identifier, or {@code null} for every season
+     * @param map      map name, matched case-insensitively, or {@code null} for every map
+     * @param agent    agent name, matched case-insensitively, or {@code null} for every agent
+     * @param result   match outcome, or {@code null} for every outcome
+     * @param gameMode game mode, or {@code null} for every mode
+     * @param pageable pagination and sort parameters
+     * @return the requested page of matches
+     */
     @EntityGraph(attributePaths = {"player", "match", "match.season"})
     @Query(
         """
@@ -76,16 +91,29 @@ public interface PlayerMatchRepository
         @Param("seasonId") Long seasonId,
         @Param("map") String map,
         @Param("agent") String agent,
-        @Param("result") io.github.thomashtn.valorant.tracker.match.model.MatchResult result,
-        @Param("gameMode") io.github.thomashtn.valorant.tracker.match.model.GameMode gameMode,
+        @Param("result") MatchResult result,
+        @Param("gameMode") GameMode gameMode,
         Pageable pageable
     );
 
-    /** Returns all matches required to calculate one player's profile statistics. */
+    /**
+     * Returns all matches required to calculate one player's profile statistics.
+     *
+     * @param playerId internal player identifier
+     * @return every stored match of the player, most recent first
+     */
     @EntityGraph(attributePaths = {"match", "match.season"})
     List<PlayerMatch> findAllByPlayerIdOrderByMatchStartedAtDesc(Long playerId);
 
-    /** Returns the matches used to calculate one player's profile statistics, filtered by season and game mode. */
+    /**
+     * Returns the matches used to calculate one player's profile statistics, filtered by season and
+     * game mode.
+     *
+     * @param playerId internal player identifier
+     * @param seasonId internal season identifier, or {@code null} for every season
+     * @param gameMode game mode, or {@code null} for every mode
+     * @return matching matches, most recent first
+     */
     @EntityGraph(attributePaths = {"match", "match.season"})
     @Query(
         """
@@ -101,7 +129,7 @@ public interface PlayerMatchRepository
     List<PlayerMatch> findAllByPlayerIdAndSeasonAndGameMode(
         @Param("playerId") Long playerId,
         @Param("seasonId") Long seasonId,
-        @Param("gameMode") io.github.thomashtn.valorant.tracker.match.model.GameMode gameMode
+        @Param("gameMode") GameMode gameMode
     );
 }
 

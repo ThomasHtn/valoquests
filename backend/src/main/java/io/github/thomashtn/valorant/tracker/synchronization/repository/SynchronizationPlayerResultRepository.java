@@ -16,6 +16,9 @@ public interface SynchronizationPlayerResultRepository
      *
      * <p>The player is fetched alongside its results because every caller reads its display name.
      * The association is lazy, which would otherwise issue one extra query per returned row.
+     *
+     * @param synchronizationId internal synchronization identifier
+     * @return every player result of that execution, ordered by player identifier
      */
     @EntityGraph(attributePaths = "player")
     List<SynchronizationPlayerResult>

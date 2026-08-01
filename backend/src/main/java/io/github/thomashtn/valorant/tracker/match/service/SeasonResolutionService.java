@@ -27,6 +27,8 @@ public class SeasonResolutionService {
 
     /**
      * Creates the season resolution service.
+     *
+     * @param seasonRepository repository holding the seasons discovered so far
      */
     public SeasonResolutionService(SeasonRepository seasonRepository) {
         this.seasonRepository = seasonRepository;

@@ -1,5 +1,8 @@
 package io.github.thomashtn.valorant.tracker.challenge.calculator;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeGameMode;
@@ -12,15 +15,14 @@ import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.entity.ValorantMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
-import org.junit.jupiter.api.Test;
-
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests maximum-group challenge-progress calculations.
@@ -48,7 +50,8 @@ class MaxGroupChallengeProgressCalculatorTest {
 
         new MaxGroupChallengeProgressCalculator(
             metricEvaluator,
-            matchFilter
+            matchFilter,
+            new WeekCalendar(Clock.systemUTC(), ZoneOffset.UTC)
         );
 
     /**

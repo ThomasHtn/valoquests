@@ -1,19 +1,18 @@
 package io.github.thomashtn.valorant.tracker.challenge.parser;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.github.thomashtn.valorant.tracker.challenge.entity.Challenge;
 import io.github.thomashtn.valorant.tracker.challenge.exception.InvalidChallengeDefinitionException;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valorant.tracker.challenge.model.ProgressMode;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
-
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Tests challenge JSON parsing and rule validation.

@@ -1,5 +1,9 @@
 package io.github.thomashtn.valorant.tracker.player.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.entity.ValorantMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
@@ -9,6 +13,7 @@ import io.github.thomashtn.valorant.tracker.player.dto.PlayerDetailsResponse;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
+import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -17,10 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link DefaultPlayerQueryService}.
@@ -98,7 +99,7 @@ class DefaultPlayerQueryServiceTest {
         when(playerRepository.findById(1L)).thenReturn(Optional.of(player(1L)));
 
         assertThatThrownBy(() -> service.findById(1L, null, "not-a-mode"))
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(InvalidRequestException.class);
     }
 
     /**

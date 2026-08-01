@@ -7,13 +7,12 @@ import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeScope;
+import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
-
-import java.util.List;
-import java.util.Objects;
 
 /**
  * Jackson-based implementation of the challenge-definition parser.
@@ -30,9 +29,9 @@ public class JacksonChallengeDefinitionParser
     /**
      * Jackson type token used to deserialize the JSON condition array.
      */
-    private static final TypeReference<List<ChallengeCondition>>
-        CONDITION_LIST_TYPE = new TypeReference<>() {
-    };
+    private static final TypeReference<List<ChallengeCondition>> CONDITION_LIST_TYPE =
+        new TypeReference<>() {
+        };
 
     /**
      * Application-configured JSON mapper.

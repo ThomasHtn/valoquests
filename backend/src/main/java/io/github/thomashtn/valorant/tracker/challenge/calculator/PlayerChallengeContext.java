@@ -1,7 +1,6 @@
 package io.github.thomashtn.valorant.tracker.challenge.calculator;
 
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;

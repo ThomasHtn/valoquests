@@ -8,17 +8,10 @@ import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valorant.tracker.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valorant.tracker.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -29,6 +22,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Creates and retrieves deterministic weekly challenge packs.
@@ -78,23 +75,31 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     private final Clock clock;
 
     /**
+     * Calendar resolving the current week.
+     */
+    private final WeekCalendar weekCalendar;
+
+    /**
      * Creates the weekly challenge selection service.
      *
      * @param challengeRepository       challenge catalogue repository
      * @param weeklyChallengeRepository weekly challenge repository
      * @param calculatorRegistry        challenge calculator registry
      * @param clock                     application clock
+     * @param weekCalendar              calendar resolving the current week
      */
     public DefaultWeeklyChallengeSelectionService(
         ChallengeRepository challengeRepository,
         WeeklyChallengeRepository weeklyChallengeRepository,
         ChallengeProgressCalculatorRegistry calculatorRegistry,
-        Clock clock
+        Clock clock,
+        WeekCalendar weekCalendar
     ) {
         this.challengeRepository = challengeRepository;
         this.weeklyChallengeRepository = weeklyChallengeRepository;
         this.calculatorRegistry = calculatorRegistry;
         this.clock = clock;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -105,7 +110,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     @Override
     @Transactional
     public List<WeeklyChallenge> selectCurrentWeekChallenges() {
-        return selectWeekChallenges(resolveCurrentWeekStart());
+        return selectWeekChallenges(weekCalendar.currentWeekStart());
     }
 
     /**
@@ -145,6 +150,20 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
 
         logSelection(weekStart, completedPack);
         return List.copyOf(completedPack);
+    }
+
+    /**
+     * Retrieves the challenge pack a week already owns, creating nothing.
+     *
+     * @param weekStart Monday identifying the week
+     * @return the week's challenges, empty when it never had a pack
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<WeeklyChallenge> findExistingWeekChallenges(LocalDate weekStart) {
+        validateWeekStart(weekStart);
+
+        return weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(weekStart);
     }
 
     /**
@@ -432,7 +451,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     private void validateWeekStart(LocalDate weekStart) {
         Objects.requireNonNull(weekStart, "Week start must not be null.");
 
-        if (weekStart.getDayOfWeek() != DayOfWeek.MONDAY) {
+        if (!weekCalendar.isWeekStart(weekStart)) {
             throw new IllegalArgumentException(
                 "Weekly challenge selection must use a Monday as week start."
             );
@@ -452,16 +471,6 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
                 + ". Verify that every difficulty has at least one enabled challenge with an "
                 + "implemented progress calculator and compatible exclusion group."
         );
-    }
-
-    /**
-     * Resolves the Monday beginning the current UTC week.
-     *
-     * @return current UTC week start
-     */
-    private LocalDate resolveCurrentWeekStart() {
-        return LocalDate.now(clock.withZone(ZoneOffset.UTC))
-            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
     }
 
     /**
