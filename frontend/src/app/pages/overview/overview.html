@@ -1,25 +1,38 @@
 <h1 class="sr-only">{{ 'overview.title' | translate }}</h1>
 
-<!-- Outer column sized against the viewport (`dvh`) rather than `h-full`, since the ancestor
-     wrapper this page renders into (`app.html`'s `<main>` padding) has no definite height of its
-     own for a percentage to resolve against. The subtracted amount matches that ancestor's own
-     `p-4`/`sm:p-6` padding exactly. On mobile, where the sidebar collapses into a bottom tab bar
-     and shares height with `<main>`, this slightly overshoots `<main>`'s actual content height;
-     `<main>` already scrolls, so the only effect is a few extra pixels of scroll to fully reveal
-     the last section, not lost or clipped content. -->
-<div class="flex h-[calc(100dvh_-_2rem)] flex-col sm:h-[calc(100dvh_-_3rem)]">
-  <!-- Negative right margin cancels the ancestor's padding so this element's own box — and
-       therefore its scrollbar — reaches the true edge of the viewport, matching every other
-       page's scrollbar (rendered by `<main>` itself). The padding readded below restores the
-       equivalent visual inset for the content, plus extra room at `lg` for the dot rail. -->
+<!-- Escapes the ancestor route wrapper (`app.html`'s `<main>` padding and `max-w-[1440px]` cap)
+     via `absolute` positioning anchored to `<main>` itself (see its `relative`), rather than
+     rendering in the normal document flow like every other page's `PAGE_LAYOUT_CLASS` stack. Two
+     things make that escape necessary rather than cosmetic: this page owns a single full-height
+     scroll-snap container, which needs `<main>`'s exact box to size itself against `dvh`-free; and
+     on displays wider than the cap, the centering gutters it leaves are otherwise a dead zone
+     where wheel scrolling does nothing, since neither the capped wrapper nor `<main>` (which never
+     overflows — see below) is scrollable there. `inset-4`/`sm:inset-6` reproduce that wrapper's
+     `p-4`/`sm:p-6` visual padding directly against `<main>`'s true edges instead. -->
+<div class="absolute inset-4 flex flex-col sm:inset-6">
+  <!-- Hides the scrollbar at `lg` and up, where the dot rail already doubles as the scroll
+       position indicator (per its own doc comment, the primary way desktop users are meant to
+       navigate sections); scrolling itself is unaffected, including via keyboard through this
+       element's `tabindex`. Below `lg`, with no dot rail rendered, the native scrollbar remains the
+       only such indicator. That hiding rule lives in `styles.css` as plain, unlayered CSS keyed off
+       `overview-scroll-container` below — a Tailwind utility here would sit inside the generated
+       utilities layer and lose to the unlayered global scrollbar rule there regardless of
+       specificity. -->
   <div
     #scrollContainer
-    class="-mr-4 flex min-h-0 flex-1 snap-y snap-mandatory flex-col overflow-y-auto pr-4 motion-safe:scroll-smooth sm:-mr-6 sm:pr-6 lg:pr-20"
+    id="overview-scroll-container"
+    class="flex min-h-0 flex-1 snap-y snap-mandatory flex-col overflow-y-auto motion-safe:scroll-smooth"
     tabindex="0"
   >
+    <!-- Each section re-caps its own content at `max-w-[1440px]`, the width the ancestor wrapper
+         used to cap for free, since the container above now deliberately spans `<main>`'s full
+         width to keep it scrollable edge to edge. `lg:pr-20` reserves room so the dot rail below
+         never overlaps section content; it lives on each section rather than on the scroll
+         container above, so it shrinks this same `mx-auto`-centered box instead of shifting it
+         off-center against the container's own, wider one. -->
     <section
       #sectionRef
-      class="flex min-h-full shrink-0 flex-col justify-center gap-6 py-6 snap-start snap-always"
+      class="mx-auto flex min-h-full w-full max-w-[1440px] shrink-0 flex-col justify-center gap-6 py-6 snap-start snap-always lg:pr-20"
       id="overview-hero"
     >
       <p
@@ -33,7 +46,7 @@
 
     <section
       #sectionRef
-      class="flex min-h-full shrink-0 flex-col justify-center py-6 snap-start snap-always"
+      class="mx-auto flex min-h-full w-full max-w-[1440px] shrink-0 flex-col justify-center py-6 snap-start snap-always lg:pr-20"
       id="overview-challenges"
     >
       <app-weekly-challenges />
@@ -41,29 +54,37 @@
 
     <section
       #sectionRef
-      class="flex min-h-full shrink-0 flex-col justify-center py-6 snap-start snap-always"
+      class="mx-auto flex min-h-full w-full max-w-[1440px] shrink-0 flex-col justify-center py-6 snap-start snap-always lg:pr-20"
       id="overview-ranking"
     >
       <app-weekly-ranking />
     </section>
   </div>
-</div>
 
-<!-- Desktop-only: on touch devices, the same sections are already reachable with a natural swipe
-     per section, so a second, more cramped navigation aid is not added there. -->
-<nav
-  [attr.aria-label]="'overview.sections.navLabel' | translate"
-  class="pointer-events-none absolute top-1/2 right-2 hidden -translate-y-1/2 flex-col gap-3 sm:right-4 lg:flex"
->
-  @for (section of sections; track section.id) {
-    <button
-      (click)="scrollToSection(section.id)"
-      [attr.aria-current]="activeSectionId() === section.id ? 'true' : null"
-      [attr.aria-label]="section.ariaLabelKey | translate"
-      [class.bg-brand-500]="activeSectionId() === section.id"
-      [class.bg-surface-600]="activeSectionId() !== section.id"
-      class="focus-ring pointer-events-auto h-2.5 w-2.5 shrink-0 rounded-full transition-colors hover:bg-brand-400"
-      type="button"
-    ></button>
-  }
-</nav>
+  <!-- Desktop-only: on touch devices, the same sections are already reachable with a natural swipe
+       per section, so a second, more cramped navigation aid is not added there. A sibling of the
+       scroll container rather than a descendant, so it stays fixed in place while that container
+       scrolls. Re-caps at `max-w-[1440px]` with the same `lg:pr-20` reservation as the scroll
+       container, so the two center identically and the dot rail hugs the visible card edge instead
+       of drifting into the full-bleed gutter the scroll container now spans on displays wider than
+       the cap. `pointer-events-none` here (the buttons re-enable their own) keeps this wrapper from
+       shadowing wheel scroll over that gutter. -->
+  <div class="pointer-events-none absolute inset-0 mx-auto w-full max-w-[1440px] lg:pr-20">
+    <nav
+      [attr.aria-label]="'overview.sections.navLabel' | translate"
+      class="pointer-events-none absolute top-1/2 right-2 hidden -translate-y-1/2 flex-col gap-3 sm:right-4 lg:flex"
+    >
+      @for (section of sections; track section.id) {
+        <button
+          (click)="scrollToSection(section.id)"
+          [attr.aria-current]="activeSectionId() === section.id ? 'true' : null"
+          [attr.aria-label]="section.ariaLabelKey | translate"
+          [class.bg-brand-500]="activeSectionId() === section.id"
+          [class.bg-surface-600]="activeSectionId() !== section.id"
+          class="focus-ring pointer-events-auto h-2.5 w-2.5 shrink-0 rounded-full transition-colors hover:bg-brand-400"
+          type="button"
+        ></button>
+      }
+    </nav>
+  </div>
+</div>

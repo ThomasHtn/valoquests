@@ -52,10 +52,12 @@ interface OverviewSection {
   templateUrl: './overview.html',
   // Diverges from `PAGE_LAYOUT_CLASS`: every other page stacks its blocks in normal document flow,
   // but this page owns a single full-height scroll-snap container instead, so the shared
-  // vertical-stack-with-gap treatment does not apply here. `relative` anchors the dot rail, which
-  // is positioned against this host rather than the scroll container so it stays fixed in place
-  // while the container beneath it scrolls.
-  host: { class: 'relative block' },
+  // vertical-stack-with-gap treatment does not apply here. The host itself stays unpositioned (see
+  // `overview.html`): its own box is capped and padded by the ancestor route wrapper in `app.html`,
+  // and everything this page renders escapes that box via `position: absolute` anchored to
+  // `<main>` instead, so it is `block` only to avoid the default inline display of a custom
+  // element.
+  host: { class: 'block' },
 })
 export class Overview {
   /**

@@ -80,3 +80,18 @@
 *::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-brand-500);
 }
+
+/* The overview page's scroll-snap container hides its native scrollbar at `lg` and up, where its
+   dot rail (see `overview.html`) already doubles as the scroll position indicator; scrolling
+   itself is unaffected. Written as plain, unlayered CSS like the rules above rather than a
+   Tailwind utility class, since utilities are emitted inside a generated layer and would lose to
+   the unlayered `*` rule above regardless of specificity. */
+@media (width >= 64rem) {
+  #overview-scroll-container {
+    scrollbar-width: none;
+  }
+
+  #overview-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+}
