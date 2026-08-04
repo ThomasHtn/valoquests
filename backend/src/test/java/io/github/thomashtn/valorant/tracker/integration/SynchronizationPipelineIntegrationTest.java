@@ -539,7 +539,7 @@ class SynchronizationPipelineIntegrationTest
 
         assertThat(score.getWeekStart())
             .isEqualTo(WEEK_START);
-        assertThat(score.getPoints())
+        assertThat(score.getChallengeDamage())
             .isEqualTo(23_000);
         assertThat(score.getMatchDamage())
             .isEqualTo(850);
@@ -708,7 +708,7 @@ class SynchronizationPipelineIntegrationTest
     private Challenge createChallenge(
         String code,
         ChallengeDifficulty difficulty,
-        int points,
+        int damage,
         ProgressMode progressMode,
         ChallengeRuleType ruleType,
         String metric,
@@ -726,7 +726,7 @@ class SynchronizationPipelineIntegrationTest
             "Synchronization pipeline challenge " + code
         );
         challenge.setDifficulty(difficulty);
-        challenge.setPoints(points);
+        challenge.setDamage(damage);
         challenge.setCategory(ChallengeCategory.OTHER);
         challenge.setRuleType(ruleType);
         challenge.setProgressMode(progressMode);

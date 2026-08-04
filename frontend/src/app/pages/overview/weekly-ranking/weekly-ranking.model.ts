@@ -89,7 +89,7 @@ export interface RankingRow {
   readonly playerId: number;
   readonly displayName: string;
   readonly avatarUrl: string | null;
-  readonly points: number;
+  readonly damage: number;
   readonly cells: readonly RankingCell[];
 
   /**

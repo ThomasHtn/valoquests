@@ -34,7 +34,7 @@ public record CurrentRankingResponse(
      *     none
      * @param positionVariation   places gained since the previous week, negative when lost
      * @param player              identity shown next to the rank
-     * @param points              challenge damage accumulated so far this week
+     * @param challengeDamage     challenge damage accumulated so far this week
      * @param completedChallenges challenges completed so far
      * @param totalChallenges     challenges selected for the week
      * @param matchDamage         damage dealt by valued matches so far this week
@@ -50,7 +50,7 @@ public record CurrentRankingResponse(
         Integer previousPosition,
         int positionVariation,
         PlayerRankingResponse player,
-        int points,
+        int challengeDamage,
         int completedChallenges,
         int totalChallenges,
         int matchDamage,

@@ -30,7 +30,7 @@ public record CurrentChallengesResponse(
      * @param difficulty           difficulty tier the challenge was selected for
      * @param metric               metric the challenge measures
      * @param targetValue          value a player must reach to complete it
-     * @param points               points awarded on completion
+     * @param damage               damage awarded on completion
      * @param completedPlayers     tracked players who completed it
      * @param totalPlayers         tracked players it applies to
      * @param completionPercentage completed players as a percentage of the total
@@ -43,7 +43,7 @@ public record CurrentChallengesResponse(
         ChallengeDifficulty difficulty,
         String metric,
         BigDecimal targetValue,
-        int points,
+        int damage,
         int completedPlayers,
         int totalPlayers,
         BigDecimal completionPercentage

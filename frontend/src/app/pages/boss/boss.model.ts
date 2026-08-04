@@ -21,5 +21,4 @@ export interface BossHistoryRow {
    * earned by finishing 1st in the most recently finalized week.
    */
   readonly defeatedByIsChampion: boolean;
-  readonly winStreak: number;
 }

@@ -31,7 +31,7 @@ export interface ChallengeRow {
   readonly completedPlayers: number;
   readonly totalPlayers: number;
   readonly completionPercentage: number;
-  readonly points: number;
+  readonly damage: number;
   readonly visual: ChallengeVisual;
 
   /**

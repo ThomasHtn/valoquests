@@ -110,13 +110,6 @@ public class WeeklyBossEncounter extends AuditableEntity {
     private PlayerMatch finishingPlayerMatch;
 
     /**
-     * Consecutive-victory streak snapshot after this week was resolved. Only meaningful once
-     * {@link #finalizedAt} is set.
-     */
-    @Column(name = "win_streak", nullable = false)
-    private int winStreak;
-
-    /**
      * Timestamp at which the weekly result became immutable.
      */
     @Column(name = "finalized_at")

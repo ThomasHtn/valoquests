@@ -23,10 +23,8 @@
     "title": "Boss",
     "week": {
       "label": "Semaine {{number}}"
-    },
-    "winStreak": "{{count}} victoire(s) d'affilée"
+    }
   },
-  "champion": "Champion",
   "notFound": {
     "backToOverview": "Retour à la vue d'ensemble",
     "description": "La page demandée n'existe pas ou a été déplacée.",
@@ -37,11 +35,8 @@
       "defeated": "Le boss a été vaincu cette semaine !",
       "error": "Impossible de charger le boss de la semaine.",
       "eyebrow": "Boss hebdomadaire",
-      "hpLabel": "Points de vie",
       "hpValue": "{{remaining}} / {{total}} PV",
-      "loading": "Chargement du boss…",
-      "modifier": "Difficulté {{value}} %",
-      "winStreak": "{{count}} victoire(s) d'affilée"
+      "loading": "Chargement du boss…"
     },
     "podium": {
       "rank": {
@@ -63,7 +58,6 @@
         "ariaLabel": "Aller au classement"
       }
     },
-    "subtitle": "Affrontez les joueurs et vos amis à travers des défis Valorant, et complétez-les en équipe.",
     "teamProgress": {
       "contributors": "{{count}} joueur(s) ont contribué cette semaine",
       "eyebrow": "Objectif d'équipe",
@@ -77,6 +71,7 @@
     },
     "weeklyChallenges": {
       "completedCount": "{{completed}} terminés sur {{total}}",
+      "damageTooltip": "Dégâts infligés une fois le défi terminé",
       "difficulty": {
         "EASY": "Facile",
         "HARD": "Difficile",
@@ -100,16 +95,14 @@
         "SCORE": "Score"
       },
       "playersUnit": "joueurs",
-      "pointsTooltip": "Points accordés une fois le défi terminé",
       "progressTooltip": "{{completed}} joueur(s) sur {{total}} ont terminé ce défi",
       "title": "Défis de la semaine"
     },
     "weeklyRanking": {
       "columns": {
+        "damage": "Dégâts",
         "player": "Joueur",
-        "points": "Points",
-        "position": "#",
-        "target": "Objectif {{value}}"
+        "position": "#"
       },
       "completed": "Défi terminé",
       "empty": "Aucun classement n'est disponible cette semaine.",
@@ -217,8 +210,8 @@
   "ranking": {
     "columns": {
       "completedChallenges": "Défis complétés",
+      "damage": "Dégâts",
       "player": "Joueur",
-      "points": "Points",
       "position": "#"
     },
     "empty": "Aucune semaine n'a encore été finalisée.",
@@ -229,7 +222,7 @@
       "page": "Page {{page}} sur {{total}}",
       "previous": "Précédent"
     },
-    "subtitle": "Retrouvez les points obtenus par chaque joueur, semaine après semaine.",
+    "subtitle": "Retrouvez les dégâts obtenus par chaque joueur, semaine après semaine.",
     "title": "Classement",
     "week": {
       "label": "Semaine {{number}}"
@@ -237,8 +230,8 @@
   },
   "retry": "Réessayer",
   "shared": {
-    "pointsBadge": {
-      "unit": "DÉGÂTS"
+    "damageBadge": {
+      "unit": "DGS"
     }
   },
   "sidebar": {

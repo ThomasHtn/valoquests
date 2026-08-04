@@ -27,7 +27,7 @@ public record RankingHistoryWeekResponse(
      *     competitive and therefore never ranked
      * @param playerId            internal player identifier
      * @param displayName         player name shown in the ranking
-     * @param points              challenge damage awarded for the week
+     * @param challengeDamage     challenge damage awarded for the week
      * @param completedChallenges challenges the player completed that week
      * @param matchDamage         damage dealt by valued matches that week
      * @param regularityBonus     regularity bonus awarded for that week
@@ -40,7 +40,7 @@ public record RankingHistoryWeekResponse(
         Integer position,
         Long playerId,
         String displayName,
-        int points,
+        int challengeDamage,
         int completedChallenges,
         int matchDamage,
         int regularityBonus,

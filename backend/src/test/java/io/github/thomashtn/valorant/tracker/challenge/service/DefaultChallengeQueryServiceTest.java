@@ -165,7 +165,7 @@ class DefaultChallengeQueryServiceTest {
         assertThat(response.name()).isEqualTo("Kill them all");
         assertThat(response.description()).isEqualTo("Kill them all description");
         assertThat(response.difficulty()).isEqualTo(ChallengeDifficulty.MEDIUM);
-        assertThat(response.points()).isEqualTo(50);
+        assertThat(response.damage()).isEqualTo(50);
         assertThat(response.metric()).isEqualTo("KILLS");
         assertThat(response.targetValue()).isEqualByComparingTo("50");
     }
@@ -243,12 +243,12 @@ class DefaultChallengeQueryServiceTest {
             .containsExactly(tuple(10L, 2), tuple(11L, 0));
     }
 
-    private WeeklyChallenge weeklyChallenge(long id, String name, int points) {
+    private WeeklyChallenge weeklyChallenge(long id, String name, int damage) {
         Challenge challenge = new Challenge();
         challenge.setName(name);
         challenge.setDescription(name + " description");
         challenge.setDifficulty(ChallengeDifficulty.MEDIUM);
-        challenge.setPoints(points);
+        challenge.setDamage(damage);
 
         WeeklyChallenge weeklyChallenge = new WeeklyChallenge();
         weeklyChallenge.setId(id);

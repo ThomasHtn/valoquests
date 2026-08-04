@@ -11,7 +11,7 @@ import { RankingApi } from '@core/ranking/ranking-api';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { Pagination } from '@shared/pagination/pagination';
-import { PointsBadge } from '@shared/points-badge/points-badge';
+import { DamageBadge } from '@shared/damage-badge/damage-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
@@ -31,7 +31,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     Avatar,
     ChampionBadge,
     Pagination,
-    PointsBadge,
+    DamageBadge,
     PositionBadge,
     ResourceState,
     LucideCheck,
@@ -116,7 +116,7 @@ export class Ranking {
         playerId: entry.playerId,
         displayName: entry.displayName,
         avatarUrl: avatarUrlByPlayerId.get(entry.playerId) ?? null,
-        points: entry.points,
+        damage: entry.challengeDamage,
         completedChallenges: entry.completedChallenges,
       })),
     }));

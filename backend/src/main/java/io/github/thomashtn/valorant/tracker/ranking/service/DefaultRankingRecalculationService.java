@@ -340,7 +340,7 @@ public class DefaultRankingRecalculationService
 
         score.setPlayer(player);
         score.setWeekStart(weekStart);
-        score.setPoints(aggregate.challengeDamage());
+        score.setChallengeDamage(aggregate.challengeDamage());
         score.setCompletedChallenges(
             aggregate.completedChallenges()
         );

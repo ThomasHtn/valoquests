@@ -44,7 +44,9 @@
         <app-avatar [champion]="isChampion()" [priority]="true" [src]="avatarUrl()" size="lg" />
         <div>
           <h1
-            class="flex items-center gap-2 text-2xl font-bold tracking-wide text-text-primary uppercase"
+            class="flex items-center gap-2 text-2xl font-bold tracking-wide uppercase"
+            [class.text-accent-gold]="isChampion()"
+            [class.text-text-primary]="!isChampion()"
           >
             {{ playerDetails.displayName }}
             @if (isChampion()) {

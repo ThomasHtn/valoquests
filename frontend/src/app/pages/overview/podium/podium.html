@@ -57,14 +57,16 @@
             {{ 'overview.podium.rank.' + entry.position | translate }}
           </p>
           <p
-            class="flex items-center gap-1.5 text-sm font-extrabold text-text-primary sm:text-base"
+            class="flex items-center gap-1.5 text-sm font-extrabold sm:text-base"
+            [class.text-accent-gold]="entry.player.id === championPlayerId()"
+            [class.text-text-primary]="entry.player.id !== championPlayerId()"
           >
             {{ entry.player.displayName }}
             @if (entry.player.id === championPlayerId()) {
               <app-champion-badge />
             }
           </p>
-          <app-points-badge [points]="entry.points" />
+          <app-damage-badge [damage]="entry.challengeDamage" />
         </a>
       }
     </div>
@@ -81,7 +83,9 @@
             >
               <app-position-badge [position]="entry.position" size="sm" />
               <span class="text-text-secondary">{{ entry.player.displayName }}</span>
-              <span class="font-bold tabular-nums text-accent-gold">{{ entry.points }}</span>
+              <span class="font-bold tabular-nums text-accent-gold">{{
+                entry.challengeDamage
+              }}</span>
             </a>
           </li>
         }

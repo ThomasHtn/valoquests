@@ -84,10 +84,6 @@ public class DefaultBossQueryService implements BossQueryService {
         LocalDate weekStart = weekCalendar.currentWeekStart();
         WeeklyBossEncounter encounter = weeklyBossSelectionService.selectCurrentWeekBoss();
 
-        int enteringWinStreak = encounterRepository.findLatestFinalized()
-            .map(WeeklyBossEncounter::getWinStreak)
-            .orElse(0);
-
         return new CurrentBossResponse(
             weekStart,
             weekStart.plusDays(6),
@@ -95,8 +91,7 @@ public class DefaultBossQueryService implements BossQueryService {
             encounter.getBaseHp(),
             encounter.getDifficultyModifierPercent(),
             encounter.getEffectiveHp(),
-            totalDamageDealt(weekStart),
-            enteringWinStreak
+            totalDamageDealt(weekStart)
         );
     }
 
@@ -149,8 +144,7 @@ public class DefaultBossQueryService implements BossQueryService {
             totalDamageDealt(encounter.getWeekStart()),
             encounter.isDefeated(),
             defeatedByPlayer == null ? null : defeatedByPlayer.getId(),
-            defeatedByPlayer == null ? null : defeatedByPlayer.getDisplayName(),
-            encounter.getWinStreak()
+            defeatedByPlayer == null ? null : defeatedByPlayer.getDisplayName()
         );
     }
 

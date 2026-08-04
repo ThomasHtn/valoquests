@@ -60,9 +60,9 @@
             <p class="mt-1 text-sm text-text-secondary">{{ row.description }}</p>
           </div>
 
-          <app-points-badge
-            [appTooltip]="'overview.weeklyChallenges.pointsTooltip' | translate"
-            [points]="row.points"
+          <app-damage-badge
+            [appTooltip]="'overview.weeklyChallenges.damageTooltip' | translate"
+            [damage]="row.damage"
             class="shrink-0"
             appTooltipPosition="above"
           />

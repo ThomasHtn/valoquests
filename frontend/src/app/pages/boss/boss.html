@@ -76,7 +76,11 @@
               />
               <div>
                 <p class="text-xs text-text-secondary">{{ 'boss.finishingBlow' | translate }}</p>
-                <p class="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
+                <p
+                  class="flex items-center gap-1.5 text-sm font-semibold"
+                  [class.text-accent-gold]="week.defeatedByIsChampion"
+                  [class.text-text-primary]="!week.defeatedByIsChampion"
+                >
                   {{ week.defeatedByPlayerDisplayName }}
                   @if (week.defeatedByIsChampion) {
                     <app-champion-badge />
@@ -84,14 +88,6 @@
                 </p>
               </div>
             </div>
-          }
-
-          @if (week.winStreak > 0) {
-            <span
-              class="shrink-0 rounded-full bg-accent-gold/15 px-2.5 py-1 text-xs font-bold tabular-nums text-accent-gold"
-            >
-              {{ 'boss.winStreak' | translate: { count: week.winStreak } }}
-            </span>
           }
         </div>
       </li>

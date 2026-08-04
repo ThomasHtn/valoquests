@@ -234,7 +234,7 @@ class DefaultWeeklyChallengeSelectionServiceTest {
         challenge.setDifficulty(difficulty);
         challenge.setCategory(category);
         challenge.setProgressMode(ProgressMode.SUM);
-        challenge.setPoints((difficulty.ordinal() + 1) * 100);
+        challenge.setDamage((difficulty.ordinal() + 1) * 100);
         challenge.setEnabled(true);
         return challenge;
     }

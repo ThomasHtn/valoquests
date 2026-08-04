@@ -17,11 +17,18 @@
        only such indicator. That hiding rule lives in `styles.css` as plain, unlayered CSS keyed off
        `overview-scroll-container` below — a Tailwind utility here would sit inside the generated
        utilities layer and lose to the unlayered global scrollbar rule there regardless of
-       specificity. -->
+       specificity.
+
+       The negative right margin cancels the parent wrapper's `inset-4`/`sm:inset-6` on this edge
+       only, stretching this element's box out to `<main>`'s true right edge — same as every other
+       page, where the scrollbar belongs to `<main>` itself rather than to an inset wrapper. The
+       matching `pr-*` then restores that same gutter as padding instead of position, so content
+       lines up exactly as before while the scrollbar (drawn at the border edge, ignoring padding)
+       renders flush against the true edge instead of floating `inset-4`/`inset-6` away from it. -->
   <div
     #scrollContainer
     id="overview-scroll-container"
-    class="flex min-h-0 flex-1 snap-y snap-mandatory flex-col overflow-y-auto motion-safe:scroll-smooth"
+    class="-mr-4 flex min-h-0 flex-1 snap-y snap-mandatory flex-col overflow-y-auto pr-4 motion-safe:scroll-smooth sm:-mr-6 sm:pr-6"
     tabindex="0"
   >
     <!-- Each section re-caps its own content at `max-w-[1440px]`, the width the ancestor wrapper
@@ -35,12 +42,7 @@
       class="mx-auto flex min-h-full w-full max-w-[1440px] shrink-0 flex-col justify-center gap-6 py-6 snap-start snap-always lg:pr-20"
       id="overview-hero"
     >
-      <p
-        class="mx-auto max-w-2xl text-center text-lg font-bold tracking-tight text-text-secondary sm:text-xl md:text-2xl"
-      >
-        {{ 'overview.subtitle' | translate }}
-      </p>
-      <app-boss-encounter class="block" />
+      <app-boss-encounter class="block" [week]="week()" />
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <app-podium class="block h-full" />
         <app-team-progress class="block h-full" [week]="week()" />
@@ -89,5 +91,22 @@
         ></button>
       }
     </nav>
+
+    <!-- Purely decorative nudge toward the sections below the hero; only shown there (see
+         `showScrollHint`'s doc comment), so it never lingers once the visitor has already found
+         their way further down. Stacked, staggered `animate-bounce` delays make the two chevrons
+         cascade downward instead of bouncing in lockstep. -->
+    @if (showScrollHint()) {
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute right-2 bottom-6 hidden flex-col items-center sm:right-4 lg:flex"
+      >
+        <svg class="h-5 w-5 text-text-secondary motion-safe:animate-bounce" lucideChevronDown></svg>
+        <svg
+          class="-mt-3 h-5 w-5 text-text-secondary/50 motion-safe:animate-bounce [animation-delay:150ms]"
+          lucideChevronDown
+        ></svg>
+      </div>
+    }
   </div>
 </div>

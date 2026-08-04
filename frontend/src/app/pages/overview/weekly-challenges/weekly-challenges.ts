@@ -11,7 +11,7 @@ import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { RankingEntry } from '@core/ranking/ranking.model';
 import { Avatar } from '@shared/avatar/avatar';
-import { PointsBadge } from '@shared/points-badge/points-badge';
+import { DamageBadge } from '@shared/damage-badge/damage-badge';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { ChallengeRow } from './weekly-challenges.model';
@@ -28,7 +28,7 @@ import { ChallengeRow } from './weekly-challenges.model';
     TranslatePipe,
     ChallengeIconView,
     Tooltip,
-    PointsBadge,
+    DamageBadge,
     Avatar,
     ResourceState,
     LucideTarget,
@@ -103,7 +103,7 @@ export class WeeklyChallenges {
       completedPlayers: challenge.completedPlayers,
       totalPlayers: challenge.totalPlayers,
       completionPercentage: challenge.completionPercentage,
-      points: challenge.points,
+      damage: challenge.damage,
       visual: resolveChallengeVisual(challenge.metric, challenge.difficulty),
       contributors: this.rankingEntries().map((entry) => ({
         playerId: entry.player.id,

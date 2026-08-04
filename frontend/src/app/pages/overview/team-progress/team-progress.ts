@@ -1,5 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { LucideCheck, LucideClock } from '@lucide/angular';
+import { LucideCheck } from '@lucide/angular';
 
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
@@ -36,7 +36,7 @@ interface Contributor {
  */
 @Component({
   selector: 'app-team-progress',
-  imports: [TranslatePipe, Avatar, ProgressBar, ResourceState, LucideCheck, LucideClock],
+  imports: [TranslatePipe, Avatar, ProgressBar, ResourceState, LucideCheck],
   templateUrl: './team-progress.html',
 })
 export class TeamProgress {

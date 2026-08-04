@@ -13,7 +13,6 @@ import java.time.LocalDate;
  * @param difficultyModifierPercent collective difficulty modifier applied this week, in percent
  * @param effectiveHp             hit points the boss must lose to be defeated this week
  * @param totalDamageDealt        cumulative damage dealt so far by every active player
- * @param enteringWinStreak       consecutive-victory streak going into this week's fight
  */
 @Schema(description = "Active weekly boss confrontation.")
 public record CurrentBossResponse(
@@ -23,7 +22,6 @@ public record CurrentBossResponse(
     int baseHp,
     int difficultyModifierPercent,
     int effectiveHp,
-    int totalDamageDealt,
-    int enteringWinStreak
+    int totalDamageDealt
 ) {
 }

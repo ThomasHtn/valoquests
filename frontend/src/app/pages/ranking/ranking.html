@@ -58,7 +58,7 @@
                 {{ 'ranking.columns.player' | translate }}
               </th>
               <th class="px-4 py-3 text-right font-semibold" scope="col">
-                {{ 'ranking.columns.points' | translate }}
+                {{ 'ranking.columns.damage' | translate }}
               </th>
               <th class="px-4 py-3 text-right font-semibold" scope="col">
                 {{ 'ranking.columns.completedChallenges' | translate }}
@@ -76,14 +76,19 @@
                 <th class="px-2 py-3 text-left font-normal" scope="row">
                   <div class="flex items-center gap-3">
                     <app-avatar [champion]="row.position === 1" [src]="row.avatarUrl" size="sm" />
-                    <span class="font-semibold text-text-primary">{{ row.displayName }}</span>
+                    <span
+                      class="font-semibold"
+                      [class.text-accent-gold]="row.position === 1"
+                      [class.text-text-primary]="row.position !== 1"
+                      >{{ row.displayName }}</span
+                    >
                     @if (row.position === 1) {
                       <app-champion-badge />
                     }
                   </div>
                 </th>
                 <td class="px-4 py-3 text-right">
-                  <app-points-badge [points]="row.points" />
+                  <app-damage-badge [damage]="row.damage" />
                 </td>
                 <td class="px-4 py-3 text-right">
                   <span
@@ -107,7 +112,11 @@
               <app-position-badge [position]="row.position" />
               <app-avatar [champion]="row.position === 1" [src]="row.avatarUrl" size="sm" />
               <div class="min-w-0 flex-1">
-                <p class="flex items-center gap-2 truncate font-semibold text-text-primary">
+                <p
+                  class="flex items-center gap-2 truncate font-semibold"
+                  [class.text-accent-gold]="row.position === 1"
+                  [class.text-text-primary]="row.position !== 1"
+                >
                   {{ row.displayName }}
                   @if (row.position === 1) {
                     <app-champion-badge />
@@ -125,7 +134,7 @@
                   </span>
                 </p>
               </div>
-              <app-points-badge class="shrink-0" [points]="row.points" />
+              <app-damage-badge class="shrink-0" [damage]="row.damage" />
             </li>
           }
         </ul>

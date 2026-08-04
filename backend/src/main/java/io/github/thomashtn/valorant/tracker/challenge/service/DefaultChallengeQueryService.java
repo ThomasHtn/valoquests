@@ -165,7 +165,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             weeklyChallenge.getChallenge().getDifficulty(),
             resolveMetricLabel(definition),
             resolveTargetValue(definition, progressRows),
-            weeklyChallenge.getChallenge().getPoints(),
+            weeklyChallenge.getChallenge().getDamage(),
             completedPlayers,
             totalPlayers,
             calculateCompletionPercentage(completedPlayers, totalPlayers)

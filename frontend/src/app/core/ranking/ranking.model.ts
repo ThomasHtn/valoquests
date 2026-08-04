@@ -47,7 +47,7 @@ export interface RankingEntry {
   readonly previousPosition: number | null;
   readonly positionVariation: number;
   readonly player: PlayerRanking;
-  readonly points: number;
+  readonly challengeDamage: number;
   readonly completedChallenges: number;
   readonly totalChallenges: number;
   readonly challengeProgress: readonly RankingChallengeProgress[];
@@ -85,7 +85,7 @@ export interface RankingHistoryEntry {
   readonly position: number;
   readonly playerId: number;
   readonly displayName: string;
-  readonly points: number;
+  readonly challengeDamage: number;
   readonly completedChallenges: number;
 }
 

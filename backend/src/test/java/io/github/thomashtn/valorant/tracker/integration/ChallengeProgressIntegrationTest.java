@@ -315,7 +315,7 @@ class ChallengeProgressIntegrationTest
                 assertThat(score.getPreviousPosition())
                     .isNull();
 
-                assertThat(score.getPoints())
+                assertThat(score.getChallengeDamage())
                     .isEqualTo(23_000);
 
                 assertThat(score.getCompletedChallenges())
@@ -746,7 +746,7 @@ class ChallengeProgressIntegrationTest
      *
      * @param code           stable challenge code
      * @param difficulty     challenge difficulty
-     * @param points         awarded points
+     * @param damage         awarded damage
      * @param progressMode   calculation mode
      * @param ruleType       structural rule type
      * @param conditionsJson serialized rule definition
@@ -755,7 +755,7 @@ class ChallengeProgressIntegrationTest
     private Challenge createChallenge(
         String code,
         ChallengeDifficulty difficulty,
-        int points,
+        int damage,
         ProgressMode progressMode,
         ChallengeRuleType ruleType,
         String conditionsJson
@@ -768,7 +768,7 @@ class ChallengeProgressIntegrationTest
             "Integration challenge " + code
         );
         challenge.setDifficulty(difficulty);
-        challenge.setPoints(points);
+        challenge.setDamage(damage);
         challenge.setCategory(
             ChallengeCategory.OTHER
         );

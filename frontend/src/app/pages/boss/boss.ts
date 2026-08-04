@@ -132,7 +132,6 @@ export class Boss {
         : null,
       defeatedByIsChampion:
         week.defeatedByPlayerId !== null && week.defeatedByPlayerId === championPlayerId,
-      winStreak: week.winStreak,
     }));
   });
 

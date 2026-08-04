@@ -394,11 +394,11 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         selections.forEach(selection -> {
             Challenge challenge = selection.getChallenge();
             LOGGER.debug(
-                "Selected weekly challenge: difficulty={}, code={}, category={}, points={}.",
+                "Selected weekly challenge: difficulty={}, code={}, category={}, damage={}.",
                 challenge.getDifficulty(),
                 challenge.getCode(),
                 challenge.getCategory(),
-                challenge.getPoints()
+                challenge.getDamage()
             );
         });
     }

@@ -23,10 +23,8 @@
     "title": "Boss",
     "week": {
       "label": "Week {{number}}"
-    },
-    "winStreak": "{{count}} win(s) in a row"
+    }
   },
-  "champion": "Champion",
   "notFound": {
     "backToOverview": "Back to overview",
     "description": "The requested page does not exist or has been moved.",
@@ -37,11 +35,8 @@
       "defeated": "The boss has been defeated this week!",
       "error": "Failed to load the weekly boss.",
       "eyebrow": "Weekly boss",
-      "hpLabel": "Hit points",
       "hpValue": "{{remaining}} / {{total}} HP",
-      "loading": "Loading the boss…",
-      "modifier": "Difficulty {{value}}%",
-      "winStreak": "{{count}} win(s) in a row"
+      "loading": "Loading the boss…"
     },
     "podium": {
       "rank": {
@@ -63,7 +58,6 @@
         "ariaLabel": "Go to the ranking"
       }
     },
-    "subtitle": "Face off against players and friends through Valorant challenges, and complete them as a team.",
     "teamProgress": {
       "contributors": "{{count}} player(s) contributed this week",
       "eyebrow": "Team objective",
@@ -77,6 +71,7 @@
     },
     "weeklyChallenges": {
       "completedCount": "{{completed}} of {{total}} completed",
+      "damageTooltip": "Damage awarded once the challenge is completed",
       "difficulty": {
         "EASY": "Easy",
         "HARD": "Hard",
@@ -100,16 +95,14 @@
         "SCORE": "Score"
       },
       "playersUnit": "players",
-      "pointsTooltip": "Points awarded once the challenge is completed",
       "progressTooltip": "{{completed}} of {{total}} players have completed this challenge",
       "title": "Weekly challenges"
     },
     "weeklyRanking": {
       "columns": {
+        "damage": "Damage",
         "player": "Player",
-        "points": "Points",
-        "position": "#",
-        "target": "Target {{value}}"
+        "position": "#"
       },
       "completed": "Challenge completed",
       "empty": "No ranking is available this week.",
@@ -217,8 +210,8 @@
   "ranking": {
     "columns": {
       "completedChallenges": "Completed challenges",
+      "damage": "Damage",
       "player": "Player",
-      "points": "Points",
       "position": "#"
     },
     "empty": "No week has been finalized yet.",
@@ -229,7 +222,7 @@
       "page": "Page {{page}} of {{total}}",
       "previous": "Previous"
     },
-    "subtitle": "Review the points earned by each player, week after week.",
+    "subtitle": "Review the damage earned by each player, week after week.",
     "title": "Ranking",
     "week": {
       "label": "Week {{number}}"
@@ -237,7 +230,7 @@
   },
   "retry": "Retry",
   "shared": {
-    "pointsBadge": {
+    "damageBadge": {
       "unit": "DMG"
     }
   },

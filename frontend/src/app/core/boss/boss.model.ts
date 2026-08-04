@@ -42,7 +42,6 @@ export interface CurrentBoss {
   readonly difficultyModifierPercent: number;
   readonly effectiveHp: number;
   readonly totalDamageDealt: number;
-  readonly enteringWinStreak: number;
 }
 
 /**
@@ -66,5 +65,4 @@ export interface BossHistoryWeek {
   readonly defeated: boolean;
   readonly defeatedByPlayerId: number | null;
   readonly defeatedByPlayerDisplayName: string | null;
-  readonly winStreak: number;
 }

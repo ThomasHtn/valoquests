@@ -61,8 +61,8 @@ public class WeeklyPlayerScore extends AuditableEntity {
      * Total damage dealt by completed weekly challenges, resolved through the week's own scoring
      * ruleset version.
      */
-    @Column(nullable = false)
-    private int points;
+    @Column(name = "challenge_damage", nullable = false)
+    private int challengeDamage;
 
     /**
      * Number of weekly challenges completed by the player.
@@ -89,7 +89,7 @@ public class WeeklyPlayerScore extends AuditableEntity {
     private int teamBonus;
 
     /**
-     * Total damage dealt to the boss this week: {@link #points} + {@link #matchDamage} +
+     * Total damage dealt to the boss this week: {@link #challengeDamage} + {@link #matchDamage} +
      * {@link #regularityBonus} + {@link #teamBonus}. This is the individual ranking key.
      */
     @Column(name = "total_damage", nullable = false)

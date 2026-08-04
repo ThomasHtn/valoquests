@@ -282,7 +282,7 @@ class DefaultRankingQueryServiceTest {
         String displayName,
         int position,
         Integer previousPosition,
-        int points,
+        int challengeDamage,
         int completedChallenges
     ) {
         Player player = new Player();
@@ -293,7 +293,7 @@ class DefaultRankingQueryServiceTest {
         score.setPlayer(player);
         score.setPosition(position);
         score.setPreviousPosition(previousPosition);
-        score.setPoints(points);
+        score.setChallengeDamage(challengeDamage);
         score.setCompletedChallenges(completedChallenges);
         return score;
     }

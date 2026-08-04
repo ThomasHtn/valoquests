@@ -44,7 +44,7 @@ public class RankingAdminController {
     @Operation(
         summary = "Recalculate the current weekly ranking",
         description = """
-            Rebuilds points, positions, completed-challenge counters and position variations from
+            Rebuilds damage, positions, completed-challenge counters and position variations from
             stored challenge progress. This operation never contacts the Henrik API.
             """
     )

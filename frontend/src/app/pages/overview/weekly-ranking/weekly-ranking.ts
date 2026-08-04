@@ -18,7 +18,7 @@ import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
-import { PointsBadge } from '@shared/points-badge/points-badge';
+import { DamageBadge } from '@shared/damage-badge/damage-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ProgressCircle } from '@shared/progress-circle/progress-circle';
@@ -49,7 +49,7 @@ import {
     Tooltip,
     Avatar,
     ChampionBadge,
-    PointsBadge,
+    DamageBadge,
     PositionBadge,
     ProgressBar,
     ProgressCircle,
@@ -154,7 +154,7 @@ export class WeeklyRanking {
         playerId: entry.player.id,
         displayName: entry.player.displayName,
         avatarUrl: resolvePlayerAvatarUrl(entry.player.portrait),
-        points: entry.points,
+        damage: entry.challengeDamage,
         cells,
         isChampion: entry.player.id === championPlayerId,
       };

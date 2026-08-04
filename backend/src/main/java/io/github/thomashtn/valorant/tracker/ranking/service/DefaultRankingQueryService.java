@@ -208,7 +208,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
                 score.getPlayer().getCompetitiveTier(),
                 score.getPlayer().getRankRating()
             ),
-            score.getPoints(),
+            score.getChallengeDamage(),
             score.getCompletedChallenges(),
             totalChallenges,
             score.getMatchDamage(),
@@ -279,7 +279,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
                         score.getPosition(),
                         score.getPlayer().getId(),
                         score.getPlayer().getDisplayName(),
-                        score.getPoints(),
+                        score.getChallengeDamage(),
                         score.getCompletedChallenges(),
                         score.getMatchDamage(),
                         score.getRegularityBonus(),

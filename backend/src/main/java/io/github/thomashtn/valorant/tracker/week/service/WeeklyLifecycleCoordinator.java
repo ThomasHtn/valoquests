@@ -131,23 +131,17 @@ public class WeeklyLifecycleCoordinator {
             encounter.getEffectiveHp()
         );
 
-        int previousStreak = bossEncounterRepository.findLatestFinalized()
-            .map(WeeklyBossEncounter::getWinStreak)
-            .orElse(0);
-
         encounter.setDefeated(chronologyResult.defeated());
         encounter.setDefeatedByPlayer(chronologyResult.defeatedByPlayer());
         encounter.setFinishingPlayerMatch(chronologyResult.finishingPlayerMatch());
-        encounter.setWinStreak(chronologyResult.defeated() ? previousStreak + 1 : 0);
         encounter.setFinalizedAt(finalizedAt);
 
         bossEncounterRepository.save(encounter);
 
         LOGGER.info(
-            "Boss encounter finalized for previous week {}: defeated={}, winStreak={}.",
+            "Boss encounter finalized for previous week {}: defeated={}.",
             weekStart,
-            chronologyResult.defeated(),
-            encounter.getWinStreak()
+            chronologyResult.defeated()
         );
     }
 }

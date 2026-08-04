@@ -10,7 +10,7 @@ import { RankingEntry } from '@core/ranking/ranking.model';
 import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
-import { PointsBadge } from '@shared/points-badge/points-badge';
+import { DamageBadge } from '@shared/damage-badge/damage-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ResourceState } from '@shared/resource-state/resource-state';
 
@@ -29,7 +29,7 @@ import { ResourceState } from '@shared/resource-state/resource-state';
     RouterLink,
     Avatar,
     ChampionBadge,
-    PointsBadge,
+    DamageBadge,
     PositionBadge,
     ResourceState,
   ],

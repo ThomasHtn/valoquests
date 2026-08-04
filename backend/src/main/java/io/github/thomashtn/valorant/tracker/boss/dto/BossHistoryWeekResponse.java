@@ -20,7 +20,6 @@ import java.time.LocalDate;
  *                                 defeated
  * @param defeatedByPlayerDisplayName display name of the player who dealt the finishing blow, when
  *                                 defeated
- * @param winStreak                consecutive-victory streak after this week was resolved
  */
 @Schema(description = "Finalized boss confrontation for one week.")
 public record BossHistoryWeekResponse(
@@ -32,7 +31,6 @@ public record BossHistoryWeekResponse(
     int totalDamageDealt,
     boolean defeated,
     Long defeatedByPlayerId,
-    String defeatedByPlayerDisplayName,
-    int winStreak
+    String defeatedByPlayerDisplayName
 ) {
 }

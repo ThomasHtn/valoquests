@@ -1,5 +1,5 @@
 /**
- * Difficulty tier of a challenge, controlling its point reward.
+ * Difficulty tier of a challenge, controlling its damage reward.
  */
 export type ChallengeDifficulty = 'EASY' | 'NORMAL' | 'MEDIUM' | 'HARD' | 'VERY_HARD';
 
@@ -26,7 +26,7 @@ export interface ChallengeProgress {
    * Target value for the challenge, or `null` for a composite challenge with no stored progress.
    */
   readonly targetValue: number | null;
-  readonly points: number;
+  readonly damage: number;
   readonly completedPlayers: number;
   readonly totalPlayers: number;
   readonly completionPercentage: number;

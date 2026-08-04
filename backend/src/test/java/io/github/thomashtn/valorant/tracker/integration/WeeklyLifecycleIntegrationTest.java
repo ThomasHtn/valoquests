@@ -338,7 +338,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     private void assertScore(
         WeeklyPlayerScore score,
         Player player,
-        int points,
+        int challengeDamage,
         int totalDamage,
         int completedChallenges,
         int position,
@@ -346,7 +346,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         Instant finalizedAt
     ) {
         assertThat(score.getPlayer().getId()).isEqualTo(player.getId());
-        assertThat(score.getPoints()).isEqualTo(points);
+        assertThat(score.getChallengeDamage()).isEqualTo(challengeDamage);
         assertThat(score.getTotalDamage()).isEqualTo(totalDamage);
         assertThat(score.getCompletedChallenges()).isEqualTo(completedChallenges);
         assertThat(score.getPosition()).isEqualTo(position);
@@ -479,7 +479,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     private Challenge createChallenge(
         String code,
         ChallengeDifficulty difficulty,
-        int points,
+        int damage,
         ProgressMode progressMode,
         ChallengeRuleType ruleType,
         String metric,
@@ -492,7 +492,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         challenge.setName(code);
         challenge.setDescription("Lifecycle challenge " + code);
         challenge.setDifficulty(difficulty);
-        challenge.setPoints(points);
+        challenge.setDamage(damage);
         challenge.setCategory(ChallengeCategory.OTHER);
         challenge.setRuleType(ruleType);
         challenge.setProgressMode(progressMode);

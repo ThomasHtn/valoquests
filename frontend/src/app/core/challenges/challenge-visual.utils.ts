@@ -42,19 +42,19 @@ const CHALLENGE_DIFFICULTY_COLORS: Readonly<
     barClass: 'bg-accent-blue',
   },
   MEDIUM: {
+    iconClass: 'text-accent-purple',
+    badgeClass: 'bg-accent-purple/15',
+    barClass: 'bg-accent-purple',
+  },
+  HARD: {
     iconClass: 'text-accent-gold',
     badgeClass: 'bg-accent-gold/15',
     barClass: 'bg-accent-gold',
   },
-  HARD: {
+  VERY_HARD: {
     iconClass: 'text-accent-pink',
     badgeClass: 'bg-accent-pink/15',
     barClass: 'bg-accent-pink',
-  },
-  VERY_HARD: {
-    iconClass: 'text-accent-red',
-    badgeClass: 'bg-accent-red/15',
-    barClass: 'bg-accent-red',
   },
 };
 

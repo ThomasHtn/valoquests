@@ -11,39 +11,20 @@
     [loadingText]="'overview.weeklyChallenges.loading' | translate"
     padding="py-10"
   >
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <p class="text-xs font-bold tracking-widest text-accent-green uppercase">
-          {{ 'overview.teamProgress.eyebrow' | translate }}
-          @if (week(); as week) {
-            <span aria-hidden="true">·</span>
-            {{ 'overview.week.label' | translate: { number: week.number } }}
-          }
-        </p>
-        <h2 class="mt-1 max-w-prose text-xl font-extrabold text-text-primary sm:text-2xl">
-          {{ 'overview.teamProgress.heading' | translate }}
-        </h2>
-      </div>
-
-      @if (week(); as week) {
-        <p
-          class="flex shrink-0 items-center gap-1.5 text-sm font-bold tabular-nums text-text-primary"
-        >
-          <svg class="h-4 w-4 text-accent-purple" lucideClock></svg>
-          {{
-            'overview.week.countdown'
-              | translate
-                : {
-                    days: week.remaining.days,
-                    hours: week.remaining.hours,
-                    minutes: week.remaining.minutes,
-                  }
-          }}
-        </p>
-      }
+    <div>
+      <p class="text-xs font-bold tracking-widest text-accent-green uppercase">
+        {{ 'overview.teamProgress.eyebrow' | translate }}
+        @if (week(); as week) {
+          <span aria-hidden="true">·</span>
+          {{ 'overview.week.label' | translate: { number: week.number } }}
+        }
+      </p>
+      <h2 class="mt-1 max-w-prose text-xl font-extrabold text-text-primary sm:text-2xl">
+        {{ 'overview.teamProgress.heading' | translate }}
+      </h2>
     </div>
 
-    <div class="mt-6">
+    <div class="mt-auto">
       <div class="flex items-baseline justify-between text-sm">
         <span class="text-text-secondary">{{
           'overview.teamProgress.progressLabel' | translate
@@ -64,7 +45,7 @@
     </div>
 
     @if (contributors().length) {
-      <div class="mt-auto flex flex-wrap items-center gap-3 border-t border-surface-700 pt-5">
+      <div class="mt-5 flex flex-wrap items-center gap-3 border-t border-surface-700 pt-5">
         <ul class="flex -space-x-2">
           @for (contributor of contributors(); track contributor.playerId) {
             <li

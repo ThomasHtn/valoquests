@@ -116,12 +116,12 @@ class DefaultRankingRecalculationServiceTest {
         // not interfere with this ordering assertion.
         assertThat(scores).hasSize(2);
         assertThat(scores.get(0).getPlayer()).isSameAs(secondPlayer);
-        assertThat(scores.get(0).getPoints()).isEqualTo(2500);
+        assertThat(scores.get(0).getChallengeDamage()).isEqualTo(2500);
         assertThat(scores.get(0).getTotalDamage()).isEqualTo(2500);
         assertThat(scores.get(0).getCompletedChallenges()).isEqualTo(1);
         assertThat(scores.get(0).getPosition()).isEqualTo(1);
         assertThat(scores.get(1).getPlayer()).isSameAs(firstPlayer);
-        assertThat(scores.get(1).getPoints()).isEqualTo(1500);
+        assertThat(scores.get(1).getChallengeDamage()).isEqualTo(1500);
         assertThat(scores.get(1).getTotalDamage()).isEqualTo(1500);
         assertThat(scores.get(1).getPosition()).isEqualTo(2);
     }

@@ -6,7 +6,7 @@ export interface RankingHistoryRow {
   readonly playerId: number;
   readonly displayName: string;
   readonly avatarUrl: string | null;
-  readonly points: number;
+  readonly damage: number;
   readonly completedChallenges: number;
 }
 

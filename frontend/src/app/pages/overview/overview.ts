@@ -10,6 +10,7 @@ import {
   viewChildren,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { LucideChevronDown } from '@lucide/angular';
 import { interval } from 'rxjs';
 
 import { ChallengesApi } from '@core/challenges/challenges-api';
@@ -50,7 +51,15 @@ interface OverviewSection {
  */
 @Component({
   selector: 'app-overview',
-  imports: [TranslatePipe, BossEncounter, Podium, TeamProgress, WeeklyChallenges, WeeklyRanking],
+  imports: [
+    TranslatePipe,
+    BossEncounter,
+    Podium,
+    TeamProgress,
+    WeeklyChallenges,
+    WeeklyRanking,
+    LucideChevronDown,
+  ],
   templateUrl: './overview.html',
   // Diverges from `PAGE_LAYOUT_CLASS`: every other page stacks its blocks in normal document flow,
   // but this page owns a single full-height scroll-snap container instead, so the shared
@@ -81,8 +90,8 @@ export class Overview {
   /**
    * Active week's number, date range and remaining time, or `null` while loading.
    *
-   * Computed once here, from a single ticking clock, and passed down to `TeamProgress` so its
-   * countdown never drifts from this value.
+   * Computed once here, from a single ticking clock, and passed down to `BossEncounter` and
+   * `TeamProgress` so their countdown never drifts from this value.
    */
   protected readonly week = computed<WeekSummary | null>(() => {
     const currentChallenges = this.challengesApi.current;
@@ -113,6 +122,15 @@ export class Overview {
    * Id of the section currently in view, driving the dot rail's active indicator.
    */
   protected readonly activeSectionId = signal(this.sections[0].id);
+
+  /**
+   * Whether the bouncing "scroll down" hint should render, next to the dot rail. Shown only while
+   * the hero section is active, to nudge first-time visitors toward the sections below it — not a
+   * persistent fixture once they've already navigated further.
+   */
+  protected readonly showScrollHint = computed(
+    () => this.activeSectionId() === this.sections[0].id,
+  );
 
   /**
    * The scroll-snap container, queried to serve as the `IntersectionObserver` root.

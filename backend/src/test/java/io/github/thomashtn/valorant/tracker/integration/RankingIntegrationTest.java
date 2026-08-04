@@ -44,7 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
  * aggregation, ordering, position history, idempotence and cleanup.</p>
  *
  * <p>Challenge damage is resolved from {@code ScoringRulesetV1} by difficulty tier (EASY=1500,
- * NORMAL=2500, MEDIUM=4000, HARD=6000), not from the legacy {@code Challenge.points} column, which this
+ * NORMAL=2500, MEDIUM=4000, HARD=6000), not from the legacy {@code Challenge.damage} column, which this
  * feature supersedes for scoring. No match is ever persisted by these fixtures, so match damage and the
  * regularity bonus are always zero here; only challenge damage and, where two players complete the same
  * weekly challenge, the team bonus contribute to the total.</p>
@@ -116,7 +116,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
     private EntityManager entityManager;
 
     /**
-     * Verifies point aggregation, incomplete-progress exclusion and zero-score
+     * Verifies damage aggregation, incomplete-progress exclusion and zero-score
      * ranking entries.
      */
     @Test
@@ -680,7 +680,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
             1
         );
 
-        assertThat(inactiveScore.getPoints()).isZero();
+        assertThat(inactiveScore.getChallengeDamage()).isZero();
         assertThat(inactiveScore.getTotalDamage()).isZero();
         assertThat(inactiveScore.getCompletedChallenges()).isEqualTo(1);
         assertThat(inactiveScore.getPosition()).isNull();
@@ -949,7 +949,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
      *
      * @param score                       persisted score
      * @param expectedPlayer              expected player
-     * @param expectedPoints              expected challenge damage ({@code points})
+     * @param expectedChallengeDamage     expected challenge damage ({@code challengeDamage})
      * @param expectedTotalDamage         expected total damage, including any team bonus
      * @param expectedCompletedChallenges expected completed challenge count
      * @param expectedPosition            expected current position
@@ -958,7 +958,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
     private void assertScore(
         WeeklyPlayerScore score,
         Player expectedPlayer,
-        int expectedPoints,
+        int expectedChallengeDamage,
         int expectedTotalDamage,
         int expectedCompletedChallenges,
         int expectedPosition,
@@ -970,8 +970,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(score.getWeekStart())
             .isEqualTo(WEEK_START);
 
-        assertThat(score.getPoints())
-            .isEqualTo(expectedPoints);
+        assertThat(score.getChallengeDamage())
+            .isEqualTo(expectedChallengeDamage);
 
         assertThat(score.getTotalDamage())
             .isEqualTo(expectedTotalDamage);
