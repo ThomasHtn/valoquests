@@ -5,7 +5,6 @@ import io.github.thomashtn.valorant.tracker.boss.service.WeekRulesetResolver;
 import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valorant.tracker.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
-import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
@@ -131,27 +130,26 @@ public class DefaultRankingRecalculationService
 
         Instant calculatedAt = clock.instant();
 
-        List<Player> activePlayers = playerRepository
-            .findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE);
+        List<Player> players = playerRepository.findAllByOrderByIdAsc();
 
-        if (activePlayers.isEmpty()) {
+        if (players.isEmpty()) {
             scoreRepository.deleteAllByWeekStart(weekStart);
 
             LOGGER.info(
-                "Ranking cleared for week {} because no player is active.",
+                "Ranking cleared for week {} because no player is tracked.",
                 weekStart
             );
 
             return;
         }
 
-        List<Long> activePlayerIds = activePlayers.stream()
+        List<Long> playerIds = players.stream()
             .map(Player::getId)
             .toList();
 
         scoreRepository.deleteAllByWeekStartAndPlayerIdNotIn(
             weekStart,
-            activePlayerIds
+            playerIds
         );
 
         Map<Long, WeeklyPlayerScore> existingByPlayerId = scoreRepository
@@ -166,9 +164,9 @@ public class DefaultRankingRecalculationService
         Map<Long, Integer> completedCountByWeeklyChallengeId =
             countCompletionsByWeeklyChallenge(weekStart);
         Map<Long, RankingAggregate> aggregates =
-            aggregateProgress(weekStart, activePlayers, ruleset, completedCountByWeeklyChallengeId);
+            aggregateProgress(weekStart, players, ruleset, completedCountByWeeklyChallengeId);
 
-        List<WeeklyPlayerScore> scores = activePlayers.stream()
+        List<WeeklyPlayerScore> scores = players.stream()
             .map(player -> buildScore(
                 player,
                 weekStart,
@@ -199,7 +197,10 @@ public class DefaultRankingRecalculationService
     }
 
     /**
-     * Counts, for every weekly challenge, how many players have completed it so far.
+     * Counts, for every weekly challenge, how many competitive players have completed it so far.
+     *
+     * <p>An inactive player's completion is deliberately excluded: it must not inflate the team
+     * bonus earned by the players who actually compete.
      *
      * @param weekStart week being recalculated
      * @return completed-player count indexed by weekly challenge identifier
@@ -210,7 +211,7 @@ public class DefaultRankingRecalculationService
         for (PlayerChallengeProgress progress : progressRepository
             .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(weekStart)) {
 
-            if (progress.isCompleted()) {
+            if (progress.isCompleted() && progress.getPlayer().isCompetitive()) {
                 completedCounts.merge(progress.getWeeklyChallenge().getId(), 1, Integer::sum);
             }
         }
@@ -221,24 +222,29 @@ public class DefaultRankingRecalculationService
     /**
      * Aggregates match damage, challenge damage, regularity bonus and team bonus by player.
      *
+     * <p>An inactive player only ever accumulates {@link RankingAggregate#completedChallenges()},
+     * so their individual progress stays visible while never contributing damage of any kind.
+     *
      * @param weekStart                        week being recalculated
-     * @param activePlayers                    players to aggregate
+     * @param players                          players to aggregate
      * @param ruleset                          ruleset resolved for this week
      * @param completedCountByWeeklyChallengeId final completed-player count per weekly challenge
      * @return player aggregations indexed by player identifier
      */
     private Map<Long, RankingAggregate> aggregateProgress(
         LocalDate weekStart,
-        List<Player> activePlayers,
+        List<Player> players,
         ScoringRuleset ruleset,
         Map<Long, Integer> completedCountByWeeklyChallengeId
     ) {
         Map<Long, RankingAggregate> aggregates = new HashMap<>();
 
-        for (Player player : activePlayers) {
+        for (Player player : players) {
             aggregates.put(
                 player.getId(),
-                aggregateMatchDamage(player, weekStart, ruleset)
+                player.isCompetitive()
+                    ? aggregateMatchDamage(player, weekStart, ruleset)
+                    : RankingAggregate.EMPTY
             );
         }
 
@@ -254,6 +260,15 @@ public class DefaultRankingRecalculationService
             }
 
             long playerId = progress.getPlayer().getId();
+
+            if (!progress.getPlayer().isCompetitive()) {
+                aggregates.merge(
+                    playerId,
+                    new RankingAggregate(0, 0, 1, 0, 0, 0),
+                    RankingAggregate::add
+                );
+                continue;
+            }
 
             int challengeDamage = ruleset.challengeDamage(
                 progress.getWeeklyChallenge().getChallenge().getDifficulty()

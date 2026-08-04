@@ -146,7 +146,10 @@ export class WeeklyRanking {
       });
 
       return {
-        position: entry.position,
+        // The backend omits `position` entirely from the JSON payload when null (global
+        // non-null serialization), so the parsed value is `undefined`, not `null` - normalized
+        // here so every `=== null` check downstream (component and template) is reliable.
+        position: entry.position ?? null,
         positionVariation: entry.positionVariation,
         playerId: entry.player.id,
         displayName: entry.player.displayName,

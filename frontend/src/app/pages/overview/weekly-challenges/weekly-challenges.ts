@@ -75,10 +75,19 @@ export class WeeklyChallenges {
   protected readonly skeletonRows = SKELETON_ROWS;
 
   /**
-   * Every tracked player's current ranking entry, used to resolve per-challenge completion.
+   * Every active tracked player's current ranking entry, used to resolve per-challenge
+   * completion.
+   *
+   * An inactive player is excluded: their challenge completions never count toward the
+   * collective total, so they never appear as a contributor either. The backend omits
+   * `position` from the JSON entirely when null, so the parsed value is `undefined` rather than
+   * `null` - `!= null` catches both.
    */
   private readonly rankingEntries = computed<readonly RankingEntry[]>(
-    () => resourceValue(this.rankingResource, null)?.ranking ?? [],
+    () =>
+      resourceValue(this.rankingResource, null)?.ranking.filter(
+        (entry) => entry.position != null,
+      ) ?? [],
   );
 
   /**

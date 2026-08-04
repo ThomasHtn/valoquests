@@ -358,12 +358,12 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Marks migration-seeded players inactive for deterministic ranking.
+     * Removes migration-seeded players for deterministic ranking. Marking them inactive is not
+     * enough: an inactive player still gets a weekly score built for display, so they would still
+     * show up in the ranking assertions below.
      */
     private void deactivateSeededPlayers() {
-        List<Player> players = playerRepository.findAll();
-        players.forEach(player -> player.setStatus(PlayerStatus.INACTIVE));
-        playerRepository.saveAll(players);
+        playerRepository.deleteAll();
     }
 
     /**

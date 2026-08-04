@@ -20,9 +20,10 @@ import { PositionBadgeSize } from './position-badge.model';
 })
 export class PositionBadge {
   /**
-   * 1-based ranking position to display.
+   * 1-based ranking position to display, or {@code null} for an inactive player who never
+   * consumes a ranking slot.
    */
-  public readonly position = input.required<number>();
+  public readonly position = input.required<number | null>();
 
   /**
    * Size preset controlling the badge's dimensions and font size.
@@ -38,7 +39,10 @@ export class PositionBadge {
    * Whether the position is on the podium (1st to 3rd), which is highlighted with a stronger fill
    * and outline than the neutral treatment used from 4th place onward.
    */
-  protected readonly isPodium = computed(() => this.position() <= 3);
+  protected readonly isPodium = computed(() => {
+    const position = this.position();
+    return position !== null && position <= 3;
+  });
 
   /**
    * Tailwind text color utility applied to the number and, through `currentColor`, to the

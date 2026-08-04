@@ -255,11 +255,11 @@ public class DefaultRankingQueryService implements RankingQueryService {
         LocalDate weekStart,
         List<WeeklyPlayerScore> scores
     ) {
+        // Inactive players never consume a ranking slot (null position); they are excluded from
+        // this history view entirely, unlike the current-week view where they still appear.
         List<WeeklyPlayerScore> orderedScores = scores.stream()
-            .sorted(Comparator.comparing(
-                WeeklyPlayerScore::getPosition,
-                Comparator.nullsLast(Comparator.naturalOrder())
-            ))
+            .filter(score -> score.getPosition() != null)
+            .sorted(Comparator.comparing(WeeklyPlayerScore::getPosition))
             .toList();
         Instant finalizedAt = orderedScores.stream()
             .map(WeeklyPlayerScore::getFinalizedAt)

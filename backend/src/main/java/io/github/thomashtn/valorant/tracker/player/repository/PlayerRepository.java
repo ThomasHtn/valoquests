@@ -39,19 +39,15 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     List<Player> findAllByStatusOrderByIdAsc(PlayerStatus status);
 
     /**
-     * Returns competitive players having the requested status in deterministic identifier order.
+     * Returns every tracked player, regardless of status, in deterministic identifier order.
      *
-     * <p>Used wherever challenge resolution or boss combat must exclude non-competitive players
-     * (e.g. a showcased pro player) while still including every other active player.
+     * <p>Used wherever every player must be processed regardless of competition eligibility (e.g.
+     * synchronization, challenge progress calculation): an inactive player is still tracked and
+     * still completes challenges individually, it just never competes.
      *
-     * @param status      player lifecycle status
-     * @param competitive whether the player takes part in challenge resolution and boss combat
-     * @return matching players ordered by identifier
+     * @return every player ordered by identifier
      */
-    List<Player> findAllByStatusAndCompetitiveOrderByIdAsc(
-        PlayerStatus status,
-        boolean competitive
-    );
+    List<Player> findAllByOrderByIdAsc();
 
     /**
      * Returns the most recent successful synchronization instant across every tracked player.

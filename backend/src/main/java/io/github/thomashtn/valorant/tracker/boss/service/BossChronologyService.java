@@ -111,7 +111,7 @@ public class BossChronologyService {
         int effectiveHp
     ) {
         List<Player> activePlayers =
-            playerRepository.findAllByStatusAndCompetitiveOrderByIdAsc(PlayerStatus.ACTIVE, true);
+            playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE);
         List<WeeklyChallenge> weeklyChallenges =
             weeklyChallengeSelectionService.findExistingWeekChallenges(weekStart);
 

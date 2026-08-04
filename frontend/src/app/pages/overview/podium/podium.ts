@@ -56,10 +56,18 @@ export class Podium {
   );
 
   /**
-   * Every tracked player's current ranking entry, in the order returned by the backend.
+   * Every active tracked player's current ranking entry, in the order returned by the backend.
+   *
+   * An inactive player is excluded: the podium and its preview strip are a competitive
+   * leaderboard, and an inactive player never competes for a slot. The backend omits `position`
+   * from the JSON entirely when null, so the parsed value is `undefined` rather than `null` -
+   * `!= null` catches both.
    */
   protected readonly entries = computed<readonly RankingEntry[]>(
-    () => resourceValue(this.rankingResource, null)?.ranking ?? [],
+    () =>
+      resourceValue(this.rankingResource, null)?.ranking.filter(
+        (entry) => entry.position != null,
+      ) ?? [],
   );
 
   /**

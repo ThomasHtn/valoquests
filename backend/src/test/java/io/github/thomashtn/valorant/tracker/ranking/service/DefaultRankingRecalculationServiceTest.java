@@ -88,7 +88,7 @@ class DefaultRankingRecalculationServiceTest {
         WeeklyChallenge easyWeeklyChallenge = createWeeklyChallenge(10L, ChallengeDifficulty.EASY);
         WeeklyChallenge normalWeeklyChallenge = createWeeklyChallenge(20L, ChallengeDifficulty.NORMAL);
 
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of(firstPlayer, secondPlayer));
         when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START))
             .thenReturn(List.of());
@@ -137,7 +137,7 @@ class DefaultRankingRecalculationServiceTest {
         existing.setWeekStart(WEEK_START);
         existing.setPosition(3);
 
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of(player));
         when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START))
             .thenReturn(List.of(existing));
@@ -156,16 +156,16 @@ class DefaultRankingRecalculationServiceTest {
     }
 
     /**
-     * Verifies that a non-competitive player still gets a score built and sorted by damage, but
-     * never consumes a ranking slot, and does not shift a competitive player behind it down.
+     * Verifies that an inactive player still gets a score built with their real completed-challenge
+     * count, but with zero damage and no ranking slot, and does not shift an active player down.
      */
     @Test
-    void shouldSkipRankingSlotForNonCompetitivePlayer() {
+    void shouldSkipRankingSlotForInactivePlayer() {
         Player proPlayer = createPlayer(1L, "Pro");
-        proPlayer.setCompetitive(false);
+        proPlayer.setStatus(PlayerStatus.INACTIVE);
         Player competitivePlayer = createPlayer(2L, "Regular");
 
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of(proPlayer, competitivePlayer));
         when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START))
             .thenReturn(List.of());
@@ -194,7 +194,8 @@ class DefaultRankingRecalculationServiceTest {
             .findFirst()
             .orElseThrow();
 
-        assertThat(proScore.getTotalDamage()).isGreaterThan(competitiveScore.getTotalDamage());
+        assertThat(proScore.getTotalDamage()).isZero();
+        assertThat(proScore.getCompletedChallenges()).isEqualTo(1);
         assertThat(proScore.getPosition()).isNull();
         assertThat(competitiveScore.getPosition()).isEqualTo(1);
     }

@@ -173,15 +173,20 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
     }
 
     /**
-     * Counts completed progress rows.
+     * Counts completed progress rows belonging to a competitive (active) player.
+     *
+     * <p>An inactive player can still complete a challenge, but it must never inflate the
+     * collective completion reported here: {@code totalPlayers} only counts active players, so
+     * the numerator must stay consistent with it.
      *
      * @param progressRows progress rows to inspect
-     * @return number of completed rows
+     * @return number of completed rows from active players
      */
     private int countCompletedPlayers(List<PlayerChallengeProgress> progressRows) {
         return Math.toIntExact(
             progressRows.stream()
                 .filter(PlayerChallengeProgress::isCompleted)
+                .filter(progress -> progress.getPlayer().isCompetitive())
                 .count()
         );
     }

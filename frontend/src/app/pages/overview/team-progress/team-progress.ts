@@ -112,16 +112,22 @@ export class TeamProgress {
   });
 
   /**
-   * Every tracked player, paired with whether they have completed at least one challenge this
-   * week, shown as the hero's avatar stack.
+   * Every active tracked player, paired with whether they have completed at least one challenge
+   * this week, shown as the hero's avatar stack.
+   *
+   * An inactive player is excluded: this banner reports collective progress, which never counts
+   * an inactive player's completions. The backend omits `position` from the JSON entirely when
+   * null, so the parsed value is `undefined` rather than `null` - `!= null` catches both.
    */
   protected readonly contributors = computed<readonly Contributor[]>(() =>
-    (resourceValue(this.rankingResource, null)?.ranking ?? []).map((entry) => ({
-      playerId: entry.player.id,
-      displayName: entry.player.displayName,
-      avatarUrl: resolvePlayerAvatarUrl(entry.player.portrait),
-      contributed: entry.completedChallenges > 0,
-    })),
+    (resourceValue(this.rankingResource, null)?.ranking ?? [])
+      .filter((entry) => entry.position != null)
+      .map((entry) => ({
+        playerId: entry.player.id,
+        displayName: entry.player.displayName,
+        avatarUrl: resolvePlayerAvatarUrl(entry.player.portrait),
+        contributed: entry.completedChallenges > 0,
+      })),
   );
 
   /**

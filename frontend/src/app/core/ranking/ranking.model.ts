@@ -39,7 +39,11 @@ export interface RankingChallengeProgress {
  * Mirrors `CurrentRankingResponse.RankingEntryResponse` from the backend.
  */
 export interface RankingEntry {
-  readonly position: number;
+  /**
+   * 1-based ranking position, or `null` when the player is inactive and therefore never
+   * consumes a ranking slot.
+   */
+  readonly position: number | null;
   readonly previousPosition: number | null;
   readonly positionVariation: number;
   readonly player: PlayerRanking;

@@ -121,7 +121,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
      */
     @Test
     void shouldAggregateCompletedChallengesAndRankEveryActivePlayer() {
-        deactivateSeededPlayers();
+        removeSeededPlayers();
 
         Player alpha = createPlayer(
             "ranking-alpha",
@@ -230,7 +230,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
      */
     @Test
     void shouldPreservePreviousPositionsWhenRankingChanges() {
-        deactivateSeededPlayers();
+        removeSeededPlayers();
 
         Player alpha = createPlayer(
             "ranking-variation-alpha",
@@ -369,7 +369,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
      */
     @Test
     void shouldResolveTiesDeterministically() {
-        deactivateSeededPlayers();
+        removeSeededPlayers();
 
         Player alpha = createPlayer(
             "ranking-tie-alpha",
@@ -485,7 +485,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
      */
     @Test
     void shouldRemainIdempotentWhenProgressDoesNotChange() {
-        deactivateSeededPlayers();
+        removeSeededPlayers();
 
         Player alpha = createPlayer(
             "ranking-idempotent-alpha",
@@ -591,12 +591,13 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Verifies that an obsolete score is deleted when its player becomes
-     * inactive.
+     * Verifies that a player who becomes inactive mid-week keeps their score (for display), but
+     * their already-completed challenge stops counting toward the team bonus of players who are
+     * still active.
      */
     @Test
-    void shouldRemoveScoresBelongingToInactivePlayers() {
-        deactivateSeededPlayers();
+    void shouldExcludeInactivePlayerFromTeamBonusWhileKeepingTheirScore() {
+        removeSeededPlayers();
 
         Player activePlayer = createPlayer(
             "ranking-active-player",
@@ -652,33 +653,47 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         List<WeeklyPlayerScore> scores =
             loadScores();
 
-        // The now-inactive player's progress row still exists (the roster is assumed fixed for a given
-        // week; deactivating mid-week is an edge case outside that assumption), so it still counts
-        // toward the team bonus tier: two players validated this challenge, even though only one is
-        // still ranked afterward.
-        assertThat(scores)
-            .singleElement()
-            .satisfies(score ->
-                assertScore(
-                    score,
-                    activePlayer,
-                    1_500,
-                    1_650,
-                    1,
-                    1,
-                    1
-                )
-            );
+        assertThat(scores).hasSize(2);
+
+        // The now-inactive player's progress row still exists (the roster is assumed fixed for a
+        // given week; deactivating mid-week is an edge case outside that assumption), but it no
+        // longer counts toward the team bonus tier: only one player is still active, so the "two
+        // completions" tier no longer applies.
+        Long inactivePlayerId = futureInactivePlayer.getId();
+
+        WeeklyPlayerScore activeScore = scores.stream()
+            .filter(score -> score.getPlayer().getId().equals(activePlayer.getId()))
+            .findFirst()
+            .orElseThrow();
+        WeeklyPlayerScore inactiveScore = scores.stream()
+            .filter(score -> score.getPlayer().getId().equals(inactivePlayerId))
+            .findFirst()
+            .orElseThrow();
+
+        assertScore(
+            activeScore,
+            activePlayer,
+            1_500,
+            1_500,
+            1,
+            1,
+            1
+        );
+
+        assertThat(inactiveScore.getPoints()).isZero();
+        assertThat(inactiveScore.getTotalDamage()).isZero();
+        assertThat(inactiveScore.getCompletedChallenges()).isEqualTo(1);
+        assertThat(inactiveScore.getPosition()).isNull();
     }
 
     /**
-     * Verifies that a non-competitive player still gets a weekly score built and ordered by
-     * damage for display, but never occupies a ranking slot, and does not push a competitive
-     * player behind it down a position.
+     * Verifies that an inactive player still gets a weekly score built with their real
+     * completed-challenge count, but with zero damage and no ranking slot, and does not push an
+     * active player behind it down a position.
      */
     @Test
-    void shouldExcludeNonCompetitivePlayerFromRankingSlot() {
-        deactivateSeededPlayers();
+    void shouldExcludeInactivePlayerFromRankingSlot() {
+        removeSeededPlayers();
 
         Player pro = createNonCompetitivePlayer(
             "ranking-pro",
@@ -710,15 +725,15 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(scores).hasSize(2);
 
         // loadScores() orders by `position ASC`, and PostgreSQL's default NULLS LAST puts the pro
-        // player's null position after the regular player's real one - regardless of the pro
-        // player's higher HARD damage (6000) outranking the regular player's EASY damage (1500) -
-        // which is exactly what keeps him out of the ranking slots: the regular player still gets
-        // position 1, not 2.
+        // player's null position after the regular player's real one, regardless of the HARD
+        // challenge he completed: an inactive player never deals damage, so he never competes for
+        // a slot in the first place - the regular player still gets position 1, not 2.
         WeeklyPlayerScore regularScore = scores.get(0);
         WeeklyPlayerScore proScore = scores.get(1);
 
         assertThat(proScore.getPlayer().getId()).isEqualTo(pro.getId());
-        assertThat(proScore.getTotalDamage()).isEqualTo(6_000);
+        assertThat(proScore.getTotalDamage()).isZero();
+        assertThat(proScore.getCompletedChallenges()).isEqualTo(1);
         assertThat(proScore.getPosition()).isNull();
 
         assertScore(
@@ -733,19 +748,12 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Marks Flyway-seeded players inactive so every test controls the complete
-     * active-player population.
+     * Removes Flyway-seeded players so every test controls the complete tracked-player
+     * population. Marking them inactive is not enough: an inactive player still gets a weekly
+     * score built for display, so they would still show up in the ranking assertions below.
      */
-    private void deactivateSeededPlayers() {
-        List<Player> players = playerRepository.findAll();
-
-        players.forEach(
-            player -> player.setStatus(
-                PlayerStatus.INACTIVE
-            )
-        );
-
-        playerRepository.saveAll(players);
+    private void removeSeededPlayers() {
+        playerRepository.deleteAll();
         flushAndClear();
     }
 
@@ -775,8 +783,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Creates one active but non-competitive ranking participant, e.g. a showcased pro player who
-     * must never occupy a ranking slot.
+     * Creates one inactive ranking participant, e.g. a showcased pro player who must never occupy
+     * a ranking slot.
      *
      * @param riotPuuid   unique Riot account identifier
      * @param displayName player display name
@@ -787,7 +795,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         String displayName
     ) {
         Player player = createPlayer(riotPuuid, displayName);
-        player.setCompetitive(false);
+        player.setStatus(PlayerStatus.INACTIVE);
 
         return playerRepository.save(player);
     }

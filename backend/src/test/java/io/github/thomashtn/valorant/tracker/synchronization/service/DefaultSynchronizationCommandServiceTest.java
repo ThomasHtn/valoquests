@@ -110,7 +110,7 @@ class DefaultSynchronizationCommandServiceTest {
         Player firstPlayer = player(1L);
         Player secondPlayer = player(2L);
 
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of(firstPlayer, secondPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
@@ -157,6 +157,32 @@ class DefaultSynchronizationCommandServiceTest {
     }
 
     /**
+     * Verifies that an inactive player is still synchronized: only its ranking slot and boss
+     * damage are excluded, never its match import.
+     */
+    @Test
+    void shouldSynchronizeInactivePlayersToo() {
+        Player activePlayer = player(1L);
+        Player inactivePlayer = player(2L);
+        inactivePlayer.setStatus(PlayerStatus.INACTIVE);
+
+        when(playerRepository.findAllByOrderByIdAsc())
+            .thenReturn(List.of(activePlayer, inactivePlayer));
+
+        when(playerSynchronizationService.synchronize(1L))
+            .thenReturn(result(activePlayer, 10, PLAYER_ONE_COMPLETED_AT));
+
+        when(playerSynchronizationService.synchronize(2L))
+            .thenReturn(result(inactivePlayer, 4, PLAYER_TWO_COMPLETED_AT));
+
+        SynchronizationResponse response = service.synchronizeAllPlayers();
+
+        assertThat(response.playersProcessed()).isEqualTo(2);
+        verify(playerSynchronizationService).synchronize(1L);
+        verify(playerSynchronizationService).synchronize(2L);
+    }
+
+    /**
      * Verifies that one player failure does not prevent later players from
      * being synchronized.
      */
@@ -165,7 +191,7 @@ class DefaultSynchronizationCommandServiceTest {
         Player firstPlayer = player(1L);
         Player secondPlayer = player(2L);
 
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of(firstPlayer, secondPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
@@ -210,7 +236,7 @@ class DefaultSynchronizationCommandServiceTest {
         Player firstPlayer = player(1L);
         Player secondPlayer = player(2L);
 
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of(firstPlayer, secondPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
@@ -240,7 +266,7 @@ class DefaultSynchronizationCommandServiceTest {
      */
     @Test
     void shouldRecordScheduledSynchronizationTrigger() {
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of());
 
         SynchronizationResponse response = service.synchronizeAllPlayers(
@@ -257,7 +283,7 @@ class DefaultSynchronizationCommandServiceTest {
      */
     @Test
     void shouldCompleteWhenNoActivePlayerExists() {
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of());
 
         SynchronizationResponse response =
@@ -341,7 +367,7 @@ class DefaultSynchronizationCommandServiceTest {
         Player firstPlayer = player(1L);
         Player secondPlayer = player(2L);
 
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of(firstPlayer, secondPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
@@ -389,7 +415,7 @@ class DefaultSynchronizationCommandServiceTest {
     void shouldRecalculateChallengeProgressAfterImportingMatches() {
         Player firstPlayer = player(1L);
 
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of(firstPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
@@ -410,7 +436,7 @@ class DefaultSynchronizationCommandServiceTest {
     void shouldNotRecalculateChallengeProgressWhenNothingWasImported() {
         Player firstPlayer = player(1L);
 
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of(firstPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
@@ -431,7 +457,7 @@ class DefaultSynchronizationCommandServiceTest {
     void shouldReportSuccessWhenChallengeRecalculationFails() {
         Player firstPlayer = player(1L);
 
-        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+        when(playerRepository.findAllByOrderByIdAsc())
             .thenReturn(List.of(firstPlayer));
 
         when(playerSynchronizationService.synchronize(1L))

@@ -131,12 +131,8 @@ class DefaultChallengeRecalculationServiceTest {
             )
         ).thenReturn(List.of(weeklyChallenge));
 
-        when(
-            playerRepository.findAllByStatusAndCompetitiveOrderByIdAsc(
-                PlayerStatus.ACTIVE,
-                true
-            )
-        ).thenReturn(List.of(player));
+        when(playerRepository.findAllByOrderByIdAsc())
+            .thenReturn(List.of(player));
 
         when(contextFactory.create(player, WEEK_START))
             .thenReturn(context);
@@ -194,12 +190,8 @@ class DefaultChallengeRecalculationServiceTest {
             )
         ).thenReturn(List.of(weeklyChallenge));
 
-        when(
-            playerRepository.findAllByStatusAndCompetitiveOrderByIdAsc(
-                PlayerStatus.ACTIVE,
-                true
-            )
-        ).thenReturn(List.of());
+        when(playerRepository.findAllByOrderByIdAsc())
+            .thenReturn(List.of());
 
         service.recalculateCurrentWeekProgress();
 

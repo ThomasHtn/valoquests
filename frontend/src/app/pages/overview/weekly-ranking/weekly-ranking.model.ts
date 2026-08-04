@@ -75,7 +75,11 @@ export interface RankingCell {
  * progress cells, aligned with {@link RankingColumn}.
  */
 export interface RankingRow {
-  readonly position: number;
+  /**
+   * 1-based ranking position, or `null` for an inactive player: still shown for their individual
+   * challenge progress, but never ranked and pinned to the bottom of the table.
+   */
+  readonly position: number | null;
 
   /**
    * Places gained since last week's ranking: positive when the player climbed, negative when they

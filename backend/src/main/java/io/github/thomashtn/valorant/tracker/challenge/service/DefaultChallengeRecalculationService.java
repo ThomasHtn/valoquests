@@ -5,7 +5,6 @@ import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallenge
 import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallengeContextFactory;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
-import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
 import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
@@ -96,7 +95,7 @@ public class DefaultChallengeRecalculationService
     }
 
     /**
-     * Recalculates every active player's progress for the current UTC week.
+     * Recalculates every tracked player's progress for the current UTC week.
      *
      * <p>Only matches already stored in PostgreSQL are used. The Henrik API is
      * never called by this operation.</p>
@@ -134,7 +133,7 @@ public class DefaultChallengeRecalculationService
     }
 
     /**
-     * Rebuilds every active player's progress against one week's challenge pack.
+     * Rebuilds every tracked player's progress against one week's challenge pack.
      *
      * @param weekStart        Monday identifying the recalculated week
      * @param weeklyChallenges challenge pack assigned to that week
@@ -152,23 +151,19 @@ public class DefaultChallengeRecalculationService
             return;
         }
 
-        List<Player> activePlayers =
-            playerRepository.findAllByStatusAndCompetitiveOrderByIdAsc(
-                PlayerStatus.ACTIVE,
-                true
-            );
+        List<Player> players = playerRepository.findAllByOrderByIdAsc();
 
         LOGGER.info(
             "Starting challenge progress recalculation for week {}: "
                 + "{} player(s), {} challenge(s).",
             weekStart,
-            activePlayers.size(),
+            players.size(),
             weeklyChallenges.size()
         );
 
         int progressCount = 0;
 
-        for (Player player : activePlayers) {
+        for (Player player : players) {
             progressCount += recalculatePlayerProgress(
                 player,
                 weekStart,
@@ -185,7 +180,7 @@ public class DefaultChallengeRecalculationService
     }
 
     /**
-     * Recalculates every weekly challenge for one active player.
+     * Recalculates every weekly challenge for one tracked player.
      *
      * @param player           player being recalculated
      * @param weekStart        current week start

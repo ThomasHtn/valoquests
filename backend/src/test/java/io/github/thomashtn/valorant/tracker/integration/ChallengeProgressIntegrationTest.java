@@ -342,18 +342,12 @@ class ChallengeProgressIntegrationTest
     }
 
     /**
-     * Marks Flyway-seeded players inactive so only the test player is ranked.
+     * Removes Flyway-seeded players so only the test player is ranked. Marking them inactive is
+     * not enough: an inactive player still gets a weekly score built for display, so they would
+     * still show up in the ranking assertions below.
      */
     private void deactivateSeededPlayers() {
-        List<Player> players = playerRepository.findAll();
-
-        players.forEach(
-            player -> player.setStatus(
-                PlayerStatus.INACTIVE
-            )
-        );
-
-        playerRepository.saveAll(players);
+        playerRepository.deleteAll();
     }
 
     /**

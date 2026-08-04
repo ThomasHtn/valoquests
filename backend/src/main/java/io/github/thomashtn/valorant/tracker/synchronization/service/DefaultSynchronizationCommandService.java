@@ -3,7 +3,6 @@ package io.github.thomashtn.valorant.tracker.synchronization.service;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
-import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.entity.Synchronization;
@@ -122,12 +121,11 @@ public class DefaultSynchronizationCommandService
         SynchronizationTrigger trigger
     ) {
         Synchronization synchronization = startSynchronization(trigger);
-        List<Player> players =
-            playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE);
+        List<Player> players = playerRepository.findAllByOrderByIdAsc();
         SynchronizationBatchSummary summary = SynchronizationBatchSummary.empty();
 
         LOGGER.info(
-            "Starting synchronization for {} active players",
+            "Starting synchronization for {} tracked players",
             players.size()
         );
 

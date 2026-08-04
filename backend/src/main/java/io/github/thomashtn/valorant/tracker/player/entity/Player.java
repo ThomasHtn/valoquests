@@ -93,10 +93,13 @@ public class Player extends AuditableEntity {
      * Whether this player takes part in weekly challenge resolution, boss combat and ranking
      * positions.
      *
-     * <p>Independent from {@link #status}: a non-competitive player is still synchronized
-     * normally and still gets a weekly score for display, it just never contributes to challenge
-     * progress or boss damage, and never consumes a ranking slot.
+     * <p>Derived from {@link #status}: an inactive player is still synchronized normally and
+     * still gets a weekly score for display, it just never contributes to boss damage and never
+     * consumes a ranking slot. It can still complete challenges individually, though.
+     *
+     * @return {@code true} when this player's status is {@link PlayerStatus#ACTIVE}
      */
-    @Column(nullable = false)
-    private boolean competitive = true;
+    public boolean isCompetitive() {
+        return status == PlayerStatus.ACTIVE;
+    }
 }

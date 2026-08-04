@@ -1,17 +1,22 @@
-<span [class]="metrics().containerClass" class="relative flex shrink-0 items-center justify-center">
-  <svg aria-hidden="true" class="absolute inset-0 h-full w-full" viewBox="0 0 100 100">
-    <polygon
-      [attr.fill-opacity]="isPodium() ? 0.18 : 0.06"
-      [attr.stroke-opacity]="isPodium() ? 1 : 0.5"
-      [class]="colorClass()"
-      fill="currentColor"
-      points="50,4 94,27 94,73 50,96 6,73 6,27"
-      stroke="currentColor"
-      stroke-linejoin="round"
-      stroke-width="6"
-    />
-  </svg>
-  <span [class]="[colorClass(), metrics().textClass]" class="relative font-bold tabular-nums">
-    {{ position() }}
+@if (position() !== null) {
+  <span
+    [class]="metrics().containerClass"
+    class="relative flex shrink-0 items-center justify-center"
+  >
+    <svg aria-hidden="true" class="absolute inset-0 h-full w-full" viewBox="0 0 100 100">
+      <polygon
+        [attr.fill-opacity]="isPodium() ? 0.18 : 0.06"
+        [attr.stroke-opacity]="isPodium() ? 1 : 0.5"
+        [class]="colorClass()"
+        fill="currentColor"
+        points="50,4 94,27 94,73 50,96 6,73 6,27"
+        stroke="currentColor"
+        stroke-linejoin="round"
+        stroke-width="6"
+      />
+    </svg>
+    <span [class]="[colorClass(), metrics().textClass]" class="relative font-bold tabular-nums">
+      {{ position() }}
+    </span>
   </span>
-</span>
+}
