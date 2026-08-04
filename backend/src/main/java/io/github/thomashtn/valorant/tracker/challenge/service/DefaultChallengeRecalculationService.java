@@ -153,8 +153,9 @@ public class DefaultChallengeRecalculationService
         }
 
         List<Player> activePlayers =
-            playerRepository.findAllByStatusOrderByIdAsc(
-                PlayerStatus.ACTIVE
+            playerRepository.findAllByStatusAndCompetitiveOrderByIdAsc(
+                PlayerStatus.ACTIVE,
+                true
             );
 
         LOGGER.info(

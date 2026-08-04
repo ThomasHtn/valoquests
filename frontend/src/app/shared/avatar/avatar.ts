@@ -41,6 +41,13 @@ export class Avatar {
   public readonly priority = input(false);
 
   /**
+   * Whether this avatar belongs to the reigning weekly "Champion" (see {@link ChampionBadge}),
+   * drawing a gold ring around it so the title reads at a glance wherever the player's name
+   * appears, not just next to the badge itself.
+   */
+  public readonly champion = input(false);
+
+  /**
    * Rendering metrics matching the current {@link size}.
    */
   protected readonly metrics = computed(() => AVATAR_SIZES[this.size()]);

@@ -31,21 +31,26 @@ export class PlayersApi {
    * @param id - Reactive internal player identifier.
    * @param gameMode - Reactive game mode the statistics are scoped to.
    * @param seasonId - Reactive season filter, or `null` to include every season.
+   * @param weekStart - Reactive week filter (`YYYY-MM-DD`, a Monday), or `null` to include every
+   * match regardless of week.
    * @returns The reactive resource fetching the requested player's detailed profile.
    */
   public details(
     id: Signal<number>,
     gameMode: Signal<GameMode>,
     seasonId: Signal<number | null>,
+    weekStart: Signal<string | null>,
   ): HttpResourceRef<PlayerDetails | undefined> {
     return httpResource<PlayerDetails>(() => {
       const selectedSeasonId = seasonId();
+      const selectedWeekStart = weekStart();
 
       return {
         url: API_ENDPOINTS.playerDetails(id()),
         params: {
           gameMode: gameMode(),
           ...(selectedSeasonId !== null ? { seasonId: selectedSeasonId } : {}),
+          ...(selectedWeekStart !== null ? { weekStart: selectedWeekStart } : {}),
         },
       };
     });

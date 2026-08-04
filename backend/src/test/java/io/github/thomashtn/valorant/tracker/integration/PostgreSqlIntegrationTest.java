@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
@@ -19,13 +18,25 @@ public abstract class PostgreSqlIntegrationTest {
 
     /**
      * PostgreSQL container shared by every integration test class.
+     *
+     * <p>Deliberately <em>not</em> annotated {@code @Container}: that annotation ties the
+     * container's lifecycle to the JUnit 5 {@code Testcontainers} extension, which stops it once
+     * the class currently using it finishes - including this static field shared across every
+     * subclass. Whichever integration test class happens to run last would then find the container
+     * already stopped and fail with a connection refused error. This is the "singleton container"
+     * pattern Testcontainers itself documents for this exact case: started once, in a static
+     * initializer, and left to the JVM shutdown hook (Ryuk) to reap (see "singleton containers" in
+     * the Testcontainers manual lifecycle control documentation).
      */
-    @Container
     protected static final PostgreSQLContainer<?> POSTGRESQL =
         new PostgreSQLContainer<>("postgres:17-alpine")
             .withDatabaseName("valorant_tracker")
             .withUsername("valorant")
             .withPassword("valorant");
+
+    static {
+        POSTGRESQL.start();
+    }
 
     /**
      * Overrides the standard test database configuration with the values

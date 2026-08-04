@@ -14,8 +14,10 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
+import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Avatar } from '@shared/avatar/avatar';
+import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { PointsBadge } from '@shared/points-badge/points-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
@@ -46,6 +48,7 @@ import {
     ChallengeIconView,
     Tooltip,
     Avatar,
+    ChampionBadge,
     PointsBadge,
     PositionBadge,
     ProgressBar,
@@ -113,10 +116,19 @@ export class WeeklyRanking {
   );
 
   /**
+   * Id of the reigning weekly "Champion", or `null` while unknown or before any week has been
+   * finalized.
+   */
+  private readonly championPlayerId = computed(() =>
+    resolveChampionPlayerId(resourceValue(this.rankingApi.latestFinalizedWeek, null)),
+  );
+
+  /**
    * Ranking entries mapped to display-ready rows: one cell per column, aligned by challenge id.
    */
   protected readonly rows = computed<readonly RankingRow[]>(() => {
     const columns = this.columns();
+    const championPlayerId = this.championPlayerId();
     return (resourceValue(this.rankingResource, null)?.ranking ?? []).map((entry) => {
       const cells: RankingCell[] = columns.map((column) => {
         const progress = entry.challengeProgress.find(
@@ -141,6 +153,7 @@ export class WeeklyRanking {
         avatarUrl: resolvePlayerAvatarUrl(entry.player.portrait),
         points: entry.points,
         cells,
+        isChampion: entry.player.id === championPlayerId,
       };
     });
   });

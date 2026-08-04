@@ -192,12 +192,13 @@ public class DefaultRankingQueryService implements RankingQueryService {
                 .map(this::toChallengeProgress)
                 .toList();
         Integer previousPosition = score.getPreviousPosition();
-        int variation = previousPosition == null
+        Integer currentPosition = score.getPosition();
+        int variation = previousPosition == null || currentPosition == null
             ? 0
-            : previousPosition - score.getPosition();
+            : previousPosition - currentPosition;
 
         return new CurrentRankingResponse.RankingEntryResponse(
-            score.getPosition(),
+            currentPosition,
             previousPosition,
             variation,
             new CurrentRankingResponse.PlayerRankingResponse(
@@ -210,6 +211,11 @@ public class DefaultRankingQueryService implements RankingQueryService {
             score.getPoints(),
             score.getCompletedChallenges(),
             totalChallenges,
+            score.getMatchDamage(),
+            score.getRegularityBonus(),
+            score.getTeamBonus(),
+            score.getActiveDays(),
+            score.getTotalDamage(),
             progress
         );
     }
@@ -250,7 +256,10 @@ public class DefaultRankingQueryService implements RankingQueryService {
         List<WeeklyPlayerScore> scores
     ) {
         List<WeeklyPlayerScore> orderedScores = scores.stream()
-            .sorted(Comparator.comparingInt(WeeklyPlayerScore::getPosition))
+            .sorted(Comparator.comparing(
+                WeeklyPlayerScore::getPosition,
+                Comparator.nullsLast(Comparator.naturalOrder())
+            ))
             .toList();
         Instant finalizedAt = orderedScores.stream()
             .map(WeeklyPlayerScore::getFinalizedAt)
@@ -258,7 +267,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
             .max(Instant::compareTo)
             .orElse(null);
         Long winnerPlayerId = orderedScores.stream()
-            .filter(score -> score.getPosition() == 1)
+            .filter(score -> Integer.valueOf(1).equals(score.getPosition()))
             .map(score -> score.getPlayer().getId())
             .findFirst()
             .orElse(null);
@@ -271,7 +280,12 @@ public class DefaultRankingQueryService implements RankingQueryService {
                         score.getPlayer().getId(),
                         score.getPlayer().getDisplayName(),
                         score.getPoints(),
-                        score.getCompletedChallenges()
+                        score.getCompletedChallenges(),
+                        score.getMatchDamage(),
+                        score.getRegularityBonus(),
+                        score.getTeamBonus(),
+                        score.getActiveDays(),
+                        score.getTotalDamage()
                     )
                 )
                 .toList();

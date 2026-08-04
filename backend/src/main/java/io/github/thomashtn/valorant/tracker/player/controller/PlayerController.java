@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,9 +57,10 @@ public class PlayerController {
     }
 
     /**
-     * @param playerId internal database identifier of the requested player
-     * @param seasonId optional season identifier restricting the statistics
-     * @param gameMode optional game mode restricting the statistics
+     * @param playerId  internal database identifier of the requested player
+     * @param seasonId  optional season identifier restricting the statistics
+     * @param gameMode  optional game mode restricting the statistics
+     * @param weekStart optional Monday restricting the statistics to that calendar week
      * @return complete player profile and aggregated statistics
      */
     @GetMapping("/{playerId}")
@@ -67,7 +69,7 @@ public class PlayerController {
         description = """
             Returns a complete player profile containing Riot identity, current competitive rank,
             global performance indicators and aggregated statistics by agent and map, optionally
-            scoped to one season and/or one game mode.
+            scoped to one season, one game mode and/or one calendar week.
             """
     )
     @ApiResponse(responseCode = "200", description = "Player profile returned successfully.")
@@ -78,8 +80,11 @@ public class PlayerController {
         @Parameter(description = "Restricts statistics to one season. Omit for every season.")
         @RequestParam(required = false) Long seasonId,
         @Parameter(description = "Restricts statistics to one game mode. Omit for every mode.")
-        @RequestParam(required = false) String gameMode
+        @RequestParam(required = false) String gameMode,
+        @Parameter(description = "Restricts statistics to the calendar week starting on this Monday. "
+            + "Omit for every week.")
+        @RequestParam(required = false) LocalDate weekStart
     ) {
-        return service.findById(playerId, seasonId, gameMode);
+        return service.findById(playerId, seasonId, gameMode, weekStart);
     }
 }

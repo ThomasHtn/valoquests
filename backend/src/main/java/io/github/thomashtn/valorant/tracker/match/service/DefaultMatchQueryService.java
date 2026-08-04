@@ -5,13 +5,16 @@ import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 import io.github.thomashtn.valorant.tracker.match.model.MatchHistoryFilter;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
+import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchHistoryCriteria;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
 import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Locale;
 import org.springframework.data.domain.Page;
@@ -43,17 +46,25 @@ public class DefaultMatchQueryService implements MatchQueryService {
     private final PlayerMatchRepository playerMatchRepository;
 
     /**
+     * Calendar resolving a week's instant bounds.
+     */
+    private final WeekCalendar weekCalendar;
+
+    /**
      * Creates the persisted match query service.
      *
      * @param playerRepository      repository used to validate tracked players
      * @param playerMatchRepository repository used to query persisted player matches
+     * @param weekCalendar          calendar resolving a week's instant bounds
      */
     public DefaultMatchQueryService(
         PlayerRepository playerRepository,
-        PlayerMatchRepository playerMatchRepository
+        PlayerMatchRepository playerMatchRepository,
+        WeekCalendar weekCalendar
     ) {
         this.playerRepository = playerRepository;
         this.playerMatchRepository = playerMatchRepository;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -78,13 +89,22 @@ public class DefaultMatchQueryService implements MatchQueryService {
         }
         MatchResult parsedResult = parseResult(filter.result());
         GameMode parsedGameMode = parseGameMode(filter.gameMode());
-        Page<PlayerMatch> matches = playerMatchRepository.findHistory(
-            playerId,
+        Instant periodStart = filter.weekStart() == null
+            ? PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START : weekCalendar.startOf(filter.weekStart());
+        Instant periodEnd = filter.weekStart() == null
+            ? PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END : weekCalendar.endOf(filter.weekStart());
+        PlayerMatchHistoryCriteria criteria = new PlayerMatchHistoryCriteria(
             filter.seasonId(),
             normalize(filter.map()),
             normalize(filter.agent()),
             parsedResult,
             parsedGameMode,
+            periodStart,
+            periodEnd
+        );
+        Page<PlayerMatch> matches = playerMatchRepository.findHistory(
+            playerId,
+            criteria,
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "match.startedAt", "id"))
         );
         return new PageResponse<>(

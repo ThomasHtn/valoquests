@@ -75,15 +75,23 @@
                 </td>
                 <th class="px-2 py-3 text-left font-normal" scope="row">
                   <div class="flex items-center gap-3">
-                    <app-avatar [src]="row.avatarUrl" size="sm" />
+                    <app-avatar [champion]="row.position === 1" [src]="row.avatarUrl" size="sm" />
                     <span class="font-semibold text-text-primary">{{ row.displayName }}</span>
+                    @if (row.position === 1) {
+                      <app-champion-badge />
+                    }
                   </div>
                 </th>
                 <td class="px-4 py-3 text-right">
                   <app-points-badge [points]="row.points" />
                 </td>
-                <td class="px-4 py-3 text-right tabular-nums text-text-primary">
-                  {{ row.completedChallenges }}
+                <td class="px-4 py-3 text-right">
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full bg-accent-green/15 px-2.5 py-1 text-xs font-bold tabular-nums text-accent-green"
+                  >
+                    {{ row.completedChallenges }}
+                    <svg aria-hidden="true" class="h-3 w-3" lucideCheck></svg>
+                  </span>
                 </td>
               </tr>
             }
@@ -97,12 +105,24 @@
               class="flex items-center gap-3 border-b border-surface-700 px-4 py-3 last:border-b-0"
             >
               <app-position-badge [position]="row.position" />
-              <app-avatar [src]="row.avatarUrl" size="sm" />
+              <app-avatar [champion]="row.position === 1" [src]="row.avatarUrl" size="sm" />
               <div class="min-w-0 flex-1">
-                <p class="truncate font-semibold text-text-primary">{{ row.displayName }}</p>
-                <p class="text-xs text-text-secondary">
-                  {{ row.completedChallenges }}
-                  {{ 'ranking.columns.completedChallenges' | translate }}
+                <p class="flex items-center gap-2 truncate font-semibold text-text-primary">
+                  {{ row.displayName }}
+                  @if (row.position === 1) {
+                    <app-champion-badge />
+                  }
+                </p>
+                <p class="mt-1 flex items-center gap-1">
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full bg-accent-green/15 px-2 py-0.5 text-xs font-bold tabular-nums text-accent-green"
+                  >
+                    {{ row.completedChallenges }}
+                    <svg aria-hidden="true" class="h-3 w-3" lucideCheck></svg>
+                  </span>
+                  <span class="text-xs text-text-secondary">
+                    {{ 'ranking.columns.completedChallenges' | translate }}
+                  </span>
                 </p>
               </div>
               <app-points-badge class="shrink-0" [points]="row.points" />

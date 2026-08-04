@@ -1,5 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 
+import { TranslatePipe } from '@core/i18n/translate-pipe';
+
 /**
  * Point reward rendered as a badge.
  *
@@ -9,7 +11,8 @@ import { Component, computed, input } from '@angular/core';
  */
 @Component({
   selector: 'app-points-badge',
-  template: '{{ points() }} XP',
+  imports: [TranslatePipe],
+  template: '{{ points() }} {{ "shared.pointsBadge.unit" | translate }}',
   host: {
     class: 'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold tabular-nums',
     '[class]': 'toneClass()',

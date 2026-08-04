@@ -3,6 +3,7 @@ package io.github.thomashtn.valorant.tracker.player.service;
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
+import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchHistoryCriteria;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valorant.tracker.player.dto.AgentStatisticsResponse;
 import io.github.thomashtn.valorant.tracker.player.dto.MapStatisticsResponse;
@@ -12,8 +13,11 @@ import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -39,17 +43,25 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
     private final PlayerMatchRepository playerMatchRepository;
 
     /**
+     * Calendar resolving a week's instant bounds.
+     */
+    private final WeekCalendar weekCalendar;
+
+    /**
      * Creates the persisted player query service.
      *
      * @param playerRepository repository used to load tracked players
      * @param playerMatchRepository repository used to query persisted player matches
+     * @param weekCalendar calendar resolving a week's instant bounds
      */
     public DefaultPlayerQueryService(
         PlayerRepository playerRepository,
-        PlayerMatchRepository playerMatchRepository
+        PlayerMatchRepository playerMatchRepository,
+        WeekCalendar weekCalendar
     ) {
         this.playerRepository = playerRepository;
         this.playerMatchRepository = playerMatchRepository;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -70,17 +82,27 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
     /**
      * Returns the detailed profile and aggregate statistics of one player.
      *
-     * @param playerId internal player identifier
-     * @param seasonId optional season identifier restricting the statistics; {@code null} for every season
-     * @param gameMode optional game mode restricting the statistics; {@code null} for every mode
+     * @param playerId  internal player identifier
+     * @param seasonId  optional season identifier restricting the statistics; {@code null} for every season
+     * @param gameMode  optional game mode restricting the statistics; {@code null} for every mode
+     * @param weekStart optional Monday restricting the statistics to that calendar week; {@code null}
+     *     for every week
      * @return player details
      */
     @Override
-    public PlayerDetailsResponse findById(long playerId, Long seasonId, String gameMode) {
+    public PlayerDetailsResponse findById(long playerId, Long seasonId, String gameMode, LocalDate weekStart) {
         Player player = playerRepository.findById(playerId)
             .orElseThrow(() -> new PlayerNotFoundException(playerId));
-        List<PlayerMatch> matches = playerMatchRepository
-            .findAllByPlayerIdAndSeasonAndGameMode(playerId, seasonId, parseGameMode(gameMode));
+        Instant periodStart = weekStart == null
+            ? PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START : weekCalendar.startOf(weekStart);
+        Instant periodEnd = weekStart == null
+            ? PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END : weekCalendar.endOf(weekStart);
+        List<PlayerMatch> matches = playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+            playerId,
+            new PlayerMatchHistoryCriteria(
+                seasonId, null, null, null, parseGameMode(gameMode), periodStart, periodEnd
+            )
+        );
         Statistics statistics = Statistics.from(matches);
 
         return new PlayerDetailsResponse(

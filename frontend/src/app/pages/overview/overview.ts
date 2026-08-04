@@ -17,6 +17,7 @@ import { formatDateRange, isoWeekNumber, remainingWeekTime } from '@core/date/we
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { COUNTDOWN_REFRESH_INTERVAL_MS } from './overview.constants';
 import { WeekSummary } from './overview.model';
+import { BossEncounter } from './boss-encounter/boss-encounter';
 import { Podium } from './podium/podium';
 import { TeamProgress } from './team-progress/team-progress';
 import { WeeklyChallenges } from './weekly-challenges/weekly-challenges';
@@ -43,12 +44,13 @@ interface OverviewSection {
  *
  * Landing page shown at the application root route, presented as three full-height, scroll-snapped
  * sections: a hero pairing the ranking podium with the team's collective progress toward the
- * week's challenges, then the weekly challenges card, then the weekly ranking card. A dot rail
- * lets desktop users jump directly to a section instead of scrolling through it.
+ * week's challenges and the weekly boss card, then the weekly challenges card, then the weekly
+ * ranking card. A dot rail lets desktop users jump directly to a section instead of scrolling
+ * through it.
  */
 @Component({
   selector: 'app-overview',
-  imports: [TranslatePipe, Podium, TeamProgress, WeeklyChallenges, WeeklyRanking],
+  imports: [TranslatePipe, BossEncounter, Podium, TeamProgress, WeeklyChallenges, WeeklyRanking],
   templateUrl: './overview.html',
   // Diverges from `PAGE_LAYOUT_CLASS`: every other page stacks its blocks in normal document flow,
   // but this page owns a single full-height scroll-snap container instead, so the shared

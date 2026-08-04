@@ -1,8 +1,6 @@
 package io.github.thomashtn.valorant.tracker.match.repository;
 
 import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
-import io.github.thomashtn.valorant.tracker.match.model.GameMode;
-import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -60,15 +58,13 @@ public interface PlayerMatchRepository
     /**
      * Returns a filtered page of matches for one tracked player.
      *
-     * <p>Every filter is optional and ignored when {@code null}, so one query serves the unfiltered
-     * history and every combination the match page offers.
+     * <p>Every {@link PlayerMatchHistoryCriteria} field is optional and ignored when {@code null},
+     * so one query serves the unfiltered history and every combination the match page offers.
+     * Criteria are bundled into one parameter, rather than passed individually, to keep this method
+     * under the project's parameter-count limit.
      *
      * @param playerId internal player identifier
-     * @param seasonId internal season identifier, or {@code null} for every season
-     * @param map      map name, matched case-insensitively, or {@code null} for every map
-     * @param agent    agent name, matched case-insensitively, or {@code null} for every agent
-     * @param result   match outcome, or {@code null} for every outcome
-     * @param gameMode game mode, or {@code null} for every mode
+     * @param criteria optional season, map, agent, result, game mode and week-range filters
      * @param pageable pagination and sort parameters
      * @return the requested page of matches
      */
@@ -79,20 +75,20 @@ public interface PlayerMatchRepository
             FROM PlayerMatch playerMatch
             JOIN playerMatch.match valorantMatch
             WHERE playerMatch.player.id = :playerId
-              AND (:seasonId IS NULL OR valorantMatch.season.id = :seasonId)
-              AND (:map IS NULL OR LOWER(valorantMatch.mapName) = LOWER(CAST(:map AS string)))
-              AND (:agent IS NULL OR LOWER(playerMatch.agentName) = LOWER(CAST(:agent AS string)))
-              AND (:result IS NULL OR playerMatch.result = :result)
-              AND (:gameMode IS NULL OR valorantMatch.gameMode = :gameMode)
+              AND (:#{#criteria.seasonId} IS NULL OR valorantMatch.season.id = :#{#criteria.seasonId})
+              AND (:#{#criteria.map} IS NULL
+                OR LOWER(valorantMatch.mapName) = LOWER(CAST(:#{#criteria.map} AS string)))
+              AND (:#{#criteria.agent} IS NULL
+                OR LOWER(playerMatch.agentName) = LOWER(CAST(:#{#criteria.agent} AS string)))
+              AND (:#{#criteria.result} IS NULL OR playerMatch.result = :#{#criteria.result})
+              AND (:#{#criteria.gameMode} IS NULL OR valorantMatch.gameMode = :#{#criteria.gameMode})
+              AND valorantMatch.startedAt >= :#{#criteria.periodStart}
+              AND valorantMatch.startedAt < :#{#criteria.periodEnd}
             """
     )
     Page<PlayerMatch> findHistory(
         @Param("playerId") Long playerId,
-        @Param("seasonId") Long seasonId,
-        @Param("map") String map,
-        @Param("agent") String agent,
-        @Param("result") MatchResult result,
-        @Param("gameMode") GameMode gameMode,
+        @Param("criteria") PlayerMatchHistoryCriteria criteria,
         Pageable pageable
     );
 
@@ -106,12 +102,17 @@ public interface PlayerMatchRepository
     List<PlayerMatch> findAllByPlayerIdOrderByMatchStartedAtDesc(Long playerId);
 
     /**
-     * Returns the matches used to calculate one player's profile statistics, filtered by season and
-     * game mode.
+     * Returns the matches used to calculate one player's profile statistics, filtered by season,
+     * game mode and a week range.
+     *
+     * <p>Filters are bundled into {@link PlayerMatchHistoryCriteria} - {@code map}, {@code agent}
+     * and {@code result} are simply left {@code null} by callers, since statistics have no use for
+     * them - rather than bound individually, mirroring {@link #findHistory}. See that criteria
+     * type's Javadoc for why {@code periodStart}/{@code periodEnd} must never be {@code null}.
      *
      * @param playerId internal player identifier
-     * @param seasonId internal season identifier, or {@code null} for every season
-     * @param gameMode game mode, or {@code null} for every mode
+     * @param criteria season, game mode and week-range filters; {@code map}, {@code agent} and
+     *     {@code result} are ignored
      * @return matching matches, most recent first
      */
     @EntityGraph(attributePaths = {"match", "match.season"})
@@ -121,15 +122,16 @@ public interface PlayerMatchRepository
             FROM PlayerMatch playerMatch
             JOIN playerMatch.match valorantMatch
             WHERE playerMatch.player.id = :playerId
-              AND (:seasonId IS NULL OR valorantMatch.season.id = :seasonId)
-              AND (:gameMode IS NULL OR valorantMatch.gameMode = :gameMode)
+              AND (:#{#criteria.seasonId} IS NULL OR valorantMatch.season.id = :#{#criteria.seasonId})
+              AND (:#{#criteria.gameMode} IS NULL OR valorantMatch.gameMode = :#{#criteria.gameMode})
+              AND valorantMatch.startedAt >= :#{#criteria.periodStart}
+              AND valorantMatch.startedAt < :#{#criteria.periodEnd}
             ORDER BY valorantMatch.startedAt DESC
             """
     )
     List<PlayerMatch> findAllByPlayerIdAndSeasonAndGameMode(
         @Param("playerId") Long playerId,
-        @Param("seasonId") Long seasonId,
-        @Param("gameMode") GameMode gameMode
+        @Param("criteria") PlayerMatchHistoryCriteria criteria
     );
 }
 

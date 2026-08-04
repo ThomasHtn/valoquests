@@ -88,4 +88,15 @@ public class Player extends AuditableEntity {
      */
     @Column(name = "last_successful_synchronization_at")
     private Instant lastSuccessfulSynchronizationAt;
+
+    /**
+     * Whether this player takes part in weekly challenge resolution, boss combat and ranking
+     * positions.
+     *
+     * <p>Independent from {@link #status}: a non-competitive player is still synchronized
+     * normally and still gets a weekly score for display, it just never contributes to challenge
+     * progress or boss damage, and never consumes a ranking slot.
+     */
+    @Column(nullable = false)
+    private boolean competitive = true;
 }

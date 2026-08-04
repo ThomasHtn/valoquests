@@ -42,6 +42,12 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>The tests persist actual players, weekly challenges and challenge
  * progress before executing the production ranking service. They validate
  * aggregation, ordering, position history, idempotence and cleanup.</p>
+ *
+ * <p>Challenge damage is resolved from {@code ScoringRulesetV1} by difficulty tier (EASY=1500,
+ * NORMAL=2500, MEDIUM=4000, HARD=6000), not from the legacy {@code Challenge.points} column, which this
+ * feature supersedes for scoring. No match is ever persisted by these fixtures, so match damage and the
+ * regularity bonus are always zero here; only challenge damage and, where two players complete the same
+ * weekly challenge, the team bonus contribute to the total.</p>
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -130,49 +136,49 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
             "Charlie"
         );
 
-        WeeklyChallenge challenge100 =
+        WeeklyChallenge challengeEasy =
             createWeeklyChallenge(
-                "RANKING_NOMINAL_100",
-                100
+                "RANKING_NOMINAL_EASY",
+                ChallengeDifficulty.EASY
             );
 
-        WeeklyChallenge challenge200 =
+        WeeklyChallenge challengeNormal =
             createWeeklyChallenge(
-                "RANKING_NOMINAL_200",
-                200
+                "RANKING_NOMINAL_NORMAL",
+                ChallengeDifficulty.NORMAL
             );
 
-        WeeklyChallenge challenge400 =
+        WeeklyChallenge challengeHard =
             createWeeklyChallenge(
-                "RANKING_NOMINAL_400",
-                400
+                "RANKING_NOMINAL_HARD",
+                ChallengeDifficulty.HARD
             );
 
         createProgress(
             alpha,
-            challenge100,
+            challengeEasy,
             true
         );
         createProgress(
             alpha,
-            challenge200,
+            challengeNormal,
             true
         );
         createProgress(
             alpha,
-            challenge400,
+            challengeHard,
             false
         );
 
         createProgress(
             bravo,
-            challenge400,
+            challengeHard,
             true
         );
 
         createProgress(
             charlie,
-            challenge200,
+            challengeNormal,
             false
         );
 
@@ -185,10 +191,13 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
 
         assertThat(scores).hasSize(3);
 
+        // bravo: HARD (6000) alone. alpha: EASY (1500) + NORMAL (2500) = 4000. Neither challenge is
+        // completed by more than one player here, so the team bonus stays at zero throughout.
         assertScore(
             scores.get(0),
             bravo,
-            400,
+            6_000,
+            6_000,
             1,
             1,
             null
@@ -197,7 +206,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             scores.get(1),
             alpha,
-            300,
+            4_000,
+            4_000,
             2,
             2,
             null
@@ -206,6 +216,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             scores.get(2),
             charlie,
+            0,
             0,
             0,
             3,
@@ -234,47 +245,47 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
             "Charlie"
         );
 
-        WeeklyChallenge challenge100 =
+        WeeklyChallenge challengeEasy =
             createWeeklyChallenge(
-                "RANKING_VARIATION_100",
-                100
+                "RANKING_VARIATION_EASY",
+                ChallengeDifficulty.EASY
             );
 
-        WeeklyChallenge challenge200 =
+        WeeklyChallenge challengeNormal =
             createWeeklyChallenge(
-                "RANKING_VARIATION_200",
-                200
+                "RANKING_VARIATION_NORMAL",
+                ChallengeDifficulty.NORMAL
             );
 
-        WeeklyChallenge challenge300 =
+        WeeklyChallenge challengeMedium =
             createWeeklyChallenge(
-                "RANKING_VARIATION_300",
-                300
+                "RANKING_VARIATION_MEDIUM",
+                ChallengeDifficulty.MEDIUM
             );
 
         PlayerChallengeProgress alphaProgress =
             createProgress(
                 alpha,
-                challenge300,
+                challengeMedium,
                 true
             );
 
         createProgress(
             bravo,
-            challenge200,
+            challengeNormal,
             true
         );
 
         PlayerChallengeProgress bravoBonusProgress =
             createProgress(
                 bravo,
-                challenge300,
+                challengeMedium,
                 false
             );
 
         createProgress(
             charlie,
-            challenge100,
+            challengeEasy,
             true
         );
 
@@ -318,10 +329,14 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
 
         assertThat(scores).hasSize(3);
 
+        // First pass ordered alpha (MEDIUM=4000) > bravo (NORMAL=2500) > charlie (EASY=1500), which
+        // seeds the previous positions asserted below. The second pass flips completion: bravo now
+        // also completes the MEDIUM challenge (NORMAL+MEDIUM=6500) while alpha completes nothing.
         assertScore(
             scores.get(0),
             bravo,
-            500,
+            6_500,
+            6_500,
             2,
             1,
             2
@@ -330,7 +345,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             scores.get(1),
             charlie,
-            100,
+            1_500,
+            1_500,
             1,
             2,
             3
@@ -341,6 +357,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
             alpha,
             0,
             0,
+            0,
             3,
             1
         );
@@ -348,7 +365,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
 
     /**
      * Verifies ranking tie breakers in their documented order:
-     * completed challenges, then player identifier.
+     * total damage, then completed challenges, then player identifier.
      */
     @Test
     void shouldResolveTiesDeterministically() {
@@ -367,45 +384,55 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
             "Charlie"
         );
 
-        WeeklyChallenge challenge100A =
+        // bravo reaches 4000 (EASY 1500 + NORMAL 2500) across two challenges; alpha and charlie each
+        // reach the same 4000 total through a single, separate MEDIUM challenge. All three tie on total
+        // damage, so the tie is resolved by completed-challenge count (bravo wins with 2), then by
+        // player identifier for the remaining alpha/charlie tie.
+        WeeklyChallenge bravoEasy =
             createWeeklyChallenge(
-                "RANKING_TIE_100_A",
-                100
+                "RANKING_TIE_BRAVO_EASY",
+                ChallengeDifficulty.EASY
             );
 
-        WeeklyChallenge challenge100B =
+        WeeklyChallenge bravoNormal =
             createWeeklyChallenge(
-                "RANKING_TIE_100_B",
-                100
+                "RANKING_TIE_BRAVO_NORMAL",
+                ChallengeDifficulty.NORMAL
             );
 
-        WeeklyChallenge challenge200 =
+        WeeklyChallenge alphaMedium =
             createWeeklyChallenge(
-                "RANKING_TIE_200",
-                200
+                "RANKING_TIE_ALPHA_MEDIUM",
+                ChallengeDifficulty.MEDIUM
+            );
+
+        WeeklyChallenge charlieMedium =
+            createWeeklyChallenge(
+                "RANKING_TIE_CHARLIE_MEDIUM",
+                ChallengeDifficulty.MEDIUM
             );
 
         createProgress(
             alpha,
-            challenge200,
+            alphaMedium,
             true
         );
 
         createProgress(
             bravo,
-            challenge100A,
+            bravoEasy,
             true
         );
 
         createProgress(
             bravo,
-            challenge100B,
+            bravoNormal,
             true
         );
 
         createProgress(
             charlie,
-            challenge200,
+            charlieMedium,
             true
         );
 
@@ -421,7 +448,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             scores.get(0),
             bravo,
-            200,
+            4_000,
+            4_000,
             2,
             1,
             null
@@ -430,7 +458,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             scores.get(1),
             alpha,
-            200,
+            4_000,
+            4_000,
             1,
             2,
             null
@@ -439,7 +468,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             scores.get(2),
             charlie,
-            200,
+            4_000,
+            4_000,
             1,
             3,
             null
@@ -466,27 +496,27 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
             "Bravo"
         );
 
-        WeeklyChallenge challenge100 =
+        WeeklyChallenge challengeEasy =
             createWeeklyChallenge(
-                "RANKING_IDEMPOTENT_100",
-                100
+                "RANKING_IDEMPOTENT_EASY",
+                ChallengeDifficulty.EASY
             );
 
-        WeeklyChallenge challenge200 =
+        WeeklyChallenge challengeNormal =
             createWeeklyChallenge(
-                "RANKING_IDEMPOTENT_200",
-                200
+                "RANKING_IDEMPOTENT_NORMAL",
+                ChallengeDifficulty.NORMAL
             );
 
         createProgress(
             alpha,
-            challenge200,
+            challengeNormal,
             true
         );
 
         createProgress(
             bravo,
-            challenge100,
+            challengeEasy,
             true
         );
 
@@ -542,7 +572,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             secondScores.get(0),
             alpha,
-            200,
+            2_500,
+            2_500,
             1,
             1,
             1
@@ -551,7 +582,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             secondScores.get(1),
             bravo,
-            100,
+            1_500,
+            1_500,
             1,
             2,
             2
@@ -575,21 +607,21 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
             "FutureInactive"
         );
 
-        WeeklyChallenge challenge100 =
+        WeeklyChallenge challengeEasy =
             createWeeklyChallenge(
-                "RANKING_INACTIVE_100",
-                100
+                "RANKING_INACTIVE_EASY",
+                ChallengeDifficulty.EASY
             );
 
         createProgress(
             activePlayer,
-            challenge100,
+            challengeEasy,
             true
         );
 
         createProgress(
             futureInactivePlayer,
-            challenge100,
+            challengeEasy,
             true
         );
 
@@ -620,18 +652,84 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         List<WeeklyPlayerScore> scores =
             loadScores();
 
+        // The now-inactive player's progress row still exists (the roster is assumed fixed for a given
+        // week; deactivating mid-week is an edge case outside that assumption), so it still counts
+        // toward the team bonus tier: two players validated this challenge, even though only one is
+        // still ranked afterward.
         assertThat(scores)
             .singleElement()
             .satisfies(score ->
                 assertScore(
                     score,
                     activePlayer,
-                    100,
+                    1_500,
+                    1_650,
                     1,
                     1,
                     1
                 )
             );
+    }
+
+    /**
+     * Verifies that a non-competitive player still gets a weekly score built and ordered by
+     * damage for display, but never occupies a ranking slot, and does not push a competitive
+     * player behind it down a position.
+     */
+    @Test
+    void shouldExcludeNonCompetitivePlayerFromRankingSlot() {
+        deactivateSeededPlayers();
+
+        Player pro = createNonCompetitivePlayer(
+            "ranking-pro",
+            "Pro"
+        );
+        Player regular = createPlayer(
+            "ranking-regular",
+            "Regular"
+        );
+
+        WeeklyChallenge challengeHard =
+            createWeeklyChallenge(
+                "RANKING_NON_COMPETITIVE_HARD",
+                ChallengeDifficulty.HARD
+            );
+        WeeklyChallenge challengeEasy =
+            createWeeklyChallenge(
+                "RANKING_NON_COMPETITIVE_EASY",
+                ChallengeDifficulty.EASY
+            );
+
+        createProgress(pro, challengeHard, true);
+        createProgress(regular, challengeEasy, true);
+
+        rankingRecalculationService.recalculateWeek(WEEK_START);
+
+        List<WeeklyPlayerScore> scores = loadScores();
+
+        assertThat(scores).hasSize(2);
+
+        // loadScores() orders by `position ASC`, and PostgreSQL's default NULLS LAST puts the pro
+        // player's null position after the regular player's real one - regardless of the pro
+        // player's higher HARD damage (6000) outranking the regular player's EASY damage (1500) -
+        // which is exactly what keeps him out of the ranking slots: the regular player still gets
+        // position 1, not 2.
+        WeeklyPlayerScore regularScore = scores.get(0);
+        WeeklyPlayerScore proScore = scores.get(1);
+
+        assertThat(proScore.getPlayer().getId()).isEqualTo(pro.getId());
+        assertThat(proScore.getTotalDamage()).isEqualTo(6_000);
+        assertThat(proScore.getPosition()).isNull();
+
+        assertScore(
+            regularScore,
+            regular,
+            1_500,
+            1_500,
+            1,
+            1,
+            null
+        );
     }
 
     /**
@@ -677,20 +775,38 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
+     * Creates one active but non-competitive ranking participant, e.g. a showcased pro player who
+     * must never occupy a ranking slot.
+     *
+     * @param riotPuuid   unique Riot account identifier
+     * @param displayName player display name
+     * @return persisted player
+     */
+    private Player createNonCompetitivePlayer(
+        String riotPuuid,
+        String displayName
+    ) {
+        Player player = createPlayer(riotPuuid, displayName);
+        player.setCompetitive(false);
+
+        return playerRepository.save(player);
+    }
+
+    /**
      * Creates a reusable challenge and selects it for the test week.
      *
-     * @param code   stable unique challenge code
-     * @param points points awarded when completed
+     * @param code       stable unique challenge code
+     * @param difficulty difficulty tier, which resolves the damage awarded on completion
      * @return persisted weekly challenge
      */
     private WeeklyChallenge createWeeklyChallenge(
         String code,
-        int points
+        ChallengeDifficulty difficulty
     ) {
         Challenge challenge =
             createChallenge(
                 code,
-                points
+                difficulty
             );
 
         challenge = challengeRepository.save(
@@ -714,13 +830,13 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Creates one complete challenge catalogue entry.
      *
-     * @param code   stable unique code
-     * @param points completion reward
+     * @param code       stable unique code
+     * @param difficulty difficulty tier, which resolves the damage awarded on completion
      * @return unsaved challenge
      */
     private Challenge createChallenge(
         String code,
-        int points
+        ChallengeDifficulty difficulty
     ) {
         Challenge challenge = new Challenge();
 
@@ -729,10 +845,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         challenge.setDescription(
             "Ranking integration challenge " + code
         );
-        challenge.setDifficulty(
-            ChallengeDifficulty.EASY
-        );
-        challenge.setPoints(points);
+        challenge.setDifficulty(difficulty);
         challenge.setCategory(
             ChallengeCategory.OTHER
         );
@@ -828,7 +941,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
      *
      * @param score                       persisted score
      * @param expectedPlayer              expected player
-     * @param expectedPoints              expected points
+     * @param expectedPoints              expected challenge damage ({@code points})
+     * @param expectedTotalDamage         expected total damage, including any team bonus
      * @param expectedCompletedChallenges expected completed challenge count
      * @param expectedPosition            expected current position
      * @param expectedPreviousPosition    expected former position
@@ -837,6 +951,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         WeeklyPlayerScore score,
         Player expectedPlayer,
         int expectedPoints,
+        int expectedTotalDamage,
         int expectedCompletedChallenges,
         int expectedPosition,
         Integer expectedPreviousPosition
@@ -849,6 +964,9 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
 
         assertThat(score.getPoints())
             .isEqualTo(expectedPoints);
+
+        assertThat(score.getTotalDamage())
+            .isEqualTo(expectedTotalDamage);
 
         assertThat(score.getCompletedChallenges())
             .isEqualTo(

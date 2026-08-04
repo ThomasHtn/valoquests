@@ -26,6 +26,8 @@ export class MatchesApi {
    * @param page - Reactive zero-based page index.
    * @param gameMode - Reactive game mode filter, or `null` to include every mode.
    * @param seasonId - Reactive season filter, or `null` to include every season.
+   * @param weekStart - Reactive week filter (`YYYY-MM-DD`, a Monday), or `null` to include every
+   * match regardless of week.
    * @returns The reactive resource fetching the requested page of match history.
    */
   public history(
@@ -33,10 +35,12 @@ export class MatchesApi {
     page: Signal<number>,
     gameMode: Signal<GameMode | null>,
     seasonId: Signal<number | null>,
+    weekStart: Signal<string | null>,
   ): HttpResourceRef<PageResponse<Match> | undefined> {
     return httpResource<PageResponse<Match>>(() => {
       const selectedGameMode = gameMode();
       const selectedSeasonId = seasonId();
+      const selectedWeekStart = weekStart();
 
       return {
         url: API_ENDPOINTS.playerMatches(playerId()),
@@ -45,6 +49,7 @@ export class MatchesApi {
           size: MATCH_HISTORY_PAGE_SIZE,
           ...(selectedGameMode ? { gameMode: selectedGameMode } : {}),
           ...(selectedSeasonId !== null ? { seasonId: selectedSeasonId } : {}),
+          ...(selectedWeekStart !== null ? { weekStart: selectedWeekStart } : {}),
         },
       };
     });

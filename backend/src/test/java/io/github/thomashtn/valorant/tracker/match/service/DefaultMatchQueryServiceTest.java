@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -15,14 +14,17 @@ import io.github.thomashtn.valorant.tracker.match.entity.ValorantMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 import io.github.thomashtn.valorant.tracker.match.model.MatchHistoryFilter;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
+import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchHistoryCriteria;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
 import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -52,11 +54,14 @@ class DefaultMatchQueryServiceTest {
     @Mock
     private PlayerMatchRepository playerMatchRepository;
 
+    @Mock
+    private WeekCalendar weekCalendar;
+
     private DefaultMatchQueryService service;
 
     @BeforeEach
     void setUp() {
-        service = new DefaultMatchQueryService(playerRepository, playerMatchRepository);
+        service = new DefaultMatchQueryService(playerRepository, playerMatchRepository, weekCalendar);
     }
 
     /**
@@ -65,7 +70,7 @@ class DefaultMatchQueryServiceTest {
     private void given(List<PlayerMatch> matches) {
         when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
         when(playerMatchRepository.findHistory(
-            any(), any(), any(), any(), any(), any(), any(Pageable.class)
+            any(), any(), any(Pageable.class)
         )).thenReturn(new PageImpl<>(matches, PageRequest.of(0, 10), matches.size()));
     }
 
@@ -75,16 +80,16 @@ class DefaultMatchQueryServiceTest {
         given(List.of());
 
         service.findByPlayer(PLAYER_ID, 0, 10, new MatchHistoryFilter(
-            7L, "  Ascent  ", "   ", "win", "competitive"
+            7L, "  Ascent  ", "   ", "win", "competitive", null
         ));
 
         verify(playerMatchRepository).findHistory(
             eq(PLAYER_ID),
-            eq(7L),
-            eq("Ascent"),
-            isNull(),
-            eq(MatchResult.WIN),
-            eq(GameMode.COMPETITIVE),
+            eq(new PlayerMatchHistoryCriteria(
+                7L, "Ascent", null, MatchResult.WIN, GameMode.COMPETITIVE,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+            )),
             any(Pageable.class)
         );
     }
@@ -98,11 +103,33 @@ class DefaultMatchQueryServiceTest {
 
         verify(playerMatchRepository).findHistory(
             eq(PLAYER_ID),
-            isNull(),
-            isNull(),
-            isNull(),
-            isNull(),
-            isNull(),
+            eq(new PlayerMatchHistoryCriteria(
+                null, null, null, null, null,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+            )),
+            any(Pageable.class)
+        );
+    }
+
+    @Test
+    @DisplayName("resolves a supplied weekStart through the week calendar and forwards it as a period")
+    void shouldResolveWeekStartThroughTheWeekCalendar() {
+        given(List.of());
+
+        LocalDate weekStart = LocalDate.of(2026, 7, 27);
+        Instant periodStart = Instant.parse("2026-07-27T00:00:00Z");
+        Instant periodEnd = Instant.parse("2026-08-03T00:00:00Z");
+        when(weekCalendar.startOf(weekStart)).thenReturn(periodStart);
+        when(weekCalendar.endOf(weekStart)).thenReturn(periodEnd);
+
+        service.findByPlayer(
+            PLAYER_ID, 0, 10, new MatchHistoryFilter(null, null, null, null, null, weekStart)
+        );
+
+        verify(playerMatchRepository).findHistory(
+            eq(PLAYER_ID),
+            eq(new PlayerMatchHistoryCriteria(null, null, null, null, null, periodStart, periodEnd)),
             any(Pageable.class)
         );
     }
@@ -192,12 +219,12 @@ class DefaultMatchQueryServiceTest {
         when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
 
         assertThatThrownBy(() -> service.findByPlayer(PLAYER_ID, 0, 10,
-            new MatchHistoryFilter(null, null, null, "victory", null)))
+            new MatchHistoryFilter(null, null, null, "victory", null, null)))
             .isInstanceOf(InvalidRequestException.class)
             .hasMessageContaining("WIN");
 
         assertThatThrownBy(() -> service.findByPlayer(PLAYER_ID, 0, 10,
-            new MatchHistoryFilter(null, null, null, null, "ranked")))
+            new MatchHistoryFilter(null, null, null, null, "ranked", null)))
             .isInstanceOf(InvalidRequestException.class)
             .hasMessageContaining("gameMode");
     }

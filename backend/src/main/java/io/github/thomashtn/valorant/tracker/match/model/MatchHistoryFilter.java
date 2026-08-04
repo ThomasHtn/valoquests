@@ -1,6 +1,7 @@
 package io.github.thomashtn.valorant.tracker.match.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
 
 /**
  * Groups the optional filters a caller may apply to a player's match history.
@@ -15,8 +16,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @param seasonId internal season identifier, or {@code null} for every season
  * @param map      map name, or {@code null} for every map
  * @param agent    agent name, or {@code null} for every agent
- * @param result   match outcome name, or {@code null} for every outcome
- * @param gameMode game mode name, or {@code null} for every mode
+ * @param result    match outcome name, or {@code null} for every outcome
+ * @param gameMode  game mode name, or {@code null} for every mode
+ * @param weekStart Monday restricting matches to that calendar week, or {@code null} for every week
  */
 public record MatchHistoryFilter(
 
@@ -33,12 +35,15 @@ public record MatchHistoryFilter(
     String result,
 
     @Schema(description = "Optional game mode filter.", example = "COMPETITIVE")
-    String gameMode
+    String gameMode,
+
+    @Schema(description = "Optional Monday restricting matches to that calendar week.", example = "2026-07-27")
+    LocalDate weekStart
 ) {
 
     /**
      * A filter that excludes nothing.
      */
     public static final MatchHistoryFilter NONE =
-        new MatchHistoryFilter(null, null, null, null, null);
+        new MatchHistoryFilter(null, null, null, null, null, null);
 }

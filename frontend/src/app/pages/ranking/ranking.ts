@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { LucideCheck } from '@lucide/angular';
 
 import { formatDateRange, isoWeekNumber } from '@core/date/week-period.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -8,6 +9,7 @@ import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { Avatar } from '@shared/avatar/avatar';
+import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { Pagination } from '@shared/pagination/pagination';
 import { PointsBadge } from '@shared/points-badge/points-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
@@ -24,7 +26,16 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
  */
 @Component({
   selector: 'app-ranking',
-  imports: [TranslatePipe, Avatar, Pagination, PointsBadge, PositionBadge, ResourceState],
+  imports: [
+    TranslatePipe,
+    Avatar,
+    ChampionBadge,
+    Pagination,
+    PointsBadge,
+    PositionBadge,
+    ResourceState,
+    LucideCheck,
+  ],
   templateUrl: './ranking.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

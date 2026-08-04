@@ -524,6 +524,12 @@ class SynchronizationPipelineIntegrationTest
 
     /**
      * Verifies the single-player ranking produced from calculated progress.
+     *
+     * <p>Challenge damage is resolved from {@code ScoringRulesetV1} by difficulty tier: completing all
+     * five (EASY+NORMAL+MEDIUM+HARD+VERY_HARD) totals 23000. The two imported matches (WIN=500,
+     * LOSS=350) add 850 in match damage, and span two distinct days, adding the 2-day regularity bonus
+     * (300). A single active player means no challenge here is shared, so the team bonus stays at zero:
+     * 23000 + 850 + 300 = 24150 total damage.
      */
     private void assertCalculatedRanking(
         Player player,
@@ -534,7 +540,15 @@ class SynchronizationPipelineIntegrationTest
         assertThat(score.getWeekStart())
             .isEqualTo(WEEK_START);
         assertThat(score.getPoints())
-            .isEqualTo(1_500);
+            .isEqualTo(23_000);
+        assertThat(score.getMatchDamage())
+            .isEqualTo(850);
+        assertThat(score.getRegularityBonus())
+            .isEqualTo(300);
+        assertThat(score.getTeamBonus())
+            .isEqualTo(0);
+        assertThat(score.getTotalDamage())
+            .isEqualTo(24_150);
         assertThat(score.getCompletedChallenges())
             .isEqualTo(5);
         assertThat(score.getPosition())

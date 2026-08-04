@@ -1,5 +1,5 @@
 <section
-  class="rounded-2xl border border-surface-700 bg-surface-900 bg-linear-to-br from-accent-green/10 to-transparent p-6 sm:p-8"
+  class="flex h-full flex-col rounded-2xl border border-surface-700 bg-surface-900 bg-linear-to-br from-accent-green/10 to-transparent p-6 sm:p-8"
 >
   <app-resource-state
     (retry)="reload()"
@@ -64,7 +64,7 @@
     </div>
 
     @if (contributors().length) {
-      <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-surface-700 pt-5">
+      <div class="mt-auto flex flex-wrap items-center gap-3 border-t border-surface-700 pt-5">
         <ul class="flex -space-x-2">
           @for (contributor of contributors(); track contributor.playerId) {
             <li

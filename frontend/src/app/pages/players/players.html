@@ -75,9 +75,14 @@
                 [routerLink]="['/players', row.id]"
                 class="flex items-center gap-3 after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
               >
-                <app-avatar [src]="row.avatarUrl" size="md" />
+                <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="md" />
                 <div>
-                  <p class="font-semibold text-text-primary">{{ row.displayName }}</p>
+                  <p class="flex items-center gap-1.5 font-semibold text-text-primary">
+                    {{ row.displayName }}
+                    @if (row.isChampion) {
+                      <app-champion-badge />
+                    }
+                  </p>
                   @if (row.tag) {
                     <p class="text-xs text-text-secondary">#{{ row.tag }}</p>
                   }
@@ -141,9 +146,14 @@
             class="focus-ring-inset flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-surface-800"
           >
             <div class="flex items-center gap-3">
-              <app-avatar [src]="row.avatarUrl" size="md" />
+              <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="md" />
               <div class="min-w-0 flex-1">
-                <p class="truncate font-semibold text-text-primary">{{ row.displayName }}</p>
+                <p class="flex items-center gap-1.5 truncate font-semibold text-text-primary">
+                  {{ row.displayName }}
+                  @if (row.isChampion) {
+                    <app-champion-badge />
+                  }
+                </p>
                 <p class="truncate text-xs text-text-secondary">
                   @if (row.tag) {
                     #{{ row.tag }} ·

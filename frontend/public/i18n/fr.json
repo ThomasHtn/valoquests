@@ -1,10 +1,48 @@
 {
+  "boss": {
+    "category": {
+      "ELITE": "Élite",
+      "MINOR": "Mineur",
+      "STANDARD": "Standard"
+    },
+    "damageDealt": "{{damage}} / {{hp}} PV infligés",
+    "empty": "Aucune semaine n'a encore été finalisée.",
+    "error": "Impossible de charger l'historique des boss.",
+    "finishingBlow": "Coup de grâce",
+    "loading": "Chargement de l'historique des boss…",
+    "outcome": {
+      "defeated": "Vaincu",
+      "survived": "A survécu"
+    },
+    "pagination": {
+      "next": "Suivant",
+      "page": "Page {{page}} sur {{total}}",
+      "previous": "Précédent"
+    },
+    "subtitle": "Retrouvez le boss affronté par le groupe chaque semaine, et qui a porté le coup de grâce.",
+    "title": "Boss",
+    "week": {
+      "label": "Semaine {{number}}"
+    },
+    "winStreak": "{{count}} victoire(s) d'affilée"
+  },
+  "champion": "Champion",
   "notFound": {
     "backToOverview": "Retour à la vue d'ensemble",
     "description": "La page demandée n'existe pas ou a été déplacée.",
     "title": "Page introuvable"
   },
   "overview": {
+    "bossEncounter": {
+      "defeated": "Le boss a été vaincu cette semaine !",
+      "error": "Impossible de charger le boss de la semaine.",
+      "eyebrow": "Boss hebdomadaire",
+      "hpLabel": "Points de vie",
+      "hpValue": "{{remaining}} / {{total}} PV",
+      "loading": "Chargement du boss…",
+      "modifier": "Difficulté {{value}} %",
+      "winStreak": "{{count}} victoire(s) d'affilée"
+    },
     "podium": {
       "rank": {
         "1": "1re place",
@@ -142,7 +180,11 @@
       "record": "{{wins}} V / {{losses}} D",
       "winRate": "Winrate"
     },
-    "title": "Profil du joueur"
+    "title": "Profil du joueur",
+    "viewMode": {
+      "global": "Global",
+      "weekly": "Cette semaine"
+    }
   },
   "players": {
     "columns": {
@@ -194,6 +236,11 @@
     }
   },
   "retry": "Réessayer",
+  "shared": {
+    "pointsBadge": {
+      "unit": "DÉGÂTS"
+    }
+  },
   "sidebar": {
     "collapse": "Réduire la barre latérale",
     "expand": "Déplier la barre latérale",
@@ -218,6 +265,7 @@
       "unknown": "Jamais synchronisé"
     },
     "nav": {
+      "boss": "Boss",
       "comparison": "Comparaison",
       "overview": "Vue d'ensemble",
       "players": "Joueurs",

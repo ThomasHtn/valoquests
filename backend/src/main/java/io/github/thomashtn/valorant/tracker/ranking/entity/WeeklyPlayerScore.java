@@ -58,7 +58,8 @@ public class WeeklyPlayerScore extends AuditableEntity {
     private LocalDate weekStart;
 
     /**
-     * Total points awarded for completed weekly challenges.
+     * Total damage dealt by completed weekly challenges, resolved through the week's own scoring
+     * ruleset version.
      */
     @Column(nullable = false)
     private int points;
@@ -70,10 +71,42 @@ public class WeeklyPlayerScore extends AuditableEntity {
     private int completedChallenges;
 
     /**
-     * Current or final one-based ranking position.
+     * Total damage dealt by the player's valued matches this week.
      */
-    @Column(nullable = false)
-    private int position;
+    @Column(name = "match_damage", nullable = false)
+    private int matchDamage;
+
+    /**
+     * Regularity bonus for the number of distinct active days this week.
+     */
+    @Column(name = "regularity_bonus", nullable = false)
+    private int regularityBonus;
+
+    /**
+     * Sum of the per-challenge team bonuses earned this week.
+     */
+    @Column(name = "team_bonus", nullable = false)
+    private int teamBonus;
+
+    /**
+     * Total damage dealt to the boss this week: {@link #points} + {@link #matchDamage} +
+     * {@link #regularityBonus} + {@link #teamBonus}. This is the individual ranking key.
+     */
+    @Column(name = "total_damage", nullable = false)
+    private int totalDamage;
+
+    /**
+     * Number of distinct days with at least one valid match this week.
+     */
+    @Column(name = "active_days", nullable = false)
+    private int activeDays;
+
+    /**
+     * Current or final one-based ranking position, {@code null} when the player is not
+     * competitive and therefore never occupies a ranking slot.
+     */
+    @Column
+    private Integer position;
 
     /**
      * Position stored before the latest recalculation.

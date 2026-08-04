@@ -49,4 +49,14 @@ export const API_ENDPOINTS = {
    * `GET` the paginated history of finalized weekly rankings.
    */
   rankingHistory: `${environment.apiBaseUrl}/rankings/history`,
+
+  /**
+   * `GET` the active week's boss confrontation.
+   */
+  currentBoss: `${environment.apiBaseUrl}/boss/current`,
+
+  /**
+   * `GET` the paginated history of finalized weekly boss confrontations.
+   */
+  bossHistory: `${environment.apiBaseUrl}/boss/history`,
 } as const;

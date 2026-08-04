@@ -249,13 +249,22 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
 
     /**
      * Verifies the live ranking created by challenge recalculation.
+     *
+     * <p>Challenge damage is resolved from {@code ScoringRulesetV1} by difficulty tier. Alpha completes
+     * all five (EASY 1500 + NORMAL 2500 + MEDIUM 4000 + HARD 6000 + VERY_HARD 9000 = 23000); bravo only
+     * completes the EASY kills challenge (1500). That kills challenge is shared, and both players
+     * complete it, so both receive the 2-player team bonus (150). Match damage sums each player's four
+     * COMPETITIVE matches (alpha: WIN+LOSS+WIN+LOSS = 500+350+500+350 = 1700; bravo: LOSS+LOSS+WIN+LOSS
+     * = 350+350+500+350 = 1550), and the regularity bonus follows each player's own distinct match days
+     * (alpha spans 4 days = 1200; bravo spans 2 days = 300, matching their own PLAY_DAY progress
+     * values).
      */
     private void assertCurrentRanking(Player alpha, Player bravo) {
         List<WeeklyPlayerScore> scores = loadScores(COMPETITION_WEEK_START);
 
         assertThat(scores).hasSize(2);
-        assertScore(scores.get(0), alpha, 1_500, 5, 1, null, null);
-        assertScore(scores.get(1), bravo, 100, 1, 2, null, null);
+        assertScore(scores.get(0), alpha, 23_000, 26_050, 5, 1, null, null);
+        assertScore(scores.get(1), bravo, 1_500, 3_500, 1, 2, null, null);
     }
 
     /**
@@ -271,8 +280,8 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
 
         List<WeeklyPlayerScore> scores = loadScores(COMPETITION_WEEK_START);
         assertThat(scores).hasSize(2);
-        assertScore(scores.get(0), alpha, 1_500, 5, 1, 1, ROLLOVER_TIME);
-        assertScore(scores.get(1), bravo, 100, 1, 2, 2, ROLLOVER_TIME);
+        assertScore(scores.get(0), alpha, 23_000, 26_050, 5, 1, 1, ROLLOVER_TIME);
+        assertScore(scores.get(1), bravo, 1_500, 3_500, 1, 2, 2, ROLLOVER_TIME);
     }
 
     /**
@@ -330,6 +339,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         WeeklyPlayerScore score,
         Player player,
         int points,
+        int totalDamage,
         int completedChallenges,
         int position,
         Integer previousPosition,
@@ -337,6 +347,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     ) {
         assertThat(score.getPlayer().getId()).isEqualTo(player.getId());
         assertThat(score.getPoints()).isEqualTo(points);
+        assertThat(score.getTotalDamage()).isEqualTo(totalDamage);
         assertThat(score.getCompletedChallenges()).isEqualTo(completedChallenges);
         assertThat(score.getPosition()).isEqualTo(position);
         assertThat(score.getPreviousPosition()).isEqualTo(previousPosition);

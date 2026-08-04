@@ -1,0 +1,129 @@
+<section
+  class="relative isolate overflow-hidden rounded-2xl border border-surface-700 bg-surface-900 p-6 sm:p-8"
+>
+  <!-- Boss artwork, when the catalogue entry has one, sitting behind the card's content with a
+       dark gradient over it for text contrast. Falls back to the original flat gradient once every
+       provisional catalogue entry gets real artwork (`imageUrl` is `null` today). -->
+  @if (boss()?.boss?.imageUrl; as bossImageUrl) {
+    <div
+      aria-hidden="true"
+      class="absolute inset-0 -z-10 bg-cover bg-center"
+      [style.background-image]="'url(' + bossImageUrl + ')'"
+    ></div>
+    <div
+      aria-hidden="true"
+      class="absolute inset-0 -z-10 bg-linear-to-br from-surface-900 via-surface-900/85 to-surface-900/50"
+    ></div>
+  } @else {
+    <div
+      aria-hidden="true"
+      class="absolute inset-0 -z-10 bg-linear-to-br from-brand-900/40 to-transparent"
+    ></div>
+  }
+
+  <app-resource-state
+    (retry)="reload()"
+    [errorText]="'overview.bossEncounter.error' | translate"
+    [isError]="hasError()"
+    [isLoading]="isLoading()"
+    [loadingText]="'overview.bossEncounter.loading' | translate"
+    padding="py-10"
+  >
+    @if (boss(); as encounter) {
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="flex items-start gap-4">
+          <!-- Diablo-style boss portrait: a circular frame glowing in the category's color, so the
+               boss reads as a distinct "character" rather than only a name and a bar. -->
+          <div
+            [class]="categoryPortraitClass()"
+            class="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-surface-800 ring-4 ring-offset-2 ring-offset-surface-900 sm:h-20 sm:w-20"
+          >
+            @if (encounter.boss.imageUrl; as portraitUrl) {
+              <img
+                [height]="80"
+                [ngSrc]="portraitUrl"
+                [width]="80"
+                alt=""
+                class="h-full w-full object-cover"
+                priority
+              />
+            } @else {
+              <span class="flex h-full w-full items-center justify-center">
+                <svg class="h-8 w-8 text-text-secondary sm:h-10 sm:w-10" lucideSkull></svg>
+              </span>
+            }
+          </div>
+
+          <div>
+            <p [class]="categoryColorClass()" class="text-xs font-bold tracking-widest uppercase">
+              {{ 'overview.bossEncounter.eyebrow' | translate }}
+              <span aria-hidden="true">·</span>
+              {{ 'boss.category.' + encounter.boss.category | translate }}
+            </p>
+            <h2 class="mt-1 max-w-prose text-xl font-extrabold text-text-primary sm:text-2xl">
+              {{ encounter.boss.name }}
+            </h2>
+            <p class="mt-1 max-w-prose text-sm text-text-secondary">
+              {{ encounter.boss.description }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex shrink-0 flex-col items-end gap-1.5">
+          <span
+            class="rounded-full bg-surface-800 px-2.5 py-1 text-xs font-bold tabular-nums text-text-secondary"
+          >
+            {{
+              'overview.bossEncounter.modifier'
+                | translate: { value: encounter.difficultyModifierPercent }
+            }}
+          </span>
+          @if (encounter.enteringWinStreak > 0) {
+            <span
+              class="flex items-center gap-1 rounded-full bg-accent-gold/15 px-2.5 py-1 text-xs font-bold tabular-nums text-accent-gold"
+            >
+              <svg class="h-3 w-3" lucideSwords></svg>
+              {{
+                'overview.bossEncounter.winStreak'
+                  | translate: { count: encounter.enteringWinStreak }
+              }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <span class="flex items-center gap-1.5 text-sm text-text-secondary">
+          <svg class="h-4 w-4" lucideSkull></svg>
+          {{ 'overview.bossEncounter.hpLabel' | translate }}
+        </span>
+        <!-- Game-style health bar: the HP readout sits inside the bar itself, like an in-game boss
+             health orb, rather than as a separate line above it. -->
+        <div class="relative mt-2">
+          <app-progress-bar
+            [colorClass]="hpBarColorClass()"
+            heightClass="h-6 sm:h-7"
+            [percentage]="remainingPercentage()"
+          />
+          <span
+            class="pointer-events-none absolute inset-0 flex items-center justify-center text-xs font-bold tabular-nums text-white [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)] sm:text-sm"
+          >
+            {{
+              'overview.bossEncounter.hpValue'
+                | translate: { remaining: remainingHp(), total: encounter.effectiveHp }
+            }}
+          </span>
+        </div>
+      </div>
+
+      @if (defeated()) {
+        <p
+          class="mt-6 flex items-center gap-2 border-t border-surface-700 pt-5 text-sm font-bold text-accent-green"
+        >
+          <svg class="h-4 w-4" lucideSwords></svg>
+          {{ 'overview.bossEncounter.defeated' | translate }}
+        </p>
+      }
+    }
+  </app-resource-state>
+</section>

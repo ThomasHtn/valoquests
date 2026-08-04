@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
-import io.github.thomashtn.valorant.tracker.challenge.service.WeeklyChallengeSelectionService;
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
@@ -67,10 +66,10 @@ class DefaultWeeklyRolloverServiceTest {
         rankingRecalculationService;
 
     /**
-     * Weekly challenge selection dependency.
+     * Weekly lifecycle coordination dependency.
      */
-    private WeeklyChallengeSelectionService
-        weeklyChallengeSelectionService;
+    private WeeklyLifecycleCoordinator
+        weeklyLifecycleCoordinator;
 
     /**
      * Challenge progress recalculation dependency.
@@ -97,8 +96,8 @@ class DefaultWeeklyRolloverServiceTest {
         rankingRecalculationService =
             mock(RankingRecalculationService.class);
 
-        weeklyChallengeSelectionService =
-            mock(WeeklyChallengeSelectionService.class);
+        weeklyLifecycleCoordinator =
+            mock(WeeklyLifecycleCoordinator.class);
 
         challengeRecalculationService =
             mock(ChallengeRecalculationService.class);
@@ -112,7 +111,7 @@ class DefaultWeeklyRolloverServiceTest {
             weeklyChallengeRepository,
             weeklyPlayerScoreRepository,
             rankingRecalculationService,
-            weeklyChallengeSelectionService,
+            weeklyLifecycleCoordinator,
             challengeRecalculationService,
             clock,
             new WeekCalendar(clock, ZoneOffset.UTC)
@@ -192,9 +191,15 @@ class DefaultWeeklyRolloverServiceTest {
                 )
             );
 
-        verify(weeklyChallengeSelectionService)
-            .selectWeekChallenges(
+        verify(weeklyLifecycleCoordinator)
+            .openWeek(
                 CURRENT_WEEK_START
+            );
+
+        verify(weeklyLifecycleCoordinator)
+            .closeBossEncounterIfNeeded(
+                PREVIOUS_WEEK_START,
+                ROLLOVER_TIME
             );
 
         assertThat(firstChallenge.getFinalizedAt())
@@ -260,10 +265,18 @@ class DefaultWeeklyRolloverServiceTest {
             org.mockito.ArgumentMatchers.anyList()
         );
 
-        verify(weeklyChallengeSelectionService)
-            .selectWeekChallenges(
+        verify(weeklyLifecycleCoordinator)
+            .openWeek(
                 CURRENT_WEEK_START
             );
+
+        verify(
+            weeklyLifecycleCoordinator,
+            never()
+        ).closeBossEncounterIfNeeded(
+            PREVIOUS_WEEK_START,
+            ROLLOVER_TIME
+        );
     }
 
     /**
@@ -286,10 +299,18 @@ class DefaultWeeklyRolloverServiceTest {
             never()
         ).recalculateWeek(PREVIOUS_WEEK_START);
 
-        verify(weeklyChallengeSelectionService)
-            .selectWeekChallenges(
+        verify(weeklyLifecycleCoordinator)
+            .openWeek(
                 CURRENT_WEEK_START
             );
+
+        verify(
+            weeklyLifecycleCoordinator,
+            never()
+        ).closeBossEncounterIfNeeded(
+            PREVIOUS_WEEK_START,
+            ROLLOVER_TIME
+        );
     }
 
     /**
@@ -338,9 +359,9 @@ class DefaultWeeklyRolloverServiceTest {
         );
 
         verify(
-            weeklyChallengeSelectionService,
+            weeklyLifecycleCoordinator,
             never()
-        ).selectWeekChallenges(
+        ).openWeek(
             CURRENT_WEEK_START
         );
     }

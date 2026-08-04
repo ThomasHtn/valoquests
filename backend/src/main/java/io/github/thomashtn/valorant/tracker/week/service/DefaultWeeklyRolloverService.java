@@ -4,7 +4,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valorant.tracker.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valorant.tracker.challenge.service.ChallengeRecalculationService;
-import io.github.thomashtn.valorant.tracker.challenge.service.WeeklyChallengeSelectionService;
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
@@ -62,11 +61,10 @@ public class DefaultWeeklyRolloverService
         rankingRecalculationService;
 
     /**
-     * Service used to create the current weekly challenge pack.
+     * Coordinates opening a new week's challenge pack and boss encounter, and closing the previous
+     * week's boss encounter.
      */
-    private final WeeklyChallengeSelectionService
-
-        weeklyChallengeSelectionService;
+    private final WeeklyLifecycleCoordinator weeklyLifecycleCoordinator;
 
     /**
      * Service used to refresh the closing week's progress before it is frozen.
@@ -88,13 +86,13 @@ public class DefaultWeeklyRolloverService
     /**
      * Creates the weekly rollover service.
      *
-     * @param weeklyChallengeRepository       weekly challenge repository
-     * @param weeklyPlayerScoreRepository     weekly score repository
-     * @param rankingRecalculationService     ranking recalculation service
-     * @param weeklyChallengeSelectionService challenge selection service
-     * @param challengeRecalculationService   challenge progress recalculation service
-     * @param clock                           application clock
-     * @param weekCalendar                    calendar resolving the current week
+     * @param weeklyChallengeRepository     weekly challenge repository
+     * @param weeklyPlayerScoreRepository   weekly score repository
+     * @param rankingRecalculationService   ranking recalculation service
+     * @param weeklyLifecycleCoordinator    coordinator opening a new week and closing a boss encounter
+     * @param challengeRecalculationService challenge progress recalculation service
+     * @param clock                         application clock
+     * @param weekCalendar                  calendar resolving the current week
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -104,7 +102,7 @@ public class DefaultWeeklyRolloverService
         WeeklyChallengeRepository weeklyChallengeRepository,
         WeeklyPlayerScoreRepository weeklyPlayerScoreRepository,
         RankingRecalculationService rankingRecalculationService,
-        WeeklyChallengeSelectionService weeklyChallengeSelectionService,
+        WeeklyLifecycleCoordinator weeklyLifecycleCoordinator,
         ChallengeRecalculationService challengeRecalculationService,
         Clock clock,
         WeekCalendar weekCalendar
@@ -118,8 +116,7 @@ public class DefaultWeeklyRolloverService
         this.rankingRecalculationService =
             rankingRecalculationService;
 
-        this.weeklyChallengeSelectionService =
-            weeklyChallengeSelectionService;
+        this.weeklyLifecycleCoordinator = weeklyLifecycleCoordinator;
 
         this.challengeRecalculationService =
             challengeRecalculationService;
@@ -156,7 +153,7 @@ public class DefaultWeeklyRolloverService
             rolloverTime
         );
 
-        weeklyChallengeSelectionService.selectWeekChallenges(
+        weeklyLifecycleCoordinator.openWeek(
             currentWeekStart
         );
 
@@ -226,6 +223,8 @@ public class DefaultWeeklyRolloverService
         rankingRecalculationService.recalculateWeek(
             previousWeekStart
         );
+
+        weeklyLifecycleCoordinator.closeBossEncounterIfNeeded(previousWeekStart, finalizedAt);
 
         List<WeeklyPlayerScore> weeklyScores =
             weeklyPlayerScoreRepository

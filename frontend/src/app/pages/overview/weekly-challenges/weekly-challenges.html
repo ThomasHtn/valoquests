@@ -6,12 +6,12 @@
 </div>
 
 <app-resource-state
-  (retry)="challengesResource.reload()"
+  (retry)="reload()"
   [emptyText]="'overview.weeklyChallenges.empty' | translate"
   [errorText]="'overview.weeklyChallenges.error' | translate"
   [isEmpty]="rows().length === 0"
-  [isError]="!!challengesResource.error()"
-  [isLoading]="challengesResource.isLoading()"
+  [isError]="hasError()"
+  [isLoading]="isLoading()"
   [loadingText]="'overview.weeklyChallenges.loading' | translate"
 >
   <!-- Skeleton mirroring the loaded vignette grid, so data arriving does not shift the page. -->
@@ -73,15 +73,26 @@
             'overview.weeklyChallenges.progressTooltip'
               | translate: { completed: row.completedPlayers, total: row.totalPlayers }
           "
-          class="mt-5 flex items-center gap-3"
+          class="mt-5 flex flex-wrap items-center gap-3 border-t border-surface-700 pt-5"
           appTooltipPosition="above"
         >
-          <app-progress-bar
-            [colorClass]="row.visual.barClass"
-            [percentage]="row.completionPercentage"
-            class="flex-1"
-            heightClass="h-2"
-          />
+          <ul class="flex -space-x-2">
+            @for (contributor of row.contributors; track contributor.playerId) {
+              <li
+                [class.opacity-40]="!contributor.contributed"
+                class="relative rounded-full ring-2 ring-surface-900"
+              >
+                <app-avatar [src]="contributor.avatarUrl" size="sm" />
+                @if (contributor.contributed) {
+                  <span
+                    class="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent-green ring-2 ring-surface-900"
+                  >
+                    <svg class="h-2 w-2 text-surface-950" lucideCheck></svg>
+                  </span>
+                }
+              </li>
+            }
+          </ul>
           <p class="shrink-0 text-sm tabular-nums text-text-secondary">
             <span class="font-bold">{{ row.completedPlayers }}</span>
             <span>

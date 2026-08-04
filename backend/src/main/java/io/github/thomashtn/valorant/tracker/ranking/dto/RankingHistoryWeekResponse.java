@@ -23,19 +23,30 @@ public record RankingHistoryWeekResponse(
      * <p>These values are a snapshot, not a live projection: a finalized week is immutable, so they
      * never move again even if the matches behind them are recalculated.
      *
-     * @param position            final rank, starting at 1
+     * @param position            final rank, starting at 1, {@code null} when the player is not
+     *     competitive and therefore never ranked
      * @param playerId            internal player identifier
      * @param displayName         player name shown in the ranking
-     * @param points              points awarded for the week
+     * @param points              challenge damage awarded for the week
      * @param completedChallenges challenges the player completed that week
+     * @param matchDamage         damage dealt by valued matches that week
+     * @param regularityBonus     regularity bonus awarded for that week
+     * @param teamBonus           sum of per-challenge team bonuses earned that week
+     * @param activeDays          number of distinct active days that week
+     * @param totalDamage         total damage dealt to the boss that week
      */
     public record FinalRankingEntryResponse(
 
-        int position,
+        Integer position,
         Long playerId,
         String displayName,
         int points,
-        int completedChallenges
+        int completedChallenges,
+        int matchDamage,
+        int regularityBonus,
+        int teamBonus,
+        int activeDays,
+        int totalDamage
     ) {
     }
 

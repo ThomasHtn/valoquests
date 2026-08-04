@@ -132,8 +132,9 @@ class DefaultChallengeRecalculationServiceTest {
         ).thenReturn(List.of(weeklyChallenge));
 
         when(
-            playerRepository.findAllByStatusOrderByIdAsc(
-                PlayerStatus.ACTIVE
+            playerRepository.findAllByStatusAndCompetitiveOrderByIdAsc(
+                PlayerStatus.ACTIVE,
+                true
             )
         ).thenReturn(List.of(player));
 
@@ -194,8 +195,9 @@ class DefaultChallengeRecalculationServiceTest {
         ).thenReturn(List.of(weeklyChallenge));
 
         when(
-            playerRepository.findAllByStatusOrderByIdAsc(
-                PlayerStatus.ACTIVE
+            playerRepository.findAllByStatusAndCompetitiveOrderByIdAsc(
+                PlayerStatus.ACTIVE,
+                true
             )
         ).thenReturn(List.of());
 

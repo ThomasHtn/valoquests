@@ -41,10 +41,15 @@
       class="flex flex-col gap-6 rounded-xl border border-surface-700 bg-surface-900 p-5 sm:flex-row sm:items-center sm:justify-between"
     >
       <div class="flex items-center gap-5">
-        <app-avatar [priority]="true" [src]="avatarUrl()" size="lg" />
+        <app-avatar [champion]="isChampion()" [priority]="true" [src]="avatarUrl()" size="lg" />
         <div>
-          <h1 class="text-2xl font-bold tracking-wide text-text-primary uppercase">
+          <h1
+            class="flex items-center gap-2 text-2xl font-bold tracking-wide text-text-primary uppercase"
+          >
             {{ playerDetails.displayName }}
+            @if (isChampion()) {
+              <app-champion-badge />
+            }
           </h1>
           @if (tag()) {
             <p class="mt-1 text-sm text-text-secondary">#{{ tag() }}</p>
@@ -65,8 +70,41 @@
       }
     </section>
 
+    <!-- View toggle: weekly progress leads, since it is what a player checks first to track this
+         week's challenges, with the all-time record as secondary context. Placed first, ahead of
+         the season/game-mode filters, since it changes what the filters below are scoped to. -->
+    <div
+      class="inline-flex w-fit items-center gap-1 rounded-lg border border-surface-700 bg-surface-900 p-1"
+      role="tablist"
+    >
+      <button
+        (click)="setViewMode('weekly')"
+        [class.bg-brand-500]="viewMode() === 'weekly'"
+        [class.text-text-secondary]="viewMode() !== 'weekly'"
+        [class.text-white]="viewMode() === 'weekly'"
+        [attr.aria-selected]="viewMode() === 'weekly'"
+        class="focus-ring rounded-md px-3 py-1.5 text-sm font-semibold transition-colors"
+        role="tab"
+        type="button"
+      >
+        {{ 'playerProfile.viewMode.weekly' | translate }}
+      </button>
+      <button
+        (click)="setViewMode('global')"
+        [class.bg-brand-500]="viewMode() === 'global'"
+        [class.text-text-secondary]="viewMode() !== 'global'"
+        [class.text-white]="viewMode() === 'global'"
+        [attr.aria-selected]="viewMode() === 'global'"
+        class="focus-ring rounded-md px-3 py-1.5 text-sm font-semibold transition-colors"
+        role="tab"
+        type="button"
+      >
+        {{ 'playerProfile.viewMode.global' | translate }}
+      </button>
+    </div>
+
     <!-- Filters. Placed above the stats they scope, rather than above the match history alone,
-         since both are now correlated to the selected season and game mode. -->
+         since both are now correlated to the selected season, game mode and view. -->
     <div class="flex flex-wrap items-center gap-3">
       <app-select
         [ariaLabel]="'playerProfile.filters.gameModeLabel' | translate"

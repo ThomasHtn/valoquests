@@ -40,8 +40,11 @@
       >
         {{ 'overview.subtitle' | translate }}
       </p>
-      <app-podium />
-      <app-team-progress [week]="week()" />
+      <app-boss-encounter class="block" />
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <app-podium class="block h-full" />
+        <app-team-progress class="block h-full" [week]="week()" />
+      </div>
     </section>
 
     <section

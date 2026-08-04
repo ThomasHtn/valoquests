@@ -30,6 +30,11 @@ export const routes: Routes = [
     loadComponent: () => import('@pages/ranking/ranking').then((m) => m.Ranking),
   },
   {
+    path: 'boss',
+    title: 'boss.title',
+    loadComponent: () => import('@pages/boss/boss').then((m) => m.Boss),
+  },
+  {
     path: '**',
     title: 'notFound.title',
     loadComponent: () => import('@pages/not-found/not-found').then((m) => m.NotFound),

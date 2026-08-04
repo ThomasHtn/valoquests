@@ -1,6 +1,6 @@
 <section
   [attr.aria-label]="'overview.podium.title' | translate"
-  class="rounded-2xl border border-surface-700 bg-surface-950 bg-radial-[at_top] from-brand-900/50 to-transparent p-6 sm:p-8"
+  class="flex h-full flex-col justify-center rounded-2xl border border-surface-700 bg-surface-950 bg-radial-[at_top] from-brand-900/50 to-transparent p-6 sm:p-8"
 >
   <app-resource-state
     (retry)="reload()"
@@ -24,27 +24,45 @@
           [routerLink]="['/players', entry.player.id]"
           class="focus-ring flex flex-col items-center gap-2 rounded-xl px-2 py-1 text-center"
         >
-          <div
-            [class.h-11]="entry.position !== 1"
-            [class.h-24]="entry.position === 1"
-            [class.w-11]="entry.position !== 1"
-            [class.w-24]="entry.position === 1"
-            class="flex shrink-0 items-center justify-center overflow-hidden [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+          <!-- The champion's gold glow is applied to this wrapper rather than to the hexagon div
+               itself: `filter` composites before `clip-path`, so a `drop-shadow` declared on the
+               very element that also clips to the hexagon would be clipped away with everything
+               else outside that shape. Applied here instead, it paints around the hexagon's
+               already-clipped silhouette. -->
+          <span
+            [class]="
+              entry.player.id === championPlayerId()
+                ? 'drop-shadow-[0_0_6px_var(--color-accent-gold)]'
+                : ''
+            "
           >
-            <app-avatar
-              [priority]="entry.position === 1"
-              [size]="entry.position === 1 ? 'lg' : 'md'"
-              [src]="resolveAvatarUrl(entry.player.portrait)"
-            />
-          </div>
+            <div
+              [class.h-11]="entry.position !== 1"
+              [class.h-24]="entry.position === 1"
+              [class.w-11]="entry.position !== 1"
+              [class.w-24]="entry.position === 1"
+              class="flex shrink-0 items-center justify-center overflow-hidden [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+            >
+              <app-avatar
+                [priority]="entry.position === 1"
+                [size]="entry.position === 1 ? 'lg' : 'md'"
+                [src]="resolveAvatarUrl(entry.player.portrait)"
+              />
+            </div>
+          </span>
           <p
             [class]="podiumTextAccent(entry.position)"
             class="text-xs font-bold tracking-wide uppercase"
           >
             {{ 'overview.podium.rank.' + entry.position | translate }}
           </p>
-          <p class="text-sm font-extrabold text-text-primary sm:text-base">
+          <p
+            class="flex items-center gap-1.5 text-sm font-extrabold text-text-primary sm:text-base"
+          >
             {{ entry.player.displayName }}
+            @if (entry.player.id === championPlayerId()) {
+              <app-champion-badge />
+            }
           </p>
           <app-points-badge [points]="entry.points" />
         </a>

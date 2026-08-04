@@ -6,6 +6,7 @@ import {
   LucideHouse,
   LucideMenu,
   LucideRefreshCw,
+  LucideSkull,
   LucideTrophy,
   LucideUsers,
 } from '@lucide/angular';
@@ -34,6 +35,7 @@ import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './
     LucideHouse,
     LucideUsers,
     LucideChartColumn,
+    LucideSkull,
     LucideTrophy,
     LucideMenu,
     LucideRefreshCw,

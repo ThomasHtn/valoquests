@@ -5,9 +5,11 @@ import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
+import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { RankingEntry } from '@core/ranking/ranking.model';
 import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
 import { Avatar } from '@shared/avatar/avatar';
+import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { PointsBadge } from '@shared/points-badge/points-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -22,7 +24,15 @@ import { ResourceState } from '@shared/resource-state/resource-state';
  */
 @Component({
   selector: 'app-podium',
-  imports: [TranslatePipe, RouterLink, Avatar, PointsBadge, PositionBadge, ResourceState],
+  imports: [
+    TranslatePipe,
+    RouterLink,
+    Avatar,
+    ChampionBadge,
+    PointsBadge,
+    PositionBadge,
+    ResourceState,
+  ],
   templateUrl: './podium.html',
 })
 export class Podium {
@@ -36,6 +46,14 @@ export class Podium {
    * overview header.
    */
   protected readonly rankingResource = this.rankingApi.current;
+
+  /**
+   * Id of the reigning weekly "Champion", or `null` while unknown or before any week has been
+   * finalized.
+   */
+  protected readonly championPlayerId = computed(() =>
+    resolveChampionPlayerId(resourceValue(this.rankingApi.latestFinalizedWeek, null)),
+  );
 
   /**
    * Every tracked player's current ranking entry, in the order returned by the backend.

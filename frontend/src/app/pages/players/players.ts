@@ -20,7 +20,10 @@ import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/player-sta
 import { resourceValue } from '@core/http/resource-state.utils';
 import { PlayerSummary } from '@core/players/player-summary.model';
 import { PlayersApi } from '@core/players/players-api';
+import { RankingApi } from '@core/ranking/ranking-api';
+import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { Avatar } from '@shared/avatar/avatar';
+import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -41,6 +44,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     RouterLink,
     LucideChevronRight,
     Avatar,
+    ChampionBadge,
     ProgressBar,
     RankIconView,
     ResourceState,
@@ -55,9 +59,22 @@ export class Players {
   private readonly playersApi = inject(PlayersApi);
 
   /**
+   * Data-access service backing the reigning-champion lookup.
+   */
+  private readonly rankingApi = inject(RankingApi);
+
+  /**
    * i18n service used to resolve each row's translated rank label.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Id of the reigning weekly "Champion", or `null` while unknown or before any week has been
+   * finalized.
+   */
+  private readonly championPlayerId = computed(() =>
+    resolveChampionPlayerId(resourceValue(this.rankingApi.latestFinalizedWeek, null)),
+  );
 
   /**
    * Reactive resource fetching every tracked player's summary.
@@ -120,6 +137,7 @@ export class Players {
     return {
       id: player.id,
       displayName: player.displayName,
+      isChampion: player.id === this.championPlayerId(),
       tag: extractRiotTag(player.riotId),
       avatarUrl: resolvePlayerAvatarUrl(player.portrait),
       tier: resolveCompetitiveTierVisual(player.competitiveTier, (key) =>

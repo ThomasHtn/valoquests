@@ -64,11 +64,11 @@ class PlayerMatchRepositoryIntegrationTest
 
         Page<PlayerMatch> history = playerMatchRepository.findHistory(
             player.getId(),
-            null,
-            null,
-            null,
-            null,
-            null,
+            new PlayerMatchHistoryCriteria(
+                null, null, null, null, null,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+            ),
             PageRequest.of(0, 10)
         );
 
@@ -87,11 +87,11 @@ class PlayerMatchRepositoryIntegrationTest
 
         Page<PlayerMatch> history = playerMatchRepository.findHistory(
             player.getId(),
-            null,
-            "ascent",
-            "jett",
-            null,
-            null,
+            new PlayerMatchHistoryCriteria(
+                null, "ascent", "jett", null, null,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+            ),
             PageRequest.of(0, 10)
         );
 
@@ -110,25 +110,110 @@ class PlayerMatchRepositoryIntegrationTest
 
         Page<PlayerMatch> competitive = playerMatchRepository.findHistory(
             player.getId(),
-            null,
-            null,
-            null,
-            null,
-            GameMode.COMPETITIVE,
+            new PlayerMatchHistoryCriteria(
+                null, null, null, null, GameMode.COMPETITIVE,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+            ),
             PageRequest.of(0, 10)
         );
         Page<PlayerMatch> deathmatch = playerMatchRepository.findHistory(
             player.getId(),
-            null,
-            null,
-            null,
-            null,
-            GameMode.DEATHMATCH,
+            new PlayerMatchHistoryCriteria(
+                null, null, null, null, GameMode.DEATHMATCH,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+            ),
             PageRequest.of(0, 10)
         );
 
         assertThat(competitive.getTotalElements()).isEqualTo(1);
         assertThat(deathmatch.getTotalElements()).isZero();
+    }
+
+    /**
+     * Ensures the {@code periodStart}/{@code periodEnd} range keeps matches inside the week and
+     * excludes matches outside it, mirroring {@link PlayerMatchRepository#findForChallengePeriod}.
+     */
+    @Test
+    void shouldFilterHistoryByWeekPeriod() {
+        Player player = createPlayer();
+        Season season = createSeason();
+        ValorantMatch match = createMatch(season);
+        playerMatchRepository.save(createPlayerMatch(player, match));
+
+        Page<PlayerMatch> insideWeek = playerMatchRepository.findHistory(
+            player.getId(),
+            new PlayerMatchHistoryCriteria(
+                null, null, null, null, null,
+                Instant.parse("2026-07-20T00:00:00Z"),
+                Instant.parse("2026-07-27T00:00:00Z")
+            ),
+            PageRequest.of(0, 10)
+        );
+        Page<PlayerMatch> outsideWeek = playerMatchRepository.findHistory(
+            player.getId(),
+            new PlayerMatchHistoryCriteria(
+                null, null, null, null, null,
+                Instant.parse("2026-07-27T00:00:00Z"),
+                Instant.parse("2026-08-03T00:00:00Z")
+            ),
+            PageRequest.of(0, 10)
+        );
+
+        assertThat(insideWeek.getTotalElements()).isEqualTo(1);
+        assertThat(outsideWeek.getTotalElements()).isZero();
+    }
+
+    /**
+     * Exercises {@link PlayerMatchRepository#findAllByPlayerIdAndSeasonAndGameMode} against real
+     * PostgreSQL: a narrow period keeps only the matches inside it, and
+     * {@link PlayerMatchHistoryCriteria#UNBOUNDED_PERIOD_START}/{@link
+     * PlayerMatchHistoryCriteria#UNBOUNDED_PERIOD_END} (what callers use in place of a week filter)
+     * still return every match regardless of date.
+     *
+     * <p>Regression guard for a bug where this query bound {@code periodStart}/{@code periodEnd}
+     * through a {@code :param IS NULL OR ...} check: PostgreSQL 16 rejected it with "could not
+     * determine data type of parameter", since that placeholder's only usage in the query text
+     * carried no type information at statement-prepare time - independent of whether the bound
+     * value later turned out to be null. See {@link PlayerMatchHistoryCriteria}'s Javadoc for the
+     * full explanation and why the fix is an unconditional comparison rather than a cast.
+     */
+    @Test
+    void shouldFilterStatisticsByWeekPeriodWithoutAPostgresTypeInferenceError() {
+        Player player = createPlayer();
+        Season season = createSeason();
+        ValorantMatch match = createMatch(season);
+        playerMatchRepository.save(createPlayerMatch(player, match));
+
+        var insideWeek = playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+            player.getId(),
+            new PlayerMatchHistoryCriteria(
+                null, null, null, null, null,
+                Instant.parse("2026-07-20T00:00:00Z"),
+                Instant.parse("2026-07-27T00:00:00Z")
+            )
+        );
+        var outsideWeek = playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+            player.getId(),
+            new PlayerMatchHistoryCriteria(
+                null, null, null, null, null,
+                Instant.parse("2026-07-27T00:00:00Z"),
+                Instant.parse("2026-08-03T00:00:00Z")
+            )
+        );
+        var unbounded = playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+            player.getId(),
+            new PlayerMatchHistoryCriteria(
+                null, null, null, null, null,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+                PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+            )
+        );
+
+        assertThat(unbounded).hasSize(1);
+        assertThat(insideWeek).hasSize(1);
+        assertThat(outsideWeek).isEmpty();
     }
 
     private Player createPlayer() {

@@ -61,11 +61,15 @@
                   }}</span>
                 </span>
                 @if (column.targetLabel) {
-                  <span class="font-normal text-text-muted normal-case tabular-nums">
+                  <span
+                    [class]="[column.visual.iconClass, column.visual.badgeClass]"
+                    class="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold normal-case tabular-nums"
+                  >
                     {{
                       'overview.weeklyRanking.columns.target'
                         | translate: { value: column.targetLabel }
                     }}
+                    <svg aria-hidden="true" class="h-3 w-3" lucideCheck></svg>
                   </span>
                 }
               </span>
@@ -95,8 +99,11 @@
                 [routerLink]="['/players', row.playerId]"
                 class="flex items-center gap-3 after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
               >
-                <app-avatar [src]="row.avatarUrl" size="sm" />
+                <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="sm" />
                 <span class="font-semibold text-text-primary">{{ row.displayName }}</span>
+                @if (row.isChampion) {
+                  <app-champion-badge />
+                }
               </a>
             </th>
             <td class="px-4 py-3 text-right">
@@ -165,9 +172,14 @@
               [routerLink]="['/players', row.playerId]"
               class="flex min-w-0 flex-1 items-center gap-3 after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
             >
-              <app-avatar [src]="row.avatarUrl" size="sm" />
-              <span class="min-w-0 flex-1 truncate font-semibold text-text-primary">
+              <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="sm" />
+              <span
+                class="flex min-w-0 flex-1 items-center gap-1.5 truncate font-semibold text-text-primary"
+              >
                 {{ row.displayName }}
+                @if (row.isChampion) {
+                  <app-champion-badge />
+                }
               </span>
             </a>
             <app-points-badge class="shrink-0" [points]="row.points" />

@@ -24,6 +24,7 @@ import {
 } from '@lucide/angular';
 
 import { formatLocalTime } from '@core/date/date-time.utils';
+import { resourceValue } from '@core/http/resource-state.utils';
 import { resolveAgentInitial, resolveMatchScore } from '@core/matches/match-format.utils';
 import { resolveResultAccentClass, resolveResultTextClass } from '@core/matches/match-visual.utils';
 import { FILTERABLE_GAME_MODES, GameMode } from '@core/matches/game-mode.model';
@@ -47,7 +48,10 @@ import {
 } from '@core/players/player-format.utils';
 import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/player-stats.utils';
 import { PlayersApi } from '@core/players/players-api';
+import { RankingApi } from '@core/ranking/ranking-api';
+import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { Avatar } from '@shared/avatar/avatar';
+import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -71,6 +75,7 @@ import { groupMatchesByDay } from './match-day.utils';
     TranslatePipe,
     RouterLink,
     Avatar,
+    ChampionBadge,
     ProgressBar,
     RankIconView,
     ResourceState,
@@ -109,6 +114,11 @@ export class PlayerProfile {
   private readonly seasonsApi = inject(SeasonsApi);
 
   /**
+   * Data-access service backing the reigning-champion lookup.
+   */
+  private readonly rankingApi = inject(RankingApi);
+
+  /**
    * i18n service used to resolve the player's translated rank label.
    */
   private readonly translation = inject(Translation);
@@ -142,6 +152,14 @@ export class PlayerProfile {
    * to competitive rather than being nullable.
    */
   protected readonly gameModeFilter = signal<GameMode>('COMPETITIVE');
+
+  /**
+   * Whether the stats and match history are scoped to the active week or to all time.
+   *
+   * Defaults to `'weekly'`: this profile is read first and foremost to check progress toward the
+   * active week's challenges, with the all-time record as secondary context.
+   */
+  protected readonly viewMode = signal<'weekly' | 'global'>('weekly');
 
   /**
    * Reactive resource fetching every known season, used by the season filter.
@@ -182,13 +200,28 @@ export class PlayerProfile {
   });
 
   /**
+   * Active week's Monday, as `YYYY-MM-DD`, or `null` while it has not loaded yet or in the
+   * `'global'` view.
+   *
+   * Read from the shared current-ranking resource rather than computed client-side, so it is
+   * always the exact week the backend considers active - the same source `Overview` and
+   * `WeeklyRanking` already rely on.
+   */
+  protected readonly activeWeekStart = computed<string | null>(() =>
+    this.viewMode() === 'weekly'
+      ? (resourceValue(this.rankingApi.current, null)?.weekStart ?? null)
+      : null,
+  );
+
+  /**
    * Reactive resource fetching the requested player's detailed profile, scoped to the selected
-   * game mode and season.
+   * game mode, season and - in the `'weekly'` view - the active week.
    */
   protected readonly detailsResource = this.playersApi.details(
     this.playerId,
     this.gameModeFilter,
     this.seasonId,
+    this.activeWeekStart,
   );
 
   /**
@@ -209,6 +242,7 @@ export class PlayerProfile {
     this.page,
     this.gameModeFilter,
     this.seasonId,
+    this.activeWeekStart,
   );
 
   /**
@@ -303,6 +337,17 @@ export class PlayerProfile {
   protected readonly avatarUrl = computed(() =>
     resolvePlayerAvatarUrl(this.details()?.portrait ?? null),
   );
+
+  /**
+   * Whether this player holds the reigning weekly "Champion" title, earned by finishing 1st in
+   * the most recently finalized week.
+   */
+  protected readonly isChampion = computed(() => {
+    const championPlayerId = resolveChampionPlayerId(
+      resourceValue(this.rankingApi.latestFinalizedWeek, null),
+    );
+    return this.details()?.id === championPlayerId;
+  });
 
   /**
    * Translated label and color class for the player's current competitive rank, or `null` while
@@ -434,6 +479,21 @@ export class PlayerProfile {
       return;
     }
     this.page.update((page) => page + 1);
+  }
+
+  /**
+   * Switches between the weekly and all-time views and restarts the match history from its first
+   * page, since {@link activeWeekStart} changing scopes both the statistics and the match history
+   * differently.
+   *
+   * @param mode - The newly selected view.
+   */
+  protected setViewMode(mode: 'weekly' | 'global'): void {
+    if (this.viewMode() === mode) {
+      return;
+    }
+    this.viewMode.set(mode);
+    this.restartMatchHistory();
   }
 
   /**

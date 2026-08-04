@@ -1,10 +1,48 @@
 {
+  "boss": {
+    "category": {
+      "ELITE": "Elite",
+      "MINOR": "Minor",
+      "STANDARD": "Standard"
+    },
+    "damageDealt": "{{damage}} / {{hp}} HP dealt",
+    "empty": "No week has been finalized yet.",
+    "error": "Failed to load the boss history.",
+    "finishingBlow": "Finishing blow",
+    "loading": "Loading the boss history…",
+    "outcome": {
+      "defeated": "Defeated",
+      "survived": "Survived"
+    },
+    "pagination": {
+      "next": "Next",
+      "page": "Page {{page}} of {{total}}",
+      "previous": "Previous"
+    },
+    "subtitle": "Review the boss the group faced each week, and who dealt the finishing blow.",
+    "title": "Boss",
+    "week": {
+      "label": "Week {{number}}"
+    },
+    "winStreak": "{{count}} win(s) in a row"
+  },
+  "champion": "Champion",
   "notFound": {
     "backToOverview": "Back to overview",
     "description": "The requested page does not exist or has been moved.",
     "title": "Page not found"
   },
   "overview": {
+    "bossEncounter": {
+      "defeated": "The boss has been defeated this week!",
+      "error": "Failed to load the weekly boss.",
+      "eyebrow": "Weekly boss",
+      "hpLabel": "Hit points",
+      "hpValue": "{{remaining}} / {{total}} HP",
+      "loading": "Loading the boss…",
+      "modifier": "Difficulty {{value}}%",
+      "winStreak": "{{count}} win(s) in a row"
+    },
     "podium": {
       "rank": {
         "1": "1st place",
@@ -142,7 +180,11 @@
       "record": "{{wins}} W / {{losses}} L",
       "winRate": "Win rate"
     },
-    "title": "Player profile"
+    "title": "Player profile",
+    "viewMode": {
+      "global": "Global",
+      "weekly": "This week"
+    }
   },
   "players": {
     "columns": {
@@ -194,6 +236,11 @@
     }
   },
   "retry": "Retry",
+  "shared": {
+    "pointsBadge": {
+      "unit": "DMG"
+    }
+  },
   "sidebar": {
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
@@ -218,6 +265,7 @@
       "unknown": "Never synchronized"
     },
     "nav": {
+      "boss": "Boss",
       "comparison": "Comparison",
       "overview": "Overview",
       "players": "Players",

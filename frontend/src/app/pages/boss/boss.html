@@ -1,0 +1,109 @@
+<!-- Header -->
+<header>
+  <h1 class="flex items-center gap-2 text-2xl font-bold tracking-wide text-text-primary uppercase">
+    {{ 'boss.title' | translate }}
+  </h1>
+  <p class="mt-1 text-sm text-text-secondary">
+    {{ 'boss.subtitle' | translate }}
+  </p>
+</header>
+
+<app-resource-state
+  [emptyText]="'boss.empty' | translate"
+  [errorText]="'boss.error' | translate"
+  [isEmpty]="weeks().length === 0"
+  [isError]="hasError()"
+  [isLoading]="isLoading()"
+  [loadingText]="'boss.loading' | translate"
+  padding="px-1 py-6"
+  (retry)="reload()"
+>
+  <div skeleton class="flex flex-col gap-4">
+    @for (placeholder of skeletonRows; track $index) {
+      <section
+        class="flex items-center gap-4 rounded-xl border border-surface-700 bg-surface-900 px-5 py-4"
+      >
+        <span class="h-9 w-9 shrink-0 rounded-full bg-surface-700"></span>
+        <span class="h-3 rounded-full bg-surface-700" [style.width.%]="placeholder"></span>
+      </section>
+    }
+  </div>
+
+  <!-- Boss history, one confrontation per finalized week. -->
+  <ul class="flex flex-col gap-4">
+    @for (week of weeks(); track week.weekStart) {
+      <li class="overflow-clip rounded-xl border border-surface-700 bg-surface-900">
+        <header class="flex flex-wrap items-center gap-x-3 border-b border-surface-700 px-5 py-4">
+          <h2 class="text-sm font-bold tracking-wide text-text-primary uppercase">
+            {{ week.weekLabel }}
+          </h2>
+          <span class="text-sm text-text-secondary">{{ week.dateRangeLabel }}</span>
+          <span
+            [class]="
+              week.defeated
+                ? 'bg-accent-green/15 text-accent-green'
+                : 'bg-surface-700 text-text-muted'
+            "
+            class="ms-auto rounded-full px-2.5 py-1 text-xs font-bold uppercase"
+          >
+            {{ (week.defeated ? 'boss.outcome.defeated' : 'boss.outcome.survived') | translate }}
+          </span>
+        </header>
+
+        <div class="flex flex-wrap items-center gap-4 px-5 py-4">
+          <div class="min-w-0 flex-1">
+            <p
+              [class]="week.categoryColorClass"
+              class="text-xs font-bold tracking-widest uppercase"
+            >
+              {{ week.categoryLabel }}
+            </p>
+            <p class="truncate text-base font-extrabold text-text-primary">{{ week.bossName }}</p>
+            <p class="mt-1 tabular-nums text-sm text-text-secondary">
+              {{
+                'boss.damageDealt'
+                  | translate: { damage: week.totalDamageDealt, hp: week.effectiveHp }
+              }}
+            </p>
+          </div>
+
+          @if (week.defeated && week.defeatedByPlayerDisplayName) {
+            <div class="flex shrink-0 items-center gap-2">
+              <app-avatar
+                [champion]="week.defeatedByIsChampion"
+                [src]="week.defeatedByAvatarUrl"
+                size="sm"
+              />
+              <div>
+                <p class="text-xs text-text-secondary">{{ 'boss.finishingBlow' | translate }}</p>
+                <p class="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
+                  {{ week.defeatedByPlayerDisplayName }}
+                  @if (week.defeatedByIsChampion) {
+                    <app-champion-badge />
+                  }
+                </p>
+              </div>
+            </div>
+          }
+
+          @if (week.winStreak > 0) {
+            <span
+              class="shrink-0 rounded-full bg-accent-gold/15 px-2.5 py-1 text-xs font-bold tabular-nums text-accent-gold"
+            >
+              {{ 'boss.winStreak' | translate: { count: week.winStreak } }}
+            </span>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+
+  <app-pagination
+    [nextLabel]="'boss.pagination.next' | translate"
+    (pageChange)="page.set($event)"
+    [page]="page()"
+    [pageLabel]="'boss.pagination.page' | translate: { page: page() + 1, total: totalPages() }"
+    [previousLabel]="'boss.pagination.previous' | translate"
+    [totalPages]="totalPages()"
+  />
+</app-resource-state>

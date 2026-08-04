@@ -8,13 +8,17 @@ import io.github.thomashtn.valorant.tracker.match.entity.PlayerMatch;
 import io.github.thomashtn.valorant.tracker.match.entity.ValorantMatch;
 import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
+import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchHistoryCriteria;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valorant.tracker.player.dto.PlayerDetailsResponse;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
+import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +46,12 @@ class DefaultPlayerQueryServiceTest {
     private PlayerMatchRepository playerMatchRepository;
 
     /**
+     * Mocked week calendar, never resolving a week bound since these tests never pass a weekStart.
+     */
+    @Mock
+    private WeekCalendar weekCalendar;
+
+    /**
      * Service under test.
      */
     private DefaultPlayerQueryService service;
@@ -51,7 +61,7 @@ class DefaultPlayerQueryServiceTest {
      */
     @BeforeEach
     void setUp() {
-        service = new DefaultPlayerQueryService(playerRepository, playerMatchRepository);
+        service = new DefaultPlayerQueryService(playerRepository, playerMatchRepository, weekCalendar);
     }
 
     /**
@@ -61,14 +71,46 @@ class DefaultPlayerQueryServiceTest {
     @Test
     void shouldScopeStatisticsToTheRequestedSeasonAndGameMode() {
         when(playerRepository.findById(1L)).thenReturn(Optional.of(player(1L)));
-        when(playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(1L, 5L, GameMode.COMPETITIVE))
-            .thenReturn(List.of(match(MatchResult.WIN, "Jett", "Ascent")));
+        when(
+            playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+                1L,
+                new PlayerMatchHistoryCriteria(
+                    5L, null, null, null, GameMode.COMPETITIVE,
+                    PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+                    PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+                )
+            )
+        ).thenReturn(List.of(match(MatchResult.WIN, "Jett", "Ascent")));
 
-        PlayerDetailsResponse response = service.findById(1L, 5L, "competitive");
+        PlayerDetailsResponse response = service.findById(1L, 5L, "competitive", null);
 
         assertThat(response.statistics().matchesPlayed()).isEqualTo(1);
         assertThat(response.statistics().wins()).isEqualTo(1);
         assertThat(response.statistics().losses()).isEqualTo(0);
+    }
+
+    /**
+     * Verifies that a supplied weekStart is resolved through the week calendar and forwarded as the
+     * matches' instant period, narrowing statistics to that calendar week.
+     */
+    @Test
+    void shouldScopeStatisticsToTheRequestedWeek() {
+        LocalDate weekStart = LocalDate.of(2026, 7, 27);
+        Instant periodStart = Instant.parse("2026-07-27T00:00:00Z");
+        Instant periodEnd = Instant.parse("2026-08-03T00:00:00Z");
+
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(player(1L)));
+        when(weekCalendar.startOf(weekStart)).thenReturn(periodStart);
+        when(weekCalendar.endOf(weekStart)).thenReturn(periodEnd);
+        when(
+            playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+                1L, new PlayerMatchHistoryCriteria(null, null, null, null, null, periodStart, periodEnd)
+            )
+        ).thenReturn(List.of(match(MatchResult.WIN, "Jett", "Ascent")));
+
+        PlayerDetailsResponse response = service.findById(1L, null, null, weekStart);
+
+        assertThat(response.statistics().matchesPlayed()).isEqualTo(1);
     }
 
     /**
@@ -78,13 +120,21 @@ class DefaultPlayerQueryServiceTest {
     @Test
     void shouldComputeLifetimeAggregateWhenNoFilterIsSupplied() {
         when(playerRepository.findById(1L)).thenReturn(Optional.of(player(1L)));
-        when(playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(1L, null, null))
-            .thenReturn(List.of(
-                match(MatchResult.WIN, "Jett", "Ascent"),
-                match(MatchResult.LOSS, "Reyna", "Bind")
-            ));
+        when(
+            playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+                1L,
+                new PlayerMatchHistoryCriteria(
+                    null, null, null, null, null,
+                    PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+                    PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+                )
+            )
+        ).thenReturn(List.of(
+            match(MatchResult.WIN, "Jett", "Ascent"),
+            match(MatchResult.LOSS, "Reyna", "Bind")
+        ));
 
-        PlayerDetailsResponse response = service.findById(1L, null, null);
+        PlayerDetailsResponse response = service.findById(1L, null, null, null);
 
         assertThat(response.statistics().matchesPlayed()).isEqualTo(2);
         assertThat(response.statistics().wins()).isEqualTo(1);
@@ -98,7 +148,7 @@ class DefaultPlayerQueryServiceTest {
     void shouldRejectAnUnknownGameMode() {
         when(playerRepository.findById(1L)).thenReturn(Optional.of(player(1L)));
 
-        assertThatThrownBy(() -> service.findById(1L, null, "not-a-mode"))
+        assertThatThrownBy(() -> service.findById(1L, null, "not-a-mode", null))
             .isInstanceOf(InvalidRequestException.class);
     }
 
@@ -109,7 +159,7 @@ class DefaultPlayerQueryServiceTest {
     void shouldThrowWhenPlayerDoesNotExist() {
         when(playerRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.findById(1L, null, null))
+        assertThatThrownBy(() -> service.findById(1L, null, null, null))
             .isInstanceOf(PlayerNotFoundException.class);
     }
 

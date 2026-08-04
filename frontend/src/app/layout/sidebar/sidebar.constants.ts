@@ -11,5 +11,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { icon: 'house', labelKey: 'overview', routerLink: '/', exactMatch: true },
   { icon: 'users', labelKey: 'players', routerLink: '/players' },
   //{ icon: 'chart-column', labelKey: 'comparison' },
+  { icon: 'skull', labelKey: 'boss', routerLink: '/boss' },
   { icon: 'trophy', labelKey: 'ranking', routerLink: '/ranking' },
 ];

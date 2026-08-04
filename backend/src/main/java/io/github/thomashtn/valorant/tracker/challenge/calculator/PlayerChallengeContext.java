@@ -58,4 +58,23 @@ public record PlayerChallengeContext(
 
         playerMatches = List.copyOf(playerMatches);
     }
+
+    /**
+     * Creates a copy of this context truncated to the first matches, in chronological order.
+     *
+     * <p>Used to replay a calculator match by match, to find the exact match at which a challenge
+     * became completed, without changing the calculator implementations themselves.
+     *
+     * @param matchCount number of leading matches to keep, must be between 1 and {@link #playerMatches()}'s size
+     * @return truncated context sharing every other field
+     */
+    public PlayerChallengeContext prefixedTo(int matchCount) {
+        return new PlayerChallengeContext(
+            playerId,
+            weekStart,
+            periodStart,
+            periodEnd,
+            playerMatches.subList(0, matchCount)
+        );
+    }
 }

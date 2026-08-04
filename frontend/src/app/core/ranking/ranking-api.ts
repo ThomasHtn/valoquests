@@ -25,6 +25,18 @@ export class RankingApi {
   public readonly current = httpResource<CurrentRanking>(() => API_ENDPOINTS.currentRanking);
 
   /**
+   * Most recently finalized week's ranking, used to resolve the reigning "Champion" title (see
+   * {@link resolveChampionPlayerId}).
+   *
+   * Shared as a single reactive resource for the same reason as {@link current}: every screen
+   * decorating a player's name with the title reads the same in-flight request.
+   */
+  public readonly latestFinalizedWeek = httpResource<PageResponse<RankingHistoryWeek>>(() => ({
+    url: API_ENDPOINTS.rankingHistory,
+    params: { page: 0, size: 1 },
+  }));
+
+  /**
    * Finalized weekly rankings, paginated by week and ordered from the most recent completed week
    * to the oldest.
    *

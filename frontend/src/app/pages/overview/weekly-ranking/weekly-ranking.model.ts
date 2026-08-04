@@ -87,4 +87,10 @@ export interface RankingRow {
   readonly avatarUrl: string | null;
   readonly points: number;
   readonly cells: readonly RankingCell[];
+
+  /**
+   * Whether this player holds the reigning weekly "Champion" title, earned by finishing 1st in
+   * the most recently finalized week.
+   */
+  readonly isChampion: boolean;
 }

@@ -28,25 +28,36 @@ public record CurrentRankingResponse(
     /**
      * Exposes one player's live standing in the current week.
      *
-     * @param position            current rank, starting at 1
+     * @param position            current rank, starting at 1, {@code null} when the player is not
+     *     competitive and therefore never ranked
      * @param previousPosition    rank held in the previous week, {@code null} when the player had
      *     none
      * @param positionVariation   places gained since the previous week, negative when lost
      * @param player              identity shown next to the rank
-     * @param points              points accumulated so far this week
+     * @param points              challenge damage accumulated so far this week
      * @param completedChallenges challenges completed so far
      * @param totalChallenges     challenges selected for the week
+     * @param matchDamage         damage dealt by valued matches so far this week
+     * @param regularityBonus     regularity bonus for the number of active days so far
+     * @param teamBonus           sum of per-challenge team bonuses earned so far
+     * @param activeDays          number of distinct active days so far this week
+     * @param totalDamage         total damage dealt to the boss so far: the individual ranking key
      * @param challengeProgress   per-challenge progress backing the counters above
      */
     public record RankingEntryResponse(
 
-        int position,
+        Integer position,
         Integer previousPosition,
         int positionVariation,
         PlayerRankingResponse player,
         int points,
         int completedChallenges,
         int totalChallenges,
+        int matchDamage,
+        int regularityBonus,
+        int teamBonus,
+        int activeDays,
+        int totalDamage,
         List<ChallengeProgressResponse> challengeProgress
     ) {
         /**

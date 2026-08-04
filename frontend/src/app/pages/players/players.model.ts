@@ -8,6 +8,12 @@ export interface PlayerRow {
   readonly displayName: string;
 
   /**
+   * Whether this player holds the reigning weekly "Champion" title, earned by finishing 1st in
+   * the most recently finalized week.
+   */
+  readonly isChampion: boolean;
+
+  /**
    * Tag segment of the player's Riot ID (e.g. `"EUW"` from `"Kenshiro#EUW"`), or `null` when
    * absent.
    */

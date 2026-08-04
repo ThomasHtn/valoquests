@@ -2,7 +2,7 @@
  * Icon of a {@link NavItem}, matched against a `@switch` in the template
  * since each Lucide icon is its own standalone directive.
  */
-export type NavIcon = 'house' | 'users' | 'chart-column' | 'trophy';
+export type NavIcon = 'house' | 'users' | 'chart-column' | 'trophy' | 'skull';
 
 /**
  * Primary navigation entry.

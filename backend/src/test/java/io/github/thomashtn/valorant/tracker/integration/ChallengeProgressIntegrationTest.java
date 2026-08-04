@@ -205,11 +205,14 @@ class ChallengeProgressIntegrationTest
             40
         );
 
+        // Clearly before the week's start under the Europe/Paris zone (Monday 00:00 Paris =
+        // 2026-07-19T22:00:00Z): a timestamp equal to that boundary would fall inside the week instead
+        // of before it, since the period start is inclusive.
         createExcludedMatch(
             player,
             season,
             "integration-previous-week",
-            "2026-07-19T22:00:00Z",
+            "2026-07-19T20:00:00Z",
             GameMode.COMPETITIVE,
             100
         );
@@ -282,6 +285,15 @@ class ChallengeProgressIntegrationTest
     /**
      * Verifies the ranking generated from completed challenge progress.
      *
+     * <p>Challenge damage is resolved from {@code ScoringRulesetV1} by difficulty tier: completing all
+     * five (EASY 1500 + NORMAL 2500 + MEDIUM 4000 + HARD 6000 + VERY_HARD 9000) totals 23000, matching
+     * the design notes' own worked example. Match damage sums the five valued matches this player
+     * played this week — four COMPETITIVE (WIN 500 + LOSS 350 + WIN 500 + LOSS 350) plus the Deathmatch
+     * match, which reaches the 40-kill victory threshold (WIN 150) — for 1850. Those five matches also
+     * span five distinct calendar days (the Deathmatch match falls on its own day), so the regularity
+     * bonus is the 5-day tier, 1800. A single active player means no challenge here is shared, so the
+     * team bonus stays at zero.
+     *
      * @param player expected ranked player
      */
     private void assertGeneratedRanking(Player player) {
@@ -304,10 +316,25 @@ class ChallengeProgressIntegrationTest
                     .isNull();
 
                 assertThat(score.getPoints())
-                    .isEqualTo(1_500);
+                    .isEqualTo(23_000);
 
                 assertThat(score.getCompletedChallenges())
                     .isEqualTo(5);
+
+                assertThat(score.getMatchDamage())
+                    .isEqualTo(1_850);
+
+                assertThat(score.getActiveDays())
+                    .isEqualTo(5);
+
+                assertThat(score.getRegularityBonus())
+                    .isEqualTo(1_800);
+
+                assertThat(score.getTeamBonus())
+                    .isEqualTo(0);
+
+                assertThat(score.getTotalDamage())
+                    .isEqualTo(26_650);
 
                 assertThat(score.getCalculatedAt())
                     .isEqualTo(CALCULATION_TIME);
