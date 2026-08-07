@@ -95,3 +95,22 @@
     display: none;
   }
 }
+
+/*
+ * Ranking history carousel: the entrance of the week currently on screen, the carousel's one
+ * authored motion moment. Slides in from the side matching the navigation direction — left for a
+ * more recent week, right for an older one — via the `--week-enter-offset` custom property set
+ * inline by the ranking page. Referenced through an arbitrary `animation` utility rather than a
+ * Tailwind keyframe since only that one element ever plays it.
+ */
+@keyframes week-enter {
+  from {
+    opacity: 0;
+    transform: translateX(var(--week-enter-offset, 16px));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

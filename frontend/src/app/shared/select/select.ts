@@ -61,6 +61,45 @@ export class Select<T> {
   public readonly value = model<T | null>(null);
 
   /**
+   * Whether the trigger is disabled.
+   */
+  public readonly disabled = input(false);
+
+  /**
+   * Already-translated message shown in the panel instead of the options list once there is
+   * nothing meaningful left to choose from (zero options, or a single one that's already the
+   * current value). Left empty (the default) for call sites that never hit that case and are
+   * happy to keep showing whatever `options()` holds, even a lone entry.
+   */
+  public readonly emptyText = input('');
+
+  /**
+   * Corner shape of the trigger: `'full'` for the standard pill (the default, used by every
+   * filter dropdown), `'lg'` for a rounded rectangle when the trigger doubles as a page heading
+   * (e.g. the ranking history carousel's week selector).
+   */
+  public readonly rounded = input<'full' | 'lg'>('full');
+
+  /**
+   * Visual weight of the trigger: `'solid'` for the standard bordered, gradient-filled pill (the
+   * default, used by every filter dropdown), `'ghost'` for a background-free trigger that only
+   * reveals itself on hover/focus — for placements where the control should read as a quiet page
+   * affordance rather than a filter (e.g. the ranking history carousel's week selector, sitting
+   * next to the page title).
+   */
+  public readonly variant = input<'solid' | 'ghost'>('solid');
+
+  /**
+   * Trigger classes for the current {@link variant}, isolated from the shared layout/typography
+   * classes in the template so neither copy has to repeat the other's concerns.
+   */
+  protected readonly variantClass = computed(() =>
+    this.variant() === 'ghost'
+      ? 'text-text-secondary hover:bg-surface-800/60 hover:text-text-primary'
+      : 'border border-surface-700 bg-gradient-to-b from-surface-800 to-surface-950 text-text-primary transition-[background-image,scale] hover:from-surface-700 hover:to-surface-900',
+  );
+
+  /**
    * Id of the options panel, referenced by the trigger's `aria-controls`.
    */
   protected readonly listboxId = `select-listbox-${++instanceCount}`;

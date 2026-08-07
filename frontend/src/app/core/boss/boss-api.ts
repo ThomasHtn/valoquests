@@ -1,5 +1,5 @@
-import { httpResource, HttpResourceRef } from '@angular/common/http';
-import { Service, Signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { Service } from '@angular/core';
 
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
@@ -7,9 +7,12 @@ import { PageResponse } from '@core/http/page-response.model';
 import { BossHistoryWeek, CurrentBoss } from './boss.model';
 
 /**
- * Number of finalized weeks requested per page of boss history.
+ * Number of finalized weeks requested for the boss history, fetched in a single page. The battle
+ * timeline (see the boss page) renders the group's whole confrontation history at once rather than
+ * paginating it, and the group is small and short-lived enough (see the root CLAUDE.md) that this
+ * ceiling — the backend's own maximum page size — is never expected to be reached.
  */
-const BOSS_HISTORY_PAGE_SIZE = 5;
+const BOSS_HISTORY_SIZE = 100;
 
 /**
  * Data-access service for the weekly boss confrontation.
@@ -25,18 +28,15 @@ export class BossApi {
   public readonly current = httpResource<CurrentBoss>(() => API_ENDPOINTS.currentBoss);
 
   /**
-   * Finalized weekly boss confrontations, paginated by week and ordered from the most recent
-   * completed week to the oldest.
+   * Every finalized weekly boss confrontation, ordered from the most recent completed week to the
+   * oldest.
    *
-   * Created per caller, unlike {@link current}, since it is parameterized by the requested page.
-   *
-   * @param page - Reactive zero-based page index.
-   * @returns The reactive resource fetching the requested page of boss history.
+   * Shared as a single reactive resource, like {@link current}: unlike the ranking/challenge
+   * history pages, the boss timeline has no per-consumer parameter (no page to request) since it
+   * always renders the full history.
    */
-  public history(page: Signal<number>): HttpResourceRef<PageResponse<BossHistoryWeek> | undefined> {
-    return httpResource<PageResponse<BossHistoryWeek>>(() => ({
-      url: API_ENDPOINTS.bossHistory,
-      params: { page: page(), size: BOSS_HISTORY_PAGE_SIZE },
-    }));
-  }
+  public readonly history = httpResource<PageResponse<BossHistoryWeek>>(() => ({
+    url: API_ENDPOINTS.bossHistory,
+    params: { page: 0, size: BOSS_HISTORY_SIZE },
+  }));
 }

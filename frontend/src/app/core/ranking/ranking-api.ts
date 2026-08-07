@@ -1,5 +1,5 @@
-import { httpResource, HttpResourceRef } from '@angular/common/http';
-import { Service, Signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { Service } from '@angular/core';
 
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
@@ -7,9 +7,15 @@ import { PageResponse } from '@core/http/page-response.model';
 import { CurrentRanking, RankingHistoryWeek } from './ranking.model';
 
 /**
- * Number of finalized weeks requested per page of ranking history.
+ * Upper bound of finalized weeks fetched in one call to {@link RankingApi.history} — the backend's
+ * own maximum for `size` on `GET /api/rankings/history`.
+ *
+ * The tracked group is fixed and the calendar cadence is weekly (see the root CLAUDE.md), so almost
+ * two years of history stay under this ceiling. Fetching it all in one request lets the ranking
+ * history page's carousel and quick-jump dropdown browse weeks entirely client-side instead of
+ * round-tripping on every navigation step.
  */
-const RANKING_HISTORY_PAGE_SIZE = 5;
+const RANKING_HISTORY_MAX_WEEKS = 100;
 
 /**
  * Data-access service for the weekly player ranking.
@@ -37,20 +43,14 @@ export class RankingApi {
   }));
 
   /**
-   * Finalized weekly rankings, paginated by week and ordered from the most recent completed week
-   * to the oldest.
+   * Every finalized weekly ranking, ordered from the most recent completed week to the oldest.
    *
-   * Created per caller, unlike {@link current}, since it is parameterized by the requested page.
-   *
-   * @param page - Reactive zero-based page index.
-   * @returns The reactive resource fetching the requested page of ranking history.
+   * Shared as a single reactive resource, like {@link current}: the ranking history page browses
+   * it entirely client-side (its carousel and quick-jump dropdown alike), so one request covers
+   * the whole page instead of one per navigation step.
    */
-  public history(
-    page: Signal<number>,
-  ): HttpResourceRef<PageResponse<RankingHistoryWeek> | undefined> {
-    return httpResource<PageResponse<RankingHistoryWeek>>(() => ({
-      url: API_ENDPOINTS.rankingHistory,
-      params: { page: page(), size: RANKING_HISTORY_PAGE_SIZE },
-    }));
-  }
+  public readonly history = httpResource<PageResponse<RankingHistoryWeek>>(() => ({
+    url: API_ENDPOINTS.rankingHistory,
+    params: { page: 0, size: RANKING_HISTORY_MAX_WEEKS },
+  }));
 }

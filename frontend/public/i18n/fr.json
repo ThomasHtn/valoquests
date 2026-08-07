@@ -6,7 +6,6 @@
       "STANDARD": "Standard"
     },
     "damageDealt": "{{damage}} / {{hp}} PV infligés",
-    "empty": "Aucune semaine n'a encore été finalisée.",
     "error": "Impossible de charger l'historique des boss.",
     "finishingBlow": "Coup de grâce",
     "loading": "Chargement de l'historique des boss…",
@@ -14,13 +13,19 @@
       "defeated": "Vaincu",
       "survived": "A survécu"
     },
-    "pagination": {
-      "next": "Suivant",
-      "page": "Page {{page}} sur {{total}}",
-      "previous": "Précédent"
+    "status": {
+      "current": "En cours",
+      "upcoming": "À venir"
     },
     "subtitle": "Retrouvez le boss affronté par le groupe chaque semaine, et qui a porté le coup de grâce.",
+    "timeline": {
+      "ariaLabel": "Chronologie des combats de boss"
+    },
     "title": "Boss",
+    "upcoming": {
+      "description": "Le prochain adversaire n'est pas encore déterminé.",
+      "name": "Boss inconnu"
+    },
     "week": {
       "label": "Semaine {{number}}"
     }
@@ -214,13 +219,17 @@
       "player": "Joueur",
       "position": "#"
     },
+    "carousel": {
+      "empty": "Aucune autre semaine disponible",
+      "jumpTo": "Aller à une semaine",
+      "next": "Semaine suivante",
+      "previous": "Semaine précédente"
+    },
     "empty": "Aucune semaine n'a encore été finalisée.",
     "error": "Impossible de charger l'historique du classement.",
     "loading": "Chargement de l'historique du classement…",
-    "pagination": {
-      "next": "Suivant",
-      "page": "Page {{page}} sur {{total}}",
-      "previous": "Précédent"
+    "podium": {
+      "title": "Podium"
     },
     "subtitle": "Retrouvez les dégâts obtenus par chaque joueur, semaine après semaine.",
     "title": "Classement",
@@ -230,8 +239,11 @@
   },
   "retry": "Réessayer",
   "shared": {
+    "challengeCompletionBadge": {
+      "label": "Défis complétés"
+    },
     "damageBadge": {
-      "unit": "DGS"
+      "label": "Dégâts"
     }
   },
   "sidebar": {

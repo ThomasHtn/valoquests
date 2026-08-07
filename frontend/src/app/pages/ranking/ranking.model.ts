@@ -12,10 +12,22 @@ export interface RankingHistoryRow {
 
 /**
  * Single historical week rendered as its own ranking block, paired with its resolved label.
+ *
+ * Split into a podium spotlight and the rest of the field, mirroring the overview page's podium so
+ * a finalized week reads the same competitive shape as the live one.
  */
 export interface RankingHistoryWeekView {
   readonly weekStart: string;
   readonly weekLabel: string;
   readonly dateRangeLabel: string;
-  readonly rows: readonly RankingHistoryRow[];
+
+  /**
+   * The top 3 finishers, shown as the week's podium spotlight.
+   */
+  readonly top3: readonly RankingHistoryRow[];
+
+  /**
+   * Finishers from 4th place onward, shown as a compact list below the podium.
+   */
+  readonly rest: readonly RankingHistoryRow[];
 }
