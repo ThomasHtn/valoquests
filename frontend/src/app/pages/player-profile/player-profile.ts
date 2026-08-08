@@ -16,6 +16,7 @@ import {
   LucideActivity,
   LucideChevronRight,
   LucideCrosshair,
+  LucideEllipsisVertical,
   LucideGamepad2,
   LucideLoaderCircle,
   LucideSwords,
@@ -63,6 +64,13 @@ import { MatchDay } from './match-day.model';
 import { groupMatchesByDay } from './match-day.utils';
 
 /**
+ * Game modes shown as their own button in the game-mode filter's button group, in
+ * {@link FILTERABLE_GAME_MODES} order. The remaining modes stay reachable through that group's
+ * overflow menu rather than crowding the group itself.
+ */
+const PRIMARY_GAME_MODES: readonly GameMode[] = ['COMPETITIVE', 'UNRATED', 'DEATHMATCH'];
+
+/**
  * Player-profile page.
  *
  * Displays one tracked player's identity, current competitive rank, aggregated statistics and
@@ -83,6 +91,7 @@ import { groupMatchesByDay } from './match-day.utils';
     LucideActivity,
     LucideChevronRight,
     LucideCrosshair,
+    LucideEllipsisVertical,
     LucideGamepad2,
     LucideLoaderCircle,
     LucideSwords,
@@ -90,7 +99,10 @@ import { groupMatchesByDay } from './match-day.utils';
     LucideZap,
   ],
   templateUrl: './player-profile.html',
-  host: { class: PAGE_LAYOUT_CLASS },
+  host: {
+    class: PAGE_LAYOUT_CLASS,
+    '(document:click)': 'onDocumentClick($event)',
+  },
 })
 export class PlayerProfile {
   /**
@@ -262,20 +274,59 @@ export class PlayerProfile {
   );
 
   /**
+   * Game modes rendered as their own button in the game-mode filter's button group.
+   */
+  protected readonly primaryGameModes = PRIMARY_GAME_MODES;
+
+  /**
+   * {@link gameModeFilterOptions}, narrowed to the modes not offered their own button - i.e. those
+   * reachable only through the game-mode filter's overflow menu.
+   */
+  protected readonly overflowGameModeOptions = computed<readonly SelectOption<GameMode>[]>(() =>
+    this.gameModeFilterOptions().filter((option) => !PRIMARY_GAME_MODES.includes(option.value)),
+  );
+
+  /**
+   * Translated label of the selected game mode when it is one of {@link overflowGameModeOptions},
+   * or `null` when a primary mode is selected. Shown on the overflow trigger itself so the active
+   * filter stays legible even when it isn't one of the buttons rendered beside it.
+   */
+  protected readonly overflowGameModeActiveLabel = computed(
+    () =>
+      this.overflowGameModeOptions().find((option) => option.value === this.gameModeFilter())
+        ?.label ?? null,
+  );
+
+  /**
+   * Whether the game-mode filter's overflow menu is open.
+   */
+  protected readonly isGameModeMenuOpen = signal(false);
+
+  /**
+   * Wrapper around the overflow trigger and its panel, used to tell a click on either apart from a
+   * click elsewhere on the page - see {@link onDocumentClick}.
+   */
+  private readonly gameModeMenu = viewChild<ElementRef<HTMLElement>>('gameModeMenu');
+
+  /**
    * Options offered by the season filter, including the "all seasons" entry.
    */
   protected readonly seasonFilterOptions = computed<readonly SelectOption<number | null>[]>(() => [
     { value: null, label: this.translation.translate('playerProfile.filters.allSeasons') },
-    ...this.seasons().map((season) => ({ value: season.id, label: season.name })),
+    ...this.seasons().map((season) => ({
+      value: season.id,
+      label: this.translation.translate('playerProfile.filters.season', { name: season.name }),
+    })),
   ]);
 
   /**
    * Every match fetched so far, grouped into the days they were played on.
    *
-   * Drives both the table and the card list, so a day's record is computed once.
+   * Drives both the table and the card list, so a day's record is computed once. Recomputed on a
+   * language switch too, since each day's label is spelled out in the active language.
    */
   protected readonly matchDays = computed<readonly MatchDay[]>(() =>
-    groupMatchesByDay(this.matches()),
+    groupMatchesByDay(this.matches(), this.translation.language()),
   );
 
   /**
@@ -388,6 +439,20 @@ export class PlayerProfile {
   protected readonly resultAccentClass = resolveResultAccentClass;
 
   /**
+   * Shared column grid for every row of the desktop match-history grid (header, day-summary and
+   * match rows alike), so their columns land at the same horizontal position however each row is
+   * otherwise styled. A CSS Grid rather than an HTML `<table>`: match rows need a real inset
+   * margin to read as nested under the day-summary row above them, and `margin` has no effect on
+   * `<tr>`.
+   *
+   * The 6 stat columns are `fr`-based, not fixed widths: a fixed width keeps them pinned to their
+   * own narrow band regardless of how wide the row grows, bunching every stat together at the
+   * row's trailing edge instead of spreading across it.
+   */
+  protected readonly rowGridClass =
+    'grid grid-cols-[minmax(0,2fr)_repeat(6,minmax(0,1fr))] items-center';
+
+  /**
    * Resolves the colour carrying a match's result on the player's own score, exposed to the
    * template.
    */
@@ -498,17 +563,44 @@ export class PlayerProfile {
 
   /**
    * Applies the selected game-mode filter and restarts the match history from its first page.
+   * Called directly by the button group's own buttons and by {@link selectOverflowGameMode}.
    *
-   * @param gameMode - The newly selected game mode. `null` never actually occurs here - the
-   * game-mode select never offers a "no selection" option - but `Select#value` is typed `T | null`
-   * for every consumer, so the emitted event carries that type regardless.
+   * @param gameMode - The newly selected game mode.
    */
-  protected onGameModeFilterChange(gameMode: GameMode | null): void {
-    if (gameMode === null) {
-      return;
-    }
+  protected onGameModeFilterChange(gameMode: GameMode): void {
     this.gameModeFilter.set(gameMode);
     this.restartMatchHistory();
+  }
+
+  /**
+   * Toggles the game-mode filter's overflow menu.
+   */
+  protected toggleGameModeMenu(): void {
+    this.isGameModeMenuOpen.update((isOpen) => !isOpen);
+  }
+
+  /**
+   * Applies a game mode picked from the overflow menu and closes it.
+   *
+   * @param gameMode - The newly selected game mode.
+   */
+  protected selectOverflowGameMode(gameMode: GameMode): void {
+    this.isGameModeMenuOpen.set(false);
+    this.onGameModeFilterChange(gameMode);
+  }
+
+  /**
+   * Closes the game-mode filter's overflow menu when a click lands outside its trigger and panel.
+   *
+   * @param event - The document-wide click event.
+   */
+  protected onDocumentClick(event: MouseEvent): void {
+    if (
+      this.isGameModeMenuOpen() &&
+      !this.gameModeMenu()?.nativeElement.contains(event.target as Node)
+    ) {
+      this.isGameModeMenuOpen.set(false);
+    }
   }
 
   /**

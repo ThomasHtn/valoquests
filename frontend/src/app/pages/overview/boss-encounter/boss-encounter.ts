@@ -1,11 +1,12 @@
 import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
-import { LucideClock, LucideSkull, LucideSwords } from '@lucide/angular';
+import { LucideClock, LucideHeart, LucideSkull, LucideSwords } from '@lucide/angular';
 
 import { BossApi } from '@core/boss/boss-api';
 import { resolveBossHpBarColorClass } from '@core/boss/boss-visual.utils';
 import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { HEX_FRAME_EDGES } from '@pages/boss/boss-timeline.constants';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { WeekSummary } from '../overview.model';
@@ -27,6 +28,7 @@ import { WeekSummary } from '../overview.model';
     LucideSkull,
     LucideSwords,
     LucideClock,
+    LucideHeart,
   ],
   templateUrl: './boss-encounter.html',
 })
@@ -95,6 +97,12 @@ export class BossEncounter {
   protected readonly hpBarColorClass = computed(() =>
     resolveBossHpBarColorClass(this.remainingPercentage()),
   );
+
+  /**
+   * Six shortened edges tracing the portrait's segmented hex frame, shared with the boss battle
+   * timeline's markers (`boss.html`) so both pages read as the same "character" framing.
+   */
+  protected readonly hexFrameEdges = HEX_FRAME_EDGES;
 
   /**
    * Reloads the backing resource after a failure.

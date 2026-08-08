@@ -35,6 +35,11 @@ export const routes: Routes = [
     loadComponent: () => import('@pages/boss/boss').then((m) => m.Boss),
   },
   {
+    path: 'rules',
+    title: 'rules.title',
+    loadComponent: () => import('@pages/rules/rules').then((m) => m.Rules),
+  },
+  {
     path: '**',
     title: 'notFound.title',
     loadComponent: () => import('@pages/not-found/not-found').then((m) => m.NotFound),

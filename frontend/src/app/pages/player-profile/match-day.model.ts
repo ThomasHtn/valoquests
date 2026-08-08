@@ -32,4 +32,39 @@ export interface MatchDay {
    * The day's matches, in the order the API returned them.
    */
   readonly matches: readonly Match[];
+
+  /**
+   * Average KDA ratio across the day's matches.
+   */
+  readonly avgKda: number;
+
+  /**
+   * Average headshot percentage across the day's matches.
+   */
+  readonly avgHeadshotPercentage: number;
+
+  /**
+   * Average damage per round across the day's matches.
+   */
+  readonly avgAdr: number;
+
+  /**
+   * Average combat score across the day's matches.
+   */
+  readonly avgAcs: number;
+
+  /**
+   * Kills summed across the day's matches.
+   */
+  readonly totalKills: number;
+
+  /**
+   * Deaths summed across the day's matches.
+   */
+  readonly totalDeaths: number;
+
+  /**
+   * Assists summed across the day's matches.
+   */
+  readonly totalAssists: number;
 }

@@ -18,17 +18,19 @@
   (retry)="detailsResource.reload()"
 >
   <div skeleton class="flex flex-col gap-6">
-    <div class="flex items-center gap-5 rounded-xl border border-surface-700 bg-surface-900 p-5">
+    <div
+      class="flex items-center gap-5 rounded-lg bg-gradient-to-r from-surface-800/50 via-surface-800/15 to-transparent p-5"
+    >
       <span class="h-24 w-24 shrink-0 rounded-xl bg-surface-700"></span>
       <span class="flex flex-col gap-3">
         <span class="h-6 w-48 rounded-full bg-surface-700"></span>
         <span class="h-3 w-24 rounded-full bg-surface-700"></span>
       </span>
     </div>
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
       @for (placeholder of skeletonRows; track $index) {
-        <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
-          <span class="mb-3 block h-2.5 w-16 rounded-full bg-surface-700"></span>
+        <div class="rounded-xl bg-surface-800 p-3">
+          <span class="mb-2 block h-2.5 w-16 rounded-full bg-surface-700"></span>
           <span class="block h-6 w-14 rounded-full bg-surface-700"></span>
         </div>
       }
@@ -38,13 +40,13 @@
   @if (details(); as playerDetails) {
     <!-- Player identity -->
     <section
-      class="flex flex-col gap-6 rounded-xl border border-surface-700 bg-surface-900 p-5 sm:flex-row sm:items-center sm:justify-between"
+      class="flex flex-col gap-6 rounded-lg bg-surface-800/15 p-5 sm:flex-row sm:items-center sm:justify-between"
     >
       <div class="flex items-center gap-5">
         <app-avatar [champion]="isChampion()" [priority]="true" [src]="avatarUrl()" size="lg" />
         <div>
           <h1
-            class="flex items-center gap-2 text-2xl font-bold tracking-wide uppercase"
+            class="flex items-center gap-2 text-2xl font-extrabold tracking-wide uppercase"
             [class.text-accent-gold]="isChampion()"
             [class.text-text-primary]="!isChampion()"
           >
@@ -72,60 +74,98 @@
       }
     </section>
 
-    <!-- View toggle: weekly progress leads, since it is what a player checks first to track this
-         week's challenges, with the all-time record as secondary context. Placed first, ahead of
-         the season/game-mode filters, since it changes what the filters below are scoped to. -->
-    <div
-      class="inline-flex w-fit items-center gap-1 rounded-lg border border-surface-700 bg-surface-900 p-1"
-      role="tablist"
-    >
-      <button
-        (click)="setViewMode('weekly')"
-        [class.bg-brand-500]="viewMode() === 'weekly'"
-        [class.text-text-secondary]="viewMode() !== 'weekly'"
-        [class.text-white]="viewMode() === 'weekly'"
-        [attr.aria-selected]="viewMode() === 'weekly'"
-        class="focus-ring rounded-md px-3 py-1.5 text-sm font-semibold transition-colors"
-        role="tab"
-        type="button"
-      >
-        {{ 'playerProfile.viewMode.weekly' | translate }}
-      </button>
-      <button
-        (click)="setViewMode('global')"
-        [class.bg-brand-500]="viewMode() === 'global'"
-        [class.text-text-secondary]="viewMode() !== 'global'"
-        [class.text-white]="viewMode() === 'global'"
-        [attr.aria-selected]="viewMode() === 'global'"
-        class="focus-ring rounded-md px-3 py-1.5 text-sm font-semibold transition-colors"
-        role="tab"
-        type="button"
-      >
-        {{ 'playerProfile.viewMode.global' | translate }}
-      </button>
-    </div>
-
-    <!-- Filters. Placed above the stats they scope, rather than above the match history alone,
-         since both are now correlated to the selected season, game mode and view. -->
+    <!-- Filters. Placed first, ahead of the weekly/global tabs: both the tabs and everything they
+         scope read differently depending on the selected game mode and season, so the filters
+         take priority over them. -->
     <div class="flex flex-wrap items-center gap-3">
-      <app-select
-        [ariaLabel]="'playerProfile.filters.gameModeLabel' | translate"
-        [options]="gameModeFilterOptions()"
-        [value]="gameModeFilter()"
-        (valueChange)="onGameModeFilterChange($event)"
-      />
+      <!-- Game-mode filter, as a button group: the modes players actually check sit right in
+           view (see `PRIMARY_GAME_MODES`), the rest stay one tap away behind the overflow
+           trigger instead of crowding the group with every mode the backend can report. -->
+      <div
+        #gameModeMenu
+        (keydown.escape)="isGameModeMenuOpen.set(false)"
+        [attr.aria-label]="'playerProfile.filters.gameModeLabel' | translate"
+        class="relative inline-flex items-center gap-1 rounded-lg p-1"
+        role="group"
+      >
+        @for (mode of primaryGameModes; track mode) {
+          <button
+            (click)="onGameModeFilterChange(mode)"
+            [attr.aria-pressed]="gameModeFilter() === mode"
+            [class.border-brand-500/45]="gameModeFilter() === mode"
+            [class.bg-brand-500/12]="gameModeFilter() === mode"
+            [class.text-brand-400]="gameModeFilter() === mode"
+            [class.border-transparent]="gameModeFilter() !== mode"
+            [class.text-text-secondary]="gameModeFilter() !== mode"
+            [class.hover:bg-surface-800]="gameModeFilter() !== mode"
+            [class.hover:text-text-primary]="gameModeFilter() !== mode"
+            class="focus-ring cursor-pointer rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors motion-safe:active:scale-[0.96]"
+            type="button"
+          >
+            {{ 'playerProfile.matches.gameMode.' + mode | translate }}
+          </button>
+        }
+
+        <!-- Overflow trigger: shows the active mode's label instead of staying icon-only once a
+             non-primary mode is picked, so the current filter stays legible without opening the
+             menu. -->
+        <button
+          (click)="toggleGameModeMenu()"
+          [attr.aria-expanded]="isGameModeMenuOpen()"
+          [attr.aria-label]="'playerProfile.filters.moreGameModes' | translate"
+          [class.border-brand-500/45]="overflowGameModeActiveLabel()"
+          [class.bg-brand-500/12]="overflowGameModeActiveLabel()"
+          [class.text-brand-400]="overflowGameModeActiveLabel()"
+          [class.border-transparent]="!overflowGameModeActiveLabel()"
+          [class.text-text-secondary]="!overflowGameModeActiveLabel()"
+          [class.hover:bg-surface-800]="!overflowGameModeActiveLabel()"
+          [class.hover:text-text-primary]="!overflowGameModeActiveLabel()"
+          aria-haspopup="menu"
+          class="focus-ring flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-semibold transition-colors motion-safe:active:scale-[0.96]"
+          type="button"
+        >
+          @if (overflowGameModeActiveLabel(); as activeLabel) {
+            <span>{{ activeLabel }}</span>
+          }
+          <svg class="h-4 w-4 shrink-0" lucideEllipsisVertical></svg>
+        </button>
+
+        @if (isGameModeMenuOpen()) {
+          <div
+            [attr.aria-label]="'playerProfile.filters.moreGameModes' | translate"
+            class="absolute top-full right-0 z-20 mt-2 min-w-40 rounded-lg bg-gradient-to-b from-surface-800 to-surface-950 py-1"
+            role="menu"
+          >
+            @for (option of overflowGameModeOptions(); track option.value) {
+              <button
+                (click)="selectOverflowGameMode(option.value)"
+                [attr.aria-checked]="gameModeFilter() === option.value"
+                [class.bg-surface-800]="gameModeFilter() === option.value"
+                class="block w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-text-primary transition-colors hover:bg-surface-800"
+                role="menuitemradio"
+                type="button"
+              >
+                {{ option.label }}
+              </button>
+            }
+          </div>
+        }
+      </div>
 
       <app-select
         [ariaLabel]="'playerProfile.filters.seasonLabel' | translate"
         [options]="seasonFilterOptions()"
         [value]="seasonId()"
         (valueChange)="onSeasonFilterChange($event)"
+        class="sm:ml-auto"
+        rounded="lg"
+        variant="gradient"
       />
 
       @if (hasActiveFilters()) {
         <button
           (click)="resetFilters()"
-          class="focus-ring min-h-10 cursor-pointer rounded-lg px-2 text-sm font-semibold text-text-secondary underline-offset-4 transition-colors hover:text-text-primary hover:underline sm:ml-auto"
+          class="focus-ring min-h-10 cursor-pointer rounded-lg px-2 text-sm font-semibold text-text-secondary underline-offset-4 transition-colors hover:text-text-primary hover:underline"
           type="button"
         >
           {{ 'playerProfile.filters.reset' | translate }}
@@ -133,375 +173,498 @@
       }
     </div>
 
-    <!-- Stat tiles. The win rate leads: it is the one figure that summarises a player's record,
-         so it gets the wide tile, the bar and the win/loss split, while the rest stay uniform. -->
-    <section class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
-      <div
-        class="col-span-2 rounded-xl border border-surface-700 bg-surface-900 p-4 sm:col-span-3 lg:col-span-2"
-      >
-        <div class="mb-3 flex items-center gap-2 text-text-secondary">
-          <svg class="h-4 w-4 text-accent-green" lucideTarget></svg>
-          <span class="text-xs font-semibold tracking-wide uppercase">
-            {{ 'playerProfile.stats.winRate' | translate }}
-          </span>
-        </div>
-        <p
-          [class]="winRateVisual(playerDetails.statistics.winRate).textClass"
-          class="text-4xl font-bold tabular-nums"
+    <!-- View toggle, as underline tabs matching the app's tab convention: whether the stats and
+         match history below are scoped to the active week or to all time. Placed below the
+         filters, which take priority since they change what the tabs themselves mean. Grouped
+         with the stats and match history it scopes inside one faintly-tinted panel, so the active
+         tab reads as enclosing that content rather than floating above unrelated sections. -->
+    <div class="rounded-xl bg-surface-900/40">
+      <div class="flex w-full border-b border-surface-700" role="tablist">
+        <button
+          (click)="setViewMode('weekly')"
+          [attr.aria-selected]="viewMode() === 'weekly'"
+          [class.text-text-primary]="viewMode() === 'weekly'"
+          [class.text-text-secondary]="viewMode() !== 'weekly'"
+          [class.hover:text-text-primary]="viewMode() !== 'weekly'"
+          [class.hover:bg-surface-800]="viewMode() !== 'weekly'"
+          class="focus-ring relative flex-1 cursor-pointer px-1 py-3.5 text-center text-base font-semibold transition-colors"
+          role="tab"
+          type="button"
         >
-          {{ formatWinRate(playerDetails.statistics.winRate) }}
-        </p>
-        <app-progress-bar
-          class="mt-3"
-          heightClass="h-1.5"
-          [colorClass]="winRateVisual(playerDetails.statistics.winRate).barClass"
-          [percentage]="playerDetails.statistics.winRate"
-        />
-        <p class="mt-2 text-xs text-text-secondary">
-          {{
-            'playerProfile.stats.record'
-              | translate
-                : { wins: playerDetails.statistics.wins, losses: playerDetails.statistics.losses }
-          }}
-        </p>
-      </div>
-
-      <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
-        <div class="mb-3 flex items-center gap-2 text-text-secondary">
-          <svg class="h-4 w-4 text-accent-purple" lucideSwords></svg>
-          <span class="text-xs font-semibold tracking-wide uppercase">
-            {{ 'playerProfile.stats.kda' | translate }}
-          </span>
-        </div>
-        <p
-          [class]="kdaVisual(playerDetails.statistics.kda).textClass"
-          class="text-2xl font-bold tabular-nums"
-        >
-          {{ formatKda(playerDetails.statistics.kda) }}
-        </p>
-      </div>
-
-      <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
-        <div class="mb-3 flex items-center gap-2 text-text-secondary">
-          <svg class="h-4 w-4 text-accent-gold" lucideCrosshair></svg>
-          <span class="text-xs font-semibold tracking-wide uppercase">
-            {{ 'playerProfile.stats.headshotPercentage' | translate }}
-          </span>
-        </div>
-        <p class="text-2xl font-bold tabular-nums text-text-primary">
-          {{ formatHeadshotPercentage(playerDetails.statistics.headshotPercentage) }}
-        </p>
-      </div>
-
-      <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
-        <div class="mb-3 flex items-center gap-2 text-text-secondary">
-          <svg class="h-4 w-4 text-accent-blue" lucideActivity></svg>
-          <span class="text-xs font-semibold tracking-wide uppercase">
-            {{ 'playerProfile.stats.adr' | translate }}
-          </span>
-        </div>
-        <p class="text-2xl font-bold tabular-nums text-text-primary">
-          {{ formatScore(playerDetails.statistics.adr) }}
-        </p>
-      </div>
-
-      <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
-        <div class="mb-3 flex items-center gap-2 text-text-secondary">
-          <svg class="h-4 w-4 text-accent-cyan" lucideZap></svg>
-          <span class="text-xs font-semibold tracking-wide uppercase">
-            {{ 'playerProfile.stats.acs' | translate }}
-          </span>
-        </div>
-        <p class="text-2xl font-bold tabular-nums text-text-primary">
-          {{ formatScore(playerDetails.statistics.acs) }}
-        </p>
-      </div>
-
-      <div class="rounded-xl border border-surface-700 bg-surface-900 p-4">
-        <div class="mb-3 flex items-center gap-2 text-text-secondary">
-          <svg class="h-4 w-4 text-accent-pink" lucideGamepad2></svg>
-          <span class="text-xs font-semibold tracking-wide uppercase">
-            {{ 'playerProfile.stats.matchesPlayed' | translate }}
-          </span>
-        </div>
-        <p class="text-2xl font-bold tabular-nums text-text-primary">
-          {{ playerDetails.statistics.matchesPlayed }}
-        </p>
-      </div>
-    </section>
-
-    <!-- Match history -->
-    <section class="overflow-clip rounded-xl border border-surface-700 bg-surface-900">
-      <app-resource-state
-        [emptyText]="'playerProfile.matches.empty' | translate"
-        [errorText]="'playerProfile.matches.error' | translate"
-        [isEmpty]="matches().length === 0"
-        [isError]="!!matchesResource.error()"
-        [isLoading]="matchesResource.isLoading() && matches().length === 0"
-        [loadingText]="'playerProfile.matches.loading' | translate"
-        (retry)="matchesResource.reload()"
-      >
-        <ul skeleton>
-          @for (placeholder of skeletonRows; track $index) {
-            <li
-              class="flex items-center gap-4 border-b border-surface-700 px-5 py-4 last:border-b-0"
-            >
-              <span class="h-3 w-24 shrink-0 rounded-full bg-surface-700"></span>
-              <span class="h-5 w-20 shrink-0 rounded-full bg-surface-700"></span>
-              <span class="h-3 rounded-full bg-surface-700" [style.width.%]="placeholder"></span>
-            </li>
+          {{ 'playerProfile.viewMode.weekly' | translate }}
+          @if (viewMode() === 'weekly') {
+            <span
+              aria-hidden="true"
+              class="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-400"
+            ></span>
           }
-        </ul>
+        </button>
+        <button
+          (click)="setViewMode('global')"
+          [attr.aria-selected]="viewMode() === 'global'"
+          [class.text-text-primary]="viewMode() === 'global'"
+          [class.text-text-secondary]="viewMode() !== 'global'"
+          [class.hover:text-text-primary]="viewMode() !== 'global'"
+          [class.hover:bg-surface-800]="viewMode() !== 'global'"
+          class="focus-ring relative flex-1 cursor-pointer px-1 py-3.5 text-center text-base font-semibold transition-colors"
+          role="tab"
+          type="button"
+        >
+          {{ 'playerProfile.viewMode.global' | translate }}
+          @if (viewMode() === 'global') {
+            <span
+              aria-hidden="true"
+              class="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-400"
+            ></span>
+          }
+        </button>
+      </div>
 
-        <!-- Table, from `lg` up. One `tbody` per day of play, each opened by a header row carrying
-             the day's record: the history is read as a series of sessions, and a flat list gave no
-             way to tell one evening from the next. -->
-        <table class="hidden w-full text-sm lg:table">
-          <thead class="sticky top-0 z-10 bg-surface-800">
-            <tr
-              class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase"
+      <!-- Stat tiles. The win rate leads: it is the one figure that summarises a player's record,
+           so it gets the wide tile, the bar and the win/loss split, while the rest stay uniform. -->
+      <section class="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3 sm:p-5 lg:grid-cols-7">
+        <div
+          class="col-span-2 rounded-xl bg-gradient-to-br from-accent-green/10 to-surface-800 p-3 sm:col-span-3 lg:col-span-2"
+        >
+          <div class="mb-1.5 flex items-center gap-1.5 text-text-secondary">
+            <svg class="h-4 w-4 text-accent-green" lucideTarget></svg>
+            <span class="text-xs font-semibold tracking-wide uppercase">
+              {{ 'playerProfile.stats.winRate' | translate }}
+            </span>
+          </div>
+          <div class="flex items-baseline justify-between gap-2">
+            <p
+              [class]="winRateVisual(playerDetails.statistics.winRate).textClass"
+              class="text-3xl font-bold tabular-nums"
             >
-              <th class="px-5 py-3 text-left font-semibold" scope="col">
-                {{ 'playerProfile.matches.columns.match' | translate }}
-              </th>
-              <th class="px-4 py-3 text-right font-semibold" scope="col">
-                {{ 'playerProfile.matches.columns.score' | translate }}
-              </th>
-              <th class="px-4 py-3 text-right font-semibold" scope="col">
-                {{ 'playerProfile.matches.columns.kda' | translate }}
-              </th>
-              <th class="px-4 py-3 text-right font-semibold" scope="col">
-                {{ 'playerProfile.matches.columns.kd' | translate }}
-              </th>
-              <th class="px-4 py-3 text-right font-semibold" scope="col">
-                {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
-              </th>
-              <th class="px-4 py-3 text-right font-semibold" scope="col">
-                {{ 'playerProfile.matches.columns.adr' | translate }}
-              </th>
-              <th class="px-5 py-3 text-right font-semibold" scope="col">
-                {{ 'playerProfile.matches.columns.acs' | translate }}
-              </th>
-            </tr>
-          </thead>
-          @for (day of matchDays(); track day.dayKey) {
-            <tbody>
-              <!-- The top border is dropped on the first group only, where it would sit directly on
-                   the header's own bottom border. -->
-              <tr [class.border-t]="!$first" class="border-b border-surface-700 bg-surface-800/60">
-                <th
-                  class="px-5 py-2 text-left text-xs font-bold tracking-wide text-text-secondary uppercase"
-                  colspan="7"
-                  scope="colgroup"
+              {{ formatWinRate(playerDetails.statistics.winRate) }}
+            </p>
+            <p class="text-xs text-text-secondary">
+              {{
+                'playerProfile.stats.record'
+                  | translate
+                    : {
+                        wins: playerDetails.statistics.wins,
+                        losses: playerDetails.statistics.losses,
+                      }
+              }}
+            </p>
+          </div>
+          <app-progress-bar
+            class="mt-1.5"
+            heightClass="h-1.5"
+            [colorClass]="winRateVisual(playerDetails.statistics.winRate).barClass"
+            [percentage]="playerDetails.statistics.winRate"
+          />
+        </div>
+
+        <div
+          class="flex h-full flex-col justify-between rounded-xl bg-gradient-to-br from-accent-purple/10 to-surface-800 p-3"
+        >
+          <div class="flex items-center gap-1.5 text-text-secondary">
+            <svg class="h-4 w-4 text-accent-purple" lucideSwords></svg>
+            <span class="text-xs font-semibold tracking-wide uppercase">
+              {{ 'playerProfile.stats.kda' | translate }}
+            </span>
+          </div>
+          <p
+            [class]="kdaVisual(playerDetails.statistics.kda).textClass"
+            class="self-end text-3xl font-bold tabular-nums"
+          >
+            {{ formatKda(playerDetails.statistics.kda) }}
+          </p>
+        </div>
+
+        <div
+          class="flex h-full flex-col justify-between rounded-xl bg-gradient-to-br from-accent-gold/10 to-surface-800 p-3"
+        >
+          <div class="flex items-center gap-1.5 text-text-secondary">
+            <svg class="h-4 w-4 text-accent-gold" lucideCrosshair></svg>
+            <span class="text-xs font-semibold tracking-wide uppercase">
+              {{ 'playerProfile.stats.headshotPercentage' | translate }}
+            </span>
+          </div>
+          <p class="self-end text-3xl font-bold tabular-nums text-text-primary">
+            {{ formatHeadshotPercentage(playerDetails.statistics.headshotPercentage) }}
+          </p>
+        </div>
+
+        <div
+          class="flex h-full flex-col justify-between rounded-xl bg-gradient-to-br from-accent-blue/10 to-surface-800 p-3"
+        >
+          <div class="flex items-center gap-1.5 text-text-secondary">
+            <svg class="h-4 w-4 text-accent-blue" lucideActivity></svg>
+            <span class="text-xs font-semibold tracking-wide uppercase">
+              {{ 'playerProfile.stats.adr' | translate }}
+            </span>
+          </div>
+          <p class="self-end text-3xl font-bold tabular-nums text-text-primary">
+            {{ formatScore(playerDetails.statistics.adr) }}
+          </p>
+        </div>
+
+        <div
+          class="flex h-full flex-col justify-between rounded-xl bg-gradient-to-br from-accent-cyan/10 to-surface-800 p-3"
+        >
+          <div class="flex items-center gap-1.5 text-text-secondary">
+            <svg class="h-4 w-4 text-accent-cyan" lucideZap></svg>
+            <span class="text-xs font-semibold tracking-wide uppercase">
+              {{ 'playerProfile.stats.acs' | translate }}
+            </span>
+          </div>
+          <p class="self-end text-3xl font-bold tabular-nums text-text-primary">
+            {{ formatScore(playerDetails.statistics.acs) }}
+          </p>
+        </div>
+
+        <div
+          class="flex h-full flex-col justify-between rounded-xl bg-gradient-to-br from-accent-pink/10 to-surface-800 p-3"
+        >
+          <div class="flex items-center gap-1.5 text-text-secondary">
+            <svg class="h-4 w-4 text-accent-pink" lucideGamepad2></svg>
+            <span class="text-xs font-semibold tracking-wide uppercase">
+              {{ 'playerProfile.stats.matchesPlayed' | translate }}
+            </span>
+          </div>
+          <p class="self-end text-3xl font-bold tabular-nums text-text-primary">
+            {{ playerDetails.statistics.matchesPlayed }}
+          </p>
+        </div>
+      </section>
+
+      <!-- Match history -->
+      <section class="p-3 sm:p-4">
+        <app-resource-state
+          [emptyText]="'playerProfile.matches.empty' | translate"
+          [errorText]="'playerProfile.matches.error' | translate"
+          [isEmpty]="matches().length === 0"
+          [isError]="!!matchesResource.error()"
+          [isLoading]="matchesResource.isLoading() && matches().length === 0"
+          [loadingText]="'playerProfile.matches.loading' | translate"
+          (retry)="matchesResource.reload()"
+        >
+          <ul skeleton class="flex flex-col gap-2">
+            @for (placeholder of skeletonRows; track $index) {
+              <li class="flex items-center gap-4 rounded-lg bg-surface-800/60 px-4 py-4">
+                <span class="h-3 w-24 shrink-0 rounded-full bg-surface-700"></span>
+                <span class="h-5 w-20 shrink-0 rounded-full bg-surface-700"></span>
+                <span class="h-3 rounded-full bg-surface-700" [style.width.%]="placeholder"></span>
+              </li>
+            }
+          </ul>
+
+          <!-- Grid, from `lg` up, built on CSS Grid rather than `<table>`, so match rows can carry
+             their own discreet per-cell stat labels below. There is no separate header row: keeping
+             one aligned with match rows proved too fragile, so each stat cell carries its own
+             column label instead (`rowGridClass` keeps every row's columns landing at the same
+             horizontal position, for the values to scan as a column). -->
+          <div class="hidden flex-col gap-3 text-base lg:flex">
+            @for (day of matchDays(); track day.dayKey) {
+              <div class="flex flex-col gap-3">
+                <!-- Day summary row: the record sits beside the date rather than at the row's
+                     trailing edge, where it would land under the ACS column and read as one of
+                     its values. The rest of the row carries the day's own averages/totals,
+                     aligned under the same columns the matches below use, so a session's overall
+                     shape (e.g. its headshot rate) reads at a glance without adding across rows. -->
+                <div
+                  [class]="rowGridClass"
+                  class="rounded-lg bg-surface-700/80 py-3 text-xs text-text-secondary uppercase"
                 >
-                  <!-- The record sits beside the date rather than at the row's trailing edge,
-                       where it would land under the ACS column and read as one of its values. -->
-                  <span class="flex items-baseline gap-2">
-                    <span>{{ day.dateLabel }}</span>
-                    <span class="font-normal normal-case tabular-nums text-text-muted">
-                      {{
-                        'playerProfile.stats.record'
-                          | translate: { wins: day.wins, losses: day.losses }
-                      }}
+                  <div class="px-4 text-left font-bold">
+                    <span class="flex items-center gap-4">
+                      <span
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-surface-600 text-sm font-bold normal-case tabular-nums"
+                      >
+                        {{ day.matches.length }}
+                      </span>
+                      <span class="flex items-baseline gap-4">
+                        <span class="text-sm">{{ day.dateLabel }}</span>
+                        <span class="font-bold normal-case tabular-nums">
+                          <span class="text-accent-green">{{
+                            'playerProfile.stats.wins' | translate: { count: day.wins }
+                          }}</span>
+                          <span class="text-text-muted">/</span>
+                          <span class="text-accent-red">{{
+                            'playerProfile.stats.losses' | translate: { count: day.losses }
+                          }}</span>
+                        </span>
+                      </span>
+                    </span>
+                  </div>
+                  <div></div>
+                  <div class="flex flex-col items-end px-4">
+                    <span class="text-[10px] tracking-wide text-text-muted normal-case">{{
+                      'playerProfile.matches.columns.kda' | translate
+                    }}</span>
+                    <span class="font-bold normal-case tabular-nums">
+                      {{ day.totalKills }}/{{ day.totalDeaths }}/{{ day.totalAssists }}
+                    </span>
+                  </div>
+                  <div class="flex flex-col items-end px-4">
+                    <span class="text-[10px] tracking-wide text-text-muted normal-case">{{
+                      'playerProfile.matches.columns.kd' | translate
+                    }}</span>
+                    <span class="font-bold normal-case tabular-nums">{{
+                      formatKda(day.avgKda)
+                    }}</span>
+                  </div>
+                  <div class="flex flex-col items-end px-4">
+                    <span class="text-[10px] tracking-wide text-text-muted normal-case">{{
+                      'playerProfile.matches.columns.headshotPercentage' | translate
+                    }}</span>
+                    <span class="font-bold normal-case tabular-nums">{{
+                      formatHeadshotPercentage(day.avgHeadshotPercentage)
+                    }}</span>
+                  </div>
+                  <div class="flex flex-col items-end px-4">
+                    <span class="text-[10px] tracking-wide text-text-muted normal-case">{{
+                      'playerProfile.matches.columns.adr' | translate
+                    }}</span>
+                    <span class="font-bold normal-case tabular-nums">{{
+                      formatScore(day.avgAdr)
+                    }}</span>
+                  </div>
+                  <div class="flex flex-col items-end px-4">
+                    <span class="text-[10px] tracking-wide text-text-muted normal-case">{{
+                      'playerProfile.matches.columns.acs' | translate
+                    }}</span>
+                    <span class="font-bold normal-case tabular-nums">{{
+                      formatScore(day.avgAcs)
+                    }}</span>
+                  </div>
+                </div>
+                @for (row of day.matches; track row.id) {
+                  <div
+                    [class]="rowGridClass + ' ' + resultAccentClass(row.result)"
+                    class="rounded-lg bg-surface-800/15 transition-colors hover:bg-surface-700/25"
+                  >
+                    <div
+                      class="flex items-center gap-3 px-4 py-4 text-left font-semibold text-text-primary"
+                    >
+                      <span class="flex items-center gap-3">
+                        <!-- Monogram rather than a portrait: `public/players` bundles six agents and
+                           the played agent is often none of them. -->
+                        <span
+                          aria-hidden="true"
+                          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-700 text-sm font-bold text-text-secondary"
+                        >
+                          {{ agentInitial(row.agentName) }}
+                        </span>
+                        <span class="flex min-w-0 flex-col">
+                          <span class="truncate">
+                            {{ row.mapName }}
+                            <!-- The result is shown as the row's leading accent and on the ally
+                               score, neither of which conveys anything to a screen reader. -->
+                            <span class="sr-only">
+                              — {{ 'playerProfile.matches.result.' + row.result | translate }}
+                            </span>
+                          </span>
+                          <span class="truncate text-sm font-normal text-text-secondary">
+                            {{ matchTime(row.startedAt) }} ·
+                            {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }} ·
+                            {{ row.agentName }}
+                          </span>
+                        </span>
+                      </span>
+                    </div>
+                    <div class="px-4 py-4 text-right tabular-nums">
+                      @if (matchScore(row.allyScore, row.enemyScore); as score) {
+                        <span [class]="resultTextClass(row.result)" class="font-bold">
+                          {{ score.ally }}
+                        </span>
+                        <span class="text-text-muted">: {{ score.enemy }}</span>
+                      } @else {
+                        <span class="text-text-muted">—</span>
+                      }
+                    </div>
+                    <div class="flex flex-col items-end px-4 py-4">
+                      <span class="text-[10px] tracking-wide text-text-muted uppercase">{{
+                        'playerProfile.matches.columns.kda' | translate
+                      }}</span>
+                      <span class="tabular-nums text-text-primary">
+                        {{ row.kills }}/{{ row.deaths }}/{{ row.assists }}
+                      </span>
+                    </div>
+                    <div class="flex flex-col items-end px-4 py-4">
+                      <span class="text-[10px] tracking-wide text-text-muted uppercase">{{
+                        'playerProfile.matches.columns.kd' | translate
+                      }}</span>
+                      <span [class]="kdaVisual(row.kda).textClass" class="font-bold tabular-nums">{{
+                        formatKda(row.kda)
+                      }}</span>
+                    </div>
+                    <div class="flex flex-col items-end px-4 py-4">
+                      <span class="text-[10px] tracking-wide text-text-muted uppercase">{{
+                        'playerProfile.matches.columns.headshotPercentage' | translate
+                      }}</span>
+                      <span class="tabular-nums text-text-primary">{{
+                        formatHeadshotPercentage(row.headshotPercentage)
+                      }}</span>
+                    </div>
+                    <div class="flex flex-col items-end px-4 py-4">
+                      <span class="text-[10px] tracking-wide text-text-muted uppercase">{{
+                        'playerProfile.matches.columns.adr' | translate
+                      }}</span>
+                      <span class="tabular-nums text-text-primary">{{ formatScore(row.adr) }}</span>
+                    </div>
+                    <div class="flex flex-col items-end px-4 py-4">
+                      <span class="text-[10px] tracking-wide text-text-muted uppercase">{{
+                        'playerProfile.matches.columns.acs' | translate
+                      }}</span>
+                      <span class="tabular-nums text-text-primary">{{ formatScore(row.acs) }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Card list, below `lg`. Same day grouping as the table, so the two layouts tell the
+             same story about a session. -->
+          <div class="lg:hidden">
+            @for (day of matchDays(); track day.dayKey) {
+              <div class="flex flex-col gap-1 px-1 pt-4 pb-3 first:pt-0">
+                <div class="flex items-center justify-between gap-3">
+                  <span class="flex items-center gap-2">
+                    <span
+                      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-surface-600 text-sm font-bold text-text-secondary tabular-nums"
+                    >
+                      {{ day.matches.length }}
+                    </span>
+                    <span class="text-sm font-bold tracking-wide text-text-secondary uppercase">
+                      {{ day.dateLabel }}
                     </span>
                   </span>
-                </th>
-              </tr>
-              @for (row of day.matches; track row.id) {
-                <tr
-                  [class]="resultAccentClass(row.result)"
-                  class="border-b border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800"
-                >
-                  <th class="px-5 py-3 text-left font-semibold text-text-primary" scope="row">
-                    <span class="flex items-center gap-3">
+                  <span class="text-sm font-bold tabular-nums">
+                    <span class="text-accent-green">{{
+                      'playerProfile.stats.wins' | translate: { count: day.wins }
+                    }}</span>
+                    <span class="text-text-muted">/</span>
+                    <span class="text-accent-red">{{
+                      'playerProfile.stats.losses' | translate: { count: day.losses }
+                    }}</span>
+                  </span>
+                </div>
+                <!-- Day summary: the same averages the desktop table aligns under its columns,
+                     condensed to one line since cards have no columns to align under. -->
+                <p class="pl-11 text-xs text-text-secondary">
+                  {{ formatHeadshotPercentage(day.avgHeadshotPercentage) }}
+                  {{ 'playerProfile.matches.columns.headshotPercentage' | translate }} ·
+                  {{ formatScore(day.avgAcs) }}
+                  {{ 'playerProfile.matches.columns.acs' | translate }}
+                </p>
+              </div>
+
+              <ul class="flex flex-col gap-3">
+                @for (row of day.matches; track row.id) {
+                  <li
+                    [class]="resultAccentClass(row.result)"
+                    class="flex flex-col gap-4 rounded-lg bg-surface-800/15 px-5 py-5"
+                  >
+                    <div class="flex items-center gap-3">
                       <!-- Monogram rather than a portrait: `public/players` bundles six agents and
-                           the played agent is often none of them. -->
+                         the played agent is often none of them. -->
                       <span
                         aria-hidden="true"
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-700 text-xs font-bold text-text-secondary"
+                        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-surface-700 text-base font-bold text-text-secondary"
                       >
                         {{ agentInitial(row.agentName) }}
                       </span>
-                      <span class="flex min-w-0 flex-col">
-                        <span class="truncate">
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate text-base font-semibold text-text-primary">
                           {{ row.mapName }}
-                          <!-- The result is shown as the row's leading accent and on the ally
-                               score, neither of which conveys anything to a screen reader. -->
+                          <!-- The result is shown as the card's leading accent and on the ally score,
+                             neither of which conveys anything to a screen reader. -->
                           <span class="sr-only">
                             — {{ 'playerProfile.matches.result.' + row.result | translate }}
                           </span>
-                        </span>
-                        <span class="truncate text-xs font-normal text-text-secondary">
+                        </p>
+                        <p class="truncate text-sm text-text-secondary">
                           {{ matchTime(row.startedAt) }} ·
                           {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }} ·
                           {{ row.agentName }}
-                        </span>
+                        </p>
+                      </div>
+                      <span class="shrink-0 text-lg font-bold tabular-nums">
+                        @if (matchScore(row.allyScore, row.enemyScore); as score) {
+                          <span [class]="resultTextClass(row.result)">{{ score.ally }}</span>
+                          <span class="font-normal text-text-muted">: {{ score.enemy }}</span>
+                        } @else {
+                          <span class="font-normal text-text-muted">—</span>
+                        }
                       </span>
-                    </span>
-                  </th>
-                  <td class="px-4 py-3 text-right tabular-nums">
-                    @if (matchScore(row.allyScore, row.enemyScore); as score) {
-                      <span [class]="resultTextClass(row.result)" class="font-bold">
-                        {{ score.ally }}
-                      </span>
-                      <span class="text-text-muted">: {{ score.enemy }}</span>
-                    } @else {
-                      <span class="text-text-muted">—</span>
-                    }
-                  </td>
-                  <td class="px-4 py-3 text-right tabular-nums text-text-primary">
-                    {{ row.kills }} / {{ row.deaths }} / {{ row.assists }}
-                  </td>
-                  <td
-                    [class]="kdaVisual(row.kda).textClass"
-                    class="px-4 py-3 text-right font-bold tabular-nums"
-                  >
-                    {{ formatKda(row.kda) }}
-                  </td>
-                  <td class="px-4 py-3 text-right tabular-nums text-text-primary">
-                    {{ formatHeadshotPercentage(row.headshotPercentage) }}
-                  </td>
-                  <td class="px-4 py-3 text-right tabular-nums text-text-primary">
-                    {{ formatScore(row.adr) }}
-                  </td>
-                  <td class="px-5 py-3 text-right tabular-nums text-text-primary">
-                    {{ formatScore(row.acs) }}
-                  </td>
-                </tr>
-              }
-            </tbody>
-          }
-        </table>
+                    </div>
 
-        <!-- Card list, below `lg`. Same day grouping as the table, so the two layouts tell the
-             same story about a session. -->
-        <div class="lg:hidden">
-          @for (day of matchDays(); track day.dayKey) {
-            <div
-              [class.border-t]="!$first"
-              class="flex items-baseline justify-between gap-3 border-b border-surface-700 bg-surface-800/60 px-4 py-2"
-            >
-              <span class="text-xs font-bold tracking-wide text-text-secondary uppercase">
-                {{ day.dateLabel }}
-              </span>
-              <span class="text-xs tabular-nums text-text-muted">
-                {{
-                  'playerProfile.stats.record' | translate: { wins: day.wins, losses: day.losses }
-                }}
-              </span>
-            </div>
+                    <dl class="grid grid-cols-3 gap-3 sm:grid-cols-5">
+                      <div>
+                        <dt class="text-xs tracking-wide text-text-secondary uppercase">
+                          {{ 'playerProfile.matches.columns.kda' | translate }}
+                        </dt>
+                        <dd class="mt-0.5 text-base font-bold tabular-nums text-text-primary">
+                          {{ row.kills }}/{{ row.deaths }}/{{ row.assists }}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt class="text-xs tracking-wide text-text-secondary uppercase">
+                          {{ 'playerProfile.matches.columns.kd' | translate }}
+                        </dt>
+                        <dd
+                          [class]="kdaVisual(row.kda).textClass"
+                          class="mt-0.5 text-base font-bold tabular-nums"
+                        >
+                          {{ formatKda(row.kda) }}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt class="text-xs tracking-wide text-text-secondary uppercase">
+                          {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
+                        </dt>
+                        <dd class="mt-0.5 text-base font-bold tabular-nums text-text-primary">
+                          {{ formatHeadshotPercentage(row.headshotPercentage) }}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt class="text-xs tracking-wide text-text-secondary uppercase">
+                          {{ 'playerProfile.matches.columns.adr' | translate }}
+                        </dt>
+                        <dd class="mt-0.5 text-base font-bold tabular-nums text-text-primary">
+                          {{ formatScore(row.adr) }}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt class="text-xs tracking-wide text-text-secondary uppercase">
+                          {{ 'playerProfile.matches.columns.acs' | translate }}
+                        </dt>
+                        <dd class="mt-0.5 text-base font-bold tabular-nums text-text-primary">
+                          {{ formatScore(row.acs) }}
+                        </dd>
+                      </div>
+                    </dl>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
 
-            <ul>
-              @for (row of day.matches; track row.id) {
-                <li
-                  [class]="resultAccentClass(row.result)"
-                  class="flex flex-col gap-3 border-b border-surface-700 px-4 py-4 last:border-b-0"
-                >
-                  <div class="flex items-center gap-3">
-                    <!-- Monogram rather than a portrait: `public/players` bundles six agents and
-                         the played agent is often none of them. -->
-                    <span
-                      aria-hidden="true"
-                      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-700 text-sm font-bold text-text-secondary"
-                    >
-                      {{ agentInitial(row.agentName) }}
-                    </span>
-                    <div class="min-w-0 flex-1">
-                      <p class="truncate font-semibold text-text-primary">
-                        {{ row.mapName }}
-                        <!-- The result is shown as the card's leading accent and on the ally score,
-                             neither of which conveys anything to a screen reader. -->
-                        <span class="sr-only">
-                          — {{ 'playerProfile.matches.result.' + row.result | translate }}
-                        </span>
-                      </p>
-                      <p class="truncate text-xs text-text-secondary">
-                        {{ matchTime(row.startedAt) }} ·
-                        {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }} ·
-                        {{ row.agentName }}
-                      </p>
-                    </div>
-                    <span class="shrink-0 font-bold tabular-nums">
-                      @if (matchScore(row.allyScore, row.enemyScore); as score) {
-                        <span [class]="resultTextClass(row.result)">{{ score.ally }}</span>
-                        <span class="font-normal text-text-muted">: {{ score.enemy }}</span>
-                      } @else {
-                        <span class="font-normal text-text-muted">—</span>
-                      }
-                    </span>
-                  </div>
-
-                  <dl
-                    class="grid grid-cols-3 gap-2 border-t border-surface-700 pt-3 sm:grid-cols-5"
-                  >
-                    <div>
-                      <dt class="text-xs tracking-wide text-text-secondary uppercase">
-                        {{ 'playerProfile.matches.columns.kda' | translate }}
-                      </dt>
-                      <dd class="mt-0.5 text-sm font-bold tabular-nums text-text-primary">
-                        {{ row.kills }}/{{ row.deaths }}/{{ row.assists }}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt class="text-xs tracking-wide text-text-secondary uppercase">
-                        {{ 'playerProfile.matches.columns.kd' | translate }}
-                      </dt>
-                      <dd
-                        [class]="kdaVisual(row.kda).textClass"
-                        class="mt-0.5 text-sm font-bold tabular-nums"
-                      >
-                        {{ formatKda(row.kda) }}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt class="text-xs tracking-wide text-text-secondary uppercase">
-                        {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
-                      </dt>
-                      <dd class="mt-0.5 text-sm font-bold tabular-nums text-text-primary">
-                        {{ formatHeadshotPercentage(row.headshotPercentage) }}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt class="text-xs tracking-wide text-text-secondary uppercase">
-                        {{ 'playerProfile.matches.columns.adr' | translate }}
-                      </dt>
-                      <dd class="mt-0.5 text-sm font-bold tabular-nums text-text-primary">
-                        {{ formatScore(row.adr) }}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt class="text-xs tracking-wide text-text-secondary uppercase">
-                        {{ 'playerProfile.matches.columns.acs' | translate }}
-                      </dt>
-                      <dd class="mt-0.5 text-sm font-bold tabular-nums text-text-primary">
-                        {{ formatScore(row.acs) }}
-                      </dd>
-                    </div>
-                  </dl>
-                </li>
-              }
-            </ul>
-          }
-        </div>
-
-        <!-- Infinite-scroll trigger, present only while another page remains. Observed by the
+          <!-- Infinite-scroll trigger, present only while another page remains. Observed by the
              component's intersection observer, which requests that next page once this element
              scrolls into view - so the list grows in place instead of the page jumping back to
              the top on every page change, as a "next page" control would. -->
-        @if (hasMoreMatches()) {
-          <div #loadMoreTrigger aria-hidden="true"></div>
-        }
+          @if (hasMoreMatches()) {
+            <div #loadMoreTrigger aria-hidden="true"></div>
+          }
 
-        @if (isLoadingMoreMatches()) {
-          <div
-            class="flex items-center justify-center gap-2 border-t border-surface-700 px-5 py-4 text-sm text-text-secondary"
-            role="status"
-          >
-            <svg class="h-4 w-4 animate-spin" lucideLoaderCircle></svg>
-            {{ 'playerProfile.matches.loadingMore' | translate }}
-          </div>
-        }
-      </app-resource-state>
-    </section>
+          @if (isLoadingMoreMatches()) {
+            <div
+              class="flex items-center justify-center gap-2 pt-3 text-sm text-text-secondary"
+              role="status"
+            >
+              <svg class="h-4 w-4 animate-spin" lucideLoaderCircle></svg>
+              {{ 'playerProfile.matches.loadingMore' | translate }}
+            </div>
+          }
+        </app-resource-state>
+      </section>
+    </div>
   }
 </app-resource-state>

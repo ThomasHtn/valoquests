@@ -40,6 +40,8 @@
       "defeated": "Le boss a été vaincu cette semaine !",
       "error": "Impossible de charger le boss de la semaine.",
       "eyebrow": "Boss hebdomadaire",
+      "hpAmount": "{{remaining}} / {{total}}",
+      "hpUnit": "PV",
       "hpValue": "{{remaining}} / {{total}} PV",
       "loading": "Chargement du boss…"
     },
@@ -51,6 +53,7 @@
       },
       "title": "Podium de la semaine"
     },
+    "rulesLink": "Comment ça marche",
     "sections": {
       "challenges": {
         "ariaLabel": "Aller aux défis de la semaine"
@@ -63,6 +66,7 @@
         "ariaLabel": "Aller au classement"
       }
     },
+    "tagline": "Accomplissez des missions chaque semaine pour venir à bout de boss redoutables !",
     "teamProgress": {
       "contributors": "{{count}} joueur(s) ont contribué cette semaine",
       "eyebrow": "Objectif d'équipe",
@@ -100,7 +104,6 @@
         "SCORE": "Score"
       },
       "playersUnit": "joueurs",
-      "progressTooltip": "{{completed}} joueur(s) sur {{total}} ont terminé ce défi",
       "title": "Défis de la semaine"
     },
     "weeklyRanking": {
@@ -128,7 +131,9 @@
     "filters": {
       "allSeasons": "Toutes les saisons",
       "gameModeLabel": "Filtrer par mode de jeu",
+      "moreGameModes": "Autres modes de jeu",
       "reset": "Réinitialiser",
+      "season": "Saison {{name}}",
       "seasonLabel": "Filtrer par saison"
     },
     "loading": "Chargement du profil du joueur…",
@@ -174,14 +179,16 @@
       "adr": "ADR",
       "headshotPercentage": "HS%",
       "kda": "K/D",
+      "losses": "{{count}} D",
       "matchesPlayed": "Matches",
       "record": "{{wins}} V / {{losses}} D",
-      "winRate": "Winrate"
+      "winRate": "Winrate",
+      "wins": "{{count}} V"
     },
     "title": "Profil du joueur",
     "viewMode": {
-      "global": "Global",
-      "weekly": "Cette semaine"
+      "global": "Saisons",
+      "weekly": "Semaine"
     }
   },
   "players": {
@@ -221,9 +228,7 @@
     },
     "carousel": {
       "empty": "Aucune autre semaine disponible",
-      "jumpTo": "Aller à une semaine",
-      "next": "Semaine suivante",
-      "previous": "Semaine précédente"
+      "jumpTo": "Aller à une semaine"
     },
     "empty": "Aucune semaine n'a encore été finalisée.",
     "error": "Impossible de charger l'historique du classement.",
@@ -238,6 +243,39 @@
     }
   },
   "retry": "Réessayer",
+  "rules": {
+    "backToOverview": "Retour à la vue d'ensemble",
+    "sections": {
+      "boss": {
+        "description": "Chaque semaine débarque un boss, Mineur, Standard ou Élite, avec une barre de vie partagée par toute l'équipe. Chaque coup porté par n'importe qui, en match ou en défi, l'entame. Terrassez-le avant dimanche soir, sinon il survit jusqu'au combat suivant.",
+        "eyebrow": "Étape 3 · Boss hebdomadaire",
+        "title": "Un boss, une barre de vie commune"
+      },
+      "challenges": {
+        "description": "Chaque lundi, cinq défis sortent d'un chapeau de 46, un par palier de difficulté. Aucune case à cocher : dès que tes matchs sont synchronisés, ta progression avance toute seule.",
+        "eyebrow": "Étape 1 · Défis de la semaine",
+        "title": "Cinq défis, un par difficulté"
+      },
+      "damage": {
+        "bonuses": "Bonus pour les assidus : jouer plusieurs jours dans la semaine et compléter un défi à plusieurs ajoutent chacun leur pile de dégâts en plus.",
+        "description": "Une victoire en compétitif ? Gros dégâts. Une partie fun entre potes, même perdue ? Ça compte aussi. Termine un défi et empoche un bonus de dégâts, d'autant plus gros qu'il était corsé.",
+        "eyebrow": "Étape 2 · Dégâts",
+        "matchDamageLabel": "Dégâts par match",
+        "regularityDays": "{{days}} jours",
+        "regularityLabel": "Bonus de régularité",
+        "teamLabel": "Bonus d'équipe",
+        "teamPlayers": "{{count}} joueurs",
+        "title": "Chaque match tape fort"
+      },
+      "ranking": {
+        "description": "Les dégâts totaux de la semaine font le classement. Celui qui porte le coup de grâce au boss est sacré Champion et garde la couronne jusqu'à ce qu'un autre termine le travail.",
+        "eyebrow": "Étape 4 · Classement & Champion",
+        "title": "Grimpe au classement, décroche la couronne"
+      }
+    },
+    "subtitle": "Attrape ta lame. Voici toute la quête : cinq défis chaque semaine, des dégâts à chaque match, un boss à terrasser à plusieurs, et un trône à défendre.",
+    "title": "Règles et fonctionnement"
+  },
   "shared": {
     "challengeCompletionBadge": {
       "label": "Défis complétés"

@@ -1,5 +1,5 @@
 <section
-  class="relative isolate flex min-h-[15rem] flex-col justify-between overflow-hidden rounded-2xl border border-surface-700 bg-surface-900 p-6 sm:min-h-[17rem] sm:p-8"
+  class="relative isolate flex min-h-[13rem] flex-col justify-between overflow-hidden rounded-2xl border border-surface-700 bg-surface-900 p-6 sm:min-h-[15rem] sm:p-8"
 >
   <!-- Boss artwork, when the catalogue entry has one, sitting behind the card's content with a
        dark gradient over it for text contrast. Falls back to the original flat gradient once every
@@ -48,25 +48,42 @@
   >
     @if (boss(); as encounter) {
       <div class="flex items-start gap-4">
-        <!-- Diablo-style boss portrait: a circular frame glowing in the category's color, so the
-             boss reads as a distinct "character" rather than only a name and a bar. -->
-        <div
-          class="ring-accent-red relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-surface-800 shadow-[0_0_18px_var(--color-accent-red)] ring-4 ring-offset-2 ring-offset-surface-900 sm:h-20 sm:w-20"
-        >
-          @if (encounter.boss.imageUrl; as portraitUrl) {
-            <img
-              [height]="80"
-              [ngSrc]="portraitUrl"
-              [width]="80"
-              alt=""
-              class="h-full w-full object-cover"
-              priority
-            />
-          } @else {
-            <span class="flex h-full w-full items-center justify-center">
-              <svg class="h-8 w-8 text-text-secondary sm:h-10 sm:w-10" lucideSkull></svg>
-            </span>
-          }
+        <!-- Boss portrait: the same segmented hex frame used by the battle map's markers
+             (`boss.html`), so the boss reads as a distinct "character" rather than only a name and
+             a bar, and both pages frame it identically. -->
+        <div class="relative h-16 w-16 shrink-0 sm:h-20 sm:w-20">
+          <div
+            class="absolute inset-1.5 overflow-hidden bg-surface-800 [clip-path:polygon(50%_0%,93.3%_25%,93.3%_75%,50%_100%,6.7%_75%,6.7%_25%)]"
+          >
+            @if (encounter.boss.imageUrl; as portraitUrl) {
+              <img
+                [height]="80"
+                [ngSrc]="portraitUrl"
+                [width]="80"
+                alt=""
+                class="h-full w-full object-cover"
+                priority
+              />
+            } @else {
+              <span class="flex h-full w-full items-center justify-center">
+                <svg class="h-8 w-8 text-text-secondary sm:h-10 sm:w-10" lucideSkull></svg>
+              </span>
+            }
+          </div>
+
+          <svg class="absolute inset-0 h-full w-full" fill="none" viewBox="0 0 100 100">
+            @for (edge of hexFrameEdges; track $index) {
+              <line
+                [attr.x1]="edge.x1"
+                [attr.x2]="edge.x2"
+                [attr.y1]="edge.y1"
+                [attr.y2]="edge.y2"
+                class="stroke-accent-red"
+                stroke-linecap="round"
+                stroke-width="6"
+              />
+            }
+          </svg>
         </div>
 
         <div>
@@ -85,7 +102,7 @@
       </div>
 
       <!-- Game-style health bar: the HP readout sits inside the bar itself, like an in-game boss
-           health orb, rather than as a separate label above it. -->
+           health orb, with a heart marking the unit between the number and "HP"/"PV". -->
       <div class="relative mt-6">
         <app-progress-bar
           [colorClass]="hpBarColorClass()"
@@ -93,12 +110,14 @@
           [percentage]="remainingPercentage()"
         />
         <span
-          class="pointer-events-none absolute inset-0 flex items-center justify-center text-xs font-bold tabular-nums text-white [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)] sm:text-sm"
+          class="pointer-events-none absolute inset-0 flex items-center justify-center gap-1.5 text-xs font-bold tabular-nums text-white [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)] sm:text-sm"
         >
           {{
-            'overview.bossEncounter.hpValue'
+            'overview.bossEncounter.hpAmount'
               | translate: { remaining: remainingHp(), total: encounter.effectiveHp }
           }}
+          <svg class="text-accent-red h-3.5 w-3.5 shrink-0" fill="currentColor" lucideHeart></svg>
+          {{ 'overview.bossEncounter.hpUnit' | translate }}
         </span>
       </div>
 

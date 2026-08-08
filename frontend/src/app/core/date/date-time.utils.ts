@@ -23,17 +23,26 @@ export function toLocalDayKey(instant: string): string {
 }
 
 /**
- * Formats an ISO-8601 instant as `DD/MM/YYYY` in the reader's timezone.
- *
- * Formatted by hand rather than through `Intl`, as the rest of the application does: no locale is
- * registered, and a single numeric format keeps dates the same width everywhere they are listed.
+ * BCP-47 locale backing {@link formatLocalDayMonth}'s month name, keyed by the app's own
+ * `Language` codes (kept as a literal union here rather than importing `Language` from
+ * `core/i18n`, so this module stays free of any dependency on the i18n module).
+ */
+const MONTH_NAME_LOCALES: Record<'fr' | 'en', string> = { fr: 'fr-FR', en: 'en-US' };
+
+/**
+ * Formats an ISO-8601 instant as `"<Month> <day>"` (e.g. `"Août 7"`) in the reader's timezone,
+ * with the month name spelled out in `language`.
  *
  * @param instant - The instant to format, as an ISO-8601 instant.
+ * @param language - The app language whose month names to use.
  * @returns The formatted date.
  */
-export function formatLocalDate(instant: string): string {
+export function formatLocalDayMonth(instant: string, language: 'fr' | 'en'): string {
   const date = new Date(instant);
-  return `${padToTwoDigits(date.getDate())}/${padToTwoDigits(date.getMonth() + 1)}/${date.getFullYear()}`;
+  const month = new Intl.DateTimeFormat(MONTH_NAME_LOCALES[language], { month: 'long' }).format(
+    date,
+  );
+  return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${date.getDate()}`;
 }
 
 /**

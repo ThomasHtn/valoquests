@@ -1,6 +1,6 @@
 <section
   [attr.aria-label]="'overview.podium.title' | translate"
-  class="flex h-full flex-col justify-center rounded-2xl border border-surface-700 bg-surface-950 bg-radial-[at_top] from-brand-900/50 to-transparent p-6 sm:p-8"
+  class="flex h-full flex-col justify-center rounded-2xl border border-surface-700 bg-surface-950 bg-radial-[at_top] from-accent-gold/20 to-transparent p-6 sm:p-8"
 >
   <app-resource-state
     (retry)="reload()"
@@ -71,21 +71,19 @@
       }
     </div>
 
-    <!-- Rest of the field: a compact preview of positions 4 and below, reusing the same hexagon
+    <!-- Rest of the field: a compact preview of positions 4 to 6, reusing the same hexagon
          position badge as the full ranking table so the two widgets read as one system. -->
     @if (rest().length) {
-      <ul class="mt-6 flex flex-wrap justify-center gap-2 border-t border-surface-700 pt-5">
+      <ul class="mt-6 flex flex-wrap justify-center gap-4 border-t border-surface-700 pt-5">
         @for (entry of rest(); track entry.player.id) {
           <li>
             <a
               [routerLink]="['/players', entry.player.id]"
-              class="focus-ring-inset flex items-center gap-2 rounded-lg border border-surface-700 bg-surface-900 px-3 py-1.5 text-sm transition-colors hover:bg-surface-800"
+              class="focus-ring-inset flex items-center gap-2 px-1 py-1 text-sm"
             >
               <app-position-badge [position]="entry.position" size="sm" />
               <span class="text-text-secondary">{{ entry.player.displayName }}</span>
-              <span class="font-bold tabular-nums text-accent-gold">{{
-                entry.challengeDamage
-              }}</span>
+              <app-damage-badge [damage]="entry.challengeDamage" />
             </a>
           </li>
         }

@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideChevronLeft, LucideChevronRight, LucideCrown } from '@lucide/angular';
+import { LucideCrown } from '@lucide/angular';
 
 import { formatDateRange, isoWeekNumber } from '@core/date/week-period.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -23,12 +23,6 @@ import { RankingHistoryWeekView } from './ranking.model';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 
 /**
- * Minimum horizontal travel, in pixels, for a touch gesture on the carousel to register as a
- * swipe (week navigation) rather than a tap or an imprecise scroll attempt.
- */
-const SWIPE_THRESHOLD_PX = 48;
-
-/**
  * Number of challenges selected for a week, i.e. the denominator {@link ChallengeCompletionBadge}
  * renders for every row: one per difficulty, fixed by `ChallengeDifficulty` on the backend (see
  * the root CLAUDE.md). `RankingHistoryEntry` has no `totalChallenges` field of its own to read
@@ -41,8 +35,8 @@ const WEEKLY_CHALLENGE_COUNT = 5;
  * Ranking history page.
  *
  * Browses the finalized ranking of every completed calendar week as a carousel, one week at a
- * time, from the most recent to the oldest — either stepped through with the previous/next
- * arrows or jumped to directly through the quick-access dropdown.
+ * time, from the most recent to the oldest, jumped to directly through the quick-access
+ * dropdown.
  */
 @Component({
   selector: 'app-ranking',
@@ -56,8 +50,6 @@ const WEEKLY_CHALLENGE_COUNT = 5;
     PositionBadge,
     ResourceState,
     Select,
-    LucideChevronLeft,
-    LucideChevronRight,
     LucideCrown,
   ],
   templateUrl: './ranking.html',
@@ -98,17 +90,10 @@ export class Ranking {
   /**
    * Direction of the most recent navigation step, driving which side the incoming week's entrance
    * transition slides in from: `'previous'` (a more recent week) slides in from the left,
-   * `'next'` (an older week) slides in from the right — mirroring the side of the arrow that was
-   * pressed, or the jumped-to week's position relative to the one it replaces.
+   * `'next'` (an older week) slides in from the right — mirroring the jumped-to week's position
+   * relative to the one it replaces.
    */
   protected readonly navigationDirection = signal<'previous' | 'next'>('next');
-
-  /**
-   * Horizontal/vertical client coordinates of the touch that started the in-progress swipe, or
-   * `null` between gestures. Read back on `touchend` to tell a horizontal swipe (week navigation)
-   * from a vertical one (page scroll, left untouched).
-   */
-  private touchStart: { x: number; y: number } | null = null;
 
   /**
    * Whether either backing resource is still loading.
@@ -231,22 +216,6 @@ export class Ranking {
   }
 
   /**
-   * Steps the carousel to the previous (more recent) week, clamped to the most recent one.
-   */
-  protected goToPreviousWeek(): void {
-    this.navigationDirection.set('previous');
-    this.weekIndex.update((index) => Math.max(0, index - 1));
-  }
-
-  /**
-   * Steps the carousel to the next (older) week, clamped to the oldest one.
-   */
-  protected goToNextWeek(): void {
-    this.navigationDirection.set('next');
-    this.weekIndex.update((index) => Math.min(this.totalWeeks() - 1, index + 1));
-  }
-
-  /**
    * Jumps the carousel straight to the week chosen from the quick-jump dropdown.
    *
    * @param index - The selected week's zero-based index, or `null` when the dropdown is cleared
@@ -256,45 +225,6 @@ export class Ranking {
     if (index !== null) {
       this.navigationDirection.set(index < this.weekIndex() ? 'previous' : 'next');
       this.weekIndex.set(index);
-    }
-  }
-
-  /**
-   * Records where a touch gesture on the carousel started, so `onTouchEnd` can measure it.
-   *
-   * @param event - The `touchstart` event captured on the current week's section.
-   */
-  protected onTouchStart(event: TouchEvent): void {
-    const touch = event.touches[0];
-    this.touchStart = { x: touch.clientX, y: touch.clientY };
-  }
-
-  /**
-   * Steps the carousel when a touch gesture on the carousel reads as a horizontal swipe: left
-   * (like flipping to the next page) moves to the next, older week, right moves to the previous,
-   * more recent one. Left untouched — page scroll keeps working as normal — when the gesture
-   * travels more vertically than horizontally, or doesn't clear {@link SWIPE_THRESHOLD_PX}.
-   *
-   * @param event - The `touchend` event captured on the current week's section.
-   */
-  protected onTouchEnd(event: TouchEvent): void {
-    const start = this.touchStart;
-    this.touchStart = null;
-    if (!start) {
-      return;
-    }
-
-    const touch = event.changedTouches[0];
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX || Math.abs(deltaX) < Math.abs(deltaY)) {
-      return;
-    }
-
-    if (deltaX < 0) {
-      this.goToNextWeek();
-    } else {
-      this.goToPreviousWeek();
     }
   }
 }

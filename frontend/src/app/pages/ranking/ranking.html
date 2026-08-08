@@ -5,16 +5,15 @@
      stays hidden while there is nothing to jump between yet (loading, error, or truly empty
      history).
 
-     Below `sm`, where the carousel's arrows give way to swiping (see the section below), the
-     dropdown becomes the only way to jump directly to a week, so it moves off the title row and
-     centers on its own line between the title and the podium instead of competing with the title
-     for space; at `sm` and up it sits top-right, beside the title. `self-center`/`sm:self-auto`
-     carries that repositioning alone — `items-start`/`sm:justify-between` on the row below is
-     what already keeps the title itself left-aligned in both layouts. -->
+     Below `sm` it moves off the title row and centers on its own line between the title and the
+     podium instead of competing with the title for space; at `sm` and up it sits top-right,
+     beside the title. `self-center`/`sm:self-auto` carries that repositioning alone —
+     `items-start`/`sm:justify-between` on the row below is what already keeps the title itself
+     left-aligned in both layouts. -->
 <header class="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
   <div>
     <h1
-      class="flex items-center gap-2 text-3xl font-extrabold tracking-wide text-text-primary uppercase drop-shadow-[0_0_18px_var(--color-brand-900)]"
+      class="flex items-center gap-2 text-3xl font-extrabold tracking-wide text-text-primary uppercase"
     >
       {{ 'ranking.title' | translate }}
     </h1>
@@ -62,18 +61,12 @@
   </div>
 
   <!-- Weekly ranking history, browsed as a carousel: one finalized week at a time instead of a
-       long stacked list. Below `sm` there isn't room for the previous/next arrows without them
-       overlapping the podium, and a swipe reads as the more natural gesture on a touchscreen
-       anyway, so navigation is a left/right swipe there (`onTouchStart`/`onTouchEnd`) instead; at
-       `sm` and up the arrows take over (see the seam below) and the swipe handlers stay attached
-       but idle, since nothing fires `touchstart` on a mouse/trackpad. The quick-jump dropdown
-       above works at every width. All history is fetched once (see `RankingApi.history`), so
-       every navigation step is instant and purely client-side. -->
+       long stacked list, navigated through the quick-jump dropdown above. All history is fetched
+       once (see `RankingApi.history`), so every navigation step is instant and purely
+       client-side. -->
   <div class="flex flex-col gap-8">
     @for (week of currentWeekSlide(); track week.weekStart) {
       <section
-        (touchend)="onTouchEnd($event)"
-        (touchstart)="onTouchStart($event)"
         [style.--week-enter-offset]="weekEnterOffset()"
         class="motion-safe:[animation:week-enter_.3s_ease-out]"
       >
@@ -170,48 +163,9 @@
           }
         </div>
 
-        <!-- Seam between the podium and the rest of the field: a page-wide divider carrying the
-             previous/next arrows at its ends, so navigating reads as flipping the whole page
-             rather than just the podium above it. Rendered unconditionally (not only when the
-             rest-of-field table exists below) so the arrows always sit at the same spot.
-
-             The arrows themselves anchor to `<main>` (see its `relative` in `app.html`, the same
-             anchor the overview page uses to escape this same cap) rather than to this row, so on
-             displays wider than the page's `max-w-[1440px]` cap they reach into — and center
-             within — the empty gutter that cap leaves on each side, instead of stopping at its
-             edge. `left`/`right` are plain inline styles rather than Tailwind arbitrary values:
-             the `calc()` needs literal spaces around `-`, which Tailwind's bracket syntax cannot
-             carry. No ancestor between the arrows and `<main>` may itself be positioned — that
-             would become their containing block instead and break the calc's `100%` (must resolve
-             to `<main>`'s width) — so this row uses `flex items-center` rather than the `relative`
-             wrapper a purely row-local anchor would need; that same flex alignment is what centers
-             the arrows on the divider vertically, since with `top` left unset they fall back to
-             their would-be in-flow ("static") position, which flexbox places mid-row. -->
-        <div class="flex items-center">
-          <div class="mx-5 border-t border-surface-800/50 sm:mx-6"></div>
-
-          <button
-            [attr.aria-label]="'ranking.carousel.previous' | translate"
-            [disabled]="weekIndex() === 0"
-            (click)="goToPreviousWeek()"
-            class="focus-ring absolute z-10 hidden h-8 w-8 shrink-0 items-center justify-center rounded-full border border-surface-700 bg-surface-950/80 text-text-secondary transition-colors hover:border-brand-500/50 hover:text-text-primary disabled:pointer-events-none disabled:opacity-30 motion-safe:active:scale-[0.92] sm:flex sm:h-9 sm:w-9"
-            style="left: max(0.75rem, calc((100% - 1440px) / 4))"
-            type="button"
-          >
-            <svg aria-hidden="true" class="h-4 w-4" lucideChevronLeft></svg>
-          </button>
-
-          <button
-            [attr.aria-label]="'ranking.carousel.next' | translate"
-            [disabled]="weekIndex() === totalWeeks() - 1"
-            (click)="goToNextWeek()"
-            class="focus-ring absolute z-10 hidden h-8 w-8 shrink-0 items-center justify-center rounded-full border border-surface-700 bg-surface-950/80 text-text-secondary transition-colors hover:border-brand-500/50 hover:text-text-primary disabled:pointer-events-none disabled:opacity-30 motion-safe:active:scale-[0.92] sm:flex sm:h-9 sm:w-9"
-            style="right: max(0.75rem, calc((100% - 1440px) / 4))"
-            type="button"
-          >
-            <svg aria-hidden="true" class="h-4 w-4" lucideChevronRight></svg>
-          </button>
-        </div>
+        <!-- Seam between the podium and the rest of the field: a page-wide divider, so a
+             finalized week reads as one glass panel from the podium all the way down. -->
+        <div class="mx-5 border-t border-surface-800/50 sm:mx-6"></div>
 
         <!-- Rest of the field: a modern, translucent table so a finalized week keeps reading as one
              glass panel from the podium all the way down, rather than switching to a flat list once
@@ -239,7 +193,7 @@
                 <tbody>
                   @for (row of week.rest; track row.playerId) {
                     <tr
-                      class="relative bg-gradient-to-r from-surface-800/50 via-surface-800/15 to-transparent transition-colors hover:from-surface-700/60 hover:via-surface-700/25 has-[a:focus-visible]:from-surface-700/60 has-[a:focus-visible]:via-surface-700/25 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
+                      class="relative bg-surface-800/15 transition-colors hover:bg-surface-700/25 has-[a:focus-visible]:bg-surface-700/25 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
                     >
                       <td class="rounded-l-lg px-5 py-5 text-left">
                         <app-position-badge [position]="row.position" />
@@ -256,7 +210,7 @@
                       <td class="px-4 py-5 text-right">
                         <app-damage-badge [damage]="row.damage" />
                       </td>
-                      <td class="px-4 py-5 text-right">
+                      <td class="rounded-r-lg px-4 py-5 text-right">
                         <app-challenge-completion-badge
                           [completed]="row.completedChallenges"
                           [total]="weeklyChallengeCount"

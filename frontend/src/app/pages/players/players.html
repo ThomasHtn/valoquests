@@ -1,159 +1,85 @@
-<!-- Header -->
+<!-- Header, matching the boss/ranking pages' title treatment so all pages read as one family. -->
 <header>
-  <h1 class="text-2xl font-bold tracking-wide text-text-primary uppercase">
+  <h1
+    class="flex items-center gap-2 text-3xl font-extrabold tracking-wide text-text-primary uppercase"
+  >
     {{ 'players.title' | translate }}
   </h1>
-  <p class="mt-1 text-sm text-text-secondary">
+  <p class="mt-1 text-sm font-medium text-text-secondary">
     {{ 'players.subtitleCount' | translate: { count: rows().length } }}
   </p>
 </header>
 
-<!-- Players list. `overflow-clip` rather than `overflow-hidden`: it rounds the table's corners
-     without establishing a scroll container, which would otherwise anchor the sticky header to
-     this card instead of to the scrolling page. -->
-<section class="overflow-clip rounded-xl border border-surface-700 bg-surface-900">
-  <app-resource-state
-    [emptyText]="'players.empty' | translate"
-    [errorText]="'players.error' | translate"
-    [isEmpty]="rows().length === 0"
-    [isError]="!!playersResource.error()"
-    [isLoading]="playersResource.isLoading()"
-    [loadingText]="'players.loading' | translate"
-    (retry)="playersResource.reload()"
-  >
-    <ul skeleton>
-      @for (placeholder of skeletonRows; track $index) {
-        <li class="flex items-center gap-4 border-b border-surface-700 px-5 py-4 last:border-b-0">
-          <span class="h-11 w-11 shrink-0 rounded-full bg-surface-700"></span>
-          <span class="flex flex-1 flex-col gap-2">
-            <span class="h-3 rounded-full bg-surface-700" [style.width.%]="placeholder"></span>
-            <span class="h-2.5 w-1/4 rounded-full bg-surface-700"></span>
-          </span>
-          <span class="hidden h-3 w-40 shrink-0 rounded-full bg-surface-700 lg:block"></span>
-        </li>
-      }
-    </ul>
+<app-resource-state
+  [emptyText]="'players.empty' | translate"
+  [errorText]="'players.error' | translate"
+  [isEmpty]="rows().length === 0"
+  [isError]="!!playersResource.error()"
+  [isLoading]="playersResource.isLoading()"
+  [loadingText]="'players.loading' | translate"
+  padding="px-1 py-6"
+  (retry)="playersResource.reload()"
+>
+  <ul skeleton>
+    @for (placeholder of skeletonRows; track $index) {
+      <li class="flex items-center gap-4 border-b border-surface-700 px-5 py-4 last:border-b-0">
+        <span class="h-11 w-11 shrink-0 rounded-full bg-surface-700"></span>
+        <span class="flex flex-1 flex-col gap-2">
+          <span class="h-3 rounded-full bg-surface-700" [style.width.%]="placeholder"></span>
+          <span class="h-2.5 w-1/4 rounded-full bg-surface-700"></span>
+        </span>
+        <span class="hidden h-3 w-40 shrink-0 rounded-full bg-surface-700 lg:block"></span>
+      </li>
+    }
+  </ul>
 
-    <!-- Table, from `lg` up. Below that the same data is stacked into cards, since seven columns
-         cannot be read on a phone without scrolling the page sideways. -->
-    <table class="hidden w-full text-sm lg:table">
-      <thead class="sticky top-0 z-10 bg-surface-800">
-        <tr class="border-b border-surface-700 text-xs tracking-wide text-text-secondary uppercase">
-          <th class="px-5 py-3 text-left font-semibold" scope="col">
-            {{ 'players.columns.player' | translate }}
-          </th>
-          <th class="px-4 py-3 text-left font-semibold" scope="col">
-            {{ 'players.columns.rank' | translate }}
-          </th>
-          <th class="px-4 py-3 text-right font-semibold" scope="col">
-            {{ 'players.columns.winRate' | translate }}
-          </th>
-          <th class="px-4 py-3 text-right font-semibold" scope="col">
-            {{ 'players.columns.kda' | translate }}
-          </th>
-          <th class="px-4 py-3 text-right font-semibold" scope="col">
-            {{ 'players.columns.headshotPercentage' | translate }}
-          </th>
-          <th class="px-4 py-3 text-right font-semibold" scope="col">
-            {{ 'players.columns.matchesPlayed' | translate }}
-          </th>
-          <th class="px-5 py-3" scope="col">
-            <span class="sr-only">{{ 'players.columns.details' | translate }}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of rows(); track row.id) {
-          <!-- The row is navigable as a whole: the name cell's link stretches over it through an
-               `::after` overlay, so the chevron's promise of navigation matches the actual target.
-               Focus stays on the link, and the row draws the indicator on its behalf. -->
-          <tr
-            class="relative cursor-pointer border-b border-surface-700 transition-colors last:border-b-0 hover:bg-surface-800 has-[a:focus-visible]:bg-surface-800 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
-          >
-            <th class="px-5 py-3 text-left font-normal" scope="row">
-              <a
-                [routerLink]="['/players', row.id]"
-                class="flex items-center gap-3 after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
-              >
-                <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="md" />
-                <div>
-                  <p
-                    class="flex items-center gap-1.5 font-semibold"
-                    [class.text-accent-gold]="row.isChampion"
-                    [class.text-text-primary]="!row.isChampion"
-                  >
-                    {{ row.displayName }}
-                    @if (row.isChampion) {
-                      <app-champion-badge />
-                    }
-                  </p>
-                  @if (row.tag) {
-                    <p class="text-xs text-text-secondary">#{{ row.tag }}</p>
-                  }
-                </div>
-              </a>
-            </th>
-            <td class="px-4 py-3">
-              <div class="flex items-center gap-2">
-                <app-rank-icon-view
-                  [src]="row.rankIconUrl"
-                  [tierLabel]="row.tier.label"
-                  size="sm"
-                />
-                <div>
-                  <p [class]="row.tier.colorClass" class="font-semibold">{{ row.tier.label }}</p>
-                  @if (row.rankRating !== null) {
-                    <p class="text-xs text-text-secondary">{{ row.rankRating }} RR</p>
-                  }
-                </div>
-              </div>
-            </td>
-            <td class="px-4 py-3">
-              <div class="flex flex-col items-end gap-1.5">
-                <span [class]="winRateVisual(row.winRate).textClass" class="font-bold tabular-nums">
-                  {{ formatWinRate(row.winRate) }}
-                </span>
-                <app-progress-bar
-                  class="w-16"
-                  [colorClass]="winRateVisual(row.winRate).barClass"
-                  [percentage]="row.winRate ?? 0"
-                />
-              </div>
-            </td>
-            <td
-              [class]="kdaVisual(row.kda).textClass"
-              class="px-4 py-3 text-right font-bold tabular-nums"
-            >
-              {{ formatKda(row.kda) }}
-            </td>
-            <td class="px-4 py-3 text-right tabular-nums text-text-primary">
-              {{ formatHeadshotPercentage(row.headshotPercentage) }}
-            </td>
-            <td class="px-4 py-3 text-right tabular-nums text-text-primary">
-              {{ row.matchesPlayed }}
-            </td>
-            <td class="px-5 py-3 text-right text-text-secondary">
-              <svg class="ml-auto h-4 w-4" lucideChevronRight></svg>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-
-    <!-- Card list, below `lg`. Carries the three statistics that rank players against each other;
-         the rest stays one tap away on the profile. -->
-    <ul class="lg:hidden">
+  <!-- Table, from `lg` up. Below that the same data is stacked into cards, since seven columns
+       cannot be read on a phone without scrolling the page sideways. Same glass-panel treatment
+       (translucent header, gradient rows on generous `border-spacing`) as the ranking page's
+       tables, so a table reads the same wherever it appears. -->
+  <table class="hidden w-full border-separate border-spacing-y-3 text-sm lg:table">
+    <thead>
+      <tr class="text-xs tracking-widest text-text-secondary/80 uppercase">
+        <th class="px-5 py-2.5 text-left font-medium" scope="col">
+          {{ 'players.columns.player' | translate }}
+        </th>
+        <th class="px-4 py-2.5 text-left font-medium" scope="col">
+          {{ 'players.columns.rank' | translate }}
+        </th>
+        <th class="px-4 py-2.5 text-right font-medium" scope="col">
+          {{ 'players.columns.winRate' | translate }}
+        </th>
+        <th class="px-4 py-2.5 text-right font-medium" scope="col">
+          {{ 'players.columns.kda' | translate }}
+        </th>
+        <th class="px-4 py-2.5 text-right font-medium" scope="col">
+          {{ 'players.columns.headshotPercentage' | translate }}
+        </th>
+        <th class="px-4 py-2.5 text-right font-medium" scope="col">
+          {{ 'players.columns.matchesPlayed' | translate }}
+        </th>
+        <th class="px-5 py-2.5" scope="col">
+          <span class="sr-only">{{ 'players.columns.details' | translate }}</span>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
       @for (row of rows(); track row.id) {
-        <li class="border-b border-surface-700 last:border-b-0">
-          <a
-            [routerLink]="['/players', row.id]"
-            class="focus-ring-inset flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-surface-800"
-          >
-            <div class="flex items-center gap-3">
+        <!-- The row is navigable as a whole: the name cell's link stretches over it through an
+             `::after` overlay, so the chevron's promise of navigation matches the actual target.
+             Focus stays on the link, and the row draws the indicator on its behalf. -->
+        <tr
+          class="relative cursor-pointer bg-surface-800/15 transition-colors hover:bg-surface-700/25 has-[a:focus-visible]:bg-surface-700/25 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
+        >
+          <th class="rounded-l-lg px-5 py-5 text-left font-normal" scope="row">
+            <a
+              [routerLink]="['/players', row.id]"
+              class="flex items-center gap-3 after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+            >
               <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="md" />
-              <div class="min-w-0 flex-1">
+              <div>
                 <p
-                  class="flex items-center gap-1.5 truncate font-semibold"
+                  class="flex items-center gap-1.5 font-semibold"
                   [class.text-accent-gold]="row.isChampion"
                   [class.text-text-primary]="!row.isChampion"
                 >
@@ -162,57 +88,125 @@
                     <app-champion-badge />
                   }
                 </p>
-                <p class="truncate text-xs text-text-secondary">
-                  @if (row.tag) {
-                    #{{ row.tag }} ·
-                  }
-                  {{ row.matchesPlayed }} {{ 'players.columns.matchesPlayed' | translate }}
-                </p>
+                @if (row.tag) {
+                  <p class="text-xs text-text-secondary">#{{ row.tag }}</p>
+                }
               </div>
-              <div class="flex shrink-0 items-center gap-2">
-                <app-rank-icon-view
-                  [src]="row.rankIconUrl"
-                  [tierLabel]="row.tier.label"
-                  size="sm"
-                />
-                <p [class]="row.tier.colorClass" class="text-sm font-semibold">
-                  {{ row.tier.label }}
-                </p>
+            </a>
+          </th>
+          <td class="px-4 py-5">
+            <div class="flex items-center gap-2">
+              <app-rank-icon-view [src]="row.rankIconUrl" [tierLabel]="row.tier.label" size="sm" />
+              <div>
+                <p [class]="row.tier.colorClass" class="font-semibold">{{ row.tier.label }}</p>
+                @if (row.rankRating !== null) {
+                  <p class="text-xs text-text-secondary">{{ row.rankRating }} RR</p>
+                }
               </div>
             </div>
-
-            <dl class="grid grid-cols-3 gap-3 border-t border-surface-700 pt-3">
-              <div>
-                <dt class="text-xs tracking-wide text-text-secondary uppercase">
-                  {{ 'players.columns.winRate' | translate }}
-                </dt>
-                <dd
-                  [class]="winRateVisual(row.winRate).textClass"
-                  class="mt-0.5 font-bold tabular-nums"
-                >
-                  {{ formatWinRate(row.winRate) }}
-                </dd>
-              </div>
-              <div>
-                <dt class="text-xs tracking-wide text-text-secondary uppercase">
-                  {{ 'players.columns.kda' | translate }}
-                </dt>
-                <dd [class]="kdaVisual(row.kda).textClass" class="mt-0.5 font-bold tabular-nums">
-                  {{ formatKda(row.kda) }}
-                </dd>
-              </div>
-              <div>
-                <dt class="text-xs tracking-wide text-text-secondary uppercase">
-                  {{ 'players.columns.headshotPercentage' | translate }}
-                </dt>
-                <dd class="mt-0.5 font-bold tabular-nums text-text-primary">
-                  {{ formatHeadshotPercentage(row.headshotPercentage) }}
-                </dd>
-              </div>
-            </dl>
-          </a>
-        </li>
+          </td>
+          <td class="px-4 py-5">
+            <div class="flex flex-col items-end gap-1.5">
+              <span [class]="winRateVisual(row.winRate).textClass" class="font-bold tabular-nums">
+                {{ formatWinRate(row.winRate) }}
+              </span>
+              <app-progress-bar
+                class="w-16"
+                [colorClass]="winRateVisual(row.winRate).barClass"
+                [percentage]="row.winRate ?? 0"
+              />
+            </div>
+          </td>
+          <td
+            [class]="kdaVisual(row.kda).textClass"
+            class="px-4 py-5 text-right font-bold tabular-nums"
+          >
+            {{ formatKda(row.kda) }}
+          </td>
+          <td class="px-4 py-5 text-right tabular-nums text-text-primary">
+            {{ formatHeadshotPercentage(row.headshotPercentage) }}
+          </td>
+          <td class="px-4 py-5 text-right tabular-nums text-text-primary">
+            {{ row.matchesPlayed }}
+          </td>
+          <td class="rounded-r-lg px-5 py-5 text-right text-text-secondary">
+            <svg class="ml-auto h-4 w-4" lucideChevronRight></svg>
+          </td>
+        </tr>
       }
-    </ul>
-  </app-resource-state>
-</section>
+    </tbody>
+  </table>
+
+  <!-- Card list, below `lg`. Carries the three statistics that rank players against each other;
+       the rest stays one tap away on the profile. -->
+  <ul class="flex flex-col gap-3 lg:hidden">
+    @for (row of rows(); track row.id) {
+      <li
+        class="rounded-lg bg-surface-800/15 transition-colors has-[a:focus-visible]:bg-surface-700/25"
+      >
+        <a
+          [routerLink]="['/players', row.id]"
+          class="focus-ring-inset flex flex-col gap-3 px-4 py-5 transition-colors hover:bg-surface-700/25"
+        >
+          <div class="flex items-center gap-3">
+            <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="md" />
+            <div class="min-w-0 flex-1">
+              <p
+                class="flex items-center gap-1.5 truncate font-semibold"
+                [class.text-accent-gold]="row.isChampion"
+                [class.text-text-primary]="!row.isChampion"
+              >
+                {{ row.displayName }}
+                @if (row.isChampion) {
+                  <app-champion-badge />
+                }
+              </p>
+              <p class="truncate text-xs text-text-secondary">
+                @if (row.tag) {
+                  #{{ row.tag }} ·
+                }
+                {{ row.matchesPlayed }} {{ 'players.columns.matchesPlayed' | translate }}
+              </p>
+            </div>
+            <div class="flex shrink-0 items-center gap-2">
+              <app-rank-icon-view [src]="row.rankIconUrl" [tierLabel]="row.tier.label" size="sm" />
+              <p [class]="row.tier.colorClass" class="text-sm font-semibold">
+                {{ row.tier.label }}
+              </p>
+            </div>
+          </div>
+
+          <dl class="grid grid-cols-3 gap-3 border-t border-surface-700 pt-3">
+            <div>
+              <dt class="text-xs tracking-wide text-text-secondary uppercase">
+                {{ 'players.columns.winRate' | translate }}
+              </dt>
+              <dd
+                [class]="winRateVisual(row.winRate).textClass"
+                class="mt-0.5 font-bold tabular-nums"
+              >
+                {{ formatWinRate(row.winRate) }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs tracking-wide text-text-secondary uppercase">
+                {{ 'players.columns.kda' | translate }}
+              </dt>
+              <dd [class]="kdaVisual(row.kda).textClass" class="mt-0.5 font-bold tabular-nums">
+                {{ formatKda(row.kda) }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs tracking-wide text-text-secondary uppercase">
+                {{ 'players.columns.headshotPercentage' | translate }}
+              </dt>
+              <dd class="mt-0.5 font-bold tabular-nums text-text-primary">
+                {{ formatHeadshotPercentage(row.headshotPercentage) }}
+              </dd>
+            </div>
+          </dl>
+        </a>
+      </li>
+    }
+  </ul>
+</app-resource-state>

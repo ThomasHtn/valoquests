@@ -40,6 +40,8 @@
       "defeated": "The boss has been defeated this week!",
       "error": "Failed to load the weekly boss.",
       "eyebrow": "Weekly boss",
+      "hpAmount": "{{remaining}} / {{total}}",
+      "hpUnit": "HP",
       "hpValue": "{{remaining}} / {{total}} HP",
       "loading": "Loading the boss…"
     },
@@ -51,6 +53,7 @@
       },
       "title": "This week's podium"
     },
+    "rulesLink": "How it works",
     "sections": {
       "challenges": {
         "ariaLabel": "Go to the weekly challenges"
@@ -63,6 +66,7 @@
         "ariaLabel": "Go to the ranking"
       }
     },
+    "tagline": "Complete missions every week to bring down fearsome bosses!",
     "teamProgress": {
       "contributors": "{{count}} player(s) contributed this week",
       "eyebrow": "Team objective",
@@ -100,7 +104,6 @@
         "SCORE": "Score"
       },
       "playersUnit": "players",
-      "progressTooltip": "{{completed}} of {{total}} players have completed this challenge",
       "title": "Weekly challenges"
     },
     "weeklyRanking": {
@@ -128,7 +131,9 @@
     "filters": {
       "allSeasons": "All seasons",
       "gameModeLabel": "Filter by game mode",
+      "moreGameModes": "More game modes",
       "reset": "Reset",
+      "season": "Season {{name}}",
       "seasonLabel": "Filter by season"
     },
     "loading": "Loading player profile…",
@@ -174,14 +179,16 @@
       "adr": "ADR",
       "headshotPercentage": "HS%",
       "kda": "K/D",
+      "losses": "{{count}} L",
       "matchesPlayed": "Matches",
       "record": "{{wins}} W / {{losses}} L",
-      "winRate": "Win rate"
+      "winRate": "Win rate",
+      "wins": "{{count}} W"
     },
     "title": "Player profile",
     "viewMode": {
-      "global": "Global",
-      "weekly": "This week"
+      "global": "Seasons",
+      "weekly": "Week"
     }
   },
   "players": {
@@ -221,9 +228,7 @@
     },
     "carousel": {
       "empty": "No other week available",
-      "jumpTo": "Jump to a week",
-      "next": "Next week",
-      "previous": "Previous week"
+      "jumpTo": "Jump to a week"
     },
     "empty": "No week has been finalized yet.",
     "error": "Failed to load the ranking history.",
@@ -238,6 +243,39 @@
     }
   },
   "retry": "Retry",
+  "rules": {
+    "backToOverview": "Back to overview",
+    "sections": {
+      "boss": {
+        "description": "Every week a boss shows up, Minor, Standard or Elite, and its health bar belongs to the whole squad. Every hit anyone lands, from a match or a challenge, drains it. Bring it down before Sunday night, or it lives to fight another week.",
+        "eyebrow": "Step 3 · Weekly boss",
+        "title": "One boss, one shared health bar"
+      },
+      "challenges": {
+        "description": "Every Monday, five challenges get pulled out of a hat of 46, one for each difficulty tier. No checkbox to tick, no form to fill in: the moment your matches sync, your progress ticks up on its own.",
+        "eyebrow": "Step 1 · Weekly challenges",
+        "title": "Five challenges, one per difficulty"
+      },
+      "damage": {
+        "bonuses": "Bonus points for showing up: playing on several days in the week and teaming up with others on the same challenge both pile extra damage on the stack.",
+        "description": "Ranked win? Big hit. Casual match, even a loss? Still chips in. Finish a challenge and cash in a fat damage bonus on top, bigger the harder it was.",
+        "eyebrow": "Step 2 · Damage",
+        "matchDamageLabel": "Damage per match",
+        "regularityDays": "{{days}} days",
+        "regularityLabel": "Regularity bonus",
+        "teamLabel": "Team bonus",
+        "teamPlayers": "{{count}} players",
+        "title": "Every match throws a punch"
+      },
+      "ranking": {
+        "description": "Total damage for the week decides the ranking. Whoever lands the killing blow on the boss gets crowned Champion and wears the crown until someone else finishes the job.",
+        "eyebrow": "Step 4 · Ranking & Champion",
+        "title": "Climb the board, claim the crown"
+      }
+    },
+    "subtitle": "Grab your blade. Here's the whole quest: five weekly challenges, damage from every match, one boss to bring down together, and a throne to fight for.",
+    "title": "Rules & how it works"
+  },
   "shared": {
     "challengeCompletionBadge": {
       "label": "Completed challenges"

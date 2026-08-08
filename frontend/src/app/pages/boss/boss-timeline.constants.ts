@@ -115,15 +115,16 @@ export interface HexFrameEdge {
  * The six edges of the hex marker's frame, each shortened at both ends so a small gap opens at
  * every vertex — the segmented, beveled look of a sci-fi hex frame rather than a plain outline.
  *
- * Traces the same pointy-top hexagon already used to clip podium avatars on the ranking page
- * (`clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)`), so the boss portrait and
- * its frame share one consistent hex geometry across the app.
+ * Traces a true regular pointy-top hexagon (vertices at 50%/0%, 93.3%/25%, 93.3%/75%, 50%/100%,
+ * 6.7%/75%, 6.7%/25% — width = height * sin(60°)) rather than stretching one edge-to-edge across
+ * the square viewBox, which is what flattened the marker; the boss portrait clip-path in `boss.html`
+ * uses the same vertices so the frame and the portrait line up.
  */
 export const HEX_FRAME_EDGES: readonly HexFrameEdge[] = [
-  { x1: 57.5, y1: 3.75, x2: 92.5, y2: 21.25 },
-  { x1: 100, y1: 32.5, x2: 100, y2: 67.5 },
-  { x1: 92.5, y1: 78.75, x2: 57.5, y2: 96.25 },
-  { x1: 42.5, y1: 96.25, x2: 7.5, y2: 78.75 },
-  { x1: 0, y1: 67.5, x2: 0, y2: 32.5 },
-  { x1: 7.5, y1: 21.25, x2: 42.5, y2: 3.75 },
+  { x1: 56.5, y1: 3.75, x2: 86.8, y2: 21.25 },
+  { x1: 93.3, y1: 32.5, x2: 93.3, y2: 67.5 },
+  { x1: 86.8, y1: 78.75, x2: 56.5, y2: 96.25 },
+  { x1: 43.5, y1: 96.25, x2: 13.2, y2: 78.75 },
+  { x1: 6.7, y1: 67.5, x2: 6.7, y2: 32.5 },
+  { x1: 13.2, y1: 21.25, x2: 43.5, y2: 3.75 },
 ];

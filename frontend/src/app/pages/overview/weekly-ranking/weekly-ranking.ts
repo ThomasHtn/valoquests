@@ -2,7 +2,13 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { RouterLink } from '@angular/router';
-import { LucideCheck, LucideChevronDown, LucideChevronUp, LucideTrophy } from '@lucide/angular';
+import {
+  LucideCheck,
+  LucideChevronDown,
+  LucideChevronUp,
+  LucideTarget,
+  LucideTrophy,
+} from '@lucide/angular';
 
 import { ChallengeIconView } from '@shared/challenge-icon-view/challenge-icon-view';
 import {
@@ -57,6 +63,7 @@ import {
     LucideCheck,
     LucideChevronDown,
     LucideChevronUp,
+    LucideTarget,
     LucideTrophy,
   ],
   templateUrl: './weekly-ranking.html',

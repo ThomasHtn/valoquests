@@ -1,0 +1,197 @@
+<header>
+  <a
+    class="focus-ring inline-flex items-center gap-1.5 text-sm font-semibold text-text-secondary transition-colors hover:text-text-primary"
+    routerLink="/"
+  >
+    <svg class="h-4 w-4 shrink-0" lucideArrowLeft></svg>
+    {{ 'rules.backToOverview' | translate }}
+  </a>
+  <h1
+    class="mt-3 flex items-center gap-2 text-3xl font-extrabold tracking-wide text-text-primary uppercase"
+  >
+    {{ 'rules.title' | translate }}
+  </h1>
+  <p class="mt-1 max-w-prose text-sm font-medium text-text-secondary">
+    {{ 'rules.subtitle' | translate }}
+  </p>
+</header>
+
+<!-- A "quest log" rather than a stack of bordered cards: four steps strung along a single
+     gradient line, echoing the boss battle timeline's hex markers (`boss.html`) at a lighter
+     weight, so the rules read as part of the same run rather than a dry reference sheet. -->
+<ol class="relative flex flex-col gap-10 py-2 pl-1 sm:pl-2">
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute top-2 bottom-2 left-8 w-0.5 bg-linear-to-b from-brand-500 via-accent-purple to-accent-gold sm:left-10"
+  ></div>
+
+  <li class="relative flex gap-5">
+    <span
+      class="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface-900 text-brand-500 ring-4 ring-brand-500 shadow-[0_0_18px_var(--color-brand-500)] sm:h-16 sm:w-16"
+    >
+      <svg class="h-6 w-6 sm:h-7 sm:w-7" lucideTarget></svg>
+    </span>
+    <div class="min-w-0 flex-1 pt-2">
+      <p class="text-brand-500 text-xs font-bold tracking-widest uppercase">
+        {{ 'rules.sections.challenges.eyebrow' | translate }}
+      </p>
+      <h2 class="mt-1 text-xl font-extrabold text-text-primary sm:text-2xl">
+        {{ 'rules.sections.challenges.title' | translate }}
+      </h2>
+      <p class="mt-2 max-w-prose text-sm text-text-secondary sm:text-base">
+        {{ 'rules.sections.challenges.description' | translate }}
+      </p>
+
+      <ul class="mt-4 flex flex-wrap gap-2">
+        @for (tier of difficultyShowcase; track tier.difficulty) {
+          <li
+            [class]="tier.colorClass"
+            class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
+          >
+            {{ 'overview.weeklyChallenges.difficulty.' + tier.difficulty | translate }}
+            <span aria-hidden="true">·</span>
+            {{ tier.damage }}
+          </li>
+        }
+      </ul>
+    </div>
+  </li>
+
+  <li class="relative flex gap-5">
+    <span
+      class="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface-900 text-accent-purple ring-4 ring-accent-purple shadow-[0_0_18px_var(--color-accent-purple)] sm:h-16 sm:w-16"
+    >
+      <svg class="h-6 w-6 sm:h-7 sm:w-7" lucideSwords></svg>
+    </span>
+    <div class="min-w-0 flex-1 pt-2">
+      <p class="text-accent-purple text-xs font-bold tracking-widest uppercase">
+        {{ 'rules.sections.damage.eyebrow' | translate }}
+      </p>
+      <h2 class="mt-1 text-xl font-extrabold text-text-primary sm:text-2xl">
+        {{ 'rules.sections.damage.title' | translate }}
+      </h2>
+      <p class="mt-2 max-w-prose text-sm text-text-secondary sm:text-base">
+        {{ 'rules.sections.damage.description' | translate }}
+      </p>
+
+      <!-- Per-mode damage ladder: a lightweight grid rather than a bordered table, so it keeps
+           reading as part of the quest log instead of a spec sheet. -->
+      <p class="mt-4 text-xs font-bold tracking-widest text-text-muted uppercase">
+        {{ 'rules.sections.damage.matchDamageLabel' | translate }}
+      </p>
+      <div
+        class="mt-2 grid max-w-prose grid-cols-[1fr_auto_auto_auto] items-center gap-x-4 gap-y-1.5 text-sm"
+      >
+        <span></span>
+        <span class="text-accent-green text-right text-xs font-bold tracking-wide uppercase">
+          {{ 'playerProfile.matches.result.WIN' | translate }}
+        </span>
+        <span class="text-right text-xs font-bold tracking-wide text-text-muted uppercase">
+          {{ 'playerProfile.matches.result.DRAW' | translate }}
+        </span>
+        <span class="text-right text-xs font-bold tracking-wide text-text-secondary uppercase">
+          {{ 'playerProfile.matches.result.LOSS' | translate }}
+        </span>
+
+        @for (mode of matchDamageShowcase; track mode.mode) {
+          <span class="font-semibold text-text-primary">
+            {{ 'playerProfile.matches.gameMode.' + mode.mode | translate }}
+          </span>
+          <span class="text-accent-green text-right font-bold tabular-nums">{{ mode.win }}</span>
+          <span class="text-right font-bold tabular-nums text-text-muted">
+            {{ mode.draw ?? '—' }}
+          </span>
+          <span class="text-right font-bold tabular-nums text-text-secondary">
+            {{ mode.loss }}
+          </span>
+        }
+      </div>
+
+      <p class="mt-4 max-w-prose text-sm text-text-secondary sm:text-base">
+        {{ 'rules.sections.damage.bonuses' | translate }}
+      </p>
+
+      <p class="mt-3 text-xs font-bold tracking-widest text-text-muted uppercase">
+        {{ 'rules.sections.damage.regularityLabel' | translate }}
+      </p>
+      <ul class="mt-2 flex flex-wrap gap-2">
+        @for (tier of regularityBonusShowcase; track tier.days) {
+          <li
+            class="bg-accent-cyan/15 text-accent-cyan flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
+          >
+            {{ 'rules.sections.damage.regularityDays' | translate: { days: tier.days } }}
+            <span aria-hidden="true">·</span>
+            {{ tier.bonus }}
+          </li>
+        }
+      </ul>
+
+      <p class="mt-3 text-xs font-bold tracking-widest text-text-muted uppercase">
+        {{ 'rules.sections.damage.teamLabel' | translate }}
+      </p>
+      <ul class="mt-2 flex flex-wrap gap-2">
+        @for (tier of teamBonusShowcase; track tier.playersLabel) {
+          <li
+            class="bg-accent-blue/15 text-accent-blue flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
+          >
+            {{ 'rules.sections.damage.teamPlayers' | translate: { count: tier.playersLabel } }}
+            <span aria-hidden="true">·</span>
+            {{ tier.bonus }}
+          </li>
+        }
+      </ul>
+    </div>
+  </li>
+
+  <li class="relative flex gap-5">
+    <span
+      class="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface-900 text-accent-red ring-4 ring-accent-red shadow-[0_0_18px_var(--color-accent-red)] sm:h-16 sm:w-16"
+    >
+      <svg class="h-6 w-6 sm:h-7 sm:w-7" lucideSkull></svg>
+    </span>
+    <div class="min-w-0 flex-1 pt-2">
+      <p class="text-accent-red text-xs font-bold tracking-widest uppercase">
+        {{ 'rules.sections.boss.eyebrow' | translate }}
+      </p>
+      <h2 class="mt-1 text-xl font-extrabold text-text-primary sm:text-2xl">
+        {{ 'rules.sections.boss.title' | translate }}
+      </h2>
+      <p class="mt-2 max-w-prose text-sm text-text-secondary sm:text-base">
+        {{ 'rules.sections.boss.description' | translate }}
+      </p>
+
+      <ul class="mt-4 flex flex-wrap gap-2">
+        @for (category of bossCategoryShowcase; track category) {
+          <li
+            [class]="bossCategoryColorClass(category)"
+            class="rounded-full bg-surface-800 px-3 py-1.5 text-xs font-bold tracking-wide uppercase"
+          >
+            {{ 'boss.category.' + category | translate }}
+          </li>
+        }
+      </ul>
+    </div>
+  </li>
+
+  <li class="relative flex gap-5">
+    <span
+      class="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface-900 text-accent-gold ring-4 ring-accent-gold shadow-[0_0_18px_var(--color-accent-gold)] sm:h-16 sm:w-16"
+    >
+      <svg class="h-6 w-6 sm:h-7 sm:w-7" lucideTrophy></svg>
+    </span>
+    <div class="min-w-0 flex-1 pt-2">
+      <p class="text-accent-gold text-xs font-bold tracking-widest uppercase">
+        {{ 'rules.sections.ranking.eyebrow' | translate }}
+      </p>
+      <h2 class="mt-1 text-xl font-extrabold text-text-primary sm:text-2xl">
+        {{ 'rules.sections.ranking.title' | translate }}
+      </h2>
+      <p
+        class="mt-2 flex max-w-prose flex-wrap items-center gap-2 text-sm text-text-secondary sm:text-base"
+      >
+        {{ 'rules.sections.ranking.description' | translate }}
+        <app-champion-badge />
+      </p>
+    </div>
+  </li>
+</ol>

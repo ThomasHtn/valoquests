@@ -10,7 +10,8 @@ import {
   viewChildren,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { LucideChevronDown } from '@lucide/angular';
+import { RouterLink } from '@angular/router';
+import { LucideBookOpen, LucideChevronDown } from '@lucide/angular';
 import { interval } from 'rxjs';
 
 import { ChallengesApi } from '@core/challenges/challenges-api';
@@ -25,11 +26,13 @@ import { WeeklyChallenges } from './weekly-challenges/weekly-challenges';
 import { WeeklyRanking } from './weekly-ranking/weekly-ranking';
 
 /**
- * Ratio of a snap section that must be visible before the dot rail's active state switches to it,
- * chosen so the indicator updates roughly mid-transition rather than at the very first sliver of
- * the next section coming into view.
+ * Intersection ratios at which the `IntersectionObserver` re-checks each section's visibility. A
+ * single high ratio (e.g. 0.55) would never fire for a section taller than the scroll container —
+ * its ratio could never climb that high — leaving {@link Overview.activeSectionId} stuck on
+ * whichever section last crossed it. This dense step list instead makes the observer track every
+ * section's ratio continuously, so the most-visible one can always be picked out.
  */
-const SECTION_VISIBILITY_THRESHOLD = 0.55;
+const SECTION_VISIBILITY_THRESHOLDS = Array.from({ length: 21 }, (_, step) => step / 20);
 
 /**
  * One section of the overview's scroll-snap layout, paired with the translation key of its dot
@@ -53,11 +56,13 @@ interface OverviewSection {
   selector: 'app-overview',
   imports: [
     TranslatePipe,
+    RouterLink,
     BossEncounter,
     Podium,
     TeamProgress,
     WeeklyChallenges,
     WeeklyRanking,
+    LucideBookOpen,
     LucideChevronDown,
   ],
   templateUrl: './overview.html',
@@ -124,11 +129,11 @@ export class Overview {
   protected readonly activeSectionId = signal(this.sections[0].id);
 
   /**
-   * Whether the bouncing "scroll down" hint should render, next to the dot rail. Shown only while
-   * the hero section is active, to nudge first-time visitors toward the sections below it — not a
-   * persistent fixture once they've already navigated further.
+   * Whether the hero section is the one currently in view. Drives both the bouncing "scroll down"
+   * hint next to the dot rail and the "how it works" link floating over the hero, so neither
+   * lingers once the visitor has scrolled past the hero.
    */
-  protected readonly showScrollHint = computed(
+  protected readonly isHeroSectionActive = computed(
     () => this.activeSectionId() === this.sections[0].id,
   );
 
@@ -171,16 +176,23 @@ export class Overview {
 
   /**
    * Observes every section's visibility within the scroll container, keeping
-   * {@link activeSectionId} in sync with whichever one is currently in view.
+   * {@link activeSectionId} in sync with whichever one is currently the most visible — rather than
+   * the last one to report any overlap at all, which could flip to a barely-entering neighbor
+   * while the current section is still mostly on screen.
    */
   private observeSections(): void {
+    const visibilityRatios = new Map<string, number>();
+
     const observer = new IntersectionObserver(
       (entries) => {
-        entries
-          .filter((entry) => entry.isIntersecting)
-          .forEach((entry) => this.activeSectionId.set(entry.target.id));
+        entries.forEach((entry) => visibilityRatios.set(entry.target.id, entry.intersectionRatio));
+
+        const [mostVisibleId] = [...visibilityRatios].reduce((mostVisible, candidate) =>
+          candidate[1] > mostVisible[1] ? candidate : mostVisible,
+        );
+        this.activeSectionId.set(mostVisibleId);
       },
-      { root: this.scrollContainer().nativeElement, threshold: SECTION_VISIBILITY_THRESHOLD },
+      { root: this.scrollContainer().nativeElement, threshold: SECTION_VISIBILITY_THRESHOLDS },
     );
 
     this.sectionElements().forEach((section) => observer.observe(section.nativeElement));

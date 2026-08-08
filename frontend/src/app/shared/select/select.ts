@@ -85,19 +85,26 @@ export class Select<T> {
    * default, used by every filter dropdown), `'ghost'` for a background-free trigger that only
    * reveals itself on hover/focus — for placements where the control should read as a quiet page
    * affordance rather than a filter (e.g. the ranking history carousel's week selector, sitting
-   * next to the page title).
+   * next to the page title), `'gradient'` for a borderless, background-free trigger that only
+   * tints on hover — for placements sitting alongside other borderless controls (e.g. the player
+   * profile's filter row).
    */
-  public readonly variant = input<'solid' | 'ghost'>('solid');
+  public readonly variant = input<'solid' | 'ghost' | 'gradient'>('solid');
 
   /**
    * Trigger classes for the current {@link variant}, isolated from the shared layout/typography
    * classes in the template so neither copy has to repeat the other's concerns.
    */
-  protected readonly variantClass = computed(() =>
-    this.variant() === 'ghost'
-      ? 'text-text-secondary hover:bg-surface-800/60 hover:text-text-primary'
-      : 'border border-surface-700 bg-gradient-to-b from-surface-800 to-surface-950 text-text-primary transition-[background-image,scale] hover:from-surface-700 hover:to-surface-900',
-  );
+  protected readonly variantClass = computed(() => {
+    switch (this.variant()) {
+      case 'ghost':
+        return 'text-text-secondary hover:bg-surface-800/60 hover:text-text-primary';
+      case 'gradient':
+        return 'text-text-primary transition-colors hover:bg-surface-800/60';
+      default:
+        return 'border border-surface-700 bg-gradient-to-b from-surface-800 to-surface-950 text-text-primary transition-[background-image,scale] hover:from-surface-700 hover:to-surface-900';
+    }
+  });
 
   /**
    * Id of the options panel, referenced by the trigger's `aria-controls`.

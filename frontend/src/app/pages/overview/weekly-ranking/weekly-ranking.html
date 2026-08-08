@@ -1,6 +1,6 @@
 <div class="mb-6 flex items-center justify-center gap-2">
   <svg class="h-6 w-6 shrink-0 text-brand-500" lucideTrophy></svg>
-  <h2 class="text-lg font-bold tracking-wide text-text-primary uppercase">
+  <h2 class="text-3xl font-semibold text-text-secondary sm:text-4xl">
     {{ 'overview.weeklyRanking.title' | translate }}
   </h2>
 </div>
@@ -63,11 +63,11 @@
               </span>
               @if (column.targetLabel) {
                 <span
-                  [class]="[column.visual.iconClass, column.visual.badgeClass]"
-                  class="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold normal-case tabular-nums"
+                  [class]="column.visual.iconClass"
+                  class="flex items-center gap-1 rounded-full border border-current/40 px-2 py-0.5 text-xs font-bold normal-case tabular-nums"
                 >
+                  <svg aria-hidden="true" class="h-3 w-3" lucideTarget></svg>
                   {{ column.targetLabel }}
-                  <svg aria-hidden="true" class="h-3 w-3" lucideCheck></svg>
                 </span>
               }
             </span>
@@ -82,7 +82,7 @@
              row means the same thing on both screens. -->
         <tr
           [class.opacity-50]="row.position === null"
-          class="relative cursor-pointer bg-gradient-to-r from-surface-800/50 via-surface-800/15 to-transparent transition-colors hover:from-surface-700/60 hover:via-surface-700/25 has-[a:focus-visible]:from-surface-700/60 has-[a:focus-visible]:via-surface-700/25 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
+          class="relative cursor-pointer bg-surface-800/15 transition-colors hover:bg-surface-700/25 has-[a:focus-visible]:bg-surface-700/25 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
         >
           <td class="rounded-l-lg px-5 py-5">
             <span class="flex items-center gap-2">
@@ -117,8 +117,8 @@
           </td>
           <!-- The target is written once in the column header, so the cell keeps only the value
                the player is at. -->
-          @for (cell of row.cells; track cell.challengeId) {
-            <td class="px-4 py-5">
+          @for (cell of row.cells; track cell.challengeId; let last = $last) {
+            <td [class.rounded-r-lg]="last" class="px-4 py-5">
               <div class="flex items-center justify-center">
                 @if (cell.completed) {
                   <!-- Completion is carried by the value itself, as a badge, rather than by a
@@ -167,7 +167,7 @@
     @for (row of rows(); track row.playerId) {
       <li
         [class.opacity-50]="row.position === null"
-        class="relative flex flex-col gap-3 rounded-lg bg-gradient-to-r from-surface-800/50 via-surface-800/15 to-transparent px-4 py-4 transition-colors has-[a:focus-visible]:from-surface-700/60 has-[a:focus-visible]:via-surface-700/25 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
+        class="relative flex flex-col gap-3 rounded-lg bg-surface-800/15 px-4 py-4 transition-colors has-[a:focus-visible]:bg-surface-700/25 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
       >
         <div class="flex items-center gap-3">
           <app-position-badge [position]="row.position" />

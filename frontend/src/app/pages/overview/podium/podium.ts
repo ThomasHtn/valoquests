@@ -76,9 +76,9 @@ export class Podium {
   protected readonly top3 = computed(() => this.entries().slice(0, 3));
 
   /**
-   * Ranking entries from the 4th place onward, shown as a compact preview strip.
+   * Ranking entries for positions 4 to 6, shown as a compact preview strip.
    */
-  protected readonly rest = computed(() => this.entries().slice(3));
+  protected readonly rest = computed(() => this.entries().slice(3, 6));
 
   /**
    * Resolves a player's avatar asset from their portrait field, exposed to the template.

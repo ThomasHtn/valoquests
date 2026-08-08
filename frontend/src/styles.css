@@ -81,19 +81,18 @@
   background-color: var(--color-brand-500);
 }
 
-/* The overview page's scroll-snap container hides its native scrollbar at `lg` and up, where its
-   dot rail (see `overview.html`) already doubles as the scroll position indicator; scrolling
-   itself is unaffected. Written as plain, unlayered CSS like the rules above rather than a
-   Tailwind utility class, since utilities are emitted inside a generated layer and would lose to
+/* The overview page's scroll-snap container hides its native scrollbar at every breakpoint: at
+   `lg` and up, the dot rail (see `overview.html`) doubles as the scroll position indicator, and
+   below it, sections are reachable with a natural touch swipe, same as elsewhere on that page.
+   Scrolling itself is unaffected. Written as plain, unlayered CSS like the rules above rather than
+   a Tailwind utility class, since utilities are emitted inside a generated layer and would lose to
    the unlayered `*` rule above regardless of specificity. */
-@media (width >= 64rem) {
-  #overview-scroll-container {
-    scrollbar-width: none;
-  }
+#overview-scroll-container {
+  scrollbar-width: none;
+}
 
-  #overview-scroll-container::-webkit-scrollbar {
-    display: none;
-  }
+#overview-scroll-container::-webkit-scrollbar {
+  display: none;
 }
 
 /*
