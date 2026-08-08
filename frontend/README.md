@@ -9,7 +9,7 @@ See the [root README](../README.md) for what the whole project does.
 
 The frontend is a **read-only website**: it fetches data from the backend API and displays it. It never calculates statistics itself — all numbers come directly from the backend.
 
-It has four screens:
+It has six screens:
 
 | Screen          | What it shows                                                                       |
 |-----------------|-------------------------------------------------------------------------------------|
@@ -17,6 +17,8 @@ It has four screens:
 | Player list     | Every tracked player, with rank, win rate, KDA and match count                      |
 | Player profile  | One player's rank, stats and full match history, filterable by game mode and season |
 | Ranking history | The ranking of every completed week, most recent first                              |
+| Weekly boss     | The current boss's category and health bar, and the damage dealt so far             |
+| Rules           | How challenges, damage and the weekly boss battle work                              |
 
 A "page not found" screen is shown for any other address.
 

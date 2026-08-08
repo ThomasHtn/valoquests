@@ -17,6 +17,8 @@ history from Riot Games (through a service called the Henrik API), then:
 
 - builds each player's profile: rank, match history, win rate, KDA, headshots, and more;
 - picks five weekly challenges, one per difficulty level (from a catalogue of 46), and tracks who completes them;
+- pits the whole group against a shared weekly boss (Minor, Standard or Elite): every match played and every
+  challenge completed deals damage to its health bar;
 - turns completed challenges into points and keeps a live ranking, week after week.
 
 It answers one simple question every week: **who actually had the best week?**
@@ -30,8 +32,7 @@ The project has two applications that work together:
 ```text
 valorant-tracker
 ├── backend    The server (API). Talks to the database and to the Henrik API.
-├── frontend   The website. Shows player profiles, challenges and rankings.
-└── scripts    Small operational scripts (e.g. a synchronization benchmark).
+└── frontend   The website. Shows player profiles, challenges and rankings.
 ```
 
 - The **backend** must be running for the **frontend** to display any real data.
@@ -85,8 +86,10 @@ Running the whole application means starting the backend and the frontend separa
 | ----------------- | -------------------------------------------------------------------------------- |
 | Overview          | The current week's challenges, team progress and the live ranking, at a glance   |
 | Player list       | Every tracked player, with rank, win rate, KDA and match count                   |
-| Player profile     | One player's rank, stats and full match history (filterable by mode and season) |
+| Player profile    | One player's rank, stats and full match history (filterable by mode and season)  |
 | Ranking history   | The ranking of every completed week, most recent first                          |
+| Weekly boss       | The current boss's category and health bar, and the damage dealt so far         |
+| Rules             | How challenges, damage and the weekly boss battle work                          |
 
 ## 6. Common problems
 

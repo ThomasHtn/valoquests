@@ -162,7 +162,7 @@ GET  /api/admin/synchronizations/{synchronizationId}
 | `SCHEDULING_ZONE`                      | `Europe/Paris`                                      | Time zone for the schedule above         |
 | `WEEK_ROLLOVER_ENABLED`                | `true`                                              | Turns the automatic weekly reset on/off  |
 | `WEEK_ROLLOVER_CRON`                   | `0 5 0 * * MON`                                     | When the week resets (Monday 00:05)      |
-| `WEEK_ROLLOVER_ZONE`                   | `UTC`                                               | Time zone used for weekly calculations   |
+| `WEEK_ROLLOVER_ZONE`                   | `Europe/Paris`                                      | Time zone used for weekly calculations (week boundaries, boss selection) and the rollover cron |
 
 `PT5S`, `PT60S`, etc. are ISO-8601 durations (`PT5S` = 5 seconds, `PT60S` = 60 seconds).
 
