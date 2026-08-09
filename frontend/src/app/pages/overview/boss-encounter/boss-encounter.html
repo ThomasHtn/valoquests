@@ -22,8 +22,12 @@
   }
 
   @if (week(); as week) {
+    <!-- In normal flow (not absolute) below `sm`: the eyebrow label next to it wraps to two lines
+         on narrow cards, and an absolutely-positioned badge at a fixed top offset would overlap
+         that second line instead of reserving room for it. `sm:absolute` restores the original
+         corner-badge treatment once the card is wide enough for the eyebrow to stay on one line. -->
     <p
-      class="absolute top-6 right-6 z-10 flex shrink-0 items-center gap-1.5 text-sm font-bold tabular-nums text-text-primary sm:top-8 sm:right-8"
+      class="relative z-10 mb-3 flex w-fit shrink-0 items-center gap-1.5 self-end text-sm font-bold tabular-nums text-text-primary sm:absolute sm:top-8 sm:right-8 sm:mb-0 sm:w-auto sm:self-auto"
     >
       <svg class="h-4 w-4 text-accent-purple" lucideClock></svg>
       {{

@@ -246,6 +246,10 @@ export class Boss {
   /**
    * Scrolls the current week's marker into view once, the first time the timeline finishes
    * loading — the page's one-time "you are here" cue on a potentially long battle map.
+   * `block: 'nearest'` rather than `'center'`: centering can require enough scroll to push the
+   * page's own `<header>` half off-screen (clipped, not fully hidden) on short mobile viewports,
+   * since it scrolls above the marker in the same document flow. `'nearest'` still scrolls when
+   * the marker starts off-screen, just without overshooting past a fully-visible result.
    * `requestAnimationFrame` is a browser-only API, safe to call unconditionally here since this
    * effect only ever runs client-side, after `isLoading` first turns false.
    */
@@ -259,7 +263,7 @@ export class Boss {
       requestAnimationFrame(() => {
         this.hostElement.nativeElement
           .querySelector('[data-timeline-current]')
-          ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
     });
   }

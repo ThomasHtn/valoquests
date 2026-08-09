@@ -12,7 +12,7 @@ import org.springframework.context.annotation.PropertySource;
  */
 @SpringBootApplication
 @EnableConfigurationProperties({ApplicationProperties.class, HenrikApiProperties.class})
-@PropertySource("file:.env")
+@PropertySource(value = "file:.env", ignoreResourceNotFound = true)
 public class ValorantTrackerApplication {
 
     /**
