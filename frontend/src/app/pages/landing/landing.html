@@ -1,0 +1,51 @@
+<!-- `h-screen` rather than `h-full`: this page renders straight under the root outlet, with no
+     sized ancestor to inherit a height from. `overflow-y-auto` is the safety valve for viewports
+     too short to hold the composition, which `body { overflow: hidden }` would otherwise trap. -->
+<main
+  class="relative flex h-screen flex-col items-center justify-center overflow-y-auto bg-surface-950 px-6 py-7 text-text-primary sm:px-20 sm:py-15"
+>
+  <div
+    aria-hidden="true"
+    class="landing-backdrop pointer-events-none absolute inset-0 opacity-50"
+  ></div>
+
+  <div class="relative flex max-w-[720px] flex-col items-center text-center">
+    <p
+      class="bg-brand-500 px-2.5 py-[5px] font-mono text-[9px]/none font-bold tracking-[0.16em] text-surface-950 uppercase sm:text-[10px]/none sm:tracking-[0.2em]"
+    >
+      @if (weekNumber(); as week) {
+        {{ 'landing.weekLabel' | translate: { week: week } }}
+      } @else {
+        {{ 'landing.weekLabelPending' | translate }}
+      }
+    </p>
+
+    <h1
+      class="mt-4 font-display text-[28px]/[1.35] font-bold uppercase sm:mt-5 sm:text-[44px]/[1.5]"
+    >
+      <span class="block">{{ 'landing.heading.line1' | translate }}</span>
+      <span class="block">{{ 'landing.heading.line2' | translate }}</span>
+    </h1>
+
+    <p class="mt-3.5 max-w-[540px] text-sm/[1.5] text-text-secondary sm:mt-5 sm:text-lg/[1.55]">
+      {{ 'landing.body' | translate }}
+    </p>
+
+    <!-- The chevron points down at the compass, hence the hint sitting above it. Its rotation is
+         carried by an inner element so the nudge animation's own `transform` cannot overwrite it. -->
+    <p class="mt-6 flex items-center justify-center gap-2 text-text-muted sm:mt-8">
+      <span
+        class="font-mono text-[10px]/none font-medium tracking-[0.14em] uppercase sm:text-xs/none sm:tracking-[0.2em]"
+      >
+        {{ 'landing.hint' | translate }}
+      </span>
+      <span aria-hidden="true" class="inline-block motion-safe:animate-hint-nudge">
+        <span
+          class="block h-2 w-2 rotate-[-45deg] border-r-2 border-b-2 border-current sm:h-2.5 sm:w-2.5"
+        ></span>
+      </span>
+    </p>
+  </div>
+
+  <app-compass class="relative mt-6 sm:mt-8" (entered)="enter()" />
+</main>

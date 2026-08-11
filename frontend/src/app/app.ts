@@ -1,17 +1,16 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { Sidebar } from '@layout/sidebar/sidebar';
-
 /**
  * Root component.
  *
- * Renders the skip link and the persistent sidebar alongside the routed page content.
+ * Holds nothing but the top-level outlet: the chrome shared by the application's pages lives in
+ * `Shell`, which the router activates as a layout route, so that the landing page can render
+ * without it.
  */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Sidebar, TranslatePipe],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
 })
 export class App {}

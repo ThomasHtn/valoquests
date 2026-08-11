@@ -1,8 +1,13 @@
 /*
- * Typography tokens.
- * Defines the display font used for the application wordmark (`font-display`).
+ * Typography tokens, following the "Expédition" design direction.
+ *
+ * `--font-sans` and `--font-mono` are the tokens Tailwind's preflight applies to the document, so
+ * redefining them here is what switches the application's body and monospace faces. `font-display`
+ * stays a deliberate opt-in, used for the wordmark and page headings.
  */
 
 @theme {
-  --font-display: 'Rajdhani', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }

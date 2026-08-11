@@ -1,0 +1,89 @@
+/*
+ * Animation tokens for the landing page's compass.
+ *
+ * Declared as Tailwind v4 `--animate-*` theme variables so the templates consume them as regular
+ * utilities and can gate them behind `motion-safe:`, the prefix already used elsewhere in the
+ * application. Every one of these loops indefinitely, so each animated element also carries its
+ * resting value as a plain utility class — that is what renders when a visitor asks for reduced
+ * motion and the `motion-safe:` utility drops out.
+ */
+
+@theme {
+  --animate-compass-spin: compass-spin 26s linear infinite;
+  --animate-compass-spin-reverse: compass-spin-reverse 40s linear infinite;
+  --animate-compass-needle: compass-needle 5s ease-in-out infinite;
+  --animate-compass-core: compass-core 2.4s ease-in-out infinite;
+  --animate-compass-ripple: compass-ripple 3s ease-out infinite;
+  --animate-hint-nudge: hint-nudge 1.6s ease-in-out infinite;
+
+  /* Outer bezel, drifting clockwise. */
+  @keyframes compass-spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Inner bezel, counter-rotating so the two rings never look locked together. */
+  @keyframes compass-spin-reverse {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+
+  /* Needle hunting around its resting bearing, as a real compass needle settles. */
+  @keyframes compass-needle {
+    0%,
+    100% {
+      transform: rotate(28deg);
+    }
+
+    50% {
+      transform: rotate(48deg);
+    }
+  }
+
+  /* Core disc breathing, marking the call to action as alive. */
+  @keyframes compass-core {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  /* Sonar ring expanding out of the core and fading. */
+  @keyframes compass-ripple {
+    from {
+      opacity: 0.7;
+      transform: scale(0.72);
+    }
+
+    to {
+      opacity: 0;
+      transform: scale(1.5);
+    }
+  }
+
+  /* Chevron nudging downward, pointing at the compass. */
+  @keyframes hint-nudge {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(5px);
+    }
+  }
+}

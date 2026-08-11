@@ -1,0 +1,70 @@
+<!-- Layers are stacked in a single grid cell rather than absolutely positioned, so that centering
+     costs no `transform` and leaves each layer's own transform free for its animation. The needle
+     is the exception: it pivots around the compass center, not its own, so it is anchored with
+     `bottom-1/2` and offset with `left-[calc(50%-1px)]` (half its 2px width) instead of a
+     translate that the rotation would overwrite. -->
+<button
+  class="focus-ring relative grid h-[210px] w-[210px] cursor-pointer place-items-center rounded-full transition-transform duration-200 hover:scale-[1.03] sm:h-[300px] sm:w-[300px]"
+  type="button"
+  (click)="entered.emit()"
+>
+  <!-- Sonar rings pulsing out of the core. Invisible at rest, so that reduced motion leaves two
+       static discs stacked on the core instead of a pair of frozen halos. -->
+  <span
+    aria-hidden="true"
+    class="col-start-1 row-start-1 h-[132px] w-[132px] rounded-full border border-brand-500 opacity-0 motion-safe:animate-compass-ripple sm:h-[186px] sm:w-[186px]"
+  ></span>
+  <span
+    aria-hidden="true"
+    class="col-start-1 row-start-1 h-[132px] w-[132px] rounded-full border border-brand-500 opacity-0 [animation-delay:1.5s] motion-safe:animate-compass-ripple sm:h-[186px] sm:w-[186px]"
+  ></span>
+
+  <!-- Outer bezel and its cardinal ticks, north picked out in brand amber. -->
+  <span
+    aria-hidden="true"
+    class="relative col-start-1 row-start-1 h-[210px] w-[210px] rounded-full border border-dashed border-brand-500/40 motion-safe:animate-compass-spin sm:h-[300px] sm:w-[300px]"
+  >
+    <span
+      class="absolute top-1 left-[calc(50%-1px)] h-2.5 w-0.5 bg-brand-500 sm:top-1.5 sm:h-3"
+    ></span>
+    <span
+      class="absolute bottom-1 left-[calc(50%-1px)] h-2.5 w-0.5 bg-text-primary/30 sm:bottom-1.5 sm:h-3"
+    ></span>
+    <span
+      class="absolute top-[calc(50%-1px)] left-1 h-0.5 w-2.5 bg-text-primary/30 sm:left-1.5 sm:w-3"
+    ></span>
+    <span
+      class="absolute top-[calc(50%-1px)] right-1 h-0.5 w-2.5 bg-text-primary/30 sm:right-1.5 sm:w-3"
+    ></span>
+  </span>
+
+  <!-- Inner bezel, counter-rotating so the two never look locked together. -->
+  <span
+    aria-hidden="true"
+    class="relative col-start-1 row-start-1 h-[168px] w-[168px] rounded-full border border-brand-500/55 motion-safe:animate-compass-spin-reverse sm:h-[240px] sm:w-[240px]"
+  >
+    <span
+      class="absolute top-2.5 left-[calc(50%-3px)] h-1.5 w-1.5 rounded-full bg-brand-500 sm:top-3.5"
+    ></span>
+  </span>
+
+  <!-- Core disc carrying the label. -->
+  <span
+    class="col-start-1 row-start-1 flex h-[132px] w-[132px] flex-col items-center justify-center gap-1.5 rounded-full border-2 border-brand-500 bg-radial from-brand-400 to-[#a6752a] text-surface-950 motion-safe:animate-compass-core sm:h-[186px] sm:w-[186px]"
+  >
+    <span class="font-display text-[13px]/none font-bold tracking-[0.14em] uppercase sm:text-base">
+      {{ 'landing.compass.action' | translate }}
+    </span>
+    <span
+      class="font-mono text-[8px]/none font-semibold tracking-[0.14em] uppercase sm:text-[10px]"
+    >
+      {{ 'landing.compass.caption' | translate }}
+    </span>
+  </span>
+
+  <!-- Needle, drawn over everything and hunting around its resting bearing. -->
+  <span
+    aria-hidden="true"
+    class="absolute bottom-1/2 left-[calc(50%-1px)] h-[54px] w-0.5 origin-bottom rotate-[28deg] bg-linear-to-b from-brand-500 to-brand-500/0 motion-safe:animate-compass-needle sm:h-[76px]"
+  ></span>
+</button>

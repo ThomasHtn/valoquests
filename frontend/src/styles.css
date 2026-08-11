@@ -1,13 +1,14 @@
 @import 'tailwindcss';
 @import './styles/colors.css';
 @import './styles/typography.css';
+@import './styles/animations.css';
 
 @layer base {
   html,
   body {
-    /* `app.html`'s root layout already scrolls its own routed content (`main`) within a
-       `h-screen` shell; without this, `html` also grows to fit that content and gains its own
-       browser scrollbar alongside it. */
+    /* `shell.html`'s layout already scrolls its own routed content (`main`) within a `h-screen`
+       shell, and the landing page fills the viewport exactly; without this, `html` also grows to
+       fit that content and gains its own browser scrollbar alongside it. */
     height: 100%;
     overflow: hidden;
   }

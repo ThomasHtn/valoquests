@@ -1,9 +1,10 @@
 <section
-  class="relative isolate flex min-h-[13rem] flex-col justify-between overflow-hidden rounded-2xl border border-surface-700 bg-surface-900 p-6 sm:min-h-[15rem] sm:p-8"
+  class="relative isolate flex min-h-[13rem] flex-col overflow-hidden rounded-2xl border border-accent-red/40 bg-surface-900 p-6 sm:p-8"
 >
   <!-- Boss artwork, when the catalogue entry has one, sitting behind the card's content with a
-       dark gradient over it for text contrast. Falls back to the original flat gradient once every
-       provisional catalogue entry gets real artwork (`imageUrl` is `null` today). -->
+       dark gradient over it for text contrast. Falls back to a red ambient tint — matching the
+       boss/damage color language — once every provisional catalogue entry gets real artwork
+       (`imageUrl` is `null` today). -->
   @if (boss()?.boss?.imageUrl; as bossImageUrl) {
     <div
       aria-hidden="true"
@@ -17,29 +18,8 @@
   } @else {
     <div
       aria-hidden="true"
-      class="absolute inset-0 -z-10 bg-linear-to-br from-brand-900/40 to-transparent"
+      class="absolute inset-0 -z-10 bg-linear-to-br from-accent-red/15 via-transparent to-transparent"
     ></div>
-  }
-
-  @if (week(); as week) {
-    <!-- In normal flow (not absolute) below `sm`: the eyebrow label next to it wraps to two lines
-         on narrow cards, and an absolutely-positioned badge at a fixed top offset would overlap
-         that second line instead of reserving room for it. `sm:absolute` restores the original
-         corner-badge treatment once the card is wide enough for the eyebrow to stay on one line. -->
-    <p
-      class="relative z-10 mb-3 flex w-fit shrink-0 items-center gap-1.5 self-end text-sm font-bold tabular-nums text-text-primary sm:absolute sm:top-8 sm:right-8 sm:mb-0 sm:w-auto sm:self-auto"
-    >
-      <svg class="h-4 w-4 text-accent-purple" lucideClock></svg>
-      {{
-        'overview.week.countdown'
-          | translate
-            : {
-                days: week.remaining.days,
-                hours: week.remaining.hours,
-                minutes: week.remaining.minutes,
-              }
-      }}
-    </p>
   }
 
   <app-resource-state
@@ -51,26 +31,27 @@
     padding="py-10"
   >
     @if (boss(); as encounter) {
-      <div class="flex items-start gap-4">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-center">
         <!-- Boss portrait: the same segmented hex frame used by the battle map's markers
              (`boss.html`), so the boss reads as a distinct "character" rather than only a name and
-             a bar, and both pages frame it identically. -->
-        <div class="relative h-16 w-16 shrink-0 sm:h-20 sm:w-20">
+             a bar, and both pages frame it identically. Sized up from the compact card treatment
+             so it reads as the card's focal point, matching the mockup. -->
+        <div class="relative mx-auto h-28 w-28 shrink-0 sm:mx-0 sm:h-36 sm:w-36">
           <div
-            class="absolute inset-1.5 overflow-hidden bg-surface-800 [clip-path:polygon(50%_0%,93.3%_25%,93.3%_75%,50%_100%,6.7%_75%,6.7%_25%)]"
+            class="absolute inset-2 overflow-hidden bg-surface-800 [clip-path:polygon(50%_0%,93.3%_25%,93.3%_75%,50%_100%,6.7%_75%,6.7%_25%)]"
           >
             @if (encounter.boss.imageUrl; as portraitUrl) {
               <img
-                [height]="80"
+                [height]="144"
                 [ngSrc]="portraitUrl"
-                [width]="80"
+                [width]="144"
                 alt=""
                 class="h-full w-full object-cover"
                 priority
               />
             } @else {
               <span class="flex h-full w-full items-center justify-center">
-                <svg class="h-8 w-8 text-text-secondary sm:h-10 sm:w-10" lucideSkull></svg>
+                <svg class="h-14 w-14 text-text-secondary sm:h-16 sm:w-16" lucideSkull></svg>
               </span>
             }
           </div>
@@ -90,39 +71,46 @@
           </svg>
         </div>
 
-        <div>
-          <p class="text-accent-red text-xs font-bold tracking-widest uppercase">
-            {{ 'overview.bossEncounter.eyebrow' | translate }}
-            <span aria-hidden="true">·</span>
-            {{ 'boss.category.' + encounter.boss.category | translate }}
-          </p>
-          <h2 class="mt-1 max-w-prose text-xl font-extrabold text-text-primary sm:text-2xl">
-            {{ encounter.boss.name }}
-          </h2>
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span
+              class="rounded px-2 py-1 text-xs font-bold tracking-widest text-surface-950 uppercase bg-accent-red"
+            >
+              {{ 'overview.bossEncounter.eyebrow' | translate }}
+            </span>
+            <span class="text-xs font-bold tracking-widest text-text-secondary uppercase">
+              {{ 'boss.category.' + encounter.boss.category | translate }}
+            </span>
+          </div>
+
+          <div class="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 class="max-w-prose text-2xl font-extrabold text-text-primary sm:text-3xl">
+              {{ encounter.boss.name }}
+            </h2>
+            <p
+              class="flex shrink-0 items-center gap-1.5 text-base font-bold tabular-nums text-text-primary"
+            >
+              {{
+                'overview.bossEncounter.hpAmount'
+                  | translate: { remaining: remainingHp(), total: encounter.effectiveHp }
+              }}
+              <svg class="h-4 w-4 shrink-0 text-accent-red" fill="currentColor" lucideHeart></svg>
+              {{ 'overview.bossEncounter.hpUnit' | translate }}
+            </p>
+          </div>
+
           <p class="mt-1 max-w-prose text-sm text-text-secondary">
             {{ encounter.boss.description }}
           </p>
-        </div>
-      </div>
 
-      <!-- Game-style health bar: the HP readout sits inside the bar itself, like an in-game boss
-           health orb, with a heart marking the unit between the number and "HP"/"PV". -->
-      <div class="relative mt-6">
-        <app-progress-bar
-          [colorClass]="hpBarColorClass()"
-          heightClass="h-6 sm:h-7"
-          [percentage]="remainingPercentage()"
-        />
-        <span
-          class="pointer-events-none absolute inset-0 flex items-center justify-center gap-1.5 text-xs font-bold tabular-nums text-white [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)] sm:text-sm"
-        >
-          {{
-            'overview.bossEncounter.hpAmount'
-              | translate: { remaining: remainingHp(), total: encounter.effectiveHp }
-          }}
-          <svg class="text-accent-red h-3.5 w-3.5 shrink-0" fill="currentColor" lucideHeart></svg>
-          {{ 'overview.bossEncounter.hpUnit' | translate }}
-        </span>
+          <!-- Game-style health bar, spanning the full width of the content block below the name. -->
+          <app-progress-bar
+            class="mt-4 block"
+            [colorClass]="hpBarColorClass()"
+            heightClass="h-4"
+            [percentage]="remainingPercentage()"
+          />
+        </div>
       </div>
 
       @if (defeated()) {

@@ -30,6 +30,21 @@
       "label": "Week {{number}}"
     }
   },
+"landing": {
+  "body": "Every match moves the squad forward on this week's map. Five stages to clear, one threat to push back before Sunday night.",
+  "compass": {
+    "action": "Enter",
+    "caption": "Hit the road"
+  },
+  "heading": {
+    "line1": "One squad.",
+    "line2": "One territory to reclaim."
+  },
+  "hint": "Click the compass to enter",
+  "title": "Expedition",
+  "weekLabel": "Expedition · Week {{week}}",
+  "weekLabelPending": "Expedition"
+},
   "notFound": {
     "backToOverview": "Back to overview",
     "description": "The requested page does not exist or has been moved.",
@@ -45,6 +60,12 @@
       "hpValue": "{{remaining}} / {{total}} HP",
       "loading": "Loading the boss…"
     },
+    "header": {
+      "eyebrow": "Overview · Week {{number}}",
+      "timeLabel": "Time remaining",
+      "timeRemaining": "{{days}}d {{hours}}h",
+      "title": "The squad's progress this week"
+    },
     "podium": {
       "rank": {
         "1": "1st place",
@@ -54,18 +75,6 @@
       "title": "This week's podium"
     },
     "rulesLink": "How it works",
-    "sections": {
-      "challenges": {
-        "ariaLabel": "Go to the weekly challenges"
-      },
-      "hero": {
-        "ariaLabel": "Go to the weekly objective"
-      },
-      "navLabel": "Overview navigation",
-      "ranking": {
-        "ariaLabel": "Go to the ranking"
-      }
-    },
     "tagline": "Complete missions every week to bring down fearsome bosses!",
     "teamProgress": {
       "contributors": "{{count}} player(s) contributed this week",
@@ -104,6 +113,7 @@
         "SCORE": "Score"
       },
       "playersUnit": "players",
+      "subtitle": "One vignette per challenge, and who on the squad has already cleared it.",
       "title": "Weekly challenges"
     },
     "weeklyRanking": {
@@ -116,6 +126,7 @@
       "empty": "No ranking is available this week.",
       "error": "Failed to load the weekly ranking.",
       "loading": "Loading ranking…",
+      "subtitle": "Every tracked player's position and exact progress toward this week's challenges.",
       "title": "Weekly ranking",
       "variation": {
         "down": "{{count}} place(s) lost",
@@ -309,7 +320,9 @@
     },
     "nav": {
       "boss": "Boss",
+      "challenges": "Challenges",
       "comparison": "Comparison",
+      "leaderboard": "Leaderboard",
       "overview": "Overview",
       "players": "Players",
       "ranking": "Ranking"

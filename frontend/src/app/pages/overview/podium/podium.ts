@@ -19,8 +19,8 @@ import { ResourceState } from '@shared/resource-state/resource-state';
  * hexagon position badge already used by the weekly ranking, followed by a compact strip of the
  * remaining tracked players.
  *
- * Reads the same shared current-ranking resource as `WeeklyRanking` directly, rather than reaching
- * into that component's internals, so both stay independent and `WeeklyRanking` is left unchanged.
+ * Reads the same shared current-ranking resource as `Leaderboard` directly, rather than reaching
+ * into that component's internals, so both stay independent and `Leaderboard` is left unchanged.
  */
 @Component({
   selector: 'app-podium',
@@ -42,7 +42,7 @@ export class Podium {
   private readonly rankingApi = inject(RankingApi);
 
   /**
-   * Reactive resource fetching the current week's ranking, shared with `WeeklyRanking` and the
+   * Reactive resource fetching the current week's ranking, shared with `Leaderboard` and the
    * overview header.
    */
   protected readonly rankingResource = this.rankingApi.current;

@@ -1,144 +1,51 @@
-<!-- Escapes the ancestor route wrapper (`app.html`'s `<main>` padding and `max-w-[1440px]` cap)
-     via `absolute` positioning anchored to `<main>` itself (see its `relative`), rather than
-     rendering in the normal document flow like every other page's `PAGE_LAYOUT_CLASS` stack. Two
-     things make that escape necessary rather than cosmetic: this page owns a single full-height
-     scroll-snap container, which needs `<main>`'s exact box to size itself against `dvh`-free; and
-     on displays wider than the cap, the centering gutters it leaves are otherwise a dead zone
-     where wheel scrolling does nothing, since neither the capped wrapper nor `<main>` (which never
-     overflows — see below) is scrollable there. `inset-4`/`sm:inset-6` reproduce that wrapper's
-     `p-4`/`sm:p-6` visual padding directly against `<main>`'s true edges instead.
+<!-- Header: active week, page title and countdown, matching the "Vue d'ensemble" mockup's single,
+     non-scrolling hero screen. Unlike the other pages' `<header>` (title + subtitle), this one
+     also carries the countdown on its trailing edge — the one piece of the old scroll-snap hero
+     that belongs at the very top rather than inside the boss card below. -->
+<header class="flex flex-wrap items-start justify-between gap-4">
+  <div>
+    <p class="text-xs font-bold tracking-widest text-brand-500 uppercase">
+      {{ 'overview.header.eyebrow' | translate: { number: week()?.number ?? '—' } }}
+    </p>
+    <h1 class="mt-1 text-3xl font-extrabold tracking-wide text-text-primary sm:text-4xl">
+      {{ 'overview.header.title' | translate }}
+    </h1>
+  </div>
 
-     `overflow-hidden` here is what actually keeps `<main>` from overflowing: even though the
-     scroll-snap container below clips its own oversized content visually (own `overflow-y-auto`),
-     browsers still count that content's full height as scrollable overflow on this ancestor, which
-     otherwise leaks into `<main>`'s own `scrollHeight` and pops a second, native scrollbar there.
-     Both axes, not just `overflow-y-hidden`: that container's own `-mr-4`/`sm:-mr-6` negative margin
-     (see below) deliberately overflows this box horizontally too, and clipping only one axis makes
-     the UA treat the other's `visible` as `auto` per spec, turning that bleed into a real, visible
-     horizontal scrollbar here instead of leaving it as harmless, unclipped `visible` overflow. -->
-<div class="absolute inset-4 flex flex-col overflow-hidden sm:inset-6">
-  <!-- Wraps the scroll container and the dot-rail overlay together so the overlay's `inset-0`
-       resolves against this box alone, matching the scroll container's own visible height. -->
-  <div class="relative flex min-h-0 flex-1 flex-col">
-    <!-- Absolutely positioned so it floats above the scroll-snap container instead of reserving its
-       own row: unmounting it no longer resizes anything below, so it can be conditionally rendered
-       via `@if` without shifting the snap sections under the visitor. -->
-    @if (isHeroSectionActive()) {
-      <a
-        class="focus-ring absolute top-0 right-0 z-10 inline-flex items-center gap-1.5 rounded-lg border border-surface-700 bg-surface-950/70 px-3 py-1.5 text-sm font-semibold text-text-secondary backdrop-blur transition hover:bg-surface-800 hover:text-text-primary"
-        routerLink="/rules"
-      >
-        <svg class="h-4 w-4 shrink-0" lucideBookOpen></svg>
-        {{ 'overview.rulesLink' | translate }}
-      </a>
-    }
-    <!-- Hides the native scrollbar at every breakpoint: at `lg` and up, the dot rail already doubles
-       as the scroll position indicator (per its own doc comment, the primary way desktop users are
-       meant to navigate sections); below `lg`, a touch swipe reaches the same sections. Scrolling
-       itself is unaffected either way, including via wheel and via keyboard through this element's
-       `tabindex`. That hiding rule lives in `styles.css` as plain, unlayered CSS keyed off
-       `overview-scroll-container` below — a Tailwind utility here would sit inside the generated
-       utilities layer and lose to the unlayered global scrollbar rule there regardless of
-       specificity.
-
-       The negative right margin cancels the parent wrapper's `inset-4`/`sm:inset-6` on this edge
-       only, stretching this element's box out to `<main>`'s true right edge — same as every other
-       page, where the scrollbar belongs to `<main>` itself rather than to an inset wrapper. The
-       matching `pr-*` then restores that same gutter as padding instead of position, so content
-       lines up exactly as before while the scrollbar (drawn at the border edge, ignoring padding)
-       renders flush against the true edge instead of floating `inset-4`/`inset-6` away from it. -->
-    <div
-      #scrollContainer
-      id="overview-scroll-container"
-      class="-mr-4 flex min-h-0 flex-1 snap-y snap-mandatory flex-col overflow-y-auto overscroll-contain pr-4 motion-safe:scroll-smooth sm:-mr-6 sm:pr-6"
-      tabindex="0"
-    >
-      <!-- Each section re-caps its own content at `max-w-[1440px]`, the width the ancestor wrapper
-         used to cap for free, since the container above now deliberately spans `<main>`'s full
-         width to keep it scrollable edge to edge. `lg:pr-20` reserves room so the dot rail below
-         never overlaps section content; it lives on each section rather than on the scroll
-         container above, so it shrinks this same `mx-auto`-centered box instead of shifting it
-         off-center against the container's own, wider one. -->
-      <section
-        #sectionRef
-        class="mx-auto flex min-h-full w-full max-w-[1440px] shrink-0 flex-col justify-center gap-6 py-6 snap-start snap-always lg:pr-20"
-        id="overview-hero"
-      >
-        <p
-          class="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold text-text-secondary sm:text-4xl"
-        >
-          {{ 'overview.tagline' | translate }}
+  <div class="flex flex-col items-end gap-2">
+    <div class="text-right">
+      <p class="text-xs font-bold tracking-widest text-text-muted uppercase">
+        {{ 'overview.header.timeLabel' | translate }}
+      </p>
+      @if (week(); as week) {
+        <p class="text-2xl font-extrabold text-text-primary">
+          {{
+            'overview.header.timeRemaining'
+              | translate: { days: week.remaining.days, hours: week.remaining.hours }
+          }}
         </p>
-
-        <app-boss-encounter class="block" [week]="week()" />
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <app-podium class="block h-full" />
-          <app-team-progress class="block h-full" [week]="week()" />
-        </div>
-      </section>
-
-      <section
-        #sectionRef
-        class="mx-auto flex min-h-full w-full max-w-[1440px] shrink-0 flex-col justify-center py-6 snap-start snap-always lg:pr-20"
-        id="overview-challenges"
-      >
-        <app-weekly-challenges />
-      </section>
-
-      <section
-        #sectionRef
-        class="mx-auto flex min-h-full w-full max-w-[1440px] shrink-0 flex-col justify-center py-6 snap-start snap-always lg:pr-20"
-        id="overview-ranking"
-      >
-        <app-weekly-ranking />
-      </section>
-    </div>
-
-    <!-- Desktop-only: on touch devices, the same sections are already reachable with a natural swipe
-       per section, so a second, more cramped navigation aid is not added there. A sibling of the
-       scroll container rather than a descendant, so it stays fixed in place while that container
-       scrolls. Re-caps at `max-w-[1440px]` with the same `lg:pr-20` reservation as the scroll
-       container, so the two center identically and the dot rail hugs the visible card edge instead
-       of drifting into the full-bleed gutter the scroll container now spans on displays wider than
-       the cap. `pointer-events-none` here (the buttons re-enable their own) keeps this wrapper from
-       shadowing wheel scroll over that gutter. -->
-    <div class="pointer-events-none absolute inset-0 mx-auto w-full max-w-[1440px] lg:pr-20">
-      <nav
-        [attr.aria-label]="'overview.sections.navLabel' | translate"
-        class="pointer-events-none absolute top-1/2 right-2 hidden -translate-y-1/2 flex-col gap-3 sm:right-4 lg:flex"
-      >
-        @for (section of sections; track section.id) {
-          <button
-            (click)="scrollToSection(section.id)"
-            [attr.aria-current]="activeSectionId() === section.id ? 'true' : null"
-            [attr.aria-label]="section.ariaLabelKey | translate"
-            [class.bg-brand-500]="activeSectionId() === section.id"
-            [class.bg-surface-600]="activeSectionId() !== section.id"
-            class="focus-ring pointer-events-auto h-2.5 w-2.5 shrink-0 rounded-full transition-colors hover:bg-brand-400"
-            type="button"
-          ></button>
-        }
-      </nav>
-
-      <!-- Purely decorative nudge toward the sections below the hero; only shown there (see
-         `isHeroSectionActive`'s doc comment), so it never lingers once the visitor has already found
-         their way further down. Stacked, staggered `animate-bounce` delays make the two chevrons
-         cascade downward instead of bouncing in lockstep. -->
-      @if (isHeroSectionActive()) {
-        <div
-          aria-hidden="true"
-          class="pointer-events-none absolute right-2 bottom-6 hidden flex-col items-center sm:right-4 lg:flex"
-        >
-          <svg
-            class="h-5 w-5 text-text-secondary motion-safe:animate-bounce"
-            lucideChevronDown
-          ></svg>
-          <svg
-            class="-mt-3 h-5 w-5 text-text-secondary/50 motion-safe:animate-bounce [animation-delay:150ms]"
-            lucideChevronDown
-          ></svg>
-        </div>
       }
     </div>
+    <a
+      class="focus-ring inline-flex items-center gap-1.5 text-sm font-semibold text-text-secondary transition-colors hover:text-text-primary"
+      routerLink="/rules"
+    >
+      <svg class="h-4 w-4 shrink-0" lucideBookOpen></svg>
+      {{ 'overview.rulesLink' | translate }}
+    </a>
   </div>
+</header>
+
+<!-- Thin divider, diamond-tipped, echoing the mockup's separator between the header and the boss
+     card. -->
+<div aria-hidden="true" class="flex items-center gap-3.5">
+  <span class="h-2.25 w-2.25 shrink-0 rotate-45 bg-brand-500"></span>
+  <span class="h-px flex-1 bg-linear-to-r from-brand-500/75 to-brand-500/10"></span>
+</div>
+
+<app-boss-encounter />
+
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+  <app-podium class="block h-full" />
+  <app-team-progress class="block h-full" [week]="week()" />
 </div>

@@ -14,16 +14,19 @@ import { Avatar } from '@shared/avatar/avatar';
 import { DamageBadge } from '@shared/damage-badge/damage-badge';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
-import { ChallengeRow } from './weekly-challenges.model';
+import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
+import { ChallengeRow } from './challenges.model';
 
 /**
- * "Weekly challenges" card of the overview page.
+ * Weekly challenges page.
  *
  * Displays the collective completion progress of every challenge selected for the active week, one
- * vignette per challenge.
+ * vignette per challenge. Previously an in-page card of the overview's scroll-snap hero (still
+ * called `WeeklyChallenges` in sibling doc comments), extracted to its own route since it has no
+ * place in the "Vue d'ensemble" mockup's single, non-scrolling hero screen.
  */
 @Component({
-  selector: 'app-weekly-challenges',
+  selector: 'app-challenges',
   imports: [
     TranslatePipe,
     ChallengeIconView,
@@ -34,9 +37,10 @@ import { ChallengeRow } from './weekly-challenges.model';
     LucideTarget,
     LucideCheck,
   ],
-  templateUrl: './weekly-challenges.html',
+  templateUrl: './challenges.html',
+  host: { class: PAGE_LAYOUT_CLASS },
 })
-export class WeeklyChallenges {
+export class Challenges {
   /**
    * Data-access service backing the shared current-challenges resource.
    */

@@ -4,9 +4,11 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   LucideChartColumn,
   LucideHouse,
+  LucideListOrdered,
   LucideMenu,
   LucideRefreshCw,
   LucideSkull,
+  LucideTarget,
   LucideTrophy,
   LucideUsers,
 } from '@lucide/angular';
@@ -36,6 +38,8 @@ import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './
     LucideUsers,
     LucideChartColumn,
     LucideSkull,
+    LucideTarget,
+    LucideListOrdered,
     LucideTrophy,
     LucideMenu,
     LucideRefreshCw,

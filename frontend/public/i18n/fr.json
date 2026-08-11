@@ -30,6 +30,21 @@
       "label": "Semaine {{number}}"
     }
   },
+"landing": {
+  "body": "Chaque partie fait avancer l'escouade sur la carte de la semaine. Cinq étapes à franchir, une menace à repousser avant dimanche soir.",
+  "compass": {
+    "action": "Entrer",
+    "caption": "Prendre la route"
+  },
+  "heading": {
+    "line1": "Une escouade.",
+    "line2": "Un territoire à reconquérir."
+  },
+  "hint": "Cliquez sur la boussole pour entrer",
+  "title": "Expédition",
+  "weekLabel": "Expédition · Semaine {{week}}",
+  "weekLabelPending": "Expédition"
+},
   "notFound": {
     "backToOverview": "Retour à la vue d'ensemble",
     "description": "La page demandée n'existe pas ou a été déplacée.",
@@ -45,6 +60,12 @@
       "hpValue": "{{remaining}} / {{total}} PV",
       "loading": "Chargement du boss…"
     },
+    "header": {
+      "eyebrow": "Vue d'ensemble · Semaine {{number}}",
+      "timeLabel": "Temps restant",
+      "timeRemaining": "{{days}}j {{hours}}h",
+      "title": "Avancement de l'escouade cette semaine"
+    },
     "podium": {
       "rank": {
         "1": "1re place",
@@ -54,18 +75,6 @@
       "title": "Podium de la semaine"
     },
     "rulesLink": "Comment ça marche",
-    "sections": {
-      "challenges": {
-        "ariaLabel": "Aller aux défis de la semaine"
-      },
-      "hero": {
-        "ariaLabel": "Aller à l'objectif de la semaine"
-      },
-      "navLabel": "Navigation de la vue d'ensemble",
-      "ranking": {
-        "ariaLabel": "Aller au classement"
-      }
-    },
     "tagline": "Accomplissez des missions chaque semaine pour venir à bout de boss redoutables !",
     "teamProgress": {
       "contributors": "{{count}} joueur(s) ont contribué cette semaine",
@@ -104,6 +113,7 @@
         "SCORE": "Score"
       },
       "playersUnit": "joueurs",
+      "subtitle": "Une vignette par défi, et qui dans l'escouade l'a déjà terminé.",
       "title": "Défis de la semaine"
     },
     "weeklyRanking": {
@@ -116,6 +126,7 @@
       "empty": "Aucun classement n'est disponible cette semaine.",
       "error": "Impossible de charger le classement de la semaine.",
       "loading": "Chargement du classement…",
+      "subtitle": "La position et la progression exacte de chaque joueur suivi sur les défis de la semaine.",
       "title": "Classement de la semaine",
       "variation": {
         "down": "{{count}} place(s) perdue(s)",
@@ -309,7 +320,9 @@
     },
     "nav": {
       "boss": "Boss",
+      "challenges": "Quête",
       "comparison": "Comparaison",
+      "leaderboard": "Palmarès",
       "overview": "Vue d'ensemble",
       "players": "Joueurs",
       "ranking": "Classement"

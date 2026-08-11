@@ -1,9 +1,15 @@
-<div class="mb-6 flex items-center justify-center gap-2">
-  <svg class="h-6 w-6 shrink-0 text-brand-500" lucideTrophy></svg>
-  <h2 class="text-3xl font-semibold text-text-secondary sm:text-4xl">
+<!-- Header, matching the other pages' title treatment so all pages read as one family. -->
+<header>
+  <h1
+    class="flex items-center gap-2 text-3xl font-extrabold tracking-wide text-text-primary uppercase"
+  >
+    <svg class="h-6 w-6 shrink-0 text-brand-500" lucideTrophy></svg>
     {{ 'overview.weeklyRanking.title' | translate }}
-  </h2>
-</div>
+  </h1>
+  <p class="mt-1 text-sm font-medium text-text-secondary">
+    {{ 'overview.weeklyRanking.subtitle' | translate }}
+  </p>
+</header>
 
 <app-resource-state
   [emptyText]="'overview.weeklyRanking.empty' | translate"

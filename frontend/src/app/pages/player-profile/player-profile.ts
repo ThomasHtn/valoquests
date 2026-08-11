@@ -217,7 +217,7 @@ export class PlayerProfile {
    *
    * Read from the shared current-ranking resource rather than computed client-side, so it is
    * always the exact week the backend considers active - the same source `Overview` and
-   * `WeeklyRanking` already rely on.
+   * `Leaderboard` already rely on.
    */
   protected readonly activeWeekStart = computed<string | null>(() =>
     this.viewMode() === 'weekly'

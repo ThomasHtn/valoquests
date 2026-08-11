@@ -7,7 +7,6 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { Avatar } from '@shared/avatar/avatar';
-import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { WeekSummary } from '../overview.model';
 
@@ -31,12 +30,12 @@ interface Contributor {
  * Reframes the weekly challenges as a collective goal rather than an individual one: the
  * proportion of challenges the whole group has already cleared, who has contributed so far, and
  * the time left to finish together. Reads the same shared current-challenges and current-ranking
- * resources as `WeeklyChallenges` and `WeeklyRanking` directly, rather than reaching into either
+ * resources as `Challenges` and `Leaderboard` directly, rather than reaching into either
  * component's internals, so both stay unchanged.
  */
 @Component({
   selector: 'app-team-progress',
-  imports: [TranslatePipe, Avatar, ProgressBar, ResourceState, LucideCheck],
+  imports: [TranslatePipe, Avatar, ResourceState, LucideCheck],
   templateUrl: './team-progress.html',
 })
 export class TeamProgress {
@@ -92,7 +91,7 @@ export class TeamProgress {
   /**
    * Number of challenges every tracked player has completed.
    *
-   * Mirrors `WeeklyChallenges.completedCount`: a challenge counts as done only once the whole
+   * Mirrors `Challenges.completedCount`: a challenge counts as done only once the whole
    * group has cleared it, since this banner reports collective rather than individual progress.
    */
   protected readonly completedCount = computed(
@@ -104,12 +103,14 @@ export class TeamProgress {
   );
 
   /**
-   * Share of the week's challenges the group has fully cleared, from 0 to 100.
+   * One flag per challenge of the active week, `true` for the ones the group has already
+   * cleared — driving the discrete, segmented progress bar (one segment per challenge) rather
+   * than a continuous percentage fill, since {@link totalCount} is always a small, fixed number
+   * of discrete challenges rather than a truly continuous quantity.
    */
-  protected readonly progressPercentage = computed(() => {
-    const total = this.totalCount();
-    return total === 0 ? 0 : Math.round((this.completedCount() / total) * 100);
-  });
+  protected readonly segments = computed<readonly boolean[]>(() =>
+    Array.from({ length: this.totalCount() }, (_, index) => index < this.completedCount()),
+  );
 
   /**
    * Every active tracked player, paired with whether they have completed at least one challenge

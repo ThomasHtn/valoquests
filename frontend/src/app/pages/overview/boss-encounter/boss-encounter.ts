@@ -1,6 +1,6 @@
 import { NgOptimizedImage } from '@angular/common';
-import { Component, computed, inject, input } from '@angular/core';
-import { LucideClock, LucideHeart, LucideSkull, LucideSwords } from '@lucide/angular';
+import { Component, computed, inject } from '@angular/core';
+import { LucideHeart, LucideSkull, LucideSwords } from '@lucide/angular';
 
 import { BossApi } from '@core/boss/boss-api';
 import { resolveBossHpBarColorClass } from '@core/boss/boss-visual.utils';
@@ -9,14 +9,14 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { HEX_FRAME_EDGES } from '@pages/boss/boss-timeline.constants';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { WeekSummary } from '../overview.model';
 
 /**
  * "Weekly boss" card of the overview page.
  *
  * Reframes the week's collective damage — already folded into the ranking's damage by
- * `WeeklyRanking` — as a single shared health bar: the boss the group is fighting this week, its
- * remaining hit points, and whether it has already fallen.
+ * `Leaderboard` — as a single shared health bar: the boss the group is fighting this week, its
+ * remaining hit points, and whether it has already fallen. The countdown to the week's end is
+ * shown once, in the overview header, rather than repeated here.
  */
 @Component({
   selector: 'app-boss-encounter',
@@ -27,7 +27,6 @@ import { WeekSummary } from '../overview.model';
     NgOptimizedImage,
     LucideSkull,
     LucideSwords,
-    LucideClock,
     LucideHeart,
   ],
   templateUrl: './boss-encounter.html',
@@ -37,12 +36,6 @@ export class BossEncounter {
    * Data-access service backing the shared current-boss resource.
    */
   private readonly bossApi = inject(BossApi);
-
-  /**
-   * Active week summary, computed once by `Overview` from a single ticking clock so the countdown
-   * shown here never drifts from the page header.
-   */
-  public readonly week = input<WeekSummary | null>(null);
 
   /**
    * Reactive resource fetching the active week's boss confrontation.

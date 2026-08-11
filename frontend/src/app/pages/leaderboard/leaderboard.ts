@@ -30,23 +30,27 @@ import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ProgressCircle } from '@shared/progress-circle/progress-circle';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
-import { RankingCell, RankingColumn, RankingRow } from './weekly-ranking.model';
+import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
+import { RankingCell, RankingColumn, RankingRow } from './leaderboard.model';
 import {
   buildCurrentValueLabel,
   buildTargetValueLabel,
   computeCompletionPercentage,
   formatMetricValue,
-} from './weekly-ranking.utils';
+} from './leaderboard.utils';
 
 /**
- * "Weekly ranking" card of the overview page.
+ * Weekly leaderboard page.
  *
  * Displays every tracked player's position, score and exact progress toward each challenge
- * selected for the active week, reusing the challenge color language from the weekly challenges
- * card so both widgets read as one system.
+ * selected for the active week, reusing the challenge color language from the challenges page so
+ * both read as one system. Previously an in-page card of the overview's scroll-snap hero (still
+ * called `WeeklyRanking` in sibling doc comments), extracted to its own route since it has no place
+ * in the "Vue d'ensemble" mockup's single, non-scrolling hero screen. Distinct from `/ranking`,
+ * which browses the finalized history of past weeks rather than the live current one.
  */
 @Component({
-  selector: 'app-weekly-ranking',
+  selector: 'app-leaderboard',
   imports: [
     TranslatePipe,
     NgTemplateOutlet,
@@ -66,9 +70,10 @@ import {
     LucideTarget,
     LucideTrophy,
   ],
-  templateUrl: './weekly-ranking.html',
+  templateUrl: './leaderboard.html',
+  host: { class: PAGE_LAYOUT_CLASS },
 })
-export class WeeklyRanking {
+export class Leaderboard {
   /**
    * Data-access service backing the shared current-ranking resource.
    */
@@ -91,8 +96,8 @@ export class WeeklyRanking {
   protected readonly rankingResource = this.rankingApi.current;
 
   /**
-   * Reactive resource fetching the current week's challenges, shared with the overview header and
-   * the weekly challenges card.
+   * Reactive resource fetching the current week's challenges, shared with the overview hero and
+   * the challenges page.
    */
   private readonly challengesResource = this.challengesApi.current;
 
