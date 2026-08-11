@@ -15,9 +15,22 @@ import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ResourceState } from '@shared/resource-state/resource-state';
 
 /**
- * Hero podium of the overview page: the top 3 players in hexagon-framed avatars, echoing the
- * hexagon position badge already used by the weekly ranking, followed by a compact strip of the
- * remaining tracked players.
+ * Plinth treatment per podium position, 1st to 3rd: how tall the block stands, the color of the
+ * cap it is topped with, and the tint washing down from it.
+ *
+ * Height carries the rank as much as color does — a gold cap alone would leave the three places
+ * reading as equals in a screenshot, or to anyone who cannot separate the three hues.
+ */
+const PODIUM_PLINTH_CLASSES: readonly string[] = [
+  'h-28 border-brand-500 bg-linear-to-b from-brand-500/18 to-transparent',
+  'h-22 border-text-primary/50 bg-linear-to-b from-text-primary/8 to-transparent',
+  'h-18 border-podium-bronze/80 bg-linear-to-b from-text-primary/6 to-transparent',
+];
+
+/**
+ * Hero podium of the overview page: the top 3 players in hexagon-framed avatars standing on
+ * plinths, echoing the hexagon position badge already used by the weekly ranking, followed by the
+ * remaining tracked players as flat rows.
  *
  * Reads the same shared current-ranking resource as `Leaderboard` directly, rather than reaching
  * into that component's internals, so both stay independent and `Leaderboard` is left unchanged.
@@ -89,6 +102,27 @@ export class Podium {
    * Resolves the text color for a podium entry's position, exposed to the template.
    */
   protected readonly podiumTextAccent = resolvePositionBadgeClass;
+
+  /**
+   * Resolves the plinth treatment for a podium position.
+   *
+   * @param position - The entry's 1-based position, always 1 to 3 here. `null` (an inactive
+   *   player) never reaches the podium, and gets no plinth.
+   * @returns The Tailwind height, border and background utilities to apply to the plinth.
+   */
+  protected plinthClass(position: number | null): string {
+    return (position === null ? undefined : PODIUM_PLINTH_CLASSES[position - 1]) ?? '';
+  }
+
+  /**
+   * Formats a position as the mockup's zero-padded plate number ("01", "02", "03").
+   *
+   * @param position - The entry's 1-based position, or `null` for an inactive player.
+   * @returns The position as a two-digit string, or an em dash when there is none.
+   */
+  protected paddedRank(position: number | null): string {
+    return position === null ? '—' : String(position).padStart(2, '0');
+  }
 
   /**
    * Reloads the ranking resource after a failure.

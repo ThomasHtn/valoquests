@@ -46,8 +46,8 @@ export class Overview {
   /**
    * Active week's number, date range and remaining time, or `null` while loading.
    *
-   * Computed once here, from a single ticking clock, and passed down to `BossEncounter` and
-   * `TeamProgress` so their countdown never drifts from this value or from the header's own.
+   * Computed here from a single ticking clock, so the header's week number and its countdown are
+   * always read from the same instant.
    */
   protected readonly week = computed<WeekSummary | null>(() => {
     const currentChallenges = this.challengesApi.current;

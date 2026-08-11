@@ -4,10 +4,10 @@
 <aside
   [attr.aria-label]="'sidebar.label' | translate"
   [class]="railWidthClass()"
-  class="order-last flex shrink-0 flex-col border-t border-surface-700 bg-surface-900 lg:order-first lg:h-full lg:justify-between lg:border-t-0 lg:px-3 lg:py-6 lg:transition-[width] lg:duration-200 motion-reduce:lg:transition-none"
+  class="order-last flex shrink-0 flex-col border-t border-brand-500/20 bg-surface-sunken/95 lg:order-first lg:h-full lg:justify-between lg:border-t-0 lg:border-r lg:py-6 lg:transition-[width] lg:duration-200 motion-reduce:lg:transition-none"
 >
   <div>
-    <div class="mb-4 hidden border-b border-surface-700 pb-5 lg:block">
+    <div class="mb-5 hidden px-5 lg:block">
       @if (collapsed()) {
         <!-- Collapsed rail: the "V" mark doubles as the expand trigger, swapping to a chevron
              on hover instead of showing a separate always-visible button (ChatGPT-style). -->
@@ -15,11 +15,11 @@
           <button
             (click)="toggleCollapsed()"
             [attr.aria-label]="'sidebar.expand' | translate"
-            class="focus-ring group relative flex h-11 w-14 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-linear-to-br from-brand-500/15 to-transparent transition-colors hover:bg-surface-800"
+            class="focus-ring group relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center bg-brand-500/12 transition-colors clip-hex hover:bg-brand-500/25"
             type="button"
           >
             <span
-              class="font-display text-2xl font-bold tracking-tight text-brand-500 transition-opacity group-hover:opacity-0"
+              class="font-display text-2xl font-bold text-brand-500 transition-opacity group-hover:opacity-0"
               >V</span
             >
             <svg
@@ -29,45 +29,43 @@
           </button>
         </div>
       } @else {
-        <!-- Expanded rail: full "VALORANT QUESTS" wordmark alongside the collapse trigger. -->
-        <div class="flex items-center justify-between gap-1">
+        <!-- Expanded rail: the wordmark stacked over the squad marker, as in the mockup, with the
+             collapse trigger kept alongside it. -->
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <div class="font-display text-3xl leading-[0.88] font-bold uppercase">
+              <span class="block text-brand-500">Valorant</span>
+              <span class="block text-text-primary">Quests</span>
+            </div>
+            <div class="mt-2.5 flex items-center gap-2">
+              <span class="h-0.5 w-5.5 shrink-0 bg-brand-500"></span>
+              <span class="font-mono text-[10px] tracking-[0.3em] text-text-muted uppercase">
+                {{ 'sidebar.squad' | translate }}
+              </span>
+            </div>
+          </div>
+
           <button
             (click)="toggleCollapsed()"
             [attr.aria-label]="'sidebar.collapse' | translate"
-            class="focus-ring flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-surface-800 text-text-primary transition-colors hover:bg-surface-700"
+            class="focus-ring -mt-1 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-surface-800 hover:text-text-primary"
             type="button"
           >
             <svg class="block h-5 w-5 shrink-0" lucideMenu></svg>
           </button>
-
-          <div class="flex flex-col leading-0">
-            <span
-              class="font-display inline-flex -skew-x-6 items-baseline text-4xl font-bold tracking-tight"
-            >
-              <span class="text-brand-500 drop-shadow-[0_0_10px_rgba(255,70,85,0.45)]">V</span>
-              <span
-                class="bg-linear-to-r from-text-primary to-text-secondary bg-clip-text text-transparent"
-                >ALORANT</span
-              >
-            </span>
-            <div class="flex items-center justify-end gap-1.5">
-              <span
-                class="h-0.75 w-5 shrink-0 bg-linear-to-r from-brand-500 to-brand-400 [clip-path:polygon(15%_0,100%_0,85%_100%,0_100%)]"
-              ></span>
-              <span
-                class="font-display text-[11px] font-semibold tracking-[0.35em] text-text-secondary"
-                >QUESTS</span
-              >
-            </div>
-          </div>
         </div>
       }
     </div>
 
     <!-- Primary navigation. Each link shows a CDK/Material tooltip for its label so the collapsed
          (icon-only) rail stays usable; the tab bar always shows its labels instead. Entries without
-         a routerLink have no page yet and render as inert. -->
-    <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex lg:flex-col lg:gap-1">
+         a routerLink have no page yet and render as inert.
+
+         The active entry is marked by a brand bar along its leading edge — the top edge on the tab
+         bar, the left edge on the rail — drawn as a `::before` so the indicator needs no extra
+         element and never affects the entry's own layout. Only its color is bound to the active
+         state; its geometry is static. -->
+    <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex lg:flex-col">
       @for (item of navItems; track item.labelKey) {
         <a
           [attr.aria-disabled]="item.routerLink ? null : 'true'"
@@ -77,9 +75,9 @@
           [appTooltip]="'sidebar.nav.' + item.labelKey | translate"
           [routerLinkActiveOptions]="{ exact: !!item.exactMatch }"
           [routerLink]="item.routerLink"
-          class="focus-ring-inset flex min-h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-2 py-2 text-[11px] font-medium text-text-secondary transition-colors hover:bg-surface-800 hover:text-text-primary lg:min-h-0 lg:w-full lg:flex-none lg:flex-row lg:gap-3 lg:rounded-lg lg:px-3 lg:py-2.5 lg:text-sm"
+          class="focus-ring-inset relative flex min-h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-2 py-2 text-[11px] font-medium text-text-secondary transition-colors before:absolute before:inset-x-0 before:top-0 before:h-0.75 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary lg:min-h-0 lg:w-full lg:flex-none lg:flex-row lg:gap-3.5 lg:px-5.5 lg:py-3.25 lg:text-sm lg:before:inset-x-auto lg:before:inset-y-0 lg:before:left-0 lg:before:h-auto lg:before:w-0.75"
           appTooltipPosition="right"
-          routerLinkActive="text-accent-purple lg:bg-surface-800"
+          routerLinkActive="text-text-primary before:bg-brand-500 lg:bg-linear-to-r lg:from-brand-500/20 lg:to-transparent"
         >
           @switch (item.icon) {
             @case ('house') {
@@ -104,20 +102,22 @@
               <svg class="block h-5 w-5 shrink-0" lucideTrophy></svg>
             }
           }
-          <span [class]="navLabelClass()">{{ 'sidebar.nav.' + item.labelKey | translate }}</span>
+          <span [class]="navLabelClass()" class="lg:font-display lg:tracking-[0.16em] lg:uppercase">
+            {{ 'sidebar.nav.' + item.labelKey | translate }}
+          </span>
         </a>
       }
     </nav>
   </div>
 
   <!-- Footer: last synchronization time. Rail only; the tab bar has no room for it. -->
-  <div class="hidden flex-col gap-3 pt-4 lg:flex">
+  <div class="hidden flex-col gap-3 px-5 pt-4 lg:flex">
     @if (collapsed()) {
       <div class="flex w-full justify-center">
         <button
           [attr.aria-label]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
           [appTooltip]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
-          class="focus-ring flex h-10 w-10 cursor-default items-center justify-center rounded-lg text-text-muted"
+          class="focus-ring flex h-10 w-10 cursor-default items-center justify-center text-text-muted"
           appTooltipPosition="right"
           type="button"
         >
@@ -125,22 +125,29 @@
         </button>
       </div>
     } @else {
-      <div class="flex items-center gap-3 rounded-lg border border-surface-700 px-3 py-2.5">
-        <svg class="h-5 w-5 shrink-0 text-text-muted" lucideRefreshCw></svg>
-        <div class="flex flex-col text-xs text-text-muted">
-          <span>{{ 'sidebar.lastSync.label' | translate }}</span>
-          <span>{{ lastSyncLabel() }}</span>
-        </div>
-        <span
-          [class.bg-success]="apiStatus() === 'online'"
-          [class.bg-danger]="apiStatus() === 'offline'"
-          [appTooltip]="apiStatusLabel()"
-          class="ml-auto h-2 w-2 shrink-0 rounded-full"
-          appTooltipPosition="left"
-          role="status"
-        >
-          <span class="sr-only">{{ apiStatusLabel() }}</span>
-        </span>
+      <!-- Hairline fading out at both ends, the direction's divider, rather than a full-width
+           border: it separates the footer from the nav without closing the rail off. -->
+      <span
+        aria-hidden="true"
+        class="h-px bg-linear-to-r from-transparent via-brand-500/50 to-transparent"
+      ></span>
+      <div>
+        <p class="font-mono text-[10px] tracking-[0.24em] text-text-muted uppercase">
+          {{ 'sidebar.lastSync.label' | translate }}
+        </p>
+        <p class="mt-2 flex items-center gap-2 text-sm text-text-secondary">
+          <span
+            [class.bg-success]="apiStatus() === 'online'"
+            [class.bg-danger]="apiStatus() === 'offline'"
+            [appTooltip]="apiStatusLabel()"
+            class="h-1.5 w-1.5 shrink-0 rounded-full"
+            appTooltipPosition="right"
+            role="status"
+          >
+            <span class="sr-only">{{ apiStatusLabel() }}</span>
+          </span>
+          {{ lastSyncLabel() }}
+        </p>
       </div>
     }
   </div>

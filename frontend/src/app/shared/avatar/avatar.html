@@ -1,7 +1,7 @@
 <!-- Portrait -->
 @if (src(); as portraitUrl) {
   <img
-    [class]="metrics().containerClass"
+    [class]="frameClass()"
     [class.ring-2]="champion()"
     [class.ring-accent-gold]="champion()"
     [height]="metrics().pixels"
@@ -14,7 +14,7 @@
 } @else {
   <!-- Fallback -->
   <span
-    [class]="metrics().containerClass"
+    [class]="frameClass()"
     [class.ring-2]="champion()"
     [class.ring-accent-gold]="champion()"
     class="flex shrink-0 items-center justify-center bg-surface-700 text-text-secondary"

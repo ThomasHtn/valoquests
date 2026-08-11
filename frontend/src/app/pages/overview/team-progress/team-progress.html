@@ -1,5 +1,8 @@
+<!-- Collective progress band: a single low strip under the boss card, per the mockup, rather than a
+     card of its own. It reports one fact — how far the whole squad has got through the week's
+     challenges, and who moved it — so it earns a line, not a panel. -->
 <section
-  class="flex h-full flex-col rounded-2xl border border-surface-700 bg-surface-900 bg-linear-to-br from-accent-green/10 to-transparent p-6 sm:p-8"
+  class="notch-tl-br border border-brand-500/25 bg-surface-sunken/55 px-4.5 py-3 [--notch:0.75rem]"
 >
   <app-resource-state
     (retry)="reload()"
@@ -9,72 +12,50 @@
     [isError]="hasError()"
     [isLoading]="isLoading()"
     [loadingText]="'overview.weeklyChallenges.loading' | translate"
-    padding="py-10"
+    padding="py-4"
   >
-    <div>
-      <p class="text-xs font-bold tracking-widest text-accent-green uppercase">
-        {{ 'overview.teamProgress.eyebrow' | translate }}
-        @if (week(); as week) {
-          <span aria-hidden="true">·</span>
-          {{ 'overview.week.label' | translate: { number: week.number } }}
-        }
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
+      <p class="text-sm whitespace-nowrap text-text-secondary">
+        {{ 'overview.teamProgress.progressLabel' | translate }}
       </p>
-      <h2 class="mt-1 max-w-prose text-xl font-extrabold text-text-primary sm:text-2xl">
-        {{ 'overview.teamProgress.heading' | translate }}
-      </h2>
-    </div>
 
-    <div class="mt-auto">
-      <div class="flex items-baseline justify-between text-sm">
-        <span class="text-text-secondary">{{
-          'overview.teamProgress.progressLabel' | translate
-        }}</span>
-        <strong class="tabular-nums text-text-primary">
-          {{
-            'overview.weeklyChallenges.completedCount'
-              | translate: { completed: completedCount(), total: totalCount() }
-          }}
-        </strong>
-      </div>
-      <!-- Discrete, segmented bar — one segment per challenge, filled or not — rather than a
-           continuous percentage fill: the number of challenges is always small and fixed, so a
-           segment reads at a glance as "this one specific challenge is done" instead of an
-           abstract percentage. -->
-      <div class="mt-2 flex gap-1.5" role="presentation">
+      <!-- Discrete, sheared segments — one per challenge, filled or not — rather than a continuous
+           percentage fill: the number of challenges is always small and fixed, so a segment reads
+           at a glance as "this one specific challenge is done" instead of an abstract percentage.
+           Hidden from assistive technology, since the count beside it states the same thing. -->
+      <div aria-hidden="true" class="flex min-w-40 flex-1 gap-1.5">
         @for (filled of segments(); track $index) {
           <span
             [class.bg-brand-500]="filled"
             [class.bg-surface-700]="!filled"
-            class="h-3 flex-1 [clip-path:polygon(6px_0,100%_0,calc(100%-6px)_100%,0_100%)]"
+            class="clip-shear h-3 flex-1"
           ></span>
         }
       </div>
-    </div>
 
-    @if (contributors().length) {
-      <div class="mt-5 flex flex-wrap items-center gap-3 border-t border-surface-700 pt-5">
-        <ul class="flex -space-x-2.5">
+      <strong
+        class="font-display text-base leading-none font-semibold whitespace-nowrap text-brand-500 tabular-nums"
+      >
+        {{
+          'overview.weeklyChallenges.completedCount'
+            | translate: { completed: completedCount(), total: totalCount() }
+        }}
+      </strong>
+
+      @if (contributors().length) {
+        <!-- Avatar stack, decorative: the count that follows states the same fact in words, and a
+             dimmed avatar carries no meaning of its own beyond it. -->
+        <ul aria-hidden="true" class="flex -space-x-1.5">
           @for (contributor of contributors(); track contributor.playerId) {
-            <li [class.opacity-40]="!contributor.contributed" class="relative">
-              <div
-                class="flex h-9 w-9 items-center justify-center overflow-hidden bg-surface-900 ring-2 ring-surface-900 [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
-              >
-                <app-avatar [src]="contributor.avatarUrl" size="sm" />
-              </div>
-              @if (contributor.contributed) {
-                <span
-                  class="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent-green ring-2 ring-surface-900"
-                >
-                  <svg class="h-2 w-2 text-surface-950" lucideCheck></svg>
-                </span>
-              }
+            <li [class.opacity-35]="!contributor.contributed">
+              <app-avatar [src]="contributor.avatarUrl" shape="hex" size="xs" />
             </li>
           }
         </ul>
-        <span class="text-sm text-text-secondary">
+        <p class="text-sm whitespace-nowrap text-text-muted">
           {{ 'overview.teamProgress.contributors' | translate: { count: contributorsCount() } }}
-        </span>
-      </div>
-    }
+        </p>
+      }
+    </div>
   </app-resource-state>
 </section>

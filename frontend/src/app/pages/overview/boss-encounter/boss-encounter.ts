@@ -1,13 +1,12 @@
 import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
-import { LucideHeart, LucideSkull, LucideSwords } from '@lucide/angular';
+import { LucideSkull, LucideSwords } from '@lucide/angular';
 
 import { BossApi } from '@core/boss/boss-api';
 import { resolveBossHpBarColorClass } from '@core/boss/boss-visual.utils';
 import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { HEX_FRAME_EDGES } from '@pages/boss/boss-timeline.constants';
-import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ResourceState } from '@shared/resource-state/resource-state';
 
 /**
@@ -20,15 +19,7 @@ import { ResourceState } from '@shared/resource-state/resource-state';
  */
 @Component({
   selector: 'app-boss-encounter',
-  imports: [
-    TranslatePipe,
-    ProgressBar,
-    ResourceState,
-    NgOptimizedImage,
-    LucideSkull,
-    LucideSwords,
-    LucideHeart,
-  ],
+  imports: [TranslatePipe, ResourceState, NgOptimizedImage, LucideSkull, LucideSwords],
   templateUrl: './boss-encounter.html',
 })
 export class BossEncounter {

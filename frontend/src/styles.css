@@ -31,6 +31,98 @@
 }
 
 /*
+ * Angular silhouettes — the direction's core shape language.
+ *
+ * The direction has no rounded corners: panels are *cut*, badges are hexagons, segments are
+ * sheared. These are declared once as utilities rather than repeated as inline `[clip-path:…]`
+ * arbitrary values, so the cut sizes stay consistent across cards and a reader sees an intent
+ * ("this panel is notched") instead of a polygon.
+ *
+ * Cut depth is read from `--notch`, so a caller can tighten it on a smaller element with
+ * `[--notch:0.75rem]` without redeclaring the polygon.
+ *
+ * Note these clip their element's own box: a focus outline drawn outside it would be cut away,
+ * which is why interactive notched elements use `focus-ring-inset`.
+ */
+
+@utility clip-hex {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+/* Panel cut at its top-right and bottom-left corners. The direction's primary card silhouette. */
+@utility notch-tr-bl {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--notch, 1.5rem)) 0,
+    100% var(--notch, 1.5rem),
+    100% 100%,
+    var(--notch, 1.5rem) 100%,
+    0 calc(100% - var(--notch, 1.5rem))
+  );
+}
+
+/* Panel cut at its top-left and bottom-right corners — the mirrored silhouette, used to set a
+   secondary band apart from the card it sits under. */
+@utility notch-tl-br {
+  clip-path: polygon(
+    var(--notch, 0.75rem) 0,
+    100% 0,
+    100% calc(100% - var(--notch, 0.75rem)),
+    calc(100% - var(--notch, 0.75rem)) 100%,
+    0 100%,
+    0 var(--notch, 0.75rem)
+  );
+}
+
+/* Sheared segment, leaning right — the progress bar's discrete slots. */
+@utility clip-shear {
+  clip-path: polygon(
+    var(--notch, 0.375rem) 0,
+    100% 0,
+    calc(100% - var(--notch, 0.375rem)) 100%,
+    0 100%
+  );
+}
+
+/*
+ * Ambient field of the application ground: a warm brand glow crossed by a cooler one, overlaid
+ * with faint concentric rings, as if the interface were a scope trained on the week's target. Both
+ * layers are painted as pseudo-elements of the shell so no page has to carry decorative markup,
+ * and both are `fixed` so the field stays anchored to the viewport while content scrolls past it
+ * rather than sliding along with it.
+ */
+@utility ambient-field {
+  /* Makes this element the stacking context the two layers sit inside: at `z-index: -1` they then
+     paint above its own background but below every descendant, so no page content needs to opt
+     out of them. */
+  isolation: isolate;
+
+  &::before,
+  &::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  &::before {
+    background:
+      radial-gradient(circle at 58% 46%, --alpha(var(--color-brand-500) / 14%), transparent 45%),
+      radial-gradient(circle at 58% 46%, --alpha(var(--color-accent-blue) / 10%), transparent 65%);
+  }
+
+  &::after {
+    opacity: 0.45;
+    background: repeating-radial-gradient(
+      circle at 58% 46%,
+      transparent 0 80px,
+      --alpha(var(--color-text-primary) / 4%) 80px 81px
+    );
+  }
+}
+
+/*
  * Visible keyboard focus indicator.
  *
  * The user-agent default outline is nearly invisible against the `surface-950` ground, so every

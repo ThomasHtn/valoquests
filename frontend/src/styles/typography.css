@@ -7,7 +7,7 @@
  */
 
 @theme {
-  --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Oswald', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }

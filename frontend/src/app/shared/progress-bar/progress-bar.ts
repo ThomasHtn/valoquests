@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
 
 /**
- * Thin, rounded progress track with a colored fill.
+ * Thin, square-ended progress track with a colored fill.
  *
  * Shared by every screen showing completion or performance as a percentage (win rate, challenge
  * and ranking progress) so they all render the exact same track. The host element is the track
@@ -18,7 +18,7 @@ import { Component, input } from '@angular/core';
   selector: 'app-progress-bar',
   templateUrl: './progress-bar.html',
   host: {
-    class: 'block overflow-hidden rounded-full bg-surface-700',
+    class: 'block overflow-hidden bg-surface-sunken',
     '[class]': 'heightClass()',
     'aria-hidden': 'true',
   },

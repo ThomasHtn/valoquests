@@ -1,10 +1,14 @@
+<!-- The card is cut at two opposite corners instead of rounded, the direction's panel silhouette.
+     The cut reveals the page ground through the border, which is why the border stops at the
+     bevels rather than tracing them: `clip-path` clips the border box along with everything
+     else. -->
 <section
-  class="relative isolate flex min-h-[13rem] flex-col overflow-hidden rounded-2xl border border-accent-red/40 bg-surface-900 p-6 sm:p-8"
+  class="notch-tr-bl relative isolate flex min-h-46 flex-col justify-center border border-accent-red/40 bg-linear-[110deg] from-accent-red/14 to-surface-sunken/70 p-6 sm:p-7"
 >
   <!-- Boss artwork, when the catalogue entry has one, sitting behind the card's content with a
-       dark gradient over it for text contrast. Falls back to a red ambient tint — matching the
-       boss/damage color language — once every provisional catalogue entry gets real artwork
-       (`imageUrl` is `null` today). -->
+       dark gradient over it for text contrast. Falls back to the red ambient tint carried by the
+       card itself — matching the boss/damage color language — until every provisional catalogue
+       entry gets real artwork (`imageUrl` is `null` today). -->
   @if (boss()?.boss?.imageUrl; as bossImageUrl) {
     <div
       aria-hidden="true"
@@ -13,12 +17,7 @@
     ></div>
     <div
       aria-hidden="true"
-      class="absolute inset-0 -z-10 bg-linear-to-br from-surface-900 via-surface-900/85 to-surface-900/50"
-    ></div>
-  } @else {
-    <div
-      aria-hidden="true"
-      class="absolute inset-0 -z-10 bg-linear-to-br from-accent-red/15 via-transparent to-transparent"
+      class="absolute inset-0 -z-10 bg-linear-to-br from-surface-950 via-surface-950/85 to-surface-950/50"
     ></div>
   }
 
@@ -31,15 +30,13 @@
     padding="py-10"
   >
     @if (boss(); as encounter) {
-      <div class="flex flex-col gap-6 sm:flex-row sm:items-center">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
         <!-- Boss portrait: the same segmented hex frame used by the battle map's markers
              (`boss.html`), so the boss reads as a distinct "character" rather than only a name and
              a bar, and both pages frame it identically. Sized up from the compact card treatment
              so it reads as the card's focal point, matching the mockup. -->
         <div class="relative mx-auto h-28 w-28 shrink-0 sm:mx-0 sm:h-36 sm:w-36">
-          <div
-            class="absolute inset-2 overflow-hidden bg-surface-800 [clip-path:polygon(50%_0%,93.3%_25%,93.3%_75%,50%_100%,6.7%_75%,6.7%_25%)]"
-          >
+          <div class="clip-hex absolute inset-2 overflow-hidden bg-surface-800">
             @if (encounter.boss.imageUrl; as portraitUrl) {
               <img
                 [height]="144"
@@ -72,50 +69,66 @@
         </div>
 
         <div class="min-w-0 flex-1">
-          <div class="flex flex-wrap items-center gap-2">
+          <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <span
-              class="rounded px-2 py-1 text-xs font-bold tracking-widest text-surface-950 uppercase bg-accent-red"
+              class="bg-accent-red px-2.5 py-1 font-mono text-[10px] font-bold tracking-[0.18em] text-surface-950 uppercase"
             >
               {{ 'overview.bossEncounter.eyebrow' | translate }}
             </span>
-            <span class="text-xs font-bold tracking-widest text-text-secondary uppercase">
+            <span class="font-mono text-[11px] tracking-[0.2em] text-text-muted uppercase">
+              {{ 'overview.bossEncounter.difficulty' | translate }}
+              <span aria-hidden="true">·</span>
               {{ 'boss.category.' + encounter.boss.category | translate }}
             </span>
           </div>
 
-          <div class="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h2 class="max-w-prose text-2xl font-extrabold text-text-primary sm:text-3xl">
+          <div class="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2
+              class="font-display max-w-prose text-3xl leading-none font-bold text-text-primary uppercase sm:text-4xl"
+            >
               {{ encounter.boss.name }}
             </h2>
-            <p
-              class="flex shrink-0 items-center gap-1.5 text-base font-bold tabular-nums text-text-primary"
-            >
-              {{
-                'overview.bossEncounter.hpAmount'
-                  | translate: { remaining: remainingHp(), total: encounter.effectiveHp }
-              }}
-              <svg class="h-4 w-4 shrink-0 text-accent-red" fill="currentColor" lucideHeart></svg>
-              {{ 'overview.bossEncounter.hpUnit' | translate }}
+            <p class="font-display shrink-0 text-2xl leading-none font-bold tabular-nums">
+              <span class="text-accent-red">{{ remainingHp() }}</span>
+              <span class="text-base text-text-muted">
+                / {{ encounter.effectiveHp }} {{ 'overview.bossEncounter.hpUnit' | translate }}
+              </span>
             </p>
           </div>
 
-          <p class="mt-1 max-w-prose text-sm text-text-secondary">
+          <p class="mt-1.5 max-w-prose text-sm text-text-secondary">
             {{ encounter.boss.description }}
           </p>
 
-          <!-- Game-style health bar, spanning the full width of the content block below the name. -->
-          <app-progress-bar
-            class="mt-4 block"
-            [colorClass]="hpBarColorClass()"
-            heightClass="h-4"
-            [percentage]="remainingPercentage()"
-          />
+          <!-- Game-style health bar, spanning the full width of the content block below the name.
+               Written here rather than through the shared `<app-progress-bar>`: this is the one
+               bar in the application carrying a leading-edge marker at the fill's head, the
+               mockup's signal that the bar is being *drained* rather than filled.
+
+               Hidden from assistive technology, like the shared bar: the exact remaining and total
+               hit points are already rendered as text beside the boss name. -->
+          <div
+            aria-hidden="true"
+            class="notch-tl-br relative mt-4 h-5.5 border border-text-primary/15 bg-surface-sunken [--notch:0.5rem]"
+          >
+            <div
+              [class]="hpBarColorClass()"
+              [style.width.%]="remainingPercentage()"
+              class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
+            ></div>
+            @if (remainingPercentage() > 0) {
+              <span
+                [style.left.%]="remainingPercentage()"
+                class="absolute inset-y-0 -ml-0.5 w-0.5 bg-text-primary"
+              ></span>
+            }
+          </div>
         </div>
       </div>
 
       @if (defeated()) {
         <p
-          class="mt-6 flex items-center gap-2 border-t border-surface-700 pt-5 text-sm font-bold text-accent-green"
+          class="mt-6 flex items-center gap-2 border-t border-text-primary/10 pt-5 text-sm font-bold text-accent-green"
         >
           <svg class="h-4 w-4" lucideSwords></svg>
           {{ 'overview.bossEncounter.defeated' | translate }}

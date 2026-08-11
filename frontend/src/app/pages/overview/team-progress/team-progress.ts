@@ -1,5 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
-import { LucideCheck } from '@lucide/angular';
+import { Component, computed, inject } from '@angular/core';
 
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
@@ -8,7 +7,6 @@ import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { Avatar } from '@shared/avatar/avatar';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { WeekSummary } from '../overview.model';
 
 /**
  * Single contributor shown in the team hero's avatar stack.
@@ -25,17 +23,17 @@ interface Contributor {
 }
 
 /**
- * Team objective banner of the overview page.
+ * Team objective band of the overview page.
  *
  * Reframes the weekly challenges as a collective goal rather than an individual one: the
- * proportion of challenges the whole group has already cleared, who has contributed so far, and
- * the time left to finish together. Reads the same shared current-challenges and current-ranking
- * resources as `Challenges` and `Leaderboard` directly, rather than reaching into either
- * component's internals, so both stay unchanged.
+ * proportion of challenges the whole group has already cleared, and who has contributed so far.
+ * Reads the same shared current-challenges and current-ranking resources as `Challenges` and
+ * `Leaderboard` directly, rather than reaching into either component's internals, so both stay
+ * unchanged.
  */
 @Component({
   selector: 'app-team-progress',
-  imports: [TranslatePipe, Avatar, ResourceState, LucideCheck],
+  imports: [TranslatePipe, Avatar, ResourceState],
   templateUrl: './team-progress.html',
 })
 export class TeamProgress {
@@ -48,12 +46,6 @@ export class TeamProgress {
    * Data-access service backing the shared current-ranking resource.
    */
   private readonly rankingApi = inject(RankingApi);
-
-  /**
-   * Active week summary, computed once by `Overview` from a single ticking clock so the countdown
-   * shown here never drifts from the page header.
-   */
-  public readonly week = input<WeekSummary | null>(null);
 
   /**
    * Reactive resource fetching the current week's challenges, shared with the overview header and
