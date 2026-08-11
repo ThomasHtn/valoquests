@@ -67,6 +67,17 @@ export function formatDateRange(weekStart: string, weekEnd: string): string {
 }
 
 /**
+ * Resolves the day the next weekly period starts on, i.e. the day after `weekEnd`.
+ *
+ * @param weekEnd - The active week's end date, as `YYYY-MM-DD`.
+ * @returns The next week's start date, as `YYYY-MM-DD`.
+ */
+export function nextWeekStart(weekEnd: string): string {
+  const nextStart = new Date(parseIsoDate(weekEnd).getTime() + MILLISECONDS_PER_DAY);
+  return nextStart.toISOString().slice(0, 10);
+}
+
+/**
  * Computes the time remaining until the day after `weekEnd`, when the weekly rollover occurs.
  *
  * @param weekEnd - The active week's end date, as `YYYY-MM-DD`.

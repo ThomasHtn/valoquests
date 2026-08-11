@@ -18,9 +18,9 @@ interface DifficultyShowcase {
 export const DIFFICULTY_SHOWCASE: readonly DifficultyShowcase[] = [
   { difficulty: 'EASY', damage: 1_500, colorClass: 'bg-accent-green/15 text-accent-green' },
   { difficulty: 'NORMAL', damage: 2_500, colorClass: 'bg-accent-blue/15 text-accent-blue' },
-  { difficulty: 'MEDIUM', damage: 4_000, colorClass: 'bg-accent-purple/15 text-accent-purple' },
-  { difficulty: 'HARD', damage: 6_000, colorClass: 'bg-accent-gold/15 text-accent-gold' },
-  { difficulty: 'VERY_HARD', damage: 9_000, colorClass: 'bg-accent-pink/15 text-accent-pink' },
+  { difficulty: 'MEDIUM', damage: 4_000, colorClass: 'bg-accent-gold/15 text-accent-gold' },
+  { difficulty: 'HARD', damage: 6_000, colorClass: 'bg-accent-pink/15 text-accent-pink' },
+  { difficulty: 'VERY_HARD', damage: 9_000, colorClass: 'bg-accent-red/15 text-accent-red' },
 ];
 
 /**

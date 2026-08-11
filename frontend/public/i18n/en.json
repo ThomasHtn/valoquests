@@ -86,7 +86,7 @@
     },
     "weeklyChallenges": {
       "completedCount": "{{completed}} of {{total}} completed",
-      "damageTooltip": "Damage awarded once the challenge is completed",
+      "damageLabel": "Damage",
       "difficulty": {
         "EASY": "Easy",
         "HARD": "Hard",
@@ -96,6 +96,7 @@
       },
       "empty": "No challenge is active this week.",
       "error": "Failed to load the weekly challenges.",
+      "eyebrow": "Quest · Week {{number}}",
       "loading": "Loading challenges…",
       "metric": {
         "ASSISTS": "Assists",
@@ -109,9 +110,14 @@
         "ROUNDS_PLAYED": "Rounds",
         "SCORE": "Score"
       },
-      "playersUnit": "players",
-      "subtitle": "One vignette per challenge, and who on the squad has already cleared it.",
-      "title": "Weekly challenges"
+      "nextDraw": {
+        "date": "Monday {{date}} · 00:00",
+        "description": "Five new challenges will be drawn from the catalogue.",
+        "label": "Next draw"
+      },
+      "subtitle": "Five challenges drawn from a catalogue of 46, one per difficulty. Every challenge cleared deals its damage to the week's target.",
+      "title": "Weekly challenges",
+      "totalPotential": "Total potential · {{damage}} damage"
     },
     "weeklyRanking": {
       "columns": {

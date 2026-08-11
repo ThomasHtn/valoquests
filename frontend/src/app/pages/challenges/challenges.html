@@ -1,15 +1,39 @@
-<!-- Header, matching the other pages' title treatment so all pages read as one family. -->
-<header>
-  <h1
-    class="flex items-center gap-2 text-3xl font-extrabold tracking-wide text-text-primary uppercase"
-  >
-    <svg class="h-6 w-6 shrink-0 text-brand-500" lucideTarget></svg>
-    {{ 'overview.weeklyChallenges.title' | translate }}
-  </h1>
-  <p class="mt-1 text-sm font-medium text-text-secondary">
-    {{ 'overview.weeklyChallenges.subtitle' | translate }}
-  </p>
+<!-- Header: the week's quest, its stakes and the countdown to the next draw — the same treatment as
+     the overview's hero header, so both screens open on the same beat. -->
+<header class="flex flex-wrap items-start justify-between gap-4">
+  <div>
+    <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
+      {{ 'overview.weeklyChallenges.eyebrow' | translate: { number: weekNumber() ?? '—' } }}
+    </p>
+    <h1
+      class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
+    >
+      {{ 'overview.weeklyChallenges.title' | translate }}
+    </h1>
+    <p class="mt-2 max-w-prose text-sm text-text-secondary">
+      {{ 'overview.weeklyChallenges.subtitle' | translate }}
+    </p>
+  </div>
+
+  <div class="text-right">
+    <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+      {{ 'overview.header.timeLabel' | translate }}
+    </p>
+    @if (remaining(); as remaining) {
+      <p class="font-display mt-1.5 text-2xl leading-none font-bold text-brand-500">
+        {{
+          'overview.header.timeRemaining'
+            | translate: { days: remaining.days, hours: remaining.hours }
+        }}
+      </p>
+    }
+  </div>
 </header>
+
+<app-section-divider
+  [label]="'overview.weeklyChallenges.totalPotential' | translate: { damage: totalDamage() }"
+  class="-mt-2"
+/>
 
 <app-resource-state
   (retry)="reload()"
@@ -20,87 +44,94 @@
   [isLoading]="isLoading()"
   [loadingText]="'overview.weeklyChallenges.loading' | translate"
 >
-  <!-- Skeleton mirroring the loaded vignette grid, so data arriving does not shift the page. -->
-  <ul class="grid grid-cols-1 gap-5 sm:grid-cols-2" skeleton>
+  <!-- Skeleton mirroring the loaded board, so data arriving does not shift the page. -->
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2" skeleton>
     @for (placeholder of skeletonRows; track $index) {
-      <li class="rounded-xl border border-surface-700 bg-surface-900 p-6">
-        <div class="flex items-start gap-4">
-          <span class="h-14 w-14 shrink-0 rounded-full bg-surface-700"></span>
-          <span class="flex min-w-0 flex-1 flex-col gap-2">
-            <span [style.width.%]="placeholder" class="h-3 rounded-full bg-surface-700"></span>
-            <span class="h-2.5 w-3/4 rounded-full bg-surface-700"></span>
-          </span>
-          <span class="h-6 w-16 shrink-0 rounded-full bg-surface-700"></span>
-        </div>
-        <span class="mt-5 block h-2 w-full rounded-full bg-surface-700"></span>
-      </li>
-    }
-  </ul>
-
-  <!-- One vignette per challenge, two to a row from `sm` up. -->
-  <ul class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-    @for (row of rows(); track row.id) {
-      <li
-        class="rounded-xl border border-surface-700 bg-surface-900 p-6 transition-colors hover:bg-surface-800"
+      <div
+        class="notch-tr-bl flex min-h-40 items-center gap-4 border border-surface-700 bg-surface-900 p-4 [--notch:1rem] sm:gap-6 sm:p-6"
       >
-        <div class="flex items-start gap-4">
-          <div
-            [class]="row.visual.badgeClass"
-            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
-          >
-            <app-challenge-icon-view
-              [class]="row.visual.iconClass"
-              [icon]="row.visual.icon"
-              class="h-7 w-7"
-            />
-          </div>
-
-          <div class="min-w-0 flex-1">
-            <p class="flex flex-wrap items-baseline gap-1.5">
-              <span class="text-base font-semibold text-text-primary">{{ row.name }}</span>
-              <span aria-hidden="true" class="shrink-0 text-text-muted">·</span>
-              <span [class]="row.visual.iconClass" class="shrink-0 text-xs font-medium">
-                {{ 'overview.weeklyChallenges.difficulty.' + row.difficulty | translate }}
-              </span>
-            </p>
-            <p class="mt-1 text-sm text-text-secondary">{{ row.description }}</p>
-          </div>
-
-          <app-damage-badge
-            [appTooltip]="'overview.weeklyChallenges.damageTooltip' | translate"
-            [damage]="row.damage"
-            class="shrink-0"
-            appTooltipPosition="above"
-          />
-        </div>
-
-        <div class="mt-5 flex flex-wrap items-center gap-3 border-t border-surface-700 pt-5">
-          <ul class="flex -space-x-2">
-            @for (contributor of row.contributors; track contributor.playerId) {
-              <li
-                [class.opacity-40]="!contributor.contributed"
-                class="relative rounded-full ring-2 ring-surface-900"
-              >
-                <app-avatar [src]="contributor.avatarUrl" size="sm" />
-                @if (contributor.contributed) {
-                  <span
-                    class="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent-green ring-2 ring-surface-900"
-                  >
-                    <svg class="h-2 w-2 text-surface-950" lucideCheck></svg>
-                  </span>
-                }
-              </li>
-            }
-          </ul>
-          <p class="shrink-0 text-sm tabular-nums text-text-secondary">
-            <span class="font-bold">{{ row.completedPlayers }}</span>
-            <span>
-              / {{ row.totalPlayers }}
-              {{ 'overview.weeklyChallenges.playersUnit' | translate }}
-            </span>
-          </p>
-        </div>
-      </li>
+        <span class="clip-hex h-14 w-12 shrink-0 bg-surface-700 sm:h-16 sm:w-14"></span>
+        <span class="flex min-w-0 flex-1 flex-col gap-3">
+          <span [style.width.%]="placeholder" class="h-2.5 rounded-full bg-surface-700"></span>
+          <span class="h-3.5 w-2/3 rounded-full bg-surface-700"></span>
+          <span class="h-2.5 w-full rounded-full bg-surface-700"></span>
+        </span>
+        <span class="h-8 w-14 shrink-0 rounded-full bg-surface-700"></span>
+      </div>
     }
-  </ul>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <!-- One card per challenge, tinted by its difficulty tier: the tier's accent lights the border
+         and bleeds into the panel from its leading corner, so the five cards read as a ladder from
+         green to red rather than as five identical rows. -->
+    @for (row of rows(); track row.id) {
+      <article
+        [class]="row.visual.panelClass"
+        class="notch-tr-bl flex min-h-40 items-center gap-4 border bg-linear-[115deg] to-surface-sunken/60 p-4 [--notch:1rem] sm:gap-6 sm:p-6"
+      >
+        <!-- Tier badge. Decorative: the difficulty it stands for is written beside it. -->
+        <span
+          [class]="row.visual.barClass"
+          aria-hidden="true"
+          class="clip-hex relative h-14 w-12 shrink-0 sm:h-16 sm:w-14"
+        >
+          <span
+            [class]="row.visual.iconClass"
+            class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-lg leading-none font-bold sm:text-xl"
+          >
+            {{ row.visual.tier }}
+          </span>
+        </span>
+
+        <div class="min-w-0 flex-1">
+          <p
+            [class]="row.visual.iconClass"
+            class="tracking-label font-mono text-2xs font-medium uppercase"
+          >
+            {{ 'overview.weeklyChallenges.difficulty.' + row.difficulty | translate }}
+          </p>
+          <h2
+            class="font-display mt-2 text-xl leading-none font-semibold text-text-primary uppercase sm:text-2xl"
+          >
+            {{ row.name }}
+          </h2>
+          <p class="mt-2 text-sm text-text-secondary">{{ row.description }}</p>
+        </div>
+
+        <p class="shrink-0 border-l border-text-primary/10 pl-4 text-right">
+          <span
+            class="tracking-label block font-mono text-2xs font-medium text-text-muted uppercase"
+          >
+            {{ 'overview.weeklyChallenges.damageLabel' | translate }}
+          </span>
+          <span
+            class="font-display mt-2 block text-2xl leading-none font-bold text-brand-500 tabular-nums sm:text-3xl"
+          >
+            {{ row.damage }}
+          </span>
+        </p>
+      </article>
+    }
+
+    <!-- Sixth cell of the board: what happens when the countdown runs out. Dashed rather than
+         solid, since it is the one slot on the grid that is not a challenge to clear. -->
+    @if (nextDrawDate(); as nextDrawDate) {
+      <div
+        class="notch-tr-bl flex min-h-40 flex-col justify-center gap-3 border border-dashed border-brand-500/30 bg-surface-sunken/45 p-4 [--notch:1rem] sm:p-6"
+      >
+        <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+          {{ 'overview.weeklyChallenges.nextDraw.label' | translate }}
+        </p>
+        <p
+          class="font-display text-xl leading-none font-bold text-text-primary/75 uppercase sm:text-2xl"
+        >
+          {{ 'overview.weeklyChallenges.nextDraw.date' | translate: { date: nextDrawDate } }}
+        </p>
+        <p class="text-sm text-text-secondary">
+          {{ 'overview.weeklyChallenges.nextDraw.description' | translate }}
+        </p>
+      </div>
+    }
+  </div>
 </app-resource-state>

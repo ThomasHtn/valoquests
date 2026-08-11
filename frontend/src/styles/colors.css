@@ -5,9 +5,14 @@
  */
 
 @theme {
-  /* Brand (Expédition amber) */
+  /*
+   * Brand (Expédition amber). `brand-600` is the one step below the base tone: it exists so a
+   * surface lit by the brand can be *shaded* — the landing compass's disc is a radial from
+   * `brand-400` down to it — without any screen reaching for a raw hex outside the palette.
+   */
   --color-brand-950: #26190c;
   --color-brand-900: #3a2814;
+  --color-brand-600: #a6752a;
   --color-brand-500: #d9954a;
   --color-brand-400: #e8ab6b;
 

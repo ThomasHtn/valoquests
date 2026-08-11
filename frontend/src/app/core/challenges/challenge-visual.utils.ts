@@ -26,35 +26,50 @@ const CHALLENGE_METRIC_ICONS: Readonly<Record<string, ChallengeIcon>> = {
 const DEFAULT_CHALLENGE_ICON: ChallengeIcon = 'target';
 
 /**
- * Color treatment applied per challenge difficulty, from easiest to hardest.
+ * Tier rank and color treatment applied per challenge difficulty, from easiest to hardest.
+ *
+ * The scale is a heat ramp — green, blue, amber, pink, red — so the five weekly slots read as an
+ * escalating ladder rather than five unrelated categories. The hardest tier takes `accent-red`,
+ * the same hue as damage and boss health: the reward is what a very hard challenge is *for*, and
+ * nothing else on these screens is red enough to be confused with it.
  */
 const CHALLENGE_DIFFICULTY_COLORS: Readonly<
   Record<ChallengeDifficulty, Omit<ChallengeVisual, 'icon'>>
 > = {
   EASY: {
+    tier: 'I',
     iconClass: 'text-accent-green',
     badgeClass: 'bg-accent-green/15',
     barClass: 'bg-accent-green',
+    panelClass: 'border-accent-green/35 from-accent-green/12',
   },
   NORMAL: {
+    tier: 'II',
     iconClass: 'text-accent-blue',
     badgeClass: 'bg-accent-blue/15',
     barClass: 'bg-accent-blue',
+    panelClass: 'border-accent-blue/35 from-accent-blue/12',
   },
   MEDIUM: {
-    iconClass: 'text-accent-purple',
-    badgeClass: 'bg-accent-purple/15',
-    barClass: 'bg-accent-purple',
-  },
-  HARD: {
+    tier: 'III',
     iconClass: 'text-accent-gold',
     badgeClass: 'bg-accent-gold/15',
     barClass: 'bg-accent-gold',
+    panelClass: 'border-accent-gold/35 from-accent-gold/12',
   },
-  VERY_HARD: {
+  HARD: {
+    tier: 'IV',
     iconClass: 'text-accent-pink',
     badgeClass: 'bg-accent-pink/15',
     barClass: 'bg-accent-pink',
+    panelClass: 'border-accent-pink/35 from-accent-pink/12',
+  },
+  VERY_HARD: {
+    tier: 'V',
+    iconClass: 'text-accent-red',
+    badgeClass: 'bg-accent-red/15',
+    barClass: 'bg-accent-red',
+    panelClass: 'border-accent-red/35 from-accent-red/12',
   },
 };
 

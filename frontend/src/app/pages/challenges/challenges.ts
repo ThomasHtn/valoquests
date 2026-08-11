@@ -1,42 +1,39 @@
-import { Component, computed, inject } from '@angular/core';
-import { Tooltip } from '@shared/tooltip/tooltip';
-import { LucideCheck, LucideTarget } from '@lucide/angular';
+import { Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { interval } from 'rxjs';
 
-import { ChallengeIconView } from '@shared/challenge-icon-view/challenge-icon-view';
+import { CurrentChallenges } from '@core/challenges/challenge.model';
+import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { resolveChallengeVisual } from '@core/challenges/challenge-visual.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
+import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
+import {
+  formatDayMonth,
+  isoWeekNumber,
+  nextWeekStart,
+  RemainingTime,
+  remainingWeekTime,
+} from '@core/date/week-period.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
-import { RankingApi } from '@core/ranking/ranking-api';
-import { RankingEntry } from '@core/ranking/ranking.model';
-import { Avatar } from '@shared/avatar/avatar';
-import { DamageBadge } from '@shared/damage-badge/damage-badge';
+import { Translation } from '@core/i18n/translation';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
+import { SectionDivider } from '@shared/section-divider/section-divider';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { ChallengeRow } from './challenges.model';
 
 /**
- * Weekly challenges page.
+ * Weekly quest page.
  *
- * Displays the collective completion progress of every challenge selected for the active week, one
- * vignette per challenge. Previously an in-page card of the overview's scroll-snap hero (still
- * called `WeeklyChallenges` in sibling doc comments), extracted to its own route since it has no
- * place in the "Vue d'ensemble" mockup's single, non-scrolling hero screen.
+ * Presents the five challenges drawn for the active week — one per difficulty tier — as a board of
+ * cards stating what each one asks for and what it is worth against the week's boss. Who has
+ * cleared what is deliberately *not* shown here: that is the squad matrix's job (`Leaderboard` at
+ * `/leaderboard`), and repeating it turned every card into a second, weaker copy of that screen.
  */
 @Component({
   selector: 'app-challenges',
-  imports: [
-    TranslatePipe,
-    ChallengeIconView,
-    Tooltip,
-    DamageBadge,
-    Avatar,
-    ResourceState,
-    LucideTarget,
-    LucideCheck,
-  ],
+  imports: [TranslatePipe, ResourceState, SectionDivider],
   templateUrl: './challenges.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })
@@ -47,10 +44,15 @@ export class Challenges {
   private readonly challengesApi = inject(ChallengesApi);
 
   /**
-   * Data-access service backing the shared current-ranking resource, used to build each
-   * challenge's avatar stack.
+   * i18n service, read for the active language rather than for a lookup: the damage amounts are
+   * grouped with the separator that language uses.
    */
-  private readonly rankingApi = inject(RankingApi);
+  private readonly translation = inject(Translation);
+
+  /**
+   * Current time, refreshed periodically to keep the countdown display accurate.
+   */
+  private readonly now = signal(new Date());
 
   /**
    * Reactive resource fetching the current week's challenges, shared with the overview header.
@@ -58,20 +60,14 @@ export class Challenges {
   protected readonly challengesResource = this.challengesApi.current;
 
   /**
-   * Reactive resource fetching the current week's ranking, shared with the podium and weekly
-   * ranking card.
+   * Whether the backing resource is still loading.
    */
-  protected readonly rankingResource = this.rankingApi.current;
+  protected readonly isLoading = anyLoading(this.challengesResource);
 
   /**
-   * Whether either backing resource is still loading.
+   * Whether the backing resource failed to load.
    */
-  protected readonly isLoading = anyLoading(this.challengesResource, this.rankingResource);
-
-  /**
-   * Whether either backing resource failed to load.
-   */
-  protected readonly hasError = anyError(this.challengesResource, this.rankingResource);
+  protected readonly hasError = anyError(this.challengesResource);
 
   /**
    * Placeholder line widths driving the loading skeleton.
@@ -79,51 +75,81 @@ export class Challenges {
   protected readonly skeletonRows = SKELETON_ROWS;
 
   /**
-   * Every active tracked player's current ranking entry, used to resolve per-challenge
-   * completion.
-   *
-   * An inactive player is excluded: their challenge completions never count toward the
-   * collective total, so they never appear as a contributor either. The backend omits
-   * `position` from the JSON entirely when null, so the parsed value is `undefined` rather than
-   * `null` - `!= null` catches both.
+   * The active week as the backend describes it, or `null` until it has loaded.
    */
-  private readonly rankingEntries = computed<readonly RankingEntry[]>(
-    () =>
-      resourceValue(this.rankingResource, null)?.ranking.filter(
-        (entry) => entry.position != null,
-      ) ?? [],
+  private readonly currentWeek = computed<CurrentChallenges | null>(
+    () => resourceValue(this.challengesResource, null) ?? null,
   );
 
   /**
-   * Challenges of the active week, paired with their resolved icon and color treatment and each
-   * player's completion for that specific challenge.
+   * Active week's ISO number, or `null` while loading.
    */
-  protected readonly rows = computed<readonly ChallengeRow[]>(() =>
-    (resourceValue(this.challengesResource, null)?.challenges ?? []).map((challenge) => ({
+  protected readonly weekNumber = computed<number | null>(() => {
+    const currentWeek = this.currentWeek();
+    return currentWeek === null ? null : isoWeekNumber(currentWeek.weekStart);
+  });
+
+  /**
+   * Time left before the weekly rollover, or `null` while loading.
+   */
+  protected readonly remaining = computed<RemainingTime | null>(() => {
+    const currentWeek = this.currentWeek();
+    return currentWeek === null ? null : remainingWeekTime(currentWeek.weekEnd, this.now());
+  });
+
+  /**
+   * Day the next five challenges are drawn, as `DD/MM`, or `null` while loading.
+   */
+  protected readonly nextDrawDate = computed<string | null>(() => {
+    const currentWeek = this.currentWeek();
+    return currentWeek === null ? null : formatDayMonth(nextWeekStart(currentWeek.weekEnd));
+  });
+
+  /**
+   * The week's challenges, paired with their resolved tier and color treatment.
+   */
+  protected readonly rows = computed<readonly ChallengeRow[]>(() => {
+    const language = this.translation.language();
+
+    return (this.currentWeek()?.challenges ?? []).map((challenge) => ({
       id: challenge.id,
       name: challenge.name,
       description: challenge.description,
       difficulty: challenge.difficulty,
-      completedPlayers: challenge.completedPlayers,
-      totalPlayers: challenge.totalPlayers,
-      completionPercentage: challenge.completionPercentage,
-      damage: challenge.damage,
+      damage: formatDamage(challenge.damage, language),
       visual: resolveChallengeVisual(challenge.metric, challenge.difficulty),
-      contributors: this.rankingEntries().map((entry) => ({
-        playerId: entry.player.id,
-        displayName: entry.player.displayName,
-        avatarUrl: resolvePlayerAvatarUrl(entry.player.portrait),
-        contributed:
-          entry.challengeProgress.find((progress) => progress.challengeId === challenge.id)
-            ?.completed ?? false,
-      })),
-    })),
-  );
+    }));
+  });
 
   /**
-   * Reloads both backing resources after a failure.
+   * Damage the squad would deal by clearing every challenge of the week.
+   *
+   * Summed here rather than read from the API: it is a total of amounts already on screen, stated
+   * so the board's stakes are legible without adding them up by eye — not a statistic the backend
+   * owns.
+   */
+  protected readonly totalDamage = computed<string>(() => {
+    const total = (this.currentWeek()?.challenges ?? []).reduce(
+      (sum, challenge) => sum + challenge.damage,
+      0,
+    );
+    return formatDamage(total, this.translation.language());
+  });
+
+  /**
+   * Refreshes {@link now} every minute so the countdown stays accurate for the lifetime of the
+   * page.
+   */
+  constructor() {
+    interval(COUNTDOWN_REFRESH_INTERVAL_MS)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.now.set(new Date()));
+  }
+
+  /**
+   * Reloads the backing resource after a failure.
    */
   protected reload(): void {
-    reloadAll(this.challengesResource, this.rankingResource);
+    reloadAll(this.challengesResource);
   }
 }

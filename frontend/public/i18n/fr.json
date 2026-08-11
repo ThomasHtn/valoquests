@@ -86,7 +86,7 @@
     },
     "weeklyChallenges": {
       "completedCount": "{{completed}} terminés sur {{total}}",
-      "damageTooltip": "Dégâts infligés une fois le défi terminé",
+      "damageLabel": "Dégâts",
       "difficulty": {
         "EASY": "Facile",
         "HARD": "Difficile",
@@ -96,6 +96,7 @@
       },
       "empty": "Aucun défi n'est actif cette semaine.",
       "error": "Impossible de charger les défis de la semaine.",
+      "eyebrow": "Quête · Semaine {{number}}",
       "loading": "Chargement des défis…",
       "metric": {
         "ASSISTS": "Assists",
@@ -109,9 +110,14 @@
         "ROUNDS_PLAYED": "Rounds",
         "SCORE": "Score"
       },
-      "playersUnit": "joueurs",
-      "subtitle": "Une vignette par défi, et qui dans l'escouade l'a déjà terminé.",
-      "title": "Défis de la semaine"
+      "nextDraw": {
+        "date": "Lundi {{date}} · 00h00",
+        "description": "Cinq nouveaux défis seront tirés du catalogue.",
+        "label": "Prochain tirage"
+      },
+      "subtitle": "Cinq défis tirés d'un catalogue de 46, un par difficulté. Chaque défi réalisé inflige ses dégâts à la cible de la semaine.",
+      "title": "Défis de la semaine",
+      "totalPotential": "Potentiel total · {{damage}} dégâts"
     },
     "weeklyRanking": {
       "columns": {

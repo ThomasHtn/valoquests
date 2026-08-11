@@ -10,4 +10,25 @@
   --font-display: 'Oswald', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /*
+   * One step below `text-xs`, for the direction's monospaced micro-labels: the eyebrows, column
+   * headers and unit captions that name a value without competing with it. Named as a step of the
+   * type scale rather than written as a raw pixel size at each call site, so the whole family
+   * moves together and no screen invents its own 9px or 11px variant.
+   *
+   * The line height is 1: these labels are always a single uppercase line, and the default
+   * leading would push the value they caption out of alignment.
+   */
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: 1;
+
+  /*
+   * Letter-spacing ladder for those same labels, which are set far wider than Tailwind's built-in
+   * scale reaches (`tracking-widest` stops at 0.1em). Two steps only: the default, and the wider
+   * one reserved for the wordmark and for a page's opening eyebrow, where the extra air marks the
+   * top of the hierarchy.
+   */
+  --tracking-label: 0.2em;
+  --tracking-label-wide: 0.3em;
 }

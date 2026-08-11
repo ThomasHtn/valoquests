@@ -71,11 +71,11 @@
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <span
-              class="bg-accent-red px-2.5 py-1 font-mono text-[10px] font-bold tracking-[0.18em] text-surface-950 uppercase"
+              class="tracking-label bg-accent-red px-2.5 py-1 font-mono text-2xs font-bold text-surface-950 uppercase"
             >
               {{ 'overview.bossEncounter.eyebrow' | translate }}
             </span>
-            <span class="font-mono text-[11px] tracking-[0.2em] text-text-muted uppercase">
+            <span class="tracking-label font-mono text-2xs text-text-muted uppercase">
               {{ 'overview.bossEncounter.difficulty' | translate }}
               <span aria-hidden="true">·</span>
               {{ 'boss.category.' + encounter.boss.category | translate }}
@@ -109,7 +109,7 @@
                hit points are already rendered as text beside the boss name. -->
           <div
             aria-hidden="true"
-            class="notch-tl-br relative mt-4 h-5.5 border border-text-primary/15 bg-surface-sunken [--notch:0.5rem]"
+            class="notch-tl-br relative mt-4 h-6 border border-text-primary/15 bg-surface-sunken [--notch:0.5rem]"
           >
             <div
               [class]="hpBarColorClass()"

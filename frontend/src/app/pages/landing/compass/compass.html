@@ -50,14 +50,14 @@
 
   <!-- Core disc carrying the label. -->
   <span
-    class="col-start-1 row-start-1 flex h-[132px] w-[132px] flex-col items-center justify-center gap-1.5 rounded-full border-2 border-brand-500 bg-radial from-brand-400 to-[#a6752a] text-surface-950 motion-safe:animate-compass-core sm:h-[186px] sm:w-[186px]"
+    class="col-start-1 row-start-1 flex h-[132px] w-[132px] flex-col items-center justify-center gap-1.5 rounded-full border-2 border-brand-500 bg-radial from-brand-400 to-brand-600 text-surface-950 motion-safe:animate-compass-core sm:h-[186px] sm:w-[186px]"
   >
-    <span class="font-display text-[13px]/none font-bold tracking-[0.14em] uppercase sm:text-base">
+    <span class="tracking-label font-display text-sm/none font-bold uppercase sm:text-base">
       {{ 'landing.compass.action' | translate }}
     </span>
-    <span
-      class="font-mono text-[8px]/none font-semibold tracking-[0.14em] uppercase sm:text-[10px]"
-    >
+    <!-- Tracked one step tighter than the label default: this caption has to fit inside a fixed
+         disc, and at `tracking-label` it runs past its edge on the small viewport. -->
+    <span class="font-mono text-2xs font-semibold tracking-wider uppercase">
       {{ 'landing.compass.caption' | translate }}
     </span>
   </span>

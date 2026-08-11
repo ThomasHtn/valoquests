@@ -16,6 +16,12 @@ export type ChallengeIcon =
   | 'target';
 
 /**
+ * Rank of a challenge's difficulty tier, written as a roman numeral from easiest (`I`) to hardest
+ * (`V`), the way the design labels the five weekly slots.
+ */
+export type ChallengeTier = 'I' | 'II' | 'III' | 'IV' | 'V';
+
+/**
  * Visual treatment applied to a challenge, shared by the weekly challenges card and the weekly
  * ranking table so both widgets render the same icon and color for a given challenge.
  *
@@ -24,7 +30,18 @@ export type ChallengeIcon =
  */
 export interface ChallengeVisual {
   readonly icon: ChallengeIcon;
+
+  /**
+   * Difficulty rank shown inside the hex badge, so the tier is not conveyed by color alone.
+   */
+  readonly tier: ChallengeTier;
   readonly iconClass: string;
   readonly badgeClass: string;
   readonly barClass: string;
+
+  /**
+   * Border and gradient origin of the challenge card, tinting the whole panel with the tier's
+   * accent. Paired with the card's own `bg-linear-*` direction and end color.
+   */
+  readonly panelClass: string;
 }

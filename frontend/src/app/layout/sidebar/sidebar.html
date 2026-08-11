@@ -38,8 +38,8 @@
               <span class="block text-text-primary">Quests</span>
             </div>
             <div class="mt-2.5 flex items-center gap-2">
-              <span class="h-0.5 w-5.5 shrink-0 bg-brand-500"></span>
-              <span class="font-mono text-[10px] tracking-[0.3em] text-text-muted uppercase">
+              <span class="h-0.5 w-6 shrink-0 bg-brand-500"></span>
+              <span class="tracking-label-wide font-mono text-2xs text-text-muted uppercase">
                 {{ 'sidebar.squad' | translate }}
               </span>
             </div>
@@ -75,7 +75,7 @@
           [appTooltip]="'sidebar.nav.' + item.labelKey | translate"
           [routerLinkActiveOptions]="{ exact: !!item.exactMatch }"
           [routerLink]="item.routerLink"
-          class="focus-ring-inset relative flex min-h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-2 py-2 text-[11px] font-medium text-text-secondary transition-colors before:absolute before:inset-x-0 before:top-0 before:h-0.75 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary lg:min-h-0 lg:w-full lg:flex-none lg:flex-row lg:gap-3.5 lg:px-5.5 lg:py-3.25 lg:text-sm lg:before:inset-x-auto lg:before:inset-y-0 lg:before:left-0 lg:before:h-auto lg:before:w-0.75"
+          class="focus-ring-inset relative flex min-h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-2 py-2 text-2xs/normal font-medium text-text-secondary transition-colors before:absolute before:inset-x-0 before:top-0 before:h-1 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary lg:min-h-0 lg:w-full lg:flex-none lg:flex-row lg:gap-3.5 lg:px-6 lg:py-3 lg:text-sm lg:before:inset-x-auto lg:before:inset-y-0 lg:before:left-0 lg:before:h-auto lg:before:w-1"
           appTooltipPosition="right"
           routerLinkActive="text-text-primary before:bg-brand-500 lg:bg-linear-to-r lg:from-brand-500/20 lg:to-transparent"
         >
@@ -102,7 +102,7 @@
               <svg class="block h-5 w-5 shrink-0" lucideTrophy></svg>
             }
           }
-          <span [class]="navLabelClass()" class="lg:font-display lg:tracking-[0.16em] lg:uppercase">
+          <span [class]="navLabelClass()" class="lg:font-display lg:tracking-label lg:uppercase">
             {{ 'sidebar.nav.' + item.labelKey | translate }}
           </span>
         </a>
@@ -132,7 +132,7 @@
         class="h-px bg-linear-to-r from-transparent via-brand-500/50 to-transparent"
       ></span>
       <div>
-        <p class="font-mono text-[10px] tracking-[0.24em] text-text-muted uppercase">
+        <p class="tracking-label font-mono text-2xs text-text-muted uppercase">
           {{ 'sidebar.lastSync.label' | translate }}
         </p>
         <p class="mt-2 flex items-center gap-2 text-sm text-text-secondary">

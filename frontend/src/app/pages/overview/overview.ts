@@ -5,10 +5,11 @@ import { LucideBookOpen } from '@lucide/angular';
 import { interval } from 'rxjs';
 
 import { ChallengesApi } from '@core/challenges/challenges-api';
+import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
 import { formatDateRange, isoWeekNumber, remainingWeekTime } from '@core/date/week-period.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { SectionDivider } from '@shared/section-divider/section-divider';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
-import { COUNTDOWN_REFRESH_INTERVAL_MS } from './overview.constants';
 import { WeekSummary } from './overview.model';
 import { BossEncounter } from './boss-encounter/boss-encounter';
 import { Podium } from './podium/podium';
@@ -27,7 +28,15 @@ import { TeamProgress } from './team-progress/team-progress';
  */
 @Component({
   selector: 'app-overview',
-  imports: [TranslatePipe, RouterLink, BossEncounter, Podium, TeamProgress, LucideBookOpen],
+  imports: [
+    TranslatePipe,
+    RouterLink,
+    BossEncounter,
+    Podium,
+    TeamProgress,
+    SectionDivider,
+    LucideBookOpen,
+  ],
   templateUrl: './overview.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })
