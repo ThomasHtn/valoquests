@@ -15,7 +15,7 @@
           (click)="previous.emit()"
           [attr.aria-label]="'boss.panel.previous' | translate"
           [disabled]="!hasPrevious()"
-          class="notch-tr-bl focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center border border-text-primary/15 bg-text-primary/8 text-text-secondary transition-colors [--notch:0.375rem] hover:bg-text-primary/15 hover:text-text-primary disabled:pointer-events-none disabled:opacity-35"
+          class="notch-tr notch-tr-edge focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center border border-text-primary/15 bg-text-primary/8 text-text-secondary transition-colors [--notch:0.375rem] hover:bg-text-primary/15 hover:text-text-primary disabled:pointer-events-none disabled:opacity-35"
           type="button"
         >
           <svg class="size-4" lucideChevronLeft></svg>
@@ -24,7 +24,7 @@
           (click)="next.emit()"
           [attr.aria-label]="'boss.panel.next' | translate"
           [disabled]="!hasNext()"
-          class="notch-tr-bl focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center border border-text-primary/15 bg-text-primary/8 text-text-secondary transition-colors [--notch:0.375rem] hover:bg-text-primary/15 hover:text-text-primary disabled:pointer-events-none disabled:opacity-35"
+          class="notch-tr notch-tr-edge focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center border border-text-primary/15 bg-text-primary/8 text-text-secondary transition-colors [--notch:0.375rem] hover:bg-text-primary/15 hover:text-text-primary disabled:pointer-events-none disabled:opacity-35"
           type="button"
         >
           <svg class="size-4" lucideChevronRight></svg>
@@ -34,7 +34,7 @@
       <button
         (click)="close()"
         [attr.aria-label]="'boss.panel.close' | translate"
-        class="notch-tr-bl focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center border border-text-primary/15 text-text-secondary transition-colors [--notch:0.375rem] hover:bg-text-primary/10 hover:text-text-primary"
+        class="notch-tr notch-tr-edge focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center border border-text-primary/15 text-text-secondary transition-colors [--notch:0.375rem] hover:bg-text-primary/10 hover:text-text-primary"
         type="button"
       >
         <svg class="size-4" lucideX></svg>
@@ -68,7 +68,7 @@
          artwork (`imageUrl` is `null` for every entry today). -->
     <div
       [class]="tier().panelClass"
-      class="notch-tr-bl relative flex h-44 shrink-0 items-center justify-center overflow-hidden border bg-linear-[135deg] to-surface-950 [--notch:1.125rem]"
+      class="notch-tr notch-tr-edge relative flex h-44 shrink-0 items-center justify-center overflow-hidden border bg-linear-[135deg] to-surface-950 [--notch:1.125rem]"
     >
       @if (node().portraitUrl; as portraitUrl) {
         <img

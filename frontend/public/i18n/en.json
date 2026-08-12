@@ -96,7 +96,6 @@
       },
       "title": "This week's podium"
     },
-    "rulesLink": "How it works",
     "tagline": "Complete missions every week to bring down fearsome bosses!",
     "teamProgress": {
       "contributors": "{{count}} player(s) contributed this week",
@@ -142,7 +141,9 @@
       "totalPotential": "Total potential · {{damage}} damage"
     },
     "weeklyRanking": {
+      "champion": "Champion",
       "columns": {
+        "bonusDamage": "Bonus damage",
         "damage": "Damage",
         "player": "Player",
         "position": "#"
@@ -150,9 +151,12 @@
       "completed": "Challenge completed",
       "empty": "No ranking is available this week.",
       "error": "Failed to load the weekly ranking.",
+      "eyebrow": "Squad · Week {{number}}",
+      "inactive": "Inactive",
       "loading": "Loading ranking…",
-      "subtitle": "Every tracked player's position and exact progress toward this week's challenges.",
-      "title": "Weekly ranking",
+      "subtitle": "Every tracked player's position, damage and exact progress toward this week's challenges.",
+      "title": "Squad matrix",
+      "totalDamage": "Total damage · {{damage}}",
       "variation": {
         "down": "{{count}} place(s) lost",
         "up": "{{count}} place(s) gained"
@@ -282,36 +286,70 @@
   },
   "retry": "Retry",
   "rules": {
-    "backToOverview": "Back to overview",
+    "eyebrow": "How it works",
+    "heading": "It all plays out in 4 beats",
+    "readingTime": {
+      "label": "Reading",
+      "value": "2 min"
+    },
     "sections": {
+      "bonuses": {
+        "days": "{{days}} d",
+        "footnote": "Both bonuses stack on top of match and challenge damage. Nothing to do beyond playing.",
+        "players": "{{count}} players",
+        "regularityLabel": "Regularity · days played in the week",
+        "teamLabel": "Squad · players who finished the same challenge",
+        "title": "Bonus: come back often, play together"
+      },
       "boss": {
-        "description": "Every week a boss shows up, Minor, Standard or Elite, and its health bar belongs to the whole squad. Every hit anyone lands, from a match or a challenge, drains it. Bring it down before Sunday night, or it lives to fight another week.",
-        "eyebrow": "Step 3 · Weekly boss",
+        "categories": {
+          "ELITE": "Huge health pool: without a big collective week, it survives.",
+          "MINOR": "Short bar: the squad usually folds it by midweek.",
+          "STANDARD": "The normal pace: everyone has to pitch in."
+        },
+        "description": "Every week a boss shows up with a health pool shared by the whole squad. Every hit anyone lands drains it. Bring it down before Sunday night, or it survives into the next fight.",
         "title": "One boss, one shared health bar"
       },
       "challenges": {
-        "description": "Every Monday, five challenges get pulled out of a hat of 46, one for each difficulty tier. No checkbox to tick, no form to fill in: the moment your matches sync, your progress ticks up on its own.",
-        "eyebrow": "Step 1 · Weekly challenges",
+        "damageLabel": "Damage",
+        "description": "Every Monday, five challenges are drawn from a catalogue of 46, one per tier. The tougher it is, the bigger the damage bonus.",
+        "difficultyLabel": "Difficulty",
         "title": "Five challenges, one per difficulty"
       },
       "damage": {
-        "bonuses": "Bonus points for showing up: playing on several days in the week and teaming up with others on the same challenge both pile extra damage on the stack.",
-        "description": "Ranked win? Big hit. Casual match, even a loss? Still chips in. Finish a challenge and cash in a fat damage bonus on top, bigger the harder it was.",
-        "eyebrow": "Step 2 · Damage",
-        "matchDamageLabel": "Damage per match",
-        "regularityDays": "{{days}} days",
-        "regularityLabel": "Regularity bonus",
-        "teamLabel": "Team bonus",
-        "teamPlayers": "{{count}} players",
+        "description": "A ranked win? Big damage. A casual game with friends, even a loss? It counts too.",
+        "modeLabel": "Game mode",
         "title": "Every match throws a punch"
       },
       "ranking": {
-        "description": "Total damage for the week decides the ranking. Whoever lands the killing blow on the boss gets crowned Champion and wears the crown until someone else finishes the job.",
-        "eyebrow": "Step 4 · Ranking & Champion",
-        "title": "Climb the board, claim the crown"
+        "description": "Total damage for the week decides the ranking. Whoever lands the killing blow gets crowned Champion and wears the crown until someone else finishes the job.",
+        "facts": {
+          "championTitle": "Finishing blow = Champion title, shown on the overview.",
+          "crown": "The crown stays with the Champion until the next boss goes down.",
+          "damage": "Weekly ranking: the sum of your damage (matches + challenges + bonuses)."
+        },
+        "title": "Ranking & crown"
       }
     },
-    "subtitle": "Grab your blade. Here's the whole quest: five weekly challenges, damage from every match, one boss to bring down together, and a throne to fight for.",
+    "steps": {
+      "boss": {
+        "description": "One health bar for the whole squad",
+        "title": "The boss takes it"
+      },
+      "challenges": {
+        "description": "Drawn every Monday, one per difficulty",
+        "title": "5 challenges"
+      },
+      "damage": {
+        "description": "Every match deals damage",
+        "title": "You play"
+      },
+      "ranking": {
+        "description": "Finishing blow = crown",
+        "title": "The champion"
+      }
+    },
+    "subtitle": "Nothing to tick, nothing to declare: you play, the app syncs your matches and the squad moves forward. Here's the full scoring table.",
     "title": "Rules & how it works"
   },
   "shared": {
@@ -349,10 +387,11 @@
       "boss": "Campaign",
       "challenges": "Challenges",
       "comparison": "Comparison",
-      "leaderboard": "Leaderboard",
+      "leaderboard": "Squad",
       "overview": "Overview",
       "players": "Players",
-      "ranking": "Ranking"
+      "ranking": "Ranking",
+      "rules": "Rules"
     },
     "navLabel": "Main navigation",
     "squad": "Squad 07"

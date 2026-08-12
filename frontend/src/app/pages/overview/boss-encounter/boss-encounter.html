@@ -1,9 +1,9 @@
-<!-- The card is cut at two opposite corners instead of rounded, the direction's panel silhouette.
+<!-- The card is cut at its top-right corner instead of rounded, the direction's panel silhouette.
      The cut reveals the page ground through the border, which is why the border stops at the
-     bevels rather than tracing them: `clip-path` clips the border box along with everything
+     bevel rather than tracing it: `clip-path` clips the border box along with everything
      else. -->
 <section
-  class="notch-tr-bl relative isolate flex min-h-46 flex-col justify-center border border-accent-red/40 bg-linear-[110deg] from-accent-red/14 to-surface-sunken/70 p-6 sm:p-7"
+  class="notch-tr notch-tr-edge relative isolate flex min-h-46 flex-col justify-center border border-accent-red/40 bg-linear-[110deg] from-accent-red/14 to-surface-sunken/70 p-6 sm:p-7"
 >
   <!-- Boss artwork, when the catalogue entry has one, sitting behind the card's content with a
        dark gradient over it for text contrast. Falls back to the red ambient tint carried by the
@@ -109,7 +109,7 @@
                hit points are already rendered as text beside the boss name. -->
           <div
             aria-hidden="true"
-            class="notch-tl-br relative mt-4 h-6 border border-text-primary/15 bg-surface-sunken [--notch:0.5rem]"
+            class="notch-tr notch-tr-edge relative mt-4 h-6 border border-text-primary/15 bg-surface-sunken [--notch:0.5rem]"
           >
             <div
               [class]="hpBarColorClass()"

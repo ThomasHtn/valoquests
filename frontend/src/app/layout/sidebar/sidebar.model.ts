@@ -1,19 +1,9 @@
 /**
- * Icon of a {@link NavItem}, matched against a `@switch` in the template
- * since each Lucide icon is its own standalone directive.
- */
-export type NavIcon =
-  'house' | 'users' | 'chart-column' | 'trophy' | 'skull' | 'target' | 'list-ordered';
-
-/**
  * Primary navigation entry.
+ *
+ * Carries no icon: every entry shows the same hexagon marker, as in the mockup.
  */
 export interface NavItem {
-  /**
-   * Icon displayed for this section.
-   */
-  readonly icon: NavIcon;
-
   /**
    * Suffix appended to `sidebar.nav.` to resolve this section's label.
    */

@@ -24,97 +24,112 @@
     [loadingText]="'overview.weeklyRanking.loading' | translate"
     padding="py-10"
   >
-    <!-- Podium spotlight: 1st place rendered larger and centered via `order`, so the DOM keeps its
-         natural reading order (1st, 2nd, 3rd) for assistive technology while the visual layout
-         reads as a podium. Each place stands on a plinth whose height, and not only its color,
-         encodes the rank. -->
-    <ol class="mt-4 grid grid-cols-3 items-end gap-3">
-      @for (entry of top3(); track entry.player.id) {
-        <li
-          [class.order-1]="entry.position === 2"
-          [class.order-2]="entry.position === 1"
-          [class.order-3]="entry.position === 3"
-        >
-          <a
-            [routerLink]="['/players', entry.player.id]"
-            class="focus-ring flex flex-col items-center text-center"
+    <!-- Two columns on wide screens: the podium on the leading edge, the rest of the field on the
+         trailing one, both settling on the same baseline. Below `lg` the two stack, since three
+         plinths and a row list cannot share a narrow viewport without either becoming unreadable. -->
+    <div class="mt-4 grid gap-4 lg:grid-cols-2 lg:items-end lg:gap-6">
+      <!-- Podium spotlight: 1st place rendered larger and centered via `order`, so the DOM keeps its
+           natural reading order (1st, 2nd, 3rd) for assistive technology while the visual layout
+           reads as a podium. Each place stands on a plinth whose height, and not only its color,
+           encodes the rank. -->
+      <ol class="grid grid-cols-3 items-end gap-3">
+        @for (entry of top3(); track entry.player.id) {
+          <li
+            [class.order-1]="entry.position === 2"
+            [class.order-2]="entry.position === 1"
+            [class.order-3]="entry.position === 3"
           >
-            <!-- The champion's gold glow is applied to this wrapper rather than to the hexagon
+            <a
+              [routerLink]="['/players', entry.player.id]"
+              class="focus-ring flex flex-col items-center text-center"
+            >
+              <!-- The champion's gold glow is applied to this wrapper rather than to the hexagon
                  itself: `filter` composites before `clip-path`, so a `drop-shadow` declared on the
                  very element that also clips to the hexagon would be clipped away with everything
                  else outside that shape. Applied here instead, it paints around the hexagon's
                  already-clipped silhouette. -->
-            <span
-              [class]="
-                entry.player.id === championPlayerId()
-                  ? 'drop-shadow-[0_0_6px_var(--color-accent-gold)]'
-                  : ''
-              "
-            >
-              <app-avatar
-                [priority]="entry.position === 1"
-                [size]="entry.position === 1 ? 'md' : 'sm'"
-                [src]="resolveAvatarUrl(entry.player.portrait)"
-                shape="hex"
-              />
-            </span>
+              <span
+                [class]="
+                  entry.player.id === championPlayerId()
+                    ? 'drop-shadow-[0_0_6px_var(--color-accent-gold)]'
+                    : ''
+                "
+              >
+                <app-avatar
+                  [priority]="entry.position === 1"
+                  [size]="entry.position === 1 ? 'lg' : 'md'"
+                  [src]="resolveAvatarUrl(entry.player.portrait)"
+                  shape="hex"
+                />
+              </span>
 
-            <p
-              [class]="podiumTextAccent(entry.position)"
-              class="font-display mt-2 flex items-center gap-1.5 text-base leading-none font-semibold"
-            >
-              {{ entry.player.displayName }}
-              @if (entry.player.id === championPlayerId()) {
-                <app-champion-badge />
-              }
-            </p>
+              <p
+                [class]="podiumTextAccent(entry.position)"
+                [class.text-2xl]="entry.position === 1"
+                class="font-display mt-3 flex items-center gap-1.5 text-xl leading-none font-semibold"
+              >
+                {{ entry.player.displayName }}
+                @if (entry.player.id === championPlayerId()) {
+                  <app-champion-badge />
+                }
+              </p>
 
-            <span
-              [class]="plinthClass(entry.position)"
-              class="mt-2.5 flex w-full flex-col items-center justify-start gap-2 border-t-3 px-2 py-3"
-            >
-              <!-- Zero-padded rank, the mockup's plate number. The translated ordinal it replaces
+              <span
+                [class]="plinthClass(entry.position)"
+                class="mt-3 flex w-full flex-col items-center justify-start gap-3 border-t-3 px-2 py-4"
+              >
+                <!-- Zero-padded rank, the mockup's plate number. The translated ordinal it replaces
                    stays available to screen readers, which have no use for the styling. -->
-              <span class="font-mono text-sm tracking-widest text-text-muted tabular-nums">
-                <span aria-hidden="true">{{ paddedRank(entry.position) }}</span>
-                <span class="sr-only">
-                  {{ 'overview.podium.rank.' + entry.position | translate }}
+                <span class="font-mono text-base tracking-widest text-text-muted tabular-nums">
+                  <span aria-hidden="true">{{ paddedRank(entry.position) }}</span>
+                  <span class="sr-only">
+                    {{ 'overview.podium.rank.' + entry.position | translate }}
+                  </span>
+                </span>
+                <span
+                  [class]="podiumTextAccent(entry.position)"
+                  [class.text-4xl]="entry.position === 1"
+                  class="font-display text-3xl leading-none font-bold tabular-nums"
+                >
+                  {{ entry.challengeDamage }}
+                  <span class="sr-only">{{ 'shared.damageBadge.label' | translate }}</span>
                 </span>
               </span>
-              <span
-                [class]="podiumTextAccent(entry.position)"
-                [class.text-3xl]="entry.position === 1"
-                class="font-display text-2xl leading-none font-bold tabular-nums"
-              >
-                {{ entry.challengeDamage }}
-                <span class="sr-only">{{ 'shared.damageBadge.label' | translate }}</span>
-              </span>
-            </span>
-          </a>
-        </li>
-      }
-    </ol>
-
-    <!-- Rest of the field: positions 4 to 6 as flat rows, each led by the same hexagon position
-         badge as the full ranking table so the two widgets read as one system. -->
-    @if (rest().length) {
-      <ul class="mt-3 flex flex-col gap-1.5">
-        @for (entry of rest(); track entry.player.id) {
-          <li>
-            <a
-              [routerLink]="['/players', entry.player.id]"
-              class="focus-ring-inset flex items-center gap-3 border-l-2 border-brand-500/35 bg-linear-to-r from-text-primary/5 to-transparent px-3.5 py-2.5 transition-colors hover:from-text-primary/10"
-            >
-              <app-position-badge [position]="entry.position" size="sm" />
-              <app-avatar [src]="resolveAvatarUrl(entry.player.portrait)" shape="hex" size="xs" />
-              <span class="flex-1 truncate text-sm text-text-primary">
-                {{ entry.player.displayName }}
-              </span>
-              <app-damage-badge [damage]="entry.challengeDamage" />
             </a>
           </li>
         }
-      </ul>
-    }
+      </ol>
+
+      <!-- Rest of the field: positions 4 to 6 as flat rows, each led by the same hexagon position
+           badge as the full ranking table so the two widgets read as one system. -->
+      @if (rest().length) {
+        <ul class="flex flex-col gap-2">
+          @for (entry of rest(); track entry.player.id) {
+            <li>
+              <a
+                [routerLink]="['/players', entry.player.id]"
+                class="focus-ring-inset flex items-center gap-4 border-l-3 border-brand-500/35 bg-linear-to-r from-text-primary/5 to-transparent px-4 py-3.5 transition-colors hover:from-text-primary/10"
+              >
+                <app-position-badge [position]="entry.position" size="md" />
+                <app-avatar [src]="resolveAvatarUrl(entry.player.portrait)" shape="hex" size="sm" />
+                <span class="flex-1 truncate text-lg text-text-primary">
+                  {{ entry.player.displayName }}
+                </span>
+                <!-- Damage as the mockup writes it here: the bare figure in the display face, no
+                     pill and no sword glyph. The badge treatment is reserved for the ranking
+                     tables, where a row carries several numbers and the reward needs marking out;
+                     on this strip it is the only value, and the chrome only added noise. -->
+                <span
+                  class="font-display text-xl leading-none font-semibold text-text-secondary tabular-nums"
+                >
+                  {{ entry.challengeDamage }}
+                  <span class="sr-only">{{ 'shared.damageBadge.label' | translate }}</span>
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </div>
   </app-resource-state>
 </section>

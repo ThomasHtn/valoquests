@@ -42,10 +42,10 @@ export const AVATAR_SIZES: Readonly<Record<AvatarSize, AvatarSizeMetrics>> = {
   },
   sm: { containerClass: 'h-9 w-9', roundedClass: 'rounded-full', iconClass: 'h-5 w-5', pixels: 36 },
   md: {
-    containerClass: 'h-11 w-11',
+    containerClass: 'h-16 w-16',
     roundedClass: 'rounded-full',
-    iconClass: 'h-6 w-6',
-    pixels: 44,
+    iconClass: 'h-8 w-8',
+    pixels: 64,
   },
   lg: {
     containerClass: 'h-24 w-24',

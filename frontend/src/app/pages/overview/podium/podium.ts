@@ -10,7 +10,6 @@ import { RankingEntry } from '@core/ranking/ranking.model';
 import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
-import { DamageBadge } from '@shared/damage-badge/damage-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ResourceState } from '@shared/resource-state/resource-state';
 
@@ -22,9 +21,9 @@ import { ResourceState } from '@shared/resource-state/resource-state';
  * reading as equals in a screenshot, or to anyone who cannot separate the three hues.
  */
 const PODIUM_PLINTH_CLASSES: readonly string[] = [
-  'h-28 border-brand-500 bg-linear-to-b from-brand-500/18 to-transparent',
-  'h-22 border-text-primary/50 bg-linear-to-b from-text-primary/8 to-transparent',
-  'h-18 border-podium-bronze/80 bg-linear-to-b from-text-primary/6 to-transparent',
+  'h-36 border-brand-500 bg-linear-to-b from-brand-500/18 to-transparent',
+  'h-28 border-text-primary/50 bg-linear-to-b from-text-primary/8 to-transparent',
+  'h-24 border-podium-bronze/80 bg-linear-to-b from-text-primary/6 to-transparent',
 ];
 
 /**
@@ -37,15 +36,7 @@ const PODIUM_PLINTH_CLASSES: readonly string[] = [
  */
 @Component({
   selector: 'app-podium',
-  imports: [
-    TranslatePipe,
-    RouterLink,
-    Avatar,
-    ChampionBadge,
-    DamageBadge,
-    PositionBadge,
-    ResourceState,
-  ],
+  imports: [TranslatePipe, RouterLink, Avatar, ChampionBadge, PositionBadge, ResourceState],
   templateUrl: './podium.html',
 })
 export class Podium {

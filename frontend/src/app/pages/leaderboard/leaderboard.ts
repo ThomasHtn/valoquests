@@ -1,21 +1,20 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { RouterLink } from '@angular/router';
-import {
-  LucideCheck,
-  LucideChevronDown,
-  LucideChevronUp,
-  LucideTarget,
-  LucideTrophy,
-} from '@lucide/angular';
+import { LucideCheck, LucideChevronDown, LucideChevronUp } from '@lucide/angular';
+import { interval } from 'rxjs';
 
 import { ChallengeIconView } from '@shared/challenge-icon-view/challenge-icon-view';
+import { formatDamage } from '@core/challenges/challenge-format.utils';
 import {
   resolveChallengeMetricLabel,
   resolveChallengeVisual,
 } from '@core/challenges/challenge-visual.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
+import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
+import { isoWeekNumber, RemainingTime, remainingWeekTime } from '@core/date/week-period.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
@@ -24,12 +23,12 @@ import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
-import { DamageBadge } from '@shared/damage-badge/damage-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ProgressCircle } from '@shared/progress-circle/progress-circle';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
+import { SectionDivider } from '@shared/section-divider/section-divider';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { RankingCell, RankingColumn, RankingRow } from './leaderboard.model';
 import {
@@ -40,13 +39,12 @@ import {
 } from './leaderboard.utils';
 
 /**
- * Weekly leaderboard page.
+ * Weekly leaderboard page — the squad's tactical matrix.
  *
- * Displays every tracked player's position, score and exact progress toward each challenge
- * selected for the active week, reusing the challenge color language from the challenges page so
- * both read as one system. Previously an in-page card of the overview's scroll-snap hero (still
- * called `WeeklyRanking` in sibling doc comments), extracted to its own route since it has no place
- * in the "Vue d'ensemble" mockup's single, non-scrolling hero screen. Distinct from `/ranking`,
+ * Crosses the seven tracked players with the five challenges drawn for the active week: one row
+ * per player, one column per challenge, so who is carrying the week and which challenge the squad
+ * is collectively stuck on are both readable in one glance. Reuses the challenge color language
+ * from the quest page, so a tier means the same thing on both screens. Distinct from `/ranking`,
  * which browses the finalized history of past weeks rather than the live current one.
  */
 @Component({
@@ -59,16 +57,14 @@ import {
     Tooltip,
     Avatar,
     ChampionBadge,
-    DamageBadge,
     PositionBadge,
     ProgressBar,
     ProgressCircle,
     ResourceState,
+    SectionDivider,
     LucideCheck,
     LucideChevronDown,
     LucideChevronUp,
-    LucideTarget,
-    LucideTrophy,
   ],
   templateUrl: './leaderboard.html',
   host: { class: PAGE_LAYOUT_CLASS },
@@ -86,9 +82,15 @@ export class Leaderboard {
   private readonly challengesApi = inject(ChallengesApi);
 
   /**
-   * i18n service used to resolve each challenge's translated category label.
+   * i18n service used to resolve each challenge's translated category label, and read for the
+   * active language when grouping damage amounts.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Current time, refreshed periodically to keep the countdown display accurate.
+   */
+  private readonly now = signal(new Date());
 
   /**
    * Reactive resource fetching the current week's ranking.
@@ -112,12 +114,35 @@ export class Leaderboard {
   protected readonly hasError = anyError(this.rankingResource, this.challengesResource);
 
   /**
+   * The active week as the ranking describes it, or `null` until it has loaded.
+   */
+  private readonly currentWeek = computed(() => resourceValue(this.rankingResource, null) ?? null);
+
+  /**
+   * Active week's ISO number, or `null` while loading.
+   */
+  protected readonly weekNumber = computed<number | null>(() => {
+    const currentWeek = this.currentWeek();
+    return currentWeek === null ? null : isoWeekNumber(currentWeek.weekStart);
+  });
+
+  /**
+   * Time left before the weekly rollover, or `null` while loading. Same countdown as the overview
+   * and quest pages, since it is the deadline all three screens are counting down to.
+   */
+  protected readonly remaining = computed<RemainingTime | null>(() => {
+    const currentWeek = this.currentWeek();
+    return currentWeek === null ? null : remainingWeekTime(currentWeek.weekEnd, this.now());
+  });
+
+  /**
    * Challenges selected for the active week, paired with their resolved icon and color treatment,
    * used both as table columns and to resolve each row's per-challenge cell visual.
    */
   protected readonly columns = computed<readonly RankingColumn[]>(() =>
     (resourceValue(this.challengesResource, null)?.challenges ?? []).map((challenge) => ({
       challengeId: challenge.id,
+      name: challenge.name,
       categoryLabel: resolveChallengeMetricLabel(challenge.metric, (key) =>
         this.translation.translate(key),
       ),
@@ -141,7 +166,8 @@ export class Leaderboard {
   protected readonly rows = computed<readonly RankingRow[]>(() => {
     const columns = this.columns();
     const championPlayerId = this.championPlayerId();
-    return (resourceValue(this.rankingResource, null)?.ranking ?? []).map((entry) => {
+    const language = this.translation.language();
+    return (this.currentWeek()?.ranking ?? []).map((entry) => {
       const cells: RankingCell[] = columns.map((column) => {
         const progress = entry.challengeProgress.find(
           (candidate) => candidate.challengeId === column.challengeId,
@@ -157,6 +183,8 @@ export class Leaderboard {
         };
       });
 
+      const bonus = entry.regularityBonus + entry.teamBonus;
+
       return {
         // The backend omits `position` entirely from the JSON payload when null (global
         // non-null serialization), so the parsed value is `undefined`, not `null` - normalized
@@ -166,7 +194,10 @@ export class Leaderboard {
         playerId: entry.player.id,
         displayName: entry.player.displayName,
         avatarUrl: resolvePlayerAvatarUrl(entry.player.portrait),
-        damage: entry.challengeDamage,
+        // `totalDamage`, not `challengeDamage`: the ranking is ordered on the total, so showing
+        // anything else next to a position would not explain the order it is in.
+        damageLabel: formatDamage(entry.totalDamage, language),
+        bonusLabel: bonus === 0 ? null : `+${formatDamage(bonus, language)}`,
         cells,
         isChampion: entry.player.id === championPlayerId,
       };
@@ -174,9 +205,34 @@ export class Leaderboard {
   });
 
   /**
+   * Damage the whole squad has dealt to the week's boss so far.
+   *
+   * Summed here rather than read from the API, like the quest page's potential total: it adds up
+   * amounts already on screen so the week's collective standing is legible without doing it by
+   * eye.
+   */
+  protected readonly totalDamage = computed<string>(() => {
+    const total = (this.currentWeek()?.ranking ?? []).reduce(
+      (sum, entry) => sum + entry.totalDamage,
+      0,
+    );
+    return formatDamage(total, this.translation.language());
+  });
+
+  /**
    * Placeholder line widths driving the loading skeleton.
    */
   protected readonly skeletonRows = SKELETON_ROWS;
+
+  /**
+   * Refreshes {@link now} every minute so the countdown stays accurate for the lifetime of the
+   * page.
+   */
+  constructor() {
+    interval(COUNTDOWN_REFRESH_INTERVAL_MS)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.now.set(new Date()));
+  }
 
   /**
    * Reloads both backing resources after a failure.

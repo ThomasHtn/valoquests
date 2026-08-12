@@ -50,6 +50,30 @@ export interface RankingEntry {
   readonly challengeDamage: number;
   readonly completedChallenges: number;
   readonly totalChallenges: number;
+
+  /**
+   * Damage dealt by the matches that counted this week, outside of any challenge.
+   */
+  readonly matchDamage: number;
+
+  /**
+   * Bonus earned for the number of distinct days the player was active this week.
+   */
+  readonly regularityBonus: number;
+
+  /**
+   * Sum of the per-challenge bonuses earned because enough of the squad cleared the same
+   * challenge.
+   */
+  readonly teamBonus: number;
+  readonly activeDays: number;
+
+  /**
+   * Damage dealt to the week's boss: {@link challengeDamage} + {@link matchDamage} +
+   * {@link regularityBonus} + {@link teamBonus}. This is what the ranking is ordered on, so it is
+   * the amount shown next to a position.
+   */
+  readonly totalDamage: number;
   readonly challengeProgress: readonly RankingChallengeProgress[];
 }
 

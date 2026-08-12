@@ -48,7 +48,7 @@
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2" skeleton>
     @for (placeholder of skeletonRows; track $index) {
       <div
-        class="notch-tr-bl flex min-h-40 items-center gap-4 border border-surface-700 bg-surface-900 p-4 [--notch:1rem] sm:gap-6 sm:p-6"
+        class="notch-tr notch-tr-edge flex min-h-40 items-center gap-4 border border-surface-700 bg-surface-900 p-4 [--notch:1rem] sm:gap-6 sm:p-6"
       >
         <span class="clip-hex h-14 w-12 shrink-0 bg-surface-700 sm:h-16 sm:w-14"></span>
         <span class="flex min-w-0 flex-1 flex-col gap-3">
@@ -68,7 +68,7 @@
     @for (row of rows(); track row.id) {
       <article
         [class]="row.visual.panelClass"
-        class="notch-tr-bl flex min-h-40 items-center gap-4 border bg-linear-[115deg] to-surface-sunken/60 p-4 [--notch:1rem] sm:gap-6 sm:p-6"
+        class="notch-tr notch-tr-edge flex min-h-40 items-center gap-4 border bg-linear-[115deg] to-surface-sunken/60 p-4 [--notch:1rem] sm:gap-6 sm:p-6"
       >
         <!-- Tier badge. Decorative: the difficulty it stands for is written beside it. -->
         <span
@@ -118,7 +118,7 @@
          solid, since it is the one slot on the grid that is not a challenge to clear. -->
     @if (nextDrawDate(); as nextDrawDate) {
       <div
-        class="notch-tr-bl flex min-h-40 flex-col justify-center gap-3 border border-dashed border-brand-500/30 bg-surface-sunken/45 p-4 [--notch:1rem] sm:p-6"
+        class="notch-tr notch-tr-edge flex min-h-40 flex-col justify-center gap-3 border border-dashed border-brand-500/30 bg-surface-sunken/45 p-4 [--notch:1rem] sm:p-6"
       >
         <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
           {{ 'overview.weeklyChallenges.nextDraw.label' | translate }}

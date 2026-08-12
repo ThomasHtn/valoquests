@@ -31,9 +31,10 @@
      inside the viewport instead of running off the bottom of the page. -->
 <div
   [attr.aria-label]="ariaLabel()"
+  [class.rounded-lg]="rounded() !== 'none'"
   [hidden]="!isOpen()"
   [id]="listboxId"
-  class="absolute top-full left-0 z-20 mt-2 max-h-72 min-w-full overflow-y-auto rounded-lg border border-surface-700 bg-surface-900 py-1 shadow-lg"
+  class="absolute top-full left-0 z-20 mt-2 max-h-72 min-w-full overflow-y-auto border border-surface-700 bg-surface-900 py-1 shadow-lg"
   role="listbox"
 >
   @if (emptyText() && options().length <= 1) {

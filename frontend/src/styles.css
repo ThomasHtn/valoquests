@@ -33,8 +33,8 @@
 /*
  * Angular silhouettes — the direction's core shape language.
  *
- * The direction has no rounded corners: panels are *cut*, badges are hexagons, segments are
- * sheared. These are declared once as utilities rather than repeated as inline `[clip-path:…]`
+ * The direction has no rounded corners: panels are *cut* at their top-right corner, badges are
+ * hexagons, segments are sheared. These are declared once as utilities rather than inline `[clip-path:…]`
  * arbitrary values, so the cut sizes stay consistent across cards and a reader sees an intent
  * ("this panel is notched") instead of a polygon.
  *
@@ -49,29 +49,50 @@
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
-/* Panel cut at its top-right and bottom-left corners. The direction's primary card silhouette. */
-@utility notch-tr-bl {
+/* Panel cut at its top-right corner only. The direction's single card silhouette: every notched
+   surface is cut on the same corner, so cards, bands and badges read as one family. */
+@utility notch-tr {
   clip-path: polygon(
     0 0,
     calc(100% - var(--notch, 1.5rem)) 0,
     100% var(--notch, 1.5rem),
     100% 100%,
-    var(--notch, 1.5rem) 100%,
-    0 calc(100% - var(--notch, 1.5rem))
+    0 100%
   );
 }
 
-/* Panel cut at its top-left and bottom-right corners — the mirrored silhouette, used to set a
-   secondary band apart from the card it sits under. */
-@utility notch-tl-br {
-  clip-path: polygon(
-    var(--notch, 0.75rem) 0,
-    100% 0,
-    100% calc(100% - var(--notch, 0.75rem)),
-    calc(100% - var(--notch, 0.75rem)) 100%,
-    0 100%,
-    0 var(--notch, 0.75rem)
-  );
+/*
+ * The diagonal edge of a `notch-tr` panel, for panels that carry a border.
+ *
+ * `clip-path` clips the border box, so a bordered panel's border stops dead at the cut and the
+ * diagonal is left bare. This draws the missing edge as a rotated rule pinned to the corner. It
+ * inherits `border-color` and `border-top-style` from the element, so the edge tracks hover and
+ * state changes (and dashed borders) without restating the color, and `transition` so it fades in
+ * step with the border it continues.
+ *
+ * Pair with `notch-tr`; the two read the same `--notch`. Set `--notch-border-width` alongside it
+ * when the element's border is not 1px, since it drives both the rule's weight and the offset that
+ * pulls it out of the padding box onto the border box the cut is traced on.
+ */
+@utility notch-tr-edge {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: calc(-1 * var(--notch-border-width, 1px));
+    right: calc(-1 * var(--notch-border-width, 1px));
+    /* The cut spans `--notch` on both axes, so the edge it leaves is that times √2. */
+    width: calc(var(--notch, 1.5rem) * 1.4142);
+    border-top: var(--notch-border-width, 1px) solid;
+    border-color: inherit;
+    border-top-style: inherit;
+    transition: inherit;
+    /* Pivot on the corner, drop to where the cut meets the right edge, then lay the rule back up
+       along the diagonal. Its stroke falls on the inner side of the cut, so the clip never eats it. */
+    transform-origin: 100% 0;
+    transform: translateY(var(--notch, 1.5rem)) rotate(45deg);
+  }
 }
 
 /* Sheared segment, leaning right — the progress bar's discrete slots. */

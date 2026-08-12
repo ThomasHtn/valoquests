@@ -12,17 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  LucideActivity,
-  LucideChevronRight,
-  LucideCrosshair,
-  LucideEllipsisVertical,
-  LucideGamepad2,
-  LucideLoaderCircle,
-  LucideSwords,
-  LucideTarget,
-  LucideZap,
-} from '@lucide/angular';
+import { LucideChevronRight, LucideEllipsisVertical, LucideLoaderCircle } from '@lucide/angular';
 
 import { formatLocalTime } from '@core/date/date-time.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -88,15 +78,9 @@ const PRIMARY_GAME_MODES: readonly GameMode[] = ['COMPETITIVE', 'UNRATED', 'DEAT
     RankIconView,
     ResourceState,
     Select,
-    LucideActivity,
     LucideChevronRight,
-    LucideCrosshair,
     LucideEllipsisVertical,
-    LucideGamepad2,
     LucideLoaderCircle,
-    LucideSwords,
-    LucideTarget,
-    LucideZap,
   ],
   templateUrl: './player-profile.html',
   host: {

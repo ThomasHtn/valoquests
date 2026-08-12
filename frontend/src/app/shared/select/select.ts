@@ -76,9 +76,10 @@ export class Select<T> {
   /**
    * Corner shape of the trigger: `'full'` for the standard pill (the default, used by every
    * filter dropdown), `'lg'` for a rounded rectangle when the trigger doubles as a page heading
-   * (e.g. the ranking history carousel's week selector).
+   * (e.g. the ranking history carousel's week selector), `'none'` for the square silhouette the
+   * "Expédition" direction calls for on screens that have already been restyled to it.
    */
-  public readonly rounded = input<'full' | 'lg'>('full');
+  public readonly rounded = input<'full' | 'lg' | 'none'>('full');
 
   /**
    * Visual weight of the trigger: `'solid'` for the standard bordered, gradient-filled pill (the

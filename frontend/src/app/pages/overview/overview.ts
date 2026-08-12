@@ -1,7 +1,5 @@
 import { Component, computed, signal, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
-import { LucideBookOpen } from '@lucide/angular';
 import { interval } from 'rxjs';
 
 import { ChallengesApi } from '@core/challenges/challenges-api';
@@ -28,15 +26,7 @@ import { TeamProgress } from './team-progress/team-progress';
  */
 @Component({
   selector: 'app-overview',
-  imports: [
-    TranslatePipe,
-    RouterLink,
-    BossEncounter,
-    Podium,
-    TeamProgress,
-    SectionDivider,
-    LucideBookOpen,
-  ],
+  imports: [TranslatePipe, BossEncounter, Podium, TeamProgress, SectionDivider],
   templateUrl: './overview.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

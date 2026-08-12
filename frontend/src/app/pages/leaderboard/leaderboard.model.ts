@@ -8,6 +8,12 @@ export interface RankingColumn {
   readonly challengeId: number;
 
   /**
+   * The challenge's own name, e.g. `"Roi du Deathmatch"`. Read by assistive technology in the
+   * matrix header, where a column is identified visually by its tier badge alone.
+   */
+  readonly name: string;
+
+  /**
    * Short category label derived from the challenge's metric (e.g. `"Kills"`), shown instead of
    * the challenge's full name so the table header stays scannable at a glance. The full name is
    * still carried by {@link tooltip}.
@@ -27,8 +33,9 @@ export interface RankingColumn {
    * Tooltip text shown when hovering the column's header, combining the challenge's name and
    * description.
    *
-   * Supplements the visible name with the challenge's description; it is no longer the only place
-   * the name exists, so it may stay out of reach of keyboard and touch.
+   * Supplements what the header shows visually: the tier badge and the target. The name and
+   * description it carries are also exposed to assistive technology through the header's
+   * `sr-only` caption, so nothing is reachable by pointer only.
    */
   readonly tooltip: string;
   readonly visual: ChallengeVisual;
@@ -89,7 +96,22 @@ export interface RankingRow {
   readonly playerId: number;
   readonly displayName: string;
   readonly avatarUrl: string | null;
-  readonly damage: number;
+
+  /**
+   * Pre-formatted damage dealt to the week's boss, grouped in the active language (`"12 400"`).
+   * This is the amount the ranking is ordered on, bonuses included.
+   */
+  readonly damageLabel: string;
+
+  /**
+   * Pre-formatted share of {@link damageLabel} that came from the regularity and team bonuses,
+   * signed (`"+2 350"`), or `null` when the player earned none.
+   *
+   * Broken out because the two are earned in completely different ways: damage is dealt by
+   * playing, bonuses are granted for showing up regularly and for clearing a challenge alongside
+   * the rest of the squad.
+   */
+  readonly bonusLabel: string | null;
   readonly cells: readonly RankingCell[];
 
   /**
