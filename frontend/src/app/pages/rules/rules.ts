@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
+import { SectionDivider } from '@shared/section-divider/section-divider';
 import {
   BOSS_CATEGORY_SHOWCASE,
   DIFFICULTY_SHOWCASE,
@@ -22,7 +23,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
  */
 @Component({
   selector: 'app-rules',
-  imports: [TranslatePipe, ChampionBadge],
+  imports: [TranslatePipe, ChampionBadge, SectionDivider],
   templateUrl: './rules.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

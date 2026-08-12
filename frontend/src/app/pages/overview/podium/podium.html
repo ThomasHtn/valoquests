@@ -25,19 +25,18 @@
     padding="py-10"
   >
     <!-- Two columns on wide screens: the podium on the leading edge, the rest of the field on the
-         trailing one, both settling on the same baseline. Below `lg` the two stack, since three
-         plinths and a row list cannot share a narrow viewport without either becoming unreadable.
+         trailing one, both stretched to the same row height so the list can sit at the top of that
+         column, level with the champion, rather than down at the plinths. Below `lg` the two stack,
+         since three plinths and a row list cannot share a narrow viewport without either becoming
+         unreadable.
 
-         `--podium-base` is the single measure the whole block is built from: the 3rd plinth stands
-         exactly that tall, the 2nd and 1st scale off it (see `PODIUM_PLINTH_CLASSES`), and the
-         rest-of-the-field list is given the same height, so its first row starts level with the
-         bronze cap. It tracks the viewport so the podium fills the screen it is on instead of
-         leaving the page half empty, with a floor at the natural height of three rows — below it
-         the rows would have to shrink — and a ceiling so a very tall display does not stretch the
-         block past what reads as a podium. -->
-    <div
-      class="mt-4 grid gap-4 [--podium-base:clamp(15.25rem,29vh,22rem)] lg:grid-cols-2 lg:items-end lg:gap-6"
-    >
+         `--podium-base` is the single measure the plinths are built from: the 3rd plinth stands
+         exactly that tall, the 2nd and 1st scale off it (see `PODIUM_PLINTH_CLASSES`). It tracks the
+         viewport so the podium fills the screen it is on instead of leaving the page half empty,
+         with a floor at the natural height of three plinth rows — below it the rows would have to
+         shrink — and a ceiling so a very tall display does not stretch the block past what reads as
+         a podium. -->
+    <div class="mt-4 grid gap-4 [--podium-base:clamp(13rem,24vh,18.5rem)] lg:grid-cols-2 lg:gap-6">
       <!-- Podium spotlight: 1st place rendered larger and centered via `order`, so the DOM keeps its
            natural reading order (1st, 2nd, 3rd) for assistive technology while the visual layout
            reads as a podium. Each place stands on a plinth whose height, and not only its color,
@@ -51,18 +50,19 @@
           >
             <a
               [routerLink]="['/players', entry.player.id]"
-              class="focus-ring flex flex-col items-center text-center"
+              class="focus-ring group flex flex-col items-center text-center transition-transform duration-200 ease-out hover:-translate-y-1"
             >
               <!-- The champion's gold glow is applied to this wrapper rather than to the hexagon
                  itself: `filter` composites before `clip-path`, so a `drop-shadow` declared on the
                  very element that also clips to the hexagon would be clipped away with everything
                  else outside that shape. Applied here instead, it paints around the hexagon's
-                 already-clipped silhouette. -->
+                 already-clipped silhouette. The same treatment lights up on hover/focus for every
+                 entry, in brand color, as the affordance that the plinth is a link to the profile. -->
               <span
                 [class]="
                   entry.player.id === championPlayerId()
                     ? 'drop-shadow-[0_0_6px_var(--color-accent-gold)]'
-                    : ''
+                    : 'transition-[filter] duration-200 group-hover:drop-shadow-[0_0_6px_var(--color-brand-500)] group-focus-visible:drop-shadow-[0_0_6px_var(--color-brand-500)]'
                 "
               >
                 <app-avatar
@@ -114,10 +114,10 @@
            badge as the full ranking table, and wearing the registry's row treatment — notched
            corner, leading rule, flat wash — so every list of players reads as one system. -->
       @if (rest().length) {
-        <!-- Height pinned to the same base as the 3rd plinth, the rows sharing it evenly: they
-             breathe instead of huddling at the bottom of the column, and the strip ends level with
-             the podium it sits beside. -->
-        <ul class="flex h-(--podium-base) flex-col gap-2">
+        <!-- The parent grid stretches this column to the podium's full height; the rows then share
+             that height evenly via `flex-1` so the list fills the same vertical span as the plinths
+             instead of huddling at the top and leaving the rest of the column empty. -->
+        <ul class="flex h-full flex-col gap-3">
           @for (entry of rest(); track entry.player.id) {
             <li class="flex-1">
               <a
@@ -127,7 +127,7 @@
                 <app-position-badge [position]="entry.position" />
                 <app-avatar [src]="resolveAvatarUrl(entry.player.portrait)" shape="hex" size="sm" />
                 <span
-                  class="font-display min-w-0 flex-1 truncate text-lg leading-none font-semibold text-text-primary"
+                  class="font-display min-w-0 flex-1 truncate text-lg leading-tight font-semibold text-text-primary"
                 >
                   {{ entry.player.displayName }}
                 </span>

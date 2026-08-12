@@ -75,7 +75,7 @@
           [appTooltip]="'sidebar.nav.' + item.labelKey | translate"
           [routerLinkActiveOptions]="{ exact: !!item.exactMatch }"
           [routerLink]="item.routerLink"
-          class="group focus-ring-inset relative flex min-h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-2 py-2 text-2xs/normal font-medium text-text-secondary transition-colors before:absolute before:inset-x-0 before:top-0 before:h-1 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary lg:min-h-0 lg:w-full lg:flex-none lg:flex-row lg:gap-3.5 lg:px-6 lg:py-3 lg:text-sm lg:before:inset-x-auto lg:before:inset-y-0 lg:before:left-0 lg:before:h-auto lg:before:w-1"
+          class="group focus-ring-inset relative flex min-h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-2 py-2 text-xs/normal font-medium text-brand-500 transition-colors before:absolute before:inset-x-0 before:top-0 before:h-1 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary lg:min-h-0 lg:w-full lg:flex-none lg:flex-row lg:gap-3.5 lg:px-6 lg:py-3 lg:text-sm lg:text-text-secondary lg:before:inset-x-auto lg:before:inset-y-0 lg:before:left-0 lg:before:h-auto lg:before:w-1"
           appTooltipPosition="right"
           ariaCurrentWhenActive="page"
           routerLinkActive="text-text-primary before:bg-brand-500 lg:bg-linear-to-r lg:from-brand-500/20 lg:to-transparent"
@@ -83,10 +83,11 @@
           <!-- Same hexagon marker on every entry, as in the mockup — no per-section pictogram.
                Hollow while inactive, the inner hex punched out of the rail's own surface; solid
                brand once active. Keyed off `aria-current`, which `routerLinkActive` sets, so the
-               active state needs no second source of truth. -->
+               active state needs no second source of truth. Rail only: on the tab bar it never
+               varies between entries, so it carries no information and is dropped there. -->
           <span
             aria-hidden="true"
-            class="relative block h-4.5 w-4 shrink-0 bg-current clip-hex group-aria-[current=page]:bg-brand-500"
+            class="relative hidden h-4.5 w-4 shrink-0 bg-current clip-hex group-aria-[current=page]:bg-brand-500 lg:block"
           >
             <span
               class="absolute inset-0.5 bg-surface-sunken clip-hex group-aria-[current=page]:hidden"

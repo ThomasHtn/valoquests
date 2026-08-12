@@ -55,7 +55,7 @@
        cells, so each value carries its own label instead (see the `lg:sr-only` captions below). -->
   <div
     aria-hidden="true"
-    class="hidden border-b border-brand-500/25 px-5 pb-3 lg:grid lg:grid-cols-[minmax(0,1fr)_11rem_12rem_6rem_7rem_6rem_1.5rem] lg:gap-x-4"
+    class="hidden border-b border-brand-500/25 px-5 pb-3 lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_11rem_12rem_6rem_7rem_6rem_1.5rem] lg:gap-x-4"
   >
     <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
       {{ 'players.columns.player' | translate }}
@@ -95,7 +95,7 @@
                 <span
                   [class.text-accent-gold]="row.isChampion"
                   [class.text-text-primary]="!row.isChampion"
-                  class="font-display truncate text-lg leading-none font-semibold"
+                  class="font-display truncate text-lg leading-tight font-semibold"
                 >
                   {{ row.displayName }}
                 </span>
@@ -114,7 +114,7 @@
             <span class="min-w-0">
               <span
                 [class]="row.tier.colorClass"
-                class="font-display block truncate text-base leading-none font-semibold uppercase"
+                class="font-display block truncate text-base leading-tight font-semibold uppercase"
               >
                 {{ row.tier.label }}
               </span>
