@@ -48,9 +48,17 @@ export interface RankingCell {
   readonly challengeId: number;
 
   /**
-   * Short category label derived from the challenge's metric (e.g. `"Kills"`), shown as the
-   * cell's label in the stacked card layout used below `lg`, where the table header carrying it
-   * is not rendered.
+   * The challenge's own name, e.g. `"Roi du Deathmatch"`.
+   *
+   * Labels the cell in the stacked card layout used below `xl`, where the tier badges identifying
+   * the columns are not rendered. The metric alone would not do: several of a week's five
+   * challenges routinely share one metric, so a card would list "Matches" three times over.
+   */
+  readonly name: string;
+
+  /**
+   * Short category label derived from the challenge's metric (e.g. `"Kills"`), read by assistive
+   * technology alongside the cell's value so the unit the number counts is announced with it.
    */
   readonly categoryLabel: string;
 

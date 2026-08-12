@@ -1,8 +1,10 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
@@ -21,10 +23,10 @@ import { ResourceState } from '@shared/resource-state/resource-state';
  * reading as equals in a screenshot, or to anyone who cannot separate the three hues.
  *
  * Every height derives from the `--podium-base` custom property declared on the two-column
- * container in the template: the 3rd plinth *is* that base, and the rest-of-the-field list is
- * given the exact same height. Since both columns sit on the same baseline, the 4th place row and
- * the bronze cap then line up by construction, at any base value, rather than through two
- * hardcoded heights that would drift apart the moment a row's padding changes.
+ * container in the template: the 3rd plinth *is* that base, and the other two are multiples of it.
+ * So the three stay in proportion at any base value, rather than through three hardcoded heights
+ * that would drift apart the moment a row's padding changes. The rest-of-the-field list beside
+ * them takes its height from the grid row the plinths set, and needs no measure of its own.
  */
 const PODIUM_PLINTH_CLASSES: readonly string[] = [
   'h-[calc(var(--podium-base)*1.4)] border-brand-500 bg-linear-to-b from-brand-500/18 to-transparent',
@@ -50,6 +52,11 @@ export class Podium {
    * Data-access service backing the shared current-ranking resource.
    */
   private readonly rankingApi = inject(RankingApi);
+
+  /**
+   * i18n service read for the active language when grouping damage amounts.
+   */
+  private readonly translation = inject(Translation);
 
   /**
    * Reactive resource fetching the current week's ranking, shared with `Leaderboard` and the
@@ -86,9 +93,13 @@ export class Podium {
   protected readonly top3 = computed(() => this.entries().slice(0, 3));
 
   /**
-   * Ranking entries for positions 4 to 6, shown as a compact preview strip.
+   * Every ranking entry below the podium, shown as a compact strip beside it.
+   *
+   * Not capped: the overview is the only screen a visitor is guaranteed to open, and a squad
+   * member silently missing from it — with no "see the full ranking" affordance anywhere on the
+   * page — reads as a bug rather than as a summary.
    */
-  protected readonly rest = computed(() => this.entries().slice(3, 6));
+  protected readonly rest = computed(() => this.entries().slice(3));
 
   /**
    * Resolves a player's avatar asset from their portrait field, exposed to the template.
@@ -99,6 +110,19 @@ export class Podium {
    * Resolves the text color for a podium entry's position, exposed to the template.
    */
   protected readonly podiumTextAccent = resolvePositionBadgeClass;
+
+  /**
+   * Groups a damage amount in the active language (`"12 400"`).
+   *
+   * The ranking table and the campaign timeline both print these figures grouped; the podium is
+   * the same number on another screen and has no reason to print it raw.
+   *
+   * @param damage - The raw damage amount.
+   * @returns The grouped amount.
+   */
+  protected formatDamage(damage: number): string {
+    return formatDamage(damage, this.translation.language());
+  }
 
   /**
    * Resolves the plinth treatment for a podium position.

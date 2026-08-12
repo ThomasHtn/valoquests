@@ -1,10 +1,10 @@
 <!-- Fill -->
 <div [class]="colorClass()" [style.width.%]="percentage()" class="h-full"></div>
 
-<!-- Leading-edge marker, pulled fully inside the fill by `-ml-0.5` so it stays visible when the
-     track is full. Skipped at 0 %, where it would otherwise sit on an empty track and read as a
-     value of its own. -->
-@if (edgeMarker() && percentage() > 0) {
+<!-- Leading-edge marker, pulled fully inside the fill by `-ml-0.5`. Skipped at 0 %, where it would
+     otherwise sit on an empty track and read as a value of its own, and at 100 %, where it merges
+     with the track's own edge and marks nothing. -->
+@if (edgeMarker() && percentage() > 0 && percentage() < 100) {
   <span
     [style.left.%]="percentage()"
     class="absolute inset-y-0 -ml-0.5 w-0.5 bg-text-primary"

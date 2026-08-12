@@ -20,6 +20,7 @@ import { Translation } from '@core/i18n/translation';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { SectionDivider } from '@shared/section-divider/section-divider';
+import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { ChallengeRow } from './challenges.model';
 
@@ -33,7 +34,7 @@ import { ChallengeRow } from './challenges.model';
  */
 @Component({
   selector: 'app-challenges',
-  imports: [TranslatePipe, ResourceState, SectionDivider],
+  imports: [TranslatePipe, ResourceState, SectionDivider, WeekCountdown],
   templateUrl: './challenges.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

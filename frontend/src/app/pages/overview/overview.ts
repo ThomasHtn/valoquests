@@ -7,6 +7,7 @@ import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
 import { formatDateRange, isoWeekNumber, remainingWeekTime } from '@core/date/week-period.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { SectionDivider } from '@shared/section-divider/section-divider';
+import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { WeekSummary } from './overview.model';
 import { BossEncounter } from './boss-encounter/boss-encounter';
@@ -26,7 +27,7 @@ import { TeamProgress } from './team-progress/team-progress';
  */
 @Component({
   selector: 'app-overview',
-  imports: [TranslatePipe, BossEncounter, Podium, TeamProgress, SectionDivider],
+  imports: [TranslatePipe, BossEncounter, Podium, TeamProgress, SectionDivider, WeekCountdown],
   templateUrl: './overview.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

@@ -4,7 +4,7 @@
 <aside
   [attr.aria-label]="'sidebar.label' | translate"
   [class]="railWidthClass()"
-  class="order-last flex shrink-0 flex-col border-t border-brand-500/20 bg-surface-sunken/95 lg:order-first lg:h-full lg:justify-between lg:border-t-0 lg:border-r lg:py-6 lg:transition-[width] lg:duration-200 motion-reduce:lg:transition-none"
+  class="order-last flex shrink-0 flex-col border-t border-brand-500/20 bg-surface-sunken/95 pb-[env(safe-area-inset-bottom)] lg:order-first lg:h-full lg:justify-between lg:border-t-0 lg:border-r lg:py-6 lg:transition-[width] lg:duration-200 motion-reduce:lg:transition-none"
 >
   <div>
     <div class="mb-5 hidden px-5 lg:block">
@@ -75,7 +75,7 @@
           [appTooltip]="'sidebar.nav.' + item.labelKey | translate"
           [routerLinkActiveOptions]="{ exact: !!item.exactMatch }"
           [routerLink]="item.routerLink"
-          class="group focus-ring-inset relative flex min-h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-2 py-2 text-xs/normal font-medium text-brand-500 transition-colors before:absolute before:inset-x-0 before:top-0 before:h-1 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary lg:min-h-0 lg:w-full lg:flex-none lg:flex-row lg:gap-3.5 lg:px-6 lg:py-3 lg:text-sm lg:text-text-secondary lg:before:inset-x-auto lg:before:inset-y-0 lg:before:left-0 lg:before:h-auto lg:before:w-1"
+          class="group focus-ring-inset relative flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-1 py-2 text-center text-2xs/tight font-medium text-text-secondary transition-colors sm:text-xs/tight before:absolute before:inset-x-0 before:top-0 before:h-1 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary lg:min-h-0 lg:w-full lg:flex-none lg:flex-row lg:gap-3.5 lg:px-6 lg:py-3 lg:text-start lg:text-sm lg:before:inset-x-auto lg:before:inset-y-0 lg:before:left-0 lg:before:h-auto lg:before:w-1"
           appTooltipPosition="right"
           ariaCurrentWhenActive="page"
           routerLinkActive="text-text-primary before:bg-brand-500 lg:bg-linear-to-r lg:from-brand-500/20 lg:to-transparent"
@@ -101,10 +101,21 @@
     </nav>
   </div>
 
-  <!-- Footer: last synchronization time. Rail only; the tab bar has no room for it. -->
-  <div class="hidden flex-col gap-3 px-5 pt-4 lg:flex">
+  <!-- Footer: last synchronization time and the language switch.
+
+       Two presentations, one markup, as with the nav above it. On the rail it is a stacked block
+       at the bottom. On the tab bar it becomes a single thin strip pinned *above* the tabs
+       (`order-first`), because both things it carries are needed there too: without it a phone has
+       no way to change language and no sign of whether the data on screen is fresh. Its own
+       content is what shrinks to fit — the "Synchronisation" caption drops, leaving the status dot
+       and the timestamp on one line beside the language pair. -->
+  <div
+    class="order-first flex items-center justify-between gap-3 border-b border-brand-500/15 px-4 py-1.5 lg:order-none lg:flex-col lg:items-stretch lg:gap-3 lg:border-b-0 lg:px-5 lg:pt-4 lg:pb-0"
+  >
     @if (collapsed()) {
-      <div class="flex w-full justify-center">
+      <!-- Collapsed rail only: below `lg` the sidebar is never collapsed, and the icon-only
+           timestamp needs a tooltip to be readable at all. -->
+      <div class="hidden w-full justify-center lg:flex">
         <button
           [attr.aria-label]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
           [appTooltip]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
@@ -117,16 +128,18 @@
       </div>
     } @else {
       <!-- Hairline fading out at both ends, the direction's divider, rather than a full-width
-           border: it separates the footer from the nav without closing the rail off. -->
+           border: it separates the footer from the nav without closing the rail off. The strip
+           above the tab bar carries its own top border instead, since there the footer sits
+           against the page rather than inside the rail. -->
       <span
         aria-hidden="true"
-        class="h-px bg-linear-to-r from-transparent via-brand-500/50 to-transparent"
+        class="hidden h-px bg-linear-to-r from-transparent via-brand-500/50 to-transparent lg:block"
       ></span>
-      <div>
-        <p class="tracking-label font-mono text-xs text-text-muted uppercase">
+      <div class="flex min-w-0 items-center gap-2 lg:block">
+        <p class="tracking-label hidden font-mono text-xs text-text-muted uppercase lg:block">
           {{ 'sidebar.lastSync.label' | translate }}
         </p>
-        <p class="mt-2 flex items-center gap-2 text-sm text-text-secondary">
+        <p class="flex min-w-0 items-center gap-2 text-sm text-text-secondary lg:mt-2">
           <span
             [class.bg-success]="apiStatus() === 'online'"
             [class.bg-danger]="apiStatus() === 'offline'"
@@ -137,9 +150,46 @@
           >
             <span class="sr-only">{{ apiStatusLabel() }}</span>
           </span>
-          {{ lastSyncLabel() }}
+          <span class="truncate">{{ lastSyncLabel() }}</span>
         </p>
       </div>
     }
+
+    <!-- Language. Two of them, so a segmented pair rather than a dropdown: both options stay on
+         screen and switching is one press, where a select would hide the alternative behind an
+         open-and-pick round trip. The pair stacks on the collapsed rail, too narrow to hold it
+         side by side.
+
+         Each button is named after its language rather than after the switch it performs: with
+         `aria-pressed` carrying the state, "Switch to English" on the button that *is* already
+         English announces an action that does nothing. The name is spelled out rather than left as
+         the visible two-letter code, which a screen reader would otherwise read out letter by
+         letter, and it rides along as a tooltip for the same reason a sighted reader has. -->
+    <div
+      [attr.aria-label]="'sidebar.language.label' | translate"
+      [class]="languageGroupClass()"
+      class="flex shrink-0 gap-1"
+      role="group"
+    >
+      @for (candidate of supportedLanguages; track candidate) {
+        @let languageName = 'sidebar.language.names.' + candidate | translate;
+
+        <button
+          (click)="switchLanguage(candidate)"
+          [attr.aria-label]="languageName"
+          [attr.aria-pressed]="language() === candidate"
+          [appTooltip]="languageName"
+          [class]="
+            language() === candidate
+              ? 'border-brand-500/45 bg-brand-500/15 text-brand-500'
+              : 'border-surface-700 bg-surface-900 text-text-muted hover:border-surface-600 hover:bg-surface-800 hover:text-text-primary'
+          "
+          class="notch-tr notch-tr-edge focus-ring-inset tracking-label flex min-h-9 min-w-10 cursor-pointer items-center justify-center border px-2 font-mono text-2xs font-semibold uppercase transition-colors [--notch:0.375rem] motion-safe:active:scale-[0.96]"
+          type="button"
+        >
+          {{ candidate }}
+        </button>
+      }
+    </div>
   </div>
 </aside>

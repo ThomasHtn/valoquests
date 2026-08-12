@@ -5,6 +5,7 @@ import { LucideMenu, LucideRefreshCw } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { Language } from '@core/i18n/translation.model';
 import { PlayersApi } from '@core/players/players-api';
 import { NAV_ITEMS } from './sidebar.constants';
 import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './sidebar.utils';
@@ -12,8 +13,9 @@ import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './
 /**
  * Persistent navigation sidebar.
  *
- * Displays the primary navigation and the last synchronization time. Renders as a vertical rail on
- * `lg` and above, where it can be collapsed to icons only, and as a bottom tab bar below it.
+ * Displays the primary navigation, the last synchronization time and the language switch. Renders
+ * as a vertical rail on `lg` and above, where it can be collapsed to icons only, and as a bottom
+ * tab bar below it.
  *
  * The host is `display: contents` so the inner `<aside>` is itself the flex item of the
  * application shell, which is what lets it reorder from first (rail) to last (tab bar).
@@ -47,6 +49,16 @@ export class Sidebar {
   protected readonly navItems = NAV_ITEMS;
 
   /**
+   * Languages the switcher offers, in display order.
+   */
+  protected readonly supportedLanguages = this.translation.supportedLanguages;
+
+  /**
+   * Currently active language, marking the pressed button of the switcher.
+   */
+  protected readonly language = this.translation.language;
+
+  /**
    * Width utility applied to the rail, reflecting {@link collapsed}.
    *
    * Resolved here rather than through `[class.lg:w-20]` bindings because Angular class bindings
@@ -75,6 +87,15 @@ export class Sidebar {
    * shares the same markup.
    */
   protected readonly navLabelClass = computed(() => (this.collapsed() ? 'lg:hidden' : ''));
+
+  /**
+   * Direction utility applied to the language switcher: the pair stacks on a collapsed rail, which
+   * is too narrow to hold two buttons side by side, and stays a row everywhere else.
+   *
+   * Resolved here for the same reason as {@link navItemClass}: a Tailwind variant prefix cannot be
+   * expressed through an Angular class binding.
+   */
+  protected readonly languageGroupClass = computed(() => (this.collapsed() ? 'lg:flex-col' : ''));
 
   /**
    * Reactive resource fetching every tracked player's synchronization status.
@@ -123,5 +144,19 @@ export class Sidebar {
    */
   protected toggleCollapsed(): void {
     this.collapsed.update((collapsed) => !collapsed);
+  }
+
+  /**
+   * Switches the application to `language`.
+   *
+   * The returned promise is deliberately not awaited: the switch is already reflected by the
+   * `language` signal the moment it is set, and the dictionary it then loads swaps in on its own
+   * through {@link TranslatePipe}. Failures are handled inside the service, which falls back to
+   * rendering raw keys rather than rejecting.
+   *
+   * @param language - The language to switch to.
+   */
+  protected switchLanguage(language: Language): void {
+    void this.translation.setLanguage(language);
   }
 }

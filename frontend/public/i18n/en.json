@@ -97,17 +97,20 @@
       },
       "title": "This week's podium"
     },
-    "tagline": "Complete missions every week to bring down fearsome bosses!",
     "teamProgress": {
-      "contributors": "{{count}} player(s) contributed this week",
+      "contributors": {
+        "one": "{{count}} player contributed this week",
+        "other": "{{count}} players contributed this week"
+      },
       "progressLabel": "Collective progress"
     },
     "title": "Overview",
-    "week": {
-      "countdown": "Ends in {{days}}d {{hours}}h {{minutes}}m"
-    },
+    "week": {},
     "weeklyChallenges": {
-      "completedCount": "{{completed}} of {{total}} completed",
+      "completedCount": {
+        "one": "{{count}} of {{total}} challenge done",
+        "other": "{{count}} of {{total}} challenges done"
+      },
       "damageLabel": "Damage",
       "difficulty": {
         "EASY": "Easy",
@@ -146,8 +149,7 @@
       "columns": {
         "bonusDamage": "Bonus damage",
         "damage": "Damage",
-        "player": "Player",
-        "position": "#"
+        "player": "Player"
       },
       "completed": "Challenge completed",
       "empty": "No ranking is available this week.",
@@ -159,8 +161,14 @@
       "title": "Squad matrix",
       "totalDamage": "Total damage · {{damage}}",
       "variation": {
-        "down": "{{count}} place(s) lost",
-        "up": "{{count}} place(s) gained"
+        "down": {
+          "one": "{{count}} place lost",
+          "other": "{{count}} places lost"
+        },
+        "up": {
+          "one": "{{count}} place gained",
+          "other": "{{count}} places gained"
+        }
       }
     }
   },
@@ -235,8 +243,8 @@
   "players": {
     "allSeasons": "All-season statistics",
     "columns": {
-      "headshotPercentage": "Headshot %",
-      "kda": "KDA",
+      "headshotPercentage": "HS%",
+      "kda": "K/D",
       "matchesPlayed": "Matches",
       "player": "Player",
       "rank": "Rank",
@@ -245,9 +253,12 @@
     "empty": "No player is tracked yet.",
     "error": "Failed to load players.",
     "eyebrow": "Players · Squad registry",
-    "heading": "{{count}} tracked players",
+    "heading": {
+      "one": "{{count}} tracked player",
+      "other": "{{count}} tracked players"
+    },
     "loading": "Loading players…",
-    "subtitle": "Rank, win rate and accuracy for every player, from the highest ranked down.",
+    "subtitle": "Rank, win rate and headshots for every player, from the highest ranked down.",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -321,8 +332,7 @@
       "names": {
         "en": "English",
         "fr": "French"
-      },
-      "tooltip": "Switch to {{language}}"
+      }
     },
     "lastSync": {
       "error": "Unavailable",

@@ -101,8 +101,10 @@
                   [class.text-4xl]="entry.position === 1"
                   class="font-display text-3xl leading-none font-bold tabular-nums"
                 >
-                  {{ entry.challengeDamage }}
-                  <span class="sr-only">{{ 'shared.damageBadge.label' | translate }}</span>
+                  {{ formatDamage(entry.challengeDamage) }}
+                  <span class="sr-only">
+                    {{ 'overview.weeklyRanking.columns.damage' | translate }}
+                  </span>
                 </span>
               </span>
             </a>
@@ -110,19 +112,24 @@
         }
       </ol>
 
-      <!-- Rest of the field: positions 4 to 6 as flat rows, each led by the same hexagon position
-           badge as the full ranking table, and wearing the registry's row treatment — notched
-           corner, leading rule, flat wash — so every list of players reads as one system. -->
+      <!-- Rest of the field: every player below the podium as a flat row, each led by the same
+           hexagon position badge as the full ranking table, and wearing the registry's row
+           treatment — notched corner, leading rule, flat wash — so every list of players reads as
+           one system. -->
       @if (rest().length) {
-        <!-- The parent grid stretches this column to the podium's full height; the rows then share
-             that height evenly via `flex-1` so the list fills the same vertical span as the plinths
-             instead of huddling at the top and leaving the rest of the column empty. -->
-        <ul class="flex h-full flex-col gap-3">
+        <!-- The parent grid stretches this column to the podium's full height. The rows keep the
+             registry's own height rather than sharing that span via `flex-1` — stretched over a
+             podium's worth of column they turn into near-empty bands, and a row means the same
+             thing here as in the ranking table, so it should measure the same. Centering the group
+             in the leftover space is what keeps the column from reading as top-heavy; `min-h-full`
+             rather than `h-full` so a squad longer than the podium is tall grows the row instead
+             of overflowing it. -->
+        <ul class="flex min-h-full flex-col justify-center gap-3">
           @for (entry of rest(); track entry.player.id) {
-            <li class="flex-1">
+            <li>
               <a
                 [routerLink]="['/players', entry.player.id]"
-                class="notch-tr focus-ring-inset flex h-full items-center gap-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:px-5"
+                class="notch-tr focus-ring-inset flex items-center gap-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:px-5"
               >
                 <app-position-badge [position]="entry.position" />
                 <app-avatar [src]="resolveAvatarUrl(entry.player.portrait)" shape="hex" size="sm" />
@@ -138,8 +145,10 @@
                 <span
                   class="font-display text-lg leading-none font-bold text-text-secondary tabular-nums"
                 >
-                  {{ entry.challengeDamage }}
-                  <span class="sr-only">{{ 'shared.damageBadge.label' | translate }}</span>
+                  {{ formatDamage(entry.challengeDamage) }}
+                  <span class="sr-only">
+                    {{ 'overview.weeklyRanking.columns.damage' | translate }}
+                  </span>
                 </span>
               </a>
             </li>

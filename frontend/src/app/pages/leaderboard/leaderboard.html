@@ -14,19 +14,7 @@
       </h1>
     </div>
 
-    <div class="text-right">
-      <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
-        {{ 'overview.header.timeLabel' | translate }}
-      </p>
-      @if (remaining(); as remaining) {
-        <p class="font-display mt-1.5 text-2xl leading-none font-bold text-brand-500">
-          {{
-            'overview.header.timeRemaining'
-              | translate: { days: remaining.days, hours: remaining.hours }
-          }}
-        </p>
-      }
-    </div>
+    <app-week-countdown [remaining]="remaining()" />
   </div>
 
   <p class="mt-2 text-lead text-text-secondary">
@@ -247,7 +235,8 @@
                 <app-challenge-icon-view [icon]="cell.visual.icon" class="h-3.5 w-3.5" />
               </span>
               <dt class="min-w-0 flex-1 truncate text-sm text-text-secondary">
-                {{ cell.categoryLabel }}
+                {{ cell.name }}
+                <span class="sr-only">— {{ cell.categoryLabel }}</span>
               </dt>
               <!-- Fixed width, regardless of whether the bar is shown or of the badge's own
                    content width: the bar's leading edge and the badge's trailing edge must both

@@ -63,7 +63,7 @@
       "line1": "Une escouade.",
       "line2": "Un territoire à reconquérir."
     },
-    "hint": "Cliquez sur la boussole pour entrer",
+    "hint": "Clique sur la boussole pour entrer",
     "title": "Expédition",
     "weekLabel": "Expédition · Semaine {{week}}",
     "weekLabelPending": "Expédition"
@@ -97,17 +97,20 @@
       },
       "title": "Podium de la semaine"
     },
-    "tagline": "Accomplissez des missions chaque semaine pour venir à bout de boss redoutables !",
     "teamProgress": {
-      "contributors": "{{count}} joueur(s) ont contribué cette semaine",
+      "contributors": {
+        "one": "{{count}} joueur a contribué cette semaine",
+        "other": "{{count}} joueurs ont contribué cette semaine"
+      },
       "progressLabel": "Progression collective"
     },
     "title": "Vue d'ensemble",
-    "week": {
-      "countdown": "Fin dans {{days}}j {{hours}}h {{minutes}}m"
-    },
+    "week": {},
     "weeklyChallenges": {
-      "completedCount": "{{completed}} terminés sur {{total}}",
+      "completedCount": {
+        "one": "{{count}} défi terminé sur {{total}}",
+        "other": "{{count}} défis terminés sur {{total}}"
+      },
       "damageLabel": "Dégâts",
       "difficulty": {
         "EASY": "Facile",
@@ -146,8 +149,7 @@
       "columns": {
         "bonusDamage": "Dégâts bonus",
         "damage": "Dégâts",
-        "player": "Joueur",
-        "position": "#"
+        "player": "Joueur"
       },
       "completed": "Défi terminé",
       "empty": "Aucun classement n'est disponible cette semaine.",
@@ -159,8 +161,14 @@
       "title": "Matrice de l'escouade",
       "totalDamage": "Dégâts cumulés · {{damage}}",
       "variation": {
-        "down": "{{count}} place(s) perdue(s)",
-        "up": "{{count}} place(s) gagnée(s)"
+        "down": {
+          "one": "{{count}} place perdue",
+          "other": "{{count}} places perdues"
+        },
+        "up": {
+          "one": "{{count}} place gagnée",
+          "other": "{{count}} places gagnées"
+        }
       }
     }
   },
@@ -221,7 +229,7 @@
       "headshotPercentage": "HS%",
       "kda": "K/D",
       "losses": "{{count}} D",
-      "matchesPlayed": "Matches",
+      "matchesPlayed": "Matchs",
       "record": "{{wins}} V / {{losses}} D",
       "winRate": "Winrate",
       "wins": "{{count}} V"
@@ -235,8 +243,8 @@
   "players": {
     "allSeasons": "Statistiques toutes saisons",
     "columns": {
-      "headshotPercentage": "Précision",
-      "kda": "KDA",
+      "headshotPercentage": "HS%",
+      "kda": "K/D",
       "matchesPlayed": "Matchs",
       "player": "Joueur",
       "rank": "Rang",
@@ -245,9 +253,12 @@
     "empty": "Aucun joueur suivi pour le moment.",
     "error": "Impossible de charger les joueurs.",
     "eyebrow": "Joueurs · Registre de l'escouade",
-    "heading": "{{count}} joueurs suivis",
+    "heading": {
+      "one": "{{count}} joueur suivi",
+      "other": "{{count}} joueurs suivis"
+    },
     "loading": "Chargement des joueurs…",
-    "subtitle": "Rang, winrate et précision de chaque joueur, du mieux classé au dernier.",
+    "subtitle": "Rang, winrate et headshots de chaque joueur, du mieux classé au dernier.",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -285,7 +296,7 @@
           "MINOR": "Barre courte : l'escouade le plie souvent en milieu de semaine.",
           "STANDARD": "Le rythme normal : il faut que tout le monde s'y mette."
         },
-        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade. Chaque coup porté par n'importe qui l'entame. Terrassez-le avant dimanche soir, sinon il survit jusqu'au combat suivant.",
+        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade. Chaque coup porté par n'importe qui l'entame. Terrasse-le avant dimanche soir, sinon il survit jusqu'au combat suivant.",
         "title": "Un boss, une barre de vie commune"
       },
       "challenges": {
@@ -321,8 +332,7 @@
       "names": {
         "en": "Anglais",
         "fr": "Français"
-      },
-      "tooltip": "Passer en {{language}}"
+      }
     },
     "lastSync": {
       "error": "Indisponible",

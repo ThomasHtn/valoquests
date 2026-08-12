@@ -4,8 +4,10 @@ import { LucideSkull, LucideSwords } from '@lucide/angular';
 
 import { BossApi } from '@core/boss/boss-api';
 import { resolveBossHpBarColorClass } from '@core/boss/boss-visual.utils';
+import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
 import { ResourceState } from '@shared/resource-state/resource-state';
 
 /**
@@ -26,6 +28,11 @@ export class BossEncounter {
    * Data-access service backing the shared current-boss resource.
    */
   private readonly bossApi = inject(BossApi);
+
+  /**
+   * i18n service read for the active language when grouping hit-point amounts.
+   */
+  private readonly translation = inject(Translation);
 
   /**
    * Reactive resource fetching the active week's boss confrontation.
@@ -51,10 +58,27 @@ export class BossEncounter {
    * Hit points the boss has left, floored at zero once damage dealt reaches its effective hit
    * points.
    */
-  protected readonly remainingHp = computed(() => {
+  private readonly remainingHp = computed(() => {
     const boss = this.boss();
     return boss ? Math.max(0, boss.effectiveHp - boss.totalDamageDealt) : 0;
   });
+
+  /**
+   * Remaining and total hit points, grouped in the active language (`"66 500"`).
+   *
+   * Grouped rather than printed raw: the campaign timeline already formats the very same figures
+   * that way (see `Boss`), and a five-digit health pool is unreadable without the separator.
+   */
+  protected readonly remainingHpLabel = computed(() =>
+    formatDamage(this.remainingHp(), this.translation.language()),
+  );
+
+  /**
+   * Total hit points, grouped like {@link remainingHpLabel}.
+   */
+  protected readonly effectiveHpLabel = computed(() =>
+    formatDamage(this.boss()?.effectiveHp ?? 0, this.translation.language()),
+  );
 
   /**
    * Share of hit points the boss has left, from 0 to 100.

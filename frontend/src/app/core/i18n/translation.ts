@@ -73,12 +73,18 @@ export class Translation {
   /**
    * Resolves `key` against the currently loaded dictionary.
    *
+   * An entry may be a plain string, or — when the sentence changes with a quantity — an object of
+   * `one` and `other` branches picked from a numeric `count` parameter (see
+   * {@link resolvePluralBranch}). That is what keeps the interface off `"{{count}} joueur(s)"`,
+   * which reads as an unfinished string rather than as a sentence.
+   *
    * @param key - Dot-separated dictionary path (e.g. `sidebar.nav.overview`).
-   * @param params - Optional placeholder values substituted into the translated string.
+   * @param params - Optional placeholder values substituted into the translated string. A numeric
+   * `count` additionally selects the plural branch of a pluralized entry.
    * @returns The translated string, or `key` itself when no translation is found.
    */
   public translate(key: string, params?: Readonly<Record<string, string | number>>): string {
-    const value: unknown = key
+    const entry: unknown = key
       .split('.')
       .reduce<unknown>(
         (node, segment) =>
@@ -88,7 +94,8 @@ export class Translation {
         this.dictionary(),
       );
 
-    if (typeof value !== 'string') {
+    const value = this.resolvePluralBranch(entry, params?.['count']);
+    if (value === null) {
       return key;
     }
 
@@ -100,6 +107,33 @@ export class Translation {
       (result, [name, replacement]) => result.replaceAll(`{{${name}}}`, String(replacement)),
       value,
     );
+  }
+
+  /**
+   * Narrows a dictionary entry to the single string to render.
+   *
+   * A pluralized entry carries `one` and `other` branches; which one applies depends on the active
+   * language, not only on the count. French treats 0 as singular ("0 joueur"), English does not
+   * ("0 players") — hence the rule below rather than a shared `count === 1`.
+   *
+   * @param entry - The raw dictionary entry, of unknown shape.
+   * @param count - The `count` parameter passed to {@link translate}, if any.
+   * @returns The string to render, or `null` when the entry is not renderable.
+   */
+  private resolvePluralBranch(entry: unknown, count: string | number | undefined): string | null {
+    if (typeof entry === 'string') {
+      return entry;
+    }
+
+    if (typeof entry !== 'object' || entry === null || typeof count !== 'number') {
+      return null;
+    }
+
+    const branches = entry as TranslationDictionary;
+    const isSingular = this.language() === 'fr' ? Math.abs(count) < 2 : Math.abs(count) === 1;
+    const branch = branches[isSingular ? 'one' : 'other'];
+
+    return typeof branch === 'string' ? branch : null;
   }
 
   /**

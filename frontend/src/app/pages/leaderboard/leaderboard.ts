@@ -29,6 +29,7 @@ import { ProgressCircle } from '@shared/progress-circle/progress-circle';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { SectionDivider } from '@shared/section-divider/section-divider';
+import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { RankingCell, RankingColumn, RankingRow } from './leaderboard.model';
 import {
@@ -62,6 +63,7 @@ import {
     ProgressCircle,
     ResourceState,
     SectionDivider,
+    WeekCountdown,
     LucideCheck,
     LucideChevronDown,
     LucideChevronUp,
@@ -174,6 +176,7 @@ export class Leaderboard {
         );
         return {
           challengeId: column.challengeId,
+          name: column.name,
           categoryLabel: column.categoryLabel,
           currentValueLabel: buildCurrentValueLabel(progress),
           targetValueLabel: buildTargetValueLabel(progress),

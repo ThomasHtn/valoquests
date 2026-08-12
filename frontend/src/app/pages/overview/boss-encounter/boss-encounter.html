@@ -83,9 +83,9 @@
               {{ encounter.boss.name }}
             </h2>
             <p class="font-display shrink-0 text-2xl leading-none font-bold tabular-nums">
-              <span class="text-accent-red">{{ remainingHp() }}</span>
+              <span class="text-accent-red">{{ remainingHpLabel() }}</span>
               <span class="text-base text-text-muted">
-                / {{ encounter.effectiveHp }} {{ 'overview.bossEncounter.hpUnit' | translate }}
+                / {{ effectiveHpLabel() }} {{ 'overview.bossEncounter.hpUnit' | translate }}
               </span>
             </p>
           </div>
@@ -112,7 +112,9 @@
               [style.width.%]="remainingPercentage()"
               class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
             ></div>
-            @if (remainingPercentage() > 0) {
+            <!-- Skipped on an untouched boss: at 100 % the marker lands on the cut corner and is
+                 sliced into a stray wedge, and there is no drained edge for it to mark yet. -->
+            @if (remainingPercentage() > 0 && remainingPercentage() < 100) {
               <span
                 [style.left.%]="remainingPercentage()"
                 class="absolute inset-y-0 -ml-0.5 w-0.5 bg-text-primary"

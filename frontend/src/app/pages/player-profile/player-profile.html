@@ -122,9 +122,9 @@
             [class]="
               gameModeFilter() === mode
                 ? 'border-brand-500/40 bg-brand-500/15 text-brand-500'
-                : 'border-text-primary/15 text-text-secondary hover:border-brand-500/40 hover:text-text-primary'
+                : 'border-surface-700 bg-surface-900 text-text-secondary hover:border-surface-600 hover:bg-surface-800 hover:text-text-primary'
             "
-            class="notch-tr notch-tr-edge focus-ring-inset cursor-pointer border px-4 py-2 text-sm font-semibold transition-colors [--notch:0.5rem]"
+            class="notch-tr notch-tr-edge focus-ring-inset min-h-10 cursor-pointer border px-4 py-2 text-sm font-semibold transition-colors [--notch:0.5rem] motion-safe:active:scale-[0.96]"
             type="button"
           >
             {{ 'playerProfile.matches.gameMode.' + mode | translate }}
@@ -141,10 +141,10 @@
           [class]="
             overflowGameModeActiveLabel()
               ? 'border-brand-500/40 bg-brand-500/15 text-brand-500'
-              : 'border-transparent text-text-muted hover:text-text-primary'
+              : 'border-surface-700 bg-surface-900 text-text-muted hover:border-surface-600 hover:bg-surface-800 hover:text-text-primary'
           "
           aria-haspopup="menu"
-          class="notch-tr notch-tr-edge focus-ring-inset flex cursor-pointer items-center gap-1.5 border px-2.5 py-2 text-sm font-semibold transition-colors [--notch:0.5rem]"
+          class="notch-tr notch-tr-edge focus-ring-inset flex min-h-10 min-w-10 cursor-pointer items-center justify-center gap-1.5 border px-2.5 py-2 text-sm font-semibold transition-colors [--notch:0.5rem] motion-safe:active:scale-[0.96]"
           type="button"
         >
           @if (overflowGameModeActiveLabel(); as activeLabel) {
@@ -156,7 +156,7 @@
         @if (isGameModeMenuOpen()) {
           <div
             [attr.aria-label]="'playerProfile.filters.moreGameModes' | translate"
-            class="absolute top-full right-0 z-20 mt-2 min-w-40 border border-surface-700 bg-surface-900 py-1"
+            class="notch-tr absolute top-full right-0 z-20 mt-2 min-w-40 border-l-2 border-brand-500/50 bg-surface-900 py-1 [--notch:0.5rem]"
             role="menu"
           >
             @for (option of overflowGameModeOptions(); track option.value) {
@@ -164,7 +164,7 @@
                 (click)="selectOverflowGameMode(option.value)"
                 [attr.aria-checked]="gameModeFilter() === option.value"
                 [class.text-brand-500]="gameModeFilter() === option.value"
-                class="block w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-text-primary transition-colors hover:bg-surface-800"
+                class="block w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-text-primary transition-[background-color,scale] hover:bg-surface-800 motion-safe:active:scale-[0.96]"
                 role="menuitemradio"
                 type="button"
               >
@@ -308,7 +308,11 @@
         </p>
       </div>
 
-      <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
+      <!-- Spans the trailing gap on the two- and three-column grids: as the sixth of six tiles it
+           would otherwise sit alone against an empty cell. -->
+      <div
+        class="col-span-2 border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5 lg:col-span-1"
+      >
         <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
           {{ 'playerProfile.stats.matchesPlayed' | translate }}
         </p>
