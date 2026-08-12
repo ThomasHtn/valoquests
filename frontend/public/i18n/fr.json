@@ -31,7 +31,7 @@
       "next": "Semaine suivante",
       "portrait": "Portrait du boss",
       "previous": "Semaine précédente",
-      "quests": "Quêtes",
+      "quests": "Défis",
       "ranking": "Classement"
     },
     "progress": "{{defeated}} boss vaincus · {{fought}} affrontés · {{damage}} dégâts",
@@ -39,7 +39,7 @@
       "current": "En cours",
       "upcoming": "À venir"
     },
-    "subtitle": "Chaque semaine, un boss. Du premier affrontement jusqu'aux cibles encore scellées.",
+    "subtitle": "Un boss par semaine, du premier affrontement à ceux encore verrouillés.",
     "timeline": {
       "ariaLabel": "Chronologie des combats de boss"
     },
@@ -54,7 +54,7 @@
     }
   },
   "landing": {
-    "body": "Chaque partie fait avancer l'escouade sur la carte de la semaine. Cinq étapes à franchir, une menace à repousser avant dimanche soir.",
+    "body": "Chaque partie fait avancer l'escouade sur la carte de la semaine. Cinq défis à relever, une menace à repousser avant dimanche soir.",
     "compass": {
       "action": "Entrer",
       "caption": "Prendre la route"
@@ -63,19 +63,19 @@
       "line1": "Une escouade.",
       "line2": "Un territoire à reconquérir."
     },
-    "hint": "Clique sur la boussole pour entrer",
+    "hint": "Clique sur la boussole",
     "title": "Expédition",
     "weekLabel": "Expédition · Semaine {{week}}",
     "weekLabelPending": "Expédition"
   },
   "notFound": {
     "backToOverview": "Retour à la vue d'ensemble",
-    "description": "La page demandée n'existe pas ou a été déplacée.",
+    "description": "Cette page n'existe pas.",
     "title": "Page introuvable"
   },
   "overview": {
     "bossEncounter": {
-      "defeated": "Le boss a été vaincu cette semaine !",
+      "defeated": "Le boss est tombé cette semaine.",
       "difficulty": "Difficulté",
       "error": "Impossible de charger le boss de la semaine.",
       "eyebrow": "Boss hebdomadaire",
@@ -105,7 +105,6 @@
       "progressLabel": "Progression collective"
     },
     "title": "Vue d'ensemble",
-    "week": {},
     "weeklyChallenges": {
       "completedCount": {
         "one": "{{count}} défi terminé sur {{total}}",
@@ -121,7 +120,7 @@
       },
       "empty": "Aucun défi n'est actif cette semaine.",
       "error": "Impossible de charger les défis de la semaine.",
-      "eyebrow": "Quête · Semaine {{number}}",
+      "eyebrow": "Défis · Semaine {{number}}",
       "loading": "Chargement des défis…",
       "metric": {
         "ASSISTS": "Assists",
@@ -154,11 +153,11 @@
       "completed": "Défi terminé",
       "empty": "Aucun classement n'est disponible cette semaine.",
       "error": "Impossible de charger le classement de la semaine.",
-      "eyebrow": "Escouade · Semaine {{number}}",
+      "eyebrow": "Classement · Semaine {{number}}",
       "inactive": "Inactif",
       "loading": "Chargement du classement…",
       "subtitle": "La position, les dégâts et la progression exacte de chaque joueur sur les défis de la semaine.",
-      "title": "Matrice de l'escouade",
+      "title": "Classement de la semaine",
       "totalDamage": "Dégâts cumulés · {{damage}}",
       "variation": {
         "down": {
@@ -252,7 +251,7 @@
     },
     "empty": "Aucun joueur suivi pour le moment.",
     "error": "Impossible de charger les joueurs.",
-    "eyebrow": "Joueurs · Registre de l'escouade",
+    "eyebrow": "Registre de l'escouade",
     "heading": {
       "one": "{{count}} joueur suivi",
       "other": "{{count}} joueurs suivis"
@@ -276,7 +275,7 @@
   "retry": "Réessayer",
   "rules": {
     "eyebrow": "Règles du jeu",
-    "heading": "Tout se joue en 4 temps",
+    "heading": "Une semaine, en 4 temps",
     "readingTime": {
       "label": "Lecture",
       "value": "2 min"
@@ -347,9 +346,8 @@
     },
     "nav": {
       "boss": "Campagne",
-      "challenges": "Quête",
-      "comparison": "Comparaison",
-      "leaderboard": "Escouade",
+      "challenges": "Défis",
+      "leaderboard": "Classement",
       "overview": "Vue d'ensemble",
       "players": "Joueurs",
       "rules": "Règles"

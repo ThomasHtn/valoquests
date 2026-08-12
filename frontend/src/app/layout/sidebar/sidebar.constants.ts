@@ -8,11 +8,10 @@ import { NavItem } from './sidebar.model';
  * without a `routerLink` have no page yet and render as inert.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
-  { labelKey: 'overview', routerLink: '/overview', exactMatch: true },
-  { labelKey: 'challenges', routerLink: '/challenges' },
-  { labelKey: 'boss', routerLink: '/boss' },
-  { labelKey: 'leaderboard', routerLink: '/leaderboard' },
-  { labelKey: 'players', routerLink: '/players' },
-  //{ labelKey: 'comparison' },
-  { labelKey: 'rules', routerLink: '/rules' },
+  { labelKey: 'overview', icon: 'layout-dashboard', routerLink: '/overview', exactMatch: true },
+  { labelKey: 'challenges', icon: 'target', routerLink: '/challenges' },
+  { labelKey: 'boss', icon: 'skull', routerLink: '/boss' },
+  { labelKey: 'leaderboard', icon: 'trophy', routerLink: '/leaderboard' },
+  { labelKey: 'players', icon: 'users', routerLink: '/players' },
+  { labelKey: 'rules', icon: 'book-open', routerLink: '/rules' },
 ];

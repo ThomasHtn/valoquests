@@ -50,6 +50,9 @@ export class Avatar {
    * Whether this avatar belongs to the reigning weekly "Champion" (see {@link ChampionBadge}),
    * drawing a gold ring around it so the title reads at a glance wherever the player's name
    * appears, not just next to the badge itself.
+   *
+   * Only takes effect on the `circle` {@link shape}: the ring is painted outside the element's
+   * box, which the hexagon's `clip-path` then clips away.
    */
   public readonly champion = input(false);
 

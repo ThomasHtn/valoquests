@@ -15,10 +15,9 @@
   <app-sidebar />
 
   <!-- Routed page content. Capped in width so that on wide displays the eye is not dragged across
-       the full viewport between a table's first and last column. `relative` gives the overview
-       page (see its own doc comments) a positioning context it can anchor its full-bleed
-       scroll-snap container against, bypassing this wrapper's padding and width cap so that the
-       gutters left by the cap remain scrollable instead of turning into a dead zone. -->
+       the full viewport between a table's first and last column. `relative` gives a page a
+       positioning context to anchor anything full-bleed against, bypassing this wrapper's padding
+       and width cap. -->
   <main class="relative flex-1 overflow-y-auto" id="main-content" tabindex="-1">
     <div class="mx-auto w-full max-w-[1440px] p-4 sm:p-6">
       <router-outlet />

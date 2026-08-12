@@ -1,13 +1,25 @@
 /**
- * Primary navigation entry.
+ * Pictogram identifying a navigation entry.
  *
- * Carries no icon: every entry shows the same hexagon marker, as in the mockup.
+ * Modelled as a closed union rather than a free-form Lucide name so the template's `@switch` is
+ * exhaustive: an entry can only ask for an icon the sidebar actually imports.
+ */
+export type NavIcon = 'layout-dashboard' | 'target' | 'skull' | 'trophy' | 'users' | 'book-open';
+
+/**
+ * Primary navigation entry.
  */
 export interface NavItem {
   /**
    * Suffix appended to `sidebar.nav.` to resolve this section's label.
    */
   readonly labelKey: string;
+
+  /**
+   * Pictogram shown ahead of the label, and the only thing identifying the entry on the collapsed
+   * icon-only rail.
+   */
+  readonly icon: NavIcon;
 
   /**
    * Route to navigate to. Omitted for sections without an implemented page

@@ -1,7 +1,16 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideMenu, LucideRefreshCw } from '@lucide/angular';
+import {
+  LucideBookOpen,
+  LucideLayoutDashboard,
+  LucideMenu,
+  LucideRefreshCw,
+  LucideSkull,
+  LucideTarget,
+  LucideTrophy,
+  LucideUsers,
+} from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -23,7 +32,20 @@ import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './
 @Component({
   selector: 'app-sidebar',
   host: { class: 'contents' },
-  imports: [RouterLink, RouterLinkActive, LucideMenu, LucideRefreshCw, TranslatePipe, Tooltip],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    LucideBookOpen,
+    LucideLayoutDashboard,
+    LucideMenu,
+    LucideRefreshCw,
+    LucideSkull,
+    LucideTarget,
+    LucideTrophy,
+    LucideUsers,
+    TranslatePipe,
+    Tooltip,
+  ],
   templateUrl: './sidebar.html',
 })
 export class Sidebar {

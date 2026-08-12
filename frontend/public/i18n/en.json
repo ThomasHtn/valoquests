@@ -31,7 +31,7 @@
       "next": "Next week",
       "portrait": "Boss portrait",
       "previous": "Previous week",
-      "quests": "Quests",
+      "quests": "Challenges",
       "ranking": "Ranking"
     },
     "progress": "{{defeated}} bosses defeated · {{fought}} faced · {{damage}} damage",
@@ -39,7 +39,7 @@
       "current": "In progress",
       "upcoming": "Upcoming"
     },
-    "subtitle": "One boss a week. From the first confrontation through to the targets still sealed.",
+    "subtitle": "One boss a week, from the first fight to the ones still locked.",
     "timeline": {
       "ariaLabel": "Boss battle timeline"
     },
@@ -54,7 +54,7 @@
     }
   },
   "landing": {
-    "body": "Every match moves the squad forward on this week's map. Five stages to clear, one threat to push back before Sunday night.",
+    "body": "Every match moves the squad forward on this week's map. Five challenges to clear, one threat to push back before Sunday night.",
     "compass": {
       "action": "Enter",
       "caption": "Hit the road"
@@ -63,19 +63,19 @@
       "line1": "One squad.",
       "line2": "One territory to reclaim."
     },
-    "hint": "Click the compass to enter",
+    "hint": "Click the compass",
     "title": "Expedition",
     "weekLabel": "Expedition · Week {{week}}",
     "weekLabelPending": "Expedition"
   },
   "notFound": {
     "backToOverview": "Back to overview",
-    "description": "The requested page does not exist or has been moved.",
+    "description": "This page doesn't exist.",
     "title": "Page not found"
   },
   "overview": {
     "bossEncounter": {
-      "defeated": "The boss has been defeated this week!",
+      "defeated": "The boss is down this week.",
       "difficulty": "Difficulty",
       "error": "Failed to load the weekly boss.",
       "eyebrow": "Weekly boss",
@@ -105,7 +105,6 @@
       "progressLabel": "Collective progress"
     },
     "title": "Overview",
-    "week": {},
     "weeklyChallenges": {
       "completedCount": {
         "one": "{{count}} of {{total}} challenge done",
@@ -121,7 +120,7 @@
       },
       "empty": "No challenge is active this week.",
       "error": "Failed to load the weekly challenges.",
-      "eyebrow": "Quest · Week {{number}}",
+      "eyebrow": "Challenges · Week {{number}}",
       "loading": "Loading challenges…",
       "metric": {
         "ASSISTS": "Assists",
@@ -154,11 +153,11 @@
       "completed": "Challenge completed",
       "empty": "No ranking is available this week.",
       "error": "Failed to load the weekly ranking.",
-      "eyebrow": "Squad · Week {{number}}",
+      "eyebrow": "Ranking · Week {{number}}",
       "inactive": "Inactive",
       "loading": "Loading ranking…",
       "subtitle": "Every tracked player's position, damage and exact progress toward this week's challenges.",
-      "title": "Squad matrix",
+      "title": "Weekly ranking",
       "totalDamage": "Total damage · {{damage}}",
       "variation": {
         "down": {
@@ -252,7 +251,7 @@
     },
     "empty": "No player is tracked yet.",
     "error": "Failed to load players.",
-    "eyebrow": "Players · Squad registry",
+    "eyebrow": "Squad registry",
     "heading": {
       "one": "{{count}} tracked player",
       "other": "{{count}} tracked players"
@@ -276,7 +275,7 @@
   "retry": "Retry",
   "rules": {
     "eyebrow": "How it works",
-    "heading": "It all plays out in 4 beats",
+    "heading": "A week, in 4 steps",
     "readingTime": {
       "label": "Reading",
       "value": "2 min"
@@ -348,8 +347,7 @@
     "nav": {
       "boss": "Campaign",
       "challenges": "Challenges",
-      "comparison": "Comparison",
-      "leaderboard": "Squad",
+      "leaderboard": "Ranking",
       "overview": "Overview",
       "players": "Players",
       "rules": "Rules"

@@ -80,18 +80,35 @@
           ariaCurrentWhenActive="page"
           routerLinkActive="text-text-primary before:bg-brand-500 lg:bg-linear-to-r lg:from-brand-500/20 lg:to-transparent"
         >
-          <!-- Same hexagon marker on every entry, as in the mockup — no per-section pictogram.
-               Hollow while inactive, the inner hex punched out of the rail's own surface; solid
-               brand once active. Keyed off `aria-current`, which `routerLinkActive` sets, so the
-               active state needs no second source of truth. Rail only: on the tab bar it never
-               varies between entries, so it carries no information and is dropped there. -->
+          <!-- Per-section pictogram. Shown on the tab bar too, unlike the marker it replaces: it
+               now distinguishes the entries instead of repeating the same shape, and it is the
+               only thing identifying them on the collapsed rail. Inherits the link's text color
+               and turns brand once active, keyed off `aria-current` which `routerLinkActive`
+               sets, so the active state needs no second source of truth. -->
           <span
             aria-hidden="true"
-            class="relative hidden h-4.5 w-4 shrink-0 bg-current clip-hex group-aria-[current=page]:bg-brand-500 lg:block"
+            class="block h-5 w-5 shrink-0 group-aria-[current=page]:text-brand-500"
           >
-            <span
-              class="absolute inset-0.5 bg-surface-sunken clip-hex group-aria-[current=page]:hidden"
-            ></span>
+            @switch (item.icon) {
+              @case ('layout-dashboard') {
+                <svg class="h-full w-full" lucideLayoutDashboard></svg>
+              }
+              @case ('target') {
+                <svg class="h-full w-full" lucideTarget></svg>
+              }
+              @case ('skull') {
+                <svg class="h-full w-full" lucideSkull></svg>
+              }
+              @case ('trophy') {
+                <svg class="h-full w-full" lucideTrophy></svg>
+              }
+              @case ('users') {
+                <svg class="h-full w-full" lucideUsers></svg>
+              }
+              @case ('book-open') {
+                <svg class="h-full w-full" lucideBookOpen></svg>
+              }
+            }
           </span>
           <span [class]="navLabelClass()" class="lg:font-display lg:tracking-label lg:uppercase">
             {{ 'sidebar.nav.' + item.labelKey | translate }}

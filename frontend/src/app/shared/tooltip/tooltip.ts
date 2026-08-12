@@ -113,11 +113,15 @@ export class Tooltip implements OnDestroy {
     this.renderer.setAttribute(bubble, 'role', 'tooltip');
     this.renderer.setAttribute(bubble, 'popover', 'manual');
     this.renderer.setProperty(bubble, 'textContent', this.appTooltip());
+    // Same treatment as the application's other floating panels (the select listbox, the profile
+    // page's game-mode menu): cut corner, held by a leading brand rule rather than a full border.
+    // No shadow — `clip-path` clips one along with the corner it cuts, and the rule is what lifts
+    // the bubble off the surface behind it.
     this.renderer.setAttribute(
       bubble,
       'class',
-      'pointer-events-none m-0 max-w-64 rounded-md border border-surface-700 bg-surface-800 ' +
-        'px-2 py-1 text-xs text-text-primary shadow-lg',
+      'notch-tr pointer-events-none m-0 max-w-64 border-l-2 border-brand-500/50 bg-surface-900 ' +
+        'px-2.5 py-1.5 text-xs text-text-primary [--notch:0.375rem]',
     );
     this.renderer.setStyle(bubble, 'position', 'fixed');
 

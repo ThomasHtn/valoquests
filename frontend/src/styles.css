@@ -67,8 +67,11 @@
  * `clip-path` clips the border box, so a bordered panel's border stops dead at the cut and the
  * diagonal is left bare. This draws the missing edge as a rotated rule pinned to the corner. It
  * inherits `border-color` and `border-top-style` from the element, so the edge tracks hover and
- * state changes (and dashed borders) without restating the color, and `transition` so it fades in
- * step with the border it continues.
+ * state changes (and dashed borders) without restating the color.
+ *
+ * The rule must not transition: its inherited `border-color` already follows the element's own
+ * animated value frame by frame, and a transition here would re-animate towards each intermediate
+ * value, leaving the diagonal visibly lagging behind the border it continues.
  *
  * Pair with `notch-tr`; the two read the same `--notch`. Set `--notch-border-width` alongside it
  * when the element's border is not 1px, since it drives both the rule's weight and the offset that
@@ -87,7 +90,7 @@
     border-top: var(--notch-border-width, 1px) solid;
     border-color: inherit;
     border-top-style: inherit;
-    transition: inherit;
+    transition: none;
     /* Pivot on the corner, drop to where the cut meets the right edge, then lay the rule back up
        along the diagonal. Its stroke falls on the inner side of the cut, so the clip never eats it. */
     transform-origin: 100% 0;
@@ -195,20 +198,6 @@
   background-color: var(--color-brand-500);
 }
 
-/* The overview page's scroll-snap container hides its native scrollbar at every breakpoint: at
-   `lg` and up, the dot rail (see `overview.html`) doubles as the scroll position indicator, and
-   below it, sections are reachable with a natural touch swipe, same as elsewhere on that page.
-   Scrolling itself is unaffected. Written as plain, unlayered CSS like the rules above rather than
-   a Tailwind utility class, since utilities are emitted inside a generated layer and would lose to
-   the unlayered `*` rule above regardless of specificity. */
-#overview-scroll-container {
-  scrollbar-width: none;
-}
-
-#overview-scroll-container::-webkit-scrollbar {
-  display: none;
-}
-
 /*
  * Campaign detail drawer: the panel sliding in from the right edge it is anchored to. Referenced
  * through an arbitrary `animation` utility (see `boss-detail.html`) rather than a Tailwind keyframe
@@ -218,25 +207,6 @@
   from {
     opacity: 0;
     transform: translateX(24px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/*
- * Ranking history carousel: the entrance of the week currently on screen, the carousel's one
- * authored motion moment. Slides in from the side matching the navigation direction — left for a
- * more recent week, right for an older one — via the `--week-enter-offset` custom property set
- * inline by the ranking page. Referenced through an arbitrary `animation` utility rather than a
- * Tailwind keyframe since only that one element ever plays it.
- */
-@keyframes week-enter {
-  from {
-    opacity: 0;
-    transform: translateX(var(--week-enter-offset, 16px));
   }
 
   to {

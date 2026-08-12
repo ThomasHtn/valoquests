@@ -51,19 +51,7 @@
       class="notch-tr flex flex-col gap-5 border-l-2 border-text-primary/15 bg-text-primary/4 p-5 [--notch:1.25rem] sm:flex-row sm:items-center sm:justify-between sm:p-6"
     >
       <div class="flex items-center gap-5">
-        <!-- Portrait, set in a hexagonal plate: the halo behind it *is* the frame, drawn a hair
-             larger than the avatar and cut to the same silhouette. Gold for the reigning champion,
-             brand amber otherwise. `isolate` + `-z-10` keeps the halo *behind* the portrait: the
-             avatar renders an unpositioned `<img>`, which a positioned sibling would otherwise
-             paint over. -->
-        <span class="relative isolate shrink-0">
-          <span
-            [class]="isChampion() ? 'bg-accent-gold' : 'bg-brand-500/45'"
-            aria-hidden="true"
-            class="clip-hex absolute -inset-0.5 -z-10"
-          ></span>
-          <app-avatar [priority]="true" [src]="avatarUrl()" shape="hex" size="lg" />
-        </span>
+        <app-avatar [priority]="true" [src]="avatarUrl()" shape="hex" size="lg" />
 
         <div class="min-w-0">
           <h1
@@ -164,7 +152,7 @@
                 (click)="selectOverflowGameMode(option.value)"
                 [attr.aria-checked]="gameModeFilter() === option.value"
                 [class.text-brand-500]="gameModeFilter() === option.value"
-                class="block w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-text-primary transition-[background-color,scale] hover:bg-surface-800 motion-safe:active:scale-[0.96]"
+                class="focus-ring-inset block w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-text-primary transition-[background-color,scale] hover:bg-surface-800 motion-safe:active:scale-[0.96]"
                 role="menuitemradio"
                 type="button"
               >
@@ -459,7 +447,7 @@
               @for (row of day.matches; track row.id) {
                 <div
                   [class]="rowGridClass + ' ' + resultAccentClass(row.result)"
-                  class="notch-tr bg-text-primary/3 transition-colors [--notch:0.625rem] hover:bg-brand-500/8"
+                  class="notch-tr bg-text-primary/3 transition-colors [--notch:0.625rem] hover:bg-text-primary/6"
                 >
                   <div class="flex items-center gap-3.5 px-4 py-3.5">
                     <!-- Monogram rather than a portrait: `public/players` bundles six agents and
