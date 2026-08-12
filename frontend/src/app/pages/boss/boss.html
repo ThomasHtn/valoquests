@@ -1,210 +1,198 @@
-<!-- Header, matching the ranking page's title treatment (see its own doc comment) so both
-     history-style pages read as one family. -->
+<!-- Header: the campaign this page tells, opened on the same beat as the quest board — eyebrow,
+     display title, one line of stakes. -->
 <header>
+  <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
+    {{ 'boss.eyebrow' | translate }}
+  </p>
   <h1
-    class="flex items-center gap-2 text-3xl font-extrabold tracking-wide text-text-primary uppercase"
+    class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
   >
     {{ 'boss.title' | translate }}
   </h1>
-  <p class="mt-1 text-sm font-medium text-text-secondary">
+  <p class="mt-2 max-w-prose text-sm text-text-secondary">
     {{ 'boss.subtitle' | translate }}
   </p>
 </header>
 
+<app-section-divider [label]="progressLabel()" class="-mt-2" />
+
 <app-resource-state
+  (retry)="reload()"
   [errorText]="'boss.error' | translate"
   [isError]="hasError()"
   [isLoading]="isLoading()"
   [loadingText]="'boss.loading' | translate"
-  padding="px-1 py-6"
-  (retry)="reload()"
 >
-  <div skeleton class="flex flex-col gap-6">
+  <div class="flex flex-col gap-6" skeleton>
     @for (placeholder of skeletonRows; track $index) {
       <div class="flex items-center gap-4">
-        <span
-          class="h-14 w-14 shrink-0 bg-surface-700 [clip-path:polygon(50%_0%,93.3%_25%,93.3%_75%,50%_100%,6.7%_75%,6.7%_25%)]"
-        ></span>
-        <span class="h-3 rounded-full bg-surface-700" [style.width.%]="placeholder"></span>
+        <span class="clip-hex h-16 w-14 shrink-0 bg-surface-700"></span>
+        <span [style.width.%]="placeholder" class="h-3 bg-surface-700"></span>
       </div>
     }
   </div>
 
-  <!-- Battle map: a vertical timeline from the oldest finalized week to the active one, then a
-       handful of locked weeks ahead (see `UPCOMING_PLACEHOLDER_COUNT`). A single gradient line
-       (see `timelineLineGradient`) runs down the center, alternating hex-marker cards left and
-       right of it on wider screens; below `sm` there isn't room to alternate, so the line and
-       every marker pin to the left edge instead. `data-timeline-current` marks the one node the
-       page auto-scrolls to on load (see the constructor). The tactical-grid backdrop is purely
-       decorative (`aria-hidden`), layered behind the list to sell the "battle map" framing. -->
-  <div class="relative overflow-hidden rounded-2xl bg-surface-950/60 px-2 py-6 sm:px-6">
+  <!-- Campaign timeline: every finalized week from the oldest to the active one, then a handful of
+       locked weeks ahead (see `UPCOMING_PLACEHOLDER_COUNT`). A single gradient line (see
+       `timelineLineGradient`) runs down the center, alternating panels left and right of it on
+       wider screens; below `sm` there isn't room to alternate, so the line and every marker pin to
+       the left edge instead. `data-timeline-current` marks the one node the page auto-scrolls to on
+       load (see the constructor). -->
+  <div class="relative">
     <div
+      [style.background]="timelineLineGradient()"
       aria-hidden="true"
-      class="pointer-events-none absolute inset-0 opacity-60"
-      style="
-        background-image: radial-gradient(
-          ellipse 80% 50% at 50% 0%,
-          color-mix(in srgb, var(--color-accent-purple) 20%, transparent),
-          transparent 70%
-        );
-      "
+      class="pointer-events-none absolute inset-y-0 left-7 w-0.5 -translate-x-1/2 sm:left-1/2"
     ></div>
 
     <ol
       [attr.aria-label]="'boss.timeline.ariaLabel' | translate"
-      class="relative flex flex-col gap-10"
+      class="flex flex-col gap-8 sm:gap-10"
       role="list"
     >
-      <div
-        aria-hidden="true"
-        [style.background]="timelineLineGradient()"
-        class="pointer-events-none absolute inset-y-0 left-8 w-0.5 -translate-x-1/2 sm:left-1/2"
-      ></div>
-
       @for (node of nodes(); track node.id; let isOdd = $odd) {
         @let tier = timelineTier(node.status);
 
         <li
           [attr.data-timeline-current]="node.status === 'current' ? '' : null"
-          class="relative grid grid-cols-[4rem_1fr] items-center gap-4 sm:grid-cols-[1fr_4rem_1fr] sm:gap-6"
+          class="relative grid grid-cols-[3.5rem_1fr] items-center gap-4 sm:grid-cols-[1fr_7rem_1fr] sm:gap-0"
         >
-          <!-- Hex marker: the boss portrait (or a fallback icon), clipped to the same pointy-top
-               hexagon already used for podium avatars on the ranking page, framed by a segmented
-               sci-fi outline (see `HEX_FRAME_EDGES`) colored and glowing per the node's tier.
-               `row-start-1` pins it to the same implicit row as the info card: without it, Grid's
-               auto-placement cursor (already advanced past column 1 by this marker, which comes
-               first in DOM order) pushes a left-side card (`sm:col-start-1`) down into a second
-               row, breaking both the vertical centering and the timeline's row spacing. -->
+          <!-- Week marker: the campaign's beat, a hexagon carrying the ISO week number. It is the
+             one element of a row that stays in place while the panels alternate around it, so the
+             column of markers reads as the calendar the whole page is ordered by. `row-start-1`
+             pins it to the same implicit row as the panel: without it, Grid's auto-placement
+             cursor (already advanced past column 1 by this marker, which comes first in DOM order)
+             pushes a left-side panel (`sm:col-start-1`) down into a second row, breaking both the
+             vertical centering and the timeline's row spacing. -->
           <div class="col-start-1 row-start-1 flex justify-center sm:col-start-2">
-            <div [class]="tier.frameGlowClass" class="relative h-14 w-14 shrink-0 sm:h-16 sm:w-16">
-              <div
-                class="absolute inset-1.5 overflow-hidden bg-surface-800 [clip-path:polygon(50%_0%,93.3%_25%,93.3%_75%,50%_100%,6.7%_75%,6.7%_25%)]"
-              >
-                @if (node.portraitUrl; as portraitUrl) {
-                  <img
-                    [height]="64"
-                    [ngSrc]="portraitUrl"
-                    [width]="64"
-                    alt=""
-                    class="h-full w-full object-cover"
-                  />
-                } @else {
-                  <span class="flex h-full w-full items-center justify-center">
-                    @if (node.status === 'upcoming') {
-                      <svg class="h-5 w-5 text-text-muted" lucideLock></svg>
-                    } @else {
-                      <svg class="h-6 w-6 text-text-secondary" lucideSkull></svg>
-                    }
-                  </span>
-                }
-              </div>
+            <div class="relative h-16 w-14 shrink-0 sm:h-20 sm:w-18">
+              @if (tier.markerHaloClass) {
+                <span
+                  [class]="tier.markerHaloClass"
+                  aria-hidden="true"
+                  class="clip-hex absolute -inset-1.5"
+                ></span>
+              }
 
-              <svg class="absolute inset-0 h-full w-full" fill="none" viewBox="0 0 100 100">
-                @for (edge of hexFrameEdges; track $index) {
-                  <line
-                    [attr.x1]="edge.x1"
-                    [attr.x2]="edge.x2"
-                    [attr.y1]="edge.y1"
-                    [attr.y2]="edge.y2"
-                    [class]="tier.frameStrokeClass"
-                    stroke-linecap="round"
-                    stroke-width="6"
-                  />
-                }
-              </svg>
+              <span [class]="tier.markerClass" class="clip-hex absolute inset-0">
+                <span
+                  class="clip-hex absolute inset-0.5 flex flex-col items-center justify-center gap-1 bg-surface-950"
+                >
+                  <span class="tracking-label font-mono text-2xs text-text-muted uppercase">
+                    {{ 'boss.week.short' | translate }}
+                  </span>
+                  <span class="font-display text-lg leading-none font-bold sm:text-xl">
+                    {{ node.weekNumber ?? '—' }}
+                  </span>
+                </span>
+              </span>
             </div>
           </div>
 
-          <!-- Info card, alternating sides of the center line at `sm` and up. `row-start-1` keeps
-               it paired with the marker above (see the marker's comment for why). -->
-          <div
-            [class.opacity-70]="node.status === 'upcoming'"
+          <!-- The week's panel, alternating sides of the center line at `sm` and up, and opening the
+             detail drawer when picked. `row-start-1` keeps it paired with its marker (see the
+             marker's comment for why). -->
+          <button
+            (click)="select(node)"
+            [class]="tier.panelClass"
             [class.sm:col-start-1]="!isOdd"
             [class.sm:col-start-3]="isOdd"
-            class="col-start-2 row-start-1 min-w-0 rounded-xl border border-surface-700 bg-surface-900/70 px-5 py-4 backdrop-blur-md"
+            class="notch-tr-bl focus-ring-inset col-start-2 row-start-1 min-w-0 cursor-pointer border bg-linear-[115deg] to-surface-sunken/60 p-4 text-left transition-colors [--notch:1.25rem] hover:border-brand-500/70 sm:p-5"
+            type="button"
           >
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span class="flex items-center justify-between gap-3">
               <span
-                [class]="tier.badgeClass"
-                class="rounded-full px-2.5 py-1 text-xs font-bold tracking-wide uppercase"
+                [class]="tier.pillClass"
+                class="tracking-label px-2 py-1 font-mono text-2xs font-bold uppercase"
               >
-                {{ statusLabelKey(node.status) | translate }}
+                {{ node.statusLabel }}
               </span>
-              @if (node.weekLabel) {
-                <span class="text-xs font-semibold text-text-secondary"
-                  >{{ node.weekLabel }} · {{ node.dateRangeLabel }}</span
-                >
+              @if (node.dateRangeLabel; as dateRangeLabel) {
+                <span class="font-mono text-2xs text-text-muted tabular-nums">{{
+                  dateRangeLabel
+                }}</span>
               }
-            </div>
+            </span>
 
-            <p class="mt-3 truncate text-base font-extrabold text-text-primary">
-              {{ node.bossName }}
-            </p>
-
-            @if (node.categoryLabel) {
-              <p
-                [class]="node.categoryColorClass"
-                class="mt-0.5 text-xs font-bold tracking-widest uppercase"
+            <span class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <span
+                class="font-display text-xl leading-none font-bold text-text-primary uppercase sm:text-2xl"
               >
-                {{ node.categoryLabel }}
-              </p>
-            }
-            @if (node.status === 'upcoming') {
-              <p class="mt-1 text-sm text-text-secondary">{{ node.bossDescription }}</p>
-            }
-
-            @if (node.status === 'current') {
-              <div class="relative mt-4">
-                <app-progress-bar
-                  [colorClass]="currentHpBarColorClass()"
-                  [percentage]="currentRemainingPercentage()"
-                  heightClass="h-5"
-                />
+                {{ node.bossName }}
+              </span>
+              @if (node.categoryLabel; as categoryLabel) {
                 <span
-                  class="pointer-events-none absolute inset-0 flex items-center justify-center text-2xs font-bold tabular-nums text-white [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
+                  [class]="node.categoryColorClass"
+                  class="tracking-label border border-current px-2 py-1 font-mono text-2xs font-semibold uppercase"
                 >
-                  {{
-                    'overview.bossEncounter.hpValue'
-                      | translate: { remaining: currentRemainingHp(), total: currentEffectiveHp() }
-                  }}
+                  {{ categoryLabel }}
                 </span>
-              </div>
-            } @else if (node.effectiveHp !== null && node.totalDamageDealt !== null) {
-              <p class="mt-3 tabular-nums text-sm text-text-secondary">
-                {{
-                  'boss.damageDealt'
-                    | translate: { damage: node.totalDamageDealt, hp: node.effectiveHp }
-                }}
-              </p>
-            }
+              }
+            </span>
 
-            @if (node.status === 'defeated' && node.defeatedByPlayerDisplayName) {
-              <div class="mt-4 flex items-center gap-2 border-t border-surface-800 pt-3">
-                <app-avatar
-                  [champion]="node.defeatedByIsChampion"
-                  [src]="node.defeatedByAvatarUrl"
-                  size="sm"
-                />
-                <div>
-                  <p class="text-xs text-text-secondary">
-                    {{ 'boss.finishingBlow' | translate }}
-                  </p>
-                  <p
-                    [class.text-accent-gold]="node.defeatedByIsChampion"
-                    [class.text-text-primary]="!node.defeatedByIsChampion"
-                    class="flex items-center gap-1.5 text-sm font-semibold"
-                  >
-                    {{ node.defeatedByPlayerDisplayName }}
-                    @if (node.defeatedByIsChampion) {
-                      <app-champion-badge />
-                    }
-                  </p>
-                </div>
-              </div>
+            @if (node.hasDamage) {
+              <span class="mt-4 flex items-baseline justify-between gap-3">
+                <span
+                  class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase"
+                >
+                  {{ node.barLabel }}
+                </span>
+                <span
+                  [class]="tier.accentTextClass"
+                  class="font-mono text-2xs font-medium tabular-nums"
+                  >{{ node.damagePercentageLabel }}</span
+                >
+              </span>
+
+              <!-- Damage bar, with the tally riding inside the track so the number and the fill it
+                 describes are read in one glance. -->
+              <span class="relative mt-2 flex h-6 border border-text-primary/15 bg-surface-sunken">
+                <span
+                  [class]="tier.barFillClass"
+                  [style.width.%]="node.damagePercentage"
+                  aria-hidden="true"
+                  class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
+                ></span>
+                <span
+                  class="relative flex flex-1 items-center justify-center font-mono text-2xs font-semibold text-text-primary tabular-nums [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
+                  >{{ node.damageLabel }}</span
+                >
+              </span>
+
+              @if (node.metaLabel; as metaLabel) {
+                <span class="mt-3 flex items-center gap-2.5 text-sm text-text-secondary">
+                  <span
+                    [class]="tier.barFillClass"
+                    aria-hidden="true"
+                    class="size-1.5 shrink-0 rotate-45"
+                  ></span>
+                  {{ metaLabel }}
+                </span>
+              }
+            } @else {
+              <span
+                class="mt-4 flex items-center gap-3 border border-dashed border-text-primary/15 bg-text-primary/3 p-3 text-sm text-text-secondary"
+              >
+                <span aria-hidden="true" class="font-mono text-sm font-bold text-text-muted"
+                  >?</span
+                >
+                {{ node.bossDescription }}
+              </span>
             }
-          </div>
+          </button>
         </li>
       }
     </ol>
   </div>
 </app-resource-state>
+
+@if (selectedNode(); as node) {
+  <app-boss-detail
+    (closed)="closePanel()"
+    (next)="step(1)"
+    (previous)="step(-1)"
+    [hasNext]="hasNextNode()"
+    [hasPrevious]="hasPreviousNode()"
+    [node]="node"
+  />
+}

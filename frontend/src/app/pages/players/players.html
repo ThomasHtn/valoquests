@@ -1,14 +1,27 @@
-<!-- Header, matching the boss/ranking pages' title treatment so all pages read as one family. -->
+<!-- Header: the same beat as the quest and campaign pages — eyebrow, display title, one line of
+     stakes — with the roster's size as the headline, since "how many are tracked" is the first
+     thing this page answers. -->
 <header>
+  <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
+    {{ 'players.eyebrow' | translate }}
+  </p>
   <h1
-    class="flex items-center gap-2 text-3xl font-extrabold tracking-wide text-text-primary uppercase"
+    class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
   >
-    {{ 'players.title' | translate }}
+    <!-- The count only replaces the page's name once it is actually known: while loading, empty or
+         failed, `rows()` is empty and a headline "0 players" would be a lie. -->
+    @if (rows().length) {
+      {{ 'players.heading' | translate: { count: rows().length } }}
+    } @else {
+      {{ 'players.title' | translate }}
+    }
   </h1>
-  <p class="mt-1 text-sm font-medium text-text-secondary">
-    {{ 'players.subtitleCount' | translate: { count: rows().length } }}
+  <p class="mt-2 max-w-prose text-sm text-text-secondary">
+    {{ 'players.subtitle' | translate }}
   </p>
 </header>
+
+<app-section-divider [label]="'players.allSeasons' | translate" class="-mt-2" />
 
 <app-resource-state
   [emptyText]="'players.empty' | translate"
@@ -17,194 +30,172 @@
   [isError]="!!playersResource.error()"
   [isLoading]="playersResource.isLoading()"
   [loadingText]="'players.loading' | translate"
-  padding="px-1 py-6"
+  padding="py-6"
   (retry)="playersResource.reload()"
 >
-  <ul skeleton>
+  <!-- Skeleton shaped like a loaded row — same silhouette, same leading rule — so data arriving
+       does not shift the page. -->
+  <div class="flex flex-col gap-2" skeleton>
     @for (placeholder of skeletonRows; track $index) {
-      <li class="flex items-center gap-4 border-b border-surface-700 px-5 py-4 last:border-b-0">
-        <span class="h-11 w-11 shrink-0 rounded-full bg-surface-700"></span>
-        <span class="flex flex-1 flex-col gap-2">
-          <span class="h-3 rounded-full bg-surface-700" [style.width.%]="placeholder"></span>
-          <span class="h-2.5 w-1/4 rounded-full bg-surface-700"></span>
+      <div
+        class="notch-tr-bl flex items-center gap-3 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-4 [--notch:0.875rem] lg:px-5"
+      >
+        <span class="size-9 shrink-0 rounded-full bg-surface-700"></span>
+        <span class="flex min-w-0 flex-1 flex-col gap-2">
+          <span [style.width.%]="placeholder" class="h-3 bg-surface-700"></span>
+          <span class="h-2.5 w-1/6 bg-surface-700"></span>
         </span>
-        <span class="hidden h-3 w-40 shrink-0 rounded-full bg-surface-700 lg:block"></span>
-      </li>
+        <span class="hidden h-3 w-1/3 shrink-0 bg-surface-700 lg:block"></span>
+      </div>
     }
-  </ul>
+  </div>
 
-  <!-- Table, from `lg` up. Below that the same data is stacked into cards, since seven columns
-       cannot be read on a phone without scrolling the page sideways. Same glass-panel treatment
-       (translucent header, gradient rows on generous `border-spacing`) as the ranking page's
-       tables, so a table reads the same wherever it appears. -->
-  <table class="hidden w-full border-separate border-spacing-y-3 text-sm lg:table">
-    <thead>
-      <tr class="text-xs tracking-widest text-text-secondary/80 uppercase">
-        <th class="px-5 py-2.5 text-left font-medium" scope="col">
-          {{ 'players.columns.player' | translate }}
-        </th>
-        <th class="px-4 py-2.5 text-left font-medium" scope="col">
-          {{ 'players.columns.rank' | translate }}
-        </th>
-        <th class="px-4 py-2.5 text-right font-medium" scope="col">
-          {{ 'players.columns.winRate' | translate }}
-        </th>
-        <th class="px-4 py-2.5 text-right font-medium" scope="col">
-          {{ 'players.columns.kda' | translate }}
-        </th>
-        <th class="px-4 py-2.5 text-right font-medium" scope="col">
-          {{ 'players.columns.headshotPercentage' | translate }}
-        </th>
-        <th class="px-4 py-2.5 text-right font-medium" scope="col">
-          {{ 'players.columns.matchesPlayed' | translate }}
-        </th>
-        <th class="px-5 py-2.5" scope="col">
-          <span class="sr-only">{{ 'players.columns.details' | translate }}</span>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (row of rows(); track row.id) {
-        <!-- The row is navigable as a whole: the name cell's link stretches over it through an
-             `::after` overlay, so the chevron's promise of navigation matches the actual target.
-             Focus stays on the link, and the row draws the indicator on its behalf. -->
-        <tr
-          class="relative cursor-pointer bg-surface-800/15 transition-colors hover:bg-surface-700/25 has-[a:focus-visible]:bg-surface-700/25 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
+  <!-- Column header, from `lg` up — where the rows are wide enough to align into columns. Hidden
+       from assistive technology because it labels nothing: the rows are a list of links, not table
+       cells, so each value carries its own label instead (see the `lg:sr-only` captions below). -->
+  <div
+    aria-hidden="true"
+    class="hidden border-b border-brand-500/25 px-5 pb-3 lg:grid lg:grid-cols-[minmax(0,1fr)_9rem_10rem_5rem_6rem_5rem_1.5rem] lg:gap-x-4"
+  >
+    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+      {{ 'players.columns.player' | translate }}
+    </span>
+    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+      {{ 'players.columns.rank' | translate }}
+    </span>
+    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+      {{ 'players.columns.winRate' | translate }}
+    </span>
+    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+      {{ 'players.columns.kda' | translate }}
+    </span>
+    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+      {{ 'players.columns.headshotPercentage' | translate }}
+    </span>
+    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+      {{ 'players.columns.matchesPlayed' | translate }}
+    </span>
+  </div>
+
+  <!-- The registry itself: one notched row per player, entirely a link to their profile. The same
+       markup serves both breakpoints — below `lg` the row stacks into identity + rank on one line
+       and a strip of statistics under a hairline; from `lg` the statistics group dissolves into the
+       parent grid (`lg:contents`) so its cells land in the header's columns. -->
+  <ul class="flex flex-col gap-2">
+    @for (row of rows(); track row.id) {
+      <li>
+        <a
+          [class]="
+            row.isChampion
+              ? 'border-brand-500 bg-brand-500/10'
+              : 'border-text-primary/15 bg-text-primary/4'
+          "
+          [routerLink]="['/players', row.id]"
+          class="notch-tr-bl focus-ring-inset grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4 border-l-2 px-4 py-4 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:grid-cols-[minmax(0,1fr)_9rem_10rem_5rem_6rem_5rem_1.5rem] lg:gap-x-4 lg:gap-y-0 lg:px-5"
         >
-          <th class="rounded-l-lg px-5 py-5 text-left font-normal" scope="row">
-            <a
-              [routerLink]="['/players', row.id]"
-              class="flex items-center gap-3 after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
-            >
-              <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="md" />
-              <div>
-                <p
-                  class="flex items-center gap-1.5 font-semibold"
+          <span class="flex min-w-0 items-center gap-3">
+            <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="sm" />
+            <span class="min-w-0">
+              <span class="flex items-center gap-2">
+                <span
                   [class.text-accent-gold]="row.isChampion"
                   [class.text-text-primary]="!row.isChampion"
+                  class="font-display truncate text-base leading-none font-semibold"
                 >
                   {{ row.displayName }}
-                  @if (row.isChampion) {
-                    <app-champion-badge />
-                  }
-                </p>
-                @if (row.tag) {
-                  <p class="text-xs text-text-secondary">#{{ row.tag }}</p>
-                }
-              </div>
-            </a>
-          </th>
-          <td class="px-4 py-5">
-            <div class="flex items-center gap-2">
-              <app-rank-icon-view [src]="row.rankIconUrl" [tierLabel]="row.tier.label" size="sm" />
-              <div>
-                <p [class]="row.tier.colorClass" class="font-semibold">{{ row.tier.label }}</p>
-                @if (row.rankRating !== null) {
-                  <p class="text-xs text-text-secondary">{{ row.rankRating }} RR</p>
-                }
-              </div>
-            </div>
-          </td>
-          <td class="px-4 py-5">
-            <div class="flex flex-col items-end gap-1.5">
-              <span [class]="winRateVisual(row.winRate).textClass" class="font-bold tabular-nums">
-                {{ formatWinRate(row.winRate) }}
-              </span>
-              <app-progress-bar
-                class="w-16"
-                [colorClass]="winRateVisual(row.winRate).barClass"
-                [percentage]="row.winRate ?? 0"
-              />
-            </div>
-          </td>
-          <td
-            [class]="kdaVisual(row.kda).textClass"
-            class="px-4 py-5 text-right font-bold tabular-nums"
-          >
-            {{ formatKda(row.kda) }}
-          </td>
-          <td class="px-4 py-5 text-right tabular-nums text-text-primary">
-            {{ formatHeadshotPercentage(row.headshotPercentage) }}
-          </td>
-          <td class="px-4 py-5 text-right tabular-nums text-text-primary">
-            {{ row.matchesPlayed }}
-          </td>
-          <td class="rounded-r-lg px-5 py-5 text-right text-text-secondary">
-            <svg class="ml-auto h-4 w-4" lucideChevronRight></svg>
-          </td>
-        </tr>
-      }
-    </tbody>
-  </table>
-
-  <!-- Card list, below `lg`. Carries the three statistics that rank players against each other;
-       the rest stays one tap away on the profile. -->
-  <ul class="flex flex-col gap-3 lg:hidden">
-    @for (row of rows(); track row.id) {
-      <li
-        class="rounded-lg bg-surface-800/15 transition-colors has-[a:focus-visible]:bg-surface-700/25"
-      >
-        <a
-          [routerLink]="['/players', row.id]"
-          class="focus-ring-inset flex flex-col gap-3 px-4 py-5 transition-colors hover:bg-surface-700/25"
-        >
-          <div class="flex items-center gap-3">
-            <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="md" />
-            <div class="min-w-0 flex-1">
-              <p
-                class="flex items-center gap-1.5 truncate font-semibold"
-                [class.text-accent-gold]="row.isChampion"
-                [class.text-text-primary]="!row.isChampion"
-              >
-                {{ row.displayName }}
+                </span>
                 @if (row.isChampion) {
                   <app-champion-badge />
                 }
-              </p>
-              <p class="truncate text-xs text-text-secondary">
-                @if (row.tag) {
-                  #{{ row.tag }} ·
-                }
-                {{ row.matchesPlayed }} {{ 'players.columns.matchesPlayed' | translate }}
-              </p>
-            </div>
-            <div class="flex shrink-0 items-center gap-2">
-              <app-rank-icon-view [src]="row.rankIconUrl" [tierLabel]="row.tier.label" size="sm" />
-              <p [class]="row.tier.colorClass" class="text-sm font-semibold">
-                {{ row.tier.label }}
-              </p>
-            </div>
-          </div>
+              </span>
+              @if (row.tag) {
+                <span class="mt-1.5 block truncate text-sm text-text-muted">#{{ row.tag }}</span>
+              }
+            </span>
+          </span>
 
-          <dl class="grid grid-cols-3 gap-3 border-t border-surface-700 pt-3">
-            <div>
-              <dt class="text-xs tracking-wide text-text-secondary uppercase">
+          <span class="flex items-center gap-2.5">
+            <app-rank-icon-view [src]="row.rankIconUrl" [tierLabel]="row.tier.label" size="sm" />
+            <span class="min-w-0">
+              <span
+                [class]="row.tier.colorClass"
+                class="font-display block truncate text-sm leading-none font-semibold uppercase"
+              >
+                {{ row.tier.label }}
+              </span>
+              @if (row.rankRating !== null) {
+                <span class="mt-1.5 block font-mono text-2xs text-text-muted tabular-nums">
+                  {{ row.rankRating }} RR
+                </span>
+              }
+            </span>
+          </span>
+
+          <span
+            class="col-span-2 grid grid-cols-2 gap-4 border-t border-text-primary/10 pt-4 sm:grid-cols-4 lg:contents"
+          >
+            <span class="flex flex-col gap-2">
+              <span
+                class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase lg:sr-only"
+              >
                 {{ 'players.columns.winRate' | translate }}
-              </dt>
-              <dd
+              </span>
+              <span
                 [class]="winRateVisual(row.winRate).textClass"
-                class="mt-0.5 font-bold tabular-nums"
+                class="font-display text-base leading-none font-bold tabular-nums"
               >
                 {{ formatWinRate(row.winRate) }}
-              </dd>
-            </div>
-            <div>
-              <dt class="text-xs tracking-wide text-text-secondary uppercase">
+              </span>
+              <app-progress-bar
+                class="w-full border border-text-primary/10 lg:w-28"
+                heightClass="h-1.5"
+                [colorClass]="winRateVisual(row.winRate).barClass"
+                [percentage]="row.winRate ?? 0"
+              />
+            </span>
+
+            <span class="flex flex-col gap-2">
+              <span
+                class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase lg:sr-only"
+              >
                 {{ 'players.columns.kda' | translate }}
-              </dt>
-              <dd [class]="kdaVisual(row.kda).textClass" class="mt-0.5 font-bold tabular-nums">
+              </span>
+              <span
+                [class]="kdaVisual(row.kda).textClass"
+                class="font-display text-base leading-none font-bold tabular-nums"
+              >
                 {{ formatKda(row.kda) }}
-              </dd>
-            </div>
-            <div>
-              <dt class="text-xs tracking-wide text-text-secondary uppercase">
+              </span>
+            </span>
+
+            <span class="flex flex-col gap-2">
+              <span
+                class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase lg:sr-only"
+              >
                 {{ 'players.columns.headshotPercentage' | translate }}
-              </dt>
-              <dd class="mt-0.5 font-bold tabular-nums text-text-primary">
+              </span>
+              <span class="text-base leading-none text-text-secondary tabular-nums">
                 {{ formatHeadshotPercentage(row.headshotPercentage) }}
-              </dd>
-            </div>
-          </dl>
+              </span>
+            </span>
+
+            <span class="flex flex-col gap-2">
+              <span
+                class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase lg:sr-only"
+              >
+                {{ 'players.columns.matchesPlayed' | translate }}
+              </span>
+              <span class="text-base leading-none text-text-secondary tabular-nums">
+                {{ row.matchesPlayed }}
+              </span>
+            </span>
+          </span>
+
+          <svg
+            aria-hidden="true"
+            class="hidden size-4 justify-self-end text-text-muted lg:block"
+            lucideChevronRight
+          ></svg>
         </a>
       </li>
     }

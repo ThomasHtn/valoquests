@@ -67,14 +67,25 @@ export function formatDateRange(weekStart: string, weekEnd: string): string {
 }
 
 /**
+ * Shifts an ISO-8601 date by a whole number of days.
+ *
+ * @param isoDate - The date to shift, as `YYYY-MM-DD`.
+ * @param days - Number of days to add; negative values move backwards.
+ * @returns The shifted date, as `YYYY-MM-DD`.
+ */
+export function addDays(isoDate: string, days: number): string {
+  const shifted = new Date(parseIsoDate(isoDate).getTime() + days * MILLISECONDS_PER_DAY);
+  return shifted.toISOString().slice(0, 10);
+}
+
+/**
  * Resolves the day the next weekly period starts on, i.e. the day after `weekEnd`.
  *
  * @param weekEnd - The active week's end date, as `YYYY-MM-DD`.
  * @returns The next week's start date, as `YYYY-MM-DD`.
  */
 export function nextWeekStart(weekEnd: string): string {
-  const nextStart = new Date(parseIsoDate(weekEnd).getTime() + MILLISECONDS_PER_DAY);
-  return nextStart.toISOString().slice(0, 10);
+  return addDays(weekEnd, 1);
 }
 
 /**

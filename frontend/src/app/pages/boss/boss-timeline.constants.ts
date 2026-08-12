@@ -10,32 +10,46 @@
 export type BossTimelineNodeStatus = 'defeated' | 'survived' | 'current' | 'upcoming';
 
 /**
- * Visual treatment for one timeline node status: its hex marker's frame color/glow, status badge,
- * and the connector line leading to the next node.
+ * Visual treatment for one timeline node status: its hex week marker, the panel silhouette beside
+ * it, and the damage bar inside that panel.
  *
- * Flat and glow-free for resolved outcomes (the frame color alone carries the meaning), reserving
- * the pulsing glow for the one node that represents the fight actually in progress.
+ * The four statuses form a single reading of the campaign, told through color alone: brand amber
+ * for a boss the group put down, red for the fight currently running, muted surfaces for a week
+ * that was merely survived, and a dimmer step still for a week whose boss has not been drawn.
+ * Flat and glow-free everywhere except the active week, which is the only node allowed to pulse.
  */
 export interface BossTimelineTier {
   /**
-   * Stroke color utility applied to the hex marker's segmented frame.
+   * Background (hex ring) and text (week number) color utilities applied to the marker.
    */
-  readonly frameStrokeClass: string;
+  readonly markerClass: string;
 
   /**
-   * Glow/motion utility layered on the hex marker, empty for statuses with no special emphasis.
+   * Utilities for the halo hexagon layered behind the marker, empty for every status but the
+   * active week.
    */
-  readonly frameGlowClass: string;
+  readonly markerHaloClass: string;
 
   /**
-   * Background/text color utilities applied to the node's status badge.
+   * Border and gradient-start utilities tinting the node's panel with the status color.
    */
-  readonly badgeClass: string;
+  readonly panelClass: string;
 
   /**
-   * Background utility applied to the connector line segment leading to the next node.
+   * Background/text color utilities applied to the node's status pill.
    */
-  readonly connectorClass: string;
+  readonly pillClass: string;
+
+  /**
+   * Background utility applied to the damage bar's fill.
+   */
+  readonly barFillClass: string;
+
+  /**
+   * Text color utility for the values the status color owns: the damage percentage and the bullet
+   * ahead of the node's meta line.
+   */
+  readonly accentTextClass: string;
 }
 
 /**
@@ -43,28 +57,36 @@ export interface BossTimelineTier {
  */
 const BOSS_TIMELINE_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTimelineTier>> = {
   defeated: {
-    frameStrokeClass: 'stroke-accent-green',
-    frameGlowClass: '',
-    badgeClass: 'bg-accent-green/15 text-accent-green',
-    connectorClass: 'bg-accent-green/40',
+    markerClass: 'bg-brand-500 text-brand-500',
+    markerHaloClass: '',
+    panelClass: 'border-brand-500/40 from-brand-500/12',
+    pillClass: 'bg-brand-500/15 text-brand-500',
+    barFillClass: 'bg-brand-500',
+    accentTextClass: 'text-brand-500',
   },
   survived: {
-    frameStrokeClass: 'stroke-text-muted',
-    frameGlowClass: '',
-    badgeClass: 'bg-surface-700 text-text-muted',
-    connectorClass: 'bg-surface-700',
+    markerClass: 'bg-surface-600 text-text-secondary',
+    markerHaloClass: '',
+    panelClass: 'border-surface-700 from-surface-700/35',
+    pillClass: 'bg-surface-800 text-text-secondary',
+    barFillClass: 'bg-surface-600',
+    accentTextClass: 'text-text-secondary',
   },
   current: {
-    frameStrokeClass: 'stroke-accent-purple',
-    frameGlowClass: 'drop-shadow-[0_0_10px_var(--color-accent-purple)] motion-safe:animate-pulse',
-    badgeClass: 'bg-accent-purple/15 text-accent-purple',
-    connectorClass: 'bg-surface-700',
+    markerClass: 'bg-accent-red text-accent-red',
+    markerHaloClass: 'bg-accent-red/25 motion-safe:animate-pulse',
+    panelClass: 'border-accent-red/50 from-accent-red/14',
+    pillClass: 'bg-accent-red/15 text-accent-red',
+    barFillClass: 'bg-accent-red',
+    accentTextClass: 'text-accent-red',
   },
   upcoming: {
-    frameStrokeClass: 'stroke-surface-600',
-    frameGlowClass: 'opacity-50',
-    badgeClass: 'bg-surface-800 text-text-muted',
-    connectorClass: 'bg-surface-800',
+    markerClass: 'bg-surface-700 text-text-muted',
+    markerHaloClass: '',
+    panelClass: 'border-surface-800 from-surface-800/25',
+    pillClass: 'bg-surface-800 text-text-muted',
+    barFillClass: 'bg-surface-700',
+    accentTextClass: 'text-text-muted',
   },
 };
 
@@ -99,6 +121,32 @@ const BOSS_TIMELINE_STATUS_LABEL_KEYS: Readonly<Record<BossTimelineNodeStatus, s
  */
 export function resolveBossStatusLabelKey(status: BossTimelineNodeStatus): string {
   return BOSS_TIMELINE_STATUS_LABEL_KEYS[status];
+}
+
+/**
+ * Translation key captioning a node's damage bar, indexed by {@link BossTimelineNodeStatus}.
+ *
+ * The same bar means three different things depending on the week it belongs to — damage still
+ * accumulating, the blow that finished the boss, or the total a week fell short with — so each
+ * status names it rather than sharing one neutral caption.
+ *
+ * `'upcoming'` maps to the empty string: a locked week renders no bar at all.
+ */
+const BOSS_TIMELINE_BAR_LABEL_KEYS: Readonly<Record<BossTimelineNodeStatus, string>> = {
+  defeated: 'boss.damageBar.defeated',
+  survived: 'boss.damageBar.survived',
+  current: 'boss.damageBar.current',
+  upcoming: '',
+};
+
+/**
+ * Resolves the translation key captioning a timeline node's damage bar.
+ *
+ * @param status - The node's outcome/state.
+ * @returns The i18n key to resolve, or the empty string for a status rendering no bar.
+ */
+export function resolveBossDamageBarLabelKey(status: BossTimelineNodeStatus): string {
+  return BOSS_TIMELINE_BAR_LABEL_KEYS[status];
 }
 
 /**

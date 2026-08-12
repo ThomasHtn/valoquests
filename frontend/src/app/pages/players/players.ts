@@ -27,6 +27,7 @@ import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
+import { SectionDivider } from '@shared/section-divider/section-divider';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { PlayerRow } from './players.model';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
@@ -48,6 +49,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     ProgressBar,
     RankIconView,
     ResourceState,
+    SectionDivider,
   ],
   templateUrl: './players.html',
   host: { class: PAGE_LAYOUT_CLASS },

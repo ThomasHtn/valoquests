@@ -1,197 +1,300 @@
-<header>
-  <a
-    class="focus-ring inline-flex items-center gap-1.5 text-sm font-semibold text-text-secondary transition-colors hover:text-text-primary"
-    routerLink="/overview"
-  >
-    <svg class="h-4 w-4 shrink-0" lucideArrowLeft></svg>
-    {{ 'rules.backToOverview' | translate }}
-  </a>
-  <h1
-    class="mt-3 flex items-center gap-2 text-3xl font-extrabold tracking-wide text-text-primary uppercase"
-  >
-    {{ 'rules.title' | translate }}
-  </h1>
-  <p class="mt-1 max-w-prose text-sm font-medium text-text-secondary">
-    {{ 'rules.subtitle' | translate }}
-  </p>
+<!-- Header: the same beat as the overview and quest headers — eyebrow, display title, one line of
+     stakes — with the reading cost as the trailing metric, so the page announces upfront that it is
+     short. -->
+<header class="flex flex-wrap items-start justify-between gap-4">
+  <div>
+    <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
+      {{ 'rules.eyebrow' | translate }}
+    </p>
+    <h1
+      class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
+    >
+      {{ 'rules.heading' | translate }}
+    </h1>
+    <p class="mt-2 max-w-prose text-sm text-text-secondary">
+      {{ 'rules.subtitle' | translate }}
+    </p>
+  </div>
+
+  <div class="text-right">
+    <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+      {{ 'rules.readingTime.label' | translate }}
+    </p>
+    <p class="font-display mt-1.5 text-2xl leading-none font-bold text-brand-500">
+      {{ 'rules.readingTime.value' | translate }}
+    </p>
+  </div>
 </header>
 
-<!-- A "quest log" rather than a stack of bordered cards: four steps strung along a single
-     gradient line, echoing the boss battle timeline's hex markers (`boss.html`) at a lighter
-     weight, so the rules read as part of the same run rather than a dry reference sheet. -->
-<ol class="relative flex flex-col gap-10 py-2 pl-1 sm:pl-2">
-  <div
-    aria-hidden="true"
-    class="pointer-events-none absolute top-2 bottom-2 left-8 w-0.5 bg-linear-to-b from-brand-500 via-accent-purple to-accent-gold sm:left-10"
-  ></div>
-
-  <li class="relative flex gap-5">
-    <span
-      class="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface-900 text-brand-500 ring-4 ring-brand-500 shadow-[0_0_18px_var(--color-brand-500)] sm:h-16 sm:w-16"
+<!-- The loop in four beats, before any number: whoever only reads this strip still knows how the
+     week works. Each panel is numbered by its position, and the numbering carries on into the
+     detailed panels below. -->
+<ol class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+  @for (step of steps; track step; let index = $index) {
+    <li
+      class="notch-tr-bl flex items-center gap-3.5 border border-brand-500/30 bg-linear-[115deg] from-brand-500/12 to-surface-sunken/55 p-3.5 [--notch:0.875rem]"
     >
-      <svg class="h-6 w-6 sm:h-7 sm:w-7" lucideTarget></svg>
-    </span>
-    <div class="min-w-0 flex-1 pt-2">
-      <p class="text-brand-500 text-xs font-bold tracking-widest uppercase">
-        {{ 'rules.sections.challenges.eyebrow' | translate }}
-      </p>
-      <h2 class="mt-1 text-xl font-extrabold text-text-primary sm:text-2xl">
-        {{ 'rules.sections.challenges.title' | translate }}
-      </h2>
-      <p class="mt-2 max-w-prose text-sm text-text-secondary sm:text-base">
-        {{ 'rules.sections.challenges.description' | translate }}
-      </p>
+      <span aria-hidden="true" class="clip-hex relative h-10 w-9 shrink-0 bg-brand-500">
+        <span
+          class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-base leading-none font-bold text-brand-500"
+        >
+          {{ index + 1 }}
+        </span>
+      </span>
+      <div class="min-w-0">
+        <h2 class="font-display text-base leading-none font-semibold text-text-primary uppercase">
+          {{ 'rules.steps.' + step + '.title' | translate }}
+        </h2>
+        <p class="mt-1.5 text-sm text-text-secondary">
+          {{ 'rules.steps.' + step + '.description' | translate }}
+        </p>
+      </div>
+    </li>
+  }
+</ol>
 
-      <ul class="mt-4 flex flex-wrap gap-2">
-        @for (tier of difficultyShowcase; track tier.difficulty) {
-          <li
-            [class]="tier.colorClass"
-            class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
-          >
-            {{ 'overview.weeklyChallenges.difficulty.' + tier.difficulty | translate }}
-            <span aria-hidden="true">·</span>
-            {{ tier.damage }}
-          </li>
-        }
-      </ul>
+<div class="grid gap-4 lg:grid-cols-2">
+  <!-- 1 · Challenges. The tier ladder is a table rather than a row of pills: the point is that
+       damage climbs with difficulty, which only reads when the tiers are stacked and the bars
+       line up. -->
+  <section
+    class="notch-tr-bl flex flex-col gap-3 border border-text-primary/10 bg-surface-sunken/50 p-5 [--notch:1.125rem] sm:p-6"
+  >
+    <div class="flex items-center gap-3">
+      <span aria-hidden="true" class="size-2.5 shrink-0 rotate-45 bg-brand-500"></span>
+      <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+        <span class="text-brand-500">1</span> · {{ 'rules.sections.challenges.title' | translate }}
+      </h2>
     </div>
-  </li>
+    <p class="text-sm text-text-secondary">
+      {{ 'rules.sections.challenges.description' | translate }}
+    </p>
 
-  <li class="relative flex gap-5">
-    <span
-      class="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface-900 text-accent-purple ring-4 ring-accent-purple shadow-[0_0_18px_var(--color-accent-purple)] sm:h-16 sm:w-16"
+    <div
+      class="mt-1 grid grid-cols-[minmax(0,1fr)_4rem] items-center gap-x-3 border-b border-brand-500/30 px-1 pb-2"
     >
-      <svg class="h-6 w-6 sm:h-7 sm:w-7" lucideSwords></svg>
-    </span>
-    <div class="min-w-0 flex-1 pt-2">
-      <p class="text-accent-purple text-xs font-bold tracking-widest uppercase">
-        {{ 'rules.sections.damage.eyebrow' | translate }}
-      </p>
-      <h2 class="mt-1 text-xl font-extrabold text-text-primary sm:text-2xl">
-        {{ 'rules.sections.damage.title' | translate }}
-      </h2>
-      <p class="mt-2 max-w-prose text-sm text-text-secondary sm:text-base">
-        {{ 'rules.sections.damage.description' | translate }}
-      </p>
-
-      <!-- Per-mode damage ladder: a lightweight grid rather than a bordered table, so it keeps
-           reading as part of the quest log instead of a spec sheet. -->
-      <p class="mt-4 text-xs font-bold tracking-widest text-text-muted uppercase">
-        {{ 'rules.sections.damage.matchDamageLabel' | translate }}
-      </p>
-      <div
-        class="mt-2 grid max-w-prose grid-cols-[1fr_auto_auto_auto] items-center gap-x-4 gap-y-1.5 text-sm"
+      <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+        {{ 'rules.sections.challenges.difficultyLabel' | translate }}
+      </span>
+      <span
+        class="tracking-label text-right font-mono text-2xs font-medium text-text-muted uppercase"
       >
-        <span></span>
-        <span class="text-accent-green text-right text-xs font-bold tracking-wide uppercase">
-          {{ 'playerProfile.matches.result.WIN' | translate }}
-        </span>
-        <span class="text-right text-xs font-bold tracking-wide text-text-muted uppercase">
-          {{ 'playerProfile.matches.result.DRAW' | translate }}
-        </span>
-        <span class="text-right text-xs font-bold tracking-wide text-text-secondary uppercase">
-          {{ 'playerProfile.matches.result.LOSS' | translate }}
-        </span>
+        {{ 'rules.sections.challenges.damageLabel' | translate }}
+      </span>
+    </div>
 
-        @for (mode of matchDamageShowcase; track mode.mode) {
-          <span class="font-semibold text-text-primary">
+    <ul>
+      @for (tier of difficultyShowcase; track tier.difficulty) {
+        <li
+          class="grid grid-cols-[minmax(0,1fr)_4rem] items-center gap-x-3 px-1 py-2 odd:bg-text-primary/4"
+        >
+          <div class="flex min-w-0 items-center gap-3">
+            <!-- Decorative: the tier it stands for is written beside it. -->
+            <span
+              [class]="tier.visual.barClass"
+              aria-hidden="true"
+              class="clip-hex relative h-7 w-6 shrink-0"
+            >
+              <span
+                [class]="tier.visual.iconClass"
+                class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-2xs font-bold"
+              >
+                {{ tier.visual.tier }}
+              </span>
+            </span>
+            <span class="truncate text-sm font-semibold text-text-primary uppercase">
+              {{ 'overview.weeklyChallenges.difficulty.' + tier.difficulty | translate }}
+            </span>
+            <span aria-hidden="true" class="hidden h-1 min-w-10 flex-1 bg-text-primary/8 sm:block">
+              <span [class]="tier.visual.barClass" [style.width.%]="tier.share" class="block h-1">
+              </span>
+            </span>
+          </div>
+          <span class="font-display text-right text-lg font-bold text-brand-500 tabular-nums">
+            {{ tier.damage }}
+          </span>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <!-- 2 · Match damage, by mode and outcome. -->
+  <section
+    class="notch-tr-bl flex flex-col gap-3 border border-text-primary/10 bg-surface-sunken/50 p-5 [--notch:1.125rem] sm:p-6"
+  >
+    <div class="flex items-center gap-3">
+      <span aria-hidden="true" class="size-2.5 shrink-0 rotate-45 bg-brand-500"></span>
+      <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+        <span class="text-brand-500">2</span> · {{ 'rules.sections.damage.title' | translate }}
+      </h2>
+    </div>
+    <p class="text-sm text-text-secondary">
+      {{ 'rules.sections.damage.description' | translate }}
+    </p>
+
+    <div
+      class="mt-1 grid grid-cols-[minmax(0,1fr)_repeat(3,3rem)] items-center gap-x-2 border-b border-brand-500/30 px-1 pb-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,3.5rem)]"
+    >
+      <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+        {{ 'rules.sections.damage.modeLabel' | translate }}
+      </span>
+      <span class="text-right font-mono text-2xs font-medium text-brand-500 uppercase">
+        {{ 'playerProfile.matches.result.WIN' | translate }}
+      </span>
+      <span class="text-right font-mono text-2xs font-medium text-text-muted uppercase">
+        {{ 'playerProfile.matches.result.DRAW' | translate }}
+      </span>
+      <span class="text-right font-mono text-2xs font-medium text-text-muted uppercase">
+        {{ 'playerProfile.matches.result.LOSS' | translate }}
+      </span>
+    </div>
+
+    <ul>
+      @for (mode of matchDamageShowcase; track mode.mode) {
+        <li
+          class="grid grid-cols-[minmax(0,1fr)_repeat(3,3rem)] items-center gap-x-2 px-1 py-2 odd:bg-text-primary/4 sm:grid-cols-[minmax(0,1fr)_repeat(3,3.5rem)]"
+        >
+          <span class="truncate text-sm font-semibold text-text-primary">
             {{ 'playerProfile.matches.gameMode.' + mode.mode | translate }}
           </span>
-          <span class="text-accent-green text-right font-bold tabular-nums">{{ mode.win }}</span>
-          <span class="text-right font-bold tabular-nums text-text-muted">
+          <span class="font-display text-right font-bold text-brand-500 tabular-nums">
+            {{ mode.win }}
+          </span>
+          <span class="font-display text-right font-bold text-text-secondary tabular-nums">
             {{ mode.draw ?? '—' }}
           </span>
-          <span class="text-right font-bold tabular-nums text-text-secondary">
+          <span class="font-display text-right font-bold text-text-muted tabular-nums">
             {{ mode.loss }}
           </span>
-        }
+        </li>
+      }
+    </ul>
+  </section>
+
+  <!-- Bonuses. Tinted brand instead of neutral, and spanning the full width: they are not a fifth
+       beat of the loop but a multiplier sitting on top of the two above. -->
+  <section
+    class="notch-tr-bl flex flex-col gap-4 border border-brand-500/30 bg-linear-[115deg] from-brand-500/10 to-surface-sunken/55 p-5 [--notch:1.125rem] sm:p-6 lg:col-span-2"
+  >
+    <div class="flex items-center gap-3">
+      <span aria-hidden="true" class="size-2.5 shrink-0 rotate-45 bg-brand-500"></span>
+      <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+        {{ 'rules.sections.bonuses.title' | translate }}
+      </h2>
+      <span
+        aria-hidden="true"
+        class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
+      ></span>
+    </div>
+
+    <div class="grid gap-5 md:grid-cols-2 md:gap-8">
+      <div>
+        <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+          {{ 'rules.sections.bonuses.regularityLabel' | translate }}
+        </p>
+        <ul class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
+          @for (tier of regularityBonusShowcase; track tier.label) {
+            <li
+              [class]="tier.intensityClass"
+              class="flex flex-col items-center gap-1.5 border-t-2 px-1 py-2.5"
+            >
+              <span class="font-mono text-xs font-semibold text-text-secondary">
+                {{ 'rules.sections.bonuses.days' | translate: { days: tier.label } }}
+              </span>
+              <span class="font-display text-lg leading-none font-bold text-brand-500 tabular-nums">
+                {{ tier.bonus }}
+              </span>
+            </li>
+          }
+        </ul>
       </div>
 
-      <p class="mt-4 max-w-prose text-sm text-text-secondary sm:text-base">
-        {{ 'rules.sections.damage.bonuses' | translate }}
-      </p>
-
-      <p class="mt-3 text-xs font-bold tracking-widest text-text-muted uppercase">
-        {{ 'rules.sections.damage.regularityLabel' | translate }}
-      </p>
-      <ul class="mt-2 flex flex-wrap gap-2">
-        @for (tier of regularityBonusShowcase; track tier.days) {
-          <li
-            class="bg-accent-cyan/15 text-accent-cyan flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
-          >
-            {{ 'rules.sections.damage.regularityDays' | translate: { days: tier.days } }}
-            <span aria-hidden="true">·</span>
-            {{ tier.bonus }}
-          </li>
-        }
-      </ul>
-
-      <p class="mt-3 text-xs font-bold tracking-widest text-text-muted uppercase">
-        {{ 'rules.sections.damage.teamLabel' | translate }}
-      </p>
-      <ul class="mt-2 flex flex-wrap gap-2">
-        @for (tier of teamBonusShowcase; track tier.playersLabel) {
-          <li
-            class="bg-accent-blue/15 text-accent-blue flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
-          >
-            {{ 'rules.sections.damage.teamPlayers' | translate: { count: tier.playersLabel } }}
-            <span aria-hidden="true">·</span>
-            {{ tier.bonus }}
-          </li>
-        }
-      </ul>
+      <div>
+        <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+          {{ 'rules.sections.bonuses.teamLabel' | translate }}
+        </p>
+        <ul class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+          @for (tier of teamBonusShowcase; track tier.label) {
+            <li
+              [class]="tier.intensityClass"
+              class="flex flex-col items-center gap-1.5 border-t-2 px-1 py-2.5"
+            >
+              <span class="font-mono text-xs font-semibold text-text-secondary">
+                {{ 'rules.sections.bonuses.players' | translate: { count: tier.label } }}
+              </span>
+              <span class="font-display text-lg leading-none font-bold text-brand-500 tabular-nums">
+                {{ tier.bonus }}
+              </span>
+            </li>
+          }
+        </ul>
+      </div>
     </div>
-  </li>
 
-  <li class="relative flex gap-5">
-    <span
-      class="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface-900 text-accent-red ring-4 ring-accent-red shadow-[0_0_18px_var(--color-accent-red)] sm:h-16 sm:w-16"
-    >
-      <svg class="h-6 w-6 sm:h-7 sm:w-7" lucideSkull></svg>
-    </span>
-    <div class="min-w-0 flex-1 pt-2">
-      <p class="text-accent-red text-xs font-bold tracking-widest uppercase">
-        {{ 'rules.sections.boss.eyebrow' | translate }}
-      </p>
-      <h2 class="mt-1 text-xl font-extrabold text-text-primary sm:text-2xl">
-        {{ 'rules.sections.boss.title' | translate }}
+    <p class="text-sm text-text-secondary">
+      {{ 'rules.sections.bonuses.footnote' | translate }}
+    </p>
+  </section>
+
+  <!-- 3 · The shared boss, and how heavy it can get. -->
+  <section
+    class="notch-tr-bl flex flex-col gap-3 border border-text-primary/10 bg-surface-sunken/50 p-5 [--notch:1.125rem] sm:p-6"
+  >
+    <div class="flex items-center gap-3">
+      <span aria-hidden="true" class="size-2.5 shrink-0 rotate-45 bg-brand-500"></span>
+      <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+        <span class="text-brand-500">3</span> · {{ 'rules.sections.boss.title' | translate }}
       </h2>
-      <p class="mt-2 max-w-prose text-sm text-text-secondary sm:text-base">
-        {{ 'rules.sections.boss.description' | translate }}
-      </p>
+    </div>
+    <p class="text-sm text-text-secondary">
+      {{ 'rules.sections.boss.description' | translate }}
+    </p>
 
-      <ul class="mt-4 flex flex-wrap gap-2">
-        @for (category of bossCategoryShowcase; track category) {
-          <li
-            [class]="bossCategoryColorClass(category)"
-            class="rounded-full bg-surface-800 px-3 py-1.5 text-xs font-bold tracking-wide uppercase"
-          >
+    <ul class="mt-1 grid gap-2.5 sm:grid-cols-3">
+      @for (category of bossCategoryShowcase; track category) {
+        <!-- The category's own color is set on the tile so its leading rule can inherit it,
+             matching how a boss is colored on the overview and boss pages. -->
+        <li
+          [class]="bossCategoryColorClass(category)"
+          class="border-l-2 border-current bg-text-primary/4 px-3.5 py-3"
+        >
+          <p class="tracking-label font-display text-sm font-semibold uppercase">
             {{ 'boss.category.' + category | translate }}
-          </li>
-        }
-      </ul>
-    </div>
-  </li>
+          </p>
+          <p class="mt-2 text-sm text-text-secondary">
+            {{ 'rules.sections.boss.categories.' + category | translate }}
+          </p>
+        </li>
+      }
+    </ul>
+  </section>
 
-  <li class="relative flex gap-5">
-    <span
-      class="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface-900 text-accent-gold ring-4 ring-accent-gold shadow-[0_0_18px_var(--color-accent-gold)] sm:h-16 sm:w-16"
-    >
-      <svg class="h-6 w-6 sm:h-7 sm:w-7" lucideTrophy></svg>
-    </span>
-    <div class="min-w-0 flex-1 pt-2">
-      <p class="text-accent-gold text-xs font-bold tracking-widest uppercase">
-        {{ 'rules.sections.ranking.eyebrow' | translate }}
-      </p>
-      <h2 class="mt-1 text-xl font-extrabold text-text-primary sm:text-2xl">
-        {{ 'rules.sections.ranking.title' | translate }}
+  <!-- 4 · What all that damage is counted for. -->
+  <section
+    class="notch-tr-bl flex flex-col gap-3 border border-text-primary/10 bg-surface-sunken/50 p-5 [--notch:1.125rem] sm:p-6"
+  >
+    <div class="flex items-center gap-3">
+      <span aria-hidden="true" class="size-2.5 shrink-0 rotate-45 bg-brand-500"></span>
+      <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+        <span class="text-brand-500">4</span> · {{ 'rules.sections.ranking.title' | translate }}
       </h2>
-      <p
-        class="mt-2 flex max-w-prose flex-wrap items-center gap-2 text-sm text-text-secondary sm:text-base"
-      >
-        {{ 'rules.sections.ranking.description' | translate }}
-        <app-champion-badge />
-      </p>
     </div>
-  </li>
-</ol>
+    <p class="flex flex-wrap items-center gap-x-2 text-sm text-text-secondary">
+      {{ 'rules.sections.ranking.description' | translate }}
+      <app-champion-badge />
+    </p>
+
+    <ol class="mt-1 flex flex-col gap-2">
+      @for (fact of rankingFacts; track fact; let index = $index) {
+        <li class="flex items-center gap-3.5 px-3.5 py-2.5 odd:bg-text-primary/4">
+          <span aria-hidden="true" class="shrink-0 font-mono text-sm font-bold text-brand-500">
+            0{{ index + 1 }}
+          </span>
+          <span class="text-sm text-text-secondary">
+            {{ 'rules.sections.ranking.facts.' + fact | translate }}
+          </span>
+        </li>
+      }
+    </ol>
+  </section>
+</div>

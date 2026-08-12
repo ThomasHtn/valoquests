@@ -1,26 +1,78 @@
 import { BossTimelineNodeStatus } from './boss-timeline.constants';
 
 /**
- * One marker on the boss battle timeline, display-ready.
+ * One player's share of the damage dealt to a single week's boss, display-ready.
+ *
+ * Reconstructed from that week's ranking (the challenge damage a player scored during the week is
+ * exactly the damage the boss took from them), so it exists for every week the ranking covers —
+ * finalized or active — and never for a week whose boss has not been drawn.
+ */
+export interface BossContribution {
+  readonly playerId: number;
+
+  /**
+   * 1-based position within the week's ranking.
+   */
+  readonly position: number;
+  readonly displayName: string;
+  readonly avatarUrl: string | null;
+
+  /**
+   * Whether this player is the reigning weekly "Champion", so their avatar carries the title's
+   * gold ring here too.
+   */
+  readonly isChampion: boolean;
+
+  /**
+   * Damage dealt, grouped for reading (`21 400`).
+   */
+  readonly damageLabel: string;
+
+  /**
+   * Challenges cleared that week — `"4/5"` while the week is still running and its total is known,
+   * the bare count once finalized, since the backend's history does not carry how many challenges
+   * that week had.
+   */
+  readonly questsLabel: string;
+}
+
+/**
+ * One marker on the boss campaign timeline, display-ready.
  *
  * Covers all four states the timeline renders: a finalized past week (`'defeated'` /
  * `'survived'`), the active week (`'current'`), or a locked placeholder for a week ahead
  * (`'upcoming'`) whose boss doesn't exist yet — see {@link BossTimelineNodeStatus}.
+ *
+ * Every label is baked here already translated and already formatted: the node is what both the
+ * timeline and the detail panel render, and neither should have to re-derive the same string from
+ * raw hit points twice.
  */
 export interface BossTimelineNode {
   /**
-   * Stable identity for the `@for` track expression: a real node's ISO `weekStart`, or a
-   * synthetic key for an `'upcoming'` placeholder.
+   * Stable identity for the `@for` track expression and for the panel's selection: a real node's
+   * ISO `weekStart`, or a synthetic key for an `'upcoming'` placeholder.
    */
   readonly id: string;
 
   readonly status: BossTimelineNodeStatus;
 
   /**
-   * `null` for an `'upcoming'` placeholder, whose week isn't determined yet.
+   * ISO week number shown inside the hex marker, or `null` for an `'upcoming'` placeholder whose
+   * week isn't determined yet.
+   */
+  readonly weekNumber: number | null;
+
+  /**
+   * Full `Semaine 32` wording, used where the marker's bare number needs spelling out — the row's
+   * accessible name.
    */
   readonly weekLabel: string | null;
   readonly dateRangeLabel: string | null;
+
+  /**
+   * Translated status pill wording (`Vaincu`, `En cours`, …).
+   */
+  readonly statusLabel: string;
 
   readonly bossName: string;
   readonly bossDescription: string;
@@ -33,12 +85,38 @@ export interface BossTimelineNode {
   readonly portraitUrl: string | null;
 
   /**
-   * `null` for an `'upcoming'` placeholder, which has no hit points to track yet.
+   * Whether the week has a boss to report damage on at all, i.e. every status but `'upcoming'`.
+   * Read by both the timeline card and the panel to pick between the damage block and the locked
+   * placeholder.
    */
-  readonly effectiveHp: number | null;
-  readonly totalDamageDealt: number | null;
+  readonly hasDamage: boolean;
 
-  readonly defeatedByPlayerDisplayName: string | null;
-  readonly defeatedByAvatarUrl: string | null;
-  readonly defeatedByIsChampion: boolean;
+  /**
+   * Share of the boss's effective hit points the group has taken off, from 0 to 100, clamped at
+   * 100 once the boss is down. Zero for an `'upcoming'` placeholder.
+   */
+  readonly damagePercentage: number;
+
+  /**
+   * That same share as text (`64 %`), and the raw tally behind it (`61 400 / 95 000 PV`).
+   */
+  readonly damagePercentageLabel: string;
+  readonly damageLabel: string;
+
+  /**
+   * Translated caption above the damage bar — see `resolveBossDamageBarLabelKey`.
+   */
+  readonly barLabel: string;
+
+  /**
+   * The one line qualifying the week: who landed the finishing blow, who dealt the most damage, or
+   * how long the active week has left. `null` when nothing is known yet.
+   */
+  readonly metaLabel: string | null;
+
+  /**
+   * The week's damage broken down per player, ordered best first. Empty for an `'upcoming'`
+   * placeholder and for any week the ranking does not cover.
+   */
+  readonly contributions: readonly BossContribution[];
 }

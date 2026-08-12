@@ -5,29 +5,51 @@
       "MINOR": "Minor",
       "STANDARD": "Standard"
     },
-    "damageDealt": "{{damage}} / {{hp}} HP dealt",
+    "damageBar": {
+      "current": "Damage in progress",
+      "defeated": "Boss eliminated",
+      "survived": "Damage dealt"
+    },
+    "damageDealt": "{{damage}} / {{hp}} HP",
+    "damagePercentage": "{{value}}%",
     "error": "Failed to load the boss history.",
-    "finishingBlow": "Finishing blow",
+    "eyebrow": "Campaign",
     "loading": "Loading the boss history…",
+    "meta": {
+      "finishingBlow": "Finishing blow · {{player}}",
+      "remaining": "{{days}}d {{hours}}h remaining",
+      "topDamage": "Top damage · {{player}} · {{damage}}"
+    },
     "outcome": {
       "defeated": "Defeated",
       "survived": "Survived"
     },
+    "panel": {
+      "close": "Close the week's detail",
+      "damage": "Damage",
+      "next": "Next week",
+      "portrait": "Boss portrait",
+      "previous": "Previous week",
+      "quests": "Quests",
+      "ranking": "Ranking"
+    },
+    "progress": "{{defeated}} bosses defeated · {{fought}} faced · {{damage}} damage",
     "status": {
       "current": "In progress",
       "upcoming": "Upcoming"
     },
-    "subtitle": "Review the boss the group faced each week, and who dealt the finishing blow.",
+    "subtitle": "One boss a week. From the first confrontation through to the targets still sealed.",
     "timeline": {
       "ariaLabel": "Boss battle timeline"
     },
-    "title": "Boss",
+    "title": "Boss timeline",
     "upcoming": {
       "description": "The next opponent hasn't been drawn yet.",
       "name": "Unknown boss"
     },
     "week": {
-      "label": "Week {{number}}"
+      "label": "Week {{number}}",
+      "short": "Wk"
     }
   },
   "landing": {
@@ -206,8 +228,8 @@
     }
   },
   "players": {
+    "allSeasons": "All-season statistics",
     "columns": {
-      "details": "Details",
       "headshotPercentage": "Headshot %",
       "kda": "KDA",
       "matchesPlayed": "Matches",
@@ -217,8 +239,10 @@
     },
     "empty": "No player is tracked yet.",
     "error": "Failed to load players.",
+    "eyebrow": "Players · Squad registry",
+    "heading": "{{count}} tracked players",
     "loading": "Loading players…",
-    "subtitleCount": "{{count}} tracked players · all-season statistics",
+    "subtitle": "Rank, win rate and accuracy for every player, from the highest ranked down.",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -322,7 +346,7 @@
       "unknown": "Never synchronized"
     },
     "nav": {
-      "boss": "Boss",
+      "boss": "Campaign",
       "challenges": "Challenges",
       "comparison": "Comparison",
       "leaderboard": "Leaderboard",

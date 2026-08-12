@@ -74,6 +74,21 @@ const CHALLENGE_DIFFICULTY_COLORS: Readonly<
 };
 
 /**
+ * Resolves the tier rank and color treatment of a difficulty, without an icon.
+ *
+ * Used where a difficulty is shown on its own rather than through a challenge — the rules page's
+ * damage ladder — so the tier reads with the same color there as on the weekly board.
+ *
+ * @param difficulty - The difficulty tier.
+ * @returns The visual treatment to apply for the tier.
+ */
+export function resolveDifficultyVisual(
+  difficulty: ChallengeDifficulty,
+): Omit<ChallengeVisual, 'icon'> {
+  return CHALLENGE_DIFFICULTY_COLORS[difficulty];
+}
+
+/**
  * Resolves the icon and color treatment for a challenge.
  *
  * The icon reflects the challenge's metric (e.g. `"HEADSHOTS"` or `"KILLS + MATCHES_PLAYED"`,
@@ -92,7 +107,7 @@ export function resolveChallengeVisual(
   const [primaryMetric] = metric.split(' + ');
   return {
     icon: CHALLENGE_METRIC_ICONS[primaryMetric] ?? DEFAULT_CHALLENGE_ICON,
-    ...CHALLENGE_DIFFICULTY_COLORS[difficulty],
+    ...resolveDifficultyVisual(difficulty),
   };
 }
 

@@ -17,9 +17,9 @@ import { Component, input } from '@angular/core';
       class="h-px flex-1 bg-linear-to-r from-brand-500/75 to-brand-500/10"
     ></span>
     @if (label()) {
-      <span
-        class="tracking-label shrink-0 font-mono text-2xs font-medium text-text-muted uppercase"
-      >
+      <!-- Shrinkable rather than fixed: a long label (a campaign tally, say) would otherwise push
+           the divider past its container on a narrow viewport instead of wrapping. -->
+      <span class="tracking-label min-w-0 font-mono text-2xs font-medium text-text-muted uppercase">
         {{ label() }}
       </span>
     }

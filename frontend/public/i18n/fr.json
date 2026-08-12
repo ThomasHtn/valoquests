@@ -5,29 +5,51 @@
       "MINOR": "Mineur",
       "STANDARD": "Standard"
     },
-    "damageDealt": "{{damage}} / {{hp}} PV infligés",
+    "damageBar": {
+      "current": "Dégâts en cours",
+      "defeated": "Boss éliminé",
+      "survived": "Dégâts infligés"
+    },
+    "damageDealt": "{{damage}} / {{hp}} PV",
+    "damagePercentage": "{{value}} %",
     "error": "Impossible de charger l'historique des boss.",
-    "finishingBlow": "Coup de grâce",
+    "eyebrow": "Campagne",
     "loading": "Chargement de l'historique des boss…",
+    "meta": {
+      "finishingBlow": "Coup de grâce · {{player}}",
+      "remaining": "{{days}}j {{hours}}h restantes",
+      "topDamage": "Meilleur dégât · {{player}} · {{damage}}"
+    },
     "outcome": {
       "defeated": "Vaincu",
-      "survived": "A survécu"
+      "survived": "Survécu"
     },
+    "panel": {
+      "close": "Fermer le détail de la semaine",
+      "damage": "Dégâts",
+      "next": "Semaine suivante",
+      "portrait": "Portrait du boss",
+      "previous": "Semaine précédente",
+      "quests": "Quêtes",
+      "ranking": "Classement"
+    },
+    "progress": "{{defeated}} boss vaincus · {{fought}} affrontés · {{damage}} dégâts",
     "status": {
       "current": "En cours",
       "upcoming": "À venir"
     },
-    "subtitle": "Retrouvez le boss affronté par le groupe chaque semaine, et qui a porté le coup de grâce.",
+    "subtitle": "Chaque semaine, un boss. Du premier affrontement jusqu'aux cibles encore scellées.",
     "timeline": {
       "ariaLabel": "Chronologie des combats de boss"
     },
-    "title": "Boss",
+    "title": "Chronologie des boss",
     "upcoming": {
       "description": "Le prochain adversaire n'est pas encore déterminé.",
       "name": "Boss inconnu"
     },
     "week": {
-      "label": "Semaine {{number}}"
+      "label": "Semaine {{number}}",
+      "short": "Sem"
     }
   },
   "landing": {
@@ -206,8 +228,8 @@
     }
   },
   "players": {
+    "allSeasons": "Statistiques toutes saisons",
     "columns": {
-      "details": "Détails",
       "headshotPercentage": "Précision",
       "kda": "KDA",
       "matchesPlayed": "Matchs",
@@ -217,8 +239,10 @@
     },
     "empty": "Aucun joueur suivi pour le moment.",
     "error": "Impossible de charger les joueurs.",
+    "eyebrow": "Joueurs · Registre de l'escouade",
+    "heading": "{{count}} joueurs suivis",
     "loading": "Chargement des joueurs…",
-    "subtitleCount": "{{count}} joueurs suivis · statistiques toutes saisons",
+    "subtitle": "Rang, winrate et précision de chaque joueur, du mieux classé au dernier.",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -322,7 +346,7 @@
       "unknown": "Jamais synchronisé"
     },
     "nav": {
-      "boss": "Boss",
+      "boss": "Campagne",
       "challenges": "Quête",
       "comparison": "Comparaison",
       "leaderboard": "Palmarès",
