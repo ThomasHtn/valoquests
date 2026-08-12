@@ -9,7 +9,6 @@ import {
   MATCH_DAMAGE_SHOWCASE,
   RANKING_FACTS,
   REGULARITY_BONUS_SHOWCASE,
-  RULES_STEPS,
   TEAM_BONUS_SHOWCASE,
 } from './rules.constants';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
@@ -17,9 +16,9 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 /**
  * Rules page.
  *
- * Static, single-screen walkthrough of the weekly loop: the four beats as a strip across the top,
- * then one panel per beat spelling out the numbers behind it, for anyone landing on the tracker
- * without prior context.
+ * Static walkthrough of the weekly loop, read top to bottom: one section per beat, each pairing a
+ * short narrative with the numbers behind it, for anyone landing on the tracker without prior
+ * context.
  */
 @Component({
   selector: 'app-rules',
@@ -28,11 +27,6 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Rules {
-  /**
-   * The four beats of the weekly loop, shown as the header strip.
-   */
-  protected readonly steps = RULES_STEPS;
-
   /**
    * Damage ladder shown in the challenges panel, exposed to the template.
    */

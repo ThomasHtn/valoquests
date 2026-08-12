@@ -41,13 +41,13 @@ export interface BossTimelineTier {
   readonly pillClass: string;
 
   /**
-   * Background utility applied to the damage bar's fill.
+   * Background utility applied to the health bar's fill.
    */
   readonly barFillClass: string;
 
   /**
-   * Text color utility for the values the status color owns: the damage percentage and the bullet
-   * ahead of the node's meta line.
+   * Text color utility for the values the status color owns: the remaining hit points percentage
+   * and the bullet ahead of the node's meta line.
    */
   readonly accentTextClass: string;
 }
@@ -124,55 +124,27 @@ export function resolveBossStatusLabelKey(status: BossTimelineNodeStatus): strin
 }
 
 /**
- * Translation key captioning a node's damage bar, indexed by {@link BossTimelineNodeStatus}.
+ * Translation key captioning a node's health bar, indexed by {@link BossTimelineNodeStatus}.
  *
- * The same bar means three different things depending on the week it belongs to — damage still
- * accumulating, the blow that finished the boss, or the total a week fell short with — so each
+ * The same bar means three different things depending on the week it belongs to — the hit points
+ * left to take off, the empty gauge of a boss put down, or what a week fell short of — so each
  * status names it rather than sharing one neutral caption.
  *
  * `'upcoming'` maps to the empty string: a locked week renders no bar at all.
  */
 const BOSS_TIMELINE_BAR_LABEL_KEYS: Readonly<Record<BossTimelineNodeStatus, string>> = {
-  defeated: 'boss.damageBar.defeated',
-  survived: 'boss.damageBar.survived',
-  current: 'boss.damageBar.current',
+  defeated: 'boss.hpBar.defeated',
+  survived: 'boss.hpBar.survived',
+  current: 'boss.hpBar.current',
   upcoming: '',
 };
 
 /**
- * Resolves the translation key captioning a timeline node's damage bar.
+ * Resolves the translation key captioning a timeline node's health bar.
  *
  * @param status - The node's outcome/state.
  * @returns The i18n key to resolve, or the empty string for a status rendering no bar.
  */
-export function resolveBossDamageBarLabelKey(status: BossTimelineNodeStatus): string {
+export function resolveBossHpBarLabelKey(status: BossTimelineNodeStatus): string {
   return BOSS_TIMELINE_BAR_LABEL_KEYS[status];
 }
-
-/**
- * One edge of the hex marker's segmented frame, as a line in a 0-100 square viewBox.
- */
-export interface HexFrameEdge {
-  readonly x1: number;
-  readonly y1: number;
-  readonly x2: number;
-  readonly y2: number;
-}
-
-/**
- * The six edges of the hex marker's frame, each shortened at both ends so a small gap opens at
- * every vertex — the segmented, beveled look of a sci-fi hex frame rather than a plain outline.
- *
- * Traces a true regular pointy-top hexagon (vertices at 50%/0%, 93.3%/25%, 93.3%/75%, 50%/100%,
- * 6.7%/75%, 6.7%/25% — width = height * sin(60°)) rather than stretching one edge-to-edge across
- * the square viewBox, which is what flattened the marker; the boss portrait clip-path in `boss.html`
- * uses the same vertices so the frame and the portrait line up.
- */
-export const HEX_FRAME_EDGES: readonly HexFrameEdge[] = [
-  { x1: 56.5, y1: 3.75, x2: 86.8, y2: 21.25 },
-  { x1: 93.3, y1: 32.5, x2: 93.3, y2: 67.5 },
-  { x1: 86.8, y1: 78.75, x2: 56.5, y2: 96.25 },
-  { x1: 43.5, y1: 96.25, x2: 13.2, y2: 78.75 },
-  { x1: 6.7, y1: 67.5, x2: 6.7, y2: 32.5 },
-  { x1: 13.2, y1: 21.25, x2: 43.5, y2: 3.75 },
-];

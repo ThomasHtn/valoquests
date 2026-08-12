@@ -25,7 +25,7 @@
        data arriving does not shift the page. -->
   <div class="flex flex-col gap-6" skeleton>
     <div
-      class="notch-tr notch-tr-edge flex items-center gap-5 border border-text-primary/10 bg-text-primary/4 p-5 [--notch:1.25rem]"
+      class="notch-tr flex items-center gap-5 border-l-2 border-surface-700 bg-text-primary/4 p-5 [--notch:1.25rem]"
     >
       <span class="clip-hex size-24 shrink-0 bg-surface-700"></span>
       <span class="flex flex-col gap-3">
@@ -44,10 +44,11 @@
   </div>
 
   @if (details(); as playerDetails) {
-    <!-- Identity banner: the page's one hero panel, lit by the brand from its leading corner like
-         every other headline surface in the direction. -->
+    <!-- Identity banner: same surface as a row of the registry this page is reached from — flat
+         tint, leading rule, cut corner — so the profile reads as that row opened up rather than as
+         a separate kind of panel. -->
     <section
-      class="notch-tr notch-tr-edge flex flex-col gap-5 border border-brand-500/30 bg-linear-[115deg] from-brand-500/12 to-surface-sunken/55 p-5 [--notch:1.25rem] sm:flex-row sm:items-center sm:justify-between sm:p-6"
+      class="notch-tr flex flex-col gap-5 border-l-2 border-text-primary/15 bg-text-primary/4 p-5 [--notch:1.25rem] sm:flex-row sm:items-center sm:justify-between sm:p-6"
     >
       <div class="flex items-center gap-5">
         <!-- Portrait, set in a hexagonal plate: the halo behind it *is* the frame, drawn a hair
@@ -180,13 +181,12 @@
         [value]="seasonId()"
         (valueChange)="onSeasonFilterChange($event)"
         class="sm:ml-auto"
-        rounded="none"
       />
 
       @if (hasActiveFilters()) {
         <button
           (click)="resetFilters()"
-          class="focus-ring tracking-label cursor-pointer px-2 py-2 font-mono text-2xs font-medium text-text-muted uppercase transition-colors hover:text-text-primary"
+          class="focus-ring tracking-label cursor-pointer px-2 py-2 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:text-text-primary"
           type="button"
         >
           {{ 'playerProfile.filters.reset' | translate }}
@@ -241,7 +241,7 @@
         [class]="winRate.textClass"
         class="col-span-2 border-t-2 border-current bg-text-primary/4 px-4 py-3.5 sm:col-span-3 lg:col-span-1"
       >
-        <p class="tracking-label flex items-center gap-2 font-mono text-2xs font-medium uppercase">
+        <p class="tracking-label flex items-center gap-2 font-mono text-xs font-medium uppercase">
           <span
             [class]="winRate.barClass"
             aria-hidden="true"
@@ -270,7 +270,7 @@
       </div>
 
       <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
-        <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+        <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
           {{ 'playerProfile.stats.kda' | translate }}
         </p>
         <p
@@ -282,7 +282,7 @@
       </div>
 
       <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
-        <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+        <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
           {{ 'playerProfile.stats.headshotPercentage' | translate }}
         </p>
         <p class="font-display mt-3 text-2xl leading-none font-bold text-text-primary tabular-nums">
@@ -291,7 +291,7 @@
       </div>
 
       <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
-        <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+        <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
           {{ 'playerProfile.stats.adr' | translate }}
         </p>
         <p class="font-display mt-3 text-2xl leading-none font-bold text-text-primary tabular-nums">
@@ -300,7 +300,7 @@
       </div>
 
       <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
-        <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+        <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
           {{ 'playerProfile.stats.acs' | translate }}
         </p>
         <p class="font-display mt-3 text-2xl leading-none font-bold text-text-primary tabular-nums">
@@ -309,7 +309,7 @@
       </div>
 
       <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
-        <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+        <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
           {{ 'playerProfile.stats.matchesPlayed' | translate }}
         </p>
         <p class="font-display mt-3 text-2xl leading-none font-bold text-text-primary tabular-nums">
@@ -353,12 +353,13 @@
             <div class="flex flex-col gap-2">
               <!-- Day summary row: the record sits beside the date rather than at the row's
                    trailing edge, where it would land under the ACS column and read as one of its
-                   values. The rest of the row carries the day's own averages/totals, set in mono
-                   on a single line and aligned under the same columns the matches below use, so a
-                   session's overall shape reads at a glance without adding across rows. -->
+                   values. The rest of the row carries the day's own averages/totals, laid out
+                   label-over-value under the same columns the matches below use, so a session's
+                   overall shape reads at a glance without adding across rows. The background is a
+                   denser tint of the match rows' own so the summary reads as their header. -->
               <div
                 [class]="rowGridClass"
-                class="border-l-2 border-brand-500 bg-brand-500/8 py-2.5 pr-4"
+                class="border-l-2 border-brand-500 bg-text-primary/8 py-2.5 pr-4"
               >
                 <div class="flex items-center gap-4 px-4">
                   <span
@@ -373,7 +374,7 @@
                   </span>
                   <span class="flex min-w-0 items-baseline gap-3">
                     <span
-                      class="tracking-label truncate font-mono text-2xs font-medium text-text-secondary uppercase"
+                      class="tracking-label truncate font-mono text-xs font-medium text-text-secondary uppercase"
                     >
                       {{ day.dateLabel }}
                     </span>
@@ -389,41 +390,63 @@
                   </span>
                 </div>
                 <div></div>
-                <p
-                  class="tracking-label truncate px-2 text-center font-mono text-2xs font-medium text-text-muted uppercase"
-                >
-                  {{ 'playerProfile.matches.columns.kda' | translate }}
-                  <span class="text-text-secondary tabular-nums">
+                <p class="px-2 text-center">
+                  <span
+                    class="tracking-label block truncate font-mono text-xs font-medium text-text-muted uppercase"
+                  >
+                    {{ 'playerProfile.matches.columns.kda' | translate }}
+                  </span>
+                  <span
+                    class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                  >
                     {{ day.totalKills }}/{{ day.totalDeaths }}/{{ day.totalAssists }}
                   </span>
                 </p>
-                <p
-                  class="tracking-label truncate px-2 text-center font-mono text-2xs font-medium text-text-muted uppercase"
-                >
-                  {{ 'playerProfile.matches.columns.kd' | translate }}
-                  <span class="text-text-secondary tabular-nums">{{ formatKda(day.avgKda) }}</span>
+                <p class="px-2 text-center">
+                  <span
+                    class="tracking-label block truncate font-mono text-xs font-medium text-text-muted uppercase"
+                  >
+                    {{ 'playerProfile.matches.columns.kd' | translate }}
+                  </span>
+                  <span
+                    class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                  >
+                    {{ formatKda(day.avgKda) }}
+                  </span>
                 </p>
-                <p
-                  class="tracking-label truncate px-2 text-center font-mono text-2xs font-medium text-text-muted uppercase"
-                >
-                  {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
-                  <span class="text-text-secondary tabular-nums">
+                <p class="px-2 text-center">
+                  <span
+                    class="tracking-label block truncate font-mono text-xs font-medium text-text-muted uppercase"
+                  >
+                    {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
+                  </span>
+                  <span
+                    class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                  >
                     {{ formatHeadshotPercentage(day.avgHeadshotPercentage) }}
                   </span>
                 </p>
-                <p
-                  class="tracking-label truncate px-2 text-center font-mono text-2xs font-medium text-text-muted uppercase"
-                >
-                  {{ 'playerProfile.matches.columns.adr' | translate }}
-                  <span class="text-text-secondary tabular-nums">
+                <p class="px-2 text-center">
+                  <span
+                    class="tracking-label block truncate font-mono text-xs font-medium text-text-muted uppercase"
+                  >
+                    {{ 'playerProfile.matches.columns.adr' | translate }}
+                  </span>
+                  <span
+                    class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                  >
                     {{ formatScore(day.avgAdr) }}
                   </span>
                 </p>
-                <p
-                  class="tracking-label truncate px-2 text-center font-mono text-2xs font-medium text-text-muted uppercase"
-                >
-                  {{ 'playerProfile.matches.columns.acs' | translate }}
-                  <span class="text-text-secondary tabular-nums">
+                <p class="px-2 text-center">
+                  <span
+                    class="tracking-label block truncate font-mono text-xs font-medium text-text-muted uppercase"
+                  >
+                    {{ 'playerProfile.matches.columns.acs' | translate }}
+                  </span>
+                  <span
+                    class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                  >
                     {{ formatScore(day.avgAcs) }}
                   </span>
                 </p>
@@ -475,7 +498,7 @@
 
                   <p class="px-2 text-center">
                     <span
-                      class="tracking-label block font-mono text-2xs font-medium text-text-muted uppercase"
+                      class="tracking-label block font-mono text-xs font-medium text-text-muted uppercase"
                     >
                       {{ 'playerProfile.matches.columns.kda' | translate }}
                     </span>
@@ -488,7 +511,7 @@
 
                   <p class="px-2 text-center">
                     <span
-                      class="tracking-label block font-mono text-2xs font-medium text-text-muted uppercase"
+                      class="tracking-label block font-mono text-xs font-medium text-text-muted uppercase"
                     >
                       {{ 'playerProfile.matches.columns.kd' | translate }}
                     </span>
@@ -502,7 +525,7 @@
 
                   <p class="px-2 text-center">
                     <span
-                      class="tracking-label block font-mono text-2xs font-medium text-text-muted uppercase"
+                      class="tracking-label block font-mono text-xs font-medium text-text-muted uppercase"
                     >
                       {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
                     </span>
@@ -515,7 +538,7 @@
 
                   <p class="px-2 text-center">
                     <span
-                      class="tracking-label block font-mono text-2xs font-medium text-text-muted uppercase"
+                      class="tracking-label block font-mono text-xs font-medium text-text-muted uppercase"
                     >
                       {{ 'playerProfile.matches.columns.adr' | translate }}
                     </span>
@@ -528,7 +551,7 @@
 
                   <p class="px-2 text-center">
                     <span
-                      class="tracking-label block font-mono text-2xs font-medium text-text-muted uppercase"
+                      class="tracking-label block font-mono text-xs font-medium text-text-muted uppercase"
                     >
                       {{ 'playerProfile.matches.columns.acs' | translate }}
                     </span>
@@ -550,7 +573,7 @@
           @for (day of matchDays(); track day.dayKey) {
             <div class="flex flex-col gap-2">
               <div
-                class="flex flex-wrap items-center gap-x-4 gap-y-2 border-l-2 border-brand-500 bg-brand-500/8 px-4 py-2.5"
+                class="flex flex-wrap items-center gap-x-4 gap-y-2 border-l-2 border-brand-500 bg-text-primary/8 px-4 py-2.5"
               >
                 <span aria-hidden="true" class="clip-hex relative size-8 shrink-0 bg-brand-500/50">
                   <span
@@ -560,7 +583,7 @@
                   </span>
                 </span>
                 <span
-                  class="tracking-label font-mono text-2xs font-medium text-text-secondary uppercase"
+                  class="tracking-label font-mono text-xs font-medium text-text-secondary uppercase"
                 >
                   {{ day.dateLabel }}
                 </span>
@@ -622,7 +645,7 @@
                     >
                       <div>
                         <dt
-                          class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase"
+                          class="tracking-label font-mono text-xs font-medium text-text-muted uppercase"
                         >
                           {{ 'playerProfile.matches.columns.kda' | translate }}
                         </dt>
@@ -634,7 +657,7 @@
                       </div>
                       <div>
                         <dt
-                          class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase"
+                          class="tracking-label font-mono text-xs font-medium text-text-muted uppercase"
                         >
                           {{ 'playerProfile.matches.columns.kd' | translate }}
                         </dt>
@@ -647,7 +670,7 @@
                       </div>
                       <div>
                         <dt
-                          class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase"
+                          class="tracking-label font-mono text-xs font-medium text-text-muted uppercase"
                         >
                           {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
                         </dt>
@@ -659,7 +682,7 @@
                       </div>
                       <div>
                         <dt
-                          class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase"
+                          class="tracking-label font-mono text-xs font-medium text-text-muted uppercase"
                         >
                           {{ 'playerProfile.matches.columns.adr' | translate }}
                         </dt>
@@ -671,7 +694,7 @@
                       </div>
                       <div>
                         <dt
-                          class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase"
+                          class="tracking-label font-mono text-xs font-medium text-text-muted uppercase"
                         >
                           {{ 'playerProfile.matches.columns.acs' | translate }}
                         </dt>
@@ -699,7 +722,7 @@
 
         @if (isLoadingMoreMatches()) {
           <div
-            class="tracking-label flex items-center justify-center gap-2 pt-4 font-mono text-2xs text-text-muted uppercase"
+            class="tracking-label flex items-center justify-center gap-2 pt-4 font-mono text-xs text-text-muted uppercase"
             role="status"
           >
             <svg aria-hidden="true" class="size-3.5 animate-spin" lucideLoaderCircle></svg>

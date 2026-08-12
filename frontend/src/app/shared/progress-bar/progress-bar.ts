@@ -18,7 +18,7 @@ import { Component, input } from '@angular/core';
   selector: 'app-progress-bar',
   templateUrl: './progress-bar.html',
   host: {
-    class: 'block overflow-hidden bg-surface-sunken',
+    class: 'relative block overflow-hidden bg-surface-sunken',
     '[class]': 'heightClass()',
     'aria-hidden': 'true',
   },
@@ -39,4 +39,11 @@ export class ProgressBar {
    * Tailwind height utility applied to the track, for the few call sites needing a taller bar.
    */
   public readonly heightClass = input('h-1');
+
+  /**
+   * Draws a bright hairline at the fill's head, the game-style marker the boss health bar uses.
+   * Opt-in: on a thin track it reads as decoration, so only the call sites treating the bar as a
+   * gauge rather than a plain indicator turn it on.
+   */
+  public readonly edgeMarker = input(false);
 }

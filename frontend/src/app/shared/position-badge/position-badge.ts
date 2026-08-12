@@ -1,8 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 
 import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
-import { POSITION_BADGE_SIZES } from './position-badge.constants';
-import { PositionBadgeSize } from './position-badge.model';
 
 /**
  * Hexagonal badge displaying a ranking position, highlighted by podium tier.
@@ -24,16 +22,6 @@ export class PositionBadge {
    * consumes a ranking slot.
    */
   public readonly position = input.required<number | null>();
-
-  /**
-   * Size preset controlling the badge's dimensions and font size.
-   */
-  public readonly size = input<PositionBadgeSize>('md');
-
-  /**
-   * Rendering metrics matching the current {@link size}.
-   */
-  protected readonly metrics = computed(() => POSITION_BADGE_SIZES[this.size()]);
 
   /**
    * Whether the position is on the podium (1st to 3rd), which is highlighted with a stronger fill

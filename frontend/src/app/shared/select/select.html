@@ -6,12 +6,9 @@
   [attr.aria-controls]="listboxId"
   [attr.aria-expanded]="isOpen()"
   [attr.aria-label]="ariaLabel()"
-  [class]="variantClass()"
-  [class.rounded-full]="rounded() === 'full'"
-  [class.rounded-lg]="rounded() === 'lg'"
   [disabled]="disabled()"
   aria-haspopup="listbox"
-  class="focus-ring flex min-h-10 cursor-pointer items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors motion-safe:active:scale-[0.96] disabled:pointer-events-none disabled:opacity-40 sm:gap-2 sm:px-4"
+  class="notch-tr notch-tr-edge focus-ring-inset flex min-h-10 cursor-pointer items-center gap-1.5 border border-brand-500/40 bg-brand-500/12 px-3 py-2 text-sm font-semibold text-text-primary transition-colors [--notch:0.5rem] hover:border-brand-500/60 hover:bg-brand-500/20 motion-safe:active:scale-[0.96] disabled:pointer-events-none disabled:opacity-40 sm:gap-2 sm:px-4"
   role="combobox"
   type="button"
 >
@@ -28,13 +25,16 @@
      rendered as buttons for native click/activation semantics but held out of the tab order with
      tabindex="-1", since focus stays on the combobox and moves through `aria-activedescendant`.
      Capped in height and scrolled beyond it, so a long list (every game mode, every season) stays
-     inside the viewport instead of running off the bottom of the page. -->
+     inside the viewport instead of running off the bottom of the page.
+
+     Held by a leading rule rather than a full border: `notch-tr-edge`, which would be needed to
+     redraw a border across the cut, sets `position: relative` and would fight the absolute
+     positioning the panel is placed with. -->
 <div
   [attr.aria-label]="ariaLabel()"
-  [class.rounded-lg]="rounded() !== 'none'"
   [hidden]="!isOpen()"
   [id]="listboxId"
-  class="absolute top-full left-0 z-20 mt-2 max-h-72 min-w-full overflow-y-auto border border-surface-700 bg-surface-900 py-1 shadow-lg"
+  class="notch-tr absolute top-full left-0 z-20 mt-2 max-h-72 min-w-full overflow-y-auto border-l-2 border-brand-500/50 bg-surface-900 py-1 [--notch:0.5rem]"
   role="listbox"
 >
   @if (emptyText() && options().length <= 1) {

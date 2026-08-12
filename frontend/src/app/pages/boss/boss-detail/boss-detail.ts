@@ -13,6 +13,7 @@ import { LucideChevronLeft, LucideChevronRight, LucideSkull, LucideX } from '@lu
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
+import { PositionBadge } from '@shared/position-badge/position-badge';
 import { resolveBossTimelineTier } from '../boss-timeline.constants';
 import { BossTimelineNode } from '../boss.model';
 
@@ -30,6 +31,7 @@ import { BossTimelineNode } from '../boss.model';
     TranslatePipe,
     Avatar,
     ChampionBadge,
+    PositionBadge,
     NgOptimizedImage,
     LucideChevronLeft,
     LucideChevronRight,

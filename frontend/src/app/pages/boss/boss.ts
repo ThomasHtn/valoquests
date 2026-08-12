@@ -4,7 +4,6 @@ import { interval } from 'rxjs';
 
 import { BossApi } from '@core/boss/boss-api';
 import { BossHistoryWeek, CurrentBoss } from '@core/boss/boss.model';
-import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
 import {
@@ -25,7 +24,7 @@ import { SectionDivider } from '@shared/section-divider/section-divider';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { BossDetail } from './boss-detail/boss-detail';
 import {
-  resolveBossDamageBarLabelKey,
+  resolveBossHpBarLabelKey,
   resolveBossStatusLabelKey,
   resolveBossTimelineTier,
 } from './boss-timeline.constants';
@@ -303,25 +302,11 @@ export class Boss {
   protected readonly timelineTier = resolveBossTimelineTier;
 
   /**
-   * Background gradient for the timeline's center line: ground already covered in brand amber,
-   * turning red at the active week's position, then flat and muted ahead — a progress readout for
-   * the whole campaign at a glance, without measuring every row's rendered height to color each
-   * segment individually. The same three colors the markers themselves use, in the same order.
+   * Position of the active week in {@link nodes}, or `-1` when no week is currently running.
    */
-  protected readonly timelineLineGradient = computed(() => {
-    const nodes = this.nodes();
-    const currentIndex = nodes.findIndex((node) => node.status === 'current');
-    const progressPercentage =
-      nodes.length > 1 && currentIndex >= 0
-        ? Math.round((currentIndex / (nodes.length - 1)) * 100)
-        : 0;
-
-    return (
-      `linear-gradient(to bottom, var(--color-brand-500) 0%, ` +
-      `var(--color-accent-red) ${progressPercentage}%, ` +
-      `var(--color-surface-700) ${progressPercentage}%, var(--color-surface-800) 100%)`
-    );
-  });
+  private readonly currentNodeIndex = computed(() =>
+    this.nodes().findIndex((node) => node.status === 'current'),
+  );
 
   /**
    * Scrolls the current week's marker into view once, the first time the timeline finishes
@@ -353,6 +338,36 @@ export class Boss {
     interval(COUNTDOWN_REFRESH_INTERVAL_MS)
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.now.set(new Date()));
+  }
+
+  /**
+   * Background for one row's segment of the timeline's center line: ground already covered in brand
+   * amber, turning red exactly at the active week's marker, then flat and muted ahead — the same
+   * three colors the markers themselves use, in the same order.
+   *
+   * The line is drawn one segment per row rather than as a single gradient spanning the whole list
+   * because rows do not share a height, so no percentage along the list maps to a marker's center
+   * and the handover always landed short of the active hexagon. A marker is vertically centered in
+   * its row, which puts that handover at a hard 50% of the row's own segment.
+   *
+   * @param index - Position of the row in {@link nodes}.
+   * @returns The CSS `background` value for that row's segment.
+   */
+  protected timelineConnectorBackground(index: number): string {
+    const currentIndex = this.currentNodeIndex();
+
+    if (currentIndex < 0 || index > currentIndex) {
+      return 'var(--color-surface-700)';
+    }
+
+    if (index < currentIndex) {
+      return 'var(--color-brand-500)';
+    }
+
+    return (
+      `linear-gradient(to bottom, var(--color-brand-500) 0%, var(--color-accent-red) 50%, ` +
+      `var(--color-surface-700) 50%)`
+    );
   }
 
   /**
@@ -468,7 +483,7 @@ export class Boss {
 
   /**
    * Builds everything a week with a drawn boss shares, whatever its outcome — identity, dates and
-   * the damage readout — leaving each caller to add only its own meta line.
+   * the hit points readout — leaving each caller to add only its own meta line.
    *
    * @param weekStart - Monday identifying the week, as `YYYY-MM-DD`.
    * @param weekEnd - Sunday identifying the week, as `YYYY-MM-DD`.
@@ -489,8 +504,8 @@ export class Boss {
     contributions: readonly BossContribution[],
   ): BossTimelineNode {
     const language = this.translation.language();
-    const percentage =
-      effectiveHp > 0 ? Math.min(100, Math.round((totalDamageDealt / effectiveHp) * 100)) : 0;
+    const remainingHp = Math.max(0, effectiveHp - totalDamageDealt);
+    const percentage = effectiveHp > 0 ? Math.round((remainingHp / effectiveHp) * 100) : 0;
 
     return {
       id: weekStart,
@@ -504,18 +519,17 @@ export class Boss {
       bossName: boss.name,
       bossDescription: boss.description,
       categoryLabel: this.translation.translate(`boss.category.${boss.category}`),
-      categoryColorClass: resolveBossCategoryColorClass(boss.category),
       portraitUrl: boss.imageUrl,
       hasDamage: true,
-      damagePercentage: percentage,
-      damagePercentageLabel: this.translation.translate('boss.damagePercentage', {
+      hpPercentage: percentage,
+      hpPercentageLabel: this.translation.translate('boss.hpPercentage', {
         value: percentage,
       }),
-      damageLabel: this.translation.translate('boss.damageDealt', {
-        damage: formatDamage(totalDamageDealt, language),
-        hp: formatDamage(effectiveHp, language),
+      hpLabel: this.translation.translate('boss.hpValue', {
+        remaining: formatDamage(remainingHp, language),
+        total: formatDamage(effectiveHp, language),
       }),
-      barLabel: this.translation.translate(resolveBossDamageBarLabelKey(status)),
+      barLabel: this.translation.translate(resolveBossHpBarLabelKey(status)),
       metaLabel: null,
       contributions,
     };
@@ -549,12 +563,11 @@ export class Boss {
       bossName: this.translation.translate('boss.upcoming.name'),
       bossDescription: this.translation.translate('boss.upcoming.description'),
       categoryLabel: null,
-      categoryColorClass: null,
       portraitUrl: null,
       hasDamage: false,
-      damagePercentage: 0,
-      damagePercentageLabel: '',
-      damageLabel: '',
+      hpPercentage: 0,
+      hpPercentageLabel: '',
+      hpLabel: '',
       barLabel: '',
       metaLabel: null,
       contributions: [],

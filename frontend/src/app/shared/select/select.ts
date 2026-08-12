@@ -22,7 +22,8 @@ import { SelectOption } from './select.model';
 let instanceCount = 0;
 
 /**
- * Custom-styled, single-select dropdown matching the application's pill-shaped filter design.
+ * Custom-styled, single-select dropdown wearing the "Expédition" direction: flat, brand-lit, cut
+ * at the top-right corner like every other notched surface.
  *
  * Shared by every filter needing a dropdown so they all render and behave the same way. Kept as a
  * plain button-and-panel pair (no native `<select>`, no Angular Material) since the panel always
@@ -72,40 +73,6 @@ export class Select<T> {
    * happy to keep showing whatever `options()` holds, even a lone entry.
    */
   public readonly emptyText = input('');
-
-  /**
-   * Corner shape of the trigger: `'full'` for the standard pill (the default, used by every
-   * filter dropdown), `'lg'` for a rounded rectangle when the trigger doubles as a page heading
-   * (e.g. the ranking history carousel's week selector), `'none'` for the square silhouette the
-   * "Expédition" direction calls for on screens that have already been restyled to it.
-   */
-  public readonly rounded = input<'full' | 'lg' | 'none'>('full');
-
-  /**
-   * Visual weight of the trigger: `'solid'` for the standard bordered, gradient-filled pill (the
-   * default, used by every filter dropdown), `'ghost'` for a background-free trigger that only
-   * reveals itself on hover/focus — for placements where the control should read as a quiet page
-   * affordance rather than a filter (e.g. the ranking history carousel's week selector, sitting
-   * next to the page title), `'gradient'` for a borderless, background-free trigger that only
-   * tints on hover — for placements sitting alongside other borderless controls (e.g. the player
-   * profile's filter row).
-   */
-  public readonly variant = input<'solid' | 'ghost' | 'gradient'>('solid');
-
-  /**
-   * Trigger classes for the current {@link variant}, isolated from the shared layout/typography
-   * classes in the template so neither copy has to repeat the other's concerns.
-   */
-  protected readonly variantClass = computed(() => {
-    switch (this.variant()) {
-      case 'ghost':
-        return 'text-text-secondary hover:bg-surface-800/60 hover:text-text-primary';
-      case 'gradient':
-        return 'text-text-primary transition-colors hover:bg-surface-800/60';
-      default:
-        return 'border border-surface-700 bg-gradient-to-b from-surface-800 to-surface-950 text-text-primary transition-[background-image,scale] hover:from-surface-700 hover:to-surface-900';
-    }
-  });
 
   /**
    * Id of the options panel, referenced by the trigger's `aria-controls`.

@@ -6,7 +6,6 @@ import { BossApi } from '@core/boss/boss-api';
 import { resolveBossHpBarColorClass } from '@core/boss/boss-visual.utils';
 import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { HEX_FRAME_EDGES } from '@pages/boss/boss-timeline.constants';
 import { ResourceState } from '@shared/resource-state/resource-state';
 
 /**
@@ -81,12 +80,6 @@ export class BossEncounter {
   protected readonly hpBarColorClass = computed(() =>
     resolveBossHpBarColorClass(this.remainingPercentage()),
   );
-
-  /**
-   * Six shortened edges tracing the portrait's segmented hex frame, shared with the boss battle
-   * timeline's markers (`boss.html`) so both pages read as the same "character" framing.
-   */
-  protected readonly hexFrameEdges = HEX_FRAME_EDGES;
 
   /**
    * Reloads the backing resource after a failure.

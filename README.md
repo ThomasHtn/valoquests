@@ -87,8 +87,7 @@ Running the whole application means starting the backend and the frontend separa
 | Overview          | The current week's challenges, team progress and the live ranking, at a glance   |
 | Player list       | Every tracked player, with rank, win rate, KDA and match count                   |
 | Player profile    | One player's rank, stats and full match history (filterable by mode and season)  |
-| Ranking history   | The ranking of every completed week, most recent first                          |
-| Weekly boss       | The current boss's category and health bar, and the damage dealt so far         |
+| Weekly boss       | The campaign timeline, week by week, with each week's ranking in its detail panel |
 | Rules             | How challenges, damage and the weekly boss battle work                          |
 
 ## 6. Common problems

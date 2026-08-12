@@ -9,7 +9,7 @@
   >
     {{ 'boss.title' | translate }}
   </h1>
-  <p class="mt-2 max-w-prose text-sm text-text-secondary">
+  <p class="mt-2 text-lead text-text-secondary">
     {{ 'boss.subtitle' | translate }}
   </p>
 </header>
@@ -33,30 +33,36 @@
   </div>
 
   <!-- Campaign timeline: every finalized week from the oldest to the active one, then a handful of
-       locked weeks ahead (see `UPCOMING_PLACEHOLDER_COUNT`). A single gradient line (see
-       `timelineLineGradient`) runs down the center, alternating panels left and right of it on
-       wider screens; below `sm` there isn't room to alternate, so the line and every marker pin to
-       the left edge instead. `data-timeline-current` marks the one node the page auto-scrolls to on
-       load (see the constructor). -->
+       locked weeks ahead (see `UPCOMING_PLACEHOLDER_COUNT`). A line runs down the center, one
+       segment per row (see `timelineConnectorBackground`), alternating panels left and right of it
+       on wider screens; below `sm` there isn't room to alternate, so the line and every marker pin
+       to the left edge instead. `data-timeline-current` marks the one node the page auto-scrolls to
+       on load (see the constructor). -->
   <div class="relative">
-    <div
-      [style.background]="timelineLineGradient()"
-      aria-hidden="true"
-      class="pointer-events-none absolute inset-y-0 left-7 w-0.5 -translate-x-1/2 sm:left-1/2"
-    ></div>
-
     <ol
       [attr.aria-label]="'boss.timeline.ariaLabel' | translate"
       class="flex flex-col gap-8 sm:gap-10"
       role="list"
     >
-      @for (node of nodes(); track node.id; let isOdd = $odd) {
+      @for (node of nodes(); track node.id; let isOdd = $odd, index = $index, isLast = $last) {
         @let tier = timelineTier(node.status);
 
         <li
           [attr.data-timeline-current]="node.status === 'current' ? '' : null"
           class="relative grid grid-cols-[3.5rem_1fr] items-center gap-4 sm:grid-cols-[1fr_7rem_1fr] sm:gap-0"
         >
+          <!-- This row's slice of the center line. It runs past the row's own bottom to bridge the
+             gap to the next one, so the segments read as a single continuous line; the last row
+             stops at its own edge rather than trailing into nothing. -->
+          <span
+            [class.-bottom-8]="!isLast"
+            [class.bottom-0]="isLast"
+            [class.sm:-bottom-10]="!isLast"
+            [style.background]="timelineConnectorBackground(index)"
+            aria-hidden="true"
+            class="pointer-events-none absolute top-0 left-7 w-0.5 -translate-x-1/2 sm:left-1/2"
+          ></span>
+
           <!-- Week marker: the campaign's beat, a hexagon carrying the ISO week number. It is the
              one element of a row that stays in place while the panels alternate around it, so the
              column of markers reads as the calendar the whole page is ordered by. `row-start-1`
@@ -78,7 +84,7 @@
                 <span
                   class="clip-hex absolute inset-0.5 flex flex-col items-center justify-center gap-1 bg-surface-950"
                 >
-                  <span class="tracking-label font-mono text-2xs text-text-muted uppercase">
+                  <span class="tracking-label font-mono text-xs text-text-muted uppercase">
                     {{ 'boss.week.short' | translate }}
                   </span>
                   <span class="font-display text-lg leading-none font-bold sm:text-xl">
@@ -121,10 +127,9 @@
                 {{ node.bossName }}
               </span>
               @if (node.categoryLabel; as categoryLabel) {
-                <span
-                  [class]="node.categoryColorClass"
-                  class="tracking-label border border-current px-2 py-1 font-mono text-2xs font-semibold uppercase"
-                >
+                <span class="tracking-label font-mono text-xs text-text-muted uppercase">
+                  {{ 'boss.difficulty' | translate }}
+                  <span aria-hidden="true">·</span>
                   {{ categoryLabel }}
                 </span>
               }
@@ -133,29 +138,29 @@
             @if (node.hasDamage) {
               <span class="mt-4 flex items-baseline justify-between gap-3">
                 <span
-                  class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase"
+                  class="tracking-label font-mono text-xs font-medium text-text-muted uppercase"
                 >
                   {{ node.barLabel }}
                 </span>
                 <span
                   [class]="tier.accentTextClass"
                   class="font-mono text-2xs font-medium tabular-nums"
-                  >{{ node.damagePercentageLabel }}</span
+                  >{{ node.hpPercentageLabel }}</span
                 >
               </span>
 
-              <!-- Damage bar, with the tally riding inside the track so the number and the fill it
-                 describes are read in one glance. -->
+              <!-- Health bar, draining as the group takes hit points off, with the tally riding
+                 inside the track so the number and the fill it describes are read in one glance. -->
               <span class="relative mt-2 flex h-6 border border-text-primary/15 bg-surface-sunken">
                 <span
                   [class]="tier.barFillClass"
-                  [style.width.%]="node.damagePercentage"
+                  [style.width.%]="node.hpPercentage"
                   aria-hidden="true"
                   class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
                 ></span>
                 <span
                   class="relative flex flex-1 items-center justify-center font-mono text-2xs font-semibold text-text-primary tabular-nums [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
-                  >{{ node.damageLabel }}</span
+                  >{{ node.hpLabel }}</span
                 >
               </span>
 
@@ -171,7 +176,7 @@
               }
             } @else {
               <span
-                class="mt-4 flex items-center gap-3 border border-dashed border-text-primary/15 bg-text-primary/3 p-3 text-sm text-text-secondary"
+                class="text-prose mt-4 flex items-center gap-3 border border-dashed border-text-primary/15 bg-text-primary/3 p-3 text-text-secondary"
               >
                 <span aria-hidden="true" class="font-mono text-sm font-bold text-text-muted"
                   >?</span

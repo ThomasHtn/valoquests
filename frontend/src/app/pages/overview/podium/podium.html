@@ -26,8 +26,18 @@
   >
     <!-- Two columns on wide screens: the podium on the leading edge, the rest of the field on the
          trailing one, both settling on the same baseline. Below `lg` the two stack, since three
-         plinths and a row list cannot share a narrow viewport without either becoming unreadable. -->
-    <div class="mt-4 grid gap-4 lg:grid-cols-2 lg:items-end lg:gap-6">
+         plinths and a row list cannot share a narrow viewport without either becoming unreadable.
+
+         `--podium-base` is the single measure the whole block is built from: the 3rd plinth stands
+         exactly that tall, the 2nd and 1st scale off it (see `PODIUM_PLINTH_CLASSES`), and the
+         rest-of-the-field list is given the same height, so its first row starts level with the
+         bronze cap. It tracks the viewport so the podium fills the screen it is on instead of
+         leaving the page half empty, with a floor at the natural height of three rows — below it
+         the rows would have to shrink — and a ceiling so a very tall display does not stretch the
+         block past what reads as a podium. -->
+    <div
+      class="mt-4 grid gap-4 [--podium-base:clamp(15.25rem,29vh,22rem)] lg:grid-cols-2 lg:items-end lg:gap-6"
+    >
       <!-- Podium spotlight: 1st place rendered larger and centered via `order`, so the DOM keeps its
            natural reading order (1st, 2nd, 3rd) for assistive technology while the visual layout
            reads as a podium. Each place stands on a plinth whose height, and not only its color,
@@ -101,18 +111,24 @@
       </ol>
 
       <!-- Rest of the field: positions 4 to 6 as flat rows, each led by the same hexagon position
-           badge as the full ranking table so the two widgets read as one system. -->
+           badge as the full ranking table, and wearing the registry's row treatment — notched
+           corner, leading rule, flat wash — so every list of players reads as one system. -->
       @if (rest().length) {
-        <ul class="flex flex-col gap-2">
+        <!-- Height pinned to the same base as the 3rd plinth, the rows sharing it evenly: they
+             breathe instead of huddling at the bottom of the column, and the strip ends level with
+             the podium it sits beside. -->
+        <ul class="flex h-(--podium-base) flex-col gap-2">
           @for (entry of rest(); track entry.player.id) {
-            <li>
+            <li class="flex-1">
               <a
                 [routerLink]="['/players', entry.player.id]"
-                class="focus-ring-inset flex items-center gap-4 border-l-3 border-brand-500/35 bg-linear-to-r from-text-primary/5 to-transparent px-4 py-3.5 transition-colors hover:from-text-primary/10"
+                class="notch-tr focus-ring-inset flex h-full items-center gap-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:px-5"
               >
-                <app-position-badge [position]="entry.position" size="md" />
+                <app-position-badge [position]="entry.position" />
                 <app-avatar [src]="resolveAvatarUrl(entry.player.portrait)" shape="hex" size="sm" />
-                <span class="flex-1 truncate text-lg text-text-primary">
+                <span
+                  class="font-display min-w-0 flex-1 truncate text-lg leading-none font-semibold text-text-primary"
+                >
                   {{ entry.player.displayName }}
                 </span>
                 <!-- Damage as the mockup writes it here: the bare figure in the display face, no
@@ -120,7 +136,7 @@
                      tables, where a row carries several numbers and the reward needs marking out;
                      on this strip it is the only value, and the chrome only added noise. -->
                 <span
-                  class="font-display text-xl leading-none font-semibold text-text-secondary tabular-nums"
+                  class="font-display text-lg leading-none font-bold text-text-secondary tabular-nums"
                 >
                   {{ entry.challengeDamage }}
                   <span class="sr-only">{{ 'shared.damageBadge.label' | translate }}</span>

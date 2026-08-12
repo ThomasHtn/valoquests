@@ -1,207 +1,207 @@
-<!-- Header: the same beat as the overview and quest headers — eyebrow, display title, one line of
-     stakes — with the reading cost as the trailing metric, so the page announces upfront that it is
-     short. -->
-<header class="flex flex-wrap items-start justify-between gap-4">
-  <div>
-    <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
-      {{ 'rules.eyebrow' | translate }}
-    </p>
+<!-- Header: same opening beat as the other pages — eyebrow, display title, one line of stakes. The
+     reading cost rides along as a chip rather than as a headline metric: it reassures that the page
+     is short, it is not a number worth competing with the title. -->
+<header>
+  <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
+    {{ 'rules.eyebrow' | translate }}
+  </p>
+
+  <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
     <h1
-      class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
+      class="font-display text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
     >
       {{ 'rules.heading' | translate }}
     </h1>
-    <p class="mt-2 max-w-prose text-sm text-text-secondary">
-      {{ 'rules.subtitle' | translate }}
-    </p>
+    <span
+      class="tracking-label inline-flex items-center gap-1.5 border border-text-primary/10 bg-surface-sunken/60 px-2.5 py-1 font-mono text-2xs font-medium text-text-muted uppercase"
+    >
+      {{ 'rules.readingTime.label' | translate }}
+      <span class="text-text-secondary">{{ 'rules.readingTime.value' | translate }}</span>
+    </span>
   </div>
 
-  <div class="text-right">
-    <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
-      {{ 'rules.readingTime.label' | translate }}
-    </p>
-    <p class="font-display mt-1.5 text-2xl leading-none font-bold text-brand-500">
-      {{ 'rules.readingTime.value' | translate }}
-    </p>
-  </div>
+  <p class="mt-3 max-w-2xl text-lead text-text-secondary">
+    {{ 'rules.subtitle' | translate }}
+  </p>
 </header>
 
-<!-- The loop in four beats, before any number: whoever only reads this strip still knows how the
-     week works. Each panel is numbered by its position, and the numbering carries on into the
-     detailed panels below. -->
-<ol class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-  @for (step of steps; track step; let index = $index) {
-    <li
-      class="notch-tr notch-tr-edge flex items-center gap-3.5 border border-brand-500/30 bg-linear-[115deg] from-brand-500/12 to-surface-sunken/55 p-3.5 [--notch:0.875rem]"
-    >
-      <span aria-hidden="true" class="clip-hex relative h-10 w-9 shrink-0 bg-brand-500">
+<!-- The four beats, as rows of a document rather than as boxed panels: narrative on the left,
+     numbers on the right, separated by a single hairline. Stacking beats a two-column masonry here
+     because the reading order is the whole point — the loop only makes sense read top to bottom.
+
+     Capped narrower than the shell's own width cap and centered in the gutters that leaves: these
+     tables hold two to four columns, and at the shell's full width their rows stretched into
+     mostly-empty rules. The header above keeps the full width, so this page opens on exactly the
+     same line as every other one. -->
+<div class="mx-auto flex w-full max-w-4xl flex-col">
+  <!-- 01 · Challenges. Unruled at the top, unlike the beats below it: the hairlines separate one
+       beat from the next, and there is nothing above this one to separate it from. -->
+  <section
+    class="grid items-start gap-x-10 gap-y-5 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:py-9"
+  >
+    <div>
+      <div class="flex items-baseline gap-3">
         <span
-          class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-base leading-none font-bold text-brand-500"
+          aria-hidden="true"
+          class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums"
         >
-          {{ index + 1 }}
+          01
         </span>
-      </span>
-      <div class="min-w-0">
-        <h2 class="font-display text-base leading-none font-semibold text-text-primary uppercase">
-          {{ 'rules.steps.' + step + '.title' | translate }}
+        <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+          {{ 'rules.sections.challenges.title' | translate }}
         </h2>
-        <p class="mt-1.5 text-sm text-text-secondary">
-          {{ 'rules.steps.' + step + '.description' | translate }}
-        </p>
       </div>
-    </li>
-  }
-</ol>
-
-<div class="grid gap-4 lg:grid-cols-2">
-  <!-- 1 · Challenges. The tier ladder is a table rather than a row of pills: the point is that
-       damage climbs with difficulty, which only reads when the tiers are stacked and the bars
-       line up. -->
-  <section
-    class="notch-tr notch-tr-edge flex flex-col gap-3 border border-text-primary/10 bg-surface-sunken/50 p-5 [--notch:1.125rem] sm:p-6"
-  >
-    <div class="flex items-center gap-3">
-      <span aria-hidden="true" class="size-2.5 shrink-0 rotate-45 bg-brand-500"></span>
-      <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
-        <span class="text-brand-500">1</span> · {{ 'rules.sections.challenges.title' | translate }}
-      </h2>
+      <p class="mt-3 text-prose text-text-secondary">
+        {{ 'rules.sections.challenges.description' | translate }}
+      </p>
     </div>
-    <p class="text-sm text-text-secondary">
-      {{ 'rules.sections.challenges.description' | translate }}
-    </p>
 
-    <div
-      class="mt-1 grid grid-cols-[minmax(0,1fr)_4rem] items-center gap-x-3 border-b border-brand-500/30 px-1 pb-2"
-    >
-      <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
-        {{ 'rules.sections.challenges.difficultyLabel' | translate }}
-      </span>
-      <span
-        class="tracking-label text-right font-mono text-2xs font-medium text-text-muted uppercase"
+    <div>
+      <div
+        class="grid grid-cols-[minmax(0,1fr)_5rem] items-center gap-x-4 border-b border-brand-500/30 pb-2"
       >
-        {{ 'rules.sections.challenges.damageLabel' | translate }}
-      </span>
-    </div>
-
-    <ul>
-      @for (tier of difficultyShowcase; track tier.difficulty) {
-        <li
-          class="grid grid-cols-[minmax(0,1fr)_4rem] items-center gap-x-3 px-1 py-2 odd:bg-text-primary/4"
+        <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+          {{ 'rules.sections.challenges.difficultyLabel' | translate }}
+        </span>
+        <span
+          class="tracking-label text-right font-mono text-xs font-medium text-text-muted uppercase"
         >
-          <div class="flex min-w-0 items-center gap-3">
-            <!-- Decorative: the tier it stands for is written beside it. -->
-            <span
-              [class]="tier.visual.barClass"
-              aria-hidden="true"
-              class="clip-hex relative h-7 w-6 shrink-0"
-            >
+          {{ 'rules.sections.challenges.damageLabel' | translate }}
+        </span>
+      </div>
+
+      <ul>
+        @for (tier of difficultyShowcase; track tier.difficulty) {
+          <li
+            class="grid grid-cols-[minmax(0,1fr)_5rem] items-center gap-x-4 border-b border-text-primary/8 py-2.5 last:border-b-0"
+          >
+            <div class="flex min-w-0 items-center gap-3">
+              <!-- Decorative: the tier it stands for is written beside it. -->
               <span
-                [class]="tier.visual.iconClass"
-                class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-2xs font-bold"
+                [class]="tier.visual.barClass"
+                aria-hidden="true"
+                class="clip-hex relative h-7 w-6 shrink-0"
               >
-                {{ tier.visual.tier }}
+                <span
+                  [class]="tier.visual.iconClass"
+                  class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-2xs font-bold"
+                >
+                  {{ tier.visual.tier }}
+                </span>
               </span>
-            </span>
-            <span class="truncate text-sm font-semibold text-text-primary uppercase">
-              {{ 'overview.weeklyChallenges.difficulty.' + tier.difficulty | translate }}
-            </span>
-            <span aria-hidden="true" class="hidden h-1 min-w-10 flex-1 bg-text-primary/8 sm:block">
-              <span [class]="tier.visual.barClass" [style.width.%]="tier.share" class="block h-1">
+              <span class="truncate text-sm font-semibold text-text-primary uppercase">
+                {{ 'overview.weeklyChallenges.difficulty.' + tier.difficulty | translate }}
               </span>
+            </div>
+            <span class="font-display text-right text-lg font-bold text-brand-500 tabular-nums">
+              {{ tier.damage }}
             </span>
-          </div>
-          <span class="font-display text-right text-lg font-bold text-brand-500 tabular-nums">
-            {{ tier.damage }}
-          </span>
-        </li>
-      }
-    </ul>
+          </li>
+        }
+      </ul>
+    </div>
   </section>
 
-  <!-- 2 · Match damage, by mode and outcome. -->
+  <!-- 02 · Match damage, by mode and outcome. -->
   <section
-    class="notch-tr notch-tr-edge flex flex-col gap-3 border border-text-primary/10 bg-surface-sunken/50 p-5 [--notch:1.125rem] sm:p-6"
+    class="grid items-start gap-x-10 gap-y-5 border-t border-text-primary/10 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:py-9"
   >
-    <div class="flex items-center gap-3">
-      <span aria-hidden="true" class="size-2.5 shrink-0 rotate-45 bg-brand-500"></span>
-      <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
-        <span class="text-brand-500">2</span> · {{ 'rules.sections.damage.title' | translate }}
-      </h2>
-    </div>
-    <p class="text-sm text-text-secondary">
-      {{ 'rules.sections.damage.description' | translate }}
-    </p>
-
-    <div
-      class="mt-1 grid grid-cols-[minmax(0,1fr)_repeat(3,3rem)] items-center gap-x-2 border-b border-brand-500/30 px-1 pb-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,3.5rem)]"
-    >
-      <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
-        {{ 'rules.sections.damage.modeLabel' | translate }}
-      </span>
-      <span class="text-right font-mono text-2xs font-medium text-brand-500 uppercase">
-        {{ 'playerProfile.matches.result.WIN' | translate }}
-      </span>
-      <span class="text-right font-mono text-2xs font-medium text-text-muted uppercase">
-        {{ 'playerProfile.matches.result.DRAW' | translate }}
-      </span>
-      <span class="text-right font-mono text-2xs font-medium text-text-muted uppercase">
-        {{ 'playerProfile.matches.result.LOSS' | translate }}
-      </span>
-    </div>
-
-    <ul>
-      @for (mode of matchDamageShowcase; track mode.mode) {
-        <li
-          class="grid grid-cols-[minmax(0,1fr)_repeat(3,3rem)] items-center gap-x-2 px-1 py-2 odd:bg-text-primary/4 sm:grid-cols-[minmax(0,1fr)_repeat(3,3.5rem)]"
+    <div>
+      <div class="flex items-baseline gap-3">
+        <span
+          aria-hidden="true"
+          class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums"
         >
-          <span class="truncate text-sm font-semibold text-text-primary">
-            {{ 'playerProfile.matches.gameMode.' + mode.mode | translate }}
-          </span>
-          <span class="font-display text-right font-bold text-brand-500 tabular-nums">
-            {{ mode.win }}
-          </span>
-          <span class="font-display text-right font-bold text-text-secondary tabular-nums">
-            {{ mode.draw ?? '—' }}
-          </span>
-          <span class="font-display text-right font-bold text-text-muted tabular-nums">
-            {{ mode.loss }}
-          </span>
-        </li>
-      }
-    </ul>
-  </section>
-
-  <!-- Bonuses. Tinted brand instead of neutral, and spanning the full width: they are not a fifth
-       beat of the loop but a multiplier sitting on top of the two above. -->
-  <section
-    class="notch-tr notch-tr-edge flex flex-col gap-4 border border-brand-500/30 bg-linear-[115deg] from-brand-500/10 to-surface-sunken/55 p-5 [--notch:1.125rem] sm:p-6 lg:col-span-2"
-  >
-    <div class="flex items-center gap-3">
-      <span aria-hidden="true" class="size-2.5 shrink-0 rotate-45 bg-brand-500"></span>
-      <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
-        {{ 'rules.sections.bonuses.title' | translate }}
-      </h2>
-      <span
-        aria-hidden="true"
-        class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
-      ></span>
+          02
+        </span>
+        <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+          {{ 'rules.sections.damage.title' | translate }}
+        </h2>
+      </div>
+      <p class="mt-3 text-prose text-text-secondary">
+        {{ 'rules.sections.damage.description' | translate }}
+      </p>
     </div>
 
-    <div class="grid gap-5 md:grid-cols-2 md:gap-8">
+    <div>
+      <div
+        class="grid grid-cols-[minmax(0,1fr)_repeat(3,3.25rem)] items-center gap-x-3 border-b border-brand-500/30 pb-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,4rem)]"
+      >
+        <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+          {{ 'rules.sections.damage.modeLabel' | translate }}
+        </span>
+        <span class="text-right font-mono text-xs font-medium text-brand-500 uppercase">
+          {{ 'playerProfile.matches.result.WIN' | translate }}
+        </span>
+        <span class="text-right font-mono text-xs font-medium text-text-muted uppercase">
+          {{ 'playerProfile.matches.result.DRAW' | translate }}
+        </span>
+        <span class="text-right font-mono text-xs font-medium text-text-muted uppercase">
+          {{ 'playerProfile.matches.result.LOSS' | translate }}
+        </span>
+      </div>
+
+      <ul>
+        @for (mode of matchDamageShowcase; track mode.mode) {
+          <li
+            class="grid grid-cols-[minmax(0,1fr)_repeat(3,3.25rem)] items-center gap-x-3 border-b border-text-primary/8 py-2.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_repeat(3,4rem)]"
+          >
+            <span class="truncate text-sm font-semibold text-text-primary">
+              {{ 'playerProfile.matches.gameMode.' + mode.mode | translate }}
+            </span>
+            <span class="font-display text-right font-bold text-brand-500 tabular-nums">
+              {{ mode.win }}
+            </span>
+            <span class="font-display text-right font-bold text-text-secondary tabular-nums">
+              {{ mode.draw ?? '—' }}
+            </span>
+            <span class="font-display text-right font-bold text-text-muted tabular-nums">
+              {{ mode.loss }}
+            </span>
+          </li>
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- Bonuses. Tinted brand and marked with a plus rather than a number: they are not a fifth beat
+       of the loop but a multiplier sitting on top of the two above. -->
+  <section
+    class="grid items-start gap-x-10 gap-y-5 border-t border-brand-500/30 bg-linear-[115deg] from-brand-500/8 to-transparent px-4 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:px-5 lg:py-9"
+  >
+    <div>
+      <div class="flex items-baseline gap-3">
+        <span
+          aria-hidden="true"
+          class="font-display text-2xl leading-none font-bold text-brand-500"
+        >
+          +
+        </span>
+        <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+          {{ 'rules.sections.bonuses.title' | translate }}
+        </h2>
+      </div>
+      <p class="mt-3 text-prose text-text-secondary">
+        {{ 'rules.sections.bonuses.footnote' | translate }}
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-5">
       <div>
-        <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+        <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
           {{ 'rules.sections.bonuses.regularityLabel' | translate }}
         </p>
-        <ul class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <ul class="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-6">
           @for (tier of regularityBonusShowcase; track tier.label) {
             <li
-              [class]="tier.intensityClass"
-              class="flex flex-col items-center gap-1.5 border-t-2 px-1 py-2.5"
+              class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
             >
-              <span class="font-mono text-xs font-semibold text-text-secondary">
+              <span class="font-mono text-2xs font-semibold text-text-secondary">
                 {{ 'rules.sections.bonuses.days' | translate: { days: tier.label } }}
               </span>
-              <span class="font-display text-lg leading-none font-bold text-brand-500 tabular-nums">
+              <span
+                class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
+              >
                 {{ tier.bonus }}
               </span>
             </li>
@@ -210,19 +210,20 @@
       </div>
 
       <div>
-        <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+        <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
           {{ 'rules.sections.bonuses.teamLabel' | translate }}
         </p>
-        <ul class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+        <ul class="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-5">
           @for (tier of teamBonusShowcase; track tier.label) {
             <li
-              [class]="tier.intensityClass"
-              class="flex flex-col items-center gap-1.5 border-t-2 px-1 py-2.5"
+              class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
             >
-              <span class="font-mono text-xs font-semibold text-text-secondary">
+              <span class="font-mono text-2xs font-semibold text-text-secondary">
                 {{ 'rules.sections.bonuses.players' | translate: { count: tier.label } }}
               </span>
-              <span class="font-display text-lg leading-none font-bold text-brand-500 tabular-nums">
+              <span
+                class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
+              >
                 {{ tier.bonus }}
               </span>
             </li>
@@ -230,27 +231,30 @@
         </ul>
       </div>
     </div>
-
-    <p class="text-sm text-text-secondary">
-      {{ 'rules.sections.bonuses.footnote' | translate }}
-    </p>
   </section>
 
-  <!-- 3 · The shared boss, and how heavy it can get. -->
+  <!-- 03 · The shared boss, and how heavy it can get. -->
   <section
-    class="notch-tr notch-tr-edge flex flex-col gap-3 border border-text-primary/10 bg-surface-sunken/50 p-5 [--notch:1.125rem] sm:p-6"
+    class="grid items-start gap-x-10 gap-y-5 border-t border-text-primary/10 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:py-9"
   >
-    <div class="flex items-center gap-3">
-      <span aria-hidden="true" class="size-2.5 shrink-0 rotate-45 bg-brand-500"></span>
-      <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
-        <span class="text-brand-500">3</span> · {{ 'rules.sections.boss.title' | translate }}
-      </h2>
+    <div>
+      <div class="flex items-baseline gap-3">
+        <span
+          aria-hidden="true"
+          class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums"
+        >
+          03
+        </span>
+        <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+          {{ 'rules.sections.boss.title' | translate }}
+        </h2>
+      </div>
+      <p class="mt-3 text-prose text-text-secondary">
+        {{ 'rules.sections.boss.description' | translate }}
+      </p>
     </div>
-    <p class="text-sm text-text-secondary">
-      {{ 'rules.sections.boss.description' | translate }}
-    </p>
 
-    <ul class="mt-1 grid gap-2.5 sm:grid-cols-3">
+    <ul class="grid gap-3 sm:grid-cols-3">
       @for (category of bossCategoryShowcase; track category) {
         <!-- The category's own color is set on the tile so its leading rule can inherit it,
              matching how a boss is colored on the overview and boss pages. -->
@@ -261,7 +265,7 @@
           <p class="tracking-label font-display text-sm font-semibold uppercase">
             {{ 'boss.category.' + category | translate }}
           </p>
-          <p class="mt-2 text-sm text-text-secondary">
+          <p class="mt-2 text-prose text-text-secondary">
             {{ 'rules.sections.boss.categories.' + category | translate }}
           </p>
         </li>
@@ -269,28 +273,38 @@
     </ul>
   </section>
 
-  <!-- 4 · What all that damage is counted for. -->
+  <!-- 04 · What all that damage is counted for. Closes the document without a rule under it, for
+       the same reason 01 opens without one. -->
   <section
-    class="notch-tr notch-tr-edge flex flex-col gap-3 border border-text-primary/10 bg-surface-sunken/50 p-5 [--notch:1.125rem] sm:p-6"
+    class="grid items-start gap-x-10 gap-y-5 border-t border-text-primary/10 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:py-9"
   >
-    <div class="flex items-center gap-3">
-      <span aria-hidden="true" class="size-2.5 shrink-0 rotate-45 bg-brand-500"></span>
-      <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
-        <span class="text-brand-500">4</span> · {{ 'rules.sections.ranking.title' | translate }}
-      </h2>
+    <div>
+      <div class="flex items-baseline gap-3">
+        <span
+          aria-hidden="true"
+          class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums"
+        >
+          04
+        </span>
+        <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+          {{ 'rules.sections.ranking.title' | translate }}
+        </h2>
+      </div>
+      <p class="mt-3 flex flex-wrap items-center gap-x-2 text-prose text-text-secondary">
+        {{ 'rules.sections.ranking.description' | translate }}
+        <app-champion-badge />
+      </p>
     </div>
-    <p class="flex flex-wrap items-center gap-x-2 text-sm text-text-secondary">
-      {{ 'rules.sections.ranking.description' | translate }}
-      <app-champion-badge />
-    </p>
 
-    <ol class="mt-1 flex flex-col gap-2">
+    <ol>
       @for (fact of rankingFacts; track fact; let index = $index) {
-        <li class="flex items-center gap-3.5 px-3.5 py-2.5 odd:bg-text-primary/4">
+        <li
+          class="flex items-baseline gap-3.5 border-b border-text-primary/8 py-2.5 last:border-b-0"
+        >
           <span aria-hidden="true" class="shrink-0 font-mono text-sm font-bold text-brand-500">
             0{{ index + 1 }}
           </span>
-          <span class="text-sm text-text-secondary">
+          <span class="text-prose text-text-secondary">
             {{ 'rules.sections.ranking.facts.' + fact | translate }}
           </span>
         </li>

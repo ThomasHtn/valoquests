@@ -1,1 +1,7 @@
-<span aria-hidden="true">👑</span>
+<!-- `tracking-label` adds its letter-spacing *after* the last letter too, so an even `px` would
+     leave the label visibly off-centre. The right padding drops by that same amount to compensate. -->
+<span
+  class="tracking-label shrink-0 bg-brand-500/20 py-1 pr-1 pl-1.5 font-mono text-2xs font-medium text-brand-500 uppercase"
+>
+  {{ 'overview.weeklyRanking.champion' | translate }}
+</span>

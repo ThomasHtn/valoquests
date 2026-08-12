@@ -19,11 +19,17 @@ import { ResourceState } from '@shared/resource-state/resource-state';
  *
  * Height carries the rank as much as color does — a gold cap alone would leave the three places
  * reading as equals in a screenshot, or to anyone who cannot separate the three hues.
+ *
+ * Every height derives from the `--podium-base` custom property declared on the two-column
+ * container in the template: the 3rd plinth *is* that base, and the rest-of-the-field list is
+ * given the exact same height. Since both columns sit on the same baseline, the 4th place row and
+ * the bronze cap then line up by construction, at any base value, rather than through two
+ * hardcoded heights that would drift apart the moment a row's padding changes.
  */
 const PODIUM_PLINTH_CLASSES: readonly string[] = [
-  'h-36 border-brand-500 bg-linear-to-b from-brand-500/18 to-transparent',
-  'h-28 border-text-primary/50 bg-linear-to-b from-text-primary/8 to-transparent',
-  'h-24 border-podium-bronze/80 bg-linear-to-b from-text-primary/6 to-transparent',
+  'h-[calc(var(--podium-base)*1.4)] border-brand-500 bg-linear-to-b from-brand-500/18 to-transparent',
+  'h-[calc(var(--podium-base)*1.15)] border-text-primary/50 bg-linear-to-b from-text-primary/8 to-transparent',
+  'h-(--podium-base) border-podium-bronze/80 bg-linear-to-b from-text-primary/6 to-transparent',
 ];
 
 /**

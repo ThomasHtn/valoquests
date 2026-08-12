@@ -16,7 +16,7 @@
       {{ 'players.title' | translate }}
     }
   </h1>
-  <p class="mt-2 max-w-prose text-sm text-text-secondary">
+  <p class="mt-2 text-lead text-text-secondary">
     {{ 'players.subtitle' | translate }}
   </p>
 </header>
@@ -38,7 +38,7 @@
   <div class="flex flex-col gap-2" skeleton>
     @for (placeholder of skeletonRows; track $index) {
       <div
-        class="notch-tr flex items-center gap-3 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-4 [--notch:0.875rem] lg:px-5"
+        class="notch-tr flex items-center gap-3 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-5 [--notch:0.875rem] lg:px-5"
       >
         <span class="size-9 shrink-0 rounded-full bg-surface-700"></span>
         <span class="flex min-w-0 flex-1 flex-col gap-2">
@@ -55,24 +55,24 @@
        cells, so each value carries its own label instead (see the `lg:sr-only` captions below). -->
   <div
     aria-hidden="true"
-    class="hidden border-b border-brand-500/25 px-5 pb-3 lg:grid lg:grid-cols-[minmax(0,1fr)_9rem_10rem_5rem_6rem_5rem_1.5rem] lg:gap-x-4"
+    class="hidden border-b border-brand-500/25 px-5 pb-3 lg:grid lg:grid-cols-[minmax(0,1fr)_11rem_12rem_6rem_7rem_6rem_1.5rem] lg:gap-x-4"
   >
-    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+    <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
       {{ 'players.columns.player' | translate }}
     </span>
-    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+    <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
       {{ 'players.columns.rank' | translate }}
     </span>
-    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+    <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
       {{ 'players.columns.winRate' | translate }}
     </span>
-    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+    <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
       {{ 'players.columns.kda' | translate }}
     </span>
-    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+    <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
       {{ 'players.columns.headshotPercentage' | translate }}
     </span>
-    <span class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+    <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
       {{ 'players.columns.matchesPlayed' | translate }}
     </span>
   </div>
@@ -85,13 +85,8 @@
     @for (row of rows(); track row.id) {
       <li>
         <a
-          [class]="
-            row.isChampion
-              ? 'border-brand-500 bg-brand-500/10'
-              : 'border-text-primary/15 bg-text-primary/4'
-          "
           [routerLink]="['/players', row.id]"
-          class="notch-tr focus-ring-inset grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4 border-l-2 px-4 py-4 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:grid-cols-[minmax(0,1fr)_9rem_10rem_5rem_6rem_5rem_1.5rem] lg:gap-x-4 lg:gap-y-0 lg:px-5"
+          class="notch-tr focus-ring-inset grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:grid-cols-[minmax(0,1fr)_11rem_12rem_6rem_7rem_6rem_1.5rem] lg:gap-x-4 lg:gap-y-0 lg:px-5"
         >
           <span class="flex min-w-0 items-center gap-3">
             <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="sm" />
@@ -100,7 +95,7 @@
                 <span
                   [class.text-accent-gold]="row.isChampion"
                   [class.text-text-primary]="!row.isChampion"
-                  class="font-display truncate text-base leading-none font-semibold"
+                  class="font-display truncate text-lg leading-none font-semibold"
                 >
                   {{ row.displayName }}
                 </span>
@@ -109,7 +104,7 @@
                 }
               </span>
               @if (row.tag) {
-                <span class="mt-1.5 block truncate text-sm text-text-muted">#{{ row.tag }}</span>
+                <span class="mt-1.5 block truncate text-base text-text-muted">#{{ row.tag }}</span>
               }
             </span>
           </span>
@@ -119,12 +114,12 @@
             <span class="min-w-0">
               <span
                 [class]="row.tier.colorClass"
-                class="font-display block truncate text-sm leading-none font-semibold uppercase"
+                class="font-display block truncate text-base leading-none font-semibold uppercase"
               >
                 {{ row.tier.label }}
               </span>
               @if (row.rankRating !== null) {
-                <span class="mt-1.5 block font-mono text-2xs text-text-muted tabular-nums">
+                <span class="mt-1.5 block font-mono text-xs text-text-muted tabular-nums">
                   {{ row.rankRating }} RR
                 </span>
               }
@@ -136,33 +131,34 @@
           >
             <span class="flex flex-col gap-2">
               <span
-                class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase lg:sr-only"
+                class="tracking-label font-mono text-xs font-medium text-text-muted uppercase lg:sr-only"
               >
                 {{ 'players.columns.winRate' | translate }}
               </span>
               <span
                 [class]="winRateVisual(row.winRate).textClass"
-                class="font-display text-base leading-none font-bold tabular-nums"
+                class="font-display text-lg leading-none font-bold tabular-nums"
               >
                 {{ formatWinRate(row.winRate) }}
               </span>
               <app-progress-bar
-                class="w-full border border-text-primary/10 lg:w-28"
-                heightClass="h-1.5"
+                class="notch-tr w-full [--notch:0.1875rem] lg:w-36"
+                heightClass="h-2.5"
                 [colorClass]="winRateVisual(row.winRate).barClass"
+                [edgeMarker]="true"
                 [percentage]="row.winRate ?? 0"
               />
             </span>
 
             <span class="flex flex-col gap-2">
               <span
-                class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase lg:sr-only"
+                class="tracking-label font-mono text-xs font-medium text-text-muted uppercase lg:sr-only"
               >
                 {{ 'players.columns.kda' | translate }}
               </span>
               <span
                 [class]="kdaVisual(row.kda).textClass"
-                class="font-display text-base leading-none font-bold tabular-nums"
+                class="font-display text-lg leading-none font-bold tabular-nums"
               >
                 {{ formatKda(row.kda) }}
               </span>
@@ -170,22 +166,22 @@
 
             <span class="flex flex-col gap-2">
               <span
-                class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase lg:sr-only"
+                class="tracking-label font-mono text-xs font-medium text-text-muted uppercase lg:sr-only"
               >
                 {{ 'players.columns.headshotPercentage' | translate }}
               </span>
-              <span class="text-base leading-none text-text-secondary tabular-nums">
+              <span class="text-lg leading-none text-text-secondary tabular-nums">
                 {{ formatHeadshotPercentage(row.headshotPercentage) }}
               </span>
             </span>
 
             <span class="flex flex-col gap-2">
               <span
-                class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase lg:sr-only"
+                class="tracking-label font-mono text-xs font-medium text-text-muted uppercase lg:sr-only"
               >
                 {{ 'players.columns.matchesPlayed' | translate }}
               </span>
-              <span class="text-base leading-none text-text-secondary tabular-nums">
+              <span class="text-lg leading-none text-text-secondary tabular-nums">
                 {{ row.matchesPlayed }}
               </span>
             </span>

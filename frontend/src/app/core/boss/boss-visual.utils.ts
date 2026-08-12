@@ -12,8 +12,8 @@ const BOSS_CATEGORY_COLORS: Readonly<Record<BossCategory, string>> = {
 /**
  * Resolves the text color utility for a boss's category.
  *
- * Shared by the overview boss card and the boss history page so a category reads the same
- * everywhere it appears.
+ * Only the rules page colors a category today: the overview card and the campaign timeline both
+ * render it as plain muted text beside the boss name.
  *
  * @param category - The boss's weight class.
  * @returns The Tailwind text color utility to apply.

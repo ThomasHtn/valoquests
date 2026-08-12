@@ -14,6 +14,5 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'leaderboard', routerLink: '/leaderboard' },
   { labelKey: 'players', routerLink: '/players' },
   //{ labelKey: 'comparison' },
-  { labelKey: 'ranking', routerLink: '/ranking' },
   { labelKey: 'rules', routerLink: '/rules' },
 ];

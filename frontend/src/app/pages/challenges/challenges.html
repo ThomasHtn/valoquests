@@ -1,33 +1,38 @@
 <!-- Header: the week's quest, its stakes and the countdown to the next draw — the same treatment as
-     the overview's hero header, so both screens open on the same beat. -->
-<header class="flex flex-wrap items-start justify-between gap-4">
-  <div>
-    <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
-      {{ 'overview.weeklyChallenges.eyebrow' | translate: { number: weekNumber() ?? '—' } }}
-    </p>
-    <h1
-      class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
-    >
-      {{ 'overview.weeklyChallenges.title' | translate }}
-    </h1>
-    <p class="mt-2 max-w-prose text-sm text-text-secondary">
-      {{ 'overview.weeklyChallenges.subtitle' | translate }}
-    </p>
+     the overview's hero header, so both screens open on the same beat. The subtitle sits below the
+     title row rather than inside its column, so it spans the full width and stays on one line
+     instead of being squeezed against the countdown. -->
+<header>
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
+        {{ 'overview.weeklyChallenges.eyebrow' | translate: { number: weekNumber() ?? '—' } }}
+      </p>
+      <h1
+        class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
+      >
+        {{ 'overview.weeklyChallenges.title' | translate }}
+      </h1>
+    </div>
+
+    <div class="text-right">
+      <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+        {{ 'overview.header.timeLabel' | translate }}
+      </p>
+      @if (remaining(); as remaining) {
+        <p class="font-display mt-1.5 text-2xl leading-none font-bold text-brand-500">
+          {{
+            'overview.header.timeRemaining'
+              | translate: { days: remaining.days, hours: remaining.hours }
+          }}
+        </p>
+      }
+    </div>
   </div>
 
-  <div class="text-right">
-    <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
-      {{ 'overview.header.timeLabel' | translate }}
-    </p>
-    @if (remaining(); as remaining) {
-      <p class="font-display mt-1.5 text-2xl leading-none font-bold text-brand-500">
-        {{
-          'overview.header.timeRemaining'
-            | translate: { days: remaining.days, hours: remaining.hours }
-        }}
-      </p>
-    }
-  </div>
+  <p class="mt-2 text-lead text-text-secondary">
+    {{ 'overview.weeklyChallenges.subtitle' | translate }}
+  </p>
 </header>
 
 <app-section-divider
@@ -87,7 +92,7 @@
         <div class="min-w-0 flex-1">
           <p
             [class]="row.visual.iconClass"
-            class="tracking-label font-mono text-2xs font-medium uppercase"
+            class="tracking-label font-mono text-xs font-medium uppercase"
           >
             {{ 'overview.weeklyChallenges.difficulty.' + row.difficulty | translate }}
           </p>
@@ -96,12 +101,12 @@
           >
             {{ row.name }}
           </h2>
-          <p class="mt-2 text-sm text-text-secondary">{{ row.description }}</p>
+          <p class="mt-2 text-prose text-text-secondary">{{ row.description }}</p>
         </div>
 
         <p class="shrink-0 border-l border-text-primary/10 pl-4 text-right">
           <span
-            class="tracking-label block font-mono text-2xs font-medium text-text-muted uppercase"
+            class="tracking-label block font-mono text-xs font-medium text-text-muted uppercase"
           >
             {{ 'overview.weeklyChallenges.damageLabel' | translate }}
           </span>
@@ -120,7 +125,7 @@
       <div
         class="notch-tr notch-tr-edge flex min-h-40 flex-col justify-center gap-3 border border-dashed border-brand-500/30 bg-surface-sunken/45 p-4 [--notch:1rem] sm:p-6"
       >
-        <p class="tracking-label font-mono text-2xs font-medium text-text-muted uppercase">
+        <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
           {{ 'overview.weeklyChallenges.nextDraw.label' | translate }}
         </p>
         <p
@@ -128,7 +133,7 @@
         >
           {{ 'overview.weeklyChallenges.nextDraw.date' | translate: { date: nextDrawDate } }}
         </p>
-        <p class="text-sm text-text-secondary">
+        <p class="text-prose text-text-secondary">
           {{ 'overview.weeklyChallenges.nextDraw.description' | translate }}
         </p>
       </div>

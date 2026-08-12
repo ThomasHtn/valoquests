@@ -5,15 +5,16 @@
       "MINOR": "Mineur",
       "STANDARD": "Standard"
     },
-    "damageBar": {
-      "current": "Dégâts en cours",
-      "defeated": "Boss éliminé",
-      "survived": "Dégâts infligés"
-    },
-    "damageDealt": "{{damage}} / {{hp}} PV",
-    "damagePercentage": "{{value}} %",
+    "difficulty": "Difficulté",
     "error": "Impossible de charger l'historique des boss.",
     "eyebrow": "Campagne",
+    "hpBar": {
+      "current": "PV restants",
+      "defeated": "Boss éliminé",
+      "survived": "PV restants"
+    },
+    "hpPercentage": "{{value}} %",
+    "hpValue": "{{remaining}} / {{total}} PV",
     "loading": "Chargement de l'historique des boss…",
     "meta": {
       "finishingBlow": "Coup de grâce · {{player}}",
@@ -261,29 +262,6 @@
     },
     "title": "Joueurs"
   },
-  "ranking": {
-    "columns": {
-      "completedChallenges": "Défis complétés",
-      "damage": "Dégâts",
-      "player": "Joueur",
-      "position": "#"
-    },
-    "carousel": {
-      "empty": "Aucune autre semaine disponible",
-      "jumpTo": "Aller à une semaine"
-    },
-    "empty": "Aucune semaine n'a encore été finalisée.",
-    "error": "Impossible de charger l'historique du classement.",
-    "loading": "Chargement de l'historique du classement…",
-    "podium": {
-      "title": "Podium"
-    },
-    "subtitle": "Retrouvez les dégâts obtenus par chaque joueur, semaine après semaine.",
-    "title": "Classement",
-    "week": {
-      "label": "Semaine {{number}}"
-    }
-  },
   "retry": "Réessayer",
   "rules": {
     "eyebrow": "Règles du jeu",
@@ -322,7 +300,7 @@
         "title": "Chaque match tape fort"
       },
       "ranking": {
-        "description": "Les dégâts totaux de la semaine font le classement. Celui qui porte le coup de grâce est sacré Champion et garde la couronne jusqu'à ce qu'un autre termine le travail.",
+        "description": "Les dégâts totaux de la semaine font le classement. Le reste, c'est de la gloire.",
         "facts": {
           "championTitle": "Coup de grâce = titre de Champion, affiché sur la vue d'ensemble.",
           "crown": "La couronne reste au Champion jusqu'au prochain boss achevé.",
@@ -331,34 +309,8 @@
         "title": "Classement & couronne"
       }
     },
-    "steps": {
-      "boss": {
-        "description": "Une barre de vie pour l'escouade",
-        "title": "Le boss encaisse"
-      },
-      "challenges": {
-        "description": "Tirés chaque lundi, un par difficulté",
-        "title": "5 défis"
-      },
-      "damage": {
-        "description": "Chaque match inflige des dégâts",
-        "title": "Tu joues"
-      },
-      "ranking": {
-        "description": "Coup de grâce = couronne",
-        "title": "Le champion"
-      }
-    },
     "subtitle": "Rien à cocher, rien à déclarer : tu joues, l'appli synchronise tes matchs et l'escouade avance. Voici le barème complet.",
     "title": "Règles et fonctionnement"
-  },
-  "shared": {
-    "challengeCompletionBadge": {
-      "label": "Défis complétés"
-    },
-    "damageBadge": {
-      "label": "Dégâts"
-    }
   },
   "sidebar": {
     "collapse": "Réduire la barre latérale",
@@ -390,7 +342,6 @@
       "leaderboard": "Escouade",
       "overview": "Vue d'ensemble",
       "players": "Joueurs",
-      "ranking": "Classement",
       "rules": "Règles"
     },
     "navLabel": "Navigation principale",

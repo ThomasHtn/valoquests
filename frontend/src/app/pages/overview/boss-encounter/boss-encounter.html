@@ -31,41 +31,35 @@
   >
     @if (boss(); as encounter) {
       <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
-        <!-- Boss portrait: the same segmented hex frame used by the battle map's markers
-             (`boss.html`), so the boss reads as a distinct "character" rather than only a name and
-             a bar, and both pages frame it identically. Sized up from the compact card treatment
-             so it reads as the card's focal point, matching the mockup. -->
-        <div class="relative mx-auto h-28 w-28 shrink-0 sm:mx-0 sm:h-36 sm:w-36">
-          <div class="clip-hex absolute inset-2 overflow-hidden bg-surface-800">
-            @if (encounter.boss.imageUrl; as portraitUrl) {
-              <img
-                [height]="144"
-                [ngSrc]="portraitUrl"
-                [width]="144"
-                alt=""
-                class="h-full w-full object-cover"
-                priority
-              />
-            } @else {
-              <span class="flex h-full w-full items-center justify-center">
-                <svg class="h-14 w-14 text-text-secondary sm:h-16 sm:w-16" lucideSkull></svg>
-              </span>
-            }
-          </div>
+        <!-- Boss portrait: the same hex marker used by the campaign timeline (`boss.html`) — a
+             colored hexagon with a `surface-950` hexagon inset inside it, plus the pulsing halo
+             the timeline gives the week currently being fought, which is exactly what this card
+             shows. Both pages therefore frame the boss identically, only sized up here so the
+             portrait reads as the card's focal point. -->
+        <div class="relative mx-auto h-28 w-24 shrink-0 sm:mx-0 sm:h-36 sm:w-32">
+          <span
+            aria-hidden="true"
+            class="clip-hex absolute -inset-1.5 bg-accent-red/25 motion-safe:animate-pulse"
+          ></span>
 
-          <svg class="absolute inset-0 h-full w-full" fill="none" viewBox="0 0 100 100">
-            @for (edge of hexFrameEdges; track $index) {
-              <line
-                [attr.x1]="edge.x1"
-                [attr.x2]="edge.x2"
-                [attr.y1]="edge.y1"
-                [attr.y2]="edge.y2"
-                class="stroke-accent-red"
-                stroke-linecap="round"
-                stroke-width="6"
-              />
-            }
-          </svg>
+          <span class="clip-hex absolute inset-0 bg-accent-red">
+            <span class="clip-hex absolute inset-0.5 overflow-hidden bg-surface-950">
+              @if (encounter.boss.imageUrl; as portraitUrl) {
+                <img
+                  [height]="144"
+                  [ngSrc]="portraitUrl"
+                  [width]="128"
+                  alt=""
+                  class="h-full w-full object-cover"
+                  priority
+                />
+              } @else {
+                <span class="flex h-full w-full items-center justify-center">
+                  <svg class="h-14 w-14 text-text-secondary sm:h-16 sm:w-16" lucideSkull></svg>
+                </span>
+              }
+            </span>
+          </span>
         </div>
 
         <div class="min-w-0 flex-1">
@@ -75,7 +69,7 @@
             >
               {{ 'overview.bossEncounter.eyebrow' | translate }}
             </span>
-            <span class="tracking-label font-mono text-2xs text-text-muted uppercase">
+            <span class="tracking-label font-mono text-xs text-text-muted uppercase">
               {{ 'overview.bossEncounter.difficulty' | translate }}
               <span aria-hidden="true">·</span>
               {{ 'boss.category.' + encounter.boss.category | translate }}
@@ -96,14 +90,16 @@
             </p>
           </div>
 
-          <p class="mt-1.5 max-w-prose text-sm text-text-secondary">
+          <p class="text-prose mt-1.5 max-w-prose text-text-secondary">
             {{ encounter.boss.description }}
           </p>
 
           <!-- Game-style health bar, spanning the full width of the content block below the name.
-               Written here rather than through the shared `<app-progress-bar>`: this is the one
-               bar in the application carrying a leading-edge marker at the fill's head, the
-               mockup's signal that the bar is being *drained* rather than filled.
+               Written here rather than through the shared `<app-progress-bar>`: this one carries a
+               border, so it needs `notch-tr-edge` to redraw the diagonal the cut removes, which the
+               shared borderless track has no use for. Its leading-edge marker at the fill's head is
+               the mockup's signal that the bar is being *drained* rather than filled; the shared
+               bar reproduces it behind its `edgeMarker` input.
 
                Hidden from assistive technology, like the shared bar: the exact remaining and total
                hit points are already rendered as text beside the boss name. -->

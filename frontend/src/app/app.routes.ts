@@ -54,11 +54,6 @@ export const routes: Routes = [
           import('@pages/player-profile/player-profile').then((m) => m.PlayerProfile),
       },
       {
-        path: 'ranking',
-        title: 'ranking.title',
-        loadComponent: () => import('@pages/ranking/ranking').then((m) => m.Ranking),
-      },
-      {
         path: 'boss',
         title: 'boss.title',
         loadComponent: () => import('@pages/boss/boss').then((m) => m.Boss),

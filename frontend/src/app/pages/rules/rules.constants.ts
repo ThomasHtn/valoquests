@@ -5,28 +5,13 @@ import { resolveDifficultyVisual } from '@core/challenges/challenge-visual.utils
 import { GameMode } from '@core/matches/game-mode.model';
 
 /**
- * The four beats of the weekly loop, in order.
- *
- * Each entry is the middle segment of its `rules.steps.*` translation keys; the step's number is
- * its position in this list, so neither the copy nor the markup has to repeat it.
- */
-export const RULES_STEPS: readonly string[] = ['challenges', 'damage', 'boss', 'ranking'];
-
-/**
  * One difficulty tier shown in the challenges step's damage ladder, from easiest to hardest.
  */
 interface DifficultyShowcase {
   readonly difficulty: ChallengeDifficulty;
   readonly damage: number;
-  /** Share of the hardest tier's damage, driving the row's inline bar. */
-  readonly share: number;
   readonly visual: Omit<ChallengeVisual, 'icon'>;
 }
-
-/**
- * Damage awarded by the hardest tier, the reference the ladder's bars are scaled against.
- */
-const HARDEST_TIER_DAMAGE = 9_000;
 
 /**
  * Damage ladder shown alongside the challenges step, colored the same way as the weekly
@@ -38,12 +23,11 @@ export const DIFFICULTY_SHOWCASE: readonly DifficultyShowcase[] = (
     ['NORMAL', 2_500],
     ['MEDIUM', 4_000],
     ['HARD', 6_000],
-    ['VERY_HARD', HARDEST_TIER_DAMAGE],
+    ['VERY_HARD', 9_000],
   ] as const
 ).map(([difficulty, damage]) => ({
   difficulty,
   damage,
-  share: Math.round((damage / HARDEST_TIER_DAMAGE) * 100),
   visual: resolveDifficultyVisual(difficulty),
 }));
 
@@ -80,15 +64,10 @@ export const MATCH_DAMAGE_SHOWCASE: readonly MatchDamageShowcase[] = [
 
 /**
  * One step of a bonus ladder.
- *
- * `intensityClass` ramps the tile's brand tint and top rule with the reward, so a ladder reads as
- * a climb before any number is parsed. Written as literal utilities rather than computed opacities
- * because Tailwind resolves class names statically.
  */
 interface BonusShowcase {
   readonly label: string;
   readonly bonus: number;
-  readonly intensityClass: string;
 }
 
 /**
@@ -97,12 +76,12 @@ interface BonusShowcase {
  * earns nothing, so the ladder starts at two.
  */
 export const REGULARITY_BONUS_SHOWCASE: readonly BonusShowcase[] = [
-  { label: '2', bonus: 300, intensityClass: 'bg-brand-500/5 border-brand-500/30' },
-  { label: '3', bonus: 700, intensityClass: 'bg-brand-500/8 border-brand-500/40' },
-  { label: '4', bonus: 1_200, intensityClass: 'bg-brand-500/10 border-brand-500/55' },
-  { label: '5', bonus: 1_800, intensityClass: 'bg-brand-500/12 border-brand-500/70' },
-  { label: '6', bonus: 2_400, intensityClass: 'bg-brand-500/15 border-brand-500/85' },
-  { label: '7', bonus: 3_000, intensityClass: 'bg-brand-500/20 border-brand-500' },
+  { label: '2', bonus: 300 },
+  { label: '3', bonus: 700 },
+  { label: '4', bonus: 1_200 },
+  { label: '5', bonus: 1_800 },
+  { label: '6', bonus: 2_400 },
+  { label: '7', bonus: 3_000 },
 ];
 
 /**
@@ -112,11 +91,11 @@ export const REGULARITY_BONUS_SHOWCASE: readonly BonusShowcase[] = [
  * ladder stops there.
  */
 export const TEAM_BONUS_SHOWCASE: readonly BonusShowcase[] = [
-  { label: '2', bonus: 150, intensityClass: 'bg-brand-500/5 border-brand-500/30' },
-  { label: '3', bonus: 300, intensityClass: 'bg-brand-500/8 border-brand-500/45' },
-  { label: '4', bonus: 500, intensityClass: 'bg-brand-500/12 border-brand-500/60' },
-  { label: '5', bonus: 750, intensityClass: 'bg-brand-500/16 border-brand-500/80' },
-  { label: '6+', bonus: 1_100, intensityClass: 'bg-brand-500/20 border-brand-500' },
+  { label: '2', bonus: 150 },
+  { label: '3', bonus: 300 },
+  { label: '4', bonus: 500 },
+  { label: '5', bonus: 750 },
+  { label: '6+', bonus: 1_100 },
 ];
 
 /**

@@ -5,15 +5,16 @@
       "MINOR": "Minor",
       "STANDARD": "Standard"
     },
-    "damageBar": {
-      "current": "Damage in progress",
-      "defeated": "Boss eliminated",
-      "survived": "Damage dealt"
-    },
-    "damageDealt": "{{damage}} / {{hp}} HP",
-    "damagePercentage": "{{value}}%",
+    "difficulty": "Difficulty",
     "error": "Failed to load the boss history.",
     "eyebrow": "Campaign",
+    "hpBar": {
+      "current": "HP remaining",
+      "defeated": "Boss eliminated",
+      "survived": "HP remaining"
+    },
+    "hpPercentage": "{{value}}%",
+    "hpValue": "{{remaining}} / {{total}} HP",
     "loading": "Loading the boss history…",
     "meta": {
       "finishingBlow": "Finishing blow · {{player}}",
@@ -261,29 +262,6 @@
     },
     "title": "Players"
   },
-  "ranking": {
-    "columns": {
-      "completedChallenges": "Completed challenges",
-      "damage": "Damage",
-      "player": "Player",
-      "position": "#"
-    },
-    "carousel": {
-      "empty": "No other week available",
-      "jumpTo": "Jump to a week"
-    },
-    "empty": "No week has been finalized yet.",
-    "error": "Failed to load the ranking history.",
-    "loading": "Loading the ranking history…",
-    "podium": {
-      "title": "Podium"
-    },
-    "subtitle": "Review the damage earned by each player, week after week.",
-    "title": "Ranking",
-    "week": {
-      "label": "Week {{number}}"
-    }
-  },
   "retry": "Retry",
   "rules": {
     "eyebrow": "How it works",
@@ -322,7 +300,7 @@
         "title": "Every match throws a punch"
       },
       "ranking": {
-        "description": "Total damage for the week decides the ranking. Whoever lands the killing blow gets crowned Champion and wears the crown until someone else finishes the job.",
+        "description": "Total damage for the week decides the ranking. The rest is glory.",
         "facts": {
           "championTitle": "Finishing blow = Champion title, shown on the overview.",
           "crown": "The crown stays with the Champion until the next boss goes down.",
@@ -331,34 +309,8 @@
         "title": "Ranking & crown"
       }
     },
-    "steps": {
-      "boss": {
-        "description": "One health bar for the whole squad",
-        "title": "The boss takes it"
-      },
-      "challenges": {
-        "description": "Drawn every Monday, one per difficulty",
-        "title": "5 challenges"
-      },
-      "damage": {
-        "description": "Every match deals damage",
-        "title": "You play"
-      },
-      "ranking": {
-        "description": "Finishing blow = crown",
-        "title": "The champion"
-      }
-    },
     "subtitle": "Nothing to tick, nothing to declare: you play, the app syncs your matches and the squad moves forward. Here's the full scoring table.",
     "title": "Rules & how it works"
-  },
-  "shared": {
-    "challengeCompletionBadge": {
-      "label": "Completed challenges"
-    },
-    "damageBadge": {
-      "label": "Damage"
-    }
   },
   "sidebar": {
     "collapse": "Collapse sidebar",
@@ -390,7 +342,6 @@
       "leaderboard": "Squad",
       "overview": "Overview",
       "players": "Players",
-      "ranking": "Ranking",
       "rules": "Rules"
     },
     "navLabel": "Main navigation",

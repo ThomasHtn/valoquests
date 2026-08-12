@@ -81,7 +81,6 @@ export interface BossTimelineNode {
    * `null` for an `'upcoming'` placeholder, whose boss category isn't drawn yet.
    */
   readonly categoryLabel: string | null;
-  readonly categoryColorClass: string | null;
   readonly portraitUrl: string | null;
 
   /**
@@ -92,19 +91,19 @@ export interface BossTimelineNode {
   readonly hasDamage: boolean;
 
   /**
-   * Share of the boss's effective hit points the group has taken off, from 0 to 100, clamped at
-   * 100 once the boss is down. Zero for an `'upcoming'` placeholder.
+   * Share of the boss's effective hit points still standing, from 0 to 100, floored at 0 once the
+   * boss is down. Zero for an `'upcoming'` placeholder.
    */
-  readonly damagePercentage: number;
+  readonly hpPercentage: number;
 
   /**
-   * That same share as text (`64 %`), and the raw tally behind it (`61 400 / 95 000 PV`).
+   * That same share as text (`36 %`), and the raw tally behind it (`33 600 / 95 000 PV`).
    */
-  readonly damagePercentageLabel: string;
-  readonly damageLabel: string;
+  readonly hpPercentageLabel: string;
+  readonly hpLabel: string;
 
   /**
-   * Translated caption above the damage bar — see `resolveBossDamageBarLabelKey`.
+   * Translated caption above the health bar — see `resolveBossHpBarLabelKey`.
    */
   readonly barLabel: string;
 

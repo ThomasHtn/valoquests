@@ -12,16 +12,38 @@
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /*
-   * One step below `text-xs`, for the direction's monospaced micro-labels: the eyebrows, column
-   * headers and unit captions that name a value without competing with it. Named as a step of the
-   * type scale rather than written as a raw pixel size at each call site, so the whole family
-   * moves together and no screen invents its own 9px or 11px variant.
+   * One step below `text-xs`, for the direction's smallest monospaced marks: the page eyebrows,
+   * the status pills and the numeric micro-values that ride inside a badge or a progress track.
+   * Column headers and the captions that name a value sit one step up, at `text-xs`, so every
+   * data list reads with the same header size. Named as a step of the type scale rather than
+   * written as a raw pixel size at each call site, so the whole family moves together and no
+   * screen invents its own 9px or 11px variant.
    *
    * The line height is 1: these labels are always a single uppercase line, and the default
    * leading would push the value they caption out of alignment.
    */
   --text-2xs: 0.625rem;
   --text-2xs--line-height: 1;
+
+  /*
+   * The two steps every run of prose uses: `text-lead` for a page's opening line of stakes (the
+   * `<header>` subtitle), `text-prose` for the descriptions inside the page — a challenge's rule,
+   * a boss's flavor line, a section of the rulebook.
+   *
+   * Both sit one step above the label/data scale they used to borrow from (`text-base` and
+   * `text-sm`). `Barlow Condensed` is a condensed face, so it reads a size smaller than its metrics
+   * claim; at the old sizes a full sentence was legible but not inviting, and these paragraphs are
+   * the only text on screen meant to be *read* rather than scanned.
+   *
+   * The line height rides on the token rather than a `leading-*` at each call site: these are the
+   * only multi-line runs in the interface, and their leading is part of what makes them a
+   * paragraph. Data rows, badges and column headers keep the tighter default scale — widening them
+   * too would cost the density the dashboards are built on.
+   */
+  --text-prose: 1rem;
+  --text-prose--line-height: 1.65;
+  --text-lead: 1.125rem;
+  --text-lead--line-height: 1.6;
 
   /*
    * Letter-spacing ladder for those same labels, which are set far wider than Tailwind's built-in
