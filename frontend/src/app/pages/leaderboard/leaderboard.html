@@ -16,15 +16,11 @@
 
     <app-week-countdown [remaining]="remaining()" />
   </div>
-
-  <p class="mt-2 text-lead text-text-secondary">
-    {{ 'overview.weeklyRanking.subtitle' | translate }}
-  </p>
 </header>
 
 <app-section-divider
   [label]="'overview.weeklyRanking.totalDamage' | translate: { damage: totalDamage() }"
-  class="-mt-2"
+  class="my-2"
 />
 
 <app-resource-state

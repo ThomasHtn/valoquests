@@ -39,7 +39,6 @@
       "current": "En cours",
       "upcoming": "À venir"
     },
-    "subtitle": "Un boss par semaine, du premier affrontement à ceux encore verrouillés.",
     "timeline": {
       "ariaLabel": "Chronologie des combats de boss"
     },
@@ -139,7 +138,6 @@
         "description": "Cinq nouveaux défis seront tirés du catalogue.",
         "label": "Prochain tirage"
       },
-      "subtitle": "Cinq défis tirés d'un catalogue de 46, un par difficulté. Chaque défi réalisé inflige ses dégâts à la cible de la semaine.",
       "title": "Défis de la semaine",
       "totalPotential": "Potentiel total · {{damage}} dégâts"
     },
@@ -156,7 +154,6 @@
       "eyebrow": "Classement · Semaine {{number}}",
       "inactive": "Inactif",
       "loading": "Chargement du classement…",
-      "subtitle": "La position, les dégâts et la progression exacte de chaque joueur sur les défis de la semaine.",
       "title": "Classement de la semaine",
       "totalDamage": "Dégâts cumulés · {{damage}}",
       "variation": {
@@ -258,7 +255,6 @@
       "other": "{{count}} joueurs suivis"
     },
     "loading": "Chargement des joueurs…",
-    "subtitle": "Rang, winrate et headshots de chaque joueur, du mieux classé au dernier.",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -320,7 +316,6 @@
         "title": "Classement & couronne"
       }
     },
-    "subtitle": "Rien à cocher, rien à déclarer : tu joues, l'appli fait le reste.",
     "title": "Règles et fonctionnement"
   },
   "sidebar": {

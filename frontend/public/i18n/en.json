@@ -39,7 +39,6 @@
       "current": "In progress",
       "upcoming": "Upcoming"
     },
-    "subtitle": "One boss a week, from the first fight to the ones still locked.",
     "timeline": {
       "ariaLabel": "Boss battle timeline"
     },
@@ -139,7 +138,6 @@
         "description": "Five new challenges will be drawn from the catalogue.",
         "label": "Next draw"
       },
-      "subtitle": "Five challenges drawn from a catalogue of 46, one per difficulty. Every challenge cleared deals its damage to the week's target.",
       "title": "Weekly challenges",
       "totalPotential": "Total potential · {{damage}} damage"
     },
@@ -156,7 +154,6 @@
       "eyebrow": "Ranking · Week {{number}}",
       "inactive": "Inactive",
       "loading": "Loading ranking…",
-      "subtitle": "Every tracked player's position, damage and exact progress toward this week's challenges.",
       "title": "Weekly ranking",
       "totalDamage": "Total damage · {{damage}}",
       "variation": {
@@ -258,7 +255,6 @@
       "other": "{{count}} tracked players"
     },
     "loading": "Loading players…",
-    "subtitle": "Rank, win rate and headshots for every player, from the highest ranked down.",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -320,7 +316,6 @@
         "title": "Ranking & crown"
       }
     },
-    "subtitle": "Nothing to tick, nothing to declare: you play, the app handles the rest.",
     "title": "Rules & how it works"
   },
   "sidebar": {
