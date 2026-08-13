@@ -126,8 +126,11 @@
     </div>
 
     <div>
+      <!-- The outcome columns are sized by their *header*, not by their values: "Victoire" and
+           "Défaite" are the widest things they hold, and at the narrower measure they used to run
+           over their neighbour and off the right edge of a phone. -->
       <div
-        class="grid grid-cols-[minmax(0,1fr)_repeat(3,3.25rem)] items-center gap-x-3 border-b border-brand-500/30 pb-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,4rem)]"
+        class="grid grid-cols-[minmax(0,1fr)_repeat(3,5rem)] items-center gap-x-3 border-b border-brand-500/30 pb-2"
       >
         <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
           {{ 'rules.sections.damage.modeLabel' | translate }}
@@ -152,9 +155,11 @@
       <ul>
         @for (mode of matchDamageShowcase; track mode.mode) {
           <li
-            class="grid grid-cols-[minmax(0,1fr)_repeat(3,3.25rem)] items-center gap-x-3 border-b border-text-primary/8 py-2.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_repeat(3,4rem)]"
+            class="grid grid-cols-[minmax(0,1fr)_repeat(3,5rem)] items-center gap-x-3 border-b border-text-primary/8 py-2.5 last:border-b-0"
           >
-            <span class="truncate text-sm font-semibold text-text-primary">
+            <!-- Wraps rather than truncates: on a phone the longest mode name no longer fits on
+                 one line, and a mode the reader cannot finish reading defeats the table. -->
+            <span class="text-sm font-semibold text-text-primary">
               {{ 'playerProfile.matches.gameMode.' + mode.mode | translate }}
             </span>
             <span class="font-display text-right font-bold text-brand-500 tabular-nums">

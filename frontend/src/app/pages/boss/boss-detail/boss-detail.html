@@ -108,7 +108,10 @@
              track rather than beside it, so the number and the fill it describes are read in one
              glance; it stays exposed to assistive technology since nothing else on the panel
              repeats it. -->
-        <div class="relative mt-2 h-7 border border-text-primary/15 bg-surface-950">
+        <!-- Same track as the timeline panel this drawer opens from — same height, same sunken
+             ground, same tally size — so the bar reads as the one the reader just clicked, seen
+             closer up rather than redrawn. -->
+        <div class="relative mt-2 h-6 border border-text-primary/15 bg-surface-sunken">
           <div
             [class]="tier().barFillClass"
             [style.width.%]="node().hpPercentage"
@@ -116,7 +119,7 @@
             class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
           ></div>
           <span
-            class="relative flex h-full items-center justify-center font-mono text-xs font-semibold text-text-primary tabular-nums [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
+            class="relative flex h-full items-center justify-center font-mono text-2xs font-semibold text-text-primary tabular-nums [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
             >{{ node().hpLabel }}</span
           >
         </div>

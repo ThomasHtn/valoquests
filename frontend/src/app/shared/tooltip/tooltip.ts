@@ -63,6 +63,13 @@ export class Tooltip implements OnDestroy {
   public readonly appTooltipDisabled = input(false);
 
   /**
+   * Bubble size. `md` is used by the sidebar's navigation entries, whose tooltip is the only way to
+   * read the entry's label while the rail is collapsed and therefore needs to read comfortably at a
+   * glance; every other tooltip stays at the default `sm`.
+   */
+  public readonly appTooltipSize = input<'sm' | 'md'>('sm');
+
+  /**
    * Host element the bubble is positioned against and described by.
    */
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -117,11 +124,15 @@ export class Tooltip implements OnDestroy {
     // page's game-mode menu): cut corner, held by a leading brand rule rather than a full border.
     // No shadow — `clip-path` clips one along with the corner it cuts, and the rule is what lifts
     // the bubble off the surface behind it.
+    const sizeClass =
+      this.appTooltipSize() === 'md'
+        ? 'max-w-72 px-4 py-2.5 text-sm'
+        : 'max-w-64 px-2.5 py-1.5 text-xs';
     this.renderer.setAttribute(
       bubble,
       'class',
-      'notch-tr pointer-events-none m-0 max-w-64 border-l-2 border-brand-500/50 bg-surface-900 ' +
-        'px-2.5 py-1.5 text-xs text-text-primary [--notch:0.375rem]',
+      `notch-tr pointer-events-none m-0 border-l-2 border-brand-500/50 bg-surface-sunken ` +
+        `text-text-primary [--notch:0.375rem] ${sizeClass}`,
     );
     this.renderer.setStyle(bubble, 'position', 'fixed');
 

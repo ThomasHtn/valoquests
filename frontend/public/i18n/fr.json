@@ -19,7 +19,7 @@
     "meta": {
       "finishingBlow": "Coup de grâce · {{player}}",
       "remaining": "{{days}}j {{hours}}h restantes",
-      "topDamage": "Meilleur dégât · {{player}} · {{damage}}"
+      "topDamage": "Meilleurs dégâts · {{player}} · {{damage}}"
     },
     "outcome": {
       "defeated": "Vaincu",
@@ -236,6 +236,7 @@
     "title": "Profil du joueur",
     "viewMode": {
       "global": "Saisons",
+      "label": "Période",
       "weekly": "Semaine"
     }
   },
@@ -286,7 +287,7 @@
         "footnote": "Ces deux bonus se cumulent avec les dégâts des matchs et des défis. Rien à faire de plus que jouer.",
         "players": "{{count}} joueurs",
         "regularityLabel": "Régularité · jours joués dans la semaine",
-        "teamLabel": "Équipe · joueurs ayant fini le même défi",
+        "teamLabel": "Escouade · joueurs ayant fini le même défi",
         "title": "Bonus : reviens souvent, joue à plusieurs"
       },
       "boss": {
@@ -323,6 +324,7 @@
     "title": "Règles et fonctionnement"
   },
   "sidebar": {
+    "closeMenu": "Fermer le menu",
     "collapse": "Réduire la barre latérale",
     "expand": "Déplier la barre latérale",
     "label": "Barre latérale",
@@ -349,11 +351,12 @@
       "challenges": "Défis",
       "leaderboard": "Classement",
       "overview": "Vue d'ensemble",
-      "players": "Joueurs",
+      "players": "Escouade",
       "rules": "Règles"
     },
     "navLabel": "Navigation principale",
-    "squad": "Escouade 07"
+    "openMenu": "Ouvrir le menu",
+    "squad": "Escadron 117"
   },
   "skipToContent": "Aller au contenu principal"
 }

@@ -143,8 +143,12 @@
               >
                 {{ formatWinRate(row.winRate) }}
               </span>
+              <!-- From `lg` the bar is pulled out of its cell's measured height (its own 0.625rem
+                   plus the 0.5rem gap above it). The row centers its cells, so without this the
+                   only cell carrying a bar is taller than the other three and its value floats
+                   half a line above the win rate, K/D and matches it should scan level with. -->
               <app-progress-bar
-                class="notch-tr w-full [--notch:0.1875rem] lg:w-36"
+                class="notch-tr w-full [--notch:0.1875rem] lg:-mb-[1.125rem] lg:w-36"
                 heightClass="h-2.5"
                 [colorClass]="winRateVisual(row.winRate).barClass"
                 [edgeMarker]="true"

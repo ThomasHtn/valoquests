@@ -38,15 +38,19 @@
   role="listbox"
 >
   @if (emptyText() && options().length <= 1) {
-    <p class="px-4 py-2 text-sm whitespace-nowrap text-text-secondary">{{ emptyText() }}</p>
+    <p class="px-4 py-2.5 text-sm whitespace-nowrap text-text-secondary">{{ emptyText() }}</p>
   } @else {
     @for (option of options(); track $index) {
+      <!-- The current value keeps a brand tint of its own, on top of the highlight the keyboard
+           and the pointer both move around: a listbox whose only mark is the highlight leaves a
+           reader who opens it and moves the mouse with nothing saying which option is in force. -->
       <button
         (click)="select(option)"
         [attr.aria-selected]="$index === selectedIndex()"
         [class.bg-surface-800]="$index === activeIndex()"
+        [class.text-brand-500]="$index === selectedIndex()"
         [id]="optionId($index)"
-        class="block w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-text-primary transition-[background-color,scale] hover:bg-surface-800 motion-safe:active:scale-[0.96]"
+        class="block min-h-10 w-full cursor-pointer px-4 py-2.5 text-left text-sm whitespace-nowrap text-text-primary transition-[background-color,scale] hover:bg-surface-800 motion-safe:active:scale-[0.96]"
         role="option"
         tabindex="-1"
         type="button"

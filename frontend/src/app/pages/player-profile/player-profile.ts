@@ -61,6 +61,17 @@ import { groupMatchesByDay } from './match-day.utils';
 const PRIMARY_GAME_MODES: readonly GameMode[] = ['COMPETITIVE', 'UNRATED', 'DEATHMATCH'];
 
 /**
+ * Period the statistics and the match history are scoped to.
+ */
+type ViewMode = 'weekly' | 'global';
+
+/**
+ * The two periods, in the order the toggle offers them: the active week first, since that is what
+ * the profile is opened for, then everything on record.
+ */
+const VIEW_MODES: readonly ViewMode[] = ['weekly', 'global'];
+
+/**
  * Player-profile page.
  *
  * Displays one tracked player's identity, current competitive rank, aggregated statistics and
@@ -155,7 +166,13 @@ export class PlayerProfile {
    * Defaults to `'weekly'`: this profile is read first and foremost to check progress toward the
    * active week's challenges, with the all-time record as secondary context.
    */
-  protected readonly viewMode = signal<'weekly' | 'global'>('weekly');
+  protected readonly viewMode = signal<ViewMode>('weekly');
+
+  /**
+   * The two periods offered by the toggle, in display order, so the template renders them from one
+   * list instead of repeating the button markup per option.
+   */
+  protected readonly viewModes = VIEW_MODES;
 
   /**
    * Reactive resource fetching every known season, used by the season filter.
@@ -537,7 +554,7 @@ export class PlayerProfile {
    *
    * @param mode - The newly selected view.
    */
-  protected setViewMode(mode: 'weekly' | 'global'): void {
+  protected setViewMode(mode: ViewMode): void {
     if (this.viewMode() === mode) {
       return;
     }

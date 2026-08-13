@@ -7,9 +7,9 @@
   {{ 'skipToContent' | translate }}
 </a>
 
-<!-- Navigation sits beside the content on desktop and below it on small screens, hence the
-     direction switch: the sidebar orders itself last under `lg` so it renders as a bottom tab bar
-     within the same DOM order. -->
+<!-- Navigation sits beside the content on desktop and above it on small screens, hence the direction
+     switch: under `lg` the sidebar contributes a header bar that stacks over the routed content,
+     and its panel becomes a drawer overlaying the page rather than a column beside it. -->
 <div class="ambient-field flex h-screen flex-col overflow-hidden bg-surface-950 lg:flex-row">
   <!-- Persistent navigation, shown on every route nested under this shell. -->
   <app-sidebar />

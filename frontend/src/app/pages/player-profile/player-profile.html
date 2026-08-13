@@ -109,7 +109,7 @@
             [attr.aria-pressed]="gameModeFilter() === mode"
             [class]="
               gameModeFilter() === mode
-                ? 'border-brand-500/40 bg-brand-500/15 text-brand-500'
+                ? 'border-brand-500/45 bg-brand-500/15 text-brand-500'
                 : 'border-surface-700 bg-surface-900 text-text-secondary hover:border-surface-600 hover:bg-surface-800 hover:text-text-primary'
             "
             class="notch-tr notch-tr-edge focus-ring-inset min-h-10 cursor-pointer border px-4 py-2 text-sm font-semibold transition-colors [--notch:0.5rem] motion-safe:active:scale-[0.96]"
@@ -128,8 +128,8 @@
           [attr.aria-label]="'playerProfile.filters.moreGameModes' | translate"
           [class]="
             overflowGameModeActiveLabel()
-              ? 'border-brand-500/40 bg-brand-500/15 text-brand-500'
-              : 'border-surface-700 bg-surface-900 text-text-muted hover:border-surface-600 hover:bg-surface-800 hover:text-text-primary'
+              ? 'border-brand-500/45 bg-brand-500/15 text-brand-500'
+              : 'border-surface-700 bg-surface-900 text-text-secondary hover:border-surface-600 hover:bg-surface-800 hover:text-text-primary'
           "
           aria-haspopup="menu"
           class="notch-tr notch-tr-edge focus-ring-inset flex min-h-10 min-w-10 cursor-pointer items-center justify-center gap-1.5 border px-2.5 py-2 text-sm font-semibold transition-colors [--notch:0.5rem] motion-safe:active:scale-[0.96]"
@@ -152,7 +152,7 @@
                 (click)="selectOverflowGameMode(option.value)"
                 [attr.aria-checked]="gameModeFilter() === option.value"
                 [class.text-brand-500]="gameModeFilter() === option.value"
-                class="focus-ring-inset block w-full cursor-pointer px-4 py-2 text-left text-sm whitespace-nowrap text-text-primary transition-[background-color,scale] hover:bg-surface-800 motion-safe:active:scale-[0.96]"
+                class="focus-ring-inset block min-h-10 w-full cursor-pointer px-4 py-2.5 text-left text-sm whitespace-nowrap text-text-primary transition-[background-color,scale] hover:bg-surface-800 motion-safe:active:scale-[0.96]"
                 role="menuitemradio"
                 type="button"
               >
@@ -182,38 +182,35 @@
       }
     </div>
 
-    <!-- View toggle: whether the stats and match history below are scoped to the active week or to
-         all time. Underline tabs, set in the display face like every other section heading, so the
-         active scope reads as a title over the strip it governs rather than as one more filter. -->
-    <div class="flex items-center gap-8 border-b border-text-primary/10" role="tablist">
-      <button
-        (click)="setViewMode('weekly')"
-        [attr.aria-selected]="viewMode() === 'weekly'"
-        [class]="
-          viewMode() === 'weekly'
-            ? 'border-brand-500 text-text-primary'
-            : 'border-transparent text-text-muted hover:text-text-primary'
-        "
-        class="focus-ring font-display -mb-px cursor-pointer border-b-2 pb-3 text-sm font-semibold tracking-wide uppercase transition-colors"
-        role="tab"
-        type="button"
-      >
-        {{ 'playerProfile.viewMode.weekly' | translate }}
-      </button>
-      <button
-        (click)="setViewMode('global')"
-        [attr.aria-selected]="viewMode() === 'global'"
-        [class]="
-          viewMode() === 'global'
-            ? 'border-brand-500 text-text-primary'
-            : 'border-transparent text-text-muted hover:text-text-primary'
-        "
-        class="focus-ring font-display -mb-px cursor-pointer border-b-2 pb-3 text-sm font-semibold tracking-wide uppercase transition-colors"
-        role="tab"
-        type="button"
-      >
-        {{ 'playerProfile.viewMode.global' | translate }}
-      </button>
+    <!-- Period toggle: whether the stats and match history below are scoped to the active week or
+         to all time. Underline treatment, set in the display face like every other section
+         heading, so the active scope reads as a title over the strip it governs rather than as one
+         more filter.
+
+         A pressed-button group rather than a tablist: nothing below is a tab panel — the toggle
+         re-scopes two independent sections — and `role="tab"` would promise arrow-key navigation
+         and an `aria-controls` target that do not exist. It is the same control the game-mode
+         filter above already is, so it is announced the same way. -->
+    <div
+      [attr.aria-label]="'playerProfile.viewMode.label' | translate"
+      class="flex items-center gap-8 border-b border-text-primary/10"
+      role="group"
+    >
+      @for (mode of viewModes; track mode) {
+        <button
+          (click)="setViewMode(mode)"
+          [attr.aria-pressed]="viewMode() === mode"
+          [class]="
+            viewMode() === mode
+              ? 'border-brand-500 text-text-primary'
+              : 'border-transparent text-text-muted hover:text-text-primary'
+          "
+          class="focus-ring font-display -mb-px min-h-10 cursor-pointer border-b-2 pb-3 text-sm font-semibold tracking-wide uppercase transition-colors"
+          type="button"
+        >
+          {{ 'playerProfile.viewMode.' + mode | translate }}
+        </button>
+      }
     </div>
 
     <!-- Stat strip. The win rate leads: it is the one figure that summarises a player's record, so
@@ -222,7 +219,12 @@
     <section
       class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(0,1fr))]"
     >
-      @let winRate = winRateVisual(playerDetails.statistics.winRate);
+      <!-- With nothing in scope every figure below is a zero the backend had to send, not a
+           record: coloring them would read "0 % win rate, needs work" where the truth is "no match
+           here yet". `null` is the treatment the stats already use for a value they cannot judge,
+           so the strip greys out as a block and the empty state below says the rest. -->
+      @let hasSample = playerDetails.statistics.matchesPlayed > 0;
+      @let winRate = winRateVisual(hasSample ? playerDetails.statistics.winRate : null);
       <!-- `border-current`, driven by the tile's own text colour: `StatVisual` carries a text and a
            background utility, neither of which can colour a border on its own. -->
       <div
@@ -262,7 +264,7 @@
           {{ 'playerProfile.stats.kda' | translate }}
         </p>
         <p
-          [class]="kdaVisual(playerDetails.statistics.kda).textClass"
+          [class]="kdaVisual(hasSample ? playerDetails.statistics.kda : null).textClass"
           class="font-display mt-3 text-2xl leading-none font-bold tabular-nums"
         >
           {{ formatKda(playerDetails.statistics.kda) }}
