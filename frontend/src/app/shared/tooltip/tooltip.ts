@@ -1,5 +1,7 @@
 import { Directive, ElementRef, OnDestroy, Renderer2, inject, input, signal } from '@angular/core';
 
+import { TOOLTIP_SURFACE_CLASS } from './tooltip.constants';
+
 /**
  * Monotonically increasing counter backing {@link Tooltip.tooltipId}.
  *
@@ -120,10 +122,6 @@ export class Tooltip implements OnDestroy {
     this.renderer.setAttribute(bubble, 'role', 'tooltip');
     this.renderer.setAttribute(bubble, 'popover', 'manual');
     this.renderer.setProperty(bubble, 'textContent', this.appTooltip());
-    // Same treatment as the application's other floating panels (the select listbox, the profile
-    // page's game-mode menu): cut corner, held by a leading brand rule rather than a full border.
-    // No shadow — `clip-path` clips one along with the corner it cuts, and the rule is what lifts
-    // the bubble off the surface behind it.
     const sizeClass =
       this.appTooltipSize() === 'md'
         ? 'max-w-72 px-4 py-2.5 text-sm'
@@ -131,8 +129,7 @@ export class Tooltip implements OnDestroy {
     this.renderer.setAttribute(
       bubble,
       'class',
-      `notch-tr pointer-events-none m-0 border-l-2 border-brand-500/50 bg-surface-sunken ` +
-        `text-text-primary [--notch:0.375rem] ${sizeClass}`,
+      `${TOOLTIP_SURFACE_CLASS} pointer-events-none m-0 ${sizeClass}`,
     );
     this.renderer.setStyle(bubble, 'position', 'fixed');
 

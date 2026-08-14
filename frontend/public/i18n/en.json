@@ -6,8 +6,7 @@
       "STANDARD": "Standard"
     },
     "difficulty": "Difficulty",
-    "error": "Failed to load the boss history.",
-    "eyebrow": "Campaign",
+    "error": "Failed to load the battle history.",
     "hpBar": {
       "current": "HP remaining",
       "defeated": "Boss eliminated",
@@ -15,7 +14,7 @@
     },
     "hpPercentage": "{{value}}%",
     "hpValue": "{{remaining}} / {{total}} HP",
-    "loading": "Loading the boss history…",
+    "loading": "Loading the battle history…",
     "meta": {
       "finishingBlow": "Finishing blow · {{player}}",
       "remaining": "{{days}}d {{hours}}h remaining",
@@ -40,9 +39,9 @@
       "upcoming": "Upcoming"
     },
     "timeline": {
-      "ariaLabel": "Boss battle timeline"
+      "ariaLabel": "Boss battle history"
     },
-    "title": "Boss timeline",
+    "title": "Battle history",
     "upcoming": {
       "description": "The next opponent hasn't been drawn yet.",
       "name": "Unknown boss"
@@ -51,6 +50,21 @@
       "label": "Week {{number}}",
       "short": "Wk"
     }
+  },
+  "campaign": {
+    "error": "Failed to load the battle map.",
+    "eyebrow": "Campaign",
+    "legend": {
+      "current": "Under attack",
+      "defeated": "Territory taken",
+      "survived": "Assault repelled",
+      "upcoming": "Uncharted"
+    },
+    "loading": "Loading the battle map…",
+    "map": {
+      "ariaLabel": "Campaign battle map, one territory per week"
+    },
+    "title": "Battle map"
   },
   "landing": {
     "body": "Every match moves the squad forward on this week's map. Five challenges to clear, one threat to push back before Sunday night.",

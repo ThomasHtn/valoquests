@@ -28,6 +28,14 @@ export interface NavItem {
   readonly routerLink?: string;
 
   /**
+   * Extra URL prefixes that also count as this entry being active, beyond {@link routerLink}
+   * itself. Reserved for a section that owns a second page reached from within the first rather
+   * than from the sidebar, such as the campaign's battle history — the sidebar still has only one
+   * entry for the whole section, but that entry stays highlighted on both.
+   */
+  readonly activeRoutes?: readonly string[];
+
+  /**
    * Whether the entry is highlighted only on an exact URL match.
    *
    * Reserved for the root route, which every other URL starts with. Every

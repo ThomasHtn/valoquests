@@ -128,23 +128,21 @@
       @for (item of navItems; track item.labelKey) {
         <a
           (click)="closeMobileMenu()"
+          [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
           [attr.aria-disabled]="item.routerLink ? null : 'true'"
           [class.cursor-default]="!item.routerLink"
-          [class]="navItemClass()"
+          [class]="navItemClass() + navActiveClass(item)"
           [appTooltipDisabled]="!collapsed()"
           [appTooltip]="'sidebar.nav.' + item.labelKey | translate"
-          [routerLinkActiveOptions]="{ exact: !!item.exactMatch }"
           [routerLink]="item.routerLink"
           class="group focus-ring-inset relative flex min-h-11 w-full cursor-pointer items-center gap-3.5 px-6 py-3 text-start text-sm font-medium text-text-secondary transition-colors before:absolute before:inset-y-0 before:left-0 before:w-1 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary"
           appTooltipPosition="right"
           appTooltipSize="md"
-          ariaCurrentWhenActive="page"
-          routerLinkActive="bg-linear-to-r from-brand-500/20 to-transparent text-brand-500 before:bg-brand-500"
         >
           <!-- Per-section pictogram. It distinguishes the entries instead of repeating the same
                shape, and it is the only thing identifying them on the collapsed rail. Inherits the
                link's text color and turns brand once active, keyed off `aria-current` which
-               `routerLinkActive` sets, so the active state needs no second source of truth. -->
+               `isNavItemActive` sets, so the active state needs no second source of truth. -->
           <span
             aria-hidden="true"
             class="block h-5 w-5 shrink-0 group-aria-[current=page]:text-brand-500"

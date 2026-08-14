@@ -6,8 +6,7 @@
       "STANDARD": "Standard"
     },
     "difficulty": "Difficulté",
-    "error": "Impossible de charger l'historique des boss.",
-    "eyebrow": "Campagne",
+    "error": "Impossible de charger l'historique des combats.",
     "hpBar": {
       "current": "PV restants",
       "defeated": "Boss éliminé",
@@ -15,7 +14,7 @@
     },
     "hpPercentage": "{{value}} %",
     "hpValue": "{{remaining}} / {{total}} PV",
-    "loading": "Chargement de l'historique des boss…",
+    "loading": "Chargement de l'historique des combats…",
     "meta": {
       "finishingBlow": "Coup de grâce · {{player}}",
       "remaining": "{{days}}j {{hours}}h restantes",
@@ -40,9 +39,9 @@
       "upcoming": "À venir"
     },
     "timeline": {
-      "ariaLabel": "Chronologie des combats de boss"
+      "ariaLabel": "Historique des combats de boss"
     },
-    "title": "Chronologie des boss",
+    "title": "Historique des combats",
     "upcoming": {
       "description": "Le prochain adversaire n'est pas encore déterminé.",
       "name": "Boss inconnu"
@@ -51,6 +50,21 @@
       "label": "Semaine {{number}}",
       "short": "Sem"
     }
+  },
+  "campaign": {
+    "error": "Impossible de charger la carte de bataille.",
+    "eyebrow": "Campagne",
+    "legend": {
+      "current": "Sous assaut",
+      "defeated": "Territoire conquis",
+      "survived": "Assaut repoussé",
+      "upcoming": "Terre inconnue"
+    },
+    "loading": "Chargement de la carte de bataille…",
+    "map": {
+      "ariaLabel": "Carte de bataille de la campagne, un territoire par semaine"
+    },
+    "title": "Carte de bataille"
   },
   "landing": {
     "body": "Chaque partie fait avancer l'escouade sur la carte de la semaine. Cinq défis à relever, une menace à repousser avant dimanche soir.",

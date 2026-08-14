@@ -97,6 +97,13 @@ export interface BossTimelineNode {
   readonly hpPercentage: number;
 
   /**
+   * The complement of {@link hpPercentage}: the share of the boss's hit points already taken off,
+   * from 0 to 100. Held alongside rather than derived at render time because the battle map fills
+   * each territory hexagon by ground *gained*, while the timeline drains a bar by hit points left.
+   */
+  readonly damagePercentage: number;
+
+  /**
    * That same share as text (`36 %`), and the raw tally behind it (`33 600 / 95 000 PV`).
    */
   readonly hpPercentageLabel: string;

@@ -10,15 +10,15 @@ import {
 } from '@angular/core';
 import { LucideChevronLeft, LucideChevronRight, LucideSkull, LucideX } from '@lucide/angular';
 
+import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
+import { BossTimelineNode } from '@core/boss/boss-timeline.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
-import { resolveBossTimelineTier } from '../boss-timeline.constants';
-import { BossTimelineNode } from '../boss.model';
 
 /**
- * Detail panel for one week of the campaign, opened from a timeline node.
+ * Detail panel for one week of the campaign, opened from the battle map or the legacy timeline.
  *
  * A right-anchored drawer built on the native `<dialog>` element: modality, the backdrop, Escape
  * to dismiss and the focus trap all come from the platform, so the component only owns opening it

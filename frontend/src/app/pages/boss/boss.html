@@ -1,9 +1,18 @@
-<!-- Header: the campaign this page tells, opened on the same beat as the quest board — eyebrow,
-     display title, one line of stakes. -->
+<!-- Header: the way back into the battle map stands in for the usual category eyebrow — this page
+     is reached from there, not from the sidebar, so where it sits matters more here than a
+     decorative label — same treatment as the player profile, reached from the registry the same
+     way. Folding it into the eyebrow's own slot, rather than a separate breadcrumb row above it,
+     keeps the header the same height as every other page's. -->
 <header>
-  <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
-    {{ 'boss.eyebrow' | translate }}
-  </p>
+  <nav aria-label="Breadcrumb" class="flex font-mono text-2xs font-medium text-brand-500">
+    <a
+      class="tracking-label-wide focus-ring flex items-center gap-1 uppercase transition-colors hover:text-text-primary"
+      routerLink="/campaign"
+    >
+      <svg aria-hidden="true" class="size-2.5" lucideChevronLeft></svg>
+      {{ 'campaign.title' | translate }}
+    </a>
+  </nav>
   <h1
     class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
   >
@@ -11,13 +20,13 @@
   </h1>
 </header>
 
-<app-section-divider [label]="progressLabel()" class="my-2" />
+<app-section-divider [label]="campaign.progressLabel()" class="my-2" />
 
 <app-resource-state
   (retry)="reload()"
   [errorText]="'boss.error' | translate"
-  [isError]="hasError()"
-  [isLoading]="isLoading()"
+  [isError]="campaign.hasError()"
+  [isLoading]="campaign.isLoading()"
   [loadingText]="'boss.loading' | translate"
 >
   <div class="flex flex-col gap-6" skeleton>
@@ -29,12 +38,11 @@
     }
   </div>
 
-  <!-- Campaign timeline: every finalized week from the oldest to the active one, then a handful of
-       locked weeks ahead (see `UPCOMING_PLACEHOLDER_COUNT`). A line runs down the center, one
-       segment per row (see `timelineConnectorBackground`), alternating panels left and right of it
-       on wider screens; below `sm` there isn't room to alternate, so the line and every marker pin
-       to the left edge instead. `data-timeline-current` marks the one node the page auto-scrolls to
-       on load (see the constructor). -->
+  <!-- Battle history: every finalized week from the oldest to the active one. A line runs down the
+       center, one segment per row (see `timelineConnectorBackground`), alternating panels left and
+       right of it on wider screens; below `sm` there isn't room to alternate, so the line and every
+       marker pin to the left edge instead. `data-timeline-current` marks the one node the page
+       auto-scrolls to on load (see the constructor). -->
   <div class="relative">
     <ol
       [attr.aria-label]="'boss.timeline.ariaLabel' | translate"

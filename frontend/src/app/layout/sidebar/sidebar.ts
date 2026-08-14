@@ -8,8 +8,10 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter, map } from 'rxjs';
 import {
   LucideBookOpen,
   LucideLanguages,
@@ -28,6 +30,7 @@ import { Translation } from '@core/i18n/translation';
 import { Language } from '@core/i18n/translation.model';
 import { PlayersApi } from '@core/players/players-api';
 import { NAV_ITEMS } from './sidebar.constants';
+import { NavItem } from './sidebar.model';
 import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './sidebar.utils';
 
 /**
@@ -51,7 +54,6 @@ import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './
   },
   imports: [
     RouterLink,
-    RouterLinkActive,
     LucideBookOpen,
     LucideLanguages,
     LucideLayoutDashboard,
@@ -83,6 +85,27 @@ export class Sidebar {
    * Injector used to defer the drawer's focus moves to after the state change has been rendered.
    */
   private readonly injector = inject(Injector);
+
+  /**
+   * Router used to track the active route for {@link isNavItemActive}.
+   */
+  private readonly router = inject(Router);
+
+  /**
+   * URL of the currently active route, refreshed on every navigation.
+   *
+   * Backs {@link isNavItemActive}: a nav entry can stay highlighted across more than the one route
+   * its own `routerLink` points to (see `NavItem.activeRoutes`), which the declarative
+   * `routerLinkActive` directive cannot express on its own, so active-state matching is done here
+   * instead.
+   */
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
 
   /**
    * Whether the sidebar is rendered as an icon-only collapsed rail.
@@ -300,6 +323,40 @@ export class Sidebar {
   protected readonly apiStatusLabel = computed(() =>
     this.translation.translate(`sidebar.lastSync.status.${this.apiStatus()}`),
   );
+
+  /**
+   * Whether `item` should render as the active navigation entry.
+   *
+   * `exactMatch` entries only match the current URL outright; every other entry also matches a
+   * child route under its own `routerLink`, and under any of its `activeRoutes` (a second page
+   * reached from within the section rather than from the sidebar, which still shares this one
+   * entry).
+   *
+   * @param item - The navigation entry to check.
+   * @returns Whether the entry is active for the current route.
+   */
+  protected isNavItemActive(item: NavItem): boolean {
+    const url = this.currentUrl();
+    const routes = [item.routerLink, ...(item.activeRoutes ?? [])].filter(
+      (route): route is string => !!route,
+    );
+
+    return routes.some(
+      (route) => url === route || (!item.exactMatch && url.startsWith(`${route}/`)),
+    );
+  }
+
+  /**
+   * Utilities layered onto an active entry on top of {@link navItemClass}, empty otherwise.
+   *
+   * @param item - The navigation entry to check.
+   * @returns The active-state utilities, or the empty string.
+   */
+  protected navActiveClass(item: NavItem): string {
+    return this.isNavItemActive(item)
+      ? ' bg-linear-to-r from-brand-500/20 to-transparent text-brand-500 before:bg-brand-500'
+      : '';
+  }
 
   /**
    * Toggles the sidebar between its expanded and icon-only collapsed state.
