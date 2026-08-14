@@ -91,60 +91,68 @@
          scope read differently depending on the selected game mode and season, so the filters
          take priority over them. -->
     <div class="flex flex-wrap items-center gap-2">
-      <!-- Game-mode filter, as a button group: the modes players actually check sit right in
+      <!-- Game-mode filter, as a segmented control: the modes players actually check sit right in
            view (see `PRIMARY_GAME_MODES`), the rest stay one tap away behind the overflow
-           trigger instead of crowding the group with every mode the backend can report. Notched
-           chips rather than pills, and `focus-ring-inset` since a clipped element cuts away any
-           indicator drawn outside its own box. -->
+           trigger instead of crowding the group with every mode the backend can report. Unboxed:
+           one notch around the whole strip and no rules at all, so the active segment's brand tint
+           is the only division and the row reads as a single control rather than a set of loose
+           chips. `focus-ring-inset` since the clipped track cuts away any indicator drawn outside
+           its box. -->
       <div
         #gameModeMenu
         (keydown.escape)="isGameModeMenuOpen.set(false)"
         [attr.aria-label]="'playerProfile.filters.gameModeLabel' | translate"
-        class="relative inline-flex items-center gap-2"
+        class="relative inline-flex items-center"
         role="group"
       >
-        @for (mode of primaryGameModes; track mode) {
+        <!-- The overflow menu is a sibling of this track, not a child: the track's `clip-path`
+             would cut off any panel escaping its box. It opens beside the trigger, like the
+             sidebar's own flyouts; only on the narrowest widths, where the filter row wraps and
+             there is nothing to its right, does it drop underneath instead. -->
+        <div class="notch-tr inline-flex items-center [--notch:0.5rem]">
+          @for (mode of primaryGameModes; track mode) {
+            <button
+              (click)="onGameModeFilterChange(mode)"
+              [attr.aria-pressed]="gameModeFilter() === mode"
+              [class]="
+                gameModeFilter() === mode
+                  ? 'bg-brand-500/15 text-brand-500'
+                  : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
+              "
+              class="focus-ring-inset min-h-10 cursor-pointer self-stretch px-4 py-2 text-sm font-semibold transition-colors"
+              type="button"
+            >
+              {{ 'playerProfile.matches.gameMode.' + mode | translate }}
+            </button>
+          }
+
+          <!-- Overflow trigger: shows the active mode's label instead of staying icon-only once a
+               non-primary mode is picked, so the current filter stays legible without opening the
+               menu. -->
           <button
-            (click)="onGameModeFilterChange(mode)"
-            [attr.aria-pressed]="gameModeFilter() === mode"
+            (click)="toggleGameModeMenu()"
+            [attr.aria-expanded]="isGameModeMenuOpen()"
+            [attr.aria-label]="'playerProfile.filters.moreGameModes' | translate"
             [class]="
-              gameModeFilter() === mode
-                ? 'border-brand-500/45 bg-brand-500/15 text-brand-500'
-                : 'border-surface-700 bg-surface-900 text-text-secondary hover:border-surface-600 hover:bg-surface-800 hover:text-text-primary'
+              overflowGameModeActiveLabel()
+                ? 'bg-brand-500/15 text-brand-500'
+                : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
             "
-            class="notch-tr notch-tr-edge focus-ring-inset min-h-10 cursor-pointer border px-4 py-2 text-sm font-semibold transition-colors [--notch:0.5rem] motion-safe:active:scale-[0.96]"
+            aria-haspopup="menu"
+            class="focus-ring-inset flex min-h-10 min-w-10 cursor-pointer items-center justify-center gap-1.5 self-stretch px-2.5 py-2 text-sm font-semibold transition-colors"
             type="button"
           >
-            {{ 'playerProfile.matches.gameMode.' + mode | translate }}
+            @if (overflowGameModeActiveLabel(); as activeLabel) {
+              <span>{{ activeLabel }}</span>
+            }
+            <svg aria-hidden="true" class="size-4 shrink-0" lucideEllipsisVertical></svg>
           </button>
-        }
-
-        <!-- Overflow trigger: shows the active mode's label instead of staying icon-only once a
-             non-primary mode is picked, so the current filter stays legible without opening the
-             menu. -->
-        <button
-          (click)="toggleGameModeMenu()"
-          [attr.aria-expanded]="isGameModeMenuOpen()"
-          [attr.aria-label]="'playerProfile.filters.moreGameModes' | translate"
-          [class]="
-            overflowGameModeActiveLabel()
-              ? 'border-brand-500/45 bg-brand-500/15 text-brand-500'
-              : 'border-surface-700 bg-surface-900 text-text-secondary hover:border-surface-600 hover:bg-surface-800 hover:text-text-primary'
-          "
-          aria-haspopup="menu"
-          class="notch-tr notch-tr-edge focus-ring-inset flex min-h-10 min-w-10 cursor-pointer items-center justify-center gap-1.5 border px-2.5 py-2 text-sm font-semibold transition-colors [--notch:0.5rem] motion-safe:active:scale-[0.96]"
-          type="button"
-        >
-          @if (overflowGameModeActiveLabel(); as activeLabel) {
-            <span>{{ activeLabel }}</span>
-          }
-          <svg aria-hidden="true" class="size-4 shrink-0" lucideEllipsisVertical></svg>
-        </button>
+        </div>
 
         @if (isGameModeMenuOpen()) {
           <div
             [attr.aria-label]="'playerProfile.filters.moreGameModes' | translate"
-            class="notch-tr absolute top-full right-0 z-20 mt-2 min-w-40 border-l-2 border-brand-500/50 bg-surface-900 py-1 [--notch:0.5rem]"
+            class="notch-tr absolute top-full right-0 z-20 mt-2 min-w-40 border-l-2 border-brand-500/50 bg-surface-sunken py-2 [--notch:0.5rem] sm:top-0 sm:right-auto sm:left-full sm:mt-0 sm:ml-2"
             role="menu"
           >
             @for (option of overflowGameModeOptions(); track option.value) {
@@ -152,7 +160,7 @@
                 (click)="selectOverflowGameMode(option.value)"
                 [attr.aria-checked]="gameModeFilter() === option.value"
                 [class.text-brand-500]="gameModeFilter() === option.value"
-                class="focus-ring-inset block min-h-10 w-full cursor-pointer px-4 py-2.5 text-left text-sm whitespace-nowrap text-text-primary transition-[background-color,scale] hover:bg-surface-800 motion-safe:active:scale-[0.96]"
+                class="focus-ring-inset block min-h-10 w-full cursor-pointer px-4 py-2.5 text-left text-base whitespace-nowrap text-text-secondary transition-[background-color,scale] hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
                 role="menuitemradio"
                 type="button"
               >
@@ -384,6 +392,7 @@
                   </span>
                 </div>
                 <div></div>
+                <div></div>
                 <p class="px-2 text-center">
                   <span
                     class="tracking-label block truncate font-mono text-xs font-medium text-text-muted uppercase"
@@ -452,14 +461,26 @@
                   class="notch-tr bg-text-primary/3 transition-colors [--notch:0.625rem] hover:bg-text-primary/6"
                 >
                   <div class="flex items-center gap-3.5 px-4 py-3.5">
-                    <!-- Monogram rather than a portrait: `public/players` bundles six agents and
-                         the played agent is often none of them. -->
-                    <span
-                      aria-hidden="true"
-                      class="notch-tr font-display flex size-10 shrink-0 items-center justify-center bg-surface-700 text-sm leading-none font-bold text-text-secondary [--notch:0.375rem]"
-                    >
-                      {{ agentInitial(row.agentName) }}
-                    </span>
+                    @if (mapImageUrl(row.mapName); as mapImage) {
+                      <!-- Map thumbnail, clipped to the same square/notch silhouette as the
+                           monogram fallback; only part of the image needs to stay visible. -->
+                      <img
+                        [height]="40"
+                        [ngSrc]="mapImage"
+                        [width]="40"
+                        alt=""
+                        aria-hidden="true"
+                        class="notch-tr size-10 shrink-0 object-cover [--notch:0.375rem]"
+                      />
+                    } @else {
+                      <!-- Monogram fallback: `public/maps` does not bundle every map. -->
+                      <span
+                        aria-hidden="true"
+                        class="notch-tr font-display flex size-10 shrink-0 items-center justify-center bg-surface-700 text-sm leading-none font-bold text-text-secondary [--notch:0.375rem]"
+                      >
+                        {{ agentInitial(row.agentName) }}
+                      </span>
+                    }
                     <span class="flex min-w-0 flex-col gap-1.5">
                       <span
                         class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
@@ -473,8 +494,7 @@
                       </span>
                       <span class="truncate text-sm text-text-muted">
                         {{ matchTime(row.startedAt) }} ·
-                        {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }} ·
-                        {{ row.agentName }}
+                        {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }}
                       </span>
                     </span>
                   </div>
@@ -489,6 +509,28 @@
                       <span class="text-text-muted">—</span>
                     }
                   </p>
+
+                  <div class="flex items-center justify-center px-2">
+                    @if (agentImageUrl(row.agentName); as agentImage) {
+                      <img
+                        [height]="40"
+                        [ngSrc]="agentImage"
+                        [width]="40"
+                        [alt]="row.agentName"
+                        class="notch-tr size-10 shrink-0 object-cover [--notch:0.375rem]"
+                      />
+                    } @else {
+                      <!-- Monogram fallback: `public/agents` does not bundle agents released after
+                           the portrait set was last updated. -->
+                      <span
+                        aria-hidden="true"
+                        class="notch-tr font-display flex size-10 shrink-0 items-center justify-center bg-surface-700 text-sm leading-none font-bold text-text-secondary [--notch:0.375rem]"
+                      >
+                        {{ agentInitial(row.agentName) }}
+                      </span>
+                      <span class="sr-only">{{ row.agentName }}</span>
+                    }
+                  </div>
 
                   <p class="px-2 text-center">
                     <span
@@ -599,14 +641,26 @@
                     class="notch-tr flex flex-col gap-4 bg-text-primary/3 px-4 py-4 [--notch:0.625rem]"
                   >
                     <div class="flex items-center gap-3.5">
-                      <!-- Monogram rather than a portrait: `public/players` bundles six agents and
-                           the played agent is often none of them. -->
-                      <span
-                        aria-hidden="true"
-                        class="notch-tr font-display flex size-10 shrink-0 items-center justify-center bg-surface-700 text-sm leading-none font-bold text-text-secondary [--notch:0.375rem]"
-                      >
-                        {{ agentInitial(row.agentName) }}
-                      </span>
+                      @if (mapImageUrl(row.mapName); as mapImage) {
+                        <!-- Map thumbnail, clipped to the same square/notch silhouette as the
+                             monogram fallback; only part of the image needs to stay visible. -->
+                        <img
+                          [height]="40"
+                          [ngSrc]="mapImage"
+                          [width]="40"
+                          alt=""
+                          aria-hidden="true"
+                          class="notch-tr size-10 shrink-0 object-cover [--notch:0.375rem]"
+                        />
+                      } @else {
+                        <!-- Monogram fallback: `public/maps` does not bundle every map. -->
+                        <span
+                          aria-hidden="true"
+                          class="notch-tr font-display flex size-10 shrink-0 items-center justify-center bg-surface-700 text-sm leading-none font-bold text-text-secondary [--notch:0.375rem]"
+                        >
+                          {{ agentInitial(row.agentName) }}
+                        </span>
+                      }
                       <div class="flex min-w-0 flex-1 flex-col gap-1.5">
                         <p
                           class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
@@ -620,8 +674,7 @@
                         </p>
                         <p class="truncate text-sm text-text-muted">
                           {{ matchTime(row.startedAt) }} ·
-                          {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }} ·
-                          {{ row.agentName }}
+                          {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }}
                         </p>
                       </div>
                       <p class="font-display shrink-0 text-lg leading-none font-bold tabular-nums">
@@ -632,6 +685,25 @@
                           <span class="text-text-muted">—</span>
                         }
                       </p>
+                      @if (agentImageUrl(row.agentName); as agentImage) {
+                        <img
+                          [height]="40"
+                          [ngSrc]="agentImage"
+                          [width]="40"
+                          [alt]="row.agentName"
+                          class="notch-tr size-10 shrink-0 object-cover [--notch:0.375rem]"
+                        />
+                      } @else {
+                        <!-- Monogram fallback: `public/agents` does not bundle agents released
+                             after the portrait set was last updated. -->
+                        <span
+                          aria-hidden="true"
+                          class="notch-tr font-display flex size-10 shrink-0 items-center justify-center bg-surface-700 text-sm leading-none font-bold text-text-secondary [--notch:0.375rem]"
+                        >
+                          {{ agentInitial(row.agentName) }}
+                        </span>
+                        <span class="sr-only">{{ row.agentName }}</span>
+                      }
                     </div>
 
                     <dl

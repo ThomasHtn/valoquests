@@ -23,6 +23,13 @@
 
 <app-boss-encounter />
 
-<app-team-progress />
+<!-- Collective progress and podium side by side, per the mockup: both summarize "how is the
+     week going" and share the screen evenly rather than stacking as two full-width strips.
 
-<app-podium />
+     Left to stretch rather than aligned to the start: both panels are section rules opening on the
+     same line, and letting them share the row's height makes them close on the same line too, each
+     spreading its own content over that height. -->
+<div class="grid gap-6 lg:grid-cols-2">
+  <app-team-progress />
+  <app-podium />
+</div>

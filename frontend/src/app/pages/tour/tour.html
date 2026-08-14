@@ -1,0 +1,166 @@
+<!-- `h-screen` rather than `h-full`, same reason as the landing page: this renders straight under
+     the root outlet, with no sized ancestor to inherit a height from. The three bands are fixed
+     (progress on top, controls at the bottom) and only the middle one scrolls, so the way out of
+     the tour is always on screen no matter how tall a step's illustration grows. -->
+<main
+  [attr.aria-label]="'tour.ariaLabel' | translate"
+  class="ambient-field flex h-screen flex-col overflow-hidden bg-surface-950 text-text-primary"
+>
+  <!-- Progress band: how far along the tour is, and the way out of it. -->
+  <header
+    class="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-3 border-b border-brand-500/20 bg-surface-sunken/80 px-4 py-3.5 motion-safe:animate-chrome-in sm:px-8"
+  >
+    <p class="flex items-baseline gap-2.5">
+      <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+        {{ 'tour.progress.label' | translate }}
+      </span>
+      <span class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums">
+        {{
+          'tour.progress.counter' | translate: { current: currentPosition(), total: steps.length }
+        }}
+      </span>
+    </p>
+
+    <!-- Discrete sheared segments — one per step — rather than a continuous percentage fill, the
+         same treatment as the weekly challenges' progress bar: the number of steps is small and
+         fixed, so a segment reads as "one step done" instead of an abstract ratio. Hidden from
+         assistive technology, since the counter beside it states the same position. -->
+    <div aria-hidden="true" class="order-last flex w-full gap-2 sm:order-none sm:w-auto sm:flex-1">
+      @for (filled of segments(); track $index) {
+        <!-- Gold rim painted as a filled outer slot with the fill inset one pixel inside it: the
+             `clip-path` cuts the sheared sides off any real border, so the frame has to be a shape
+             of its own. The fill fades in rather than snapping, so the bar visibly advances with
+             the step instead of having always been there. -->
+        <span class="clip-shear relative h-3 flex-1 bg-accent-gold/60 sm:max-w-28">
+          <span
+            [class.bg-brand-500]="filled"
+            [class.bg-surface-700]="!filled"
+            class="clip-shear absolute inset-px transition-colors duration-500 motion-reduce:transition-none"
+          ></span>
+        </span>
+      }
+    </div>
+
+    <button
+      (click)="skip()"
+      class="focus-ring tracking-label ml-auto inline-flex h-12 cursor-pointer items-center border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
+      type="button"
+    >
+      {{ 'tour.skip' | translate }}
+    </button>
+  </header>
+
+  <!-- Scrolling band. The illustrations are the overview's real components, which are as tall as
+       they are on the overview itself, so the step has to be free to scroll on short viewports —
+       the header and footer stay put. -->
+  <div
+    #content
+    class="scroll-subtle flex flex-1 flex-col overflow-y-auto px-4 py-8 sm:px-8 sm:py-10"
+  >
+    <!-- Announced on every step change: the controls stay in place and only this region swaps, so
+         nothing else would tell a screen reader that the content moved on.
+
+         Centered vertically through `m-auto` rather than the band's `justify-center`: the steps
+         differ widely in height — the opening one is three lines, the podium is taller than most
+         viewports — and auto margins collapse to zero once the content overflows, where
+         `justify-center` would instead push its top out of reach above the scroll origin. -->
+    <div aria-live="polite" class="m-auto w-full max-w-6xl">
+      @for (step of stepFrames(); track step) {
+        <!-- Copy and illustration side by side from `lg` up, stacked below it. Side by side is what
+             keeps the tallest step — the podium — inside one screen rather than pushing its own
+             explanation past the fold; it also gives the copy a column narrow enough to read at
+             this type size. The opening step has no illustration and takes the full width as a
+             single centered block. -->
+        <div
+          [class]="
+            hasIllustration()
+              ? 'grid items-center gap-8 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-14'
+              : 'flex justify-center'
+          "
+        >
+          <!-- Ranged left beside its illustration on wide viewports, centered when it stands alone
+               or is stacked above it. -->
+          <div
+            [class]="
+              hasIllustration()
+                ? 'items-center text-center lg:items-start lg:text-left'
+                : 'max-w-3xl items-center text-center'
+            "
+            class="flex flex-col motion-safe:animate-step-in"
+          >
+            <p class="tracking-label-wide font-mono text-xs font-medium text-brand-500 uppercase">
+              {{ 'tour.steps.' + step + '.eyebrow' | translate }}
+            </p>
+
+            <h1 class="font-display mt-3 text-3xl/tight font-bold uppercase sm:text-4xl/tight">
+              {{ 'tour.steps.' + step + '.title' | translate }}
+            </h1>
+
+            <p class="mt-4 max-w-[46ch] text-lead text-text-secondary sm:text-xl/relaxed">
+              {{ 'tour.steps.' + step + '.body' | translate }}
+            </p>
+
+            <!-- The hand-off to the rules page, on the closing step only: the tour deliberately
+                 stops at the broad strokes, and this is where the detail lives. Opens in the
+                 application, so following it ends the tour like any other exit. -->
+            @if (isLast()) {
+              <a
+                (click)="leaveForRules()"
+                class="focus-ring tracking-label mt-6 inline-flex h-12 items-center border border-brand-500/45 px-4 font-mono text-xs font-medium text-brand-500 uppercase transition-colors hover:bg-brand-500/12"
+                routerLink="/rules"
+              >
+                {{ 'tour.rulesLink' | translate }}
+              </a>
+            }
+          </div>
+
+          <!-- The step's illustration: the very component the visitor is about to meet, entering a
+               beat after the copy so the heading is readable before the panel beside it settles. -->
+          @if (hasIllustration()) {
+            <div class="flex min-w-0 flex-col motion-safe:animate-step-in-late">
+              @switch (step) {
+                @case ('boss') {
+                  <app-boss-encounter />
+                }
+                @case ('challenges') {
+                  <app-team-progress />
+                }
+                @case ('ranking') {
+                  <app-podium />
+                }
+                @case ('players') {
+                  <app-players-preview />
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Controls band. "Back" keeps its slot on the first step rather than disappearing, so the
+       buttons never shift under the pointer between steps. -->
+  <footer
+    class="flex shrink-0 items-center justify-between gap-4 border-t border-brand-500/20 bg-surface-sunken/80 px-4 py-3.5 motion-safe:animate-chrome-in sm:px-8"
+  >
+    <button
+      (click)="previous()"
+      [disabled]="isFirst()"
+      class="focus-ring tracking-label inline-flex h-12 cursor-pointer items-center gap-2 border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-text-muted motion-safe:active:scale-[0.96]"
+      type="button"
+    >
+      <svg class="block h-4 w-4 shrink-0" lucideChevronLeft></svg>
+      {{ 'tour.previous' | translate }}
+    </button>
+
+    <button
+      (click)="next()"
+      class="focus-ring tracking-label inline-flex h-12 cursor-pointer items-center gap-2 bg-brand-500 px-5 font-mono text-xs font-bold text-surface-950 uppercase transition-colors hover:bg-brand-400 motion-safe:active:scale-[0.96]"
+      type="button"
+    >
+      {{ (isLast() ? 'tour.finish' : 'tour.next') | translate }}
+      <svg class="block h-4 w-4 shrink-0" lucideChevronRight></svg>
+    </button>
+  </footer>
+</main>

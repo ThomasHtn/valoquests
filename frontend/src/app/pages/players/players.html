@@ -1,6 +1,5 @@
 <!-- Header: the same beat as the quest and campaign pages — eyebrow, display title, one line of
-     stakes — with the roster's size as the headline, since "how many are tracked" is the first
-     thing this page answers. -->
+     stakes. -->
 <header>
   <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
     {{ 'players.eyebrow' | translate }}
@@ -8,13 +7,7 @@
   <h1
     class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
   >
-    <!-- The count only replaces the page's name once it is actually known: while loading, empty or
-         failed, `rows()` is empty and a headline "0 players" would be a lie. -->
-    @if (rows().length) {
-      {{ 'players.heading' | translate: { count: rows().length } }}
-    } @else {
-      {{ 'players.title' | translate }}
-    }
+    {{ 'players.heading' | translate }}
   </h1>
 </header>
 
@@ -52,7 +45,7 @@
        cells, so each value carries its own label instead (see the `lg:sr-only` captions below). -->
   <div
     aria-hidden="true"
-    class="hidden border-b border-brand-500/25 px-5 pb-3 lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_11rem_12rem_6rem_7rem_6rem_1.5rem] lg:gap-x-4"
+    class="hidden px-5 lg:-mb-5 lg:grid lg:grid-cols-[minmax(0,1fr)_11rem_12rem_6rem_7rem_6rem_1.5rem] lg:gap-x-4"
   >
     <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
       {{ 'players.columns.player' | translate }}

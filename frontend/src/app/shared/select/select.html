@@ -8,7 +8,7 @@
   [attr.aria-label]="ariaLabel()"
   [disabled]="disabled()"
   aria-haspopup="listbox"
-  class="notch-tr notch-tr-edge focus-ring-inset flex min-h-10 cursor-pointer items-center gap-1.5 border border-surface-700 bg-surface-900 px-3 py-2 text-sm font-semibold text-text-primary transition-colors [--notch:0.5rem] hover:border-surface-600 hover:bg-surface-800 motion-safe:active:scale-[0.96] disabled:pointer-events-none disabled:opacity-40 sm:gap-2 sm:px-4"
+  class="notch-tr focus-ring-inset flex min-h-10 cursor-pointer items-center gap-1.5 px-3 py-2 text-sm font-semibold text-text-primary transition-colors [--notch:0.5rem] hover:bg-brand-500/8 motion-safe:active:scale-[0.96] disabled:pointer-events-none disabled:opacity-40 sm:gap-2 sm:px-4"
   role="combobox"
   type="button"
 >
@@ -34,11 +34,11 @@
   [attr.aria-label]="ariaLabel()"
   [hidden]="!isOpen()"
   [id]="listboxId"
-  class="notch-tr absolute top-full left-0 z-20 mt-2 max-h-72 min-w-full overflow-y-auto border-l-2 border-brand-500/50 bg-surface-900 py-1 [--notch:0.5rem]"
+  class="notch-tr absolute top-full right-0 z-20 mt-2 max-h-72 min-w-full overflow-y-auto border-l-2 border-brand-500/50 bg-surface-sunken py-2 [--notch:0.5rem]"
   role="listbox"
 >
   @if (emptyText() && options().length <= 1) {
-    <p class="px-4 py-2.5 text-sm whitespace-nowrap text-text-secondary">{{ emptyText() }}</p>
+    <p class="px-4 py-2.5 text-base whitespace-nowrap text-text-secondary">{{ emptyText() }}</p>
   } @else {
     @for (option of options(); track $index) {
       <!-- The current value keeps a brand tint of its own, on top of the highlight the keyboard
@@ -47,10 +47,10 @@
       <button
         (click)="select(option)"
         [attr.aria-selected]="$index === selectedIndex()"
-        [class.bg-surface-800]="$index === activeIndex()"
+        [class.bg-brand-500/8]="$index === activeIndex()"
         [class.text-brand-500]="$index === selectedIndex()"
         [id]="optionId($index)"
-        class="block min-h-10 w-full cursor-pointer px-4 py-2.5 text-left text-sm whitespace-nowrap text-text-primary transition-[background-color,scale] hover:bg-surface-800 motion-safe:active:scale-[0.96]"
+        class="block min-h-10 w-full cursor-pointer px-4 py-2.5 text-left text-base whitespace-nowrap text-text-secondary transition-[background-color,scale] hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
         role="option"
         tabindex="-1"
         type="button"

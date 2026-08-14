@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import {
   afterRenderEffect,
   Component,
@@ -16,7 +17,12 @@ import { LucideChevronRight, LucideEllipsisVertical, LucideLoaderCircle } from '
 
 import { formatLocalTime } from '@core/date/date-time.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
-import { resolveAgentInitial, resolveMatchScore } from '@core/matches/match-format.utils';
+import {
+  resolveAgentImageUrl,
+  resolveAgentInitial,
+  resolveMapImageUrl,
+  resolveMatchScore,
+} from '@core/matches/match-format.utils';
 import { resolveResultAccentClass, resolveResultTextClass } from '@core/matches/match-visual.utils';
 import { FILTERABLE_GAME_MODES, GameMode } from '@core/matches/game-mode.model';
 import { Match } from '@core/matches/match.model';
@@ -85,6 +91,7 @@ const VIEW_MODES: readonly ViewMode[] = ['weekly', 'global'];
     RouterLink,
     Avatar,
     ChampionBadge,
+    NgOptimizedImage,
     ProgressBar,
     RankIconView,
     ResourceState,
@@ -446,12 +453,12 @@ export class PlayerProfile {
    * margin to read as nested under the day-summary row above them, and `margin` has no effect on
    * `<tr>`.
    *
-   * The 6 stat columns are `fr`-based, not fixed widths: a fixed width keeps them pinned to their
+   * The 7 stat columns are `fr`-based, not fixed widths: a fixed width keeps them pinned to their
    * own narrow band regardless of how wide the row grows, bunching every stat together at the
    * row's trailing edge instead of spreading across it.
    */
   protected readonly rowGridClass =
-    'grid grid-cols-[minmax(0,2fr)_repeat(6,minmax(0,1fr))] items-center';
+    'grid grid-cols-[minmax(0,2fr)_repeat(7,minmax(0,1fr))] items-center';
 
   /**
    * Resolves the colour carrying a match's result on the player's own score, exposed to the
@@ -468,6 +475,16 @@ export class PlayerProfile {
    * Resolves the monogram standing in for a match's agent portrait, exposed to the template.
    */
   protected readonly agentInitial = resolveAgentInitial;
+
+  /**
+   * Resolves a match's map image, exposed to the template.
+   */
+  protected readonly mapImageUrl = resolveMapImageUrl;
+
+  /**
+   * Resolves a match's agent portrait, exposed to the template.
+   */
+  protected readonly agentImageUrl = resolveAgentImageUrl;
 
   /**
    * Formats a win rate, exposed to the template.

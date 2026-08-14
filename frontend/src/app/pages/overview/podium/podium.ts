@@ -46,6 +46,9 @@ const PODIUM_PLINTH_CLASSES: readonly string[] = [
   selector: 'app-podium',
   imports: [TranslatePipe, RouterLink, Avatar, ChampionBadge, PositionBadge, ResourceState],
   templateUrl: './podium.html',
+  // Transparent host: the section itself becomes the grid item of the overview's two-column row,
+  // so it stretches to the row's height and can align its bottom edge with the panel beside it.
+  host: { class: 'contents' },
 })
 export class Podium {
   /**

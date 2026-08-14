@@ -172,30 +172,63 @@
   }
 }
 
+/*
+ * Scroll container whose scrollbar stays out of sight until it is needed: the thumb is painted
+ * only while the pointer is over the container, or while something inside it holds focus. A list
+ * that only just overflows therefore keeps its edge clean instead of carrying a permanent grey
+ * bar, while the track still reserves its gutter so revealing the thumb never shifts the layout.
+ *
+ * Relies on the base scrollbar styling below being declared inside `@layer base`: as a `@utility`
+ * this lands in the utilities layer, which wins over base whatever the selectors' specificity.
+ */
+@utility scroll-subtle {
+  scrollbar-color: transparent transparent;
+
+  &:hover,
+  &:focus-within {
+    scrollbar-color: var(--color-surface-600) transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent;
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &:focus-within::-webkit-scrollbar-thumb {
+    background-color: var(--color-surface-600);
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-brand-500);
+  }
+}
+
 /* Scrollbars, styled to match the dark surface palette instead of the OS default. */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-surface-600) transparent;
-}
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-surface-600) transparent;
+  }
 
-*::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
 
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-*::-webkit-scrollbar-thumb {
-  background-color: var(--color-surface-600);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  border-radius: 9999px;
-}
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-surface-600);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 9999px;
+  }
 
-*::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-brand-500);
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-brand-500);
+  }
 }
 
 /*

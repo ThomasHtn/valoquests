@@ -97,18 +97,16 @@
       "title": "This week's podium"
     },
     "teamProgress": {
-      "contributors": {
-        "one": "{{count}} player contributed this week",
-        "other": "{{count}} players contributed this week"
+      "completedLabel": "squad challenges completed",
+      "deadline": {
+        "one": "{{count}} challenge left to clear before Sunday, 11:59 PM",
+        "other": "{{count}} challenges left to clear before Sunday, 11:59 PM"
       },
-      "progressLabel": "Collective progress"
+      "progressLabel": "Collective progress",
+      "rowPlayers": "Players"
     },
     "title": "Overview",
     "weeklyChallenges": {
-      "completedCount": {
-        "one": "{{count}} of {{total}} challenge done",
-        "other": "{{count}} of {{total}} challenges done"
-      },
       "damageLabel": "Damage",
       "difficulty": {
         "EASY": "Easy",
@@ -250,10 +248,7 @@
     "empty": "No player is tracked yet.",
     "error": "Failed to load players.",
     "eyebrow": "Squad registry",
-    "heading": {
-      "one": "{{count}} tracked player",
-      "other": "{{count}} tracked players"
-    },
+    "heading": "Tracked players list",
     "loading": "Loading players…",
     "tiers": {
       "ascendant": "Ascendant",
@@ -277,6 +272,7 @@
       "label": "Reading",
       "value": "2 min"
     },
+    "replayTour": "Replay the tour",
     "sections": {
       "bonuses": {
         "days": "{{days}} d",
@@ -353,5 +349,45 @@
     "openMenu": "Open menu",
     "squad": "Squad 07"
   },
-  "skipToContent": "Skip to main content"
+  "skipToContent": "Skip to main content",
+  "tour": {
+    "ariaLabel": "Guided tour of the application",
+    "finish": "Enter",
+    "next": "Next",
+    "previous": "Back",
+    "progress": {
+      "counter": "{{current}} / {{total}}",
+      "label": "Step"
+    },
+    "rulesLink": "Read the full rules",
+    "skip": "Skip the tour",
+    "steps": {
+      "boss": {
+        "body": "Every week a boss stands in the squad's way with its own pool of hit points. Your matches and challenges chip away at it, and it has to fall before Sunday 11:59 pm. Miss that, and it survives the week.",
+        "eyebrow": "The boss",
+        "title": "This week's opponent"
+      },
+      "challenges": {
+        "body": "Five challenges are drawn every week, from the easiest to the nastiest. The harder the challenge, the more it costs the boss. The bar tracks what the squad has cleared so far, one challenge at a time.",
+        "eyebrow": "The challenges",
+        "title": "Five challenges, five tiers"
+      },
+      "intro": {
+        "body": "Seven players, one week, one territory to take back. Everything you play in Valorant counts: every match feeds the squad's effort and your standing in the group. One minute to get the loop.",
+        "eyebrow": "The idea",
+        "title": "One week, one expedition"
+      },
+      "players": {
+        "body": "Every tracked player has their own page: competitive rank, match history and detailed statistics. That is the broad strokes — the rules page covers the points, the bonuses and the exact numbers.",
+        "eyebrow": "The squad",
+        "title": "Seven profiles to follow"
+      },
+      "ranking": {
+        "body": "Everyone's damage adds up into a weekly ranking. Showing up regularly and clearing challenges together earn bonuses on top. Whoever leads when the week closes takes the Champion title.",
+        "eyebrow": "The ranking",
+        "title": "Who hits hardest"
+      }
+    },
+    "title": "Guided tour"
+  }
 }

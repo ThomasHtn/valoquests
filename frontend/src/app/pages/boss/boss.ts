@@ -425,6 +425,12 @@ export class Boss {
   ): BossTimelineNode {
     const status = week.defeated ? 'defeated' : 'survived';
     const topContributor = contributions[0];
+    const finishingBlowLabel =
+      week.defeatedByPlayerDisplayName === null
+        ? null
+        : this.translation.translate('boss.meta.finishingBlow', {
+            player: week.defeatedByPlayerDisplayName,
+          });
 
     return {
       ...this.toFoughtNode(
@@ -437,17 +443,16 @@ export class Boss {
         contributions,
       ),
       metaLabel: week.defeated
-        ? week.defeatedByPlayerDisplayName === null
-          ? null
-          : this.translation.translate('boss.meta.finishingBlow', {
-              player: week.defeatedByPlayerDisplayName,
-            })
+        ? finishingBlowLabel
         : topContributor
           ? this.translation.translate('boss.meta.topDamage', {
               player: topContributor.displayName,
               damage: topContributor.damageLabel,
             })
           : null,
+      // The top-damage wording is dropped in the panel: it repeats the first row of the ranking the
+      // panel already prints underneath. The finishing blow isn't in that ranking, so it stays.
+      panelMetaLabel: week.defeated ? finishingBlowLabel : null,
     };
   }
 
@@ -463,6 +468,10 @@ export class Boss {
     contributions: readonly BossContribution[],
   ): BossTimelineNode {
     const remaining = remainingWeekTime(current.weekEnd, this.now());
+    const remainingLabel = this.translation.translate('boss.meta.remaining', {
+      days: remaining.days,
+      hours: remaining.hours,
+    });
 
     return {
       ...this.toFoughtNode(
@@ -474,10 +483,8 @@ export class Boss {
         current.totalDamageDealt,
         contributions,
       ),
-      metaLabel: this.translation.translate('boss.meta.remaining', {
-        days: remaining.days,
-        hours: remaining.hours,
-      }),
+      metaLabel: remainingLabel,
+      panelMetaLabel: remainingLabel,
     };
   }
 
@@ -531,6 +538,7 @@ export class Boss {
       }),
       barLabel: this.translation.translate(resolveBossHpBarLabelKey(status)),
       metaLabel: null,
+      panelMetaLabel: null,
       contributions,
     };
   }
@@ -570,6 +578,7 @@ export class Boss {
       hpLabel: '',
       barLabel: '',
       metaLabel: null,
+      panelMetaLabel: null,
       contributions: [],
     };
   }

@@ -18,6 +18,18 @@
       {{ 'rules.readingTime.label' | translate }}
       <span class="text-text-secondary">{{ 'rules.readingTime.value' | translate }}</span>
     </span>
+
+    <!-- Way back into the guided tour, which is otherwise a one-time briefing. Shaped like the
+         reading-time chip beside it rather than as a button: it is an aside for whoever remembers
+         the tour and wants it again, not a call to action competing with the page's own content.
+         The replay query parameter is what lets it through `tourEntryGuard`. -->
+    <a
+      class="focus-ring tracking-label inline-flex items-center gap-1.5 border border-brand-500/40 bg-surface-sunken/60 px-2.5 py-1 font-mono text-2xs font-medium text-brand-500 uppercase transition-colors hover:bg-brand-500/12"
+      routerLink="/tour"
+      [queryParams]="{ replay: '' }"
+    >
+      {{ 'rules.replayTour' | translate }}
+    </a>
   </div>
 </header>
 

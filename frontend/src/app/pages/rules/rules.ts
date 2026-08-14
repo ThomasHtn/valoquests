@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -23,7 +24,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
  */
 @Component({
   selector: 'app-rules',
-  imports: [TranslatePipe, ChampionBadge, SectionDivider],
+  imports: [TranslatePipe, RouterLink, ChampionBadge, SectionDivider],
   templateUrl: './rules.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

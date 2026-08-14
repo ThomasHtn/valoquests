@@ -97,18 +97,16 @@
       "title": "Podium de la semaine"
     },
     "teamProgress": {
-      "contributors": {
-        "one": "{{count}} joueur a contribué cette semaine",
-        "other": "{{count}} joueurs ont contribué cette semaine"
+      "completedLabel": "défis d'escouade terminés",
+      "deadline": {
+        "one": "Il reste {{count}} défi à valider avant dimanche 23h59",
+        "other": "Il reste {{count}} défis à valider avant dimanche 23h59"
       },
-      "progressLabel": "Progression collective"
+      "progressLabel": "Progression collective",
+      "rowPlayers": "Joueurs"
     },
     "title": "Vue d'ensemble",
     "weeklyChallenges": {
-      "completedCount": {
-        "one": "{{count}} défi terminé sur {{total}}",
-        "other": "{{count}} défis terminés sur {{total}}"
-      },
       "damageLabel": "Dégâts",
       "difficulty": {
         "EASY": "Facile",
@@ -250,10 +248,7 @@
     "empty": "Aucun joueur suivi pour le moment.",
     "error": "Impossible de charger les joueurs.",
     "eyebrow": "Registre de l'escouade",
-    "heading": {
-      "one": "{{count}} joueur suivi",
-      "other": "{{count}} joueurs suivis"
-    },
+    "heading": "Liste des joueurs suivis",
     "loading": "Chargement des joueurs…",
     "tiers": {
       "ascendant": "Ascendant",
@@ -277,6 +272,7 @@
       "label": "Lecture",
       "value": "2 min"
     },
+    "replayTour": "Revoir le tour d'horizon",
     "sections": {
       "bonuses": {
         "days": "{{days}} j",
@@ -353,5 +349,45 @@
     "openMenu": "Ouvrir le menu",
     "squad": "Escadron 117"
   },
-  "skipToContent": "Aller au contenu principal"
+  "skipToContent": "Aller au contenu principal",
+  "tour": {
+    "ariaLabel": "Tour d'horizon de l'application",
+    "finish": "Entrer",
+    "next": "Suivant",
+    "previous": "Retour",
+    "progress": {
+      "counter": "{{current}} / {{total}}",
+      "label": "Étape"
+    },
+    "rulesLink": "Lire les règles en détail",
+    "skip": "Passer le tour",
+    "steps": {
+      "boss": {
+        "body": "Chaque semaine, un boss se dresse devant l'escouade avec ses propres points de vie. Vos parties et vos défis lui infligent des dégâts, et il faut le mettre à terre avant dimanche 23h59. Passé ce délai, il survit et la semaine est perdue.",
+        "eyebrow": "Le boss",
+        "title": "L'adversaire de la semaine"
+      },
+      "challenges": {
+        "body": "Cinq défis sont tirés chaque semaine, du plus simple au plus corsé. Plus un défi est difficile, plus il coûte cher au boss. La barre suit ce que l'escouade a déjà validé, défi par défi.",
+        "eyebrow": "Les défis",
+        "title": "Cinq défis, cinq niveaux"
+      },
+      "intro": {
+        "body": "Sept joueurs, une semaine, un territoire à reprendre. Tout ce que vous jouez sur Valorant compte : chaque partie alimente l'effort collectif et votre place dans le groupe. Une minute pour comprendre le cycle.",
+        "eyebrow": "Le principe",
+        "title": "Une semaine, une expédition"
+      },
+      "players": {
+        "body": "Chaque joueur suivi a sa fiche : rang compétitif, historique de parties et statistiques détaillées. C'est tout pour les grandes lignes — la page des règles détaille les points, les bonus et les barèmes.",
+        "eyebrow": "L'escouade",
+        "title": "Sept profils à suivre"
+      },
+      "ranking": {
+        "body": "Les dégâts de chacun sont cumulés et donnent un classement hebdomadaire. La régularité et les efforts collectifs ajoutent des bonus. Le joueur en tête à la clôture de la semaine repart avec le titre de Champion.",
+        "eyebrow": "Le classement",
+        "title": "Qui frappe le plus fort"
+      }
+    },
+    "title": "Tour d'horizon"
+  }
 }

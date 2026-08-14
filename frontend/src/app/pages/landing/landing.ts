@@ -37,7 +37,7 @@ export class Landing {
   private readonly landingVisit = inject(LandingVisit);
 
   /**
-   * Navigates into the application once the compass has been activated.
+   * Navigates on to the guided tour once the compass has been activated.
    */
   private readonly router = inject(Router);
 
@@ -56,10 +56,11 @@ export class Landing {
   });
 
   /**
-   * Records the entry and moves on to the overview.
+   * Records the entry and moves on to the guided tour, which hands the visitor over to the overview
+   * once it is done — or straight away, for a visitor who has already been through it.
    */
   protected enter(): void {
     this.landingVisit.markEntered();
-    void this.router.navigate(['/overview']);
+    void this.router.navigate(['/tour']);
   }
 }

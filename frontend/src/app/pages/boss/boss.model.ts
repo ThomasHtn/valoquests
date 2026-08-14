@@ -114,6 +114,13 @@ export interface BossTimelineNode {
   readonly metaLabel: string | null;
 
   /**
+   * Same line as `metaLabel`, minus what the panel already spells out below it: the panel lists the
+   * full per-player ranking, so the top-damage wording would only repeat its first row. `null` when
+   * the panel has nothing left to add.
+   */
+  readonly panelMetaLabel: string | null;
+
+  /**
    * The week's damage broken down per player, ordered best first. Empty for an `'upcoming'`
    * placeholder and for any week the ranking does not cover.
    */

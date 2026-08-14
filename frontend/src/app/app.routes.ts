@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { landingEntryGuard } from '@core/landing/landing-entry.guard';
+import { tourEntryGuard } from '@core/tour/tour-entry.guard';
 
 /**
  * Application routes.
@@ -14,6 +15,10 @@ import { landingEntryGuard } from '@core/landing/landing-entry.guard';
  * falls through to the second, which activates `Shell` — the sidebar layout — and resolves the
  * page among its children. The wildcard route is one of those children on purpose, so a wrong URL
  * still lands on a page the visitor can navigate away from.
+ *
+ * The guided tour sits between the two, and must stay declared *before* the `Shell` route: it is
+ * the landing page's continuation and renders chrome-free like it, so being resolved as one of
+ * `Shell`'s children would both wrap it in the sidebar and, failing that, hand it to the wildcard.
  */
 export const routes: Routes = [
   {
@@ -22,6 +27,12 @@ export const routes: Routes = [
     title: 'landing.title',
     canActivate: [landingEntryGuard],
     loadComponent: () => import('@pages/landing/landing').then((m) => m.Landing),
+  },
+  {
+    path: 'tour',
+    title: 'tour.title',
+    canActivate: [tourEntryGuard],
+    loadComponent: () => import('@pages/tour/tour').then((m) => m.Tour),
   },
   {
     path: '',

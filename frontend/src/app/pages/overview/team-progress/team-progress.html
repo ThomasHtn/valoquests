@@ -1,9 +1,9 @@
-<!-- Collective progress band: a single low strip under the boss card, per the mockup, rather than a
-     card of its own. It reports one fact — how far the whole squad has got through the week's
-     challenges, and who moved it — so it earns a line, not a panel. -->
-<section
-  class="notch-tr notch-tr-edge border border-brand-500/25 bg-surface-sunken/55 px-4 py-3 [--notch:0.75rem]"
->
+<!-- Collective progress: shares the row with the podium rather than spanning the full page width,
+     reading as part of the page rather than as a panel — the same treatment as the podium beside
+     it. Its progress bar (kept gold — the squad's overall pace, unrelated to any single
+     challenge's own difficulty color) sits above a breakdown of the week's challenges, styled the
+     same way as the weekly challenges board so both read as one system. -->
+<section class="flex flex-col">
   <app-resource-state
     (retry)="reload()"
     [emptyText]="'overview.weeklyChallenges.empty' | translate"
@@ -14,48 +14,126 @@
     [loadingText]="'overview.weeklyChallenges.loading' | translate"
     padding="py-4"
   >
-    <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
-      <p class="text-sm whitespace-nowrap text-text-secondary">
-        {{ 'overview.teamProgress.progressLabel' | translate }}
-      </p>
-
-      <!-- Discrete, sheared segments — one per challenge, filled or not — rather than a continuous
-           percentage fill: the number of challenges is always small and fixed, so a segment reads
-           at a glance as "this one specific challenge is done" instead of an abstract percentage.
-           Hidden from assistive technology, since the count beside it states the same thing. -->
-      <div aria-hidden="true" class="flex min-w-40 flex-1 gap-1.5">
-        @for (filled of segments(); track $index) {
+    <div class="flex flex-1 flex-col gap-6">
+      <div>
+        <!-- Section rule: title and a hairline fading to nothing — the same header treatment as
+             the podium beside it, so both panels read as one system. -->
+        <div class="flex items-center gap-3">
+          <h2
+            class="font-display text-sm leading-none font-semibold tracking-label text-text-secondary uppercase"
+          >
+            {{ 'overview.teamProgress.progressLabel' | translate }}
+          </h2>
           <span
-            [class.bg-brand-500]="filled"
-            [class.bg-surface-700]="!filled"
-            class="clip-shear h-3 flex-1"
+            aria-hidden="true"
+            class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
           ></span>
-        }
+          <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
+        </div>
+
+        <!-- Headline: how many of the week's challenges the squad has cleared, and how long is
+             left to clear the rest. -->
+        <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <p class="flex items-baseline gap-1">
+            <span class="font-display text-6xl leading-none font-bold text-brand-500 tabular-nums">
+              {{ completedCount() }}
+            </span>
+            <span
+              class="font-display text-3xl leading-none font-semibold text-text-muted tabular-nums"
+            >
+              / {{ totalCount() }}
+            </span>
+          </p>
+
+          <div class="min-w-0">
+            <p class="font-display text-lg leading-tight font-semibold text-text-primary">
+              {{ 'overview.teamProgress.completedLabel' | translate }}
+            </p>
+            <p class="mt-1 text-sm text-text-secondary">
+              {{ 'overview.teamProgress.deadline' | translate: { count: remainingCount() } }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Discrete, sheared segments — one per challenge, filled or not — rather than a
+             continuous percentage fill: the number of challenges is always small and fixed, so a
+             segment reads at a glance as "this one specific challenge is done" instead of an
+             abstract percentage. Kept gold regardless of a challenge's own difficulty color: this
+             bar is the squad's overall pace, not a breakdown. Hidden from assistive technology,
+             since the headline above states the same count. -->
+        <div aria-hidden="true" class="mt-5 flex gap-2">
+          @for (filled of segments(); track $index) {
+            <!-- Gold rim painted as a filled outer slot with the fill inset one pixel inside it,
+                 rather than stroked as a border: `clip-path` cuts the sheared sides off any real
+                 border, so the frame has to be a shape of its own — the same treatment as the hex
+                 badges in the breakdown below. -->
+            <span class="clip-shear relative h-4 flex-1 bg-accent-gold/60">
+              <span
+                [class.bg-brand-500]="filled"
+                [class.bg-surface-700]="!filled"
+                class="clip-shear absolute inset-px"
+              ></span>
+            </span>
+          }
+        </div>
       </div>
 
-      <strong
-        class="font-display text-base leading-none font-semibold whitespace-nowrap text-brand-500 tabular-nums"
-      >
-        {{
-          'overview.weeklyChallenges.completedCount'
-            | translate: { count: completedCount(), total: totalCount() }
-        }}
-      </strong>
+      <!-- One row per challenge, tinted by its difficulty tier the same way as the weekly
+           challenges board: a hex badge (a checkmark once the whole squad has cleared it, its
+           roman-numeral tier otherwise), the challenge's name and difficulty, and how many
+           tracked players have completed it so far. -->
+      <!-- The breakdown takes the height left over by the headline above rather than sitting under
+           it at its natural size: the panel stretches to match the podium beside it, and the slack
+           belongs in the rows themselves instead of as a gap under the progress bar. -->
+      <ul class="flex flex-1 flex-col gap-2">
+        @for (row of rows(); track row.id) {
+          <li
+            [class]="row.visual.panelClass"
+            class="notch-tr notch-tr-edge flex flex-1 items-center gap-3 border bg-linear-[115deg] to-surface-sunken/60 px-3 py-2.5 [--notch:0.625rem]"
+          >
+            <span
+              [class]="row.visual.barClass"
+              aria-hidden="true"
+              class="clip-hex relative h-8 w-7 shrink-0"
+            >
+              <span
+                [class]="row.visual.iconClass"
+                class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-xs leading-none font-bold"
+              >
+                {{ row.completed ? '✓' : row.visual.tier }}
+              </span>
+            </span>
 
-      @if (contributors().length) {
-        <!-- Avatar stack, decorative: the count that follows states the same fact in words, and a
-             dimmed avatar carries no meaning of its own beyond it. -->
-        <ul aria-hidden="true" class="flex -space-x-1.5">
-          @for (contributor of contributors(); track contributor.playerId) {
-            <li [class.opacity-35]="!contributor.contributed">
-              <app-avatar [src]="contributor.avatarUrl" shape="hex" size="xs" />
-            </li>
-          }
-        </ul>
-        <p class="text-sm whitespace-nowrap text-text-muted">
-          {{ 'overview.teamProgress.contributors' | translate: { count: contributorsCount() } }}
-        </p>
-      }
+            <div class="min-w-0 flex-1">
+              <p
+                [class]="row.visual.iconClass"
+                class="tracking-label font-mono text-2xs font-medium uppercase"
+              >
+                {{ 'overview.weeklyChallenges.difficulty.' + row.difficulty | translate }}
+              </p>
+              <p
+                class="font-display mt-0.5 truncate text-sm leading-tight font-semibold text-text-primary"
+              >
+                {{ row.name }}
+              </p>
+            </div>
+
+            <p class="shrink-0 border-l border-text-primary/10 pl-3 text-right">
+              <span
+                class="tracking-label block font-mono text-2xs font-medium text-text-muted uppercase"
+              >
+                {{ 'overview.teamProgress.rowPlayers' | translate }}
+              </span>
+              <span
+                class="font-display mt-1 block text-lg leading-none font-bold text-text-primary tabular-nums"
+              >
+                {{ row.completedPlayers
+                }}<span class="text-text-muted">/{{ row.totalPlayers }}</span>
+              </span>
+            </p>
+          </li>
+        }
+      </ul>
     </div>
   </app-resource-state>
 </section>

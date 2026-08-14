@@ -1,11 +1,15 @@
 /*
- * Animation tokens for the landing page's compass.
+ * Animation tokens for the two screens that open the application: the landing page's compass and
+ * the guided tour.
  *
  * Declared as Tailwind v4 `--animate-*` theme variables so the templates consume them as regular
  * utilities and can gate them behind `motion-safe:`, the prefix already used elsewhere in the
- * application. Every one of these loops indefinitely, so each animated element also carries its
- * resting value as a plain utility class — that is what renders when a visitor asks for reduced
- * motion and the `motion-safe:` utility drops out.
+ * application.
+ *
+ * The compass animations loop indefinitely, so each element carrying one also carries its resting
+ * value as a plain utility class — that is what renders when a visitor asks for reduced motion and
+ * the `motion-safe:` utility drops out. The tour's animations run once on entry and are declared
+ * `both`, so their final frame *is* the resting state and no such fallback is needed.
  */
 
 @theme {
@@ -15,6 +19,17 @@
   --animate-compass-core: compass-core 2.4s ease-in-out infinite;
   --animate-compass-ripple: compass-ripple 3s ease-out infinite;
   --animate-hint-nudge: hint-nudge 1.6s ease-in-out infinite;
+
+  /* Guided tour: a step's blocks rising into place as it opens. The copy leads and the illustration
+     follows a beat later, so the eye is given the heading to read before the panel beside it
+     settles. The easing overshoots nothing — it decelerates hard, which reads as the block landing
+     rather than sliding. */
+  --animate-step-in: step-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-step-in-late: step-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+
+  /* Guided tour: the fixed bands, fading in once on arrival. They stay put from then on — only the
+     content between them changes — so they must not replay on every step. */
+  --animate-chrome-in: chrome-in 0.6s ease-out both;
 
   /* Outer bezel, drifting clockwise. */
   @keyframes compass-spin {
@@ -72,6 +87,31 @@
     to {
       opacity: 0;
       transform: scale(1.5);
+    }
+  }
+
+  /* A tour step's block rising into place. */
+  @keyframes step-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* The tour's fixed bands arriving. Opacity only: they are pinned to the viewport edges, and
+     sliding them in would read as the page failing to lay out rather than as an entrance. */
+  @keyframes chrome-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
     }
   }
 

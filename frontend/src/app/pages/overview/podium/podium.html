@@ -24,11 +24,9 @@
     [loadingText]="'overview.weeklyRanking.loading' | translate"
     padding="py-10"
   >
-    <!-- Two columns on wide screens: the podium on the leading edge, the rest of the field on the
-         trailing one, both stretched to the same row height so the list can sit at the top of that
-         column, level with the champion, rather than down at the plinths. Below `lg` the two stack,
-         since three plinths and a row list cannot share a narrow viewport without either becoming
-         unreadable.
+    <!-- Podium on top, the rest of the field stacked below it: the podium now shares the row with
+         the collective progress panel rather than spanning the full page, so it only gets a single
+         column's worth of width and has no room for a second inner column beside it.
 
          `--podium-base` is the single measure the plinths are built from: the 3rd plinth stands
          exactly that tall, the 2nd and 1st scale off it (see `PODIUM_PLINTH_CLASSES`). It tracks the
@@ -36,7 +34,9 @@
          with a floor at the natural height of three plinth rows — below it the rows would have to
          shrink — and a ceiling so a very tall display does not stretch the block past what reads as
          a podium. -->
-    <div class="mt-4 grid gap-4 [--podium-base:clamp(13rem,24vh,18.5rem)] lg:grid-cols-2 lg:gap-6">
+    <div
+      class="mt-4 flex flex-1 flex-col justify-between gap-6 [--podium-base:clamp(6rem,9vh,7.5rem)]"
+    >
       <!-- Podium spotlight: 1st place rendered larger and centered via `order`, so the DOM keeps its
            natural reading order (1st, 2nd, 3rd) for assistive technology while the visual layout
            reads as a podium. Each place stands on a plinth whose height, and not only its color,
@@ -67,7 +67,7 @@
               >
                 <app-avatar
                   [priority]="entry.position === 1"
-                  [size]="entry.position === 1 ? 'lg' : 'md'"
+                  [size]="entry.position === 1 ? 'md' : 'sm'"
                   [src]="resolveAvatarUrl(entry.player.portrait)"
                   shape="hex"
                 />
@@ -86,7 +86,7 @@
 
               <span
                 [class]="plinthClass(entry.position)"
-                class="mt-3 flex w-full flex-col items-center justify-start gap-3 border-t-3 px-2 py-4"
+                class="mt-3 flex w-full flex-col items-center justify-start gap-2 border-t-3 px-2 py-3"
               >
                 <!-- Zero-padded rank, the mockup's plate number. The translated ordinal it replaces
                    stays available to screen readers, which have no use for the styling. -->
@@ -116,15 +116,15 @@
            hexagon position badge as the full ranking table, and wearing the registry's row
            treatment — notched corner, leading rule, flat wash — so every list of players reads as
            one system. -->
+      <!-- Beyond six rows the strip scrolls rather than growing: the podium is sized to the
+           viewport and a longer roster would otherwise push the block past it. `--podium-row` is
+           one row's natural height (`py-5` around a `size-9` avatar), so the cap is expressed as
+           "six rows and the five gaps between them" and follows the row treatment if it changes.
+           The scrollbar itself only shows on hover/focus (see `scroll-subtle`). -->
       @if (rest().length) {
-        <!-- The parent grid stretches this column to the podium's full height. The rows keep the
-             registry's own height rather than sharing that span via `flex-1` — stretched over a
-             podium's worth of column they turn into near-empty bands, and a row means the same
-             thing here as in the ranking table, so it should measure the same. Centering the group
-             in the leftover space is what keeps the column from reading as top-heavy; `min-h-full`
-             rather than `h-full` so a squad longer than the podium is tall grows the row instead
-             of overflowing it. -->
-        <ul class="flex min-h-full flex-col justify-center gap-3">
+        <ul
+          class="scroll-subtle flex max-h-[calc(6*var(--podium-row)_+_5*0.75rem)] flex-col gap-3 overflow-y-auto overscroll-contain [--podium-row:4.75rem]"
+        >
           @for (entry of rest(); track entry.player.id) {
             <li>
               <a
