@@ -5,6 +5,7 @@ import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallenge
 import io.github.thomashtn.valorant.tracker.challenge.calculator.PlayerChallengeContextFactory;
 import io.github.thomashtn.valorant.tracker.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
+import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.ranking.service.RankingRecalculationService;
 import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
@@ -151,7 +152,8 @@ public class DefaultChallengeRecalculationService
             return;
         }
 
-        List<Player> players = playerRepository.findAllByOrderByIdAsc();
+        List<Player> players =
+            playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED);
 
         LOGGER.info(
             "Starting challenge progress recalculation for week {}: "

@@ -5,6 +5,7 @@ import io.github.thomashtn.valorant.tracker.boss.service.WeekRulesetResolver;
 import io.github.thomashtn.valorant.tracker.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valorant.tracker.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
+import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valorant.tracker.ranking.repository.WeeklyPlayerScoreRepository;
@@ -130,7 +131,8 @@ public class DefaultRankingRecalculationService
 
         Instant calculatedAt = clock.instant();
 
-        List<Player> players = playerRepository.findAllByOrderByIdAsc();
+        List<Player> players =
+            playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED);
 
         if (players.isEmpty()) {
             scoreRepository.deleteAllByWeekStart(weekStart);

@@ -1,6 +1,7 @@
 package io.github.thomashtn.valorant.tracker.synchronization.repository;
 
 import io.github.thomashtn.valorant.tracker.synchronization.entity.PlayerSeasonSynchronization;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -37,4 +38,12 @@ public interface PlayerSeasonSynchronizationRepository
         Long playerId,
         String seasonExternalId
     );
+
+    /**
+     * Returns every season walk checkpoint of one player.
+     *
+     * @param playerId tracked player identifier
+     * @return the player's checkpoints
+     */
+    List<PlayerSeasonSynchronization> findAllByPlayerId(Long playerId);
 }

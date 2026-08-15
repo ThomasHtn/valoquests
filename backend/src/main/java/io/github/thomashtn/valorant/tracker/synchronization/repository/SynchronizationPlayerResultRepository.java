@@ -23,4 +23,12 @@ public interface SynchronizationPlayerResultRepository
     @EntityGraph(attributePaths = "player")
     List<SynchronizationPlayerResult>
         findAllBySynchronizationIdOrderByPlayerIdAsc(Long synchronizationId);
+
+    /**
+     * Returns every result recorded for one player, across executions.
+     *
+     * @param playerId tracked player identifier
+     * @return the player's results
+     */
+    List<SynchronizationPlayerResult> findAllByPlayerId(Long playerId);
 }

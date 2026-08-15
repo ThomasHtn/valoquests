@@ -5,19 +5,21 @@ import static io.github.thomashtn.valorant.tracker.shared.config.OpenApiConfig.A
 import io.github.thomashtn.valorant.tracker.shared.dto.PageResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationDetailsResponse;
 import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
-import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationCommandService;
+import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationLaunchService;
 import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -36,9 +38,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class SynchronizationAdminController {
 
     /**
-     * Application service used to execute synchronization commands.
+     * Application service used to accept and dispatch synchronization commands.
      */
-    private final SynchronizationCommandService synchronizationService;
+    private final SynchronizationLaunchService synchronizationLaunchService;
 
     /**
      * Application service used to query synchronization history.
@@ -48,26 +50,35 @@ public class SynchronizationAdminController {
     /**
      * Creates the administrative synchronization controller.
      *
-     * @param synchronizationService synchronization command service
+     * @param synchronizationLaunchService synchronization launch service
      * @param synchronizationQueryService synchronization query service
      */
     public SynchronizationAdminController(
-        SynchronizationCommandService synchronizationService,
+        SynchronizationLaunchService synchronizationLaunchService,
         SynchronizationQueryService synchronizationQueryService
     ) {
-        this.synchronizationService = synchronizationService;
+        this.synchronizationLaunchService = synchronizationLaunchService;
         this.synchronizationQueryService = synchronizationQueryService;
     }
 
     /**
-     * Synchronizes all active players.
-     *
-     * @return synchronization summary
+     * Accepts a synchronization of all tracked players.
      */
     @PostMapping("/synchronizations")
+    @ResponseStatus(HttpStatus.ACCEPTED)
     @Operation(
-        summary = "Synchronize all active players",
+        summary = "Start a synchronization of every tracked player",
         description = """
+            Accepts the request and runs the synchronization in the background, then answers
+            immediately. A full run walks the Henrik match history for the whole squad under a rate
+            limit of a few dozen requests per minute and routinely takes minutes, which no HTTP
+            client should be asked to wait through. Poll
+            `GET /api/admin/synchronizations/latest` to follow the run: it reports PENDING or
+            RUNNING while it is in flight, then its final status and counters.
+
+            Only one execution may be in flight at a time; a second request is refused with a 409
+            rather than queued, so two walks never spend the same rate-limit budget.
+
             Imports every match of the current Valorant season for each active tracked player. The
             operation resolves missing Riot account identifiers, refreshes competitive ranks and walks
             the Henrik match history backwards until it leaves the current season, importing matches
@@ -86,14 +97,14 @@ public class SynchronizationAdminController {
             exhausted the current act apart from one truncated by the safety page limit.
 
             When the run imported at least one match, the current week's challenge progress and the
-            weekly ranking are rebuilt from the stored matches before the response is returned. A
-            failure of that step is logged without failing the synchronization, since the matches are
-            already stored and the next run recalculates from scratch.
+            weekly ranking are rebuilt from the stored matches once the walk completes. A failure of
+            that step is logged without failing the synchronization, since the matches are already
+            stored and the next run recalculates from scratch.
             """
     )
     @ApiResponse(
-            responseCode = "200",
-        description = "Synchronization completed."
+            responseCode = "202",
+        description = "Synchronization accepted and started in the background."
     )
     @ApiResponse(
             responseCode = "401",
@@ -103,19 +114,23 @@ public class SynchronizationAdminController {
             responseCode = "403",
         description = "X-Admin-Key value is invalid."
     )
-    public SynchronizationResponse synchronizeAllPlayers() {
-        return synchronizationService.synchronizeAllPlayers();
+    @ApiResponse(
+            responseCode = "409",
+        description = "A synchronization is already in progress."
+    )
+    public void synchronizeAllPlayers() {
+        synchronizationLaunchService.launchAllPlayers();
     }
 
     /**
-     * Synchronizes one tracked player.
+     * Accepts a synchronization of one tracked player.
      *
      * @param playerId internal player identifier
-     * @return completed synchronization summary
      */
     @PostMapping("/players/{playerId}/synchronizations")
+    @ResponseStatus(HttpStatus.ACCEPTED)
     @Operation(
-        summary = "Synchronize one player",
+        summary = "Start a synchronization of one player",
         description = """
             Imports every match of the current Valorant season for one tracked player, applying the
             same season scope, mode filter and early-stop rules as the batch operation. Useful to
@@ -123,11 +138,17 @@ public class SynchronizationAdminController {
             Older acts are out of scope here too, so this command cannot deepen an existing history.
             Challenge progress and the weekly ranking are rebuilt for every player when the run
             imported at least one match.
+
+            Runs in the background like the batch operation, and is followed the same way through
+            `GET /api/admin/synchronizations/latest`. The player is resolved before the request is
+            accepted, so an unknown identifier is reported right away instead of surfacing minutes
+            later as a failed execution. Henrik failures, in contrast, can only be observed on that
+            execution: they happen long after this route has answered.
             """
     )
     @ApiResponse(
-            responseCode = "200",
-        description = "Player synchronization completed."
+            responseCode = "202",
+        description = "Player synchronization accepted and started in the background."
     )
     @ApiResponse(
             responseCode = "401",
@@ -142,14 +163,10 @@ public class SynchronizationAdminController {
         description = "Tracked player not found."
     )
     @ApiResponse(
-            responseCode = "429",
-        description = "Henrik rate limit reached."
+            responseCode = "409",
+        description = "A synchronization is already in progress."
     )
-    @ApiResponse(
-            responseCode = "502",
-        description = "Henrik API request failed."
-    )
-    public SynchronizationResponse synchronizePlayer(
+    public void synchronizePlayer(
         @Parameter(
             description = "Internal player identifier.",
             example = "3",
@@ -157,7 +174,7 @@ public class SynchronizationAdminController {
     )
         @PathVariable long playerId
     ) {
-        return synchronizationService.synchronizePlayer(playerId);
+        synchronizationLaunchService.launchPlayer(playerId);
     }
 
     /**

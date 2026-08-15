@@ -14,22 +14,26 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
 import {
   LucideBookOpen,
+  LucideDatabaseBackup,
   LucideLanguages,
   LucideLayoutDashboard,
+  LucideLogOut,
   LucideMenu,
   LucideRefreshCw,
   LucideSkull,
   LucideTarget,
   LucideTrophy,
+  LucideUserCog,
   LucideUsers,
   LucideX,
 } from '@lucide/angular';
 
+import { AdminSession } from '@core/admin/admin-session';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Language } from '@core/i18n/translation.model';
 import { PlayersApi } from '@core/players/players-api';
-import { NAV_ITEMS } from './sidebar.constants';
+import { ADMIN_NAV_ITEMS, NAV_ITEMS } from './sidebar.constants';
 import { NavItem } from './sidebar.model';
 import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './sidebar.utils';
 
@@ -55,13 +59,16 @@ import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './
   imports: [
     RouterLink,
     LucideBookOpen,
+    LucideDatabaseBackup,
     LucideLanguages,
     LucideLayoutDashboard,
+    LucideLogOut,
     LucideMenu,
     LucideRefreshCw,
     LucideSkull,
     LucideTarget,
     LucideTrophy,
+    LucideUserCog,
     LucideUsers,
     LucideX,
     TranslatePipe,
@@ -90,6 +97,11 @@ export class Sidebar {
    * Router used to track the active route for {@link isNavItemActive}.
    */
   private readonly router = inject(Router);
+
+  /**
+   * Backoffice session, which decides which set of navigation entries the rail offers.
+   */
+  private readonly adminSession = inject(AdminSession);
 
   /**
    * URL of the currently active route, refreshed on every navigation.
@@ -124,9 +136,20 @@ export class Sidebar {
   protected readonly mobileMenuId = 'sidebar-panel';
 
   /**
-   * Primary navigation entries.
+   * Whether a backoffice session is open.
+   *
+   * Also gates the sign-out control in the footer, which is the only way back out of the
+   * backoffice: nothing in the application links into it, so nothing links out of it either.
    */
-  protected readonly navItems = NAV_ITEMS;
+  protected readonly adminMode = computed(() => this.adminSession.isAuthenticated());
+
+  /**
+   * Navigation entries currently on offer.
+   *
+   * The backoffice replaces the public entries rather than adding to them — see
+   * {@link ADMIN_NAV_ITEMS}.
+   */
+  protected readonly navItems = computed(() => (this.adminMode() ? ADMIN_NAV_ITEMS : NAV_ITEMS));
 
   /**
    * Languages the switcher offers, in display order.
@@ -435,6 +458,18 @@ export class Sidebar {
    */
   protected toggleLanguageMenu(): void {
     this.languageMenuOpen.update((open) => !open);
+  }
+
+  /**
+   * Closes the backoffice session and returns to the public application.
+   *
+   * Navigating away is part of the action rather than left to the visitor: the pages the session
+   * was on are guarded, so staying on one would only bounce back to the sign-in screen.
+   */
+  protected signOutOfAdmin(): void {
+    this.adminSession.signOut();
+    this.closeMobileMenu();
+    void this.router.navigate(['/overview']);
   }
 
   /**

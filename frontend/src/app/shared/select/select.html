@@ -34,7 +34,10 @@
   [attr.aria-label]="ariaLabel()"
   [hidden]="!isOpen()"
   [id]="listboxId"
-  class="notch-tr absolute top-full right-0 z-20 mt-2 max-h-72 min-w-full overflow-y-auto border-l-2 border-brand-500/50 bg-surface-sunken py-2 [--notch:0.5rem]"
+  [style.top.px]="panelPosition().top"
+  [style.right.px]="panelPosition().right"
+  [style.min-width.px]="panelPosition().minWidth"
+  class="notch-tr fixed z-20 max-h-96 overflow-y-auto border-l-2 border-brand-500/50 bg-surface-sunken py-2 [--notch:0.5rem]"
   role="listbox"
 >
   @if (emptyText() && options().length <= 1) {

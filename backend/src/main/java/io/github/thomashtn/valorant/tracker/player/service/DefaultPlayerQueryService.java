@@ -11,6 +11,7 @@ import io.github.thomashtn.valorant.tracker.player.dto.PlayerDetailsResponse;
 import io.github.thomashtn.valorant.tracker.player.dto.PlayerSummaryResponse;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
+import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
 import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
@@ -67,11 +68,15 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
     /**
      * Returns every tracked player with aggregate match statistics.
      *
+     * <p>Archived players are left out: they were removed from the roster and only remain stored so
+     * the finalized weeks naming them stay readable. They are still resolvable through
+     * {@link #findById}, which is what keeps a link from such a week working.
+     *
      * @return tracked player summaries
      */
     @Override
     public List<PlayerSummaryResponse> findAll() {
-        return playerRepository.findAll().stream()
+        return playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED).stream()
             .map(player -> toSummary(
                 player,
                 playerMatchRepository.findAllByPlayerIdOrderByMatchStartedAtDesc(player.getId())

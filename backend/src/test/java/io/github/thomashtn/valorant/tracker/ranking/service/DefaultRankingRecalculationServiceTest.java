@@ -88,7 +88,7 @@ class DefaultRankingRecalculationServiceTest {
         WeeklyChallenge easyWeeklyChallenge = createWeeklyChallenge(10L, ChallengeDifficulty.EASY);
         WeeklyChallenge normalWeeklyChallenge = createWeeklyChallenge(20L, ChallengeDifficulty.NORMAL);
 
-        when(playerRepository.findAllByOrderByIdAsc())
+        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
             .thenReturn(List.of(firstPlayer, secondPlayer));
         when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START))
             .thenReturn(List.of());
@@ -137,7 +137,7 @@ class DefaultRankingRecalculationServiceTest {
         existing.setWeekStart(WEEK_START);
         existing.setPosition(3);
 
-        when(playerRepository.findAllByOrderByIdAsc())
+        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
             .thenReturn(List.of(player));
         when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START))
             .thenReturn(List.of(existing));
@@ -165,7 +165,7 @@ class DefaultRankingRecalculationServiceTest {
         proPlayer.setStatus(PlayerStatus.INACTIVE);
         Player competitivePlayer = createPlayer(2L, "Regular");
 
-        when(playerRepository.findAllByOrderByIdAsc())
+        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
             .thenReturn(List.of(proPlayer, competitivePlayer));
         when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START))
             .thenReturn(List.of());

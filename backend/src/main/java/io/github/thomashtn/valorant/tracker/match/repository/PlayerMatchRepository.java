@@ -26,6 +26,15 @@ public interface PlayerMatchRepository
     boolean existsByPlayerIdAndMatchId(Long playerId, Long matchId);
 
     /**
+     * Determines whether a player has a stored match started at or after an instant.
+     *
+     * @param playerId internal player identifier
+     * @param startedAt inclusive lower bound
+     * @return {@code true} when at least one stored match starts at or after the bound
+     */
+    boolean existsByPlayerIdAndMatchStartedAtGreaterThanEqual(Long playerId, Instant startedAt);
+
+    /**
      * Retrieves the matches played by a player during a half-open period.
      *
      * <p>The beginning is inclusive and the end is exclusive. The associated

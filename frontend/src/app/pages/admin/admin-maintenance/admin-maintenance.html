@@ -1,0 +1,104 @@
+<header>
+  <p class="tracking-label-wide font-mono text-xs font-medium text-brand-500 uppercase">
+    {{ 'admin.eyebrow' | translate }}
+  </p>
+  <h1
+    class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
+  >
+    {{ 'admin.maintenance.heading' | translate }}
+  </h1>
+</header>
+
+<app-section-divider [label]="'admin.maintenance.dangerSection' | translate" class="my-2" />
+
+<!-- Danger tones on the panel itself, not just on its button: this is the only screen in the
+     application where a click destroys data, and the surface should say so before the pointer
+     reaches the control. -->
+<div
+  class="notch-tr notch-tr-edge border border-danger/40 bg-danger/5 p-5 [--notch:0.875rem] sm:p-6"
+>
+  <h2 class="tracking-label font-display text-base font-bold text-danger uppercase">
+    {{ 'admin.maintenance.reset.heading' | translate }}
+  </h2>
+
+  <p class="mt-2 max-w-2xl text-base text-pretty text-text-secondary">
+    {{ 'admin.maintenance.reset.description' | translate }}
+  </p>
+
+  <div class="mt-5 grid gap-5 sm:grid-cols-2">
+    <div>
+      <p class="tracking-label font-mono text-xs text-danger uppercase">
+        {{ 'admin.maintenance.reset.clearedLabel' | translate }}
+      </p>
+      <ul class="mt-2 flex flex-col gap-1.5">
+        @for (key of clearedDataKeys; track key) {
+          <li class="flex items-start gap-2 text-base text-text-secondary">
+            <span aria-hidden="true" class="mt-1.5 size-1.5 shrink-0 rotate-45 bg-danger"></span>
+            <span class="min-w-0 text-pretty">{{ key | translate }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <div>
+      <p class="tracking-label font-mono text-xs text-text-muted uppercase">
+        {{ 'admin.maintenance.reset.keptLabel' | translate }}
+      </p>
+      <ul class="mt-2 flex flex-col gap-1.5">
+        @for (key of keptDataKeys; track key) {
+          <li class="flex items-start gap-2 text-base text-text-secondary">
+            <span
+              aria-hidden="true"
+              class="mt-1.5 size-1.5 shrink-0 rotate-45 border border-text-muted"
+            ></span>
+            <span class="min-w-0 text-pretty">{{ key | translate }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+
+  @if (synchronizing()) {
+    <p class="mt-5 border-l-2 border-brand-500/60 pl-3 text-base text-pretty text-text-secondary">
+      {{ 'admin.maintenance.reset.blockedBySync' | translate }}
+    </p>
+  }
+
+  <button
+    (click)="askForReset()"
+    [disabled]="busy() || synchronizing()"
+    class="notch-tr focus-ring-inset mt-6 flex min-h-11 cursor-pointer items-center bg-danger px-5 py-2 text-sm font-medium text-surface-950 transition-colors [--notch:0.5rem] hover:bg-danger/90 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-[0.96]"
+    type="button"
+  >
+    {{ 'admin.maintenance.reset.action' | translate }}
+  </button>
+
+  @if (resetState().status === 'done' || resetState().status === 'error') {
+    <p
+      [class]="
+        resetState().status === 'error'
+          ? 'border-danger/60 text-danger'
+          : 'border-success/60 text-success'
+      "
+      class="mt-4 border-l-2 pl-3 text-sm text-pretty"
+      role="status"
+    >
+      {{ resetState().message }}
+    </p>
+  }
+</div>
+
+<app-confirm-dialog
+  (confirmed)="confirmReset()"
+  (dismissed)="dismissReset()"
+  [body]="'admin.maintenance.reset.confirmBody' | translate"
+  [busy]="busy()"
+  [cancelLabel]="'admin.cancel' | translate"
+  [confirmationHint]="
+    'admin.maintenance.reset.phraseHint' | translate: { phrase: confirmationPhrase() }
+  "
+  [confirmationPhrase]="confirmationPhrase()"
+  [confirmLabel]="'admin.maintenance.reset.confirm' | translate"
+  [heading]="'admin.maintenance.reset.heading' | translate"
+  [open]="dialogOpen()"
+/>

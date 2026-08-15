@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { adminGuard } from '@core/admin/admin.guard';
 import { landingEntryGuard } from '@core/landing/landing-entry.guard';
 import { tourEntryGuard } from '@core/tour/tour-entry.guard';
 
@@ -19,6 +20,11 @@ import { tourEntryGuard } from '@core/tour/tour-entry.guard';
  * The guided tour sits between the two, and must stay declared *before* the `Shell` route: it is
  * the landing page's continuation and renders chrome-free like it, so being resolved as one of
  * `Shell`'s children would both wrap it in the sidebar and, failing that, hand it to the wildcard.
+ * The backoffice's sign-in screen is declared there for the same reason.
+ *
+ * The backoffice itself is reachable by URL only — nothing in the application links to it — and its
+ * pages are ordinary `Shell` children: signing in swaps the sidebar's entries rather than replacing
+ * the layout, so the coach stays in the same application rather than crossing into a second one.
  */
 export const routes: Routes = [
   {
@@ -33,6 +39,11 @@ export const routes: Routes = [
     title: 'tour.title',
     canActivate: [tourEntryGuard],
     loadComponent: () => import('@pages/tour/tour').then((m) => m.Tour),
+  },
+  {
+    path: 'admin/login',
+    title: 'admin.login.title',
+    loadComponent: () => import('@pages/admin/admin-login/admin-login').then((m) => m.AdminLogin),
   },
   {
     path: '',
@@ -80,6 +91,29 @@ export const routes: Routes = [
         path: 'rules',
         title: 'rules.title',
         loadComponent: () => import('@pages/rules/rules').then((m) => m.Rules),
+      },
+      {
+        path: 'admin/operations',
+        title: 'admin.operations.title',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('@pages/admin/admin-operations/admin-operations').then((m) => m.AdminOperations),
+      },
+      {
+        path: 'admin/players',
+        title: 'admin.players.title',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('@pages/admin/admin-players/admin-players').then((m) => m.AdminPlayers),
+      },
+      {
+        path: 'admin/maintenance',
+        title: 'admin.maintenance.title',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('@pages/admin/admin-maintenance/admin-maintenance').then(
+            (m) => m.AdminMaintenance,
+          ),
       },
       {
         path: '**',

@@ -108,6 +108,27 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles a request refused because it conflicts with the application's current state.
+     *
+     * @param exception conflict exception
+     * @param request current HTTP request
+     * @return standardized HTTP 409 response
+     */
+    @ExceptionHandler(ConflictException.class)
+    ResponseEntity<ApiErrorResponse> handleConflict(
+        ConflictException exception,
+        HttpServletRequest request
+    ) {
+        return buildResponse(
+            HttpStatus.CONFLICT,
+            "CONFLICT",
+            exception.getMessage(),
+            request,
+            Map.of()
+        );
+    }
+
+    /**
      * Handles a request parameter that cannot be converted to its declared type.
      *
      * <p>Without this handler {@code ?seasonId=abc} reaches the catch-all and answers 500, telling

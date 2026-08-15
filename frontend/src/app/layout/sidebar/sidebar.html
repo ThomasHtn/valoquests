@@ -125,7 +125,19 @@
          indicator needs no extra element and never affects the entry's own layout. Only its color
          is bound to the active state; its geometry is static. -->
     <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex flex-col">
-      @for (item of navItems; track item.labelKey) {
+      @if (adminMode()) {
+        <!-- Sign that the sidebar is showing a different set of destinations than usual. Without
+             it, a coach landing here from a bookmark would only see that the familiar entries are
+             gone, with nothing saying why. -->
+        <p
+          class="tracking-label mb-1 px-6 font-mono text-2xs font-medium text-brand-500 uppercase"
+          [class]="navLabelClass()"
+        >
+          {{ 'sidebar.nav.adminSection' | translate }}
+        </p>
+      }
+
+      @for (item of navItems(); track item.labelKey) {
         <a
           (click)="closeMobileMenu()"
           [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
@@ -166,6 +178,15 @@
               @case ('book-open') {
                 <svg class="h-full w-full" lucideBookOpen></svg>
               }
+              @case ('refresh-cw') {
+                <svg class="h-full w-full" lucideRefreshCw></svg>
+              }
+              @case ('user-cog') {
+                <svg class="h-full w-full" lucideUserCog></svg>
+              }
+              @case ('database-backup') {
+                <svg class="h-full w-full" lucideDatabaseBackup></svg>
+              }
             }
           </span>
           <span
@@ -184,6 +205,28 @@
        screen is fresh — so the drawer carries the same block as the rail, only with its own
        padding. -->
   <div class="flex flex-col gap-6 px-6 pt-6 lg:pt-4">
+    @if (adminMode()) {
+      <!-- The only way out of the backoffice. Nothing in the application links into it, so nothing
+           would link out of it either: without this control, leaving would mean typing a URL.
+           Styled in danger tones like every other control that discards state, and sitting above
+           the divider so it reads as part of the navigation rather than of the footer's status. -->
+      <button
+        (click)="signOutOfAdmin()"
+        [appTooltip]="'sidebar.admin.signOut' | translate"
+        [appTooltipDisabled]="!collapsed()"
+        [class]="collapsed() ? 'lg:justify-center lg:px-0' : ''"
+        appTooltipPosition="right"
+        appTooltipSize="md"
+        class="focus-ring-inset -mx-6 flex min-h-11 cursor-pointer items-center gap-3.5 px-6 py-2 text-start text-sm font-medium text-text-secondary transition-colors hover:bg-danger/10 hover:text-danger motion-safe:active:scale-[0.96]"
+        type="button"
+      >
+        <svg aria-hidden="true" class="block h-5 w-5 shrink-0" lucideLogOut></svg>
+        <span [class]="navLabelClass()" class="tracking-label font-display uppercase">
+          {{ 'sidebar.admin.signOut' | translate }}
+        </span>
+      </button>
+    }
+
     @if (!collapsed()) {
       <!-- Hairline fading out at both ends, the direction's divider, rather than a full-width
            border: it separates the footer from the nav without closing the panel off. -->

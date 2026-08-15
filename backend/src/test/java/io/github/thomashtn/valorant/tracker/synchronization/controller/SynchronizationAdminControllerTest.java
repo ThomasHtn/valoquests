@@ -1,19 +1,15 @@
 package io.github.thomashtn.valorant.tracker.synchronization.controller;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import io.github.thomashtn.valorant.tracker.shared.config.AdminApiKeyFilter;
-import io.github.thomashtn.valorant.tracker.synchronization.dto.SynchronizationResponse;
-import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationStatus;
-import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationTrigger;
-import io.github.thomashtn.valorant.tracker.synchronization.model.SynchronizationType;
-import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationCommandService;
-import java.time.Instant;
+import io.github.thomashtn.valorant.tracker.shared.exception.ConflictException;
+import io.github.thomashtn.valorant.tracker.synchronization.service.SynchronizationLaunchService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,40 +33,53 @@ class SynchronizationAdminControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private SynchronizationCommandService synchronizationService;
+    private SynchronizationLaunchService synchronizationLaunchService;
 
     /**
-     * Verifies that the batch route delegates to the command service.
+     * Verifies that the batch route accepts the request and hands it to the launch service.
+     *
+     * <p>202 rather than 200: the run outlives the request, so the response can only acknowledge
+     * that it started.
      */
     @Test
-    void shouldSynchronizeEveryActivePlayer() throws Exception {
-        when(synchronizationService.synchronizeAllPlayers()).thenReturn(response());
-
+    void shouldAcceptASynchronizationOfEveryPlayer() throws Exception {
         mockMvc.perform(
                 post("/api/admin/synchronizations")
                     .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)
             )
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value("COMPLETED"))
-            .andExpect(jsonPath("$.matchesImported").value(12));
+            .andExpect(status().isAccepted());
 
-        verify(synchronizationService).synchronizeAllPlayers();
+        verify(synchronizationLaunchService).launchAllPlayers();
     }
 
     /**
      * Verifies that the single-player route delegates with its path identifier.
      */
     @Test
-    void shouldSynchronizeOnePlayer() throws Exception {
-        when(synchronizationService.synchronizePlayer(3L)).thenReturn(response());
-
+    void shouldAcceptASynchronizationOfOnePlayer() throws Exception {
         mockMvc.perform(
                 post("/api/admin/players/3/synchronizations")
                     .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)
             )
-            .andExpect(status().isOk());
+            .andExpect(status().isAccepted());
 
-        verify(synchronizationService).synchronizePlayer(3L);
+        verify(synchronizationLaunchService).launchPlayer(3L);
+    }
+
+    /**
+     * Verifies that a concurrent request is refused rather than queued.
+     */
+    @Test
+    void shouldRefuseASecondConcurrentSynchronization() throws Exception {
+        doThrow(new ConflictException("A synchronization is already in progress."))
+            .when(synchronizationLaunchService).launchAllPlayers();
+
+        mockMvc.perform(
+                post("/api/admin/synchronizations")
+                    .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)
+            )
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("CONFLICT"));
     }
 
     /**
@@ -80,7 +89,7 @@ class SynchronizationAdminControllerTest {
      * absence makes the removal part of the API contract rather than an implementation detail.
      *
      * <p>The batch path answers 405 rather than 404: {@code /synchronizations/deep} now matches the
-     * synchronization-details route, which serves GET only. Either way the command service is never
+     * synchronization-details route, which serves GET only. Either way the launch service is never
      * reached, which is what actually matters.
      */
     @Test
@@ -97,27 +106,6 @@ class SynchronizationAdminControllerTest {
             )
             .andExpect(status().isNotFound());
 
-        verifyNoInteractions(synchronizationService);
-    }
-
-    /**
-     * Creates a completed synchronization summary.
-     */
-    private SynchronizationResponse response() {
-        Instant startedAt = Instant.parse("2026-07-25T06:00:00Z");
-        return new SynchronizationResponse(
-            1L,
-            SynchronizationType.STANDARD,
-            SynchronizationTrigger.MANUAL,
-            SynchronizationStatus.COMPLETED,
-            startedAt,
-            startedAt.plusSeconds(90),
-            startedAt,
-            startedAt.plusSeconds(90),
-            6,
-            0,
-            12,
-            null
-        );
+        verifyNoInteractions(synchronizationLaunchService);
     }
 }

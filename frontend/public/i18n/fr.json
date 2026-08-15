@@ -1,4 +1,139 @@
 {
+  "admin": {
+    "eyebrow": "Backoffice",
+    "actionFailed": "L'opération a échoué. Réessaie, ou consulte les logs du backend.",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "login": {
+      "title": "Administration",
+      "eyebrow": "Accès réservé",
+      "heading": "Poste de commandement",
+      "keyLabel": "Clé d'administration",
+      "showKey": "Afficher la clé",
+      "hideKey": "Masquer la clé",
+      "submit": "Entrer",
+      "rejected": "Clé refusée par le serveur."
+    },
+    "operations": {
+      "title": "Opérations",
+      "heading": "Opérations",
+      "lastRun": "Dernière synchronisation",
+      "statusLabel": "État",
+      "startedAt": "Démarrée le",
+      "playersProcessed": "Joueurs traités",
+      "matchesImported": "Matchs importés",
+      "failures": "Échecs",
+      "status": {
+        "none": "Aucune synchronisation enregistrée.",
+        "PENDING": "En attente",
+        "RUNNING": "En cours",
+        "PARTIAL": "Partielle",
+        "COMPLETED": "Terminée",
+        "FAILED": "Échouée",
+        "CANCELLED": "Annulée"
+      },
+      "syncAll": {
+        "heading": "Synchroniser l'escouade",
+        "description": "Importe les matchs de la saison en cours pour tous les joueurs suivis, puis recalcule progression et classement. Plusieurs minutes selon le quota Riot.",
+        "action": "Synchroniser",
+        "accepted": "Synchronisation lancée. Suis son avancement dans l'encart ci-dessus."
+      },
+      "syncPlayer": {
+        "heading": "Synchroniser un joueur",
+        "description": "Rattrape un seul joueur, sans rejouer les autres. Utile après un échec isolé lors d'une exécution planifiée.",
+        "action": "Synchroniser",
+        "accepted": "Synchronisation du joueur lancée.",
+        "pickerLabel": "Joueur à synchroniser",
+        "placeholder": "Choisir un joueur",
+        "noneSelected": "Choisis d'abord un joueur."
+      },
+      "recalculate": {
+        "heading": "Recalculer la progression",
+        "description": "Reconstruit la progression des défis de la semaine et le classement à partir des matchs déjà stockés. N'appelle pas l'API Riot.",
+        "action": "Recalculer",
+        "done": "Progression et classement recalculés."
+      },
+      "weekSelection": {
+        "heading": "Ouvrir la semaine",
+        "description": "Tire les défis manquants de la semaine en cours et son boss, comme le fait le passage de semaine du lundi. Sans effet si tout est déjà en place.",
+        "action": "Démarrer",
+        "done": "La semaine en cours est complète."
+      }
+    },
+    "players": {
+      "title": "Joueurs",
+      "heading": "Escouade",
+      "rosterSection": "Effectif",
+      "addPlayer": "Ajouter un joueur",
+      "edit": "Modifier",
+      "activate": "Activer",
+      "deactivate": "Désactiver",
+      "restore": "Restaurer",
+      "loading": "Chargement de l'effectif…",
+      "error": "Impossible de charger l'effectif.",
+      "empty": "Aucun joueur suivi.",
+      "neverSynchronized": "Jamais synchronisé",
+      "created": "Joueur ajouté à l'effectif.",
+      "updated": "Joueur mis à jour.",
+      "statusChanged": "Statut mis à jour.",
+      "archived": "Joueur archivé : des semaines closes en dépendent. Il reste restaurable.",
+      "deleted": "Joueur supprimé définitivement.",
+      "columns": {
+        "lastSync": "Dernière synchro"
+      },
+      "status": {
+        "ACTIVE": "Actif",
+        "INACTIVE": "Inactif",
+        "ARCHIVED": "Archivé"
+      },
+      "form": {
+        "createHeading": "Nouveau joueur",
+        "editHeading": "Modifier le joueur",
+        "gameName": "Nom Riot",
+        "tagLine": "Tag (sans #)",
+        "displayName": "Nom affiché",
+        "portrait": "Portrait (agent, optionnel)",
+        "status": "Statut initial"
+      },
+      "remove": {
+        "action": "Retirer",
+        "heading": "Retirer du roster",
+        "confirm": "Retirer",
+        "archiveBody": "Ce joueur a participé à la campagne : il sera archivé, pas supprimé. Il disparaît de l'application publique et n'est plus synchronisé, mais les semaines closes qui le citent restent lisibles. Tu pourras le restaurer.",
+        "deleteBody": "Ce joueur n'a participé à aucune campagne : il sera supprimé définitivement, avec ses matchs et ses traces de synchronisation. Cette action est irréversible."
+      }
+    },
+    "maintenance": {
+      "title": "Maintenance",
+      "heading": "Maintenance",
+      "dangerSection": "Zone rouge",
+      "reset": {
+        "heading": "Nouvelle campagne",
+        "description": "Efface tout ce qui dérive de l'historique des matchs, pour repartir d'une base saine. La prochaine synchronisation réimporte depuis zéro.",
+        "clearedLabel": "Sera effacé",
+        "keptLabel": "Sera conservé",
+        "cleared": {
+          "matches": "Tous les matchs importés et les saisons",
+          "challenges": "Les défis hebdomadaires et leur progression",
+          "rankings": "Tous les classements hebdomadaires",
+          "bosses": "Toutes les confrontations de boss",
+          "synchronizations": "L'historique des synchronisations"
+        },
+        "kept": {
+          "players": "L'effectif et les statuts des joueurs",
+          "challengeCatalogue": "Le catalogue de défis",
+          "bossCatalogue": "Le catalogue de boss"
+        },
+        "action": "Repartir sur une base saine",
+        "confirm": "Tout effacer",
+        "confirmBody": "Cette action est irréversible. Tous les matchs, défis, classements et boss seront effacés. L'effectif et les catalogues sont conservés.",
+        "phrase": "EFFACER",
+        "phraseHint": "Tape {{phrase}} pour confirmer",
+        "blockedBySync": "Une synchronisation est en cours. Attends qu'elle se termine : elle écrirait des matchs dans la base en train d'être vidée.",
+        "done": "Campagne réinitialisée. Lance une synchronisation pour réimporter l'historique."
+      }
+    }
+  },
   "boss": {
     "category": {
       "ELITE": "Élite",
@@ -329,6 +464,9 @@
     "title": "Règles et fonctionnement"
   },
   "sidebar": {
+    "admin": {
+      "signOut": "Quitter l'administration"
+    },
     "closeMenu": "Fermer le menu",
     "collapse": "Réduire la barre latérale",
     "expand": "Déplier la barre latérale",
@@ -352,6 +490,10 @@
       "unknown": "Jamais synchronisé"
     },
     "nav": {
+      "adminMaintenance": "Maintenance",
+      "adminOperations": "Opérations",
+      "adminPlayers": "Joueurs",
+      "adminSection": "Administration",
       "boss": "Campagne",
       "challenges": "Défis",
       "leaderboard": "Classement",

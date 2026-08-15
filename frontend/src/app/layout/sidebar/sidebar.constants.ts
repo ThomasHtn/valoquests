@@ -15,3 +15,17 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'players', icon: 'users', routerLink: '/players' },
   { labelKey: 'rules', icon: 'book-open', routerLink: '/rules' },
 ];
+
+/**
+ * Navigation entries shown instead of {@link NAV_ITEMS} while a backoffice session is open.
+ *
+ * The backoffice replaces the navigation rather than adding to it: the coach signing in is there to
+ * operate the tracker, not to browse it, and the two sets of destinations have nothing to do with
+ * one another. The public pages stay reachable by URL throughout — the swap is about what the
+ * sidebar offers, not about locking anything away.
+ */
+export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
+  { labelKey: 'adminOperations', icon: 'refresh-cw', routerLink: '/admin/operations' },
+  { labelKey: 'adminPlayers', icon: 'user-cog', routerLink: '/admin/players' },
+  { labelKey: 'adminMaintenance', icon: 'database-backup', routerLink: '/admin/maintenance' },
+];

@@ -2,6 +2,7 @@ import {
   afterRenderEffect,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
   input,
@@ -43,6 +44,7 @@ let instanceCount = 0;
     class: 'relative inline-block',
     '(document:click)': 'onDocumentClick($event)',
     '(keydown)': 'onKeydown($event)',
+    '(window:resize)': 'close()',
   },
 })
 export class Select<T> {
@@ -103,6 +105,15 @@ export class Select<T> {
   private readonly triggerButton = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
 
   /**
+   * Viewport-relative coordinates the panel is pinned to while open.
+   *
+   * The panel is positioned `fixed` rather than `absolute` so it escapes any ancestor's
+   * `clip-path` or `overflow: hidden` (e.g. a `notch-tr` card) instead of being cut off at that
+   * ancestor's edge. Computed from the trigger's own bounding rect each time the panel opens.
+   */
+  protected readonly panelPosition = signal({ top: 0, right: 0, minWidth: 0 });
+
+  /**
    * Index of the currently selected option, or `-1` when none matches.
    */
   protected readonly selectedIndex = computed(() =>
@@ -142,6 +153,19 @@ export class Select<T> {
       const host: HTMLElement = this.elementRef.nativeElement;
       host.querySelector(`#${this.optionId(index)}`)?.scrollIntoView({ block: 'nearest' });
     });
+
+    // `scroll` doesn't bubble, so a `document:scroll` host binding would miss scrolling that
+    // happens inside a container (e.g. the app's own scrollable `<main>`) rather than the window
+    // itself. Listening on the capture phase still sees it, wherever it happens, since capture
+    // fires while the event travels down toward its target. Closing rather than repositioning
+    // keeps this simple and avoids the panel trailing a stale position for a frame.
+    const closeOnScroll = (): void => {
+      if (this.isOpen()) {
+        this.close();
+      }
+    };
+    window.addEventListener('scroll', closeOnScroll, true);
+    inject(DestroyRef).onDestroy(() => window.removeEventListener('scroll', closeOnScroll, true));
   }
 
   /**
@@ -257,6 +281,12 @@ export class Select<T> {
    * Opens the panel, highlighting the selected option so arrow keys start from the current value.
    */
   private open(): void {
+    const rect = this.triggerButton().nativeElement.getBoundingClientRect();
+    this.panelPosition.set({
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+      minWidth: rect.width,
+    });
     this.activeIndex.set(Math.max(0, this.selectedIndex()));
     this.isOpen.set(true);
   }

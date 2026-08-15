@@ -4,7 +4,16 @@
  * Modelled as a closed union rather than a free-form Lucide name so the template's `@switch` is
  * exhaustive: an entry can only ask for an icon the sidebar actually imports.
  */
-export type NavIcon = 'layout-dashboard' | 'target' | 'skull' | 'trophy' | 'users' | 'book-open';
+export type NavIcon =
+  | 'layout-dashboard'
+  | 'target'
+  | 'skull'
+  | 'trophy'
+  | 'users'
+  | 'book-open'
+  | 'refresh-cw'
+  | 'user-cog'
+  | 'database-backup';
 
 /**
  * Primary navigation entry.
