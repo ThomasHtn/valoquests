@@ -1,6 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { LucideCircleCheck, LucideLoaderCircle, LucideTriangleAlert } from '@lucide/angular';
 
+import { Button } from '@shared/button/button';
 import { AdminActionState } from '../admin-action.model';
 
 /**
@@ -16,7 +17,7 @@ import { AdminActionState } from '../admin-action.model';
  */
 @Component({
   selector: 'app-admin-action-card',
-  imports: [LucideCircleCheck, LucideLoaderCircle, LucideTriangleAlert],
+  imports: [Button, LucideCircleCheck, LucideLoaderCircle, LucideTriangleAlert],
   templateUrl: './admin-action-card.html',
   host: { class: 'block' },
 })

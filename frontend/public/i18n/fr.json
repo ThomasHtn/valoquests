@@ -91,8 +91,6 @@
         "editHeading": "Modifier le joueur",
         "gameName": "Nom Riot",
         "tagLine": "Tag (sans #)",
-        "displayName": "Nom affiché",
-        "portrait": "Portrait (agent, optionnel)",
         "status": "Statut initial"
       },
       "remove": {

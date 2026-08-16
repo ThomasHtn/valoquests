@@ -9,6 +9,8 @@ import {
   viewChild,
 } from '@angular/core';
 
+import { Button } from '@shared/button/button';
+
 /**
  * Modal confirmation for an action that cannot be undone.
  *
@@ -23,6 +25,7 @@ import {
  */
 @Component({
   selector: 'app-confirm-dialog',
+  imports: [Button],
   templateUrl: './confirm-dialog.html',
   host: {
     class: 'contents',

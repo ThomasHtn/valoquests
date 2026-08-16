@@ -25,8 +25,14 @@
    * navigation rail and inset wells (a health bar's track, a segmented bar's empty slots) read as
    * carved *below* the page ground, so they need a value darker than `surface-950` without
    * inverting the meaning of the scale's numbering.
+   *
+   * `surface-panel` is the other role outside the scale: the raised panel a dialog or a card form
+   * sits on. It is a `color-mix` of `surface-sunken` rather than a flat step of the scale, so it
+   * reads as the same carved material as the rest of the interface instead of a flat grey box —
+   * `surface-900` used to fill this role directly and read as an unrelated color.
    */
   --color-surface-sunken: #0a151d;
+  --color-surface-panel: color-mix(in oklab, var(--color-surface-sunken) 95%, transparent);
   --color-surface-950: #0f1c26;
   --color-surface-900: #142330;
   --color-surface-800: #1b2c3a;

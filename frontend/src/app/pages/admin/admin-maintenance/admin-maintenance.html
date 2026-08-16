@@ -65,9 +65,10 @@
   }
 
   <button
+    appButton="danger"
     (click)="askForReset()"
     [disabled]="busy() || synchronizing()"
-    class="notch-tr focus-ring-inset mt-6 flex min-h-11 cursor-pointer items-center bg-danger px-5 py-2 text-sm font-medium text-surface-950 transition-colors [--notch:0.5rem] hover:bg-danger/90 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-[0.96]"
+    class="mt-6 flex min-h-11 items-center px-5 py-2 text-sm font-medium [--notch:0.5rem]"
     type="button"
   >
     {{ 'admin.maintenance.reset.action' | translate }}
@@ -80,7 +81,7 @@
           ? 'border-danger/60 text-danger'
           : 'border-success/60 text-success'
       "
-      class="mt-4 border-l-2 pl-3 text-sm text-pretty"
+      class="mt-4 border-l-2 pl-3 text-prose text-pretty"
       role="status"
     >
       {{ resetState().message }}

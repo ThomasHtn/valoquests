@@ -11,14 +11,10 @@
     <ng-content />
 
     <button
+      [appButton]="destructive() ? 'danger' : 'primary'"
       (click)="triggered.emit()"
-      [class]="
-        destructive()
-          ? 'bg-danger text-surface-950 hover:bg-danger/90'
-          : 'bg-brand-500 text-surface-950 hover:bg-brand-400'
-      "
       [disabled]="disabled() || state().status === 'running'"
-      class="notch-tr focus-ring-inset ml-auto flex min-h-10 w-36 cursor-pointer items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-colors [--notch:0.5rem] disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-[0.96]"
+      class="ml-auto flex min-h-10 w-36 items-center justify-center gap-2 px-4 py-2 text-sm font-medium [--notch:0.5rem]"
       type="button"
     >
       @if (state().status === 'running') {

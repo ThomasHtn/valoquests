@@ -2,6 +2,7 @@ import { Component, computed, inject, input, output } from '@angular/core';
 import { LucideInbox, LucideRefreshCw, LucideTriangleAlert } from '@lucide/angular';
 
 import { Translation } from '@core/i18n/translation';
+import { Button } from '@shared/button/button';
 
 /**
  * Loading / error / empty / content switch for a resource-backed view.
@@ -16,7 +17,7 @@ import { Translation } from '@core/i18n/translation';
  */
 @Component({
   selector: 'app-resource-state',
-  imports: [LucideInbox, LucideRefreshCw, LucideTriangleAlert],
+  imports: [Button, LucideInbox, LucideRefreshCw, LucideTriangleAlert],
   templateUrl: './resource-state.html',
   host: { class: 'contents' },
 })

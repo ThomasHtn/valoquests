@@ -28,6 +28,19 @@
   p {
     text-wrap: pretty;
   }
+
+  /* Chrome/Safari paint autofilled fields with their own opaque background (and force a matching
+     text color) regardless of `bg-transparent` on the input; this pushes the surface color back in
+     via the only override they honor and re-asserts the direction's text color over their forced
+     one. The huge inset shadow is the standard trick to repaint the field without touching layout. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px var(--color-surface-950) inset;
+    -webkit-text-fill-color: var(--color-text-primary);
+    caret-color: var(--color-text-primary);
+    transition: background-color 9999s ease-in-out 0s;
+  }
 }
 
 /*
@@ -232,11 +245,12 @@
 }
 
 /*
- * Campaign detail drawer: the panel sliding in from the right edge it is anchored to. Referenced
- * through an arbitrary `animation` utility (see `boss-detail.html`) rather than a Tailwind keyframe
- * since only that one element ever plays it, and gated behind `motion-safe:` there.
+ * Right-anchored drawer entrance: the panel sliding in from the right edge it is anchored to.
+ * Shared by every native-`<dialog>` drawer (the campaign detail panel, the backoffice player form)
+ * through an arbitrary `animation` utility rather than a Tailwind keyframe, each gated behind
+ * `motion-safe:` at its own call site.
  */
-@keyframes boss-detail-enter {
+@keyframes drawer-enter {
   from {
     opacity: 0;
     transform: translateX(24px);

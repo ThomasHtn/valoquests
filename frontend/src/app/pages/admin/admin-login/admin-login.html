@@ -1,7 +1,7 @@
 <!-- Outer panel notched at 1.25rem; the field and buttons inside step down to 0.5rem so the nested
      corners read as concentric rather than pinched. -->
 <div
-  class="notch-tr notch-tr-edge w-full max-w-md border border-brand-500/30 bg-surface-900/70 p-8 [--notch:1.25rem]"
+  class="notch-tr notch-tr-edge w-full max-w-md border border-brand-500/30 bg-surface-panel p-8 [--notch:1.25rem]"
 >
   <span
     aria-hidden="true"
@@ -25,38 +25,44 @@
       <span class="tracking-label block font-mono text-xs text-text-muted uppercase">
         {{ 'admin.login.keyLabel' | translate }}
       </span>
-      <!-- `notch-tr-edge` needs an element that actually renders `::after`: a replaced element like
-           `<input>` never does, whatever browser draws it, so the border and the notch live on this
-           wrapping `div` instead and the field itself sits inside it as a plain, borderless child. -->
+      <!-- The border lives as a `background-color` on this wrapping `div`, one `--notch` cut behind
+           an inner `div` cut to the same shape but inset by its `p-px` padding: the sliver of the
+           outer shape left showing around the inner one is the "border". Two nested clip-paths of
+           the same polygon, rather than a real `border` plus a rotated line standing in for the cut
+           corner (which a replaced element like `<input>` can't render via `::after` anyway),
+           because that line and the clip-path are two independently anti-aliased shapes trying to
+           land on the same pixel, and left a hairline gap at the tip. -->
       <div
-        class="notch-tr notch-tr-edge mt-2 flex h-11 items-center border border-surface-600 bg-surface-950 transition-colors [--notch:0.5rem] focus-within:border-brand-500/60 has-[:disabled]:opacity-60"
+        class="notch-tr mt-2 h-11 bg-text-muted p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500 has-[:disabled]:opacity-60"
       >
-        <input
-          (input)="onKeyInput($event)"
-          [attr.aria-invalid]="error() ? 'true' : null"
-          [disabled]="verifying()"
-          [type]="showKey() ? 'text' : 'password'"
-          [value]="key()"
-          autocapitalize="off"
-          autocomplete="current-password"
-          class="focus-ring-inset h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-sm text-text-primary placeholder:text-text-muted"
-          spellcheck="false"
-        />
-        <button
-          (click)="toggleShowKey()"
-          [attr.aria-label]="
-            (showKey() ? 'admin.login.hideKey' : 'admin.login.showKey') | translate
-          "
-          [attr.aria-pressed]="showKey()"
-          class="focus-ring flex h-full w-11 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:text-text-primary"
-          type="button"
-        >
-          @if (showKey()) {
-            <svg aria-hidden="true" class="h-4 w-4" lucideEyeOff></svg>
-          } @else {
-            <svg aria-hidden="true" class="h-4 w-4" lucideEye></svg>
-          }
-        </button>
+        <div class="notch-tr flex h-full items-center bg-surface-sunken [--notch:0.5rem]">
+          <input
+            (input)="onKeyInput($event)"
+            [attr.aria-invalid]="error() ? 'true' : null"
+            [disabled]="verifying()"
+            [type]="showKey() ? 'text' : 'password'"
+            [value]="key()"
+            autocapitalize="off"
+            autocomplete="current-password"
+            class="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+            spellcheck="false"
+          />
+          <button
+            (click)="toggleShowKey()"
+            [attr.aria-label]="
+              (showKey() ? 'admin.login.hideKey' : 'admin.login.showKey') | translate
+            "
+            [attr.aria-pressed]="showKey()"
+            class="focus-ring flex h-full w-11 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:text-text-primary"
+            type="button"
+          >
+            @if (showKey()) {
+              <svg aria-hidden="true" class="h-4 w-4" lucideEyeOff></svg>
+            } @else {
+              <svg aria-hidden="true" class="h-4 w-4" lucideEye></svg>
+            }
+          </button>
+        </div>
       </div>
     </label>
 
@@ -70,8 +76,9 @@
     }
 
     <button
+      appButton="primary"
       [disabled]="verifying() || key().trim() === ''"
-      class="notch-tr focus-ring-inset mt-6 flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 bg-brand-500 px-4 py-2 text-sm font-medium text-surface-950 transition-colors [--notch:0.5rem] hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-[0.96]"
+      class="mt-6 flex min-h-11 w-full items-center justify-center gap-2 px-4 py-2 text-sm font-medium [--notch:0.5rem]"
       type="submit"
     >
       @if (verifying()) {

@@ -16,7 +16,7 @@
         ? 'border-danger/60 text-danger'
         : 'border-success/60 text-success'
     "
-    class="border-l-2 pl-3 text-sm text-pretty"
+    class="border-l-2 pl-3 text-prose text-pretty"
     role="status"
   >
     {{ commandState().message }}
@@ -25,157 +25,16 @@
 
 <app-section-divider [label]="'admin.players.rosterSection' | translate" class="my-2" />
 
-@if (formOpen()) {
-  <!-- Editing happens in place rather than in a modal: the operator is comparing what they type
-       against the rows below, which a dialog would cover. -->
-  <form
-    (submit)="submitForm($event)"
-    class="notch-tr notch-tr-edge border border-brand-500/40 bg-surface-900/60 p-5 [--notch:0.875rem]"
+<div>
+  <button
+    appButton="primary"
+    (click)="startCreating()"
+    class="flex min-h-10 items-center px-4 py-2 text-sm font-medium [--notch:0.5rem]"
+    type="button"
   >
-    <h2 class="tracking-label font-display text-base font-bold text-text-primary uppercase">
-      {{
-        (editedPlayer() ? 'admin.players.form.editHeading' : 'admin.players.form.createHeading')
-          | translate
-      }}
-    </h2>
-
-    <div class="mt-4 grid gap-4 sm:grid-cols-2">
-      <label class="block">
-        <span class="tracking-label block font-mono text-xs text-text-muted uppercase">
-          {{ 'admin.players.form.gameName' | translate }}
-        </span>
-        <div
-          class="notch-tr notch-tr-edge mt-2 h-11 border border-surface-600 bg-surface-950 transition-colors [--notch:0.5rem] focus-within:border-brand-500/60 has-[:disabled]:opacity-60"
-        >
-          <input
-            (input)="onFieldInput('gameName', $event)"
-            [disabled]="busy()"
-            [value]="form().gameName"
-            autocomplete="off"
-            class="focus-ring-inset h-full w-full bg-transparent px-3 text-sm text-text-primary"
-            maxlength="32"
-            required
-            type="text"
-          />
-        </div>
-      </label>
-
-      <label class="block">
-        <span class="tracking-label block font-mono text-xs text-text-muted uppercase">
-          {{ 'admin.players.form.tagLine' | translate }}
-        </span>
-        <div
-          class="notch-tr notch-tr-edge mt-2 h-11 border border-surface-600 bg-surface-950 transition-colors [--notch:0.5rem] focus-within:border-brand-500/60 has-[:disabled]:opacity-60"
-        >
-          <input
-            (input)="onFieldInput('tagLine', $event)"
-            [disabled]="busy()"
-            [value]="form().tagLine"
-            autocomplete="off"
-            class="focus-ring-inset h-full w-full bg-transparent px-3 text-sm text-text-primary"
-            maxlength="16"
-            required
-            type="text"
-          />
-        </div>
-      </label>
-
-      <label class="block">
-        <span class="tracking-label block font-mono text-xs text-text-muted uppercase">
-          {{ 'admin.players.form.displayName' | translate }}
-        </span>
-        <div
-          class="notch-tr notch-tr-edge mt-2 h-11 border border-surface-600 bg-surface-950 transition-colors [--notch:0.5rem] focus-within:border-brand-500/60 has-[:disabled]:opacity-60"
-        >
-          <input
-            (input)="onFieldInput('displayName', $event)"
-            [disabled]="busy()"
-            [value]="form().displayName"
-            autocomplete="off"
-            class="focus-ring-inset h-full w-full bg-transparent px-3 text-sm text-text-primary"
-            maxlength="64"
-            required
-            type="text"
-          />
-        </div>
-      </label>
-
-      <label class="block">
-        <span class="tracking-label block font-mono text-xs text-text-muted uppercase">
-          {{ 'admin.players.form.portrait' | translate }}
-        </span>
-        <div
-          class="notch-tr notch-tr-edge mt-2 h-11 border border-surface-600 bg-surface-950 transition-colors [--notch:0.5rem] focus-within:border-brand-500/60 has-[:disabled]:opacity-60"
-        >
-          <input
-            (input)="onFieldInput('portrait', $event)"
-            [disabled]="busy()"
-            [value]="form().portrait"
-            autocomplete="off"
-            class="focus-ring-inset h-full w-full bg-transparent px-3 text-sm text-text-primary"
-            maxlength="255"
-            type="text"
-          />
-        </div>
-      </label>
-    </div>
-
-    @if (!editedPlayer()) {
-      <!-- Only on creation: an existing player's status is changed from its own row, so offering
-           it here too would give the same state two owners. -->
-      <fieldset class="mt-4">
-        <legend class="tracking-label font-mono text-xs text-text-muted uppercase">
-          {{ 'admin.players.form.status' | translate }}
-        </legend>
-        <div class="mt-2 flex gap-2">
-          @for (candidate of ['ACTIVE', 'INACTIVE']; track candidate) {
-            <button
-              (click)="onStatusChange($any(candidate))"
-              [attr.aria-pressed]="form().status === candidate"
-              [class]="
-                form().status === candidate
-                  ? 'border-brand-500/60 bg-brand-500/15 text-brand-400'
-                  : 'border-surface-600 text-text-secondary hover:border-surface-600/80 hover:text-text-primary'
-              "
-              class="notch-tr notch-tr-edge focus-ring-inset tracking-label flex min-h-10 cursor-pointer items-center border px-4 font-mono text-xs font-semibold uppercase transition-colors [--notch:0.375rem] motion-safe:active:scale-[0.96]"
-              type="button"
-            >
-              {{ 'admin.players.status.' + candidate | translate }}
-            </button>
-          }
-        </div>
-      </fieldset>
-    }
-
-    <div class="mt-6 flex flex-wrap justify-end gap-3">
-      <button
-        (click)="cancelForm()"
-        [disabled]="busy()"
-        class="notch-tr focus-ring-inset flex min-h-10 cursor-pointer items-center px-4 py-2 text-sm font-semibold text-text-secondary transition-colors [--notch:0.5rem] hover:bg-surface-800 hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-[0.96]"
-        type="button"
-      >
-        {{ 'admin.cancel' | translate }}
-      </button>
-      <button
-        [disabled]="busy() || !formValid()"
-        class="notch-tr focus-ring-inset flex min-h-10 cursor-pointer items-center bg-brand-500 px-4 py-2 text-sm font-medium text-surface-950 transition-colors [--notch:0.5rem] hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-[0.96]"
-        type="submit"
-      >
-        {{ 'admin.save' | translate }}
-      </button>
-    </div>
-  </form>
-} @else {
-  <div>
-    <button
-      (click)="startCreating()"
-      class="notch-tr focus-ring-inset flex min-h-10 cursor-pointer items-center bg-brand-500 px-4 py-2 text-sm font-medium text-surface-950 transition-colors [--notch:0.5rem] hover:bg-brand-400 motion-safe:active:scale-[0.96]"
-      type="button"
-    >
-      {{ 'admin.players.addPlayer' | translate }}
-    </button>
-  </div>
-}
+    {{ 'admin.players.addPlayer' | translate }}
+  </button>
+</div>
 
 <app-resource-state
   (retry)="playersResource.reload()"
@@ -254,9 +113,10 @@
 
         <div class="flex shrink-0 flex-wrap gap-2 lg:justify-self-end">
           <button
+            appButton="secondary"
             (click)="$event.stopPropagation(); startEditing(player)"
             [disabled]="busy()"
-            class="notch-tr notch-tr-edge focus-ring-inset flex min-h-10 cursor-pointer items-center gap-1.5 border border-surface-600 px-3 text-xs font-semibold text-text-secondary transition-colors [--notch:0.375rem] hover:border-brand-500/60 hover:text-brand-400 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-[0.96]"
+            class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
             type="button"
           >
             <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucideSquarePen></svg>
@@ -265,9 +125,10 @@
 
           @if (player.status === 'ARCHIVED') {
             <button
+              appButton="accent"
               (click)="$event.stopPropagation(); changeStatus(player, 'ACTIVE')"
               [disabled]="busy()"
-              class="notch-tr notch-tr-edge focus-ring-inset flex min-h-10 cursor-pointer items-center gap-1.5 border border-brand-500/45 px-3 text-xs font-semibold text-brand-400 transition-colors [--notch:0.375rem] hover:border-brand-500/70 hover:bg-brand-500/12 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-[0.96]"
+              class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
               type="button"
             >
               <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucideRotateCcw></svg>
@@ -275,12 +136,13 @@
             </button>
           } @else {
             <button
+              appButton="secondary"
               (click)="
                 $event.stopPropagation();
                 changeStatus(player, player.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE')
               "
               [disabled]="busy()"
-              class="notch-tr notch-tr-edge focus-ring-inset flex min-h-10 cursor-pointer items-center gap-1.5 border border-surface-600 px-3 text-xs font-semibold text-text-secondary transition-colors [--notch:0.375rem] hover:border-brand-500/60 hover:text-brand-400 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-[0.96]"
+              class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
               type="button"
             >
               <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucidePower></svg>
@@ -291,9 +153,10 @@
             </button>
 
             <button
+              appButton="danger-outline"
               (click)="$event.stopPropagation(); askForRemoval(player)"
               [disabled]="busy()"
-              class="notch-tr notch-tr-edge focus-ring-inset flex min-h-10 cursor-pointer items-center gap-1.5 border border-danger/40 px-3 text-xs font-semibold text-danger transition-colors [--notch:0.375rem] hover:border-danger/70 hover:bg-danger/12 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:active:scale-[0.96]"
+              class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
               type="button"
             >
               <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucideTrash2></svg>
@@ -316,3 +179,13 @@
   [heading]="'admin.players.remove.heading' | translate"
   [open]="playerPendingRemoval() !== null"
 />
+
+@if (formOpen()) {
+  <app-player-form-panel
+    (closed)="cancelForm()"
+    (saved)="savePlayer($event)"
+    [busy]="busy()"
+    [editedPlayer]="editedPlayer()"
+    [errorMessage]="commandState().status === 'error' ? commandState().message : null"
+  />
+}

@@ -7,6 +7,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
+import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { SectionDivider } from '@shared/section-divider/section-divider';
 import { AdminActionState, IDLE_ACTION } from '../admin-action.model';
@@ -46,7 +47,7 @@ const KEPT_DATA_KEYS: readonly string[] = [
  */
 @Component({
   selector: 'app-admin-maintenance',
-  imports: [TranslatePipe, ConfirmDialog, SectionDivider],
+  imports: [TranslatePipe, Button, ConfirmDialog, SectionDivider],
   templateUrl: './admin-maintenance.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

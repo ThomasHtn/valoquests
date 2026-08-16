@@ -13,10 +13,11 @@
     >
       <svg class="h-5 w-5" lucideTriangleAlert></svg>
     </span>
-    <p class="text-sm font-semibold text-text-primary">{{ errorText() }}</p>
+    <p class="text-prose font-semibold text-text-primary">{{ errorText() }}</p>
     <button
+      appButton="accent"
       (click)="retry.emit()"
-      class="notch-tr notch-tr-edge focus-ring-inset flex min-h-10 cursor-pointer items-center gap-2 border border-brand-500/45 bg-brand-500/12 px-4 py-2 text-sm font-semibold text-brand-400 transition-colors [--notch:0.5rem] hover:border-brand-500/70 hover:bg-brand-500/20 motion-safe:active:scale-[0.96]"
+      class="flex min-h-10 items-center gap-2 px-4 py-2 text-sm font-semibold [--notch:0.5rem]"
       type="button"
     >
       <svg class="h-4 w-4 shrink-0" lucideRefreshCw></svg>
@@ -31,7 +32,7 @@
     >
       <svg class="h-5 w-5" lucideInbox></svg>
     </span>
-    <p class="text-sm text-text-secondary">{{ emptyText() }}</p>
+    <p class="text-prose text-text-secondary">{{ emptyText() }}</p>
   </div>
 } @else {
   <ng-content />

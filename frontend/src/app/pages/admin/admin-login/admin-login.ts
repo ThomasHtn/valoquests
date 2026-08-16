@@ -14,6 +14,7 @@ import { ADMIN_HOME_ROUTE } from '@core/admin/admin-session.constants';
 import { AdminSession } from '@core/admin/admin-session';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { Button } from '@shared/button/button';
 
 /**
  * Backoffice sign-in screen.
@@ -30,6 +31,7 @@ import { Translation } from '@core/i18n/translation';
   selector: 'app-admin-login',
   imports: [
     TranslatePipe,
+    Button,
     LucideEye,
     LucideEyeOff,
     LucideLoaderCircle,

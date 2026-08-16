@@ -9,12 +9,13 @@ import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
 import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
+import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionDivider } from '@shared/section-divider/section-divider';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { AdminActionState, IDLE_ACTION } from '../admin-action.model';
-import { EMPTY_PLAYER_FORM, PlayerFormValue } from './admin-players.model';
+import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-form-panel';
 
 /**
  * Backoffice roster screen.
@@ -29,7 +30,9 @@ import { EMPTY_PLAYER_FORM, PlayerFormValue } from './admin-players.model';
   selector: 'app-admin-players',
   imports: [
     TranslatePipe,
+    Button,
     ConfirmDialog,
+    PlayerFormPanel,
     ResourceState,
     SectionDivider,
     LucidePower,
@@ -72,14 +75,9 @@ export class AdminPlayers {
   protected readonly editedPlayer = signal<AdminPlayer | null>(null);
 
   /**
-   * Whether the roster form is on screen.
+   * Whether the roster form panel is on screen.
    */
   protected readonly formOpen = signal(false);
-
-  /**
-   * Current contents of the roster form.
-   */
-  protected readonly form = signal<PlayerFormValue>(EMPTY_PLAYER_FORM);
 
   /**
    * State of the last roster command, reported above the table.
@@ -95,17 +93,6 @@ export class AdminPlayers {
    * Whether a command is currently running, which locks the form and the dialog.
    */
   protected readonly busy = signal(false);
-
-  /**
-   * Whether the form holds enough to be submitted.
-   */
-  protected readonly formValid = computed(() => {
-    const value = this.form();
-
-    return (
-      value.gameName.trim() !== '' && value.tagLine.trim() !== '' && value.displayName.trim() !== ''
-    );
-  });
 
   /**
    * Already-translated body of the removal dialog, which states which of the two outcomes the
@@ -142,33 +129,25 @@ export class AdminPlayers {
   }
 
   /**
-   * Opens the form on a blank player.
+   * Opens the panel on a blank player.
    */
   protected startCreating(): void {
     this.editedPlayer.set(null);
-    this.form.set(EMPTY_PLAYER_FORM);
     this.formOpen.set(true);
   }
 
   /**
-   * Opens the form on an existing player.
+   * Opens the panel on an existing player.
    *
    * @param player - The player to edit.
    */
   protected startEditing(player: AdminPlayer): void {
     this.editedPlayer.set(player);
-    this.form.set({
-      gameName: player.gameName,
-      tagLine: player.tagLine,
-      displayName: player.displayName,
-      portrait: player.portrait ?? '',
-      status: player.status,
-    });
     this.formOpen.set(true);
   }
 
   /**
-   * Closes the form without applying anything.
+   * Closes the panel without applying anything.
    */
   protected cancelForm(): void {
     this.formOpen.set(false);
@@ -176,61 +155,37 @@ export class AdminPlayers {
   }
 
   /**
-   * Updates one field of the roster form.
+   * Creates or updates the player the panel submitted.
    *
-   * @param field - The field to update.
-   * @param event - The input event carrying the field's current value.
-   */
-  protected onFieldInput(field: keyof PlayerFormValue, event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-
-    this.form.update((current) => ({ ...current, [field]: value }));
-  }
-
-  /**
-   * Sets the status the new player will be created with.
+   * The display name and portrait are not exposed there, so they are carried over unchanged from
+   * the edited player, or defaulted to the Riot name and `null` on creation.
    *
-   * @param status - The status to apply.
+   * @param result - The identity the panel submitted.
    */
-  protected onStatusChange(status: AdminPlayerStatus): void {
-    this.form.update((current) => ({ ...current, status }));
-  }
-
-  /**
-   * Creates or updates the player the form describes.
-   *
-   * @param event - The form submission, whose default navigation is prevented.
-   */
-  protected async submitForm(event: Event): Promise<void> {
-    event.preventDefault();
-
-    if (!this.formValid() || this.busy()) {
+  protected async savePlayer(result: PlayerFormResult): Promise<void> {
+    if (this.busy()) {
       return;
     }
 
-    const value = this.form();
     const edited = this.editedPlayer();
-
-    // An empty portrait field means "no portrait", which the API spells `null`.
-    const portrait = value.portrait.trim() === '' ? null : value.portrait.trim();
 
     await this.run(
       edited === null ? 'admin.players.created' : 'admin.players.updated',
       async () => {
         if (edited === null) {
           await this.adminApi.createPlayer({
-            gameName: value.gameName.trim(),
-            tagLine: value.tagLine.trim(),
-            displayName: value.displayName.trim(),
-            portrait,
-            status: value.status,
+            gameName: result.gameName,
+            tagLine: result.tagLine,
+            displayName: result.gameName,
+            portrait: null,
+            status: result.status,
           });
         } else {
           await this.adminApi.updatePlayer(edited.id, {
-            gameName: value.gameName.trim(),
-            tagLine: value.tagLine.trim(),
-            displayName: value.displayName.trim(),
-            portrait,
+            gameName: result.gameName,
+            tagLine: result.tagLine,
+            displayName: edited.displayName,
+            portrait: edited.portrait,
           });
         }
 
