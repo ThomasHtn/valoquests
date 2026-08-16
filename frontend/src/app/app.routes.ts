@@ -80,13 +80,6 @@ export const routes: Routes = [
         title: 'campaign.title',
         loadComponent: () => import('@pages/campaign/campaign').then((m) => m.Campaign),
       },
-      // Battle history: every fought week, told as a chronology rather than the battle map's
-      // territory above.
-      {
-        path: 'boss',
-        title: 'boss.title',
-        loadComponent: () => import('@pages/boss/boss').then((m) => m.Boss),
-      },
       {
         path: 'rules',
         title: 'rules.title',

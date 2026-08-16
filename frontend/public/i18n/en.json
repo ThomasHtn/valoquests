@@ -189,6 +189,7 @@
   "campaign": {
     "error": "Failed to load the battle map.",
     "eyebrow": "Campaign",
+    "historyToggle": "History",
     "legend": {
       "current": "Under attack",
       "defeated": "Territory taken",
@@ -501,8 +502,7 @@
       "rules": "Rules"
     },
     "navLabel": "Main navigation",
-    "openMenu": "Open menu",
-    "squad": "Squad 07"
+    "openMenu": "Open menu"
   },
   "skipToContent": "Skip to main content",
   "tour": {

@@ -10,7 +10,7 @@ import { NavItem } from './sidebar.model';
 export const NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'overview', icon: 'layout-dashboard', routerLink: '/overview', exactMatch: true },
   { labelKey: 'challenges', icon: 'target', routerLink: '/challenges' },
-  { labelKey: 'boss', icon: 'skull', routerLink: '/campaign', activeRoutes: ['/boss'] },
+  { labelKey: 'boss', icon: 'skull', routerLink: '/campaign' },
   { labelKey: 'leaderboard', icon: 'trophy', routerLink: '/leaderboard' },
   { labelKey: 'players', icon: 'users', routerLink: '/players' },
   { labelKey: 'rules', icon: 'book-open', routerLink: '/rules' },

@@ -17,9 +17,13 @@ import { Component, input } from '@angular/core';
       class="h-px flex-1 bg-linear-to-r from-brand-500/75 to-brand-500/10"
     ></span>
     @if (label()) {
-      <!-- Shrinkable rather than fixed: a long label (a campaign tally, say) would otherwise push
-           the divider past its container on a narrow viewport instead of wrapping. -->
-      <span class="tracking-label min-w-0 font-mono text-2xs font-medium text-text-muted uppercase">
+      <!-- Truncated rather than left to wrap: a long label (a campaign tally, say) wrapping to a
+           second line on a narrow viewport strands the trailing diamond above it, disconnected
+           from the tail end it's meant to mark. Ellipsis keeps it on the rule's single line and
+           never past the container either. -->
+      <span
+        class="tracking-label min-w-0 truncate font-mono text-2xs font-medium text-text-muted uppercase"
+      >
         {{ label() }}
       </span>
     }

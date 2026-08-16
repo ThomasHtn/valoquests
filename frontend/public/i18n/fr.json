@@ -189,6 +189,7 @@
   "campaign": {
     "error": "Impossible de charger la carte de bataille.",
     "eyebrow": "Campagne",
+    "historyToggle": "Historique",
     "legend": {
       "current": "Sous assaut",
       "defeated": "Territoire conquis",
@@ -501,8 +502,7 @@
       "rules": "Règles"
     },
     "navLabel": "Navigation principale",
-    "openMenu": "Ouvrir le menu",
-    "squad": "Escadron 117"
+    "openMenu": "Ouvrir le menu"
   },
   "skipToContent": "Aller au contenu principal",
   "tour": {
