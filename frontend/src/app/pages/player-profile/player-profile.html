@@ -1,17 +1,16 @@
-<!-- Breadcrumb. Stands in for the eyebrow the other pages open on: this screen is reached from the
-     registry, so where it sits in the app is worth more here than a decorative label. -->
-<nav aria-label="Breadcrumb" class="flex items-center gap-2 font-mono text-2xs text-text-muted">
-  <a
-    class="tracking-label focus-ring uppercase transition-colors hover:text-text-primary"
-    routerLink="/players"
-  >
-    {{ 'playerProfile.breadcrumb.players' | translate }}
-  </a>
-  <svg aria-hidden="true" class="size-3" lucideChevronRight></svg>
-  <span aria-current="page" class="tracking-label text-text-primary uppercase">
-    {{ details()?.displayName ?? '…' }}
-  </span>
-</nav>
+<!-- Way back into the registry this profile is reached from, styled like every other "way
+     back/exit" control in the app (the rules page's replay-tour link, the guided tour's skip
+     button): a bordered chip, `h-11` for a comfortable tap target, not a bare text link. The
+     current page's own name isn't repeated here — the identity banner right below already opens
+     on it as this page's real `<h1>`, so restating it here would only be a second source of the
+     same fact. -->
+<a
+  class="focus-ring tracking-label inline-flex h-11 w-fit items-center gap-2 border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
+  routerLink="/players"
+>
+  <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
+  {{ 'playerProfile.breadcrumb.players' | translate }}
+</a>
 
 <app-resource-state
   [errorText]="'playerProfile.error' | translate"

@@ -13,7 +13,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideChevronRight, LucideEllipsisVertical, LucideLoaderCircle } from '@lucide/angular';
+import { LucideChevronLeft, LucideEllipsisVertical, LucideLoaderCircle } from '@lucide/angular';
 
 import { formatLocalTime } from '@core/date/date-time.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -96,7 +96,7 @@ const VIEW_MODES: readonly ViewMode[] = ['weekly', 'global'];
     RankIconView,
     ResourceState,
     Select,
-    LucideChevronRight,
+    LucideChevronLeft,
     LucideEllipsisVertical,
     LucideLoaderCircle,
   ],
