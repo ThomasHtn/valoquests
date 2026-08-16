@@ -1,4 +1,5 @@
 import {
+  afterNextRender,
   afterRenderEffect,
   Component,
   computed,
@@ -105,11 +106,18 @@ export class Select<T> {
   private readonly triggerButton = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
 
   /**
+   * Options panel, reparented to `document.body` once opened.
+   *
+   * `position: fixed` alone only escapes an ancestor's `overflow: hidden` — it does not escape a
+   * `clip-path` (e.g. a `notch-tr` card), which clips its whole painted subtree regardless of how
+   * a descendant is positioned. Moving the node itself out to the document body sidesteps that.
+   */
+  private readonly panelElement = viewChild.required<ElementRef<HTMLDivElement>>('panel');
+
+  /**
    * Viewport-relative coordinates the panel is pinned to while open.
    *
-   * The panel is positioned `fixed` rather than `absolute` so it escapes any ancestor's
-   * `clip-path` or `overflow: hidden` (e.g. a `notch-tr` card) instead of being cut off at that
-   * ancestor's edge. Computed from the trigger's own bounding rect each time the panel opens.
+   * Computed from the trigger's own bounding rect each time the panel opens.
    */
   protected readonly panelPosition = signal({ top: 0, right: 0, minWidth: 0 });
 
@@ -144,6 +152,9 @@ export class Select<T> {
    * panel cannot be measured until its `hidden` attribute has been written to the DOM.
    */
   constructor() {
+    afterNextRender(() => document.body.appendChild(this.panelElement().nativeElement));
+    inject(DestroyRef).onDestroy(() => this.panelElement().nativeElement.remove());
+
     afterRenderEffect(() => {
       const index = this.activeIndex();
       if (!this.isOpen() || index < 0) {
@@ -269,10 +280,17 @@ export class Select<T> {
   /**
    * Closes the panel when a click lands outside this component.
    *
+   * The panel itself is checked separately from the host: it lives under `document.body`, not
+   * under the host element, so a click on its own padding would otherwise read as "outside".
+   *
    * @param event - The document-wide click event.
    */
   protected onDocumentClick(event: MouseEvent): void {
-    if (!this.elementRef.nativeElement.contains(event.target as Node)) {
+    const target = event.target as Node;
+    if (
+      !this.elementRef.nativeElement.contains(target) &&
+      !this.panelElement().nativeElement.contains(target)
+    ) {
       this.close();
     }
   }
@@ -294,7 +312,7 @@ export class Select<T> {
   /**
    * Closes the panel and clears the keyboard highlight.
    */
-  private close(): void {
+  protected close(): void {
     this.isOpen.set(false);
     this.activeIndex.set(-1);
   }

@@ -125,18 +125,6 @@
          indicator needs no extra element and never affects the entry's own layout. Only its color
          is bound to the active state; its geometry is static. -->
     <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex flex-col">
-      @if (adminMode()) {
-        <!-- Sign that the sidebar is showing a different set of destinations than usual. Without
-             it, a coach landing here from a bookmark would only see that the familiar entries are
-             gone, with nothing saying why. -->
-        <p
-          class="tracking-label mb-1 px-6 font-mono text-2xs font-medium text-brand-500 uppercase"
-          [class]="navLabelClass()"
-        >
-          {{ 'sidebar.nav.adminSection' | translate }}
-        </p>
-      }
-
       @for (item of navItems(); track item.labelKey) {
         <a
           (click)="closeMobileMenu()"

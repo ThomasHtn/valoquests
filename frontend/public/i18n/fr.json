@@ -124,7 +124,7 @@
           "challengeCatalogue": "Le catalogue de défis",
           "bossCatalogue": "Le catalogue de boss"
         },
-        "action": "Repartir sur une base saine",
+        "action": "Supprimer et recommencer",
         "confirm": "Tout effacer",
         "confirmBody": "Cette action est irréversible. Tous les matchs, défis, classements et boss seront effacés. L'effectif et les catalogues sont conservés.",
         "phrase": "EFFACER",
@@ -493,7 +493,6 @@
       "adminMaintenance": "Maintenance",
       "adminOperations": "Opérations",
       "adminPlayers": "Joueurs",
-      "adminSection": "Administration",
       "boss": "Campagne",
       "challenges": "Défis",
       "leaderboard": "Classement",
