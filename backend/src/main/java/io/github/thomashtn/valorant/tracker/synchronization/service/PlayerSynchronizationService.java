@@ -7,6 +7,7 @@ import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.player.service.PlayerAccountResolutionService;
+import io.github.thomashtn.valorant.tracker.shared.util.NonTransactionalGuard;
 import io.github.thomashtn.valorant.tracker.synchronization.model.MatchHistoryWalkResult;
 import io.github.thomashtn.valorant.tracker.synchronization.model.PlayerSynchronizationResult;
 import java.time.Clock;
@@ -23,7 +24,9 @@ import org.springframework.stereotype.Service;
  *
  * <p><strong>Deliberately not transactional.</strong> Henrik calls must stay outside a database
  * transaction, and the walker relies on each of its steps committing independently to keep the
- * per-season completion flag honest. See {@link SeasonSynchronizationStateService}.
+ * per-season completion flag honest. See {@link SeasonSynchronizationStateService}. Enforced at
+ * entry by {@link NonTransactionalGuard}, so wrapping this method in {@code @Transactional} fails
+ * fast instead of silently defeating the checkpoint.
  */
 @Service
 public class PlayerSynchronizationService {
@@ -97,6 +100,8 @@ public class PlayerSynchronizationService {
      * @return synchronization result
      */
     public PlayerSynchronizationResult synchronize(Long playerId) {
+        NonTransactionalGuard.assertNoActiveTransaction("Player synchronization");
+
         Player player = playerRepository.findById(playerId)
             .orElseThrow(() -> new PlayerNotFoundException(playerId));
         Player resolvedPlayer = accountResolutionService.resolvePuuid(player);

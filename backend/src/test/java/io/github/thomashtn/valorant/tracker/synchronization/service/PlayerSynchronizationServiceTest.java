@@ -27,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Unit tests for {@link PlayerSynchronizationService}.
@@ -168,6 +169,24 @@ class PlayerSynchronizationServiceTest {
             .isInstanceOf(PlayerNotFoundException.class);
 
         verifyNoInteractions(accountResolutionService, mmrClient, matchHistoryWalker);
+    }
+
+    /**
+     * Verifies that synchronizing a player fails fast when invoked inside a database transaction,
+     * instead of silently defeating the walk's per-step checkpoint commits.
+     */
+    @Test
+    void shouldRejectSynchronizationInsideAnActiveTransaction() {
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+
+        try {
+            assertThatThrownBy(() -> service.synchronize(1L))
+                .isInstanceOf(IllegalStateException.class);
+
+            verifyNoInteractions(playerRepository, accountResolutionService, mmrClient, matchHistoryWalker);
+        } finally {
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
     }
 
     /**

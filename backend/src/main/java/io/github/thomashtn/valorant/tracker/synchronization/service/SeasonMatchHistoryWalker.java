@@ -48,7 +48,9 @@ import org.springframework.stereotype.Service;
  *
  * <p><strong>This walk must not run inside a transaction.</strong> See
  * {@link SeasonSynchronizationStateService} for why the completion flag depends on each step
- * committing on its own.
+ * committing on its own. Enforced by {@link
+ * io.github.thomashtn.valorant.tracker.shared.util.NonTransactionalGuard} at the entry of {@link
+ * PlayerSynchronizationService#synchronize}, this walk's only caller today.
  */
 @Service
 public class SeasonMatchHistoryWalker {

@@ -28,7 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
  * transaction, defer every commit to the end, and let a rollback erase the {@code complete = false}
  * row along with the imported matches, silently abandoning a season that was being caught up.
  * {@link io.github.thomashtn.valorant.tracker.synchronization.service.DefaultSynchronizationCommandService}
- * is non-transactional for that same reason.
+ * is non-transactional for that same reason. Enforced by {@link
+ * io.github.thomashtn.valorant.tracker.shared.util.NonTransactionalGuard} at the entry of {@link
+ * PlayerSynchronizationService#synchronize}.
  */
 @Service
 public class SeasonSynchronizationStateService {

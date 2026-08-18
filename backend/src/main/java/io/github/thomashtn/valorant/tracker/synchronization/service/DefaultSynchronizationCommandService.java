@@ -33,7 +33,9 @@ import org.springframework.stereotype.Service;
  * <p>The absence of a surrounding transaction is also what the per-season completion flag depends
  * on: see {@link SeasonSynchronizationStateService}. Making this service transactional would defer
  * every commit to the end of the batch and let a rollback erase the state that says a season is
- * still being caught up.</p>
+ * still being caught up. {@link
+ * io.github.thomashtn.valorant.tracker.shared.util.NonTransactionalGuard} enforces this at the
+ * entry of {@link PlayerSynchronizationService#synchronize}, called once per player below.</p>
  *
  * <p>Importing matches is only half of the workflow: challenge progress and the weekly ranking are
  * derived from the stored matches and stay stale until they are rebuilt. Every execution that
