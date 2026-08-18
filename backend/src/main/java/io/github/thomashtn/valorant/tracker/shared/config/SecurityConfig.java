@@ -22,8 +22,9 @@ public class SecurityConfig {
     /**
      * Builds the application security filter chain.
      *
-     * @param http       Spring Security HTTP configuration
-     * @param properties application-level configuration properties
+     * @param http                 Spring Security HTTP configuration
+     * @param properties           application-level configuration properties
+     * @param adminAuthRateLimiter throttle applied to repeated invalid admin-key attempts
      * @return the configured security filter chain
      * @throws Exception when Spring Security cannot build the chain
      */
@@ -38,7 +39,8 @@ public class SecurityConfig {
     )
     SecurityFilterChain securityFilterChain(
         HttpSecurity http,
-        ApplicationProperties properties
+        ApplicationProperties properties,
+        AdminAuthRateLimiter adminAuthRateLimiter
     ) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
@@ -62,7 +64,7 @@ public class SecurityConfig {
                 .anyRequest().denyAll()
             )
             .addFilterBefore(
-                new AdminApiKeyFilter(properties.adminApiKey()),
+                new AdminApiKeyFilter(properties.adminApiKey(), adminAuthRateLimiter),
                 UsernamePasswordAuthenticationFilter.class
             );
 

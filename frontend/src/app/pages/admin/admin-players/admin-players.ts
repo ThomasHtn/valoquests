@@ -1,8 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { LucidePower, LucideRotateCcw, LucideSquarePen, LucideTrash2 } from '@lucide/angular';
 
+import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
-import { resolveAdminErrorMessage } from '@core/admin/admin-error.utils';
+import { AdminCommandRunner } from '@core/admin/admin-command-runner';
 import { AdminPlayer, AdminPlayerStatus } from '@core/admin/admin.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -14,7 +15,6 @@ import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionDivider } from '@shared/section-divider/section-divider';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
-import { AdminActionState, IDLE_ACTION } from '../admin-action.model';
 import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-form-panel';
 
 /**
@@ -53,6 +53,11 @@ export class AdminPlayers {
    * i18n service used to resolve outcome messages built outside templates.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Runs each roster command below and reports its running/done/error outcome.
+   */
+  private readonly commandRunner = inject(AdminCommandRunner);
 
   /**
    * Resource holding every player, archived ones included.
@@ -169,27 +174,30 @@ export class AdminPlayers {
 
     const edited = this.editedPlayer();
 
-    await this.run(
-      edited === null ? 'admin.players.created' : 'admin.players.updated',
-      async () => {
-        if (edited === null) {
-          await this.adminApi.createPlayer({
-            gameName: result.gameName,
-            tagLine: result.tagLine,
-            displayName: result.gameName,
-            portrait: null,
-            status: result.status,
-          });
-        } else {
-          await this.adminApi.updatePlayer(edited.id, {
-            gameName: result.gameName,
-            tagLine: result.tagLine,
-            displayName: edited.displayName,
-            portrait: edited.portrait,
-          });
-        }
-
-        this.cancelForm();
+    await this.commandRunner.run(
+      () =>
+        edited === null
+          ? this.adminApi.createPlayer({
+              gameName: result.gameName,
+              tagLine: result.tagLine,
+              displayName: result.gameName,
+              portrait: null,
+              status: result.status,
+            })
+          : this.adminApi.updatePlayer(edited.id, {
+              gameName: result.gameName,
+              tagLine: result.tagLine,
+              displayName: edited.displayName,
+              portrait: edited.portrait,
+            }),
+      {
+        state: this.commandState,
+        busy: this.busy,
+        successMessage: () =>
+          this.translation.translate(
+            edited === null ? 'admin.players.created' : 'admin.players.updated',
+          ),
+        onSuccess: () => this.cancelForm(),
       },
     );
   }
@@ -201,9 +209,11 @@ export class AdminPlayers {
    * @param status - The status to apply.
    */
   protected async changeStatus(player: AdminPlayer, status: AdminPlayerStatus): Promise<void> {
-    await this.run('admin.players.statusChanged', () =>
-      this.adminApi.changePlayerStatus(player.id, status).then(() => undefined),
-    );
+    await this.commandRunner.run(() => this.adminApi.changePlayerStatus(player.id, status), {
+      state: this.commandState,
+      busy: this.busy,
+      successMessage: () => this.translation.translate('admin.players.statusChanged'),
+    });
   }
 
   /**
@@ -232,52 +242,14 @@ export class AdminPlayers {
       return;
     }
 
-    this.busy.set(true);
-    this.commandState.set({ status: 'running', message: '' });
-
-    try {
-      const result = await this.adminApi.removePlayer(player.id);
-
-      this.commandState.set({
-        status: 'done',
-        message: this.translation.translate(
+    await this.commandRunner.run(() => this.adminApi.removePlayer(player.id), {
+      state: this.commandState,
+      busy: this.busy,
+      successMessage: (result) =>
+        this.translation.translate(
           result.outcome === 'ARCHIVED' ? 'admin.players.archived' : 'admin.players.deleted',
         ),
-      });
-      this.playerPendingRemoval.set(null);
-    } catch (error: unknown) {
-      this.commandState.set({
-        status: 'error',
-        message: resolveAdminErrorMessage(error, this.translation.translate('admin.actionFailed')),
-      });
-    } finally {
-      this.busy.set(false);
-    }
-  }
-
-  /**
-   * Runs one roster command and reports its outcome above the table.
-   *
-   * @param successKey - Translation key of the success message.
-   * @param command - The command to run.
-   */
-  private async run(successKey: string, command: () => Promise<void>): Promise<void> {
-    this.busy.set(true);
-    this.commandState.set({ status: 'running', message: '' });
-
-    try {
-      await command();
-      this.commandState.set({
-        status: 'done',
-        message: this.translation.translate(successKey),
-      });
-    } catch (error: unknown) {
-      this.commandState.set({
-        status: 'error',
-        message: resolveAdminErrorMessage(error, this.translation.translate('admin.actionFailed')),
-      });
-    } finally {
-      this.busy.set(false);
-    }
+      onSuccess: () => this.playerPendingRemoval.set(null),
+    });
   }
 }

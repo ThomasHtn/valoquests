@@ -1,8 +1,8 @@
 import { Component, input, output } from '@angular/core';
 import { LucideCircleCheck, LucideLoaderCircle, LucideTriangleAlert } from '@lucide/angular';
 
+import { AdminActionState } from '@core/admin/admin-action.model';
 import { Button } from '@shared/button/button';
-import { AdminActionState } from '../admin-action.model';
 
 /**
  * One triggerable backoffice operation, with its own outcome reported in place.

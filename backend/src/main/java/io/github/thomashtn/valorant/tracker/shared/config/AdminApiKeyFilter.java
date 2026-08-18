@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -27,12 +28,19 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     private final String expectedApiKey;
 
     /**
+     * Throttles repeated invalid-key attempts per remote address.
+     */
+    private final AdminAuthRateLimiter rateLimiter;
+
+    /**
      * Creates an administrative API key filter.
      *
      * @param expectedApiKey configured key used to validate incoming requests
+     * @param rateLimiter    throttle applied to repeated invalid-key attempts
      */
-    public AdminApiKeyFilter(String expectedApiKey) {
+    public AdminApiKeyFilter(String expectedApiKey, AdminAuthRateLimiter rateLimiter) {
         this.expectedApiKey = expectedApiKey;
+        this.rateLimiter = rateLimiter;
     }
 
     /**
@@ -78,6 +86,18 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
         FilterChain filterChain
     ) throws ServletException, IOException {
 
+        String remoteAddress = request.getRemoteAddr();
+
+        if (rateLimiter.isLockedOut(remoteAddress)) {
+            writeProblemResponse(
+                response,
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                "ADMIN_KEY_RATE_LIMITED",
+                "Too many invalid administrator key attempts. Try again later."
+            );
+            return;
+        }
+
         String providedApiKey = request.getHeader(HEADER_NAME);
 
         if (providedApiKey == null) {
@@ -91,6 +111,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
         }
 
         if (!matchesExpectedKey(providedApiKey)) {
+            rateLimiter.recordFailure(remoteAddress);
             writeProblemResponse(
                 response,
                 HttpServletResponse.SC_FORBIDDEN,
@@ -100,6 +121,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
             return;
         }
 
+        rateLimiter.recordSuccess(remoteAddress);
         filterChain.doFilter(request, response);
     }
 

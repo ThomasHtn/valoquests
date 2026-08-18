@@ -1,6 +1,6 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
@@ -82,8 +82,7 @@ export class AdminApi {
    * @returns A promise that resolves once the run has been accepted.
    */
   public async synchronizeAllPlayers(): Promise<void> {
-    await firstValueFrom(this.http.post(API_ENDPOINTS.admin.synchronizations, null));
-    this.refresh();
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.synchronizations, null));
   }
 
   /**
@@ -93,8 +92,7 @@ export class AdminApi {
    * @returns A promise that resolves once the run has been accepted.
    */
   public async synchronizePlayer(playerId: number): Promise<void> {
-    await firstValueFrom(this.http.post(API_ENDPOINTS.admin.playerSynchronization(playerId), null));
-    this.refresh();
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.playerSynchronization(playerId), null));
   }
 
   /**
@@ -103,7 +101,7 @@ export class AdminApi {
    * @returns A promise that resolves once the rebuild has completed.
    */
   public async recalculateProgress(): Promise<void> {
-    await firstValueFrom(this.http.post(API_ENDPOINTS.admin.challengeRecalculation, null));
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.challengeRecalculation, null));
   }
 
   /**
@@ -112,7 +110,7 @@ export class AdminApi {
    * @returns A promise that resolves once the rebuild has completed.
    */
   public async recalculateRanking(): Promise<void> {
-    await firstValueFrom(this.http.post(API_ENDPOINTS.admin.rankingRecalculation, null));
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.rankingRecalculation, null));
   }
 
   /**
@@ -121,7 +119,7 @@ export class AdminApi {
    * @returns A promise that resolves once the week is fully set up.
    */
   public async selectCurrentWeek(): Promise<void> {
-    await firstValueFrom(this.http.post(API_ENDPOINTS.admin.currentWeekSelection, null));
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.currentWeekSelection, null));
   }
 
   /**
@@ -131,13 +129,7 @@ export class AdminApi {
    * @returns A promise that resolves with the created player.
    */
   public async createPlayer(request: AdminPlayerCreateRequest): Promise<AdminPlayer> {
-    const created = await firstValueFrom(
-      this.http.post<AdminPlayer>(API_ENDPOINTS.admin.players, request),
-    );
-
-    this.refresh();
-
-    return created;
+    return this.mutate(this.http.post<AdminPlayer>(API_ENDPOINTS.admin.players, request));
   }
 
   /**
@@ -151,13 +143,7 @@ export class AdminApi {
     playerId: number,
     request: AdminPlayerUpdateRequest,
   ): Promise<AdminPlayer> {
-    const updated = await firstValueFrom(
-      this.http.put<AdminPlayer>(API_ENDPOINTS.admin.player(playerId), request),
-    );
-
-    this.refresh();
-
-    return updated;
+    return this.mutate(this.http.put<AdminPlayer>(API_ENDPOINTS.admin.player(playerId), request));
   }
 
   /**
@@ -172,13 +158,9 @@ export class AdminApi {
     playerId: number,
     status: AdminPlayerStatus,
   ): Promise<AdminPlayer> {
-    const updated = await firstValueFrom(
+    return this.mutate(
       this.http.patch<AdminPlayer>(API_ENDPOINTS.admin.playerStatus(playerId), { status }),
     );
-
-    this.refresh();
-
-    return updated;
   }
 
   /**
@@ -188,13 +170,9 @@ export class AdminApi {
    * @returns A promise that resolves with what the request actually did.
    */
   public async removePlayer(playerId: number): Promise<AdminPlayerDeletionResult> {
-    const result = await firstValueFrom(
+    return this.mutate(
       this.http.delete<AdminPlayerDeletionResult>(API_ENDPOINTS.admin.player(playerId)),
     );
-
-    this.refresh();
-
-    return result;
   }
 
   /**
@@ -203,20 +181,38 @@ export class AdminApi {
    * @returns A promise that resolves once the reset has completed.
    */
   public async resetCampaign(): Promise<void> {
-    await firstValueFrom(this.http.post(API_ENDPOINTS.admin.campaignReset, null));
-    this.refresh();
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.campaignReset, null));
   }
 
   /**
    * Refetches every administration resource.
    *
-   * A command is a `POST` sent beside the resources, so nothing they depend on changes and they
-   * would otherwise keep describing the state from before it. This is also the polling step: a run
-   * in flight is followed by calling this on an interval, since the backend has no way to push its
-   * progress.
+   * A command is a `POST`/`PUT`/`PATCH`/`DELETE` sent beside the resources, so nothing they depend
+   * on changes and they would otherwise keep describing the state from before it. This is also the
+   * polling step: a run in flight is followed by calling this on an interval, since the backend has
+   * no way to push its progress.
    */
   public refresh(): void {
     this.players.reload();
     this.latestSynchronization.reload();
+  }
+
+  /**
+   * Sends one command and refreshes every administration resource once it settles successfully.
+   *
+   * This is the whole cache-invalidation strategy: every command method above goes through this
+   * helper instead of calling {@link refresh} itself, so a future command cannot be added while
+   * forgetting to invalidate — it would have to skip this helper entirely to do so. A failed request
+   * rejects before the refresh, leaving the resources describing the state that is still accurate.
+   *
+   * @param request$ - The mutating request to send.
+   * @returns A promise that resolves with the request's response.
+   */
+  private async mutate<T>(request$: Observable<T>): Promise<T> {
+    const result = await firstValueFrom(request$);
+
+    this.refresh();
+
+    return result;
   }
 }

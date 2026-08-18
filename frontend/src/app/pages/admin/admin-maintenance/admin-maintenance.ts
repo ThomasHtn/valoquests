@@ -1,7 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 
+import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
-import { resolveAdminErrorMessage } from '@core/admin/admin-error.utils';
+import { AdminCommandRunner } from '@core/admin/admin-command-runner';
 import { IN_FLIGHT_SYNCHRONIZATION_STATUSES } from '@core/admin/admin.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -10,7 +11,6 @@ import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { SectionDivider } from '@shared/section-divider/section-divider';
-import { AdminActionState, IDLE_ACTION } from '../admin-action.model';
 
 /**
  * Translation keys of the data the campaign reset clears, listed for the operator before they
@@ -61,6 +61,11 @@ export class AdminMaintenance {
    * i18n service used to resolve the confirmation phrase and the outcome messages.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Runs the reset command below and reports its running/done/error outcome.
+   */
+  private readonly commandRunner = inject(AdminCommandRunner);
 
   /**
    * Translation keys of the data the reset clears.
@@ -131,24 +136,13 @@ export class AdminMaintenance {
       return;
     }
 
-    this.busy.set(true);
-    this.resetState.set({ status: 'running', message: '' });
-
-    try {
-      await this.adminApi.resetCampaign();
-      this.resetState.set({
-        status: 'done',
-        message: this.translation.translate('admin.maintenance.reset.done'),
-      });
-      this.dialogOpen.set(false);
-    } catch (error: unknown) {
-      // The dialog stays open on failure: nothing was cleared, so the operator is still deciding.
-      this.resetState.set({
-        status: 'error',
-        message: resolveAdminErrorMessage(error, this.translation.translate('admin.actionFailed')),
-      });
-    } finally {
-      this.busy.set(false);
-    }
+    // onSuccess only fires once the reset has actually cleared something, so the dialog stays open
+    // on failure and the operator is still deciding.
+    await this.commandRunner.run(() => this.adminApi.resetCampaign(), {
+      state: this.resetState,
+      busy: this.busy,
+      successMessage: () => this.translation.translate('admin.maintenance.reset.done'),
+      onSuccess: () => this.dialogOpen.set(false),
+    });
   }
 }

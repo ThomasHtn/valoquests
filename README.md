@@ -5,6 +5,7 @@
 **A weekly Valorant competition for a group of friends, tracked automatically.**
 
 [![Backend CI](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/frontend-ci.yml)
 
 </div>
 
@@ -16,10 +17,10 @@ Valorant Tracker follows a fixed group of seven Valorant players. Several times 
 history from Riot Games (through a service called the Henrik API), then:
 
 - builds each player's profile: rank, match history, win rate, KDA, headshots, and more;
-- picks five weekly challenges, one per difficulty level (from a catalogue of 46), and tracks who completes them;
+- picks five weekly challenges, one per difficulty level (from a catalogue of 62), and tracks who completes them;
 - pits the whole group against a shared weekly boss (Minor, Standard or Elite): every match played and every
   challenge completed deals damage to its health bar;
-- turns completed challenges into points and keeps a live ranking, week after week.
+- turns completed challenges into damage and keeps a live ranking, week after week.
 
 It answers one simple question every week: **who actually had the best week?**
 
@@ -110,6 +111,10 @@ This README only covers the essentials. For more detail on each part of the proj
 | -------- | --------------------------------------------- |
 | Backend  | [`backend/README.md`](backend/README.md)      |
 | Frontend | [`frontend/README.md`](frontend/README.md)    |
+
+## 8. License
+
+[MIT](LICENSE)
 
 ---
 

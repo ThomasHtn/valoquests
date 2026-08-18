@@ -1,7 +1,8 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 
+import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
-import { resolveAdminErrorMessage } from '@core/admin/admin-error.utils';
+import { AdminCommandRunner } from '@core/admin/admin-command-runner';
 import { IN_FLIGHT_SYNCHRONIZATION_STATUSES } from '@core/admin/admin.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -12,7 +13,6 @@ import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
 import { SectionDivider } from '@shared/section-divider/section-divider';
 import { AdminActionCard } from '../admin-action-card/admin-action-card';
-import { AdminActionState, IDLE_ACTION } from '../admin-action.model';
 
 /**
  * Delay between two polls of the running synchronization, in milliseconds.
@@ -50,6 +50,12 @@ export class AdminOperations {
    * i18n service used to resolve outcome messages, which are built here rather than in templates.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Runs each command below and reports its running/done/error outcome in the card that triggered
+   * it.
+   */
+  private readonly commandRunner = inject(AdminCommandRunner);
 
   /**
    * Resource holding every tracked player, backing the per-player synchronization picker.
@@ -171,9 +177,10 @@ export class AdminOperations {
    * Starts a background synchronization of every tracked player.
    */
   protected async synchronizeAll(): Promise<void> {
-    await this.run(this.syncAllState, 'admin.operations.syncAll.accepted', () =>
-      this.adminApi.synchronizeAllPlayers(),
-    );
+    await this.commandRunner.run(() => this.adminApi.synchronizeAllPlayers(), {
+      state: this.syncAllState,
+      successMessage: () => this.translation.translate('admin.operations.syncAll.accepted'),
+    });
   }
 
   /**
@@ -191,51 +198,29 @@ export class AdminOperations {
       return;
     }
 
-    await this.run(this.syncPlayerState, 'admin.operations.syncPlayer.accepted', () =>
-      this.adminApi.synchronizePlayer(playerId),
-    );
+    await this.commandRunner.run(() => this.adminApi.synchronizePlayer(playerId), {
+      state: this.syncPlayerState,
+      successMessage: () => this.translation.translate('admin.operations.syncPlayer.accepted'),
+    });
   }
 
   /**
    * Rebuilds the current week's challenge progress and the weekly ranking.
    */
   protected async recalculateProgress(): Promise<void> {
-    await this.run(this.recalculateState, 'admin.operations.recalculate.done', () =>
-      this.adminApi.recalculateProgress(),
-    );
+    await this.commandRunner.run(() => this.adminApi.recalculateProgress(), {
+      state: this.recalculateState,
+      successMessage: () => this.translation.translate('admin.operations.recalculate.done'),
+    });
   }
 
   /**
    * Draws the current week's missing challenges and its boss encounter.
    */
   protected async selectCurrentWeek(): Promise<void> {
-    await this.run(this.weekSelectionState, 'admin.operations.weekSelection.done', () =>
-      this.adminApi.selectCurrentWeek(),
-    );
-  }
-
-  /**
-   * Runs one command and reports its outcome in the card that triggered it.
-   *
-   * @param state - Signal holding the card's state.
-   * @param successKey - Translation key of the success message.
-   * @param command - The command to run.
-   */
-  private async run(
-    state: { set: (value: AdminActionState) => void },
-    successKey: string,
-    command: () => Promise<void>,
-  ): Promise<void> {
-    state.set({ status: 'running', message: '' });
-
-    try {
-      await command();
-      state.set({ status: 'done', message: this.translation.translate(successKey) });
-    } catch (error: unknown) {
-      state.set({
-        status: 'error',
-        message: resolveAdminErrorMessage(error, this.translation.translate('admin.actionFailed')),
-      });
-    }
+    await this.commandRunner.run(() => this.adminApi.selectCurrentWeek(), {
+      state: this.weekSelectionState,
+      successMessage: () => this.translation.translate('admin.operations.weekSelection.done'),
+    });
   }
 }
