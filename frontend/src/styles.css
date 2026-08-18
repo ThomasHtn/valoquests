@@ -36,7 +36,7 @@
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 1000px var(--color-surface-950) inset;
+    -webkit-box-shadow: 0 0 0 1000px var(--color-surface-sunken) inset;
     -webkit-text-fill-color: var(--color-text-primary);
     caret-color: var(--color-text-primary);
     transition: background-color 9999s ease-in-out 0s;
@@ -259,5 +259,32 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+/*
+ * Snackbar entrance and timebar, shared by `app-snackbar`. The timebar animates `transform: scaleX`
+ * rather than `width` so it composites on its own layer instead of triggering layout on every
+ * frame.
+ */
+@keyframes snackbar-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes snackbar-timebar {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
   }
 }

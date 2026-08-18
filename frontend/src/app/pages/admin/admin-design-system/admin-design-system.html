@@ -1,0 +1,833 @@
+<header>
+  <p class="tracking-label-wide font-mono text-xs font-medium text-brand-500 uppercase">
+    {{ 'admin.eyebrow' | translate }}
+  </p>
+  <h1
+    class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
+  >
+    {{ 'admin.designSystem.heading' | translate }}
+  </h1>
+</header>
+
+<!-- Colors -->
+<app-section-divider [label]="'admin.designSystem.sections.colors' | translate" class="my-2" />
+
+@for (group of colorGroups; track group.label) {
+  <div>
+    <h2 class="tracking-label font-display text-base font-bold text-text-primary uppercase">
+      {{ group.label }}
+    </h2>
+    <div class="mt-3 flex flex-wrap gap-4">
+      @for (token of group.tokens; track token.name) {
+        <div class="w-28">
+          <div [class]="token.swatchClass" class="h-16 rounded border border-surface-600"></div>
+          <p class="mt-1.5 font-mono text-2xs text-text-primary">{{ token.name }}</p>
+          <p class="font-mono text-2xs text-text-muted">{{ token.hex }}</p>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- Typography -->
+<app-section-divider [label]="'admin.designSystem.sections.typography' | translate" class="my-2" />
+
+<div class="flex flex-col gap-4">
+  <p class="font-display text-3xl text-text-primary">Oswald — font-display</p>
+  <p class="font-sans text-3xl text-text-primary">Barlow Condensed — font-sans</p>
+  <p class="font-mono text-2xl text-text-primary">ui-monospace — font-mono</p>
+</div>
+
+<div class="mt-4 flex flex-col gap-2.5">
+  <p class="font-mono text-2xs text-text-primary uppercase">text-2xs — Semaine 34, joueur actif</p>
+  <p class="font-mono text-xs text-text-primary uppercase">text-xs — Semaine 34, joueur actif</p>
+  <p class="text-sm text-text-primary">text-sm — Semaine 34, joueur actif</p>
+  <p class="text-prose text-text-primary">text-prose — Semaine 34, joueur actif</p>
+  <p class="text-base text-text-primary">text-base — Semaine 34, joueur actif</p>
+  <p class="text-lead text-text-primary">text-lead — Semaine 34, joueur actif</p>
+  <p class="text-lg text-text-primary">text-lg — Semaine 34, joueur actif</p>
+  <p class="font-display text-2xl text-text-primary">text-2xl — Semaine 34, joueur actif</p>
+  <p class="font-display text-3xl text-text-primary">text-3xl — Semaine 34, joueur actif</p>
+</div>
+
+<div class="mt-4 flex flex-col gap-2.5">
+  <p class="tracking-label font-mono text-xs text-text-secondary uppercase">
+    tracking-label — Défi de la semaine
+  </p>
+  <p class="tracking-label-wide font-mono text-xs text-brand-500 uppercase">
+    tracking-label-wide — Défi de la semaine
+  </p>
+</div>
+
+<!-- Backgrounds -->
+<!-- No shared background component exists either: every screen picks one of these surface
+     treatments by hand. Catalogued here as swatches, each labelled with the classes it takes. -->
+<app-section-divider [label]="'admin.designSystem.sections.backgrounds' | translate" class="my-2" />
+
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <div>
+    <div class="h-20 border border-surface-600 bg-surface-950"></div>
+    <p class="mt-1.5 font-mono text-2xs text-text-primary">bg-surface-950</p>
+    <p class="font-mono text-2xs text-text-muted">App background</p>
+  </div>
+  <div>
+    <div class="h-20 border border-surface-600 bg-surface-sunken"></div>
+    <p class="mt-1.5 font-mono text-2xs text-text-primary">bg-surface-sunken</p>
+    <p class="font-mono text-2xs text-text-muted">Sidebar / headers / dropdown panels</p>
+  </div>
+  <div>
+    <div class="h-20 border border-surface-600 bg-text-primary/4"></div>
+    <p class="mt-1.5 font-mono text-2xs text-text-primary">bg-text-primary/4</p>
+    <p class="font-mono text-2xs text-text-muted">Default panel/row tint</p>
+  </div>
+  <div>
+    <div
+      class="h-20 border border-text-primary/10 bg-linear-[115deg] from-surface-800/70 to-surface-sunken/60"
+    ></div>
+    <p class="mt-1.5 font-mono text-2xs text-text-primary">
+      bg-linear-[115deg] from-surface-800/70 to-surface-sunken/60
+    </p>
+    <p class="font-mono text-2xs text-text-muted">Gradient card (player preview, campaign)</p>
+  </div>
+  <div>
+    <div class="h-20 border border-danger/40 bg-danger/5"></div>
+    <p class="mt-1.5 font-mono text-2xs text-text-primary">bg-danger/5</p>
+    <p class="font-mono text-2xs text-text-muted">Destructive panel tint</p>
+  </div>
+  <div>
+    <div class="ambient-field h-20 border border-surface-600 bg-surface-950"></div>
+    <p class="mt-1.5 font-mono text-2xs text-text-primary">ambient-field</p>
+    <p class="font-mono text-2xs text-text-muted">Decorative glow (landing, tour)</p>
+  </div>
+</div>
+
+<!-- Buttons -->
+<app-section-divider [label]="'admin.designSystem.sections.buttons' | translate" class="my-2" />
+
+<div class="flex flex-wrap items-center gap-3">
+  @for (variant of buttonVariants; track variant) {
+    <button
+      [appButton]="variant"
+      class="flex min-h-10 items-center px-4 py-2 text-sm font-medium capitalize [--notch:0.5rem]"
+      type="button"
+    >
+      {{ variant }}
+    </button>
+  }
+  <button
+    appButton="primary"
+    class="flex min-h-10 items-center px-4 py-2 text-sm font-medium [--notch:0.5rem]"
+    disabled
+    type="button"
+  >
+    disabled
+  </button>
+</div>
+
+<!-- Pagination & navigation -->
+<!-- Not `appButton`: this is the "way back / exit" chip family (player-profile's breadcrumb, the
+     tour's previous/next/skip) — square-edged rather than notched, deliberately kept apart from the
+     action-button variants (see `button.ts`'s own doc comment). Catalogued as the pattern itself. -->
+<app-section-divider [label]="'admin.designSystem.sections.pagination' | translate" class="my-2" />
+
+<div class="flex flex-wrap items-center gap-6">
+  <div class="flex items-center gap-3">
+    <button
+      class="focus-ring tracking-label inline-flex h-12 cursor-pointer items-center gap-2 border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-text-muted motion-safe:active:scale-[0.96]"
+      type="button"
+    >
+      <svg class="block h-4 w-4 shrink-0" lucideChevronLeft></svg>
+      Précédent
+    </button>
+    <button
+      class="focus-ring tracking-label inline-flex h-12 cursor-pointer items-center gap-2 bg-brand-500 px-5 font-mono text-xs font-bold text-surface-950 uppercase transition-colors hover:bg-brand-400 motion-safe:active:scale-[0.96]"
+      type="button"
+    >
+      Suivant
+      <svg class="block h-4 w-4 shrink-0" lucideChevronRight></svg>
+    </button>
+    <button
+      class="focus-ring tracking-label inline-flex h-12 cursor-pointer items-center gap-2 border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase opacity-35 transition-colors"
+      disabled
+      type="button"
+    >
+      <svg class="block h-4 w-4 shrink-0" lucideChevronLeft></svg>
+      Précédent
+    </button>
+  </div>
+
+  <a
+    class="focus-ring tracking-label inline-flex h-11 w-fit cursor-pointer items-center gap-2 border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
+  >
+    <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
+    Retour à la liste
+  </a>
+</div>
+<p class="mt-3 text-sm text-text-secondary">
+  Le reste de l'application n'utilise pas de pagination numérotée : les listes longues (historique
+  de matchs) chargent la page suivante au scroll infini plutôt que par des boutons de page.
+</p>
+
+<!-- Tabs -->
+<!-- Two distinct patterns, neither a real `role="tab"` tablist in the app today: a segmented pill
+     control (player-profile's game-mode filter, `role="group"`) and underline tabs (its view-mode
+     toggle). Both demoed live against local signals, not the real page's state. -->
+<app-section-divider [label]="'admin.designSystem.sections.tabs' | translate" class="my-2" />
+
+<div class="flex flex-col gap-6">
+  <div>
+    <p class="mb-2 font-mono text-2xs text-text-muted uppercase">Segmented control</p>
+    <div class="notch-tr inline-flex items-center [--notch:0.5rem]">
+      @for (option of segmentOptions; track option.value) {
+        <button
+          (click)="segmentValue.set(option.value)"
+          [attr.aria-pressed]="segmentValue() === option.value"
+          [class]="
+            segmentValue() === option.value
+              ? 'bg-brand-500/15 text-brand-500'
+              : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
+          "
+          class="focus-ring-inset min-h-10 cursor-pointer self-stretch px-4 py-2 text-sm font-semibold transition-colors"
+          type="button"
+        >
+          {{ option.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div>
+    <p class="mb-2 font-mono text-2xs text-text-muted uppercase">Underline tabs</p>
+    <div class="flex items-center gap-8 border-b border-text-primary/10" role="group">
+      @for (option of tabOptions; track option.value) {
+        <button
+          (click)="tabValue.set(option.value)"
+          [attr.aria-pressed]="tabValue() === option.value"
+          [class]="
+            tabValue() === option.value
+              ? 'border-brand-500 text-text-primary'
+              : 'border-transparent text-text-muted hover:text-text-primary'
+          "
+          class="focus-ring font-display -mb-px min-h-10 cursor-pointer border-b-2 pb-3 text-sm font-semibold tracking-wide uppercase transition-colors"
+          type="button"
+        >
+          {{ option.label }}
+        </button>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Dropdowns & menus -->
+<!-- Two patterns: a listbox-style dropdown (sidebar language switcher) and a context menu
+     (player-profile's "more game modes" overflow). Self-contained demo state below — selecting a
+     language here does not call the real `Translation` service. -->
+<app-section-divider [label]="'admin.designSystem.sections.dropdowns' | translate" class="my-2" />
+
+<div class="flex flex-wrap items-start gap-10">
+  <div>
+    <p class="mb-2 font-mono text-2xs text-text-muted uppercase">Listbox (langue)</p>
+    <div class="relative w-fit">
+      <button
+        (click)="toggleDropdown()"
+        [attr.aria-expanded]="dropdownOpen()"
+        aria-haspopup="listbox"
+        class="focus-ring-inset tracking-label flex h-9 shrink-0 cursor-pointer items-center gap-1.5 px-2 font-mono text-2xs font-semibold text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
+        type="button"
+      >
+        <svg class="h-4 w-4 shrink-0" lucideLanguages></svg>
+        <span>{{ dropdownValue() }}</span>
+      </button>
+
+      <div
+        [hidden]="!dropdownOpen()"
+        class="notch-tr absolute top-full left-0 z-20 mt-2 w-44 border-l-2 border-brand-500/50 bg-surface-sunken [--notch:0.5rem]"
+        role="listbox"
+      >
+        @for (candidate of dropdownLanguages; track candidate.code) {
+          <button
+            (click)="selectDropdownValue(candidate.code)"
+            [attr.aria-selected]="dropdownValue() === candidate.code"
+            [class]="
+              dropdownValue() === candidate.code
+                ? 'bg-brand-500/15 text-brand-500'
+                : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
+            "
+            class="flex min-h-10 w-full cursor-pointer items-center justify-between gap-4 px-4 py-2.5 text-left text-base transition-colors motion-safe:active:scale-[0.96]"
+            role="option"
+            type="button"
+          >
+            <span>{{ candidate.label }}</span>
+            <span class="text-xs opacity-70">{{ candidate.code }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="mb-2 font-mono text-2xs text-text-muted uppercase">Context menu</p>
+    <div class="relative w-fit">
+      <button
+        (click)="toggleOverflowMenu()"
+        [attr.aria-expanded]="overflowMenuOpen()"
+        aria-haspopup="menu"
+        class="focus-ring-inset flex min-h-10 cursor-pointer items-center gap-1.5 border border-text-primary/15 px-3 py-2 text-sm font-semibold text-text-secondary transition-colors hover:bg-brand-500/8 hover:text-text-primary"
+        type="button"
+      >
+        <span>Plus d'options</span>
+        <svg aria-hidden="true" class="size-4 shrink-0" lucideEllipsisVertical></svg>
+      </button>
+
+      @if (overflowMenuOpen()) {
+        <div
+          class="notch-tr absolute top-full left-0 z-20 mt-2 min-w-40 border-l-2 border-brand-500/50 bg-surface-sunken [--notch:0.5rem]"
+          role="menu"
+        >
+          <button
+            (click)="selectOverflowMenuOption('a')"
+            [attr.aria-checked]="overflowMenuValue() === 'a'"
+            class="focus-ring-inset block min-h-10 w-full cursor-pointer px-4 py-2.5 text-left text-base whitespace-nowrap text-text-secondary transition-[background-color,scale] hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
+            role="menuitemradio"
+            type="button"
+          >
+            Option A
+          </button>
+          <button
+            (click)="selectOverflowMenuOption('b')"
+            [attr.aria-checked]="overflowMenuValue() === 'b'"
+            class="focus-ring-inset block min-h-10 w-full cursor-pointer px-4 py-2.5 text-left text-base whitespace-nowrap text-text-secondary transition-[background-color,scale] hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
+            role="menuitemradio"
+            type="button"
+          >
+            Option B
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar & menu buttons -->
+<!-- The live instance is `app-sidebar` in the application shell — not reproduced standalone here,
+     since it depends on `Router`, `AdminSession` and `PlayersApi` context that only exists inside
+     the real shell. These are its chrome controls in isolation. -->
+<app-section-divider [label]="'admin.designSystem.sections.menuButtons' | translate" class="my-2" />
+
+<div class="flex flex-wrap items-center gap-6">
+  <div class="text-center">
+    <button
+      class="focus-ring flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center bg-surface-sunken text-text-primary transition-colors hover:bg-brand-500/8 motion-safe:active:scale-[0.96]"
+      type="button"
+    >
+      <svg class="block h-6 w-6 shrink-0" lucideMenu></svg>
+    </button>
+    <p class="mt-1.5 font-mono text-2xs text-text-muted">Burger (mobile)</p>
+  </div>
+
+  <div class="text-center">
+    <button
+      class="focus-ring relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center bg-brand-500/12 transition-colors clip-hex hover:bg-brand-500/25"
+      type="button"
+    >
+      <span class="font-display text-2xl font-bold text-brand-500">V</span>
+    </button>
+    <p class="mt-1.5 font-mono text-2xs text-text-muted">Collapse rail</p>
+  </div>
+
+  <div class="text-center">
+    <button
+      class="focus-ring flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center bg-surface-sunken text-text-muted transition-colors hover:bg-surface-800 hover:text-text-primary motion-safe:active:scale-[0.96]"
+      type="button"
+    >
+      <svg class="block h-5 w-5 shrink-0" lucideX></svg>
+    </button>
+    <p class="mt-1.5 font-mono text-2xs text-text-muted">Close drawer</p>
+  </div>
+
+  <div class="flex flex-col gap-1 bg-surface-sunken py-1">
+    <a
+      class="group focus-ring-inset relative flex min-h-11 w-48 cursor-pointer items-center gap-3.5 px-6 py-3 text-start text-sm font-medium text-text-secondary transition-colors before:absolute before:inset-y-0 before:left-0 before:w-1 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary"
+    >
+      <svg aria-hidden="true" class="block h-5 w-5 shrink-0" lucideMenu></svg>
+      <span class="tracking-label font-display uppercase">Nav item</span>
+    </a>
+    <a
+      aria-current="page"
+      class="relative flex min-h-11 w-48 items-center gap-3.5 bg-linear-to-r from-brand-500/20 to-transparent px-6 py-3 text-start text-sm font-medium text-brand-500 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-brand-500 before:content-['']"
+    >
+      <svg aria-hidden="true" class="block h-5 w-5 shrink-0" lucideMenu></svg>
+      <span class="tracking-label font-display uppercase">Nav item (actif)</span>
+    </a>
+  </div>
+</div>
+
+<!-- Text inputs -->
+<!-- No shared `app-input` component exists: every screen repeats this label + double-`div` notch
+     wrapper + native `<input>` markup by hand (see admin-login, player-form-panel,
+     confirm-dialog). Catalogued here as the pattern itself, not as a component. -->
+<app-section-divider [label]="'admin.designSystem.sections.textInputs' | translate" class="my-2" />
+
+<div class="flex flex-wrap gap-6">
+  <label class="block w-64">
+    <span class="tracking-label block font-mono text-xs text-text-muted uppercase">Normal</span>
+    <div
+      class="notch-tr mt-2 h-11 bg-text-muted p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500 has-[:disabled]:opacity-60"
+    >
+      <div class="notch-tr h-full bg-surface-sunken [--notch:0.5rem]">
+        <input
+          (input)="sampleInputValue.set($any($event.target).value)"
+          [value]="sampleInputValue()"
+          autocomplete="off"
+          class="h-full w-full bg-transparent px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+          placeholder="Placeholder"
+          type="text"
+        />
+      </div>
+    </div>
+  </label>
+
+  <label class="block w-64">
+    <span class="tracking-label block font-mono text-xs text-text-muted uppercase">Désactivé</span>
+    <div
+      class="notch-tr mt-2 h-11 bg-text-muted p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500 has-[:disabled]:opacity-60"
+    >
+      <div class="notch-tr h-full bg-surface-sunken [--notch:0.5rem]">
+        <input
+          class="h-full w-full bg-transparent px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+          disabled
+          type="text"
+          value="Verrouillé"
+        />
+      </div>
+    </div>
+  </label>
+
+  <label class="block w-64">
+    <span class="tracking-label block font-mono text-xs text-text-muted uppercase"
+      >Avec bouton intégré</span
+    >
+    <div
+      class="notch-tr mt-2 h-11 bg-text-muted p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500 has-[:disabled]:opacity-60"
+    >
+      <div class="notch-tr flex h-full items-center bg-surface-sunken [--notch:0.5rem]">
+        <input
+          [type]="sampleInputRevealed() ? 'text' : 'password'"
+          autocomplete="off"
+          class="h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+          value="secret-key"
+        />
+        <button
+          (click)="sampleInputRevealed.set(!sampleInputRevealed())"
+          class="focus-ring flex h-full w-11 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:text-text-primary"
+          type="button"
+        >
+          @if (sampleInputRevealed()) {
+            <svg aria-hidden="true" class="h-4 w-4" lucideEyeOff></svg>
+          } @else {
+            <svg aria-hidden="true" class="h-4 w-4" lucideEye></svg>
+          }
+        </button>
+      </div>
+    </div>
+  </label>
+
+  <div class="w-64">
+    <label class="block">
+      <span class="tracking-label block font-mono text-xs text-text-muted uppercase">Erreur</span>
+      <div
+        class="notch-tr mt-2 h-11 bg-text-muted p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500"
+      >
+        <div class="notch-tr h-full bg-surface-sunken [--notch:0.5rem]">
+          <input
+            aria-invalid="true"
+            class="h-full w-full bg-transparent px-3 text-sm text-text-primary focus:outline-none"
+            type="text"
+            value="clé invalide"
+          />
+        </div>
+      </div>
+    </label>
+    <p class="mt-3 flex items-start gap-2 text-xs text-danger" role="alert">
+      <svg aria-hidden="true" class="mt-px h-4 w-4 shrink-0" lucideTriangleAlert></svg>
+      <span class="min-w-0 text-pretty">Message d'erreur.</span>
+    </p>
+  </div>
+</div>
+
+<!-- Avatars -->
+<app-section-divider [label]="'admin.designSystem.sections.avatars' | translate" class="my-2" />
+
+<div class="flex flex-wrap items-end gap-4">
+  <div class="text-center">
+    <app-avatar size="xs" />
+    <p class="mt-1.5 font-mono text-2xs text-text-muted">xs</p>
+  </div>
+  <div class="text-center">
+    <app-avatar size="sm" />
+    <p class="mt-1.5 font-mono text-2xs text-text-muted">sm</p>
+  </div>
+  <div class="text-center">
+    <app-avatar size="md" />
+    <p class="mt-1.5 font-mono text-2xs text-text-muted">md</p>
+  </div>
+  <div class="text-center">
+    <app-avatar size="lg" />
+    <p class="mt-1.5 font-mono text-2xs text-text-muted">lg</p>
+  </div>
+  <div class="text-center">
+    <app-avatar [champion]="true" size="lg" />
+    <p class="mt-1.5 font-mono text-2xs text-text-muted">lg / champion</p>
+  </div>
+</div>
+
+<!-- Badges -->
+<app-section-divider [label]="'admin.designSystem.sections.badges' | translate" class="my-2" />
+
+<div class="flex flex-wrap items-center gap-4">
+  <app-position-badge [position]="1" />
+  <app-position-badge [position]="2" />
+  <app-position-badge [position]="3" />
+  <app-position-badge [position]="4" />
+  <app-position-badge [position]="10" />
+  <app-position-badge [position]="null" />
+  <app-champion-badge />
+</div>
+
+<!-- Status indicators -->
+<app-section-divider
+  [label]="'admin.designSystem.sections.statusIndicators' | translate"
+  class="my-2"
+/>
+
+<div class="flex flex-col gap-6">
+  <div>
+    <p class="mb-2 font-mono text-2xs text-text-muted uppercase">Player status badge</p>
+    <div class="flex flex-wrap items-center gap-3">
+      @for (status of playerStatuses; track status) {
+        <span
+          [class]="
+            status === 'ACTIVE'
+              ? 'border-brand-500/50 bg-brand-500/12 text-brand-400'
+              : status === 'INACTIVE'
+                ? 'border-surface-600 bg-surface-800 text-text-secondary'
+                : 'border-danger/40 bg-danger/10 text-danger'
+          "
+          class="tracking-label notch-tr notch-tr-edge shrink-0 border px-2.5 py-1 font-mono text-xs font-semibold uppercase [--notch:0.375rem]"
+        >
+          {{ 'admin.players.status.' + status | translate }}
+        </span>
+      }
+    </div>
+  </div>
+
+  <div>
+    <p class="mb-2 font-mono text-2xs text-text-muted uppercase">API status dot</p>
+    <div class="flex flex-wrap items-center gap-6">
+      @for (status of apiStatuses; track status) {
+        <p class="flex items-center gap-2 text-sm text-text-secondary">
+          <span
+            [class.bg-success]="status === 'online'"
+            [class.bg-danger]="status === 'offline'"
+            class="h-1.5 w-1.5 shrink-0 rounded-full"
+            role="status"
+          ></span>
+          {{ 'sidebar.lastSync.status.' + status | translate }}
+        </p>
+      }
+    </div>
+  </div>
+
+  <div>
+    <p class="mb-2 font-mono text-2xs text-text-muted uppercase">Inline banner</p>
+    <div class="flex flex-col gap-2">
+      <p
+        class="border-l-2 border-success/60 pl-3 text-prose text-pretty text-success"
+        role="status"
+      >
+        Opération terminée avec succès.
+      </p>
+      <p class="border-l-2 border-danger/60 pl-3 text-prose text-pretty text-danger" role="status">
+        Une erreur est survenue pendant l'opération.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Progress -->
+<app-section-divider [label]="'admin.designSystem.sections.progress' | translate" class="my-2" />
+
+<div class="flex flex-col gap-3">
+  <app-progress-bar [percentage]="25" colorClass="bg-accent-green" class="w-48" />
+  <app-progress-bar [percentage]="60" colorClass="bg-accent-blue" class="w-48" />
+  <app-progress-bar
+    [percentage]="90"
+    [edgeMarker]="true"
+    colorClass="bg-accent-red"
+    heightClass="h-2"
+    class="w-48"
+  />
+</div>
+
+<div class="mt-4 flex flex-wrap items-center gap-4">
+  <app-progress-circle [percentage]="25" colorClass="text-accent-green" class="h-10 w-10" />
+  <app-progress-circle [percentage]="60" colorClass="text-accent-blue" class="h-10 w-10" />
+  <app-progress-circle [percentage]="90" colorClass="text-accent-purple" class="h-10 w-10" />
+</div>
+
+<!-- Rank icons -->
+<app-section-divider [label]="'admin.designSystem.sections.rankIcons' | translate" class="my-2" />
+
+<div class="flex flex-wrap items-end gap-4">
+  @for (rank of sampleRankIcons; track rank.src) {
+    <div class="text-center">
+      <app-rank-icon-view [src]="rank.src" [tierLabel]="rank.label" size="md" />
+      <p class="mt-1.5 font-mono text-2xs text-text-muted">{{ rank.label }}</p>
+    </div>
+  }
+</div>
+
+<!-- Challenge icons -->
+<app-section-divider
+  [label]="'admin.designSystem.sections.challengeIcons' | translate"
+  class="my-2"
+/>
+
+<div class="flex flex-wrap items-center gap-4">
+  @for (icon of challengeIcons; track icon) {
+    <div class="text-center">
+      <app-challenge-icon-view [icon]="icon" class="block h-6 w-6 text-brand-400" />
+      <p class="mt-1.5 font-mono text-2xs text-text-muted">{{ icon }}</p>
+    </div>
+  }
+</div>
+
+<!-- Panels -->
+<!-- No shared `app-panel` component exists: every screen repeats one of these notched, tinted
+     `<div>`/`<section>` blocks by hand. Catalogued as the patterns themselves. -->
+<app-section-divider [label]="'admin.designSystem.sections.panels' | translate" class="my-2" />
+
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+  <div class="notch-tr notch-tr-edge bg-text-primary/4 p-5 [--notch:0.875rem]">
+    <p class="tracking-label font-mono text-xs text-text-muted uppercase">Panel standard</p>
+    <p class="mt-1 text-sm text-text-secondary">
+      notch-tr notch-tr-edge bg-text-primary/4 p-5 — encarts de statut du backoffice.
+    </p>
+  </div>
+
+  <div class="notch-tr notch-tr-edge border border-danger/40 bg-danger/5 p-5 [--notch:0.875rem]">
+    <p class="tracking-label font-mono text-xs text-danger uppercase">Panel danger</p>
+    <p class="mt-1 text-sm text-text-secondary">
+      border border-danger/40 bg-danger/5 — réservé aux écrans qui détruisent des données
+      (maintenance).
+    </p>
+  </div>
+
+  <div
+    class="notch-tr notch-tr-edge border border-accent-green/40 bg-linear-[115deg] to-surface-sunken/60 p-5 text-accent-green [--notch:0.875rem]"
+  >
+    <p class="tracking-label font-mono text-xs uppercase">Panel gradient (tier)</p>
+    <p class="mt-1 text-sm text-text-secondary">
+      border bg-linear-[115deg] to-surface-sunken/60, teinté par la couleur du tier — cartes de défi
+      de la semaine.
+    </p>
+  </div>
+
+  <div
+    class="notch-tr notch-tr-edge border border-dashed border-brand-500/30 bg-surface-sunken/45 p-5 [--notch:0.875rem]"
+  >
+    <p class="tracking-label font-mono text-xs text-text-muted uppercase">Panel pointillé</p>
+    <p class="mt-1 text-sm text-text-secondary">
+      border-dashed border-brand-500/30 bg-surface-sunken/45 — emplacement à venir (prochain
+      tirage).
+    </p>
+  </div>
+</div>
+
+<!-- Cards -->
+<!-- Cards differ from panels above by being self-contained units in a wrapping/grid layout rather
+     than full-width sections. Catalogued as patterns, plus one real component (`app-admin-action-card`). -->
+<app-section-divider [label]="'admin.designSystem.sections.cards' | translate" class="my-2" />
+
+<div class="flex flex-wrap items-start gap-6">
+  <div
+    class="notch-tr notch-tr-edge flex w-40 flex-col items-center gap-2.5 border border-text-primary/10 bg-text-primary/4 px-3 py-5 [--notch:0.75rem]"
+  >
+    <app-avatar size="md" />
+    <p class="font-display max-w-full truncate text-lg leading-tight font-semibold">Kaelis</p>
+    <p
+      class="tracking-label max-w-full truncate font-mono text-xs font-medium text-brand-400 uppercase"
+    >
+      Diamond 3
+    </p>
+  </div>
+
+  <div
+    class="notch-tr notch-tr-edge relative flex h-32 w-56 shrink-0 items-center justify-center overflow-hidden border bg-linear-[135deg] to-surface-950 [--notch:1.125rem]"
+  >
+    <p class="tracking-label font-mono text-xs text-text-muted uppercase">Card image</p>
+  </div>
+
+  <div
+    class="notch-tr notch-tr-edge flex min-h-32 w-64 flex-col justify-center gap-2 border border-dashed border-brand-500/30 bg-surface-sunken/45 p-4 [--notch:1rem]"
+  >
+    <p class="tracking-label font-mono text-xs text-text-muted uppercase">Card placeholder</p>
+    <p class="text-sm text-text-secondary">border-dashed — emplacement à venir.</p>
+  </div>
+
+  <app-admin-action-card
+    (triggered)="runActionCardDemo()"
+    [state]="actionCardState()"
+    actionLabel="Lancer"
+    description="Composant réel — l'état ci-dessous est simulé, sans commande derrière."
+    heading="app-admin-action-card"
+    class="w-72"
+  />
+</div>
+
+<!-- Tables & rows -->
+<!-- No native `<table>` in the app: every list is a grid-based row, matching a `<table>`'s columns
+     from `lg`/`xl` up and collapsing to a labelled card below it (leaderboard matrix,
+     admin-players list). Condensed demo below. -->
+<app-section-divider [label]="'admin.designSystem.sections.tables' | translate" class="my-2" />
+
+<div aria-hidden="true" class="hidden px-5 lg:grid lg:grid-cols-[3rem_1fr_8rem] lg:gap-x-3">
+  <span></span>
+  <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">Joueur</span>
+  <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">Score</span>
+</div>
+
+<ul class="mt-1 flex flex-col gap-2">
+  @for (row of tableRows; track row.position) {
+    <li
+      class="notch-tr flex items-center gap-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-4 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:grid lg:grid-cols-[3rem_1fr_8rem] lg:gap-x-3 lg:px-5"
+    >
+      <span class="font-display text-base text-text-muted tabular-nums">#{{ row.position }}</span>
+      <span class="font-display truncate text-lg leading-none font-semibold text-text-primary">
+        {{ row.name }}
+      </span>
+      <span class="font-display text-lg leading-none font-bold text-brand-500 tabular-nums">
+        {{ row.score }}
+      </span>
+    </li>
+  }
+</ul>
+
+<!-- Select -->
+<app-section-divider [label]="'admin.designSystem.sections.select' | translate" class="my-2" />
+
+<app-select
+  ariaLabel="Rang de démonstration"
+  [options]="selectOptions"
+  [(value)]="selectValue"
+  class="w-56"
+/>
+
+<!-- Tooltip -->
+<app-section-divider [label]="'admin.designSystem.sections.tooltip' | translate" class="my-2" />
+
+<div class="flex flex-wrap items-center gap-6">
+  <button
+    appButton="secondary"
+    appTooltip="Bulle au-dessus (sm)"
+    appTooltipPosition="above"
+    appTooltipSize="sm"
+    class="flex min-h-10 items-center px-4 py-2 text-sm font-medium [--notch:0.5rem]"
+    type="button"
+  >
+    Survoler (sm)
+  </button>
+  <button
+    appButton="secondary"
+    appTooltip="Bulle en dessous (md), plus large"
+    appTooltipPosition="below"
+    appTooltipSize="md"
+    class="flex min-h-10 items-center px-4 py-2 text-sm font-medium [--notch:0.5rem]"
+    type="button"
+  >
+    Survoler (md)
+  </button>
+</div>
+
+<!-- Confirm dialog -->
+<app-section-divider
+  [label]="'admin.designSystem.sections.confirmDialog' | translate"
+  class="my-2"
+/>
+
+<button
+  appButton="danger-outline"
+  (click)="dialogOpen.set(true)"
+  class="flex min-h-10 items-center px-4 py-2 text-sm font-medium [--notch:0.5rem]"
+  type="button"
+>
+  Ouvrir la démonstration
+</button>
+
+<app-confirm-dialog
+  (confirmed)="dialogOpen.set(false)"
+  (dismissed)="dialogOpen.set(false)"
+  [open]="dialogOpen()"
+  body="Ceci est un aperçu du dialogue de confirmation, sans action réelle derrière."
+  cancelLabel="Annuler"
+  confirmLabel="Confirmer"
+  heading="Exemple de confirmation"
+/>
+
+<!-- Resource state -->
+<app-section-divider
+  [label]="'admin.designSystem.sections.resourceState' | translate"
+  class="my-2"
+/>
+
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <div>
+    <p class="mb-2 font-mono text-2xs text-text-muted uppercase">Loading</p>
+    <app-resource-state [isLoading]="true" [isError]="false" loadingText="Chargement…" errorText="">
+      <p>Contenu</p>
+    </app-resource-state>
+  </div>
+  <div>
+    <p class="mb-2 font-mono text-2xs text-text-muted uppercase">Error</p>
+    <app-resource-state
+      [isLoading]="false"
+      [isError]="true"
+      loadingText=""
+      errorText="Impossible de charger la ressource."
+    >
+      <p>Contenu</p>
+    </app-resource-state>
+  </div>
+  <div>
+    <p class="mb-2 font-mono text-2xs text-text-muted uppercase">Empty</p>
+    <app-resource-state
+      [isLoading]="false"
+      [isError]="false"
+      [isEmpty]="true"
+      loadingText=""
+      errorText=""
+      emptyText="Aucune donnée pour l'instant."
+    >
+      <p>Contenu</p>
+    </app-resource-state>
+  </div>
+  <div>
+    <p class="mb-2 font-mono text-2xs text-text-muted uppercase">Content</p>
+    <app-resource-state [isLoading]="false" [isError]="false" loadingText="" errorText="">
+      <p class="text-text-primary">Contenu chargé avec succès.</p>
+    </app-resource-state>
+  </div>
+</div>
+
+<!-- Divider -->
+<app-section-divider [label]="'admin.designSystem.sections.layout' | translate" class="my-2" />
+
+<app-section-divider />
+
+<!-- Week countdown -->
+<app-section-divider
+  [label]="'admin.designSystem.sections.weekCountdown' | translate"
+  class="my-2"
+/>
+
+<app-week-countdown [remaining]="sampleRemainingTime" />

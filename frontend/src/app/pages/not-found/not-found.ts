@@ -23,7 +23,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
         {{ 'notFound.description' | translate }}
       </p>
       <a
-        class="notch-tr notch-tr-edge focus-ring-inset mt-6 inline-flex min-h-10 items-center border border-surface-700 bg-surface-900 px-4 py-2 text-sm font-semibold text-text-primary transition-colors [--notch:0.5rem] hover:border-surface-600 hover:bg-surface-800 motion-safe:active:scale-[0.96]"
+        class="focus-ring tracking-label mt-6 inline-flex h-12 items-center border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
         routerLink="/overview"
       >
         {{ 'notFound.backToOverview' | translate }}

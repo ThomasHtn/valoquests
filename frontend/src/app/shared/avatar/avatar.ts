@@ -2,8 +2,8 @@ import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
 import { LucideUser } from '@lucide/angular';
 
-import { AVATAR_HEX_CLASS, AVATAR_SIZES } from './avatar.constants';
-import { AvatarShape, AvatarSize } from './avatar.model';
+import { AVATAR_SIZES } from './avatar.constants';
+import { AvatarSize } from './avatar.model';
 
 /**
  * Player avatar, falling back to a generic user icon when no portrait is available.
@@ -32,12 +32,6 @@ export class Avatar {
   public readonly size = input<AvatarSize>('md');
 
   /**
-   * Silhouette the portrait is cut to. Hexagons mark a player who holds a rank — see
-   * {@link AvatarShape}.
-   */
-  public readonly shape = input<AvatarShape>('circle');
-
-  /**
    * Whether the portrait should be fetched eagerly, ahead of the rest of the page.
    *
    * Enable it on the single avatar that is the page's largest contentful paint (today, the profile
@@ -50,9 +44,6 @@ export class Avatar {
    * Whether this avatar belongs to the reigning weekly "Champion" (see {@link ChampionBadge}),
    * drawing a gold ring around it so the title reads at a glance wherever the player's name
    * appears, not just next to the badge itself.
-   *
-   * Only takes effect on the `circle` {@link shape}: the ring is painted outside the element's
-   * box, which the hexagon's `clip-path` then clips away.
    */
   public readonly champion = input(false);
 
@@ -62,13 +53,8 @@ export class Avatar {
   protected readonly metrics = computed(() => AVATAR_SIZES[this.size()]);
 
   /**
-   * Container utilities for the current {@link size} and {@link shape}, applied to the portrait
-   * and to the fallback alike so both are cut to the same silhouette.
+   * Container utilities for the current {@link size}, applied to the portrait and to the
+   * fallback alike so both are cut to the same disc.
    */
-  protected readonly frameClass = computed(() => {
-    const { containerClass, roundedClass } = this.metrics();
-    const shape = this.shape();
-
-    return `${containerClass} ${shape === 'hex' ? AVATAR_HEX_CLASS : roundedClass}`;
-  });
+  protected readonly frameClass = computed(() => `${this.metrics().containerClass} rounded-full`);
 }

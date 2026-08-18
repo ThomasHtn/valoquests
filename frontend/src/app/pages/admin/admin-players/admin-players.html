@@ -9,20 +9,6 @@
   </h1>
 </header>
 
-@if (commandState().status === 'done' || commandState().status === 'error') {
-  <p
-    [class]="
-      commandState().status === 'error'
-        ? 'border-danger/60 text-danger'
-        : 'border-success/60 text-success'
-    "
-    class="border-l-2 pl-3 text-prose text-pretty"
-    role="status"
-  >
-    {{ commandState().message }}
-  </p>
-}
-
 <app-section-divider [label]="'admin.players.rosterSection' | translate" class="my-2" />
 
 <div>
@@ -186,6 +172,5 @@
     (saved)="savePlayer($event)"
     [busy]="busy()"
     [editedPlayer]="editedPlayer()"
-    [errorMessage]="commandState().status === 'error' ? commandState().message : null"
   />
 }

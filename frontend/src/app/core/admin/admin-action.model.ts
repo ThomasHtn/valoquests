@@ -1,9 +1,9 @@
 /**
  * Lifecycle of one backoffice action, as the screen reports it.
  *
- * Kept per action rather than in a global notification area: the operator triggered this button,
- * and the answer belongs next to it. A page-level banner would make two actions run in a row
- * indistinguishable.
+ * `status` still drives per-button feedback (a spinner while `running`, staying disabled for the
+ * duration); the outcome once the action settles is reported through the global snackbar instead
+ * of `message`, which callers may still read but no longer need to render.
  */
 export type AdminActionStatus = 'idle' | 'running' | 'done' | 'error';
 

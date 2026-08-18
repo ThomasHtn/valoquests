@@ -52,10 +52,10 @@
               [routerLink]="['/players', entry.player.id]"
               class="focus-ring group flex flex-col items-center text-center transition-transform duration-200 ease-out hover:-translate-y-1"
             >
-              <!-- The champion's gold glow is applied to this wrapper rather than to the hexagon
+              <!-- The champion's gold glow is applied to this wrapper rather than to the avatar
                  itself: `filter` composites before `clip-path`, so a `drop-shadow` declared on the
-                 very element that also clips to the hexagon would be clipped away with everything
-                 else outside that shape. Applied here instead, it paints around the hexagon's
+                 very element that also clips the portrait would be clipped away with everything
+                 else outside that shape. Applied here instead, it paints around the avatar's
                  already-clipped silhouette. The same treatment lights up on hover/focus for every
                  entry, in brand color, as the affordance that the plinth is a link to the profile. -->
               <span
@@ -69,7 +69,6 @@
                   [priority]="entry.position === 1"
                   [size]="entry.position === 1 ? 'md' : 'sm'"
                   [src]="resolveAvatarUrl(entry.player.portrait)"
-                  shape="hex"
                 />
               </span>
 
@@ -132,7 +131,7 @@
                 class="notch-tr focus-ring-inset flex items-center gap-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:px-5"
               >
                 <app-position-badge [position]="entry.position" />
-                <app-avatar [src]="resolveAvatarUrl(entry.player.portrait)" shape="hex" size="sm" />
+                <app-avatar [src]="resolveAvatarUrl(entry.player.portrait)" size="sm" />
                 <span
                   class="font-display min-w-0 flex-1 truncate text-lg leading-tight font-semibold text-text-primary"
                 >

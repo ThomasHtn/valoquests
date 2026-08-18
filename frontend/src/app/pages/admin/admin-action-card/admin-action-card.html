@@ -27,21 +27,4 @@
       {{ actionLabel() }}
     </button>
   </div>
-
-  @if (state().status === 'done' || state().status === 'error') {
-    <!-- Colour is never the only cue: each outcome carries its own icon and its own sentence, so
-         the answer survives both a colour-blind reader and a screen reader. -->
-    <p
-      [class]="state().status === 'error' ? 'text-danger' : 'text-success'"
-      class="mt-3 flex items-start gap-2 text-xs"
-      role="status"
-    >
-      @if (state().status === 'error') {
-        <svg aria-hidden="true" class="mt-px h-4 w-4 shrink-0" lucideTriangleAlert></svg>
-      } @else {
-        <svg aria-hidden="true" class="mt-px h-4 w-4 shrink-0" lucideCircleCheck></svg>
-      }
-      <span class="min-w-0 text-pretty">{{ state().message }}</span>
-    </p>
-  }
 </div>

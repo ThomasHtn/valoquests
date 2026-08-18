@@ -7,6 +7,7 @@ import { IN_FLIGHT_SYNCHRONIZATION_STATUSES } from '@core/admin/admin.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
+import { SnackbarService } from '@core/snackbar/snackbar';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
 import { Select } from '@shared/select/select';
@@ -56,6 +57,12 @@ export class AdminOperations {
    * it.
    */
   private readonly commandRunner = inject(AdminCommandRunner);
+
+  /**
+   * Queues the "no player selected" snackbar, the one outcome on this page the shared runner never
+   * sees since it is rejected before any command runs.
+   */
+  private readonly snackbar = inject(SnackbarService);
 
   /**
    * Resource holding every tracked player, backing the per-player synchronization picker.
@@ -190,10 +197,10 @@ export class AdminOperations {
     const playerId = this.selectedPlayerId();
 
     if (playerId === null) {
-      this.syncPlayerState.set({
-        status: 'error',
-        message: this.translation.translate('admin.operations.syncPlayer.noneSelected'),
-      });
+      const message = this.translation.translate('admin.operations.syncPlayer.noneSelected');
+
+      this.syncPlayerState.set({ status: 'error', message });
+      this.snackbar.error(message);
 
       return;
     }

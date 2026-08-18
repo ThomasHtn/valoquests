@@ -1,18 +1,11 @@
 /*
  * Color palette, following the "Expédition" design direction.
  * Defines Tailwind v4 theme tokens (`@theme`), exposed as utilities such as
- * `bg-surface-900`, `text-accent-purple`, `border-brand-500`.
+ * `bg-surface-800`, `text-accent-purple`, `border-brand-500`.
  */
 
 @theme {
-  /*
-   * Brand (Expédition amber). `brand-600` is the one step below the base tone: it exists so a
-   * surface lit by the brand can be *shaded* — the landing compass's disc is a radial from
-   * `brand-400` down to it — without any screen reaching for a raw hex outside the palette.
-   */
-  --color-brand-950: #26190c;
-  --color-brand-900: #3a2814;
-  --color-brand-600: #a6752a;
+  /* Brand (Expédition amber). */
   --color-brand-500: #d9954a;
   --color-brand-400: #e8ab6b;
 
@@ -24,17 +17,10 @@
    * `surface-sunken` sits outside that scale on purpose: it is a *role*, not a step. The
    * navigation rail and inset wells (a health bar's track, a segmented bar's empty slots) read as
    * carved *below* the page ground, so they need a value darker than `surface-950` without
-   * inverting the meaning of the scale's numbering.
-   *
-   * `surface-panel` is the other role outside the scale: the raised panel a dialog or a card form
-   * sits on. It is a `color-mix` of `surface-sunken` rather than a flat step of the scale, so it
-   * reads as the same carved material as the rest of the interface instead of a flat grey box —
-   * `surface-900` used to fill this role directly and read as an unrelated color.
+   * inverting the meaning of the scale's numbering. Dialogs and panels use it directly too.
    */
   --color-surface-sunken: #0a151d;
-  --color-surface-panel: color-mix(in oklab, var(--color-surface-sunken) 95%, transparent);
   --color-surface-950: #0f1c26;
-  --color-surface-900: #142330;
   --color-surface-800: #1b2c3a;
   --color-surface-700: #253645;
   --color-surface-600: #33495b;
@@ -67,5 +53,5 @@
 
   /* Semantic states */
   --color-success: #5fb88a;
-  --color-danger: #f87171;
+  --color-danger: #d9534f;
 }

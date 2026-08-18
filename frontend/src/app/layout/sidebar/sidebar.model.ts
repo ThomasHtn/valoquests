@@ -13,7 +13,8 @@ export type NavIcon =
   | 'book-open'
   | 'refresh-cw'
   | 'user-cog'
-  | 'database-backup';
+  | 'database-backup'
+  | 'palette';
 
 /**
  * Primary navigation entry.

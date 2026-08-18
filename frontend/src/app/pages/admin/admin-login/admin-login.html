@@ -1,7 +1,7 @@
 <!-- Outer panel notched at 1.25rem; the field and buttons inside step down to 0.5rem so the nested
      corners read as concentric rather than pinched. -->
 <div
-  class="notch-tr notch-tr-edge w-full max-w-md border border-brand-500/30 bg-surface-panel p-8 [--notch:1.25rem]"
+  class="notch-tr notch-tr-edge w-full max-w-md border border-brand-500/30 bg-surface-sunken p-8 [--notch:1.25rem]"
 >
   <span
     aria-hidden="true"
@@ -44,7 +44,7 @@
             [value]="key()"
             autocapitalize="off"
             autocomplete="current-password"
-            class="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+            class="h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
             spellcheck="false"
           />
           <button
@@ -65,15 +65,6 @@
         </div>
       </div>
     </label>
-
-    @if (error()) {
-      <!-- The icon carries the failure as much as the colour does, so the message still reads as a
-           failure without colour perception. -->
-      <p class="mt-3 flex items-start gap-2 text-xs text-danger" role="alert">
-        <svg aria-hidden="true" class="mt-px h-4 w-4 shrink-0" lucideTriangleAlert></svg>
-        <span class="min-w-0 text-pretty">{{ error() }}</span>
-      </p>
-    }
 
     <button
       appButton="primary"

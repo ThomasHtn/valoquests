@@ -85,7 +85,7 @@ const COMPETITIVE_TIER_ORDER: readonly CompetitiveTier[] = [
 const TIER_GROUP_COLOR_CLASSES: Readonly<Record<string, string>> = {
   unranked: 'text-text-muted',
   iron: 'text-text-muted',
-  bronze: 'text-accent-red',
+  bronze: 'text-podium-bronze',
   silver: 'text-text-secondary',
   gold: 'text-accent-gold',
   platinum: 'text-accent-cyan',

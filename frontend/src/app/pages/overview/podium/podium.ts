@@ -35,9 +35,8 @@ const PODIUM_PLINTH_CLASSES: readonly string[] = [
 ];
 
 /**
- * Hero podium of the overview page: the top 3 players in hexagon-framed avatars standing on
- * plinths, echoing the hexagon position badge already used by the weekly ranking, followed by the
- * remaining tracked players as flat rows.
+ * Hero podium of the overview page: the top 3 players in circular avatars standing on
+ * plinths, followed by the remaining tracked players as flat rows.
  *
  * Reads the same shared current-ranking resource as `Leaderboard` directly, rather than reaching
  * into that component's internals, so both stay independent and `Leaderboard` is left unchanged.

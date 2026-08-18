@@ -1,0 +1,46 @@
+@if (snackbar.current(); as message) {
+  <div
+    class="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-4 sm:justify-end sm:pr-6"
+  >
+    <!-- Keyed by `message.id` via `@for` over a single-element array rather than a plain `@if`: the
+         enter and timebar animations must restart even when the same text is queued twice in a
+         row, which they only do if Angular actually recreates the element. -->
+    @for (item of [message]; track item.id) {
+      <div
+        [attr.aria-live]="message.type === 'error' ? 'assertive' : 'polite'"
+        [class]="message.type === 'error' ? 'border-danger/40' : 'border-success/40'"
+        class="notch-tr notch-tr-edge pointer-events-auto relative w-full max-w-sm overflow-hidden border bg-surface-sunken shadow-lg [--notch:0.625rem] motion-safe:animate-[snackbar-enter_200ms_ease-out]"
+        role="status"
+      >
+        <p
+          [class]="message.type === 'error' ? 'text-danger' : 'text-success'"
+          class="flex items-start gap-2 p-4 pr-10 text-sm text-pretty"
+        >
+          @if (message.type === 'error') {
+            <svg aria-hidden="true" class="mt-px h-4 w-4 shrink-0" lucideTriangleAlert></svg>
+          } @else {
+            <svg aria-hidden="true" class="mt-px h-4 w-4 shrink-0" lucideCircleCheck></svg>
+          }
+          <span class="min-w-0 text-text-primary">{{ message.text }}</span>
+        </p>
+
+        <button
+          (click)="snackbar.dismiss()"
+          [attr.aria-label]="'snackbar.dismiss' | translate"
+          class="focus-ring absolute top-3 right-3 flex size-5 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:text-text-primary"
+          type="button"
+        >
+          <svg aria-hidden="true" class="size-3.5" lucideX></svg>
+        </button>
+
+        <!-- Timebar: an inline `animation-duration` rather than a Tailwind utility, since it must
+             match `SNACKBAR_DURATION_MS` exactly instead of one of the scale's fixed steps. -->
+        <div
+          [class]="message.type === 'error' ? 'bg-danger' : 'bg-success'"
+          [style.animation-duration.ms]="snackbarDurationMs"
+          class="absolute bottom-0 left-0 h-0.5 w-full origin-left motion-safe:animate-[snackbar-timebar_linear_forwards]"
+        ></div>
+      </div>
+    }
+  </div>
+}

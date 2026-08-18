@@ -171,6 +171,9 @@
               @case ('database-backup') {
                 <svg class="h-full w-full" lucideDatabaseBackup></svg>
               }
+              @case ('palette') {
+                <svg class="h-full w-full" lucidePalette></svg>
+              }
             }
           </span>
           <span
@@ -287,7 +290,7 @@
           [class]="languagePanelClass()"
           [hidden]="!languageMenuOpen()"
           [id]="languageMenuId"
-          class="notch-tr notch-tr-edge absolute right-0 bottom-full z-20 mb-2 w-44 border border-brand-500/50 bg-surface-sunken pt-1 [--notch:0.5rem]"
+          class="notch-tr absolute right-0 bottom-full z-20 mb-2 w-44 border-l-2 border-brand-500/50 bg-surface-sunken [--notch:0.5rem]"
           role="listbox"
         >
           <p class="tracking-label px-4 pt-2 pb-1.5 font-mono text-2xs text-text-muted uppercase">
@@ -304,12 +307,12 @@
                   ? 'bg-brand-500/15 text-brand-500'
                   : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
               "
-              class="tracking-label flex min-h-10 w-full cursor-pointer items-center justify-between gap-4 px-4 py-2 text-left font-mono text-xs font-semibold uppercase transition-colors motion-safe:active:scale-[0.96]"
+              class="flex min-h-10 w-full cursor-pointer items-center justify-between gap-4 px-4 py-2.5 text-left text-base transition-colors motion-safe:active:scale-[0.96]"
               role="option"
               type="button"
             >
               <span>{{ languageName }}</span>
-              <span class="text-2xs opacity-70">{{ candidate }}</span>
+              <span class="text-xs opacity-70">{{ candidate }}</span>
             </button>
           }
         </div>

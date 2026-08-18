@@ -50,11 +50,6 @@ export class PlayerFormPanel {
   public readonly busy = input(false);
 
   /**
-   * Already-translated message of the last failed submission, or `null` when there is none to show.
-   */
-  public readonly errorMessage = input<string | null>(null);
-
-  /**
    * Emitted when the operator submits a valid form.
    */
   public readonly saved = output<PlayerFormResult>();

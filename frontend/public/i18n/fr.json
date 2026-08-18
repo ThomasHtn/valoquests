@@ -130,6 +130,36 @@
         "blockedBySync": "Une synchronisation est en cours. Attends qu'elle se termine : elle écrirait des matchs dans la base en train d'être vidée.",
         "done": "Campagne réinitialisée. Lance une synchronisation pour réimporter l'historique."
       }
+    },
+    "designSystem": {
+      "title": "Design System",
+      "heading": "Design System",
+      "sections": {
+        "avatars": "Avatars",
+        "backgrounds": "Fonds & surfaces",
+        "badges": "Badges & indicateurs",
+        "buttons": "Boutons",
+        "cards": "Cartes",
+        "challengeIcons": "Icônes de défi",
+        "colors": "Couleurs",
+        "confirmDialog": "Dialogue de confirmation",
+        "dropdowns": "Menus déroulants",
+        "layout": "Divider",
+        "menuButtons": "Sidebar & boutons de menu",
+        "pagination": "Pagination & navigation",
+        "panels": "Panels",
+        "progress": "Progression",
+        "rankIcons": "Icônes de rang",
+        "resourceState": "États de ressource",
+        "select": "Sélecteur",
+        "statusIndicators": "Statuts",
+        "tables": "Tableaux & lignes",
+        "tabs": "Tabs",
+        "textInputs": "Champs de texte",
+        "tooltip": "Infobulle",
+        "typography": "Typographie",
+        "weekCountdown": "Compte à rebours"
+      }
     }
   },
   "boss": {
@@ -489,6 +519,7 @@
       "unknown": "Jamais synchronisé"
     },
     "nav": {
+      "adminDesignSystem": "Design System",
       "adminMaintenance": "Maintenance",
       "adminOperations": "Opérations",
       "adminPlayers": "Joueurs",
@@ -501,6 +532,9 @@
     },
     "navLabel": "Navigation principale",
     "openMenu": "Ouvrir le menu"
+  },
+  "snackbar": {
+    "dismiss": "Fermer"
   },
   "skipToContent": "Aller au contenu principal",
   "tour": {

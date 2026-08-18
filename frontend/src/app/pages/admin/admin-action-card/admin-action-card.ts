@@ -1,23 +1,21 @@
 import { Component, input, output } from '@angular/core';
-import { LucideCircleCheck, LucideLoaderCircle, LucideTriangleAlert } from '@lucide/angular';
+import { LucideLoaderCircle } from '@lucide/angular';
 
 import { AdminActionState } from '@core/admin/admin-action.model';
 import { Button } from '@shared/button/button';
 
 /**
- * One triggerable backoffice operation, with its own outcome reported in place.
+ * One triggerable backoffice operation.
  *
  * Every maintenance command on these screens has the same anatomy — a name, a sentence saying what
- * it will do, one button, and an answer — so the anatomy is written once here rather than repeated
- * per operation with the drift that invites.
- *
- * The outcome sits inside the card on purpose. These commands take seconds to minutes and are run
- * in sequence when something has gone wrong; a shared banner would overwrite each answer with the
- * next and leave the operator unable to tell which command actually succeeded.
+ * it will do, and one button — so the anatomy is written once here rather than repeated per
+ * operation with the drift that invites. Its outcome is reported through the global snackbar, not
+ * in the card itself: {@link state} is still consumed for the running spinner and to keep the
+ * button disabled for the command's duration.
  */
 @Component({
   selector: 'app-admin-action-card',
-  imports: [Button, LucideCircleCheck, LucideLoaderCircle, LucideTriangleAlert],
+  imports: [Button, LucideLoaderCircle],
   templateUrl: './admin-action-card.html',
   host: { class: 'block' },
 })

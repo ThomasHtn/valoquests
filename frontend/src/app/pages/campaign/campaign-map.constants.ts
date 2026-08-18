@@ -113,14 +113,14 @@ const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritor
   },
   current: {
     ringClass: 'bg-accent-red',
-    fillClass: 'bg-surface-900',
+    fillClass: 'bg-surface-800',
     iconClass: 'text-accent-red',
     haloClass: 'bg-accent-red/25 motion-safe:animate-pulse',
     damageFillClass: 'bg-accent-red/35',
   },
   upcoming: {
     ringClass: 'bg-surface-600',
-    fillClass: 'bg-surface-900',
+    fillClass: 'bg-surface-800',
     iconClass: 'text-text-muted',
     haloClass: '',
     damageFillClass: '',

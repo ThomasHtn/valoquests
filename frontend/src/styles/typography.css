@@ -9,7 +9,7 @@
 @theme {
   --font-display: 'Oswald', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /*
    * One step below `text-xs`, for the direction's smallest monospaced marks: the page eyebrows,

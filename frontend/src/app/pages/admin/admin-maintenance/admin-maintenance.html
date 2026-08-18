@@ -73,20 +73,6 @@
   >
     {{ 'admin.maintenance.reset.action' | translate }}
   </button>
-
-  @if (resetState().status === 'done' || resetState().status === 'error') {
-    <p
-      [class]="
-        resetState().status === 'error'
-          ? 'border-danger/60 text-danger'
-          : 'border-success/60 text-success'
-      "
-      class="mt-4 border-l-2 pl-3 text-prose text-pretty"
-      role="status"
-    >
-      {{ resetState().message }}
-    </p>
-  }
 </div>
 
 <app-confirm-dialog

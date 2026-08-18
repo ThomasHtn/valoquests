@@ -29,12 +29,6 @@
       </button>
     </div>
 
-    @if (errorMessage(); as message) {
-      <p class="border-l-2 border-danger/60 pl-3 text-prose text-pretty text-danger" role="status">
-        {{ message }}
-      </p>
-    }
-
     <label class="block">
       <span class="tracking-label block font-mono text-xs text-text-muted uppercase">
         {{ 'admin.players.form.gameName' | translate }}
@@ -48,7 +42,7 @@
             [disabled]="busy()"
             [value]="gameName()"
             autocomplete="off"
-            class="h-full w-full bg-transparent px-3 font-mono text-sm text-text-primary focus:outline-none"
+            class="h-full w-full bg-transparent px-3 text-sm text-text-primary focus:outline-none"
             maxlength="32"
             required
             type="text"
@@ -70,7 +64,7 @@
             [disabled]="busy()"
             [value]="tagLine()"
             autocomplete="off"
-            class="h-full w-full bg-transparent px-3 font-mono text-sm text-text-primary focus:outline-none"
+            class="h-full w-full bg-transparent px-3 text-sm text-text-primary focus:outline-none"
             maxlength="16"
             required
             type="text"

@@ -13,7 +13,7 @@
     #panel
     [attr.aria-label]="heading()"
     aria-modal="true"
-    class="notch-tr notch-tr-edge focus-ring fixed top-1/2 left-1/2 z-50 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 border border-brand-500/40 bg-surface-panel p-6 [--notch:0.875rem]"
+    class="notch-tr notch-tr-edge focus-ring fixed top-1/2 left-1/2 z-50 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 border border-brand-500/40 bg-surface-sunken p-6 [--notch:0.875rem]"
     role="dialog"
     tabindex="-1"
   >
@@ -36,7 +36,7 @@
              anti-aliased shapes trying to land on the same pixel); two nested clip-paths of the
              same polygon never have that seam. -->
         <div
-          class="notch-tr mt-2 h-11 bg-text-muted p-px transition-colors [--notch:0.5rem] hover:bg-text-muted/80 focus-within:bg-brand-500 has-[:disabled]:opacity-60"
+          class="notch-tr mt-2 h-11 bg-text-muted p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500 has-[:disabled]:opacity-60"
         >
           <div class="notch-tr h-full bg-surface-sunken [--notch:0.5rem]">
             <input
@@ -46,7 +46,7 @@
               autocapitalize="off"
               autocomplete="off"
               autocorrect="off"
-              class="h-full w-full bg-transparent px-3 font-mono text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+              class="h-full w-full bg-transparent px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
               spellcheck="false"
               type="text"
             />

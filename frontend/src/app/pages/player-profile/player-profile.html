@@ -5,7 +5,7 @@
      on it as this page's real `<h1>`, so restating it here would only be a second source of the
      same fact. -->
 <a
-  class="focus-ring tracking-label inline-flex h-11 w-fit items-center gap-2 border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
+  class="focus-ring tracking-label inline-flex h-11 w-fit cursor-pointer items-center gap-2 border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
   routerLink="/players"
 >
   <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
@@ -26,7 +26,7 @@
     <div
       class="notch-tr flex items-center gap-5 border-l-2 border-surface-700 bg-text-primary/4 p-5 [--notch:1.25rem]"
     >
-      <span class="clip-hex size-24 shrink-0 bg-surface-700"></span>
+      <span class="size-24 shrink-0 rounded-full bg-surface-700"></span>
       <span class="flex flex-col gap-3">
         <span class="h-6 w-48 bg-surface-700"></span>
         <span class="h-3 w-24 bg-surface-700"></span>
@@ -50,7 +50,7 @@
       class="notch-tr flex flex-col gap-5 border-l-2 border-text-primary/15 bg-text-primary/4 p-5 [--notch:1.25rem] sm:flex-row sm:items-center sm:justify-between sm:p-6"
     >
       <div class="flex items-center gap-5">
-        <app-avatar [priority]="true" [src]="avatarUrl()" shape="hex" size="lg" />
+        <app-avatar [priority]="true" [src]="avatarUrl()" size="lg" />
 
         <div class="min-w-0">
           <h1
@@ -151,7 +151,7 @@
         @if (isGameModeMenuOpen()) {
           <div
             [attr.aria-label]="'playerProfile.filters.moreGameModes' | translate"
-            class="notch-tr absolute top-full right-0 z-20 mt-2 min-w-40 border-l-2 border-brand-500/50 bg-surface-sunken py-2 [--notch:0.5rem] sm:top-0 sm:right-auto sm:left-full sm:mt-0 sm:ml-2"
+            class="notch-tr absolute top-full right-0 z-20 mt-2 min-w-40 border-l-2 border-brand-500/50 bg-surface-sunken [--notch:0.5rem] sm:top-0 sm:right-auto sm:left-full sm:mt-0 sm:ml-2"
             role="menu"
           >
             @for (option of overflowGameModeOptions(); track option.value) {
@@ -333,7 +333,7 @@
         <ul class="flex flex-col gap-2" skeleton>
           @for (placeholder of skeletonRows; track $index) {
             <li
-              class="notch-tr flex items-center gap-4 border-l-2 border-surface-700 bg-text-primary/3 px-4 py-4 [--notch:0.625rem]"
+              class="notch-tr flex items-center gap-4 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-4 [--notch:0.625rem]"
             >
               <span class="size-10 shrink-0 bg-surface-700"></span>
               <span class="flex min-w-0 flex-1 flex-col gap-2">
@@ -457,7 +457,7 @@
               @for (row of day.matches; track row.id) {
                 <div
                   [class]="rowGridClass + ' ' + resultAccentClass(row.result)"
-                  class="notch-tr bg-text-primary/3 transition-colors [--notch:0.625rem] hover:bg-text-primary/6"
+                  class="notch-tr bg-text-primary/4 transition-colors [--notch:0.625rem] hover:bg-brand-500/15"
                 >
                   <div class="flex items-center gap-3.5 px-4 py-3.5">
                     @if (mapImageUrl(row.mapName); as mapImage) {
@@ -637,7 +637,7 @@
                 @for (row of day.matches; track row.id) {
                   <li
                     [class]="resultAccentClass(row.result)"
-                    class="notch-tr flex flex-col gap-4 bg-text-primary/3 px-4 py-4 [--notch:0.625rem]"
+                    class="notch-tr flex flex-col gap-4 bg-text-primary/4 px-4 py-4 [--notch:0.625rem]"
                   >
                     <div class="flex items-center gap-3.5">
                       @if (mapImageUrl(row.mapName); as mapImage) {

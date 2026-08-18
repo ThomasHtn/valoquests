@@ -1,12 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import {
-  LucideEye,
-  LucideEyeOff,
-  LucideLoaderCircle,
-  LucideLockKeyhole,
-  LucideTriangleAlert,
-} from '@lucide/angular';
+import { LucideEye, LucideEyeOff, LucideLoaderCircle, LucideLockKeyhole } from '@lucide/angular';
 
 import { AdminApi } from '@core/admin/admin-api';
 import { resolveAdminErrorMessage } from '@core/admin/admin-error.utils';
@@ -14,6 +8,7 @@ import { ADMIN_HOME_ROUTE } from '@core/admin/admin-session.constants';
 import { AdminSession } from '@core/admin/admin-session';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { SnackbarService } from '@core/snackbar/snackbar';
 import { Button } from '@shared/button/button';
 
 /**
@@ -29,15 +24,7 @@ import { Button } from '@shared/button/button';
  */
 @Component({
   selector: 'app-admin-login',
-  imports: [
-    TranslatePipe,
-    Button,
-    LucideEye,
-    LucideEyeOff,
-    LucideLoaderCircle,
-    LucideLockKeyhole,
-    LucideTriangleAlert,
-  ],
+  imports: [TranslatePipe, Button, LucideEye, LucideEyeOff, LucideLoaderCircle, LucideLockKeyhole],
   templateUrl: './admin-login.html',
   // Diverges from `PAGE_LAYOUT_CLASS`: this is a single centred composition filling the viewport,
   // not a stack of blocks inside the application shell.
@@ -63,6 +50,11 @@ export class AdminLogin {
    * i18n service used to resolve the fallback failure message.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Queues the rejection snackbar.
+   */
+  private readonly snackbar = inject(SnackbarService);
 
   /**
    * Key currently typed in the field.
@@ -123,9 +115,13 @@ export class AdminLogin {
       this.session.signIn(candidate);
       await this.router.navigate([ADMIN_HOME_ROUTE]);
     } catch (error: unknown) {
-      this.error.set(
-        resolveAdminErrorMessage(error, this.translation.translate('admin.login.rejected')),
+      const message = resolveAdminErrorMessage(
+        error,
+        this.translation.translate('admin.login.rejected'),
       );
+
+      this.error.set(message);
+      this.snackbar.error(message);
     } finally {
       this.verifying.set(false);
     }

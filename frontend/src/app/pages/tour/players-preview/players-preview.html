@@ -14,10 +14,10 @@
   <ul class="flex flex-wrap justify-center gap-3">
     @for (card of cards(); track card.id) {
       <li
-        class="notch-tr notch-tr-edge flex w-40 flex-col items-center gap-2.5 border border-text-primary/10 bg-linear-[115deg] from-surface-800/70 to-surface-sunken/60 px-3 py-5 [--notch:0.75rem]"
+        class="notch-tr notch-tr-edge flex w-40 flex-col items-center gap-2.5 border border-text-primary/10 bg-text-primary/4 px-3 py-5 [--notch:0.75rem]"
       >
         <!-- Hexagon silhouette, the application's marker for a player who holds a rank. -->
-        <app-avatar [src]="card.avatarUrl" shape="hex" size="md" />
+        <app-avatar [src]="card.avatarUrl" size="md" />
 
         <p class="font-display max-w-full truncate text-lg leading-tight font-semibold">
           {{ card.displayName }}
