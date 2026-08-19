@@ -93,6 +93,32 @@ class DefaultSeasonQueryServiceTest {
         assertThat(service.findAll()).isEmpty();
     }
 
+    /**
+     * Verifies that the current season resolves to the most recent one by episode and act, not the
+     * one with the greatest identifier.
+     */
+    @Test
+    void shouldResolveCurrentSeasonAsTheMostRecentByEpisodeAndAct() {
+        when(seasonRepository.findAllByOrderByIdDesc()).thenReturn(List.of(
+            season(4L, "e9a1", false),
+            season(3L, "e10a3", false),
+            season(2L, "e10a1", false),
+            season(1L, "e11a2", false)
+        ));
+
+        assertThat(service.resolveCurrentSeasonId()).isEqualTo(1L);
+    }
+
+    /**
+     * Verifies that the current season resolves to {@code null} when no season is known yet.
+     */
+    @Test
+    void shouldResolveNullCurrentSeasonWhenNoSeasonExists() {
+        when(seasonRepository.findAllByOrderByIdDesc()).thenReturn(List.of());
+
+        assertThat(service.resolveCurrentSeasonId()).isNull();
+    }
+
     private Season season(Long id, String name, boolean active) {
         Season season = new Season();
         season.setId(id);

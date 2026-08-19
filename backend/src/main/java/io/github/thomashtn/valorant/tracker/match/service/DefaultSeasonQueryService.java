@@ -54,9 +54,26 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
      */
     @Override
     public List<SeasonResponse> findAll() {
+        return chronologicallyOrderedSeasons().stream()
+            .map(this::toResponse)
+            .toList();
+    }
+
+    /**
+     * Resolves the season currently in progress as the most recent one known - seasons are created
+     * on demand from imported matches, so the most recent one is always the one still being played.
+     *
+     * @return the current season's identifier, or {@code null} if no season is known yet
+     */
+    @Override
+    public Long resolveCurrentSeasonId() {
+        List<Season> seasons = chronologicallyOrderedSeasons();
+        return seasons.isEmpty() ? null : seasons.get(0).getId();
+    }
+
+    private List<Season> chronologicallyOrderedSeasons() {
         return seasonRepository.findAllByOrderByIdDesc().stream()
             .sorted(Comparator.comparingLong(DefaultSeasonQueryService::chronologicalKey).reversed())
-            .map(this::toResponse)
             .toList();
     }
 

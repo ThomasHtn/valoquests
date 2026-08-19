@@ -48,7 +48,8 @@ public class PlayerController {
         summary = "List tracked players",
         description = """
             Returns every player configured in the application with identity, current competitive
-            rank, synchronization state and the main statistics used by the player list.
+            rank, synchronization state and the main statistics used by the player list, scoped to
+            the season currently in progress and to competitive matches.
             """
     )
     @ApiResponse(responseCode = "200", description = "Players returned successfully.")

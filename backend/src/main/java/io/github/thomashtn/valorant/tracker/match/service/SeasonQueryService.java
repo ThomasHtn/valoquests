@@ -14,4 +14,11 @@ public interface SeasonQueryService {
      * @return known seasons
      */
     List<SeasonResponse> findAll();
+
+    /**
+     * Resolves the season currently in progress - the most recent one known.
+     *
+     * @return the current season's identifier, or {@code null} if no season is known yet
+     */
+    Long resolveCurrentSeasonId();
 }

@@ -10,9 +10,12 @@ import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchHistoryCriteria;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
+import io.github.thomashtn.valorant.tracker.match.service.SeasonQueryService;
 import io.github.thomashtn.valorant.tracker.player.dto.PlayerDetailsResponse;
+import io.github.thomashtn.valorant.tracker.player.dto.PlayerSummaryResponse;
 import io.github.thomashtn.valorant.tracker.player.entity.Player;
 import io.github.thomashtn.valorant.tracker.player.exception.PlayerNotFoundException;
+import io.github.thomashtn.valorant.tracker.player.model.PlayerStatus;
 import io.github.thomashtn.valorant.tracker.player.repository.PlayerRepository;
 import io.github.thomashtn.valorant.tracker.shared.exception.InvalidRequestException;
 import io.github.thomashtn.valorant.tracker.week.WeekCalendar;
@@ -52,6 +55,12 @@ class DefaultPlayerQueryServiceTest {
     private WeekCalendar weekCalendar;
 
     /**
+     * Mocked season query service, resolving the season currently in progress.
+     */
+    @Mock
+    private SeasonQueryService seasonQueryService;
+
+    /**
      * Service under test.
      */
     private DefaultPlayerQueryService service;
@@ -61,7 +70,60 @@ class DefaultPlayerQueryServiceTest {
      */
     @BeforeEach
     void setUp() {
-        service = new DefaultPlayerQueryService(playerRepository, playerMatchRepository, weekCalendar);
+        service = new DefaultPlayerQueryService(
+            playerRepository, playerMatchRepository, weekCalendar, seasonQueryService
+        );
+    }
+
+    /**
+     * Verifies that the player list's statistics are scoped to the season currently in progress, as
+     * resolved by {@link SeasonQueryService}, and to competitive matches.
+     */
+    @Test
+    void shouldScopePlayerListStatisticsToTheCurrentSeasonAndCompetitiveMode() {
+        when(seasonQueryService.resolveCurrentSeasonId()).thenReturn(5L);
+        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
+            .thenReturn(List.of(player(1L)));
+        when(
+            playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+                1L,
+                new PlayerMatchHistoryCriteria(
+                    5L, null, null, null, GameMode.COMPETITIVE,
+                    PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+                    PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+                )
+            )
+        ).thenReturn(List.of(match(MatchResult.WIN, "Jett", "Ascent")));
+
+        List<PlayerSummaryResponse> result = service.findAll();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().matchesPlayed()).isEqualTo(1);
+    }
+
+    /**
+     * Verifies that the player list falls back to every competitive match on record when no season
+     * is known yet.
+     */
+    @Test
+    void shouldComputePlayerListLifetimeAggregateWhenNoSeasonExistsYet() {
+        when(seasonQueryService.resolveCurrentSeasonId()).thenReturn(null);
+        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
+            .thenReturn(List.of(player(1L)));
+        when(
+            playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+                1L,
+                new PlayerMatchHistoryCriteria(
+                    null, null, null, null, GameMode.COMPETITIVE,
+                    PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+                    PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+                )
+            )
+        ).thenReturn(List.of());
+
+        List<PlayerSummaryResponse> result = service.findAll();
+
+        assertThat(result.getFirst().matchesPlayed()).isEqualTo(0);
     }
 
     /**

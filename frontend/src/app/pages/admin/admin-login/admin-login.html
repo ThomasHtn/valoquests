@@ -5,9 +5,9 @@
 >
   <span
     aria-hidden="true"
-    class="clip-hex flex h-12 w-11 shrink-0 items-center justify-center bg-brand-500/12 text-brand-500"
+    class="clip-hex mx-auto flex h-16 w-14 shrink-0 items-center justify-center bg-brand-500/12 text-brand-500"
   >
-    <svg class="h-5 w-5" lucideLockKeyhole></svg>
+    <svg class="h-7 w-7" lucideLockKeyhole></svg>
   </span>
 
   <p class="tracking-label-wide mt-6 font-mono text-xs font-medium text-brand-500 uppercase">
@@ -51,7 +51,7 @@
     <button
       appButton="primary"
       [disabled]="verifying() || key().trim() === ''"
-      class="mt-6 flex min-h-11 w-full items-center justify-center gap-2 px-4 py-2 text-sm font-medium [--notch:0.5rem]"
+      class="mt-6 flex min-h-11 w-full items-center justify-center gap-2 px-4 py-2 text-base font-semibold [--notch:0.5rem]"
       type="submit"
     >
       @if (verifying()) {

@@ -5,6 +5,7 @@ import io.github.thomashtn.valorant.tracker.match.model.GameMode;
 import io.github.thomashtn.valorant.tracker.match.model.MatchResult;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchHistoryCriteria;
 import io.github.thomashtn.valorant.tracker.match.repository.PlayerMatchRepository;
+import io.github.thomashtn.valorant.tracker.match.service.SeasonQueryService;
 import io.github.thomashtn.valorant.tracker.player.dto.AgentStatisticsResponse;
 import io.github.thomashtn.valorant.tracker.player.dto.MapStatisticsResponse;
 import io.github.thomashtn.valorant.tracker.player.dto.PlayerDetailsResponse;
@@ -49,37 +50,55 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
     private final WeekCalendar weekCalendar;
 
     /**
+     * Resolves the season currently in progress, used to scope the player list's statistics.
+     */
+    private final SeasonQueryService seasonQueryService;
+
+    /**
      * Creates the persisted player query service.
      *
      * @param playerRepository repository used to load tracked players
      * @param playerMatchRepository repository used to query persisted player matches
      * @param weekCalendar calendar resolving a week's instant bounds
+     * @param seasonQueryService resolves the season currently in progress
      */
     public DefaultPlayerQueryService(
         PlayerRepository playerRepository,
         PlayerMatchRepository playerMatchRepository,
-        WeekCalendar weekCalendar
+        WeekCalendar weekCalendar,
+        SeasonQueryService seasonQueryService
     ) {
         this.playerRepository = playerRepository;
         this.playerMatchRepository = playerMatchRepository;
         this.weekCalendar = weekCalendar;
+        this.seasonQueryService = seasonQueryService;
     }
 
     /**
-     * Returns every tracked player with aggregate match statistics.
+     * Returns every tracked player with aggregate match statistics scoped to the season currently in
+     * progress and to competitive matches.
      *
      * <p>Archived players are left out: they were removed from the roster and only remain stored so
      * the finalized weeks naming them stay readable. They are still resolvable through
      * {@link #findById}, which is what keeps a link from such a week working.
      *
+     * <p>Falls back to every competitive match on record when no season is known yet - an empty
+     * database, before the first synchronization ever runs.
+     *
      * @return tracked player summaries
      */
     @Override
     public List<PlayerSummaryResponse> findAll() {
+        Long currentSeasonId = seasonQueryService.resolveCurrentSeasonId();
+        PlayerMatchHistoryCriteria criteria = new PlayerMatchHistoryCriteria(
+            currentSeasonId, null, null, null, GameMode.COMPETITIVE,
+            PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
+            PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
+        );
         return playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED).stream()
             .map(player -> toSummary(
                 player,
-                playerMatchRepository.findAllByPlayerIdOrderByMatchStartedAtDesc(player.getId())
+                playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(player.getId(), criteria)
             ))
             .toList();
     }
