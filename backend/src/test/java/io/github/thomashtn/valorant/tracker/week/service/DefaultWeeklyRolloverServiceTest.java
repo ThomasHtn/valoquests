@@ -42,6 +42,12 @@ class DefaultWeeklyRolloverServiceTest {
         LocalDate.of(2026, 7, 20);
 
     /**
+     * Older week left open by a rollover that never ran.
+     */
+    private static final LocalDate MISSED_WEEK_START =
+        LocalDate.of(2026, 6, 29);
+
+    /**
      * Fixed rollover timestamp.
      */
     private static final Instant ROLLOVER_TIME =
@@ -136,6 +142,8 @@ class DefaultWeeklyRolloverServiceTest {
         WeeklyPlayerScore secondScore =
             new WeeklyPlayerScore();
 
+        givenPendingWeeks(PREVIOUS_WEEK_START);
+
         when(
             weeklyChallengeRepository
                 .findAllByWeekStartOrderByIdAsc(
@@ -216,18 +224,29 @@ class DefaultWeeklyRolloverServiceTest {
     }
 
     /**
-     * Verifies that an already finalized week is not recalculated.
+     * Verifies that every week left open by a missed rollover is caught up, oldest first.
      */
     @Test
-    void shouldRemainIdempotentWhenPreviousWeekIsFinalized() {
-        WeeklyChallenge firstChallenge =
+    void shouldCatchUpEveryPendingWeek() {
+        WeeklyChallenge missedWeekChallenge =
             new WeeklyChallenge();
 
-        WeeklyChallenge secondChallenge =
+        WeeklyChallenge previousWeekChallenge =
             new WeeklyChallenge();
 
-        firstChallenge.setFinalizedAt(ROLLOVER_TIME);
-        secondChallenge.setFinalizedAt(ROLLOVER_TIME);
+        givenPendingWeeks(
+            MISSED_WEEK_START,
+            PREVIOUS_WEEK_START
+        );
+
+        when(
+            weeklyChallengeRepository
+                .findAllByWeekStartOrderByIdAsc(
+                    MISSED_WEEK_START
+                )
+        ).thenReturn(
+            List.of(missedWeekChallenge)
+        );
 
         when(
             weeklyChallengeRepository
@@ -235,11 +254,50 @@ class DefaultWeeklyRolloverServiceTest {
                     PREVIOUS_WEEK_START
                 )
         ).thenReturn(
-            List.of(
-                firstChallenge,
-                secondChallenge
-            )
+            List.of(previousWeekChallenge)
         );
+
+        service.rolloverIfNeeded();
+
+        InOrder catchUpOrder = inOrder(
+            rankingRecalculationService,
+            weeklyLifecycleCoordinator
+        );
+
+        catchUpOrder.verify(rankingRecalculationService)
+            .recalculateWeek(MISSED_WEEK_START);
+
+        catchUpOrder.verify(rankingRecalculationService)
+            .recalculateWeek(PREVIOUS_WEEK_START);
+
+        catchUpOrder.verify(weeklyLifecycleCoordinator)
+            .openWeek(CURRENT_WEEK_START);
+
+        verify(challengeRecalculationService)
+            .recalculateWeekProgress(MISSED_WEEK_START);
+
+        verify(weeklyLifecycleCoordinator)
+            .closeBossEncounterIfNeeded(
+                MISSED_WEEK_START,
+                ROLLOVER_TIME
+            );
+
+        assertThat(missedWeekChallenge.getFinalizedAt())
+            .isEqualTo(ROLLOVER_TIME);
+
+        assertThat(previousWeekChallenge.getFinalizedAt())
+            .isEqualTo(ROLLOVER_TIME);
+    }
+
+    /**
+     * Verifies that nothing is finalized when no past week is still open.
+     *
+     * <p>Covers both an already finalized previous week and the very first application week: in
+     * either case the week is not pending.</p>
+     */
+    @Test
+    void shouldPrepareCurrentWeekWhenNoWeekIsPending() {
+        givenPendingWeeks();
 
         service.rolloverIfNeeded();
 
@@ -247,16 +305,6 @@ class DefaultWeeklyRolloverServiceTest {
             rankingRecalculationService,
             never()
         ).recalculateWeek(PREVIOUS_WEEK_START);
-
-        verify(
-            weeklyChallengeRepository,
-            never()
-        ).saveAll(
-            List.of(
-                firstChallenge,
-                secondChallenge
-            )
-        );
 
         verify(
             weeklyPlayerScoreRepository,
@@ -264,40 +312,6 @@ class DefaultWeeklyRolloverServiceTest {
         ).saveAll(
             org.mockito.ArgumentMatchers.anyList()
         );
-
-        verify(weeklyLifecycleCoordinator)
-            .openWeek(
-                CURRENT_WEEK_START
-            );
-
-        verify(
-            weeklyLifecycleCoordinator,
-            never()
-        ).closeBossEncounterIfNeeded(
-            PREVIOUS_WEEK_START,
-            ROLLOVER_TIME
-        );
-    }
-
-    /**
-     * Verifies that the first application week can be created without a
-     * previous challenge pack.
-     */
-    @Test
-    void shouldPrepareCurrentWeekWhenPreviousWeekDoesNotExist() {
-        when(
-            weeklyChallengeRepository
-                .findAllByWeekStartOrderByIdAsc(
-                    PREVIOUS_WEEK_START
-                )
-        ).thenReturn(List.of());
-
-        service.rolloverIfNeeded();
-
-        verify(
-            rankingRecalculationService,
-            never()
-        ).recalculateWeek(PREVIOUS_WEEK_START);
 
         verify(weeklyLifecycleCoordinator)
             .openWeek(
@@ -328,6 +342,8 @@ class DefaultWeeklyRolloverServiceTest {
 
         WeeklyChallenge activeChallenge =
             new WeeklyChallenge();
+
+        givenPendingWeeks(PREVIOUS_WEEK_START);
 
         when(
             weeklyChallengeRepository
@@ -364,5 +380,19 @@ class DefaultWeeklyRolloverServiceTest {
         ).openWeek(
             CURRENT_WEEK_START
         );
+    }
+
+    /**
+     * Declares the past weeks the repository reports as still open.
+     *
+     * @param weekStarts pending week identifiers, oldest first
+     */
+    private void givenPendingWeeks(LocalDate... weekStarts) {
+        when(
+            weeklyChallengeRepository
+                .findPendingWeekStartsBefore(
+                    CURRENT_WEEK_START
+                )
+        ).thenReturn(List.of(weekStarts));
     }
 }

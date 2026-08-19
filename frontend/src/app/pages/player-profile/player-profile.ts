@@ -49,12 +49,14 @@ import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
+import { NavChip } from '@shared/nav-chip/nav-chip';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
+import { StatTile } from '@shared/stat-tile/stat-tile';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { MatchDay } from './match-day.model';
 import { groupMatchesByDay } from './match-day.utils';
@@ -99,6 +101,8 @@ const VIEW_MODES: readonly ViewMode[] = ['weekly', 'global'];
     LucideChevronLeft,
     LucideEllipsisVertical,
     LucideLoaderCircle,
+    NavChip,
+    StatTile,
   ],
   templateUrl: './player-profile.html',
   host: {

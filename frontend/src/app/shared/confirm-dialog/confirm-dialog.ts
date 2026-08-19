@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 
 import { Button } from '@shared/button/button';
+import { TextField, TextFieldInput } from '@shared/text-field/text-field';
 
 /**
  * Modal confirmation for an action that cannot be undone.
@@ -25,7 +26,7 @@ import { Button } from '@shared/button/button';
  */
 @Component({
   selector: 'app-confirm-dialog',
-  imports: [Button],
+  imports: [Button, TextField, TextFieldInput],
   templateUrl: './confirm-dialog.html',
   host: {
     class: 'contents',

@@ -1,28 +1,20 @@
 import { NgOptimizedImage } from '@angular/common';
-import {
-  afterNextRender,
-  Component,
-  computed,
-  ElementRef,
-  input,
-  output,
-  viewChild,
-} from '@angular/core';
-import { LucideChevronLeft, LucideChevronRight, LucideSkull, LucideX } from '@lucide/angular';
+import { Component, computed, input, output } from '@angular/core';
+import { LucideChevronLeft, LucideChevronRight, LucideSkull } from '@lucide/angular';
 
 import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
+import { Drawer } from '@shared/drawer/drawer';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 
 /**
  * Detail panel for one week of the campaign, opened from the battle map or the legacy timeline.
  *
- * A right-anchored drawer built on the native `<dialog>` element: modality, the backdrop, Escape
- * to dismiss and the focus trap all come from the platform, so the component only owns opening it
- * and reporting the dismissal back to the page. It stays mounted while the reader steps between
+ * Rendered inside the shared `app-drawer`, which owns the panel and its dismissal, so this
+ * component is only the week's contents. It stays mounted while the reader steps between
  * weeks — only {@link node} changes — and is destroyed by the page once closed.
  */
 @Component({
@@ -32,11 +24,11 @@ import { PositionBadge } from '@shared/position-badge/position-badge';
     Avatar,
     ChampionBadge,
     PositionBadge,
+    Drawer,
     NgOptimizedImage,
     LucideChevronLeft,
     LucideChevronRight,
     LucideSkull,
-    LucideX,
   ],
   templateUrl: './boss-detail.html',
 })
@@ -65,43 +57,7 @@ export class BossDetail {
   public readonly closed = output<void>();
 
   /**
-   * The drawer element itself, needed to drive it through the imperative `<dialog>` API.
-   */
-  private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
-
-  /**
    * Visual treatment matching the detailed week's status, shared with its timeline node.
    */
   protected readonly tier = computed(() => resolveBossTimelineTier(this.node().status));
-
-  /**
-   * Opens the drawer as a modal as soon as it is in the DOM — the component is only ever rendered
-   * in response to the reader selecting a week, so there is no state where it should sit closed —
-   * and wires dismissal by clicking the backdrop.
-   *
-   * That last listener is bound here rather than as a template `(click)`: a `<dialog>`'s backdrop
-   * is a pseudo-element with no node of its own, so the click surfaces on the dialog itself, and a
-   * click handler on an element that is not itself a control is exactly what the template
-   * accessibility rules reject — rightly, except that here the keyboard equivalent is Escape,
-   * which the platform already handles.
-   */
-  constructor() {
-    afterNextRender(() => {
-      const dialog = this.dialog().nativeElement;
-      dialog.showModal();
-      dialog.addEventListener('click', (event) => {
-        if (event.target === dialog) {
-          dialog.close();
-        }
-      });
-    });
-  }
-
-  /**
-   * Dismisses the drawer. The `close` event it fires is what notifies the page, so this path and
-   * the platform's own (Escape) end up reporting through the same channel.
-   */
-  protected close(): void {
-    this.dialog().nativeElement.close();
-  }
 }

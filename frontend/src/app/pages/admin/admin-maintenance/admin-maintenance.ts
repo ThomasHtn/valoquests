@@ -10,6 +10,8 @@ import { resourceValue } from '@core/http/resource-state.utils';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
+import { InlineMessage } from '@shared/inline-message/inline-message';
+import { PageHeader } from '@shared/page-header/page-header';
 import { SectionDivider } from '@shared/section-divider/section-divider';
 
 /**
@@ -47,7 +49,7 @@ const KEPT_DATA_KEYS: readonly string[] = [
  */
 @Component({
   selector: 'app-admin-maintenance',
-  imports: [TranslatePipe, Button, ConfirmDialog, SectionDivider],
+  imports: [TranslatePipe, Button, ConfirmDialog, InlineMessage, PageHeader, SectionDivider],
   templateUrl: './admin-maintenance.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

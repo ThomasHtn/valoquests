@@ -1,206 +1,186 @@
-<!-- Right-anchored drawer. The margin utilities override the user-agent's centering (`margin:auto`
-     on all four sides) so the dialog pins to the viewport's right edge at full height, and
-     `max-h-dvh` overrides the default `max-height: calc(100% - 6px - 2em)` that would otherwise
-     leave it floating short of the top and bottom. -->
-<dialog
-  #dialog
-  (close)="closed.emit()"
-  aria-labelledby="boss-detail-title"
-  class="m-0 ml-auto h-dvh max-h-dvh w-full max-w-md border-l border-brand-500/30 bg-surface-sunken p-0 text-text-primary backdrop:bg-surface-sunken/75 motion-safe:animate-[drawer-enter_200ms_ease-out]"
+<app-drawer
+  (closed)="closed.emit()"
+  [closeLabel]="'boss.panel.close' | translate"
+  labelledBy="boss-detail-title"
 >
-  <div class="flex h-full flex-col gap-6 overflow-y-auto p-5 sm:p-7">
-    <!-- Week stepper. Borderless and chromeless next to the close button, which is the one framed
-         control of the header: stepping is a secondary move, and two more outlined boxes beside the
-         close one read as a toolbar the drawer does not need. Square, uncut: at this size the
-         direction's corner cut only muddies the hover surface. -->
-    <div class="flex items-center justify-between gap-2">
-      <div class="flex items-center gap-1">
-        <button
-          (click)="previous.emit()"
-          [attr.aria-label]="'boss.panel.previous' | translate"
-          [disabled]="!hasPrevious()"
-          class="focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
-          type="button"
-        >
-          <svg class="size-4" lucideChevronLeft></svg>
-        </button>
-        <button
-          (click)="next.emit()"
-          [attr.aria-label]="'boss.panel.next' | translate"
-          [disabled]="!hasNext()"
-          class="focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
-          type="button"
-        >
-          <svg class="size-4" lucideChevronRight></svg>
-        </button>
-      </div>
-
-      <button
-        (click)="close()"
-        [attr.aria-label]="'boss.panel.close' | translate"
-        class="focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center border border-text-primary/15 text-text-secondary transition-colors hover:bg-text-primary/10 hover:text-text-primary"
-        type="button"
-      >
-        <svg class="size-4" lucideX></svg>
-      </button>
-    </div>
-
-    <div>
-      <p class="tracking-label font-mono text-xs font-medium uppercase">
-        <span [class]="tier().accentTextClass">{{ node().statusLabel }}</span>
-        @if (node().dateRangeLabel; as dateRangeLabel) {
-          <span class="text-text-muted"> · {{ dateRangeLabel }}</span>
-        }
-      </p>
-
-      <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h2 class="font-display text-2xl leading-none font-bold uppercase" id="boss-detail-title">
-          {{ node().bossName }}
-        </h2>
-        @if (node().categoryLabel; as categoryLabel) {
-          <span class="tracking-label font-mono text-xs text-text-muted uppercase">
-            {{ 'boss.difficulty' | translate }}
-            <span aria-hidden="true">·</span>
-            {{ categoryLabel }}
-          </span>
-        }
-      </div>
-    </div>
-
-    <!-- Boss artwork, or the tinted plate standing in for it until the catalogue gets real
-         artwork (`imageUrl` is `null` for every entry today). -->
-    <div
-      [class]="tier().panelClass"
-      class="notch-tr notch-tr-edge relative flex h-44 shrink-0 items-center justify-center overflow-hidden border bg-linear-[135deg] to-surface-950 [--notch:1.125rem]"
+  <!-- Week stepper. Borderless and chromeless next to the drawer's close button, which is the one
+       framed control of the header: stepping is a secondary move, and two more outlined boxes
+       beside the close one read as a toolbar the drawer does not need. Square, uncut: at this size
+       the direction's corner cut only muddies the hover surface. -->
+  <div class="flex items-center gap-1" drawerLeading>
+    <button
+      (click)="previous.emit()"
+      [attr.aria-label]="'boss.panel.previous' | translate"
+      [disabled]="!hasPrevious()"
+      class="focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
+      type="button"
     >
-      @if (node().portraitUrl; as portraitUrl) {
-        <img
-          [height]="176"
-          [ngSrc]="portraitUrl"
-          [width]="416"
-          alt=""
-          class="h-full w-full object-cover"
-        />
-      } @else {
-        <span class="flex flex-col items-center gap-3 text-text-muted">
-          <svg class="size-9" lucideSkull></svg>
-          <span class="tracking-label font-mono text-xs uppercase">
-            {{ 'boss.panel.portrait' | translate }}
-          </span>
+      <svg class="size-4" lucideChevronLeft></svg>
+    </button>
+    <button
+      (click)="next.emit()"
+      [attr.aria-label]="'boss.panel.next' | translate"
+      [disabled]="!hasNext()"
+      class="focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
+      type="button"
+    >
+      <svg class="size-4" lucideChevronRight></svg>
+    </button>
+  </div>
+
+  <div>
+    <p class="label-caption">
+      <span [class]="tier().accentTextClass">{{ node().statusLabel }}</span>
+      @if (node().dateRangeLabel; as dateRangeLabel) {
+        <span class="text-text-muted"> · {{ dateRangeLabel }}</span>
+      }
+    </p>
+
+    <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <h2 class="font-display text-2xl leading-none font-bold uppercase" id="boss-detail-title">
+        {{ node().bossName }}
+      </h2>
+      @if (node().categoryLabel; as categoryLabel) {
+        <span class="label-caption text-text-muted">
+          {{ 'boss.difficulty' | translate }}
+          <span aria-hidden="true">·</span>
+          {{ categoryLabel }}
         </span>
       }
     </div>
+  </div>
 
-    @if (node().hasDamage) {
-      <div>
-        <div class="flex items-baseline justify-between gap-3">
-          <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
-            {{ node().barLabel }}
-          </span>
-          <span
-            [class]="tier().accentTextClass"
-            class="font-mono text-2xs font-medium tabular-nums"
-            >{{ node().hpPercentageLabel }}</span
-          >
-        </div>
+  <!-- Boss artwork, or the tinted plate standing in for it until the catalogue gets real
+         artwork (`imageUrl` is `null` for every entry today). -->
+  <div
+    [class]="tier().panelClass"
+    class="notch-tr notch-tr-edge relative flex h-44 shrink-0 items-center justify-center overflow-hidden border bg-linear-[135deg] to-surface-950 [--notch:1.125rem]"
+  >
+    @if (node().portraitUrl; as portraitUrl) {
+      <img
+        [height]="176"
+        [ngSrc]="portraitUrl"
+        [width]="416"
+        alt=""
+        class="h-full w-full object-cover"
+      />
+    } @else {
+      <span class="flex flex-col items-center gap-3 text-text-muted">
+        <svg class="size-9" lucideSkull></svg>
+        <span class="label-caption">
+          {{ 'boss.panel.portrait' | translate }}
+        </span>
+      </span>
+    }
+  </div>
 
-        <!-- Health bar, draining as the group takes hit points off. The tally rides inside the
+  @if (node().hasDamage) {
+    <div>
+      <div class="flex items-baseline justify-between gap-3">
+        <span class="label-caption text-text-muted">
+          {{ node().barLabel }}
+        </span>
+        <span
+          [class]="tier().accentTextClass"
+          class="font-mono text-2xs font-medium tabular-nums"
+          >{{ node().hpPercentageLabel }}</span
+        >
+      </div>
+
+      <!-- Health bar, draining as the group takes hit points off. The tally rides inside the
              track rather than beside it, so the number and the fill it describes are read in one
              glance; it stays exposed to assistive technology since nothing else on the panel
              repeats it. -->
-        <!-- Same track as the timeline panel this drawer opens from — same height, same sunken
+      <!-- Same track as the timeline panel this drawer opens from — same height, same sunken
              ground, same tally size — so the bar reads as the one the reader just clicked, seen
              closer up rather than redrawn. -->
-        <div class="relative mt-2 h-6 border border-text-primary/15 bg-surface-sunken">
-          <div
-            [class]="tier().barFillClass"
-            [style.width.%]="node().hpPercentage"
-            aria-hidden="true"
-            class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
-          ></div>
-          <span
-            class="relative flex h-full items-center justify-center font-mono text-2xs font-semibold text-text-primary tabular-nums [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
-            >{{ node().hpLabel }}</span
-          >
-        </div>
-
-        @if (node().panelMetaLabel; as metaLabel) {
-          <p class="mt-4 flex items-center gap-2.5 text-sm text-text-secondary">
-            <span
-              [class]="tier().barFillClass"
-              aria-hidden="true"
-              class="size-1.5 shrink-0 rotate-45"
-            ></span>
-            {{ metaLabel }}
-          </p>
-        }
+      <div class="relative mt-2 h-6 border border-text-primary/15 bg-surface-sunken">
+        <div
+          [class]="tier().barFillClass"
+          [style.width.%]="node().hpPercentage"
+          aria-hidden="true"
+          class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
+        ></div>
+        <span
+          class="relative flex h-full items-center justify-center font-mono text-2xs font-semibold text-text-primary tabular-nums [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
+          >{{ node().hpLabel }}</span
+        >
       </div>
-    } @else {
-      <p
-        class="text-prose flex items-center gap-3 border border-dashed border-text-primary/15 bg-text-primary/3 p-3.5 text-text-secondary"
-      >
-        <span aria-hidden="true" class="font-mono text-sm font-bold text-text-muted">?</span>
-        {{ node().bossDescription }}
-      </p>
-    }
 
-    <!-- Who actually did the damage. Reconstructed from the week's ranking, so it is absent for a
+      @if (node().panelMetaLabel; as metaLabel) {
+        <p class="mt-4 flex items-center gap-2.5 text-sm text-text-secondary">
+          <span
+            [class]="tier().barFillClass"
+            aria-hidden="true"
+            class="size-1.5 shrink-0 rotate-45"
+          ></span>
+          {{ metaLabel }}
+        </p>
+      }
+    </div>
+  } @else {
+    <p
+      class="text-prose flex items-center gap-3 border border-dashed border-text-primary/15 bg-text-primary/3 p-3.5 text-text-secondary"
+    >
+      <span aria-hidden="true" class="font-mono text-sm font-bold text-text-muted">?</span>
+      {{ node().bossDescription }}
+    </p>
+  }
+
+  <!-- Who actually did the damage. Reconstructed from the week's ranking, so it is absent for a
          week the ranking does not cover — a locked week ahead, or one finalized before the group
          started being tracked. -->
-    @if (node().contributions.length > 0) {
-      <div>
-        <div class="flex items-baseline justify-between gap-4">
-          <h3 class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
-            {{ 'boss.panel.ranking' | translate }}
-          </h3>
-          <div class="tracking-label flex gap-4 font-mono text-xs text-text-muted uppercase">
-            <span>{{ 'boss.panel.quests' | translate }}</span>
-            <span class="w-16 text-right">{{ 'boss.panel.damage' | translate }}</span>
-          </div>
+  @if (node().contributions.length > 0) {
+    <div>
+      <div class="flex items-baseline justify-between gap-4">
+        <h3 class="label-caption text-text-muted">
+          {{ 'boss.panel.ranking' | translate }}
+        </h3>
+        <div class="label-caption flex gap-4 text-text-muted">
+          <span>{{ 'boss.panel.quests' | translate }}</span>
+          <span class="w-16 text-right">{{ 'boss.panel.damage' | translate }}</span>
         </div>
+      </div>
 
-        <ol class="mt-3 flex flex-col gap-2">
-          @for (contribution of node().contributions; track contribution.playerId) {
-            <!-- The registry's row treatment — notched corner, leading rule, flat wash — as used by
+      <ol class="mt-3 flex flex-col gap-2">
+        @for (contribution of node().contributions; track contribution.playerId) {
+          <!-- The registry's row treatment — notched corner, leading rule, flat wash — as used by
                  the players page, the ranking and the podium's field, so a player row means the
                  same thing here as everywhere else. Only the padding is tighter, for the drawer's
                  width. The leading rule carries the top contributor's emphasis. -->
-            <li
-              [class]="
-                contribution.position === 1 ? 'border-brand-500/70' : 'border-text-primary/15'
-              "
-              class="notch-tr flex items-center gap-3 border-l-2 bg-text-primary/4 px-3 py-2.5 [--notch:0.625rem]"
-            >
-              <app-position-badge [position]="contribution.position" />
-              <app-avatar
-                [champion]="contribution.isChampion"
-                [src]="contribution.avatarUrl"
-                size="sm"
-              />
-              <span class="flex min-w-0 flex-1 items-center gap-2">
-                <span
-                  [class.text-accent-gold]="contribution.isChampion"
-                  [class.text-text-primary]="!contribution.isChampion"
-                  class="font-display truncate text-lg leading-tight font-semibold"
-                >
-                  {{ contribution.displayName }}
-                </span>
-                @if (contribution.isChampion) {
-                  <app-champion-badge />
-                }
-              </span>
-              <span class="shrink-0 font-mono text-2xs text-text-muted tabular-nums">
-                {{ contribution.questsLabel }}
-              </span>
+          <li
+            [class]="contribution.position === 1 ? 'border-brand-500/70' : 'border-text-primary/15'"
+            class="notch-tr flex items-center gap-3 border-l-2 bg-text-primary/4 px-3 py-2.5 [--notch:0.625rem]"
+          >
+            <app-position-badge [position]="contribution.position" />
+            <app-avatar
+              [champion]="contribution.isChampion"
+              [src]="contribution.avatarUrl"
+              size="sm"
+            />
+            <span class="flex min-w-0 flex-1 items-center gap-2">
               <span
-                class="font-display w-16 shrink-0 text-right text-base leading-none font-bold text-brand-500 tabular-nums"
+                [class.text-accent-gold]="contribution.isChampion"
+                [class.text-text-primary]="!contribution.isChampion"
+                class="font-display truncate text-lg leading-tight font-semibold"
               >
-                {{ contribution.damageLabel }}
+                {{ contribution.displayName }}
               </span>
-            </li>
-          }
-        </ol>
-      </div>
-    }
-  </div>
-</dialog>
+              @if (contribution.isChampion) {
+                <app-champion-badge />
+              }
+            </span>
+            <span class="shrink-0 font-mono text-2xs text-text-muted tabular-nums">
+              {{ contribution.questsLabel }}
+            </span>
+            <span
+              class="font-display w-16 shrink-0 text-right text-base leading-none font-bold text-brand-500 tabular-nums"
+            >
+              {{ contribution.damageLabel }}
+            </span>
+          </li>
+        }
+      </ol>
+    </div>
+  }
+</app-drawer>

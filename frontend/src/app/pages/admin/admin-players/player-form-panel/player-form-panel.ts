@@ -1,18 +1,10 @@
-import {
-  afterNextRender,
-  Component,
-  computed,
-  ElementRef,
-  input,
-  linkedSignal,
-  output,
-  viewChild,
-} from '@angular/core';
-import { LucideX } from '@lucide/angular';
+import { Component, computed, input, linkedSignal, output } from '@angular/core';
 
 import { AdminPlayer, AdminPlayerStatus } from '@core/admin/admin.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Button } from '@shared/button/button';
+import { Drawer } from '@shared/drawer/drawer';
+import { TextField, TextFieldInput } from '@shared/text-field/text-field';
 
 /**
  * Identity the operator submitted, before it is turned into a create or update request.
@@ -27,15 +19,15 @@ export interface PlayerFormResult {
  * Right-anchored drawer for adding or editing a roster player, opened from a row or from the
  * "Add a player" button.
  *
- * Built on the native `<dialog>` element, like the campaign detail drawer: modality, the backdrop,
- * Escape to dismiss and the focus trap all come from the platform. Only the Riot identity (game
+ * Rendered inside the shared `app-drawer`, which owns the panel and its dismissal. Only the Riot
+ * identity (game
  * name, tag) and, when creating, the initial status are editable here — the display name and
  * portrait are not roster-operator concerns day to day, so the panel does not surface them: it
  * carries the display name over unchanged on an edit, and defaults it to the game name on creation.
  */
 @Component({
   selector: 'app-player-form-panel',
-  imports: [TranslatePipe, Button, LucideX],
+  imports: [TranslatePipe, Button, Drawer, TextField, TextFieldInput],
   templateUrl: './player-form-panel.html',
 })
 export class PlayerFormPanel {
@@ -59,11 +51,6 @@ export class PlayerFormPanel {
    * button, Escape, or a click on the backdrop).
    */
   public readonly closed = output<void>();
-
-  /**
-   * The drawer element itself, needed to drive it through the imperative `<dialog>` API.
-   */
-  private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
   /**
    * Riot name field, seeded from {@link editedPlayer} and then locally editable.
@@ -90,31 +77,6 @@ export class PlayerFormPanel {
   protected readonly valid = computed(
     () => this.gameName().trim() !== '' && this.tagLine().trim() !== '',
   );
-
-  /**
-   * Opens the drawer as a modal as soon as it is in the DOM, and wires dismissal by clicking the
-   * backdrop. See `boss-detail.ts` for why the backdrop listener is bound here rather than as a
-   * template `(click)`.
-   */
-  constructor() {
-    afterNextRender(() => {
-      const dialog = this.dialog().nativeElement;
-      dialog.showModal();
-      dialog.addEventListener('click', (event) => {
-        if (event.target === dialog) {
-          dialog.close();
-        }
-      });
-    });
-  }
-
-  /**
-   * Dismisses the drawer. The `close` event it fires is what notifies the page, so this path and
-   * the platform's own (Escape) end up reporting through the same channel.
-   */
-  protected close(): void {
-    this.dialog().nativeElement.close();
-  }
 
   /**
    * Updates the Riot name field.

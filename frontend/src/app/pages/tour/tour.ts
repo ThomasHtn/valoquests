@@ -7,6 +7,7 @@ import { TourVisit } from '@core/tour/tour-visit';
 import { BossEncounter } from '@pages/overview/boss-encounter/boss-encounter';
 import { Podium } from '@pages/overview/podium/podium';
 import { TeamProgress } from '@pages/overview/team-progress/team-progress';
+import { NavChip } from '@shared/nav-chip/nav-chip';
 
 import { PlayersPreview } from './players-preview/players-preview';
 import { TOUR_STEPS } from './tour.constants';
@@ -42,6 +43,7 @@ import { TourStepId } from './tour.model';
     TeamProgress,
     Podium,
     PlayersPreview,
+    NavChip,
   ],
   templateUrl: './tour.html',
   // Diverges from `PAGE_LAYOUT_CLASS`, same rationale as `Landing`: this is a full-viewport

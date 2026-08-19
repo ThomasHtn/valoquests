@@ -2,6 +2,7 @@ package io.github.thomashtn.valorant.tracker.challenge.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -24,6 +25,9 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -42,6 +46,16 @@ class DefaultWeeklyChallengeSelectionServiceTest {
      * Fixed selection timestamp.
      */
     private static final Instant SELECTION_TIME = Instant.parse("2026-07-20T08:00:00Z");
+
+    /**
+     * Number of interchangeable candidates offered for each difficulty.
+     */
+    private static final int CATALOGUE_CHALLENGES_PER_DIFFICULTY = 10;
+
+    /**
+     * Number of consecutive weeks observed by the rotation test.
+     */
+    private static final int OBSERVED_WEEKS = 8;
 
     /**
      * Challenge catalogue repository dependency.
@@ -186,6 +200,41 @@ class DefaultWeeklyChallengeSelectionServiceTest {
     }
 
     /**
+     * Verifies that consecutive weeks draw different packs from the same catalogue.
+     *
+     * <p>Regression test: the week used to be mixed into the candidate order as a shared additive
+     * offset, which left the sorted order identical and drew the same pack every single week.</p>
+     */
+    @Test
+    void shouldDrawDifferentPacksOnConsecutiveWeeks() {
+        List<Challenge> candidates = createCatalogue(CATALOGUE_CHALLENGES_PER_DIFFICULTY);
+
+        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(any(LocalDate.class)))
+            .thenReturn(List.of());
+        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+
+        Set<List<String>> distinctPacks = IntStream.range(0, OBSERVED_WEEKS)
+            .mapToObj(weekIndex -> selectCodes(WEEK_START.plusWeeks(weekIndex)))
+            .collect(Collectors.toSet());
+
+        assertThat(distinctPacks).hasSizeGreaterThan(1);
+    }
+
+    /**
+     * Verifies that re-selecting the same week keeps drawing the same pack.
+     */
+    @Test
+    void shouldDrawTheSamePackForTheSameWeek() {
+        List<Challenge> candidates = createCatalogue(CATALOGUE_CHALLENGES_PER_DIFFICULTY);
+
+        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(any(LocalDate.class)))
+            .thenReturn(List.of());
+        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+
+        assertThat(selectCodes(WEEK_START)).isEqualTo(selectCodes(WEEK_START));
+    }
+
+    /**
      * Verifies that persisted duplicate difficulty tiers are rejected before catalogue access.
      */
     @Test
@@ -215,6 +264,48 @@ class DefaultWeeklyChallengeSelectionServiceTest {
         assertThatThrownBy(() -> service.selectWeekChallenges(WEEK_START.plusDays(1)))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Monday");
+    }
+
+    /**
+     * Creates a catalogue holding several interchangeable candidates per difficulty.
+     *
+     * @param challengesPerDifficulty number of candidates offered for each difficulty
+     * @return catalogue fixture
+     */
+    private List<Challenge> createCatalogue(int challengesPerDifficulty) {
+        return Arrays.stream(ChallengeDifficulty.values())
+            .flatMap(difficulty -> IntStream.range(0, challengesPerDifficulty)
+                .mapToObj(index -> createCandidate(difficulty, index)))
+            .toList();
+    }
+
+    /**
+     * Creates one interchangeable catalogue candidate.
+     *
+     * <p>Candidates of the same difficulty share a category, so category diversity never constrains
+     * which one is drawn: only the weekly ordering does.</p>
+     *
+     * @param difficulty challenge difficulty
+     * @param index      candidate index within its difficulty
+     * @return challenge fixture
+     */
+    private Challenge createCandidate(ChallengeDifficulty difficulty, int index) {
+        Challenge challenge = createChallenge(difficulty, categoryFor(difficulty));
+        challenge.setId((long) difficulty.ordinal() * CATALOGUE_CHALLENGES_PER_DIFFICULTY + index + 1);
+        challenge.setCode("CHALLENGE_" + difficulty.name() + "_" + index);
+        return challenge;
+    }
+
+    /**
+     * Selects one week's pack and returns its challenge codes.
+     *
+     * @param weekStart Monday identifying the week
+     * @return selected challenge codes, ordered by difficulty
+     */
+    private List<String> selectCodes(LocalDate weekStart) {
+        return service.selectWeekChallenges(weekStart).stream()
+            .map(selection -> selection.getChallenge().getCode())
+            .toList();
     }
 
     /**

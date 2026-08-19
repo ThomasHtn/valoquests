@@ -290,12 +290,9 @@
           [class]="languagePanelClass()"
           [hidden]="!languageMenuOpen()"
           [id]="languageMenuId"
-          class="notch-tr absolute right-0 bottom-full z-20 mb-2 w-44 border-l-2 border-brand-500/50 bg-surface-sunken [--notch:0.5rem]"
+          class="menu-panel absolute right-0 bottom-full z-20 mb-2 w-44"
           role="listbox"
         >
-          <p class="tracking-label px-4 pt-2 pb-1.5 font-mono text-2xs text-text-muted uppercase">
-            {{ 'sidebar.language.label' | translate }}
-          </p>
           @for (candidate of supportedLanguages; track candidate) {
             @let languageName = 'sidebar.language.names.' + candidate | translate;
 
@@ -307,7 +304,7 @@
                   ? 'bg-brand-500/15 text-brand-500'
                   : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
               "
-              class="flex min-h-10 w-full cursor-pointer items-center justify-between gap-4 px-4 py-2.5 text-left text-base transition-colors motion-safe:active:scale-[0.96]"
+              class="menu-option focus-ring-inset flex items-center justify-between gap-4"
               role="option"
               type="button"
             >

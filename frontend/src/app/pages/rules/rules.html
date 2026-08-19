@@ -1,41 +1,23 @@
-<!-- Header: same opening beat as the other pages — eyebrow, display title, one line of stakes. The
-     reading cost rides along as a chip rather than as a headline metric: it reassures that the page
-     is short, it is not a number worth competing with the title. -->
-<header class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-  <div>
-    <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
-      {{ 'rules.eyebrow' | translate }}
-    </p>
-
-    <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-      <h1
-        class="font-display text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
-      >
-        {{ 'rules.heading' | translate }}
-      </h1>
-      <span
-        class="tracking-label inline-flex items-center gap-1.5 border border-text-primary/10 bg-surface-sunken/60 px-2.5 py-1 font-mono text-2xs font-medium text-text-muted uppercase"
-      >
-        {{ 'rules.readingTime.label' | translate }}
-        <span class="text-text-secondary">{{ 'rules.readingTime.value' | translate }}</span>
-      </span>
-    </div>
-  </div>
-
-  <!-- Way back into the guided tour, which is otherwise a one-time briefing. Styled like the
-       tour's own "skip" control, top-right of its header, rather than as a chip: it reads as the
-       same exit/entry affordance the visitor already saw there. The replay query parameter is
-       what lets it through `tourEntryGuard`. -->
-  <a
-    class="focus-ring tracking-label inline-flex h-12 cursor-pointer items-center border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
-    routerLink="/tour"
-    [queryParams]="{ replay: '' }"
+<!-- Header: the reading cost rides along as a chip on the title's own line rather than as a
+     headline metric — it reassures that the page is short, it is not a number worth competing with
+     the title. -->
+<app-page-header [eyebrow]="'rules.eyebrow' | translate" [heading]="'rules.heading' | translate">
+  <span
+    class="tracking-label inline-flex items-center gap-1.5 border border-text-primary/10 bg-surface-sunken/60 px-2.5 py-1 font-mono text-2xs font-medium text-text-muted uppercase"
+    headingAside
   >
+    {{ 'rules.readingTime.label' | translate }}
+    <span class="text-text-secondary">{{ 'rules.readingTime.value' | translate }}</span>
+  </span>
+
+  <!-- Way back into the guided tour, which is otherwise a one-time briefing. The replay query
+       parameter is what lets it through `tourEntryGuard`. -->
+  <a appNavChip routerLink="/tour" [queryParams]="{ replay: '' }">
     {{ 'rules.replayTour' | translate }}
   </a>
-</header>
+</app-page-header>
 
-<app-section-divider class="my-2" />
+<app-section-divider />
 
 <!-- The four beats, as rows of a document rather than as boxed panels: narrative on the left,
      numbers on the right, separated by a single hairline. Stacking beats a two-column masonry here
@@ -72,12 +54,10 @@
       <div
         class="grid grid-cols-[minmax(0,1fr)_5rem] items-center gap-x-4 border-b border-brand-500/30 pb-2"
       >
-        <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+        <span class="label-caption text-text-muted">
           {{ 'rules.sections.challenges.difficultyLabel' | translate }}
         </span>
-        <span
-          class="tracking-label text-right font-mono text-xs font-medium text-text-muted uppercase"
-        >
+        <span class="label-caption text-right text-text-muted">
           {{ 'rules.sections.challenges.damageLabel' | translate }}
         </span>
       </div>
@@ -142,22 +122,16 @@
       <div
         class="grid grid-cols-[minmax(0,1fr)_repeat(3,5rem)] items-center gap-x-3 border-b border-brand-500/30 pb-2"
       >
-        <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+        <span class="label-caption text-text-muted">
           {{ 'rules.sections.damage.modeLabel' | translate }}
         </span>
-        <span
-          class="tracking-label text-right font-mono text-xs font-medium text-brand-500 uppercase"
-        >
+        <span class="label-caption text-right text-brand-500">
           {{ 'playerProfile.matches.result.WIN' | translate }}
         </span>
-        <span
-          class="tracking-label text-right font-mono text-xs font-medium text-text-muted uppercase"
-        >
+        <span class="label-caption text-right text-text-muted">
           {{ 'playerProfile.matches.result.DRAW' | translate }}
         </span>
-        <span
-          class="tracking-label text-right font-mono text-xs font-medium text-text-muted uppercase"
-        >
+        <span class="label-caption text-right text-text-muted">
           {{ 'playerProfile.matches.result.LOSS' | translate }}
         </span>
       </div>
@@ -211,7 +185,7 @@
 
     <div class="flex flex-col gap-5">
       <div>
-        <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+        <p class="label-caption text-text-muted">
           {{ 'rules.sections.bonuses.regularityLabel' | translate }}
         </p>
         <ul class="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -233,7 +207,7 @@
       </div>
 
       <div>
-        <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+        <p class="label-caption text-text-muted">
           {{ 'rules.sections.bonuses.teamLabel' | translate }}
         </p>
         <ul class="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-5">

@@ -12,9 +12,11 @@ import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
+import { PageHeader } from '@shared/page-header/page-header';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionDivider } from '@shared/section-divider/section-divider';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
+import { StatusBadge, StatusBadgeTone } from '@shared/status-badge/status-badge';
 import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-form-panel';
 
 /**
@@ -39,6 +41,8 @@ import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-fo
     LucideRotateCcw,
     LucideSquarePen,
     LucideTrash2,
+    PageHeader,
+    StatusBadge,
   ],
   templateUrl: './admin-players.html',
   host: { class: PAGE_LAYOUT_CLASS },
@@ -116,6 +120,17 @@ export class AdminPlayers {
         : 'admin.players.remove.deleteBody',
     );
   });
+
+  /**
+   * Tone `app-status-badge` renders a roster status with: the brand tint for a player still being
+   * tracked, neutral for one paused, danger for one archived out of the roster.
+   *
+   * @param status - The status to map.
+   * @returns The badge tone for that status.
+   */
+  protected statusTone(status: AdminPlayerStatus): StatusBadgeTone {
+    return status === 'ACTIVE' ? 'brand' : status === 'INACTIVE' ? 'neutral' : 'danger';
+  }
 
   /**
    * Formats a player's last successful synchronization.

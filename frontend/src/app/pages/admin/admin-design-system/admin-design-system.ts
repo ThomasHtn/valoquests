@@ -21,6 +21,9 @@ import { Button, ButtonVariant } from '@shared/button/button';
 import { ChallengeIconView } from '@shared/challenge-icon-view/challenge-icon-view';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
+import { InlineMessage } from '@shared/inline-message/inline-message';
+import { NavChip } from '@shared/nav-chip/nav-chip';
+import { PageHeader } from '@shared/page-header/page-header';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ProgressCircle } from '@shared/progress-circle/progress-circle';
@@ -28,6 +31,9 @@ import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionDivider } from '@shared/section-divider/section-divider';
 import { Select } from '@shared/select/select';
+import { StatTile } from '@shared/stat-tile/stat-tile';
+import { StatusBadge, StatusBadgeTone } from '@shared/status-badge/status-badge';
+import { TextField, TextFieldInput } from '@shared/text-field/text-field';
 import { SelectOption } from '@shared/select/select.model';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { WeekCountdown } from '@shared/week-countdown/week-countdown';
@@ -68,6 +74,9 @@ const SAMPLE_REMAINING_TIME: RemainingTime = { days: 2, hours: 14, minutes: 30 }
     ChallengeIconView,
     ChampionBadge,
     ConfirmDialog,
+    InlineMessage,
+    NavChip,
+    PageHeader,
     LucideChevronLeft,
     LucideChevronRight,
     LucideEllipsisVertical,
@@ -84,6 +93,10 @@ const SAMPLE_REMAINING_TIME: RemainingTime = { days: 2, hours: 14, minutes: 30 }
     ResourceState,
     SectionDivider,
     Select,
+    StatTile,
+    StatusBadge,
+    TextField,
+    TextFieldInput,
     Tooltip,
     TranslatePipe,
     WeekCountdown,
@@ -221,6 +234,17 @@ export class AdminDesignSystem {
    * each click to illustrate the component without a real backend command behind it.
    */
   protected readonly actionCardState = signal<AdminActionState>(IDLE_ACTION);
+
+  /**
+   * Maps a roster status to the tone `app-status-badge` renders it with, the same way
+   * `admin-players` does on its own rows.
+   *
+   * @param status - The status to map.
+   * @returns The badge tone for that status.
+   */
+  protected playerStatusTone(status: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED'): StatusBadgeTone {
+    return status === 'ACTIVE' ? 'brand' : status === 'INACTIVE' ? 'neutral' : 'danger';
+  }
 
   /**
    * Runs one cycle of {@link actionCardState}, mirroring how a real backoffice command reports its

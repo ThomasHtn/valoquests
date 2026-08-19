@@ -21,50 +21,32 @@
   </h1>
 
   <form (submit)="submit($event)" class="mt-6">
-    <label class="block">
-      <span class="tracking-label block font-mono text-xs text-text-muted uppercase">
-        {{ 'admin.login.keyLabel' | translate }}
-      </span>
-      <!-- The border lives as a `background-color` on this wrapping `div`, one `--notch` cut behind
-           an inner `div` cut to the same shape but inset by its `p-px` padding: the sliver of the
-           outer shape left showing around the inner one is the "border". Two nested clip-paths of
-           the same polygon, rather than a real `border` plus a rotated line standing in for the cut
-           corner (which a replaced element like `<input>` can't render via `::after` anyway),
-           because that line and the clip-path are two independently anti-aliased shapes trying to
-           land on the same pixel, and left a hairline gap at the tip. -->
-      <div
-        class="notch-tr mt-2 h-11 bg-text-muted p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500 has-[:disabled]:opacity-60"
+    <app-text-field [label]="'admin.login.keyLabel' | translate">
+      <input
+        appTextFieldInput
+        (input)="onKeyInput($event)"
+        [attr.aria-invalid]="error() ? 'true' : null"
+        [disabled]="verifying()"
+        [type]="showKey() ? 'text' : 'password'"
+        [value]="key()"
+        autocapitalize="off"
+        autocomplete="current-password"
+        spellcheck="false"
+      />
+      <button
+        (click)="toggleShowKey()"
+        [attr.aria-label]="(showKey() ? 'admin.login.hideKey' : 'admin.login.showKey') | translate"
+        [attr.aria-pressed]="showKey()"
+        class="focus-ring flex h-full w-11 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:text-text-primary"
+        type="button"
       >
-        <div class="notch-tr flex h-full items-center bg-surface-sunken [--notch:0.5rem]">
-          <input
-            (input)="onKeyInput($event)"
-            [attr.aria-invalid]="error() ? 'true' : null"
-            [disabled]="verifying()"
-            [type]="showKey() ? 'text' : 'password'"
-            [value]="key()"
-            autocapitalize="off"
-            autocomplete="current-password"
-            class="h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
-            spellcheck="false"
-          />
-          <button
-            (click)="toggleShowKey()"
-            [attr.aria-label]="
-              (showKey() ? 'admin.login.hideKey' : 'admin.login.showKey') | translate
-            "
-            [attr.aria-pressed]="showKey()"
-            class="focus-ring flex h-full w-11 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:text-text-primary"
-            type="button"
-          >
-            @if (showKey()) {
-              <svg aria-hidden="true" class="h-4 w-4" lucideEyeOff></svg>
-            } @else {
-              <svg aria-hidden="true" class="h-4 w-4" lucideEye></svg>
-            }
-          </button>
-        </div>
-      </div>
-    </label>
+        @if (showKey()) {
+          <svg aria-hidden="true" class="h-4 w-4" lucideEyeOff></svg>
+        } @else {
+          <svg aria-hidden="true" class="h-4 w-4" lucideEye></svg>
+        }
+      </button>
+    </app-text-field>
 
     <button
       appButton="primary"

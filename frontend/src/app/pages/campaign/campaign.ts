@@ -14,6 +14,7 @@ import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
+import { PageHeader } from '@shared/page-header/page-header';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionDivider } from '@shared/section-divider/section-divider';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
@@ -89,6 +90,7 @@ interface CampaignMapRow {
     LucideMap,
     LucideSwords,
     LucideX,
+    PageHeader,
   ],
   templateUrl: './campaign.html',
   host: { class: PAGE_LAYOUT_CLASS },

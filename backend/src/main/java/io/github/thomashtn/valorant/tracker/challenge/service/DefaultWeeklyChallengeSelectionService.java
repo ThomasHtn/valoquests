@@ -49,6 +49,36 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         Comparator.comparingInt(selection -> selection.getChallenge().getDifficulty().ordinal());
 
     /**
+     * Odd 64-bit constant separating consecutive weeks before diffusion (golden-ratio derived).
+     */
+    private static final long WEEK_SEED_MULTIPLIER = 0x9E3779B97F4A7C15L;
+
+    /**
+     * First SplitMix64 finalizer multiplier.
+     */
+    private static final long AVALANCHE_FIRST_MULTIPLIER = 0xBF58476D1CE4E5B9L;
+
+    /**
+     * Second SplitMix64 finalizer multiplier.
+     */
+    private static final long AVALANCHE_SECOND_MULTIPLIER = 0x94D049BB133111EBL;
+
+    /**
+     * First SplitMix64 finalizer shift.
+     */
+    private static final int AVALANCHE_FIRST_SHIFT = 30;
+
+    /**
+     * Second SplitMix64 finalizer shift.
+     */
+    private static final int AVALANCHE_SECOND_SHIFT = 27;
+
+    /**
+     * Closing SplitMix64 finalizer shift.
+     */
+    private static final int AVALANCHE_FINAL_SHIFT = 31;
+
+    /**
      * Application logger.
      */
     private static final Logger LOGGER =
@@ -406,12 +436,33 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     /**
      * Produces a stable weekly order for one challenge.
      *
+     * <p>The week has to be mixed into every candidate's value non-additively. {@code Objects.hash}
+     * only adds a shared week term to each candidate, which shifts them all equally and leaves the
+     * sorted order untouched: every week then drew the exact same pack.
+     *
      * @param weekStart selected week
      * @param challenge challenge candidate
      * @return deterministic ordering value
      */
     private long selectionOrder(LocalDate weekStart, Challenge challenge) {
-        return Objects.hash(weekStart, challenge.getId(), challenge.getCode());
+        long challengeSeed = Objects.hash(challenge.getId(), challenge.getCode());
+
+        return avalanche(weekStart.toEpochDay() * WEEK_SEED_MULTIPLIER + challengeSeed);
+    }
+
+    /**
+     * Spreads a seed over the whole {@code long} range so neighbouring seeds order unrelatedly.
+     *
+     * <p>SplitMix64 finalizer: a bijection, so two distinct seeds keep distinct ordering values.</p>
+     *
+     * @param seed ordering seed
+     * @return diffused ordering value
+     */
+    private static long avalanche(long seed) {
+        long mixed = seed;
+        mixed = (mixed ^ (mixed >>> AVALANCHE_FIRST_SHIFT)) * AVALANCHE_FIRST_MULTIPLIER;
+        mixed = (mixed ^ (mixed >>> AVALANCHE_SECOND_SHIFT)) * AVALANCHE_SECOND_MULTIPLIER;
+        return mixed ^ (mixed >>> AVALANCHE_FINAL_SHIFT);
     }
 
     /**

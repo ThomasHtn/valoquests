@@ -1,26 +1,14 @@
-<!-- Header: the same beat as the quest and registry pages — eyebrow, display title, one line of
-     stakes — with the countdown on the trailing edge, since this screen is the one that answers
-     "how far is the squad, and how long is left". -->
-<header>
-  <div class="flex flex-wrap items-start justify-between gap-4">
-    <div>
-      <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
-        {{ 'overview.weeklyRanking.eyebrow' | translate: { number: weekNumber() ?? '—' } }}
-      </p>
-      <h1
-        class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
-      >
-        {{ 'overview.weeklyRanking.title' | translate }}
-      </h1>
-    </div>
-
-    <app-week-countdown [remaining]="remaining()" />
-  </div>
-</header>
+<!-- Header: the same beat as the quest and registry pages, with the countdown on the trailing edge,
+     since this screen is the one that answers "how far is the squad, and how long is left". -->
+<app-page-header
+  [eyebrow]="'overview.weeklyRanking.eyebrow' | translate: { number: weekNumber() ?? '—' }"
+  [heading]="'overview.weeklyRanking.title' | translate"
+>
+  <app-week-countdown [remaining]="remaining()" />
+</app-page-header>
 
 <app-section-divider
   [label]="'overview.weeklyRanking.totalDamage' | translate: { damage: totalDamage() }"
-  class="my-2"
 />
 
 <app-resource-state
@@ -57,13 +45,13 @@
     class="hidden px-5 xl:-mb-5 xl:grid xl:grid-cols-[4rem_minmax(12rem,2.5fr)_6.5rem_5.5rem_repeat(5,minmax(3.75rem,0.7fr))] xl:items-end xl:gap-x-3"
   >
     <span></span>
-    <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+    <span class="label-caption text-text-muted">
       {{ 'overview.weeklyRanking.columns.player' | translate }}
     </span>
-    <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+    <span class="label-caption text-text-muted">
       {{ 'overview.weeklyRanking.columns.damage' | translate }}
     </span>
-    <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+    <span class="label-caption text-text-muted">
       {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
     </span>
     <!-- A column is identified by its tier badge and its target, not by the challenge's name: at

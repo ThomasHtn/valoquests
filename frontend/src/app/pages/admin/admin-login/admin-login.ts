@@ -10,6 +10,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { SnackbarService } from '@core/snackbar/snackbar';
 import { Button } from '@shared/button/button';
+import { TextField, TextFieldInput } from '@shared/text-field/text-field';
 
 /**
  * Backoffice sign-in screen.
@@ -24,7 +25,16 @@ import { Button } from '@shared/button/button';
  */
 @Component({
   selector: 'app-admin-login',
-  imports: [TranslatePipe, Button, LucideEye, LucideEyeOff, LucideLoaderCircle, LucideLockKeyhole],
+  imports: [
+    TranslatePipe,
+    Button,
+    TextField,
+    TextFieldInput,
+    LucideEye,
+    LucideEyeOff,
+    LucideLoaderCircle,
+    LucideLockKeyhole,
+  ],
   templateUrl: './admin-login.html',
   // Diverges from `PAGE_LAYOUT_CLASS`: this is a single centred composition filling the viewport,
   // not a stack of blocks inside the application shell.

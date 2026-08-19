@@ -1,17 +1,10 @@
-<!-- Header: the campaign told as ground to take, opened on the same beat as every other page —
-     eyebrow, display title. -->
-<header>
-  <p class="tracking-label-wide font-mono text-2xs font-medium text-brand-500 uppercase">
-    {{ 'campaign.eyebrow' | translate }}
-  </p>
-  <h1
-    class="font-display mt-2 text-2xl leading-none font-bold text-text-primary uppercase sm:text-3xl"
-  >
-    {{ 'campaign.title' | translate }}
-  </h1>
-</header>
+<!-- Header: the campaign told as ground to take, opened on the same beat as every other page. -->
+<app-page-header
+  [eyebrow]="'campaign.eyebrow' | translate"
+  [heading]="'campaign.title' | translate"
+/>
 
-<app-section-divider [label]="view() === 'history' ? campaign.progressLabel() : ''" class="my-2" />
+<app-section-divider [label]="view() === 'history' ? campaign.progressLabel() : ''" />
 
 <!-- Legend and the way into the battle history. On a narrow viewport there's no room to keep
      them side by side, so the button moves above the legend (`order-first`) and spans the full
@@ -48,7 +41,7 @@
        seen" affordances read the same. -->
   <button
     (click)="toggleView()"
-    class="focus-ring tracking-label order-first flex h-12 w-full shrink-0 cursor-pointer items-center justify-center gap-2 border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-primary uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96] sm:order-none sm:w-auto sm:justify-start sm:border-0"
+    class="focus-ring label-caption order-first flex h-12 w-full shrink-0 cursor-pointer items-center justify-center gap-2 border border-text-primary/15 px-4 text-text-primary transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96] sm:order-none sm:w-auto sm:justify-start sm:border-0"
     type="button"
   >
     @if (view() === 'map') {
@@ -325,7 +318,7 @@
                   <span
                     class="clip-hex absolute inset-0.5 flex flex-col items-center justify-center gap-1 bg-surface-950"
                   >
-                    <span class="tracking-label font-mono text-xs text-text-muted uppercase">
+                    <span class="label-caption text-text-muted">
                       {{ 'boss.week.short' | translate }}
                     </span>
                     <span class="font-display text-lg leading-none font-bold sm:text-xl">
@@ -368,7 +361,7 @@
                   {{ node.bossName }}
                 </span>
                 @if (node.categoryLabel; as categoryLabel) {
-                  <span class="tracking-label font-mono text-xs text-text-muted uppercase">
+                  <span class="label-caption text-text-muted">
                     {{ 'boss.difficulty' | translate }}
                     <span aria-hidden="true">·</span>
                     {{ categoryLabel }}
@@ -378,9 +371,7 @@
 
               @if (node.hasDamage) {
                 <span class="mt-4 flex items-baseline justify-between gap-3">
-                  <span
-                    class="tracking-label font-mono text-xs font-medium text-text-muted uppercase"
-                  >
+                  <span class="label-caption text-text-muted">
                     {{ node.barLabel }}
                   </span>
                   <span

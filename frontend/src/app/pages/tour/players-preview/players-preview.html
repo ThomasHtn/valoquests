@@ -25,10 +25,7 @@
 
         <div class="flex items-center gap-1.5">
           <app-rank-icon-view [src]="card.rankIconUrl" [tierLabel]="card.tier.label" size="sm" />
-          <span
-            [class]="card.tier.colorClass"
-            class="tracking-label max-w-full truncate font-mono text-xs font-medium uppercase"
-          >
+          <span [class]="card.tier.colorClass" class="label-caption max-w-full truncate">
             {{ card.tier.label }}
           </span>
         </div>

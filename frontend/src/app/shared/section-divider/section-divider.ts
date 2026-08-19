@@ -29,7 +29,9 @@ import { Component, input } from '@angular/core';
     }
     <span aria-hidden="true" class="size-2 shrink-0 rotate-45 border border-brand-500/70"></span>
   `,
-  host: { class: 'flex items-center gap-3.5' },
+  // The vertical margin rides on the component rather than on every call site: all thirty-odd of
+  // them set the same `my-2`, which is not a per-page decision but part of what a divider is.
+  host: { class: 'my-2 flex items-center gap-3.5' },
 })
 export class SectionDivider {
   /**

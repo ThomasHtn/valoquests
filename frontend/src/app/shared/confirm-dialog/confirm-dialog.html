@@ -24,35 +24,19 @@
     <p class="mt-3 text-prose text-pretty text-text-secondary">{{ body() }}</p>
 
     @if (confirmationPhrase()) {
-      <label class="mt-5 block">
-        <span class="tracking-label block font-mono text-2xs text-text-muted uppercase">
-          {{ confirmationHint() }}
-        </span>
-        <!-- The border lives as a `background-color` on this wrapping `div`, one `--notch` cut
-             behind an inner `div` cut to the same shape but inset by its `p-px` padding: the sliver
-             of the outer shape left showing around the inner one is the "border". A replaced
-             element like `<input>` never renders `::after`, and a plain rotated line drawn to meet
-             the clip-path's cut edge left a hairline gap at the tip (two independently
-             anti-aliased shapes trying to land on the same pixel); two nested clip-paths of the
-             same polygon never have that seam. -->
-        <div
-          class="notch-tr mt-2 h-11 bg-text-muted p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500 has-[:disabled]:opacity-60"
-        >
-          <div class="notch-tr h-full bg-surface-sunken [--notch:0.5rem]">
-            <input
-              (input)="onPhraseInput($event)"
-              [disabled]="busy()"
-              [value]="typedPhrase()"
-              autocapitalize="off"
-              autocomplete="off"
-              autocorrect="off"
-              class="h-full w-full bg-transparent px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
-              spellcheck="false"
-              type="text"
-            />
-          </div>
-        </div>
-      </label>
+      <app-text-field [label]="confirmationHint()" class="mt-5">
+        <input
+          appTextFieldInput
+          (input)="onPhraseInput($event)"
+          [disabled]="busy()"
+          [value]="typedPhrase()"
+          autocapitalize="off"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          type="text"
+        />
+      </app-text-field>
     }
 
     <div class="mt-6 flex flex-wrap justify-end gap-3">

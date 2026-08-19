@@ -24,6 +24,7 @@ import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
+import { PageHeader } from '@shared/page-header/page-header';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -50,6 +51,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     RankIconView,
     ResourceState,
     SectionDivider,
+    PageHeader,
   ],
   templateUrl: './players.html',
   host: { class: PAGE_LAYOUT_CLASS },

@@ -160,6 +160,50 @@
 }
 
 /*
+ * The direction's micro-label: the mono, letter-spaced, uppercase mark that captions a value —
+ * a column header, a stat's name, a status pill's text, the caption over a figure.
+ *
+ * Declared once because it was the single most repeated class run in the templates (over fifty
+ * call sites), and because writing it by hand had already let it drift: the same caption appeared
+ * with and without `font-medium` on neighbouring rows of the same grid. It carries the typography
+ * only — never a color — since which one a label takes is semantic (muted for a caption, `danger`
+ * on a destructive panel, the tier's own accent on a challenge card) and belongs at the call site.
+ */
+@utility label-caption {
+  @apply tracking-label font-mono text-xs font-medium uppercase;
+}
+
+/*
+ * Surface of a panel that opens over the page: the language listbox in the navigation footer, the
+ * shared select's options, the player profile's overflow menu.
+ *
+ * Held by a leading rule rather than a full border. `notch-tr-edge`, which would be needed to
+ * redraw a border across the cut, sets `position: relative` and would fight the absolute or fixed
+ * positioning these panels are placed with. Positioning, width and inner padding stay at the call
+ * site: those are what actually differ between the four.
+ */
+@utility menu-panel {
+  @apply notch-tr border-l-2 border-brand-500/50 bg-surface-sunken [--notch:0.5rem];
+}
+
+/*
+ * One row of a `menu-panel`: full width, comfortably tall enough to hit on a phone.
+ *
+ * The four call sites had drifted apart on everything but the colors — one transitioned every
+ * property, another only the background, a third had no focus indicator at all. The display mode
+ * is left out on purpose: an option showing a language and its code lays its two halves out with
+ * `flex`, a plain one does not need to.
+ *
+ * Colors, hover included, stay at the call site for the same reason `label-caption` leaves them
+ * there: a menu whose rows carry a selected state paints that state itself and must be able to
+ * hold it under the pointer, rather than have a hover tint from here override the row the reader
+ * already picked.
+ */
+@utility menu-option {
+  @apply min-h-10 w-full cursor-pointer px-4 py-2.5 text-left text-base whitespace-nowrap transition-[background-color,scale] motion-safe:active:scale-[0.96];
+}
+
+/*
  * Visible keyboard focus indicator.
  *
  * The user-agent default outline is nearly invisible against the `surface-950` ground, so every

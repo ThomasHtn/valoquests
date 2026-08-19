@@ -11,7 +11,7 @@
     class="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-3 border-b border-brand-500/20 bg-surface-sunken/80 px-4 py-3.5 motion-safe:animate-chrome-in sm:px-8"
   >
     <p class="flex items-baseline gap-2.5">
-      <span class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+      <span class="label-caption text-text-muted">
         {{ 'tour.progress.label' | translate }}
       </span>
       <span class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums">
@@ -41,11 +41,7 @@
       }
     </div>
 
-    <button
-      (click)="skip()"
-      class="focus-ring tracking-label ml-auto inline-flex h-12 cursor-pointer items-center border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
-      type="button"
-    >
+    <button appNavChip (click)="skip()" class="ml-auto" type="button">
       {{ 'tour.skip' | translate }}
     </button>
   </header>
@@ -106,7 +102,7 @@
             @if (isLast()) {
               <a
                 (click)="leaveForRules()"
-                class="focus-ring tracking-label mt-6 inline-flex h-12 items-center border border-brand-500/45 px-4 font-mono text-xs font-medium text-brand-500 uppercase transition-colors hover:bg-brand-500/12"
+                class="focus-ring label-caption mt-6 inline-flex h-12 items-center border border-brand-500/45 px-4 text-brand-500 transition-colors hover:bg-brand-500/12"
                 routerLink="/rules"
               >
                 {{ 'tour.rulesLink' | translate }}
@@ -144,21 +140,12 @@
   <footer
     class="flex shrink-0 items-center justify-between gap-4 border-t border-brand-500/20 bg-surface-sunken/80 px-4 py-3.5 motion-safe:animate-chrome-in sm:px-8"
   >
-    <button
-      (click)="previous()"
-      [disabled]="isFirst()"
-      class="focus-ring tracking-label inline-flex h-12 cursor-pointer items-center gap-2 border border-text-primary/15 px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-text-muted motion-safe:active:scale-[0.96]"
-      type="button"
-    >
+    <button appNavChip (click)="previous()" [disabled]="isFirst()" type="button">
       <svg class="block h-4 w-4 shrink-0" lucideChevronLeft></svg>
       {{ 'tour.previous' | translate }}
     </button>
 
-    <button
-      (click)="next()"
-      class="focus-ring tracking-label inline-flex h-12 cursor-pointer items-center gap-2 bg-brand-500 px-5 font-mono text-xs font-bold text-surface-950 uppercase transition-colors hover:bg-brand-400 motion-safe:active:scale-[0.96]"
-      type="button"
-    >
+    <button appNavChip="solid" (click)="next()" type="button">
       {{ (isLast() ? 'tour.finish' : 'tour.next') | translate }}
       <svg class="block h-4 w-4 shrink-0" lucideChevronRight></svg>
     </button>

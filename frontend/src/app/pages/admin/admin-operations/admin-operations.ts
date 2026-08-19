@@ -10,9 +10,12 @@ import { resourceValue } from '@core/http/resource-state.utils';
 import { SnackbarService } from '@core/snackbar/snackbar';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
+import { InlineMessage } from '@shared/inline-message/inline-message';
+import { PageHeader } from '@shared/page-header/page-header';
 import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
 import { SectionDivider } from '@shared/section-divider/section-divider';
+import { StatusBadge } from '@shared/status-badge/status-badge';
 import { AdminActionCard } from '../admin-action-card/admin-action-card';
 
 /**
@@ -37,7 +40,15 @@ const SYNCHRONIZATION_POLL_INTERVAL_MS = 3_000;
  */
 @Component({
   selector: 'app-admin-operations',
-  imports: [TranslatePipe, AdminActionCard, SectionDivider, Select],
+  imports: [
+    TranslatePipe,
+    AdminActionCard,
+    InlineMessage,
+    PageHeader,
+    SectionDivider,
+    Select,
+    StatusBadge,
+  ],
   templateUrl: './admin-operations.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

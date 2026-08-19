@@ -126,10 +126,15 @@ public class DefaultWeeklyRolloverService
     }
 
     /**
-     * Finalizes the previous week and prepares the current one.
+     * Finalizes every past week still open and prepares the current one.
      *
-     * <p>The method is idempotent. A previous week whose challenges are
-     * already finalized is not recalculated or modified again.</p>
+     * <p>Catches up rather than only handling last week: a rollover that never ran — the
+     * application was down that Monday, or the job failed — used to leave its week open forever,
+     * since the next run only ever looked at the week that had just ended. Every past week holding
+     * an active pack is therefore finalized here, oldest first.</p>
+     *
+     * <p>The method is idempotent. A week whose challenges are already finalized is no longer
+     * pending, so it is neither recalculated nor modified again.</p>
      */
     @Override
     @Transactional
@@ -137,20 +142,26 @@ public class DefaultWeeklyRolloverService
         LocalDate currentWeekStart =
             weekCalendar.currentWeekStart();
 
-        LocalDate previousWeekStart =
-            currentWeekStart.minusWeeks(1);
-
         Instant rolloverTime = clock.instant();
 
+        List<LocalDate> pendingWeekStarts =
+            weeklyChallengeRepository
+                .findPendingWeekStartsBefore(
+                    currentWeekStart
+                );
+
         LOGGER.info(
-            "Starting weekly rollover from week {} to week {}.",
-            previousWeekStart,
-            currentWeekStart
+            "Starting weekly rollover to week {}. {} past week(s) awaiting finalization: {}.",
+            currentWeekStart,
+            pendingWeekStarts.size(),
+            pendingWeekStarts
         );
 
-        finalizePreviousWeekIfNeeded(
-            previousWeekStart,
-            rolloverTime
+        // Weeks are independent — each is rebuilt from its own matches — but finalizing them in
+        // chronological order is what keeps the log readable when several are caught up at once.
+        pendingWeekStarts.forEach(
+            weekStart ->
+                finalizeWeek(weekStart, rolloverTime)
         );
 
         weeklyLifecycleCoordinator.openWeek(
@@ -164,72 +175,43 @@ public class DefaultWeeklyRolloverService
     }
 
     /**
-     * Finalizes the previous week when it contains an active challenge pack.
+     * Finalizes one past week whose challenge pack is still active.
      *
-     * @param previousWeekStart Monday identifying the previous week
-     * @param finalizedAt       shared finalization timestamp
+     * @param weekStart   Monday identifying the week to finalize
+     * @param finalizedAt shared finalization timestamp
      */
-    private void finalizePreviousWeekIfNeeded(
-        LocalDate previousWeekStart,
+    private void finalizeWeek(
+        LocalDate weekStart,
         Instant finalizedAt
     ) {
         List<WeeklyChallenge> weeklyChallenges =
             weeklyChallengeRepository
                 .findAllByWeekStartOrderByIdAsc(
-                    previousWeekStart
+                    weekStart
                 );
 
-        if (weeklyChallenges.isEmpty()) {
-            LOGGER.info(
-                "No challenge pack exists for previous week {}. "
-                    + "Nothing needs to be finalized.",
-                previousWeekStart
-            );
-
-            return;
-        }
-
-        FinalizationState finalizationState =
-            resolveFinalizationState(weeklyChallenges);
-
-        if (finalizationState
-            == FinalizationState.ALREADY_FINALIZED) {
-
-            LOGGER.info(
-                "Previous week {} is already finalized.",
-                previousWeekStart
-            );
-
-            return;
-        }
-
-        if (finalizationState
-            == FinalizationState.INCONSISTENT) {
-
-            throw new IllegalStateException(
-                "Weekly challenge pack for week "
-                    + previousWeekStart
-                    + " is only partially finalized"
-            );
-        }
+        rejectPartiallyFinalizedPack(
+            weekStart,
+            weeklyChallenges
+        );
 
         // Rebuilt before the ranking that freezes it: the last synchronization of the week runs
         // hours before this rollover, so matches played in that gap are only imported now. Without
         // this refresh they would land in a week that is already finalized and count for nothing.
         challengeRecalculationService.recalculateWeekProgress(
-            previousWeekStart
+            weekStart
         );
 
         rankingRecalculationService.recalculateWeek(
-            previousWeekStart
+            weekStart
         );
 
-        weeklyLifecycleCoordinator.closeBossEncounterIfNeeded(previousWeekStart, finalizedAt);
+        weeklyLifecycleCoordinator.closeBossEncounterIfNeeded(weekStart, finalizedAt);
 
         List<WeeklyPlayerScore> weeklyScores =
             weeklyPlayerScoreRepository
                 .findAllByWeekStartOrderByPositionAsc(
-                    previousWeekStart
+                    weekStart
                 );
 
         weeklyChallenges.forEach(
@@ -252,57 +234,38 @@ public class DefaultWeeklyRolloverService
 
         LOGGER.info(
             "Week {} finalized with {} challenge(s) and {} score(s).",
-            previousWeekStart,
+            weekStart,
             weeklyChallenges.size(),
             weeklyScores.size()
         );
     }
 
     /**
-     * Determines the current finalization state of a weekly challenge pack.
+     * Refuses to finalize a pack that is only partly frozen.
      *
-     * @param weeklyChallenges challenges belonging to one week
-     * @return detected finalization state
+     * <p>A pending week owns at least one active challenge by construction, so a single finalized
+     * one is enough to prove the pack was left half-frozen. Repairing it silently would freeze the
+     * remainder against a ranking the finalized half never saw.</p>
+     *
+     * @param weekStart        Monday identifying the week being finalized
+     * @param weeklyChallenges challenges belonging to that week
      */
-    private FinalizationState resolveFinalizationState(
+    private void rejectPartiallyFinalizedPack(
+        LocalDate weekStart,
         List<WeeklyChallenge> weeklyChallenges
     ) {
-        long finalizedCount = weeklyChallenges.stream()
-            .filter(
+        boolean partiallyFinalized = weeklyChallenges.stream()
+            .anyMatch(
                 challenge ->
                     challenge.getFinalizedAt() != null
-            )
-            .count();
+            );
 
-        if (finalizedCount == 0) {
-            return FinalizationState.NOT_FINALIZED;
+        if (partiallyFinalized) {
+            throw new IllegalStateException(
+                "Weekly challenge pack for week "
+                    + weekStart
+                    + " is only partially finalized"
+            );
         }
-
-        if (finalizedCount == weeklyChallenges.size()) {
-            return FinalizationState.ALREADY_FINALIZED;
-        }
-
-        return FinalizationState.INCONSISTENT;
-    }
-
-    /**
-     * Describes the persisted finalization state of one weekly pack.
-     */
-    private enum FinalizationState {
-
-        /**
-         * No challenge has been finalized yet.
-         */
-        NOT_FINALIZED,
-
-        /**
-         * Every challenge has already been finalized.
-         */
-        ALREADY_FINALIZED,
-
-        /**
-         * Only part of the weekly pack is finalized.
-         */
-        INCONSISTENT
     }
 }

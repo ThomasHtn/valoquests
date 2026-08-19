@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { PageHeader } from '@shared/page-header/page-header';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { RouterLink } from '@angular/router';
 import { LucideCheck, LucideChevronDown, LucideChevronUp } from '@lucide/angular';
@@ -67,6 +68,7 @@ import {
     LucideCheck,
     LucideChevronDown,
     LucideChevronUp,
+    PageHeader,
   ],
   templateUrl: './leaderboard.html',
   host: { class: PAGE_LAYOUT_CLASS },
