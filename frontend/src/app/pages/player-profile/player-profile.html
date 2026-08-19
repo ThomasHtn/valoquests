@@ -421,26 +421,10 @@
                   class="notch-tr bg-text-primary/4 transition-colors [--notch:0.625rem] hover:bg-brand-500/15"
                 >
                   <div class="flex items-center gap-3.5 px-4 py-3.5">
-                    @if (mapImageUrl(row.mapName); as mapImage) {
-                      <!-- Map thumbnail, clipped to the same square/notch silhouette as the
-                           monogram fallback; only part of the image needs to stay visible. -->
-                      <img
-                        [height]="40"
-                        [ngSrc]="mapImage"
-                        [width]="40"
-                        alt=""
-                        aria-hidden="true"
-                        class="notch-tr size-10 shrink-0 object-cover [--notch:0.375rem]"
-                      />
-                    } @else {
-                      <!-- Monogram fallback: `public/maps` does not bundle every map. -->
-                      <span
-                        aria-hidden="true"
-                        class="notch-tr font-display flex size-10 shrink-0 items-center justify-center bg-surface-700 text-sm leading-none font-bold text-text-secondary [--notch:0.375rem]"
-                      >
-                        {{ agentInitial(row.agentName) }}
-                      </span>
-                    }
+                    <app-media-thumbnail
+                      [monogram]="agentInitial(row.agentName)"
+                      [src]="mapImageUrl(row.mapName)"
+                    />
                     <span class="flex min-w-0 flex-col gap-1.5">
                       <span
                         class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
@@ -471,25 +455,11 @@
                   </p>
 
                   <div class="flex items-center justify-center px-2">
-                    @if (agentImageUrl(row.agentName); as agentImage) {
-                      <img
-                        [height]="40"
-                        [ngSrc]="agentImage"
-                        [width]="40"
-                        [alt]="row.agentName"
-                        class="notch-tr size-10 shrink-0 object-cover [--notch:0.375rem]"
-                      />
-                    } @else {
-                      <!-- Monogram fallback: `public/agents` does not bundle agents released after
-                           the portrait set was last updated. -->
-                      <span
-                        aria-hidden="true"
-                        class="notch-tr font-display flex size-10 shrink-0 items-center justify-center bg-surface-700 text-sm leading-none font-bold text-text-secondary [--notch:0.375rem]"
-                      >
-                        {{ agentInitial(row.agentName) }}
-                      </span>
-                      <span class="sr-only">{{ row.agentName }}</span>
-                    }
+                    <app-media-thumbnail
+                      [accessibleName]="row.agentName"
+                      [monogram]="agentInitial(row.agentName)"
+                      [src]="agentImageUrl(row.agentName)"
+                    />
                   </div>
 
                   <p class="px-2 text-center">
@@ -589,26 +559,10 @@
                     class="notch-tr flex flex-col gap-4 bg-text-primary/4 px-4 py-4 [--notch:0.625rem]"
                   >
                     <div class="flex items-center gap-3.5">
-                      @if (mapImageUrl(row.mapName); as mapImage) {
-                        <!-- Map thumbnail, clipped to the same square/notch silhouette as the
-                             monogram fallback; only part of the image needs to stay visible. -->
-                        <img
-                          [height]="40"
-                          [ngSrc]="mapImage"
-                          [width]="40"
-                          alt=""
-                          aria-hidden="true"
-                          class="notch-tr size-10 shrink-0 object-cover [--notch:0.375rem]"
-                        />
-                      } @else {
-                        <!-- Monogram fallback: `public/maps` does not bundle every map. -->
-                        <span
-                          aria-hidden="true"
-                          class="notch-tr font-display flex size-10 shrink-0 items-center justify-center bg-surface-700 text-sm leading-none font-bold text-text-secondary [--notch:0.375rem]"
-                        >
-                          {{ agentInitial(row.agentName) }}
-                        </span>
-                      }
+                      <app-media-thumbnail
+                        [monogram]="agentInitial(row.agentName)"
+                        [src]="mapImageUrl(row.mapName)"
+                      />
                       <div class="flex min-w-0 flex-1 flex-col gap-1.5">
                         <p
                           class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
@@ -633,25 +587,11 @@
                           <span class="text-text-muted">—</span>
                         }
                       </p>
-                      @if (agentImageUrl(row.agentName); as agentImage) {
-                        <img
-                          [height]="40"
-                          [ngSrc]="agentImage"
-                          [width]="40"
-                          [alt]="row.agentName"
-                          class="notch-tr size-10 shrink-0 object-cover [--notch:0.375rem]"
-                        />
-                      } @else {
-                        <!-- Monogram fallback: `public/agents` does not bundle agents released
-                             after the portrait set was last updated. -->
-                        <span
-                          aria-hidden="true"
-                          class="notch-tr font-display flex size-10 shrink-0 items-center justify-center bg-surface-700 text-sm leading-none font-bold text-text-secondary [--notch:0.375rem]"
-                        >
-                          {{ agentInitial(row.agentName) }}
-                        </span>
-                        <span class="sr-only">{{ row.agentName }}</span>
-                      }
+                      <app-media-thumbnail
+                        [accessibleName]="row.agentName"
+                        [monogram]="agentInitial(row.agentName)"
+                        [src]="agentImageUrl(row.agentName)"
+                      />
                     </div>
 
                     <dl

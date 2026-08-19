@@ -7,6 +7,7 @@ import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { NavChip } from '@shared/nav-chip/nav-chip';
 import { PageHeader } from '@shared/page-header/page-header';
 import { SectionDivider } from '@shared/section-divider/section-divider';
+import { RuleSection } from './rule-section/rule-section';
 import {
   BOSS_CATEGORY_SHOWCASE,
   DIFFICULTY_SHOWCASE,
@@ -26,7 +27,15 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
  */
 @Component({
   selector: 'app-rules',
-  imports: [TranslatePipe, RouterLink, ChampionBadge, NavChip, PageHeader, SectionDivider],
+  imports: [
+    TranslatePipe,
+    RouterLink,
+    ChampionBadge,
+    NavChip,
+    PageHeader,
+    RuleSection,
+    SectionDivider,
+  ],
   templateUrl: './rules.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

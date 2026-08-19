@@ -30,26 +30,12 @@
 <div class="mx-auto flex w-full max-w-4xl flex-col">
   <!-- 01 · Challenges. Unruled at the top, unlike the beats below it: the hairlines separate one
        beat from the next, and there is nothing above this one to separate it from. -->
-  <section
-    class="grid items-start gap-x-10 gap-y-5 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:py-9"
+  <app-rule-section
+    [bordered]="false"
+    [description]="'rules.sections.challenges.description' | translate"
+    [heading]="'rules.sections.challenges.title' | translate"
+    index="01"
   >
-    <div>
-      <div class="flex items-baseline gap-3">
-        <span
-          aria-hidden="true"
-          class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums"
-        >
-          01
-        </span>
-        <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
-          {{ 'rules.sections.challenges.title' | translate }}
-        </h2>
-      </div>
-      <p class="mt-3 text-prose text-text-secondary">
-        {{ 'rules.sections.challenges.description' | translate }}
-      </p>
-    </div>
-
     <div>
       <div
         class="grid grid-cols-[minmax(0,1fr)_5rem] items-center gap-x-4 border-b border-brand-500/30 pb-2"
@@ -92,29 +78,14 @@
         }
       </ul>
     </div>
-  </section>
+  </app-rule-section>
 
   <!-- 02 · Match damage, by mode and outcome. -->
-  <section
-    class="grid items-start gap-x-10 gap-y-5 border-t border-text-primary/10 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:py-9"
+  <app-rule-section
+    [description]="'rules.sections.damage.description' | translate"
+    [heading]="'rules.sections.damage.title' | translate"
+    index="02"
   >
-    <div>
-      <div class="flex items-baseline gap-3">
-        <span
-          aria-hidden="true"
-          class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums"
-        >
-          02
-        </span>
-        <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
-          {{ 'rules.sections.damage.title' | translate }}
-        </h2>
-      </div>
-      <p class="mt-3 text-prose text-text-secondary">
-        {{ 'rules.sections.damage.description' | translate }}
-      </p>
-    </div>
-
     <div>
       <!-- The outcome columns are sized by their *header*, not by their values: "Victoire" and
            "Défaite" are the widest things they hold, and at the narrower measure they used to run
@@ -159,7 +130,7 @@
         }
       </ul>
     </div>
-  </section>
+  </app-rule-section>
 
   <!-- Bonuses. Tinted brand and marked with a plus rather than a number: they are not a fifth beat
        of the loop but a multiplier sitting on top of the two above. -->
@@ -231,26 +202,11 @@
   </section>
 
   <!-- 03 · The shared boss, and how heavy it can get. -->
-  <section
-    class="grid items-start gap-x-10 gap-y-5 border-t border-text-primary/10 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:py-9"
+  <app-rule-section
+    [description]="'rules.sections.boss.description' | translate"
+    [heading]="'rules.sections.boss.title' | translate"
+    index="03"
   >
-    <div>
-      <div class="flex items-baseline gap-3">
-        <span
-          aria-hidden="true"
-          class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums"
-        >
-          03
-        </span>
-        <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
-          {{ 'rules.sections.boss.title' | translate }}
-        </h2>
-      </div>
-      <p class="mt-3 text-prose text-text-secondary">
-        {{ 'rules.sections.boss.description' | translate }}
-      </p>
-    </div>
-
     <ul class="grid gap-3 sm:grid-cols-3">
       @for (category of bossCategoryShowcase; track category) {
         <!-- The category's own color is set on the tile so its leading rule can inherit it,
@@ -268,31 +224,16 @@
         </li>
       }
     </ul>
-  </section>
+  </app-rule-section>
 
   <!-- 04 · What all that damage is counted for. Closes the document without a rule under it, for
        the same reason 01 opens without one. -->
-  <section
-    class="grid items-start gap-x-10 gap-y-5 border-t border-text-primary/10 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:py-9"
+  <app-rule-section
+    [description]="'rules.sections.ranking.description' | translate"
+    [heading]="'rules.sections.ranking.title' | translate"
+    index="04"
   >
-    <div>
-      <div class="flex items-baseline gap-3">
-        <span
-          aria-hidden="true"
-          class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums"
-        >
-          04
-        </span>
-        <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
-          {{ 'rules.sections.ranking.title' | translate }}
-        </h2>
-      </div>
-      <p class="mt-3 flex flex-wrap items-center gap-x-2 text-prose text-text-secondary">
-        {{ 'rules.sections.ranking.description' | translate }}
-        <app-champion-badge />
-      </p>
-    </div>
-
+    <app-champion-badge descriptionTrailing />
     <ol>
       @for (fact of rankingFacts; track fact; let index = $index) {
         <li
@@ -307,5 +248,5 @@
         </li>
       }
     </ol>
-  </section>
+  </app-rule-section>
 </div>

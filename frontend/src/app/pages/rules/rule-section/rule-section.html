@@ -1,0 +1,24 @@
+<section
+  [class.border-t]="bordered()"
+  class="grid items-start gap-x-10 gap-y-5 border-text-primary/10 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:py-9"
+>
+  <div>
+    <div class="flex items-baseline gap-3">
+      <span
+        aria-hidden="true"
+        class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums"
+      >
+        {{ index() }}
+      </span>
+      <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+        {{ heading() }}
+      </h2>
+    </div>
+    <p class="mt-3 flex flex-wrap items-center gap-x-2 text-prose text-text-secondary">
+      {{ description() }}
+      <ng-content select="[descriptionTrailing]" />
+    </p>
+  </div>
+
+  <ng-content />
+</section>

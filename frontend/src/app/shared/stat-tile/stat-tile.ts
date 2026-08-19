@@ -12,15 +12,7 @@ import { Component, input } from '@angular/core';
  */
 @Component({
   selector: 'app-stat-tile',
-  template: `
-    <p class="label-caption text-text-muted">{{ label() }}</p>
-    <p
-      [class]="valueClass()"
-      class="font-display mt-3 text-2xl leading-none font-bold tabular-nums"
-    >
-      {{ value() }}
-    </p>
-  `,
+  templateUrl: './stat-tile.html',
   host: { class: 'block border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5' },
 })
 export class StatTile {

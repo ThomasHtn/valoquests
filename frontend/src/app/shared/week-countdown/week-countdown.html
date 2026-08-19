@@ -1,0 +1,12 @@
+@if (remaining(); as remaining) {
+  <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+    {{ 'overview.header.timeLabel' | translate }}
+  </p>
+  <p
+    class="font-display text-xl leading-none font-bold text-brand-500 tabular-nums sm:mt-1.5 sm:text-2xl"
+  >
+    {{
+      'overview.header.timeRemaining' | translate: { days: remaining.days, hours: remaining.hours }
+    }}
+  </p>
+}

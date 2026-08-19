@@ -20,34 +20,7 @@ import { LucideX } from '@lucide/angular';
 @Component({
   selector: 'app-drawer',
   imports: [LucideX],
-  template: `
-    <dialog
-      #dialog
-      (close)="closed.emit()"
-      [attr.aria-labelledby]="labelledBy()"
-      class="m-0 ml-auto h-dvh max-h-dvh w-full max-w-md border-l border-brand-500/30 bg-surface-sunken p-0 text-text-primary backdrop:bg-surface-sunken/75 motion-safe:animate-[drawer-enter_200ms_ease-out]"
-    >
-      <div class="flex h-full flex-col gap-6 overflow-y-auto p-5 sm:p-7">
-        <!-- Header row: whatever the drawer leads with, and the one framed control of the panel.
-             Spaced apart rather than pushing the button with an auto margin, so a leading block
-             that grows (a long title) still stops short of it. -->
-        <div class="flex items-center justify-between gap-2">
-          <ng-content select="[drawerLeading]" />
-
-          <button
-            (click)="close()"
-            [attr.aria-label]="closeLabel()"
-            class="focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center border border-text-primary/15 text-text-secondary transition-colors hover:bg-text-primary/10 hover:text-text-primary"
-            type="button"
-          >
-            <svg aria-hidden="true" class="size-4" lucideX></svg>
-          </button>
-        </div>
-
-        <ng-content />
-      </div>
-    </dialog>
-  `,
+  templateUrl: './drawer.html',
 })
 export class Drawer {
   /**

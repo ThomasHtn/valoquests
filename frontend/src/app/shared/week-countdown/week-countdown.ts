@@ -16,21 +16,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 @Component({
   selector: 'app-week-countdown',
   imports: [TranslatePipe],
-  template: `
-    @if (remaining(); as remaining) {
-      <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
-        {{ 'overview.header.timeLabel' | translate }}
-      </p>
-      <p
-        class="font-display text-xl leading-none font-bold text-brand-500 tabular-nums sm:mt-1.5 sm:text-2xl"
-      >
-        {{
-          'overview.header.timeRemaining'
-            | translate: { days: remaining.days, hours: remaining.hours }
-        }}
-      </p>
-    }
-  `,
+  templateUrl: './week-countdown.html',
   // On a narrow viewport the header's flex row has wrapped and this block starts a line of its
   // own: right-aligning it there would float it away from the title above, and stacking the label
   // over the value would cost two lines between that title and its subtitle. So it runs inline and

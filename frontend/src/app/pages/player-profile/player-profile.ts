@@ -1,4 +1,3 @@
-import { NgOptimizedImage } from '@angular/common';
 import {
   afterRenderEffect,
   Component,
@@ -60,6 +59,7 @@ import { StatTile } from '@shared/stat-tile/stat-tile';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { MatchDay } from './match-day.model';
 import { groupMatchesByDay } from './match-day.utils';
+import { MediaThumbnail } from './media-thumbnail/media-thumbnail';
 
 /**
  * Game modes shown as their own button in the game-mode filter's button group, in
@@ -93,7 +93,7 @@ const VIEW_MODES: readonly ViewMode[] = ['weekly', 'global'];
     RouterLink,
     Avatar,
     ChampionBadge,
-    NgOptimizedImage,
+    MediaThumbnail,
     ProgressBar,
     RankIconView,
     ResourceState,

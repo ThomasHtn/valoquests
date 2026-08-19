@@ -1,0 +1,20 @@
+@if (src(); as imageUrl) {
+  <img
+    [attr.aria-hidden]="accessibleName() === null ? true : null"
+    [alt]="accessibleName() ?? ''"
+    [height]="40"
+    [ngSrc]="imageUrl"
+    [width]="40"
+    class="notch-tr size-10 shrink-0 object-cover [--notch:0.375rem]"
+  />
+} @else {
+  <span
+    [attr.aria-hidden]="accessibleName() === null ? true : null"
+    class="notch-tr font-display flex size-10 shrink-0 items-center justify-center bg-surface-700 text-sm leading-none font-bold text-text-secondary [--notch:0.375rem]"
+  >
+    {{ monogram() }}
+  </span>
+  @if (accessibleName(); as name) {
+    <span class="sr-only">{{ name }}</span>
+  }
+}

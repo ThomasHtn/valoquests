@@ -19,23 +19,7 @@ import { Component, Directive, input } from '@angular/core';
  */
 @Component({
   selector: 'app-text-field',
-  template: `
-    <!-- The control is associated by being wrapped, which is what the platform asks for and what
-         every call site relies on. The rule below cannot see it: the input arrives through
-         projection, so there is nothing inside this label at compile time to check against. -->
-    <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -->
-    <label class="block">
-      <span class="label-caption block text-text-muted">{{ label() }}</span>
-
-      <div
-        class="notch-tr mt-2 h-11 bg-text-muted p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500 has-[:disabled]:opacity-60"
-      >
-        <div class="notch-tr flex h-full items-center bg-surface-sunken [--notch:0.5rem]">
-          <ng-content />
-        </div>
-      </div>
-    </label>
-  `,
+  templateUrl: './text-field.html',
   host: { class: 'block' },
 })
 export class TextField {
