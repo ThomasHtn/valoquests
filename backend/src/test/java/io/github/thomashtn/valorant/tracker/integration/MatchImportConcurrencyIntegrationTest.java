@@ -27,6 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * Verifies that {@link MatchImportService} stays idempotent under real concurrent execution against
@@ -64,6 +65,12 @@ class MatchImportConcurrencyIntegrationTest extends PostgreSqlIntegrationTest {
     private PlayerMatchRepository playerMatchRepository;
 
     /**
+     * JDBC client used to remove the season row this test class creates.
+     */
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    /**
      * Removes every row this test class may have created, since nothing here rolls back.
      *
      * <p>Matched by identifier rather than by navigating {@code playerMatch.getMatch()}: that
@@ -88,6 +95,7 @@ class MatchImportConcurrencyIntegrationTest extends PostgreSqlIntegrationTest {
                     && player.getRiotPuuid().startsWith("concurrency-puuid-"))
                 .toList()
         );
+        jdbcTemplate.update("DELETE FROM season WHERE external_id = ?", SEASON_ID);
     }
 
     /**
