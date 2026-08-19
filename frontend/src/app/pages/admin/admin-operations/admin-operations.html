@@ -3,114 +3,116 @@
   [heading]="'admin.operations.heading' | translate"
 />
 
-<app-section-divider [label]="'admin.operations.statusLabel' | translate" />
+<div class="page-body">
+  <app-section-label [label]="'admin.operations.statusLabel' | translate" />
 
-<!-- State of the latest run. Sits above the commands because it answers the question that decides
+  <!-- State of the latest run. Sits above the commands because it answers the question that decides
      whether any of them should be triggered at all. -->
-<div class="notch-tr notch-tr-edge bg-text-primary/4 p-5 [--notch:0.875rem]">
-  <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-    <h2 class="tracking-label font-display text-base font-bold text-text-primary uppercase">
-      {{ 'admin.operations.lastRun' | translate }}
-    </h2>
+  <div class="notch-tr notch-tr-edge bg-text-primary/4 p-5 [--notch:0.875rem]">
+    <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+      <h2 class="tracking-label font-display text-base font-bold text-text-primary uppercase">
+        {{ 'admin.operations.lastRun' | translate }}
+      </h2>
 
-    <!-- Status is stated in words and coloured, never coloured alone. -->
-    <app-status-badge
-      [label]="statusLabel()"
-      [tone]="synchronizing() ? 'brand' : 'neutral'"
-      role="status"
-    />
+      <!-- Status is stated in words and coloured, never coloured alone. -->
+      <app-status-badge
+        [label]="statusLabel()"
+        [tone]="synchronizing() ? 'brand' : 'neutral'"
+        role="status"
+      />
+    </div>
+
+    @if (startedLabel()) {
+      <p class="mt-2 font-mono text-xs text-text-muted tabular-nums">
+        {{ 'admin.operations.startedAt' | translate }} {{ startedLabel() }}
+      </p>
+    }
+
+    @if (synchronization(); as execution) {
+      <!-- Counters move while the run is polled, so they use tabular figures: proportional digits
+         would jiggle the whole row on every refresh. -->
+      <dl class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div>
+          <dt class="label-caption text-text-muted">
+            {{ 'admin.operations.playersProcessed' | translate }}
+          </dt>
+          <dd class="font-display mt-1 text-xl font-bold text-text-primary tabular-nums">
+            {{ execution.playersProcessed }}
+          </dd>
+        </div>
+        <div>
+          <dt class="label-caption text-text-muted">
+            {{ 'admin.operations.matchesImported' | translate }}
+          </dt>
+          <dd class="font-display mt-1 text-xl font-bold text-text-primary tabular-nums">
+            {{ execution.matchesImported }}
+          </dd>
+        </div>
+        <div>
+          <dt class="label-caption text-text-muted">
+            {{ 'admin.operations.failures' | translate }}
+          </dt>
+          <dd
+            [class]="execution.failureCount > 0 ? 'text-danger' : 'text-text-primary'"
+            class="font-display mt-1 text-xl font-bold tabular-nums"
+          >
+            {{ execution.failureCount }}
+          </dd>
+        </div>
+      </dl>
+
+      @if (execution.errorMessage) {
+        <app-inline-message tone="danger" class="mt-4">
+          {{ execution.errorMessage }}
+        </app-inline-message>
+      }
+    } @else {
+      <p class="mt-2 text-base text-text-secondary">
+        {{ 'admin.operations.status.none' | translate }}
+      </p>
+    }
   </div>
 
-  @if (startedLabel()) {
-    <p class="mt-2 font-mono text-xs text-text-muted tabular-nums">
-      {{ 'admin.operations.startedAt' | translate }} {{ startedLabel() }}
-    </p>
-  }
-
-  @if (synchronization(); as execution) {
-    <!-- Counters move while the run is polled, so they use tabular figures: proportional digits
-         would jiggle the whole row on every refresh. -->
-    <dl class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-      <div>
-        <dt class="label-caption text-text-muted">
-          {{ 'admin.operations.playersProcessed' | translate }}
-        </dt>
-        <dd class="font-display mt-1 text-xl font-bold text-text-primary tabular-nums">
-          {{ execution.playersProcessed }}
-        </dd>
-      </div>
-      <div>
-        <dt class="label-caption text-text-muted">
-          {{ 'admin.operations.matchesImported' | translate }}
-        </dt>
-        <dd class="font-display mt-1 text-xl font-bold text-text-primary tabular-nums">
-          {{ execution.matchesImported }}
-        </dd>
-      </div>
-      <div>
-        <dt class="label-caption text-text-muted">
-          {{ 'admin.operations.failures' | translate }}
-        </dt>
-        <dd
-          [class]="execution.failureCount > 0 ? 'text-danger' : 'text-text-primary'"
-          class="font-display mt-1 text-xl font-bold tabular-nums"
-        >
-          {{ execution.failureCount }}
-        </dd>
-      </div>
-    </dl>
-
-    @if (execution.errorMessage) {
-      <app-inline-message tone="danger" class="mt-4">
-        {{ execution.errorMessage }}
-      </app-inline-message>
-    }
-  } @else {
-    <p class="mt-2 text-base text-text-secondary">
-      {{ 'admin.operations.status.none' | translate }}
-    </p>
-  }
-</div>
-
-<div class="mt-6 grid gap-4 lg:grid-cols-2">
-  <app-admin-action-card
-    (triggered)="synchronizeAll()"
-    [actionLabel]="'admin.operations.syncAll.action' | translate"
-    [description]="'admin.operations.syncAll.description' | translate"
-    [disabled]="synchronizing()"
-    [heading]="'admin.operations.syncAll.heading' | translate"
-    [state]="syncAllState()"
-  />
-
-  <app-admin-action-card
-    (triggered)="synchronizePlayer()"
-    [actionLabel]="'admin.operations.syncPlayer.action' | translate"
-    [description]="'admin.operations.syncPlayer.description' | translate"
-    [disabled]="synchronizing()"
-    [heading]="'admin.operations.syncPlayer.heading' | translate"
-    [state]="syncPlayerState()"
-  >
-    <app-select
-      [ariaLabel]="'admin.operations.syncPlayer.pickerLabel' | translate"
-      [options]="playerOptions()"
-      [(value)]="selectedPlayerId"
-      class="min-w-0 flex-1"
+  <div class="mt-6 grid gap-4 lg:grid-cols-2">
+    <app-admin-action-card
+      (triggered)="synchronizeAll()"
+      [actionLabel]="'admin.operations.syncAll.action' | translate"
+      [description]="'admin.operations.syncAll.description' | translate"
+      [disabled]="synchronizing()"
+      [heading]="'admin.operations.syncAll.heading' | translate"
+      [state]="syncAllState()"
     />
-  </app-admin-action-card>
 
-  <app-admin-action-card
-    (triggered)="recalculateProgress()"
-    [actionLabel]="'admin.operations.recalculate.action' | translate"
-    [description]="'admin.operations.recalculate.description' | translate"
-    [heading]="'admin.operations.recalculate.heading' | translate"
-    [state]="recalculateState()"
-  />
+    <app-admin-action-card
+      (triggered)="synchronizePlayer()"
+      [actionLabel]="'admin.operations.syncPlayer.action' | translate"
+      [description]="'admin.operations.syncPlayer.description' | translate"
+      [disabled]="synchronizing()"
+      [heading]="'admin.operations.syncPlayer.heading' | translate"
+      [state]="syncPlayerState()"
+    >
+      <app-select
+        [ariaLabel]="'admin.operations.syncPlayer.pickerLabel' | translate"
+        [options]="playerOptions()"
+        [(value)]="selectedPlayerId"
+        class="min-w-0 flex-1"
+      />
+    </app-admin-action-card>
 
-  <app-admin-action-card
-    (triggered)="selectCurrentWeek()"
-    [actionLabel]="'admin.operations.weekSelection.action' | translate"
-    [description]="'admin.operations.weekSelection.description' | translate"
-    [heading]="'admin.operations.weekSelection.heading' | translate"
-    [state]="weekSelectionState()"
-  />
+    <app-admin-action-card
+      (triggered)="recalculateProgress()"
+      [actionLabel]="'admin.operations.recalculate.action' | translate"
+      [description]="'admin.operations.recalculate.description' | translate"
+      [heading]="'admin.operations.recalculate.heading' | translate"
+      [state]="recalculateState()"
+    />
+
+    <app-admin-action-card
+      (triggered)="selectCurrentWeek()"
+      [actionLabel]="'admin.operations.weekSelection.action' | translate"
+      [description]="'admin.operations.weekSelection.description' | translate"
+      [heading]="'admin.operations.weekSelection.heading' | translate"
+      [state]="weekSelectionState()"
+    />
+  </div>
 </div>

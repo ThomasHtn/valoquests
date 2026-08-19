@@ -1,7 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { PageHeader } from '@shared/page-header/page-header';
+import { PageHeader } from '@layout/page-header/page-header';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { RouterLink } from '@angular/router';
 import { LucideCheck, LucideChevronDown, LucideChevronUp } from '@lucide/angular';
@@ -29,7 +29,6 @@ import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ProgressCircle } from '@shared/progress-circle/progress-circle';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
-import { SectionDivider } from '@shared/section-divider/section-divider';
 import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { RankingCell, RankingColumn, RankingRow } from './leaderboard.model';
@@ -63,7 +62,6 @@ import {
     ProgressBar,
     ProgressCircle,
     ResourceState,
-    SectionDivider,
     WeekCountdown,
     LucideCheck,
     LucideChevronDown,
@@ -207,21 +205,6 @@ export class Leaderboard {
         isChampion: entry.player.id === championPlayerId,
       };
     });
-  });
-
-  /**
-   * Damage the whole squad has dealt to the week's boss so far.
-   *
-   * Summed here rather than read from the API, like the quest page's potential total: it adds up
-   * amounts already on screen so the week's collective standing is legible without doing it by
-   * eye.
-   */
-  protected readonly totalDamage = computed<string>(() => {
-    const total = (this.currentWeek()?.ranking ?? []).reduce(
-      (sum, entry) => sum + entry.totalDamage,
-      0,
-    );
-    return formatDamage(total, this.translation.language());
   });
 
   /**

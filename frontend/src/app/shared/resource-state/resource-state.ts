@@ -19,7 +19,15 @@ import { Button } from '@shared/button/button';
   selector: 'app-resource-state',
   imports: [Button, LucideInbox, LucideRefreshCw, LucideTriangleAlert],
   templateUrl: './resource-state.html',
-  host: { class: 'contents' },
+  // A column rather than `display: contents`. The host used to generate no box at all so that a
+  // screen projecting several blocks through it kept them as items of the page's own stack; it
+  // then also escaped the gutter that stack gives its blocks, and the content came out flush
+  // against the column's edges. `gap: inherit` keeps the original behaviour where it mattered — it
+  // resolves to the page stack's own gap, so those blocks stay spaced exactly as if they were
+  // still its direct children. `grow` keeps this box from clipping its parent flex column's
+  // stretched height short — without it, a projected block's own `flex-1` (e.g. team-progress's
+  // challenge list, meant to reach the podium's height beside it) has nothing to grow into.
+  host: { class: 'flex grow flex-col [gap:inherit]' },
 })
 export class ResourceState {
   /**

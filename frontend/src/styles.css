@@ -204,6 +204,39 @@
 }
 
 /*
+ * Vertical layout of a routed page: its context bar, then its scrollable body under it.
+ *
+ * The stack itself fills the column `main` gives it and never scrolls — that is `page-body`'s job
+ * (below). Splitting the two into separate boxes, rather than making the whole stack one scrolling
+ * flex column with the bar `sticky` inside it, is deliberate: a container's native scrollbar always
+ * paints on top of its content for its own full height, whatever a child's `z-index` — so a bar
+ * merely `sticky` inside the same scrolling box would still have that scrollbar run behind (and
+ * over) it. Giving the bar a box of its own outside the scroll container is the only way to keep
+ * the scrollbar confined to the body beneath it.
+ */
+@utility page-stack {
+  @apply flex h-full w-full flex-col;
+}
+
+/*
+ * Scrollable body of a routed page, everything below its context bar. Bare like `page-stack`, so
+ * the gutter and the width cap ride on the page's *blocks* instead, keeping them aligned with the
+ * bar's own inner row.
+ *
+ * The rule reaches children rather than this element, which means a component hosting itself as
+ * `display: contents` would let its own children slip through it: those are given a box of their
+ * own instead (`app-resource-state`, `app-rule-section`). A new page-level block rendering as
+ * `contents` has to do the same, or it will sit flush against the column's edges.
+ */
+@utility page-body {
+  @apply scroll-subtle flex w-full flex-1 flex-col gap-6 overflow-y-auto pt-6 pb-6;
+
+  & > * {
+    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6;
+  }
+}
+
+/*
  * Visible keyboard focus indicator.
  *
  * The user-agent default outline is nearly invisible against the `surface-950` ground, so every
@@ -239,6 +272,10 @@
  * this lands in the utilities layer, which wins over base whatever the selectors' specificity.
  */
 @utility scroll-subtle {
+  /* Reserves the scrollbar's own column outside the content box, so a full-width sticky child
+     (the page header) stops before it instead of running underneath — without this, the native
+     scrollbar always paints on top of that child regardless of z-index. */
+  scrollbar-gutter: stable;
   scrollbar-color: transparent transparent;
 
   &:hover,

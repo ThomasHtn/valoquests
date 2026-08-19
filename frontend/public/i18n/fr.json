@@ -144,7 +144,7 @@
         "colors": "Couleurs",
         "confirmDialog": "Dialogue de confirmation",
         "dropdowns": "Menus déroulants",
-        "layout": "Divider",
+        "sectionLabel": "Label de section",
         "menuButtons": "Sidebar & boutons de menu",
         "pagination": "Pagination & navigation",
         "panels": "Panels",
@@ -159,7 +159,8 @@
         "textInputs": "Champs de texte",
         "tooltip": "Infobulle",
         "typography": "Typographie",
-        "weekCountdown": "Compte à rebours"
+        "weekCountdown": "Compte à rebours",
+        "pageHeader": "Barre de contexte"
       }
     }
   },
@@ -251,6 +252,10 @@
     "description": "Cette page n'existe pas.",
     "title": "Page introuvable"
   },
+  "pageHeader": {
+    "back": "Retour à {{name}}",
+    "week": "Semaine {{number}}"
+  },
   "overview": {
     "bossEncounter": {
       "defeated": "Le boss est tombé cette semaine.",
@@ -262,10 +267,9 @@
       "loading": "Chargement du boss…"
     },
     "header": {
-      "eyebrow": "Vue d'ensemble · Semaine {{number}}",
       "timeLabel": "Temps restant",
       "timeRemaining": "{{days}}j {{hours}}h",
-      "title": "Avancement de l'escouade cette semaine"
+      "title": "Vue d'ensemble"
     },
     "podium": {
       "rank": {
@@ -296,7 +300,6 @@
       },
       "empty": "Aucun défi n'est actif cette semaine.",
       "error": "Impossible de charger les défis de la semaine.",
-      "eyebrow": "Défis · Semaine {{number}}",
       "loading": "Chargement des défis…",
       "metric": {
         "ASSISTS": "Assists",
@@ -316,6 +319,7 @@
         "label": "Prochain tirage"
       },
       "title": "Défis de la semaine",
+      "heading": "Défis",
       "totalPotential": "Potentiel total · {{damage}} dégâts"
     },
     "weeklyRanking": {
@@ -328,10 +332,10 @@
       "completed": "Défi terminé",
       "empty": "Aucun classement n'est disponible cette semaine.",
       "error": "Impossible de charger le classement de la semaine.",
-      "eyebrow": "Classement · Semaine {{number}}",
       "inactive": "Inactif",
       "loading": "Chargement du classement…",
       "title": "Classement de la semaine",
+      "heading": "Classement",
       "totalDamage": "Dégâts cumulés · {{damage}}",
       "variation": {
         "down": {
@@ -415,7 +419,6 @@
     }
   },
   "players": {
-    "allSeasons": "Statistiques toutes saisons",
     "columns": {
       "headshotPercentage": "HS%",
       "kda": "K/D",
@@ -427,7 +430,7 @@
     "empty": "Aucun joueur suivi pour le moment.",
     "error": "Impossible de charger les joueurs.",
     "eyebrow": "Registre de l'escouade",
-    "heading": "Liste des joueurs suivis",
+    "heading": "Joueurs",
     "loading": "Chargement des joueurs…",
     "tiers": {
       "ascendant": "Ascendant",
@@ -445,8 +448,8 @@
   },
   "retry": "Réessayer",
   "rules": {
-    "eyebrow": "Règles du jeu",
-    "heading": "Une semaine, en 4 temps",
+    "eyebrow": "Une semaine, en 4 temps",
+    "heading": "Règles",
     "readingTime": {
       "label": "Lecture",
       "value": "2 min"

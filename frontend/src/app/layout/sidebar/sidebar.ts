@@ -1,10 +1,9 @@
 import {
-  afterNextRender,
+  afterRenderEffect,
   Component,
   computed,
   ElementRef,
   inject,
-  Injector,
   signal,
   viewChild,
 } from '@angular/core';
@@ -34,6 +33,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Language } from '@core/i18n/translation.model';
 import { PlayersApi } from '@core/players/players-api';
+import { NavigationPanel } from '@layout/navigation-panel';
 import { ADMIN_NAV_ITEMS, NAV_ITEMS } from './sidebar.constants';
 import { NavItem } from './sidebar.model';
 import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './sidebar.utils';
@@ -43,12 +43,16 @@ import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './
  *
  * Displays the primary navigation, the last synchronization time and the language switch. Renders
  * as a vertical rail on `lg` and above, where it can be collapsed to icons only. Below that
- * breakpoint the same panel becomes a drawer sliding in from the left, opened from the bar's own
- * mobile header, so a phone keeps the full labelled navigation instead of a truncated tab bar.
+ * breakpoint the same panel becomes a drawer sliding in from the left, so a phone keeps the full
+ * labelled navigation instead of a truncated tab bar.
  *
- * The host is `display: contents` so the mobile header and the `<aside>` are themselves flex items
- * of the application shell: the header stacks above the routed content, and the rail sits beside
- * it once the shell switches to a row on `lg`.
+ * The drawer's trigger is not here: below `lg` it is the burger of the routed page's context bar
+ * (`layout/page-header/`), so the application shows one bar at the top of the page rather than a
+ * navigation bar stacked over a page header. The open state the two share lives in
+ * {@link NavigationPanel}.
+ *
+ * The host is `display: contents` so the `<aside>` is itself a flex item of the application shell,
+ * sitting beside the routed content once the shell switches to a row on `lg`.
  */
 @Component({
   selector: 'app-sidebar',
@@ -91,11 +95,6 @@ export class Sidebar {
   private readonly translation = inject(Translation);
 
   /**
-   * Injector used to defer the drawer's focus moves to after the state change has been rendered.
-   */
-  private readonly injector = inject(Injector);
-
-  /**
    * Router used to track the active route for {@link isNavItemActive}.
    */
   private readonly router = inject(Router);
@@ -104,6 +103,11 @@ export class Sidebar {
    * Backoffice session, which decides which set of navigation entries the rail offers.
    */
   private readonly adminSession = inject(AdminSession);
+
+  /**
+   * Shared open state of the drawer, whose trigger lives in the routed page's context bar.
+   */
+  protected readonly navigationPanel = inject(NavigationPanel);
 
   /**
    * URL of the currently active route, refreshed on every navigation.
@@ -125,17 +129,6 @@ export class Sidebar {
    * Whether the sidebar is rendered as an icon-only collapsed rail.
    */
   protected readonly collapsed = signal(false);
-
-  /**
-   * Whether the mobile drawer is open. Meaningless from `lg` up, where the panel is a static rail
-   * that is always on screen.
-   */
-  protected readonly mobileMenuOpen = signal(false);
-
-  /**
-   * Id of the drawer panel, referenced by the mobile header's `aria-controls`.
-   */
-  protected readonly mobileMenuId = 'sidebar-panel';
 
   /**
    * Whether a backoffice session is open.
@@ -185,14 +178,24 @@ export class Sidebar {
 
   /**
    * Position and visibility utilities driving the drawer below `lg`, reflecting
-   * {@link mobileMenuOpen}. The rail restores both from `lg` up through static `lg:` utilities.
+   * {@link NavigationPanel.isOpen}. The rail restores both from `lg` up through static `lg:`
+   * utilities.
    *
    * `invisible` rather than `hidden`: it keeps the panel out of the tab order and out of the
-   * accessibility tree while closed, but still lets the slide transition run, since `visibility`
-   * interpolates discretely and therefore holds `visible` for the whole exit.
+   * accessibility tree while closed, without taking it out of the layout mid-slide.
+   *
+   * Each state carries its own transition rather than sharing one declared on the element, because
+   * `visibility` has to be timed in opposite directions. Riding the shared 300ms transition, it
+   * only resolves to `visible` once the transition has actually started — two frames after the
+   * class lands — so the panel is still unfocusable at the moment the drawer moves focus into it,
+   * and a keyboard user opening the menu was left on the document body. It therefore flips at once
+   * on the way in (`visibility 0s`), and is held back until the slide has finished on the way out
+   * (`visibility 0s 300ms`), which is what keeps the panel on screen for the whole exit.
    */
   protected readonly drawerClass = computed(() =>
-    this.mobileMenuOpen() ? 'visible translate-x-0' : 'invisible -translate-x-full',
+    this.navigationPanel.isOpen()
+      ? 'visible translate-x-0 [transition:translate_300ms_ease-out,visibility_0s]'
+      : 'invisible -translate-x-full [transition:translate_300ms_ease-out,visibility_0s_300ms]',
   );
 
   /**
@@ -200,7 +203,7 @@ export class Sidebar {
    * {@link drawerClass}.
    */
   protected readonly scrimClass = computed(() =>
-    this.mobileMenuOpen() ? 'visible opacity-100' : 'invisible opacity-0',
+    this.navigationPanel.isOpen() ? 'visible opacity-100' : 'invisible opacity-0',
   );
 
   /**
@@ -296,12 +299,6 @@ export class Sidebar {
   private readonly languageMenuElement = viewChild<ElementRef<HTMLElement>>('languageMenu');
 
   /**
-   * Mobile header's burger button, refocused when the drawer closes so keyboard focus returns to
-   * the control that opened it rather than to the top of the document.
-   */
-  private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
-
-  /**
    * Drawer's close button, focused when the drawer opens so keyboard and screen-reader users land
    * inside the panel they just summoned.
    */
@@ -348,6 +345,22 @@ export class Sidebar {
   protected readonly apiStatusLabel = computed(() =>
     this.translation.translate(`sidebar.lastSync.status.${this.apiStatus()}`),
   );
+
+  constructor() {
+    // Moves focus into the drawer as it opens, so keyboard and screen-reader users land inside the
+    // panel they just summoned rather than back at the top of the document.
+    //
+    // An after-render effect rather than a plain one: while closed the panel is
+    // `visibility: hidden`, which makes its controls unfocusable, and the class driving that only
+    // lands once the state change has been rendered. It reacts to the shared state rather than
+    // sitting in an open handler, since the control that opens the drawer belongs to the routed
+    // page's context bar, not to this component.
+    afterRenderEffect(() => {
+      if (this.navigationPanel.isOpen()) {
+        this.closeMenuButton()?.nativeElement.focus();
+      }
+    });
+  }
 
   /**
    * Whether `item` should render as the active navigation entry.
@@ -412,32 +425,32 @@ export class Sidebar {
   }
 
   /**
-   * Opens the mobile drawer and moves focus into it.
+   * Closes the drawer, returning focus to the control that opened it.
    *
-   * The focus move is deferred to the next render: while closed the panel is `visibility: hidden`,
-   * which makes its controls unfocusable, and the class driving that only lands once the signal
-   * change has been rendered.
+   * Safe to call from the rail too, where there is no drawer to close: the shared state guards on
+   * its own open state.
    */
-  protected openMobileMenu(): void {
-    this.mobileMenuOpen.set(true);
-    afterNextRender(() => this.closeMenuButton()?.nativeElement.focus(), {
-      injector: this.injector,
-    });
+  protected closeMobileMenu(): void {
+    this.navigationPanel.close();
   }
 
   /**
-   * Closes the mobile drawer and returns focus to the burger button that opened it.
+   * Dismisses the drawer once a navigation entry has been activated, and hands focus to the page
+   * that entry just opened.
    *
-   * Guarded on the open state because the navigation entries call this on every activation, rail
-   * included, where there is no drawer to close and no focus to move.
+   * Focus cannot go back to the burger the way it does on a plain dismissal: the routed page owns
+   * it, so the one that opened the drawer is destroyed by this very navigation. The routed content
+   * is the right landing point anyway — it is what the visitor asked for, and it is already the
+   * skip link's target, so it is focusable. It is also the shell's own element rather than the
+   * page's, so it outlives the navigation and can be focused straight away.
    */
-  protected closeMobileMenu(): void {
-    if (!this.mobileMenuOpen()) {
+  protected onNavItemActivated(): void {
+    if (!this.navigationPanel.isOpen()) {
       return;
     }
 
-    this.mobileMenuOpen.set(false);
-    this.menuButton()?.nativeElement.focus();
+    this.navigationPanel.close();
+    document.getElementById('main-content')?.focus();
   }
 
   /**

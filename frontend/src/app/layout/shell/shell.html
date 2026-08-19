@@ -7,20 +7,20 @@
   {{ 'skipToContent' | translate }}
 </a>
 
-<!-- Navigation sits beside the content on desktop and above it on small screens, hence the direction
-     switch: under `lg` the sidebar contributes a header bar that stacks over the routed content,
-     and its panel becomes a drawer overlaying the page rather than a column beside it. -->
+<!-- Navigation sits beside the content on desktop and overlays it on small screens, hence the
+     direction switch: from `lg` up the rail is a column of this row, and below it the same panel
+     becomes a drawer sliding over the page, summoned from the burger the routed page's context bar
+     carries. -->
 <div class="ambient-field flex h-screen flex-col overflow-hidden bg-surface-950 lg:flex-row">
   <!-- Persistent navigation, shown on every route nested under this shell. -->
   <app-sidebar />
 
-  <!-- Routed page content. Capped in width so that on wide displays the eye is not dragged across
-       the full viewport between a table's first and last column. `relative` gives a page a
-       positioning context to anchor anything full-bleed against, bypassing this wrapper's padding
-       and width cap. -->
-  <main class="scroll-subtle relative flex-1 overflow-y-auto" id="main-content" tabindex="-1">
-    <div class="mx-auto w-full max-w-[1440px] p-4 sm:p-6">
-      <router-outlet />
-    </div>
+  <!-- Routed page content. Deliberately not the scroll container: that's the page's own
+       `page-body` (see `styles.css`), kept out of this box so its scrollbar never runs behind the
+       page's context bar. No padding or width cap here: that bar spans this column edge to edge,
+       so the gutter rides on the page's own blocks instead. `relative` gives a page a positioning
+       context to anchor anything full-bleed against. -->
+  <main class="relative flex-1 overflow-hidden" id="main-content" tabindex="-1">
+    <router-outlet />
   </main>
 </div>

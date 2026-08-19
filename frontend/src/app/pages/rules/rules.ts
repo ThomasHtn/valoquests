@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LucidePlay } from '@lucide/angular';
 
 import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
-import { NavChip } from '@shared/nav-chip/nav-chip';
-import { PageHeader } from '@shared/page-header/page-header';
-import { SectionDivider } from '@shared/section-divider/section-divider';
+import { PageHeader } from '@layout/page-header/page-header';
 import { RuleSection } from './rule-section/rule-section';
 import {
   BOSS_CATEGORY_SHOWCASE,
@@ -27,15 +26,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
  */
 @Component({
   selector: 'app-rules',
-  imports: [
-    TranslatePipe,
-    RouterLink,
-    ChampionBadge,
-    NavChip,
-    PageHeader,
-    RuleSection,
-    SectionDivider,
-  ],
+  imports: [TranslatePipe, RouterLink, ChampionBadge, LucidePlay, PageHeader, RuleSection],
   templateUrl: './rules.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

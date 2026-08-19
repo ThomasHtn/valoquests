@@ -11,8 +11,8 @@ import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { InlineMessage } from '@shared/inline-message/inline-message';
-import { PageHeader } from '@shared/page-header/page-header';
-import { SectionDivider } from '@shared/section-divider/section-divider';
+import { PageHeader } from '@layout/page-header/page-header';
+import { SectionLabel } from '@shared/section-label/section-label';
 
 /**
  * Translation keys of the data the campaign reset clears, listed for the operator before they
@@ -49,7 +49,7 @@ const KEPT_DATA_KEYS: readonly string[] = [
  */
 @Component({
   selector: 'app-admin-maintenance',
-  imports: [TranslatePipe, Button, ConfirmDialog, InlineMessage, PageHeader, SectionDivider],
+  imports: [TranslatePipe, Button, ConfirmDialog, InlineMessage, PageHeader, SectionLabel],
   templateUrl: './admin-maintenance.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

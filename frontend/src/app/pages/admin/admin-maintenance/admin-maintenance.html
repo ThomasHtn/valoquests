@@ -3,83 +3,85 @@
   [heading]="'admin.maintenance.heading' | translate"
 />
 
-<app-section-divider [label]="'admin.maintenance.dangerSection' | translate" />
+<div class="page-body">
+  <app-section-label [label]="'admin.maintenance.dangerSection' | translate" />
 
-<!-- Danger tones on the panel itself, not just on its button: this is the only screen in the
+  <!-- Danger tones on the panel itself, not just on its button: this is the only screen in the
      application where a click destroys data, and the surface should say so before the pointer
      reaches the control. -->
-<div
-  class="notch-tr notch-tr-edge border border-danger/40 bg-danger/5 p-5 [--notch:0.875rem] sm:p-6"
->
-  <h2 class="tracking-label font-display text-base font-bold text-danger uppercase">
-    {{ 'admin.maintenance.reset.heading' | translate }}
-  </h2>
+  <div
+    class="notch-tr notch-tr-edge border border-danger/40 bg-danger/5 p-5 [--notch:0.875rem] sm:p-6"
+  >
+    <h2 class="tracking-label font-display text-base font-bold text-danger uppercase">
+      {{ 'admin.maintenance.reset.heading' | translate }}
+    </h2>
 
-  <p class="mt-2 max-w-2xl text-base text-pretty text-text-secondary">
-    {{ 'admin.maintenance.reset.description' | translate }}
-  </p>
+    <p class="mt-2 max-w-2xl text-base text-pretty text-text-secondary">
+      {{ 'admin.maintenance.reset.description' | translate }}
+    </p>
 
-  <div class="mt-5 grid gap-5 sm:grid-cols-2">
-    <div>
-      <p class="label-caption text-danger">
-        {{ 'admin.maintenance.reset.clearedLabel' | translate }}
-      </p>
-      <ul class="mt-2 flex flex-col gap-1.5">
-        @for (key of clearedDataKeys; track key) {
-          <li class="flex items-start gap-2 text-base text-text-secondary">
-            <span aria-hidden="true" class="mt-1.5 size-1.5 shrink-0 rotate-45 bg-danger"></span>
-            <span class="min-w-0 text-pretty">{{ key | translate }}</span>
-          </li>
-        }
-      </ul>
+    <div class="mt-5 grid gap-5 sm:grid-cols-2">
+      <div>
+        <p class="label-caption text-danger">
+          {{ 'admin.maintenance.reset.clearedLabel' | translate }}
+        </p>
+        <ul class="mt-2 flex flex-col gap-1.5">
+          @for (key of clearedDataKeys; track key) {
+            <li class="flex items-start gap-2 text-base text-text-secondary">
+              <span aria-hidden="true" class="mt-1.5 size-1.5 shrink-0 rotate-45 bg-danger"></span>
+              <span class="min-w-0 text-pretty">{{ key | translate }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <div>
+        <p class="label-caption text-text-muted">
+          {{ 'admin.maintenance.reset.keptLabel' | translate }}
+        </p>
+        <ul class="mt-2 flex flex-col gap-1.5">
+          @for (key of keptDataKeys; track key) {
+            <li class="flex items-start gap-2 text-base text-text-secondary">
+              <span
+                aria-hidden="true"
+                class="mt-1.5 size-1.5 shrink-0 rotate-45 border border-text-muted"
+              ></span>
+              <span class="min-w-0 text-pretty">{{ key | translate }}</span>
+            </li>
+          }
+        </ul>
+      </div>
     </div>
 
-    <div>
-      <p class="label-caption text-text-muted">
-        {{ 'admin.maintenance.reset.keptLabel' | translate }}
-      </p>
-      <ul class="mt-2 flex flex-col gap-1.5">
-        @for (key of keptDataKeys; track key) {
-          <li class="flex items-start gap-2 text-base text-text-secondary">
-            <span
-              aria-hidden="true"
-              class="mt-1.5 size-1.5 shrink-0 rotate-45 border border-text-muted"
-            ></span>
-            <span class="min-w-0 text-pretty">{{ key | translate }}</span>
-          </li>
-        }
-      </ul>
-    </div>
+    @if (synchronizing()) {
+      <app-inline-message class="mt-5">
+        {{ 'admin.maintenance.reset.blockedBySync' | translate }}
+      </app-inline-message>
+    }
+
+    <button
+      appButton="danger"
+      (click)="askForReset()"
+      [disabled]="busy() || synchronizing()"
+      class="mt-6 flex min-h-11 items-center px-5 py-2 text-sm font-medium [--notch:0.5rem]"
+      type="button"
+    >
+      {{ 'admin.maintenance.reset.action' | translate }}
+    </button>
   </div>
 
-  @if (synchronizing()) {
-    <app-inline-message class="mt-5">
-      {{ 'admin.maintenance.reset.blockedBySync' | translate }}
-    </app-inline-message>
-  }
-
-  <button
-    appButton="danger"
-    (click)="askForReset()"
-    [disabled]="busy() || synchronizing()"
-    class="mt-6 flex min-h-11 items-center px-5 py-2 text-sm font-medium [--notch:0.5rem]"
-    type="button"
-  >
-    {{ 'admin.maintenance.reset.action' | translate }}
-  </button>
+  <app-confirm-dialog
+    (confirmed)="confirmReset()"
+    (dismissed)="dismissReset()"
+    [body]="'admin.maintenance.reset.confirmBody' | translate"
+    [busy]="busy()"
+    [cancelLabel]="'admin.cancel' | translate"
+    [confirmationHint]="
+      'admin.maintenance.reset.phraseHint' | translate: { phrase: confirmationPhrase() }
+    "
+    [confirmationPhrase]="confirmationPhrase()"
+    [confirmLabel]="'admin.maintenance.reset.confirm' | translate"
+    [heading]="'admin.maintenance.reset.heading' | translate"
+    [open]="dialogOpen()"
+  />
 </div>
-
-<app-confirm-dialog
-  (confirmed)="confirmReset()"
-  (dismissed)="dismissReset()"
-  [body]="'admin.maintenance.reset.confirmBody' | translate"
-  [busy]="busy()"
-  [cancelLabel]="'admin.cancel' | translate"
-  [confirmationHint]="
-    'admin.maintenance.reset.phraseHint' | translate: { phrase: confirmationPhrase() }
-  "
-  [confirmationPhrase]="confirmationPhrase()"
-  [confirmLabel]="'admin.maintenance.reset.confirm' | translate"
-  [heading]="'admin.maintenance.reset.heading' | translate"
-  [open]="dialogOpen()"
-/>

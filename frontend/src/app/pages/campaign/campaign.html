@@ -1,98 +1,97 @@
-<!-- Header: the campaign told as ground to take, opened on the same beat as every other page. -->
+<!-- Context bar: the campaign told as ground to take, opened on the same beat as every other page.
+     The title tracks the view rather than staying on "battle map": the toggle swaps the whole page
+     for the battle history, so leaving the bar naming the map would leave it naming the wrong page.
+
+     The toggle itself rides in the bar as this page's one action. Its label drops below `sm`, where
+     the bar is at its tightest — the icon and the accessible name carry it there. -->
 <app-page-header
   [eyebrow]="'campaign.eyebrow' | translate"
-  [heading]="'campaign.title' | translate"
-/>
-
-<app-section-divider [label]="view() === 'history' ? campaign.progressLabel() : ''" />
-
-<!-- Legend and the way into the battle history. On a narrow viewport there's no room to keep
-     them side by side, so the button moves above the legend (`order-first`) and spans the full
-     width there, bordered like a standalone control rather than the quieter inline link it is at
-     `sm` and up, where the two sit on one row — legend left, button right via `justify-between`,
-     which also covers the in-between case where the row still wraps but the legend alone fits
-     one line: with only the button left over, `justify-between` resolves to flush left instead of
-     pinning it to the right the way `ml-auto` would. -->
-<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-  @if (view() === 'map') {
-    <ul class="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2">
-      @for (status of legendStatuses; track status) {
-        @let legendTier = territoryTier(status);
-
-        <li class="flex items-center gap-2">
-          <span aria-hidden="true" class="relative size-3.5 shrink-0">
-            <span [class]="legendTier.ringClass" class="clip-hex absolute inset-0"></span>
-            <span
-              [class]="legendTier.fillClass"
-              [style.scale]="legendInnerScale"
-              class="clip-hex absolute inset-0"
-            ></span>
-          </span>
-          <span class="tracking-label font-mono text-2xs text-text-secondary uppercase">
-            {{ 'campaign.legend.' + status | translate }}
-          </span>
-        </li>
-      }
-    </ul>
-  }
-
-  <!-- Swaps the map for the battle history in place, and back — same treatment as the guided
-       tour's replay control on the rules page, so both "come back to something you've already
-       seen" affordances read the same. -->
+  [heading]="(view() === 'map' ? 'campaign.title' : 'campaign.historyToggle') | translate"
+>
   <button
     (click)="toggleView()"
-    class="focus-ring label-caption order-first flex h-12 w-full shrink-0 cursor-pointer items-center justify-center gap-2 border border-text-primary/15 px-4 text-text-primary transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96] sm:order-none sm:w-auto sm:justify-start sm:border-0"
+    [attr.aria-label]="(view() === 'map' ? 'campaign.historyToggle' : 'campaign.title') | translate"
+    class="focus-ring label-caption flex h-10 shrink-0 cursor-pointer items-center gap-2 px-2 text-text-secondary transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
     type="button"
   >
     @if (view() === 'map') {
-      <svg class="size-4" lucideHistory></svg>
-      {{ 'campaign.historyToggle' | translate }}
+      <svg aria-hidden="true" class="size-4 shrink-0" lucideHistory></svg>
+      <span class="hidden sm:inline">{{ 'campaign.historyToggle' | translate }}</span>
     } @else {
-      <svg class="size-4" lucideMap></svg>
-      {{ 'campaign.title' | translate }}
+      <svg aria-hidden="true" class="size-4 shrink-0" lucideMap></svg>
+      <span class="hidden sm:inline">{{ 'campaign.title' | translate }}</span>
     }
   </button>
-</div>
+</app-page-header>
 
-<app-resource-state
-  (retry)="reload()"
-  [errorText]="(view() === 'map' ? 'campaign.error' : 'boss.error') | translate"
-  [isError]="campaign.hasError()"
-  [isLoading]="campaign.isLoading()"
-  [loadingText]="(view() === 'map' ? 'campaign.loading' : 'boss.loading') | translate"
->
+<div class="page-body">
+  <app-section-label [label]="view() === 'history' ? campaign.progressLabel() : ''" />
+
+  <!-- Legend of the map's territory states. Only meaningful over the map itself, so it goes with it
+     when the page swaps to the battle history. -->
   @if (view() === 'map') {
-    <div
-      class="mx-auto w-fit [--hex-gap:0.25rem] [--hex-h:calc(var(--hex-w)*1.1547)] [--hex-w:3.25rem] sm:[--hex-w:4rem] lg:[--hex-w:4.5rem] xl:[--hex-w:5rem]"
-      skeleton
-    >
-      @for (row of skeletonRows; track row; let isOdd = $odd) {
-        <div
-          [style.margin-inline-start]="isOdd ? 'calc((var(--hex-w) + var(--hex-gap)) / 2)' : ''"
-          class="-mb-[calc(var(--hex-h)*0.25)] flex gap-[var(--hex-gap)]"
-        >
-          @for (column of columns; track column) {
-            <span
-              [class]="columnVisibilityClass(column)"
-              class="clip-hex h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 bg-surface-800"
-            ></span>
-          }
-        </div>
-      }
-    </div>
-  } @else {
-    <div class="flex flex-col gap-6" skeleton>
-      @for (placeholder of historySkeletonRows; track $index) {
-        <div class="flex items-center gap-4">
-          <span class="clip-hex h-16 w-14 shrink-0 bg-surface-700"></span>
-          <span [style.width.%]="placeholder" class="h-3 bg-surface-700"></span>
-        </div>
-      }
+    <div>
+      <ul class="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2">
+        @for (status of legendStatuses; track status) {
+          @let legendTier = territoryTier(status);
+
+          <li class="flex items-center gap-2">
+            <span aria-hidden="true" class="relative size-3.5 shrink-0">
+              <span [class]="legendTier.ringClass" class="clip-hex absolute inset-0"></span>
+              <span
+                [class]="legendTier.fillClass"
+                [style.scale]="legendInnerScale"
+                class="clip-hex absolute inset-0"
+              ></span>
+            </span>
+            <span class="tracking-label font-mono text-2xs text-text-secondary uppercase">
+              {{ 'campaign.legend.' + status | translate }}
+            </span>
+          </li>
+        }
+      </ul>
     </div>
   }
 
-  @if (view() === 'map') {
-    <!-- Battle map: a honeycomb scrolling top to bottom, one row per week, framed above and below by
+  <app-resource-state
+    (retry)="reload()"
+    [errorText]="(view() === 'map' ? 'campaign.error' : 'boss.error') | translate"
+    [isError]="campaign.hasError()"
+    [isLoading]="campaign.isLoading()"
+    [loadingText]="(view() === 'map' ? 'campaign.loading' : 'boss.loading') | translate"
+  >
+    @if (view() === 'map') {
+      <div
+        class="mx-auto w-fit [--hex-gap:0.25rem] [--hex-h:calc(var(--hex-w)*1.1547)] [--hex-w:3.25rem] sm:[--hex-w:4rem] lg:[--hex-w:4.5rem] xl:[--hex-w:5rem] 2xl:[--hex-w:5.5rem]"
+        skeleton
+      >
+        @for (row of skeletonRows; track row; let isOdd = $odd) {
+          <div
+            [style.margin-inline-start]="isOdd ? 'calc((var(--hex-w) + var(--hex-gap)) / 2)' : ''"
+            class="-mb-[calc(var(--hex-h)*0.25)] flex gap-[var(--hex-gap)]"
+          >
+            @for (column of columns; track column) {
+              <span
+                [class]="columnVisibilityClass(column)"
+                class="clip-hex h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 bg-surface-800"
+              ></span>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="flex flex-col gap-6" skeleton>
+        @for (placeholder of historySkeletonRows; track $index) {
+          <div class="flex items-center gap-4">
+            <span class="clip-hex h-16 w-14 shrink-0 bg-surface-700"></span>
+            <span [style.width.%]="placeholder" class="h-3 bg-surface-700"></span>
+          </div>
+        }
+      </div>
+    }
+
+    @if (view() === 'map') {
+      <!-- Battle map: a honeycomb scrolling top to bottom, one row per week, framed above and below by
        terrain the front has not reached. Rows interlock by a quarter of a hexagon's height and
        every other one is nudged half a hexagon to the right, which is what makes flat tiles read as
        a tiled field. Each week's row hands one hexagon to its boss — placed along a serpentine
@@ -100,340 +99,341 @@
        appear once the viewport can hold them, so the field widens with the page while the path
        stays put. `data-battlemap-current` marks the hexagon the page centers on at load (see the
        constructor). -->
-    <ol
-      [attr.aria-label]="'campaign.map.ariaLabel' | translate"
-      class="mx-auto w-fit pb-[calc(var(--hex-h)*0.25)] [--hex-gap:0.25rem] [--hex-h:calc(var(--hex-w)*1.1547)] [--hex-w:3.25rem] sm:[--hex-w:4rem] lg:[--hex-w:4.5rem] xl:[--hex-w:5rem]"
-      role="list"
-    >
-      @for (row of rows(); track row.key; let isOdd = $odd) {
-        <li
-          [attr.aria-hidden]="row.node === null ? 'true' : null"
-          [style.margin-inline-start]="isOdd ? 'calc((var(--hex-w) + var(--hex-gap)) / 2)' : ''"
-          class="-mb-[calc(var(--hex-h)*0.25)] flex gap-[var(--hex-gap)]"
-        >
-          @for (column of columns; track column) {
-            <div
-              [class]="columnVisibilityClass(column)"
-              class="group relative h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 hover:z-20 focus-within:z-20"
-            >
-              @if (column === row.bossColumn ? row.node : null; as node) {
-                @let tier = territoryTier(node.status);
+      <ol
+        [attr.aria-label]="'campaign.map.ariaLabel' | translate"
+        class="mx-auto w-fit pb-[calc(var(--hex-h)*0.25)] [--hex-gap:0.25rem] [--hex-h:calc(var(--hex-w)*1.1547)] [--hex-w:3.25rem] sm:[--hex-w:4rem] lg:[--hex-w:4.5rem] xl:[--hex-w:5rem] 2xl:[--hex-w:5.5rem]"
+        role="list"
+      >
+        @for (row of rows(); track row.key; let isOdd = $odd) {
+          <li
+            [attr.aria-hidden]="row.node === null ? 'true' : null"
+            [style.margin-inline-start]="isOdd ? 'calc((var(--hex-w) + var(--hex-gap)) / 2)' : ''"
+            class="-mb-[calc(var(--hex-h)*0.25)] flex gap-[var(--hex-gap)]"
+          >
+            @for (column of columns; track column) {
+              <div
+                [class]="columnVisibilityClass(column)"
+                class="group relative h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 hover:z-20 focus-within:z-20"
+              >
+                @if (column === row.bossColumn ? row.node : null; as node) {
+                  @let tier = territoryTier(node.status);
 
-                @if (tier.haloClass) {
-                  <span
-                    [class]="tier.haloClass"
-                    aria-hidden="true"
-                    class="clip-hex absolute -inset-1"
-                  ></span>
-                }
+                  @if (tier.haloClass) {
+                    <span
+                      [class]="tier.haloClass"
+                      aria-hidden="true"
+                      class="clip-hex absolute -inset-1"
+                    ></span>
+                  }
 
-                <!-- The week's territory. The button itself stays unclipped so its focus ring is
+                  <!-- The week's territory. The button itself stays unclipped so its focus ring is
                    not cut away with the corners; the hexagon is the two layers inside it, an
                    outline showing through from behind a scaled-down surface. The cell above lifts
                    the whole tile on hover, without which the tile grows *under* the neighbours that
                    follow it in the grid and is half eaten by them. -->
-                <button
-                  (click)="select(node)"
-                  [attr.aria-label]="
-                    (node.weekLabel ? node.weekLabel + ' · ' : '') +
-                    node.bossName +
-                    ' · ' +
-                    node.statusLabel
-                  "
-                  [attr.data-battlemap-current]="node.status === 'current' ? '' : null"
-                  class="focus-ring absolute inset-0 cursor-pointer transition-transform duration-200 hover:scale-[1.07] motion-reduce:transition-none"
-                  type="button"
-                >
-                  <span [class]="tier.ringClass" class="clip-hex absolute inset-0"></span>
-
-                  <!-- Scaled down rather than inset, so the outline keeps a constant width all the
-                     way around the hexagon — see `TILE_INNER_SCALE`. -->
-                  <span
-                    [class]="tier.fillClass"
-                    [style.scale]="tileInnerScale"
-                    class="clip-hex absolute inset-0 flex items-center justify-center"
+                  <button
+                    (click)="select(node)"
+                    [attr.aria-label]="
+                      (node.weekLabel ? node.weekLabel + ' · ' : '') +
+                      node.bossName +
+                      ' · ' +
+                      node.statusLabel
+                    "
+                    [attr.data-battlemap-current]="node.status === 'current' ? '' : null"
+                    class="focus-ring absolute inset-0 cursor-pointer transition-transform duration-200 hover:scale-[1.07] motion-reduce:transition-none"
+                    type="button"
                   >
-                    <!-- The boss holding the territory, dimmed under a scrim so the outcome mark
+                    <span [class]="tier.ringClass" class="clip-hex absolute inset-0"></span>
+
+                    <!-- Scaled down rather than inset, so the outline keeps a constant width all the
+                     way around the hexagon — see `TILE_INNER_SCALE`. -->
+                    <span
+                      [class]="tier.fillClass"
+                      [style.scale]="tileInnerScale"
+                      class="clip-hex absolute inset-0 flex items-center justify-center"
+                    >
+                      <!-- The boss holding the territory, dimmed under a scrim so the outcome mark
                        stays the first thing read. Weeks whose boss has not been drawn have no
                        portrait to show. -->
-                    @if (node.portraitUrl; as portraitUrl) {
-                      <img
-                        [ngSrc]="portraitUrl"
-                        alt=""
-                        class="clip-hex object-cover opacity-45"
-                        fill
-                        sizes="80px"
-                      />
-                    }
-
-                    <!-- Ground gained: the surface fills from the bottom as the boss takes damage,
-                       so a week reads as taken, contested or untouched at a glance. -->
-                    @if (node.damagePercentage > 0) {
-                      <span
-                        [class]="tier.damageFillClass"
-                        [style.height.%]="node.damagePercentage"
-                        aria-hidden="true"
-                        class="absolute inset-x-0 bottom-0 transition-[height] duration-500 motion-reduce:transition-none"
-                      ></span>
-                    }
-
-                    <!-- The week's verdict, carried by the shape of the mark rather than by its
-                       color alone: taken, lost, still being fought, or not yet reached. -->
-                    <span
-                      [class]="tier.iconClass"
-                      aria-hidden="true"
-                      class="relative [&>svg]:size-5 sm:[&>svg]:size-6"
-                    >
-                      @switch (node.status) {
-                        @case ('defeated') {
-                          <svg lucideCheck></svg>
-                        }
-                        @case ('survived') {
-                          <svg lucideX></svg>
-                        }
-                        @case ('current') {
-                          <svg lucideSwords></svg>
-                        }
-                        @default {
-                          <svg lucideLock></svg>
-                        }
+                      @if (node.portraitUrl; as portraitUrl) {
+                        <img
+                          [ngSrc]="portraitUrl"
+                          alt=""
+                          class="clip-hex object-cover opacity-45"
+                          fill
+                          sizes="80px"
+                        />
                       }
-                    </span>
-                  </span>
-                </button>
 
-                <!-- What the tile itself cannot hold: the week it covers, how much of the boss is
+                      <!-- Ground gained: the surface fills from the bottom as the boss takes damage,
+                       so a week reads as taken, contested or untouched at a glance. -->
+                      @if (node.damagePercentage > 0) {
+                        <span
+                          [class]="tier.damageFillClass"
+                          [style.height.%]="node.damagePercentage"
+                          aria-hidden="true"
+                          class="absolute inset-x-0 bottom-0 transition-[height] duration-500 motion-reduce:transition-none"
+                        ></span>
+                      }
+
+                      <!-- The week's verdict, carried by the shape of the mark rather than by its
+                       color alone: taken, lost, still being fought, or not yet reached. -->
+                      <span
+                        [class]="tier.iconClass"
+                        aria-hidden="true"
+                        class="relative [&>svg]:size-5 sm:[&>svg]:size-6"
+                      >
+                        @switch (node.status) {
+                          @case ('defeated') {
+                            <svg lucideCheck></svg>
+                          }
+                          @case ('survived') {
+                            <svg lucideX></svg>
+                          }
+                          @case ('current') {
+                            <svg lucideSwords></svg>
+                          }
+                          @default {
+                            <svg lucideLock></svg>
+                          }
+                        }
+                      </span>
+                    </span>
+                  </button>
+
+                  <!-- What the tile itself cannot hold: the week it covers, how much of the boss is
                    left, and who is landing the hits. Purely a pointer/keyboard enhancement — the
                    same figures are all in the panel a click away, so the card is dropped below `sm`
                    where there is no hover and no room to float it beside a tile. A week with no
                    boss drawn yet has none of it to show. -->
-                @if (node.hasDamage) {
-                  <div
-                    [class]="tooltipSurfaceClass"
-                    aria-hidden="true"
-                    class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 hidden w-56 -translate-x-1/2 px-3 py-2.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none sm:block"
-                  >
-                    <p class="tracking-label font-mono text-2xs text-text-muted uppercase">
-                      {{ node.weekLabel }}
-                    </p>
-                    @if (node.dateRangeLabel; as dateRangeLabel) {
-                      <p class="font-mono text-2xs text-text-secondary tabular-nums">
-                        {{ dateRangeLabel }}
+                  @if (node.hasDamage) {
+                    <div
+                      [class]="tooltipSurfaceClass"
+                      aria-hidden="true"
+                      class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 hidden w-56 -translate-x-1/2 px-3 py-2.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none sm:block"
+                    >
+                      <p class="tracking-label font-mono text-2xs text-text-muted uppercase">
+                        {{ node.weekLabel }}
                       </p>
-                    }
+                      @if (node.dateRangeLabel; as dateRangeLabel) {
+                        <p class="font-mono text-2xs text-text-secondary tabular-nums">
+                          {{ dateRangeLabel }}
+                        </p>
+                      }
 
-                    <p class="font-display mt-1.5 text-sm leading-tight font-bold uppercase">
-                      {{ node.bossName }}
-                    </p>
+                      <p class="font-display mt-1.5 text-sm leading-tight font-bold uppercase">
+                        {{ node.bossName }}
+                      </p>
 
-                    <p class="mt-2 flex items-baseline justify-between gap-2">
-                      <span class="font-mono text-2xs text-text-secondary tabular-nums">
-                        {{ node.hpLabel }}
-                      </span>
-                      <span [class]="tier.iconClass" class="font-mono text-2xs font-medium">
-                        {{ node.hpPercentageLabel }}
-                      </span>
-                    </p>
+                      <p class="mt-2 flex items-baseline justify-between gap-2">
+                        <span class="font-mono text-2xs text-text-secondary tabular-nums">
+                          {{ node.hpLabel }}
+                        </span>
+                        <span [class]="tier.iconClass" class="font-mono text-2xs font-medium">
+                          {{ node.hpPercentageLabel }}
+                        </span>
+                      </p>
 
-                    @if (node.contributions.length > 0) {
-                      <div class="mt-2.5 flex flex-wrap items-center gap-1">
-                        @for (contribution of node.contributions; track contribution.playerId) {
-                          <app-avatar [src]="contribution.avatarUrl" size="xs" />
-                        }
-                      </div>
-                    }
-                  </div>
-                }
-              } @else {
-                <span
-                  [class]="terrainRingClass"
-                  aria-hidden="true"
-                  class="clip-hex absolute inset-0"
-                >
+                      @if (node.contributions.length > 0) {
+                        <div class="mt-2.5 flex flex-wrap items-center gap-1">
+                          @for (contribution of node.contributions; track contribution.playerId) {
+                            <app-avatar [src]="contribution.avatarUrl" size="xs" />
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                } @else {
                   <span
-                    [class]="terrainFillClass"
-                    [style.scale]="tileInnerScale"
+                    [class]="terrainRingClass"
+                    aria-hidden="true"
                     class="clip-hex absolute inset-0"
-                  ></span>
-                </span>
-              }
-            </div>
-          }
-        </li>
-      }
-    </ol>
-  } @else {
-    <!-- Battle history: every finalized week from the oldest to the active one. A line runs down
+                  >
+                    <span
+                      [class]="terrainFillClass"
+                      [style.scale]="tileInnerScale"
+                      class="clip-hex absolute inset-0"
+                    ></span>
+                  </span>
+                }
+              </div>
+            }
+          </li>
+        }
+      </ol>
+    } @else {
+      <!-- Battle history: every finalized week from the oldest to the active one. A line runs down
          the center, one segment per row (see `timelineConnectorBackground`), alternating panels
          left and right of it on wider screens; below `sm` there isn't room to alternate, so the
          line and every marker pin to the left edge instead. `data-timeline-current` marks the one
          node the view auto-scrolls to the first time it comes on screen (see `toggleView`). -->
-    <div class="relative">
-      <ol
-        [attr.aria-label]="'boss.timeline.ariaLabel' | translate"
-        class="flex flex-col gap-8 sm:gap-10"
-        role="list"
-      >
-        @for (
-          node of historyNodes();
-          track node.id;
-          let isOdd = $odd, index = $index, isLast = $last
-        ) {
-          @let tier = timelineTier(node.status);
+      <div class="relative">
+        <ol
+          [attr.aria-label]="'boss.timeline.ariaLabel' | translate"
+          class="flex flex-col gap-8 sm:gap-10"
+          role="list"
+        >
+          @for (
+            node of historyNodes();
+            track node.id;
+            let isOdd = $odd, index = $index, isLast = $last
+          ) {
+            @let tier = timelineTier(node.status);
 
-          <li
-            [attr.data-timeline-current]="node.status === 'current' ? '' : null"
-            class="relative grid grid-cols-[3.5rem_1fr] items-center gap-4 sm:grid-cols-[1fr_7rem_1fr] sm:gap-0"
-          >
-            <!-- This row's slice of the center line. It runs past the row's own bottom to bridge
+            <li
+              [attr.data-timeline-current]="node.status === 'current' ? '' : null"
+              class="relative grid grid-cols-[3.5rem_1fr] items-center gap-4 sm:grid-cols-[1fr_7rem_1fr] sm:gap-0"
+            >
+              <!-- This row's slice of the center line. It runs past the row's own bottom to bridge
                  the gap to the next one, so the segments read as a single continuous line; the
                  last row stops at its own edge rather than trailing into nothing. -->
-            <span
-              [class.-bottom-8]="!isLast"
-              [class.bottom-0]="isLast"
-              [class.sm:-bottom-10]="!isLast"
-              [style.background]="timelineConnectorBackground(index)"
-              aria-hidden="true"
-              class="pointer-events-none absolute top-0 left-7 w-0.5 -translate-x-1/2 sm:left-1/2"
-            ></span>
+              <span
+                [class.-bottom-8]="!isLast"
+                [class.bottom-0]="isLast"
+                [class.sm:-bottom-10]="!isLast"
+                [style.background]="timelineConnectorBackground(index)"
+                aria-hidden="true"
+                class="pointer-events-none absolute top-0 left-7 w-0.5 -translate-x-1/2 sm:left-1/2"
+              ></span>
 
-            <!-- Week marker: the campaign's beat, a hexagon carrying the ISO week number. It is
+              <!-- Week marker: the campaign's beat, a hexagon carrying the ISO week number. It is
                  the one element of a row that stays in place while the panels alternate around
                  it, so the column of markers reads as the calendar the whole page is ordered by.
                  `row-start-1` pins it to the same implicit row as the panel: without it, Grid's
                  auto-placement cursor (already advanced past column 1 by this marker, which comes
                  first in DOM order) pushes a left-side panel (`sm:col-start-1`) down into a second
                  row, breaking both the vertical centering and the timeline's row spacing. -->
-            <div class="col-start-1 row-start-1 flex justify-center sm:col-start-2">
-              <div class="relative h-16 w-14 shrink-0 sm:h-20 sm:w-18">
-                @if (tier.markerHaloClass) {
-                  <span
-                    [class]="tier.markerHaloClass"
-                    aria-hidden="true"
-                    class="clip-hex absolute -inset-1.5"
-                  ></span>
-                }
+              <div class="col-start-1 row-start-1 flex justify-center sm:col-start-2">
+                <div class="relative h-16 w-14 shrink-0 sm:h-20 sm:w-18">
+                  @if (tier.markerHaloClass) {
+                    <span
+                      [class]="tier.markerHaloClass"
+                      aria-hidden="true"
+                      class="clip-hex absolute -inset-1.5"
+                    ></span>
+                  }
 
-                <span [class]="tier.markerClass" class="clip-hex absolute inset-0">
-                  <span
-                    class="clip-hex absolute inset-0.5 flex flex-col items-center justify-center gap-1 bg-surface-950"
-                  >
-                    <span class="label-caption text-text-muted">
-                      {{ 'boss.week.short' | translate }}
-                    </span>
-                    <span class="font-display text-lg leading-none font-bold sm:text-xl">
-                      {{ node.weekNumber ?? '—' }}
+                  <span [class]="tier.markerClass" class="clip-hex absolute inset-0">
+                    <span
+                      class="clip-hex absolute inset-0.5 flex flex-col items-center justify-center gap-1 bg-surface-950"
+                    >
+                      <span class="label-caption text-text-muted">
+                        {{ 'boss.week.short' | translate }}
+                      </span>
+                      <span class="font-display text-lg leading-none font-bold sm:text-xl">
+                        {{ node.weekNumber ?? '—' }}
+                      </span>
                     </span>
                   </span>
-                </span>
+                </div>
               </div>
-            </div>
 
-            <!-- The week's panel, alternating sides of the center line at `sm` and up, and opening
+              <!-- The week's panel, alternating sides of the center line at `sm` and up, and opening
                  the detail drawer when picked. `row-start-1` keeps it paired with its marker (see
                  the marker's comment for why). -->
-            <button
-              (click)="select(node)"
-              [class]="tier.panelClass"
-              [class.sm:col-start-1]="!isOdd"
-              [class.sm:col-start-3]="isOdd"
-              class="notch-tr notch-tr-edge focus-ring-inset col-start-2 row-start-1 min-w-0 cursor-pointer border bg-linear-[115deg] to-surface-sunken/60 p-4 text-left transition-colors [--notch:1.25rem] hover:border-brand-500/70 sm:p-5"
-              type="button"
-            >
-              <span class="flex items-center justify-between gap-3">
-                <span
-                  [class]="tier.pillClass"
-                  class="tracking-label px-2 py-1 font-mono text-2xs font-bold uppercase"
-                >
-                  {{ node.statusLabel }}
-                </span>
-                @if (node.dateRangeLabel; as dateRangeLabel) {
-                  <span class="font-mono text-2xs text-text-muted tabular-nums">{{
-                    dateRangeLabel
-                  }}</span>
-                }
-              </span>
-
-              <span class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-                <span
-                  class="font-display text-xl leading-none font-bold text-text-primary uppercase sm:text-2xl"
-                >
-                  {{ node.bossName }}
-                </span>
-                @if (node.categoryLabel; as categoryLabel) {
-                  <span class="label-caption text-text-muted">
-                    {{ 'boss.difficulty' | translate }}
-                    <span aria-hidden="true">·</span>
-                    {{ categoryLabel }}
-                  </span>
-                }
-              </span>
-
-              @if (node.hasDamage) {
-                <span class="mt-4 flex items-baseline justify-between gap-3">
-                  <span class="label-caption text-text-muted">
-                    {{ node.barLabel }}
-                  </span>
+              <button
+                (click)="select(node)"
+                [class]="tier.panelClass"
+                [class.sm:col-start-1]="!isOdd"
+                [class.sm:col-start-3]="isOdd"
+                class="notch-tr notch-tr-edge focus-ring-inset col-start-2 row-start-1 min-w-0 cursor-pointer border bg-linear-[115deg] to-surface-sunken/60 p-4 text-left transition-colors [--notch:1.25rem] hover:border-brand-500/70 sm:p-5"
+                type="button"
+              >
+                <span class="flex items-center justify-between gap-3">
                   <span
-                    [class]="tier.accentTextClass"
-                    class="font-mono text-2xs font-medium tabular-nums"
-                    >{{ node.hpPercentageLabel }}</span
+                    [class]="tier.pillClass"
+                    class="tracking-label px-2 py-1 font-mono text-2xs font-bold uppercase"
                   >
+                    {{ node.statusLabel }}
+                  </span>
+                  @if (node.dateRangeLabel; as dateRangeLabel) {
+                    <span class="font-mono text-2xs text-text-muted tabular-nums">{{
+                      dateRangeLabel
+                    }}</span>
+                  }
                 </span>
 
-                <!-- Health bar, draining as the group takes hit points off, with the tally riding
+                <span class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <span
+                    class="font-display text-xl leading-none font-bold text-text-primary uppercase sm:text-2xl"
+                  >
+                    {{ node.bossName }}
+                  </span>
+                  @if (node.categoryLabel; as categoryLabel) {
+                    <span class="label-caption text-text-muted">
+                      {{ 'boss.difficulty' | translate }}
+                      <span aria-hidden="true">·</span>
+                      {{ categoryLabel }}
+                    </span>
+                  }
+                </span>
+
+                @if (node.hasDamage) {
+                  <span class="mt-4 flex items-baseline justify-between gap-3">
+                    <span class="label-caption text-text-muted">
+                      {{ node.barLabel }}
+                    </span>
+                    <span
+                      [class]="tier.accentTextClass"
+                      class="font-mono text-2xs font-medium tabular-nums"
+                      >{{ node.hpPercentageLabel }}</span
+                    >
+                  </span>
+
+                  <!-- Health bar, draining as the group takes hit points off, with the tally riding
                      inside the track so the number and the fill it describes are read in one
                      glance. -->
-                <span
-                  class="relative mt-2 flex h-6 border border-text-primary/15 bg-surface-sunken"
-                >
                   <span
-                    [class]="tier.barFillClass"
-                    [style.width.%]="node.hpPercentage"
-                    aria-hidden="true"
-                    class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
-                  ></span>
-                  <span
-                    class="relative flex flex-1 items-center justify-center font-mono text-2xs font-semibold text-text-primary tabular-nums [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
-                    >{{ node.hpLabel }}</span
+                    class="relative mt-2 flex h-6 border border-text-primary/15 bg-surface-sunken"
                   >
-                </span>
-
-                @if (node.metaLabel; as metaLabel) {
-                  <span class="mt-3 flex items-center gap-2.5 text-sm text-text-secondary">
                     <span
                       [class]="tier.barFillClass"
+                      [style.width.%]="node.hpPercentage"
                       aria-hidden="true"
-                      class="size-1.5 shrink-0 rotate-45"
+                      class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
                     ></span>
-                    {{ metaLabel }}
+                    <span
+                      class="relative flex flex-1 items-center justify-center font-mono text-2xs font-semibold text-text-primary tabular-nums [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
+                      >{{ node.hpLabel }}</span
+                    >
+                  </span>
+
+                  @if (node.metaLabel; as metaLabel) {
+                    <span class="mt-3 flex items-center gap-2.5 text-sm text-text-secondary">
+                      <span
+                        [class]="tier.barFillClass"
+                        aria-hidden="true"
+                        class="size-1.5 shrink-0 rotate-45"
+                      ></span>
+                      {{ metaLabel }}
+                    </span>
+                  }
+                } @else {
+                  <span
+                    class="text-prose mt-4 flex items-center gap-3 border border-dashed border-text-primary/15 bg-text-primary/3 p-3 text-text-secondary"
+                  >
+                    <span aria-hidden="true" class="font-mono text-sm font-bold text-text-muted"
+                      >?</span
+                    >
+                    {{ node.bossDescription }}
                   </span>
                 }
-              } @else {
-                <span
-                  class="text-prose mt-4 flex items-center gap-3 border border-dashed border-text-primary/15 bg-text-primary/3 p-3 text-text-secondary"
-                >
-                  <span aria-hidden="true" class="font-mono text-sm font-bold text-text-muted"
-                    >?</span
-                  >
-                  {{ node.bossDescription }}
-                </span>
-              }
-            </button>
-          </li>
-        }
-      </ol>
-    </div>
-  }
-</app-resource-state>
+              </button>
+            </li>
+          }
+        </ol>
+      </div>
+    }
+  </app-resource-state>
 
-@if (selectedNode(); as node) {
-  <app-boss-detail
-    (closed)="closePanel()"
-    (next)="step(1)"
-    (previous)="step(-1)"
-    [hasNext]="hasNextNode()"
-    [hasPrevious]="hasPreviousNode()"
-    [node]="node"
-  />
-}
+  @if (selectedNode(); as node) {
+    <app-boss-detail
+      (closed)="closePanel()"
+      (next)="step(1)"
+      (previous)="step(-1)"
+      [hasNext]="hasNextNode()"
+      [hasPrevious]="hasPreviousNode()"
+      [node]="node"
+    />
+  }
+</div>

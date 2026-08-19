@@ -1,34 +1,3 @@
-<!-- Mobile header. Below `lg` the navigation is behind a burger rather than on screen, so the app
-     still needs a permanent bar carrying the wordmark and the way back into the navigation. Hidden
-     from `lg` up, where the rail beside the content already is that bar. -->
-<header
-  class="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-brand-500/20 bg-surface-sunken px-4 lg:hidden"
->
-  <div class="flex min-w-0 items-center gap-3">
-    <!-- The wordmark's two halves are spaced with a `gap` rather than the whitespace between them:
-         Angular's template compiler collapses inter-element whitespace, so the two words would
-         otherwise run together. -->
-    <p class="flex gap-1.5 font-display text-lg leading-none font-bold uppercase">
-      <span class="text-brand-500">Valo</span>
-      <span class="text-text-primary">Quests</span>
-    </p>
-  </div>
-
-  <!-- Pulled to the bar's right edge with a negative margin so the icon stays optically aligned
-       with the content below it while the button keeps its full 44px touch target. -->
-  <button
-    #menuButton
-    (click)="openMobileMenu()"
-    [attr.aria-controls]="mobileMenuId"
-    [attr.aria-expanded]="mobileMenuOpen()"
-    [attr.aria-label]="'sidebar.openMenu' | translate"
-    class="focus-ring -mr-2.5 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center text-text-primary transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
-    type="button"
-  >
-    <svg class="block h-6 w-6 shrink-0" lucideMenu></svg>
-  </button>
-</header>
-
 <!-- Scrim behind the drawer. Decorative — the drawer is dismissed from its own close button and
      from Escape too, so this is a convenience, not the only way out. -->
 <div
@@ -50,8 +19,8 @@
   (click)="onRailClick($event)"
   [attr.aria-label]="'sidebar.label' | translate"
   [class]="railWidthClass() + ' ' + drawerClass() + ' ' + railCursorClass()"
-  [id]="mobileMenuId"
-  class="group scroll-subtle fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] shrink-0 flex-col justify-between overflow-y-auto border-r border-brand-500/20 bg-surface-sunken pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] transition-[translate,visibility] duration-300 ease-out motion-reduce:transition-none lg:visible lg:static lg:h-full lg:max-w-none lg:translate-x-0 lg:overflow-y-visible lg:bg-surface-sunken/95 lg:py-6 lg:transition-[width] lg:duration-200 motion-reduce:lg:transition-none"
+  [id]="navigationPanel.panelId"
+  class="group scroll-subtle fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] shrink-0 flex-col justify-between overflow-y-auto border-r border-brand-500/35 bg-surface-sunken pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] motion-reduce:transition-none lg:visible lg:static lg:h-full lg:max-w-none lg:translate-x-0 lg:overflow-y-visible lg:py-6 lg:transition-[width] lg:duration-200 motion-reduce:lg:transition-none"
 >
   <div>
     <div class="mb-7 px-5">
@@ -123,7 +92,7 @@
     <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex flex-col">
       @for (item of navItems(); track item.labelKey) {
         <a
-          (click)="closeMobileMenu()"
+          (click)="onNavItemActivated()"
           [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
           [attr.aria-disabled]="item.routerLink ? null : 'true'"
           [class.cursor-default]="!item.routerLink"

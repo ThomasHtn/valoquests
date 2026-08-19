@@ -1,12 +1,18 @@
 @if (remaining(); as remaining) {
-  <p class="tracking-label font-mono text-xs font-medium text-text-muted uppercase">
+  <svg aria-hidden="true" class="size-4 shrink-0 text-text-muted" lucideHourglass></svg>
+
+  <!-- Dropped below `md`, where the bar is already holding a burger and a title: the hourglass
+       names the figure there, and the accessible name carries the whole phrase throughout. -->
+  <span class="label-caption hidden text-text-muted md:inline">
     {{ 'overview.header.timeLabel' | translate }}
-  </p>
-  <p
-    class="font-display text-xl leading-none font-bold text-brand-500 tabular-nums sm:mt-1.5 sm:text-2xl"
+  </span>
+
+  <span
+    [attr.aria-label]="accessibleLabel()"
+    class="font-display text-base leading-none font-bold text-brand-500 tabular-nums sm:text-lg"
   >
     {{
       'overview.header.timeRemaining' | translate: { days: remaining.days, hours: remaining.hours }
     }}
-  </p>
+  </span>
 }

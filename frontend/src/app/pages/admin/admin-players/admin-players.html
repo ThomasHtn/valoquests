@@ -1,163 +1,170 @@
+<!-- The page's one command rides in the context bar rather than above the roster: it is what this
+     screen is for, and from the bar it stays reachable however far down the list the operator is.
+     Label dropped below `sm`, where the bar is at its tightest. -->
 <app-page-header
   [eyebrow]="'admin.eyebrow' | translate"
   [heading]="'admin.players.heading' | translate"
-/>
-
-<app-section-divider [label]="'admin.players.rosterSection' | translate" />
-
-<div>
+>
   <button
     appButton="primary"
     (click)="startCreating()"
-    class="flex min-h-10 items-center px-4 py-2 text-sm font-medium [--notch:0.5rem]"
+    [attr.aria-label]="'admin.players.addPlayer' | translate"
+    class="flex h-10 shrink-0 items-center gap-2 px-3 text-sm font-medium [--notch:0.5rem] sm:px-4"
     type="button"
   >
-    {{ 'admin.players.addPlayer' | translate }}
+    <svg aria-hidden="true" class="size-4 shrink-0" lucidePlus></svg>
+    <span class="hidden sm:inline">{{ 'admin.players.addPlayer' | translate }}</span>
   </button>
-</div>
+</app-page-header>
 
-<app-resource-state
-  (retry)="playersResource.reload()"
-  [emptyText]="'admin.players.empty' | translate"
-  [errorText]="'admin.players.error' | translate"
-  [isEmpty]="players().length === 0"
-  [isError]="!!playersResource.error()"
-  [isLoading]="playersResource.isLoading()"
-  [loadingText]="'admin.players.loading' | translate"
-  padding="py-6"
->
-  <div class="flex flex-col gap-2" skeleton>
-    @for (placeholder of skeletonRows; track $index) {
-      <div
-        class="notch-tr flex items-center gap-3 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-5 [--notch:0.875rem]"
-      >
-        <span class="flex min-w-0 flex-1 flex-col gap-2">
-          <span [style.width.%]="placeholder" class="h-3 bg-surface-700"></span>
-          <span class="h-2.5 w-1/6 bg-surface-700"></span>
-        </span>
-      </div>
-    }
-  </div>
+<div class="page-body">
+  <app-section-label [label]="'admin.players.rosterSection' | translate" />
 
-  <!-- Rows rather than a `<table>`: each entry is an identity plus its own controls, which reads
+  <app-resource-state
+    (retry)="playersResource.reload()"
+    [emptyText]="'admin.players.empty' | translate"
+    [errorText]="'admin.players.error' | translate"
+    [isEmpty]="players().length === 0"
+    [isError]="!!playersResource.error()"
+    [isLoading]="playersResource.isLoading()"
+    [loadingText]="'admin.players.loading' | translate"
+    padding="py-6"
+  >
+    <div class="flex flex-col gap-2" skeleton>
+      @for (placeholder of skeletonRows; track $index) {
+        <div
+          class="notch-tr flex items-center gap-3 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-5 [--notch:0.875rem]"
+        >
+          <span class="flex min-w-0 flex-1 flex-col gap-2">
+            <span [style.width.%]="placeholder" class="h-3 bg-surface-700"></span>
+            <span class="h-2.5 w-1/6 bg-surface-700"></span>
+          </span>
+        </div>
+      }
+    </div>
+
+    <!-- Rows rather than a `<table>`: each entry is an identity plus its own controls, which reads
        as a list of cards on a phone and lines up into columns from `lg` up. The row scrolls
        horizontally inside itself if it ever has to, so the page body never does. -->
-  <ul class="flex flex-col gap-2">
-    @for (player of players(); track player.id) {
-      <li
-        (click)="!busy() && startEditing(player)"
-        (keydown.enter)="!busy() && startEditing(player)"
-        (keydown.space)="$event.preventDefault(); !busy() && startEditing(player)"
-        [class]="
-          player.status === 'ARCHIVED'
-            ? 'border-l-surface-600 opacity-70'
-            : player.status === 'INACTIVE'
-              ? 'border-l-text-muted'
-              : 'border-l-brand-500'
-        "
-        class="notch-tr focus-ring-inset grid cursor-pointer grid-cols-1 gap-4 border-l-2 bg-text-primary/4 px-4 py-4 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,1.5fr)_20rem] lg:items-center lg:gap-x-6 lg:gap-y-0 lg:px-5"
-        role="button"
-        tabindex="0"
-      >
-        <div class="min-w-0">
-          <p class="truncate text-base font-semibold text-text-primary lg:text-lg">
-            {{ player.displayName }}
-          </p>
-          <p class="truncate font-mono text-xs text-text-muted">
-            {{ player.gameName }}#{{ player.tagLine }}
-          </p>
-        </div>
+    <ul class="flex flex-col gap-2">
+      @for (player of players(); track player.id) {
+        <li
+          (click)="!busy() && startEditing(player)"
+          (keydown.enter)="!busy() && startEditing(player)"
+          (keydown.space)="$event.preventDefault(); !busy() && startEditing(player)"
+          [class]="
+            player.status === 'ARCHIVED'
+              ? 'border-l-surface-600 opacity-70'
+              : player.status === 'INACTIVE'
+                ? 'border-l-text-muted'
+                : 'border-l-brand-500'
+          "
+          class="notch-tr focus-ring-inset grid cursor-pointer grid-cols-1 gap-4 border-l-2 bg-text-primary/4 px-4 py-4 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,1.5fr)_20rem] lg:items-center lg:gap-x-6 lg:gap-y-0 lg:px-5"
+          role="button"
+          tabindex="0"
+        >
+          <div class="min-w-0">
+            <p class="truncate text-base font-semibold text-text-primary lg:text-lg">
+              {{ player.displayName }}
+            </p>
+            <p class="truncate font-mono text-xs text-text-muted">
+              {{ player.gameName }}#{{ player.tagLine }}
+            </p>
+          </div>
 
-        <!-- Status is a labelled badge, never a bare colour. -->
-        <app-status-badge
-          [label]="'admin.players.status.' + player.status | translate"
-          [tone]="statusTone(player.status)"
-          class="self-start lg:justify-self-start lg:self-auto"
-        />
+          <!-- Status is a labelled badge, never a bare colour. -->
+          <app-status-badge
+            [label]="'admin.players.status.' + player.status | translate"
+            [tone]="statusTone(player.status)"
+            class="self-start lg:justify-self-start lg:self-auto"
+          />
 
-        <div class="min-w-0">
-          <p class="label-caption text-text-muted">
-            {{ 'admin.players.columns.lastSync' | translate }}
-          </p>
-          <p class="mt-1 truncate font-mono text-xs text-text-secondary tabular-nums">
-            {{ formatLastSync(player.lastSuccessfulSynchronizationAt) }}
-          </p>
-        </div>
+          <div class="min-w-0">
+            <p class="label-caption text-text-muted">
+              {{ 'admin.players.columns.lastSync' | translate }}
+            </p>
+            <p class="mt-1 truncate font-mono text-xs text-text-secondary tabular-nums">
+              {{ formatLastSync(player.lastSuccessfulSynchronizationAt) }}
+            </p>
+          </div>
 
-        <div class="flex shrink-0 flex-wrap gap-2 lg:justify-self-end">
-          <button
-            appButton="secondary"
-            (click)="$event.stopPropagation(); startEditing(player)"
-            [disabled]="busy()"
-            class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
-            type="button"
-          >
-            <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucideSquarePen></svg>
-            {{ 'admin.players.edit' | translate }}
-          </button>
-
-          @if (player.status === 'ARCHIVED') {
-            <button
-              appButton="accent"
-              (click)="$event.stopPropagation(); changeStatus(player, 'ACTIVE')"
-              [disabled]="busy()"
-              class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
-              type="button"
-            >
-              <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucideRotateCcw></svg>
-              {{ 'admin.players.restore' | translate }}
-            </button>
-          } @else {
+          <div class="flex shrink-0 flex-wrap gap-2 lg:justify-self-end">
             <button
               appButton="secondary"
-              (click)="
-                $event.stopPropagation();
-                changeStatus(player, player.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE')
-              "
+              (click)="$event.stopPropagation(); startEditing(player)"
               [disabled]="busy()"
               class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
               type="button"
             >
-              <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucidePower></svg>
-              {{
-                (player.status === 'ACTIVE' ? 'admin.players.deactivate' : 'admin.players.activate')
-                  | translate
-              }}
+              <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucideSquarePen></svg>
+              {{ 'admin.players.edit' | translate }}
             </button>
 
-            <button
-              appButton="danger-outline"
-              (click)="$event.stopPropagation(); askForRemoval(player)"
-              [disabled]="busy()"
-              class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
-              type="button"
-            >
-              <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucideTrash2></svg>
-              {{ 'admin.players.remove.action' | translate }}
-            </button>
-          }
-        </div>
-      </li>
-    }
-  </ul>
-</app-resource-state>
+            @if (player.status === 'ARCHIVED') {
+              <button
+                appButton="accent"
+                (click)="$event.stopPropagation(); changeStatus(player, 'ACTIVE')"
+                [disabled]="busy()"
+                class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
+                type="button"
+              >
+                <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucideRotateCcw></svg>
+                {{ 'admin.players.restore' | translate }}
+              </button>
+            } @else {
+              <button
+                appButton="secondary"
+                (click)="
+                  $event.stopPropagation();
+                  changeStatus(player, player.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE')
+                "
+                [disabled]="busy()"
+                class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
+                type="button"
+              >
+                <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucidePower></svg>
+                {{
+                  (player.status === 'ACTIVE'
+                    ? 'admin.players.deactivate'
+                    : 'admin.players.activate'
+                  ) | translate
+                }}
+              </button>
 
-<app-confirm-dialog
-  (confirmed)="confirmRemoval()"
-  (dismissed)="dismissRemoval()"
-  [body]="removalBody()"
-  [busy]="busy()"
-  [cancelLabel]="'admin.cancel' | translate"
-  [confirmLabel]="'admin.players.remove.confirm' | translate"
-  [heading]="'admin.players.remove.heading' | translate"
-  [open]="playerPendingRemoval() !== null"
-/>
+              <button
+                appButton="danger-outline"
+                (click)="$event.stopPropagation(); askForRemoval(player)"
+                [disabled]="busy()"
+                class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
+                type="button"
+              >
+                <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucideTrash2></svg>
+                {{ 'admin.players.remove.action' | translate }}
+              </button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  </app-resource-state>
 
-@if (formOpen()) {
-  <app-player-form-panel
-    (closed)="cancelForm()"
-    (saved)="savePlayer($event)"
+  <app-confirm-dialog
+    (confirmed)="confirmRemoval()"
+    (dismissed)="dismissRemoval()"
+    [body]="removalBody()"
     [busy]="busy()"
-    [editedPlayer]="editedPlayer()"
+    [cancelLabel]="'admin.cancel' | translate"
+    [confirmLabel]="'admin.players.remove.confirm' | translate"
+    [heading]="'admin.players.remove.heading' | translate"
+    [open]="playerPendingRemoval() !== null"
   />
-}
+
+  @if (formOpen()) {
+    <app-player-form-panel
+      (closed)="cancelForm()"
+      (saved)="savePlayer($event)"
+      [busy]="busy()"
+      [editedPlayer]="editedPlayer()"
+    />
+  }
+</div>

@@ -1,5 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { LucidePower, LucideRotateCcw, LucideSquarePen, LucideTrash2 } from '@lucide/angular';
+import {
+  LucidePlus,
+  LucidePower,
+  LucideRotateCcw,
+  LucideSquarePen,
+  LucideTrash2,
+} from '@lucide/angular';
 
 import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
@@ -12,9 +18,9 @@ import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
-import { PageHeader } from '@shared/page-header/page-header';
+import { PageHeader } from '@layout/page-header/page-header';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { SectionDivider } from '@shared/section-divider/section-divider';
+import { SectionLabel } from '@shared/section-label/section-label';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { StatusBadge, StatusBadgeTone } from '@shared/status-badge/status-badge';
 import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-form-panel';
@@ -36,7 +42,8 @@ import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-fo
     ConfirmDialog,
     PlayerFormPanel,
     ResourceState,
-    SectionDivider,
+    SectionLabel,
+    LucidePlus,
     LucidePower,
     LucideRotateCcw,
     LucideSquarePen,

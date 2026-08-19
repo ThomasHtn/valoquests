@@ -3,12 +3,12 @@ import { BossTimelineNodeStatus } from '@core/boss/boss-timeline.constants';
 /**
  * Columns of the hex grid the campaign is laid over, as the list the template iterates.
  *
- * Nine wide, but only the five middle ones are ever guaranteed on screen: the outer columns are
- * pure terrain that widens the field as the viewport allows (see
- * {@link resolveColumnVisibilityClass}), so the map fills the page on a desktop without ever
- * pushing the path off a phone.
+ * Thirteen wide, but only the five middle ones are ever guaranteed on screen: the outer columns
+ * are pure terrain that widens the field as the viewport allows (see
+ * {@link resolveColumnVisibilityClass}), so the map fills the page out to its edges on a desktop
+ * without ever pushing the path off a phone.
  */
-export const MAP_COLUMNS: readonly number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+export const MAP_COLUMNS: readonly number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 /**
  * Column the week at each position of the campaign occupies, before {@link PATH_COLUMN_OFFSET} is
@@ -23,9 +23,9 @@ const BOSS_COLUMN_PATTERN: readonly number[] = [2, 1, 0, 1, 2, 3, 4, 3];
 
 /**
  * Shift applied to {@link BOSS_COLUMN_PATTERN} so the path runs down the five middle columns,
- * leaving two columns of terrain on either side.
+ * leaving four columns of terrain on either side.
  */
-const PATH_COLUMN_OFFSET = 2;
+const PATH_COLUMN_OFFSET = 4;
 
 /**
  * Number of terrain-only rows drawn before the first week and after the last.
@@ -139,13 +139,19 @@ export const TERRAIN_FILL_CLASS = 'bg-surface-950';
 
 /**
  * Viewport width each column of {@link MAP_COLUMNS} needs before it is drawn, as the utilities that
- * reveal it. The five middle columns — the ones the path runs through — are always present.
+ * reveal it. The five middle columns — the ones the path runs through — are always present; each
+ * ring further out needs a wider viewport, so the field grows toward the component's edges as the
+ * breakpoints climb rather than jumping straight to full width.
  */
 const COLUMN_VISIBILITY_CLASSES: Readonly<Record<number, string>> = {
-  0: 'hidden xl:block',
-  1: 'hidden sm:block',
-  7: 'hidden sm:block',
-  8: 'hidden xl:block',
+  0: 'hidden 2xl:block',
+  1: 'hidden xl:block',
+  2: 'hidden lg:block',
+  3: 'hidden sm:block',
+  9: 'hidden sm:block',
+  10: 'hidden lg:block',
+  11: 'hidden xl:block',
+  12: 'hidden 2xl:block',
 };
 
 /**

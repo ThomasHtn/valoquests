@@ -11,10 +11,10 @@ import { SnackbarService } from '@core/snackbar/snackbar';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
 import { InlineMessage } from '@shared/inline-message/inline-message';
-import { PageHeader } from '@shared/page-header/page-header';
+import { PageHeader } from '@layout/page-header/page-header';
 import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
-import { SectionDivider } from '@shared/section-divider/section-divider';
+import { SectionLabel } from '@shared/section-label/section-label';
 import { StatusBadge } from '@shared/status-badge/status-badge';
 import { AdminActionCard } from '../admin-action-card/admin-action-card';
 
@@ -45,7 +45,7 @@ const SYNCHRONIZATION_POLL_INTERVAL_MS = 3_000;
     AdminActionCard,
     InlineMessage,
     PageHeader,
-    SectionDivider,
+    SectionLabel,
     Select,
     StatusBadge,
   ],

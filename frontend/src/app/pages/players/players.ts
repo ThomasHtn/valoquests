@@ -24,11 +24,10 @@ import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
-import { PageHeader } from '@shared/page-header/page-header';
+import { PageHeader } from '@layout/page-header/page-header';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { SectionDivider } from '@shared/section-divider/section-divider';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { PlayerRow } from './players.model';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
@@ -50,7 +49,6 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     ProgressBar,
     RankIconView,
     ResourceState,
-    SectionDivider,
     PageHeader,
   ],
   templateUrl: './players.html',

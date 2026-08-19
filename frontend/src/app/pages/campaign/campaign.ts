@@ -14,9 +14,9 @@ import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
-import { PageHeader } from '@shared/page-header/page-header';
+import { PageHeader } from '@layout/page-header/page-header';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { SectionDivider } from '@shared/section-divider/section-divider';
+import { SectionLabel } from '@shared/section-label/section-label';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { TOOLTIP_SURFACE_CLASS } from '@shared/tooltip/tooltip.constants';
 import { BossDetail } from './boss-detail/boss-detail';
@@ -81,7 +81,7 @@ interface CampaignMapRow {
     TranslatePipe,
     BossDetail,
     ResourceState,
-    SectionDivider,
+    SectionLabel,
     NgOptimizedImage,
     Avatar,
     LucideCheck,

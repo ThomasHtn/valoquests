@@ -144,7 +144,7 @@
         "colors": "Colors",
         "confirmDialog": "Confirm dialog",
         "dropdowns": "Dropdowns & menus",
-        "layout": "Divider",
+        "sectionLabel": "Section label",
         "menuButtons": "Sidebar & menu buttons",
         "pagination": "Pagination & navigation",
         "panels": "Panels",
@@ -159,7 +159,8 @@
         "textInputs": "Text inputs",
         "tooltip": "Tooltip",
         "typography": "Typography",
-        "weekCountdown": "Week countdown"
+        "weekCountdown": "Week countdown",
+        "pageHeader": "Context bar"
       }
     }
   },
@@ -251,6 +252,10 @@
     "description": "This page doesn't exist.",
     "title": "Page not found"
   },
+  "pageHeader": {
+    "back": "Back to {{name}}",
+    "week": "Week {{number}}"
+  },
   "overview": {
     "bossEncounter": {
       "defeated": "The boss is down this week.",
@@ -262,10 +267,9 @@
       "loading": "Loading the boss…"
     },
     "header": {
-      "eyebrow": "Overview · Week {{number}}",
       "timeLabel": "Time remaining",
       "timeRemaining": "{{days}}d {{hours}}h",
-      "title": "The squad's progress this week"
+      "title": "Overview"
     },
     "podium": {
       "rank": {
@@ -296,7 +300,6 @@
       },
       "empty": "No challenge is active this week.",
       "error": "Failed to load the weekly challenges.",
-      "eyebrow": "Challenges · Week {{number}}",
       "loading": "Loading challenges…",
       "metric": {
         "ASSISTS": "Assists",
@@ -316,6 +319,7 @@
         "label": "Next draw"
       },
       "title": "Weekly challenges",
+      "heading": "Challenges",
       "totalPotential": "Total potential · {{damage}} damage"
     },
     "weeklyRanking": {
@@ -328,10 +332,10 @@
       "completed": "Challenge completed",
       "empty": "No ranking is available this week.",
       "error": "Failed to load the weekly ranking.",
-      "eyebrow": "Ranking · Week {{number}}",
       "inactive": "Inactive",
       "loading": "Loading ranking…",
       "title": "Weekly ranking",
+      "heading": "Ranking",
       "totalDamage": "Total damage · {{damage}}",
       "variation": {
         "down": {
@@ -415,7 +419,6 @@
     }
   },
   "players": {
-    "allSeasons": "All-season statistics",
     "columns": {
       "headshotPercentage": "HS%",
       "kda": "K/D",
@@ -427,7 +430,7 @@
     "empty": "No player is tracked yet.",
     "error": "Failed to load players.",
     "eyebrow": "Squad registry",
-    "heading": "Tracked players list",
+    "heading": "Players",
     "loading": "Loading players…",
     "tiers": {
       "ascendant": "Ascendant",
@@ -445,8 +448,8 @@
   },
   "retry": "Retry",
   "rules": {
-    "eyebrow": "How it works",
-    "heading": "A week, in 4 steps",
+    "eyebrow": "A week, in 4 steps",
+    "heading": "Rules",
     "readingTime": {
       "label": "Reading",
       "value": "2 min"

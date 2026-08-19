@@ -11,8 +11,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { LucideChevronLeft, LucideEllipsisVertical, LucideLoaderCircle } from '@lucide/angular';
+import { LucideEllipsisVertical, LucideLoaderCircle } from '@lucide/angular';
 
 import { formatLocalTime } from '@core/date/date-time.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -48,7 +47,7 @@ import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
-import { NavChip } from '@shared/nav-chip/nav-chip';
+import { PageHeader } from '@layout/page-header/page-header';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -90,7 +89,6 @@ const VIEW_MODES: readonly ViewMode[] = ['weekly', 'global'];
   selector: 'app-player-profile',
   imports: [
     TranslatePipe,
-    RouterLink,
     Avatar,
     ChampionBadge,
     MediaThumbnail,
@@ -98,10 +96,9 @@ const VIEW_MODES: readonly ViewMode[] = ['weekly', 'global'];
     RankIconView,
     ResourceState,
     Select,
-    LucideChevronLeft,
     LucideEllipsisVertical,
     LucideLoaderCircle,
-    NavChip,
+    PageHeader,
     StatTile,
   ],
   templateUrl: './player-profile.html',

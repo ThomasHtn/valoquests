@@ -17,10 +17,10 @@ import {
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { PageHeader } from '@shared/page-header/page-header';
+import { PageHeader } from '@layout/page-header/page-header';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
-import { SectionDivider } from '@shared/section-divider/section-divider';
+import { SectionLabel } from '@shared/section-label/section-label';
 import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { ChallengeRow } from './challenges.model';
@@ -35,7 +35,7 @@ import { ChallengeRow } from './challenges.model';
  */
 @Component({
   selector: 'app-challenges',
-  imports: [TranslatePipe, PageHeader, ResourceState, SectionDivider, WeekCountdown],
+  imports: [TranslatePipe, PageHeader, ResourceState, SectionLabel, WeekCountdown],
   templateUrl: './challenges.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

@@ -139,6 +139,12 @@ export class Translation {
   /**
    * Fetches the dictionary for `language` from `public/i18n` and stores it.
    *
+   * Resolved against `document.baseURI` rather than requested relatively: a relative path is
+   * resolved against the *current route*, so entering the application on a nested URL
+   * (`/players/12`, `/admin/operations`) asked for `/players/i18n/fr.json` and every screen
+   * rendered raw keys. An absolute `/i18n/…` would fix that but break a deployment under a
+   * sub-path, which the `<base href>` is what tracks.
+   *
    * Errors are caught rather than rethrown: {@link initialize} is awaited by an
    * app initializer, so a failed request would otherwise block bootstrap and
    * leave the application on a blank page instead of degrading to raw keys.
@@ -148,7 +154,9 @@ export class Translation {
   private async load(language: Language): Promise<void> {
     try {
       const dictionary = await firstValueFrom(
-        this.http.get<TranslationDictionary>(`i18n/${language}.json`),
+        this.http.get<TranslationDictionary>(
+          new URL(`i18n/${language}.json`, document.baseURI).href,
+        ),
       );
       this.dictionary.set(dictionary);
     } catch (error) {

@@ -11,7 +11,9 @@ import { Component, input } from '@angular/core';
 @Component({
   selector: 'app-rule-section',
   templateUrl: './rule-section.html',
-  host: { class: 'contents' },
+  // A box rather than `display: contents`: the section is this component's only child, so the box
+  // costs nothing, and without one the page stack's gutter would not reach it.
+  host: { class: 'block' },
 })
 export class RuleSection {
   /**

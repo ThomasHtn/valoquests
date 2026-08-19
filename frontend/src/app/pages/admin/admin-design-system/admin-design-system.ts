@@ -23,13 +23,13 @@ import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { InlineMessage } from '@shared/inline-message/inline-message';
 import { NavChip } from '@shared/nav-chip/nav-chip';
-import { PageHeader } from '@shared/page-header/page-header';
+import { PageHeader } from '@layout/page-header/page-header';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ProgressCircle } from '@shared/progress-circle/progress-circle';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { SectionDivider } from '@shared/section-divider/section-divider';
+import { SectionLabel } from '@shared/section-label/section-label';
 import { Select } from '@shared/select/select';
 import { StatTile } from '@shared/stat-tile/stat-tile';
 import { StatusBadge, StatusBadgeTone } from '@shared/status-badge/status-badge';
@@ -91,7 +91,7 @@ const SAMPLE_REMAINING_TIME: RemainingTime = { days: 2, hours: 14, minutes: 30 }
     ProgressCircle,
     RankIconView,
     ResourceState,
-    SectionDivider,
+    SectionLabel,
     Select,
     StatTile,
     StatusBadge,
