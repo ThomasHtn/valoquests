@@ -1,8 +1,12 @@
 <!-- Context bar: the same beat as the quest and registry pages, with the countdown on the trailing
      edge, since this screen is the one that answers "how far is the squad, and how long is left". -->
 <app-page-header
-  [eyebrow]="'pageHeader.week' | translate: { number: weekNumber() ?? '—' }"
-  [heading]="'overview.weeklyRanking.heading' | translate"
+  [eyebrow]="
+    'pageHeader.weekHeading'
+      | translate
+        : { page: 'overview.weeklyRanking.heading' | translate, number: weekNumber() ?? '—' }
+  "
+  [heading]="'overview.weeklyRanking.subheading' | translate"
 >
   <app-week-countdown [remaining]="remaining()" />
 </app-page-header>

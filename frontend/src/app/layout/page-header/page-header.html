@@ -28,19 +28,24 @@
                when it is all the bar carries — on a page whose subject is already named by the
                block right under the bar, restating that name here would only be a second source of
                the same fact, and the way back is then the one thing the chrome has to offer. -->
-          <a
-            [attr.aria-label]="'pageHeader.back' | translate: { name: eyebrow() }"
-            [class]="
-              heading()
-                ? 'tracking-label-wide -my-2 h-5 py-2 text-2xs'
-                : 'tracking-label h-11 text-xs'
-            "
-            [routerLink]="parentRoute"
-            class="focus-ring -mx-1 inline-flex max-w-full items-center gap-1.5 px-1 font-mono font-medium text-brand-500 uppercase transition-colors hover:text-brand-400"
-          >
-            <svg aria-hidden="true" class="size-3.5 shrink-0" lucideChevronLeft></svg>
-            <span class="truncate">{{ eyebrow() }}</span>
-          </a>
+          <div class="flex min-w-0 items-center gap-2">
+            <a
+              [attr.aria-label]="'pageHeader.back' | translate: { name: eyebrow() }"
+              [class]="
+                heading()
+                  ? 'tracking-label-wide -my-2 h-5 py-2 text-2xs'
+                  : 'tracking-label h-11 text-xs'
+              "
+              [routerLink]="parentRoute"
+              class="focus-ring -mx-1 inline-flex max-w-full shrink-0 items-center gap-1.5 px-1 font-mono font-medium text-brand-500 uppercase transition-colors hover:text-brand-400"
+            >
+              <svg aria-hidden="true" class="size-3.5 shrink-0" lucideChevronLeft></svg>
+              <span class="truncate">{{ eyebrow() }}</span>
+            </a>
+            <!-- Discreet complement to the way back — e.g. the player's name on a detail page —
+                 never a second source of a fact already named below the bar. -->
+            <ng-content select="[eyebrowAside]" />
+          </div>
         } @else {
           <!-- Fixed 20px whichever shape the line takes, so pages close the bar at the same height
                and the chrome reads as one band rather than a strip that resizes as you move

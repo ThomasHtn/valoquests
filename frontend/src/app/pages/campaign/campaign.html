@@ -5,8 +5,8 @@
      The toggle itself rides in the bar as this page's one action. Its label drops below `sm`, where
      the bar is at its tightest — the icon and the accessible name carry it there. -->
 <app-page-header
-  [eyebrow]="'campaign.eyebrow' | translate"
-  [heading]="(view() === 'map' ? 'campaign.title' : 'campaign.historyToggle') | translate"
+  [eyebrow]="(view() === 'map' ? 'campaign.title' : 'campaign.historyToggle') | translate"
+  [heading]="(view() === 'map' ? 'campaign.subheading' : 'campaign.historySubheading') | translate"
 >
   <button
     (click)="toggleView()"

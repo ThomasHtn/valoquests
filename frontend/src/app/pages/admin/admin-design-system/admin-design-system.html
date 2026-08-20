@@ -770,8 +770,11 @@
   <div class="flex flex-col gap-4">
     <div class="overflow-hidden border border-text-primary/10">
       <app-page-header
-        [eyebrow]="'pageHeader.week' | translate: { number: 34 }"
-        [heading]="'overview.header.title' | translate"
+        [eyebrow]="
+          'pageHeader.weekHeading'
+            | translate: { page: 'overview.header.title' | translate, number: 34 }
+        "
+        [heading]="'overview.header.subheading' | translate"
       >
         <app-week-countdown [remaining]="sampleRemainingTime" />
       </app-page-header>

@@ -1,9 +1,13 @@
-<!-- Context bar: the active week, the page, and the countdown at the trailing edge — the one piece
-     of the old scroll-snap hero that belongs in the chrome rather than inside the boss card
-     below, where it now stays on screen for the whole page. -->
+<!-- Context bar: the page and the active week on the caption line, what the week is about as the
+     title itself, and the countdown at the trailing edge — the one piece of the old scroll-snap
+     hero that belongs in the chrome rather than inside the boss card below, where it now stays on
+     screen for the whole page. -->
 <app-page-header
-  [eyebrow]="'pageHeader.week' | translate: { number: week()?.number ?? '—' }"
-  [heading]="'overview.header.title' | translate"
+  [eyebrow]="
+    'pageHeader.weekHeading'
+      | translate: { page: 'overview.header.title' | translate, number: week()?.number ?? '—' }
+  "
+  [heading]="'overview.header.subheading' | translate"
 >
   <app-week-countdown [remaining]="week()?.remaining ?? null" />
 </app-page-header>

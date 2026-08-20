@@ -218,7 +218,7 @@
   },
   "campaign": {
     "error": "Impossible de charger la carte de bataille.",
-    "eyebrow": "Campagne",
+    "historySubheading": "L'historique complet des confrontations",
     "historyToggle": "Historique",
     "legend": {
       "current": "Sous assaut",
@@ -230,6 +230,7 @@
     "map": {
       "ariaLabel": "Carte de bataille de la campagne, un territoire par semaine"
     },
+    "subheading": "Le territoire gagné, semaine après semaine",
     "title": "Carte de bataille"
   },
   "landing": {
@@ -254,7 +255,7 @@
   },
   "pageHeader": {
     "back": "Retour à {{name}}",
-    "week": "Semaine {{number}}"
+    "weekHeading": "{{page}} · Semaine {{number}}"
   },
   "overview": {
     "bossEncounter": {
@@ -267,6 +268,7 @@
       "loading": "Chargement du boss…"
     },
     "header": {
+      "subheading": "Avancement de l'escouade cette semaine",
       "timeLabel": "Temps restant",
       "timeRemaining": "{{days}}j {{hours}}h",
       "title": "Vue d'ensemble"
@@ -320,6 +322,7 @@
       },
       "title": "Défis de la semaine",
       "heading": "Défis",
+      "subheading": "Les cinq défis à valider cette semaine",
       "totalPotential": "Potentiel total · {{damage}} dégâts"
     },
     "weeklyRanking": {
@@ -336,6 +339,7 @@
       "loading": "Chargement du classement…",
       "title": "Classement de la semaine",
       "heading": "Classement",
+      "subheading": "Le classement des dégâts de la semaine",
       "totalDamage": "Dégâts cumulés · {{damage}}",
       "variation": {
         "down": {
@@ -429,9 +433,9 @@
     },
     "empty": "Aucun joueur suivi pour le moment.",
     "error": "Impossible de charger les joueurs.",
-    "eyebrow": "Registre de l'escouade",
     "heading": "Joueurs",
     "loading": "Chargement des joueurs…",
+    "subheading": "Rang, historique et statistiques de chaque joueur",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -448,13 +452,13 @@
   },
   "retry": "Réessayer",
   "rules": {
-    "eyebrow": "Une semaine, en 4 temps",
     "heading": "Règles",
     "readingTime": {
       "label": "Lecture",
       "value": "2 min"
     },
     "replayTour": "Revoir le tour d'horizon",
+    "subheading": "Une semaine, en 4 temps",
     "sections": {
       "bonuses": {
         "days": "{{days}} j",
@@ -462,7 +466,7 @@
         "players": "{{count}} joueurs",
         "regularityLabel": "Régularité · jours joués dans la semaine",
         "teamLabel": "Escouade · joueurs ayant fini le même défi",
-        "title": "Bonus : reviens souvent, joue à plusieurs"
+        "title": "Régularité & escouade"
       },
       "boss": {
         "categories": {
@@ -475,12 +479,12 @@
       },
       "challenges": {
         "damageLabel": "Dégâts",
-        "description": "Chaque lundi, cinq défis sortent d'un catalogue de 46, un par palier. Plus c'est corsé, plus le bonus de dégâts est gros.",
+        "description": "Chaque lundi, cinq défis sont tirés du catalogue, un par niveau de difficulté. Plus le niveau est élevé, plus le défi pèse lourd sur le boss.",
         "difficultyLabel": "Difficulté",
         "title": "Cinq défis, un par difficulté"
       },
       "damage": {
-        "description": "Une victoire en compétitif ? Gros dégâts. Une partie fun entre potes, même perdue ? Ça compte aussi.",
+        "description": "Le mode et l'issue du match déterminent les dégâts infligés. Une victoire en compétitif pèse le plus, mais toute partie jouée, gagnée ou non, y contribue.",
         "modeLabel": "Mode de jeu",
         "title": "Chaque match tape fort"
       },
@@ -571,7 +575,7 @@
       "players": {
         "body": "Chaque joueur suivi a sa fiche : rang compétitif, historique de parties et statistiques détaillées. C'est tout pour les grandes lignes — la page des règles détaille les points, les bonus et les barèmes.",
         "eyebrow": "L'escouade",
-        "title": "Sept profils à suivre"
+        "title": "Chaque joueur, son profil"
       },
       "ranking": {
         "body": "Les dégâts de chacun sont cumulés et donnent un classement hebdomadaire. La régularité et les efforts collectifs ajoutent des bonus. Le joueur en tête à la clôture de la semaine repart avec le titre de Champion.",

@@ -218,7 +218,7 @@
   },
   "campaign": {
     "error": "Failed to load the battle map.",
-    "eyebrow": "Campaign",
+    "historySubheading": "The full history of every confrontation",
     "historyToggle": "History",
     "legend": {
       "current": "Under attack",
@@ -230,6 +230,7 @@
     "map": {
       "ariaLabel": "Campaign battle map, one territory per week"
     },
+    "subheading": "Ground gained, week after week",
     "title": "Battle map"
   },
   "landing": {
@@ -254,7 +255,7 @@
   },
   "pageHeader": {
     "back": "Back to {{name}}",
-    "week": "Week {{number}}"
+    "weekHeading": "{{page}} · Week {{number}}"
   },
   "overview": {
     "bossEncounter": {
@@ -267,6 +268,7 @@
       "loading": "Loading the boss…"
     },
     "header": {
+      "subheading": "The squad's progress this week",
       "timeLabel": "Time remaining",
       "timeRemaining": "{{days}}d {{hours}}h",
       "title": "Overview"
@@ -320,6 +322,7 @@
       },
       "title": "Weekly challenges",
       "heading": "Challenges",
+      "subheading": "The five challenges to clear this week",
       "totalPotential": "Total potential · {{damage}} damage"
     },
     "weeklyRanking": {
@@ -336,6 +339,7 @@
       "loading": "Loading ranking…",
       "title": "Weekly ranking",
       "heading": "Ranking",
+      "subheading": "This week's damage ranking",
       "totalDamage": "Total damage · {{damage}}",
       "variation": {
         "down": {
@@ -429,9 +433,9 @@
     },
     "empty": "No player is tracked yet.",
     "error": "Failed to load players.",
-    "eyebrow": "Squad registry",
     "heading": "Players",
     "loading": "Loading players…",
+    "subheading": "Rank, match history and stats for every player",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -448,13 +452,13 @@
   },
   "retry": "Retry",
   "rules": {
-    "eyebrow": "A week, in 4 steps",
     "heading": "Rules",
     "readingTime": {
       "label": "Reading",
       "value": "2 min"
     },
     "replayTour": "Replay the tour",
+    "subheading": "A week, in 4 steps",
     "sections": {
       "bonuses": {
         "days": "{{days}} d",
@@ -462,7 +466,7 @@
         "players": "{{count}} players",
         "regularityLabel": "Regularity · days played in the week",
         "teamLabel": "Squad · players who finished the same challenge",
-        "title": "Bonus: come back often, play together"
+        "title": "Regularity & squad"
       },
       "boss": {
         "categories": {
@@ -475,12 +479,12 @@
       },
       "challenges": {
         "damageLabel": "Damage",
-        "description": "Every Monday, five challenges are drawn from a catalogue of 46, one per tier. The tougher it is, the bigger the damage bonus.",
+        "description": "Every Monday, five challenges are drawn from the catalogue, one per difficulty tier. The higher the tier, the more damage it deals to the boss.",
         "difficultyLabel": "Difficulty",
         "title": "Five challenges, one per difficulty"
       },
       "damage": {
-        "description": "A ranked win? Big damage. A casual game with friends, even a loss? It counts too.",
+        "description": "The mode and outcome of a match set the damage it deals. A ranked win counts for the most, but every match played, won or not, adds to the week.",
         "modeLabel": "Game mode",
         "title": "Every match throws a punch"
       },
@@ -571,7 +575,7 @@
       "players": {
         "body": "Every tracked player has their own page: competitive rank, match history and detailed statistics. That is the broad strokes — the rules page covers the points, the bonuses and the exact numbers.",
         "eyebrow": "The squad",
-        "title": "Seven profiles to follow"
+        "title": "Every player, their own page"
       },
       "ranking": {
         "body": "Everyone's damage adds up into a weekly ranking. Showing up regularly and clearing challenges together earn bonuses on top. Whoever leads when the week closes takes the Champion title.",

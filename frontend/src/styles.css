@@ -177,13 +177,14 @@
  * Surface of a panel that opens over the page: the language listbox in the navigation footer, the
  * shared select's options, the player profile's overflow menu.
  *
- * Held by a leading rule rather than a full border. `notch-tr-edge`, which would be needed to
- * redraw a border across the cut, sets `position: relative` and would fight the absolute or fixed
- * positioning these panels are placed with. Positioning, width and inner padding stay at the call
- * site: those are what actually differ between the four.
+ * Full border rather than a leading rule alone: `bg-surface-sunken` sits close enough to the page's
+ * own background that an edge-only rule left the panel blending into whatever was behind it.
+ * `notch-tr-edge` redraws the border across the notch cut; without it that corner would show a gap.
+ * Positioning, width and inner padding stay at the call site: those are what actually differ
+ * between the four.
  */
 @utility menu-panel {
-  @apply notch-tr border-l-2 border-brand-500/50 bg-surface-sunken [--notch:0.5rem];
+  @apply notch-tr notch-tr-edge border border-brand-500/50 bg-surface-sunken [--notch:0.5rem];
 }
 
 /*
@@ -229,7 +230,7 @@
  * `contents` has to do the same, or it will sit flush against the column's edges.
  */
 @utility page-body {
-  @apply scroll-subtle flex w-full flex-1 flex-col gap-6 overflow-y-auto pt-6 pb-6;
+  @apply scroll-subtle flex w-full flex-1 flex-col gap-6 overflow-y-auto pt-10 pb-6;
 
   & > * {
     @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6;

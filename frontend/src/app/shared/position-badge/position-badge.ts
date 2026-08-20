@@ -3,13 +3,10 @@ import { Component, computed, input } from '@angular/core';
 import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
 
 /**
- * Hexagonal badge displaying a ranking position, highlighted by podium tier.
+ * Text badge displaying a ranking position (e.g. "#1"), colored by podium tier.
  *
  * Shared by the podium, the weekly ranking and the ranking history page so a position reads the
- * same everywhere it appears. Rendered as an SVG polygon rather than a CSS `clip-path` applied to
- * a bordered box: a `clip-path` clips a rectangular border after it is drawn, so the border only
- * lines up with the hexagon on its vertical edges and turns into a blurred blob at the slanted
- * ones. An SVG `stroke` instead follows the polygon's actual path, so every edge stays crisp.
+ * same everywhere it appears.
  */
 @Component({
   selector: 'app-position-badge',
@@ -24,17 +21,7 @@ export class PositionBadge {
   public readonly position = input.required<number | null>();
 
   /**
-   * Whether the position is on the podium (1st to 3rd), which is highlighted with a stronger fill
-   * and outline than the neutral treatment used from 4th place onward.
-   */
-  protected readonly isPodium = computed(() => {
-    const position = this.position();
-    return position !== null && position <= 3;
-  });
-
-  /**
-   * Tailwind text color utility applied to the number and, through `currentColor`, to the
-   * hexagon's fill and stroke.
+   * Tailwind text color utility applied to the position number.
    */
   protected readonly colorClass = computed(() => resolvePositionBadgeClass(this.position()));
 }

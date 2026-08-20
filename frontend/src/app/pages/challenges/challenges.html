@@ -1,8 +1,12 @@
 <!-- Context bar: the week's quest and the countdown to the next draw — the same beat as every other
      page, so the screens open alike. -->
 <app-page-header
-  [eyebrow]="'pageHeader.week' | translate: { number: weekNumber() ?? '—' }"
-  [heading]="'overview.weeklyChallenges.heading' | translate"
+  [eyebrow]="
+    'pageHeader.weekHeading'
+      | translate
+        : { page: 'overview.weeklyChallenges.heading' | translate, number: weekNumber() ?? '—' }
+  "
+  [heading]="'overview.weeklyChallenges.subheading' | translate"
 >
   <app-week-countdown [remaining]="remaining()" />
 </app-page-header>

@@ -23,13 +23,15 @@ import { NavigationPanel } from '@layout/navigation-panel';
  * component**, or a phone loses its way into the navigation (see `PAGE_LAYOUT_CLASS`).
  *
  * Three inputs and two slots, because a page header is only ever these shapes:
- * - {@link eyebrow} names the context above the title — the active week, the section of the
- *   backoffice, or the page this one was reached from.
+ * - {@link eyebrow} names the context above the title — the active week and the page, or the
+ *   page this one was reached from.
  * - {@link backLink} turns that same line into the way back to that parent.
  * - {@link heading} is dropped on a page whose subject is already named by the block right under
  *   the bar (the player profile opens on the portrait it belongs to), leaving the way back as the
  *   one thing the chrome carries; the eyebrow then renders as a control rather than a caption.
  * - `[headingAside]` sits on the title's own line, for a chip qualifying it.
+ * - `[eyebrowAside]` sits inline after the way-back link, for a discreet complement to it (the
+ *   player's name on a detail page whose `<h1>` already lives in the block below the bar).
  * - the default slot sits at the trailing edge, for what the page offers here: a countdown, a
  *   primary action, a view toggle.
  *

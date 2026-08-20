@@ -6,10 +6,17 @@
 
      Outside the resource state on purpose: it is chrome, so it has to stand while the profile
      loads or fails, and below `lg` it carries the only way into the navigation. -->
-<app-page-header
-  [backLink]="'/players'"
-  [eyebrow]="'playerProfile.breadcrumb.players' | translate"
-/>
+<app-page-header [backLink]="'/players'" [eyebrow]="'playerProfile.breadcrumb.players' | translate">
+  @if (details(); as playerDetails) {
+    <span
+      class="flex min-w-0 items-center gap-2 truncate font-mono text-2xs text-text-muted"
+      eyebrowAside
+    >
+      <span aria-hidden="true">|</span>
+      <span class="truncate">{{ playerDetails.displayName }}</span>
+    </span>
+  }
+</app-page-header>
 
 <div class="page-body">
   <app-resource-state
@@ -86,7 +93,7 @@
                 {{ tierVisual.label }}
               </p>
               @if (playerDetails.rankRating !== null) {
-                <p class="mt-2 font-mono text-2xs text-text-muted tabular-nums">
+                <p class="mt-2 font-mono text-sm text-text-muted tabular-nums">
                   {{ playerDetails.rankRating }} RR
                 </p>
               }
