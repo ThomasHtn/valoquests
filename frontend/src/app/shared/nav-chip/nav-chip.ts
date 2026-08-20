@@ -8,7 +8,7 @@ export type NavChipVariant = 'outline' | 'solid';
 
 const VARIANT_CLASS: Record<NavChipVariant, string> = {
   outline:
-    'border border-text-primary/15 px-4 font-medium text-text-muted hover:bg-brand-500/8 hover:text-text-primary disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-text-muted',
+    'px-4 font-medium text-text-muted hover:text-text-primary disabled:cursor-default disabled:opacity-35 disabled:hover:text-text-muted',
   solid: 'bg-brand-500 px-5 font-bold text-surface-950 hover:bg-brand-400',
 };
 
