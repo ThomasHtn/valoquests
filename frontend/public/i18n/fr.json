@@ -357,13 +357,17 @@
     "breadcrumb": {
       "players": "Escouade"
     },
+    "display": {
+      "label": "Affichage",
+      "matches": "Matchs",
+      "progress": "Progression"
+    },
     "error": "Impossible de charger le profil de ce joueur.",
     "filters": {
       "allSeasons": "Toutes les saisons",
       "gameModeLabel": "Filtrer par mode de jeu",
       "moreGameModes": "Autres modes de jeu",
       "reset": "Réinitialiser",
-      "season": "Saison {{name}}",
       "seasonLabel": "Filtrer par saison"
     },
     "loading": "Chargement du profil du joueur…",
@@ -415,12 +419,7 @@
       "winRate": "Winrate",
       "wins": "{{count}} V"
     },
-    "title": "Profil du joueur",
-    "viewMode": {
-      "global": "Saisons",
-      "label": "Période",
-      "weekly": "Semaine"
-    }
+    "title": "Profil du joueur"
   },
   "players": {
     "columns": {

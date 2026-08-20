@@ -13,12 +13,21 @@
   type="button"
 >
   <ng-content select="[icon]" />
-  <span>{{ selectedLabel() }}</span>
-  <svg
-    [class.rotate-180]="isOpen()"
-    class="h-4 w-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none"
-    lucideChevronDown
-  ></svg>
+  <!-- Held out of the DOM rather than left empty when nothing is selected: an empty span still
+       takes one of the trigger's gaps, which reads as stray padding on an icon-only trigger. -->
+  @if (selectedLabel(); as label) {
+    <span>{{ label }}</span>
+    <svg
+      [class.rotate-180]="isOpen()"
+      class="h-4 w-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none"
+      lucideChevronDown
+    ></svg>
+  } @else {
+    <!-- Icon-only trigger, nothing selected yet: a chevron promises "this shows a value, click to
+         change it", which is wrong here since there is no value to show. The vertical-dots mark
+         reads as "more options" instead, which is what this trigger actually is. -->
+    <svg class="h-4 w-4 shrink-0 text-text-secondary" lucideEllipsisVertical></svg>
+  }
 </button>
 
 <!-- Options panel. Kept in the DOM while closed so `aria-controls` always resolves. Options are

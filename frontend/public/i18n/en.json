@@ -357,13 +357,17 @@
     "breadcrumb": {
       "players": "Players"
     },
+    "display": {
+      "label": "Display",
+      "matches": "Matches",
+      "progress": "Progression"
+    },
     "error": "Failed to load this player's profile.",
     "filters": {
       "allSeasons": "All seasons",
       "gameModeLabel": "Filter by game mode",
       "moreGameModes": "More game modes",
       "reset": "Reset",
-      "season": "Season {{name}}",
       "seasonLabel": "Filter by season"
     },
     "loading": "Loading player profile…",
@@ -415,12 +419,7 @@
       "winRate": "Win rate",
       "wins": "{{count}} W"
     },
-    "title": "Player profile",
-    "viewMode": {
-      "global": "Seasons",
-      "label": "Period",
-      "weekly": "Week"
-    }
+    "title": "Player profile"
   },
   "players": {
     "columns": {

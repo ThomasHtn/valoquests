@@ -11,7 +11,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { LucideChevronDown } from '@lucide/angular';
+import { LucideChevronDown, LucideEllipsisVertical } from '@lucide/angular';
 
 import { SelectOption } from './select.model';
 
@@ -39,7 +39,7 @@ let instanceCount = 0;
  */
 @Component({
   selector: 'app-select',
-  imports: [LucideChevronDown],
+  imports: [LucideChevronDown, LucideEllipsisVertical],
   templateUrl: './select.html',
   host: {
     class: 'relative inline-block',

@@ -11,7 +11,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { LucideEllipsisVertical, LucideLoaderCircle } from '@lucide/angular';
+import { LucideLoaderCircle } from '@lucide/angular';
 
 import { formatLocalTime } from '@core/date/date-time.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -68,17 +68,6 @@ import { MediaThumbnail } from './media-thumbnail/media-thumbnail';
 const PRIMARY_GAME_MODES: readonly GameMode[] = ['COMPETITIVE', 'UNRATED', 'DEATHMATCH'];
 
 /**
- * Period the statistics and the match history are scoped to.
- */
-type ViewMode = 'weekly' | 'global';
-
-/**
- * The two periods, in the order the toggle offers them: the active week first, since that is what
- * the profile is opened for, then everything on record.
- */
-const VIEW_MODES: readonly ViewMode[] = ['weekly', 'global'];
-
-/**
  * Player-profile page.
  *
  * Displays one tracked player's identity, current competitive rank, aggregated statistics and
@@ -96,16 +85,12 @@ const VIEW_MODES: readonly ViewMode[] = ['weekly', 'global'];
     RankIconView,
     ResourceState,
     Select,
-    LucideEllipsisVertical,
     LucideLoaderCircle,
     PageHeader,
     StatTile,
   ],
   templateUrl: './player-profile.html',
-  host: {
-    class: PAGE_LAYOUT_CLASS,
-    '(document:click)': 'onDocumentClick($event)',
-  },
+  host: { class: PAGE_LAYOUT_CLASS },
 })
 export class PlayerProfile {
   /**
@@ -169,20 +154,6 @@ export class PlayerProfile {
   protected readonly gameModeFilter = signal<GameMode>('COMPETITIVE');
 
   /**
-   * Whether the stats and match history are scoped to the active week or to all time.
-   *
-   * Defaults to `'weekly'`: this profile is read first and foremost to check progress toward the
-   * active week's challenges, with the all-time record as secondary context.
-   */
-  protected readonly viewMode = signal<ViewMode>('weekly');
-
-  /**
-   * The two periods offered by the toggle, in display order, so the template renders them from one
-   * list instead of repeating the button markup per option.
-   */
-  protected readonly viewModes = VIEW_MODES;
-
-  /**
    * Reactive resource fetching every known season, used by the season filter.
    */
   protected readonly seasonsResource = this.seasonsApi.seasons;
@@ -221,28 +192,13 @@ export class PlayerProfile {
   });
 
   /**
-   * Active week's Monday, as `YYYY-MM-DD`, or `null` while it has not loaded yet or in the
-   * `'global'` view.
-   *
-   * Read from the shared current-ranking resource rather than computed client-side, so it is
-   * always the exact week the backend considers active - the same source `Overview` and
-   * `Leaderboard` already rely on.
-   */
-  protected readonly activeWeekStart = computed<string | null>(() =>
-    this.viewMode() === 'weekly'
-      ? (resourceValue(this.rankingApi.current, null)?.weekStart ?? null)
-      : null,
-  );
-
-  /**
    * Reactive resource fetching the requested player's detailed profile, scoped to the selected
-   * game mode, season and - in the `'weekly'` view - the active week.
+   * game mode and season.
    */
   protected readonly detailsResource = this.playersApi.details(
     this.playerId,
     this.gameModeFilter,
     this.seasonId,
-    this.activeWeekStart,
   );
 
   /**
@@ -263,7 +219,6 @@ export class PlayerProfile {
     this.page,
     this.gameModeFilter,
     this.seasonId,
-    this.activeWeekStart,
   );
 
   /**
@@ -296,36 +251,24 @@ export class PlayerProfile {
   );
 
   /**
-   * Translated label of the selected game mode when it is one of {@link overflowGameModeOptions},
-   * or `null` when a primary mode is selected. Shown on the overflow trigger itself so the active
-   * filter stays legible even when it isn't one of the buttons rendered beside it.
+   * Whether the selected game mode is one of {@link overflowGameModeOptions}, i.e. one the
+   * segmented control does not render a button for.
+   *
+   * Drives the brand tint on that dropdown's trigger: without it, picking a mode from the list
+   * would leave the whole control unmarked, since the three segments beside it are all inactive.
    */
-  protected readonly overflowGameModeActiveLabel = computed(
-    () =>
-      this.overflowGameModeOptions().find((option) => option.value === this.gameModeFilter())
-        ?.label ?? null,
+  protected readonly isOverflowGameModeActive = computed(() =>
+    this.overflowGameModeOptions().some((option) => option.value === this.gameModeFilter()),
   );
-
-  /**
-   * Whether the game-mode filter's overflow menu is open.
-   */
-  protected readonly isGameModeMenuOpen = signal(false);
-
-  /**
-   * Wrapper around the overflow trigger and its panel, used to tell a click on either apart from a
-   * click elsewhere on the page - see {@link onDocumentClick}.
-   */
-  private readonly gameModeMenu = viewChild<ElementRef<HTMLElement>>('gameModeMenu');
 
   /**
    * Options offered by the season filter, including the "all seasons" entry.
    */
   protected readonly seasonFilterOptions = computed<readonly SelectOption<number | null>[]>(() => [
     { value: null, label: this.translation.translate('playerProfile.filters.allSeasons') },
-    ...this.seasons().map((season) => ({
-      value: season.id,
-      label: this.translation.translate('playerProfile.filters.season', { name: season.name }),
-    })),
+    // Bare season name rather than "Saison {name}": the filter is captioned "Saison" right beside
+    // the trigger, so spelling it again on every option only widens the row.
+    ...this.seasons().map((season) => ({ value: season.id, label: season.name })),
   ]);
 
   /**
@@ -566,21 +509,6 @@ export class PlayerProfile {
   }
 
   /**
-   * Switches between the weekly and all-time views and restarts the match history from its first
-   * page, since {@link activeWeekStart} changing scopes both the statistics and the match history
-   * differently.
-   *
-   * @param mode - The newly selected view.
-   */
-  protected setViewMode(mode: ViewMode): void {
-    if (this.viewMode() === mode) {
-      return;
-    }
-    this.viewMode.set(mode);
-    this.restartMatchHistory();
-  }
-
-  /**
    * Applies the selected game-mode filter and restarts the match history from its first page.
    * Called directly by the button group's own buttons and by {@link selectOverflowGameMode}.
    *
@@ -589,37 +517,6 @@ export class PlayerProfile {
   protected onGameModeFilterChange(gameMode: GameMode): void {
     this.gameModeFilter.set(gameMode);
     this.restartMatchHistory();
-  }
-
-  /**
-   * Toggles the game-mode filter's overflow menu.
-   */
-  protected toggleGameModeMenu(): void {
-    this.isGameModeMenuOpen.update((isOpen) => !isOpen);
-  }
-
-  /**
-   * Applies a game mode picked from the overflow menu and closes it.
-   *
-   * @param gameMode - The newly selected game mode.
-   */
-  protected selectOverflowGameMode(gameMode: GameMode): void {
-    this.isGameModeMenuOpen.set(false);
-    this.onGameModeFilterChange(gameMode);
-  }
-
-  /**
-   * Closes the game-mode filter's overflow menu when a click lands outside its trigger and panel.
-   *
-   * @param event - The document-wide click event.
-   */
-  protected onDocumentClick(event: MouseEvent): void {
-    if (
-      this.isGameModeMenuOpen() &&
-      !this.gameModeMenu()?.nativeElement.contains(event.target as Node)
-    ) {
-      this.isGameModeMenuOpen.set(false);
-    }
   }
 
   /**

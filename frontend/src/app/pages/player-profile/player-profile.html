@@ -103,29 +103,29 @@
         }
       </section>
 
-      <!-- Filters. Placed first, ahead of the weekly/global tabs: both the tabs and everything they
-         scope read differently depending on the selected game mode and season, so the filters
-         take priority over them. -->
-      <div class="flex flex-wrap items-center gap-2">
-        <!-- Game-mode filter, as a segmented control: the modes players actually check sit right in
-           view (see `PRIMARY_GAME_MODES`), the rest stay one tap away behind the overflow
-           trigger instead of crowding the group with every mode the backend can report. Unboxed:
-           one notch around the whole strip and no rules at all, so the active segment's brand tint
-           is the only division and the row reads as a single control rather than a set of loose
-           chips. `focus-ring-inset` since the clipped track cuts away any indicator drawn outside
-           its box. -->
+      <!-- Filter bar. Every control scoping the page — mode, season, period — is its own block,
+         each wearing the identity banner's surface and cut corner rather than sharing one
+         continuous band with hairline rules: a group reads as one instrument, not as a stretch of
+         a longer one. The display switch is a block of its own too, pushed to the trailing edge
+         since it governs what the page shows, not what it counts.
+
+         Single line from `sm` up: `flex-nowrap` plus `overflow-x-auto` scrolls the row sideways
+         rather than stacking a filter's caption above its options, which is what wrapping inside a
+         block would otherwise do. Below `sm` there isn't enough width for every block to fit
+         without clipping the trailing ones out of view with no visible affordance that they're
+         still there, so the row wraps onto as many lines as it needs instead. -->
+      <div
+        class="scroll-subtle flex flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto sm:pb-1"
+      >
+        <!-- Game-mode filter, as a segmented control: the modes players actually check sit right
+           in view (see `PRIMARY_GAME_MODES`), the rest stay one tap away behind the trailing
+           dropdown instead of crowding the group with every mode the backend can report. -->
         <div
-          #gameModeMenu
-          (keydown.escape)="isGameModeMenuOpen.set(false)"
           [attr.aria-label]="'playerProfile.filters.gameModeLabel' | translate"
-          class="relative inline-flex items-center"
+          class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5"
           role="group"
         >
-          <!-- The overflow menu is a sibling of this track, not a child: the track's `clip-path`
-             would cut off any panel escaping its box. It opens beside the trigger, like the
-             sidebar's own flyouts; only on the narrowest widths, where the filter row wraps and
-             there is nothing to its right, does it drop underneath instead. -->
-          <div class="notch-tr inline-flex items-center [--notch:0.5rem]">
+          <div class="flex items-center">
             @for (mode of primaryGameModes; track mode) {
               <button
                 (click)="onGameModeFilterChange(mode)"
@@ -135,106 +135,78 @@
                     ? 'bg-brand-500/15 text-brand-500'
                     : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
                 "
-                class="focus-ring-inset min-h-10 cursor-pointer self-stretch px-4 py-2 text-sm font-semibold transition-colors"
+                class="focus-ring-inset min-h-10 cursor-pointer self-stretch px-2.5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
                 type="button"
               >
                 {{ 'playerProfile.matches.gameMode.' + mode | translate }}
               </button>
             }
 
-            <!-- Overflow trigger: shows the active mode's label instead of staying icon-only once a
-               non-primary mode is picked, so the current filter stays legible without opening the
-               menu. -->
-            <button
-              (click)="toggleGameModeMenu()"
-              [attr.aria-expanded]="isGameModeMenuOpen()"
-              [attr.aria-label]="'playerProfile.filters.moreGameModes' | translate"
+            <!-- The remaining modes, as the shared select rather than a menu of this page's own.
+               Vertical-dots trigger — see `Select` — since it never carries a label of its own,
+               the mode picked from it being shown by the segmented control above instead. -->
+            <app-select
+              [ariaLabel]="'playerProfile.filters.moreGameModes' | translate"
               [class]="
-                overflowGameModeActiveLabel()
-                  ? 'bg-brand-500/15 text-brand-500'
-                  : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
+                isOverflowGameModeActive() ? 'notch-tr bg-brand-500/15 [--notch:0.5rem]' : ''
               "
-              aria-haspopup="menu"
-              class="focus-ring-inset flex min-h-10 min-w-10 cursor-pointer items-center justify-center gap-1.5 self-stretch px-2.5 py-2 text-sm font-semibold transition-colors"
-              type="button"
-            >
-              @if (overflowGameModeActiveLabel(); as activeLabel) {
-                <span>{{ activeLabel }}</span>
-              }
-              <svg aria-hidden="true" class="size-4 shrink-0" lucideEllipsisVertical></svg>
-            </button>
+              [options]="overflowGameModeOptions()"
+              [value]="gameModeFilter()"
+              (valueChange)="onGameModeFilterChange($event!)"
+            />
           </div>
-
-          @if (isGameModeMenuOpen()) {
-            <div
-              [attr.aria-label]="'playerProfile.filters.moreGameModes' | translate"
-              class="menu-panel absolute top-full right-0 z-20 mt-2 min-w-40 sm:top-0 sm:right-auto sm:left-full sm:mt-0 sm:ml-2"
-              role="menu"
-            >
-              @for (option of overflowGameModeOptions(); track option.value) {
-                <button
-                  (click)="selectOverflowGameMode(option.value)"
-                  [attr.aria-checked]="gameModeFilter() === option.value"
-                  [class.text-brand-500]="gameModeFilter() === option.value"
-                  class="menu-option focus-ring-inset block text-text-secondary hover:bg-brand-500/8 hover:text-text-primary"
-                  role="menuitemradio"
-                  type="button"
-                >
-                  {{ option.label }}
-                </button>
-              }
-            </div>
-          }
         </div>
 
-        <app-select
-          [ariaLabel]="'playerProfile.filters.seasonLabel' | translate"
-          [options]="seasonFilterOptions()"
-          [value]="seasonId()"
-          (valueChange)="onSeasonFilterChange($event)"
-          class="sm:ml-auto"
-        />
+        <div
+          [attr.aria-label]="'playerProfile.filters.seasonLabel' | translate"
+          class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5"
+          role="group"
+        >
+          <app-select
+            [ariaLabel]="'playerProfile.filters.seasonLabel' | translate"
+            [options]="seasonFilterOptions()"
+            [value]="seasonId()"
+            (valueChange)="onSeasonFilterChange($event)"
+          />
+        </div>
 
         @if (hasActiveFilters()) {
           <button
             (click)="resetFilters()"
-            class="focus-ring label-caption cursor-pointer px-2 py-2 text-text-muted transition-colors hover:text-text-primary"
+            class="focus-ring-inset label-caption min-h-10 shrink-0 cursor-pointer px-2 text-2xs text-text-muted transition-colors hover:text-text-primary"
             type="button"
           >
             {{ 'playerProfile.filters.reset' | translate }}
           </button>
         }
-      </div>
 
-      <!-- Period toggle: whether the stats and match history below are scoped to the active week or
-         to all time. Underline treatment, set in the display face like every other section
-         heading, so the active scope reads as a title over the strip it governs rather than as one
-         more filter.
-
-         A pressed-button group rather than a tablist: nothing below is a tab panel — the toggle
-         re-scopes two independent sections — and `role="tab"` would promise arrow-key navigation
-         and an `aria-controls` target that do not exist. It is the same control the game-mode
-         filter above already is, so it is announced the same way. -->
-      <div
-        [attr.aria-label]="'playerProfile.viewMode.label' | translate"
-        class="flex items-center gap-8 border-b border-text-primary/10"
-        role="group"
-      >
-        @for (mode of viewModes; track mode) {
-          <button
-            (click)="setViewMode(mode)"
-            [attr.aria-pressed]="viewMode() === mode"
-            [class]="
-              viewMode() === mode
-                ? 'border-brand-500 text-text-primary'
-                : 'border-transparent text-text-muted hover:text-text-primary'
-            "
-            class="focus-ring font-display -mb-px min-h-10 cursor-pointer border-b-2 pb-3 text-sm font-semibold tracking-wide uppercase transition-colors"
-            type="button"
-          >
-            {{ 'playerProfile.viewMode.' + mode | translate }}
-          </button>
-        }
+        <!-- Display switch. "Progression" is deliberately inert: the season-progression view does
+           not exist yet, so the button is rendered disabled to state where it will live rather
+           than pretending to switch to it. Give it its handler and its pressed state when that
+           view ships; until then there is no state to hold and none is kept. -->
+        <div
+          [attr.aria-label]="'playerProfile.display.label' | translate"
+          class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 sm:ms-auto"
+          role="group"
+        >
+          <div class="flex items-center">
+            <button
+              aria-pressed="true"
+              class="focus-ring-inset min-h-10 cursor-pointer self-stretch bg-brand-500/15 px-2.5 py-2 text-sm font-semibold whitespace-nowrap text-brand-500"
+              type="button"
+            >
+              {{ 'playerProfile.display.matches' | translate }}
+            </button>
+            <button
+              aria-pressed="false"
+              class="min-h-10 self-stretch px-2.5 py-2 text-sm font-semibold whitespace-nowrap text-text-secondary opacity-40"
+              disabled
+              type="button"
+            >
+              {{ 'playerProfile.display.progress' | translate }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Stat strip. The win rate leads: it is the one figure that summarises a player's record, so
