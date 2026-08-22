@@ -52,13 +52,16 @@ import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
+import { MultiSelect } from '@shared/multi-select/multi-select';
 import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
 import { StatTile } from '@shared/stat-tile/stat-tile';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { MatchDay } from './match-day.model';
 import { groupMatchesByDay } from './match-day.utils';
 import { MediaThumbnail } from './media-thumbnail/media-thumbnail';
+import { Progression } from './progression/progression';
 
 /**
  * Game modes shown as their own button in the game-mode filter's button group, in
@@ -66,6 +69,15 @@ import { MediaThumbnail } from './media-thumbnail/media-thumbnail';
  * overflow menu rather than crowding the group itself.
  */
 const PRIMARY_GAME_MODES: readonly GameMode[] = ['COMPETITIVE', 'UNRATED', 'DEATHMATCH'];
+
+/**
+ * Largest number of seasons the progression view will chart at once.
+ *
+ * The chart series palette holds exactly this many slots, validated as an ordered set against the
+ * page's surface; a sixth curve would have to be a generated hue, which is how a chart ends up
+ * with two colours a colourblind reader cannot separate. See `styles/colors.css`.
+ */
+const MAX_PROGRESSION_SEASONS = 5;
 
 /**
  * Player-profile page.
@@ -84,10 +96,13 @@ const PRIMARY_GAME_MODES: readonly GameMode[] = ['COMPETITIVE', 'UNRATED', 'DEAT
     ProgressBar,
     RankIconView,
     ResourceState,
+    MultiSelect,
+    Progression,
     Select,
     LucideLoaderCircle,
     PageHeader,
     StatTile,
+    Tooltip,
   ],
   templateUrl: './player-profile.html',
   host: { class: PAGE_LAYOUT_CLASS },
@@ -135,6 +150,16 @@ export class PlayerProfile {
    * controls; {@link matches} accumulates every page fetched so far.
    */
   protected readonly page = signal(0);
+
+  /**
+   * Which of the profile's two views is on screen.
+   *
+   * The two do not share a scope: the match history is one mode and one season at a time, while
+   * the progression view compares several seasons of competitive play. So the filter bar swaps
+   * with the view rather than trying to drive both, and the summary tiles - which report the
+   * history's filters - are shown with the history alone.
+   */
+  protected readonly viewMode = signal<'MATCHES' | 'PROGRESS'>('MATCHES');
 
   /**
    * Every match fetched so far for the current filters, oldest fetch first.
@@ -260,6 +285,65 @@ export class PlayerProfile {
   protected readonly isOverflowGameModeActive = computed(() =>
     this.overflowGameModeOptions().some((option) => option.value === this.gameModeFilter()),
   );
+
+  /**
+   * Seasons the progression view charts, defaulting to the current one.
+   *
+   * Kept apart from {@link seasonId}: the two views ask different questions of the same list, and
+   * folding a multi-season selection back into the history's single-season filter would silently
+   * change what the reader was looking at when they switch tabs. Same `linkedSignal` shape as
+   * {@link seasonId}, so it seeds itself once the seasons load without overwriting a real choice.
+   */
+  protected readonly progressionSeasonIds = linkedSignal<readonly Season[], readonly number[]>({
+    source: this.seasons,
+    computation: (seasons, previous) => {
+      if (previous && previous.source.length > 0) {
+        return previous.value;
+      }
+      const currentSeasonId = PlayerProfile.resolveCurrentSeasonId(seasons);
+      return currentSeasonId === null ? [] : [currentSeasonId];
+    },
+  });
+
+  /**
+   * Every known season's identifier, in the order the API returned them (newest first).
+   *
+   * Handed to the progression view as the source of each season's colour: taken from this list
+   * rather than from the selection, a curve keeps its colour when another season is unticked.
+   */
+  protected readonly seasonOrder = computed(() => this.seasons().map((season) => season.id));
+
+  /**
+   * Options offered by the progression view's multi-season filter.
+   *
+   * No "all seasons" entry, unlike {@link seasonFilterOptions}: here the seasons are what the
+   * chart's curves *are*, so "all of them" is a selection the reader makes, not a value.
+   */
+  protected readonly progressionSeasonOptions = computed<readonly SelectOption<number>[]>(() =>
+    this.seasons().map((season) => ({ value: season.id, label: season.name })),
+  );
+
+  /**
+   * Summary of the progression view's season selection, shown on its trigger.
+   */
+  protected readonly progressionSeasonLabel = computed(() => {
+    const selected = this.progressionSeasonIds();
+    if (selected.length === 0) {
+      return this.translation.translate('playerProfile.filters.allSeasons');
+    }
+    if (selected.length === 1) {
+      const season = this.seasons().find((entry) => entry.id === selected[0]);
+      return season?.name ?? this.translation.translate('playerProfile.filters.seasonLabel');
+    }
+    return this.translation.translate('playerProfile.filters.seasonCount', {
+      count: selected.length,
+    });
+  });
+
+  /**
+   * Largest number of seasons the progression view charts at once, exposed to the template.
+   */
+  protected readonly maxProgressionSeasons = MAX_PROGRESSION_SEASONS;
 
   /**
    * Options offered by the season filter, including the "all seasons" entry.
@@ -527,6 +611,15 @@ export class PlayerProfile {
   protected onSeasonFilterChange(seasonId: number | null): void {
     this.seasonId.set(seasonId);
     this.restartMatchHistory();
+  }
+
+  /**
+   * Switches between the match history and the progression view.
+   *
+   * @param viewMode - The newly selected view.
+   */
+  protected onViewModeChange(viewMode: 'MATCHES' | 'PROGRESS'): void {
+    this.viewMode.set(viewMode);
   }
 
   /**

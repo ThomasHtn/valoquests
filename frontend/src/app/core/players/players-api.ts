@@ -5,6 +5,7 @@ import { API_ENDPOINTS } from '@core/http/api-endpoints';
 import { GameMode } from '@core/matches/game-mode.model';
 
 import { PlayerDetails } from './player-details.model';
+import { PlayerProgression } from './player-progression.model';
 import { PlayerSummary } from './player-summary.model';
 
 /**
@@ -47,6 +48,29 @@ export class PlayersApi {
           gameMode: gameMode(),
           ...(selectedSeasonId !== null ? { seasonId: selectedSeasonId } : {}),
         },
+      };
+    });
+  }
+
+  /**
+   * Analytics behind one tracked player's progression view, scoped to a set of seasons.
+   *
+   * @param id - Reactive internal player identifier.
+   * @param seasonIds - Reactive season selection; an empty list covers every season.
+   * @returns The reactive resource fetching the requested player's progression analytics.
+   */
+  public progression(
+    id: Signal<number>,
+    seasonIds: Signal<readonly number[]>,
+  ): HttpResourceRef<PlayerProgression | undefined> {
+    return httpResource<PlayerProgression>(() => {
+      const selectedSeasonIds = seasonIds();
+
+      return {
+        url: API_ENDPOINTS.playerProgression(id()),
+        // Repeated rather than comma-joined, which is how Spring binds a `List<Long>` parameter.
+        // Omitted entirely when empty, which the backend reads as "every season".
+        params: { ...(selectedSeasonIds.length > 0 ? { seasonIds: [...selectedSeasonIds] } : {}) },
       };
     });
   }

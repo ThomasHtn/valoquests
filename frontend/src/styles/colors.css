@@ -48,6 +48,29 @@
   --color-accent-cyan: #2dd4bf;
   --color-accent-pink: #ec4899;
 
+  /*
+   * Chart series (the progression view's multi-season curves).
+   *
+   * Deliberately not the accent tokens above. Run through the data-viz palette validator against
+   * `surface-950`, those sit above the dark lightness band — a line drawn in them glares rather
+   * than reads — and `accent-blue` falls under the chroma floor, coming out grey. These are the
+   * same hue families re-stepped for plotting: amber, cyan, purple, pink, blue.
+   *
+   * Validated as an *ordered set*: the order is what clears the colorblind-separation check (worst
+   * adjacent pair ΔE 9.9), so slots are assigned in sequence, by the entity's own rank and never
+   * by its position in the current selection. Reordering or extending this list without re-running
+   * the validator breaks that guarantee, which is also why the progression view caps a selection
+   * at five seasons.
+   *
+   * `accent-green` and `accent-red` stay out: they carry state (a win, a loss, a player's best
+   * time slot) everywhere else in the application and must not also mean "series 6".
+   */
+  --color-series-1: #c48235;
+  --color-series-2: #009f8c;
+  --color-series-3: #8c6fdc;
+  --color-series-4: #ec4899;
+  --color-series-5: #418ad1;
+
   /* Podium (ranking positions) */
   --color-podium-bronze: #a07850;
 

@@ -1,0 +1,15 @@
+<!-- The canvas is sized by this box, never by its own attributes: Chart.js resizes to its parent,
+     and `maintainAspectRatio: false` is what lets a two-hundred-point series stay a readable band
+     instead of growing a metre tall. -->
+<div class="relative h-64 w-full sm:h-72">
+  <canvas
+    #canvas
+    [attr.aria-label]="ariaLabel()"
+    class="absolute inset-0 block"
+    role="img"
+  ></canvas>
+</div>
+
+<!-- A canvas is one opaque image to a screen reader. The label above names the chart; this spells
+     out what it shows, which is the part a sighted reader gets from the plot itself. -->
+<p class="sr-only">{{ summary() }}</p>

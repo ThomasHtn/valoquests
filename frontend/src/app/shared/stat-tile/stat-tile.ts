@@ -1,5 +1,7 @@
 import { Component, input } from '@angular/core';
 
+import { Tooltip } from '@shared/tooltip/tooltip';
+
 /**
  * One figure of a statistics strip: its name in a micro-label, the value under it in the display
  * face, and a rule capping the tile instead of a box around it — so a row of them reads as one
@@ -12,6 +14,7 @@ import { Component, input } from '@angular/core';
  */
 @Component({
   selector: 'app-stat-tile',
+  imports: [Tooltip],
   templateUrl: './stat-tile.html',
   host: { class: 'block border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5' },
 })
@@ -31,4 +34,10 @@ export class StatTile {
    * against its thresholds). Left at the neutral primary for the ones it only reports.
    */
   public readonly valueClass = input('text-text-primary');
+
+  /**
+   * Already-translated explanation of what the figure measures and how it is worked out, shown on
+   * hover and on keyboard focus. Left empty for a figure whose label already says it all.
+   */
+  public readonly tooltip = input('');
 }

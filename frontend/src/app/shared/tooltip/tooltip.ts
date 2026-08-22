@@ -68,6 +68,10 @@ export class Tooltip implements OnDestroy {
    * Bubble size. `md` is used by the sidebar's navigation entries, whose tooltip is the only way to
    * read the entry's label while the rail is collapsed and therefore needs to read comfortably at a
    * glance; every other tooltip stays at the default `sm`.
+   *
+   * Both steps sit a size above the surrounding micro-labels rather than below them: a bubble
+   * explaining how a figure is worked out is a sentence to be read, not a caption to be scanned,
+   * and at the caption's own size it was the hardest text on the page to make out.
    */
   public readonly appTooltipSize = input<'sm' | 'md'>('sm');
 
@@ -124,8 +128,8 @@ export class Tooltip implements OnDestroy {
     this.renderer.setProperty(bubble, 'textContent', this.appTooltip());
     const sizeClass =
       this.appTooltipSize() === 'md'
-        ? 'max-w-72 px-4 py-2.5 text-sm'
-        : 'max-w-64 px-2.5 py-1.5 text-xs';
+        ? 'max-w-80 px-4 py-3 text-base'
+        : 'max-w-72 px-3 py-2 text-sm';
     this.renderer.setAttribute(
       bubble,
       'class',

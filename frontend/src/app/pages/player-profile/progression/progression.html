@@ -1,0 +1,70 @@
+<app-resource-state
+  [emptyText]="'playerProfile.progression.empty' | translate"
+  [errorText]="'playerProfile.progression.error' | translate"
+  [isEmpty]="isEmpty()"
+  [isError]="!!progressionResource.error()"
+  [isLoading]="progressionResource.isLoading()"
+  [loadingText]="'playerProfile.progression.loading' | translate"
+  (retry)="progressionResource.reload()"
+>
+  <!-- Skeleton shaped like the loaded view — a chart band, then a grid of tiles — so the sections
+       arriving do not shift the page under the reader. -->
+  <div class="flex flex-col gap-6" skeleton>
+    <div class="bg-text-primary/4 p-5">
+      <span class="mb-4 block h-2.5 w-32 bg-surface-700"></span>
+      <span class="block h-56 w-full bg-surface-700/60"></span>
+    </div>
+    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      @for (placeholder of skeletonRows; track $index) {
+        <div class="border-t-2 border-surface-700 bg-text-primary/4 px-4 py-3.5">
+          <span class="mb-3 block h-2.5 w-14 bg-surface-700"></span>
+          <span class="block h-5 w-12 bg-surface-700"></span>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (progression(); as data) {
+    <!-- Every section is a flat block on the same tinted ground, separated by the page stack's own
+         rhythm rather than by cards: the six of them are one report, not six widgets. -->
+    <div class="flex flex-col gap-6">
+      <section class="bg-text-primary/4 p-5 sm:p-6">
+        <app-evolution-chart [evolution]="data.evolution" [seasonOrder]="seasonOrder()" />
+      </section>
+
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+        <section class="bg-text-primary/4 p-5 sm:p-6">
+          <app-play-style [aim]="data.aim" />
+        </section>
+
+        <section class="bg-text-primary/4 p-5 sm:p-6">
+          <app-schedule-performance [hourSlots]="data.hourSlots" [weekdays]="data.weekdays" />
+        </section>
+      </div>
+
+      <section class="bg-text-primary/4 p-5 sm:p-6">
+        <app-personal-records [records]="data.records" />
+      </section>
+
+      <div class="grid gap-6 lg:grid-cols-2">
+        <section class="bg-text-primary/4 p-5 sm:p-6">
+          <app-entity-stats
+            [entityLabel]="translate('playerProfile.progression.maps.entity')"
+            [rows]="mapRows()"
+            [titleTooltip]="translate('playerProfile.progression.maps.tooltip')"
+            [title]="translate('playerProfile.progression.maps.title')"
+          />
+        </section>
+
+        <section class="bg-text-primary/4 p-5 sm:p-6">
+          <app-entity-stats
+            [entityLabel]="translate('playerProfile.progression.agents.entity')"
+            [rows]="agentRows()"
+            [titleTooltip]="translate('playerProfile.progression.agents.tooltip')"
+            [title]="translate('playerProfile.progression.agents.title')"
+          />
+        </section>
+      </div>
+    </div>
+  }
+</app-resource-state>

@@ -1,0 +1,74 @@
+<div class="flex flex-col gap-4">
+  <!-- Header: the metric switch, in the same segmented shape the page's filters use, so a control
+       that changes what is plotted looks like a control and not like a set of tabs. -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h3 class="label-caption text-sm text-text-primary">
+      <span
+        [appTooltip]="'playerProfile.progression.evolution.tooltip' | translate"
+        class="focus-ring"
+        tabindex="0"
+        >{{ 'playerProfile.progression.evolution.title' | translate }}</span
+      >
+    </h3>
+
+    <div
+      [attr.aria-label]="'playerProfile.progression.evolution.metricLabel' | translate"
+      class="flex items-center bg-text-primary/4 px-1"
+      role="group"
+    >
+      @for (option of metrics; track option) {
+        <button
+          (click)="onMetricChange(option)"
+          [attr.aria-pressed]="metric() === option"
+          [class]="
+            metric() === option
+              ? 'bg-brand-500/15 text-brand-500'
+              : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
+          "
+          class="focus-ring-inset min-h-10 cursor-pointer px-2.5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
+          type="button"
+        >
+          {{ 'playerProfile.progression.evolution.metric.' + option | translate }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <app-line-chart
+    [ariaLabel]="'playerProfile.progression.evolution.metric.' + metric() | translate"
+    [pointLabel]="'playerProfile.progression.evolution.pointLabel' | translate"
+    [series]="series()"
+    [summary]="summary()"
+    [valueSuffix]="valueSuffix()"
+    [xAxisLabel]="'playerProfile.progression.evolution.xAxis' | translate"
+    [yAxisLabel]="yAxisLabel()"
+  />
+
+  <!-- Legend. Always present with more than one curve, and it carries each season's average rather
+       than only its name: the average is what says which curve sits higher overall, which a reader
+       cannot get from two lines crossing each other two hundred times. -->
+  @if (legend().length > 1) {
+    <ul class="flex flex-wrap items-center gap-x-6 gap-y-2">
+      @for (entry of legend(); track entry.label) {
+        <li class="flex items-center gap-2">
+          <span [style.background-color]="entry.color" aria-hidden="true" class="size-2.5"></span>
+          <span class="text-sm text-text-secondary">{{ entry.label }}</span>
+          <span class="font-mono text-xs text-text-muted tabular-nums">{{ entry.average }}</span>
+        </li>
+      }
+    </ul>
+  } @else if (legend().length === 1) {
+    <p class="font-mono text-sm text-text-muted tabular-nums">
+      {{
+        'playerProfile.progression.evolution.singleAverage'
+          | translate: { average: legend()[0].average }
+      }}
+    </p>
+  }
+
+  @if (isComparing()) {
+    <p class="text-sm text-text-muted">
+      {{ 'playerProfile.progression.evolution.alignmentNote' | translate }}
+    </p>
+  }
+</div>

@@ -1,0 +1,76 @@
+<div class="flex flex-col gap-4">
+  <h3 class="label-caption text-sm text-text-primary">
+    <span
+      [appTooltip]="'playerProfile.progression.records.tooltipSection' | translate"
+      class="focus-ring"
+      tabindex="0"
+      >{{ 'playerProfile.progression.records.title' | translate }}</span
+    >
+  </h3>
+
+  @if (tiles().length > 0) {
+    <ul class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      @for (tile of tiles(); track tile.key) {
+        <li
+          class="flex items-center gap-3 border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5"
+        >
+          <!-- One icon per record, so the grid can be read by shape before it is read by word. -->
+          @switch (tile.key) {
+            @case ('mostKills') {
+              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideCrosshair></svg>
+            }
+            @case ('bestAcs') {
+              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideZap></svg>
+            }
+            @case ('mostDamage') {
+              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideFlame></svg>
+            }
+            @case ('bestKda') {
+              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideSwords></svg>
+            }
+            @case ('bestHeadshotPercentage') {
+              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideTarget></svg>
+            }
+            @case ('longestWinStreak') {
+              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideTrendingUp></svg>
+            }
+            @case ('longestActiveDayStreak') {
+              <svg
+                aria-hidden="true"
+                class="size-5 shrink-0 text-brand-500"
+                lucideCalendarCheck
+              ></svg>
+            }
+            @case ('mvps') {
+              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideStar></svg>
+            }
+            @default {
+              <svg
+                aria-hidden="true"
+                class="size-5 shrink-0 text-brand-500"
+                lucideShieldCheck
+              ></svg>
+            }
+          }
+
+          <span class="flex min-w-0 flex-col gap-1">
+            <span class="label-caption text-text-muted">
+              <span [appTooltip]="tile.tooltip" class="focus-ring" tabindex="0">{{
+                'playerProfile.progression.records.label.' + tile.key | translate
+              }}</span>
+            </span>
+            <span
+              class="font-display truncate text-xl leading-none font-bold text-text-primary tabular-nums"
+            >
+              {{ tile.value }}
+            </span>
+          </span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="text-sm text-text-secondary">
+      {{ 'playerProfile.progression.records.empty' | translate }}
+    </p>
+  }
+</div>

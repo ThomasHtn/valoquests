@@ -95,12 +95,15 @@
                     {{ 'overview.podium.rank.' + entry.position | translate }}
                   </span>
                 </span>
+                <!-- `totalDamage`, not `challengeDamage`: the ranking is ordered on the total, so
+                     the figure under a position has to be the one that earned it — challenge
+                     damage alone reads as 0 for a player who only has match damage. -->
                 <span
                   [class]="podiumTextAccent(entry.position)"
                   [class.text-4xl]="entry.position === 1"
                   class="font-display text-3xl leading-none font-bold tabular-nums"
                 >
-                  {{ formatDamage(entry.challengeDamage) }}
+                  {{ formatDamage(entry.totalDamage) }}
                   <span class="sr-only">
                     {{ 'overview.weeklyRanking.columns.damage' | translate }}
                   </span>
@@ -141,10 +144,12 @@
                      pill and no sword glyph. The badge treatment is reserved for the ranking
                      tables, where a row carries several numbers and the reward needs marking out;
                      on this strip it is the only value, and the chrome only added noise. -->
+                <!-- Same total as the plinths above: one page must not print two different
+                     damage figures for the same ranking. -->
                 <span
                   class="font-display text-lg leading-none font-bold text-text-secondary tabular-nums"
                 >
-                  {{ formatDamage(entry.challengeDamage) }}
+                  {{ formatDamage(entry.totalDamage) }}
                   <span class="sr-only">
                     {{ 'overview.weeklyRanking.columns.damage' | translate }}
                   </span>

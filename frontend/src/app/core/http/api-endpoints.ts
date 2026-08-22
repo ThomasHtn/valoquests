@@ -31,6 +31,15 @@ export const API_ENDPOINTS = {
     `${environment.apiBaseUrl}/players/${playerId}/matches`,
 
   /**
+   * `GET` the analytics behind one tracked player's progression view.
+   *
+   * @param playerId - Internal player identifier.
+   * @returns The endpoint URL.
+   */
+  playerProgression: (playerId: number): string =>
+    `${environment.apiBaseUrl}/players/${playerId}/progression`,
+
+  /**
    * `GET` every known season, used to filter match history.
    */
   seasons: `${environment.apiBaseUrl}/seasons`,

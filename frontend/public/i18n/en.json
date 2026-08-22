@@ -141,16 +141,19 @@
         "buttons": "Buttons",
         "cards": "Cards",
         "challengeIcons": "Challenge icons",
+        "charts": "Charts",
         "colors": "Colors",
         "confirmDialog": "Confirm dialog",
         "dropdowns": "Dropdowns & menus",
-        "sectionLabel": "Section label",
         "menuButtons": "Sidebar & menu buttons",
+        "multiSelect": "Multi-select",
+        "pageHeader": "Context bar",
         "pagination": "Pagination & navigation",
         "panels": "Panels",
         "progress": "Progress",
         "rankIcons": "Rank icons",
         "resourceState": "Resource states",
+        "sectionLabel": "Section label",
         "select": "Select",
         "statTiles": "Stat tiles",
         "statusIndicators": "Status indicators",
@@ -159,8 +162,7 @@
         "textInputs": "Text inputs",
         "tooltip": "Tooltip",
         "typography": "Typography",
-        "weekCountdown": "Week countdown",
-        "pageHeader": "Context bar"
+        "weekCountdown": "Week countdown"
       }
     }
   },
@@ -368,7 +370,10 @@
       "gameModeLabel": "Filter by game mode",
       "moreGameModes": "More game modes",
       "reset": "Reset",
-      "seasonLabel": "Filter by season"
+      "seasonCount": "{{count}} seasons",
+      "seasonLabel": "Filter by season",
+      "seasonLimit": "{{count}} seasons at most, so every curve keeps a colour that can be told apart.",
+      "seasonsLabel": "Filter by seasons"
     },
     "loading": "Loading player profile…",
     "matches": {
@@ -408,6 +413,112 @@
         "WIN": "Win"
       }
     },
+    "progression": {
+      "agents": {
+        "entity": "Agent",
+        "title": "Best agents",
+        "tooltip": "Win rate, ACS and match count for every agent played in competitive over the selected seasons, most played first."
+      },
+      "empty": "No competitive match over the selected seasons.",
+      "error": "Could not load this player's progression.",
+      "evolution": {
+        "alignmentNote": "Shorter seasons start further along the axis: every curve ends at the same point, so seasons are compared on where they left off.",
+        "axis": {
+          "headshotPercentage": "Headshots (%)",
+          "kda": "K/D",
+          "acs": "ACS",
+          "adr": "ADR"
+        },
+        "legendSummary": "{{season}}: average {{average}}.",
+        "metric": {
+          "acs": "ACS",
+          "adr": "ADR",
+          "headshotPercentage": "HS%",
+          "kda": "K/D"
+        },
+        "metricLabel": "Plotted statistic",
+        "pointLabel": "Match",
+        "singleAverage": "Season average: {{average}}",
+        "title": "Evolution",
+        "tooltip": "One value per competitive match, oldest to most recent. With several seasons plotted, the shorter ones are pushed right so they all end on the same abscissa.",
+        "xAxis": "Match"
+      },
+      "loading": "Loading progression…",
+      "maps": {
+        "entity": "Map",
+        "title": "Best maps",
+        "tooltip": "Win rate, ACS and match count for every map played in competitive over the selected seasons, most played first."
+      },
+      "playStyle": {
+        "empty": "No registered hit over the selected seasons.",
+        "sample": "{{shots}} registered shots",
+        "title": "Play style",
+        "tooltip": "Where registered hits landed, by body zone. Worked out from the head, body and leg hits of the filtered competitive matches. Not an accuracy figure: shots that missed entirely are not counted.",
+        "zone": {
+          "body": "Body",
+          "head": "Head",
+          "legs": "Legs"
+        },
+        "zoneSummary": "{{zone}}: {{value}}."
+      },
+      "records": {
+        "empty": "No record to show yet.",
+        "label": {
+          "bestAcs": "Best ACS",
+          "bestHeadshotPercentage": "Best HS%",
+          "bestKda": "Best K/D",
+          "longestActiveDayStreak": "Days in a row",
+          "longestWinStreak": "Win streak",
+          "mostDamage": "Most damage",
+          "mostKills": "Most kills",
+          "mvps": "MVP",
+          "peakTier": "Peak rank"
+        },
+        "title": "Personal records",
+        "tooltip": {
+          "bestAcs": "Best average combat score in a single match. Set on {{map}} as {{agent}}, on {{date}}.",
+          "bestHeadshotPercentage": "Best headshot rate in a match of at least 10 rounds. Set on {{map}} as {{agent}}, on {{date}}.",
+          "bestKda": "Best (kills + assists) / deaths ratio in a single match. Set on {{map}} as {{agent}}, on {{date}}.",
+          "longestActiveDayStreak": "Longest run of consecutive days with at least one match, in any game mode.",
+          "longestWinStreak": "Longest run of consecutive competitive wins. Cancelled matches do not break the run.",
+          "mostDamage": "Most damage dealt in a single match. Set on {{map}} as {{agent}}, on {{date}}.",
+          "mostKills": "Most kills in a single match. Set on {{map}} as {{agent}}, on {{date}}.",
+          "mvps": "Matches finished with the best score of the game.",
+          "peakTier": "Highest competitive rank reached over the selected seasons."
+        },
+        "tooltipSection": "Best performances over the selected seasons. Highs only: nothing is shown until a match has set it."
+      },
+      "schedule": {
+        "axis": {
+          "weekday": "Day of the week",
+          "hour": "Time slot",
+          "winRate": "Win rate (%)"
+        },
+        "bestHour": "Best slot: {{slot}}",
+        "bestWeekday": "Best day: {{day}}",
+        "byHour": "By time slot",
+        "byWeekday": "By day of the week",
+        "day": {
+          "FRIDAY": "Fri",
+          "MONDAY": "Mon",
+          "SATURDAY": "Sat",
+          "SUNDAY": "Sun",
+          "THURSDAY": "Thu",
+          "TUESDAY": "Tue",
+          "WEDNESDAY": "Wed"
+        },
+        "sample": "{{count}} matches",
+        "threshold": "Slots holding fewer than {{count}} matches are greyed out: the sample is too small to conclude anything from.",
+        "title": "Performance by schedule",
+        "tooltip": "Win rate of competitive matches grouped by day of the week and by three-hour slot, based on when the match started."
+      },
+      "table": {
+        "acs": "ACS",
+        "empty": "No data over the selected seasons.",
+        "matches": "Matches",
+        "winRate": "Win rate"
+      }
+    },
     "stats": {
       "acs": "ACS",
       "adr": "ADR",
@@ -416,6 +527,14 @@
       "losses": "{{count}} L",
       "matchesPlayed": "Matches",
       "record": "{{wins}} W / {{losses}} L",
+      "tooltip": {
+        "acs": "Average combat score per round: combat points earned (kills, damage, assists) divided by rounds played, then averaged over the filtered matches.",
+        "adr": "Average damage dealt per round, averaged over the filtered matches.",
+        "headshotPercentage": "Share of registered hits that landed on the head: headshots divided by head + body + leg hits. Shots that missed entirely are not counted.",
+        "kda": "(Kills + assists) divided by deaths, over every filtered match.",
+        "matchesPlayed": "Number of matches matching the current filters.",
+        "winRate": "Share of matches won: wins divided by filtered matches. Cancelled matches count towards the total."
+      },
       "winRate": "Win rate",
       "wins": "{{count}} W"
     },

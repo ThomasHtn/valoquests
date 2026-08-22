@@ -1,0 +1,70 @@
+<div class="flex flex-col gap-4">
+  <h3 class="label-caption text-sm text-text-primary">
+    <span [appTooltip]="titleTooltip()" class="focus-ring" tabindex="0">{{ title() }}</span>
+  </h3>
+
+  @if (rows().length > 0) {
+    <!-- Column header, from `sm` up only: below it the rows stack into cards that label their own
+         figures, so a header row would be captioning a layout that no longer exists. -->
+    <div
+      class="label-caption hidden grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] items-center gap-4 px-4 text-text-muted sm:grid"
+    >
+      <span>{{ entityLabel() }}</span>
+      <span class="text-right">{{ 'playerProfile.progression.table.matches' | translate }}</span>
+      <span class="text-right">{{ 'playerProfile.progression.table.winRate' | translate }}</span>
+      <span class="text-right">{{ 'playerProfile.progression.table.acs' | translate }}</span>
+    </div>
+
+    <ul class="flex flex-col gap-2">
+      @for (row of rows(); track row.name) {
+        @let winRate = winRateVisual(row.matchesPlayed > 0 ? row.winRate : null);
+        <li
+          class="notch-tr grid grid-cols-2 items-center gap-x-4 gap-y-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-3 [--notch:0.625rem] sm:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] sm:gap-y-0"
+        >
+          <div class="col-span-2 flex min-w-0 items-center gap-3 sm:col-span-1">
+            <app-media-thumbnail
+              [accessibleName]="row.name"
+              [monogram]="row.monogram"
+              [src]="row.imageUrl"
+            />
+            <span class="truncate text-base font-semibold text-text-primary">{{ row.name }}</span>
+          </div>
+
+          <div class="flex flex-col gap-1 sm:items-end">
+            <span class="label-caption text-text-muted sm:hidden">
+              {{ 'playerProfile.progression.table.matches' | translate }}
+            </span>
+            <span class="text-base text-text-secondary tabular-nums">{{ row.matchesPlayed }}</span>
+          </div>
+
+          <div class="flex flex-col gap-1 sm:items-end">
+            <span class="label-caption text-text-muted sm:hidden">
+              {{ 'playerProfile.progression.table.winRate' | translate }}
+            </span>
+            <span [class]="winRate.textClass" class="text-base font-semibold tabular-nums">
+              {{ formatWinRate(row.winRate) }}
+            </span>
+            <app-progress-bar
+              class="w-16"
+              [colorClass]="winRate.barClass"
+              [percentage]="row.winRate"
+            />
+          </div>
+
+          <div class="flex flex-col gap-1 sm:items-end">
+            <span class="label-caption text-text-muted sm:hidden">
+              {{ 'playerProfile.progression.table.acs' | translate }}
+            </span>
+            <span class="text-base text-text-secondary tabular-nums">
+              {{ formatScore(row.acs) }}
+            </span>
+          </div>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="text-sm text-text-secondary">
+      {{ 'playerProfile.progression.table.empty' | translate }}
+    </p>
+  }
+</div>

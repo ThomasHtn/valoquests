@@ -1,3 +1,4 @@
+import { ChartBar, ChartSeries } from '@shared/chart/chart.model';
 import { ChallengeIcon } from '@core/challenges/challenge-visual.model';
 
 /**
@@ -263,4 +264,33 @@ export const SAMPLE_TABLE_ROWS: readonly SampleTableRow[] = [
   { position: 1, name: 'ThomasHtn', score: '4 820' },
   { position: 2, name: 'Kaelis', score: '4 110' },
   { position: 3, name: 'Vaelune', score: '3 975' },
+];
+
+/**
+ * Curves feeding the design system's `app-line-chart` sample.
+ *
+ * Colors come from the validated series palette, in slot order - the same rule the progression
+ * view follows.
+ */
+export const SAMPLE_CHART_SERIES: readonly ChartSeries[] = [
+  {
+    label: 'Episode 10',
+    color: 'var(--color-series-1)',
+    points: [18, 21, 19, 24, 22, 26, 25, 28],
+  },
+  {
+    label: 'Episode 11',
+    color: 'var(--color-series-2)',
+    points: [null, null, null, 30, 27, 31, 29, 33],
+  },
+];
+
+/**
+ * Bars feeding the design system's `app-bar-chart` sample, one of each state a bar can hold.
+ */
+export const SAMPLE_CHART_BARS: readonly ChartBar[] = [
+  { label: 'Lun', value: 48, detail: '12 matchs', highlighted: false, muted: false },
+  { label: 'Mar', value: 61, detail: '18 matchs', highlighted: true, muted: false },
+  { label: 'Mer', value: 52, detail: '9 matchs', highlighted: false, muted: false },
+  { label: 'Jeu', value: 100, detail: '2 matchs', highlighted: false, muted: true },
 ];

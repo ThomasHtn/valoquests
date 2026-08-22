@@ -1,4 +1,15 @@
-<p class="label-caption text-text-muted">{{ label() }}</p>
+<!-- The tooltip hangs off a `<span>` rather than the whole line so its bubble points at the words
+     themselves, and the span is focusable only when there is something to describe: a tab stop
+     that opens nothing is a dead end for a keyboard reader. -->
+<p class="label-caption text-text-muted">
+  <span
+    [appTooltipDisabled]="!tooltip()"
+    [appTooltip]="tooltip()"
+    [attr.tabindex]="tooltip() ? 0 : null"
+    class="focus-ring"
+    >{{ label() }}</span
+  >
+</p>
 <p [class]="valueClass()" class="font-display mt-3 text-2xl leading-none font-bold tabular-nums">
   {{ value() }}
 </p>

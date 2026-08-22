@@ -1,0 +1,68 @@
+<!-- Trigger -->
+<button
+  #trigger
+  (click)="toggle()"
+  [attr.aria-activedescendant]="activeOptionId()"
+  [attr.aria-controls]="listboxId"
+  [attr.aria-expanded]="isOpen()"
+  [attr.aria-label]="ariaLabel()"
+  aria-haspopup="listbox"
+  class="notch-tr focus-ring-inset flex min-h-10 cursor-pointer items-center gap-1.5 px-3 py-2 text-sm font-semibold text-text-primary transition-colors [--notch:0.5rem] hover:bg-brand-500/8 motion-safe:active:scale-[0.96] sm:gap-2 sm:px-4"
+  type="button"
+>
+  <span>{{ triggerLabel() }}</span>
+  <svg
+    [class.rotate-180]="isOpen()"
+    class="h-4 w-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none"
+    lucideChevronDown
+  ></svg>
+</button>
+
+<!-- Options panel. Kept in the DOM while closed so `aria-controls` always resolves, and left open
+     while options are toggled — holding several values is the point of this control. Options are
+     buttons for native activation semantics but held out of the tab order, since focus stays on
+     the trigger and moves through `aria-activedescendant`. -->
+<div
+  #panel
+  [attr.aria-label]="ariaLabel()"
+  [hidden]="!isOpen()"
+  [id]="listboxId"
+  [style.top.px]="panelPosition().top"
+  [style.right.px]="panelPosition().right"
+  [style.min-width.px]="panelPosition().minWidth"
+  aria-multiselectable="true"
+  class="menu-panel fixed z-20"
+  role="listbox"
+>
+  <div class="max-h-96 overflow-y-auto">
+    @for (option of options(); track $index) {
+      <button
+        (click)="toggleOption(option)"
+        [attr.aria-selected]="isSelected(option)"
+        [class.bg-brand-500/8]="$index === activeIndex()"
+        [class.text-brand-500]="isSelected(option)"
+        [disabled]="isDisabled(option)"
+        [id]="optionId($index)"
+        class="menu-option flex items-center gap-2.5 text-text-secondary hover:bg-brand-500/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
+        role="option"
+        tabindex="-1"
+        type="button"
+      >
+        <!-- A filled square rather than a tick glyph: the direction has no rounded marks, and the
+             square doubles as the swatch a reader matches against the curve on the chart. -->
+        <span
+          [class]="isSelected(option) ? 'bg-brand-500' : 'border border-text-muted/50'"
+          aria-hidden="true"
+          class="size-3 shrink-0"
+        ></span>
+        <span>{{ option.label }}</span>
+      </button>
+    }
+  </div>
+
+  @if (maxSelectionNote() && isAtLimit()) {
+    <p class="border-t border-text-primary/10 px-4 py-2.5 text-xs text-text-muted">
+      {{ maxSelectionNote() }}
+    </p>
+  }
+</div>

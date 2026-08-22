@@ -1,0 +1,97 @@
+<div class="flex flex-col gap-5">
+  <h3 class="label-caption text-sm text-text-primary">
+    <span
+      [appTooltip]="'playerProfile.progression.playStyle.tooltip' | translate"
+      class="focus-ring"
+      tabindex="0"
+      >{{ 'playerProfile.progression.playStyle.title' | translate }}</span
+    >
+  </h3>
+
+  @if (hasSample()) {
+    <!-- Target sheet: the figure on the left, its dimensions called out on the right. The four
+         corner ticks are the whole of the framing — a full frame around the silhouette would box
+         it in and turn the one loud element on this page into another card. -->
+    <div class="relative flex items-stretch gap-4 py-4 sm:gap-6">
+      <span
+        aria-hidden="true"
+        class="absolute top-0 left-0 size-3 border-t border-l border-brand-500/30"
+      ></span>
+      <span
+        aria-hidden="true"
+        class="absolute top-0 right-0 size-3 border-t border-r border-brand-500/30"
+      ></span>
+      <span
+        aria-hidden="true"
+        class="absolute bottom-0 left-0 size-3 border-b border-l border-brand-500/30"
+      ></span>
+      <span
+        aria-hidden="true"
+        class="absolute right-0 bottom-0 size-3 border-r border-b border-brand-500/30"
+      ></span>
+
+      <!-- The silhouette from `pictures/accuracy_dummy.svg`, at the size this section can afford:
+           the original is a 22×56 thumbnail, and it is the anchor of the block here. -->
+      <svg
+        [attr.aria-label]="description()"
+        class="h-64 w-auto shrink-0 text-brand-500 sm:h-80"
+        fill="none"
+        role="img"
+        viewBox="0 0 22 56"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          [attr.fill-opacity]="headOpacity()"
+          d="M8.55845 0.636256L10.7381 0L12.9856 0.636256L13.302 4.45939L11.7208 6.99952H9.82327L8.23438 4.53779L8.55845 0.636256Z"
+          fill="currentColor"
+        />
+        <path
+          [attr.fill-opacity]="bodyOpacity()"
+          d="M21.54 30.02L20.92 26.22L20.9 19.62L19.35 12.5L14.7 8.87L10.77 8.25L6.83 8.87L2.18 12.5L0.63 19.62L0.62 26.15L0 30.02L2.73 31.79V27.11L4.32 18.59L5.89 15.09L6.33 24.16L10.77 29.25L15.2 24.16L15.64 15.09L17.22 18.59L18.8 27.18V31.79L21.54 30.02Z"
+          fill="currentColor"
+        />
+        <path
+          [attr.fill-opacity]="legsOpacity()"
+          d="M10.1363 30.7776L5.82254 26.0879L4.47374 29.3399L3.84028 42.8952V51.3975L2.53906 55.9982H6.4588L6.48121 51.6585L7.74812 41.0984L10.1363 30.7776Z"
+          fill="currentColor"
+        />
+        <path
+          [attr.fill-opacity]="legsOpacity()"
+          d="M11.4033 30.7776L15.7171 26.0879L17.0687 29.3399L17.7022 42.8952V51.3989L19.0034 55.9996H15.0836L15.0612 51.6599L13.7943 41.0998L11.4033 30.7776Z"
+          fill="currentColor"
+        />
+      </svg>
+
+      <!-- Callouts. The three rows grow in the proportions of the zones they name, so each one
+           lands beside its own part of the figure without a single hard-coded offset. -->
+      <ul class="flex min-w-0 flex-1 flex-col">
+        @for (zone of zones(); track zone.key; let index = $index) {
+          <li
+            [class]="index === 0 ? 'grow-[12]' : 'grow-[44]'"
+            class="flex min-h-0 basis-0 items-center gap-3"
+          >
+            <span aria-hidden="true" class="h-px w-6 shrink-0 bg-brand-500/30 sm:w-12"></span>
+            <span class="flex min-w-0 flex-col gap-1.5">
+              <span class="label-caption text-text-muted">
+                {{ 'playerProfile.progression.playStyle.zone.' + zone.key | translate }}
+              </span>
+              <span
+                class="font-display text-xl leading-none font-bold text-text-primary tabular-nums"
+              >
+                {{ zone.label }}
+              </span>
+            </span>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <p class="font-mono text-xs text-text-muted tabular-nums">
+      {{ 'playerProfile.progression.playStyle.sample' | translate: { shots: aim().totalShots } }}
+    </p>
+  } @else {
+    <p class="text-sm text-text-secondary">
+      {{ 'playerProfile.progression.playStyle.empty' | translate }}
+    </p>
+  }
+</div>

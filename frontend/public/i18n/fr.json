@@ -141,16 +141,19 @@
         "buttons": "Boutons",
         "cards": "Cartes",
         "challengeIcons": "Icônes de défi",
+        "charts": "Graphiques",
         "colors": "Couleurs",
         "confirmDialog": "Dialogue de confirmation",
         "dropdowns": "Menus déroulants",
-        "sectionLabel": "Label de section",
         "menuButtons": "Sidebar & boutons de menu",
+        "multiSelect": "Sélection multiple",
+        "pageHeader": "Barre de contexte",
         "pagination": "Pagination & navigation",
         "panels": "Panels",
         "progress": "Progression",
         "rankIcons": "Icônes de rang",
         "resourceState": "États de ressource",
+        "sectionLabel": "Label de section",
         "select": "Sélecteur",
         "statTiles": "Tuiles de statistiques",
         "statusIndicators": "Statuts",
@@ -159,8 +162,7 @@
         "textInputs": "Champs de texte",
         "tooltip": "Infobulle",
         "typography": "Typographie",
-        "weekCountdown": "Compte à rebours",
-        "pageHeader": "Barre de contexte"
+        "weekCountdown": "Compte à rebours"
       }
     }
   },
@@ -368,7 +370,10 @@
       "gameModeLabel": "Filtrer par mode de jeu",
       "moreGameModes": "Autres modes de jeu",
       "reset": "Réinitialiser",
-      "seasonLabel": "Filtrer par saison"
+      "seasonCount": "{{count}} saisons",
+      "seasonLabel": "Filtrer par saison",
+      "seasonLimit": "{{count}} saisons au maximum, pour que chaque courbe garde une couleur lisible.",
+      "seasonsLabel": "Filtrer par saisons"
     },
     "loading": "Chargement du profil du joueur…",
     "matches": {
@@ -408,6 +413,112 @@
         "WIN": "Victoire"
       }
     },
+    "progression": {
+      "agents": {
+        "entity": "Agent",
+        "title": "Meilleurs agents",
+        "tooltip": "Winrate, ACS et nombre de matchs pour chaque agent joué en compétitif sur les saisons sélectionnées, du plus joué au moins joué."
+      },
+      "empty": "Aucun match compétitif sur les saisons sélectionnées.",
+      "error": "Impossible de charger la progression de ce joueur.",
+      "evolution": {
+        "alignmentNote": "Les saisons les plus courtes démarrent plus loin sur l'axe : toutes les courbes se terminent au même endroit, pour comparer les fins de saison.",
+        "axis": {
+          "headshotPercentage": "Tirs à la tête (%)",
+          "kda": "K/D",
+          "acs": "ACS",
+          "adr": "ADR"
+        },
+        "legendSummary": "{{season}} : moyenne {{average}}.",
+        "metric": {
+          "acs": "ACS",
+          "adr": "ADR",
+          "headshotPercentage": "HS%",
+          "kda": "K/D"
+        },
+        "metricLabel": "Statistique affichée",
+        "pointLabel": "Match",
+        "singleAverage": "Moyenne de la saison : {{average}}",
+        "title": "Évolution",
+        "tooltip": "Une valeur par match compétitif, du plus ancien au plus récent. Avec plusieurs saisons, les plus courtes sont décalées vers la droite pour que toutes se terminent sur la même abscisse.",
+        "xAxis": "Match"
+      },
+      "loading": "Chargement de la progression…",
+      "maps": {
+        "entity": "Carte",
+        "title": "Meilleures cartes",
+        "tooltip": "Winrate, ACS et nombre de matchs pour chaque carte jouée en compétitif sur les saisons sélectionnées, de la plus jouée à la moins jouée."
+      },
+      "playStyle": {
+        "empty": "Aucun tir enregistré sur les saisons sélectionnées.",
+        "sample": "{{shots}} tirs enregistrés",
+        "title": "Style de jeu",
+        "tooltip": "Répartition des tirs qui ont touché, par zone du corps. Calculée sur la somme des coups à la tête, au corps et aux jambes des matchs compétitifs filtrés. Ce n'est pas une précision : les tirs manqués ne sont pas comptés.",
+        "zone": {
+          "body": "Corps",
+          "head": "Tête",
+          "legs": "Jambes"
+        },
+        "zoneSummary": "{{zone}} : {{value}}."
+      },
+      "records": {
+        "empty": "Aucun record à afficher pour l'instant.",
+        "label": {
+          "bestAcs": "Meilleur ACS",
+          "bestHeadshotPercentage": "Meilleur HS%",
+          "bestKda": "Meilleur K/D",
+          "longestActiveDayStreak": "Jours d'affilée",
+          "longestWinStreak": "Série de victoires",
+          "mostDamage": "Dégâts max",
+          "mostKills": "Éliminations max",
+          "mvps": "MVP",
+          "peakTier": "Pic de rang"
+        },
+        "title": "Records personnels",
+        "tooltip": {
+          "bestAcs": "Meilleur score de combat moyen sur un match. Réalisé sur {{map}} avec {{agent}}, le {{date}}.",
+          "bestHeadshotPercentage": "Meilleur pourcentage de tirs à la tête sur un match d'au moins 10 manches. Réalisé sur {{map}} avec {{agent}}, le {{date}}.",
+          "bestKda": "Meilleur ratio (éliminations + assistances) / morts sur un match. Réalisé sur {{map}} avec {{agent}}, le {{date}}.",
+          "longestActiveDayStreak": "Plus longue suite de jours consécutifs avec au moins un match, tous modes de jeu confondus.",
+          "longestWinStreak": "Plus longue suite de victoires compétitives consécutives. Les matchs annulés ne cassent pas la série.",
+          "mostDamage": "Plus grand total de dégâts infligés sur un match. Réalisé sur {{map}} avec {{agent}}, le {{date}}.",
+          "mostKills": "Plus grand nombre d'éliminations sur un match. Réalisé sur {{map}} avec {{agent}}, le {{date}}.",
+          "mvps": "Nombre de matchs terminés avec le meilleur score de la partie.",
+          "peakTier": "Rang compétitif le plus haut atteint sur les saisons sélectionnées."
+        },
+        "tooltipSection": "Meilleures performances sur les saisons sélectionnées. Uniquement des records : rien n'est affiché tant qu'aucun match ne l'a établi."
+      },
+      "schedule": {
+        "axis": {
+          "weekday": "Jour de la semaine",
+          "hour": "Tranche horaire",
+          "winRate": "Winrate (%)"
+        },
+        "bestHour": "Meilleur créneau : {{slot}}",
+        "bestWeekday": "Meilleur jour : {{day}}",
+        "byHour": "Par tranche horaire",
+        "byWeekday": "Par jour de la semaine",
+        "day": {
+          "FRIDAY": "Ven",
+          "MONDAY": "Lun",
+          "SATURDAY": "Sam",
+          "SUNDAY": "Dim",
+          "THURSDAY": "Jeu",
+          "TUESDAY": "Mar",
+          "WEDNESDAY": "Mer"
+        },
+        "sample": "{{count}} matchs",
+        "threshold": "Les créneaux comptant moins de {{count}} matchs sont grisés : l'échantillon est trop faible pour en tirer une conclusion.",
+        "title": "Performance selon les horaires",
+        "tooltip": "Winrate des matchs compétitifs regroupés par jour de la semaine et par tranche de 3 heures, selon l'heure de début du match."
+      },
+      "table": {
+        "acs": "ACS",
+        "empty": "Aucune donnée sur les saisons sélectionnées.",
+        "matches": "Matchs",
+        "winRate": "Winrate"
+      }
+    },
     "stats": {
       "acs": "ACS",
       "adr": "ADR",
@@ -416,6 +527,14 @@
       "losses": "{{count}} D",
       "matchesPlayed": "Matchs",
       "record": "{{wins}} V / {{losses}} D",
+      "tooltip": {
+        "acs": "Score de combat moyen par manche : les points de combat gagnés (éliminations, dégâts, assistances) divisés par le nombre de manches jouées, puis moyennés sur les matchs filtrés.",
+        "adr": "Dégâts moyens infligés par manche, moyennés sur les matchs filtrés.",
+        "headshotPercentage": "Part des tirs au but qui ont touché la tête : coups à la tête divisés par le total tête + corps + jambes. Les tirs manqués ne sont pas comptés.",
+        "kda": "(Éliminations + assistances) divisées par le nombre de morts, sur l'ensemble des matchs filtrés.",
+        "matchesPlayed": "Nombre de matchs correspondant aux filtres en cours.",
+        "winRate": "Part des matchs gagnés : victoires divisées par le nombre de matchs filtrés. Les matchs annulés comptent dans le total."
+      },
       "winRate": "Winrate",
       "wins": "{{count}} V"
     },

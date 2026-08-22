@@ -17,11 +17,15 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { AdminActionCard } from '@pages/admin/admin-action-card/admin-action-card';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { Avatar } from '@shared/avatar/avatar';
+import { BarChart } from '@shared/chart/bar-chart';
+import { ChartBar, ChartSeries } from '@shared/chart/chart.model';
+import { LineChart } from '@shared/chart/line-chart';
 import { Button, ButtonVariant } from '@shared/button/button';
 import { ChallengeIconView } from '@shared/challenge-icon-view/challenge-icon-view';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { InlineMessage } from '@shared/inline-message/inline-message';
+import { MultiSelect } from '@shared/multi-select/multi-select';
 import { NavChip } from '@shared/nav-chip/nav-chip';
 import { PageHeader } from '@layout/page-header/page-header';
 import { PositionBadge } from '@shared/position-badge/position-badge';
@@ -42,6 +46,8 @@ import {
   CHALLENGE_ICONS,
   COLOR_GROUPS,
   SAMPLE_API_STATUSES,
+  SAMPLE_CHART_BARS,
+  SAMPLE_CHART_SERIES,
   SAMPLE_DROPDOWN_LANGUAGES,
   SAMPLE_PLAYER_STATUSES,
   SAMPLE_RANK_ICONS,
@@ -70,6 +76,7 @@ const SAMPLE_REMAINING_TIME: RemainingTime = { days: 2, hours: 14, minutes: 30 }
   imports: [
     AdminActionCard,
     Avatar,
+    BarChart,
     Button,
     ChallengeIconView,
     ChampionBadge,
@@ -86,6 +93,8 @@ const SAMPLE_REMAINING_TIME: RemainingTime = { days: 2, hours: 14, minutes: 30 }
     LucideMenu,
     LucideTriangleAlert,
     LucideX,
+    LineChart,
+    MultiSelect,
     PositionBadge,
     ProgressBar,
     ProgressCircle,
@@ -161,6 +170,23 @@ export class AdminDesignSystem {
    * Value currently held by the sample `app-select`.
    */
   protected readonly selectValue = signal<string | null>('gold');
+
+  /**
+   * Values currently held by the sample `app-multi-select`.
+   */
+  protected readonly multiSelectValue = signal<readonly string[]>(['gold']);
+
+  /**
+   * Curves feeding the sample `app-line-chart`, the shorter one padded at the front exactly as the
+   * progression view pads a shorter season.
+   */
+  protected readonly sampleSeries: readonly ChartSeries[] = SAMPLE_CHART_SERIES;
+
+  /**
+   * Bars feeding the sample `app-bar-chart`, covering the plain, highlighted and under-sampled
+   * states a bar can be in.
+   */
+  protected readonly sampleBars: readonly ChartBar[] = SAMPLE_CHART_BARS;
 
   /**
    * Whether the sample `app-confirm-dialog` is open.

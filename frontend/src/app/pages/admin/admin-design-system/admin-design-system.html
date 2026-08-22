@@ -653,6 +653,45 @@
     class="w-56"
   />
 
+  <!-- Multi-select -->
+  <app-section-label [label]="'admin.designSystem.sections.multiSelect' | translate" />
+
+  <app-multi-select
+    [(value)]="multiSelectValue"
+    [maxSelection]="2"
+    [options]="selectOptions"
+    ariaLabel="Rangs de démonstration"
+    class="w-56"
+    maxSelectionNote="2 valeurs au maximum."
+    triggerLabel="Rangs"
+  />
+
+  <!-- Charts -->
+  <app-section-label [label]="'admin.designSystem.sections.charts' | translate" />
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <div class="bg-text-primary/4 p-5">
+      <p class="label-caption mb-4 text-text-muted">app-line-chart</p>
+      <app-line-chart
+        [series]="sampleSeries"
+        ariaLabel="Courbes de démonstration"
+        pointLabel="Match"
+        summary="Deux saisons, la plus courte alignée sur la fin de la plus longue."
+        valueSuffix="%"
+      />
+    </div>
+
+    <div class="bg-text-primary/4 p-5">
+      <p class="label-caption mb-4 text-text-muted">app-bar-chart</p>
+      <app-bar-chart
+        [bars]="sampleBars"
+        ariaLabel="Barres de démonstration"
+        summary="Quatre créneaux, dont un mis en évidence et un sous le seuil d'échantillon."
+        valueSuffix="%"
+      />
+    </div>
+  </div>
+
   <!-- Tooltip -->
   <app-section-label [label]="'admin.designSystem.sections.tooltip' | translate" />
 

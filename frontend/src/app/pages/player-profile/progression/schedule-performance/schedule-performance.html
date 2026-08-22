@@ -1,0 +1,60 @@
+<div class="flex h-full flex-col gap-6">
+  <h3 class="label-caption text-sm text-text-primary">
+    <span
+      [appTooltip]="'playerProfile.progression.schedule.tooltip' | translate"
+      class="focus-ring"
+      tabindex="0"
+      >{{ 'playerProfile.progression.schedule.title' | translate }}</span
+    >
+  </h3>
+
+  <div class="grid gap-8 lg:grid-cols-2">
+    <div class="flex flex-col gap-3">
+      <p class="label-caption text-text-muted">
+        {{ 'playerProfile.progression.schedule.byWeekday' | translate }}
+      </p>
+      <app-bar-chart
+        [ariaLabel]="'playerProfile.progression.schedule.byWeekday' | translate"
+        [bars]="weekdayBars()"
+        [summary]="'playerProfile.progression.schedule.byWeekday' | translate"
+        [xAxisLabel]="'playerProfile.progression.schedule.axis.weekday' | translate"
+        [yAxisLabel]="'playerProfile.progression.schedule.axis.winRate' | translate"
+        valueSuffix="%"
+      />
+      <!-- The claim in words, not only in colour: the highlighted bar is green, but green alone is
+           not something every reader can act on. -->
+      @if (bestWeekday()) {
+        <p class="flex items-center gap-2 text-sm text-text-secondary">
+          <span aria-hidden="true" class="size-2 shrink-0 rotate-45 bg-accent-green"></span>
+          {{ 'playerProfile.progression.schedule.bestWeekday' | translate: { day: bestWeekday() } }}
+        </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <p class="label-caption text-text-muted">
+        {{ 'playerProfile.progression.schedule.byHour' | translate }}
+      </p>
+      <app-bar-chart
+        [ariaLabel]="'playerProfile.progression.schedule.byHour' | translate"
+        [bars]="hourSlotBars()"
+        [summary]="'playerProfile.progression.schedule.byHour' | translate"
+        [xAxisLabel]="'playerProfile.progression.schedule.axis.hour' | translate"
+        [yAxisLabel]="'playerProfile.progression.schedule.axis.winRate' | translate"
+        valueSuffix="%"
+      />
+      @if (bestHourSlot()) {
+        <p class="flex items-center gap-2 text-sm text-text-secondary">
+          <span aria-hidden="true" class="size-2 shrink-0 rotate-45 bg-accent-green"></span>
+          {{ 'playerProfile.progression.schedule.bestHour' | translate: { slot: bestHourSlot() } }}
+        </p>
+      }
+    </div>
+  </div>
+
+  <!-- `mt-auto` sinks the reading note to the floor of the card: it qualifies everything above it,
+       so it belongs at the end of the block rather than crowding the charts it comments on. -->
+  <p class="mt-auto text-base text-text-muted">
+    {{ 'playerProfile.progression.schedule.threshold' | translate: { count: minimumSample } }}
+  </p>
+</div>

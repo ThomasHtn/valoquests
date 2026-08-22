@@ -43,18 +43,19 @@
        `sr-only` caption instead. -->
     <div
       aria-hidden="true"
-      class="hidden px-5 xl:-mb-5 xl:grid xl:grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_repeat(5,minmax(3.25rem,0.45fr))] xl:items-end xl:gap-x-3"
+      class="hidden px-5 xl:-mb-5 xl:grid xl:grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_2rem_repeat(5,minmax(3.25rem,0.45fr))] xl:items-end xl:gap-x-3"
     >
       <span></span>
       <span class="label-caption text-text-muted">
         {{ 'overview.weeklyRanking.columns.player' | translate }}
       </span>
-      <span class="label-caption text-text-muted">
+      <span class="label-caption text-text-muted text-right">
         {{ 'overview.weeklyRanking.columns.damage' | translate }}
       </span>
-      <span class="label-caption text-text-muted">
+      <span class="label-caption text-text-muted ml-3 text-right">
         {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
       </span>
+      <span></span>
       <!-- A column is identified by its tier badge and its target, not by the challenge's name: at
          this width a name would either wrap to four lines or be truncated past recognition. The
          name and its description stay one hover away, and are restated in full on every cell for
@@ -93,7 +94,7 @@
           <a
             [class.opacity-60]="row.position === null"
             [routerLink]="['/players', row.playerId]"
-            class="notch-tr focus-ring-inset grid grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_repeat(5,minmax(3.25rem,0.45fr))] items-center gap-x-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 xl:px-5"
+            class="notch-tr focus-ring-inset grid grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_2rem_repeat(5,minmax(3.25rem,0.45fr))] items-center gap-x-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 xl:px-5"
           >
             <span class="flex items-center gap-1">
               @if (row.position === null) {
@@ -132,7 +133,7 @@
               </span>
             </span>
 
-            <span class="text-right">
+            <span class="ml-3 text-right">
               @if (row.bonusLabel) {
                 <span class="sr-only">
                   {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
@@ -146,6 +147,8 @@
                 <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
               }
             </span>
+
+            <span></span>
 
             @for (cell of row.cells; track cell.challengeId) {
               <span class="flex justify-center">

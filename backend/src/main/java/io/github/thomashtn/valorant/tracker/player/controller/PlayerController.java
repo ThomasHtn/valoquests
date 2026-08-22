@@ -1,7 +1,9 @@
 package io.github.thomashtn.valorant.tracker.player.controller;
 
 import io.github.thomashtn.valorant.tracker.player.dto.PlayerDetailsResponse;
+import io.github.thomashtn.valorant.tracker.player.dto.PlayerProgressionResponse;
 import io.github.thomashtn.valorant.tracker.player.dto.PlayerSummaryResponse;
+import io.github.thomashtn.valorant.tracker.player.service.PlayerProgressionQueryService;
 import io.github.thomashtn.valorant.tracker.player.service.PlayerQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,12 +32,19 @@ public class PlayerController {
     private final PlayerQueryService service;
 
     /**
+     * Application service resolving the analytics behind the progression view.
+     */
+    private final PlayerProgressionQueryService progressionService;
+
+    /**
      * Creates the player controller.
      *
-     * @param service player query service
+     * @param service            player query service
+     * @param progressionService progression analytics query service
      */
-    public PlayerController(PlayerQueryService service) {
+    public PlayerController(PlayerQueryService service, PlayerProgressionQueryService progressionService) {
         this.service = service;
+        this.progressionService = progressionService;
     }
 
     /**
@@ -87,5 +96,32 @@ public class PlayerController {
         @RequestParam(required = false) LocalDate weekStart
     ) {
         return service.findById(playerId, seasonId, gameMode, weekStart);
+    }
+
+    /**
+     * @param playerId  internal database identifier of the requested player
+     * @param seasonIds optional seasons restricting the analytics
+     * @return every analytic the progression view renders
+     */
+    @GetMapping("/{playerId}/progression")
+    @Operation(
+        summary = "Get a player's progression analytics",
+        description = """
+            Returns the analytics behind the player profile's progression view: match-by-match
+            evolution per season, where the player's hits land, performance per weekday and time
+            slot, personal records, and aggregated statistics by map and agent. Every figure is
+            scoped to competitive matches, except the longest run of consecutive active days,
+            which counts any game mode.
+            """
+    )
+    @ApiResponse(responseCode = "200", description = "Progression analytics returned successfully.")
+    @ApiResponse(responseCode = "404", description = "No tracked player exists for the supplied identifier.")
+        public PlayerProgressionResponse getPlayerProgression(
+        @Parameter(description = "Internal player identifier.", example = "3", required = true)
+        @PathVariable long playerId,
+        @Parameter(description = "Restricts the analytics to these seasons. Omit for every season.")
+        @RequestParam(required = false) List<Long> seasonIds
+    ) {
+        return progressionService.findByPlayerId(playerId, seasonIds);
     }
 }
