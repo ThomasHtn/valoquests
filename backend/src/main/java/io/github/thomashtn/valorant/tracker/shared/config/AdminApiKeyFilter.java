@@ -7,13 +7,29 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Protects administrative routes with a static API key supplied through an
  * HTTP header.
+ *
+ * <p>This filter only <em>authenticates</em>: a valid key grants
+ * {@link #ADMIN_ROLE} in the security context, and the actual access decision is left to
+ * {@link SecurityConfig}, which requires that role on {@link #ADMIN_PATH_PATTERN}. Keeping the two
+ * concerns apart is what lets the filter answer with the precise problem responses this API
+ * documents (401 for a missing header, 403 for a wrong key, 429 once an address is locked out)
+ * while Spring Security still refuses anything that reaches an administrative handler without
+ * having passed here.</p>
  */
 public class AdminApiKeyFilter extends OncePerRequestFilter {
 
@@ -21,6 +37,31 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
      * Header expected on every administrative request.
      */
     public static final String HEADER_NAME = "X-Admin-Key";
+
+    /**
+     * Path pattern covering every administrative route.
+     *
+     * <p>Shared with {@link SecurityConfig} on purpose: the filter and the authorization rules must
+     * agree on what "administrative" means, or one of them ends up guarding a different set of
+     * routes than the other.</p>
+     */
+    public static final String ADMIN_PATH_PATTERN = "/api/admin/**";
+
+    /**
+     * Authority granted to a request carrying a valid administrator key.
+     */
+    public static final String ADMIN_ROLE = "ROLE_ADMIN";
+
+    /**
+     * Matches administrative routes the way Spring MVC resolves handler mappings.
+     *
+     * <p>Deliberately not a {@code getRequestURI().startsWith(...)} test. The request URI is the
+     * raw, still percent-encoded target, while both Spring MVC and Spring Security match on the
+     * decoded path — so {@code /api/%61dmin/players} reaches the administrative controller yet
+     * fails a raw prefix comparison, which would skip this filter entirely.</p>
+     */
+    private static final RequestMatcher ADMIN_ROUTES =
+        PathPatternRequestMatcher.withDefaults().matcher(ADMIN_PATH_PATTERN);
 
     /**
      * Administrative API key expected in protected requests.
@@ -51,7 +92,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith("/api/admin");
+        return !ADMIN_ROUTES.matches(request);
     }
 
     /**
@@ -122,7 +163,27 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
         }
 
         rateLimiter.recordSuccess(remoteAddress);
+        authenticateAsAdministrator();
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Marks the current request as coming from the administrator.
+     *
+     * <p>The key itself is never stored as credentials: the security context is exposed to
+     * downstream components and to error reporting, and the administrator key is the single secret
+     * protecting every write operation in this API.</p>
+     */
+    private void authenticateAsAdministrator() {
+        Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(
+            "administrator",
+            null,
+            List.of(new SimpleGrantedAuthority(ADMIN_ROLE))
+        );
+
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication(authentication);
+        SecurityContextHolder.setContext(securityContext);
     }
 
     /**

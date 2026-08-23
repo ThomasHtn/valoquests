@@ -15,6 +15,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * Configures stateless HTTP security and CORS rules for the application.
+ *
+ * <p>The public site is read-only, so every {@code GET /api/**} is open while anything else is
+ * denied unless a rule allows it. Administrative routes are authenticated by
+ * {@link AdminApiKeyFilter} and authorized here through {@link AdminApiKeyFilter#ADMIN_ROLE}: the
+ * filter reports <em>why</em> a key was refused, this chain decides <em>whether</em> a request may
+ * proceed. Both steps must agree, hence the shared
+ * {@link AdminApiKeyFilter#ADMIN_PATH_PATTERN}.</p>
  */
 @Configuration
 public class SecurityConfig {
@@ -51,6 +58,10 @@ public class SecurityConfig {
                 SessionCreationPolicy.STATELESS
             ))
             .authorizeHttpRequests(authorize -> authorize
+                // Must stay ahead of the public GET rule below, which would otherwise open every
+                // administrative read endpoint.
+                .requestMatchers(AdminApiKeyFilter.ADMIN_PATH_PATTERN)
+                .hasAuthority(AdminApiKeyFilter.ADMIN_ROLE)
                 .requestMatchers(
                     "/actuator/health",
                     "/actuator/info",
@@ -60,7 +71,6 @@ public class SecurityConfig {
                     "/api-docs/**"
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
-                .requestMatchers("/api/admin/**").permitAll()
                 .anyRequest().denyAll()
             )
             .addFilterBefore(

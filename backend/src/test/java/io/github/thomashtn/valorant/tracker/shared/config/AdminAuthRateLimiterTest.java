@@ -95,6 +95,28 @@ class AdminAuthRateLimiterTest {
     }
 
     /**
+     * Verifies that expired windows are reclaimed once enough addresses are tracked.
+     *
+     * <p>Without the sweep, an address that fails once and never comes back is never revisited, so
+     * its window stays forever and the map grows with every new source address an attacker uses.</p>
+     */
+    @Test
+    void shouldSweepExpiredWindowsOnceEnoughAddressesAreTracked() {
+        AdminAuthRateLimiter rateLimiter = createRateLimiter(3);
+
+        for (int index = 0; index < 1_000; index++) {
+            rateLimiter.recordFailure("198.51.100." + index);
+        }
+
+        assertThat(rateLimiter.trackedAddressCount()).isEqualTo(1_000);
+
+        clock.advance(Duration.ofMinutes(1).plusSeconds(1));
+        rateLimiter.recordFailure(REMOTE_ADDRESS);
+
+        assertThat(rateLimiter.trackedAddressCount()).isEqualTo(1);
+    }
+
+    /**
      * Creates a rate limiter with a one-minute lockout window, using the test's mutable clock.
      *
      * @param maxFailures failed attempts allowed before a lockout

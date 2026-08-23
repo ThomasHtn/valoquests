@@ -239,14 +239,29 @@ POST   /api/admin/maintenance/campaign-reset                # irreversible
 `SecurityConfig` builds a stateless chain: CSRF disabled, no sessions, CORS restricted to
 `app.frontend-origin`, allowed headers limited to `Content-Type`, `Authorization` and `X-Admin-Key`.
 
-Authorization is deliberately split in two. Spring Security permits `/api/admin/**` at its own layer;
-the real gate is `AdminApiKeyFilter`, inserted before `UsernamePasswordAuthenticationFilter`, which
-compares `X-Admin-Key` against `app.admin-api-key` in **constant time**. Everything not explicitly
-permitted — `GET /api/**`, actuator health/info, Swagger — is denied.
+Administrative access is split across two steps that must both agree. `AdminApiKeyFilter`, inserted
+before `UsernamePasswordAuthenticationFilter`, compares `X-Admin-Key` against `app.admin-api-key` in
+**constant time** and grants `ROLE_ADMIN` on success; `SecurityConfig` then *requires* that authority
+on `/api/admin/**`. The filter decides **why** a key is refused — 401 missing header, 403 wrong key,
+429 locked out — and the authorization rules decide **whether** the request proceeds, so a request
+that somehow reaches an administrative handler without passing the filter is still denied. Everything
+not explicitly permitted — `GET /api/**`, actuator health/info, Swagger — is denied.
+
+Two details are load-bearing, and both are covered by `AdminApiSecurityIntegrationTest`:
+
+- The admin rule is declared **before** the public `GET /api/**` rule. Spring Security applies the
+  first matching rule, so the reverse order would leave every administrative read endpoint open.
+- The filter recognises administrative routes with a `PathPatternRequestMatcher`, sharing
+  `AdminApiKeyFilter.ADMIN_PATH_PATTERN` with `SecurityConfig` — *not* with a raw
+  `getRequestURI().startsWith("/api/admin")`. The request URI is still percent-encoded while Spring
+  matches handlers on the decoded path, so `/api/%61dmin/...` reaches the administrative controller
+  while failing a raw prefix test.
 
 `AdminAuthRateLimiter` throttles repeated invalid keys per remote address in memory: after
 `app.admin-rate-limit.max-failures` failures the address is locked out with HTTP 429 for
-`app.admin-rate-limit.lockout-duration`. A valid key clears the counter.
+`app.admin-rate-limit.lockout-duration`. A valid key clears the counter. Because the keys are
+unauthenticated remote addresses, expired windows are swept once the map passes a threshold —
+otherwise an address that fails once and never returns would be tracked forever.
 
 ## Persistence
 

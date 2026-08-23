@@ -36,6 +36,14 @@ public class AdminAuthRateLimiter {
     private final Clock clock;
 
     /**
+     * Number of tracked addresses beyond which expired windows are swept before a new one is added.
+     *
+     * <p>Far above what this application's handful of operators can produce, so a legitimate
+     * mistyped key never triggers the sweep.</p>
+     */
+    private static final int SWEEP_THRESHOLD = 1_000;
+
+    /**
      * Tracked failure windows, keyed by remote address.
      */
     private final ConcurrentHashMap<String, AttemptWindow> windowsByRemoteAddress =
@@ -86,6 +94,8 @@ public class AdminAuthRateLimiter {
      * @param remoteAddress caller's remote address
      */
     public void recordFailure(String remoteAddress) {
+        sweepExpiredWindows();
+
         windowsByRemoteAddress.compute(
             remoteAddress,
             (key, existing) -> existing == null || existing.isExpired(clock, lockoutDuration)
@@ -101,6 +111,36 @@ public class AdminAuthRateLimiter {
      */
     public void recordSuccess(String remoteAddress) {
         windowsByRemoteAddress.remove(remoteAddress);
+    }
+
+    /**
+     * Number of remote addresses currently tracked.
+     *
+     * <p>Package-private and used only by tests: sweeping reclaims memory, which no response or
+     * lockout decision reveals, so this is the only way to assert it actually happens.</p>
+     *
+     * @return count of tracked failure windows
+     */
+    int trackedAddressCount() {
+        return windowsByRemoteAddress.size();
+    }
+
+    /**
+     * Drops windows that have outlived their lockout, once enough addresses are tracked.
+     *
+     * <p>A window is otherwise only discarded when its own address is seen again, so addresses that
+     * fail once and never return stay in the map for good. The keys come from unauthenticated
+     * callers, which makes that a slow leak an attacker can drive by rotating source addresses.
+     * Sweeping keeps the map proportional to the addresses currently failing rather than to every
+     * address that ever failed.</p>
+     */
+    private void sweepExpiredWindows() {
+        if (windowsByRemoteAddress.size() < SWEEP_THRESHOLD) {
+            return;
+        }
+
+        windowsByRemoteAddress.values()
+            .removeIf(window -> window.isExpired(clock, lockoutDuration));
     }
 
     /**
