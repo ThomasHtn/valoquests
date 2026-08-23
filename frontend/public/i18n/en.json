@@ -130,40 +130,6 @@
         "blockedBySync": "A synchronization is in progress. Wait for it to finish: it would be writing matches into the base being emptied.",
         "done": "Campaign reset. Start a synchronization to re-import the history."
       }
-    },
-    "designSystem": {
-      "title": "Design System",
-      "heading": "Design System",
-      "sections": {
-        "avatars": "Avatars",
-        "backgrounds": "Backgrounds & surfaces",
-        "badges": "Badges & indicators",
-        "buttons": "Buttons",
-        "cards": "Cards",
-        "challengeIcons": "Challenge icons",
-        "charts": "Charts",
-        "colors": "Colors",
-        "confirmDialog": "Confirm dialog",
-        "dropdowns": "Dropdowns & menus",
-        "menuButtons": "Sidebar & menu buttons",
-        "multiSelect": "Multi-select",
-        "pageHeader": "Context bar",
-        "pagination": "Pagination & navigation",
-        "panels": "Panels",
-        "progress": "Progress",
-        "rankIcons": "Rank icons",
-        "resourceState": "Resource states",
-        "sectionLabel": "Section label",
-        "select": "Select",
-        "statTiles": "Stat tiles",
-        "statusIndicators": "Status indicators",
-        "tables": "Tables & rows",
-        "tabs": "Tabs",
-        "textInputs": "Text inputs",
-        "tooltip": "Tooltip",
-        "typography": "Typography",
-        "weekCountdown": "Week countdown"
-      }
     }
   },
   "boss": {
@@ -645,7 +611,6 @@
       "unknown": "Never synchronized"
     },
     "nav": {
-      "adminDesignSystem": "Design System",
       "adminMaintenance": "Maintenance",
       "adminOperations": "Operations",
       "adminPlayers": "Players",

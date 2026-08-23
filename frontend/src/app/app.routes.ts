@@ -130,15 +130,6 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'admin/design-system',
-        title: 'admin.designSystem.title',
-        canActivate: [adminGuard],
-        loadComponent: () =>
-          import('@pages/admin/admin-design-system/admin-design-system').then(
-            (m) => m.AdminDesignSystem,
-          ),
-      },
-      {
         path: '**',
         title: 'notFound.title',
         component: NotFound,

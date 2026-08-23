@@ -28,5 +28,4 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'adminOperations', icon: 'refresh-cw', routerLink: '/admin/operations' },
   { labelKey: 'adminPlayers', icon: 'user-cog', routerLink: '/admin/players' },
   { labelKey: 'adminMaintenance', icon: 'database-backup', routerLink: '/admin/maintenance' },
-  { labelKey: 'adminDesignSystem', icon: 'palette', routerLink: '/admin/design-system' },
 ];
