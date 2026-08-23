@@ -82,7 +82,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: valorant-tracker-backend
+          name: valo-quests-backend
           path: |
             backend/target/*.jar
             !backend/target/*-sources.jar

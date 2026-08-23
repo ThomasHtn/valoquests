@@ -5,8 +5,8 @@
   <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
 
   <!-- Keep framework noise at INFO while allowing targeted package overrides. -->
-  <logger name="io.github.thomashtn.valorant.tracker" level="INFO"/>
-  <logger name="io.github.thomashtn.valorant.tracker.match.service.MatchImportService" level="INFO"/>
+  <logger name="io.github.thomashtn.valoquests" level="INFO"/>
+  <logger name="io.github.thomashtn.valoquests.match.service.MatchImportService" level="INFO"/>
 
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>

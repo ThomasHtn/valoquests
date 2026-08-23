@@ -68,7 +68,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: valorant-tracker-frontend
+          name: valo-quests-frontend
           path: frontend/dist/
           if-no-files-found: error
           retention-days: 14

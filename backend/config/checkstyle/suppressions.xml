@@ -15,7 +15,7 @@
       have the private constructor Checkstyle wants for a class whose only method is static main.
   -->
   <suppress
-    files="ValorantTrackerApplication\.java"
+    files="ValoQuestsApplication\.java"
     checks="HideUtilityClassConstructor"/>
 
   <!--

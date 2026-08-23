@@ -16,10 +16,10 @@
 
   <!-- Project coordinates. -->
   <groupId>io.github.thomashtn</groupId>
-  <artifactId>valorant-tracker</artifactId>
+  <artifactId>valo-quests</artifactId>
   <version>0.0.1-SNAPSHOT</version>
 
-  <name>Valorant Tracker</name>
+  <name>ValoQuests</name>
 
   <description>
     Backend for collecting and exposing Valorant player statistics,

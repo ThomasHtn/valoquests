@@ -71,13 +71,13 @@ touching `backend/**`.
 
 ## Architecture
 
-Package-by-feature under `io.github.thomashtn.valorant.tracker`, each feature internally layered
+Package-by-feature under `io.github.thomashtn.valoquests`, each feature internally layered
 (`controller` / `dto` / `entity` / `repository` / `service`, plus `model`, `mapper`, `exception`,
 `scheduler`, `client`, `calculator`, `config` where the feature needs them). There is no
 hexagonal/DDD split — layering is a convention, not an enforced boundary.
 
 ```text
-io.github.thomashtn.valorant.tracker
+io.github.thomashtn.valoquests
 ├── henrik/           External Henrik API client: rate limiting, retries, error taxonomy
 ├── synchronization/  Import orchestration — the pipeline that fills the database
 ├── match/            Match entities, import, season and match-history queries
@@ -313,7 +313,7 @@ this table when setting up.
 
 | Variable | Notes |
 | --- | --- |
-| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | Default to `jdbc:postgresql://localhost:5432/valorant_tracker`, `valorant`, `valorant` — matching `docker-compose.yml` |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | Default to `jdbc:postgresql://localhost:5432/valo_quests`, `valorant`, `valorant` — matching `docker-compose.yml` |
 | `HENRIK_API_KEY` | No default. Synchronization fails without it |
 | `ADMIN_API_KEY` | No default. Protects `/api/admin/**`; use ≥ 32 random characters |
 
@@ -376,7 +376,7 @@ ran in CI, so this stage uses `-DskipTests`), `eclipse-temurin:25-jre` runs it a
 exposes `8080`.
 
 ```bash
-docker build -t valorant-tracker-backend backend/    # from the repo root
+docker build -t valo-quests-backend backend/    # from the repo root
 ```
 
 The image needs the same environment variables as a local run, and `DB_URL` must point at a reachable

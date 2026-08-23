@@ -1,7 +1,7 @@
 /**
  * `localStorage` key under which the first entry through the landing page is recorded.
  */
-export const STORAGE_KEY = 'valorant-tracker.landing-entered';
+export const STORAGE_KEY = 'valo-quests.landing-entered';
 
 /**
  * Query parameter that re-opens the landing page after it has already been entered once, without

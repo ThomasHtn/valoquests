@@ -146,7 +146,7 @@ Three properties define the system:
 ## Repository layout
 
 ```text
-valorant-tracker
+valo-quests
 ├── backend/     Java 25 · Spring Boot 4 · PostgreSQL · Flyway — the API and every calculation
 ├── frontend/    Angular 22 · TypeScript · Tailwind v4 — the read-only site
 └── .github/     One CI workflow per application, each triggered only by its own path
@@ -154,11 +154,6 @@ valorant-tracker
 
 The two applications are built, tested, linted and released independently. A change scoped to one
 should never require touching the other.
-
-> **Naming note.** The product is *ValoQuests*. The repository, the Maven artifact, the Docker image
-> and the Spring `application.name` all still use the original `valorant-tracker` slug, and the UI's
-> browser title reads `Valorant Quests`. Renaming those is a separate change; this documentation uses
-> the product name.
 
 ## How data flows
 

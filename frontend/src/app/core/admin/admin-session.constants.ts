@@ -5,7 +5,7 @@
  * application persists: the key grants every destructive operation the API exposes, so it must not
  * outlive the tab it was typed in. Closing the tab ends the session.
  */
-export const ADMIN_KEY_STORAGE_KEY = 'valorant-tracker.admin-key';
+export const ADMIN_KEY_STORAGE_KEY = 'valo-quests.admin-key';
 
 /**
  * HTTP header the backend expects the administrator key in.

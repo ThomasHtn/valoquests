@@ -13,4 +13,4 @@ export const DEFAULT_LANGUAGE: Language = 'fr';
 /**
  * `localStorage` key under which the active language choice is persisted.
  */
-export const STORAGE_KEY = 'valorant-tracker.language';
+export const STORAGE_KEY = 'valo-quests.language';
