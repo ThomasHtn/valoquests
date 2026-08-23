@@ -3,7 +3,7 @@ import { BossTimelineNodeStatus } from './boss-timeline.constants';
 /**
  * One player's share of the damage dealt to a single week's boss, display-ready.
  *
- * Reconstructed from that week's ranking (the challenge damage a player scored during the week is
+ * Reconstructed from that week's ranking (the total damage a player scored during the week is
  * exactly the damage the boss took from them), so it exists for every week the ranking covers —
  * finalized or active — and never for a week whose boss has not been drawn.
  */

@@ -586,6 +586,10 @@
     },
     "title": "Règles et fonctionnement"
   },
+  "seasons": {
+    "episode": "Ép. {{episode}} · Acte {{act}}",
+    "year": "{{year}} · Acte {{act}}"
+  },
   "sidebar": {
     "admin": {
       "signOut": "Quitter l'administration"

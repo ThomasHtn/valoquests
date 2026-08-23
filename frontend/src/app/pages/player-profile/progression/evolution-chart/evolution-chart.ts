@@ -2,6 +2,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { formatSeasonName } from '@core/matches/season-name.utils';
 import {
   formatHeadshotPercentage,
   formatKda,
@@ -72,7 +73,7 @@ export class EvolutionChart {
   protected readonly series = computed(() =>
     buildEvolutionSeries(this.evolution(), this.metric(), (seasonId) =>
       resolveSeriesColor(Math.max(0, this.seasonOrder().indexOf(seasonId))),
-    ),
+    ).map((series) => ({ ...series, label: this.seasonLabel(series.label) })),
   );
 
   /**
@@ -83,7 +84,7 @@ export class EvolutionChart {
    */
   protected readonly legend = computed<readonly EvolutionLegendEntry[]>(() =>
     this.evolution().map((season, index) => ({
-      label: season.seasonName,
+      label: this.seasonLabel(season.seasonName),
       color: this.series()[index]?.color ?? resolveSeriesColor(0),
       average: this.format(season.averages[this.metric()]),
     })),
@@ -147,5 +148,15 @@ export class EvolutionChart {
       default:
         return formatScore(value);
     }
+  }
+
+  /**
+   * Spells a season's raw code out in the active language.
+   *
+   * @param name - The raw season name, as returned by the API.
+   * @returns The label shown in the legend, on the curves and in the tooltip.
+   */
+  private seasonLabel(name: string): string {
+    return formatSeasonName(name, (key, params) => this.translation.translate(key, params));
   }
 }

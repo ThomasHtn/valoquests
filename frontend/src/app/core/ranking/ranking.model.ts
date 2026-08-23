@@ -111,6 +111,12 @@ export interface RankingHistoryEntry {
   readonly displayName: string;
   readonly challengeDamage: number;
   readonly completedChallenges: number;
+
+  /**
+   * Damage dealt to that week's boss, frozen at closure. Same composition as
+   * {@link RankingEntry.totalDamage}, and what the finalized position was ordered on.
+   */
+  readonly totalDamage: number;
 }
 
 /**

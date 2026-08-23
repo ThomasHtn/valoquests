@@ -140,10 +140,13 @@ export class BossCampaign {
   /**
    * Each week's damage broken down per player, keyed by the week's ISO `weekStart`.
    *
-   * A player's challenge damage for a week is exactly the damage that week's boss took from them,
-   * so the rankings already hold the breakdown and no dedicated endpoint is needed. The active
-   * week comes from the live ranking (which additionally knows how many challenges the week has,
-   * hence the `4/5` wording there); finalized weeks come from the ranking history.
+   * A player's total damage for a week is exactly the damage that week's boss took from them — the
+   * boss's health bar is the sum of those same totals (see `DefaultBossQueryService`), so the
+   * rankings already hold the breakdown and no dedicated endpoint is needed. Reading the challenge
+   * damage alone would leave the rows short of the bar, and frozen whenever a player only scored
+   * match damage or a bonus. The active week comes from the live ranking (which additionally knows
+   * how many challenges the week has, hence the `4/5` wording there); finalized weeks come from the
+   * ranking history.
    */
   private readonly contributionsByWeekStart = computed(() => {
     const avatarUrlByPlayerId = this.avatarUrlByPlayerId();
@@ -161,7 +164,7 @@ export class BossCampaign {
           displayName: entry.displayName,
           avatarUrl: avatarUrlByPlayerId.get(entry.playerId) ?? null,
           isChampion: entry.playerId === championPlayerId,
-          damageLabel: formatDamage(entry.challengeDamage, language),
+          damageLabel: formatDamage(entry.totalDamage, language),
           questsLabel: `${entry.completedChallenges}`,
         })),
       );
@@ -188,7 +191,7 @@ export class BossCampaign {
               displayName: entry.player.displayName,
               avatarUrl: avatarUrlByPlayerId.get(entry.player.id) ?? null,
               isChampion: entry.player.id === championPlayerId,
-              damageLabel: formatDamage(entry.challengeDamage, language),
+              damageLabel: formatDamage(entry.totalDamage, language),
               questsLabel: `${entry.completedChallenges}/${entry.totalChallenges}`,
             },
           ];
