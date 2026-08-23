@@ -1,5 +1,5 @@
 /**
- * Agent portraits bundled under `public/players`, keyed by their exact Valorant agent name.
+ * Agent portraits bundled under `public/player-avatars`, keyed by their exact Valorant agent name.
  *
  * The backend's player `portrait` field is not populated yet (no synchronization step resolves it
  * from Henrik), so it is used here as the name of the player's associated agent (e.g. `"Sova"`)
@@ -31,7 +31,7 @@ export function resolvePlayerAvatarUrl(portrait: string | null): string | null {
   const trimmed = portrait.trim();
   for (const agent of AGENT_PORTRAIT_FILES) {
     if (agent.toLowerCase() === trimmed.toLowerCase()) {
-      return `/players/${agent}.webp`;
+      return `/player-avatars/${agent}.webp`;
     }
   }
 
