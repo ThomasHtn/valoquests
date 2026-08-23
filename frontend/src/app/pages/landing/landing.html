@@ -1,8 +1,10 @@
-<!-- `h-screen` rather than `h-full`: this page renders straight under the root outlet, with no
-     sized ancestor to inherit a height from. `overflow-y-auto` is the safety valve for viewports
-     too short to hold the composition, which `body { overflow: hidden }` would otherwise trap. -->
+<!-- `h-dvh` rather than `h-full`: this page renders straight under the root outlet, with no
+     sized ancestor to inherit a height from. `dvh` tracks the mobile browser's dynamic toolbar
+     instead of the larger static viewport, so the bottom of the page isn't hidden behind it.
+     `overflow-y-auto` is the safety valve for viewports too short to hold the composition, which
+     `body { overflow: hidden }` would otherwise trap. -->
 <main
-  class="relative flex h-screen flex-col items-center justify-center overflow-y-auto bg-surface-950 px-6 py-7 text-text-primary sm:px-20 sm:py-15"
+  class="relative flex h-dvh flex-col items-center justify-center overflow-y-auto bg-surface-950 px-6 py-7 text-text-primary sm:px-20 sm:py-15"
 >
   <div
     aria-hidden="true"

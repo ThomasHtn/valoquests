@@ -1,10 +1,11 @@
-<!-- `h-screen` rather than `h-full`, same reason as the landing page: this renders straight under
-     the root outlet, with no sized ancestor to inherit a height from. The three bands are fixed
-     (progress on top, controls at the bottom) and only the middle one scrolls, so the way out of
-     the tour is always on screen no matter how tall a step's illustration grows. -->
+<!-- `h-dvh` rather than `h-full`, same reason as the landing page: this renders straight under
+     the root outlet, with no sized ancestor to inherit a height from. `dvh` tracks the mobile
+     browser's dynamic toolbar so the bottom band never lands underneath it. The three bands are
+     fixed (progress on top, controls at the bottom) and only the middle one scrolls, so the way
+     out of the tour is always on screen no matter how tall a step's illustration grows. -->
 <main
   [attr.aria-label]="'tour.ariaLabel' | translate"
-  class="ambient-field flex h-screen flex-col overflow-hidden bg-surface-950 text-text-primary"
+  class="ambient-field flex h-dvh flex-col overflow-hidden bg-surface-950 text-text-primary"
 >
   <!-- Progress band: how far along the tour is, and the way out of it. -->
   <header
