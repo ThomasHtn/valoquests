@@ -21,8 +21,8 @@ import org.springframework.stereotype.Service;
  * Walks one player's Henrik match history backwards, season by season.
  *
  * <p>Henrik returns matches newest first, so the walk starts at offset zero and moves back in time.
- * Its scope is the season of the newest match: everything that season holds is imported, and the
- * walk stops when it crosses into an older one.
+ * Its scope is the season of the newest match plus the one preceding it: everything those two
+ * seasons hold is imported, and the walk stops when it crosses below them.
  *
  * <p>Two rules make the result trustworthy across interruptions and season changes:
  *
@@ -31,10 +31,10 @@ import org.springframework.stereotype.Service;
  *       crossing into an older season or by exhausting the available history. Until then the stored
  *       history may have holes, so the next run re-walks the season in full rather than stopping at
  *       the first already-stored match.</li>
- *   <li>An older season is only walked when the player already has an unfinished state for it. That
- *       finishes what a previous run started, whether it was interrupted or overtaken by a season
- *       change, without ever widening the scope: on an empty database no older state exists, so the
- *       walk is bounded by the current season.</li>
+ *   <li>Below that two-season scope, an older season is only walked when the player already has an
+ *       unfinished state for it. That finishes what a previous run started, whether it was
+ *       interrupted or overtaken by a season change, without widening the scope any further: on an
+ *       empty database no older state exists, so the walk is bounded by those two seasons.</li>
  * </ul>
  *
  * <p>Stop conditions are evaluated on the raw Henrik page, never on the subset actually imported.
@@ -80,6 +80,16 @@ public class SeasonMatchHistoryWalker {
     private static final int MAXIMUM_PAGE_COUNT = 1_000;
 
     /**
+     * Number of seasons the walk may open on its own behind the season of the newest match.
+     *
+     * <p>One, so the scope is the current season plus the previous one. Crossing below that only
+     * happens for a season the player already has an unfinished state for, which is a repair, not a
+     * widening. Every boundary crossed consumes this budget, including a repair, so a chain of
+     * unfinished seasons can never be used to reach a season this application never targeted.
+     */
+    private static final int TRAILING_SEASON_BUDGET = 1;
+
+    /**
      * Henrik client used to retrieve match-history pages.
      */
     private final HenrikMatchClient matchClient;
@@ -120,7 +130,8 @@ public class SeasonMatchHistoryWalker {
     }
 
     /**
-     * Imports every match of the player's current season, resuming unfinished seasons on the way.
+     * Imports every match of the player's current and previous seasons, resuming unfinished seasons
+     * on the way.
      *
      * @param player tracked player whose Riot identifier is already resolved
      * @return the pages retrieved, matches imported and the condition that ended the walk
@@ -169,6 +180,10 @@ public class SeasonMatchHistoryWalker {
         // positioned correctly in the continuous Henrik offset stream, is never jumped a second time.
         int pendingResumeOffset = scope.resumeOffset();
 
+        // Seasons the walk may still open behind the one it started on. Consumed by every boundary
+        // it crosses, so the scope stays bounded whatever the stored state looks like.
+        int remainingTrailingSeasons = TRAILING_SEASON_BUDGET;
+
         while (true) {
             List<HenrikMatchData> page = response.data();
             PageImport pageImport =
@@ -179,23 +194,17 @@ public class SeasonMatchHistoryWalker {
             if (foreignIndex >= 0) {
                 stateService.markSeasonComplete(player.getId(), scope.seasonId());
 
-                String foreignSeasonId = seasonId(page.get(foreignIndex));
-                Optional<Long> resumableSeasonId =
-                    stateService.findResumableSeasonId(player.getId(), foreignSeasonId);
-                if (resumableSeasonId.isPresent()) {
+                Optional<SeasonScope> crossedScope =
+                    crossInto(player, page.get(foreignIndex), remainingTrailingSeasons);
+                if (crossedScope.isPresent()) {
                     // The same page is replayed from the boundary for the admitted season: its
                     // matches sit on this page and would otherwise be the hole at that season's
                     // most recent end. Resuming at the boundary index rather than at zero keeps the
                     // already-walked newer matches out of scope, which would otherwise read as a
                     // boundary again and stop the walk immediately.
-                    scope = new SeasonScope(resumableSeasonId.get(), foreignSeasonId, false, 0);
+                    scope = crossedScope.get();
                     fromIndex = foreignIndex;
-                    LOGGER.info(
-                        "Resuming an unfinished season for player {}: season={} externalId={}",
-                        player.getId(),
-                        scope.seasonId(),
-                        foreignSeasonId
-                    );
+                    remainingTrailingSeasons--;
                     continue;
                 }
 
@@ -258,6 +267,59 @@ public class SeasonMatchHistoryWalker {
             }
             pagesFetched++;
         }
+    }
+
+    /**
+     * Decides whether the walk continues into the older season it just crossed into.
+     *
+     * <p>Two reasons admit it, in this order: the player has an unfinished state for that season, so
+     * finishing it repairs a run that was interrupted or overtaken by a season change; or the
+     * trailing budget still allows opening one, which is what puts the previous season in scope on a
+     * database that never saw it. An empty result leaves that season alone and ends the walk.
+     *
+     * @param player                   tracked player being walked
+     * @param boundaryMatch            first match of the older season on the current page
+     * @param remainingTrailingSeasons seasons the walk may still open on its own behalf
+     * @return the scope to continue with, or empty when the walk must stop at this boundary
+     */
+    private Optional<SeasonScope> crossInto(
+        Player player,
+        HenrikMatchData boundaryMatch,
+        int remainingTrailingSeasons
+    ) {
+        String foreignSeasonId = seasonId(boundaryMatch);
+        Optional<Long> resumableSeasonId =
+            stateService.findResumableSeasonId(player.getId(), foreignSeasonId);
+        if (resumableSeasonId.isPresent()) {
+            LOGGER.info(
+                "Resuming an unfinished season for player {}: season={} externalId={}",
+                player.getId(),
+                resumableSeasonId.get(),
+                foreignSeasonId
+            );
+            return Optional.of(new SeasonScope(resumableSeasonId.get(), foreignSeasonId, false, 0));
+        }
+
+        if (remainingTrailingSeasons <= 0) {
+            return Optional.empty();
+        }
+
+        Season season = seasonResolutionService.resolve(boundaryMatch.metadata().season());
+        SeasonSynchronizationStateService.SeasonWalkStart walkStart =
+            stateService.startSeason(player, season);
+        // The checkpoint of that season is deliberately not applied: the walk is already positioned
+        // at its newest match in the continuous Henrik offset stream, and jumping ahead from here
+        // would skip the pages between this boundary and the checkpoint.
+        boolean earlyStopAllowed = stateService.isComplete(player.getId(), walkStart.seasonId());
+        LOGGER.info(
+            "Extending the walk into the previous season for player {}: season={} externalId={}",
+            player.getId(),
+            walkStart.seasonId(),
+            foreignSeasonId
+        );
+        return Optional.of(
+            new SeasonScope(walkStart.seasonId(), foreignSeasonId, earlyStopAllowed, 0)
+        );
     }
 
     /**

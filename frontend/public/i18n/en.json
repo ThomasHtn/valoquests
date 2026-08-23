@@ -91,6 +91,8 @@
         "editHeading": "Edit player",
         "gameName": "Riot name",
         "tagLine": "Tag (without #)",
+        "portrait": "Avatar",
+        "portraitNone": "No avatar",
         "status": "Initial status"
       },
       "remove": {

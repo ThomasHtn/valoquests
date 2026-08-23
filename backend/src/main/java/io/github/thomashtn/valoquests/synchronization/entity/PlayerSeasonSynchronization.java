@@ -30,8 +30,9 @@ import lombok.Setter;
  * early, which is what prevents an interruption from leaving a permanent hole.
  *
  * <p>The row exists as soon as the walk of a season starts, so its presence is also the marker used
- * at a season boundary: an older season with no row was never targeted and must not be walked, which
- * is what bounds a first run on an empty database to the current season.
+ * at a season boundary: below the current and previous seasons the walk always covers, an older
+ * season with no row was never targeted and must not be walked, which is what bounds a first run on
+ * an empty database to those two seasons.
  */
 @Getter
 @Setter

@@ -85,8 +85,8 @@ public class SynchronizationPlayerResult extends AuditableEntity {
     /**
      * Condition that ended the match-history walk, or {@code null} when no walk completed.
      *
-     * <p>Reported so a short import is self-explanatory: {@code SEASON_BOUNDARY} means the player's
-     * current season was exhausted, while {@code PAGE_LIMIT_REACHED} means the history was truncated.
+     * <p>Reported so a short import is self-explanatory: {@code SEASON_BOUNDARY} means the seasons
+     * in scope were exhausted, while {@code PAGE_LIMIT_REACHED} means the history was truncated.
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "stop_reason", length = 30)

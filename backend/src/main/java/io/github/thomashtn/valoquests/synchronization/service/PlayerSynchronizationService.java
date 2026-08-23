@@ -58,7 +58,7 @@ public class PlayerSynchronizationService {
     private final HenrikMmrMapper mmrMapper;
 
     /**
-     * Service walking the player's match history within the current season.
+     * Service walking the player's match history within the current and previous seasons.
      */
     private final SeasonMatchHistoryWalker matchHistoryWalker;
 
@@ -74,7 +74,8 @@ public class PlayerSynchronizationService {
      * @param accountResolutionService service resolving missing Riot account identifiers
      * @param mmrClient                Henrik client returning competitive ranks
      * @param mmrMapper                mapper turning Henrik rank payloads into player fields
-     * @param matchHistoryWalker       walker importing the current season's match history
+     * @param matchHistoryWalker       walker importing the current and previous seasons' match
+     *                                 history
      * @param clock                    clock producing deterministic timestamps
      */
     public PlayerSynchronizationService(
@@ -94,7 +95,8 @@ public class PlayerSynchronizationService {
     }
 
     /**
-     * Synchronizes the Riot account, current rank and every match of the current season.
+     * Synchronizes the Riot account, current rank and every match of the current and previous
+     * seasons.
      *
      * @param playerId internal player identifier
      * @return synchronization result

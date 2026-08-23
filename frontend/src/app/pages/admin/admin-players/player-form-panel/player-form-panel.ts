@@ -1,10 +1,24 @@
-import { Component, computed, input, linkedSignal, output } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
 
 import { AdminPlayer, AdminPlayerStatus } from '@core/admin/admin.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
+import { AGENT_PORTRAIT_FILES, resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
+import { Avatar } from '@shared/avatar/avatar';
 import { Button } from '@shared/button/button';
 import { Drawer } from '@shared/drawer/drawer';
+import { Select } from '@shared/select/select';
+import { SelectOption } from '@shared/select/select.model';
 import { TextField, TextFieldInput } from '@shared/text-field/text-field';
+
+/**
+ * Value the portrait dropdown holds when no avatar is associated.
+ *
+ * The dropdown carries the "no avatar" case as an option of its own rather than as an unset value:
+ * `app-select` renders an unset value as an icon-only trigger, which would read as "nothing chosen
+ * yet" instead of the deliberate choice it is here.
+ */
+const NO_PORTRAIT = '';
 
 /**
  * Identity the operator submitted, before it is turned into a create or update request.
@@ -12,6 +26,11 @@ import { TextField, TextFieldInput } from '@shared/text-field/text-field';
 export interface PlayerFormResult {
   readonly gameName: string;
   readonly tagLine: string;
+
+  /**
+   * Agent name backing the bundled avatar, or `null` when none was chosen.
+   */
+  readonly portrait: string | null;
   readonly status: AdminPlayerStatus;
 }
 
@@ -19,18 +38,22 @@ export interface PlayerFormResult {
  * Right-anchored drawer for adding or editing a roster player, opened from a row or from the
  * "Add a player" button.
  *
- * Rendered inside the shared `app-drawer`, which owns the panel and its dismissal. Only the Riot
- * identity (game
- * name, tag) and, when creating, the initial status are editable here — the display name and
- * portrait are not roster-operator concerns day to day, so the panel does not surface them: it
- * carries the display name over unchanged on an edit, and defaults it to the game name on creation.
+ * Rendered inside the shared `app-drawer`, which owns the panel and its dismissal. The Riot
+ * identity (game name, tag), the avatar and, when creating, the initial status are editable here —
+ * the display name is not a roster-operator concern day to day, so the panel does not surface it:
+ * it carries it over unchanged on an edit, and defaults it to the game name on creation.
  */
 @Component({
   selector: 'app-player-form-panel',
-  imports: [TranslatePipe, Button, Drawer, TextField, TextFieldInput],
+  imports: [TranslatePipe, Avatar, Button, Drawer, Select, TextField, TextFieldInput],
   templateUrl: './player-form-panel.html',
 })
 export class PlayerFormPanel {
+  /**
+   * i18n service used to build the portrait options outside the template.
+   */
+  private readonly translation = inject(Translation);
+
   /**
    * The player being edited, or `null` when the panel is adding a new one.
    */
@@ -61,6 +84,25 @@ export class PlayerFormPanel {
    * Tag field, seeded from {@link editedPlayer} and then locally editable.
    */
   protected readonly tagLine = linkedSignal(() => this.editedPlayer()?.tagLine ?? '');
+
+  /**
+   * Agent name backing the player's avatar, seeded from {@link editedPlayer} and then locally
+   * editable. Holds {@link NO_PORTRAIT} when no avatar is associated.
+   */
+  protected readonly portrait = linkedSignal(() => this.editedPlayer()?.portrait ?? NO_PORTRAIT);
+
+  /**
+   * Avatars the dropdown offers: the bundled agent portraits, plus the "no avatar" option.
+   */
+  protected readonly portraitOptions = computed<readonly SelectOption<string>[]>(() => [
+    { value: NO_PORTRAIT, label: this.translation.translate('admin.players.form.portraitNone') },
+    ...AGENT_PORTRAIT_FILES.map((agent) => ({ value: agent, label: agent })),
+  ]);
+
+  /**
+   * Asset the preview beside the dropdown renders, or `null` for the fallback icon.
+   */
+  protected readonly portraitPreview = computed(() => resolvePlayerAvatarUrl(this.portrait()));
 
   /**
    * Status the new player will be created with. Not offered when editing: an existing player's
@@ -97,6 +139,16 @@ export class PlayerFormPanel {
   }
 
   /**
+   * Sets the avatar associated with the player.
+   *
+   * @param portrait - The chosen agent name, {@link NO_PORTRAIT} for none. Never `null`, since the
+   * dropdown only offers the options built above, but typed as the select emits it.
+   */
+  protected onPortraitChange(portrait: string | null): void {
+    this.portrait.set(portrait ?? NO_PORTRAIT);
+  }
+
+  /**
    * Sets the status the new player will be created with.
    *
    * @param status - The status to apply.
@@ -120,6 +172,7 @@ export class PlayerFormPanel {
     this.saved.emit({
       gameName: this.gameName().trim(),
       tagLine: this.tagLine().trim(),
+      portrait: this.portrait() === NO_PORTRAIT ? null : this.portrait(),
       status: this.status(),
     });
   }

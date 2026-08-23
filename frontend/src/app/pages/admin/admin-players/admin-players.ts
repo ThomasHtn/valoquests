@@ -184,8 +184,8 @@ export class AdminPlayers {
   /**
    * Creates or updates the player the panel submitted.
    *
-   * The display name and portrait are not exposed there, so they are carried over unchanged from
-   * the edited player, or defaulted to the Riot name and `null` on creation.
+   * The display name is not exposed there, so it is carried over unchanged from the edited player,
+   * or defaulted to the Riot name on creation.
    *
    * @param result - The identity the panel submitted.
    */
@@ -203,14 +203,14 @@ export class AdminPlayers {
               gameName: result.gameName,
               tagLine: result.tagLine,
               displayName: result.gameName,
-              portrait: null,
+              portrait: result.portrait,
               status: result.status,
             })
           : this.adminApi.updatePlayer(edited.id, {
               gameName: result.gameName,
               tagLine: result.tagLine,
               displayName: edited.displayName,
-              portrait: edited.portrait,
+              portrait: result.portrait,
             }),
       {
         state: this.commandState,

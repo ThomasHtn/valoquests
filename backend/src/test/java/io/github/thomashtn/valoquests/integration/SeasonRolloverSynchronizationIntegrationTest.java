@@ -84,6 +84,11 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
      */
     private static final String OLDER_SEASON = "season-rollover-older";
 
+    /**
+     * Henrik identifier of the season sitting below the walked scope.
+     */
+    private static final String OUT_OF_SCOPE_SEASON = "season-rollover-oldest";
+
     @Autowired
     private SynchronizationCommandService synchronizationCommandService;
 
@@ -156,36 +161,41 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
     }
 
     /**
-     * Verifies the first walk of a season, then that a second run stops immediately.
+     * Verifies the first walk of the two seasons in scope, then that a second run stops immediately.
+     *
+     * <p>The season below them was never targeted and must be left without a state row, otherwise
+     * the next run would walk the player's whole history one season at a time.
      *
      * <p>Also pins the mode filter: an ignored queue never reaches the match tables, while a queue
      * the application cannot classify is stored with its raw slug so nothing is lost.
      */
     @Test
-    void shouldWalkTheCurrentSeasonThenStopAtKnownHistory() {
+    void shouldWalkTheCurrentAndPreviousSeasonsThenStopAtKnownHistory() {
         givenHistory(
             fullPage(SEASON_A, "competitive"),
             mixedPage(),
-            boundaryPage(SEASON_A, OLDER_SEASON, 4)
+            boundaryPage(SEASON_A, OLDER_SEASON, 4),
+            boundaryPage(OLDER_SEASON, OUT_OF_SCOPE_SEASON, 5)
         );
 
         synchronizationCommandService.synchronizePlayer(player.getId());
 
-        assertThat(importedMatchCount()).isEqualTo(10 + 8 + 4);
+        assertThat(importedMatchCount()).isEqualTo(10 + 8 + 4 + 6 + 5);
         assertThat(isSeasonComplete(SEASON_A)).isTrue();
-        assertThat(seasonStateCount(OLDER_SEASON)).isZero();
+        assertThat(isSeasonComplete(OLDER_SEASON)).isTrue();
+        assertThat(seasonStateCount(OUT_OF_SCOPE_SEASON)).isZero();
 
         assertThat(importedGameModes())
             .doesNotContain(GameMode.SWIFTPLAY, GameMode.ESCALATION);
         assertThat(importedGameModes()).contains(GameMode.OTHER);
         assertThat(rawQueueIds()).contains("valorant_royale");
 
-        verify(matchClient, times(3)).getMatches(eq(PUUID), anyInt(), anyInt());
+        verify(matchClient, times(4)).getMatches(eq(PUUID), anyInt(), anyInt());
 
         synchronizationCommandService.synchronizePlayer(player.getId());
 
-        assertThat(importedMatchCount()).isEqualTo(22);
-        verify(matchClient, times(4)).getMatches(eq(PUUID), anyInt(), anyInt());
+        assertThat(importedMatchCount()).isEqualTo(33);
+        verify(matchClient, times(5)).getMatches(eq(PUUID), anyInt(), anyInt());
     }
 
     /**
@@ -233,7 +243,7 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
         synchronizationCommandService.synchronizePlayer(player.getId());
 
         // Both pages walked again rather than stopping on page one, and no duplicate created.
-        verify(matchClient, times(4)).getMatches(eq(PUUID), anyInt(), anyInt());
+        verify(matchClient, times(5)).getMatches(eq(PUUID), anyInt(), anyInt());
         assertThat(importedMatchCount()).isEqualTo(importedMatches);
         assertThat(isSeasonComplete(SEASON_A)).isTrue();
     }
@@ -309,8 +319,10 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
 
         synchronizationCommandService.synchronizePlayer(player.getId());
 
-        assertThat(importedMatchCount()).isEqualTo(200 + 5);
+        // 200 for season A's pages, then the boundary page split between A and the previous season.
+        assertThat(importedMatchCount()).isEqualTo(200 + 5 + 5);
         assertThat(isSeasonComplete(SEASON_A)).isTrue();
+        assertThat(isSeasonComplete(OLDER_SEASON)).isTrue();
 
         // The confirmed prefix is never re-fetched: still exactly the one call from before the retry.
         verify(matchClient, times(1)).getMatches(PUUID, 50, PAGE_SIZE);
@@ -345,8 +357,8 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
 
         synchronizationCommandService.synchronizePlayer(player.getId());
 
-        // 10 unique on the first page, 8 new on the overlapping one, 4 on the boundary page.
-        assertThat(importedMatchCount()).isEqualTo(10 + 8 + 4);
+        // 10 unique on the first page, 8 new on the overlapping one, 4 + 6 on the boundary page.
+        assertThat(importedMatchCount()).isEqualTo(10 + 8 + 4 + 6);
         assertThat(isSeasonComplete(SEASON_A)).isTrue();
 
         long distinctMatches = valorantMatchRepository.findAll().stream()
@@ -354,7 +366,7 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
             .map(ValorantMatch::getExternalMatchId)
             .distinct()
             .count();
-        assertThat(distinctMatches).isEqualTo(22);
+        assertThat(distinctMatches).isEqualTo(28);
     }
 
     /**

@@ -1,5 +1,6 @@
 /**
- * Agent portraits bundled under `public/player-avatars`, keyed by their exact Valorant agent name.
+ * Agent portraits bundled under `public/player-avatars`, named after their exact Valorant agent
+ * name. Exported so the backoffice can offer exactly the portraits the site can render.
  *
  * The backend's player `portrait` field is not populated yet (no synchronization step resolves it
  * from Henrik), so it is used here as the name of the player's associated agent (e.g. `"Sova"`)
@@ -7,14 +8,14 @@
  * recognizable icon today; it should be revisited once the backend serves real per-player
  * artwork.
  */
-const AGENT_PORTRAIT_FILES: ReadonlySet<string> = new Set([
+export const AGENT_PORTRAIT_FILES: readonly string[] = [
   'Killjoy',
   'Neon',
   'Omen',
   'Phoenix',
   'Skye',
   'Sova',
-]);
+];
 
 /**
  * Resolves the local avatar asset matching a player's `portrait` field.

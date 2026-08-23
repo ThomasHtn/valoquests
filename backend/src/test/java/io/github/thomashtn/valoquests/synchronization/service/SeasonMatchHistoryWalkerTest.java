@@ -80,9 +80,19 @@ class SeasonMatchHistoryWalkerTest {
     private static final long CURRENT_SEASON_ID = 20L;
 
     /**
+     * Henrik identifier of the season preceding the previous one, outside the walked scope.
+     */
+    private static final String OLDER_SEASON = "season-older";
+
+    /**
      * Local identifier of the previous season.
      */
     private static final long PREVIOUS_SEASON_ID = 19L;
+
+    /**
+     * Local identifier of the season preceding the previous one.
+     */
+    private static final long OLDER_SEASON_ID = 18L;
 
     @Mock
     private HenrikMatchClient matchClient;
@@ -126,9 +136,7 @@ class SeasonMatchHistoryWalkerTest {
             HenrikMatchMetadata.HenrikSeason source = invocation.getArgument(0);
             Season season = new Season();
             season.setExternalId(source.id());
-            season.setId(CURRENT_SEASON.equals(source.id())
-                ? CURRENT_SEASON_ID
-                : PREVIOUS_SEASON_ID);
+            season.setId(localSeasonId(source.id()));
             return season;
         });
         when(stateService.startSeason(any(), any()))
@@ -144,46 +152,77 @@ class SeasonMatchHistoryWalkerTest {
     }
 
     /**
-     * Verifies the nominal first walk of a season on an empty database.
+     * Verifies the nominal first walk on an empty database: the current season, then the previous
+     * one, then a stop.
      *
-     * <p>The older season the walk crosses into was never targeted, so it must be left untouched:
-     * declaring it would make the next run walk the player's whole history one season at a time.
+     * <p>The scope is deliberately two seasons deep. Anything older was never targeted and must be
+     * left untouched, otherwise the next run walks the player's whole history one season at a time.
      */
     @Test
-    void shouldWalkTheCurrentSeasonAndStopAtItsBoundary() {
+    void shouldWalkTheCurrentAndPreviousSeasonsThenStop() {
         givenPages(
             page(CURRENT_SEASON, PAGE_SIZE),
-            page(CURRENT_SEASON, PAGE_SIZE),
-            straddlingPage(6)
+            straddlingPage(6),
+            page(PREVIOUS_SEASON, PAGE_SIZE),
+            straddlingPage(PREVIOUS_SEASON, OLDER_SEASON, 4)
         );
 
         MatchHistoryWalkResult result = walker.walk(player);
 
         assertThat(result.stopReason())
             .isEqualTo(SynchronizationStopReason.SEASON_BOUNDARY);
-        assertThat(result.pagesFetched()).isEqualTo(3);
-        assertThat(result.matchesImported()).isEqualTo(26);
+        assertThat(result.pagesFetched()).isEqualTo(4);
+        assertThat(result.matchesImported()).isEqualTo(10 + 6 + 4 + 10 + 4);
 
-        verify(stateService).markSeasonComplete(1L, CURRENT_SEASON_ID);
-        verify(stateService, never()).markSeasonComplete(1L, PREVIOUS_SEASON_ID);
-        verify(stateService, never()).startSeason(any(), argThatSeasonIs(PREVIOUS_SEASON));
+        InOrder ordered = inOrder(stateService);
+        ordered.verify(stateService).markSeasonComplete(1L, CURRENT_SEASON_ID);
+        ordered.verify(stateService).markSeasonComplete(1L, PREVIOUS_SEASON_ID);
+        verify(stateService).startSeason(any(), argThatSeasonIs(PREVIOUS_SEASON));
+        verify(stateService, never()).startSeason(any(), argThatSeasonIs(OLDER_SEASON));
+        verify(stateService, never()).markSeasonComplete(1L, OLDER_SEASON_ID);
     }
 
     /**
-     * Verifies that a straddling page only hands the current season's matches to the import.
+     * Verifies that a repair of an unfinished season still consumes the trailing budget.
      *
-     * <p>Importing the older season's matches without declaring that season would leave it holding a
-     * handful of matches and no state saying it is unfinished, skewing every statistic filtered on
-     * it, forever.
+     * <p>Otherwise a chain of unfinished seasons would let the walk reach a season this application
+     * never targeted, one boundary at a time.
+     */
+    @Test
+    void shouldNotWidenTheScopeBeyondASeasonItResumed() {
+        when(stateService.findResumableSeasonId(1L, PREVIOUS_SEASON))
+            .thenReturn(Optional.of(PREVIOUS_SEASON_ID));
+        givenPages(
+            straddlingPage(6),
+            straddlingPage(PREVIOUS_SEASON, OLDER_SEASON, 4)
+        );
+
+        MatchHistoryWalkResult result = walker.walk(player);
+
+        assertThat(result.stopReason())
+            .isEqualTo(SynchronizationStopReason.SEASON_BOUNDARY);
+        verify(stateService, never()).startSeason(any(), argThatSeasonIs(OLDER_SEASON));
+        assertThat(importedSeasonIds()).doesNotContain(OLDER_SEASON);
+    }
+
+    /**
+     * Verifies that a straddling page only hands the walked seasons' matches to the import.
+     *
+     * <p>Importing an out-of-scope season's matches without declaring that season would leave it
+     * holding a handful of matches and no state saying it is unfinished, skewing every statistic
+     * filtered on it, forever.
      */
     @Test
     void shouldNotImportMatchesOfASeasonItDoesNotWalk() {
-        givenPages(straddlingPage(6));
+        givenPages(
+            straddlingPage(6),
+            straddlingPage(PREVIOUS_SEASON, OLDER_SEASON, 4)
+        );
 
         walker.walk(player);
 
         assertThat(importedSeasonIds())
-            .containsOnly(CURRENT_SEASON);
+            .containsOnly(CURRENT_SEASON, PREVIOUS_SEASON);
     }
 
     /**
@@ -296,7 +335,8 @@ class SeasonMatchHistoryWalkerTest {
         givenPages(
             page(CURRENT_SEASON, PAGE_SIZE),
             page(CURRENT_SEASON, PAGE_SIZE),
-            straddlingPage(4)
+            straddlingPage(4),
+            straddlingPage(PREVIOUS_SEASON, OLDER_SEASON, 4)
         );
         doAnswer(invocation -> allKnown(invocation.getArgument(1)))
             .when(matchImportService).importMatchesWithSummary(any(), any());
@@ -305,7 +345,7 @@ class SeasonMatchHistoryWalkerTest {
 
         assertThat(result.stopReason())
             .isEqualTo(SynchronizationStopReason.SEASON_BOUNDARY);
-        verify(matchClient, times(3)).getMatches(eq(PUUID), anyInt(), anyInt());
+        verify(matchClient, times(4)).getMatches(eq(PUUID), anyInt(), anyInt());
         verify(stateService).markSeasonComplete(1L, CURRENT_SEASON_ID);
     }
 
@@ -367,7 +407,8 @@ class SeasonMatchHistoryWalkerTest {
     void shouldContinueThroughAPageOfIgnoredGameModes() {
         givenPages(
             page(CURRENT_SEASON, PAGE_SIZE),
-            straddlingPage(4)
+            straddlingPage(4),
+            straddlingPage(PREVIOUS_SEASON, OLDER_SEASON, 4)
         );
         doAnswer(invocation -> allSkipped(invocation.getArgument(1)))
             .when(matchImportService).importMatchesWithSummary(any(), any());
@@ -376,7 +417,7 @@ class SeasonMatchHistoryWalkerTest {
 
         assertThat(result.stopReason())
             .isEqualTo(SynchronizationStopReason.SEASON_BOUNDARY);
-        verify(matchClient, times(2)).getMatches(eq(PUUID), anyInt(), anyInt());
+        verify(matchClient, times(3)).getMatches(eq(PUUID), anyInt(), anyInt());
     }
 
     /**
@@ -539,9 +580,31 @@ class SeasonMatchHistoryWalkerTest {
      * previous one, as Henrik returns at a season boundary.
      */
     private List<HenrikMatchData> straddlingPage(int currentSeasonMatches) {
-        List<HenrikMatchData> matches = new ArrayList<>(page(CURRENT_SEASON, currentSeasonMatches));
-        matches.addAll(page(PREVIOUS_SEASON, PAGE_SIZE - currentSeasonMatches));
+        return straddlingPage(CURRENT_SEASON, PREVIOUS_SEASON, currentSeasonMatches);
+    }
+
+    /**
+     * Creates a full page straddling the boundary between two given seasons.
+     */
+    private List<HenrikMatchData> straddlingPage(
+        String newerSeason,
+        String olderSeason,
+        int newerSeasonMatches
+    ) {
+        List<HenrikMatchData> matches = new ArrayList<>(page(newerSeason, newerSeasonMatches));
+        matches.addAll(page(olderSeason, PAGE_SIZE - newerSeasonMatches));
         return matches;
+    }
+
+    /**
+     * Maps a Henrik season identifier to its local identifier.
+     */
+    private long localSeasonId(String externalId) {
+        return switch (externalId) {
+            case CURRENT_SEASON -> CURRENT_SEASON_ID;
+            case PREVIOUS_SEASON -> PREVIOUS_SEASON_ID;
+            default -> OLDER_SEASON_ID;
+        };
     }
 
     /**

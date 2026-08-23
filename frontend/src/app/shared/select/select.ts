@@ -106,11 +106,16 @@ export class Select<T> {
   private readonly triggerButton = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
 
   /**
-   * Options panel, reparented to `document.body` once opened.
+   * Options panel, reparented out of the host once rendered.
    *
    * `position: fixed` alone only escapes an ancestor's `overflow: hidden` — it does not escape a
    * `clip-path` (e.g. a `notch-tr` card), which clips its whole painted subtree regardless of how
-   * a descendant is positioned. Moving the node itself out to the document body sidesteps that.
+   * a descendant is positioned. Moving the node itself out of the host sidesteps that.
+   *
+   * It moves to the nearest enclosing modal `<dialog>` when there is one (the drawers), and to
+   * `document.body` otherwise. A modal dialog paints in the top layer and renders the rest of the
+   * document inert, so a panel parked on the body would sit behind the backdrop and take no
+   * clicks — the dropdown would look like it never opens.
    */
   private readonly panelElement = viewChild.required<ElementRef<HTMLDivElement>>('panel');
 
@@ -152,7 +157,11 @@ export class Select<T> {
    * panel cannot be measured until its `hidden` attribute has been written to the DOM.
    */
   constructor() {
-    afterNextRender(() => document.body.appendChild(this.panelElement().nativeElement));
+    afterNextRender(() => {
+      const host: HTMLElement = this.elementRef.nativeElement;
+      const panelHost = host.closest('dialog') ?? document.body;
+      panelHost.appendChild(this.panelElement().nativeElement);
+    });
     inject(DestroyRef).onDestroy(() => this.panelElement().nativeElement.remove());
 
     afterRenderEffect(() => {
@@ -161,8 +170,9 @@ export class Select<T> {
         return;
       }
 
-      const host: HTMLElement = this.elementRef.nativeElement;
-      host.querySelector(`#${this.optionId(index)}`)?.scrollIntoView({ block: 'nearest' });
+      // Queried on the panel, not on the host: the panel no longer lives under the host.
+      const panel: HTMLElement = this.panelElement().nativeElement;
+      panel.querySelector(`#${this.optionId(index)}`)?.scrollIntoView({ block: 'nearest' });
     });
 
     // `scroll` doesn't bubble, so a `document:scroll` host binding would miss scrolling that

@@ -42,6 +42,25 @@
       />
     </app-text-field>
 
+    <!-- Avatar association, offered on creation as on edit: the portrait is chosen by hand, no
+         synchronization step resolves it. -->
+    <div>
+      <p class="label-caption text-text-muted">
+        {{ 'admin.players.form.portrait' | translate }}
+      </p>
+      <div class="mt-2 flex items-center gap-3">
+        <app-avatar [src]="portraitPreview()" size="sm" />
+        <app-select
+          [ariaLabel]="'admin.players.form.portrait' | translate"
+          [disabled]="busy()"
+          [options]="portraitOptions()"
+          [value]="portrait()"
+          (valueChange)="onPortraitChange($event)"
+          class="min-w-0 flex-1"
+        />
+      </div>
+    </div>
+
     @if (!editedPlayer()) {
       <!-- Only on creation: an existing player's status is changed from its own row, so offering
            it here too would give the same state two owners. -->
