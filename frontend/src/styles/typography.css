@@ -4,7 +4,54 @@
  * `--font-sans` and `--font-mono` are the tokens Tailwind's preflight applies to the document, so
  * redefining them here is what switches the application's body and monospace faces. `font-display`
  * stays a deliberate opt-in, used for the wordmark and page headings.
+ *
+ * Both faces are served from `public/fonts/` rather than from Google's CDN: a self-hosted file
+ * costs the visitor no third-party DNS lookup, no second TLS handshake and no request to a
+ * server that has nothing else to do with this site. They are cut down to Latin-1 plus the
+ * punctuation the interface actually sets, which is a fifth off each file; anything outside that
+ * range — a Riot ID in another script — falls back to the system stack, as it did before.
+ * Oswald is the variable cut, so its four weights are one file.
  */
+
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/oswald-400-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/barlow-condensed-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/barlow-condensed-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/barlow-condensed-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/barlow-condensed-700.woff2') format('woff2');
+}
 
 @theme {
   --font-display: 'Oswald', ui-sans-serif, system-ui, sans-serif;

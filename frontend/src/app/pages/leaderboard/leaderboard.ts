@@ -22,6 +22,7 @@ import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
+import { Breakpoint } from '@core/viewport/breakpoint';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
@@ -88,6 +89,12 @@ export class Leaderboard {
    * active language when grouping damage amounts.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Whether the viewport can hold the matrix layout: below it, the same rows are rendered as
+   * cards. Only the matching layout is put in the DOM, never both.
+   */
+  protected readonly isWide = inject(Breakpoint).isWide;
 
   /**
    * Current time, refreshed periodically to keep the countdown display accurate.

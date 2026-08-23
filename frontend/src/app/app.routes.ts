@@ -1,15 +1,33 @@
 import { Routes } from '@angular/router';
 
+import { Shell } from '@layout/shell/shell';
 import { adminGuard } from '@core/admin/admin.guard';
 import { landingEntryGuard } from '@core/landing/landing-entry.guard';
 import { tourEntryGuard } from '@core/tour/tour-entry.guard';
+import { Campaign } from '@pages/campaign/campaign';
+import { Challenges } from '@pages/challenges/challenges';
+import { Landing } from '@pages/landing/landing';
+import { Leaderboard } from '@pages/leaderboard/leaderboard';
+import { NotFound } from '@pages/not-found/not-found';
+import { Overview } from '@pages/overview/overview';
+import { Players } from '@pages/players/players';
+import { Rules } from '@pages/rules/rules';
+import { Tour } from '@pages/tour/tour';
 
 /**
  * Application routes.
  *
- * Each page is lazy-loaded via `loadComponent` so route-level code splitting stays automatic as
- * new pages are added. A route's `title` is a translation key rather than a literal; it is
- * resolved against the active dictionary by `TranslatedTitleStrategy`.
+ * The public pages are referenced eagerly, the backoffice and the player profile through
+ * `loadComponent`. Route-level splitting used to be the rule here, but a bundler chunk is emitted
+ * for every module two lazy pages share: the public site ended up pulling around twenty-five
+ * sub-kilobyte chunks — one per shared primitive — on every screen. Request count is the second
+ * heaviest term of the page's environmental footprint, so the public pages, which together weigh
+ * less than the shared chunks they were dragging in, now ride in the initial bundle. The two
+ * exceptions carry weight nothing else needs: the profile owns `chart.js`, and the backoffice is
+ * reachable by URL only.
+ *
+ * A route's `title` is a translation key rather than a literal; it is resolved against the active
+ * dictionary by `TranslatedTitleStrategy`.
  *
  * Two routes share the empty path. The first matches the root URL exactly (`pathMatch: 'full'`)
  * and serves the landing page, a full-bleed doorway with no navigation chrome. Every other URL
@@ -32,13 +50,13 @@ export const routes: Routes = [
     pathMatch: 'full',
     title: 'landing.title',
     canActivate: [landingEntryGuard],
-    loadComponent: () => import('@pages/landing/landing').then((m) => m.Landing),
+    component: Landing,
   },
   {
     path: 'tour',
     title: 'tour.title',
     canActivate: [tourEntryGuard],
-    loadComponent: () => import('@pages/tour/tour').then((m) => m.Tour),
+    component: Tour,
   },
   {
     path: 'admin/login',
@@ -47,27 +65,30 @@ export const routes: Routes = [
   },
   {
     path: '',
-    loadComponent: () => import('@layout/shell/shell').then((m) => m.Shell),
+    // Imported eagerly, unlike the pages it hosts: every URL but the landing page, the tour and the
+    // sign-in screen activates it, so splitting it out only bought a second round trip before
+    // anything could render — and its own chunk dragged a dozen sub-kilobyte shared chunks with it.
+    component: Shell,
     children: [
       {
         path: 'overview',
         title: 'overview.title',
-        loadComponent: () => import('@pages/overview/overview').then((m) => m.Overview),
+        component: Overview,
       },
       {
         path: 'challenges',
         title: 'overview.weeklyChallenges.title',
-        loadComponent: () => import('@pages/challenges/challenges').then((m) => m.Challenges),
+        component: Challenges,
       },
       {
         path: 'leaderboard',
         title: 'overview.weeklyRanking.title',
-        loadComponent: () => import('@pages/leaderboard/leaderboard').then((m) => m.Leaderboard),
+        component: Leaderboard,
       },
       {
         path: 'players',
         title: 'players.title',
-        loadComponent: () => import('@pages/players/players').then((m) => m.Players),
+        component: Players,
       },
       {
         path: 'players/:id',
@@ -78,12 +99,12 @@ export const routes: Routes = [
       {
         path: 'campaign',
         title: 'campaign.title',
-        loadComponent: () => import('@pages/campaign/campaign').then((m) => m.Campaign),
+        component: Campaign,
       },
       {
         path: 'rules',
         title: 'rules.title',
-        loadComponent: () => import('@pages/rules/rules').then((m) => m.Rules),
+        component: Rules,
       },
       {
         path: 'admin/operations',
@@ -120,7 +141,7 @@ export const routes: Routes = [
       {
         path: '**',
         title: 'notFound.title',
-        loadComponent: () => import('@pages/not-found/not-found').then((m) => m.NotFound),
+        component: NotFound,
       },
     ],
   },

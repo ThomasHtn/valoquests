@@ -31,7 +31,7 @@ export function resolvePlayerAvatarUrl(portrait: string | null): string | null {
   const trimmed = portrait.trim();
   for (const agent of AGENT_PORTRAIT_FILES) {
     if (agent.toLowerCase() === trimmed.toLowerCase()) {
-      return `/players/${agent}.png`;
+      return `/players/${agent}.webp`;
     }
   }
 

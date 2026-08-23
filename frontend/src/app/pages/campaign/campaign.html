@@ -111,11 +111,11 @@
             class="-mb-[calc(var(--hex-h)*0.25)] flex gap-[var(--hex-gap)]"
           >
             @for (column of columns; track column) {
-              <div
-                [class]="columnVisibilityClass(column)"
-                class="group relative h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 hover:z-20 focus-within:z-20"
-              >
-                @if (column === row.bossColumn ? row.node : null; as node) {
+              @if (column === row.bossColumn ? row.node : null; as node) {
+                <div
+                  [class]="columnVisibilityClass(column)"
+                  class="group relative h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 hover:z-20 focus-within:z-20"
+                >
                   @let tier = territoryTier(node.status);
 
                   @if (tier.haloClass) {
@@ -243,20 +243,16 @@
                       }
                     </div>
                   }
-                } @else {
-                  <span
-                    [class]="terrainRingClass"
-                    aria-hidden="true"
-                    class="clip-hex absolute inset-0"
-                  >
-                    <span
-                      [class]="terrainFillClass"
-                      [style.scale]="tileInnerScale"
-                      class="clip-hex absolute inset-0"
-                    ></span>
-                  </span>
-                }
-              </div>
+                </div>
+              } @else {
+                <!-- Bare terrain: a single element, outline and surface both drawn by `hex-terrain`,
+                   since the field is over a hundred and fifty of these. -->
+                <div
+                  [class]="[columnVisibilityClass(column), terrainRingClass]"
+                  aria-hidden="true"
+                  class="hex-terrain h-[var(--hex-h)] w-[var(--hex-w)] shrink-0"
+                ></div>
+              }
             }
           </li>
         }

@@ -367,20 +367,216 @@
                one aligned with match rows proved too fragile, so each stat cell carries its own
                column label instead (`rowGridClass` keeps every row's columns landing at the same
                horizontal position, for the values to scan as a column). -->
-            <div class="hidden flex-col gap-6 lg:flex">
-              @for (day of matchDays(); track day.dayKey) {
-                <div class="flex flex-col gap-2">
-                  <!-- Day summary row: the record sits beside the date rather than at the row's
+            @if (isLarge()) {
+              <div class="flex flex-col gap-6">
+                @for (day of matchDays(); track day.dayKey) {
+                  <div class="flex flex-col gap-2">
+                    <!-- Day summary row: the record sits beside the date rather than at the row's
                      trailing edge, where it would land under the ACS column and read as one of its
                      values. The rest of the row carries the day's own averages/totals, laid out
                      label-over-value under the same columns the matches below use, so a session's
                      overall shape reads at a glance without adding across rows. The background is a
                      denser tint of the match rows' own so the summary reads as their header. -->
-                  <div
-                    [class]="rowGridClass"
-                    class="border-l-2 border-brand-500 bg-text-primary/8 py-2.5 pr-4"
-                  >
-                    <div class="flex items-center gap-4 px-4">
+                    <div
+                      [class]="rowGridClass"
+                      class="border-l-2 border-brand-500 bg-text-primary/8 py-2.5 pr-4"
+                    >
+                      <div class="flex items-center gap-4 px-4">
+                        <span
+                          aria-hidden="true"
+                          class="clip-hex relative size-8 shrink-0 bg-brand-500/50"
+                        >
+                          <span
+                            class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-xs leading-none font-bold text-text-primary tabular-nums"
+                          >
+                            {{ day.matches.length }}
+                          </span>
+                        </span>
+                        <span class="flex min-w-0 items-baseline gap-3">
+                          <span class="label-caption truncate text-text-secondary">
+                            {{ day.dateLabel }}
+                          </span>
+                          <span class="text-sm font-semibold whitespace-nowrap tabular-nums">
+                            <span class="text-accent-green">
+                              {{ 'playerProfile.stats.wins' | translate: { count: day.wins } }}
+                            </span>
+                            <span class="text-text-muted">/</span>
+                            <span class="text-accent-red">
+                              {{ 'playerProfile.stats.losses' | translate: { count: day.losses } }}
+                            </span>
+                          </span>
+                        </span>
+                      </div>
+                      <div></div>
+                      <div></div>
+                      <p class="px-2 text-center">
+                        <span class="label-caption block truncate text-text-muted">
+                          {{ 'playerProfile.matches.columns.kda' | translate }}
+                        </span>
+                        <span
+                          class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                        >
+                          {{ day.totalKills }}/{{ day.totalDeaths }}/{{ day.totalAssists }}
+                        </span>
+                      </p>
+                      <p class="px-2 text-center">
+                        <span class="label-caption block truncate text-text-muted">
+                          {{ 'playerProfile.matches.columns.kd' | translate }}
+                        </span>
+                        <span
+                          class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                        >
+                          {{ formatKda(day.avgKda) }}
+                        </span>
+                      </p>
+                      <p class="px-2 text-center">
+                        <span class="label-caption block truncate text-text-muted">
+                          {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
+                        </span>
+                        <span
+                          class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                        >
+                          {{ formatHeadshotPercentage(day.avgHeadshotPercentage) }}
+                        </span>
+                      </p>
+                      <p class="px-2 text-center">
+                        <span class="label-caption block truncate text-text-muted">
+                          {{ 'playerProfile.matches.columns.adr' | translate }}
+                        </span>
+                        <span
+                          class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                        >
+                          {{ formatScore(day.avgAdr) }}
+                        </span>
+                      </p>
+                      <p class="px-2 text-center">
+                        <span class="label-caption block truncate text-text-muted">
+                          {{ 'playerProfile.matches.columns.acs' | translate }}
+                        </span>
+                        <span
+                          class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                        >
+                          {{ formatScore(day.avgAcs) }}
+                        </span>
+                      </p>
+                    </div>
+
+                    @for (row of day.matches; track row.id) {
+                      <div
+                        [class]="rowGridClass + ' ' + resultAccentClass(row.result)"
+                        class="notch-tr bg-text-primary/4 transition-colors [--notch:0.625rem] hover:bg-brand-500/15"
+                      >
+                        <div class="flex items-center gap-3.5 px-4 py-3.5">
+                          <app-media-thumbnail
+                            [monogram]="agentInitial(row.agentName)"
+                            [src]="mapImageUrl(row.mapName)"
+                          />
+                          <span class="flex min-w-0 flex-col gap-1.5">
+                            <span
+                              class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
+                            >
+                              {{ row.mapName }}
+                              <!-- The result is shown as the row's leading accent and on the ally score,
+                               neither of which conveys anything to a screen reader. -->
+                              <span class="sr-only">
+                                — {{ 'playerProfile.matches.result.' + row.result | translate }}
+                              </span>
+                            </span>
+                            <span class="truncate text-sm text-text-muted">
+                              {{ matchTime(row.startedAt) }} ·
+                              {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }}
+                            </span>
+                          </span>
+                        </div>
+
+                        <p
+                          class="font-display px-4 text-center text-lg leading-none font-bold tabular-nums"
+                        >
+                          @if (matchScore(row.allyScore, row.enemyScore); as score) {
+                            <span [class]="resultTextClass(row.result)">{{ score.ally }}</span>
+                            <span class="text-text-muted"> : {{ score.enemy }}</span>
+                          } @else {
+                            <span class="text-text-muted">—</span>
+                          }
+                        </p>
+
+                        <div class="flex items-center justify-center px-2">
+                          <app-media-thumbnail
+                            [accessibleName]="row.agentName"
+                            [monogram]="agentInitial(row.agentName)"
+                            [src]="agentImageUrl(row.agentName)"
+                          />
+                        </div>
+
+                        <p class="px-2 text-center">
+                          <span class="label-caption block text-text-muted">
+                            {{ 'playerProfile.matches.columns.kda' | translate }}
+                          </span>
+                          <span
+                            class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
+                          >
+                            {{ row.kills }}/{{ row.deaths }}/{{ row.assists }}
+                          </span>
+                        </p>
+
+                        <p class="px-2 text-center">
+                          <span class="label-caption block text-text-muted">
+                            {{ 'playerProfile.matches.columns.kd' | translate }}
+                          </span>
+                          <span
+                            [class]="kdaVisual(row.kda).textClass"
+                            class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
+                          >
+                            {{ formatKda(row.kda) }}
+                          </span>
+                        </p>
+
+                        <p class="px-2 text-center">
+                          <span class="label-caption block text-text-muted">
+                            {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
+                          </span>
+                          <span
+                            class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
+                          >
+                            {{ formatHeadshotPercentage(row.headshotPercentage) }}
+                          </span>
+                        </p>
+
+                        <p class="px-2 text-center">
+                          <span class="label-caption block text-text-muted">
+                            {{ 'playerProfile.matches.columns.adr' | translate }}
+                          </span>
+                          <span
+                            class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
+                          >
+                            {{ formatScore(row.adr) }}
+                          </span>
+                        </p>
+
+                        <p class="px-2 text-center">
+                          <span class="label-caption block text-text-muted">
+                            {{ 'playerProfile.matches.columns.acs' | translate }}
+                          </span>
+                          <span
+                            class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
+                          >
+                            {{ formatScore(row.acs) }}
+                          </span>
+                        </p>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <!-- Card list, below `lg`. Same day grouping as the grid, so the two layouts tell the same
+               story about a session. -->
+              <div class="flex flex-col gap-6">
+                @for (day of matchDays(); track day.dayKey) {
+                  <div class="flex flex-col gap-2">
+                    <div
+                      class="flex flex-wrap items-center gap-x-4 gap-y-2 border-l-2 border-brand-500 bg-text-primary/8 px-4 py-2.5"
+                    >
                       <span
                         aria-hidden="true"
                         class="clip-hex relative size-8 shrink-0 bg-brand-500/50"
@@ -391,320 +587,126 @@
                           {{ day.matches.length }}
                         </span>
                       </span>
-                      <span class="flex min-w-0 items-baseline gap-3">
-                        <span class="label-caption truncate text-text-secondary">
-                          {{ day.dateLabel }}
+                      <span class="label-caption text-text-secondary">
+                        {{ day.dateLabel }}
+                      </span>
+                      <span class="ml-auto text-sm font-semibold tabular-nums">
+                        <span class="text-accent-green">
+                          {{ 'playerProfile.stats.wins' | translate: { count: day.wins } }}
                         </span>
-                        <span class="text-sm font-semibold whitespace-nowrap tabular-nums">
-                          <span class="text-accent-green">
-                            {{ 'playerProfile.stats.wins' | translate: { count: day.wins } }}
-                          </span>
-                          <span class="text-text-muted">/</span>
-                          <span class="text-accent-red">
-                            {{ 'playerProfile.stats.losses' | translate: { count: day.losses } }}
-                          </span>
+                        <span class="text-text-muted">/</span>
+                        <span class="text-accent-red">
+                          {{ 'playerProfile.stats.losses' | translate: { count: day.losses } }}
                         </span>
                       </span>
                     </div>
-                    <div></div>
-                    <div></div>
-                    <p class="px-2 text-center">
-                      <span class="label-caption block truncate text-text-muted">
-                        {{ 'playerProfile.matches.columns.kda' | translate }}
-                      </span>
-                      <span
-                        class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
-                      >
-                        {{ day.totalKills }}/{{ day.totalDeaths }}/{{ day.totalAssists }}
-                      </span>
-                    </p>
-                    <p class="px-2 text-center">
-                      <span class="label-caption block truncate text-text-muted">
-                        {{ 'playerProfile.matches.columns.kd' | translate }}
-                      </span>
-                      <span
-                        class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
-                      >
-                        {{ formatKda(day.avgKda) }}
-                      </span>
-                    </p>
-                    <p class="px-2 text-center">
-                      <span class="label-caption block truncate text-text-muted">
-                        {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
-                      </span>
-                      <span
-                        class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
-                      >
-                        {{ formatHeadshotPercentage(day.avgHeadshotPercentage) }}
-                      </span>
-                    </p>
-                    <p class="px-2 text-center">
-                      <span class="label-caption block truncate text-text-muted">
-                        {{ 'playerProfile.matches.columns.adr' | translate }}
-                      </span>
-                      <span
-                        class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
-                      >
-                        {{ formatScore(day.avgAdr) }}
-                      </span>
-                    </p>
-                    <p class="px-2 text-center">
-                      <span class="label-caption block truncate text-text-muted">
-                        {{ 'playerProfile.matches.columns.acs' | translate }}
-                      </span>
-                      <span
-                        class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
-                      >
-                        {{ formatScore(day.avgAcs) }}
-                      </span>
-                    </p>
-                  </div>
 
-                  @for (row of day.matches; track row.id) {
-                    <div
-                      [class]="rowGridClass + ' ' + resultAccentClass(row.result)"
-                      class="notch-tr bg-text-primary/4 transition-colors [--notch:0.625rem] hover:bg-brand-500/15"
-                    >
-                      <div class="flex items-center gap-3.5 px-4 py-3.5">
-                        <app-media-thumbnail
-                          [monogram]="agentInitial(row.agentName)"
-                          [src]="mapImageUrl(row.mapName)"
-                        />
-                        <span class="flex min-w-0 flex-col gap-1.5">
-                          <span
-                            class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
-                          >
-                            {{ row.mapName }}
-                            <!-- The result is shown as the row's leading accent and on the ally score,
-                               neither of which conveys anything to a screen reader. -->
-                            <span class="sr-only">
-                              — {{ 'playerProfile.matches.result.' + row.result | translate }}
-                            </span>
-                          </span>
-                          <span class="truncate text-sm text-text-muted">
-                            {{ matchTime(row.startedAt) }} ·
-                            {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }}
-                          </span>
-                        </span>
-                      </div>
-
-                      <p
-                        class="font-display px-4 text-center text-lg leading-none font-bold tabular-nums"
-                      >
-                        @if (matchScore(row.allyScore, row.enemyScore); as score) {
-                          <span [class]="resultTextClass(row.result)">{{ score.ally }}</span>
-                          <span class="text-text-muted"> : {{ score.enemy }}</span>
-                        } @else {
-                          <span class="text-text-muted">—</span>
-                        }
-                      </p>
-
-                      <div class="flex items-center justify-center px-2">
-                        <app-media-thumbnail
-                          [accessibleName]="row.agentName"
-                          [monogram]="agentInitial(row.agentName)"
-                          [src]="agentImageUrl(row.agentName)"
-                        />
-                      </div>
-
-                      <p class="px-2 text-center">
-                        <span class="label-caption block text-text-muted">
-                          {{ 'playerProfile.matches.columns.kda' | translate }}
-                        </span>
-                        <span
-                          class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
+                    <ul class="flex flex-col gap-2">
+                      @for (row of day.matches; track row.id) {
+                        <li
+                          [class]="resultAccentClass(row.result)"
+                          class="notch-tr flex flex-col gap-4 bg-text-primary/4 px-4 py-4 [--notch:0.625rem]"
                         >
-                          {{ row.kills }}/{{ row.deaths }}/{{ row.assists }}
-                        </span>
-                      </p>
-
-                      <p class="px-2 text-center">
-                        <span class="label-caption block text-text-muted">
-                          {{ 'playerProfile.matches.columns.kd' | translate }}
-                        </span>
-                        <span
-                          [class]="kdaVisual(row.kda).textClass"
-                          class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
-                        >
-                          {{ formatKda(row.kda) }}
-                        </span>
-                      </p>
-
-                      <p class="px-2 text-center">
-                        <span class="label-caption block text-text-muted">
-                          {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
-                        </span>
-                        <span
-                          class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
-                        >
-                          {{ formatHeadshotPercentage(row.headshotPercentage) }}
-                        </span>
-                      </p>
-
-                      <p class="px-2 text-center">
-                        <span class="label-caption block text-text-muted">
-                          {{ 'playerProfile.matches.columns.adr' | translate }}
-                        </span>
-                        <span
-                          class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
-                        >
-                          {{ formatScore(row.adr) }}
-                        </span>
-                      </p>
-
-                      <p class="px-2 text-center">
-                        <span class="label-caption block text-text-muted">
-                          {{ 'playerProfile.matches.columns.acs' | translate }}
-                        </span>
-                        <span
-                          class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
-                        >
-                          {{ formatScore(row.acs) }}
-                        </span>
-                      </p>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-
-            <!-- Card list, below `lg`. Same day grouping as the grid, so the two layouts tell the same
-               story about a session. -->
-            <div class="flex flex-col gap-6 lg:hidden">
-              @for (day of matchDays(); track day.dayKey) {
-                <div class="flex flex-col gap-2">
-                  <div
-                    class="flex flex-wrap items-center gap-x-4 gap-y-2 border-l-2 border-brand-500 bg-text-primary/8 px-4 py-2.5"
-                  >
-                    <span
-                      aria-hidden="true"
-                      class="clip-hex relative size-8 shrink-0 bg-brand-500/50"
-                    >
-                      <span
-                        class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-xs leading-none font-bold text-text-primary tabular-nums"
-                      >
-                        {{ day.matches.length }}
-                      </span>
-                    </span>
-                    <span class="label-caption text-text-secondary">
-                      {{ day.dateLabel }}
-                    </span>
-                    <span class="ml-auto text-sm font-semibold tabular-nums">
-                      <span class="text-accent-green">
-                        {{ 'playerProfile.stats.wins' | translate: { count: day.wins } }}
-                      </span>
-                      <span class="text-text-muted">/</span>
-                      <span class="text-accent-red">
-                        {{ 'playerProfile.stats.losses' | translate: { count: day.losses } }}
-                      </span>
-                    </span>
-                  </div>
-
-                  <ul class="flex flex-col gap-2">
-                    @for (row of day.matches; track row.id) {
-                      <li
-                        [class]="resultAccentClass(row.result)"
-                        class="notch-tr flex flex-col gap-4 bg-text-primary/4 px-4 py-4 [--notch:0.625rem]"
-                      >
-                        <div class="flex items-center gap-3.5">
-                          <app-media-thumbnail
-                            [monogram]="agentInitial(row.agentName)"
-                            [src]="mapImageUrl(row.mapName)"
-                          />
-                          <div class="flex min-w-0 flex-1 flex-col gap-1.5">
-                            <p
-                              class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
-                            >
-                              {{ row.mapName }}
-                              <!-- The result is shown as the card's leading accent and on the ally
+                          <div class="flex items-center gap-3.5">
+                            <app-media-thumbnail
+                              [monogram]="agentInitial(row.agentName)"
+                              [src]="mapImageUrl(row.mapName)"
+                            />
+                            <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+                              <p
+                                class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
+                              >
+                                {{ row.mapName }}
+                                <!-- The result is shown as the card's leading accent and on the ally
                                  score, neither of which conveys anything to a screen reader. -->
-                              <span class="sr-only">
-                                — {{ 'playerProfile.matches.result.' + row.result | translate }}
-                              </span>
+                                <span class="sr-only">
+                                  — {{ 'playerProfile.matches.result.' + row.result | translate }}
+                                </span>
+                              </p>
+                              <p class="truncate text-sm text-text-muted">
+                                {{ matchTime(row.startedAt) }} ·
+                                {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }}
+                              </p>
+                            </div>
+                            <p
+                              class="font-display shrink-0 text-lg leading-none font-bold tabular-nums"
+                            >
+                              @if (matchScore(row.allyScore, row.enemyScore); as score) {
+                                <span [class]="resultTextClass(row.result)">{{ score.ally }}</span>
+                                <span class="text-text-muted"> : {{ score.enemy }}</span>
+                              } @else {
+                                <span class="text-text-muted">—</span>
+                              }
                             </p>
-                            <p class="truncate text-sm text-text-muted">
-                              {{ matchTime(row.startedAt) }} ·
-                              {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }}
-                            </p>
+                            <app-media-thumbnail
+                              [accessibleName]="row.agentName"
+                              [monogram]="agentInitial(row.agentName)"
+                              [src]="agentImageUrl(row.agentName)"
+                            />
                           </div>
-                          <p
-                            class="font-display shrink-0 text-lg leading-none font-bold tabular-nums"
-                          >
-                            @if (matchScore(row.allyScore, row.enemyScore); as score) {
-                              <span [class]="resultTextClass(row.result)">{{ score.ally }}</span>
-                              <span class="text-text-muted"> : {{ score.enemy }}</span>
-                            } @else {
-                              <span class="text-text-muted">—</span>
-                            }
-                          </p>
-                          <app-media-thumbnail
-                            [accessibleName]="row.agentName"
-                            [monogram]="agentInitial(row.agentName)"
-                            [src]="agentImageUrl(row.agentName)"
-                          />
-                        </div>
 
-                        <dl
-                          class="grid grid-cols-3 gap-3 border-t border-text-primary/10 pt-4 sm:grid-cols-5"
-                        >
-                          <div>
-                            <dt class="label-caption text-text-muted">
-                              {{ 'playerProfile.matches.columns.kda' | translate }}
-                            </dt>
-                            <dd
-                              class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
-                            >
-                              {{ row.kills }}/{{ row.deaths }}/{{ row.assists }}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt class="label-caption text-text-muted">
-                              {{ 'playerProfile.matches.columns.kd' | translate }}
-                            </dt>
-                            <dd
-                              [class]="kdaVisual(row.kda).textClass"
-                              class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
-                            >
-                              {{ formatKda(row.kda) }}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt class="label-caption text-text-muted">
-                              {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
-                            </dt>
-                            <dd
-                              class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
-                            >
-                              {{ formatHeadshotPercentage(row.headshotPercentage) }}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt class="label-caption text-text-muted">
-                              {{ 'playerProfile.matches.columns.adr' | translate }}
-                            </dt>
-                            <dd
-                              class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
-                            >
-                              {{ formatScore(row.adr) }}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt class="label-caption text-text-muted">
-                              {{ 'playerProfile.matches.columns.acs' | translate }}
-                            </dt>
-                            <dd
-                              class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
-                            >
-                              {{ formatScore(row.acs) }}
-                            </dd>
-                          </div>
-                        </dl>
-                      </li>
-                    }
-                  </ul>
-                </div>
-              }
-            </div>
+                          <dl
+                            class="grid grid-cols-3 gap-3 border-t border-text-primary/10 pt-4 sm:grid-cols-5"
+                          >
+                            <div>
+                              <dt class="label-caption text-text-muted">
+                                {{ 'playerProfile.matches.columns.kda' | translate }}
+                              </dt>
+                              <dd
+                                class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                              >
+                                {{ row.kills }}/{{ row.deaths }}/{{ row.assists }}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt class="label-caption text-text-muted">
+                                {{ 'playerProfile.matches.columns.kd' | translate }}
+                              </dt>
+                              <dd
+                                [class]="kdaVisual(row.kda).textClass"
+                                class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
+                              >
+                                {{ formatKda(row.kda) }}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt class="label-caption text-text-muted">
+                                {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
+                              </dt>
+                              <dd
+                                class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                              >
+                                {{ formatHeadshotPercentage(row.headshotPercentage) }}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt class="label-caption text-text-muted">
+                                {{ 'playerProfile.matches.columns.adr' | translate }}
+                              </dt>
+                              <dd
+                                class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                              >
+                                {{ formatScore(row.adr) }}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt class="label-caption text-text-muted">
+                                {{ 'playerProfile.matches.columns.acs' | translate }}
+                              </dt>
+                              <dd
+                                class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                              >
+                                {{ formatScore(row.acs) }}
+                              </dd>
+                            </div>
+                          </dl>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+            }
 
             <!-- Infinite-scroll trigger, present only while another page remains. Observed by the
                component's intersection observer, which requests that next page once this element

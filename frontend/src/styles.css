@@ -62,6 +62,41 @@
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
+/* Ring-shaped progress track, filled clockwise from the top to `--progress` percent in the
+   element's own `currentColor`. A conic gradient masked into a ring, so the whole indicator is one
+   node instead of an SVG holding a track circle and a dashed arc — the ranking matrix draws
+   thirty-five of them at once. The mask's stop is the inner edge of the ring, as a share of the
+   radius: it matches the stroke the SVG form used to draw. */
+@utility progress-ring {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(
+    currentColor calc(var(--progress, 0) * 1%),
+    color-mix(in oklab, var(--color-text-primary) 12%, transparent) 0
+  );
+  mask: radial-gradient(farthest-side, transparent 72%, black 72.5% 100%, transparent 100%);
+}
+
+/* An outlined hexagon — the campaign map's terrain tile — drawn as one element rather than a
+   surface nested in an outline. The map lays out over a hundred and fifty of these purely
+   decorative tiles, and the nested markup made each one cost three nodes: the field alone was
+   more than half the page's DOM, which is the heaviest term of its environmental footprint. The
+   inner surface is scaled rather than inset so the outline keeps a constant width all the way
+   around (see `TILE_INNER_SCALE`, which this mirrors). */
+@utility hex-terrain {
+  position: relative;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    scale: 0.95;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background-color: var(--color-surface-950);
+  }
+}
+
 /* Panel cut at its top-right corner only. The direction's single card silhouette: every notched
    surface is cut on the same corner, so cards, bands and badges read as one family. */
 @utility notch-tr {

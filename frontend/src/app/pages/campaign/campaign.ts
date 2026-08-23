@@ -28,7 +28,6 @@ import {
   resolveBossColumn,
   resolveBossTerritoryTier,
   resolveColumnVisibilityClass,
-  TERRAIN_FILL_CLASS,
   TERRAIN_RING_CLASS,
   TILE_INNER_SCALE,
   TRAIL_TERRAIN_ROWS,
@@ -215,7 +214,6 @@ export class Campaign {
   protected readonly timelineTier = resolveBossTimelineTier;
   protected readonly columnVisibilityClass = resolveColumnVisibilityClass;
   protected readonly terrainRingClass = TERRAIN_RING_CLASS;
-  protected readonly terrainFillClass = TERRAIN_FILL_CLASS;
   protected readonly tileInnerScale = TILE_INNER_SCALE;
   protected readonly legendInnerScale = LEGEND_INNER_SCALE;
 

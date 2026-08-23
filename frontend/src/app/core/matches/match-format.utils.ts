@@ -64,7 +64,7 @@ export function resolveAgentImageUrl(agentName: string): string | null {
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
-  return AGENT_IMAGE_IDS.has(id) ? `/agents/${id}.png` : null;
+  return AGENT_IMAGE_IDS.has(id) ? `/agents/${id}.webp` : null;
 }
 
 /**

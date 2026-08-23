@@ -57,6 +57,7 @@ import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
 import { StatTile } from '@shared/stat-tile/stat-tile';
 import { Tooltip } from '@shared/tooltip/tooltip';
+import { Breakpoint } from '@core/viewport/breakpoint';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { MatchDay } from './match-day.model';
 import { groupMatchesByDay } from './match-day.utils';
@@ -137,6 +138,12 @@ export class PlayerProfile {
    * i18n service used to resolve the player's translated rank label.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Whether the viewport can hold the match grid: below it, the same matches are rendered as
+   * cards. Only the matching layout is put in the DOM, never both.
+   */
+  protected readonly isLarge = inject(Breakpoint).isLarge;
 
   /**
    * Numeric form of {@link id}, as required by the backing resources.

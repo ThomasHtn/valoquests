@@ -10,12 +10,22 @@
     <link href="favicon.svg" rel="icon" type="image/svg+xml" />
     <link href="favicon.ico" rel="icon" type="image/x-icon" />
     <!-- Typefaces of the "Expédition" direction: Oswald for headings and the wordmark, Barlow
-         Condensed for body copy. -->
-    <link href="https://fonts.googleapis.com" rel="preconnect" />
-    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
+         Condensed for body copy. Both are self-hosted and declared in `styles/typography.css`;
+         the two the first screen always sets are preloaded so they are fetched alongside the
+         stylesheet rather than after it. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
+      as="font"
+      crossorigin
+      href="/fonts/oswald-400-700.woff2"
+      rel="preload"
+      type="font/woff2"
+    />
+    <link
+      as="font"
+      crossorigin
+      href="/fonts/barlow-condensed-400.woff2"
+      rel="preload"
+      type="font/woff2"
     />
   </head>
   <body>

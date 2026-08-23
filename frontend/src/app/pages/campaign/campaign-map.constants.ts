@@ -133,9 +133,11 @@ const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritor
  * One flat treatment for the whole field, deliberately: the weeks are what carry the campaign's
  * state, and tinting the terrain by how far the front had passed only read as an unexplained color
  * change across the top of the map.
+ *
+ * Only the outline is a class: the surface inside it is drawn by the `hex-terrain` utility's own
+ * pseudo-element, so a terrain tile costs one node instead of three.
  */
 export const TERRAIN_RING_CLASS = 'bg-surface-800/50';
-export const TERRAIN_FILL_CLASS = 'bg-surface-950';
 
 /**
  * Viewport width each column of {@link MAP_COLUMNS} needs before it is drawn, as the utilities that
