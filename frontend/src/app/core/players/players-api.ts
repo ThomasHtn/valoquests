@@ -55,19 +55,26 @@ export class PlayersApi {
   /**
    * Analytics behind one tracked player's progression view, scoped to a set of seasons.
    *
-   * @param id - Reactive internal player identifier.
+   * @param id - Reactive internal player identifier, or `null` while the player to load is not
+   *   known yet, which leaves the resource idle instead of requesting an invalid identifier.
    * @param seasonIds - Reactive season selection; an empty list covers every season.
    * @returns The reactive resource fetching the requested player's progression analytics.
    */
   public progression(
-    id: Signal<number>,
+    id: Signal<number | null>,
     seasonIds: Signal<readonly number[]>,
   ): HttpResourceRef<PlayerProgression | undefined> {
     return httpResource<PlayerProgression>(() => {
+      const playerId = id();
+
+      if (playerId === null) {
+        return undefined;
+      }
+
       const selectedSeasonIds = seasonIds();
 
       return {
-        url: API_ENDPOINTS.playerProgression(id()),
+        url: API_ENDPOINTS.playerProgression(playerId),
         // Repeated rather than comma-joined, which is how Spring binds a `List<Long>` parameter.
         // Omitted entirely when empty, which the backend reads as "every season".
         params: { ...(selectedSeasonIds.length > 0 ? { seasonIds: [...selectedSeasonIds] } : {}) },

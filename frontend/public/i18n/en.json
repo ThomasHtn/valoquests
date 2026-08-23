@@ -202,16 +202,15 @@
     "title": "Battle map"
   },
   "landing": {
-    "body": "Every match moves the squad forward on this week's map. Five challenges to clear, one threat to push back before Sunday night.",
+    "body": "A web app where every battle is fought through the video game Valorant. Week after week, the squad pushes back the enemy holding the territory and takes it back, match after match.",
     "compass": {
       "action": "Enter",
-      "caption": "Hit the road"
+      "caption": "Join the squad"
     },
     "heading": {
-      "line1": "One squad.",
-      "line2": "One territory to reclaim."
+      "welcome": "Welcome to"
     },
-    "hint": "Click the compass",
+    "hint": "Do you dare join the adventure?",
     "title": "Expedition",
     "weekLabel": "Expedition · Week {{week}}",
     "weekLabelPending": "Expedition"
@@ -637,28 +636,27 @@
       "counter": "{{current}} / {{total}}",
       "label": "Step"
     },
-    "rulesLink": "Read the full rules",
     "skip": "Skip the tour",
     "steps": {
       "boss": {
-        "body": "Every week a boss stands in the squad's way with its own pool of hit points. Your matches and challenges chip away at it, and it has to fall before Sunday 11:59 pm. Miss that, and it survives the week.",
+        "body": "Every week, an opponent appears with a pool of hit points shared by the whole group. Every match you play and every challenge you clear deals damage to it. It has to fall before Sunday 11:59 pm: miss that, and it survives and the territory stays in its hands.",
         "eyebrow": "The boss",
-        "title": "This week's opponent"
+        "title": "An opponent to defeat"
       },
       "challenges": {
-        "body": "Five challenges are drawn every week, from the easiest to the nastiest. The harder the challenge, the more it costs the boss. The bar tracks what the squad has cleared so far, one challenge at a time.",
+        "body": "Every Monday, five challenges are drawn at random, from the easiest to the hardest. The harder a challenge is to clear, the more damage it deals to the opponent.",
         "eyebrow": "The challenges",
-        "title": "Five challenges, five tiers"
+        "title": "Five challenges to clear every week"
       },
       "intro": {
-        "body": "Seven players, one week, one territory to take back. Everything you play in Valorant counts: every match feeds the squad's effort and your standing in the group. One minute to get the loop.",
+        "body": "You are joining a squad. Every week, the matches you play on Valorant move the whole group forward: they clear challenges, deal damage and push back the enemy holding the territory.\n\nLet's walk through a week.",
         "eyebrow": "The idea",
-        "title": "One week, one expedition"
+        "title": "A shared adventure, week after week"
       },
       "players": {
-        "body": "Every tracked player has their own page: competitive rank, match history and detailed statistics. That is the broad strokes — the rules page covers the points, the bonuses and the exact numbers.",
-        "eyebrow": "The squad",
-        "title": "Every player, their own page"
+        "body": "It is all yours to explore, starting now. And who knows: the next champion of this adventure might just be you.",
+        "eyebrow": "To discover",
+        "title": "Every adventurer has a story of their own"
       },
       "ranking": {
         "body": "Everyone's damage adds up into a weekly ranking. Showing up regularly and clearing challenges together earn bonuses on top. Whoever leads when the week closes takes the Champion title.",

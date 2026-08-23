@@ -91,6 +91,20 @@ export class PersonalRecords {
   public readonly records = input.required<PersonalRecordsData>();
 
   /**
+   * How many records to show at most, or `null` for all of them.
+   *
+   * Exists for the guided tour, which shows this section as a sample of what a profile holds rather
+   * than as the profile's own full grid.
+   */
+  public readonly max = input<number | null>(null);
+
+  /**
+   * Whether to render the tiles at the smaller type and spacing of a sample, rather than at the
+   * profile's own scale.
+   */
+  public readonly compact = input(false);
+
+  /**
    * i18n service, used for the tooltips carrying each record's context.
    */
   private readonly translation = inject(Translation);
@@ -129,7 +143,9 @@ export class PersonalRecords {
       tiles.push(this.simpleTile('peakTier', tier.label));
     }
 
-    return tiles;
+    const max = this.max();
+
+    return max === null ? tiles : tiles.slice(0, max);
   });
 
   /**

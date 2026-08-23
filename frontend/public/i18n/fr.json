@@ -202,16 +202,15 @@
     "title": "Carte de bataille"
   },
   "landing": {
-    "body": "Chaque partie fait avancer l'escouade sur la carte de la semaine. Cinq défis à relever, une menace à repousser avant dimanche soir.",
+    "body": "Une web app où chaque bataille se mène à travers le jeu vidéo Valorant. Semaine après semaine, l'escouade repousse l'adversaire qui occupe le territoire et le reconquiert partie après partie.",
     "compass": {
       "action": "Entrer",
-      "caption": "Prendre la route"
+      "caption": "Rejoindre l'escouade"
     },
     "heading": {
-      "line1": "Une escouade.",
-      "line2": "Un territoire à reconquérir."
+      "welcome": "Bienvenue dans"
     },
-    "hint": "Clique sur la boussole",
+    "hint": "Oseriez-vous rejoindre l'aventure ?",
     "title": "Expédition",
     "weekLabel": "Expédition · Semaine {{week}}",
     "weekLabelPending": "Expédition"
@@ -637,33 +636,32 @@
       "counter": "{{current}} / {{total}}",
       "label": "Étape"
     },
-    "rulesLink": "Lire les règles en détail",
     "skip": "Passer le tour",
     "steps": {
       "boss": {
-        "body": "Chaque semaine, un boss se dresse devant l'escouade avec ses propres points de vie. Vos parties et vos défis lui infligent des dégâts, et il faut le mettre à terre avant dimanche 23h59. Passé ce délai, il survit et la semaine est perdue.",
+        "body": "Chaque semaine, un adversaire apparaît avec des points de vie partagés par tout le groupe. Chacune de vos parties et chacun des défis relevés lui inflige des dégâts. Il faut le vaincre avant dimanche 23h59 : passé ce délai, il survit et le territoire reste entre ses mains.",
         "eyebrow": "Le boss",
-        "title": "L'adversaire de la semaine"
+        "title": "Un adversaire à vaincre"
       },
       "challenges": {
-        "body": "Cinq défis sont tirés chaque semaine, du plus simple au plus corsé. Plus un défi est difficile, plus il coûte cher au boss. La barre suit ce que l'escouade a déjà validé, défi par défi.",
+        "body": "Chaque lundi, cinq défis sont tirés au sort, du plus facile au plus difficile. Plus un défi est difficile à réussir, plus il inflige de dégâts à l'adversaire.",
         "eyebrow": "Les défis",
-        "title": "Cinq défis, cinq niveaux"
+        "title": "Cinq défis à relever chaque semaine"
       },
       "intro": {
-        "body": "Sept joueurs, une semaine, un territoire à reprendre. Tout ce que vous jouez sur Valorant compte : chaque partie alimente l'effort collectif et votre place dans le groupe. Une minute pour comprendre le cycle.",
+        "body": "Vous rejoignez une escouade. Chaque semaine, les parties que vous jouez sur Valorant font avancer tout le groupe : elles valident des défis, infligent des dégâts et repoussent l'adversaire qui occupe le territoire.\n\nVoyons comment se déroule une semaine.",
         "eyebrow": "Le principe",
-        "title": "Une semaine, une expédition"
+        "title": "Une aventure collective, semaine après semaine"
       },
       "players": {
-        "body": "Chaque joueur suivi a sa fiche : rang compétitif, historique de parties et statistiques détaillées. C'est tout pour les grandes lignes — la page des règles détaille les points, les bonus et les barèmes.",
-        "eyebrow": "L'escouade",
-        "title": "Chaque joueur, son profil"
+        "body": "À vous de découvrir tout ça dès à présent. Et qui sait : le prochain champion de l'aventure, ce sera peut-être vous.",
+        "eyebrow": "À découvrir",
+        "title": "Chaque aventurier possède sa propre histoire"
       },
       "ranking": {
-        "body": "Les dégâts de chacun sont cumulés et donnent un classement hebdomadaire. La régularité et les efforts collectifs ajoutent des bonus. Le joueur en tête à la clôture de la semaine repart avec le titre de Champion.",
+        "body": "Les dégâts infligés par chaque aventurier sont additionnés pour former un classement hebdomadaire. Jouer régulièrement et réussir des défis en groupe rapporte des bonus supplémentaires. Celui qui est en tête à la fin de la semaine remporte le titre de Champion.",
         "eyebrow": "Le classement",
-        "title": "Qui frappe le plus fort"
+        "title": "Qui a le plus contribué"
       }
     },
     "title": "Tour d'horizon"

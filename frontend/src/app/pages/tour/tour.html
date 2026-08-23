@@ -52,7 +52,7 @@
        the header and footer stay put. -->
   <div
     #content
-    class="scroll-subtle flex flex-1 flex-col overflow-y-auto px-4 py-8 sm:px-8 sm:py-10"
+    class="scroll-subtle flex flex-1 flex-col overflow-y-auto px-4 py-10 sm:px-8 sm:py-16"
   >
     <!-- Announced on every step change: the controls stay in place and only this region swaps, so
          nothing else would tell a screen reader that the content moved on.
@@ -71,7 +71,7 @@
         <div
           [class]="
             hasIllustration()
-              ? 'grid items-center gap-8 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-14'
+              ? 'grid items-center gap-10 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-20'
               : 'flex justify-center'
           "
         >
@@ -81,34 +81,48 @@
             [class]="
               hasIllustration()
                 ? 'items-center text-center lg:items-start lg:text-left'
-                : 'max-w-3xl items-center text-center'
+                : 'max-w-4xl items-center text-center'
             "
             class="flex flex-col motion-safe:animate-step-in"
           >
-            <p class="tracking-label-wide font-mono text-xs font-medium text-brand-500 uppercase">
+            <p
+              class="tracking-label-wide font-mono text-sm font-semibold text-brand-500 uppercase sm:text-base"
+            >
               {{ 'tour.steps.' + step + '.eyebrow' | translate }}
             </p>
 
-            <h1 class="font-display mt-3 text-3xl/tight font-bold uppercase sm:text-4xl/tight">
+            <!-- One size larger on the step that stands alone: with no illustration beside it, the
+                 heading is the only thing holding the top of a full-width column. -->
+            <h1
+              [class]="
+                hasIllustration()
+                  ? 'text-3xl/tight sm:text-4xl/tight'
+                  : 'text-3xl/tight sm:text-4xl/tight lg:text-5xl/tight'
+              "
+              class="font-display mt-4 text-balance font-bold uppercase"
+            >
               {{ 'tour.steps.' + step + '.title' | translate }}
             </h1>
 
-            <p class="mt-4 max-w-[46ch] text-lead text-text-secondary sm:text-xl/relaxed">
-              {{ 'tour.steps.' + step + '.body' | translate }}
-            </p>
-
-            <!-- The hand-off to the rules page, on the closing step only: the tour deliberately
-                 stops at the broad strokes, and this is where the detail lives. Opens in the
-                 application, so following it ends the tour like any other exit. -->
-            @if (isLast()) {
-              <a
-                (click)="leaveForRules()"
-                class="focus-ring label-caption mt-6 inline-flex h-12 items-center border border-brand-500/45 px-4 text-brand-500 transition-colors hover:bg-brand-500/12"
-                routerLink="/rules"
-              >
-                {{ 'tour.rulesLink' | translate }}
-              </a>
-            }
+            <!-- Split on a blank line rather than one long paragraph: most steps only have one
+                 sentence and render a single `<p>`, but the opening step spells out three separate
+                 ideas — reading them as one block was exactly what made it hard to follow. -->
+            <!-- 46ch is the measure of a column sharing its row with an illustration. The step that
+                 stands alone has the whole width to itself, and holding it to that same measure
+                 left a narrow ribbon stranded in the middle of the viewport. -->
+            <div
+              [class]="hasIllustration() ? 'max-w-[46ch]' : 'max-w-[64ch]'"
+              class="mt-6 flex flex-col gap-3"
+            >
+              @for (
+                paragraph of paragraphs('tour.steps.' + step + '.body' | translate);
+                track paragraph
+              ) {
+                <p class="text-pretty text-lead text-text-secondary sm:text-xl/relaxed">
+                  {{ paragraph }}
+                </p>
+              }
+            </div>
           </div>
 
           <!-- The step's illustration: the very component the visitor is about to meet, entering a
@@ -126,7 +140,7 @@
                   <app-podium />
                 }
                 @case ('players') {
-                  <app-players-preview />
+                  <app-player-spotlight />
                 }
               }
             </div>

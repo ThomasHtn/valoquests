@@ -1,5 +1,5 @@
 import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -9,7 +9,7 @@ import { Podium } from '@pages/overview/podium/podium';
 import { TeamProgress } from '@pages/overview/team-progress/team-progress';
 import { NavChip } from '@shared/nav-chip/nav-chip';
 
-import { PlayersPreview } from './players-preview/players-preview';
+import { PlayerSpotlight } from './player-spotlight/player-spotlight';
 import { TOUR_STEPS } from './tour.constants';
 import { TourStepId } from './tour.model';
 
@@ -36,13 +36,12 @@ import { TourStepId } from './tour.model';
   selector: 'app-tour',
   imports: [
     TranslatePipe,
-    RouterLink,
     LucideChevronLeft,
     LucideChevronRight,
     BossEncounter,
     TeamProgress,
     Podium,
-    PlayersPreview,
+    PlayerSpotlight,
     NavChip,
   ],
   templateUrl: './tour.html',
@@ -161,12 +160,16 @@ export class Tour {
   }
 
   /**
-   * Records the completion without navigating, for the closing step's link to the rules page: the
-   * `routerLink` carries the navigation, so triggering {@link finish} here would race it and land
-   * the visitor on the overview instead.
+   * Splits a step's translated body into paragraphs.
+   *
+   * Most steps are a single sentence and yield one paragraph; a blank line in the dictionary
+   * entry marks where a step needs more than that.
+   *
+   * @param body - The step's translated body text.
+   * @returns The body split into one or more paragraphs.
    */
-  protected leaveForRules(): void {
-    this.tourVisit.markCompleted();
+  protected paragraphs(body: string): readonly string[] {
+    return body.split('\n\n');
   }
 
   /**

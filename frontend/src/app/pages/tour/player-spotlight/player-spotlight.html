@@ -1,0 +1,47 @@
+<!-- One adventurer rather than the whole roster: the identity banner of their profile, cut down to a
+     portrait and a rank, with that profile's own records section underneath. -->
+<app-resource-state
+  (retry)="reload()"
+  [emptyText]="'players.empty' | translate"
+  [errorText]="'players.error' | translate"
+  [isEmpty]="identity() === null"
+  [isError]="hasError()"
+  [isLoading]="isLoading()"
+  [loadingText]="'players.loading' | translate"
+  padding="py-6"
+>
+  @if (identity(); as player) {
+    <div
+      class="notch-tr notch-tr-edge flex flex-col gap-5 border border-text-primary/10 bg-text-primary/4 px-5 py-5 [--notch:0.75rem]"
+    >
+      <div class="flex items-center gap-4">
+        <!-- Hexagon silhouette, the application's marker for a player who holds a rank. -->
+        <app-avatar [src]="player.avatarUrl" size="md" />
+
+        <div class="flex min-w-0 flex-col gap-1.5">
+          <p class="font-display truncate text-lg leading-tight font-semibold">
+            {{ player.displayName }}
+          </p>
+
+          <div class="flex items-center gap-1.5">
+            <app-rank-icon-view
+              [src]="player.rankIconUrl"
+              [tierLabel]="player.tier.label"
+              size="sm"
+            />
+            <span [class]="player.tier.colorClass" class="label-caption max-w-full truncate">
+              {{ player.tier.label }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- The profile's own records section, on this player's real progression. Rendered only once
+           the figures are in: the section states its own emptiness, which would read here as "this
+           adventurer has no story" while the request is still on the wire. -->
+      @if (records(); as playerRecords) {
+        <app-personal-records [compact]="true" [max]="3" [records]="playerRecords" />
+      }
+    </div>
+  }
+</app-resource-state>
