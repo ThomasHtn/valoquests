@@ -15,7 +15,6 @@
 @theme {
   --animate-compass-spin: compass-spin 26s linear infinite;
   --animate-compass-spin-reverse: compass-spin-reverse 40s linear infinite;
-  --animate-compass-needle: compass-needle 5s ease-in-out infinite;
   --animate-compass-core: compass-core 2.4s ease-in-out infinite;
   --animate-compass-ripple: compass-ripple 3s ease-out infinite;
   --animate-hint-nudge: hint-nudge 1.6s ease-in-out infinite;
@@ -50,18 +49,6 @@
 
     to {
       transform: rotate(-360deg);
-    }
-  }
-
-  /* Needle hunting around its resting bearing, as a real compass needle settles. */
-  @keyframes compass-needle {
-    0%,
-    100% {
-      transform: rotate(28deg);
-    }
-
-    50% {
-      transform: rotate(48deg);
     }
   }
 

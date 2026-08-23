@@ -71,9 +71,9 @@ interface BonusShowcase {
 }
 
 /**
- * One tier of the regularity bonus: extra damage awarded once the group has been active on this
- * many distinct days in the week. Mirrors `ScoringRulesetV1#regularityBonus`; a single active day
- * earns nothing, so the ladder starts at two.
+ * One tier of the regularity bonus: extra damage awarded to a player who played on this many
+ * distinct days in the week — it is counted per player, not for the group. Mirrors
+ * `ScoringRulesetV1#regularityBonus`; a single active day earns nothing, so the ladder starts at two.
  */
 export const REGULARITY_BONUS_SHOWCASE: readonly BonusShowcase[] = [
   { label: '2', bonus: 300 },
@@ -103,4 +103,9 @@ export const TEAM_BONUS_SHOWCASE: readonly BonusShowcase[] = [
  *
  * Each entry is the last segment of its `rules.sections.ranking.facts.*` translation key.
  */
-export const RANKING_FACTS: readonly string[] = ['damage', 'championTitle', 'crown'];
+export const RANKING_FACTS: readonly string[] = [
+  'damage',
+  'championTitle',
+  'crown',
+  'finishingBlow',
+];

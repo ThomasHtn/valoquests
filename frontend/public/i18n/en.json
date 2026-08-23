@@ -545,7 +545,7 @@
     "sections": {
       "bonuses": {
         "days": "{{days}} d",
-        "footnote": "Both bonuses stack on top of match and challenge damage. Nothing to do beyond playing.",
+        "footnote": "Both bonuses add to match and challenge damage in your weekly total; only the squad bonus also chips at the boss. Nothing to do beyond playing.",
         "players": "{{count}} players",
         "regularityLabel": "Regularity · days played in the week",
         "teamLabel": "Squad · players who finished the same challenge",
@@ -574,9 +574,10 @@
       "ranking": {
         "description": "Total damage for the week decides the ranking. The rest is glory.",
         "facts": {
-          "championTitle": "Finishing blow = Champion title, shown on the overview.",
-          "crown": "The crown stays with the Champion until the next boss goes down.",
-          "damage": "Weekly ranking: the sum of your damage (matches + challenges + bonuses)."
+          "championTitle": "1st place in a finalized week = Champion title, shown on the overview.",
+          "crown": "The crown stays with the Champion until the next week is finalized.",
+          "damage": "Weekly ranking: the sum of your damage (matches + challenges + bonuses).",
+          "finishingBlow": "The finishing blow on the boss is credited separately, in the fight history."
         },
         "title": "Ranking & crown"
       }

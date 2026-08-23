@@ -545,7 +545,7 @@
     "sections": {
       "bonuses": {
         "days": "{{days}} j",
-        "footnote": "Ces deux bonus se cumulent avec les dégâts des matchs et des défis. Rien à faire de plus que jouer.",
+        "footnote": "Ces deux bonus s'ajoutent aux dégâts des matchs et des défis dans ton total de la semaine ; seul le bonus d'escouade entame aussi le boss. Rien à faire de plus que jouer.",
         "players": "{{count}} joueurs",
         "regularityLabel": "Régularité · jours joués dans la semaine",
         "teamLabel": "Escouade · joueurs ayant fini le même défi",
@@ -574,9 +574,10 @@
       "ranking": {
         "description": "Les dégâts totaux de la semaine font le classement. Le reste, c'est de la gloire.",
         "facts": {
-          "championTitle": "Coup de grâce = titre de Champion, affiché sur la vue d'ensemble.",
-          "crown": "La couronne reste au Champion jusqu'au prochain boss achevé.",
-          "damage": "Classement hebdo : somme de tes dégâts (matchs + défis + bonus)."
+          "championTitle": "1re place d'une semaine clôturée = titre de Champion, affiché sur la vue d'ensemble.",
+          "crown": "La couronne reste au Champion jusqu'à la clôture de la semaine suivante.",
+          "damage": "Classement hebdo : somme de tes dégâts (matchs + défis + bonus).",
+          "finishingBlow": "Le coup de grâce sur le boss est crédité à part, dans l'historique des combats."
         },
         "title": "Classement & couronne"
       }

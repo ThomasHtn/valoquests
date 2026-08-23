@@ -1,8 +1,5 @@
 <!-- Layers are stacked in a single grid cell rather than absolutely positioned, so that centering
-     costs no `transform` and leaves each layer's own transform free for its animation. The needle
-     is the exception: it pivots around the compass center, not its own, so it is anchored with
-     `bottom-1/2` and offset with `left-[calc(50%-1px)]` (half its 2px width) instead of a
-     translate that the rotation would overwrite. -->
+     costs no `transform` and leaves each layer's own transform free for its animation. -->
 <button
   class="focus-ring relative grid h-[210px] w-[210px] cursor-pointer place-items-center rounded-full transition-transform duration-200 hover:scale-[1.03] sm:h-[300px] sm:w-[300px]"
   type="button"
@@ -61,10 +58,4 @@
       {{ 'landing.compass.caption' | translate }}
     </span>
   </span>
-
-  <!-- Needle, drawn over everything and hunting around its resting bearing. -->
-  <span
-    aria-hidden="true"
-    class="absolute bottom-1/2 left-[calc(50%-1px)] h-[54px] w-0.5 origin-bottom rotate-[28deg] bg-linear-to-b from-brand-500 to-brand-500/0 motion-safe:animate-compass-needle sm:h-[76px]"
-  ></span>
 </button>

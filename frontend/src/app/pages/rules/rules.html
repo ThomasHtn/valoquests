@@ -30,11 +30,10 @@
      numbers on the right, separated by a single hairline. Stacking beats a two-column masonry here
      because the reading order is the whole point — the loop only makes sense read top to bottom.
 
-     Capped narrower than the shell's own width cap and centered in the gutters that leaves: these
-     tables hold two to four columns, and at the shell's full width their rows stretched into
-     mostly-empty rules. The header above keeps the full width, so this page opens on exactly the
-     same line as every other one. -->
-  <div class="mx-auto flex w-full max-w-4xl flex-col">
+     No width cap of its own: the beats sit in the same column as every other page's blocks, so the
+     gutters match the rest of the application. The narrative column stays capped at `19rem`, which
+     keeps the prose readable while the tables take the remaining width. -->
+  <div class="flex w-full flex-col">
     <!-- 01 · Challenges. Unruled at the top, unlike the beats below it: the hairlines separate one
        beat from the next, and there is nothing above this one to separate it from. -->
     <app-rule-section
@@ -142,7 +141,7 @@
     <!-- Bonuses. Tinted brand and marked with a plus rather than a number: they are not a fifth beat
        of the loop but a multiplier sitting on top of the two above. -->
     <section
-      class="grid items-start gap-x-10 gap-y-5 border-t border-brand-500/30 bg-linear-[115deg] from-brand-500/8 to-transparent px-4 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:px-5 lg:py-9"
+      class="grid items-start gap-x-10 gap-y-5 border-t border-brand-500/30 bg-linear-[115deg] from-brand-500/8 to-transparent px-4 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:gap-x-40 lg:px-5 lg:py-9"
     >
       <div>
         <div class="flex items-baseline gap-3">
