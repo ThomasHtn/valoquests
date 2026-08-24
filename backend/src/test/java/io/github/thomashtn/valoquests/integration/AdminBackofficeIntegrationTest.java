@@ -251,9 +251,6 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
         WeeklyBossEncounter encounter = new WeeklyBossEncounter();
         encounter.setWeekStart(WEEK_START);
         encounter.setBossCatalogEntry(bossEntry);
-        encounter.setRulesetVersion(1);
-        encounter.setBaseHp(10_000);
-        encounter.setDifficultyModifierPercent(0);
         encounter.setEffectiveHp(10_000);
         encounter.setDefeated(true);
         encounter.setDefeatedByPlayer(player);

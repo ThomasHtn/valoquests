@@ -7,7 +7,6 @@ import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.exception.InvalidChallengeDefinitionException;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +39,6 @@ class JacksonChallengeDefinitionParserTest {
     @Test
     void shouldParseSumChallenge() {
         Challenge challenge = createChallenge(
-            ChallengeRuleType.SINGLE,
             ProgressMode.SUM,
             """
                 [
@@ -72,7 +70,6 @@ class JacksonChallengeDefinitionParserTest {
     @Test
     void shouldParseDecimalRatioTarget() {
         Challenge challenge = createChallenge(
-            ChallengeRuleType.RATIO,
             ProgressMode.RATIO,
             """
                 [
@@ -101,7 +98,6 @@ class JacksonChallengeDefinitionParserTest {
     @Test
     void shouldRejectMalformedJson() {
         Challenge challenge = createChallenge(
-            ChallengeRuleType.SINGLE,
             ProgressMode.SUM,
             "[invalid-json]"
         );
@@ -118,7 +114,6 @@ class JacksonChallengeDefinitionParserTest {
     @Test
     void shouldRejectGroupedChallengeWithoutGroupBy() {
         Challenge challenge = createChallenge(
-            ChallengeRuleType.DISTINCT,
             ProgressMode.DISTINCT_COUNT,
             """
                 [
@@ -143,7 +138,6 @@ class JacksonChallengeDefinitionParserTest {
     @Test
     void shouldRejectOccurrenceChallengeWithoutOccurrences() {
         Challenge challenge = createChallenge(
-            ChallengeRuleType.OCCURRENCE,
             ProgressMode.COUNT_MATCHES,
             """
                 [
@@ -166,20 +160,17 @@ class JacksonChallengeDefinitionParserTest {
     /**
      * Creates a valid challenge entity for parser tests.
      *
-     * @param ruleType       challenge rule type
      * @param progressMode   challenge progress mode
      * @param conditionsJson serialized conditions
      * @return configured challenge
      */
     private Challenge createChallenge(
-        ChallengeRuleType ruleType,
         ProgressMode progressMode,
         String conditionsJson
     ) {
         Challenge challenge = new Challenge();
 
         challenge.setCode("TEST_CHALLENGE");
-        challenge.setRuleType(ruleType);
         challenge.setProgressMode(progressMode);
         challenge.setConditionsJson(conditionsJson);
         challenge.setSchemaVersion(3);

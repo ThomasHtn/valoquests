@@ -28,7 +28,6 @@ public record MatchResponse(
     BigDecimal acs,
     BigDecimal adr,
     BigDecimal headshotPercentage,
-    CompetitiveTier competitiveTier,
-    Integer rankRating
+    CompetitiveTier competitiveTier
 ) {
 }

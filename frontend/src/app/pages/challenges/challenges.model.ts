@@ -22,11 +22,6 @@ export interface ChallengeRow {
   readonly damage: string;
 
   /**
-   * How far the squad has got on this challenge, as `"3/7"`.
-   */
-  readonly squadProgress: string;
-
-  /**
    * Squad multiplier currently applied to {@link damage}, as `"×1,2"`, or `null` while no bonus is
    * earned yet — a lone completer multiplies by one, and showing that reads as a penalty.
    */

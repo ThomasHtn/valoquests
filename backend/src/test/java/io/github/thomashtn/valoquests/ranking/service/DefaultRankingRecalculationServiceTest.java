@@ -7,7 +7,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.github.thomashtn.valoquests.boss.service.WeekRulesetResolver;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
@@ -18,7 +17,7 @@ import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
-import io.github.thomashtn.valoquests.scoring.ScoringRulesetV1;
+import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageAggregator;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
@@ -56,14 +55,12 @@ class DefaultRankingRecalculationServiceTest {
         playerRepository = mock(PlayerRepository.class);
         progressRepository = mock(PlayerChallengeProgressRepository.class);
         scoreRepository = mock(WeeklyPlayerScoreRepository.class);
-        WeekRulesetResolver rulesetResolver = mock(WeekRulesetResolver.class);
         WeeklyMatchDamageAggregator matchDamageAggregator = mock(WeeklyMatchDamageAggregator.class);
         Clock clock = Clock.fixed(
             Instant.parse("2026-07-21T10:00:00Z"),
             ZoneOffset.UTC
         );
 
-        when(rulesetResolver.resolve(any())).thenReturn(new ScoringRulesetV1());
         when(matchDamageAggregator.aggregate(any(), any(), any()))
             .thenReturn(new WeeklyMatchDamageAggregator.Aggregate(0, 0));
 
@@ -71,7 +68,7 @@ class DefaultRankingRecalculationServiceTest {
             playerRepository,
             progressRepository,
             scoreRepository,
-            rulesetResolver,
+            new DefaultScoringRuleset(),
             matchDamageAggregator,
             clock,
             new WeekCalendar(clock, ZoneOffset.UTC)
@@ -111,18 +108,18 @@ class DefaultRankingRecalculationServiceTest {
         verify(scoreRepository).saveAll(captor.capture());
         List<WeeklyPlayerScore> scores = captor.getValue();
 
-        // NORMAL (2500) outranks EASY (1500) under ScoringRulesetV1's challenge damage barème. Each
+        // NORMAL (1400) outranks EASY (800) under the ruleset's challenge damage barème. Each
         // challenge is completed by exactly one player here, so the team bonus stays at zero and does
         // not interfere with this ordering assertion.
         assertThat(scores).hasSize(2);
         assertThat(scores.get(0).getPlayer()).isSameAs(secondPlayer);
-        assertThat(scores.get(0).getChallengeDamage()).isEqualTo(2500);
-        assertThat(scores.get(0).getTotalDamage()).isEqualTo(2500);
+        assertThat(scores.get(0).getChallengeDamage()).isEqualTo(1400);
+        assertThat(scores.get(0).getTotalDamage()).isEqualTo(1400);
         assertThat(scores.get(0).getCompletedChallenges()).isEqualTo(1);
         assertThat(scores.get(0).getPosition()).isEqualTo(1);
         assertThat(scores.get(1).getPlayer()).isSameAs(firstPlayer);
-        assertThat(scores.get(1).getChallengeDamage()).isEqualTo(1500);
-        assertThat(scores.get(1).getTotalDamage()).isEqualTo(1500);
+        assertThat(scores.get(1).getChallengeDamage()).isEqualTo(800);
+        assertThat(scores.get(1).getTotalDamage()).isEqualTo(800);
         assertThat(scores.get(1).getPosition()).isEqualTo(2);
     }
 

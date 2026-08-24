@@ -273,10 +273,17 @@
       "error": "Impossible de charger les défis de la semaine.",
       "loading": "Chargement des défis…",
       "metric": {
+        "ACS": "ACS",
+        "ACS_PROGRESS": "Progression ACS",
+        "ADR": "ADR",
+        "ADR_PROGRESS": "Progression ADR",
         "ASSISTS": "Assists",
         "DAMAGE_DEALT": "Dégâts",
         "HEADSHOTS": "Headshots",
+        "HEADSHOT_RATE": "% HS",
+        "HEADSHOT_RATE_PROGRESS": "Progression % HS",
         "KD": "K/D",
+        "KD_PROGRESS": "Progression K/D",
         "KILLS": "Kills",
         "MATCHES_PLAYED": "Matchs",
         "MATCHES_WON": "Victoires",
@@ -540,10 +547,10 @@
     "heading": "Règles",
     "readingTime": {
       "label": "Lecture",
-      "value": "2 min"
+      "value": "4 min"
     },
     "replayTour": "Revoir le tour d'horizon",
-    "subheading": "Une semaine, en 4 temps",
+    "subheading": "Une semaine, en 6 temps",
     "sections": {
       "bonuses": {
         "days": "{{days}} j",
@@ -555,12 +562,17 @@
       },
       "boss": {
         "categories": {
-          "ELITE": "20 000 PV par joueur actif. Sans une grosse semaine collective, il survit.",
-          "MINOR": "13 000 PV par joueur actif. L'escouade le plie souvent en milieu de semaine.",
-          "STANDARD": "16 000 PV par joueur actif. Le rythme normal : il faut que tout le monde s'y mette."
+          "ELITE": "Environ 125 % d'une semaine type. Sans une grosse semaine collective, il survit.",
+          "MINOR": "Environ 80 % d'une semaine type de l'escouade. Elle le plie souvent en milieu de semaine.",
+          "STANDARD": "Exactement une semaine type de l'escouade. Il faut que tout le monde s'y mette."
         },
-        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade, calculés d'après le nombre de joueurs actifs. Un joueur actif qui ne joue pas alourdit donc le boss sans l'entamer. Terrasse-le avant dimanche soir : s'il survit, ses PV restants viennent renforcer le boss suivant, dans la limite d'un quart de sa barre.",
+        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade. Sa barre n'est pas un chiffre figé : elle est calculée d'après ce que l'escouade a réellement produit lors des dernières semaines closes, multiplié par le nombre de joueurs actifs. Un joueur actif qui ne joue pas alourdit donc le boss sans l'entamer. Terrasse-le avant dimanche soir.",
         "title": "Un boss, une barre de vie commune"
+      },
+      "calibration": {
+        "bounds": "La référence ne peut pas s'emballer : elle reste encadrée, pour qu'un arrêt total ne fasse pas tomber le boss en un match et qu'une envolée ne le rende pas inatteignable.",
+        "description": "La difficulté ne se règle pas à la main : la barre du boss suit la médiane de ce que l'escouade a réellement produit lors des 4 dernières semaines closes. Si le groupe joue plus, le boss grossit ; s'il lève le pied, le boss maigrit. Une semaine marathon isolée ne compte pas, la médiane l'ignore.",
+        "title": "Une difficulté qui s'ajuste toute seule"
       },
       "challenges": {
         "damageLabel": "Dégâts",
@@ -575,6 +587,14 @@
         "decayLabel": "Rendement du jour · rang du match dans la journée",
         "decayRank": "Match {{rank}}",
         "decayFootnote": "Au-delà de la cinquième partie du jour, une partie rapporte moins. Les parties d'une même journée sont classées de la plus à la moins payante, jamais dans l'ordre où tu les as jouées : un échauffement ne fera donc jamais baisser tes compétitives. Enchaîner sur plusieurs jours vaut mieux que tout faire d'un coup."
+      },
+      "eligibility": {
+        "description": "Une seule règle, partout : une partie compte si elle a joué au moins un round, si tu y as marqué des points, et si ce n'est pas un remake. Un remake ou une partie abandonnée ne rapporte aucun dégât, ne compte pas comme jour joué, et ne fait progresser aucun défi.",
+        "title": "Ce qui compte comme partie jouée"
+      },
+      "progression": {
+        "description": "Certains défis ne demandent pas un seuil absolu mais un progrès sur toi-même : dépasser ton propre K/D, ton ACS ou ton taux de headshots des 4 semaines précédentes, d'un pourcentage donné. Enchaîner les parties au même niveau ne les valide pas, puisque la mesure est un taux. Sans historique sur les 4 dernières semaines, le défi reste hors de portée.",
+        "title": "Les défis de progression"
       },
       "ranking": {
         "description": "Les dégâts totaux de la semaine font le classement. Le reste, c'est de la gloire.",

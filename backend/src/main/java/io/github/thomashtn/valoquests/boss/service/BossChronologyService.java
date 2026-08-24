@@ -5,10 +5,11 @@ import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressCalc
 import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContext;
 import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContextFactory;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
-import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
+import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
@@ -18,10 +19,12 @@ import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,11 +58,6 @@ public class BossChronologyService {
     private final PlayerChallengeContextFactory contextFactory;
 
     /**
-     * Service resolving the challenge pack owned by a week.
-     */
-    private final WeeklyChallengeSelectionService weeklyChallengeSelectionService;
-
-    /**
      * Parser turning persisted challenge rules into typed definitions.
      */
     private final ChallengeDefinitionParser definitionParser;
@@ -68,6 +66,11 @@ public class BossChronologyService {
      * Registry resolving the calculator for one progress mode.
      */
     private final ChallengeProgressCalculatorRegistry calculatorRegistry;
+
+    /**
+     * Repository holding the completions the weekly ranking was built from.
+     */
+    private final PlayerChallengeProgressRepository progressRepository;
 
     /**
      * Resolves whether one match is valued at all.
@@ -84,26 +87,26 @@ public class BossChronologyService {
      *
      * @param playerRepository                player repository
      * @param contextFactory                  player challenge context factory
-     * @param weeklyChallengeSelectionService  weekly challenge selection service
      * @param definitionParser                challenge definition parser
      * @param calculatorRegistry               challenge calculator registry
+     * @param progressRepository               player challenge progress repository
      * @param matchDamageCalculator            match damage calculator
      * @param damageResolver                   weekly match damage resolver
      */
     public BossChronologyService(
         PlayerRepository playerRepository,
         PlayerChallengeContextFactory contextFactory,
-        WeeklyChallengeSelectionService weeklyChallengeSelectionService,
         ChallengeDefinitionParser definitionParser,
         ChallengeProgressCalculatorRegistry calculatorRegistry,
+        PlayerChallengeProgressRepository progressRepository,
         MatchDamageCalculator matchDamageCalculator,
         WeeklyMatchDamageResolver damageResolver
     ) {
         this.playerRepository = playerRepository;
         this.contextFactory = contextFactory;
-        this.weeklyChallengeSelectionService = weeklyChallengeSelectionService;
         this.definitionParser = definitionParser;
         this.calculatorRegistry = calculatorRegistry;
+        this.progressRepository = progressRepository;
         this.matchDamageCalculator = matchDamageCalculator;
         this.damageResolver = damageResolver;
     }
@@ -124,8 +127,6 @@ public class BossChronologyService {
     ) {
         List<Player> activePlayers =
             playerRepository.findAllByStatusOrderByIdAsc(Player.COMPETITIVE_STATUS);
-        List<WeeklyChallenge> weeklyChallenges =
-            weeklyChallengeSelectionService.findExistingWeekChallenges(weekStart);
 
         Map<Player, PlayerChallengeContext> contextsByPlayer = new LinkedHashMap<>();
         for (Player player : activePlayers) {
@@ -135,14 +136,19 @@ public class BossChronologyService {
         Map<Long, DamageEvent> eventsByPlayerMatchId = new LinkedHashMap<>();
         seedMatchDamageEvents(contextsByPlayer, ruleset, eventsByPlayerMatchId);
 
-        for (WeeklyChallenge weeklyChallenge : weeklyChallenges) {
+        // Only challenges somebody completed are walked: one nobody finished contributes nothing to
+        // the fight, so the week's full pack never has to be loaded here.
+        Map<WeeklyChallenge, Set<Long>> completionsByChallenge = loadRecordedCompletions(weekStart);
+
+        completionsByChallenge.forEach((weeklyChallenge, completedPlayerIds) ->
             applyChallengeTriggerEvents(
                 weeklyChallenge,
                 contextsByPlayer,
                 ruleset,
+                completedPlayerIds,
                 eventsByPlayerMatchId
-            );
-        }
+            )
+        );
 
         return walkChronology(eventsByPlayerMatchId, effectiveHp);
     }
@@ -195,12 +201,14 @@ public class BossChronologyService {
      * @param weeklyChallenge       evaluated weekly challenge
      * @param contextsByPlayer      weekly match context per active player
      * @param ruleset               ruleset used to price the challenge and its team bonus
+     * @param completedPlayerIds    players the weekly ranking recorded as having completed it
      * @param eventsByPlayerMatchId accumulator indexed by player-match identifier
      */
     private void applyChallengeTriggerEvents(
         WeeklyChallenge weeklyChallenge,
         Map<Player, PlayerChallengeContext> contextsByPlayer,
         ScoringRuleset ruleset,
+        Set<Long> completedPlayerIds,
         Map<Long, DamageEvent> eventsByPlayerMatchId
     ) {
         Challenge challenge = weeklyChallenge.getChallenge();
@@ -209,7 +217,17 @@ public class BossChronologyService {
 
         List<PlayerMatch> creditedMatches = new ArrayList<>();
 
-        for (PlayerChallengeContext context : contextsByPlayer.values()) {
+        for (Map.Entry<Player, PlayerChallengeContext> entry : contextsByPlayer.entrySet()) {
+            PlayerChallengeContext context = entry.getValue();
+
+            // Whether a challenge was completed is read from the persisted progress the weekly ranking
+            // was built from; only which match completed it is recalculated. Deciding "whether" here
+            // too let the fight and the ranking disagree whenever the two were computed against
+            // different match data, and the health bar then showed a number no calculation produced.
+            if (!completedPlayerIds.contains(entry.getKey().getId())) {
+                continue;
+            }
+
             OptionalInt completionIndex = calculator.findFirstCompletionIndex(definition, context);
 
             if (completionIndex.isEmpty()) {
@@ -248,38 +266,58 @@ public class BossChronologyService {
     }
 
     /**
+     * Loads the completions the weekly ranking counted, as player and weekly-challenge pairs.
+     *
+     * <p>Restricted to competitive players, exactly as {@code DefaultRankingRecalculationService} does
+     * when it prices the team bonus, so both arrive at the same tier for the same challenge.
+     *
+     * @param weekStart week being replayed
+     * @return completed player identifiers, indexed by the weekly challenge they completed
+     */
+    private Map<WeeklyChallenge, Set<Long>> loadRecordedCompletions(LocalDate weekStart) {
+        Map<WeeklyChallenge, Set<Long>> completions = new LinkedHashMap<>();
+
+        for (PlayerChallengeProgress progress : progressRepository
+            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(weekStart)) {
+
+            if (progress.isCompleted() && progress.getPlayer().isCompetitive()) {
+                completions
+                    .computeIfAbsent(progress.getWeeklyChallenge(), challenge -> new HashSet<>())
+                    .add(progress.getPlayer().getId());
+            }
+        }
+
+        return completions;
+    }
+
+    /**
      * Finds the match a completion's damage should be credited to.
      *
-     * <p>Normally the completing match itself. A challenge can however be completed by a match that
-     * carries no damage of its own — a remake still counts towards a "matches played" target — and such
-     * a match has no event. The damage then falls back to the nearest valued match around it, so it
-     * stays in the player's own timeline instead of being dropped.
+     * <p>The completing match itself, and it always carries damage of its own. An ineligible match
+     * contributes nothing to any calculator, so a prefix ending on one evaluates exactly like the prefix
+     * before it and can never be the first to reach completion; every completion therefore lands on an
+     * eligible match, which {@link #seedMatchDamageEvents} has already given an event.
+     *
+     * <p>That invariant only holds because challenge progress and match damage now share one eligibility
+     * rule. While they disagreed, a remake could complete a "matches played" target, and this method had
+     * to hunt for the nearest valued match around it — which credited a player's challenge damage to an
+     * unrelated match, or silently dropped it when they had played none.
      *
      * @param context               player's weekly match context
      * @param completionIndex       index of the match that completed the challenge
      * @param eventsByPlayerMatchId events seeded for valued matches only
-     * @return match to credit, or {@code null} when the player played no valued match at all
+     * @return match to credit, or {@code null} when it carries no event after all
      */
     private PlayerMatch findCreditedMatch(
         PlayerChallengeContext context,
         int completionIndex,
         Map<Long, DamageEvent> eventsByPlayerMatchId
     ) {
-        List<PlayerMatch> playerMatches = context.playerMatches();
+        PlayerMatch completingMatch = context.playerMatches().get(completionIndex);
 
-        for (int index = completionIndex; index >= 0; index--) {
-            if (eventsByPlayerMatchId.containsKey(playerMatches.get(index).getId())) {
-                return playerMatches.get(index);
-            }
-        }
-
-        for (int index = completionIndex + 1; index < playerMatches.size(); index++) {
-            if (eventsByPlayerMatchId.containsKey(playerMatches.get(index).getId())) {
-                return playerMatches.get(index);
-            }
-        }
-
-        return null;
+        return eventsByPlayerMatchId.containsKey(completingMatch.getId())
+            ? completingMatch
+            : null;
     }
 
     /**

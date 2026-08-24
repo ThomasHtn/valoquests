@@ -7,7 +7,6 @@ import io.github.thomashtn.valoquests.boss.service.BossChronologyService;
 import io.github.thomashtn.valoquests.boss.service.WeeklyBossSelectionService;
 import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import io.github.thomashtn.valoquests.scoring.ScoringRulesetRegistry;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -53,9 +52,9 @@ public class WeeklyLifecycleCoordinator {
     private final BossChronologyService bossChronologyService;
 
     /**
-     * Registry used to resolve the closing week's own ruleset version.
+     * Barèmes the closing week's chronology is replayed with.
      */
-    private final ScoringRulesetRegistry rulesetRegistry;
+    private final ScoringRuleset ruleset;
 
     /**
      * Creates the weekly lifecycle coordinator.
@@ -64,24 +63,28 @@ public class WeeklyLifecycleCoordinator {
      * @param weeklyBossSelectionService      boss selection service
      * @param bossEncounterRepository         weekly boss encounter repository
      * @param bossChronologyService           boss chronology service
-     * @param rulesetRegistry                 scoring ruleset registry
+     * @param ruleset                         scoring ruleset
      */
     public WeeklyLifecycleCoordinator(
         WeeklyChallengeSelectionService weeklyChallengeSelectionService,
         WeeklyBossSelectionService weeklyBossSelectionService,
         WeeklyBossEncounterRepository bossEncounterRepository,
         BossChronologyService bossChronologyService,
-        ScoringRulesetRegistry rulesetRegistry
+        ScoringRuleset ruleset
     ) {
         this.weeklyChallengeSelectionService = weeklyChallengeSelectionService;
         this.weeklyBossSelectionService = weeklyBossSelectionService;
         this.bossEncounterRepository = bossEncounterRepository;
         this.bossChronologyService = bossChronologyService;
-        this.rulesetRegistry = rulesetRegistry;
+        this.ruleset = ruleset;
     }
 
     /**
      * Prepares the challenge pack and boss encounter for a new week.
+     *
+     * <p>Called by the rollover once every past week has been finalized, so the re-size here is what
+     * settles a week whose encounter was already drawn by a page view before its predecessor closed.
+     * Both calls are idempotent, and the re-size preserves the boss that was drawn.
      *
      * @param weekStart Monday identifying the new week
      */
@@ -89,15 +92,15 @@ public class WeeklyLifecycleCoordinator {
     public void openWeek(LocalDate weekStart) {
         weeklyChallengeSelectionService.selectWeekChallenges(weekStart);
         weeklyBossSelectionService.selectWeekBoss(weekStart);
+        weeklyBossSelectionService.resizeWeekBoss(weekStart);
     }
 
     /**
      * Finalizes the closing week's boss encounter, when one exists and is not already finalized.
      *
-     * <p>Resolves the chronology using the ruleset version and effective hit points frozen when the
-     * encounter was created — never the currently registered ruleset, so a later barème adjustment
-     * cannot rewrite this week's outcome. Absent entirely for a week that predates this feature, in
-     * which case there is nothing to close.
+     * <p>Resolves the chronology against the hit points frozen when the encounter was created, so the
+     * fight is judged on the target it opened with even if the roster has since changed. Absent entirely
+     * for a week that predates this feature, in which case there is nothing to close.
      *
      * @param weekStart   week being closed
      * @param finalizedAt shared finalization timestamp
@@ -122,8 +125,6 @@ public class WeeklyLifecycleCoordinator {
 
             return;
         }
-
-        ScoringRuleset ruleset = rulesetRegistry.forVersion(encounter.getRulesetVersion());
 
         BossChronologyResult chronologyResult = bossChronologyService.computeChronology(
             weekStart,

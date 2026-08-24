@@ -1,11 +1,11 @@
 package io.github.thomashtn.valoquests.challenge.service;
 
-import io.github.thomashtn.valoquests.boss.service.WeekRulesetResolver;
 import io.github.thomashtn.valoquests.challenge.dto.CurrentChallengesResponse;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
+import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
@@ -52,9 +52,9 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
     private final ChallengeDefinitionParser definitionParser;
 
     /**
-     * Resolver giving the ruleset a week was opened with, and therefore what its challenges are worth.
+     * Barèmes saying what a challenge of each difficulty is worth.
      */
-    private final WeekRulesetResolver rulesetResolver;
+    private final ScoringRuleset ruleset;
 
     /**
      * Calendar resolving the current week.
@@ -68,7 +68,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
      * @param progressRepository        player progress repository
      * @param playerRepository          tracked-player repository
      * @param definitionParser          challenge-definition parser
-     * @param rulesetResolver           resolver of the ruleset a week was opened with
+     * @param ruleset                   scoring ruleset
      * @param weekCalendar       calendar resolving the current week
      */
     public DefaultChallengeQueryService(
@@ -76,29 +76,27 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
         PlayerChallengeProgressRepository progressRepository,
         PlayerRepository playerRepository,
         ChallengeDefinitionParser definitionParser,
-        WeekRulesetResolver rulesetResolver,
+        ScoringRuleset ruleset,
         WeekCalendar weekCalendar
     ) {
         this.weeklyChallengeRepository = weeklyChallengeRepository;
         this.progressRepository = progressRepository;
         this.playerRepository = playerRepository;
         this.definitionParser = definitionParser;
-        this.rulesetResolver = rulesetResolver;
+        this.ruleset = ruleset;
         this.weekCalendar = weekCalendar;
     }
 
     /**
      * Returns collective progress for every challenge of the current week.
      *
-     * <p>Writable, against the read-only default this class carries: resolving the week's ruleset goes
-     * through {@link WeekRulesetResolver}, which lazily draws the current week's boss encounter when it
-     * does not exist yet, and an inherited read-only transaction makes that insert fail. Same reason
-     * {@code DefaultBossQueryService#findCurrent} overrides it.
+     * <p>Read-only, like the rest of this class. It used to need a writable transaction because
+     * resolving the week's barème went through a resolver that lazily drew the week's boss encounter;
+     * with a single unversioned ruleset there is nothing to resolve and nothing to insert.
      *
      * @return current-week challenge response
      */
     @Override
-    @Transactional
     public CurrentChallengesResponse findCurrent() {
         LocalDate weekStart = weekCalendar.currentWeekStart();
         List<WeeklyChallenge> weeklyChallenges = findWeeklyChallenges(weekStart);
@@ -108,15 +106,12 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             playerRepository.countByStatus(Player.COMPETITIVE_STATUS)
         );
 
-        ScoringRuleset ruleset = rulesetResolver.resolve(weekStart);
-
         List<CurrentChallengesResponse.ChallengeProgressResponse> challenges =
             weeklyChallenges.stream()
                 .map(weeklyChallenge -> toChallengeResponse(
                     weeklyChallenge,
                     progressByChallenge,
-                    totalPlayers,
-                    ruleset
+                    totalPlayers
                 ))
                 .toList();
 
@@ -161,22 +156,21 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
     /**
      * Converts a weekly challenge and its progress into an API response.
      *
-     * <p>Damage is the challenge's base value for its difficulty, resolved through the week's own
-     * ruleset. The squad bonus it can be multiplied by is not folded in: it depends on how many players
+     * <p>Damage is the challenge's base value for its difficulty, resolved through the ruleset rather
+     * than stored per challenge. The squad bonus it can be multiplied by is not folded in: it depends on
+     * how many players
      * have completed the challenge and would make the advertised figure move on its own during the
      * week. {@code completedPlayers} and {@code totalPlayers} are what the client renders it from.
      *
      * @param weeklyChallenge    weekly challenge to convert
      * @param progressByChallenge progress rows indexed by challenge identifier
      * @param totalPlayers       number of active players
-     * @param ruleset            ruleset the week was opened with
      * @return challenge response
      */
     private CurrentChallengesResponse.ChallengeProgressResponse toChallengeResponse(
         WeeklyChallenge weeklyChallenge,
         Map<Long, List<PlayerChallengeProgress>> progressByChallenge,
-        int totalPlayers,
-        ScoringRuleset ruleset
+        int totalPlayers
     ) {
         ChallengeDefinition definition = definitionParser.parse(
             weeklyChallenge.getChallenge()
@@ -196,7 +190,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             resolveMetricLabel(definition),
             resolveTargetValue(definition, progressRows),
             baseDamage,
-            resolveTeamBonusPercent(ruleset, difficulty, baseDamage, completedPlayers),
+            resolveTeamBonusPercent(difficulty, baseDamage, completedPlayers),
             completedPlayers,
             totalPlayers,
             calculateCompletionPercentage(completedPlayers, totalPlayers)
@@ -210,14 +204,12 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
      * its own copy of the bonus ladder, which is precisely how the advertised damage and the awarded
      * damage came to disagree before.
      *
-     * @param ruleset          ruleset the week was opened with
      * @param difficulty       challenge difficulty
      * @param baseDamage       challenge damage before the bonus
      * @param completedPlayers players who have completed it so far
      * @return bonus as a percentage of the base damage, zero when nothing is earned yet
      */
     private int resolveTeamBonusPercent(
-        ScoringRuleset ruleset,
         ChallengeDifficulty difficulty,
         int baseDamage,
         int completedPlayers
@@ -257,8 +249,14 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
      * @return distinct metric names joined in definition order
      */
     private String resolveMetricLabel(ChallengeDefinition definition) {
+        // A progression challenge and an absolute one can share a metric while asking opposite things:
+        // "K/D of at least 1.20" against "K/D five percent above your own last month". The suffix is
+        // what lets the client tell those two chips apart, and what stops the target being read as an
+        // absolute value when it is a percentage gain.
+        String suffix = definition.progressMode() == ProgressMode.BASELINE ? "_PROGRESS" : "";
+
         return definition.conditions().stream()
-            .map(condition -> condition.metric().name())
+            .map(condition -> condition.metric().name() + suffix)
             .distinct()
             .collect(Collectors.joining(" + "));
     }

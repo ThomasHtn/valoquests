@@ -2,16 +2,12 @@ package io.github.thomashtn.valoquests.challenge.model;
 
 /**
  * Defines the level at which a challenge condition must be evaluated.
+ *
+ * <p>A weekly scope constant used to sit alongside {@link #PER_MATCH} and was never once declared by a
+ * catalogue rule: aggregating over the week is what every calculator does when no scope is given, so
+ * naming it only offered a second way to say the default.
  */
 public enum ChallengeScope {
-
-    /**
-     * Evaluates the condition across all eligible matches of the week.
-     *
-     * <p>This scope is suitable for aggregated metrics such as total kills,
-     * total assists, total damage or a weekly kill-to-death ratio.</p>
-     */
-    WEEKLY,
 
     /**
      * Evaluates the condition independently for every eligible match.

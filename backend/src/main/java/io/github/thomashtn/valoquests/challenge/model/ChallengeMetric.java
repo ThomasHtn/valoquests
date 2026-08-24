@@ -51,6 +51,25 @@ public enum ChallengeMetric {
     KD,
 
     /**
+     * Average combat score per round.
+     *
+     * <p>Only meaningful for round-based modes; a challenge using it must filter on one.
+     */
+    ACS,
+
+    /**
+     * Average damage dealt per round.
+     *
+     * <p>Only meaningful for round-based modes; a challenge using it must filter on one.
+     */
+    ADR,
+
+    /**
+     * Share of kills that were headshots, as a ratio between zero and one.
+     */
+    HEADSHOT_RATE,
+
+    /**
      * Calendar day on which at least one eligible match was played.
      */
     PLAY_DAY

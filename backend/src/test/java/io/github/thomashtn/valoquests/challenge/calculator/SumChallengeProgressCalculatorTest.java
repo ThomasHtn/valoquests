@@ -7,11 +7,12 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.match.model.GameMode;
+import io.github.thomashtn.valoquests.match.service.MatchEligibility;
+import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -28,14 +29,14 @@ class SumChallengeProgressCalculatorTest {
      */
     private final ChallengeMetricEvaluator metricEvaluator =
 
-        new ChallengeMetricEvaluator();
+        new ChallengeMetricEvaluator(new MatchOutcomeResolver());
 
     /**
      * Match filter used by the calculator.
      */
     private final ChallengeMatchFilter matchFilter =
 
-        new ChallengeMatchFilter();
+        new ChallengeMatchFilter(new MatchEligibility());
 
     /**
      * Calculator under test.
@@ -66,7 +67,6 @@ class SumChallengeProgressCalculatorTest {
 
         ChallengeDefinition definition = new ChallengeDefinition(
             3,
-            ChallengeRuleType.SINGLE,
             ProgressMode.SUM,
             List.of(condition)
         );
@@ -122,6 +122,8 @@ class SumChallengeProgressCalculatorTest {
         match.setGameMode(gameMode);
 
         PlayerMatch playerMatch = new PlayerMatch();
+        playerMatch.setRoundsPlayed(20);
+        playerMatch.setScore(4_000);
         playerMatch.setMatch(match);
         playerMatch.setKills(kills);
 

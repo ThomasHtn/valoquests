@@ -37,14 +37,6 @@ public interface WeeklyChallengeRepository
     );
 
     /**
-     * Checks whether at least one challenge exists for a week.
-     *
-     * @param weekStart Monday identifying the requested week
-     * @return {@code true} when the weekly pack already exists
-     */
-    boolean existsByWeekStart(LocalDate weekStart);
-
-    /**
      * Retrieves every past week still holding an active challenge pack.
      *
      * <p>A week appears here until its whole pack is finalized, so a rollover that never ran keeps

@@ -306,6 +306,8 @@ public class DefaultRankingQueryService implements RankingQueryService {
         return switch (metric) {
             case DAMAGE_DEALT, SCORE -> "points";
             case KD -> "ratio";
+            case ACS, ADR -> "per round";
+            case HEADSHOT_RATE -> "ratio";
             case PLAY_DAY -> "days";
             case MATCHES_PLAYED, MATCHES_WON -> "matches";
             case KILLS -> "kills";

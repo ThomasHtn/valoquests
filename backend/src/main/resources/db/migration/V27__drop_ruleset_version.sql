@@ -1,0 +1,11 @@
+-- Removes the per-encounter scoring ruleset version.
+--
+-- Versioning existed so a closed week kept recalculating against the barème it was opened with. In
+-- practice it made the barème a week depended on a side effect of when its encounter happened to be
+-- created: a past week owning no encounter fell back on version 1, so two adjacent weeks could score
+-- under different rules for no observable reason. Weeks 2026-07-27 and 2026-08-03 in this database
+-- differed for exactly that reason.
+--
+-- There is a single unversioned ScoringRuleset now, and recalculating any week applies it. Dropped
+-- rather than kept and ignored: a column nothing reads is a column that drifts.
+ALTER TABLE weekly_boss_encounter DROP COLUMN ruleset_version;

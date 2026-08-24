@@ -7,7 +7,6 @@ import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
@@ -285,8 +284,8 @@ class ChallengeProgressIntegrationTest
     /**
      * Verifies the ranking generated from completed challenge progress.
      *
-     * <p>Challenge damage is resolved from {@code ScoringRulesetV2} by difficulty tier: completing all
-     * five (EASY 1500 + NORMAL 2500 + MEDIUM 4000 + HARD 6000 + VERY_HARD 9000) totals 23000. Match
+     * <p>Challenge damage is resolved from {@code DefaultScoringRuleset} by difficulty tier: completing
+     * all five (EASY 800 + NORMAL 1400 + MEDIUM 2200 + HARD 3200 + VERY_HARD 4500) totals 12100. Match
      * damage sums the five valued matches this player played this week — four COMPETITIVE (WIN 500 +
      * LOSS 350 + WIN 500 + LOSS 350) plus the Deathmatch match, which reaches the 40-kill victory
      * threshold (WIN 150) — for 1850, none of them reaching the sixth match of its day. Those five
@@ -316,7 +315,7 @@ class ChallengeProgressIntegrationTest
                     .isNull();
 
                 assertThat(score.getChallengeDamage())
-                    .isEqualTo(23_000);
+                    .isEqualTo(12_100);
 
                 assertThat(score.getCompletedChallenges())
                     .isEqualTo(5);
@@ -334,7 +333,7 @@ class ChallengeProgressIntegrationTest
                     .isEqualTo(0);
 
                 assertThat(score.getTotalDamage())
-                    .isEqualTo(28_450);
+                    .isEqualTo(17_550);
 
                 assertThat(score.getCalculatedAt())
                     .isEqualTo(CALCULATION_TIME);
@@ -624,7 +623,6 @@ class ChallengeProgressIntegrationTest
             "INTEGRATION_KILLS",
             ChallengeDifficulty.EASY,
             ProgressMode.SUM,
-            ChallengeRuleType.SINGLE,
             """
                 [
                   {
@@ -648,7 +646,6 @@ class ChallengeProgressIntegrationTest
             "INTEGRATION_DAMAGE",
             ChallengeDifficulty.NORMAL,
             ProgressMode.SUM,
-            ChallengeRuleType.SINGLE,
             """
                 [
                   {
@@ -672,7 +669,6 @@ class ChallengeProgressIntegrationTest
             "INTEGRATION_WINS",
             ChallengeDifficulty.MEDIUM,
             ProgressMode.SUM,
-            ChallengeRuleType.SINGLE,
             """
                 [
                   {
@@ -696,7 +692,6 @@ class ChallengeProgressIntegrationTest
             "INTEGRATION_KD",
             ChallengeDifficulty.HARD,
             ProgressMode.RATIO,
-            ChallengeRuleType.RATIO,
             """
                 [
                   {
@@ -721,7 +716,6 @@ class ChallengeProgressIntegrationTest
             "INTEGRATION_PLAY_DAYS",
             ChallengeDifficulty.VERY_HARD,
             ProgressMode.DISTINCT_COUNT,
-            ChallengeRuleType.DISTINCT,
             """
                 [
                   {
@@ -742,7 +736,6 @@ class ChallengeProgressIntegrationTest
      * @param code           stable challenge code
      * @param difficulty     challenge difficulty
      * @param progressMode   calculation mode
-     * @param ruleType       structural rule type
      * @param conditionsJson serialized rule definition
      * @return configured unsaved challenge
      */
@@ -750,7 +743,6 @@ class ChallengeProgressIntegrationTest
         String code,
         ChallengeDifficulty difficulty,
         ProgressMode progressMode,
-        ChallengeRuleType ruleType,
         String conditionsJson
     ) {
         Challenge challenge = new Challenge();
@@ -764,7 +756,6 @@ class ChallengeProgressIntegrationTest
         challenge.setCategory(
             ChallengeCategory.OTHER
         );
-        challenge.setRuleType(ruleType);
         challenge.setProgressMode(progressMode);
         challenge.setConditionsJson(
             conditionsJson

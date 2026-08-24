@@ -39,13 +39,4 @@ public record ChallengeCondition(
     public ChallengeGameMode effectiveGameMode() {
         return gameMode == null ? ChallengeGameMode.ANY : gameMode;
     }
-
-    /**
-     * Determines whether this condition is evaluated independently per match.
-     *
-     * @return {@code true} when the condition uses the per-match scope
-     */
-    public boolean isPerMatch() {
-        return scope == ChallengeScope.PER_MATCH;
-    }
 }

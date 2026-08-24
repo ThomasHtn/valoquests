@@ -259,12 +259,41 @@
       </ul>
     </app-rule-section>
 
-    <!-- 04 · What all that damage is counted for. Closes the document without a rule under it, for
+    <!-- 04 · Why the fight stays winnable on its own. Sits right after the boss because it only
+       makes sense once the shared health bar has been introduced. -->
+    <app-rule-section
+      [description]="'rules.sections.calibration.description' | translate"
+      [heading]="'rules.sections.calibration.title' | translate"
+      index="04"
+    >
+      <p class="text-prose text-text-secondary">
+        {{ 'rules.sections.calibration.bounds' | translate }}
+      </p>
+    </app-rule-section>
+
+    <!-- 05 · The two rules a reader is most likely to be surprised by: what a match has to be to
+       count at all, and the challenges measured against the player rather than a threshold. -->
+    <app-rule-section
+      [description]="'rules.sections.eligibility.description' | translate"
+      [heading]="'rules.sections.eligibility.title' | translate"
+      index="05"
+    >
+      <div class="border-l-2 border-brand-500 bg-text-primary/4 px-3.5 py-3">
+        <p class="tracking-label font-display text-sm font-semibold text-text-primary uppercase">
+          {{ 'rules.sections.progression.title' | translate }}
+        </p>
+        <p class="mt-2 text-prose text-text-secondary">
+          {{ 'rules.sections.progression.description' | translate }}
+        </p>
+      </div>
+    </app-rule-section>
+
+    <!-- 06 · What all that damage is counted for. Closes the document without a rule under it, for
        the same reason 01 opens without one. -->
     <app-rule-section
       [description]="'rules.sections.ranking.description' | translate"
       [heading]="'rules.sections.ranking.title' | translate"
-      index="04"
+      index="06"
     >
       <app-champion-badge descriptionTrailing />
       <ol>

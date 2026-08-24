@@ -86,15 +86,15 @@
             >
               {{ row.damage }}
             </span>
-            <!-- The squad line: how many have cleared it, and what that currently multiplies the
-               amount above by. The base amount never moves, so the multiplier is what carries the
-               collective gain. -->
-            <span class="label-caption mt-2 block text-text-muted tabular-nums">
-              {{ row.squadProgress }}
-              @if (row.squadMultiplier; as multiplier) {
-                <span class="text-brand-500">· {{ multiplier }}</span>
-              }
-            </span>
+            <!-- The squad multiplier currently applied to the amount above. The base amount never
+               moves, so the multiplier is what carries the collective gain. Who has cleared what
+               is already shown in the overview's team progress breakdown, so it is not repeated
+               here. -->
+            @if (row.squadMultiplier; as multiplier) {
+              <span class="label-caption mt-2 block text-brand-500 tabular-nums">
+                {{ multiplier }}
+              </span>
+            }
           </p>
         </article>
       }

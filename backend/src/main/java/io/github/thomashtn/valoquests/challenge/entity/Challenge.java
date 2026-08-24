@@ -2,7 +2,6 @@ package io.github.thomashtn.valoquests.challenge.entity;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.shared.entity.AuditableEntity;
 import jakarta.persistence.Column;
@@ -67,13 +66,6 @@ public class Challenge extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private ChallengeCategory category;
-
-    /**
-     * Structural rule type used by the future calculator registry.
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "rule_type", nullable = false, length = 20)
-    private ChallengeRuleType ruleType;
 
     /**
      * Aggregation strategy used to compute player progress.

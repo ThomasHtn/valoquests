@@ -14,7 +14,6 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
@@ -209,7 +208,6 @@ class DefaultRankingQueryServiceTest {
         when(definitionParser.parse(composite.getChallenge()))
             .thenReturn(new ChallengeDefinition(
                 3,
-                ChallengeRuleType.COMPOSITE,
                 ProgressMode.ALL,
                 List.of(condition(ChallengeMetric.KILLS), condition(ChallengeMetric.ASSISTS))
             ));
@@ -328,7 +326,6 @@ class DefaultRankingQueryServiceTest {
     private ChallengeDefinition definition(ChallengeMetric metric) {
         return new ChallengeDefinition(
             3,
-            ChallengeRuleType.SINGLE,
             ProgressMode.SUM,
             List.of(condition(metric))
         );

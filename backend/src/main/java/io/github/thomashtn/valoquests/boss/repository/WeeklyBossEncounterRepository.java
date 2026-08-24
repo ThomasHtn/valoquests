@@ -29,23 +29,29 @@ public interface WeeklyBossEncounterRepository
      * Retrieves every encounter ever created, oldest week first.
      *
      * <p>Used to replay the boss-selection history: which bosses were already drawn in the current
-     * no-repeat cycle, and what the most recently finalized modifier and win streak were.
+     * no-repeat cycle.
      *
      * @return every encounter ordered by week
      */
     List<WeeklyBossEncounter> findAllByOrderByWeekStartAsc();
 
     /**
-     * Retrieves the most recently finalized encounter, when at least one week has been closed.
+     * Retrieves the most recently finalized encounters that recorded how many players faced them.
      *
-     * @return latest finalized encounter, ordered by week
+     * <p>Feeds the calibration of a new fight from what the roster actually produces. Encounters with
+     * no recorded roster size predate that column and would divide by zero, so they are excluded here
+     * rather than guarded for at every call site.
+     *
+     * @param pageable page request bounding how far back calibration looks
+     * @return finalized encounters, most recent week first
      */
     @Query(
         "SELECT encounter FROM WeeklyBossEncounter encounter "
             + "WHERE encounter.finalizedAt IS NOT NULL "
-            + "ORDER BY encounter.weekStart DESC LIMIT 1"
+            + "AND encounter.activePlayerCount > 0 "
+            + "ORDER BY encounter.weekStart DESC"
     )
-    Optional<WeeklyBossEncounter> findLatestFinalized();
+    List<WeeklyBossEncounter> findRecentFinalized(Pageable pageable);
 
     /**
      * Retrieves finalized encounters using week-based pagination, most recent week first.

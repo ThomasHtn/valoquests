@@ -2,30 +2,23 @@ package io.github.thomashtn.valoquests.challenge.calculator;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
  * Calculates ratio-based weekly challenges.
  *
- * <p>The current challenge catalogue only uses this mode for the global
- * kill-to-death ratio. The ratio is calculated from the total number of kills
- * and deaths across all eligible matches, rather than from an average of
- * per-match ratios.</p>
+ * <p>Checks a rate against a fixed threshold, where {@code BASELINE} checks it against the player's
+ * own past. The rate itself is calculated by {@link AggregateRateCalculator}, from totals across all
+ * eligible matches rather than from an average of per-match ratios, so both modes agree on what the
+ * number means.</p>
  */
 @Component
 public class RatioChallengeProgressCalculator
     implements ChallengeProgressCalculator {
-
-    /**
-     * Scale used when calculating ratio values.
-     */
-    private static final int RATIO_SCALE = 4;
 
     /**
      * Applies filters declared by challenge conditions.
@@ -33,14 +26,22 @@ public class RatioChallengeProgressCalculator
     private final ChallengeMatchFilter matchFilter;
 
     /**
+     * Calculates the rate a metric takes over a set of matches.
+     */
+    private final AggregateRateCalculator rateCalculator;
+
+    /**
      * Creates the ratio challenge-progress calculator.
      *
-     * @param matchFilter condition match filter
+     * @param matchFilter    condition match filter
+     * @param rateCalculator aggregate rate calculator
      */
     public RatioChallengeProgressCalculator(
-        ChallengeMatchFilter matchFilter
+        ChallengeMatchFilter matchFilter,
+        AggregateRateCalculator rateCalculator
     ) {
         this.matchFilter = matchFilter;
+        this.rateCalculator = rateCalculator;
     }
 
     /**
@@ -81,10 +82,9 @@ public class RatioChallengeProgressCalculator
             )
             .toList();
 
-        BigDecimal currentValue = calculateRatio(
-            condition.metric(),
-            eligibleMatches
-        );
+        BigDecimal currentValue = rateCalculator
+            .rateOf(condition.metric(), eligibleMatches)
+            .orElse(BigDecimal.ZERO);
 
         ChallengeProgressResult normalizedResult =
             ChallengeProgressResult.from(
@@ -111,7 +111,7 @@ public class RatioChallengeProgressCalculator
     private void validateCondition(
         ChallengeCondition condition
     ) {
-        if (condition.metric() != ChallengeMetric.KD) {
+        if (!rateCalculator.supports(condition.metric())) {
             throw new IllegalArgumentException(
                 "Unsupported ratio metric: " + condition.metric()
             );
@@ -130,58 +130,4 @@ public class RatioChallengeProgressCalculator
         }
     }
 
-    /**
-     * Calculates the requested ratio.
-     *
-     * @param metric          configured ratio metric
-     * @param eligibleMatches matches included in the calculation
-     * @return calculated ratio
-     */
-    private BigDecimal calculateRatio(
-        ChallengeMetric metric,
-        List<PlayerMatch> eligibleMatches
-    ) {
-        return switch (metric) {
-            case KD -> calculateKillDeathRatio(eligibleMatches);
-            default -> throw new IllegalArgumentException(
-                "Unsupported ratio metric: " + metric
-            );
-        };
-    }
-
-    /**
-     * Calculates the global kill-to-death ratio.
-     *
-     * <p>The total number of kills is divided by the total number of deaths.
-     * When no death is recorded, the total number of kills is used as the
-     * ratio value to avoid division by zero while preserving meaningful
-     * progress.</p>
-     *
-     * @param eligibleMatches matches included in the calculation
-     * @return global kill-to-death ratio
-     */
-    private BigDecimal calculateKillDeathRatio(
-        List<PlayerMatch> eligibleMatches
-    ) {
-        long totalKills = eligibleMatches
-            .stream()
-            .mapToLong(PlayerMatch::getKills)
-            .sum();
-
-        long totalDeaths = eligibleMatches
-            .stream()
-            .mapToLong(PlayerMatch::getDeaths)
-            .sum();
-
-        if (totalDeaths == 0) {
-            return BigDecimal.valueOf(totalKills);
-        }
-
-        return BigDecimal.valueOf(totalKills)
-            .divide(
-                BigDecimal.valueOf(totalDeaths),
-                RATIO_SCALE,
-                RoundingMode.HALF_UP
-            );
-    }
 }

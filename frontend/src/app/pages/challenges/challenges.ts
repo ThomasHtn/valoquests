@@ -119,7 +119,6 @@ export class Challenges {
       description: challenge.description,
       difficulty: challenge.difficulty,
       damage: formatDamage(challenge.damage, language),
-      squadProgress: `${challenge.completedPlayers}/${challenge.totalPlayers}`,
       squadMultiplier: formatSquadMultiplier(challenge.teamBonusPercent, language),
       visual: resolveChallengeVisual(challenge.metric, challenge.difficulty),
     }));

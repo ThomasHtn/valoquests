@@ -1,4 +1,4 @@
-package io.github.thomashtn.valoquests.scoring.model;
+package io.github.thomashtn.valoquests.match.model;
 
 /**
  * Normalized outcome of one valued match, independent of how it was derived.

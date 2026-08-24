@@ -5,8 +5,8 @@ import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.exception.InvalidChallengeDefinitionException;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeScope;
+import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Component;
@@ -70,7 +70,6 @@ public class JacksonChallengeDefinitionParser
 
         ChallengeDefinition definition = new ChallengeDefinition(
             challenge.getSchemaVersion(),
-            challenge.getRuleType(),
             challenge.getProgressMode(),
             conditions
         );
@@ -122,13 +121,6 @@ public class JacksonChallengeDefinitionParser
                     + ". Expected "
                     + SUPPORTED_SCHEMA_VERSION
                     + "."
-            );
-        }
-
-        if (challenge.getRuleType() == null) {
-            throw invalidDefinition(
-                challenge,
-                "The rule type must not be null."
             );
         }
 
@@ -217,20 +209,20 @@ public class JacksonChallengeDefinitionParser
         Challenge challenge,
         ChallengeDefinition definition
     ) {
-        boolean composite =
-            definition.ruleType() == ChallengeRuleType.COMPOSITE;
+        // ALL is the only mode that combines conditions, so it is the only one taking more than one.
+        boolean combining = definition.progressMode() == ProgressMode.ALL;
 
-        if (composite && definition.conditions().size() < 2) {
+        if (combining && definition.conditions().size() < 2) {
             throw invalidDefinition(
                 challenge,
-                "A composite challenge must contain at least two conditions."
+                "An ALL challenge must contain at least two conditions."
             );
         }
 
-        if (!composite && definition.conditions().size() != 1) {
+        if (!combining && definition.conditions().size() != 1) {
             throw invalidDefinition(
                 challenge,
-                "A non-composite challenge must contain exactly one condition."
+                "A challenge that is not an ALL challenge must contain exactly one condition."
             );
         }
     }
@@ -251,7 +243,10 @@ public class JacksonChallengeDefinitionParser
             case COUNT_MATCHES -> validateOccurrences(challenge, definition);
             case MAX_STREAK -> validateStreak(challenge, definition);
             case RATIO -> validateRatio(challenge, definition);
-            case ALL -> validateComposite(challenge, definition);
+            case BASELINE -> validateBaseline(challenge, definition);
+            // ALL delegates every condition to the mode each one declares, so it constrains nothing of
+            // its own beyond the condition count already checked by validateConditionCount.
+            case ALL -> { }
         }
     }
 
@@ -373,19 +368,33 @@ public class JacksonChallengeDefinitionParser
     }
 
     /**
-     * Validates a composite challenge definition.
+     * Validates a baseline progression challenge definition.
+     *
+     * <p>The target is an improvement in percent over the player's own baseline, so it has to be
+     * strictly positive: a target of zero would be satisfied by standing still, and a negative one by
+     * getting worse.
      *
      * @param challenge  persisted challenge
      * @param definition parsed definition
      */
-    private void validateComposite(
+    private void validateBaseline(
         Challenge challenge,
         ChallengeDefinition definition
     ) {
-        if (definition.ruleType() != ChallengeRuleType.COMPOSITE) {
+        ChallengeCondition condition = definition.singleCondition();
+
+        if (condition.target() == null || condition.target().signum() <= 0) {
             throw invalidDefinition(
                 challenge,
-                "The ALL progress mode requires a COMPOSITE rule type."
+                "BASELINE requires a positive improvement target, in percent."
+            );
+        }
+
+        if (condition.minimumMatches() == null
+            || condition.minimumMatches() <= 0) {
+            throw invalidDefinition(
+                challenge,
+                "BASELINE requires a positive minimumMatches value."
             );
         }
     }

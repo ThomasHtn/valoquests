@@ -1,7 +1,6 @@
 package io.github.thomashtn.valoquests.ranking.service;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.github.thomashtn.valoquests.boss.service.WeekRulesetResolver;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
@@ -59,9 +58,9 @@ public class DefaultRankingRecalculationService
     private final WeeklyPlayerScoreRepository scoreRepository;
 
     /**
-     * Resolves the ruleset a week was opened with.
+     * Barèmes every weekly amount is priced with.
      */
-    private final WeekRulesetResolver rulesetResolver;
+    private final ScoringRuleset ruleset;
 
     /**
      * Aggregates one player's match damage and active-day count for a week.
@@ -84,7 +83,7 @@ public class DefaultRankingRecalculationService
      * @param playerRepository      player repository
      * @param progressRepository    challenge progress repository
      * @param scoreRepository       weekly score repository
-     * @param rulesetResolver       week ruleset resolver
+     * @param ruleset               scoring ruleset
      * @param matchDamageAggregator weekly match damage aggregator
      * @param clock                 application clock
      * @param weekCalendar          calendar resolving the current week
@@ -97,7 +96,7 @@ public class DefaultRankingRecalculationService
         PlayerRepository playerRepository,
         PlayerChallengeProgressRepository progressRepository,
         WeeklyPlayerScoreRepository scoreRepository,
-        WeekRulesetResolver rulesetResolver,
+        ScoringRuleset ruleset,
         WeeklyMatchDamageAggregator matchDamageAggregator,
         Clock clock,
         WeekCalendar weekCalendar
@@ -105,7 +104,7 @@ public class DefaultRankingRecalculationService
         this.playerRepository = playerRepository;
         this.progressRepository = progressRepository;
         this.scoreRepository = scoreRepository;
-        this.rulesetResolver = rulesetResolver;
+        this.ruleset = ruleset;
         this.matchDamageAggregator = matchDamageAggregator;
         this.clock = clock;
         this.weekCalendar = weekCalendar;
@@ -163,11 +162,10 @@ public class DefaultRankingRecalculationService
                 Function.identity()
             ));
 
-        ScoringRuleset ruleset = rulesetResolver.resolve(weekStart);
         Map<Long, Integer> completedCountByWeeklyChallengeId =
             countCompletionsByWeeklyChallenge(weekStart);
         Map<Long, RankingAggregate> aggregates =
-            aggregateProgress(weekStart, players, ruleset, completedCountByWeeklyChallengeId);
+            aggregateProgress(weekStart, players, completedCountByWeeklyChallengeId);
 
         List<WeeklyPlayerScore> scores = players.stream()
             .map(player -> buildScore(
@@ -230,14 +228,12 @@ public class DefaultRankingRecalculationService
      *
      * @param weekStart                        week being recalculated
      * @param players                          players to aggregate
-     * @param ruleset                          ruleset resolved for this week
      * @param completedCountByWeeklyChallengeId final completed-player count per weekly challenge
      * @return player aggregations indexed by player identifier
      */
     private Map<Long, RankingAggregate> aggregateProgress(
         LocalDate weekStart,
         List<Player> players,
-        ScoringRuleset ruleset,
         Map<Long, Integer> completedCountByWeeklyChallengeId
     ) {
         Map<Long, RankingAggregate> aggregates = new HashMap<>();
@@ -246,7 +242,7 @@ public class DefaultRankingRecalculationService
             aggregates.put(
                 player.getId(),
                 player.isCompetitive()
-                    ? aggregateMatchDamage(player, weekStart, ruleset)
+                    ? aggregateMatchDamage(player, weekStart)
                     : RankingAggregate.EMPTY
             );
         }
@@ -301,13 +297,11 @@ public class DefaultRankingRecalculationService
      *
      * @param player    aggregated player
      * @param weekStart week being recalculated
-     * @param ruleset   ruleset resolved for this week
      * @return match-damage-only aggregate for that player
      */
     private RankingAggregate aggregateMatchDamage(
         Player player,
-        LocalDate weekStart,
-        ScoringRuleset ruleset
+        LocalDate weekStart
     ) {
         WeeklyMatchDamageAggregator.Aggregate aggregate =
             matchDamageAggregator.aggregate(player, weekStart, ruleset);

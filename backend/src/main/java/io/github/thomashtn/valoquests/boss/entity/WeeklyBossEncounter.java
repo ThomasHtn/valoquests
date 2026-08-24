@@ -22,15 +22,12 @@ import lombok.Setter;
 /**
  * Associates one catalogue boss with a calendar week and tracks the confrontation's outcome.
  *
- * <p>{@code baseHp}, {@code difficultyModifierPercent} and {@code effectiveHp} are fixed at selection
- * time and never change afterward, even if the catalogue entry or the collective modifier evolve later:
- * a week's fight is resolved once, against the numbers that were true when it started.
+ * <p>{@code effectiveHp} and {@code activePlayerCount} are fixed when the week opens and never change
+ * afterward: a week's fight is resolved once, against the numbers that were true when it started.
  *
  * <p>{@code damageDealt} is frozen at closure rather than derived from
- * {@link io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore} rows, which is how it used to
- * work. Deriving it stopped being safe once a surviving boss started passing its remainder on: an admin
- * recalculating a finalized week would silently move that remainder, and with it the hit points of a
- * following week that had already been fought.
+ * {@link io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore} rows. Deriving it would let an
+ * admin recalculating a finalized week move a number later weeks calibrate themselves against.
  */
 @Getter
 @Setter
@@ -66,27 +63,7 @@ public class WeeklyBossEncounter extends AuditableEntity {
     private BossCatalogEntry bossCatalogEntry;
 
     /**
-     * Version of the {@link io.github.thomashtn.valoquests.scoring.ScoringRuleset} resolved at
-     * selection time. Recalculating this week must always resolve through this version.
-     */
-    @Column(name = "ruleset_version", nullable = false)
-    private int rulesetVersion;
-
-    /**
-     * Base hit points copied from the catalogue entry at selection time.
-     */
-    @Column(name = "base_hp", nullable = false)
-    private int baseHp;
-
-    /**
-     * Collective difficulty modifier applied this week, as a percentage (100 = neutral).
-     */
-    @Column(name = "difficulty_modifier_percent", nullable = false)
-    private int difficultyModifierPercent;
-
-    /**
-     * Effective hit points for the week: {@code baseHp * difficultyModifierPercent / 100}, rounded and
-     * frozen at selection time.
+     * Hit points the boss must lose to be defeated, frozen when the week opened.
      */
     @Column(name = "effective_hp", nullable = false)
     private int effectiveHp;
@@ -112,10 +89,13 @@ public class WeeklyBossEncounter extends AuditableEntity {
     private PlayerMatch finishingPlayerMatch;
 
     /**
-     * Hit points inherited from a predecessor that survived, already included in {@link #effectiveHp}.
+     * Number of players the roster held active when this fight was sized.
+     *
+     * <p>Recorded rather than recomputed: it is what {@link #damageDealt} has to be divided by for the
+     * week to say anything about per-player output, and the roster can change after the fact.
      */
-    @Column(name = "carried_over_hp", nullable = false)
-    private int carriedOverHp;
+    @Column(name = "active_player_count", nullable = false)
+    private int activePlayerCount;
 
     /**
      * Damage the week dealt to this boss, frozen at closure. Zero until the encounter is finalized.

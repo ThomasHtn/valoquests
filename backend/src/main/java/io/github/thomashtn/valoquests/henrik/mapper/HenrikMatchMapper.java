@@ -100,8 +100,6 @@ public class HenrikMatchMapper {
             toCompetitiveTier(sourcePlayer.tier())
         );
 
-        // Match history v4 does not reliably expose historical RR.
-        target.setRankRating(null);
         target.setMvp(isMvp(source, sourcePlayer));
 
         applyAgent(target, sourcePlayer.agent());

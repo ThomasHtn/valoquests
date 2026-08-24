@@ -273,10 +273,17 @@
       "error": "Failed to load the weekly challenges.",
       "loading": "Loading challenges…",
       "metric": {
+        "ACS": "ACS",
+        "ACS_PROGRESS": "ACS growth",
+        "ADR": "ADR",
+        "ADR_PROGRESS": "ADR growth",
         "ASSISTS": "Assists",
         "DAMAGE_DEALT": "Damage",
         "HEADSHOTS": "Headshots",
+        "HEADSHOT_RATE": "HS%",
+        "HEADSHOT_RATE_PROGRESS": "HS% growth",
         "KD": "K/D",
+        "KD_PROGRESS": "K/D growth",
         "KILLS": "Kills",
         "MATCHES_PLAYED": "Matches",
         "MATCHES_WON": "Wins",
@@ -540,10 +547,10 @@
     "heading": "Rules",
     "readingTime": {
       "label": "Reading",
-      "value": "2 min"
+      "value": "4 min"
     },
     "replayTour": "Replay the tour",
-    "subheading": "A week, in 4 steps",
+    "subheading": "One week, in 6 beats",
     "sections": {
       "bonuses": {
         "days": "{{days}} d",
@@ -555,12 +562,17 @@
       },
       "boss": {
         "categories": {
-          "ELITE": "20,000 HP per active player. Without a big collective week, it survives.",
-          "MINOR": "13,000 HP per active player. The squad usually folds it by midweek.",
-          "STANDARD": "16,000 HP per active player. The normal pace: everyone has to pitch in."
+          "ELITE": "Around 125% of a usual week. Without a big collective week, it survives.",
+          "MINOR": "Around 80% of the squad's usual week. Usually folded by midweek.",
+          "STANDARD": "Exactly the squad's usual week. Everyone has to pitch in."
         },
-        "description": "Every week a boss shows up with a health pool shared by the whole squad, sized on the number of active players. An active player who does not play therefore makes the boss heavier without draining it. Bring it down before Sunday night: if it survives, its remaining health reinforces the next boss, up to a quarter of that bar.",
+        "description": "Every week a boss shows up with a health pool shared by the whole squad. That pool is not a fixed number: it is computed from what the squad actually produced over the recent closed weeks, multiplied by the number of active players. An active player who does not play therefore makes the boss heavier without draining it. Bring it down before Sunday night.",
         "title": "One boss, one shared health bar"
+      },
+      "calibration": {
+        "bounds": "The reference cannot run away: it stays bounded, so a full stop never makes the boss fall to a single match and a surge never makes it unreachable.",
+        "description": "Difficulty is never set by hand: the boss's bar tracks the median of what the squad actually produced over the last 4 closed weeks. Play more and the boss grows, ease off and it shrinks. A one-off marathon week does not count, the median ignores it.",
+        "title": "Difficulty that tunes itself"
       },
       "challenges": {
         "damageLabel": "Damage",
@@ -575,6 +587,14 @@
         "decayLabel": "Daily returns · match rank within the day",
         "decayRank": "Match {{rank}}",
         "decayFootnote": "Past the fifth match of a day, a match is worth less. A day's matches are ranked from the most to the least rewarding, never in the order you played them, so warming up can never cost your ranked games. Spreading over several days beats doing it all at once."
+      },
+      "eligibility": {
+        "description": "One rule, everywhere: a match counts if it played at least one round, if you scored in it, and if it was not a remake. A remake or an abandoned match deals no damage, counts as no active day, and progresses no challenge.",
+        "title": "What counts as a played match"
+      },
+      "progression": {
+        "description": "Some challenges ask not for an absolute threshold but for progress on yourself: beating your own K/D, ACS or headshot rate from the previous 4 weeks by a given percentage. Grinding matches at the same level does not complete them, since the measure is a rate. With no history over the last 4 weeks, the challenge stays out of reach.",
+        "title": "Progression challenges"
       },
       "ranking": {
         "description": "Total damage for the week decides the ranking. The rest is glory.",

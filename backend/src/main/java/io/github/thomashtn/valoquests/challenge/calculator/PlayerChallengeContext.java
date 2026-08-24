@@ -10,11 +10,13 @@ import java.util.Objects;
  * Contains the persisted player data required to evaluate challenges during
  * one weekly period.
  *
- * @param playerId      internal player identifier
- * @param weekStart     first calendar day of the evaluated week
- * @param periodStart   inclusive UTC beginning of the evaluated period
- * @param periodEnd     exclusive UTC end of the evaluated period
- * @param playerMatches immutable chronological list of eligible matches
+ * @param playerId        internal player identifier
+ * @param weekStart       first calendar day of the evaluated week
+ * @param periodStart     inclusive UTC beginning of the evaluated period
+ * @param periodEnd       exclusive UTC end of the evaluated period
+ * @param playerMatches   immutable chronological list of eligible matches
+ * @param baselineMatches immutable chronological list of the matches preceding the evaluated week,
+ *     used by challenges that ask a player to improve on their own recent form
  */
 public record PlayerChallengeContext(
 
@@ -22,7 +24,8 @@ public record PlayerChallengeContext(
     LocalDate weekStart,
     Instant periodStart,
     Instant periodEnd,
-    List<PlayerMatch> playerMatches
+    List<PlayerMatch> playerMatches,
+    List<PlayerMatch> baselineMatches
 ) {
 
     /**
@@ -49,6 +52,10 @@ public record PlayerChallengeContext(
             playerMatches,
             "Player matches must not be null."
         );
+        Objects.requireNonNull(
+            baselineMatches,
+            "Baseline matches must not be null."
+        );
 
         if (!periodStart.isBefore(periodEnd)) {
             throw new IllegalArgumentException(
@@ -57,6 +64,29 @@ public record PlayerChallengeContext(
         }
 
         playerMatches = List.copyOf(playerMatches);
+        baselineMatches = List.copyOf(baselineMatches);
+    }
+
+    /**
+     * Creates a context carrying no baseline window.
+     *
+     * <p>Every challenge but the ones comparing a player to their own past ignores the baseline, so
+     * this keeps their call sites — and their tests — free of a window they never read.
+     *
+     * @param playerId      internal player identifier
+     * @param weekStart     first calendar day of the evaluated week
+     * @param periodStart   inclusive UTC beginning of the evaluated period
+     * @param periodEnd     exclusive UTC end of the evaluated period
+     * @param playerMatches immutable chronological list of eligible matches
+     */
+    public PlayerChallengeContext(
+        Long playerId,
+        LocalDate weekStart,
+        Instant periodStart,
+        Instant periodEnd,
+        List<PlayerMatch> playerMatches
+    ) {
+        this(playerId, weekStart, periodStart, periodEnd, playerMatches, List.of());
     }
 
     /**
@@ -64,6 +94,9 @@ public record PlayerChallengeContext(
      *
      * <p>Used to replay a calculator match by match, to find the exact match at which a challenge
      * became completed, without changing the calculator implementations themselves.
+     *
+     * <p>The baseline window is carried over untouched: it describes weeks that are already over, so
+     * truncating it would make a challenge's target move as the replay advances.
      *
      * @param matchCount number of leading matches to keep, must be between 1 and {@link #playerMatches()}'s size
      * @return truncated context sharing every other field
@@ -74,7 +107,8 @@ public record PlayerChallengeContext(
             weekStart,
             periodStart,
             periodEnd,
-            playerMatches.subList(0, matchCount)
+            playerMatches.subList(0, matchCount),
+            baselineMatches
         );
     }
 }

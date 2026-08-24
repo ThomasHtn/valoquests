@@ -358,7 +358,7 @@ export class BossCampaign {
    * @param weekEnd - Sunday identifying the week, as `YYYY-MM-DD`.
    * @param status - The week's outcome/state.
    * @param boss - The boss drawn for that week.
-   * @param effectiveHp - The boss's hit points once its difficulty modifier is applied.
+   * @param effectiveHp - The hit points the boss must lose to be defeated this week.
    * @param totalDamageDealt - Damage the group dealt it.
    * @param contributions - That damage broken down per player.
    * @returns The display-ready node, with a `null` meta line.

@@ -3,7 +3,6 @@ package io.github.thomashtn.valoquests.challenge.calculator;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeScope;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
@@ -144,14 +143,8 @@ public class MaxStreakChallengeProgressCalculator
             condition.metric()
         );
 
-        if (condition.operator() == ChallengeOperator.GTE) {
-            return currentValue.compareTo(condition.target()) >= 0;
-        }
-
-        throw new IllegalArgumentException(
-            "Unsupported challenge operator: "
-                + condition.operator()
-        );
+        // ChallengeOperator declares GTE alone, so there is no other comparison to dispatch on.
+        return currentValue.compareTo(condition.target()) >= 0;
     }
 
     /**

@@ -7,12 +7,13 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.MatchResult;
+import io.github.thomashtn.valoquests.match.service.MatchEligibility;
+import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -30,10 +31,10 @@ import org.junit.jupiter.api.Test;
 class ChallengeProgressCalculatorFirstCompletionTest {
 
     /** Metric evaluator shared by the calculators under test. */
-    private final ChallengeMetricEvaluator metricEvaluator = new ChallengeMetricEvaluator();
+    private final ChallengeMetricEvaluator metricEvaluator = new ChallengeMetricEvaluator(new MatchOutcomeResolver());
 
     /** Match filter shared by the calculators under test. */
-    private final ChallengeMatchFilter matchFilter = new ChallengeMatchFilter();
+    private final ChallengeMatchFilter matchFilter = new ChallengeMatchFilter(new MatchEligibility());
 
     /**
      * Verifies that a monotonic calculator reports the first match at which the target is reached.
@@ -102,7 +103,7 @@ class ChallengeProgressCalculatorFirstCompletionTest {
     @Test
     void shouldReportTheFirstCrossingForTheNonMonotonicRatioCalculator() {
         RatioChallengeProgressCalculator calculator =
-            new RatioChallengeProgressCalculator(matchFilter);
+            new RatioChallengeProgressCalculator(matchFilter, new AggregateRateCalculator());
 
         ChallengeCondition condition = new ChallengeCondition(
             ChallengeMetric.KD,
@@ -118,7 +119,6 @@ class ChallengeProgressCalculatorFirstCompletionTest {
 
         ChallengeDefinition definition = new ChallengeDefinition(
             3,
-            ChallengeRuleType.RATIO,
             ProgressMode.RATIO,
             List.of(condition)
         );
@@ -159,7 +159,6 @@ class ChallengeProgressCalculatorFirstCompletionTest {
 
         return new ChallengeDefinition(
             3,
-            ChallengeRuleType.SINGLE,
             ProgressMode.SUM,
             List.of(condition)
         );
@@ -206,6 +205,8 @@ class ChallengeProgressCalculatorFirstCompletionTest {
         );
 
         PlayerMatch playerMatch = new PlayerMatch();
+        playerMatch.setRoundsPlayed(20);
+        playerMatch.setScore(4_000);
         playerMatch.setMatch(match);
         playerMatch.setAgentName("Jett");
         playerMatch.setResult(MatchResult.WIN);

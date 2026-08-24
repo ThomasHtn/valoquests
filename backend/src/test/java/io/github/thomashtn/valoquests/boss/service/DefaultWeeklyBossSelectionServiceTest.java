@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.boss.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -13,9 +14,8 @@ import io.github.thomashtn.valoquests.boss.repository.BossCatalogEntryRepository
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import io.github.thomashtn.valoquests.scoring.ScoringRulesetRegistry;
-import io.github.thomashtn.valoquests.scoring.ScoringRulesetV1;
 import io.github.thomashtn.valoquests.scoring.model.BossCategory;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
@@ -29,12 +29,21 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 /**
- * Tests deterministic, non-repeating weekly boss selection and difficulty-modifier derivation.
+ * Tests deterministic, non-repeating weekly boss selection and how a fight is sized.
  */
 class DefaultWeeklyBossSelectionServiceTest {
 
     /** Week resolved from the fixed application clock. */
     private static final LocalDate WEEK_START = LocalDate.of(2026, 7, 20);
+
+    /** Roster size every fixture is sized against. */
+    private static final int ACTIVE_PLAYERS = 7;
+
+    /** Per-player output the calibration service is pinned to. */
+    private static final int REFERENCE = 10_000;
+
+    /** Barèmes the service under test is wired with. */
+    private static final ScoringRuleset RULESET = new DefaultScoringRuleset();
 
     /** Catalogue repository dependency. */
     private BossCatalogEntryRepository catalogRepository;
@@ -45,6 +54,9 @@ class DefaultWeeklyBossSelectionServiceTest {
     /** Player repository dependency, sizing the boss from the active roster. */
     private PlayerRepository playerRepository;
 
+    /** Calibration dependency, measuring what a player currently contributes. */
+    private BossCalibrationService calibrationService;
+
     /** Service under test. */
     private DefaultWeeklyBossSelectionService service;
 
@@ -54,20 +66,24 @@ class DefaultWeeklyBossSelectionServiceTest {
         catalogRepository = mock(BossCatalogEntryRepository.class);
         encounterRepository = mock(WeeklyBossEncounterRepository.class);
         playerRepository = mock(PlayerRepository.class);
+        calibrationService = mock(BossCalibrationService.class);
 
-        when(playerRepository.countByStatus(PlayerStatus.ACTIVE)).thenReturn(7L);
-
-        when(encounterRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(calibrationService.referenceDamagePerPlayer()).thenReturn(REFERENCE);
+        lenient().when(playerRepository.countByStatus(PlayerStatus.ACTIVE))
+            .thenReturn((long) ACTIVE_PLAYERS);
+        lenient().when(encounterRepository.findAllByOrderByWeekStartAsc()).thenReturn(List.of());
+        lenient().when(encounterRepository.findByWeekStart(any())).thenReturn(Optional.empty());
+        lenient().when(encounterRepository.save(any()))
+            .thenAnswer(invocation -> invocation.getArgument(0));
 
         Clock clock = Clock.fixed(Instant.parse("2026-07-21T10:00:00Z"), ZoneOffset.UTC);
-        ScoringRulesetRegistry rulesetRegistry =
-            new ScoringRulesetRegistry(List.of(new ScoringRulesetV1()));
 
         service = new DefaultWeeklyBossSelectionService(
             catalogRepository,
             encounterRepository,
-            rulesetRegistry,
+            RULESET,
             playerRepository,
+            calibrationService,
             new WeekCalendar(clock, ZoneOffset.UTC)
         );
     }
@@ -80,8 +96,7 @@ class DefaultWeeklyBossSelectionServiceTest {
         WeeklyBossEncounter existing = new WeeklyBossEncounter();
         existing.setWeekStart(WEEK_START);
 
-        when(encounterRepository.findByWeekStart(WEEK_START))
-            .thenReturn(Optional.of(existing));
+        when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.of(existing));
 
         WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
 
@@ -107,9 +122,6 @@ class DefaultWeeklyBossSelectionServiceTest {
             createEncounter(WEEK_START.minusWeeks(1), bossB)
         ));
 
-        when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.empty());
-        when(encounterRepository.findLatestFinalized()).thenReturn(Optional.empty());
-
         WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
 
         // Only bossC has not been drawn yet in the current cycle, so it is the only valid candidate.
@@ -134,78 +146,105 @@ class DefaultWeeklyBossSelectionServiceTest {
             createEncounter(WEEK_START.minusWeeks(1), bossB)
         ));
 
-        when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.empty());
-        when(encounterRepository.findLatestFinalized()).thenReturn(Optional.empty());
-
         WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
 
         assertThat(result.getBossCatalogEntry()).isIn(bossA, bossB);
     }
 
     /**
-     * Verifies that the difficulty modifier increases after a victory, bounded at 130%.
+     * Verifies that a fight is the measured reference times the roster, weighted by the boss category,
+     * and that the roster it was sized for is recorded alongside it.
      */
     @Test
-    void shouldIncreaseModifierAfterVictoryAndClampAtUpperBound() {
-        BossCatalogEntry boss = createBoss(1L, "BOSS_A", BossCategory.STANDARD);
-        when(catalogRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(List.of(boss));
-        when(encounterRepository.findAllByOrderByWeekStartAsc()).thenReturn(List.of());
-        when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.empty());
-
-        WeeklyBossEncounter previous = createEncounter(WEEK_START.minusWeeks(1), boss);
-        previous.setDifficultyModifierPercent(128);
-        previous.setDefeated(true);
-        when(encounterRepository.findLatestFinalized()).thenReturn(Optional.of(previous));
+    void shouldSizeTheFightOnTheRosterAndTheMeasuredReference() {
+        givenSingleBoss(BossCategory.STANDARD);
 
         WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
 
-        assertThat(result.getDifficultyModifierPercent()).isEqualTo(130);
         assertThat(result.getEffectiveHp())
-            .isEqualTo((int) Math.round(new ScoringRulesetV1().bossBaseHp(BossCategory.STANDARD, 7) * 1.30));
-    }
+            .isEqualTo(RULESET.bossHitPoints(BossCategory.STANDARD, ACTIVE_PLAYERS, REFERENCE));
+        assertThat(result.getActivePlayerCount()).isEqualTo(ACTIVE_PLAYERS);
 
-    /**
-     * Verifies that the difficulty modifier decreases after a survival, bounded at 70%.
-     */
-    @Test
-    void shouldDecreaseModifierAfterSurvivalAndClampAtLowerBound() {
-        BossCatalogEntry boss = createBoss(1L, "BOSS_A", BossCategory.STANDARD);
-        when(catalogRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(List.of(boss));
-        when(encounterRepository.findAllByOrderByWeekStartAsc()).thenReturn(List.of());
-        when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.empty());
-
-        WeeklyBossEncounter previous = createEncounter(WEEK_START.minusWeeks(1), boss);
-        previous.setDifficultyModifierPercent(75);
-        previous.setDefeated(false);
-        when(encounterRepository.findLatestFinalized()).thenReturn(Optional.of(previous));
-
-        WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
-
-        assertThat(result.getDifficultyModifierPercent()).isEqualTo(70);
-    }
-
-    /**
-     * Verifies the neutral 100% modifier used for the very first boss week.
-     */
-    @Test
-    void shouldStartAtTheNeutralModifierWhenNoWeekWasEverFinalized() {
-        BossCatalogEntry boss = createBoss(1L, "BOSS_A", BossCategory.MINOR);
-        when(catalogRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(List.of(boss));
-        when(encounterRepository.findAllByOrderByWeekStartAsc()).thenReturn(List.of());
-        when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.empty());
-        when(encounterRepository.findLatestFinalized()).thenReturn(Optional.empty());
-
-        WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
-
-        ScoringRuleset ruleset = new ScoringRulesetV1();
-        assertThat(result.getDifficultyModifierPercent()).isEqualTo(100);
-        assertThat(result.getBaseHp()).isEqualTo(ruleset.bossBaseHp(BossCategory.MINOR, 7));
-        assertThat(result.getEffectiveHp()).isEqualTo(ruleset.bossBaseHp(BossCategory.MINOR, 7));
-        assertThat(result.getRulesetVersion()).isEqualTo(1);
-
-        ArgumentCaptor<WeeklyBossEncounter> captor = ArgumentCaptor.forClass(WeeklyBossEncounter.class);
+        ArgumentCaptor<WeeklyBossEncounter> captor =
+            ArgumentCaptor.forClass(WeeklyBossEncounter.class);
         verify(encounterRepository).save(captor.capture());
         assertThat(captor.getValue().getWeekStart()).isEqualTo(WEEK_START);
+    }
+
+    /**
+     * Verifies that the fight follows the measurement rather than a constant.
+     */
+    @Test
+    void shouldFollowTheMeasuredReference() {
+        givenSingleBoss(BossCategory.STANDARD);
+        when(calibrationService.referenceDamagePerPlayer()).thenReturn(REFERENCE / 2);
+
+        WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
+
+        assertThat(result.getEffectiveHp())
+            .isEqualTo(RULESET.bossHitPoints(BossCategory.STANDARD, ACTIVE_PLAYERS, REFERENCE / 2));
+    }
+
+    /**
+     * Verifies that an absent player still weighs on the fight.
+     *
+     * <p>The roster is what sizes the boss, not attendance: a player left active and away all week adds
+     * their share of hit points without dealing any, which is what makes turning up a collective
+     * commitment. Deactivating them through the backoffice is the supported way to shrink a week.
+     */
+    @Test
+    void shouldSizeOnTheRosterRatherThanOnAttendance() {
+        givenSingleBoss(BossCategory.STANDARD);
+
+        WeeklyBossEncounter sevenPlayers = service.selectWeekBoss(WEEK_START);
+
+        when(playerRepository.countByStatus(PlayerStatus.ACTIVE)).thenReturn(6L);
+        WeeklyBossEncounter sixPlayers = service.selectWeekBoss(WEEK_START);
+
+        assertThat(sixPlayers.getEffectiveHp()).isLessThan(sevenPlayers.getEffectiveHp());
+    }
+
+    /**
+     * Verifies that re-sizing an open week applies the roster and reference as they now stand, keeping
+     * the boss that was already drawn.
+     */
+    @Test
+    void shouldResizeAnOpenWeekWithoutRedrawingItsBoss() {
+        BossCatalogEntry boss = createBoss(1L, "BOSS_A", BossCategory.STANDARD);
+
+        WeeklyBossEncounter current = createEncounter(WEEK_START, boss);
+        current.setEffectiveHp(1);
+        when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.of(current));
+
+        Optional<WeeklyBossEncounter> result = service.resizeWeekBoss(WEEK_START);
+
+        assertThat(result).isPresent();
+        assertThat(result.orElseThrow().getBossCatalogEntry()).isSameAs(boss);
+        assertThat(result.orElseThrow().getEffectiveHp())
+            .isEqualTo(RULESET.bossHitPoints(BossCategory.STANDARD, ACTIVE_PLAYERS, REFERENCE));
+        verify(encounterRepository).save(current);
+    }
+
+    /**
+     * Verifies that a finalized week is never re-sized: its fight has already been judged.
+     */
+    @Test
+    void shouldNotResizeAFinalizedWeek() {
+        BossCatalogEntry boss = createBoss(1L, "BOSS_A", BossCategory.STANDARD);
+
+        WeeklyBossEncounter current = createEncounter(WEEK_START, boss);
+        current.setFinalizedAt(Instant.parse("2026-07-20T00:05:00Z"));
+        when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.of(current));
+
+        assertThat(service.resizeWeekBoss(WEEK_START)).isEmpty();
+        verify(encounterRepository, never()).save(any());
+    }
+
+    /** Registers a one-entry catalogue and returns the boss every draw resolves to. */
+    private BossCatalogEntry givenSingleBoss(BossCategory category) {
+        BossCatalogEntry boss = createBoss(1L, "BOSS_A", category);
+        when(catalogRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(List.of(boss));
+        return boss;
     }
 
     /** Creates a catalogue boss fixture. */
@@ -220,7 +259,7 @@ class DefaultWeeklyBossSelectionServiceTest {
         return boss;
     }
 
-    /** Creates a past encounter fixture referencing a drawn boss. */
+    /** Creates an open encounter fixture referencing a drawn boss. */
     private WeeklyBossEncounter createEncounter(LocalDate weekStart, BossCatalogEntry boss) {
         WeeklyBossEncounter encounter = new WeeklyBossEncounter();
         encounter.setWeekStart(weekStart);

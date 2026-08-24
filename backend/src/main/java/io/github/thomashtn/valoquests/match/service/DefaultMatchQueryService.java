@@ -142,8 +142,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
             playerMatch.getAcs(),
             playerMatch.getAdr(),
             headshotPercentage,
-            playerMatch.getCompetitiveTier(),
-            playerMatch.getRankRating()
+            playerMatch.getCompetitiveTier()
         );
     }
 

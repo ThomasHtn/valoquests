@@ -7,7 +7,6 @@ import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
@@ -43,8 +42,8 @@ import org.springframework.transaction.annotation.Transactional;
  * progress before executing the production ranking service. They validate
  * aggregation, ordering, position history, idempotence and cleanup.</p>
  *
- * <p>Challenge damage is resolved from {@code ScoringRulesetV1} by difficulty tier (EASY=1500,
- * NORMAL=2500, MEDIUM=4000, HARD=6000), not from the legacy {@code Challenge.damage} column, which this
+ * <p>Challenge damage is resolved from {@code DefaultScoringRuleset} by difficulty tier (EASY=800,
+ * NORMAL=1400, MEDIUM=2200, HARD=3200), not from a per-challenge column, which this
  * feature supersedes for scoring. No match is ever persisted by these fixtures, so match damage and the
  * regularity bonus are always zero here; only challenge damage and, where two players complete the same
  * weekly challenge, the team bonus contribute to the total.</p>
@@ -191,13 +190,13 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
 
         assertThat(scores).hasSize(3);
 
-        // bravo: HARD (6000) alone. alpha: EASY (1500) + NORMAL (2500) = 4000. Neither challenge is
+        // bravo: HARD (3200) alone. alpha: EASY (800) + NORMAL (1400) = 2200. Neither challenge is
         // completed by more than one player here, so the team bonus stays at zero throughout.
         assertScore(
             scores.get(0),
             bravo,
-            6_000,
-            6_000,
+            3_200,
+            3_200,
             1,
             1,
             null
@@ -206,8 +205,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             scores.get(1),
             alpha,
-            4_000,
-            4_000,
+            2_200,
+            2_200,
             2,
             2,
             null
@@ -329,14 +328,14 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
 
         assertThat(scores).hasSize(3);
 
-        // First pass ordered alpha (MEDIUM=4000) > bravo (NORMAL=2500) > charlie (EASY=1500), which
+        // First pass ordered alpha (MEDIUM=2200) > bravo (NORMAL=1400) > charlie (EASY=800), which
         // seeds the previous positions asserted below. The second pass flips completion: bravo now
-        // also completes the MEDIUM challenge (NORMAL+MEDIUM=6500) while alpha completes nothing.
+        // also completes the MEDIUM challenge (NORMAL+MEDIUM=3600) while alpha completes nothing.
         assertScore(
             scores.get(0),
             bravo,
-            6_500,
-            6_500,
+            3_600,
+            3_600,
             2,
             1,
             2
@@ -345,8 +344,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             scores.get(1),
             charlie,
-            1_500,
-            1_500,
+            800,
+            800,
             1,
             2,
             3
@@ -384,8 +383,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
             "Charlie"
         );
 
-        // bravo reaches 4000 (EASY 1500 + NORMAL 2500) across two challenges; alpha and charlie each
-        // reach the same 4000 total through a single, separate MEDIUM challenge. All three tie on total
+        // bravo reaches 2200 (EASY 800 + NORMAL 1400) across two challenges; alpha and charlie each
+        // reach the same 2200 total through a single, separate MEDIUM challenge. All three tie on total
         // damage, so the tie is resolved by completed-challenge count (bravo wins with 2), then by
         // player identifier for the remaining alpha/charlie tie.
         WeeklyChallenge bravoEasy =
@@ -448,8 +447,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             scores.get(0),
             bravo,
-            4_000,
-            4_000,
+            2_200,
+            2_200,
             2,
             1,
             null
@@ -458,8 +457,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             scores.get(1),
             alpha,
-            4_000,
-            4_000,
+            2_200,
+            2_200,
             1,
             2,
             null
@@ -468,8 +467,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             scores.get(2),
             charlie,
-            4_000,
-            4_000,
+            2_200,
+            2_200,
             1,
             3,
             null
@@ -572,8 +571,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             secondScores.get(0),
             alpha,
-            2_500,
-            2_500,
+            1_400,
+            1_400,
             1,
             1,
             1
@@ -582,8 +581,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             secondScores.get(1),
             bravo,
-            1_500,
-            1_500,
+            800,
+            800,
             1,
             2,
             2
@@ -673,8 +672,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             activeScore,
             activePlayer,
-            1_500,
-            1_500,
+            800,
+            800,
             1,
             1,
             1
@@ -739,8 +738,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertScore(
             regularScore,
             regular,
-            1_500,
-            1_500,
+            800,
+            800,
             1,
             1,
             null
@@ -856,9 +855,6 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         challenge.setDifficulty(difficulty);
         challenge.setCategory(
             ChallengeCategory.OTHER
-        );
-        challenge.setRuleType(
-            ChallengeRuleType.SINGLE
         );
         challenge.setProgressMode(
             ProgressMode.SUM

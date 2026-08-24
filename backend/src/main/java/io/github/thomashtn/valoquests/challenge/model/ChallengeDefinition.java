@@ -7,14 +7,12 @@ import java.util.Objects;
  * Represents a validated challenge definition ready to be evaluated.
  *
  * @param schemaVersion version of the JSON rule schema
- * @param ruleType      structural type of the challenge
  * @param progressMode  calculation strategy
  * @param conditions    immutable list of challenge conditions
  */
 public record ChallengeDefinition(
 
     int schemaVersion,
-    ChallengeRuleType ruleType,
     ProgressMode progressMode,
     List<ChallengeCondition> conditions
 ) {
@@ -23,10 +21,6 @@ public record ChallengeDefinition(
      * Creates an immutable and validated challenge definition.
      */
     public ChallengeDefinition {
-        Objects.requireNonNull(
-            ruleType,
-            "Challenge rule type must not be null."
-        );
         Objects.requireNonNull(
             progressMode,
             "Challenge progress mode must not be null."

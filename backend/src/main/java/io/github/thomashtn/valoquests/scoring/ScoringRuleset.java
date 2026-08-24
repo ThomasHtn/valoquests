@@ -2,31 +2,28 @@ package io.github.thomashtn.valoquests.scoring;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.match.model.GameMode;
+import io.github.thomashtn.valoquests.match.model.MatchOutcome;
 import io.github.thomashtn.valoquests.scoring.model.BossCategory;
-import io.github.thomashtn.valoquests.scoring.model.MatchOutcome;
 
 /**
- * Defines one versioned set of damage barèmes.
+ * Defines the damage barèmes every weekly calculation resolves against.
  *
- * <p>A ruleset is resolved once, at the moment a week or a boss encounter is created, and its version
- * number is persisted alongside the result it produced. Recalculating an already-finalized week must
- * always resolve the ruleset through that persisted version, never through
- * {@link ScoringRulesetRegistry#current()} — otherwise a future barème adjustment would silently rewrite
- * closed history.
+ * <p>Deliberately not versioned. Versioning existed to keep closed weeks reproducible across barème
+ * adjustments, but it made the barème a week depended on a side effect of when its boss encounter
+ * happened to be created: a past week owning no encounter silently fell back on the oldest version,
+ * so two adjacent weeks could score under different rules for no reason anyone could observe. A
+ * barème adjustment is now a plain edit, and recalculating any week applies the current one.
  *
- * <p>Implemented as versioned Java classes rather than database rows, on purpose: barème adjustments are
- * expected to be rare (see chapter 11 of the design notes — the collective difficulty modifier absorbs
- * most calibration drift on its own) and this mirrors how {@link GameMode} is already a fixed enum rather
- * than editable data.
+ * <p>Implemented as a Java bean rather than database rows, on purpose: adjustments are expected to be
+ * rare, and this mirrors how {@link GameMode} is already a fixed enum rather than editable data.
+ *
+ * <p>There is deliberately no collective difficulty modifier and no carried-over hit points. Both
+ * existed to keep the fight winnable while its size was a hardcoded constant; the size is now measured
+ * from what the roster actually produces, which regulates the same drift from real data instead of from
+ * a guess. Keeping them alongside would have stacked a second feedback loop on the first: a survival
+ * would have lowered the modifier <em>and</em> the measured reference, easing the next week twice.
  */
 public interface ScoringRuleset {
-
-    /**
-     * Returns the version number this ruleset resolves to.
-     *
-     * @return ruleset version, starting at 1
-     */
-    int version();
 
     /**
      * Returns the damage dealt by one valued match, before the daily coefficient applies.
@@ -82,43 +79,50 @@ public interface ScoringRuleset {
     int challengeTeamBonus(ChallengeDifficulty difficulty, int playersWhoCompleted);
 
     /**
-     * Returns the base hit points of one boss category, before the weekly difficulty modifier and any
-     * carried-over hit points apply.
+     * Returns the hit points a boss must lose to be defeated this week.
      *
-     * @param category          weight class of the drawn boss
-     * @param activePlayerCount number of players the roster holds active when the week opens
-     * @return base hit points
+     * @param category                 weight class of the drawn boss
+     * @param activePlayerCount        number of players the roster holds active when the week opens
+     * @param referenceDamagePerPlayer what one player is currently expected to contribute in a week
+     * @return hit points for the week
      */
-    int bossBaseHp(BossCategory category, int activePlayerCount);
+    int bossHitPoints(BossCategory category, int activePlayerCount, int referenceDamagePerPlayer);
 
     /**
-     * Returns the difficulty modifier a new week opens with, given how the previous one ended.
+     * Returns the per-player weekly output a fight is sized against before any history exists.
      *
-     * <p>Owned by the ruleset rather than by the selection service so it is frozen along with every
-     * other barème: a modifier living outside the version would silently change how every future week
-     * is sized, whichever version that week resolves to.
+     * <p>Only used to open a campaign. From the second closed week onwards the reference is measured
+     * rather than assumed, which is what keeps the fight calibrated as the roster's habits change
+     * without anyone editing a constant.
      *
-     * @param previousModifierPercent modifier the most recently finalized encounter was sized with
-     * @param previousDefeated        whether that encounter ended in the boss being defeated
-     * @return modifier to apply, already clamped to this ruleset's supported range
+     * @return seed reference damage per player
      */
-    int nextDifficultyModifierPercent(int previousModifierPercent, boolean previousDefeated);
+    int seedReferenceDamagePerPlayer();
 
     /**
-     * Returns the difficulty modifier the very first encounter of a campaign opens with.
+     * Returns how many recently finalized weeks the measured reference is drawn from.
      *
-     * @return neutral starting modifier, in percent
+     * @return size of the calibration window, in weeks
      */
-    int initialDifficultyModifierPercent();
+    int calibrationWindowWeeks();
 
     /**
-     * Returns the share of a new boss's base hit points that hit points carried over from a surviving
-     * predecessor may not exceed.
+     * Returns the band the measured reference may not leave, as percentages of the seed.
      *
-     * <p>Uncapped, a surviving boss compounds: its remainder inflates the next fight, which is then
-     * likelier to survive and carry an even larger remainder, and the mechanic dies within a month.
+     * <p>A guard rail, not a target. One freak week — a holiday, or a marathon — must not be able to
+     * resize every future fight, and a roster that stops playing entirely must not drive the reference
+     * to zero and make the next boss fall to a single match.
      *
-     * @return cap expressed as a percentage of the new boss's base hit points, or zero to carry nothing
+     * @return lower and upper bound, in percent of {@link #seedReferenceDamagePerPlayer()}
      */
-    int carriedOverHpCapPercent();
+    int calibrationFloorPercent();
+
+    /**
+     * Returns the upper bound of the calibration band.
+     *
+     * @return upper bound, in percent of {@link #seedReferenceDamagePerPlayer()}
+     * @see #calibrationFloorPercent()
+     */
+    int calibrationCeilingPercent();
+
 }

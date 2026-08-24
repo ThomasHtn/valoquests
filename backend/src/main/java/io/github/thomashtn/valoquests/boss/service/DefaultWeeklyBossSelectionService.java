@@ -8,7 +8,6 @@ import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterReposit
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import io.github.thomashtn.valoquests.scoring.ScoringRulesetRegistry;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -25,17 +24,12 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Draws a deterministic, non-repeating boss for each week.
  *
- * <p>An existing selection is never replaced. The collective difficulty modifier and win streak used to
- * size the week's fight are derived from the most recently finalized encounter, so no separate mutable
- * state has to be kept in sync — the whole boss timeline can be rebuilt from persisted rows alone.
+ * <p>The boss a week fights is never replaced once drawn. Its hit points come from the roster's own
+ * measured output rather than from any state carried between weeks, so the whole boss timeline can be
+ * rebuilt from persisted rows alone.
  */
 @Service
 public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionService {
-
-    /**
-     * Divisor turning a percentage into a ratio.
-     */
-    private static final double PERCENT_SCALE = 100.0;
 
     /**
      * Odd 64-bit constant separating consecutive weeks before diffusion (golden-ratio derived).
@@ -83,14 +77,19 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
     private final WeeklyBossEncounterRepository encounterRepository;
 
     /**
-     * Registry resolving the current damage ruleset.
+     * Barèmes every encounter is sized with.
      */
-    private final ScoringRulesetRegistry rulesetRegistry;
+    private final ScoringRuleset ruleset;
 
     /**
      * Repository used to count the players the roster holds active.
      */
     private final PlayerRepository playerRepository;
+
+    /**
+     * Measures the per-player output a new fight is sized against.
+     */
+    private final BossCalibrationService calibrationService;
 
     /**
      * Calendar resolving the current week.
@@ -102,21 +101,24 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
      *
      * @param catalogRepository    boss catalogue repository
      * @param encounterRepository  weekly boss encounter repository
-     * @param rulesetRegistry      scoring ruleset registry
+     * @param ruleset              scoring ruleset
      * @param playerRepository     player repository
+     * @param calibrationService   boss calibration service
      * @param weekCalendar         calendar resolving the current week
      */
     public DefaultWeeklyBossSelectionService(
         BossCatalogEntryRepository catalogRepository,
         WeeklyBossEncounterRepository encounterRepository,
-        ScoringRulesetRegistry rulesetRegistry,
+        ScoringRuleset ruleset,
         PlayerRepository playerRepository,
+        BossCalibrationService calibrationService,
         WeekCalendar weekCalendar
     ) {
         this.catalogRepository = catalogRepository;
         this.encounterRepository = encounterRepository;
-        this.rulesetRegistry = rulesetRegistry;
+        this.ruleset = ruleset;
         this.playerRepository = playerRepository;
+        this.calibrationService = calibrationService;
         this.weekCalendar = weekCalendar;
     }
 
@@ -144,39 +146,31 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
             );
         }
 
-        BossCatalogEntry chosen = drawBoss(weekStart, catalog);
-        ScoringRuleset ruleset = rulesetRegistry.current();
-        Optional<WeeklyBossEncounter> previous = encounterRepository.findLatestFinalized();
-
-        int activePlayerCount = (int) playerRepository.countByStatus(Player.COMPETITIVE_STATUS);
-        int modifierPercent = resolveModifierPercent(previous, ruleset);
-        int baseHp = ruleset.bossBaseHp(chosen.getCategory(), activePlayerCount);
-        int carriedOverHp = resolveCarriedOverHp(previous, baseHp, ruleset);
-        int effectiveHp = (int) Math.round(baseHp * modifierPercent / PERCENT_SCALE) + carriedOverHp;
-
         WeeklyBossEncounter encounter = new WeeklyBossEncounter();
         encounter.setWeekStart(weekStart);
-        encounter.setBossCatalogEntry(chosen);
-        encounter.setRulesetVersion(ruleset.version());
-        encounter.setBaseHp(baseHp);
-        encounter.setDifficultyModifierPercent(modifierPercent);
-        encounter.setCarriedOverHp(carriedOverHp);
-        encounter.setEffectiveHp(effectiveHp);
+        encounter.setBossCatalogEntry(drawBoss(weekStart, catalog));
 
-        WeeklyBossEncounter saved = encounterRepository.save(encounter);
+        applySizing(encounter);
 
-        LOGGER.info(
-            "Boss encounter prepared for week {}: boss={}, activePlayers={}, modifier={}%, "
-                + "carriedOverHp={}, effectiveHp={}.",
-            weekStart,
-            chosen.getCode(),
-            activePlayerCount,
-            modifierPercent,
-            carriedOverHp,
-            effectiveHp
-        );
+        return encounterRepository.save(encounter);
+    }
 
-        return saved;
+    @Override
+    @Transactional
+    public Optional<WeeklyBossEncounter> resizeWeekBoss(LocalDate weekStart) {
+        validateWeekStart(weekStart);
+
+        Optional<WeeklyBossEncounter> existing = encounterRepository.findByWeekStart(weekStart)
+            .filter(encounter -> encounter.getFinalizedAt() == null);
+
+        if (existing.isEmpty()) {
+            return Optional.empty();
+        }
+
+        WeeklyBossEncounter encounter = existing.orElseThrow();
+        applySizing(encounter);
+
+        return Optional.of(encounterRepository.save(encounter));
     }
 
     @Override
@@ -185,6 +179,37 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
         validateWeekStart(weekStart);
 
         return encounterRepository.findByWeekStart(weekStart);
+    }
+
+    /**
+     * Sizes one encounter from its immediate predecessor and the roster as it currently stands.
+     *
+     * <p>Idempotent, and deliberately derived entirely from persisted rows: the same encounter can be
+     * sized again once its predecessor is finalized, which is what repairs a week drawn lazily during
+     * the window between a Monday's first page view and that Monday's rollover.
+     *
+     * @param encounter encounter to size, carrying its week and its drawn boss
+     */
+    private void applySizing(WeeklyBossEncounter encounter) {
+        int activePlayerCount = (int) playerRepository.countByStatus(Player.COMPETITIVE_STATUS);
+        int referenceDamagePerPlayer = calibrationService.referenceDamagePerPlayer();
+        int effectiveHp = ruleset.bossHitPoints(
+            encounter.getBossCatalogEntry().getCategory(),
+            activePlayerCount,
+            referenceDamagePerPlayer
+        );
+
+        encounter.setActivePlayerCount(activePlayerCount);
+        encounter.setEffectiveHp(effectiveHp);
+
+        LOGGER.info(
+            "Boss encounter sized for week {}: boss={}, activePlayers={}, reference={}, effectiveHp={}.",
+            encounter.getWeekStart(),
+            encounter.getBossCatalogEntry().getCode(),
+            activePlayerCount,
+            referenceDamagePerPlayer,
+            effectiveHp
+        );
     }
 
     /**
@@ -231,54 +256,6 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
         }
 
         return usedIds;
-    }
-
-    /**
-     * Resolves the difficulty modifier applied to the week being prepared, from the outcome of the most
-     * recently finalized encounter.
-     *
-     * @param previous most recently finalized encounter, when the campaign has one
-     * @param ruleset  ruleset the new week is being sized with
-     * @return resolved modifier, in percent
-     */
-    private int resolveModifierPercent(Optional<WeeklyBossEncounter> previous, ScoringRuleset ruleset) {
-        return previous
-            .map(encounter -> ruleset.nextDifficultyModifierPercent(
-                encounter.getDifficultyModifierPercent(),
-                encounter.isDefeated()
-            ))
-            .orElseGet(ruleset::initialDifficultyModifierPercent);
-    }
-
-    /**
-     * Resolves the hit points inherited from a predecessor that survived.
-     *
-     * <p>Only the immediately preceding encounter is looked at, and only when it survived: remainders
-     * never stack across several bad weeks, which together with the ruleset's cap is what keeps a losing
-     * streak from compounding into a boss nobody can reach.
-     *
-     * @param previous most recently finalized encounter, when the campaign has one
-     * @param baseHp   base hit points of the boss being prepared
-     * @param ruleset  ruleset the new week is being sized with
-     * @return hit points to carry over, capped, or zero
-     */
-    private int resolveCarriedOverHp(
-        Optional<WeeklyBossEncounter> previous,
-        int baseHp,
-        ScoringRuleset ruleset
-    ) {
-        int capPercent = ruleset.carriedOverHpCapPercent();
-
-        if (capPercent <= 0) {
-            return 0;
-        }
-
-        int cap = (int) Math.round(baseHp * capPercent / PERCENT_SCALE);
-
-        return previous
-            .filter(encounter -> !encounter.isDefeated())
-            .map(encounter -> Math.min(encounter.remainingHp(), cap))
-            .orElse(0);
     }
 
     /**

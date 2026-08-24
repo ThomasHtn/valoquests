@@ -8,12 +8,12 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.MatchResult;
+import io.github.thomashtn.valoquests.match.service.MatchEligibility;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -31,14 +31,14 @@ class RatioChallengeProgressCalculatorTest {
      */
     private final ChallengeMatchFilter matchFilter =
 
-        new ChallengeMatchFilter();
+        new ChallengeMatchFilter(new MatchEligibility());
 
     /**
      * Calculator under test.
      */
     private final RatioChallengeProgressCalculator calculator =
 
-        new RatioChallengeProgressCalculator(matchFilter);
+        new RatioChallengeProgressCalculator(matchFilter, new AggregateRateCalculator());
 
     /**
      * Verifies that the weekly K/D is calculated from total kills and deaths.
@@ -385,7 +385,6 @@ class RatioChallengeProgressCalculatorTest {
 
         return new ChallengeDefinition(
             3,
-            ChallengeRuleType.RATIO,
             ProgressMode.RATIO,
             List.of(condition)
         );
@@ -481,6 +480,8 @@ class RatioChallengeProgressCalculatorTest {
         );
 
         PlayerMatch playerMatch = new PlayerMatch();
+        playerMatch.setRoundsPlayed(20);
+        playerMatch.setScore(4_000);
         playerMatch.setMatch(match);
         playerMatch.setAgentName("Jett");
         playerMatch.setResult(MatchResult.WIN);

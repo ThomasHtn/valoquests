@@ -7,12 +7,13 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeScope;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.match.model.GameMode;
+import io.github.thomashtn.valoquests.match.service.MatchEligibility;
+import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -30,8 +31,8 @@ class CountMatchesChallengeProgressCalculatorTest {
     private final CountMatchesChallengeProgressCalculator calculator =
 
         new CountMatchesChallengeProgressCalculator(
-            new ChallengeMetricEvaluator(),
-            new ChallengeMatchFilter()
+            new ChallengeMetricEvaluator(new MatchOutcomeResolver()),
+            new ChallengeMatchFilter(new MatchEligibility())
         );
 
     /**
@@ -53,7 +54,6 @@ class CountMatchesChallengeProgressCalculatorTest {
 
         ChallengeDefinition definition = new ChallengeDefinition(
             3,
-            ChallengeRuleType.OCCURRENCE,
             ProgressMode.COUNT_MATCHES,
             List.of(condition)
         );
@@ -96,7 +96,6 @@ class CountMatchesChallengeProgressCalculatorTest {
 
         ChallengeDefinition definition = new ChallengeDefinition(
             3,
-            ChallengeRuleType.OCCURRENCE,
             ProgressMode.COUNT_MATCHES,
             List.of(condition)
         );
@@ -148,6 +147,8 @@ class CountMatchesChallengeProgressCalculatorTest {
         match.setGameMode(gameMode);
 
         PlayerMatch playerMatch = new PlayerMatch();
+        playerMatch.setRoundsPlayed(20);
+        playerMatch.setScore(4_000);
         playerMatch.setMatch(match);
         playerMatch.setKills(kills);
         playerMatch.setDeaths(deaths);

@@ -9,12 +9,13 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGroupBy;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.MatchResult;
+import io.github.thomashtn.valoquests.match.service.MatchEligibility;
+import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -34,14 +35,14 @@ class DistinctCountChallengeProgressCalculatorTest {
      */
     private final ChallengeMetricEvaluator metricEvaluator =
 
-        new ChallengeMetricEvaluator();
+        new ChallengeMetricEvaluator(new MatchOutcomeResolver());
 
     /**
      * Match filter used by the calculator.
      */
     private final ChallengeMatchFilter matchFilter =
 
-        new ChallengeMatchFilter();
+        new ChallengeMatchFilter(new MatchEligibility());
 
     /**
      * Calculator under test.
@@ -331,7 +332,6 @@ class DistinctCountChallengeProgressCalculatorTest {
 
         return new ChallengeDefinition(
             3,
-            ChallengeRuleType.SINGLE,
             ProgressMode.DISTINCT_COUNT,
             List.of(condition)
         );
@@ -377,6 +377,8 @@ class DistinctCountChallengeProgressCalculatorTest {
         match.setStartedAt(Instant.parse(startedAt));
 
         PlayerMatch playerMatch = new PlayerMatch();
+        playerMatch.setRoundsPlayed(20);
+        playerMatch.setScore(4_000);
         playerMatch.setMatch(match);
         playerMatch.setAgentId(agentId);
         playerMatch.setAgentName(agentName);

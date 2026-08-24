@@ -1,29 +1,40 @@
 package io.github.thomashtn.valoquests.scoring.service;
 
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
-import io.github.thomashtn.valoquests.match.model.GameMode;
-import io.github.thomashtn.valoquests.match.model.MatchResult;
+import io.github.thomashtn.valoquests.match.service.MatchEligibility;
+import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import io.github.thomashtn.valoquests.scoring.model.MatchOutcome;
 import org.springframework.stereotype.Component;
 
 /**
  * Resolves whether one played match is valued and, when it is, how much damage it deals.
- *
- * <p>Validity is a structural property of the match itself (was it really played, was it remade) and is
- * therefore not versioned: it does not belong to {@link ScoringRuleset}, unlike the damage amounts it
- * gates.
  */
 @Component
 public final class MatchDamageCalculator {
 
     /**
-     * Kills required for a Deathmatch match to count as a victory.
-     *
-     * <p>Deathmatch has no reliable team result: it ends when a player reaches this many kills, which is
-     * by definition first place, so this replaces {@link PlayerMatch#getResult()} for this one mode.
+     * Shared rule deciding whether a match counts at all.
      */
-    private static final int DEATHMATCH_VICTORY_KILLS = 40;
+    private final MatchEligibility matchEligibility;
+
+    /**
+     * Shared rule deciding how a match ended.
+     */
+    private final MatchOutcomeResolver outcomeResolver;
+
+    /**
+     * Creates the match damage calculator.
+     *
+     * @param matchEligibility shared match eligibility rule
+     * @param outcomeResolver  shared match outcome rule
+     */
+    public MatchDamageCalculator(
+        MatchEligibility matchEligibility,
+        MatchOutcomeResolver outcomeResolver
+    ) {
+        this.matchEligibility = matchEligibility;
+        this.outcomeResolver = outcomeResolver;
+    }
 
     /**
      * Determines whether a played match is valued at all.
@@ -32,33 +43,7 @@ public final class MatchDamageCalculator {
      * @return {@code true} when the match was really played and was not remade
      */
     public boolean isEligible(PlayerMatch playerMatch) {
-        return playerMatch.getRoundsPlayed() >= 1
-            && playerMatch.getScore() > 0
-            && playerMatch.getResult() != MatchResult.REMAKE;
-    }
-
-    /**
-     * Resolves the normalized outcome of one match from the tracked player's perspective.
-     *
-     * @param playerMatch tracked player's statistics for the match
-     * @return normalized outcome
-     */
-    public MatchOutcome outcomeOf(PlayerMatch playerMatch) {
-        GameMode gameMode = playerMatch.getMatch().getGameMode();
-
-        if (gameMode == GameMode.DEATHMATCH) {
-            return playerMatch.getKills() >= DEATHMATCH_VICTORY_KILLS
-                ? MatchOutcome.WIN
-                : MatchOutcome.LOSS;
-        }
-
-        return switch (playerMatch.getResult()) {
-            case WIN -> MatchOutcome.WIN;
-            case DRAW -> MatchOutcome.DRAW;
-            // UNKNOWN: Henrik did not expose a reliable team result. REMAKE never reaches here in
-            // practice since callers gate on isEligible first, but the switch must stay exhaustive.
-            case LOSS, UNKNOWN, REMAKE -> MatchOutcome.LOSS;
-        };
+        return matchEligibility.isEligible(playerMatch);
     }
 
     /**
@@ -75,7 +60,7 @@ public final class MatchDamageCalculator {
 
         return ruleset.matchDamage(
             playerMatch.getMatch().getGameMode(),
-            outcomeOf(playerMatch)
+            outcomeResolver.outcomeOf(playerMatch)
         );
     }
 }

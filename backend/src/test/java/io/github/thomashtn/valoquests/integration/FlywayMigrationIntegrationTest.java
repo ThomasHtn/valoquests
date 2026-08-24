@@ -57,7 +57,9 @@ class FlywayMigrationIntegrationTest extends PostgreSqlIntegrationTest {
         );
 
         assertThat(failedMigrations).isZero();
-        assertThat(challenges).isEqualTo(62);
+        // 62 seeded by V3 once V14 removed the unreachable modes, plus the 7 progression challenges
+        // V28 added. Six of the 62 are disabled by V28 rather than deleted, so they still count here.
+        assertThat(challenges).isEqualTo(69);
         assertThat(players).isGreaterThanOrEqualTo(6);
     }
 

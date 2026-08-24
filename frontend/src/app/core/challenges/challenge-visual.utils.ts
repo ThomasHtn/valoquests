@@ -6,6 +6,10 @@ import { ChallengeIcon, ChallengeVisual } from './challenge-visual.model';
  *
  * Keyed by the backend's `ChallengeMetric` enum names. Composite challenges expose a
  * `" + "`-joined metric string; {@link resolveChallengeVisual} matches on the first metric only.
+ *
+ * The `*_PROGRESS` keys are the same metrics asked as an improvement on the player's own recent form
+ * rather than as an absolute threshold. The backend suffixes them so the two can be told apart: their
+ * target is a percentage gain, not a value to reach. They all share the rising-trend icon.
  */
 const CHALLENGE_METRIC_ICONS: Readonly<Record<string, ChallengeIcon>> = {
   HEADSHOTS: 'skull',
@@ -18,6 +22,13 @@ const CHALLENGE_METRIC_ICONS: Readonly<Record<string, ChallengeIcon>> = {
   ROUNDS_PLAYED: 'shield',
   KD: 'trending-up',
   PLAY_DAY: 'calendar',
+  ACS: 'star',
+  ADR: 'swords',
+  HEADSHOT_RATE: 'skull',
+  KD_PROGRESS: 'trending-up',
+  ACS_PROGRESS: 'trending-up',
+  ADR_PROGRESS: 'trending-up',
+  HEADSHOT_RATE_PROGRESS: 'trending-up',
 };
 
 /**

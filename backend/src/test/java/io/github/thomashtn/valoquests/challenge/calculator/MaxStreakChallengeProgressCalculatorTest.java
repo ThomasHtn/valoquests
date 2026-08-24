@@ -8,13 +8,14 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeScope;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.MatchResult;
+import io.github.thomashtn.valoquests.match.service.MatchEligibility;
+import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -32,8 +33,8 @@ class MaxStreakChallengeProgressCalculatorTest {
     private final MaxStreakChallengeProgressCalculator calculator =
 
         new MaxStreakChallengeProgressCalculator(
-            new ChallengeMetricEvaluator(),
-            new ChallengeMatchFilter()
+            new ChallengeMetricEvaluator(new MatchOutcomeResolver()),
+            new ChallengeMatchFilter(new MatchEligibility())
         );
 
     /**
@@ -240,7 +241,7 @@ class MaxStreakChallengeProgressCalculatorTest {
     void shouldRejectDefinitionWithoutPerMatchScope() {
         ChallengeDefinition definition = createDefinition(
             ChallengeMetric.KD,
-            ChallengeScope.WEEKLY,
+            null,
             3
         );
 
@@ -340,7 +341,6 @@ class MaxStreakChallengeProgressCalculatorTest {
 
         return new ChallengeDefinition(
             3,
-            ChallengeRuleType.STREAK,
             ProgressMode.MAX_STREAK,
             List.of(condition)
         );
@@ -408,6 +408,8 @@ class MaxStreakChallengeProgressCalculatorTest {
         );
 
         PlayerMatch playerMatch = new PlayerMatch();
+        playerMatch.setRoundsPlayed(20);
+        playerMatch.setScore(4_000);
         playerMatch.setMatch(match);
         playerMatch.setAgentName("Jett");
         playerMatch.setResult(MatchResult.WIN);

@@ -19,11 +19,11 @@ interface DifficultyShowcase {
  */
 export const DIFFICULTY_SHOWCASE: readonly DifficultyShowcase[] = (
   [
-    ['EASY', 1_500],
-    ['NORMAL', 2_500],
-    ['MEDIUM', 4_000],
-    ['HARD', 6_000],
-    ['VERY_HARD', 9_000],
+    ['EASY', 800],
+    ['NORMAL', 1_400],
+    ['MEDIUM', 2_200],
+    ['HARD', 3_200],
+    ['VERY_HARD', 4_500],
   ] as const
 ).map(([difficulty, damage]) => ({
   difficulty,
@@ -40,8 +40,9 @@ export const BOSS_CATEGORY_SHOWCASE: readonly BossCategory[] = ['MINOR', 'STANDA
  * Damage a single synced match awards for one game mode, by outcome.
  *
  * `draw` is `null` for the two modes that cannot end on a draw (`SPIKE_RUSH`, `DEATHMATCH`).
- * Mirrors `ScoringRulesetV1#matchDamage` on the backend; that class is frozen once published (see
- * its own doc comment), so these values are safe to transcribe here as-is.
+ * Mirrors `DefaultScoringRuleset#matchDamage` on the backend. Every mode the barème values has a row
+ * here: a mode missing from this table reads as worth nothing, which is how Premier was presented
+ * before it was priced.
  */
 interface MatchDamageShowcase {
   readonly mode: GameMode;
@@ -55,6 +56,7 @@ interface MatchDamageShowcase {
  */
 export const MATCH_DAMAGE_SHOWCASE: readonly MatchDamageShowcase[] = [
   { mode: 'COMPETITIVE', win: 500, draw: 425, loss: 350 },
+  { mode: 'PREMIER', win: 500, draw: 425, loss: 350 },
   { mode: 'UNRATED', win: 400, draw: 340, loss: 280 },
   { mode: 'SPIKE_RUSH', win: 180, draw: null, loss: 130 },
   { mode: 'SKIRMISH', win: 170, draw: 145, loss: 120 },
@@ -73,7 +75,7 @@ interface BonusShowcase {
 /**
  * One tier of the regularity bonus: extra damage awarded to a player who played on this many
  * distinct days in the week — it is counted per player, not for the group. Mirrors
- * `ScoringRulesetV2#regularityBonus`; a single active day earns nothing, so the ladder starts at two.
+ * `DefaultScoringRuleset#regularityBonus`; a single active day earns nothing, so the ladder starts at two.
  */
 export const REGULARITY_BONUS_SHOWCASE: readonly BonusShowcase[] = [
   { label: '2', bonus: 600 },
@@ -89,7 +91,7 @@ export const REGULARITY_BONUS_SHOWCASE: readonly BonusShowcase[] = [
  *
  * Held as a percentage rather than a formatted multiplier so the decimal separator follows the
  * active language, resolved through `formatSquadMultiplier`. Mirrors
- * `ScoringRulesetV2#challengeTeamBonus`: a lone completer earns nothing, each further player adds
+ * `DefaultScoringRuleset#challengeTeamBonus`: a lone completer earns nothing, each further player adds
  * ten percent, and the fixed roster's potential 7th is capped to the 6-player tier.
  */
 export const TEAM_BONUS_SHOWCASE: readonly BonusShowcase[] = [
@@ -104,7 +106,7 @@ export const TEAM_BONUS_SHOWCASE: readonly BonusShowcase[] = [
  * One band of the daily diminishing-returns ladder: the matches of a single day, ranked from the
  * most to the least valuable, keep this share of their damage.
  *
- * Mirrors `ScoringRulesetV2#matchDamageCoefficientPercent`. Ranking by value rather than by play
+ * Mirrors `DefaultScoringRuleset#matchDamageCoefficientPercent`. Ranking by value rather than by play
  * order is deliberate and worth stating on the page: a warm-up never costs a ranked game its tier.
  */
 export const MATCH_DECAY_SHOWCASE: readonly { label: string; percent: number }[] = [

@@ -88,8 +88,6 @@ public class DefaultBossQueryService implements BossQueryService {
             weekStart,
             weekStart.plusDays(6),
             toBossResponse(encounter.getBossCatalogEntry()),
-            encounter.getBaseHp(),
-            encounter.getDifficultyModifierPercent(),
             encounter.getEffectiveHp(),
             totalDamageDealt(weekStart)
         );

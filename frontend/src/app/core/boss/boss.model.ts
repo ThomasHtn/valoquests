@@ -38,8 +38,6 @@ export interface CurrentBoss {
    */
   readonly weekEnd: string;
   readonly boss: Boss;
-  readonly baseHp: number;
-  readonly difficultyModifierPercent: number;
   readonly effectiveHp: number;
   readonly totalDamageDealt: number;
 }

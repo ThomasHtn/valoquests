@@ -3,7 +3,9 @@ package io.github.thomashtn.valoquests.challenge;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import io.github.thomashtn.valoquests.challenge.calculator.AggregateRateCalculator;
 import io.github.thomashtn.valoquests.challenge.calculator.AllChallengeProgressCalculator;
+import io.github.thomashtn.valoquests.challenge.calculator.BaselineChallengeProgressCalculator;
 import io.github.thomashtn.valoquests.challenge.calculator.ChallengeMatchFilter;
 import io.github.thomashtn.valoquests.challenge.calculator.ChallengeMetricEvaluator;
 import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressCalculator;
@@ -20,10 +22,11 @@ import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
+import io.github.thomashtn.valoquests.match.service.MatchEligibility;
+import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,18 +54,22 @@ import tools.jackson.databind.json.JsonMapper;
 class ChallengeCatalogueCompatibilityTest {
 
     /**
-     * Production migration containing the challenge catalogue.
+     * Production migrations seeding the challenge catalogue, in the order they are applied.
      */
-    private static final String CATALOGUE_RESOURCE =
-        "db/migration/V3__insert_challenges.sql";
+    private static final List<String> CATALOGUE_RESOURCES = List.of(
+        "db/migration/V3__insert_challenges.sql",
+        "db/migration/V28__add_progression_challenges.sql"
+    );
 
     /**
-     * Expected number of active catalogue entries.
+     * Expected number of catalogue entries.
      *
      * <p>V3 seeds 78 rows, of which V14 deletes the 16 filtered on a game mode synchronization no
-     * longer imports.
+     * longer imports, leaving 62. V28 adds 7 progression challenges. The 6 volume challenges V28
+     * disables are still counted here: it disables them with an UPDATE rather than removing the rows,
+     * and their definitions must keep parsing and calculating for the finalized weeks that drew them.
      */
-    private static final int EXPECTED_CHALLENGE_COUNT = 62;
+    private static final int EXPECTED_CHALLENGE_COUNT = 69;
 
     /**
      * Game-mode filters removed from the catalogue by V14.
@@ -80,6 +87,17 @@ class ChallengeCatalogueCompatibilityTest {
      */
     private static final Pattern CHALLENGE_ROW_PATTERN = Pattern.compile(
         "\\('([^']*)','([^']*)','([^']*)','([^']*)',(\\d+),"
+            + "'([^']*)','([^']*)','([^']*)','(\\[.*?])'::jsonb,"
+            + "(NULL|'[^']*'),(TRUE|FALSE),(\\d+)\\)",
+        Pattern.DOTALL
+    );
+
+    /**
+     * Pattern extracting one challenge row from a migration written after the per-challenge damage
+     * column was dropped, which is the same shape minus that column.
+     */
+    private static final Pattern MODERN_CHALLENGE_ROW_PATTERN = Pattern.compile(
+        "\\('([^']*)','([^']*)','([^']*)','([^']*)',"
             + "'([^']*)','([^']*)','([^']*)','(\\[.*?])'::jsonb,"
             + "(NULL|'[^']*'),(TRUE|FALSE),(\\d+)\\)",
         Pattern.DOTALL
@@ -106,8 +124,8 @@ class ChallengeCatalogueCompatibilityTest {
     @BeforeEach
     void setUp() {
         ChallengeMetricEvaluator metricEvaluator =
-            new ChallengeMetricEvaluator();
-        ChallengeMatchFilter matchFilter = new ChallengeMatchFilter();
+            new ChallengeMetricEvaluator(new MatchOutcomeResolver());
+        ChallengeMatchFilter matchFilter = new ChallengeMatchFilter(new MatchEligibility());
 
         List<ChallengeProgressCalculator> calculators = List.of(
             new SumChallengeProgressCalculator(
@@ -132,9 +150,13 @@ class ChallengeCatalogueCompatibilityTest {
                 metricEvaluator,
                 matchFilter
             ),
-            new RatioChallengeProgressCalculator(matchFilter),
+            new RatioChallengeProgressCalculator(matchFilter, new AggregateRateCalculator()),
             new MaxStreakChallengeProgressCalculator(
                 metricEvaluator,
+                matchFilter
+            ),
+            new BaselineChallengeProgressCalculator(
+                new AggregateRateCalculator(),
                 matchFilter
             )
         );
@@ -256,16 +278,25 @@ class ChallengeCatalogueCompatibilityTest {
      * @throws IOException when the migration cannot be read
      */
     private List<Challenge> loadChallenges() throws IOException {
-        Matcher matcher = CHALLENGE_ROW_PATTERN.matcher(
-            readCatalogueMigration()
-        );
         List<Challenge> challenges = new ArrayList<>();
 
-        while (matcher.find()) {
-            if (REMOVED_GAME_MODE_PATTERN.matcher(matcher.group(9)).find()) {
-                continue;
+        for (String resource : CATALOGUE_RESOURCES) {
+            String migration = readCatalogueMigration(resource);
+            boolean legacyShape = CHALLENGE_ROW_PATTERN.matcher(migration).find();
+            Matcher matcher = legacyShape
+                ? CHALLENGE_ROW_PATTERN.matcher(migration)
+                : MODERN_CHALLENGE_ROW_PATTERN.matcher(migration);
+
+            // The legacy shape carries a per-challenge damage column between difficulty and category;
+            // every group after it therefore shifts by one.
+            int offset = legacyShape ? 1 : 0;
+
+            while (matcher.find()) {
+                if (REMOVED_GAME_MODE_PATTERN.matcher(matcher.group(8 + offset)).find()) {
+                    continue;
+                }
+                challenges.add(toChallenge(matcher, offset));
             }
-            challenges.add(toChallenge(matcher));
         }
 
         return List.copyOf(challenges);
@@ -275,9 +306,10 @@ class ChallengeCatalogueCompatibilityTest {
      * Converts one matched SQL row into a challenge entity.
      *
      * @param matcher matcher positioned on one challenge row
+     * @param offset  one when the row carries the dropped per-challenge damage column, zero otherwise
      * @return reconstructed challenge entity
      */
-    private Challenge toChallenge(Matcher matcher) {
+    private Challenge toChallenge(Matcher matcher, int offset) {
         Challenge challenge = new Challenge();
 
         challenge.setCode(matcher.group(1));
@@ -287,23 +319,20 @@ class ChallengeCatalogueCompatibilityTest {
             ChallengeDifficulty.valueOf(matcher.group(4))
         );
         challenge.setCategory(
-            ChallengeCategory.valueOf(matcher.group(6))
-        );
-        challenge.setRuleType(
-            ChallengeRuleType.valueOf(matcher.group(7))
+            ChallengeCategory.valueOf(matcher.group(5 + offset))
         );
         challenge.setProgressMode(
-            ProgressMode.valueOf(matcher.group(8))
+            ProgressMode.valueOf(matcher.group(7 + offset))
         );
-        challenge.setConditionsJson(matcher.group(9));
+        challenge.setConditionsJson(matcher.group(8 + offset));
         challenge.setExclusionGroup(
-            parseNullableSqlString(matcher.group(10))
+            parseNullableSqlString(matcher.group(9 + offset))
         );
         challenge.setEnabled(
-            Boolean.parseBoolean(matcher.group(11))
+            Boolean.parseBoolean(matcher.group(10 + offset))
         );
         challenge.setSchemaVersion(
-            Integer.parseInt(matcher.group(12))
+            Integer.parseInt(matcher.group(11 + offset))
         );
 
         return challenge;
@@ -324,17 +353,18 @@ class ChallengeCatalogueCompatibilityTest {
     }
 
     /**
-     * Reads the production challenge migration from the classpath.
+     * Reads one production challenge migration from the classpath.
      *
+     * @param resource classpath location of the migration
      * @return complete migration content
      * @throws IOException when the resource is missing or unreadable
      */
-    private String readCatalogueMigration() throws IOException {
+    private String readCatalogueMigration(String resource) throws IOException {
         ClassLoader classLoader = Thread.currentThread()
             .getContextClassLoader();
 
         try (InputStream inputStream =
-                 classLoader.getResourceAsStream(CATALOGUE_RESOURCE)) {
+                 classLoader.getResourceAsStream(resource)) {
             assertThat(inputStream)
                 .as("production challenge migration")
                 .isNotNull();

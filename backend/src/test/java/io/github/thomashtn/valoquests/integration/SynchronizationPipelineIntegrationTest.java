@@ -11,7 +11,6 @@ import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
@@ -525,11 +524,11 @@ class SynchronizationPipelineIntegrationTest
     /**
      * Verifies the single-player ranking produced from calculated progress.
      *
-     * <p>Challenge damage is resolved from {@code ScoringRulesetV2} by difficulty tier: completing all
-     * five (EASY+NORMAL+MEDIUM+HARD+VERY_HARD) totals 23000. The two imported matches (WIN=500,
+     * <p>Challenge damage is resolved from {@code DefaultScoringRuleset} by difficulty tier: completing
+     * all five (EASY+NORMAL+MEDIUM+HARD+VERY_HARD) totals 12100. The two imported matches (WIN=500,
      * LOSS=350) add 850 in match damage, and span two distinct days, adding the 2-day regularity bonus
      * (600). A single active player means no challenge here is shared, so the team bonus stays at zero:
-     * 23000 + 850 + 600 = 24450 total damage.
+     * 12100 + 850 + 600 = 13550 total damage.
      */
     private void assertCalculatedRanking(
         Player player,
@@ -540,7 +539,7 @@ class SynchronizationPipelineIntegrationTest
         assertThat(score.getWeekStart())
             .isEqualTo(WEEK_START);
         assertThat(score.getChallengeDamage())
-            .isEqualTo(23_000);
+            .isEqualTo(12_100);
         assertThat(score.getMatchDamage())
             .isEqualTo(850);
         assertThat(score.getRegularityBonus())
@@ -548,7 +547,7 @@ class SynchronizationPipelineIntegrationTest
         assertThat(score.getTeamBonus())
             .isEqualTo(0);
         assertThat(score.getTotalDamage())
-            .isEqualTo(24_450);
+            .isEqualTo(13_550);
         assertThat(score.getCompletedChallenges())
             .isEqualTo(5);
         assertThat(score.getPosition())
@@ -646,7 +645,6 @@ class SynchronizationPipelineIntegrationTest
                     "PIPELINE_KILLS",
                     ChallengeDifficulty.EASY,
                     ProgressMode.SUM,
-                    ChallengeRuleType.SINGLE,
                     "KILLS",
                     "50",
                     null
@@ -655,7 +653,6 @@ class SynchronizationPipelineIntegrationTest
                     "PIPELINE_DAMAGE",
                     ChallengeDifficulty.NORMAL,
                     ProgressMode.SUM,
-                    ChallengeRuleType.SINGLE,
                     "DAMAGE_DEALT",
                     "5000",
                     null
@@ -664,7 +661,6 @@ class SynchronizationPipelineIntegrationTest
                     "PIPELINE_WINS",
                     ChallengeDifficulty.MEDIUM,
                     ProgressMode.SUM,
-                    ChallengeRuleType.SINGLE,
                     "MATCHES_WON",
                     "1",
                     null
@@ -673,7 +669,6 @@ class SynchronizationPipelineIntegrationTest
                     "PIPELINE_KD",
                     ChallengeDifficulty.HARD,
                     ProgressMode.RATIO,
-                    ChallengeRuleType.RATIO,
                     "KD",
                     "2",
                     "\"minimumMatches\": 2,"
@@ -682,7 +677,6 @@ class SynchronizationPipelineIntegrationTest
                     "PIPELINE_PLAY_DAYS",
                     ChallengeDifficulty.VERY_HARD,
                     ProgressMode.DISTINCT_COUNT,
-                    ChallengeRuleType.DISTINCT,
                     "PLAY_DAY",
                     "2",
                     "\"groupBy\": \"PLAY_DAY\","
@@ -704,7 +698,6 @@ class SynchronizationPipelineIntegrationTest
         String code,
         ChallengeDifficulty difficulty,
         ProgressMode progressMode,
-        ChallengeRuleType ruleType,
         String metric,
         String target,
         String additionalCondition
@@ -721,7 +714,6 @@ class SynchronizationPipelineIntegrationTest
         );
         challenge.setDifficulty(difficulty);
         challenge.setCategory(ChallengeCategory.OTHER);
-        challenge.setRuleType(ruleType);
         challenge.setProgressMode(progressMode);
         challenge.setConditionsJson(
             """

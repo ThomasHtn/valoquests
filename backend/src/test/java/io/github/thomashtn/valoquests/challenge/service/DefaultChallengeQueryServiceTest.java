@@ -2,11 +2,8 @@ package io.github.thomashtn.valoquests.challenge.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
-import io.github.thomashtn.valoquests.boss.service.WeekRulesetResolver;
 import io.github.thomashtn.valoquests.challenge.dto.CurrentChallengesResponse;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
@@ -16,7 +13,6 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeRuleType;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
@@ -24,7 +20,7 @@ import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeReposi
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
-import io.github.thomashtn.valoquests.scoring.ScoringRulesetV1;
+import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -69,22 +65,16 @@ class DefaultChallengeQueryServiceTest {
     @Mock
     private ChallengeDefinitionParser definitionParser;
 
-    @Mock
-    private WeekRulesetResolver rulesetResolver;
-
     private DefaultChallengeQueryService service;
 
     @BeforeEach
     void setUp() {
-        // Lenient: the tests that only exercise progress aggregation never reach damage resolution.
-        lenient().when(rulesetResolver.resolve(any())).thenReturn(new ScoringRulesetV1());
-
         service = new DefaultChallengeQueryService(
             weeklyChallengeRepository,
             progressRepository,
             playerRepository,
             definitionParser,
-            rulesetResolver,
+            new DefaultScoringRuleset(),
             new WeekCalendar(Clock.fixed(MIDWEEK, ZoneOffset.UTC), ZoneOffset.UTC)
         );
     }
@@ -176,7 +166,7 @@ class DefaultChallengeQueryServiceTest {
         assertThat(response.name()).isEqualTo("Kill them all");
         assertThat(response.description()).isEqualTo("Kill them all description");
         assertThat(response.difficulty()).isEqualTo(ChallengeDifficulty.MEDIUM);
-        assertThat(response.damage()).isEqualTo(4_000);
+        assertThat(response.damage()).isEqualTo(2_200);
         assertThat(response.metric()).isEqualTo("KILLS");
         assertThat(response.targetValue()).isEqualByComparingTo("50");
     }
@@ -192,7 +182,6 @@ class DefaultChallengeQueryServiceTest {
         when(definitionParser.parse(challenge.getChallenge()))
             .thenReturn(new ChallengeDefinition(
                 3,
-                ChallengeRuleType.COMPOSITE,
                 ProgressMode.ALL,
                 List.of(
                     condition(ChallengeMetric.KILLS, BigDecimal.TEN),
@@ -215,7 +204,6 @@ class DefaultChallengeQueryServiceTest {
         when(definitionParser.parse(challenge.getChallenge()))
             .thenReturn(new ChallengeDefinition(
                 3,
-                ChallengeRuleType.COMPOSITE,
                 ProgressMode.ALL,
                 List.of(
                     condition(ChallengeMetric.KILLS, BigDecimal.TEN),
@@ -285,7 +273,6 @@ class DefaultChallengeQueryServiceTest {
     private ChallengeDefinition definition(ChallengeMetric metric, BigDecimal target) {
         return new ChallengeDefinition(
             3,
-            ChallengeRuleType.SINGLE,
             ProgressMode.SUM,
             List.of(condition(metric, target))
         );

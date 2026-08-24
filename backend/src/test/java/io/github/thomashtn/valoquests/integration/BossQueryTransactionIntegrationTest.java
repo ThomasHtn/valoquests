@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
-import io.github.thomashtn.valoquests.challenge.service.ChallengeQueryService;
+import io.github.thomashtn.valoquests.boss.service.BossQueryService;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
@@ -20,14 +20,18 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 
 /**
- * Verifies that the current-challenges endpoint can open a week that has no boss encounter yet.
+ * Verifies that the current-boss endpoint can open a week that has no boss encounter yet.
  *
  * <p>Deliberately <em>not</em> {@code @Transactional}, unlike every other integration test here. The
- * defect this covers only exists when the service starts the transaction itself: resolving a week's
- * ruleset lazily draws that week's boss encounter, and the query service's own read-only default made
+ * defect this covers only exists when the service starts the transaction itself: reading the current
+ * boss lazily draws that week's encounter, and the query service's class-level read-only default made
  * PostgreSQL reject the insert with "cannot execute INSERT in a read-only transaction". A test wrapped
  * in its own writable transaction would have joined that one instead and passed against a broken
- * service, which is exactly what happened — the unit test mocks the resolver, so nothing caught it.
+ * service, which is exactly what happened — the unit tests mock the repository, so nothing caught it.
+ *
+ * <p>This used to cover the challenges endpoint, which drew the encounter as a side effect of resolving
+ * the week's scoring ruleset version. Rulesets are no longer versioned, so that endpoint is read-only
+ * again and the lazy draw now lives here alone.
  *
  * <p>The week is fixed far from the fixtures the other integration tests pin, and its rows are removed
  * afterwards, since nothing rolls this test back.
@@ -40,8 +44,8 @@ import org.springframework.context.annotation.Primary;
         "app.scheduling.week-rollover-enabled=false"
     }
 )
-@Import(ChallengeQueryTransactionIntegrationTest.FixedClockConfiguration.class)
-class ChallengeQueryTransactionIntegrationTest extends PostgreSqlIntegrationTest {
+@Import(BossQueryTransactionIntegrationTest.FixedClockConfiguration.class)
+class BossQueryTransactionIntegrationTest extends PostgreSqlIntegrationTest {
 
     /**
      * Instant inside the isolated test week, a Wednesday.
@@ -57,7 +61,7 @@ class ChallengeQueryTransactionIntegrationTest extends PostgreSqlIntegrationTest
      * Service under test.
      */
     @Autowired
-    private ChallengeQueryService challengeQueryService;
+    private BossQueryService bossQueryService;
 
     /**
      * Repository used to assert the encounter was drawn, and to clean it up.
@@ -83,11 +87,11 @@ class ChallengeQueryTransactionIntegrationTest extends PostgreSqlIntegrationTest
      * Verifies that querying a week with no boss encounter draws one instead of failing.
      */
     @Test
-    void shouldOpenTheWeeksBossEncounterWhenQueryingChallenges() {
+    void shouldOpenTheWeeksBossEncounterWhenQueryingTheCurrentBoss() {
         assertThat(weekCalendar.currentWeekStart()).isEqualTo(WEEK_START);
         assertThat(encounterRepository.findByWeekStart(WEEK_START)).isEmpty();
 
-        assertThatCode(() -> challengeQueryService.findCurrent()).doesNotThrowAnyException();
+        assertThatCode(() -> bossQueryService.findCurrent()).doesNotThrowAnyException();
 
         assertThat(encounterRepository.findByWeekStart(WEEK_START)).isPresent();
     }

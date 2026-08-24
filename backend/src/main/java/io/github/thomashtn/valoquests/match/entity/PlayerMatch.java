@@ -160,12 +160,6 @@ public class PlayerMatch extends AuditableEntity {
     private CompetitiveTier competitiveTier;
 
     /**
-     * Rank rating recorded at match time when available.
-     */
-    @Column(name = "rank_rating")
-    private Integer rankRating;
-
-    /**
      * Whether the player earned the match MVP designation.
      */
     @Column(name = "was_mvp", nullable = false)
