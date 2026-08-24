@@ -90,6 +90,17 @@ public class Player extends AuditableEntity {
     private Instant lastSuccessfulSynchronizationAt;
 
     /**
+     * Status a player must hold to count as competitive.
+     *
+     * <p>The single definition of what "competitive" means. Ranking, boss chronology, boss sizing and
+     * the challenge board each need that population, and each used to name it its own way — one
+     * filtering on {@link #isCompetitive()}, another querying {@link PlayerStatus#ACTIVE} directly.
+     * Both were right, but nothing tied them together, so a change to one would silently have left the
+     * others behind. Query by this constant rather than by the enum value.
+     */
+    public static final PlayerStatus COMPETITIVE_STATUS = PlayerStatus.ACTIVE;
+
+    /**
      * Whether this player takes part in weekly challenge resolution, boss combat and ranking
      * positions.
      *
@@ -97,9 +108,9 @@ public class Player extends AuditableEntity {
      * still gets a weekly score for display, it just never contributes to boss damage and never
      * consumes a ranking slot. It can still complete challenges individually, though.
      *
-     * @return {@code true} when this player's status is {@link PlayerStatus#ACTIVE}
+     * @return {@code true} when this player's status is {@link #COMPETITIVE_STATUS}
      */
     public boolean isCompetitive() {
-        return status == PlayerStatus.ACTIVE;
+        return status == COMPETITIVE_STATUS;
     }
 }

@@ -2,13 +2,9 @@ package io.github.thomashtn.valoquests.scoring.service;
 
 import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContext;
 import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContextFactory;
-import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,30 +20,22 @@ public class WeeklyMatchDamageAggregator {
     private final PlayerChallengeContextFactory contextFactory;
 
     /**
-     * Resolves whether one match is valued and how much damage it deals.
+     * Prices each match after the ruleset's daily diminishing returns.
      */
-    private final MatchDamageCalculator matchDamageCalculator;
-
-    /**
-     * Calendar resolving the calendar day a match falls on.
-     */
-    private final WeekCalendar weekCalendar;
+    private final WeeklyMatchDamageResolver damageResolver;
 
     /**
      * Creates the weekly match damage aggregator.
      *
-     * @param contextFactory        player challenge context factory
-     * @param matchDamageCalculator match damage calculator
-     * @param weekCalendar          calendar resolving the calendar day a match falls on
+     * @param contextFactory  player challenge context factory
+     * @param damageResolver  weekly match damage resolver
      */
     public WeeklyMatchDamageAggregator(
         PlayerChallengeContextFactory contextFactory,
-        MatchDamageCalculator matchDamageCalculator,
-        WeekCalendar weekCalendar
+        WeeklyMatchDamageResolver damageResolver
     ) {
         this.contextFactory = contextFactory;
-        this.matchDamageCalculator = matchDamageCalculator;
-        this.weekCalendar = weekCalendar;
+        this.damageResolver = damageResolver;
     }
 
     /**
@@ -62,18 +50,13 @@ public class WeeklyMatchDamageAggregator {
     public Aggregate aggregate(Player player, LocalDate weekStart, ScoringRuleset ruleset) {
         PlayerChallengeContext context = contextFactory.create(player, weekStart);
 
-        int matchDamage = 0;
-        Set<LocalDate> activeDays = new HashSet<>();
+        int matchDamage = damageResolver.resolve(context.playerMatches(), ruleset)
+            .values()
+            .stream()
+            .mapToInt(Integer::intValue)
+            .sum();
 
-        for (PlayerMatch playerMatch : context.playerMatches()) {
-            matchDamage += matchDamageCalculator.damageOf(playerMatch, ruleset);
-
-            if (matchDamageCalculator.isEligible(playerMatch)) {
-                activeDays.add(weekCalendar.dayOf(playerMatch.getMatch().getStartedAt()));
-            }
-        }
-
-        return new Aggregate(matchDamage, activeDays.size());
+        return new Aggregate(matchDamage, damageResolver.countActiveDays(context.playerMatches()));
     }
 
     /**

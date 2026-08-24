@@ -285,14 +285,14 @@ class ChallengeProgressIntegrationTest
     /**
      * Verifies the ranking generated from completed challenge progress.
      *
-     * <p>Challenge damage is resolved from {@code ScoringRulesetV1} by difficulty tier: completing all
-     * five (EASY 1500 + NORMAL 2500 + MEDIUM 4000 + HARD 6000 + VERY_HARD 9000) totals 23000, matching
-     * the design notes' own worked example. Match damage sums the five valued matches this player
-     * played this week — four COMPETITIVE (WIN 500 + LOSS 350 + WIN 500 + LOSS 350) plus the Deathmatch
-     * match, which reaches the 40-kill victory threshold (WIN 150) — for 1850. Those five matches also
-     * span five distinct calendar days (the Deathmatch match falls on its own day), so the regularity
-     * bonus is the 5-day tier, 1800. A single active player means no challenge here is shared, so the
-     * team bonus stays at zero.
+     * <p>Challenge damage is resolved from {@code ScoringRulesetV2} by difficulty tier: completing all
+     * five (EASY 1500 + NORMAL 2500 + MEDIUM 4000 + HARD 6000 + VERY_HARD 9000) totals 23000. Match
+     * damage sums the five valued matches this player played this week — four COMPETITIVE (WIN 500 +
+     * LOSS 350 + WIN 500 + LOSS 350) plus the Deathmatch match, which reaches the 40-kill victory
+     * threshold (WIN 150) — for 1850, none of them reaching the sixth match of its day. Those five
+     * matches also span five distinct calendar days (the Deathmatch match falls on its own day), so the
+     * regularity bonus is the 5-day tier, 3600. A single active player means no challenge here is
+     * shared, so the team bonus stays at zero.
      *
      * @param player expected ranked player
      */
@@ -328,13 +328,13 @@ class ChallengeProgressIntegrationTest
                     .isEqualTo(5);
 
                 assertThat(score.getRegularityBonus())
-                    .isEqualTo(1_800);
+                    .isEqualTo(3_600);
 
                 assertThat(score.getTeamBonus())
                     .isEqualTo(0);
 
                 assertThat(score.getTotalDamage())
-                    .isEqualTo(26_650);
+                    .isEqualTo(28_450);
 
                 assertThat(score.getCalculatedAt())
                     .isEqualTo(CALCULATION_TIME);
@@ -623,7 +623,6 @@ class ChallengeProgressIntegrationTest
         return createChallenge(
             "INTEGRATION_KILLS",
             ChallengeDifficulty.EASY,
-            100,
             ProgressMode.SUM,
             ChallengeRuleType.SINGLE,
             """
@@ -648,7 +647,6 @@ class ChallengeProgressIntegrationTest
         return createChallenge(
             "INTEGRATION_DAMAGE",
             ChallengeDifficulty.NORMAL,
-            200,
             ProgressMode.SUM,
             ChallengeRuleType.SINGLE,
             """
@@ -673,7 +671,6 @@ class ChallengeProgressIntegrationTest
         return createChallenge(
             "INTEGRATION_WINS",
             ChallengeDifficulty.MEDIUM,
-            300,
             ProgressMode.SUM,
             ChallengeRuleType.SINGLE,
             """
@@ -698,7 +695,6 @@ class ChallengeProgressIntegrationTest
         return createChallenge(
             "INTEGRATION_KD",
             ChallengeDifficulty.HARD,
-            400,
             ProgressMode.RATIO,
             ChallengeRuleType.RATIO,
             """
@@ -724,7 +720,6 @@ class ChallengeProgressIntegrationTest
         return createChallenge(
             "INTEGRATION_PLAY_DAYS",
             ChallengeDifficulty.VERY_HARD,
-            500,
             ProgressMode.DISTINCT_COUNT,
             ChallengeRuleType.DISTINCT,
             """
@@ -746,7 +741,6 @@ class ChallengeProgressIntegrationTest
      *
      * @param code           stable challenge code
      * @param difficulty     challenge difficulty
-     * @param damage         awarded damage
      * @param progressMode   calculation mode
      * @param ruleType       structural rule type
      * @param conditionsJson serialized rule definition
@@ -755,7 +749,6 @@ class ChallengeProgressIntegrationTest
     private Challenge createChallenge(
         String code,
         ChallengeDifficulty difficulty,
-        int damage,
         ProgressMode progressMode,
         ChallengeRuleType ruleType,
         String conditionsJson
@@ -768,7 +761,6 @@ class ChallengeProgressIntegrationTest
             "Integration challenge " + code
         );
         challenge.setDifficulty(difficulty);
-        challenge.setDamage(damage);
         challenge.setCategory(
             ChallengeCategory.OTHER
         );

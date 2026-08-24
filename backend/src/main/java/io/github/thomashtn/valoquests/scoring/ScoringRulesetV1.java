@@ -35,6 +35,38 @@ public final class ScoringRulesetV1 implements ScoringRuleset {
      */
     private static final int[] TEAM_BONUS_BY_PLAYER_COUNT = {0, 0, 150, 300, 500, 750, 1100};
 
+    /**
+     * Neutral starting value of the collective difficulty modifier, in percent.
+     */
+    private static final int INITIAL_MODIFIER_PERCENT = 100;
+
+    /**
+     * Modifier increase applied after the boss is defeated.
+     */
+    private static final int MODIFIER_INCREASE_ON_VICTORY = 5;
+
+    /**
+     * Modifier decrease applied after the boss survives.
+     */
+    private static final int MODIFIER_DECREASE_ON_SURVIVAL = 10;
+
+    /**
+     * Lower bound of the collective difficulty modifier, in percent.
+     */
+    private static final int MINIMUM_MODIFIER_PERCENT = 70;
+
+    /**
+     * Upper bound of the collective difficulty modifier, in percent.
+     */
+    private static final int MAXIMUM_MODIFIER_PERCENT = 130;
+
+    /**
+     * Percentage of its base damage every match keeps, whatever its rank within its day.
+     *
+     * <p>Version 1 values daily volume linearly: it has no diminishing returns, so this is flat.
+     */
+    private static final int FLAT_MATCH_DAMAGE_COEFFICIENT_PERCENT = 100;
+
     @Override
     public int version() {
         return VERSION;
@@ -111,13 +143,29 @@ public final class ScoringRulesetV1 implements ScoringRuleset {
     }
 
     @Override
-    public int teamBonus(int playersWhoCompleted) {
+    public int matchDamageCoefficientPercent(int rankInDay) {
+        return FLAT_MATCH_DAMAGE_COEFFICIENT_PERCENT;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Version 1 prices the bonus as a flat amount per tier, identical for every difficulty.
+     */
+    @Override
+    public int challengeTeamBonus(ChallengeDifficulty difficulty, int playersWhoCompleted) {
         int clampedCount = Math.clamp(playersWhoCompleted, 0, TEAM_BONUS_BY_PLAYER_COUNT.length - 1);
         return TEAM_BONUS_BY_PLAYER_COUNT[clampedCount];
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Version 1 sizes a boss as a fixed total, independently of how many players the roster holds
+     * active, so the count is ignored here.
+     */
     @Override
-    public int bossBaseHp(BossCategory category) {
+    public int bossBaseHp(BossCategory category, int activePlayerCount) {
         if (category == null) {
             return 0;
         }
@@ -127,5 +175,29 @@ public final class ScoringRulesetV1 implements ScoringRuleset {
             case STANDARD -> 95_000;
             case ELITE -> 115_000;
         };
+    }
+
+    @Override
+    public int nextDifficultyModifierPercent(int previousModifierPercent, boolean previousDefeated) {
+        int adjusted = previousDefeated
+            ? previousModifierPercent + MODIFIER_INCREASE_ON_VICTORY
+            : previousModifierPercent - MODIFIER_DECREASE_ON_SURVIVAL;
+
+        return Math.clamp(adjusted, MINIMUM_MODIFIER_PERCENT, MAXIMUM_MODIFIER_PERCENT);
+    }
+
+    @Override
+    public int initialDifficultyModifierPercent() {
+        return INITIAL_MODIFIER_PERCENT;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Version 1 has no carry-over: a surviving boss leaves nothing behind.
+     */
+    @Override
+    public int carriedOverHpCapPercent() {
+        return 0;
     }
 }

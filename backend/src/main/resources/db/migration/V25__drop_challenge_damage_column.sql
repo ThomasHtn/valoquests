@@ -1,0 +1,12 @@
+-- Removes the per-challenge damage column, which had become a second, contradictory barème.
+--
+-- Scoring has resolved challenge damage through the week's own ScoringRuleset version ever since the
+-- weekly-boss feature landed (1500/2500/4000/6000/9000 by difficulty). The column kept the values it was
+-- seeded with in V3 (100/250/450/700/1000) and nothing updated them, yet the challenges endpoint still
+-- served it: the site advertised a weekly pack worth 2 500 damage while the ranking awarded 23 000 for
+-- the same five challenges.
+--
+-- Dropped rather than backfilled. Backfilling would have restored agreement only until the next barème
+-- version, since the column cannot know which ruleset a week resolved against. Difficulty is the key the
+-- rulesets already index on, and it is still there.
+ALTER TABLE challenge DROP COLUMN damage;

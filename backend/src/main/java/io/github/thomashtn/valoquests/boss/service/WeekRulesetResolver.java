@@ -24,6 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class WeekRulesetResolver {
 
     /**
+     * Ruleset version every week that predates the weekly-boss feature was scored under.
+     */
+    private static final int ORIGINAL_RULESET_VERSION = 1;
+
+    /**
      * Repository used to read the week's own boss encounter.
      */
     private final WeeklyBossEncounterRepository encounterRepository;
@@ -80,6 +85,14 @@ public class WeekRulesetResolver {
         if (weekStart.equals(weekCalendar.currentWeekStart())) {
             WeeklyBossEncounter created = bossSelectionService.selectWeekBoss(weekStart);
             return rulesetRegistry.forVersion(created.getRulesetVersion());
+        }
+
+        if (weekStart.isBefore(weekCalendar.currentWeekStart())) {
+            // A past week owning no encounter predates the weekly-boss feature, so it was scored under
+            // the first ruleset and nothing else. Falling back on the current one instead would let a
+            // later barème rewrite a week that has been closed for months, which is exactly what
+            // versioning these rulesets exists to prevent.
+            return rulesetRegistry.forVersion(ORIGINAL_RULESET_VERSION);
         }
 
         return rulesetRegistry.current();

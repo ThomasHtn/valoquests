@@ -11,10 +11,10 @@ import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser
 import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.player.entity.Player;
-import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.service.MatchDamageCalculator;
+import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -32,10 +32,14 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>Builds one global, deterministic timeline of every valued match played during the week by every
  * active player, orders it chronologically, and walks it cumulatively against the boss's effective hit
  * points. A match's contribution to this timeline is its own damage, plus, for the one player it belongs
- * to, the damage of any challenge that match happened to complete and the team bonus tier that
- * completion reached at that moment — resolved by {@link ChallengeProgressCalculator#findSustainedCompletionIndex}
- * so no calculator implementation had to change. The regularity bonus never enters this timeline: it is
- * applied at closure, after this calculation, so it can never be the decisive action.
+ * to, the damage of any challenge that match happened to complete — resolved by
+ * {@link ChallengeProgressCalculator#findFirstCompletionIndex} so no calculator implementation had to
+ * change. The regularity bonus never enters this timeline: it rewards showing up rather than output, so
+ * it moves the individual ranking without ever being the decisive blow against the shared boss.
+ *
+ * <p>The team bonus is retroactive, so the moment a player joins a challenge it also raises what every
+ * earlier completer was worth. That uplift is credited to the joining player's own match, which keeps
+ * the timeline strictly chronological while leaving the total identical to the sum of the weekly scores.
  */
 @Service
 public class BossChronologyService {
@@ -66,9 +70,14 @@ public class BossChronologyService {
     private final ChallengeProgressCalculatorRegistry calculatorRegistry;
 
     /**
-     * Resolves whether one match is valued and how much damage it deals.
+     * Resolves whether one match is valued at all.
      */
     private final MatchDamageCalculator matchDamageCalculator;
+
+    /**
+     * Prices each match after the ruleset's daily diminishing returns.
+     */
+    private final WeeklyMatchDamageResolver damageResolver;
 
     /**
      * Creates the boss chronology service.
@@ -79,6 +88,7 @@ public class BossChronologyService {
      * @param definitionParser                challenge definition parser
      * @param calculatorRegistry               challenge calculator registry
      * @param matchDamageCalculator            match damage calculator
+     * @param damageResolver                   weekly match damage resolver
      */
     public BossChronologyService(
         PlayerRepository playerRepository,
@@ -86,7 +96,8 @@ public class BossChronologyService {
         WeeklyChallengeSelectionService weeklyChallengeSelectionService,
         ChallengeDefinitionParser definitionParser,
         ChallengeProgressCalculatorRegistry calculatorRegistry,
-        MatchDamageCalculator matchDamageCalculator
+        MatchDamageCalculator matchDamageCalculator,
+        WeeklyMatchDamageResolver damageResolver
     ) {
         this.playerRepository = playerRepository;
         this.contextFactory = contextFactory;
@@ -94,6 +105,7 @@ public class BossChronologyService {
         this.definitionParser = definitionParser;
         this.calculatorRegistry = calculatorRegistry;
         this.matchDamageCalculator = matchDamageCalculator;
+        this.damageResolver = damageResolver;
     }
 
     /**
@@ -111,7 +123,7 @@ public class BossChronologyService {
         int effectiveHp
     ) {
         List<Player> activePlayers =
-            playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE);
+            playerRepository.findAllByStatusOrderByIdAsc(Player.COMPETITIVE_STATUS);
         List<WeeklyChallenge> weeklyChallenges =
             weeklyChallengeSelectionService.findExistingWeekChallenges(weekStart);
 
@@ -138,6 +150,9 @@ public class BossChronologyService {
     /**
      * Seeds one damage event per valued match, before any challenge trigger is applied.
      *
+     * <p>Only eligible matches get an event. A remake carries no damage and must not be able to become
+     * the match credited with the finishing blow.
+     *
      * @param contextsByPlayer      weekly match context per active player
      * @param ruleset               ruleset used to price each match
      * @param eventsByPlayerMatchId accumulator indexed by player-match identifier
@@ -148,19 +163,34 @@ public class BossChronologyService {
         Map<Long, DamageEvent> eventsByPlayerMatchId
     ) {
         for (Map.Entry<Player, PlayerChallengeContext> entry : contextsByPlayer.entrySet()) {
+            Map<Long, Integer> damageByPlayerMatchId =
+                damageResolver.resolve(entry.getValue().playerMatches(), ruleset);
+
             for (PlayerMatch playerMatch : entry.getValue().playerMatches()) {
-                int matchDamage = matchDamageCalculator.damageOf(playerMatch, ruleset);
+                if (!matchDamageCalculator.isEligible(playerMatch)) {
+                    continue;
+                }
+
                 eventsByPlayerMatchId.put(
                     playerMatch.getId(),
-                    new DamageEvent(entry.getKey(), playerMatch, matchDamage)
+                    new DamageEvent(
+                        entry.getKey(),
+                        playerMatch,
+                        damageByPlayerMatchId.getOrDefault(playerMatch.getId(), 0)
+                    )
                 );
             }
         }
     }
 
     /**
-     * Resolves, for one weekly challenge, which match triggered it for each player, and adds the
-     * challenge damage and arrival-order team bonus to that match's event.
+     * Resolves, for one weekly challenge, which match completed it for each player, and credits that
+     * match with the challenge damage and every team-bonus movement the completion caused.
+     *
+     * <p>Because the team bonus is retroactive, the k-th completion is worth its own tier plus the
+     * uplift it hands back to the k-1 players already there. Crediting that uplift to the joining
+     * player's own match is what keeps the timeline chronological while leaving the running total equal
+     * to what the weekly ranking reports.
      *
      * @param weeklyChallenge       evaluated weekly challenge
      * @param contextsByPlayer      weekly match context per active player
@@ -177,27 +207,79 @@ public class BossChronologyService {
         ChallengeDefinition definition = definitionParser.parse(challenge);
         ChallengeProgressCalculator calculator = calculatorRegistry.getCalculator(definition.progressMode());
 
-        List<PlayerMatch> triggeringMatches = new ArrayList<>();
+        List<PlayerMatch> creditedMatches = new ArrayList<>();
 
         for (PlayerChallengeContext context : contextsByPlayer.values()) {
-            OptionalInt sustainedIndex = calculator.findSustainedCompletionIndex(definition, context);
+            OptionalInt completionIndex = calculator.findFirstCompletionIndex(definition, context);
 
-            sustainedIndex.ifPresent(
-                index -> triggeringMatches.add(context.playerMatches().get(index))
+            if (completionIndex.isEmpty()) {
+                continue;
+            }
+
+            PlayerMatch creditedMatch = findCreditedMatch(
+                context,
+                completionIndex.getAsInt(),
+                eventsByPlayerMatchId
             );
+
+            if (creditedMatch != null) {
+                creditedMatches.add(creditedMatch);
+            }
         }
 
-        triggeringMatches.sort(PLAYER_MATCH_CHRONOLOGICAL_ORDER);
+        creditedMatches.sort(PLAYER_MATCH_CHRONOLOGICAL_ORDER);
 
-        int arrivalRank = 0;
-        for (PlayerMatch triggeringMatch : triggeringMatches) {
-            arrivalRank++;
+        int baseDamage = ruleset.challengeDamage(challenge.getDifficulty());
+        int completionCount = 0;
+        int previousTeamBonus = 0;
 
-            int challengeDamage = ruleset.challengeDamage(challenge.getDifficulty())
-                + ruleset.teamBonus(arrivalRank);
+        for (PlayerMatch creditedMatch : creditedMatches) {
+            completionCount++;
 
-            eventsByPlayerMatchId.get(triggeringMatch.getId()).addDamage(challengeDamage);
+            int teamBonus = ruleset.challengeTeamBonus(challenge.getDifficulty(), completionCount);
+            int retroactiveUplift = (completionCount - 1) * (teamBonus - previousTeamBonus);
+
+            eventsByPlayerMatchId
+                .get(creditedMatch.getId())
+                .addDamage(baseDamage + teamBonus + retroactiveUplift);
+
+            previousTeamBonus = teamBonus;
         }
+    }
+
+    /**
+     * Finds the match a completion's damage should be credited to.
+     *
+     * <p>Normally the completing match itself. A challenge can however be completed by a match that
+     * carries no damage of its own — a remake still counts towards a "matches played" target — and such
+     * a match has no event. The damage then falls back to the nearest valued match around it, so it
+     * stays in the player's own timeline instead of being dropped.
+     *
+     * @param context               player's weekly match context
+     * @param completionIndex       index of the match that completed the challenge
+     * @param eventsByPlayerMatchId events seeded for valued matches only
+     * @return match to credit, or {@code null} when the player played no valued match at all
+     */
+    private PlayerMatch findCreditedMatch(
+        PlayerChallengeContext context,
+        int completionIndex,
+        Map<Long, DamageEvent> eventsByPlayerMatchId
+    ) {
+        List<PlayerMatch> playerMatches = context.playerMatches();
+
+        for (int index = completionIndex; index >= 0; index--) {
+            if (eventsByPlayerMatchId.containsKey(playerMatches.get(index).getId())) {
+                return playerMatches.get(index);
+            }
+        }
+
+        for (int index = completionIndex + 1; index < playerMatches.size(); index++) {
+            if (eventsByPlayerMatchId.containsKey(playerMatches.get(index).getId())) {
+                return playerMatches.get(index);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -218,16 +300,35 @@ public class BossChronologyService {
             ))
             .toList();
 
+        if (orderedEvents.isEmpty()) {
+            return BossChronologyResult.UNTOUCHED;
+        }
+
+        // The walk never stops at the finishing blow: the total is what a surviving boss carries over
+        // and what the health bar reports, so every event still has to be counted past that point.
         long cumulativeDamage = 0;
+        DamageEvent finishingEvent = null;
+
         for (DamageEvent event : orderedEvents) {
             cumulativeDamage += event.damage;
 
-            if (cumulativeDamage >= effectiveHp) {
-                return new BossChronologyResult(true, event.player, event.playerMatch);
+            if (finishingEvent == null && cumulativeDamage >= effectiveHp) {
+                finishingEvent = event;
             }
         }
 
-        return BossChronologyResult.SURVIVED;
+        int totalDamage = (int) Math.min(cumulativeDamage, Integer.MAX_VALUE);
+
+        if (finishingEvent == null) {
+            return BossChronologyResult.survived(totalDamage);
+        }
+
+        return new BossChronologyResult(
+            true,
+            finishingEvent.player,
+            finishingEvent.playerMatch,
+            totalDamage
+        );
     }
 
     /**

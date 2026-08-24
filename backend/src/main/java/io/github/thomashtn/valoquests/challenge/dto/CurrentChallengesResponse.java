@@ -30,7 +30,8 @@ public record CurrentChallengesResponse(
      * @param difficulty           difficulty tier the challenge was selected for
      * @param metric               metric the challenge measures
      * @param targetValue          value a player must reach to complete it
-     * @param damage               damage awarded on completion
+     * @param damage               base damage awarded on completion, before the squad bonus
+     * @param teamBonusPercent     squad bonus currently earned, as a percentage of {@code damage}
      * @param completedPlayers     tracked players who completed it
      * @param totalPlayers         tracked players it applies to
      * @param completionPercentage completed players as a percentage of the total
@@ -44,6 +45,7 @@ public record CurrentChallengesResponse(
         String metric,
         BigDecimal targetValue,
         int damage,
+        int teamBonusPercent,
         int completedPlayers,
         int totalPlayers,
         BigDecimal completionPercentage

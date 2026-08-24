@@ -62,12 +62,6 @@ public class Challenge extends AuditableEntity {
     private ChallengeDifficulty difficulty;
 
     /**
-     * Damage awarded when the challenge is completed.
-     */
-    @Column(nullable = false)
-    private int damage;
-
-    /**
      * Functional category used to diversify weekly challenge packs.
      */
     @Enumerated(EnumType.STRING)

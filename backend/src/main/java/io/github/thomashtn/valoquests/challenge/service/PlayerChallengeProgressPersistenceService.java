@@ -243,13 +243,16 @@ public class PlayerChallengeProgressPersistenceService {
     }
 
     /**
-     * Updates completion state and its associated timestamp.
+     * Latches completion and stamps the moment it was first reached.
      *
-     * <p>The first completion timestamp is preserved during later successful
-     * recalculations.</p>
+     * <p>Completion is never taken back. Only the kill-to-death ratio challenge could regress, and
+     * letting it do so meant a player who kept playing after validating could lose the challenge's
+     * damage and drop a team-bonus tier for everyone else — the exact opposite of what regularity and
+     * squad play are meant to be worth here. The measured value below it keeps moving either way, so
+     * the progress bar still tells the truth about the current ratio.
      *
      * @param progress        progress being updated
-     * @param completed       new completion state
+     * @param completed       completion state produced by this calculation
      * @param calculationTime current calculation timestamp
      */
     private void updateCompletion(
@@ -257,15 +260,14 @@ public class PlayerChallengeProgressPersistenceService {
         boolean completed,
         Instant calculationTime
     ) {
-        if (completed && progress.getCompletedAt() == null) {
+        if (progress.isCompleted()) {
+            return;
+        }
+
+        if (completed) {
             progress.setCompletedAt(calculationTime);
+            progress.setCompleted(true);
         }
-
-        if (!completed) {
-            progress.setCompletedAt(null);
-        }
-
-        progress.setCompleted(completed);
     }
 
     /**

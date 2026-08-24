@@ -547,19 +547,19 @@
     "sections": {
       "bonuses": {
         "days": "{{days}} d",
-        "footnote": "Both bonuses add to match and challenge damage in your weekly total; only the squad bonus also chips at the boss. Nothing to do beyond playing.",
+        "footnote": "Regularity adds to your weekly total but does not chip at the boss: it rewards turning up, not output. The squad bonus multiplies a challenge's damage for everyone who cleared it, including those who got there first.",
         "players": "{{count}} players",
         "regularityLabel": "Regularity · days played in the week",
-        "teamLabel": "Squad · players who finished the same challenge",
+        "teamLabel": "Squad · multiplier on the challenge's damage",
         "title": "Regularity & squad"
       },
       "boss": {
         "categories": {
-          "ELITE": "Huge health pool: without a big collective week, it survives.",
-          "MINOR": "Short bar: the squad usually folds it by midweek.",
-          "STANDARD": "The normal pace: everyone has to pitch in."
+          "ELITE": "20,000 HP per active player. Without a big collective week, it survives.",
+          "MINOR": "13,000 HP per active player. The squad usually folds it by midweek.",
+          "STANDARD": "16,000 HP per active player. The normal pace: everyone has to pitch in."
         },
-        "description": "Every week a boss shows up with a health pool shared by the whole squad. Every hit anyone lands drains it. Bring it down before Sunday night, or it survives into the next fight.",
+        "description": "Every week a boss shows up with a health pool shared by the whole squad, sized on the number of active players. An active player who does not play therefore makes the boss heavier without draining it. Bring it down before Sunday night: if it survives, its remaining health reinforces the next boss, up to a quarter of that bar.",
         "title": "One boss, one shared health bar"
       },
       "challenges": {
@@ -571,7 +571,10 @@
       "damage": {
         "description": "The mode and outcome of a match set the damage it deals. A ranked win counts for the most, but every match played, won or not, adds to the week.",
         "modeLabel": "Game mode",
-        "title": "Every match throws a punch"
+        "title": "Every match throws a punch",
+        "decayLabel": "Daily returns · match rank within the day",
+        "decayRank": "Match {{rank}}",
+        "decayFootnote": "Past the fifth match of a day, a match is worth less. A day's matches are ranked from the most to the least rewarding, never in the order you played them, so warming up can never cost your ranked games. Spreading over several days beats doing it all at once."
       },
       "ranking": {
         "description": "Total damage for the week decides the ranking. The rest is glory.",

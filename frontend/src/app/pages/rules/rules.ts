@@ -1,9 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucidePlay } from '@lucide/angular';
 
 import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
+import { formatSquadMultiplier } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { PageHeader } from '@layout/page-header/page-header';
 import { RuleSection } from './rule-section/rule-section';
@@ -11,6 +13,7 @@ import {
   BOSS_CATEGORY_SHOWCASE,
   DIFFICULTY_SHOWCASE,
   MATCH_DAMAGE_SHOWCASE,
+  MATCH_DECAY_SHOWCASE,
   RANKING_FACTS,
   REGULARITY_BONUS_SHOWCASE,
   TEAM_BONUS_SHOWCASE,
@@ -32,6 +35,11 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 })
 export class Rules {
   /**
+   * i18n service, read for the active language when formatting the squad multipliers.
+   */
+  private readonly translation = inject(Translation);
+
+  /**
    * Damage ladder shown in the challenges panel, exposed to the template.
    */
   protected readonly difficultyShowcase = DIFFICULTY_SHOWCASE;
@@ -47,9 +55,24 @@ export class Rules {
   protected readonly regularityBonusShowcase = REGULARITY_BONUS_SHOWCASE;
 
   /**
-   * Team bonus ladder shown in the bonuses panel, exposed to the template.
+   * Daily diminishing-returns ladder shown in the damage panel, exposed to the template.
    */
-  protected readonly teamBonusShowcase = TEAM_BONUS_SHOWCASE;
+  protected readonly matchDecayShowcase = MATCH_DECAY_SHOWCASE;
+
+  /**
+   * Squad bonus ladder, each tier rendered as the multiplier it applies to a challenge's damage.
+   *
+   * Formatted here rather than held formatted in the constants, so the decimal separator follows
+   * the language the reader picked.
+   */
+  protected readonly teamBonusShowcase = computed(() => {
+    const language = this.translation.language();
+
+    return TEAM_BONUS_SHOWCASE.map((tier) => ({
+      label: tier.label,
+      multiplier: formatSquadMultiplier(tier.bonus, language) ?? '',
+    }));
+  });
 
   /**
    * Boss weight classes shown in the boss panel, exposed to the template.

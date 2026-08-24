@@ -26,7 +26,18 @@ export interface ChallengeProgress {
    * Target value for the challenge, or `null` for a composite challenge with no stored progress.
    */
   readonly targetValue: number | null;
+
+  /**
+   * Base damage the challenge deals once completed, before the squad bonus.
+   */
   readonly damage: number;
+
+  /**
+   * Squad bonus currently earned, as a percentage of {@link damage}, resolved by the backend from
+   * the week's own scoring ruleset. Grows as teammates complete the same challenge, and applies
+   * retroactively to everyone who already had.
+   */
+  readonly teamBonusPercent: number;
   readonly completedPlayers: number;
   readonly totalPlayers: number;
   readonly completionPercentage: number;

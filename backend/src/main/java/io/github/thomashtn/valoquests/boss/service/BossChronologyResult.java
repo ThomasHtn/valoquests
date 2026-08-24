@@ -10,17 +10,30 @@ import io.github.thomashtn.valoquests.player.entity.Player;
  * @param defeated             whether the cumulative chronology ever reached the effective hit points
  * @param defeatedByPlayer     player who dealt the finishing blow, present only when {@code defeated}
  * @param finishingPlayerMatch match that dealt the finishing blow, present only when {@code defeated}
+ * @param totalDamage          damage the whole week dealt, counted past the finishing blow
  */
 public record BossChronologyResult(
     boolean defeated,
     Player defeatedByPlayer,
-    PlayerMatch finishingPlayerMatch
+    PlayerMatch finishingPlayerMatch,
+    int totalDamage
 ) {
 
     /**
-     * Result used when the boss was not defeated, or no match was played at all.
+     * Result used when no match was played at all.
      */
-    public static final BossChronologyResult SURVIVED = new BossChronologyResult(false, null, null);
+    public static final BossChronologyResult UNTOUCHED =
+        new BossChronologyResult(false, null, null, 0);
+
+    /**
+     * Creates the result of a week that dealt damage without ever felling the boss.
+     *
+     * @param totalDamage damage the whole week dealt
+     * @return surviving-boss result
+     */
+    public static BossChronologyResult survived(int totalDamage) {
+        return new BossChronologyResult(false, null, null, totalDamage);
+    }
 
     /**
      * Creates a chronology result.

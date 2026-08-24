@@ -134,14 +134,17 @@ public class WeeklyLifecycleCoordinator {
         encounter.setDefeated(chronologyResult.defeated());
         encounter.setDefeatedByPlayer(chronologyResult.defeatedByPlayer());
         encounter.setFinishingPlayerMatch(chronologyResult.finishingPlayerMatch());
+        encounter.setDamageDealt(chronologyResult.totalDamage());
         encounter.setFinalizedAt(finalizedAt);
 
         bossEncounterRepository.save(encounter);
 
         LOGGER.info(
-            "Boss encounter finalized for previous week {}: defeated={}.",
+            "Boss encounter finalized for previous week {}: defeated={}, damageDealt={}, remainingHp={}.",
             weekStart,
-            chronologyResult.defeated()
+            chronologyResult.defeated(),
+            chronologyResult.totalDamage(),
+            encounter.remainingHp()
         );
     }
 }

@@ -250,21 +250,22 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies the live ranking created by challenge recalculation.
      *
-     * <p>Challenge damage is resolved from {@code ScoringRulesetV1} by difficulty tier. Alpha completes
+     * <p>Challenge damage is resolved from {@code ScoringRulesetV2} by difficulty tier. Alpha completes
      * all five (EASY 1500 + NORMAL 2500 + MEDIUM 4000 + HARD 6000 + VERY_HARD 9000 = 23000); bravo only
      * completes the EASY kills challenge (1500). That kills challenge is shared, and both players
-     * complete it, so both receive the 2-player team bonus (150). Match damage sums each player's four
-     * COMPETITIVE matches (alpha: WIN+LOSS+WIN+LOSS = 500+350+500+350 = 1700; bravo: LOSS+LOSS+WIN+LOSS
-     * = 350+350+500+350 = 1550), and the regularity bonus follows each player's own distinct match days
-     * (alpha spans 4 days = 1200; bravo spans 2 days = 300, matching their own PLAY_DAY progress
-     * values).
+     * complete it, so both receive the 2-player team bonus, 10% of the challenge's own damage (150).
+     * Match damage sums each player's four COMPETITIVE matches (alpha: WIN+LOSS+WIN+LOSS =
+     * 500+350+500+350 = 1700; bravo: LOSS+LOSS+WIN+LOSS = 350+350+500+350 = 1550), none of which reaches
+     * the sixth match of its day, so no daily coefficient applies. The regularity bonus follows each
+     * player's own distinct match days (alpha spans 4 days = 2400; bravo spans 2 days = 600, matching
+     * their own PLAY_DAY progress values).
      */
     private void assertCurrentRanking(Player alpha, Player bravo) {
         List<WeeklyPlayerScore> scores = loadScores(COMPETITION_WEEK_START);
 
         assertThat(scores).hasSize(2);
-        assertScore(scores.get(0), alpha, 23_000, 26_050, 5, 1, null, null);
-        assertScore(scores.get(1), bravo, 1_500, 3_500, 1, 2, null, null);
+        assertScore(scores.get(0), alpha, 23_000, 27_250, 5, 1, null, null);
+        assertScore(scores.get(1), bravo, 1_500, 3_800, 1, 2, null, null);
     }
 
     /**
@@ -280,8 +281,8 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
 
         List<WeeklyPlayerScore> scores = loadScores(COMPETITION_WEEK_START);
         assertThat(scores).hasSize(2);
-        assertScore(scores.get(0), alpha, 23_000, 26_050, 5, 1, 1, ROLLOVER_TIME);
-        assertScore(scores.get(1), bravo, 1_500, 3_500, 1, 2, 2, ROLLOVER_TIME);
+        assertScore(scores.get(0), alpha, 23_000, 27_250, 5, 1, 1, ROLLOVER_TIME);
+        assertScore(scores.get(1), bravo, 1_500, 3_800, 1, 2, 2, ROLLOVER_TIME);
     }
 
     /**
@@ -452,15 +453,15 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     private void createCompetitionChallengePack() {
         List<Challenge> challenges = challengeRepository.saveAll(
             List.of(
-                createChallenge("LIFECYCLE_KILLS", ChallengeDifficulty.EASY, 100, ProgressMode.SUM,
+                createChallenge("LIFECYCLE_KILLS", ChallengeDifficulty.EASY, ProgressMode.SUM,
                     ChallengeRuleType.SINGLE, "KILLS", "50", null),
-                createChallenge("LIFECYCLE_DAMAGE", ChallengeDifficulty.NORMAL, 200, ProgressMode.SUM,
+                createChallenge("LIFECYCLE_DAMAGE", ChallengeDifficulty.NORMAL, ProgressMode.SUM,
                     ChallengeRuleType.SINGLE, "DAMAGE_DEALT", "6000", null),
-                createChallenge("LIFECYCLE_WINS", ChallengeDifficulty.MEDIUM, 300, ProgressMode.SUM,
+                createChallenge("LIFECYCLE_WINS", ChallengeDifficulty.MEDIUM, ProgressMode.SUM,
                     ChallengeRuleType.SINGLE, "MATCHES_WON", "2", null),
-                createChallenge("LIFECYCLE_KD", ChallengeDifficulty.HARD, 400, ProgressMode.RATIO,
+                createChallenge("LIFECYCLE_KD", ChallengeDifficulty.HARD, ProgressMode.RATIO,
                     ChallengeRuleType.RATIO, "KD", "1.5", "\"minimumMatches\": 4,"),
-                createChallenge("LIFECYCLE_PLAY_DAYS", ChallengeDifficulty.VERY_HARD, 500,
+                createChallenge("LIFECYCLE_PLAY_DAYS", ChallengeDifficulty.VERY_HARD,
                     ProgressMode.DISTINCT_COUNT, ChallengeRuleType.DISTINCT, "PLAY_DAY", "4",
                     "\"groupBy\": \"PLAY_DAY\",")
             )
@@ -479,7 +480,6 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     private Challenge createChallenge(
         String code,
         ChallengeDifficulty difficulty,
-        int damage,
         ProgressMode progressMode,
         ChallengeRuleType ruleType,
         String metric,
@@ -492,7 +492,6 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         challenge.setName(code);
         challenge.setDescription("Lifecycle challenge " + code);
         challenge.setDifficulty(difficulty);
-        challenge.setDamage(damage);
         challenge.setCategory(ChallengeCategory.OTHER);
         challenge.setRuleType(ruleType);
         challenge.setProgressMode(progressMode);

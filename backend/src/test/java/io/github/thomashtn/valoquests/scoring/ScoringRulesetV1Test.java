@@ -104,24 +104,54 @@ class ScoringRulesetV1Test {
 
     @Test
     void shouldResolveTeamBonusWithoutCumulatingTiers() {
-        assertThat(ruleset.teamBonus(0)).isZero();
-        assertThat(ruleset.teamBonus(1)).isZero();
-        assertThat(ruleset.teamBonus(2)).isEqualTo(150);
-        assertThat(ruleset.teamBonus(3)).isEqualTo(300);
-        assertThat(ruleset.teamBonus(4)).isEqualTo(500);
-        assertThat(ruleset.teamBonus(5)).isEqualTo(750);
-        assertThat(ruleset.teamBonus(6)).isEqualTo(1_100);
+        ChallengeDifficulty difficulty = ChallengeDifficulty.MEDIUM;
+
+        assertThat(ruleset.challengeTeamBonus(difficulty, 0)).isZero();
+        assertThat(ruleset.challengeTeamBonus(difficulty, 1)).isZero();
+        assertThat(ruleset.challengeTeamBonus(difficulty, 2)).isEqualTo(150);
+        assertThat(ruleset.challengeTeamBonus(difficulty, 3)).isEqualTo(300);
+        assertThat(ruleset.challengeTeamBonus(difficulty, 4)).isEqualTo(500);
+        assertThat(ruleset.challengeTeamBonus(difficulty, 5)).isEqualTo(750);
+        assertThat(ruleset.challengeTeamBonus(difficulty, 6)).isEqualTo(1_100);
+    }
+
+    @Test
+    void shouldPriceTeamBonusIndependentlyOfDifficulty() {
+        assertThat(ruleset.challengeTeamBonus(ChallengeDifficulty.EASY, 4))
+            .isEqualTo(ruleset.challengeTeamBonus(ChallengeDifficulty.VERY_HARD, 4));
     }
 
     @Test
     void shouldCapTeamBonusBeyondTheFixedRosterSize() {
-        assertThat(ruleset.teamBonus(7)).isEqualTo(ruleset.teamBonus(6));
+        assertThat(ruleset.challengeTeamBonus(ChallengeDifficulty.MEDIUM, 7))
+            .isEqualTo(ruleset.challengeTeamBonus(ChallengeDifficulty.MEDIUM, 6));
     }
 
     @Test
-    void shouldResolveBossBaseHpByCategory() {
-        assertThat(ruleset.bossBaseHp(BossCategory.MINOR)).isEqualTo(80_000);
-        assertThat(ruleset.bossBaseHp(BossCategory.STANDARD)).isEqualTo(95_000);
-        assertThat(ruleset.bossBaseHp(BossCategory.ELITE)).isEqualTo(115_000);
+    void shouldKeepMatchDamageFlatWhateverTheDailyRank() {
+        assertThat(ruleset.matchDamageCoefficientPercent(1)).isEqualTo(100);
+        assertThat(ruleset.matchDamageCoefficientPercent(12)).isEqualTo(100);
+    }
+
+    @Test
+    void shouldResolveBossBaseHpByCategoryIgnoringTheRosterSize() {
+        assertThat(ruleset.bossBaseHp(BossCategory.MINOR, 7)).isEqualTo(80_000);
+        assertThat(ruleset.bossBaseHp(BossCategory.STANDARD, 7)).isEqualTo(95_000);
+        assertThat(ruleset.bossBaseHp(BossCategory.ELITE, 7)).isEqualTo(115_000);
+        assertThat(ruleset.bossBaseHp(BossCategory.STANDARD, 2)).isEqualTo(95_000);
+    }
+
+    @Test
+    void shouldMoveTheDifficultyModifierAsymmetricallyWithinItsBounds() {
+        assertThat(ruleset.initialDifficultyModifierPercent()).isEqualTo(100);
+        assertThat(ruleset.nextDifficultyModifierPercent(100, true)).isEqualTo(105);
+        assertThat(ruleset.nextDifficultyModifierPercent(100, false)).isEqualTo(90);
+        assertThat(ruleset.nextDifficultyModifierPercent(128, true)).isEqualTo(130);
+        assertThat(ruleset.nextDifficultyModifierPercent(75, false)).isEqualTo(70);
+    }
+
+    @Test
+    void shouldCarryNothingOverFromASurvivingBoss() {
+        assertThat(ruleset.carriedOverHpCapPercent()).isZero();
     }
 }

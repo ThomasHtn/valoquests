@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval } from 'rxjs';
 
 import { CurrentChallenges } from '@core/challenges/challenge.model';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatDamage, formatSquadMultiplier } from '@core/challenges/challenge-format.utils';
 import { resolveChallengeVisual } from '@core/challenges/challenge-visual.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
@@ -119,6 +119,8 @@ export class Challenges {
       description: challenge.description,
       difficulty: challenge.difficulty,
       damage: formatDamage(challenge.damage, language),
+      squadProgress: `${challenge.completedPlayers}/${challenge.totalPlayers}`,
+      squadMultiplier: formatSquadMultiplier(challenge.teamBonusPercent, language),
       visual: resolveChallengeVisual(challenge.metric, challenge.difficulty),
     }));
   });

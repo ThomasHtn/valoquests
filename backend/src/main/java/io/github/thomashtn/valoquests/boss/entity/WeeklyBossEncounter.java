@@ -26,9 +26,11 @@ import lombok.Setter;
  * time and never change afterward, even if the catalogue entry or the collective modifier evolve later:
  * a week's fight is resolved once, against the numbers that were true when it started.
  *
- * <p>Total damage dealt is intentionally not stored here: it is derived on demand from
- * {@link io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore} rows for the same week, so
- * there is a single source of truth for weekly damage.
+ * <p>{@code damageDealt} is frozen at closure rather than derived from
+ * {@link io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore} rows, which is how it used to
+ * work. Deriving it stopped being safe once a surviving boss started passing its remainder on: an admin
+ * recalculating a finalized week would silently move that remainder, and with it the hit points of a
+ * following week that had already been fought.
  */
 @Getter
 @Setter
@@ -110,8 +112,29 @@ public class WeeklyBossEncounter extends AuditableEntity {
     private PlayerMatch finishingPlayerMatch;
 
     /**
+     * Hit points inherited from a predecessor that survived, already included in {@link #effectiveHp}.
+     */
+    @Column(name = "carried_over_hp", nullable = false)
+    private int carriedOverHp;
+
+    /**
+     * Damage the week dealt to this boss, frozen at closure. Zero until the encounter is finalized.
+     */
+    @Column(name = "damage_dealt", nullable = false)
+    private int damageDealt;
+
+    /**
      * Timestamp at which the weekly result became immutable.
      */
     @Column(name = "finalized_at")
     private Instant finalizedAt;
+
+    /**
+     * Returns the hit points still standing when the fight ended.
+     *
+     * @return remaining hit points, never negative
+     */
+    public int remainingHp() {
+        return Math.max(0, effectiveHp - damageDealt);
+    }
 }

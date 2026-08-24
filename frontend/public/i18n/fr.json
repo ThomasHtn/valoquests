@@ -547,19 +547,19 @@
     "sections": {
       "bonuses": {
         "days": "{{days}} j",
-        "footnote": "Ces deux bonus s'ajoutent aux dégâts des matchs et des défis dans ton total de la semaine ; seul le bonus d'escouade entame aussi le boss. Rien à faire de plus que jouer.",
+        "footnote": "La régularité s'ajoute à ton total de la semaine mais n'entame pas le boss : elle récompense ta présence, pas ta production. L'escouade, elle, multiplie les dégâts du défi pour tout le monde, y compris ceux qui l'avaient déjà fini.",
         "players": "{{count}} joueurs",
         "regularityLabel": "Régularité · jours joués dans la semaine",
-        "teamLabel": "Escouade · joueurs ayant fini le même défi",
+        "teamLabel": "Escouade · multiplicateur sur les dégâts du défi",
         "title": "Régularité & escouade"
       },
       "boss": {
         "categories": {
-          "ELITE": "Très gros PV : sans une grosse semaine collective, il survit.",
-          "MINOR": "Barre courte : l'escouade le plie souvent en milieu de semaine.",
-          "STANDARD": "Le rythme normal : il faut que tout le monde s'y mette."
+          "ELITE": "20 000 PV par joueur actif. Sans une grosse semaine collective, il survit.",
+          "MINOR": "13 000 PV par joueur actif. L'escouade le plie souvent en milieu de semaine.",
+          "STANDARD": "16 000 PV par joueur actif. Le rythme normal : il faut que tout le monde s'y mette."
         },
-        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade. Chaque coup porté par n'importe qui l'entame. Terrasse-le avant dimanche soir, sinon il survit jusqu'au combat suivant.",
+        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade, calculés d'après le nombre de joueurs actifs. Un joueur actif qui ne joue pas alourdit donc le boss sans l'entamer. Terrasse-le avant dimanche soir : s'il survit, ses PV restants viennent renforcer le boss suivant, dans la limite d'un quart de sa barre.",
         "title": "Un boss, une barre de vie commune"
       },
       "challenges": {
@@ -571,7 +571,10 @@
       "damage": {
         "description": "Le mode et l'issue du match déterminent les dégâts infligés. Une victoire en compétitif pèse le plus, mais toute partie jouée, gagnée ou non, y contribue.",
         "modeLabel": "Mode de jeu",
-        "title": "Chaque match tape fort"
+        "title": "Chaque match tape fort",
+        "decayLabel": "Rendement du jour · rang du match dans la journée",
+        "decayRank": "Match {{rank}}",
+        "decayFootnote": "Au-delà de la cinquième partie du jour, une partie rapporte moins. Les parties d'une même journée sont classées de la plus à la moins payante, jamais dans l'ordre où tu les as jouées : un échauffement ne fera donc jamais baisser tes compétitives. Enchaîner sur plusieurs jours vaut mieux que tout faire d'un coup."
       },
       "ranking": {
         "description": "Les dégâts totaux de la semaine font le classement. Le reste, c'est de la gloire.",

@@ -3,6 +3,7 @@ package io.github.thomashtn.valoquests.ranking.service;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.boss.service.WeekRulesetResolver;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
@@ -272,11 +273,13 @@ public class DefaultRankingRecalculationService
                 continue;
             }
 
-            int challengeDamage = ruleset.challengeDamage(
-                progress.getWeeklyChallenge().getChallenge().getDifficulty()
-            );
+            ChallengeDifficulty difficulty =
+                progress.getWeeklyChallenge().getChallenge().getDifficulty();
 
-            int teamBonus = ruleset.teamBonus(
+            int challengeDamage = ruleset.challengeDamage(difficulty);
+
+            int teamBonus = ruleset.challengeTeamBonus(
+                difficulty,
                 completedCountByWeeklyChallengeId.getOrDefault(
                     progress.getWeeklyChallenge().getId(),
                     1

@@ -286,7 +286,6 @@ class ChallengeCatalogueCompatibilityTest {
         challenge.setDifficulty(
             ChallengeDifficulty.valueOf(matcher.group(4))
         );
-        challenge.setDamage(Integer.parseInt(matcher.group(5)));
         challenge.setCategory(
             ChallengeCategory.valueOf(matcher.group(6))
         );

@@ -2,8 +2,11 @@ package io.github.thomashtn.valoquests.challenge.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import io.github.thomashtn.valoquests.boss.service.WeekRulesetResolver;
 import io.github.thomashtn.valoquests.challenge.dto.CurrentChallengesResponse;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
@@ -21,6 +24,7 @@ import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeReposi
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.scoring.ScoringRulesetV1;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -65,15 +69,22 @@ class DefaultChallengeQueryServiceTest {
     @Mock
     private ChallengeDefinitionParser definitionParser;
 
+    @Mock
+    private WeekRulesetResolver rulesetResolver;
+
     private DefaultChallengeQueryService service;
 
     @BeforeEach
     void setUp() {
+        // Lenient: the tests that only exercise progress aggregation never reach damage resolution.
+        lenient().when(rulesetResolver.resolve(any())).thenReturn(new ScoringRulesetV1());
+
         service = new DefaultChallengeQueryService(
             weeklyChallengeRepository,
             progressRepository,
             playerRepository,
             definitionParser,
+            rulesetResolver,
             new WeekCalendar(Clock.fixed(MIDWEEK, ZoneOffset.UTC), ZoneOffset.UTC)
         );
     }
@@ -113,7 +124,7 @@ class DefaultChallengeQueryServiceTest {
     @Test
     @DisplayName("counts only completed players and expresses them as a percentage of the group")
     void shouldCountOnlyCompletedPlayersAsAPercentageOfTheGroup() {
-        WeeklyChallenge challenge = weeklyChallenge(10L, "Kill them all", 50);
+        WeeklyChallenge challenge = weeklyChallenge(10L, "Kill them all");
         given(
             List.of(challenge),
             List.of(
@@ -138,7 +149,7 @@ class DefaultChallengeQueryServiceTest {
     @Test
     @DisplayName("reports zero completion rather than dividing by an empty roster")
     void shouldReportZeroCompletionForAnEmptyRoster() {
-        WeeklyChallenge challenge = weeklyChallenge(10L, "Kill them all", 50);
+        WeeklyChallenge challenge = weeklyChallenge(10L, "Kill them all");
         given(List.of(challenge), List.of(), 0);
         when(definitionParser.parse(challenge.getChallenge()))
             .thenReturn(definition(ChallengeMetric.KILLS, BigDecimal.valueOf(50)));
@@ -153,7 +164,7 @@ class DefaultChallengeQueryServiceTest {
     @Test
     @DisplayName("exposes the challenge catalogue fields alongside its target")
     void shouldExposeTheCatalogueFieldsAlongsideItsTarget() {
-        WeeklyChallenge challenge = weeklyChallenge(10L, "Kill them all", 50);
+        WeeklyChallenge challenge = weeklyChallenge(10L, "Kill them all");
         given(List.of(challenge), List.of(), 6);
         when(definitionParser.parse(challenge.getChallenge()))
             .thenReturn(definition(ChallengeMetric.KILLS, BigDecimal.valueOf(50)));
@@ -165,7 +176,7 @@ class DefaultChallengeQueryServiceTest {
         assertThat(response.name()).isEqualTo("Kill them all");
         assertThat(response.description()).isEqualTo("Kill them all description");
         assertThat(response.difficulty()).isEqualTo(ChallengeDifficulty.MEDIUM);
-        assertThat(response.damage()).isEqualTo(50);
+        assertThat(response.damage()).isEqualTo(4_000);
         assertThat(response.metric()).isEqualTo("KILLS");
         assertThat(response.targetValue()).isEqualByComparingTo("50");
     }
@@ -173,7 +184,7 @@ class DefaultChallengeQueryServiceTest {
     @Test
     @DisplayName("takes a composite challenge's target from a stored progress row")
     void shouldTakeACompositeTargetFromAStoredProgressRow() {
-        WeeklyChallenge challenge = weeklyChallenge(10L, "Do both", 90);
+        WeeklyChallenge challenge = weeklyChallenge(10L, "Do both");
         PlayerChallengeProgress stored = progress(1L, challenge, false);
         stored.setTargetValue(BigDecimal.valueOf(120));
 
@@ -199,7 +210,7 @@ class DefaultChallengeQueryServiceTest {
     @Test
     @DisplayName("leaves a composite target unset when no progress row carries one")
     void shouldLeaveACompositeTargetUnsetWithoutAStoredRow() {
-        WeeklyChallenge challenge = weeklyChallenge(10L, "Do both", 90);
+        WeeklyChallenge challenge = weeklyChallenge(10L, "Do both");
         given(List.of(challenge), List.of(), 6);
         when(definitionParser.parse(challenge.getChallenge()))
             .thenReturn(new ChallengeDefinition(
@@ -218,8 +229,8 @@ class DefaultChallengeQueryServiceTest {
     @Test
     @DisplayName("attributes each progress row to its own challenge")
     void shouldAttributeEachProgressRowToItsOwnChallenge() {
-        WeeklyChallenge easy = weeklyChallenge(10L, "Easy", 20);
-        WeeklyChallenge hard = weeklyChallenge(11L, "Hard", 80);
+        WeeklyChallenge easy = weeklyChallenge(10L, "Easy");
+        WeeklyChallenge hard = weeklyChallenge(11L, "Hard");
 
         given(
             List.of(easy, hard),
@@ -243,12 +254,11 @@ class DefaultChallengeQueryServiceTest {
             .containsExactly(tuple(10L, 2), tuple(11L, 0));
     }
 
-    private WeeklyChallenge weeklyChallenge(long id, String name, int damage) {
+    private WeeklyChallenge weeklyChallenge(long id, String name) {
         Challenge challenge = new Challenge();
         challenge.setName(name);
         challenge.setDescription(name + " description");
         challenge.setDifficulty(ChallengeDifficulty.MEDIUM);
-        challenge.setDamage(damage);
 
         WeeklyChallenge weeklyChallenge = new WeeklyChallenge();
         weeklyChallenge.setId(id);

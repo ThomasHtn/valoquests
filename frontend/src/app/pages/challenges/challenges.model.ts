@@ -17,8 +17,19 @@ export interface ChallengeRow {
 
   /**
    * Damage the challenge deals to the week's boss once completed, already grouped for the active
-   * language (e.g. `9 000`).
+   * language (e.g. `9 000`). The base amount, which never moves during the week.
    */
   readonly damage: string;
+
+  /**
+   * How far the squad has got on this challenge, as `"3/7"`.
+   */
+  readonly squadProgress: string;
+
+  /**
+   * Squad multiplier currently applied to {@link damage}, as `"×1,2"`, or `null` while no bonus is
+   * earned yet — a lone completer multiplies by one, and showing that reads as a penalty.
+   */
+  readonly squadMultiplier: string | null;
   readonly visual: ChallengeVisual;
 }

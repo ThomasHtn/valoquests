@@ -21,13 +21,13 @@ import java.util.OptionalInt;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests {@link ChallengeProgressCalculator#findSustainedCompletionIndex}, the default method used to
+ * Tests {@link ChallengeProgressCalculator#findFirstCompletionIndex}, the default method used to
  * attribute a weekly-boss finishing blow to the exact match that unlocked a challenge.
  *
  * <p>Exercises both a monotonic calculator (Sum) and the one non-monotonic calculator in this
  * catalogue (Ratio), since the two require different reasoning about what "the triggering match" means.
  */
-class ChallengeProgressCalculatorSustainedCompletionTest {
+class ChallengeProgressCalculatorFirstCompletionTest {
 
     /** Metric evaluator shared by the calculators under test. */
     private final ChallengeMetricEvaluator metricEvaluator = new ChallengeMetricEvaluator();
@@ -52,14 +52,14 @@ class ChallengeProgressCalculatorSustainedCompletionTest {
         );
 
         // Cumulative kills: 10, 25, 45 — the target of 30 is first reached on the third match.
-        OptionalInt sustainedIndex =
-            calculator.findSustainedCompletionIndex(definition, context);
+        OptionalInt completionIndex =
+            calculator.findFirstCompletionIndex(definition, context);
 
-        assertThat(sustainedIndex).hasValue(2);
+        assertThat(completionIndex).hasValue(2);
     }
 
     /**
-     * Verifies that a challenge never completed reports no sustained completion index.
+     * Verifies that a challenge never completed reports no completion index.
      */
     @Test
     void shouldReportNoIndexWhenTheTargetIsNeverReached() {
@@ -73,11 +73,11 @@ class ChallengeProgressCalculatorSustainedCompletionTest {
             createMatch(15)
         );
 
-        assertThat(calculator.findSustainedCompletionIndex(definition, context)).isEmpty();
+        assertThat(calculator.findFirstCompletionIndex(definition, context)).isEmpty();
     }
 
     /**
-     * Verifies that an empty weekly context reports no sustained completion index.
+     * Verifies that an empty weekly context reports no completion index.
      */
     @Test
     void shouldReportNoIndexWhenNoMatchIsAvailable() {
@@ -87,16 +87,20 @@ class ChallengeProgressCalculatorSustainedCompletionTest {
         ChallengeDefinition definition = createSumKillsDefinition(30);
 
         assertThat(
-            calculator.findSustainedCompletionIndex(definition, createContext())
+            calculator.findFirstCompletionIndex(definition, createContext())
         ).isEmpty();
     }
 
     /**
-     * Verifies that the non-monotonic Ratio calculator reports the last crossing that holds through
-     * the end of the week, not the first one, when the running ratio dips back below target in between.
+     * Verifies that the non-monotonic Ratio calculator reports its first crossing even when the running
+     * ratio later dips back below target.
+     *
+     * <p>This is the behaviour that makes completion latching consistent: the persisted progress keeps a
+     * challenge completed once it has been reached, so the boss chronology has to credit the same match
+     * rather than waiting for a crossing that holds to the end of the week.
      */
     @Test
-    void shouldReportTheLastSustainedCrossingForTheNonMonotonicRatioCalculator() {
+    void shouldReportTheFirstCrossingForTheNonMonotonicRatioCalculator() {
         RatioChallengeProgressCalculator calculator =
             new RatioChallengeProgressCalculator(matchFilter);
 
@@ -120,19 +124,18 @@ class ChallengeProgressCalculatorSustainedCompletionTest {
         );
 
         PlayerChallengeContext context = createContext(
-            // Match 0 alone: 3/1 = 3.0 — above target, would look "completed" if only the first
-            // crossing were considered.
+            // Match 0 alone: 3/1 = 3.0 — above target, and this is what latches the challenge.
             createMatchWithDeaths(3, 1),
-            // Match 0+1: 3/11 = 0.27 — falls back below target.
+            // Match 0+1: 3/11 = 0.27 — falls back below target, which no longer takes anything away.
             createMatchWithDeaths(0, 10),
-            // Match 0+1+2: 23/12 = 1.92 — rises back above target and holds through the end.
+            // Match 0+1+2: 23/12 = 1.92 — rises back above target.
             createMatchWithDeaths(20, 1)
         );
 
-        OptionalInt sustainedIndex =
-            calculator.findSustainedCompletionIndex(definition, context);
+        OptionalInt completionIndex =
+            calculator.findFirstCompletionIndex(definition, context);
 
-        assertThat(sustainedIndex).hasValue(2);
+        assertThat(completionIndex).hasValue(0);
     }
 
     /**

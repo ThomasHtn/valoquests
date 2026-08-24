@@ -11,6 +11,8 @@ import io.github.thomashtn.valoquests.boss.entity.BossCatalogEntry;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.BossCatalogEntryRepository;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
+import io.github.thomashtn.valoquests.player.model.PlayerStatus;
+import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.ScoringRulesetRegistry;
 import io.github.thomashtn.valoquests.scoring.ScoringRulesetV1;
@@ -40,6 +42,9 @@ class DefaultWeeklyBossSelectionServiceTest {
     /** Encounter repository dependency. */
     private WeeklyBossEncounterRepository encounterRepository;
 
+    /** Player repository dependency, sizing the boss from the active roster. */
+    private PlayerRepository playerRepository;
+
     /** Service under test. */
     private DefaultWeeklyBossSelectionService service;
 
@@ -48,6 +53,9 @@ class DefaultWeeklyBossSelectionServiceTest {
     void setUp() {
         catalogRepository = mock(BossCatalogEntryRepository.class);
         encounterRepository = mock(WeeklyBossEncounterRepository.class);
+        playerRepository = mock(PlayerRepository.class);
+
+        when(playerRepository.countByStatus(PlayerStatus.ACTIVE)).thenReturn(7L);
 
         when(encounterRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -59,6 +67,7 @@ class DefaultWeeklyBossSelectionServiceTest {
             catalogRepository,
             encounterRepository,
             rulesetRegistry,
+            playerRepository,
             new WeekCalendar(clock, ZoneOffset.UTC)
         );
     }
@@ -152,7 +161,7 @@ class DefaultWeeklyBossSelectionServiceTest {
 
         assertThat(result.getDifficultyModifierPercent()).isEqualTo(130);
         assertThat(result.getEffectiveHp())
-            .isEqualTo((int) Math.round(new ScoringRulesetV1().bossBaseHp(BossCategory.STANDARD) * 1.30));
+            .isEqualTo((int) Math.round(new ScoringRulesetV1().bossBaseHp(BossCategory.STANDARD, 7) * 1.30));
     }
 
     /**
@@ -190,8 +199,8 @@ class DefaultWeeklyBossSelectionServiceTest {
 
         ScoringRuleset ruleset = new ScoringRulesetV1();
         assertThat(result.getDifficultyModifierPercent()).isEqualTo(100);
-        assertThat(result.getBaseHp()).isEqualTo(ruleset.bossBaseHp(BossCategory.MINOR));
-        assertThat(result.getEffectiveHp()).isEqualTo(ruleset.bossBaseHp(BossCategory.MINOR));
+        assertThat(result.getBaseHp()).isEqualTo(ruleset.bossBaseHp(BossCategory.MINOR, 7));
+        assertThat(result.getEffectiveHp()).isEqualTo(ruleset.bossBaseHp(BossCategory.MINOR, 7));
         assertThat(result.getRulesetVersion()).isEqualTo(1);
 
         ArgumentCaptor<WeeklyBossEncounter> captor = ArgumentCaptor.forClass(WeeklyBossEncounter.class);

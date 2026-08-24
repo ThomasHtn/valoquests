@@ -30,33 +30,30 @@ public interface ChallengeProgressCalculator {
     );
 
     /**
-     * Finds the chronological match at which this challenge became sustainably completed.
+     * Finds the chronological match at which this challenge was first completed.
      *
      * <p>Replays {@link #calculate} over growing chronological prefixes of {@link
      * PlayerChallengeContext#playerMatches()} rather than duplicating each calculator's aggregation
      * logic. This is what lets the weekly-boss finishing blow be attributed to the exact match that
      * unlocked a challenge, for every progress mode, without touching any calculator implementation.
      *
-     * <p>Most progress modes are monotonic: once the target is reached, adding more matches never
-     * un-reaches it, so the first match at which {@code completed} turns {@code true} is also the only
-     * one. The kill-to-death ratio challenge is the one exception in this catalogue — the running ratio
-     * can cross the target and later fall back below it as more matches are summed. "Sustained
-     * completion" is therefore defined as the last match at which {@code completed} turns {@code true}
-     * and never turns {@code false} again before the end of the supplied matches: unambiguous, and
-     * consistent with the fact that {@code completed} is already allowed to flip back to {@code false}
-     * elsewhere in this codebase (see {@code PlayerChallengeProgressPersistenceService}).
+     * <p>First completion, not sustained completion: a challenge is latched the moment it is reached
+     * and can no longer be lost (see {@code PlayerChallengeProgressPersistenceService}). Most progress
+     * modes are monotonic and never could be; the kill-to-death ratio is the one that can fall back
+     * below its target as more matches are summed, and latching is precisely what stops it from
+     * punishing a player for continuing to play. This method has to latch the same way, or the ranking
+     * would credit a completion the boss chronology says never happened.
      *
      * @param definition parsed challenge definition
      * @param context    weekly player context, matches assumed chronologically ordered
      * @return zero-based index into {@link PlayerChallengeContext#playerMatches()} of the match that
-     *     sustainably completed the challenge, or empty when it never did
+     *     first completed the challenge, or empty when it never did
      */
-    default OptionalInt findSustainedCompletionIndex(
+    default OptionalInt findFirstCompletionIndex(
         ChallengeDefinition definition,
         PlayerChallengeContext context
     ) {
         int matchCount = context.playerMatches().size();
-        int sustainedIndex = -1;
 
         for (int index = 0; index < matchCount; index++) {
             boolean completed = calculate(
@@ -65,14 +62,10 @@ public interface ChallengeProgressCalculator {
             ).completed();
 
             if (completed) {
-                if (sustainedIndex == -1) {
-                    sustainedIndex = index;
-                }
-            } else {
-                sustainedIndex = -1;
+                return OptionalInt.of(index);
             }
         }
 
-        return sustainedIndex < 0 ? OptionalInt.empty() : OptionalInt.of(sustainedIndex);
+        return OptionalInt.empty();
     }
 }

@@ -5,6 +5,8 @@ import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.exception.WeeklyBossSelectionException;
 import io.github.thomashtn.valoquests.boss.repository.BossCatalogEntryRepository;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
+import io.github.thomashtn.valoquests.player.entity.Player;
+import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.ScoringRulesetRegistry;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
@@ -31,29 +33,39 @@ import org.springframework.transaction.annotation.Transactional;
 public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionService {
 
     /**
-     * Neutral starting value of the collective difficulty modifier, in percent.
+     * Divisor turning a percentage into a ratio.
      */
-    private static final int INITIAL_MODIFIER_PERCENT = 100;
+    private static final double PERCENT_SCALE = 100.0;
 
     /**
-     * Modifier increase applied after the boss is defeated.
+     * Odd 64-bit constant separating consecutive weeks before diffusion (golden-ratio derived).
      */
-    private static final int MODIFIER_INCREASE_ON_VICTORY = 5;
+    private static final long WEEK_SEED_MULTIPLIER = 0x9E3779B97F4A7C15L;
 
     /**
-     * Modifier decrease applied after the boss survives.
+     * First SplitMix64 finalizer multiplier.
      */
-    private static final int MODIFIER_DECREASE_ON_SURVIVAL = 10;
+    private static final long AVALANCHE_FIRST_MULTIPLIER = 0xBF58476D1CE4E5B9L;
 
     /**
-     * Lower bound of the collective difficulty modifier, in percent.
+     * Second SplitMix64 finalizer multiplier.
      */
-    private static final int MINIMUM_MODIFIER_PERCENT = 70;
+    private static final long AVALANCHE_SECOND_MULTIPLIER = 0x94D049BB133111EBL;
 
     /**
-     * Upper bound of the collective difficulty modifier, in percent.
+     * First SplitMix64 finalizer shift.
      */
-    private static final int MAXIMUM_MODIFIER_PERCENT = 130;
+    private static final int AVALANCHE_FIRST_SHIFT = 30;
+
+    /**
+     * Second SplitMix64 finalizer shift.
+     */
+    private static final int AVALANCHE_SECOND_SHIFT = 27;
+
+    /**
+     * Closing SplitMix64 finalizer shift.
+     */
+    private static final int AVALANCHE_FINAL_SHIFT = 31;
 
     /**
      * Application logger.
@@ -76,6 +88,11 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
     private final ScoringRulesetRegistry rulesetRegistry;
 
     /**
+     * Repository used to count the players the roster holds active.
+     */
+    private final PlayerRepository playerRepository;
+
+    /**
      * Calendar resolving the current week.
      */
     private final WeekCalendar weekCalendar;
@@ -86,17 +103,20 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
      * @param catalogRepository    boss catalogue repository
      * @param encounterRepository  weekly boss encounter repository
      * @param rulesetRegistry      scoring ruleset registry
+     * @param playerRepository     player repository
      * @param weekCalendar         calendar resolving the current week
      */
     public DefaultWeeklyBossSelectionService(
         BossCatalogEntryRepository catalogRepository,
         WeeklyBossEncounterRepository encounterRepository,
         ScoringRulesetRegistry rulesetRegistry,
+        PlayerRepository playerRepository,
         WeekCalendar weekCalendar
     ) {
         this.catalogRepository = catalogRepository;
         this.encounterRepository = encounterRepository;
         this.rulesetRegistry = rulesetRegistry;
+        this.playerRepository = playerRepository;
         this.weekCalendar = weekCalendar;
     }
 
@@ -125,26 +145,34 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
         }
 
         BossCatalogEntry chosen = drawBoss(weekStart, catalog);
-        ModifierState modifierState = resolveModifierState();
         ScoringRuleset ruleset = rulesetRegistry.current();
-        int baseHp = ruleset.bossBaseHp(chosen.getCategory());
-        int effectiveHp = (int) Math.round(baseHp * modifierState.modifierPercent() / 100.0);
+        Optional<WeeklyBossEncounter> previous = encounterRepository.findLatestFinalized();
+
+        int activePlayerCount = (int) playerRepository.countByStatus(Player.COMPETITIVE_STATUS);
+        int modifierPercent = resolveModifierPercent(previous, ruleset);
+        int baseHp = ruleset.bossBaseHp(chosen.getCategory(), activePlayerCount);
+        int carriedOverHp = resolveCarriedOverHp(previous, baseHp, ruleset);
+        int effectiveHp = (int) Math.round(baseHp * modifierPercent / PERCENT_SCALE) + carriedOverHp;
 
         WeeklyBossEncounter encounter = new WeeklyBossEncounter();
         encounter.setWeekStart(weekStart);
         encounter.setBossCatalogEntry(chosen);
         encounter.setRulesetVersion(ruleset.version());
         encounter.setBaseHp(baseHp);
-        encounter.setDifficultyModifierPercent(modifierState.modifierPercent());
+        encounter.setDifficultyModifierPercent(modifierPercent);
+        encounter.setCarriedOverHp(carriedOverHp);
         encounter.setEffectiveHp(effectiveHp);
 
         WeeklyBossEncounter saved = encounterRepository.save(encounter);
 
         LOGGER.info(
-            "Boss encounter prepared for week {}: boss={}, modifier={}%, effectiveHp={}.",
+            "Boss encounter prepared for week {}: boss={}, activePlayers={}, modifier={}%, "
+                + "carriedOverHp={}, effectiveHp={}.",
             weekStart,
             chosen.getCode(),
-            modifierState.modifierPercent(),
+            activePlayerCount,
+            modifierPercent,
+            carriedOverHp,
             effectiveHp
         );
 
@@ -209,37 +237,81 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
      * Resolves the difficulty modifier applied to the week being prepared, from the outcome of the most
      * recently finalized encounter.
      *
-     * @return resolved modifier state
+     * @param previous most recently finalized encounter, when the campaign has one
+     * @param ruleset  ruleset the new week is being sized with
+     * @return resolved modifier, in percent
      */
-    private ModifierState resolveModifierState() {
-        return encounterRepository.findLatestFinalized()
-            .map(previous -> previous.isDefeated()
-                ? new ModifierState(
-                    clampModifier(previous.getDifficultyModifierPercent() + MODIFIER_INCREASE_ON_VICTORY))
-                : new ModifierState(
-                    clampModifier(previous.getDifficultyModifierPercent() - MODIFIER_DECREASE_ON_SURVIVAL)))
-            .orElseGet(() -> new ModifierState(INITIAL_MODIFIER_PERCENT));
+    private int resolveModifierPercent(Optional<WeeklyBossEncounter> previous, ScoringRuleset ruleset) {
+        return previous
+            .map(encounter -> ruleset.nextDifficultyModifierPercent(
+                encounter.getDifficultyModifierPercent(),
+                encounter.isDefeated()
+            ))
+            .orElseGet(ruleset::initialDifficultyModifierPercent);
     }
 
     /**
-     * Bounds a difficulty modifier to the supported range.
+     * Resolves the hit points inherited from a predecessor that survived.
      *
-     * @param modifierPercent unbounded modifier value
-     * @return modifier clamped to [{@value #MINIMUM_MODIFIER_PERCENT}, {@value #MAXIMUM_MODIFIER_PERCENT}]
+     * <p>Only the immediately preceding encounter is looked at, and only when it survived: remainders
+     * never stack across several bad weeks, which together with the ruleset's cap is what keeps a losing
+     * streak from compounding into a boss nobody can reach.
+     *
+     * @param previous most recently finalized encounter, when the campaign has one
+     * @param baseHp   base hit points of the boss being prepared
+     * @param ruleset  ruleset the new week is being sized with
+     * @return hit points to carry over, capped, or zero
      */
-    private int clampModifier(int modifierPercent) {
-        return Math.clamp(modifierPercent, MINIMUM_MODIFIER_PERCENT, MAXIMUM_MODIFIER_PERCENT);
+    private int resolveCarriedOverHp(
+        Optional<WeeklyBossEncounter> previous,
+        int baseHp,
+        ScoringRuleset ruleset
+    ) {
+        int capPercent = ruleset.carriedOverHpCapPercent();
+
+        if (capPercent <= 0) {
+            return 0;
+        }
+
+        int cap = (int) Math.round(baseHp * capPercent / PERCENT_SCALE);
+
+        return previous
+            .filter(encounter -> !encounter.isDefeated())
+            .map(encounter -> Math.min(encounter.remainingHp(), cap))
+            .orElse(0);
     }
 
     /**
      * Produces a stable weekly order for one boss candidate.
+     *
+     * <p>The week has to be mixed into every candidate's value non-additively, for the same reason
+     * {@code DefaultWeeklyChallengeSelectionService} already does it: a shared week term added to each
+     * candidate shifts them all equally and leaves the sorted order untouched, so every week would draw
+     * from the same position in the catalogue.
      *
      * @param weekStart selected week
      * @param entry     boss candidate
      * @return deterministic ordering value
      */
     private long selectionOrder(LocalDate weekStart, BossCatalogEntry entry) {
-        return Objects.hash(weekStart, entry.getId(), entry.getCode());
+        long bossSeed = Objects.hash(entry.getId(), entry.getCode());
+
+        return avalanche(weekStart.toEpochDay() * WEEK_SEED_MULTIPLIER + bossSeed);
+    }
+
+    /**
+     * Spreads a seed over the whole {@code long} range so neighbouring seeds order unrelatedly.
+     *
+     * <p>SplitMix64 finalizer: a bijection, so two distinct seeds keep distinct ordering values.
+     *
+     * @param seed ordering seed
+     * @return diffused ordering value
+     */
+    private static long avalanche(long seed) {
+        long mixed = seed;
+        mixed = (mixed ^ (mixed >>> AVALANCHE_FIRST_SHIFT)) * AVALANCHE_FIRST_MULTIPLIER;
+        mixed = (mixed ^ (mixed >>> AVALANCHE_SECOND_SHIFT)) * AVALANCHE_SECOND_MULTIPLIER;
+        return mixed ^ (mixed >>> AVALANCHE_FINAL_SHIFT);
     }
 
     /**
@@ -255,11 +327,4 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
         }
     }
 
-    /**
-     * Resolved collective difficulty modifier for the week being prepared.
-     *
-     * @param modifierPercent modifier to apply, already clamped
-     */
-    private record ModifierState(int modifierPercent) {
-    }
 }

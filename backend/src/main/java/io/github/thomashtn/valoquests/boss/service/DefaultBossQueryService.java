@@ -112,8 +112,15 @@ public class DefaultBossQueryService implements BossQueryService {
     }
 
     /**
-     * Sums the total damage dealt to the boss so far this week, across every competitive active
-     * player. A showcased non-competitive player's damage is never counted against the boss.
+     * Sums the damage dealt to the boss so far during a week still in progress.
+     *
+     * <p>A player's total damage minus their regularity bonus, which is the one component that stays
+     * out of the fight: it rewards showing up rather than output. The team bonus is retroactive and
+     * identical for everyone who completed a challenge, so this sum is the same number
+     * {@code BossChronologyService} arrives at when it walks the week in order at closure. It has to
+     * be, or the health bar would show progress the fight never recognised.
+     *
+     * <p>A showcased non-competitive player's damage is never counted against the boss.
      *
      * @param weekStart week being queried
      * @return cumulative damage dealt
@@ -122,12 +129,16 @@ public class DefaultBossQueryService implements BossQueryService {
         return scoreRepository.findAllByWeekStartOrderByPositionAsc(weekStart)
             .stream()
             .filter(score -> score.getPlayer().isCompetitive())
-            .mapToInt(score -> score.getTotalDamage())
+            .mapToInt(score -> score.getTotalDamage() - score.getRegularityBonus())
             .sum();
     }
 
     /**
      * Maps one finalized encounter to its immutable history representation.
+     *
+     * <p>Damage is read from the encounter, where closure froze it, rather than recomputed from the
+     * week's scores: a past week's fight is settled, and an admin recalculating that week must not be
+     * able to move a number a later week already inherited from.
      *
      * @param encounter finalized boss encounter
      * @return history entry
@@ -141,7 +152,7 @@ public class DefaultBossQueryService implements BossQueryService {
             encounter.getFinalizedAt(),
             toBossResponse(encounter.getBossCatalogEntry()),
             encounter.getEffectiveHp(),
-            totalDamageDealt(encounter.getWeekStart()),
+            encounter.getDamageDealt(),
             encounter.isDefeated(),
             defeatedByPlayer == null ? null : defeatedByPlayer.getId(),
             defeatedByPlayer == null ? null : defeatedByPlayer.getDisplayName()

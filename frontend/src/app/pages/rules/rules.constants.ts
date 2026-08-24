@@ -73,29 +73,44 @@ interface BonusShowcase {
 /**
  * One tier of the regularity bonus: extra damage awarded to a player who played on this many
  * distinct days in the week — it is counted per player, not for the group. Mirrors
- * `ScoringRulesetV1#regularityBonus`; a single active day earns nothing, so the ladder starts at two.
+ * `ScoringRulesetV2#regularityBonus`; a single active day earns nothing, so the ladder starts at two.
  */
 export const REGULARITY_BONUS_SHOWCASE: readonly BonusShowcase[] = [
-  { label: '2', bonus: 300 },
-  { label: '3', bonus: 700 },
-  { label: '4', bonus: 1_200 },
-  { label: '5', bonus: 1_800 },
-  { label: '6', bonus: 2_400 },
-  { label: '7', bonus: 3_000 },
+  { label: '2', bonus: 600 },
+  { label: '3', bonus: 1_400 },
+  { label: '4', bonus: 2_400 },
+  { label: '5', bonus: 3_600 },
+  { label: '6', bonus: 4_800 },
+  { label: '7', bonus: 6_000 },
 ];
 
 /**
- * One tier of the team bonus: extra damage awarded once this many players have completed the same
- * challenge. Mirrors `ScoringRulesetV1#teamBonus`; a single player earns nothing, and the fixed
- * roster's potential 7th player is capped to the 6-player tier rather than extrapolated, so the
- * ladder stops there.
+ * One tier of the squad bonus, as the percentage it adds to a challenge's own damage.
+ *
+ * Held as a percentage rather than a formatted multiplier so the decimal separator follows the
+ * active language, resolved through `formatSquadMultiplier`. Mirrors
+ * `ScoringRulesetV2#challengeTeamBonus`: a lone completer earns nothing, each further player adds
+ * ten percent, and the fixed roster's potential 7th is capped to the 6-player tier.
  */
 export const TEAM_BONUS_SHOWCASE: readonly BonusShowcase[] = [
-  { label: '2', bonus: 150 },
-  { label: '3', bonus: 300 },
-  { label: '4', bonus: 500 },
-  { label: '5', bonus: 750 },
-  { label: '6+', bonus: 1_100 },
+  { label: '2', bonus: 10 },
+  { label: '3', bonus: 20 },
+  { label: '4', bonus: 30 },
+  { label: '5', bonus: 40 },
+  { label: '6+', bonus: 50 },
+];
+
+/**
+ * One band of the daily diminishing-returns ladder: the matches of a single day, ranked from the
+ * most to the least valuable, keep this share of their damage.
+ *
+ * Mirrors `ScoringRulesetV2#matchDamageCoefficientPercent`. Ranking by value rather than by play
+ * order is deliberate and worth stating on the page: a warm-up never costs a ranked game its tier.
+ */
+export const MATCH_DECAY_SHOWCASE: readonly { label: string; percent: number }[] = [
+  { label: '1-5', percent: 100 },
+  { label: '6-9', percent: 50 },
+  { label: '10+', percent: 25 },
 ];
 
 /**
