@@ -11,6 +11,8 @@ import java.time.LocalDate;
  * @param boss                    drawn boss identity
  * @param effectiveHp             hit points the boss must lose to be defeated this week
  * @param totalDamageDealt        cumulative damage dealt so far by every active player
+ * @param campaignSeasonName      raw name of the Valorant act the campaign runs in, {@code null}
+ *     while no match has been imported and no act can be resolved
  */
 @Schema(description = "Active weekly boss confrontation.")
 public record CurrentBossResponse(
@@ -18,6 +20,7 @@ public record CurrentBossResponse(
     LocalDate weekEnd,
     BossResponse boss,
     int effectiveHp,
-    int totalDamageDealt
+    int totalDamageDealt,
+    String campaignSeasonName
 ) {
 }

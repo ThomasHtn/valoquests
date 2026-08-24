@@ -235,6 +235,87 @@ class DefaultWeeklyChallengeSelectionServiceTest {
     }
 
     /**
+     * Verifies that a challenge already drawn in its difficulty's current cycle is not drawn again
+     * while another candidate of that tier is still untouched.
+     */
+    @Test
+    void shouldNotRepeatAChallengeUntilItsDifficultyHasCycled() {
+        List<Challenge> candidates = createCatalogue(2);
+
+        givenNoExistingPack();
+        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+
+        // Every tier's first candidate was drawn last week, so only the second remains in the cycle.
+        List<Challenge> alreadyDrawn = candidates.stream()
+            .filter(candidate -> candidate.getCode().endsWith("_0"))
+            .toList();
+
+        givenPastSelections(alreadyDrawn);
+
+        assertThat(selectCodes(WEEK_START))
+            .allSatisfy(code -> assertThat(code).endsWith("_1"));
+    }
+
+    /**
+     * Verifies that a completed tier cycle resets and lets any of its challenges be drawn again.
+     */
+    @Test
+    void shouldAllowRepetitionOnceTheDifficultyCycleCompletes() {
+        List<Challenge> candidates = createCatalogue(2);
+
+        givenNoExistingPack();
+        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+
+        // Both candidates of every tier were drawn: the cycle is complete, so the next draw picks
+        // from the full catalogue again and lands on whatever the weekly ordering ranks first.
+        givenPastSelections(candidates);
+
+        List<String> withCompletedCycle = selectCodes(WEEK_START);
+
+        givenPastSelections(List.of());
+
+        assertThat(withCompletedCycle).isEqualTo(selectCodes(WEEK_START));
+    }
+
+    /**
+     * Verifies that a tier holding a single challenge keeps drawing it, rather than the week being
+     * left without a pack.
+     *
+     * <p>No-repeat is a preference. A tier with one enabled challenge has nothing to alternate
+     * with, and refusing to repeat it there would break the one guarantee the pack does make: one
+     * challenge per difficulty, every week.
+     */
+    @Test
+    void shouldReuseAChallengeRatherThanLeaveTheTierEmpty() {
+        List<Challenge> candidates = createCatalogue(1);
+
+        givenNoExistingPack();
+        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+        givenPastSelections(candidates);
+
+        assertThat(selectCodes(WEEK_START)).hasSize(ChallengeDifficulty.values().length);
+    }
+
+    /**
+     * Declares that the week being drawn owns no selection yet.
+     */
+    private void givenNoExistingPack() {
+        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(any(LocalDate.class)))
+            .thenReturn(List.of());
+    }
+
+    /**
+     * Declares the challenges drawn during the weeks preceding the one being selected.
+     *
+     * @param challenges catalogue challenges already drawn, oldest first
+     */
+    private void givenPastSelections(List<Challenge> challenges) {
+        when(weeklyChallengeRepository
+            .findAllByWeekStartLessThanOrderByWeekStartAsc(any(LocalDate.class)))
+            .thenReturn(challenges.stream().map(this::createWeeklyChallenge).toList());
+    }
+
+    /**
      * Verifies that persisted duplicate difficulty tiers are rejected before catalogue access.
      */
     @Test

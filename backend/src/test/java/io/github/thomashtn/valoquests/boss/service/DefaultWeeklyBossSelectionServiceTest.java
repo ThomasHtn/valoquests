@@ -12,6 +12,7 @@ import io.github.thomashtn.valoquests.boss.entity.BossCatalogEntry;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.BossCatalogEntryRepository;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
+import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
@@ -45,6 +46,12 @@ class DefaultWeeklyBossSelectionServiceTest {
     /** Barèmes the service under test is wired with. */
     private static final ScoringRuleset RULESET = new DefaultScoringRuleset();
 
+    /** Identifier of the act every fixture's campaign runs in. */
+    private static final long CAMPAIGN_ACT_ID = 42L;
+
+    /** Act every fixture's campaign runs in. */
+    private static final Season CAMPAIGN_ACT = campaignAct();
+
     /** Catalogue repository dependency. */
     private BossCatalogEntryRepository catalogRepository;
 
@@ -57,6 +64,9 @@ class DefaultWeeklyBossSelectionServiceTest {
     /** Calibration dependency, measuring what a player currently contributes. */
     private BossCalibrationService calibrationService;
 
+    /** Campaign act dependency, naming the act a new fight is stamped with. */
+    private CampaignSeasonResolver campaignSeasonResolver;
+
     /** Service under test. */
     private DefaultWeeklyBossSelectionService service;
 
@@ -67,8 +77,12 @@ class DefaultWeeklyBossSelectionServiceTest {
         encounterRepository = mock(WeeklyBossEncounterRepository.class);
         playerRepository = mock(PlayerRepository.class);
         calibrationService = mock(BossCalibrationService.class);
+        campaignSeasonResolver = mock(CampaignSeasonResolver.class);
 
         lenient().when(calibrationService.referenceDamagePerPlayer()).thenReturn(REFERENCE);
+        lenient().when(campaignSeasonResolver.currentSeason()).thenReturn(Optional.of(CAMPAIGN_ACT));
+        lenient().when(encounterRepository.findAllBySeasonIdOrderByWeekStartAsc(CAMPAIGN_ACT_ID))
+            .thenReturn(List.of());
         lenient().when(playerRepository.countByStatus(PlayerStatus.ACTIVE))
             .thenReturn((long) ACTIVE_PLAYERS);
         lenient().when(encounterRepository.findAllByOrderByWeekStartAsc()).thenReturn(List.of());
@@ -84,8 +98,23 @@ class DefaultWeeklyBossSelectionServiceTest {
             RULESET,
             playerRepository,
             calibrationService,
-            new WeekCalendar(clock, ZoneOffset.UTC)
+            new WeekCalendar(clock, ZoneOffset.UTC),
+            campaignSeasonResolver
         );
+    }
+
+    /**
+     * Builds the act every fixture's campaign runs in.
+     *
+     * @return persisted-looking act
+     */
+    private static Season campaignAct() {
+        Season season = new Season();
+        season.setId(CAMPAIGN_ACT_ID);
+        season.setExternalId("v26a4");
+        season.setName("v26a4");
+
+        return season;
     }
 
     /**
@@ -116,16 +145,98 @@ class DefaultWeeklyBossSelectionServiceTest {
         when(catalogRepository.findAllByEnabledTrueOrderByIdAsc())
             .thenReturn(List.of(bossA, bossB, bossC));
 
-        // Two of the three bosses were already drawn in previous weeks, still within one cycle.
-        when(encounterRepository.findAllByOrderByWeekStartAsc()).thenReturn(List.of(
-            createEncounter(WEEK_START.minusWeeks(2), bossA),
-            createEncounter(WEEK_START.minusWeeks(1), bossB)
-        ));
+        // Two of the three bosses were already drawn in previous weeks of this act, still within one
+        // cycle.
+        when(encounterRepository.findAllBySeasonIdOrderByWeekStartAsc(CAMPAIGN_ACT_ID))
+            .thenReturn(List.of(
+                createEncounter(WEEK_START.minusWeeks(2), bossA),
+                createEncounter(WEEK_START.minusWeeks(1), bossB)
+            ));
 
         WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
 
         // Only bossC has not been drawn yet in the current cycle, so it is the only valid candidate.
         assertThat(result.getBossCatalogEntry()).isSameAs(bossC);
+    }
+
+    /**
+     * Verifies that a new act restarts the no-repeat cycle rather than inheriting the bosses its
+     * predecessor had already used.
+     *
+     * <p>A campaign opening on the one boss the previous act had not reached yet would face a
+     * shrinking catalogue instead of a fresh run.
+     */
+    @Test
+    void shouldRestartTheCycleWhenTheActChanges() {
+        BossCatalogEntry bossA = createBoss(1L, "BOSS_A", BossCategory.STANDARD);
+        BossCatalogEntry bossB = createBoss(2L, "BOSS_B", BossCategory.STANDARD);
+        BossCatalogEntry bossC = createBoss(3L, "BOSS_C", BossCategory.STANDARD);
+
+        when(catalogRepository.findAllByEnabledTrueOrderByIdAsc())
+            .thenReturn(List.of(bossA, bossB, bossC));
+
+        // Two bosses were drawn during the previous act, none during the one now in progress. Read
+        // over the whole history, bossC would be the only candidate left.
+        when(encounterRepository.findAllByOrderByWeekStartAsc()).thenReturn(List.of(
+            createEncounter(WEEK_START.minusWeeks(2), bossA),
+            createEncounter(WEEK_START.minusWeeks(1), bossB)
+        ));
+        when(encounterRepository.findAllBySeasonIdOrderByWeekStartAsc(CAMPAIGN_ACT_ID))
+            .thenReturn(List.of());
+
+        WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
+
+        // The whole catalogue is available again, so the draw is free rather than forced onto the
+        // one boss the previous act had not reached.
+        assertThat(result.getBossCatalogEntry()).isNotSameAs(bossC);
+        assertThat(result.getSeason()).isSameAs(CAMPAIGN_ACT);
+    }
+
+    /**
+     * Verifies that a fight records the act it belongs to, which is what scopes the campaign to it.
+     */
+    @Test
+    void shouldStampTheFightWithTheActInProgress() {
+        givenSingleBoss(BossCategory.STANDARD);
+
+        WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
+
+        assertThat(result.getSeason()).isSameAs(CAMPAIGN_ACT);
+    }
+
+    /**
+     * Verifies that re-sizing an open fight re-attaches it to the act in force, so a week drawn
+     * before the new act's first match was imported still opens that act's campaign.
+     */
+    @Test
+    void shouldReattachAnOpenFightToTheActInForceWhenResizing() {
+        BossCatalogEntry boss = createBoss(1L, "BOSS_A", BossCategory.STANDARD);
+        WeeklyBossEncounter existing = createEncounter(WEEK_START, boss);
+
+        when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.of(existing));
+
+        Optional<WeeklyBossEncounter> result = service.resizeWeekBoss(WEEK_START);
+
+        assertThat(result).isPresent();
+        assertThat(result.orElseThrow().getSeason()).isSameAs(CAMPAIGN_ACT);
+    }
+
+    /**
+     * Verifies that an unresolved act never clears the one a fight already records.
+     */
+    @Test
+    void shouldKeepTheRecordedActWhenNoneCanBeResolved() {
+        BossCatalogEntry boss = createBoss(1L, "BOSS_A", BossCategory.STANDARD);
+        WeeklyBossEncounter existing = createEncounter(WEEK_START, boss);
+        existing.setSeason(CAMPAIGN_ACT);
+
+        when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.of(existing));
+        when(campaignSeasonResolver.currentSeason()).thenReturn(Optional.empty());
+
+        Optional<WeeklyBossEncounter> result = service.resizeWeekBoss(WEEK_START);
+
+        assertThat(result).isPresent();
+        assertThat(result.orElseThrow().getSeason()).isSameAs(CAMPAIGN_ACT);
     }
 
     /**
@@ -141,10 +252,11 @@ class DefaultWeeklyBossSelectionServiceTest {
 
         // Both bosses of this two-entry catalogue were already drawn: the cycle is complete, so the
         // next draw must be free to pick from the full catalogue again.
-        when(encounterRepository.findAllByOrderByWeekStartAsc()).thenReturn(List.of(
-            createEncounter(WEEK_START.minusWeeks(2), bossA),
-            createEncounter(WEEK_START.minusWeeks(1), bossB)
-        ));
+        when(encounterRepository.findAllBySeasonIdOrderByWeekStartAsc(CAMPAIGN_ACT_ID))
+            .thenReturn(List.of(
+                createEncounter(WEEK_START.minusWeeks(2), bossA),
+                createEncounter(WEEK_START.minusWeeks(1), bossB)
+            ));
 
         WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
 

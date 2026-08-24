@@ -61,8 +61,12 @@ public class WeekAdminController {
 
             This is a repair tool for a rollover that did not run or failed halfway. It is
             idempotent and never redraws: challenges already selected for the week are kept, only
-            the missing difficulties are completed, and an existing boss encounter is left exactly
-            as it is. Running it on a healthy week therefore changes nothing.
+            the missing difficulties are completed, and the boss drawn for the week is preserved.
+
+            An unfinalized encounter is re-sized against the roster as it currently stands, so this
+            is also how a week is re-sized after a player was activated or deactivated mid-week.
+            It does not rebuild challenge progress or the ranking: use the challenge progress
+            recalculation for that.
             """
     )
     @ApiResponse(responseCode = "204", description = "The current week is fully set up.")

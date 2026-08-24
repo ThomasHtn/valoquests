@@ -566,7 +566,7 @@
           "MINOR": "Around 80% of the squad's usual week. Usually folded by midweek.",
           "STANDARD": "Exactly the squad's usual week. Everyone has to pitch in."
         },
-        "description": "Every week a boss shows up with a health pool shared by the whole squad. That pool is not a fixed number: it is computed from what the squad actually produced over the recent closed weeks, multiplied by the number of active players. An active player who does not play therefore makes the boss heavier without draining it. Bring it down before Sunday night.",
+        "description": "Every week a boss shows up with a health pool shared by the whole squad. That pool is not a fixed number: it is computed from what the squad actually produced over the recent closed weeks, multiplied by the number of active players. An active player who does not play therefore makes the boss heavier without draining it. Bring it down before Sunday night. The campaign itself only runs for the act in progress: it starts over on a new act, without erasing the fights already won.",
         "title": "One boss, one shared health bar"
       },
       "calibration": {
@@ -576,7 +576,7 @@
       },
       "challenges": {
         "damageLabel": "Damage",
-        "description": "Every Monday, five challenges are drawn from the catalogue, one per difficulty tier. The higher the tier, the more damage it deals to the boss.",
+        "description": "Every Monday, five challenges are drawn from the catalogue, one per difficulty tier. The higher the tier, the more damage it deals to the boss. A challenge does not come back until its whole tier has been cycled through.",
         "difficultyLabel": "Difficulty",
         "title": "Five challenges, one per difficulty"
       },
@@ -589,7 +589,7 @@
         "decayFootnote": "Past the fifth match of a day, a match is worth less. A day's matches are ranked from the most to the least rewarding, never in the order you played them, so warming up can never cost your ranked games. Spreading over several days beats doing it all at once."
       },
       "eligibility": {
-        "description": "One rule, everywhere: a match counts if it played at least one round, if you scored in it, and if it was not a remake. A remake or an abandoned match deals no damage, counts as no active day, and progresses no challenge.",
+        "description": "One rule, everywhere: a match counts if it was played in a mode the tracker follows, if it played at least one round, if you scored in it, and if it was not a remake. A remake, an abandoned match or an unrecognized queue deals no damage, counts as no active day, and progresses no challenge. It still shows in your history: it was played, it simply does not count towards the week.",
         "title": "What counts as a played match"
       },
       "progression": {

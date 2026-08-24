@@ -566,7 +566,7 @@
           "MINOR": "Environ 80 % d'une semaine type de l'escouade. Elle le plie souvent en milieu de semaine.",
           "STANDARD": "Exactement une semaine type de l'escouade. Il faut que tout le monde s'y mette."
         },
-        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade. Sa barre n'est pas un chiffre figé : elle est calculée d'après ce que l'escouade a réellement produit lors des dernières semaines closes, multiplié par le nombre de joueurs actifs. Un joueur actif qui ne joue pas alourdit donc le boss sans l'entamer. Terrasse-le avant dimanche soir.",
+        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade. Sa barre n'est pas un chiffre figé : elle est calculée d'après ce que l'escouade a réellement produit lors des dernières semaines closes, multiplié par le nombre de joueurs actifs. Un joueur actif qui ne joue pas alourdit donc le boss sans l'entamer. Terrasse-le avant dimanche soir. La campagne, elle, ne court que sur l'act en cours : au changement d'act la carte repart à zéro, sans effacer les combats déjà livrés.",
         "title": "Un boss, une barre de vie commune"
       },
       "calibration": {
@@ -576,7 +576,7 @@
       },
       "challenges": {
         "damageLabel": "Dégâts",
-        "description": "Chaque lundi, cinq défis sont tirés du catalogue, un par niveau de difficulté. Plus le niveau est élevé, plus le défi pèse lourd sur le boss.",
+        "description": "Chaque lundi, cinq défis sont tirés du catalogue, un par niveau de difficulté. Plus le niveau est élevé, plus le défi pèse lourd sur le boss. Un défi ne revient pas tant que son palier n'a pas été parcouru en entier.",
         "difficultyLabel": "Difficulté",
         "title": "Cinq défis, un par difficulté"
       },
@@ -589,7 +589,7 @@
         "decayFootnote": "Au-delà de la cinquième partie du jour, une partie rapporte moins. Les parties d'une même journée sont classées de la plus à la moins payante, jamais dans l'ordre où tu les as jouées : un échauffement ne fera donc jamais baisser tes compétitives. Enchaîner sur plusieurs jours vaut mieux que tout faire d'un coup."
       },
       "eligibility": {
-        "description": "Une seule règle, partout : une partie compte si elle a joué au moins un round, si tu y as marqué des points, et si ce n'est pas un remake. Un remake ou une partie abandonnée ne rapporte aucun dégât, ne compte pas comme jour joué, et ne fait progresser aucun défi.",
+        "description": "Une seule règle, partout : une partie compte si elle s'est jouée dans un mode suivi par le tracker, si elle a joué au moins un round, si tu y as marqué des points, et si ce n'est pas un remake. Un remake, une partie abandonnée ou une file d'attente non reconnue ne rapporte aucun dégât, ne compte pas comme jour joué, et ne fait progresser aucun défi. Elle reste visible dans ton historique : elle a été jouée, elle ne compte simplement pas pour la semaine.",
         "title": "Ce qui compte comme partie jouée"
       },
       "progression": {

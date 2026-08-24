@@ -55,12 +55,18 @@ public class DefaultBossQueryService implements BossQueryService {
     private final WeekCalendar weekCalendar;
 
     /**
+     * Resolves the act the campaign currently runs in.
+     */
+    private final CampaignSeasonResolver campaignSeasonResolver;
+
+    /**
      * Creates the boss query service.
      *
      * @param weeklyBossSelectionService boss selection service
      * @param encounterRepository        weekly boss encounter repository
      * @param scoreRepository            weekly player score repository
      * @param weekCalendar               calendar resolving the current week
+     * @param campaignSeasonResolver     resolver naming the act the campaign runs in
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -70,12 +76,14 @@ public class DefaultBossQueryService implements BossQueryService {
         WeeklyBossSelectionService weeklyBossSelectionService,
         WeeklyBossEncounterRepository encounterRepository,
         WeeklyPlayerScoreRepository scoreRepository,
-        WeekCalendar weekCalendar
+        WeekCalendar weekCalendar,
+        CampaignSeasonResolver campaignSeasonResolver
     ) {
         this.weeklyBossSelectionService = weeklyBossSelectionService;
         this.encounterRepository = encounterRepository;
         this.scoreRepository = scoreRepository;
         this.weekCalendar = weekCalendar;
+        this.campaignSeasonResolver = campaignSeasonResolver;
     }
 
     @Override
@@ -89,16 +97,34 @@ public class DefaultBossQueryService implements BossQueryService {
             weekStart.plusDays(6),
             toBossResponse(encounter.getBossCatalogEntry()),
             encounter.getEffectiveHp(),
-            totalDamageDealt(weekStart)
+            totalDamageDealt(weekStart),
+            encounter.getSeason() == null ? null : encounter.getSeason().getName()
         );
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Scoped to the act the campaign currently runs in. The campaign is a run of fights inside one
+     * act, not an ever-growing timeline: a new act therefore opens on an empty history and the map
+     * starts again from the week being fought. Nothing is deleted — a closed act's fights keep their
+     * rows and simply stop being the campaign.
+     *
+     * <p>The whole history is returned while no act is known, which is the state of a database whose
+     * matches have not been imported yet: scoping to nothing would hide a campaign that does exist.
+     */
     @Override
     public PageResponse<BossHistoryWeekResponse> findHistory(int page, int size) {
         validatePagination(page, size);
 
-        Page<WeeklyBossEncounter> encounterPage = encounterRepository
-            .findAllByFinalizedAtIsNotNullOrderByWeekStartDesc(PageRequest.of(page, size));
+        Page<WeeklyBossEncounter> encounterPage = campaignSeasonResolver.currentSeasonId()
+            .map(seasonId -> encounterRepository
+                .findAllBySeasonIdAndFinalizedAtIsNotNullOrderByWeekStartDesc(
+                    seasonId,
+                    PageRequest.of(page, size)
+                ))
+            .orElseGet(() -> encounterRepository
+                .findAllByFinalizedAtIsNotNullOrderByWeekStartDesc(PageRequest.of(page, size)));
 
         return new PageResponse<>(
             encounterPage.getContent().stream().map(this::toHistoryWeek).toList(),

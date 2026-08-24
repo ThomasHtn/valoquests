@@ -110,6 +110,29 @@ class DefaultSeasonQueryServiceTest {
     }
 
     /**
+     * Verifies that the year era Riot renamed its seasons to outranks every episode-era season.
+     *
+     * <p>Only the episode spelling used to be read, so a year-era season scored the undatable key
+     * and sorted behind the episodes it actually follows: the "current" season then resolved to a
+     * stale act for as long as the new era lasted.
+     */
+    @Test
+    void shouldOrderYearEraSeasonsAfterEveryEpisodeEraSeason() {
+        when(seasonRepository.findAllByOrderByIdDesc()).thenReturn(List.of(
+            season(4L, "V26A2", false),
+            season(3L, "e11a4", false),
+            season(2L, "v26a4", false),
+            season(1L, "e10a1", false)
+        ));
+
+        List<SeasonResponse> result = service.findAll();
+
+        assertThat(result).extracting(SeasonResponse::name)
+            .containsExactly("v26a4", "V26A2", "e11a4", "e10a1");
+        assertThat(service.resolveCurrentSeasonId()).isEqualTo(2L);
+    }
+
+    /**
      * Verifies that the current season resolves to {@code null} when no season is known yet.
      */
     @Test

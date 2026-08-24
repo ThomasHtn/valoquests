@@ -37,6 +37,19 @@ public interface WeeklyChallengeRepository
     );
 
     /**
+     * Retrieves every selection made before one week, oldest week first.
+     *
+     * <p>Used to replay the selection history: which challenges were already drawn in the current
+     * no-repeat cycle of their difficulty. The week being drawn is excluded, so a pack being
+     * completed one difficulty at a time never counts against itself.
+     *
+     * @param weekStart Monday identifying the week being drawn, excluded from the result
+     * @return past selections ordered by week
+     */
+    @EntityGraph(attributePaths = "challenge")
+    List<WeeklyChallenge> findAllByWeekStartLessThanOrderByWeekStartAsc(LocalDate weekStart);
+
+    /**
      * Retrieves every past week still holding an active challenge pack.
      *
      * <p>A week appears here until its whole pack is finalized, so a rollover that never ran keeps

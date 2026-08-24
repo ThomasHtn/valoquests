@@ -184,7 +184,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         weeklyRolloverService.rolloverIfNeeded();
 
         assertPreviousWeekFinalized(alpha, bravo);
-        assertNextWeekCreated();
+        assertNextWeekCreated(alpha, bravo);
     }
 
     /**
@@ -285,9 +285,13 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Verifies creation of one fresh five-difficulty challenge pack.
+     * Verifies creation of one fresh five-difficulty challenge pack, and of the zeroed ranking
+     * opening it.
+     *
+     * @param alpha first tracked player, lowest identifier
+     * @param bravo second tracked player
      */
-    private void assertNextWeekCreated() {
+    private void assertNextWeekCreated(Player alpha, Player bravo) {
         List<WeeklyChallenge> challenges = loadChallenges(NEXT_WEEK_START);
 
         assertThat(challenges)
@@ -307,7 +311,30 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
                 ChallengeDifficulty.VERY_HARD
             );
 
-        assertThat(loadScores(NEXT_WEEK_START)).isEmpty();
+        // The new week opens at zero rather than at nothing: without these rows every screen
+        // reading the current ranking would show its empty state until the next synchronization.
+        List<WeeklyPlayerScore> scores = loadScores(NEXT_WEEK_START);
+        assertThat(scores).hasSize(2);
+        assertOpeningScore(scores.get(0), alpha, 1);
+        assertOpeningScore(scores.get(1), bravo, 2);
+    }
+
+    /**
+     * Verifies one zeroed score row created when a week opens.
+     *
+     * @param score    score row to verify
+     * @param player   player the row belongs to
+     * @param position position the row must hold, ties being broken on the player identifier
+     */
+    private void assertOpeningScore(WeeklyPlayerScore score, Player player, int position) {
+        assertThat(score.getPlayer().getId()).isEqualTo(player.getId());
+        assertThat(score.getPosition()).isEqualTo(position);
+        assertThat(score.getTotalDamage()).isZero();
+        assertThat(score.getChallengeDamage()).isZero();
+        assertThat(score.getMatchDamage()).isZero();
+        assertThat(score.getCompletedChallenges()).isZero();
+        assertThat(score.getCalculatedAt()).isEqualTo(ROLLOVER_TIME);
+        assertThat(score.getFinalizedAt()).isNull();
     }
 
     /**

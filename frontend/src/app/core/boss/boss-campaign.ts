@@ -15,6 +15,7 @@ import {
 } from '@core/date/week-period.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Translation } from '@core/i18n/translation';
+import { formatSeasonName } from '@core/matches/season-name.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
@@ -28,6 +29,24 @@ import { resolveBossHpBarLabelKey, resolveBossStatusLabelKey } from './boss-time
  * them.
  */
 const UPCOMING_PLACEHOLDER_COUNT = 3;
+
+/**
+ * Damage one player dealt to a week's boss, from their ranking entry.
+ *
+ * Their weekly total minus the regularity bonus, which is the one component that stays out of the
+ * fight — it rewards showing up rather than output. This is the same subtraction
+ * `DefaultBossQueryService#totalDamageDealt` makes to fill the health bar, so a week's rows add up
+ * to the bar they sit under.
+ *
+ * @param entry - The player's ranking entry, live or finalized.
+ * @returns The damage that week's boss took from them.
+ */
+function bossDamageOf(entry: {
+  readonly totalDamage: number;
+  readonly regularityBonus: number;
+}): number {
+  return entry.totalDamage - entry.regularityBonus;
+}
 
 /**
  * The group's whole run of weekly boss confrontations, resolved once into display-ready nodes.
@@ -138,15 +157,19 @@ export class BossCampaign {
   );
 
   /**
-   * Each week's damage broken down per player, keyed by the week's ISO `weekStart`.
+   * Each week's damage to the boss, broken down per player, keyed by the week's ISO `weekStart`.
    *
-   * A player's total damage for a week is exactly the damage that week's boss took from them — the
-   * boss's health bar is the sum of those same totals (see `DefaultBossQueryService`), so the
-   * rankings already hold the breakdown and no dedicated endpoint is needed. Reading the challenge
-   * damage alone would leave the rows short of the bar, and frozen whenever a player only scored
-   * match damage or a bonus. The active week comes from the live ranking (which additionally knows
-   * how many challenges the week has, hence the `4/5` wording there); finalized weeks come from the
-   * ranking history.
+   * The rankings already hold the breakdown, so no dedicated endpoint is needed — but a player's
+   * ranking total is not what the boss took from them. The regularity bonus rewards showing up
+   * rather than output and never reaches the shared health bar, so `DefaultBossQueryService` sums
+   * `totalDamage - regularityBonus` and these rows have to subtract it too. They did not, which put
+   * up to 6 000 of phantom damage per player per week in a list printed directly under a bar
+   * computed without it.
+   *
+   * Reading the challenge damage alone would go the other way and leave the rows short of the bar,
+   * and frozen whenever a player only scored match damage or a bonus. The active week comes from
+   * the live ranking (which additionally knows how many challenges the week has, hence the `4/5`
+   * wording there); finalized weeks come from the ranking history.
    */
   private readonly contributionsByWeekStart = computed(() => {
     const avatarUrlByPlayerId = this.avatarUrlByPlayerId();
@@ -164,7 +187,7 @@ export class BossCampaign {
           displayName: entry.displayName,
           avatarUrl: avatarUrlByPlayerId.get(entry.playerId) ?? null,
           isChampion: entry.playerId === championPlayerId,
-          damageLabel: formatDamage(entry.totalDamage, language),
+          damageLabel: formatDamage(bossDamageOf(entry), language),
           questsLabel: `${entry.completedChallenges}`,
         })),
       );
@@ -191,7 +214,7 @@ export class BossCampaign {
               displayName: entry.player.displayName,
               avatarUrl: avatarUrlByPlayerId.get(entry.player.id) ?? null,
               isChampion: entry.player.id === championPlayerId,
-              damageLabel: formatDamage(entry.totalDamage, language),
+              damageLabel: formatDamage(bossDamageOf(entry), language),
               questsLabel: `${entry.completedChallenges}/${entry.totalChallenges}`,
             },
           ];
@@ -233,8 +256,24 @@ export class BossCampaign {
   );
 
   /**
+   * The Valorant act this campaign runs in, spelled out ("Acte 4 · 2026"), or the empty string
+   * while it is unknown.
+   *
+   * The campaign restarts at every act: the backend only ever returns the fights sharing the act in
+   * progress, so naming it is what tells a reader that an empty map is a fresh run rather than lost
+   * history.
+   */
+  public readonly campaignLabel = computed<string>(() => {
+    const name = resourceValue(this.currentResource, null)?.campaignSeasonName ?? null;
+
+    return name === null
+      ? ''
+      : formatSeasonName(name, (key, params) => this.translation.translate(key, params));
+  });
+
+  /**
    * Campaign tally: bosses put down, bosses faced, and the damage the group has dealt across the
-   * whole run.
+   * run — the current act's run, not every week ever fought.
    */
   public readonly progressLabel = computed(() => {
     const finalizedWeeks = resourceValue(this.historyResource, null)?.content ?? [];
@@ -244,11 +283,15 @@ export class BossCampaign {
       finalizedWeeks.reduce((total, week) => total + week.totalDamageDealt, 0) +
       (currentBoss?.totalDamageDealt ?? 0);
 
-    return this.translation.translate('boss.progress', {
+    const progress = this.translation.translate('boss.progress', {
       defeated: finalizedWeeks.filter((week) => week.defeated).length,
       fought: finalizedWeeks.length + (currentBoss ? 1 : 0),
       damage: formatDamage(totalDamage, this.translation.language()),
     });
+
+    const campaign = this.campaignLabel();
+
+    return campaign === '' ? progress : `${campaign} · ${progress}`;
   });
 
   /**

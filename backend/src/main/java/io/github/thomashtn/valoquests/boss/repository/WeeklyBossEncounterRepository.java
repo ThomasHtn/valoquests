@@ -28,12 +28,37 @@ public interface WeeklyBossEncounterRepository
     /**
      * Retrieves every encounter ever created, oldest week first.
      *
-     * <p>Used to replay the boss-selection history: which bosses were already drawn in the current
-     * no-repeat cycle.
+     * <p>Used to replay the boss-selection history when no act is known yet: which bosses were
+     * already drawn in the current no-repeat cycle.
      *
      * @return every encounter ordered by week
      */
     List<WeeklyBossEncounter> findAllByOrderByWeekStartAsc();
+
+    /**
+     * Retrieves one act's encounters, oldest week first.
+     *
+     * <p>The no-repeat cycle is replayed over the campaign in progress rather than over the whole
+     * history: a new act restarts the campaign, and a campaign opening on the four bosses its
+     * predecessor had not reached yet would not read as a fresh run.
+     *
+     * @param seasonId act the campaign currently runs in
+     * @return that act's encounters ordered by week
+     */
+    List<WeeklyBossEncounter> findAllBySeasonIdOrderByWeekStartAsc(Long seasonId);
+
+    /**
+     * Retrieves one act's finalized encounters using week-based pagination, most recent week first.
+     *
+     * @param seasonId act the campaign currently runs in
+     * @param pageable page request
+     * @return page of that act's finalized encounters
+     */
+    @EntityGraph(attributePaths = {"bossCatalogEntry", "defeatedByPlayer"})
+    Page<WeeklyBossEncounter> findAllBySeasonIdAndFinalizedAtIsNotNullOrderByWeekStartDesc(
+        Long seasonId,
+        Pageable pageable
+    );
 
     /**
      * Retrieves the most recently finalized encounters that recorded how many players faced them.

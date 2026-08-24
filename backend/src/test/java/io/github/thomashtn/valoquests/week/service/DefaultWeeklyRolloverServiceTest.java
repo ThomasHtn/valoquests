@@ -328,6 +328,35 @@ class DefaultWeeklyRolloverServiceTest {
     }
 
     /**
+     * Verifies that the newly opened week gets its progress and ranking rows straight away, after
+     * its pack and boss have been drawn.
+     *
+     * <p>Without them the current ranking stays empty until the next synchronization, and every
+     * screen reading it shows its empty state instead of a week sitting at zero.
+     */
+    @Test
+    void shouldOpenCurrentWeekRankingAtZero() {
+        givenPendingWeeks();
+
+        service.rolloverIfNeeded();
+
+        InOrder openOrder = inOrder(
+            weeklyLifecycleCoordinator,
+            challengeRecalculationService,
+            rankingRecalculationService
+        );
+
+        openOrder.verify(weeklyLifecycleCoordinator)
+            .openWeek(CURRENT_WEEK_START);
+
+        openOrder.verify(challengeRecalculationService)
+            .recalculateWeekProgress(CURRENT_WEEK_START);
+
+        openOrder.verify(rankingRecalculationService)
+            .recalculateWeek(CURRENT_WEEK_START);
+    }
+
+    /**
      * Verifies that a partially finalized pack is rejected instead of being
      * silently repaired.
      */

@@ -18,13 +18,35 @@ import org.springframework.transaction.annotation.Transactional;
 public class DefaultSeasonQueryService implements SeasonQueryService {
 
     /**
-     * Henrik season short name, as {@code e<episode>a<act>}, for example {@code e11a4}.
+     * Episode-era season short name, as {@code e<episode>a<act>}, for example {@code e11a4}.
      */
-    private static final Pattern EPISODE_ACT_NAME = Pattern.compile("^e(\\d+)a(\\d+)$");
+    private static final Pattern EPISODE_ACT_NAME = Pattern.compile("^e(\\d+)a(\\d+)$", Pattern.CASE_INSENSITIVE);
 
     /**
-     * Sort key given to a season whose name does not follow {@link #EPISODE_ACT_NAME}, placing it
-     * after every datable season rather than at an arbitrary point in the middle of them.
+     * Year-era season short name, as {@code v<yy>a<act>}, for example {@code v26a4}.
+     *
+     * <p>Riot renamed its seasons once: episodes ran until 2025, years took over from 2026. Both
+     * spellings therefore coexist in a database built from imported matches, and both have to order
+     * against each other — while only the episode form was read here, every year-era season scored
+     * {@link #UNDATABLE_SEASON_KEY} and sorted <em>behind</em> the episodes it actually follows, so
+     * the "current" season resolved to a stale act as soon as the era changed.
+     */
+    private static final Pattern YEAR_ACT_NAME = Pattern.compile("^v(\\d{2})a(\\d+)$", Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Offset turning a two-digit year into its full form, so a year-era key always outranks an
+     * episode-era one: episodes stop in the tens, years start at 2026.
+     */
+    private static final long YEAR_ERA_BASE = 2_000L;
+
+    /**
+     * Multiplier scaling the era's leading number past any act count, so one number orders the pair.
+     */
+    private static final long ERA_SCALE = 1_000L;
+
+    /**
+     * Sort key given to a season whose name follows neither supported spelling, placing it after
+     * every datable season rather than at an arbitrary point in the middle of them.
      */
     private static final long UNDATABLE_SEASON_KEY = -1L;
 
@@ -80,16 +102,33 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
     /**
      * Builds the sort key ranking a season against the others, greater being more recent.
      *
-     * <p>Acts are numbered from one within an episode, so scaling the episode past any act count
-     * makes a single number order the pair.</p>
+     * <p>Acts are numbered from one within an episode or a year, so scaling that leading number
+     * past any act count makes a single number order the pair. A year is expanded to its full form
+     * first, which is what places the whole year era after the whole episode era.</p>
      */
     private static long chronologicalKey(Season season) {
-        Matcher matcher = EPISODE_ACT_NAME.matcher(season.getName());
-        if (!matcher.matches()) {
-            return UNDATABLE_SEASON_KEY;
+        Matcher episode = EPISODE_ACT_NAME.matcher(season.getName());
+        if (episode.matches()) {
+            return actKey(Long.parseLong(episode.group(1)), episode.group(2));
         }
 
-        return Long.parseLong(matcher.group(1)) * 1_000L + Long.parseLong(matcher.group(2));
+        Matcher year = YEAR_ACT_NAME.matcher(season.getName());
+        if (year.matches()) {
+            return actKey(YEAR_ERA_BASE + Long.parseLong(year.group(1)), year.group(2));
+        }
+
+        return UNDATABLE_SEASON_KEY;
+    }
+
+    /**
+     * Combines an era's leading number and an act into one comparable key.
+     *
+     * @param eraNumber episode number, or full year for the year era
+     * @param act       act number within that era, as matched
+     * @return ordering key, greater being more recent
+     */
+    private static long actKey(long eraNumber, String act) {
+        return eraNumber * ERA_SCALE + Long.parseLong(act);
     }
 
     private SeasonResponse toResponse(Season season) {

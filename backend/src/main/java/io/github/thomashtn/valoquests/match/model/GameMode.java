@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.match.model;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -84,6 +85,31 @@ public enum GameMode {
      */
     private static final String SKIRMISH_PREFIX = "skirmish";
 
+    /**
+     * Modes the competition counts, which is exactly the set {@code DefaultScoringRuleset#matchDamage}
+     * prices.
+     *
+     * <p>Declared as the modes that <em>do</em> count rather than as the ones that do not, so a mode
+     * released by Riot and not yet priced defaults to being ignored instead of silently entering the
+     * competition at zero damage. {@link #OTHER} is the case that made this necessary: an unrecognized
+     * queue is imported on purpose, so a later reclassification is a data migration rather than a full
+     * re-import — but while it sits there unrecognized it is worth no damage, and it used to count as a
+     * day played and to progress any challenge that filtered on no particular mode. A match nobody can
+     * price must not be able to move the regularity bonus or a volume target.
+     *
+     * <p>Declared after the constants because an {@link EnumSet} of this enum cannot be built before
+     * they exist.
+     */
+    private static final Set<GameMode> SCORED_MODES = EnumSet.of(
+        COMPETITIVE,
+        UNRATED,
+        SPIKE_RUSH,
+        DEATHMATCH,
+        TEAM_DEATHMATCH,
+        SKIRMISH,
+        PREMIER
+    );
+
     private final boolean roundBased;
 
     private final boolean importEligible;
@@ -127,6 +153,19 @@ public enum GameMode {
      */
     public boolean isRoundBased() {
         return roundBased;
+    }
+
+    /**
+     * Indicates whether the competition counts matches of this mode at all.
+     *
+     * <p>A mode that is not scored carries no damage, no day played and no challenge progress — see
+     * {@link #SCORED_MODES}. Its matches are still stored and still shown in a player's history: they
+     * were played, they are simply not part of the weekly fight.
+     *
+     * @return {@code true} when a match of this mode can count
+     */
+    public boolean isScored() {
+        return SCORED_MODES.contains(this);
     }
 
     /**

@@ -96,7 +96,12 @@ export function nextWeekStart(weekEnd: string): string {
  * @returns The remaining time, clamped to zero once the deadline has passed.
  */
 export function remainingWeekTime(weekEnd: string, now: Date): RemainingTime {
-  const deadline = parseIsoDate(weekEnd).getTime() + MILLISECONDS_PER_DAY;
+  // Local midnight, not UTC midnight: the backend closes a week on the Monday 00:00 of the group's
+  // own timezone (`WeekCalendar`, `Europe/Paris`). Anchoring the deadline on `Date.UTC` made the
+  // countdown run one to two hours past the rollover that had already happened, depending on
+  // daylight saving. Read locally like every other date this application displays.
+  const [year, month, day] = weekEnd.split('-').map(Number);
+  const deadline = new Date(year, month - 1, day + 1).getTime();
   const remaining = Math.max(0, deadline - now.getTime());
 
   return {

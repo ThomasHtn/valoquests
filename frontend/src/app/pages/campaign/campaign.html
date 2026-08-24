@@ -25,7 +25,12 @@
 </app-page-header>
 
 <div class="page-body">
-  <app-section-label [label]="view() === 'history' ? campaign.progressLabel() : ''" />
+  <!-- The map is captioned with the act it runs in, the history with the full tally that already
+       opens on it. The campaign restarts at every act, so naming it is what keeps a short map from
+       reading as lost history. -->
+  <app-section-label
+    [label]="view() === 'history' ? campaign.progressLabel() : campaign.campaignLabel()"
+  />
 
   <!-- Legend of the map's territory states. Only meaningful over the map itself, so it goes with it
      when the page swaps to the battle history. -->

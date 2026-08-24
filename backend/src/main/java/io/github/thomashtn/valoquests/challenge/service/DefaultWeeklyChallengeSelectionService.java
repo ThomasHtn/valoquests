@@ -33,6 +33,11 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>A complete pack contains exactly one challenge for every supported difficulty. Existing
  * selections are never replaced during the week. Category diversity is preferred, while
  * exclusion groups are always enforced.</p>
+ *
+ * <p>A challenge does not come back until its difficulty has been cycled through: each tier keeps
+ * its own no-repeat cycle, reset once every one of its enabled challenges has been drawn. It is a
+ * preference, not a constraint — a week that can only be filled by reusing a challenge is filled
+ * that way rather than left incomplete.</p>
  */
 @Service
 public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSelectionService {
@@ -217,23 +222,116 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty =
             loadCandidatesByDifficulty(weekStart);
 
-        Optional<List<Challenge>> diverseSelection = findSelection(
-            candidatesByDifficulty,
+        // Challenges left in the current cycle first, the whole tier only as a fallback. The second
+        // attempt is exactly the selection this service used to make on its own, so a week that
+        // could be filled before is still filled now: no-repeat is a preference, never a reason to
+        // hand out an incomplete pack.
+        return firstCompleteSelection(
+            withoutCurrentCycle(candidatesByDifficulty, weekStart),
             missingDifficulties,
-            initialState,
-            true
-        );
+            initialState
+        )
+            .or(() -> firstCompleteSelection(
+                candidatesByDifficulty,
+                missingDifficulties,
+                initialState
+            ))
+            .orElseThrow(() -> createSelectionException(weekStart));
+    }
 
-        if (diverseSelection.isPresent()) {
-            return diverseSelection.orElseThrow();
+    /**
+     * Builds the best complete selection one candidate pool allows, preferring category diversity.
+     *
+     * @param candidatesByDifficulty eligible candidates grouped by difficulty
+     * @param difficulties           missing difficulty tiers
+     * @param initialState           state produced by existing selections
+     * @return complete selection when the pool allows one
+     */
+    private Optional<List<Challenge>> firstCompleteSelection(
+        Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty,
+        List<ChallengeDifficulty> difficulties,
+        SelectionState initialState
+    ) {
+        return findSelection(candidatesByDifficulty, difficulties, initialState, true)
+            .or(() -> findSelection(candidatesByDifficulty, difficulties, initialState, false));
+    }
+
+    /**
+     * Drops the candidates already drawn in the current cycle of their own difficulty.
+     *
+     * @param candidatesByDifficulty eligible candidates grouped by difficulty
+     * @param weekStart              week being drawn
+     * @return the same grouping, keeping only challenges the cycle has not used yet
+     */
+    private Map<ChallengeDifficulty, List<Challenge>> withoutCurrentCycle(
+        Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty,
+        LocalDate weekStart
+    ) {
+        Map<ChallengeDifficulty, Set<Long>> usedByDifficulty =
+            usedChallengeIdsInCurrentCycle(candidatesByDifficulty, weekStart);
+
+        Map<ChallengeDifficulty, List<Challenge>> remaining =
+            new EnumMap<>(ChallengeDifficulty.class);
+
+        candidatesByDifficulty.forEach((difficulty, candidates) -> {
+            Set<Long> used = usedByDifficulty.getOrDefault(difficulty, Set.of());
+
+            remaining.put(
+                difficulty,
+                candidates.stream()
+                    .filter(candidate -> !used.contains(candidate.getId()))
+                    .toList()
+            );
+        });
+
+        return remaining;
+    }
+
+    /**
+     * Replays every past selection to determine which challenges were already used in the cycle
+     * still in progress, per difficulty, resetting whenever a tier's cycle completes.
+     *
+     * <p>Cycles run per difficulty rather than over the catalogue as a whole: a pack draws exactly
+     * one challenge per tier, so tiers empty at their own pace and a shared cycle would let the
+     * largest one hold the smallest hostage. A tier holding a single enabled challenge clears on
+     * every draw, which is what keeps it drawable at all.
+     *
+     * <p>The same shape as {@code DefaultWeeklyBossSelectionService}'s boss cycle, for the same
+     * reason: variety is what a weekly draw is for, and a catalogue this size otherwise repeats
+     * often enough to be noticed.
+     *
+     * @param candidatesByDifficulty eligible candidates grouped by difficulty
+     * @param weekStart              week being drawn
+     * @return identifiers used since each difficulty's last completed cycle
+     */
+    private Map<ChallengeDifficulty, Set<Long>> usedChallengeIdsInCurrentCycle(
+        Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty,
+        LocalDate weekStart
+    ) {
+        Map<ChallengeDifficulty, Set<Long>> usedByDifficulty =
+            new EnumMap<>(ChallengeDifficulty.class);
+
+        for (WeeklyChallenge selection : weeklyChallengeRepository
+            .findAllByWeekStartLessThanOrderByWeekStartAsc(weekStart)) {
+
+            Challenge challenge = selection.getChallenge();
+            ChallengeDifficulty difficulty = challenge.getDifficulty();
+
+            Set<Long> used =
+                usedByDifficulty.computeIfAbsent(difficulty, tier -> new HashSet<>());
+
+            used.add(challenge.getId());
+
+            int tierSize = candidatesByDifficulty
+                .getOrDefault(difficulty, List.of())
+                .size();
+
+            if (used.size() >= tierSize) {
+                used.clear();
+            }
         }
 
-        return findSelection(
-            candidatesByDifficulty,
-            missingDifficulties,
-            initialState,
-            false
-        ).orElseThrow(() -> createSelectionException(weekStart));
+        return usedByDifficulty;
     }
 
     /**

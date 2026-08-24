@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.boss.entity;
 
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
+import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.shared.entity.AuditableEntity;
 import jakarta.persistence.Column;
@@ -61,6 +62,17 @@ public class WeeklyBossEncounter extends AuditableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "boss_catalog_entry_id", nullable = false)
     private BossCatalogEntry bossCatalogEntry;
+
+    /**
+     * Valorant act this fight belongs to, when one was known at the time.
+     *
+     * <p>What makes the campaign restart at every act instead of running forever: the campaign is
+     * the fights sharing the act currently in progress, so a new act empties it without deleting
+     * anything. {@code null} only when no match had been imported yet and no act could be resolved.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "season_id")
+    private Season season;
 
     /**
      * Hit points the boss must lose to be defeated, frozen when the week opened.

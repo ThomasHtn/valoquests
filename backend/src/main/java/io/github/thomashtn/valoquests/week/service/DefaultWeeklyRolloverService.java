@@ -168,10 +168,30 @@ public class DefaultWeeklyRolloverService
             currentWeekStart
         );
 
+        openRanking(currentWeekStart);
+
         LOGGER.info(
             "Weekly rollover completed. Current week is {}.",
             currentWeekStart
         );
+    }
+
+    /**
+     * Builds the new week's progress and ranking rows, at zero.
+     *
+     * <p>Opening a week used to stop at its challenge pack and its boss, which left the ranking
+     * with no row at all until the next scheduled synchronization rebuilt it — several hours after
+     * the Monday rollover. Every screen reading the current ranking (the podium first) then showed
+     * its empty state instead of a squad sitting at zero, which reads as a broken page rather than
+     * as a week that has just started.
+     *
+     * <p>Both calls are the same ones the synchronization runs, and both are idempotent.
+     *
+     * @param weekStart Monday identifying the week being opened
+     */
+    private void openRanking(LocalDate weekStart) {
+        challengeRecalculationService.recalculateWeekProgress(weekStart);
+        rankingRecalculationService.recalculateWeek(weekStart);
     }
 
     /**

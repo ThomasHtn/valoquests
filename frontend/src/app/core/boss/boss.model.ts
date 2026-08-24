@@ -40,6 +40,15 @@ export interface CurrentBoss {
   readonly boss: Boss;
   readonly effectiveHp: number;
   readonly totalDamageDealt: number;
+
+  /**
+   * Raw code of the Valorant act the campaign runs in (`e11a4`, `V26A4`), spelled out for display
+   * by `formatSeasonName`. `null` while no match has been imported and no act can be resolved.
+   *
+   * The campaign is scoped to this act: `GET /api/boss/history` only returns the fights sharing it,
+   * so a new act opens on an empty history and the map starts again from the week being fought.
+   */
+  readonly campaignSeasonName: string | null;
 }
 
 /**

@@ -69,9 +69,14 @@ export interface RankingEntry {
   readonly activeDays: number;
 
   /**
-   * Damage dealt to the week's boss: {@link challengeDamage} + {@link matchDamage} +
+   * The player's weekly total: {@link challengeDamage} + {@link matchDamage} +
    * {@link regularityBonus} + {@link teamBonus}. This is what the ranking is ordered on, so it is
    * the amount shown next to a position.
+   *
+   * Not the damage the boss took, which is this minus {@link regularityBonus} — the regularity
+   * bonus rewards showing up rather than output and deliberately never reaches the shared health
+   * bar (see `DefaultBossQueryService#totalDamageDealt` and the rules page). Anything printed
+   * against the boss has to subtract it, or the rows will not add up to the bar above them.
    */
   readonly totalDamage: number;
   readonly challengeProgress: readonly RankingChallengeProgress[];
@@ -111,10 +116,19 @@ export interface RankingHistoryEntry {
   readonly displayName: string;
   readonly challengeDamage: number;
   readonly completedChallenges: number;
+  readonly matchDamage: number;
 
   /**
-   * Damage dealt to that week's boss, frozen at closure. Same composition as
-   * {@link RankingEntry.totalDamage}, and what the finalized position was ordered on.
+   * Regularity bonus awarded that week. Part of {@link totalDamage}, but never part of the damage
+   * the boss took — see {@link RankingEntry.totalDamage}.
+   */
+  readonly regularityBonus: number;
+  readonly teamBonus: number;
+  readonly activeDays: number;
+
+  /**
+   * The player's frozen weekly total, and what the finalized position was ordered on. Same
+   * composition — and same distinction from boss damage — as {@link RankingEntry.totalDamage}.
    */
   readonly totalDamage: number;
 }
