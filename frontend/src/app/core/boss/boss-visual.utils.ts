@@ -23,25 +23,6 @@ export function resolveBossCategoryColorClass(category: BossCategory): string {
 }
 
 /**
- * Ring and glow color utility applied to the boss portrait, per category.
- */
-const BOSS_CATEGORY_PORTRAIT_CLASSES: Readonly<Record<BossCategory, string>> = {
-  MINOR: 'ring-accent-green shadow-[0_0_18px_var(--color-accent-green)]',
-  STANDARD: 'ring-accent-blue shadow-[0_0_18px_var(--color-accent-blue)]',
-  ELITE: 'ring-accent-red shadow-[0_0_18px_var(--color-accent-red)]',
-};
-
-/**
- * Resolves the ring and glow color utility for a boss's portrait, matching its category.
- *
- * @param category - The boss's weight class.
- * @returns The Tailwind ring/shadow color utilities to apply around the portrait.
- */
-export function resolveBossCategoryPortraitClass(category: BossCategory): string {
-  return BOSS_CATEGORY_PORTRAIT_CLASSES[category];
-}
-
-/**
  * Share of hit points remaining below which the health bar turns red.
  */
 const HP_BAR_LOW_THRESHOLD = 20;

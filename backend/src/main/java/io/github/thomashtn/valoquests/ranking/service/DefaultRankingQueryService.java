@@ -12,7 +12,7 @@ import io.github.thomashtn.valoquests.ranking.dto.RankingHistoryWeekResponse;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
-import io.github.thomashtn.valoquests.shared.exception.InvalidRequestException;
+import io.github.thomashtn.valoquests.shared.util.PaginationGuard;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -32,11 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class DefaultRankingQueryService implements RankingQueryService {
-
-    /**
-     * Maximum number of historical weeks accepted by one request.
-     */
-    private static final int MAXIMUM_PAGE_SIZE = 100;
 
     /**
      * Repository used to read weekly ranking snapshots.
@@ -145,7 +140,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
         int page,
         int size
     ) {
-        validatePagination(page, size);
+        PaginationGuard.assertValidPageRequest(page, size);
 
         Page<LocalDate> weekPage = scoreRepository.findFinalizedWeekStarts(
             PageRequest.of(page, size)
@@ -315,21 +310,5 @@ public class DefaultRankingQueryService implements RankingQueryService {
             case HEADSHOTS -> "headshots";
             case ROUNDS_PLAYED -> "rounds";
         };
-    }
-
-    /**
-     * Validates public pagination parameters.
-     */
-    private void validatePagination(int page, int size) {
-        if (page < 0) {
-            throw new InvalidRequestException(
-                "page must be greater than or equal to 0"
-            );
-        }
-        if (size < 1 || size > MAXIMUM_PAGE_SIZE) {
-            throw new InvalidRequestException(
-                "size must be between 1 and " + MAXIMUM_PAGE_SIZE
-            );
-        }
     }
 }

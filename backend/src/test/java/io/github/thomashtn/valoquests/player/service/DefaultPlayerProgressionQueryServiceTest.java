@@ -2,6 +2,8 @@ package io.github.thomashtn.valoquests.player.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -21,6 +23,7 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -358,9 +361,31 @@ class DefaultPlayerProgressionQueryServiceTest {
             .isInstanceOf(PlayerNotFoundException.class);
     }
 
+    /**
+     * Declares the player's stored history, as both repository calls would answer it.
+     *
+     * <p>The service picks one of the two depending on whether the caller selected seasons, so a
+     * given test only ever exercises one — hence {@code lenient()}. The season-scoped stub applies
+     * the filter itself rather than returning everything: narrowing is the database's job now, and
+     * a stub that ignored the selection would let a service that forgot to pass it still pass.
+     *
+     * @param matches the player's whole stored history, most recent first
+     */
     private void givenHistory(PlayerMatch... matches) {
-        when(playerMatchRepository.findAllByPlayerIdOrderByMatchStartedAtDesc(PLAYER_ID))
-            .thenReturn(List.of(matches));
+        List<PlayerMatch> history = List.of(matches);
+
+        lenient().when(playerMatchRepository.findAllByPlayerIdOrderByMatchStartedAtDesc(PLAYER_ID))
+            .thenReturn(history);
+        lenient().when(playerMatchRepository
+                .findAllByPlayerIdAndMatchSeasonIdInOrderByMatchStartedAtDesc(
+                    eq(PLAYER_ID), anyCollection()
+                ))
+            .thenAnswer(invocation -> {
+                Collection<?> selected = invocation.getArgument(1);
+                return history.stream()
+                    .filter(match -> selected.contains(match.getMatch().getSeason().getId()))
+                    .toList();
+            });
     }
 
     private Season season(long id) {

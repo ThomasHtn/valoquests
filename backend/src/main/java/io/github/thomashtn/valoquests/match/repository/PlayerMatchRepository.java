@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.match.repository;
 
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -109,6 +110,26 @@ public interface PlayerMatchRepository
      */
     @EntityGraph(attributePaths = {"match", "match.season"})
     List<PlayerMatch> findAllByPlayerIdOrderByMatchStartedAtDesc(Long playerId);
+
+    /**
+     * Returns one player's matches inside a set of seasons, most recent first.
+     *
+     * <p>Exists so the progression endpoint's season filter is applied by the database rather than
+     * by discarding rows in memory: its analytics span a whole career, so loading every stored
+     * match to keep one act's worth grows with the player's history instead of with the answer.
+     *
+     * <p>Every game mode is returned, not just competitive: the personal-records section measures
+     * the active-day streak across all of them.
+     *
+     * @param playerId  internal player identifier
+     * @param seasonIds seasons to keep; must be non-empty, since an empty {@code IN} matches nothing
+     * @return the player's matches inside those seasons, most recent first
+     */
+    @EntityGraph(attributePaths = {"match", "match.season"})
+    List<PlayerMatch> findAllByPlayerIdAndMatchSeasonIdInOrderByMatchStartedAtDesc(
+        Long playerId,
+        Collection<Long> seasonIds
+    );
 
     /**
      * Returns the matches used to calculate one player's profile statistics, filtered by season,

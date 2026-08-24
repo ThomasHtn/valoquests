@@ -10,6 +10,7 @@ import org.springframework.validation.annotation.Validated;
  *
  * @param frontendOrigin Angular frontend origin allowed by CORS
  * @param adminApiKey    secret protecting administrative endpoints
+ * @param apiDocsEnabled whether the OpenAPI document and Swagger UI are served and reachable
  */
 @Validated
 @ConfigurationProperties("app")
@@ -18,6 +19,7 @@ public record ApplicationProperties(
     @NotBlank String frontendOrigin,
     @NotBlank
     @Size(min = 32)
-    String adminApiKey
+    String adminApiKey,
+    boolean apiDocsEnabled
 ) {
 }

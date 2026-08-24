@@ -112,10 +112,7 @@ public class DefaultPlayerProgressionQueryService implements PlayerProgressionQu
             throw new PlayerNotFoundException(playerId);
         }
 
-        List<PlayerMatch> inScope = inSelectedSeasons(
-            playerMatchRepository.findAllByPlayerIdOrderByMatchStartedAtDesc(playerId),
-            seasonIds
-        );
+        List<PlayerMatch> inScope = findInSelectedSeasons(playerId, seasonIds);
         List<PlayerMatch> competitive = inScope.stream()
             .filter(match -> match.getMatch().getGameMode() == GameMode.COMPETITIVE)
             .sorted(Comparator.comparing(match -> match.getMatch().getStartedAt()))
@@ -133,20 +130,26 @@ public class DefaultPlayerProgressionQueryService implements PlayerProgressionQu
     }
 
     /**
-     * Narrows a history to the selected seasons, keeping every season when none is selected.
+     * Loads the player's history restricted to the selected seasons.
      *
-     * @param matches   the player's whole stored history
+     * <p>The restriction is handed to the database rather than applied to a full history in
+     * memory: these analytics cover a whole career, so the discarded rows are exactly the ones
+     * that keep growing. An empty or absent selection means "every season" and is the one case
+     * that still reads the entire history, because that is what the caller asked for.
+     *
+     * @param playerId  internal player identifier
      * @param seasonIds selected season identifiers, possibly {@code null} or empty
-     * @return the matches falling inside the selection
+     * @return the matches falling inside the selection, most recent first
      */
-    private List<PlayerMatch> inSelectedSeasons(List<PlayerMatch> matches, List<Long> seasonIds) {
+    private List<PlayerMatch> findInSelectedSeasons(long playerId, List<Long> seasonIds) {
         if (seasonIds == null || seasonIds.isEmpty()) {
-            return matches;
+            return playerMatchRepository.findAllByPlayerIdOrderByMatchStartedAtDesc(playerId);
         }
-        Set<Long> selected = Set.copyOf(seasonIds);
-        return matches.stream()
-            .filter(match -> selected.contains(match.getMatch().getSeason().getId()))
-            .toList();
+        return playerMatchRepository
+            .findAllByPlayerIdAndMatchSeasonIdInOrderByMatchStartedAtDesc(
+                playerId,
+                Set.copyOf(seasonIds)
+            );
     }
 
     /**

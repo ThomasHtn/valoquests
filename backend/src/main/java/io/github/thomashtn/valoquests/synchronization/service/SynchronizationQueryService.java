@@ -2,8 +2,8 @@ package io.github.thomashtn.valoquests.synchronization.service;
 
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
-import io.github.thomashtn.valoquests.shared.exception.InvalidRequestException;
 import io.github.thomashtn.valoquests.shared.exception.ResourceNotFoundException;
+import io.github.thomashtn.valoquests.shared.util.PaginationGuard;
 import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationDetailsResponse;
 import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationResponse;
 import io.github.thomashtn.valoquests.synchronization.entity.Synchronization;
@@ -23,11 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class SynchronizationQueryService {
-
-    /**
-     * Maximum page size accepted by the administrative history endpoint.
-     */
-    private static final int MAXIMUM_PAGE_SIZE = 100;
 
     /**
      * Repository used to persist synchronization executions.
@@ -92,7 +87,7 @@ public class SynchronizationQueryService {
         int page,
         int size
     ) {
-        validatePagination(page, size);
+        PaginationGuard.assertValidPageRequest(page, size);
 
         Page<Synchronization> result = synchronizationRepository.findAll(
             PageRequest.of(
@@ -196,21 +191,5 @@ public class SynchronizationQueryService {
         return playerRepository
             .findLatestSuccessfulSynchronizationAt()
             .orElse(null);
-    }
-
-    /**
-     * Validates public pagination parameters before creating a page request.
-     */
-    private void validatePagination(int page, int size) {
-        if (page < 0) {
-            throw new InvalidRequestException(
-                "page must be greater than or equal to 0"
-            );
-        }
-        if (size < 1 || size > MAXIMUM_PAGE_SIZE) {
-            throw new InvalidRequestException(
-                "size must be between 1 and " + MAXIMUM_PAGE_SIZE
-            );
-        }
     }
 }

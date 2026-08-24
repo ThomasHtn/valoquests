@@ -11,6 +11,7 @@ import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
 import io.github.thomashtn.valoquests.shared.exception.InvalidRequestException;
+import io.github.thomashtn.valoquests.shared.util.PaginationGuard;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,11 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class DefaultMatchQueryService implements MatchQueryService {
-
-    /**
-     * Maximum number of historical weeks accepted by one request.
-     */
-    private static final int MAXIMUM_PAGE_SIZE = 100;
 
     /**
      * Repository used to load tracked players.
@@ -83,7 +79,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
         int size,
         MatchHistoryFilter filter
     ) {
-        validatePagination(page, size);
+        PaginationGuard.assertValidPageRequest(page, size);
         if (!playerRepository.existsById(playerId)) {
             throw new PlayerNotFoundException(playerId);
         }
@@ -173,14 +169,5 @@ public class DefaultMatchQueryService implements MatchQueryService {
 
     private String normalize(String value) {
         return value == null || value.isBlank() ? null : value.trim();
-    }
-
-    private void validatePagination(int page, int size) {
-        if (page < 0) {
-            throw new InvalidRequestException("page must be greater than or equal to 0");
-        }
-        if (size < 1 || size > MAXIMUM_PAGE_SIZE) {
-            throw new InvalidRequestException("size must be between 1 and " + MAXIMUM_PAGE_SIZE);
-        }
     }
 }
