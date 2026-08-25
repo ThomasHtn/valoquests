@@ -11,6 +11,7 @@ import {
   formatPopulation,
   formatSignedGauge,
 } from './colony-format.utils';
+import { colonyGaugeColors } from './colony-gauge.utils';
 import { Colony, ColonyBuildingTier, ColonyGauge, ColonyRunHistory } from './colony.model';
 import {
   ColonyBossState,
@@ -21,35 +22,6 @@ import {
   ColonyRunView,
   RunDayParts,
 } from './colony-view.model';
-
-/**
- * Tailwind utilities each gauge is drawn in, in its ordinary state.
- *
- * Food green and Energy blue: both come from the application's existing accent set, and neither is
- * the brand amber the population itself is drawn in, so a gauge is never mistaken for the figure it
- * feeds.
- */
-const GAUGE_COLORS: Record<ColonyGauge, { readonly fill: string; readonly text: string }> = {
-  FOOD: {
-    fill: 'bg-accent-green',
-    text: 'text-accent-green',
-  },
-  ENERGY: {
-    fill: 'bg-accent-blue',
-    text: 'text-accent-blue',
-  },
-};
-
-/**
- * Tailwind utilities both gauges fall back to while the colony is in distress.
- *
- * The desaturated `danger` red rather than `accent-red`, which marks boss damage everywhere else:
- * a colony in trouble is a state, not a hit taken.
- */
-const DISTRESS_COLORS = {
-  fill: 'bg-danger',
-  text: 'text-danger',
-};
 
 /**
  * The squad's colony, resolved once into everything the page lays out.
@@ -425,7 +397,7 @@ export class ColonyView {
    */
   private toGaugeView(gauge: ColonyGauge, state: Colony['food'], colony: Colony): ColonyGaugeView {
     const language = this.translation.language();
-    const colors = colony.alert ? DISTRESS_COLORS : GAUGE_COLORS[gauge];
+    const colors = colonyGaugeColors(gauge, colony.alert);
     const label = this.translation.translate(`colony.gauge.${gauge}.name`);
     const valueLabel = formatGauge(state.value, language);
 

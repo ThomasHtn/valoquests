@@ -34,7 +34,17 @@
          with a floor at the natural height of three plinth rows — below it the rows would have to
          shrink — and a ceiling so a very tall display does not stretch the block past what reads as
          a podium. -->
+    <!-- What the podium is hangs off the whole zone, on the same delay as the two blocks in the
+         column beside it, and says what the figure under each name is measured on — nothing in the
+         plinths themselves states it. To the left, into the gap between the columns, which is the
+         mirror of where those two blocks put theirs.
+         No ground coming up under the pointer here, unlike them: every row of this block is
+         already its own link to a player, so the block cannot be one link over them. The rows
+         carry the affordance instead, each with its own hover. -->
     <div
+      [appTooltip]="'overview.podium.hint' | translate"
+      [appTooltipDelay]="tooltipDelayMs"
+      appTooltipPosition="left"
       class="mt-4 flex flex-1 flex-col justify-between gap-6 [--podium-base:clamp(6rem,9vh,7.5rem)]"
     >
       <!-- Podium spotlight: 1st place rendered larger and centered via `order`, so the DOM keeps its
@@ -122,10 +132,13 @@
            viewport and a longer roster would otherwise push the block past it. `--podium-row` is
            one row's natural height (`py-5` around a `size-9` avatar), so the cap is expressed as
            "six rows and the five gaps between them" and follows the row treatment if it changes.
-           The scrollbar itself only shows on hover/focus (see `scroll-subtle`). -->
+           Plain `overflow-y-auto` rather than `scroll-subtle`: its `scrollbar-gutter: stable`
+           reserves the thumb's column even on a roster short enough to never scroll, which pulls
+           every row's trailing edge in from the podium's above it — the same reason the select
+           panel does not use it either. -->
       @if (rest().length) {
         <ul
-          class="scroll-subtle flex max-h-[calc(6*var(--podium-row)_+_5*0.75rem)] flex-col gap-3 overflow-y-auto overscroll-contain [--podium-row:4.75rem]"
+          class="flex max-h-[calc(6*var(--podium-row)_+_5*0.75rem)] flex-col gap-3 overflow-y-auto overscroll-contain [--podium-row:4.75rem]"
         >
           @for (entry of rest(); track entry.player.id) {
             <li>

@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { ChallengeDifficulty } from '@core/challenges/challenge.model';
 import { ChallengeVisual } from '@core/challenges/challenge-visual.model';
@@ -7,6 +8,7 @@ import { ChallengesApi } from '@core/challenges/challenges-api';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { ResourceState } from '@shared/resource-state/resource-state';
+import { BLOCK_TOOLTIP_DELAY_MS, Tooltip } from '@shared/tooltip/tooltip';
 
 /**
  * Single row of the collective progress breakdown: a challenge paired with its resolved
@@ -40,7 +42,7 @@ interface ChallengeProgressRow {
  */
 @Component({
   selector: 'app-team-progress',
-  imports: [TranslatePipe, ResourceState],
+  imports: [TranslatePipe, RouterLink, ResourceState, Tooltip],
   templateUrl: './team-progress.html',
   // Transparent host: the section itself becomes the grid item of the overview's two-column row,
   // so it stretches to the row's height and can align its bottom edge with the panel beside it.
@@ -51,6 +53,11 @@ export class TeamProgress {
    * Data-access service backing the shared current-challenges resource.
    */
   private readonly challengesApi = inject(ChallengesApi);
+
+  /**
+   * How long the pointer rests on the block before its tooltip opens.
+   */
+  protected readonly tooltipDelayMs = BLOCK_TOOLTIP_DELAY_MS;
 
   /**
    * Reactive resource fetching the current week's challenges, shared with the overview header and

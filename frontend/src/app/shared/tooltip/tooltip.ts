@@ -21,6 +21,15 @@ const OFFSET = 8;
 export type TooltipPosition = 'above' | 'below' | 'left' | 'right';
 
 /**
+ * Delay a tooltip hung off a whole block waits before opening, in milliseconds.
+ *
+ * Long enough that crossing the block on the way somewhere else never opens the bubble, short
+ * enough that stopping on it to ask "what is this" does not feel like waiting. Shared so the two
+ * overview blocks answer at the same pace rather than each picking a number.
+ */
+export const BLOCK_TOOLTIP_DELAY_MS = 400;
+
+/**
  * Shows a short text bubble describing its host on hover and on keyboard focus.
  *
  * Replaces Angular Material's `matTooltip`, which pulled `@angular/material` and `@angular/cdk`
@@ -39,9 +48,11 @@ export type TooltipPosition = 'above' | 'below' | 'left' | 'right';
 @Directive({
   selector: '[appTooltip]',
   host: {
-    '(mouseenter)': 'show()',
+    '(mouseenter)': 'scheduleShow()',
     '(mouseleave)': 'hide()',
-    '(focusin)': 'show()',
+    // Focus opens the bubble at once: the delay exists to keep a pointer crossing the host from
+    // flashing it, and a keyboard user does not cross anything.
+    '(focusin)': 'showOnHostFocus($event)',
     '(focusout)': 'hide()',
   },
 })
@@ -76,6 +87,16 @@ export class Tooltip implements OnDestroy {
   public readonly appTooltipSize = input<'sm' | 'md'>('sm');
 
   /**
+   * How long the pointer must rest on the host before the bubble opens, in milliseconds.
+   *
+   * Zero by default, which is what a tooltip hanging off a small target wants: the reader aimed at
+   * that word or that figure, so the answer is owed immediately. A host covering a whole block is
+   * the opposite case — the pointer crosses it on the way to anything else, and without a delay the
+   * bubble flashes over content the reader was heading for.
+   */
+  public readonly appTooltipDelay = input(0);
+
+  /**
    * Host element the bubble is positioned against and described by.
    */
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -101,6 +122,11 @@ export class Tooltip implements OnDestroy {
   private escapeListener: (() => void) | null = null;
 
   /**
+   * Pending {@link appTooltipDelay} timer, or `null` while none is armed.
+   */
+  private showTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
    * Removes the bubble when the host is destroyed while its tooltip is visible.
    *
    * A popover lives in the top layer attached to the document body, so it would otherwise outlive
@@ -108,6 +134,45 @@ export class Tooltip implements OnDestroy {
    */
   public ngOnDestroy(): void {
     this.hide();
+  }
+
+  /**
+   * Opens the bubble when the host itself takes focus, ignoring focus landing on a descendant.
+   *
+   * `focusin` bubbles, unlike `mouseenter`, so a host wrapping its own interactive content — the
+   * podium, whose every row is a link to a player — would otherwise open its bubble on each of
+   * them in turn while the reader tabs through. The bubble describes the host, so only the host
+   * taking focus is a reason to show it.
+   *
+   * @param event - The focus event that reached the host.
+   */
+  protected showOnHostFocus(event: FocusEvent): void {
+    if (event.target !== this.host.nativeElement) {
+      return;
+    }
+
+    this.show();
+  }
+
+  /**
+   * Opens the bubble once the pointer has rested on the host for {@link appTooltipDelay}.
+   *
+   * Falls through to {@link show} with no timer at all when no delay is configured, so the default
+   * call site keeps its immediate bubble and gains no scheduling.
+   */
+  protected scheduleShow(): void {
+    const delay = this.appTooltipDelay();
+    if (delay <= 0) {
+      this.show();
+
+      return;
+    }
+
+    this.cancelScheduledShow();
+    this.showTimer = setTimeout(() => {
+      this.showTimer = null;
+      this.show();
+    }, delay);
   }
 
   /**
@@ -148,8 +213,13 @@ export class Tooltip implements OnDestroy {
 
   /**
    * Removes the bubble and every reference to it.
+   *
+   * Disarms any pending delay first, and before the early return: a pointer that leaves the host
+   * before the timer fires must not have a bubble open behind it.
    */
   protected hide(): void {
+    this.cancelScheduledShow();
+
     const bubble = this.bubble();
     if (!bubble) {
       return;
@@ -162,6 +232,18 @@ export class Tooltip implements OnDestroy {
     this.togglePopover(bubble, false);
     this.renderer.removeChild(this.document().body, bubble);
     this.bubble.set(null);
+  }
+
+  /**
+   * Disarms the pending delay timer, if any.
+   */
+  private cancelScheduledShow(): void {
+    if (this.showTimer === null) {
+      return;
+    }
+
+    clearTimeout(this.showTimer);
+    this.showTimer = null;
   }
 
   /**

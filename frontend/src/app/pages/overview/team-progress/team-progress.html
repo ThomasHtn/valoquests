@@ -1,9 +1,11 @@
-<!-- Collective progress: shares the row with the podium rather than spanning the full page width,
-     reading as part of the page rather than as a panel — the same treatment as the podium beside
-     it. Its progress bar (kept gold — the squad's overall pace, unrelated to any single
-     challenge's own difficulty color) sits above a breakdown of the week's challenges, styled the
-     same way as the weekly challenges board so both read as one system. -->
-<section class="flex flex-col">
+<!-- Collective progress: shares the left column with the run's own summary above it and the podium
+     beside it, reading as part of the page rather than as a panel. Its progress bar (kept gold —
+     the squad's overall pace, unrelated to any single challenge's own difficulty color) sits above
+     a breakdown of the week's challenges, styled the same way as the weekly challenges board so
+     both read as one system.
+     Takes the height the summary above it leaves rather than sitting at its natural size: the
+     column's bottom edge has to land on the podium's. -->
+<section class="flex flex-1 flex-col">
   <app-resource-state
     (retry)="reload()"
     [emptyText]="'overview.weeklyChallenges.empty' | translate"
@@ -14,126 +16,149 @@
     [loadingText]="'overview.weeklyChallenges.loading' | translate"
     padding="py-4"
   >
-    <div class="flex flex-1 flex-col gap-6">
-      <div>
-        <!-- Section rule: title and a hairline fading to nothing — the same header treatment as
-             the podium beside it, so both panels read as one system. -->
-        <div class="flex items-center gap-3">
-          <h2
-            class="font-display text-sm leading-none font-semibold tracking-label text-text-secondary uppercase"
-          >
-            {{ 'overview.teamProgress.progressLabel' | translate }}
-          </h2>
-          <span
-            aria-hidden="true"
-            class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
-          ></span>
-          <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
-        </div>
+    <div class="flex flex-1 flex-col">
+      <!-- Section rule: title and a hairline fading to nothing — the same header treatment as the
+           podium beside it and the run's summary above it, so all three read as one system.
+           It stays outside the link below: the title is what the block is called, not somewhere to
+           click, and the tooltip hanging off it is read by hovering rather than by following. -->
+      <div class="flex items-center gap-3">
+        <h2
+          class="font-display text-sm leading-none font-semibold tracking-label text-text-secondary uppercase"
+        >
+          {{ 'overview.teamProgress.progressLabel' | translate }}
+        </h2>
+        <span
+          aria-hidden="true"
+          class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
+        ></span>
+        <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
+      </div>
 
-        <!-- Headline: how many of the week's challenges the squad has cleared, and how long is
-             left to clear the rest. -->
-        <div class="mt-5 flex flex-wrap items-end gap-x-5 gap-y-2">
-          <p class="flex items-baseline gap-1">
-            <span class="font-display text-6xl leading-none font-bold text-brand-500 tabular-nums">
-              {{ completedCount() }}
-            </span>
-            <span
-              class="font-display text-3xl leading-none font-semibold text-text-muted tabular-nums"
-            >
-              / {{ totalCount() }}
-            </span>
-          </p>
+      <!-- Everything under the rule is the link to the challenge board, which details the five
+           draws this panel only counts. Same treatment as the run's summary above: no frame at
+           rest, the ground coming up under the pointer and bled past the content so the figures
+           stay flush with the rule.
+           Its tooltip hangs off the whole zone, on the same delay, and carries the rule the
+           figures cannot state — a challenge counts as cleared only once every tracked player has
+           cleared it, which is what makes this a collective count rather than a sum of individual
+           ones. -->
+      <a
+        [appTooltip]="'overview.teamProgress.hint' | translate"
+        [appTooltipDelay]="tooltipDelayMs"
+        [attr.aria-label]="'overview.teamProgress.link' | translate"
+        [routerLink]="'/challenges'"
+        appTooltipPosition="right"
+        class="focus-ring -mx-3 mt-2 flex flex-1 flex-col gap-6 px-3 py-3 transition-colors hover:bg-text-primary/4"
+      >
+        <div>
+          <!-- Headline: how many of the week's challenges the squad has cleared, and how long is
+               left to clear the rest. -->
+          <div class="flex flex-wrap items-end gap-x-5 gap-y-2">
+            <p class="flex items-baseline gap-1">
+              <span
+                class="font-display text-6xl leading-none font-bold text-brand-500 tabular-nums"
+              >
+                {{ completedCount() }}
+              </span>
+              <span
+                class="font-display text-3xl leading-none font-semibold text-text-muted tabular-nums"
+              >
+                / {{ totalCount() }}
+              </span>
+            </p>
 
-          <div class="min-w-0">
-            <p class="font-display text-lg leading-tight font-semibold text-text-primary">
-              {{ 'overview.teamProgress.completedLabel' | translate }}
-            </p>
-            <p class="mt-1 text-prose text-text-secondary">
-              {{ 'overview.teamProgress.deadline' | translate: { count: remainingCount() } }}
-            </p>
+            <div class="min-w-0">
+              <p class="font-display text-lg leading-tight font-semibold text-text-primary">
+                {{ 'overview.teamProgress.completedLabel' | translate }}
+              </p>
+              <p class="mt-1 text-prose text-text-secondary">
+                {{ 'overview.teamProgress.deadline' | translate: { count: remainingCount() } }}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <!-- Discrete, sheared segments — one per challenge, filled or not — rather than a
+          <!-- Discrete, sheared segments — one per challenge, filled or not — rather than a
              continuous percentage fill: the number of challenges is always small and fixed, so a
              segment reads at a glance as "this one specific challenge is done" instead of an
              abstract percentage. Kept gold regardless of a challenge's own difficulty color: this
              bar is the squad's overall pace, not a breakdown. Hidden from assistive technology,
              since the headline above states the same count. -->
-        <div aria-hidden="true" class="mt-5 flex gap-2">
-          @for (filled of segments(); track $index) {
-            <!-- Gold rim painted as a filled outer slot with the fill inset one pixel inside it,
+          <div aria-hidden="true" class="mt-5 flex gap-2">
+            @for (filled of segments(); track $index) {
+              <!-- Gold rim painted as a filled outer slot with the fill inset one pixel inside it,
                  rather than stroked as a border: `clip-path` cuts the sheared sides off any real
                  border, so the frame has to be a shape of its own — the same treatment as the hex
                  badges in the breakdown below. -->
-            <span class="clip-shear relative h-4 flex-1 bg-accent-gold/60">
-              <span
-                [class.bg-brand-500]="filled"
-                [class.bg-surface-700]="!filled"
-                class="clip-shear absolute inset-px"
-              ></span>
-            </span>
-          }
+              <span class="clip-shear relative h-4 flex-1 bg-accent-gold/60">
+                <span
+                  [class.bg-brand-500]="filled"
+                  [class.bg-surface-700]="!filled"
+                  class="clip-shear absolute inset-px"
+                ></span>
+              </span>
+            }
+          </div>
         </div>
-      </div>
 
-      <!-- One row per challenge, tinted by its difficulty tier the same way as the weekly
+        <!-- One tile per challenge, tinted by its difficulty tier the same way as the weekly
            challenges board: a hex badge (a checkmark once the whole squad has cleared it, its
            roman-numeral tier otherwise), the challenge's name and difficulty, and how many
-           tracked players have completed it so far. -->
-      <!-- The breakdown takes the height left over by the headline above rather than sitting under
-           it at its natural size: the panel stretches to match the podium beside it, and the slack
-           belongs in the rows themselves instead of as a gap under the progress bar. -->
-      <ul class="flex flex-1 flex-col gap-2">
-        @for (row of rows(); track row.id) {
-          <li
-            [class]="row.visual.panelClass"
-            class="notch-tr notch-tr-edge flex flex-1 items-center gap-3 border bg-linear-[115deg] to-surface-sunken/60 px-3 py-2.5 [--notch:0.625rem]"
-          >
-            <span
-              [class]="row.visual.barClass"
-              aria-hidden="true"
-              class="clip-hex relative h-8 w-7 shrink-0"
+           tracked players have completed it so far.
+           Five tiles abreast rather than five rows stacked: the week always draws exactly five
+           challenges, one per difficulty, so they are a set to be taken in at a glance rather than
+           a list to be read down — and the height that frees is what the run's summary above the
+           panel stands in. Below `sm` there is no room for five columns and the set folds to two,
+           the last tile spanning the pair so the grid closes square. -->
+        <ul class="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-5">
+          @for (row of rows(); track row.id) {
+            <li
+              [class]="row.visual.panelClass"
+              class="notch-tr notch-tr-edge flex flex-col items-center gap-2 border bg-linear-[115deg] to-surface-sunken/60 px-2 py-3 text-center max-sm:last:col-span-2 [--notch:0.625rem]"
             >
               <span
-                [class]="row.visual.iconClass"
-                class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-xs leading-none font-bold"
+                [class]="row.visual.barClass"
+                aria-hidden="true"
+                class="clip-hex relative h-9 w-8 shrink-0"
               >
-                {{ row.completed ? '✓' : row.visual.tier }}
+                <span
+                  [class]="row.visual.iconClass"
+                  class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-xs leading-none font-bold"
+                >
+                  {{ row.completed ? '✓' : row.visual.tier }}
+                </span>
               </span>
-            </span>
 
-            <div class="min-w-0 flex-1">
               <p
                 [class]="row.visual.iconClass"
                 class="tracking-label font-mono text-2xs font-medium uppercase"
               >
                 {{ 'overview.weeklyChallenges.difficulty.' + row.difficulty | translate }}
               </p>
+
+              <!-- The name wraps rather than being truncated: a column this narrow would cut most of
+                 them off at the first word, and the tile has the height to spare. -->
               <p
-                class="font-display mt-0.5 truncate text-sm leading-tight font-semibold text-text-primary"
+                class="font-display min-w-0 flex-1 text-xs leading-snug font-semibold text-balance text-text-primary hyphens-auto"
               >
                 {{ row.name }}
               </p>
-            </div>
 
-            <p class="shrink-0 border-l border-text-primary/10 pl-3 text-right">
-              <span
-                class="tracking-label block font-mono text-2xs font-medium text-text-muted uppercase"
-              >
-                {{ 'overview.teamProgress.rowPlayers' | translate }}
-              </span>
-              <span
-                class="font-display mt-1 block text-lg leading-none font-bold text-text-primary tabular-nums"
-              >
-                {{ row.completedPlayers
-                }}<span class="text-text-muted">/{{ row.totalPlayers }}</span>
-              </span>
-            </p>
-          </li>
-        }
-      </ul>
+              <!-- The count is the tile's figure, set off by a rule rather than a caption: the same
+                 label repeated five times across the row would read as noise, so it is left to
+                 assistive technology. -->
+              <p class="w-full border-t border-text-primary/10 pt-2">
+                <span class="sr-only">{{ 'overview.teamProgress.rowPlayers' | translate }}</span>
+                <span
+                  class="font-display text-base leading-none font-bold text-text-primary tabular-nums"
+                >
+                  {{ row.completedPlayers
+                  }}<span class="text-text-muted">/{{ row.totalPlayers }}</span>
+                </span>
+              </p>
+            </li>
+          }
+        </ul>
+      </a>
     </div>
   </app-resource-state>
 </section>

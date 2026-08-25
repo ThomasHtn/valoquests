@@ -1,39 +1,121 @@
 @if (colony(); as colony) {
-  <a
-    [routerLink]="'/colony'"
-    class="focus-ring group flex items-center gap-4 border border-text-primary/10 bg-surface-800/40 px-4 py-3 transition-colors hover:border-brand-500/60 sm:px-5"
-  >
-    <span class="min-w-0 flex-1">
-      <span class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <span class="label-caption text-text-muted">{{ 'colony.title' | translate }}</span>
-        <span class="font-mono text-2xs text-text-secondary tabular-nums">{{ runDayLabel() }}</span>
-      </span>
+  <section class="flex flex-col">
+    <!-- Section rule: the same header treatment as the progress panel under it and the podium
+         beside it, so the left column reads as two blocks of one page rather than a card stack. -->
+    <div class="flex items-center gap-3">
+      <h2
+        class="font-display text-sm leading-none font-semibold tracking-label text-text-secondary uppercase"
+      >
+        {{ 'campaign.title' | translate }}
+      </h2>
+      <span
+        aria-hidden="true"
+        class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
+      ></span>
+      <!-- The day is the one figure of the block that moves every morning, and the only one the
+           bars below cannot say, so it closes the rule where the other panels close it with a
+           diamond. -->
+      <span class="font-mono text-2xs text-text-muted tabular-nums">{{ runDayLabel() }}</span>
+    </div>
 
-      <span class="mt-1 flex flex-wrap items-baseline gap-x-2">
+    <!-- The whole readout is the link to the run's own page: every figure in it is a reason to
+         open that page, so none of them is a target of its own.
+         No frame and no ground at rest: the section rule above already sets the block apart, the
+         same way it does for the progress panel under it and the podium beside it. The ground only
+         comes up under the pointer, which is what carries the affordance now that no chevron
+         announces the link — and it is bled out past the content with a negative margin so the
+         figures stay flush with the rule above them. -->
+    <!-- What the block is hangs off the whole zone rather than off its title: the figures are what
+         a reader hovers, and nothing inside them says the population belongs to a run or what the
+         three bars are fed by. Held back by a delay so a pointer merely crossing the column on its
+         way to the podium never opens it. To the right, where the bubble covers neither the
+         figures being asked about nor the panel under them. -->
+    <a
+      [appTooltip]="'overview.colonySummary.hint' | translate"
+      [appTooltipDelay]="tooltipDelayMs"
+      [attr.aria-label]="'overview.colonySummary.link' | translate"
+      [routerLink]="'/campaign'"
+      appTooltipPosition="right"
+      class="focus-ring -mx-3 mt-2 flex items-center gap-4 px-3 py-3 transition-colors hover:bg-text-primary/4 sm:gap-6"
+    >
+      <!-- Population, in the direction's hexagon: the run's score, seated in the same socket the
+           gauges below it and the campaign map's tiles are drawn in — a rim in the run's color
+           around the page's own ground, never a filled plate. The share of capacity settled is a
+           reading of the run, which the page this links to draws in full; here the hexagon carries
+           the figure and nothing else. -->
+      <span class="relative size-24 shrink-0 sm:size-28">
         <span
-          [class]="colony.alert ? 'text-danger' : 'text-brand-500'"
-          class="font-display text-2xl leading-none font-bold tabular-nums"
+          [class]="colony.alert ? 'bg-danger' : 'bg-brand-500'"
+          aria-hidden="true"
+          class="clip-hex absolute inset-0"
+        ></span>
+        <span
+          [style.scale]="hexagonInnerScale"
+          aria-hidden="true"
+          class="clip-hex absolute inset-0 bg-surface-950"
+        ></span>
+
+        <span
+          class="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-text-primary"
         >
-          {{ populationLabel() }}
+          <!-- The figure is settlers, and the glyph says so in a socket with no room for a
+               caption. The word itself is left to assistive technology, which has no glyph. -->
+          <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+          <span class="sr-only">{{ 'colony.population' | translate }}</span>
+          <span class="font-display text-2xl leading-none font-bold tabular-nums">
+            {{ populationLabel() }}
+          </span>
         </span>
-        <span class="font-display text-base leading-none text-text-secondary tabular-nums">
-          / {{ capacityLabel() }}
-        </span>
-        <span class="label-caption text-text-muted">{{ 'colony.population' | translate }}</span>
       </span>
 
-      <app-progress-bar
-        [colorClass]="colony.alert ? 'bg-danger' : 'bg-brand-500'"
-        [percentage]="percentage()"
-        class="mt-2 w-full"
-        heightClass="h-1.5"
-      />
-    </span>
+      <!-- The two gauges and the health they produce, one track each: the bar that is shortest is
+           the one deciding how full the colony can get. The row names nothing on its face — the
+           glyph says which resource it is, and the campaign page states what it means in full. The
+           name stays in the markup for assistive technology, which has no glyph. -->
+      <ul class="flex min-w-0 flex-1 flex-col gap-2.5">
+        @for (track of tracks(); track track.track) {
+          <li class="flex items-center gap-3">
+            <span aria-hidden="true" class="relative grid size-8 shrink-0 place-items-center">
+              <span [class]="track.fillClass" class="clip-hex absolute inset-0 opacity-40"></span>
+              <span
+                [style.scale]="glyphInnerScale"
+                class="clip-hex absolute inset-0 bg-surface-sunken"
+              ></span>
+              <span [class]="track.textClass" class="relative [&_svg]:size-3.5">
+                @switch (track.track) {
+                  @case ('FOOD') {
+                    <svg lucideWheat></svg>
+                  }
+                  @case ('ENERGY') {
+                    <svg lucideZap></svg>
+                  }
+                  @default {
+                    <svg lucideHeartPulse></svg>
+                  }
+                }
+              </span>
+            </span>
 
-    <svg
-      aria-hidden="true"
-      class="size-4 shrink-0 text-text-muted transition-colors group-hover:text-brand-500"
-      lucideChevronRight
-    ></svg>
-  </a>
+            <span class="sr-only">{{ track.label }}</span>
+
+            <app-progress-bar
+              [colorClass]="track.fillClass"
+              [percentage]="track.percentage"
+              class="min-w-0 flex-1 rounded-md"
+              heightClass="h-2.5"
+            />
+
+            <!-- Beside the rail, never over it: the fill would mask the figure the moment the
+                 gauge tops out. -->
+            <span
+              [class]="track.textClass"
+              class="w-10 shrink-0 text-right font-display text-base leading-none font-bold whitespace-nowrap tabular-nums"
+            >
+              {{ track.valueLabel }}
+            </span>
+          </li>
+        }
+      </ul>
+    </a>
+  </section>
 }

@@ -14,6 +14,7 @@ import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ResourceState } from '@shared/resource-state/resource-state';
+import { BLOCK_TOOLTIP_DELAY_MS, Tooltip } from '@shared/tooltip/tooltip';
 
 /**
  * Plinth treatment per podium position, 1st to 3rd: how tall the block stands, the color of the
@@ -43,7 +44,15 @@ const PODIUM_PLINTH_CLASSES: readonly string[] = [
  */
 @Component({
   selector: 'app-podium',
-  imports: [TranslatePipe, RouterLink, Avatar, ChampionBadge, PositionBadge, ResourceState],
+  imports: [
+    TranslatePipe,
+    RouterLink,
+    Avatar,
+    ChampionBadge,
+    PositionBadge,
+    ResourceState,
+    Tooltip,
+  ],
   templateUrl: './podium.html',
   // Transparent host: the section itself becomes the grid item of the overview's two-column row,
   // so it stretches to the row's height and can align its bottom edge with the panel beside it.
@@ -54,6 +63,11 @@ export class Podium {
    * Data-access service backing the shared current-ranking resource.
    */
   private readonly rankingApi = inject(RankingApi);
+
+  /**
+   * How long the pointer rests on the block before its tooltip opens.
+   */
+  protected readonly tooltipDelayMs = BLOCK_TOOLTIP_DELAY_MS;
 
   /**
    * i18n service read for the active language when grouping damage amounts.

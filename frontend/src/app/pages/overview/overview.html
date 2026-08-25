@@ -15,19 +15,26 @@
 <div class="page-body">
   <app-boss-encounter />
 
-  <!-- Collective progress and podium side by side, per the mockup: both summarize "how is the
-     week going" and share the screen evenly rather than stacking as two full-width strips.
+  <!-- The week's state on the left, the week's ranking on the right: both summarize "how is the
+     week going" and share the screen evenly rather than stacking as full-width strips.
 
-     Left to stretch rather than aligned to the start: both panels are section rules opening on the
-     same line, and letting them share the row's height makes them close on the same line too, each
-     spreading its own content over that height. -->
-  <div class="grid gap-6 lg:grid-cols-2">
-    <app-team-progress />
+     Left to stretch rather than aligned to the start: every panel is a section rule opening on the
+     same line, and letting the two columns share the row's height makes them close on the same
+     line too.
+
+     The left column carries two blocks, read top to bottom as the two scales the week is played
+     on: the run it belongs to, then the week itself. The run's block sits at its natural height
+     and the progress panel takes what is left, which is what keeps the column's bottom edge on
+     the podium's. -->
+  <!-- The column gap stays wider than the gap inside the left column: the two are different
+       joints. Between the columns it is what parts the week's state from the week's ranking;
+       inside, it only stacks two blocks of the same column. Equal gaps would read the left column
+       as three panels in a row rather than two beside one. -->
+  <div class="grid gap-6 lg:grid-cols-2 lg:gap-x-12">
+    <div class="flex flex-col gap-10">
+      <app-colony-summary />
+      <app-team-progress />
+    </div>
     <app-podium />
   </div>
-
-  <!-- The run's colony, in one line: it answers a different question from everything above it —
-       "how is the run going" rather than "how is the week going" — so it closes the page rather
-       than competing with the week's own blocks, and links to the page that details it. -->
-  <app-colony-summary />
 </div>
