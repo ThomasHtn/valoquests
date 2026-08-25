@@ -1,8 +1,8 @@
 package io.github.thomashtn.valoquests.boss.entity;
 
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
-import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.player.entity.Player;
+import io.github.thomashtn.valoquests.run.entity.Run;
 import io.github.thomashtn.valoquests.shared.entity.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -64,15 +64,17 @@ public class WeeklyBossEncounter extends AuditableEntity {
     private BossCatalogEntry bossCatalogEntry;
 
     /**
-     * Valorant act this fight belongs to, when one was known at the time.
+     * Ten-week run this fight belongs to.
      *
-     * <p>What makes the campaign restart at every act instead of running forever: the campaign is
-     * the fights sharing the act currently in progress, so a new act empties it without deleting
-     * anything. {@code null} only when no match had been imported yet and no act could be resolved.
+     * <p>What makes the campaign restart every ten weeks instead of running forever: the campaign is
+     * the fights sharing the run currently in progress, so a new run empties it without deleting
+     * anything. Never {@code null} — a run is resolved from the week's own date, so unlike the act it
+     * replaces it is always knowable, which is what gives the campaign map its fixed size of ten
+     * hexagons.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "season_id")
-    private Season season;
+    @JoinColumn(name = "run_id", nullable = false)
+    private Run run;
 
     /**
      * Hit points the boss must lose to be defeated, frozen when the week opened.

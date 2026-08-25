@@ -70,6 +70,21 @@ export const API_ENDPOINTS = {
   bossHistory: `${environment.apiBaseUrl}/boss/history`,
 
   /**
+   * `GET` the squad's shared colony as it stands today.
+   */
+  colony: `${environment.apiBaseUrl}/colony`,
+
+  /**
+   * `GET` the population curve of the run in progress.
+   */
+  colonyTrajectory: `${environment.apiBaseUrl}/colony/trajectory`,
+
+  /**
+   * `GET` every closed run and how it ended.
+   */
+  colonyHistory: `${environment.apiBaseUrl}/colony/history`,
+
+  /**
    * Administration routes, every one of them guarded by the `X-Admin-Key` header that
    * `adminKeyInterceptor` attaches.
    *
@@ -142,5 +157,11 @@ export const API_ENDPOINTS = {
      * `POST` an irreversible wipe of every record derived from match history.
      */
     campaignReset: `${environment.apiBaseUrl}/admin/maintenance/campaign-reset`,
+
+    /**
+     * `POST` a replay of the run in progress. Idempotent: the colony is never advanced
+     * incrementally, so this rewrites exactly what a nightly tick would.
+     */
+    colonyRecompute: `${environment.apiBaseUrl}/admin/colony/recompute`,
   },
 } as const;

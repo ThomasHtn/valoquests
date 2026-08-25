@@ -168,7 +168,6 @@
       "quests": "Challenges",
       "ranking": "Ranking"
     },
-    "progress": "{{defeated}} bosses defeated · {{fought}} faced · {{damage}} damage",
     "status": {
       "current": "In progress",
       "upcoming": "Upcoming"
@@ -187,21 +186,102 @@
     }
   },
   "campaign": {
-    "error": "Failed to load the battle map.",
-    "historySubheading": "The full history of every confrontation",
+    "error": "Could not load the campaign.",
+    "heading": "The squad's campaign",
     "historyToggle": "History",
     "legend": {
-      "current": "Under attack",
+      "current": "Week in progress",
       "defeated": "Territory taken",
-      "survived": "Assault repelled",
-      "upcoming": "Uncharted"
+      "survived": "Boss not defeated",
+      "upcoming": "Upcoming"
     },
-    "loading": "Loading the battle map…",
+    "loading": "Loading the campaign…",
     "map": {
       "ariaLabel": "Campaign battle map, one territory per week"
     },
-    "subheading": "Ground gained, week after week",
-    "title": "Battle map"
+    "territory": "Territory",
+    "title": "Campaign",
+    "viewLabel": "Campaign view"
+  },
+  "colony": {
+    "alertBanner": "The colony is slipping. One day of playing together lifts it again: nothing is ever lost for good.",
+    "boss": {
+      "week": "Week {{week}} · {{status}}",
+      "status": {
+        "defeated": "defeated",
+        "survived": "survived",
+        "current": "in progress",
+        "upcoming": "upcoming"
+      },
+      "materials": "+{{materials}}"
+    },
+    "building": {
+      "CAMP": "Camp",
+      "BARRACKS": "Barracks",
+      "RESIDENTIAL_QUARTER": "Residential quarter",
+      "CITADEL": "Citadel",
+      "erected": "{{materials}} materials · built on day {{day}}",
+      "missing": "{{materials}} materials · {{missing}} to go"
+    },
+    "capacity": "Capacity",
+    "capacitySource": "Capacity · {{building}}",
+    "curve": {
+      "axis": "Run day",
+      "caption": "Peak {{peak}} · Average {{average}}",
+      "close": "Close the run's population",
+      "day": "D{{day}}",
+      "detail": "Capacity {{capacity}} · active players: {{players}}",
+      "milestone": "{{building}} · D{{day}}",
+      "open": "See the run's population",
+      "title": "Population over the run"
+    },
+    "error": "The colony could not be loaded.",
+    "eyebrow": "Campaign · Run {{run}} · Week {{week}} of {{weeks}}",
+    "gauge": {
+      "FOOD": {
+        "name": "Food",
+        "rule": "Play a little every day",
+        "detail": "It feeds on the damage dealt during the day, and loses 14 × population / capacity every day."
+      },
+      "ENERGY": {
+        "name": "Energy",
+        "rule": "Play together",
+        "detail": "It feeds on how many players turned out during the day, and loses 14 × population / capacity every day."
+      },
+      "movement": "{{gain}} against {{loss}} lost",
+      "description": "{{detail}} To raise it: {{rule}}. Today, {{movement}}."
+    },
+    "heading": "The squad's colony",
+    "health": "Health",
+    "healthNote": "Geometric mean of both gauges",
+    "healthDescription": "Geometric mean of Food and Energy: it only climbs when both climb, and the lower of the two drags it down.",
+    "history": {
+      "title": "Run history",
+      "column": "Run",
+      "columnHint": "One ten-week campaign, the run in progress on top and the earlier ones below.",
+      "run": "Run {{run}}",
+      "final": "Final",
+      "finalHint": "Population reached at the end of the run, its score. The one in progress is still moving.",
+      "buildings": "Bld.",
+      "buildingsHint": "Buildings put up over the ones a run can erect, the free starting camp excluded.",
+      "bosses": "Bosses",
+      "bossesHint": "Bosses put down over the ones the run stands against, one a week."
+    },
+    "loading": "Loading the colony…",
+    "materials": "Materials",
+    "nextTier": "Next tier · {{building}}",
+    "nextTierProgress": "{{materials}} / {{threshold}} materials · {{missing}} still needed",
+    "population": "Population",
+    "runDay": "Day {{day}} / {{days}}",
+    "runDayHint": "Day the campaign stands on, out of the {{days}} days it lasts.",
+    "runDayWord": "Day",
+    "title": "Colony",
+    "upgradeState": {
+      "erected": "Unlocked",
+      "next": "In progress",
+      "locked": "Locked"
+    },
+    "upgrades": "Upgrades"
   },
   "landing": {
     "body": "A web app where every battle is fought through the video game Valorant. Week after week, the squad pushes back the enemy holding the territory and takes it back, match after match.",
@@ -643,7 +723,7 @@
       "adminMaintenance": "Maintenance",
       "adminOperations": "Operations",
       "adminPlayers": "Players",
-      "boss": "Campaign",
+      "campaign": "Campaign",
       "challenges": "Challenges",
       "leaderboard": "Ranking",
       "overview": "Overview",

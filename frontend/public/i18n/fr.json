@@ -168,7 +168,6 @@
       "quests": "Défis",
       "ranking": "Classement"
     },
-    "progress": "{{defeated}} boss vaincus · {{fought}} affrontés · {{damage}} dégâts",
     "status": {
       "current": "En cours",
       "upcoming": "À venir"
@@ -187,21 +186,102 @@
     }
   },
   "campaign": {
-    "error": "Impossible de charger la carte de bataille.",
-    "historySubheading": "L'historique complet des confrontations",
+    "error": "Impossible de charger la campagne.",
+    "heading": "La campagne de l'escouade",
     "historyToggle": "Historique",
     "legend": {
-      "current": "Sous assaut",
+      "current": "Semaine en cours",
       "defeated": "Territoire conquis",
-      "survived": "Assaut repoussé",
-      "upcoming": "Terre inconnue"
+      "survived": "Boss non vaincu",
+      "upcoming": "À venir"
     },
-    "loading": "Chargement de la carte de bataille…",
+    "loading": "Chargement de la campagne…",
     "map": {
       "ariaLabel": "Carte de bataille de la campagne, un territoire par semaine"
     },
-    "subheading": "Le territoire gagné, semaine après semaine",
-    "title": "Carte de bataille"
+    "territory": "Territoire",
+    "title": "Campagne",
+    "viewLabel": "Vue de la campagne"
+  },
+  "colony": {
+    "alertBanner": "La colonie décroche. Une journée de jeu à plusieurs la fait remonter : rien n'est jamais définitivement perdu.",
+    "boss": {
+      "week": "Semaine {{week}} · {{status}}",
+      "status": {
+        "defeated": "vaincu",
+        "survived": "survivant",
+        "current": "en cours",
+        "upcoming": "à venir"
+      },
+      "materials": "+{{materials}}"
+    },
+    "building": {
+      "CAMP": "Campement",
+      "BARRACKS": "Baraquements",
+      "RESIDENTIAL_QUARTER": "Quartier résidentiel",
+      "CITADEL": "Citadelle",
+      "erected": "{{materials}} matériaux · érigé au jour {{day}}",
+      "missing": "{{materials}} matériaux · {{missing}} restants"
+    },
+    "capacity": "Capacité",
+    "capacitySource": "Capacité · {{building}}",
+    "curve": {
+      "axis": "Jour de la run",
+      "caption": "Pic {{peak}} · Moyenne {{average}}",
+      "close": "Fermer la population de la run",
+      "day": "J{{day}}",
+      "detail": "Capacité {{capacity}} · joueurs actifs : {{players}}",
+      "milestone": "{{building}} · J{{day}}",
+      "open": "Voir la population de la run",
+      "title": "Population de la run"
+    },
+    "error": "Impossible de charger la colonie.",
+    "eyebrow": "Campagne · Run {{run}} · Semaine {{week}} sur {{weeks}}",
+    "gauge": {
+      "FOOD": {
+        "name": "Nourriture",
+        "rule": "Jouer un peu chaque jour",
+        "detail": "Elle se nourrit des dégâts infligés dans la journée, et perd chaque jour 14 × population / capacité."
+      },
+      "ENERGY": {
+        "name": "Énergie",
+        "rule": "Jouer à plusieurs",
+        "detail": "Elle se nourrit du nombre de joueurs présents dans la journée, et perd chaque jour 14 × population / capacité."
+      },
+      "movement": "{{gain}} pour {{loss}} de perte",
+      "description": "{{detail}} Pour la faire monter : {{rule}}. Aujourd'hui, {{movement}}."
+    },
+    "heading": "La colonie de l'escouade",
+    "health": "Santé",
+    "healthNote": "Moyenne géométrique des deux jauges",
+    "healthDescription": "Moyenne géométrique de la nourriture et de l'énergie : elle ne remonte que si les deux remontent, et la plus basse des deux la tire vers le bas.",
+    "history": {
+      "title": "Historique des runs",
+      "column": "Run",
+      "columnHint": "Une campagne de dix semaines, la run en cours en tête et les précédentes en dessous.",
+      "run": "Run {{run}}",
+      "final": "Finale",
+      "finalHint": "Population atteinte à la fin de la run, son score. Celle de la run en cours bouge encore.",
+      "buildings": "Bât.",
+      "buildingsHint": "Bâtiments construits sur ceux qu'une run peut ériger, le camp de départ offert exclu.",
+      "bosses": "Boss",
+      "bossesHint": "Boss vaincus sur ceux que la run oppose, un par semaine."
+    },
+    "loading": "Chargement de la colonie…",
+    "materials": "Matériaux",
+    "nextTier": "Prochain palier · {{building}}",
+    "nextTierProgress": "{{materials}} / {{threshold}} matériaux · il manque {{missing}}",
+    "population": "Population",
+    "runDay": "Jour {{day}} / {{days}}",
+    "runDayHint": "Jour en cours de la campagne, sur les {{days}} jours qu'elle dure.",
+    "runDayWord": "Jour",
+    "title": "Colonie",
+    "upgradeState": {
+      "erected": "Débloqué",
+      "next": "En cours",
+      "locked": "Verrouillé"
+    },
+    "upgrades": "Améliorations"
   },
   "landing": {
     "body": "Une web app où chaque bataille se mène à travers le jeu vidéo Valorant. Semaine après semaine, l'escouade repousse l'adversaire qui occupe le territoire et le reconquiert partie après partie.",
@@ -643,7 +723,7 @@
       "adminMaintenance": "Maintenance",
       "adminOperations": "Opérations",
       "adminPlayers": "Joueurs",
-      "boss": "Campagne",
+      "campaign": "Campagne",
       "challenges": "Défis",
       "leaderboard": "Classement",
       "overview": "Vue d'ensemble",

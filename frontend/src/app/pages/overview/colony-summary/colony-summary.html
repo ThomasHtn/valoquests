@@ -1,0 +1,39 @@
+@if (colony(); as colony) {
+  <a
+    [routerLink]="'/colony'"
+    class="focus-ring group flex items-center gap-4 border border-text-primary/10 bg-surface-800/40 px-4 py-3 transition-colors hover:border-brand-500/60 sm:px-5"
+  >
+    <span class="min-w-0 flex-1">
+      <span class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <span class="label-caption text-text-muted">{{ 'colony.title' | translate }}</span>
+        <span class="font-mono text-2xs text-text-secondary tabular-nums">{{ runDayLabel() }}</span>
+      </span>
+
+      <span class="mt-1 flex flex-wrap items-baseline gap-x-2">
+        <span
+          [class]="colony.alert ? 'text-danger' : 'text-brand-500'"
+          class="font-display text-2xl leading-none font-bold tabular-nums"
+        >
+          {{ populationLabel() }}
+        </span>
+        <span class="font-display text-base leading-none text-text-secondary tabular-nums">
+          / {{ capacityLabel() }}
+        </span>
+        <span class="label-caption text-text-muted">{{ 'colony.population' | translate }}</span>
+      </span>
+
+      <app-progress-bar
+        [colorClass]="colony.alert ? 'bg-danger' : 'bg-brand-500'"
+        [percentage]="percentage()"
+        class="mt-2 w-full"
+        heightClass="h-1.5"
+      />
+    </span>
+
+    <svg
+      aria-hidden="true"
+      class="size-4 shrink-0 text-text-muted transition-colors group-hover:text-brand-500"
+      lucideChevronRight
+    ></svg>
+  </a>
+}

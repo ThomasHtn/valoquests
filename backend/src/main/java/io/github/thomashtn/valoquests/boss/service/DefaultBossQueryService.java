@@ -7,12 +7,16 @@ import io.github.thomashtn.valoquests.boss.dto.CurrentBossResponse;
 import io.github.thomashtn.valoquests.boss.entity.BossCatalogEntry;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
+import io.github.thomashtn.valoquests.colony.ColonyRuleset;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.run.entity.Run;
+import io.github.thomashtn.valoquests.run.service.RunService;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
 import io.github.thomashtn.valoquests.shared.util.PaginationGuard;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -50,9 +54,14 @@ public class DefaultBossQueryService implements BossQueryService {
     private final WeekCalendar weekCalendar;
 
     /**
-     * Resolves the act the campaign currently runs in.
+     * Resolves the run the campaign currently runs in.
      */
-    private final CampaignSeasonResolver campaignSeasonResolver;
+    private final RunService runService;
+
+    /**
+     * Ruleset supplying how many weeks a run spans.
+     */
+    private final ColonyRuleset colonyRuleset;
 
     /**
      * Creates the boss query service.
@@ -61,7 +70,8 @@ public class DefaultBossQueryService implements BossQueryService {
      * @param encounterRepository        weekly boss encounter repository
      * @param scoreRepository            weekly player score repository
      * @param weekCalendar               calendar resolving the current week
-     * @param campaignSeasonResolver     resolver naming the act the campaign runs in
+     * @param runService                 service resolving the run the campaign runs in
+     * @param colonyRuleset              ruleset supplying the run length
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -72,13 +82,15 @@ public class DefaultBossQueryService implements BossQueryService {
         WeeklyBossEncounterRepository encounterRepository,
         WeeklyPlayerScoreRepository scoreRepository,
         WeekCalendar weekCalendar,
-        CampaignSeasonResolver campaignSeasonResolver
+        RunService runService,
+        ColonyRuleset colonyRuleset
     ) {
         this.weeklyBossSelectionService = weeklyBossSelectionService;
         this.encounterRepository = encounterRepository;
         this.scoreRepository = scoreRepository;
         this.weekCalendar = weekCalendar;
-        this.campaignSeasonResolver = campaignSeasonResolver;
+        this.runService = runService;
+        this.colonyRuleset = colonyRuleset;
     }
 
     @Override
@@ -86,6 +98,7 @@ public class DefaultBossQueryService implements BossQueryService {
     public CurrentBossResponse findCurrent() {
         LocalDate weekStart = weekCalendar.currentWeekStart();
         WeeklyBossEncounter encounter = weeklyBossSelectionService.selectCurrentWeekBoss();
+        Run run = encounter.getRun();
 
         return new CurrentBossResponse(
             weekStart,
@@ -93,33 +106,45 @@ public class DefaultBossQueryService implements BossQueryService {
             toBossResponse(encounter.getBossCatalogEntry()),
             encounter.getEffectiveHp(),
             totalDamageDealt(weekStart),
-            encounter.getSeason() == null ? null : encounter.getSeason().getName()
+            run.getNumber(),
+            weekIndexInRun(run, weekStart),
+            colonyRuleset.runLengthWeeks()
         );
+    }
+
+    /**
+     * Places one week inside its run, counting from one.
+     *
+     * @param run       run the week belongs to
+     * @param weekStart Monday identifying the week
+     * @return the week's one-based position in the run
+     */
+    private int weekIndexInRun(Run run, LocalDate weekStart) {
+        return (int) ChronoUnit.WEEKS.between(run.getFirstWeekStart(), weekStart) + 1;
     }
 
     /**
      * {@inheritDoc}
      *
-     * <p>Scoped to the act the campaign currently runs in. The campaign is a run of fights inside one
-     * act, not an ever-growing timeline: a new act therefore opens on an empty history and the map
-     * starts again from the week being fought. Nothing is deleted — a closed act's fights keep their
-     * rows and simply stop being the campaign.
+     * <p>Scoped to the run the campaign currently runs in. The campaign is the ten fights of one run,
+     * not an ever-growing timeline: a new run therefore opens on an empty history and the map starts
+     * again from the week being fought. Nothing is deleted — a closed run's fights keep their rows and
+     * simply stop being the campaign.
      *
-     * <p>The whole history is returned while no act is known, which is the state of a database whose
-     * matches have not been imported yet: scoping to nothing would hide a campaign that does exist.
+     * <p>An empty page is returned while no run has been opened, which is the state of a deployment
+     * that has not seen its first rollover: there is no campaign yet to show.
      */
     @Override
     public PageResponse<BossHistoryWeekResponse> findHistory(int page, int size) {
         PaginationGuard.assertValidPageRequest(page, size);
 
-        Page<WeeklyBossEncounter> encounterPage = campaignSeasonResolver.currentSeasonId()
-            .map(seasonId -> encounterRepository
-                .findAllBySeasonIdAndFinalizedAtIsNotNullOrderByWeekStartDesc(
-                    seasonId,
+        Page<WeeklyBossEncounter> encounterPage = runService.currentRunId()
+            .map(runId -> encounterRepository
+                .findAllByRunIdAndFinalizedAtIsNotNullOrderByWeekStartDesc(
+                    runId,
                     PageRequest.of(page, size)
                 ))
-            .orElseGet(() -> encounterRepository
-                .findAllByFinalizedAtIsNotNullOrderByWeekStartDesc(PageRequest.of(page, size)));
+            .orElseGet(() -> Page.empty(PageRequest.of(page, size)));
 
         return new PageResponse<>(
             encounterPage.getContent().stream().map(this::toHistoryWeek).toList(),

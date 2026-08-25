@@ -2,17 +2,20 @@ package io.github.thomashtn.valoquests.boss.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.boss.dto.BossHistoryWeekResponse;
 import io.github.thomashtn.valoquests.boss.entity.BossCatalogEntry;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
-import io.github.thomashtn.valoquests.match.entity.Season;
+import io.github.thomashtn.valoquests.colony.DefaultColonyRuleset;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.run.entity.Run;
+import io.github.thomashtn.valoquests.run.service.RunService;
+import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.model.BossCategory;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
@@ -28,12 +31,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 /**
- * Tests that the campaign history is the act in progress, not the whole boss history.
+ * Tests that the campaign history is the run in progress, not the whole boss history.
  */
 class DefaultBossQueryServiceCampaignScopeTest {
 
-    /** Identifier of the act the campaign runs in. */
-    private static final long CAMPAIGN_ACT_ID = 7L;
+    /** Identifier of the run the campaign runs in. */
+    private static final long CAMPAIGN_RUN_ID = 7L;
 
     /** Week the only finalized fixture fight was fought in. */
     private static final LocalDate FOUGHT_WEEK = LocalDate.of(2026, 7, 13);
@@ -44,8 +47,8 @@ class DefaultBossQueryServiceCampaignScopeTest {
     /** Encounter repository dependency. */
     private WeeklyBossEncounterRepository encounterRepository;
 
-    /** Campaign act dependency. */
-    private CampaignSeasonResolver campaignSeasonResolver;
+    /** Campaign run dependency. */
+    private RunService runService;
 
     /** Service under test. */
     private DefaultBossQueryService service;
@@ -55,7 +58,7 @@ class DefaultBossQueryServiceCampaignScopeTest {
     void setUp() {
         selectionService = mock(WeeklyBossSelectionService.class);
         encounterRepository = mock(WeeklyBossEncounterRepository.class);
-        campaignSeasonResolver = mock(CampaignSeasonResolver.class);
+        runService = mock(RunService.class);
 
         Clock clock = Clock.fixed(Instant.parse("2026-07-21T10:00:00Z"), ZoneOffset.UTC);
 
@@ -64,22 +67,23 @@ class DefaultBossQueryServiceCampaignScopeTest {
             encounterRepository,
             mock(WeeklyPlayerScoreRepository.class),
             new WeekCalendar(clock, ZoneOffset.UTC),
-            campaignSeasonResolver
+            runService,
+            new DefaultColonyRuleset(new DefaultScoringRuleset())
         );
     }
 
     /**
-     * Verifies that only the fights of the act in progress make up the campaign.
+     * Verifies that only the fights of the run in progress make up the campaign.
      *
-     * <p>This is what makes a new act open on an empty map: the previous act's fights keep their
-     * rows and simply stop being returned.
+     * <p>This is what makes a new run open on an empty map: the previous run's fights keep their rows
+     * and simply stop being returned.
      */
     @Test
-    void shouldReturnOnlyTheCurrentActFights() {
-        when(campaignSeasonResolver.currentSeasonId()).thenReturn(Optional.of(CAMPAIGN_ACT_ID));
+    void shouldReturnOnlyTheCurrentRunFights() {
+        when(runService.currentRunId()).thenReturn(Optional.of(CAMPAIGN_RUN_ID));
         when(encounterRepository
-            .findAllBySeasonIdAndFinalizedAtIsNotNullOrderByWeekStartDesc(
-                org.mockito.ArgumentMatchers.eq(CAMPAIGN_ACT_ID),
+            .findAllByRunIdAndFinalizedAtIsNotNullOrderByWeekStartDesc(
+                eq(CAMPAIGN_RUN_ID),
                 any(Pageable.class)
             ))
             .thenReturn(new PageImpl<>(List.of(finalizedEncounter())));
@@ -89,31 +93,28 @@ class DefaultBossQueryServiceCampaignScopeTest {
         assertThat(result.content()).singleElement()
             .extracting(BossHistoryWeekResponse::weekStart)
             .isEqualTo(FOUGHT_WEEK);
-
-        verify(encounterRepository, never())
-            .findAllByFinalizedAtIsNotNullOrderByWeekStartDesc(any(Pageable.class));
     }
 
     /**
-     * Verifies that the whole history is returned while no act can be resolved.
+     * Verifies that no fight is returned while no run has been opened.
      *
-     * <p>The state of a database whose matches have not been imported yet: scoping to nothing would
-     * hide a campaign that does exist.
+     * <p>The state of a deployment that has not seen its first rollover. Unlike the act this replaces,
+     * a missing run is never a resolution failure, so falling back on the whole history would show a
+     * campaign that has not started.
      */
     @Test
-    void shouldReturnEveryFightWhenNoActIsKnown() {
-        when(campaignSeasonResolver.currentSeasonId()).thenReturn(Optional.empty());
-        when(encounterRepository
-            .findAllByFinalizedAtIsNotNullOrderByWeekStartDesc(any(Pageable.class)))
-            .thenReturn(new PageImpl<>(List.of(finalizedEncounter())));
+    void shouldReturnNothingWhenNoRunHasBeenOpened() {
+        when(runService.currentRunId()).thenReturn(Optional.empty());
 
         PageResponse<BossHistoryWeekResponse> result = service.findHistory(0, 10);
 
-        assertThat(result.content()).hasSize(1);
+        assertThat(result.content()).isEmpty();
+        assertThat(result.totalElements()).isZero();
+        verifyNoInteractions(encounterRepository);
     }
 
     /**
-     * Builds one finalized fight of the act in progress.
+     * Builds one finalized fight of the run in progress.
      *
      * @return finalized encounter
      */
@@ -125,15 +126,17 @@ class DefaultBossQueryServiceCampaignScopeTest {
         catalogEntry.setCategory(BossCategory.STANDARD);
         catalogEntry.setEnabled(true);
 
-        Season season = new Season();
-        season.setId(CAMPAIGN_ACT_ID);
-        season.setExternalId("v26a4");
-        season.setName("v26a4");
+        Run run = new Run();
+        run.setId(CAMPAIGN_RUN_ID);
+        run.setNumber(1);
+        run.setFirstWeekStart(LocalDate.of(2026, 6, 1));
+        run.setLastWeekStart(LocalDate.of(2026, 8, 3));
+        run.setRosterSize(7);
 
         WeeklyBossEncounter encounter = new WeeklyBossEncounter();
         encounter.setWeekStart(FOUGHT_WEEK);
         encounter.setBossCatalogEntry(catalogEntry);
-        encounter.setSeason(season);
+        encounter.setRun(run);
         encounter.setEffectiveHp(70_000);
         encounter.setDamageDealt(50_000);
         encounter.setActivePlayerCount(7);

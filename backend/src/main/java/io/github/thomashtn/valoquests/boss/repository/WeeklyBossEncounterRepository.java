@@ -26,37 +26,38 @@ public interface WeeklyBossEncounterRepository
     Optional<WeeklyBossEncounter> findByWeekStart(LocalDate weekStart);
 
     /**
-     * Retrieves every encounter ever created, oldest week first.
-     *
-     * <p>Used to replay the boss-selection history when no act is known yet: which bosses were
-     * already drawn in the current no-repeat cycle.
-     *
-     * @return every encounter ordered by week
-     */
-    List<WeeklyBossEncounter> findAllByOrderByWeekStartAsc();
-
-    /**
-     * Retrieves one act's encounters, oldest week first.
+     * Retrieves one run's encounters, oldest week first.
      *
      * <p>The no-repeat cycle is replayed over the campaign in progress rather than over the whole
-     * history: a new act restarts the campaign, and a campaign opening on the four bosses its
-     * predecessor had not reached yet would not read as a fresh run.
+     * history: a new run restarts the campaign, and a campaign opening on only the bosses its
+     * predecessor had not reached yet would face a shrinking catalogue instead of a fresh run.
      *
-     * @param seasonId act the campaign currently runs in
-     * @return that act's encounters ordered by week
+     * @param runId run the campaign currently runs in
+     * @return that run's encounters ordered by week
      */
-    List<WeeklyBossEncounter> findAllBySeasonIdOrderByWeekStartAsc(Long seasonId);
+    List<WeeklyBossEncounter> findAllByRunIdOrderByWeekStartAsc(Long runId);
 
     /**
-     * Retrieves one act's finalized encounters using week-based pagination, most recent week first.
+     * Retrieves one run's encounters that were finalized, oldest week first.
      *
-     * @param seasonId act the campaign currently runs in
+     * <p>Feeds the colony's materials: a run's ten weeks are walked in order to credit four hundred
+     * materials for each boss the group put down.
+     *
+     * @param runId run to read
+     * @return that run's finalized encounters ordered by week
+     */
+    List<WeeklyBossEncounter> findAllByRunIdAndFinalizedAtIsNotNullOrderByWeekStartAsc(Long runId);
+
+    /**
+     * Retrieves one run's finalized encounters using week-based pagination, most recent week first.
+     *
+     * @param runId    run the campaign currently runs in
      * @param pageable page request
-     * @return page of that act's finalized encounters
+     * @return page of that run's finalized encounters
      */
     @EntityGraph(attributePaths = {"bossCatalogEntry", "defeatedByPlayer"})
-    Page<WeeklyBossEncounter> findAllBySeasonIdAndFinalizedAtIsNotNullOrderByWeekStartDesc(
-        Long seasonId,
+    Page<WeeklyBossEncounter> findAllByRunIdAndFinalizedAtIsNotNullOrderByWeekStartDesc(
+        Long runId,
         Pageable pageable
     );
 
@@ -77,15 +78,6 @@ public interface WeeklyBossEncounterRepository
             + "ORDER BY encounter.weekStart DESC"
     )
     List<WeeklyBossEncounter> findRecentFinalized(Pageable pageable);
-
-    /**
-     * Retrieves finalized encounters using week-based pagination, most recent week first.
-     *
-     * @param pageable page request
-     * @return page of finalized encounters
-     */
-    @EntityGraph(attributePaths = {"bossCatalogEntry", "defeatedByPlayer"})
-    Page<WeeklyBossEncounter> findAllByFinalizedAtIsNotNullOrderByWeekStartDesc(Pageable pageable);
 
     /**
      * Returns the earliest week a boss was ever drawn for.

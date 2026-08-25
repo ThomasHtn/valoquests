@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
+import io.github.thomashtn.valoquests.colony.service.ColonyReplayService;
 import io.github.thomashtn.valoquests.henrik.exception.HenrikServiceUnavailableException;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
@@ -68,6 +69,9 @@ class DefaultSynchronizationCommandServiceTest {
     @Mock
     private ChallengeRecalculationService challengeRecalculationService;
 
+    @Mock
+    private ColonyReplayService colonyReplayService;
+
     private DefaultSynchronizationCommandService service;
 
     /**
@@ -86,6 +90,7 @@ class DefaultSynchronizationCommandServiceTest {
             synchronizationRepository,
             playerResultRepository,
             challengeRecalculationService,
+            colonyReplayService,
             clock
         );
 

@@ -5,9 +5,10 @@ import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.exception.WeeklyBossSelectionException;
 import io.github.thomashtn.valoquests.boss.repository.BossCatalogEntryRepository;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
-import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.run.entity.Run;
+import io.github.thomashtn.valoquests.run.service.RunService;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.LocalDate;
@@ -98,20 +99,20 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
     private final WeekCalendar weekCalendar;
 
     /**
-     * Resolves the act the campaign currently runs in.
+     * Resolves the run the campaign currently runs in.
      */
-    private final CampaignSeasonResolver campaignSeasonResolver;
+    private final RunService runService;
 
     /**
      * Creates the weekly boss selection service.
      *
-     * @param catalogRepository      boss catalogue repository
-     * @param encounterRepository    weekly boss encounter repository
-     * @param ruleset                scoring ruleset
-     * @param playerRepository       player repository
-     * @param calibrationService     boss calibration service
-     * @param weekCalendar           calendar resolving the current week
-     * @param campaignSeasonResolver resolver naming the act the campaign runs in
+     * @param catalogRepository   boss catalogue repository
+     * @param encounterRepository weekly boss encounter repository
+     * @param ruleset             scoring ruleset
+     * @param playerRepository    player repository
+     * @param calibrationService  boss calibration service
+     * @param weekCalendar        calendar resolving the current week
+     * @param runService          service resolving the run the campaign runs in
      */
     public DefaultWeeklyBossSelectionService(
         BossCatalogEntryRepository catalogRepository,
@@ -120,7 +121,7 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
         PlayerRepository playerRepository,
         BossCalibrationService calibrationService,
         WeekCalendar weekCalendar,
-        CampaignSeasonResolver campaignSeasonResolver
+        RunService runService
     ) {
         this.catalogRepository = catalogRepository;
         this.encounterRepository = encounterRepository;
@@ -128,7 +129,7 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
         this.playerRepository = playerRepository;
         this.calibrationService = calibrationService;
         this.weekCalendar = weekCalendar;
-        this.campaignSeasonResolver = campaignSeasonResolver;
+        this.runService = runService;
     }
 
     @Override
@@ -155,13 +156,14 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
             );
         }
 
-        Season campaignSeason = campaignSeasonResolver.currentSeason().orElse(null);
+        Run run = runService.ensureRunFor(weekStart);
 
         WeeklyBossEncounter encounter = new WeeklyBossEncounter();
         encounter.setWeekStart(weekStart);
-        encounter.setBossCatalogEntry(drawBoss(weekStart, catalog, campaignSeason));
+        encounter.setRun(run);
+        encounter.setBossCatalogEntry(drawBoss(weekStart, catalog, run));
 
-        applySizing(encounter, campaignSeason);
+        applySizing(encounter);
 
         return encounterRepository.save(encounter);
     }
@@ -179,7 +181,7 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
         }
 
         WeeklyBossEncounter encounter = existing.orElseThrow();
-        applySizing(encounter, campaignSeasonResolver.currentSeason().orElse(null));
+        applySizing(encounter);
 
         return Optional.of(encounterRepository.save(encounter));
     }
@@ -199,18 +201,14 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
      * sized again once its predecessor is finalized, which is what repairs a week drawn lazily during
      * the window between a Monday's first page view and that Monday's rollover.
      *
-     * @param encounter      encounter to size, carrying its week and its drawn boss
-     * @param campaignSeason act the campaign currently runs in, {@code null} when none is known
+     * <p>The run is deliberately not re-attached here, unlike the act it replaces. An act had to be
+     * repaired on every sizing because it was only knowable once a match of it had been imported; a run
+     * is resolved from the week's own date, so the one stamped at creation is already the right one and
+     * can never need moving.
+     *
+     * @param encounter encounter to size, carrying its week and its drawn boss
      */
-    private void applySizing(WeeklyBossEncounter encounter, Season campaignSeason) {
-        // Re-attached on every sizing, which is what keeps an open week in the campaign it belongs
-        // to: a fight drawn before the first match of a new act was imported would otherwise stay
-        // pinned to the act it has left, and vanish from the campaign it is supposed to open. Never
-        // cleared, since an unresolved act says nothing about the one already recorded.
-        if (campaignSeason != null) {
-            encounter.setSeason(campaignSeason);
-        }
-
+    private void applySizing(WeeklyBossEncounter encounter) {
         int activePlayerCount = (int) playerRepository.countByStatus(Player.COMPETITIVE_STATUS);
         int referenceDamagePerPlayer = calibrationService.referenceDamagePerPlayer();
         int effectiveHp = ruleset.bossHitPoints(
@@ -235,17 +233,17 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
     /**
      * Draws the boss for a week, avoiding repetition until the whole catalogue has been cycled through.
      *
-     * @param weekStart      selected week
-     * @param catalog        enabled catalogue entries
-     * @param campaignSeason act the campaign currently runs in, {@code null} when none is known
+     * @param weekStart selected week
+     * @param catalog   enabled catalogue entries
+     * @param run       run the campaign currently runs in
      * @return deterministically chosen boss
      */
     private BossCatalogEntry drawBoss(
         LocalDate weekStart,
         List<BossCatalogEntry> catalog,
-        Season campaignSeason
+        Run run
     ) {
-        Set<Long> usedInCurrentCycle = usedBossIdsInCurrentCycle(catalog.size(), campaignSeason);
+        Set<Long> usedInCurrentCycle = usedBossIdsInCurrentCycle(catalog.size(), run);
 
         List<BossCatalogEntry> candidates = catalog.stream()
             .filter(entry -> !usedInCurrentCycle.contains(entry.getId()))
@@ -266,21 +264,19 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
      * Replays every past selection to determine which bosses were already used in the cycle still in
      * progress, resetting whenever a cycle completes.
      *
-     * <p>Replayed over the campaign in progress, not over the whole history: an act starts a fresh
+     * <p>Replayed over the campaign in progress, not over the whole history: a run starts a fresh
      * campaign, and one opening on only the bosses its predecessor had not reached yet would face a
-     * shrinking catalogue instead of a new run. Falls back on the whole history while no act is
-     * known, which is the only state in which nothing can be scoped.
+     * shrinking catalogue instead of a new run.
      *
-     * @param catalogSize    number of currently enabled catalogue entries
-     * @param campaignSeason act the campaign currently runs in, {@code null} when none is known
+     * @param catalogSize number of currently enabled catalogue entries
+     * @param run         run the campaign currently runs in
      * @return identifiers of bosses used since the last completed cycle
      */
-    private Set<Long> usedBossIdsInCurrentCycle(int catalogSize, Season campaignSeason) {
+    private Set<Long> usedBossIdsInCurrentCycle(int catalogSize, Run run) {
         Set<Long> usedIds = new HashSet<>();
 
-        List<WeeklyBossEncounter> campaignEncounters = campaignSeason == null
-            ? encounterRepository.findAllByOrderByWeekStartAsc()
-            : encounterRepository.findAllBySeasonIdOrderByWeekStartAsc(campaignSeason.getId());
+        List<WeeklyBossEncounter> campaignEncounters =
+            encounterRepository.findAllByRunIdOrderByWeekStartAsc(run.getId());
 
         for (WeeklyBossEncounter encounter : campaignEncounters) {
             usedIds.add(encounter.getBossCatalogEntry().getId());

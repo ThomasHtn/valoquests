@@ -12,9 +12,10 @@ import io.github.thomashtn.valoquests.boss.entity.BossCatalogEntry;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.BossCatalogEntryRepository;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
-import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.run.entity.Run;
+import io.github.thomashtn.valoquests.run.service.RunService;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.model.BossCategory;
@@ -46,11 +47,11 @@ class DefaultWeeklyBossSelectionServiceTest {
     /** Barèmes the service under test is wired with. */
     private static final ScoringRuleset RULESET = new DefaultScoringRuleset();
 
-    /** Identifier of the act every fixture's campaign runs in. */
-    private static final long CAMPAIGN_ACT_ID = 42L;
+    /** Identifier of the run every fixture's campaign runs in. */
+    private static final long CAMPAIGN_RUN_ID = 42L;
 
-    /** Act every fixture's campaign runs in. */
-    private static final Season CAMPAIGN_ACT = campaignAct();
+    /** Run every fixture's campaign runs in. */
+    private static final Run CAMPAIGN_RUN = campaignRun();
 
     /** Catalogue repository dependency. */
     private BossCatalogEntryRepository catalogRepository;
@@ -64,8 +65,8 @@ class DefaultWeeklyBossSelectionServiceTest {
     /** Calibration dependency, measuring what a player currently contributes. */
     private BossCalibrationService calibrationService;
 
-    /** Campaign act dependency, naming the act a new fight is stamped with. */
-    private CampaignSeasonResolver campaignSeasonResolver;
+    /** Campaign run dependency, naming the run a new fight is stamped with. */
+    private RunService runService;
 
     /** Service under test. */
     private DefaultWeeklyBossSelectionService service;
@@ -77,15 +78,14 @@ class DefaultWeeklyBossSelectionServiceTest {
         encounterRepository = mock(WeeklyBossEncounterRepository.class);
         playerRepository = mock(PlayerRepository.class);
         calibrationService = mock(BossCalibrationService.class);
-        campaignSeasonResolver = mock(CampaignSeasonResolver.class);
+        runService = mock(RunService.class);
 
         lenient().when(calibrationService.referenceDamagePerPlayer()).thenReturn(REFERENCE);
-        lenient().when(campaignSeasonResolver.currentSeason()).thenReturn(Optional.of(CAMPAIGN_ACT));
-        lenient().when(encounterRepository.findAllBySeasonIdOrderByWeekStartAsc(CAMPAIGN_ACT_ID))
+        lenient().when(runService.ensureRunFor(any())).thenReturn(CAMPAIGN_RUN);
+        lenient().when(encounterRepository.findAllByRunIdOrderByWeekStartAsc(CAMPAIGN_RUN_ID))
             .thenReturn(List.of());
         lenient().when(playerRepository.countByStatus(PlayerStatus.ACTIVE))
             .thenReturn((long) ACTIVE_PLAYERS);
-        lenient().when(encounterRepository.findAllByOrderByWeekStartAsc()).thenReturn(List.of());
         lenient().when(encounterRepository.findByWeekStart(any())).thenReturn(Optional.empty());
         lenient().when(encounterRepository.save(any()))
             .thenAnswer(invocation -> invocation.getArgument(0));
@@ -99,22 +99,24 @@ class DefaultWeeklyBossSelectionServiceTest {
             playerRepository,
             calibrationService,
             new WeekCalendar(clock, ZoneOffset.UTC),
-            campaignSeasonResolver
+            runService
         );
     }
 
     /**
-     * Builds the act every fixture's campaign runs in.
+     * Builds the run every fixture's campaign runs in.
      *
-     * @return persisted-looking act
+     * @return persisted-looking run
      */
-    private static Season campaignAct() {
-        Season season = new Season();
-        season.setId(CAMPAIGN_ACT_ID);
-        season.setExternalId("v26a4");
-        season.setName("v26a4");
+    private static Run campaignRun() {
+        Run run = new Run();
+        run.setId(CAMPAIGN_RUN_ID);
+        run.setNumber(3);
+        run.setFirstWeekStart(LocalDate.of(2026, 6, 1));
+        run.setLastWeekStart(LocalDate.of(2026, 8, 3));
+        run.setRosterSize(ACTIVE_PLAYERS);
 
-        return season;
+        return run;
     }
 
     /**
@@ -147,7 +149,7 @@ class DefaultWeeklyBossSelectionServiceTest {
 
         // Two of the three bosses were already drawn in previous weeks of this act, still within one
         // cycle.
-        when(encounterRepository.findAllBySeasonIdOrderByWeekStartAsc(CAMPAIGN_ACT_ID))
+        when(encounterRepository.findAllByRunIdOrderByWeekStartAsc(CAMPAIGN_RUN_ID))
             .thenReturn(List.of(
                 createEncounter(WEEK_START.minusWeeks(2), bossA),
                 createEncounter(WEEK_START.minusWeeks(1), bossB)
@@ -160,14 +162,15 @@ class DefaultWeeklyBossSelectionServiceTest {
     }
 
     /**
-     * Verifies that a new act restarts the no-repeat cycle rather than inheriting the bosses its
+     * Verifies that a new run restarts the no-repeat cycle rather than inheriting the bosses its
      * predecessor had already used.
      *
-     * <p>A campaign opening on the one boss the previous act had not reached yet would face a
-     * shrinking catalogue instead of a fresh run.
+     * <p>A campaign opening on the one boss the previous run had not reached yet would face a
+     * shrinking catalogue instead of a fresh run. The scoping query is what guarantees it: a previous
+     * run's encounters simply are not returned for the run now in progress.
      */
     @Test
-    void shouldRestartTheCycleWhenTheActChanges() {
+    void shouldRestartTheCycleWhenTheRunChanges() {
         BossCatalogEntry bossA = createBoss(1L, "BOSS_A", BossCategory.STANDARD);
         BossCatalogEntry bossB = createBoss(2L, "BOSS_B", BossCategory.STANDARD);
         BossCatalogEntry bossC = createBoss(3L, "BOSS_C", BossCategory.STANDARD);
@@ -175,68 +178,50 @@ class DefaultWeeklyBossSelectionServiceTest {
         when(catalogRepository.findAllByEnabledTrueOrderByIdAsc())
             .thenReturn(List.of(bossA, bossB, bossC));
 
-        // Two bosses were drawn during the previous act, none during the one now in progress. Read
+        // Two bosses were drawn during the previous run, none during the one now in progress. Read
         // over the whole history, bossC would be the only candidate left.
-        when(encounterRepository.findAllByOrderByWeekStartAsc()).thenReturn(List.of(
-            createEncounter(WEEK_START.minusWeeks(2), bossA),
-            createEncounter(WEEK_START.minusWeeks(1), bossB)
-        ));
-        when(encounterRepository.findAllBySeasonIdOrderByWeekStartAsc(CAMPAIGN_ACT_ID))
+        when(encounterRepository.findAllByRunIdOrderByWeekStartAsc(CAMPAIGN_RUN_ID))
             .thenReturn(List.of());
 
         WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
 
-        // The whole catalogue is available again, so the draw is free rather than forced onto the
-        // one boss the previous act had not reached.
+        // The whole catalogue is available again, so the draw is free rather than forced onto the one
+        // boss the previous run had not reached.
         assertThat(result.getBossCatalogEntry()).isNotSameAs(bossC);
-        assertThat(result.getSeason()).isSameAs(CAMPAIGN_ACT);
+        assertThat(result.getRun()).isSameAs(CAMPAIGN_RUN);
     }
 
     /**
-     * Verifies that a fight records the act it belongs to, which is what scopes the campaign to it.
+     * Verifies that a fight records the run it belongs to, which is what scopes the campaign to it.
      */
     @Test
-    void shouldStampTheFightWithTheActInProgress() {
+    void shouldStampTheFightWithTheRunInProgress() {
         givenSingleBoss(BossCategory.STANDARD);
 
         WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
 
-        assertThat(result.getSeason()).isSameAs(CAMPAIGN_ACT);
+        assertThat(result.getRun()).isSameAs(CAMPAIGN_RUN);
     }
 
     /**
-     * Verifies that re-sizing an open fight re-attaches it to the act in force, so a week drawn
-     * before the new act's first match was imported still opens that act's campaign.
+     * Verifies that re-sizing an open fight leaves the run it was stamped with untouched.
+     *
+     * <p>Unlike the act it replaces, a run is resolved from the week's own date, so it is right the
+     * moment the fight is drawn and re-attaching it could only ever move it somewhere wrong.
      */
     @Test
-    void shouldReattachAnOpenFightToTheActInForceWhenResizing() {
+    void shouldNotMoveTheRunOfAnOpenFightWhenResizing() {
         BossCatalogEntry boss = createBoss(1L, "BOSS_A", BossCategory.STANDARD);
+        Run originalRun = campaignRun();
         WeeklyBossEncounter existing = createEncounter(WEEK_START, boss);
+        existing.setRun(originalRun);
 
         when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.of(existing));
 
         Optional<WeeklyBossEncounter> result = service.resizeWeekBoss(WEEK_START);
 
         assertThat(result).isPresent();
-        assertThat(result.orElseThrow().getSeason()).isSameAs(CAMPAIGN_ACT);
-    }
-
-    /**
-     * Verifies that an unresolved act never clears the one a fight already records.
-     */
-    @Test
-    void shouldKeepTheRecordedActWhenNoneCanBeResolved() {
-        BossCatalogEntry boss = createBoss(1L, "BOSS_A", BossCategory.STANDARD);
-        WeeklyBossEncounter existing = createEncounter(WEEK_START, boss);
-        existing.setSeason(CAMPAIGN_ACT);
-
-        when(encounterRepository.findByWeekStart(WEEK_START)).thenReturn(Optional.of(existing));
-        when(campaignSeasonResolver.currentSeason()).thenReturn(Optional.empty());
-
-        Optional<WeeklyBossEncounter> result = service.resizeWeekBoss(WEEK_START);
-
-        assertThat(result).isPresent();
-        assertThat(result.orElseThrow().getSeason()).isSameAs(CAMPAIGN_ACT);
+        assertThat(result.orElseThrow().getRun()).isSameAs(originalRun);
     }
 
     /**
@@ -252,7 +237,7 @@ class DefaultWeeklyBossSelectionServiceTest {
 
         // Both bosses of this two-entry catalogue were already drawn: the cycle is complete, so the
         // next draw must be free to pick from the full catalogue again.
-        when(encounterRepository.findAllBySeasonIdOrderByWeekStartAsc(CAMPAIGN_ACT_ID))
+        when(encounterRepository.findAllByRunIdOrderByWeekStartAsc(CAMPAIGN_RUN_ID))
             .thenReturn(List.of(
                 createEncounter(WEEK_START.minusWeeks(2), bossA),
                 createEncounter(WEEK_START.minusWeeks(1), bossB)

@@ -4,8 +4,8 @@ import { BossTimelineNodeStatus } from '@core/boss/boss-timeline.constants';
  * Columns of the hex grid the campaign is laid over, as the list the template iterates.
  *
  * Thirteen wide, but only the five middle ones are ever guaranteed on screen: the outer columns
- * are pure terrain that widens the field as the viewport allows (see
- * {@link resolveColumnVisibilityClass}), so the map fills the page out to its edges on a desktop
+ * are pure terrain that widens the field as its own panel allows (see
+ * {@link resolveColumnVisibilityClass}), so the map fills the panel out to its edges on a desktop
  * without ever pushing the path off a phone.
  */
 export const MAP_COLUMNS: readonly number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -31,12 +31,12 @@ const PATH_COLUMN_OFFSET = 4;
  * Number of terrain-only rows drawn before the first week and after the last.
  *
  * The campaign is a front moving through a territory, not a territory that starts and ends with it,
- * so the field keeps going past both ends of the path. They also give a short campaign enough body
- * to fill the fold. Kept even at the head so the odd/even row offset of the weeks below is
- * unchanged by their presence.
+ * so the field keeps going past both ends of the path. One row at each end, no more: the field is
+ * sized to stand whole in its panel without scrolling, which over a ten-week run puts it at exactly
+ * twelve rows.
  */
-export const LEAD_TERRAIN_ROWS = 2;
-export const TRAIL_TERRAIN_ROWS = 2;
+export const LEAD_TERRAIN_ROWS = 1;
+export const TRAIL_TERRAIN_ROWS = 1;
 
 /**
  * Fraction the inner hexagon is scaled down to, which is what draws a tile's outline.
@@ -118,10 +118,13 @@ const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritor
     haloClass: 'bg-accent-red/25 motion-safe:animate-pulse',
     damageFillClass: 'bg-accent-red/35',
   },
+  // Ground the campaign has not reached yet, drawn barely above the terrain around it: it carries no
+  // outcome to read, only a position and what it is worth, so anything louder competes with the
+  // weeks that do.
   upcoming: {
-    ringClass: 'bg-surface-600',
-    fillClass: 'bg-surface-800',
-    iconClass: 'text-text-muted',
+    ringClass: 'bg-surface-700/60',
+    fillClass: 'bg-surface-950/60',
+    iconClass: 'text-text-muted/40',
     haloClass: '',
     damageFillClass: '',
   },
@@ -140,20 +143,26 @@ const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritor
 export const TERRAIN_RING_CLASS = 'bg-surface-800/50';
 
 /**
- * Viewport width each column of {@link MAP_COLUMNS} needs before it is drawn, as the utilities that
- * reveal it. The five middle columns — the ones the path runs through — are always present; each
- * ring further out needs a wider viewport, so the field grows toward the component's edges as the
- * breakpoints climb rather than jumping straight to full width.
+ * Width each column of {@link MAP_COLUMNS} needs before it is drawn, as the utilities that reveal
+ * it. The five middle columns — the ones the path runs through — are always present; each ring
+ * further out needs a wider field, so the map grows toward its panel's edges as the breakpoints
+ * climb rather than jumping straight to full width.
+ *
+ * Measured against the panel holding the map (`@container`), not the viewport: the map shares its
+ * row with the population curve on a wide screen and takes the full width below that, so the same
+ * viewport hands it two very different widths and only the panel's own knows how many columns fit.
+ * Each step is paired with a `--hex-w` step in the template — see the field's own class list, which
+ * is what keeps the widest ring inside the panel instead of clipped by it.
  */
 const COLUMN_VISIBILITY_CLASSES: Readonly<Record<number, string>> = {
-  0: 'hidden 2xl:block',
-  1: 'hidden xl:block',
-  2: 'hidden lg:block',
-  3: 'hidden sm:block',
-  9: 'hidden sm:block',
-  10: 'hidden lg:block',
-  11: 'hidden xl:block',
-  12: 'hidden 2xl:block',
+  0: 'hidden @5xl:block',
+  1: 'hidden @3xl:block',
+  2: 'hidden @xl:block',
+  3: 'hidden @md:block',
+  9: 'hidden @md:block',
+  10: 'hidden @xl:block',
+  11: 'hidden @3xl:block',
+  12: 'hidden @5xl:block',
 };
 
 /**

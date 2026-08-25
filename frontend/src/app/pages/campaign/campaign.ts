@@ -2,22 +2,35 @@ import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, effect, ElementRef, inject, signal } from '@angular/core';
 import {
   LucideCheck,
-  LucideHistory,
+  LucideChevronRight,
+  LucideHammer,
+  LucideHeartPulse,
   LucideLock,
-  LucideMap,
   LucideSwords,
+  LucideUsers,
+  LucideWheat,
   LucideX,
+  LucideZap,
 } from '@lucide/angular';
 
 import { BossCampaign } from '@core/boss/boss-campaign';
 import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
+import { ColonyView } from '@core/colony/colony-view';
+import { ColonyBuildingState, ColonyBuildingView } from '@core/colony/colony-view.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
 import { PageHeader } from '@layout/page-header/page-header';
+import { resolveSeriesColor } from '@shared/chart/chart-theme';
+import { ChartSeries } from '@shared/chart/chart.model';
+import { LineChart } from '@shared/chart/line-chart';
+import { ProgressBar } from '@shared/progress-bar/progress-bar';
+import { Drawer } from '@shared/drawer/drawer';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { SectionLabel } from '@shared/section-label/section-label';
-import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
+import { Select } from '@shared/select/select';
+import { SelectOption } from '@shared/select/select.model';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { TOOLTIP_SURFACE_CLASS } from '@shared/tooltip/tooltip.constants';
 import { BossDetail } from './boss-detail/boss-detail';
 import {
@@ -41,6 +54,107 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 const SKELETON_ROW_COUNT = 8;
 
 /**
+ * Rows the run history stands at, real runs and empty berths together.
+ *
+ * The ledger grows one row per run and never shrinks, so it is drawn at a fixed height from the
+ * first run on: a table that resizes under the reader every ten weeks reads as a different table
+ * each time.
+ */
+const HISTORY_ROW_COUNT = 6;
+
+/**
+ * Treatments one step of the building ladder is drawn in, by how far the run has got with it. The
+ * marker is a hexagon like every other beat of the campaign — the map's territories, the history's
+ * week markers — so the ladder reads as the same clock as the rest of the page.
+ */
+const BUILDING_TIERS: Record<
+  ColonyBuildingState,
+  {
+    /**
+     * Outline of the marker's hexagon.
+     */
+    readonly markerClass: string;
+
+    /**
+     * Its surface. A tier that is up is a solid hexagon carrying a dark mark; one that is not is an
+     * outline around the page's own ground. That difference in *fill*, rather than in hue alone, is
+     * what makes a settled tier readable at a glance — a colored outline beside a colored outline
+     * reads as two shades of one state.
+     */
+    readonly markerFillClass: string;
+    readonly markerIconClass: string;
+    readonly markerHaloClass: string | null;
+
+    /**
+     * Treatment of the tag beside the tier's name, which says in words what the marker says in
+     * shape.
+     */
+    readonly tagClass: string;
+    readonly nameClass: string;
+    readonly capacityClass: string;
+
+    /**
+     * Carried by the step as a whole: a tier still out of reach is recessive against the two that
+     * are not, so the eye lands on the ladder's frontier rather than on its bottom.
+     */
+    readonly stepClass: string;
+  }
+> = {
+  erected: {
+    markerClass: 'bg-accent-green',
+    markerFillClass: 'bg-accent-green',
+    markerIconClass: 'text-surface-950',
+    markerHaloClass: null,
+    tagClass: 'bg-accent-green/15 text-accent-green',
+    nameClass: 'text-text-primary',
+    capacityClass: 'text-accent-green',
+    stepClass: '',
+  },
+  next: {
+    markerClass: 'bg-brand-500',
+    markerFillClass: 'bg-surface-950',
+    markerIconClass: 'text-brand-500',
+    markerHaloClass: 'bg-brand-500/25',
+    tagClass: 'bg-brand-500/15 text-brand-500',
+    nameClass: 'text-text-primary',
+    capacityClass: 'text-brand-500',
+    stepClass: '',
+  },
+  locked: {
+    markerClass: 'bg-surface-600',
+    markerFillClass: 'bg-surface-950',
+    markerIconClass: 'text-text-muted',
+    markerHaloClass: null,
+    tagClass: 'bg-text-primary/6 text-text-muted',
+    nameClass: 'text-text-muted',
+    capacityClass: 'text-text-muted',
+    stepClass: 'opacity-60',
+  },
+};
+
+/**
+ * One step of the building ladder, drawn as a vertical unlock timeline: the tier, the treatment it
+ * is drawn in, and the segment of line running from its marker down to the next one.
+ */
+interface CampaignBuildingStep {
+  readonly view: ColonyBuildingView;
+  readonly tier: (typeof BUILDING_TIERS)[ColonyBuildingState];
+
+  /**
+   * CSS `background` of the segment below this step's marker, or `null` on the last step, which
+   * has nothing below it to connect to.
+   */
+  readonly connectorBackground: string | null;
+
+  /**
+   * How far the materials have got towards this tier, on the one step being paid for. `null`
+   * everywhere else: a tier that is up is done, and one further down the ladder is not being paid
+   * for yet, so a bar under either would be a figure with nothing behind it.
+   */
+  readonly progressPercentage: number | null;
+}
+
+/**
  * One row of the battle map.
  */
 interface CampaignMapRow {
@@ -60,19 +174,35 @@ interface CampaignMapRow {
    * Irrelevant, and set past the grid, on a terrain-only row.
    */
   readonly bossColumn: number;
+
+  /**
+   * Materials at stake on the week, carried on the tile itself — the colony's ledger read off the
+   * map rather than beside it. `null` on a terrain-only row.
+   */
+  readonly materialsLabel: string | null;
+
+  /**
+   * Whether those materials are banked. A week not yet won shows what it is worth, recessive; a
+   * week won shows what it paid, in the brand color.
+   */
+  readonly materialsEarned: boolean;
 }
 
 /**
- * Campaign page: the group's run of weekly boss confrontations, as territory to take.
+ * Campaign page: the run told as one screen — the colony it feeds, and the ground it takes.
  *
- * A honeycomb of hexagons scrolling top to bottom, one row per week. Each row hands one hexagon to
- * its week — placed along a serpentine path, see `resolveBossColumn` — and leaves the rest as
- * terrain, tinted by whether the front has passed it. The map opens on the week being fought, and
- * picking any week's hexagon opens the same detail panel the battle history view uses.
+ * The two used to be separate pages, which split one run in half: the colony's population is
+ * capacity × min(Food gain, Energy gain) / 14, and capacity is bought with the materials the weekly
+ * bosses drop. So the page is laid out as the chain it is. The resource band on top carries the
+ * population, the gauges that set it and every run before this one; the map underneath is where the
+ * materials come from, each conquered week's haul written on its own hexagon; the tier ladder beside
+ * it is what those materials bought. The population's own history is the one reading held back —
+ * opened over the page from the hexagon carrying its current value.
  *
- * A button in the header swaps the map for that battle history in place — every fought week told
- * as a chronology rather than as territory — and swaps back the same way, so the page never
- * navigates away from itself to tell the same campaign two ways (see `view`).
+ * The map is a honeycomb standing whole in its panel, one row per week between a row of untouched
+ * terrain at each end. Picking any week's hexagon opens the detail panel, and the panel's own title
+ * is a dropdown swapping the map for the same campaign told as a chronology — the one reading that
+ * survives on a narrow screen, where the field is at its most cramped (see `view`).
  */
 @Component({
   selector: 'app-campaign',
@@ -80,20 +210,28 @@ interface CampaignMapRow {
     TranslatePipe,
     BossDetail,
     ResourceState,
-    SectionLabel,
     NgOptimizedImage,
     Avatar,
+    Drawer,
+    LineChart,
+    ProgressBar,
+    Select,
+    Tooltip,
     LucideCheck,
-    LucideHistory,
+    LucideChevronRight,
+    LucideHammer,
+    LucideHeartPulse,
     LucideLock,
-    LucideMap,
     LucideSwords,
+    LucideUsers,
+    LucideWheat,
     LucideX,
+    LucideZap,
     PageHeader,
   ],
   templateUrl: './campaign.html',
   host: { class: PAGE_LAYOUT_CLASS },
-  providers: [BossCampaign],
+  providers: [BossCampaign, ColonyView],
 })
 export class Campaign {
   /**
@@ -103,9 +241,20 @@ export class Campaign {
   protected readonly campaign = inject(BossCampaign);
 
   /**
+   * The colony the campaign feeds, resolved into display-ready view models.
+   */
+  protected readonly colony = inject(ColonyView);
+
+  /**
    * Host element, queried once to scroll the week being fought into view on load.
    */
   private readonly hostElement = inject(ElementRef<HTMLElement>);
+
+  /**
+   * Names the plotted line, the one label the page resolves itself rather than reading off a view
+   * model.
+   */
+  private readonly translation = inject(Translation);
 
   /**
    * Id of the node whose detail panel is open, or `null` while the panel is closed.
@@ -113,10 +262,13 @@ export class Campaign {
   private readonly selectedNodeId = signal<string | null>(null);
 
   /**
-   * Whether the active week's hexagon has already been scrolled into view, so the one-time
-   * auto-scroll effect never fires twice for the same load.
+   * Whether the population curve is open over the page.
+   *
+   * The curve answers a different question from the rest of the page — where the population has
+   * been, rather than where it stands — and it is the only block here that nothing else is read
+   * against, so it is opened from the figure it explains instead of holding a panel of its own.
    */
-  private hasScrolledToCurrentNode = false;
+  protected readonly isCurveOpen = signal(false);
 
   /**
    * Whether the active week's timeline marker has already been scrolled into view, so switching
@@ -126,14 +278,69 @@ export class Campaign {
 
   /**
    * Which of the two tellings of the campaign is on screen: the battle map (territory) or the
-   * battle history (chronology). Swapped in place by the header button — see `toggleView` —
+   * battle history (chronology). Swapped in place by the dropdown the panel's title carries,
    * rather than by navigating to a separate route, since both read off the same `campaign`.
    */
   protected readonly view = signal<'map' | 'history'>('map');
 
   /**
+   * The two tellings, as the dropdown's options. The panel is titled by whichever is on screen, so
+   * the title and the control that changes it are the same element.
+   */
+  protected readonly viewOptions = computed<readonly SelectOption<'map' | 'history'>[]>(() => [
+    { value: 'map', label: this.translation.translate('campaign.territory') },
+    { value: 'history', label: this.translation.translate('campaign.historyToggle') },
+  ]);
+
+  /**
+   * Whether either half of the page is still resolving, or has failed. The two are reported as one:
+   * the colony and the campaign are the same run, and half a run on screen reads as a bug.
+   */
+  protected readonly isLoading = computed(
+    () => this.campaign.isLoading() || this.colony.isLoading(),
+  );
+  protected readonly hasError = computed(() => this.campaign.hasError() || this.colony.hasError());
+
+  /**
+   * Share of capacity the population currently fills, for the headline bar.
+   */
+  protected readonly populationPercentage = computed<number>(() => {
+    const colony = this.colony.colony();
+
+    return colony === null || colony.capacity === 0
+      ? 0
+      : (colony.population / colony.capacity) * 100;
+  });
+
+  /**
+   * The run's population as one plotted line, day by day.
+   *
+   * A line rather than a column per day: the curve is read for its slope — a step up is a building
+   * going up, a sag is a quiet week — and a run is seventy-one days long, which is more bars than a
+   * panel this size can seat.
+   */
+  protected readonly curveSeries = computed<readonly ChartSeries[]>(() => {
+    const curve = this.colony.curve();
+    if (curve.length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        label: this.translation.translate('colony.population'),
+        color: resolveSeriesColor(0),
+        points: curve.map((bar) => bar.value),
+      },
+    ];
+  });
+
+  /**
    * The map, row by row, oldest week at the top, framed above and below by terrain the campaign
    * has not reached — the field extends past both ends of the path it carves through it.
+   *
+   * Every week's tile carries what its fight brought the colony in. The two lists are the same ten
+   * weeks in the same order, so they are joined by position; a week the colony has no entry for
+   * simply carries nothing.
    *
    * Empty while the campaign itself is, so an unresolved page shows no field at all rather than
    * bare terrain rows with nothing to fight over.
@@ -144,23 +351,55 @@ export class Campaign {
       return [];
     }
 
+    const bosses = this.colony.bosses();
+
     return [
       ...Array.from({ length: LEAD_TERRAIN_ROWS }, (_, index) => ({
         key: `lead-${index}`,
         node: null,
         bossColumn: -1,
+        materialsLabel: null,
+        materialsEarned: false,
       })),
       ...nodes.map((node, index) => ({
         key: node.id,
         node,
         bossColumn: resolveBossColumn(index),
+        materialsLabel: bosses[index]?.materialsLabel ?? null,
+        materialsEarned: bosses[index]?.materialsEarned ?? false,
       })),
       ...Array.from({ length: TRAIL_TERRAIN_ROWS }, (_, index) => ({
         key: `trail-${index}`,
         node: null,
         bossColumn: -1,
+        materialsLabel: null,
+        materialsEarned: false,
       })),
     ];
+  });
+
+  /**
+   * The building ladder as an unlock timeline, cheapest tier at the top: each step's treatment and
+   * the line running from its marker to the next one.
+   *
+   * The line is cut into one segment per step rather than drawn as a single gradient down the
+   * column because steps do not share a height — a tier with a longer sub-line is taller — so no
+   * percentage along the ladder maps to a marker's center. A segment turns from settled to locked
+   * exactly at the first tier the run has not paid for yet.
+   */
+  protected readonly buildingSteps = computed<readonly CampaignBuildingStep[]>(() => {
+    const buildings = this.colony.buildings();
+    const nextTier = this.colony.colony()?.nextTier ?? null;
+
+    return buildings.map((view, index) => ({
+      view,
+      tier: BUILDING_TIERS[view.state],
+      connectorBackground:
+        index === buildings.length - 1
+          ? null
+          : this.buildingConnectorBackground(view.state, buildings[index + 1].state),
+      progressPercentage: view.state === 'next' ? (nextTier?.progressPercentage ?? 0) : null,
+    }));
   });
 
   /**
@@ -229,31 +468,35 @@ export class Campaign {
   protected readonly skeletonRows = Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => index);
 
   /**
-   * Placeholder line widths driving the history view's loading skeleton.
+   * Empty berths padding the run history out to {@link HISTORY_ROW_COUNT}, so a ledger holding one
+   * run still reads as a ledger. None once the runs themselves fill it.
    */
-  protected readonly historySkeletonRows = SKELETON_ROWS;
+  protected readonly historyPlaceholders = computed<readonly number[]>(() =>
+    Array.from(
+      { length: Math.max(0, HISTORY_ROW_COUNT - this.colony.runs().length) },
+      (_, index) => index,
+    ),
+  );
 
   /**
-   * Centers the map on the week being fought once, the first time it finishes loading — on a long
-   * campaign the front is far down the page, and it is the only row worth opening on.
+   * Brings the active week's marker into view the first time the battle history comes on screen.
    *
-   * `block: 'center'` rather than the legacy timeline's `'nearest'`: a map row is a single hexagon
-   * tall, so centering it costs far less scroll than centering a timeline panel did and leaves the
-   * ground on both sides of the front visible, which is the whole point of the shot.
-   * `requestAnimationFrame` is a browser-only API, safe to call unconditionally here since this
-   * effect only ever runs client-side, after `isLoading` first turns false.
+   * The map needs no equivalent: it stands whole in its panel, so there is nothing to scroll to.
+   * The history does not — it is a column of panels as long as the run is. `requestAnimationFrame`
+   * is a browser-only API, safe to call unconditionally here since this only ever runs client-side,
+   * in response to the dropdown.
    */
   constructor() {
     effect(() => {
-      if (this.hasScrolledToCurrentNode || this.campaign.isLoading()) {
+      if (this.view() !== 'history' || this.hasScrolledToHistoryCurrentNode) {
         return;
       }
 
-      this.hasScrolledToCurrentNode = true;
+      this.hasScrolledToHistoryCurrentNode = true;
       requestAnimationFrame(() => {
         this.hostElement.nativeElement
-          .querySelector('[data-battlemap-current]')
-          ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          .querySelector('[data-timeline-current]')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
     });
   }
@@ -289,27 +532,40 @@ export class Campaign {
   }
 
   /**
-   * Swaps the map for the battle history, or back, in place.
+   * Background for the segment of the building ladder running between two steps: settled ground in
+   * solid green down to the last tier that went up, the handover drawn as a fade on the segment
+   * where it happens, and ground not yet reached drawn as a dashed line rather than a faint solid
+   * one — a road already travelled and a road still to travel should not differ by opacity alone.
    *
-   * The first time the history comes on screen, its active week's marker is scrolled into view
-   * the same way the map centers on its own active hexagon on load — `requestAnimationFrame` is a
-   * browser-only API, safe to call unconditionally here since this only ever runs client-side, in
-   * response to a click.
+   * @param state - How far the run has got with the step the segment hangs from.
+   * @param nextState - Same, for the step below it.
+   * @returns The CSS `background` value for that segment.
    */
-  protected toggleView(): void {
-    const next = this.view() === 'map' ? 'history' : 'map';
-    this.view.set(next);
-
-    if (next !== 'history' || this.hasScrolledToHistoryCurrentNode) {
-      return;
+  private buildingConnectorBackground(
+    state: ColonyBuildingState,
+    nextState: ColonyBuildingState,
+  ): string {
+    if (state !== 'erected') {
+      return (
+        `repeating-linear-gradient(to bottom, var(--color-surface-600) 0 0.25rem, ` +
+        `transparent 0.25rem 0.5rem)`
+      );
     }
 
-    this.hasScrolledToHistoryCurrentNode = true;
-    requestAnimationFrame(() => {
-      this.hostElement.nativeElement
-        .querySelector('[data-timeline-current]')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
+    return nextState === 'erected'
+      ? 'var(--color-accent-green)'
+      : 'linear-gradient(to bottom, var(--color-accent-green) 0%, var(--color-surface-600) 100%)';
+  }
+
+  /**
+   * Opens the population curve over the page, and closes it again.
+   */
+  protected openCurve(): void {
+    this.isCurveOpen.set(true);
+  }
+
+  protected closeCurve(): void {
+    this.isCurveOpen.set(false);
   }
 
   /**
@@ -341,11 +597,11 @@ export class Campaign {
   }
 
   /**
-   * Reloads every backing resource after a failure.
+   * Reloads every backing resource after a failure, on both halves of the page.
    */
   protected reload(): void {
-    this.hasScrolledToCurrentNode = false;
     this.hasScrolledToHistoryCurrentNode = false;
     this.campaign.reload();
+    this.colony.reload();
   }
 }

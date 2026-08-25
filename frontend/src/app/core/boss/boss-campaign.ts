@@ -15,7 +15,6 @@ import {
 } from '@core/date/week-period.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Translation } from '@core/i18n/translation';
-import { formatSeasonName } from '@core/matches/season-name.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
@@ -23,12 +22,14 @@ import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { resolveBossHpBarLabelKey, resolveBossStatusLabelKey } from './boss-timeline.constants';
 
 /**
- * Number of locked placeholder nodes appended after the current week, representing weeks ahead
- * whose boss doesn't exist yet — the backend only ever draws a week's boss lazily, once that week
- * becomes current (see `DefaultWeeklyBossSelectionService`), so there is no real data to show for
- * them.
+ * Number of locked placeholder nodes appended when the run's length is unknown.
+ *
+ * Only reached while the active week has failed to load, which is also the one case there is
+ * nothing to count forward from. The campaign otherwise pads itself to the run's own length (see
+ * {@link BossCampaign.nodes}): a run is exactly ten weekly rollovers, so the map has a fixed size
+ * from the moment it opens — the property the Valorant act it replaces never had.
  */
-const UPCOMING_PLACEHOLDER_COUNT = 3;
+const FALLBACK_PLACEHOLDER_COUNT = 3;
 
 /**
  * Damage one player dealt to a week's boss, from their ranking entry.
@@ -226,8 +227,12 @@ export class BossCampaign {
   });
 
   /**
-   * The full campaign: every finalized week oldest-first, the active week, then a fixed number of
-   * locked placeholders for weeks ahead.
+   * The full campaign: every finalized week oldest-first, the active week, then locked placeholders
+   * up to the run's own length.
+   *
+   * The map is exactly as long as a run, whatever has been fought so far, because a run is ten
+   * weekly rollovers rather than ten fights — a week can go by with no boss drawn at all, and
+   * counting fights would make the map shrink and grow for reasons nobody could read.
    */
   public readonly nodes: Signal<readonly BossTimelineNode[]> = computed(() => {
     const contributionsByWeekStart = this.contributionsByWeekStart();
@@ -241,7 +246,11 @@ export class BossCampaign {
       ? [this.toCurrentNode(currentBoss, contributionsByWeekStart.get(currentBoss.weekStart) ?? [])]
       : [];
 
-    const upcomingNodes = Array.from({ length: UPCOMING_PLACEHOLDER_COUNT }, (_, index) =>
+    const upcomingCount = currentBoss
+      ? Math.max(0, currentBoss.runWeekCount - historyNodes.length - currentNode.length)
+      : FALLBACK_PLACEHOLDER_COUNT;
+
+    const upcomingNodes = Array.from({ length: upcomingCount }, (_, index) =>
       this.toUpcomingNode(index, currentBoss?.weekEnd ?? null),
     );
 
@@ -254,45 +263,6 @@ export class BossCampaign {
   public readonly currentNodeIndex = computed(() =>
     this.nodes().findIndex((node) => node.status === 'current'),
   );
-
-  /**
-   * The Valorant act this campaign runs in, spelled out ("Acte 4 · 2026"), or the empty string
-   * while it is unknown.
-   *
-   * The campaign restarts at every act: the backend only ever returns the fights sharing the act in
-   * progress, so naming it is what tells a reader that an empty map is a fresh run rather than lost
-   * history.
-   */
-  public readonly campaignLabel = computed<string>(() => {
-    const name = resourceValue(this.currentResource, null)?.campaignSeasonName ?? null;
-
-    return name === null
-      ? ''
-      : formatSeasonName(name, (key, params) => this.translation.translate(key, params));
-  });
-
-  /**
-   * Campaign tally: bosses put down, bosses faced, and the damage the group has dealt across the
-   * run — the current act's run, not every week ever fought.
-   */
-  public readonly progressLabel = computed(() => {
-    const finalizedWeeks = resourceValue(this.historyResource, null)?.content ?? [];
-    const currentBoss = resourceValue(this.currentResource, null);
-
-    const totalDamage =
-      finalizedWeeks.reduce((total, week) => total + week.totalDamageDealt, 0) +
-      (currentBoss?.totalDamageDealt ?? 0);
-
-    const progress = this.translation.translate('boss.progress', {
-      defeated: finalizedWeeks.filter((week) => week.defeated).length,
-      fought: finalizedWeeks.length + (currentBoss ? 1 : 0),
-      damage: formatDamage(totalDamage, this.translation.language()),
-    });
-
-    const campaign = this.campaignLabel();
-
-    return campaign === '' ? progress : `${campaign} · ${progress}`;
-  });
 
   /**
    * Refreshes {@link now} every minute so the active week's countdown stays accurate for as long as

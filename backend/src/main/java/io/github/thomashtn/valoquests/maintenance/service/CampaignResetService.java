@@ -19,6 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
  * matches were deleted would report results nothing in the database can justify, so rebuilding from
  * an empty state is the only option that keeps the campaign traceable to stored matches.
  *
+ * <p>Runs and colony snapshots go with them. A run is the ten-week window the campaign is bounded by
+ * and a snapshot is a pure function of the matches, challenges and boss outcomes inside it, so both
+ * describe history that this reset is deleting. The next rollover opens run 1 on the empty base.
+ *
  * <p>Deliberately kept: the player roster, the challenge catalogue and the boss catalogue. None of
  * them is derived from anything.
  */
@@ -43,7 +47,9 @@ public class CampaignResetService {
             player_challenge_progress,
             weekly_player_score,
             weekly_challenge,
+            colony_daily_snapshot,
             weekly_boss_encounter,
+            run,
             player_season_synchronization,
             synchronization_player_result,
             synchronization,

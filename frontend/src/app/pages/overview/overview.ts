@@ -11,6 +11,7 @@ import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { WeekSummary } from './overview.model';
 import { BossEncounter } from './boss-encounter/boss-encounter';
+import { ColonySummary } from './colony-summary/colony-summary';
 import { Podium } from './podium/podium';
 import { TeamProgress } from './team-progress/team-progress';
 
@@ -27,7 +28,15 @@ import { TeamProgress } from './team-progress/team-progress';
  */
 @Component({
   selector: 'app-overview',
-  imports: [TranslatePipe, BossEncounter, PageHeader, Podium, TeamProgress, WeekCountdown],
+  imports: [
+    TranslatePipe,
+    BossEncounter,
+    ColonySummary,
+    PageHeader,
+    Podium,
+    TeamProgress,
+    WeekCountdown,
+  ],
   templateUrl: './overview.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })

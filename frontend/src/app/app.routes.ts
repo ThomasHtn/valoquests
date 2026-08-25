@@ -102,6 +102,13 @@ export const routes: Routes = [
         component: Campaign,
       },
       {
+        // The colony and the campaign were two pages until they turned out to be one run; the old
+        // address stays valid rather than breaking every link that already points at it.
+        path: 'colony',
+        redirectTo: 'campaign',
+        pathMatch: 'full',
+      },
+      {
         path: 'rules',
         title: 'rules.title',
         component: Rules,

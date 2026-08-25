@@ -29,6 +29,8 @@ import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.player.service.PlayerQueryService;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.run.entity.Run;
+import io.github.thomashtn.valoquests.run.repository.RunRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -101,6 +103,9 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
     @Autowired
     private WeeklyBossEncounterRepository bossEncounterRepository;
 
+    @Autowired
+    private RunRepository runRepository;
+
     /**
      * Verifies that the reset empties every derived table while keeping the roster and catalogues.
      *
@@ -130,6 +135,7 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(progressRepository.count()).isZero();
         assertThat(scoreRepository.count()).isZero();
         assertThat(bossEncounterRepository.count()).isZero();
+        assertThat(runRepository.count()).isZero();
 
         assertThat(playerRepository.count()).isEqualTo(rosterSize);
         assertThat(challengeRepository.count()).isEqualTo(challengeCatalogueSize);
@@ -248,8 +254,16 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
 
         BossCatalogEntry bossEntry = bossCatalogEntryRepository.findAll().getFirst();
 
+        Run run = new Run();
+        run.setNumber(1);
+        run.setFirstWeekStart(WEEK_START);
+        run.setLastWeekStart(WEEK_START.plusWeeks(9));
+        run.setRosterSize(7);
+        runRepository.save(run);
+
         WeeklyBossEncounter encounter = new WeeklyBossEncounter();
         encounter.setWeekStart(WEEK_START);
+        encounter.setRun(run);
         encounter.setBossCatalogEntry(bossEntry);
         encounter.setEffectiveHp(10_000);
         encounter.setDefeated(true);

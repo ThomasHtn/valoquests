@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.synchronization.service;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
+import io.github.thomashtn.valoquests.colony.service.ColonyReplayService;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
@@ -83,6 +84,11 @@ public class DefaultSynchronizationCommandService
     private final ChallengeRecalculationService challengeRecalculationService;
 
     /**
+     * Service used to replay the colony after an import, so a day's gains show up the same day.
+     */
+    private final ColonyReplayService colonyReplayService;
+
+    /**
      * Clock used to generate deterministic execution timestamps.
      */
     private final Clock clock;
@@ -95,6 +101,7 @@ public class DefaultSynchronizationCommandService
      * @param synchronizationRepository        global execution repository
      * @param playerResultRepository           per-player result repository
      * @param challengeRecalculationService    challenge progress recalculation service
+     * @param colonyReplayService              colony replay service
      * @param clock                            application clock
      */
     public DefaultSynchronizationCommandService(
@@ -103,6 +110,7 @@ public class DefaultSynchronizationCommandService
         SynchronizationRepository synchronizationRepository,
         SynchronizationPlayerResultRepository playerResultRepository,
         ChallengeRecalculationService challengeRecalculationService,
+        ColonyReplayService colonyReplayService,
         Clock clock
     ) {
         this.playerSynchronizationService = playerSynchronizationService;
@@ -110,6 +118,7 @@ public class DefaultSynchronizationCommandService
         this.synchronizationRepository = synchronizationRepository;
         this.playerResultRepository = playerResultRepository;
         this.challengeRecalculationService = challengeRecalculationService;
+        this.colonyReplayService = colonyReplayService;
         this.clock = clock;
     }
 
@@ -285,6 +294,32 @@ public class DefaultSynchronizationCommandService
             LOGGER.error(
                 "Challenge progress recalculation failed after importing {} match(es). "
                     + "Progress and ranking stay stale until the next synchronization.",
+                matchesImported,
+                exception
+            );
+        }
+
+        replayColony(matchesImported);
+    }
+
+    /**
+     * Replays the colony over the matches that were just imported.
+     *
+     * <p>Runs after the challenge recalculation because the colony reads the same week's rows, and this
+     * is what makes a day's gains show up on the day itself rather than at the next nightly tick.
+     *
+     * <p>Caught and logged like the recalculation above: the replay is idempotent and the scheduled tick
+     * will redo it, so a stale colony must never fail a synchronization that did import matches.
+     *
+     * @param matchesImported number of matches imported by the execution
+     */
+    private void replayColony(int matchesImported) {
+        try {
+            colonyReplayService.replayCurrentRun();
+        } catch (RuntimeException exception) {
+            LOGGER.error(
+                "Colony replay failed after importing {} match(es). The colony stays stale until the "
+                    + "next synchronization or daily tick.",
                 matchesImported,
                 exception
             );

@@ -42,13 +42,24 @@ export interface CurrentBoss {
   readonly totalDamageDealt: number;
 
   /**
-   * Raw code of the Valorant act the campaign runs in (`e11a4`, `V26A4`), spelled out for display
-   * by `formatSeasonName`. `null` while no match has been imported and no act can be resolved.
+   * Sequential number of the ten-week run the campaign is in.
    *
-   * The campaign is scoped to this act: `GET /api/boss/history` only returns the fights sharing it,
-   * so a new act opens on an empty history and the map starts again from the week being fought.
+   * The campaign is scoped to this run: `GET /api/boss/history` only returns the fights sharing it,
+   * so a new run opens on an empty history and the map starts again from the week being fought.
+   * Unlike the Valorant act it replaces, a run has a known length from the moment it opens, which
+   * is what lets the map draw a fixed number of hexagons.
    */
-  readonly campaignSeasonName: string | null;
+  readonly runNumber: number;
+
+  /**
+   * Position of the active week inside that run, from one.
+   */
+  readonly runWeekIndex: number;
+
+  /**
+   * Number of weeks a run spans, and therefore the number of hexagons the map draws.
+   */
+  readonly runWeekCount: number;
 }
 
 /**

@@ -6,6 +6,7 @@ import io.github.thomashtn.valoquests.boss.service.BossChronologyResult;
 import io.github.thomashtn.valoquests.boss.service.BossChronologyService;
 import io.github.thomashtn.valoquests.boss.service.WeeklyBossSelectionService;
 import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
+import io.github.thomashtn.valoquests.run.service.RunService;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -57,6 +58,11 @@ public class WeeklyLifecycleCoordinator {
     private final ScoringRuleset ruleset;
 
     /**
+     * Service opening and closing the ten-week runs the campaign is bounded by.
+     */
+    private final RunService runService;
+
+    /**
      * Creates the weekly lifecycle coordinator.
      *
      * @param weeklyChallengeSelectionService challenge selection service
@@ -64,32 +70,40 @@ public class WeeklyLifecycleCoordinator {
      * @param bossEncounterRepository         weekly boss encounter repository
      * @param bossChronologyService           boss chronology service
      * @param ruleset                         scoring ruleset
+     * @param runService                      run lifecycle service
      */
     public WeeklyLifecycleCoordinator(
         WeeklyChallengeSelectionService weeklyChallengeSelectionService,
         WeeklyBossSelectionService weeklyBossSelectionService,
         WeeklyBossEncounterRepository bossEncounterRepository,
         BossChronologyService bossChronologyService,
-        ScoringRuleset ruleset
+        ScoringRuleset ruleset,
+        RunService runService
     ) {
         this.weeklyChallengeSelectionService = weeklyChallengeSelectionService;
         this.weeklyBossSelectionService = weeklyBossSelectionService;
         this.bossEncounterRepository = bossEncounterRepository;
         this.bossChronologyService = bossChronologyService;
         this.ruleset = ruleset;
+        this.runService = runService;
     }
 
     /**
-     * Prepares the challenge pack and boss encounter for a new week.
+     * Prepares the run, challenge pack and boss encounter for a new week.
      *
      * <p>Called by the rollover once every past week has been finalized, so the re-size here is what
      * settles a week whose encounter was already drawn by a page view before its predecessor closed.
-     * Both calls are idempotent, and the re-size preserves the boss that was drawn.
+     * Every call is idempotent, and the re-size preserves the boss that was drawn.
+     *
+     * <p>The run comes first because the encounter is stamped with it. It also catches up on its own:
+     * the rollover finalizes every week it missed in one pass and then opens the current one once, so a
+     * rollover firing after a long outage can be several runs behind.
      *
      * @param weekStart Monday identifying the new week
      */
     @Transactional
     public void openWeek(LocalDate weekStart) {
+        runService.ensureRunFor(weekStart);
         weeklyChallengeSelectionService.selectWeekChallenges(weekStart);
         weeklyBossSelectionService.selectWeekBoss(weekStart);
         weeklyBossSelectionService.resizeWeekBoss(weekStart);

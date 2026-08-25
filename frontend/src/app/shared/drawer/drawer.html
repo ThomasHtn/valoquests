@@ -1,8 +1,20 @@
+<!-- The anchor decides the geometry and nothing else. `end`: the margin utilities override the
+     user-agent's centering (`margin: auto` on all four sides) to pin the panel to the viewport's
+     trailing edge at full height, and `max-h-dvh` overrides the default
+     `max-height: calc(100% - 6px - 2em)` that would otherwise leave it floating short of the top and
+     bottom. `center`: `m-auto` restores the centering the user agent gives a `<dialog>` and the CSS
+     reset takes away, the panel takes its content's height up to a ceiling, and it rises into place
+     rather than sliding in from an edge it no longer touches. -->
 <dialog
   #dialog
   (close)="closed.emit()"
   [attr.aria-labelledby]="labelledBy()"
-  class="m-0 ml-auto h-dvh max-h-dvh w-full max-w-md border-l border-brand-500/30 bg-surface-sunken p-0 text-text-primary backdrop:bg-surface-sunken/75 motion-safe:animate-[drawer-enter_200ms_ease-out]"
+  [class]="
+    anchor() === 'center'
+      ? 'm-auto max-h-[85dvh] w-[calc(100%-2rem)] max-w-2xl border border-brand-500/30 motion-safe:animate-[dialog-enter_200ms_ease-out]'
+      : 'm-0 ml-auto h-dvh max-h-dvh w-full max-w-md border-l border-brand-500/30 motion-safe:animate-[drawer-enter_200ms_ease-out]'
+  "
+  class="bg-surface-sunken p-0 text-text-primary backdrop:bg-surface-sunken/75"
 >
   <div class="flex h-full flex-col gap-6 overflow-y-auto p-5 sm:p-7">
     <!-- Header row: whatever the drawer leads with, and the one framed control of the panel.

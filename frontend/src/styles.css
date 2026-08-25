@@ -380,6 +380,22 @@
 }
 
 /*
+ * Centered dialog entrance, the counterpart of `drawer-enter` for a panel with no edge to slide in
+ * from: it rises into place instead. Same duration and easing, so the two read as one family.
+ */
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/*
  * Snackbar entrance and timebar, shared by `app-snackbar`. The timebar animates `transform: scaleX`
  * rather than `width` so it composites on its own layer instead of triggering layout on every
  * frame.
