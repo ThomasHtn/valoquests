@@ -249,7 +249,9 @@
         "detail": "It feeds on how many players turned out during the day, and loses 14 × population / capacity every day."
       },
       "movement": "{{gain}} against {{loss}} lost",
-      "description": "{{detail}} To raise it: {{rule}}. Today, {{movement}}."
+      "description": "{{detail}} To raise it: {{rule}}. Today, {{movement}}. {{settling}}",
+      "settling": "It outproduces what the colony consumes and settles at {{level}}, its surplus discarded.",
+      "settlingLimiting": "This is the gauge holding the colony back right now: at the current rhythm it settles at {{level}}, which is the level the tick on the bar marks."
     },
     "heading": "The squad's colony",
     "health": "Health",
@@ -281,7 +283,16 @@
       "next": "In progress",
       "locked": "Locked"
     },
-    "upgrades": "Upgrades"
+    "upgrades": "Upgrades",
+    "equilibrium": {
+      "caption": "Settles at",
+      "label": "At your rhythm over the last seven days, the colony settles around {{share}}% of its capacity, or {{population}} settlers. The {{gauge}} gauge is what sets that ceiling: the one fed less decides alone, and the other saturates and loses its surplus."
+    },
+    "upkeep": {
+      "caption": "Tonight",
+      "label": "At midnight the colony will consume {{loss}} off each gauge. Covering it takes {{damage}} damage (about {{matches}} games) and {{players}} distinct players during the day. Both, never either one: damage fills Food, players fill Energy.",
+      "idle": "The colony is empty, so it consumes nothing. The first day played puts settlers on the ground."
+    }
   },
   "landing": {
     "body": "A web app where every battle is fought through the video game Valorant. Week after week, the squad pushes back the enemy holding the territory and takes it back, match after match.",

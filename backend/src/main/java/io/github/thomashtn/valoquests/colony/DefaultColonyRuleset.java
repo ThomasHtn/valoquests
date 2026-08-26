@@ -3,6 +3,8 @@ package io.github.thomashtn.valoquests.colony;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.colony.model.ColonyBuilding;
 import io.github.thomashtn.valoquests.colony.model.ColonyBuildingTier;
+import io.github.thomashtn.valoquests.match.model.GameMode;
+import io.github.thomashtn.valoquests.match.model.MatchOutcome;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import java.util.List;
 import org.springframework.stereotype.Component;
@@ -21,6 +23,17 @@ import org.springframework.stereotype.Component;
  * single dedicated rule. Two players grinding ten games each produce more Food than four reasonable
  * ones and still cap at 29% of capacity, because Energy is what limits them.
  *
+ * <p>Past roughly two games a day per player, Energy is what limits the colony in every regime the
+ * squad actually plays. That is deliberate: turnout is the thing worth rewarding, and it is the one
+ * number no amount of grinding on a single account can move.
+ *
+ * <p>A run opens on nothing at all — no population, both gauges at zero. An earlier calibration opened
+ * on 300 inhabitants and both gauges at 50, which handed out a free half-health: the daily loss is
+ * proportional to the population, so a small colony paid almost nothing while that inherited health
+ * kept pulling it upwards. A run where <i>nobody ever played</i> grew from 300 to 870 inhabitants over
+ * its first eight days before starting to fall. Opening at zero is what makes the first day of a run
+ * obey the same rule as its fortieth.
+ *
  * <p>Roughly fifteen of these numbers are calibrated a priori and should be read as an experimental
  * first pass; {@code colony_daily_snapshot} is deliberately rich enough to recalibrate them afterwards
  * without asking Henrik for anything again.
@@ -34,9 +47,13 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     private static final int RUN_LENGTH_WEEKS = 10;
 
     /**
-     * Match damage worth one point of Food, which is what a competitive win is priced at.
+     * Match damage worth one point of Food.
+     *
+     * <p>Below the 500 a competitive win is priced at, so two games a day already produce slightly more
+     * Food than the turnout they came with produces Energy. That one-sided margin is what puts Energy in
+     * charge of the population in every ordinary regime.
      */
-    private static final int FOOD_DAMAGE_DIVISOR = 500;
+    private static final int FOOD_DAMAGE_DIVISOR = 400;
 
     /**
      * Daily loss coefficient of both gauges, and the maximum daily Energy gain.
@@ -70,8 +87,11 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
 
     /**
      * Value both gauges open a run at.
+     *
+     * <p>Zero, so the first day of a run is earned like any other. See this class's own documentation
+     * for what a non-zero opening did to a run nobody played.
      */
-    private static final double INITIAL_GAUGE = 50.0;
+    private static final double INITIAL_GAUGE = 0.0;
 
     /**
      * Materials a run opens with.
@@ -80,8 +100,11 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
 
     /**
      * Population a run opens with.
+     *
+     * <p>Empty ground. With both gauges also at zero, an unplayed day leaves the colony exactly where it
+     * was, and the first inhabitants only arrive once somebody has fed it.
      */
-    private static final double INITIAL_POPULATION = 300.0;
+    private static final double INITIAL_POPULATION = 0.0;
 
     /**
      * Health below which the colony is flagged as in distress.
@@ -124,6 +147,11 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     @Override
     public int foodDamageDivisor() {
         return FOOD_DAMAGE_DIVISOR;
+    }
+
+    @Override
+    public int referenceMatchDamage() {
+        return scoringRuleset.matchDamage(GameMode.COMPETITIVE, MatchOutcome.DRAW);
     }
 
     @Override

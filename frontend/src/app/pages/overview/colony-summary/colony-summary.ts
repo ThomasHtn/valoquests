@@ -5,7 +5,7 @@ import { LucideHeartPulse, LucideUsers, LucideWheat, LucideZap } from '@lucide/a
 import { ColonyApi } from '@core/colony/colony-api';
 import { formatGauge, formatPopulation } from '@core/colony/colony-format.utils';
 import { colonyGaugeColors, colonyHealthColors } from '@core/colony/colony-gauge.utils';
-import { Colony } from '@core/colony/colony.model';
+import { Colony, ColonyGaugeState } from '@core/colony/colony.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -39,6 +39,12 @@ interface ColonyTrackRow {
 
   readonly fillClass: string;
   readonly textClass: string;
+
+  /**
+   * Level the bar draws its reference tick at, `null` on health, which settles at nothing of its
+   * own — it is the mean the two gauges above it produce.
+   */
+  readonly equilibriumPercentage: number | null;
 }
 
 /**
@@ -141,8 +147,8 @@ export class ColonySummary {
     const health = colonyHealthColors(colony.alert);
 
     return [
-      this.toTrackRow('FOOD', colony.food.value, colony.alert),
-      this.toTrackRow('ENERGY', colony.energy.value, colony.alert),
+      this.toTrackRow('FOOD', colony.food, colony.alert),
+      this.toTrackRow('ENERGY', colony.energy, colony.alert),
       {
         track: 'HEALTH',
         label: this.translation.translate('colony.health'),
@@ -152,6 +158,7 @@ export class ColonySummary {
         valueLabel: `${Math.round(colony.healthPercentage)}`,
         fillClass: health.fill,
         textClass: health.text,
+        equilibriumPercentage: null,
       },
     ];
   });
@@ -174,20 +181,25 @@ export class ColonySummary {
    * Resolves one gauge into its track row.
    *
    * @param track - Which gauge this is.
-   * @param value - Today's value, from 0 to 100.
+   * @param state - Its value and the level it settles at.
    * @param alert - Whether the colony has fallen under the distress threshold.
    * @returns The display-ready track.
    */
-  private toTrackRow(track: 'FOOD' | 'ENERGY', value: number, alert: boolean): ColonyTrackRow {
+  private toTrackRow(
+    track: 'FOOD' | 'ENERGY',
+    state: ColonyGaugeState,
+    alert: boolean,
+  ): ColonyTrackRow {
     const colors = colonyGaugeColors(track, alert);
 
     return {
       track,
       label: this.translation.translate(`colony.gauge.${track}.name`),
-      percentage: value,
-      valueLabel: formatGauge(value, this.translation.language()),
+      percentage: state.value,
+      valueLabel: formatGauge(state.value, this.translation.language()),
       fillClass: colors.fill,
       textClass: colors.text,
+      equilibriumPercentage: state.equilibrium,
     };
   }
 }

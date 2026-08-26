@@ -98,9 +98,13 @@
 
             <span class="sr-only">{{ track.label }}</span>
 
+            <!-- Same tick the campaign page's own band carries: the level this gauge settles at.
+                 The block exists to be recognised again on the page it links to, and a bar that
+                 reads as a famine here and as being on the mark there would defeat that. -->
             <app-progress-bar
               [colorClass]="track.fillClass"
               [percentage]="track.percentage"
+              [targetMarker]="track.equilibriumPercentage"
               class="min-w-0 flex-1 rounded-md"
               heightClass="h-2.5"
             />

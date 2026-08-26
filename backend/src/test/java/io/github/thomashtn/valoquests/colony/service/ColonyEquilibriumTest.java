@@ -61,12 +61,14 @@ class ColonyEquilibriumTest {
     /**
      * Verifies the three regimes the design was calibrated against.
      *
-     * <p>Seven players playing twice each hold 85% of capacity. Four reasonable players hold 57%. Two
-     * players grinding ten games each hold 29% — while producing <i>more</i> Food than the four.
+     * <p>Seven players playing twice each fill the colony outright, which is the sentence the whole
+     * calibration is tuned around and is now exact rather than approximate. Four reasonable players
+     * hold 57%. Two players grinding ten games each hold 29% — while producing <i>more</i> Food than
+     * the four.
      */
     @Test
     void shouldReproduceTheCalibratedRegimes() {
-        assertThat(settledSharePercent(7, 2)).isCloseTo(85.0, org.assertj.core.data.Offset.offset(1.5));
+        assertThat(settledSharePercent(7, 2)).isCloseTo(100.0, org.assertj.core.data.Offset.offset(1.5));
         assertThat(settledSharePercent(4, 3)).isCloseTo(57.0, org.assertj.core.data.Offset.offset(1.5));
         assertThat(settledSharePercent(2, 10)).isCloseTo(29.0, org.assertj.core.data.Offset.offset(1.5));
     }
@@ -95,27 +97,28 @@ class ColonyEquilibriumTest {
      * worth more for as long as turnout is what limits the colony.
      *
      * <p>Stated at strictly equal total damage, so the only thing that changes is how many people
-     * produced it. Eight competitive games' worth of damage feeds Food at 6.8: two players cap the
-     * colony at an Energy gain of 4 and fall short, while four already push Energy past Food and reach
-     * the same ceiling seven would. That plateau is the model working as designed — once Food is the
-     * weak link, adding players cannot lift a colony the damage itself is holding down.
+     * produced it. Eight competitive games' worth of damage feeds Food at 8.5, and every turnout short
+     * of the full squad caps below it: two players at an Energy gain of 4, four at 8. Spreading the
+     * same output is therefore worth strictly more every time, right up to the seven who finally push
+     * Energy past Food and take the colony to the ceiling the damage itself sets.
      */
     @Test
     void shouldNeverPunishSpreadingTheSameOutputOverMorePlayers() {
         int totalDamage = 8 * AVERAGE_COMPETITIVE_DAMAGE;
+        double foodGain = totalDamage / (double) ruleset.foodDamageDivisor();
 
         double onTwo = settledShareOf(totalDamage, 2);
         double onFour = settledShareOf(totalDamage, 4);
         double onSeven = settledShareOf(totalDamage, 7);
 
         assertThat(onTwo).isLessThan(onFour);
-        assertThat(onFour).isLessThanOrEqualTo(onSeven);
+        assertThat(onFour).isLessThan(onSeven);
 
-        // Two players are held back by turnout, not by output: their Food gain is the same 6.8.
-        assertThat(engine.energyGain(2, ROSTER_SIZE))
-            .isLessThan(totalDamage / (double) ruleset.foodDamageDivisor());
-        assertThat(engine.energyGain(4, ROSTER_SIZE))
-            .isGreaterThan(totalDamage / (double) ruleset.foodDamageDivisor());
+        // Everyone short of the full squad is held back by turnout, not by output: the Food gain is
+        // the same 8.5 in all three regimes.
+        assertThat(engine.energyGain(2, ROSTER_SIZE)).isLessThan(foodGain);
+        assertThat(engine.energyGain(4, ROSTER_SIZE)).isLessThan(foodGain);
+        assertThat(engine.energyGain(7, ROSTER_SIZE)).isGreaterThan(foodGain);
     }
 
     /**

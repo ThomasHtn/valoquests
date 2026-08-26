@@ -179,9 +179,14 @@
                 <div class="flex min-w-0 max-w-[30rem] flex-1 items-center gap-2">
                   <span class="sr-only">{{ gauge.label }}</span>
 
+                  <!-- The tick is where this gauge settles at the squad's rhythm of the week. The
+                       gauge holding the colony back sits far under the health it produces, so the
+                       fill alone reads as a famine; against the tick it reads as being on the
+                       mark, and falling behind it reads as falling behind. -->
                   <app-progress-bar
                     [colorClass]="gauge.fillClass"
                     [percentage]="gauge.percentage"
+                    [targetMarker]="gauge.equilibriumPercentage"
                     class="min-w-0 flex-1 rounded-md"
                     heightClass="h-3"
                   />
@@ -283,6 +288,32 @@
                   {{ colony.healthDescription() }}
                 </p>
               </div>
+            </li>
+
+            <!-- What the three bars above cannot say on their own. The equilibrium is the one
+                 property of the model that cannot be read off a gauge at all, and it is what the
+                 tick on each bar marks; the objective turns it into tonight's instruction. Set
+                 below the bars behind a hairline, as text rather than as a fourth track: neither
+                 is a level, and drawing them as one would invite the eye to compare them with the
+                 gauges they explain. -->
+            <li class="mt-1 flex flex-col gap-1 border-t border-text-primary/10 pt-3">
+              <p class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <span class="label-caption shrink-0 text-text-muted">
+                  {{ 'colony.equilibrium.caption' | translate }}
+                </span>
+                <span class="min-w-0 text-sm leading-snug text-text-secondary">
+                  {{ colony.equilibriumLabel() }}
+                </span>
+              </p>
+
+              <p class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <span class="label-caption shrink-0 text-text-muted">
+                  {{ 'colony.upkeep.caption' | translate }}
+                </span>
+                <span class="min-w-0 text-sm leading-snug text-text-secondary">
+                  {{ colony.upkeepLabel() }}
+                </span>
+              </p>
             </li>
           </ul>
 

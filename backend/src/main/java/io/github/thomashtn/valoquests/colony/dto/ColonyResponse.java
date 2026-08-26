@@ -13,6 +13,11 @@ import java.util.List;
  * {@code capacity x min(Food gain, Energy gain) / 14}, so the gauge that is fed less alone decides how
  * full the colony can get, and the other one saturates and loses its surplus.
  *
+ * <p>Everything settling-related is resolved against the <b>last seven complete days</b>, never against
+ * today. Today is a day in progress: before anybody has played it holds no damage and no turnout, so an
+ * equilibrium read off it would collapse to zero every morning and climb back through the evening,
+ * which is exactly the reading a permanent display must not give.
+ *
  * @param runNumber             sequential number of the run in progress
  * @param runDay                day of the run, from one
  * @param runDayCount           days a run spans, settlement day included
@@ -21,6 +26,7 @@ import java.util.List;
  * @param day                   calendar day this state closes
  * @param food                  Food gauge and today's movement on it
  * @param energy                Energy gauge and today's movement on it
+ * @param upkeep                what the colony is about to consume, and what covers it
  * @param healthPercentage      geometric mean of both gauges, in {@code [0, 100]}
  * @param alert                 whether health has fallen under the distress threshold; a display flag
  *     with no mechanical effect
@@ -34,7 +40,8 @@ import java.util.List;
  * @param buildings             every tier, erected or not
  * @param nextTier              tier being worked towards, {@code null} once the last one is up
  * @param limitingGauge         gauge currently setting the equilibrium population
- * @param equilibriumPercentage share of capacity the colony plateaus at while today's inputs hold
+ * @param equilibriumPercentage share of capacity the colony plateaus at if the last seven days' rhythm
+ *     holds
  * @param defeatedBosses        bosses put down so far in the run
  * @param bossCount             bosses a run holds
  * @param materialsPerBoss      materials one defeated boss brings in
@@ -49,6 +56,7 @@ public record ColonyResponse(
     LocalDate day,
     ColonyGaugeResponse food,
     ColonyGaugeResponse energy,
+    ColonyUpkeepResponse upkeep,
     double healthPercentage,
     boolean alert,
     int population,

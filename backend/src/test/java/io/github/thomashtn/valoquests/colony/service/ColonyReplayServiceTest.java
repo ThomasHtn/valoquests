@@ -17,6 +17,7 @@ import io.github.thomashtn.valoquests.colony.repository.ColonyDailySnapshotRepos
 import io.github.thomashtn.valoquests.run.entity.Run;
 import io.github.thomashtn.valoquests.run.service.RunService;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -180,6 +181,63 @@ class ColonyReplayServiceTest {
         ArgumentCaptor<List<ColonyDailySnapshot>> captor = ArgumentCaptor.captor();
         verify(snapshotRepository).saveAll(captor.capture());
         assertThat(captor.getValue()).isEmpty();
+    }
+
+    /**
+     * Verifies that a run closed short of its settlement day is replayed one last time.
+     *
+     * <p>The rollover closes a run on the very Monday that is its seventy-first day, and only the open
+     * run is replayed — so that day, which credits the tenth week's challenges and boss, was never
+     * computed for anybody.
+     */
+    @Test
+    void shouldSettleAClosedRunThatNeverReachedItsSettlementDay() {
+        Run closedRun = givenClosedRunLastReplayedOn(FIRST_WEEK.plusDays(69));
+        givenRunWithDays(1);
+
+        service.replayCurrentRun();
+
+        verify(snapshotRepository).deleteAllByRunId(closedRun.getId());
+        verify(inputAssembler).assemble(closedRun);
+    }
+
+    /**
+     * Verifies that a run already settled is left strictly alone.
+     *
+     * <p>What keeps a closed run frozen: a later rebalancing of the ruleset must never rewrite a score
+     * that has already been carried.
+     */
+    @Test
+    void shouldLeaveAnAlreadySettledRunUntouched() {
+        Run closedRun = givenClosedRunLastReplayedOn(FIRST_WEEK.plusDays(70));
+        givenRunWithDays(1);
+
+        service.replayCurrentRun();
+
+        verify(snapshotRepository, times(0)).deleteAllByRunId(closedRun.getId());
+        verify(inputAssembler, times(0)).assemble(closedRun);
+    }
+
+    /**
+     * Registers one closed run and the last day its snapshots reach.
+     *
+     * @param lastDay last day the run has a snapshot for
+     * @return the closed run
+     */
+    private Run givenClosedRunLastReplayedOn(LocalDate lastDay) {
+        Run run = new Run();
+        run.setId(9L);
+        run.setNumber(9);
+        run.setFirstWeekStart(FIRST_WEEK);
+        run.setLastWeekStart(FIRST_WEEK.plusWeeks(9));
+        run.setRosterSize(ROSTER_SIZE);
+        run.setClosedAt(Instant.EPOCH);
+
+        when(runService.closedRuns()).thenReturn(List.of(run));
+        when(snapshotRepository.findLastDayByRunId(run.getId())).thenReturn(Optional.of(lastDay));
+        lenient().when(inputAssembler.assemble(run)).thenReturn(List.of());
+
+        return run;
     }
 
     /**

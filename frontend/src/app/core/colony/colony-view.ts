@@ -176,6 +176,62 @@ export class ColonyView {
   );
 
   /**
+   * Where the colony is heading at the rhythm it has actually been played.
+   *
+   * The model's fixed point, and the only thing about it that cannot be read off the gauges — which
+   * is exactly why it is carried permanently rather than left to a hover. Named with the gauge
+   * setting it, because "which of the two is holding us back" is the actionable half of the answer.
+   */
+  public readonly equilibriumLabel = computed<string>(() => {
+    const colony = this.colony();
+    if (colony === null) {
+      return '';
+    }
+
+    const language = this.translation.language();
+
+    return this.translation.translate('colony.equilibrium.label', {
+      share: Math.round(colony.equilibriumPercentage),
+      population: formatPopulation(
+        Math.round((colony.equilibriumPercentage / 100) * colony.capacity),
+        language,
+      ),
+      gauge: this.translation.translate(`colony.gauge.${colony.limitingGauge}.name`),
+    });
+  });
+
+  /**
+   * Tonight's instruction: what the next tick takes, and what cancels it.
+   *
+   * Both requirements are always stated, never either one. Damage fills Food and turnout fills
+   * Energy, so a night bringing only one of them still lets the other gauge fall — which is the
+   * single most common way a squad that did play still wakes up to a colony that shrank.
+   *
+   * An empty colony consumes nothing, so there is no objective to state and the line says so
+   * instead of asking for zero of everything.
+   */
+  public readonly upkeepLabel = computed<string>(() => {
+    const colony = this.colony();
+    if (colony === null) {
+      return '';
+    }
+
+    const language = this.translation.language();
+    const upkeep = colony.upkeep;
+
+    if (upkeep.upcomingLoss <= 0) {
+      return this.translation.translate('colony.upkeep.idle');
+    }
+
+    return this.translation.translate('colony.upkeep.label', {
+      loss: formatGauge(upkeep.upcomingLoss, language),
+      damage: formatPopulation(upkeep.damageToHold, language),
+      matches: upkeep.matchesToHold,
+      players: upkeep.playersToHold,
+    });
+  });
+
+  /**
    * What the current capacity comes from, so the figure beside the population is attributable.
    */
   public readonly capacitySourceLabel = computed<string>(() => {
@@ -407,20 +463,28 @@ export class ColonyView {
       label,
       percentage: state.value,
       valueLabel,
-      // The three fragments the sentence is made of are separate keys rather than one block of copy
-      // per gauge: what feeds a gauge and how it is played are two different answers, and the day's
-      // movement is a figure that has to be interpolated anyway.
+      // The four fragments the sentence is made of are separate keys rather than one block of copy
+      // per gauge: what feeds a gauge and how it is played are two different answers, and both the
+      // day's movement and the level it settles at are figures that have to be interpolated anyway.
       descriptionLabel: this.translation.translate('colony.gauge.description', {
         detail: this.translation.translate(`colony.gauge.${gauge}.detail`),
         rule: this.translation.translate(`colony.gauge.${gauge}.rule`),
         movement: this.translation.translate('colony.gauge.movement', {
           gain: formatSignedGauge(state.gain, language),
-          loss: formatSignedGauge(-state.loss, language),
+          loss: formatSignedGauge(-colony.upkeep.upcomingLoss, language),
         }),
+        settling: this.translation.translate(
+          colony.limitingGauge === gauge
+            ? 'colony.gauge.settlingLimiting'
+            : 'colony.gauge.settling',
+          { level: formatGauge(state.equilibrium, language) },
+        ),
       }),
       fillClass: colors.fill,
       textClass: colors.text,
       isLimiting: colony.limitingGauge === gauge,
+      equilibriumPercentage: state.equilibrium,
+      equilibriumLabel: formatGauge(state.equilibrium, language),
     };
   }
 

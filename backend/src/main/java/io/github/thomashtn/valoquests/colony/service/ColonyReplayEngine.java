@@ -3,6 +3,7 @@ package io.github.thomashtn.valoquests.colony.service;
 import io.github.thomashtn.valoquests.colony.ColonyRuleset;
 import io.github.thomashtn.valoquests.colony.model.ColonyDailyInput;
 import io.github.thomashtn.valoquests.colony.model.ColonyDayState;
+import io.github.thomashtn.valoquests.colony.model.ColonyEquilibrium;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
@@ -31,6 +32,14 @@ public class ColonyReplayEngine {
      * Divisor turning a percentage into a ratio.
      */
     private static final double PERCENT_SCALE = 100.0;
+
+    /**
+     * Days {@link #settle} runs before reading the plateau off.
+     *
+     * <p>Comfortably past it: the population moves by at most 2.5% of capacity a day, so it needs
+     * forty days to cross a full capacity from empty, and the gauges converge faster than that.
+     */
+    private static final int SETTLING_DAYS = 400;
 
     /**
      * Calibration every step reads its numbers from.
@@ -83,8 +92,8 @@ public class ColonyReplayEngine {
 
             double foodGain = foodGain(day.matchDamage());
             double energyGain = energyGain(day.activePlayerCount(), rosterSize);
-            food = Math.min(ruleset.gaugeMaximum(), food + foodGain);
-            energy = Math.min(ruleset.gaugeMaximum(), energy + energyGain);
+            food = capped(food + foodGain);
+            energy = capped(energy + energyGain);
 
             materials += day.creditedMaterials();
             capacity = ruleset.capacityFor(materials);
@@ -110,6 +119,49 @@ public class ColonyReplayEngine {
         }
 
         return states;
+    }
+
+    /**
+     * Returns the state the colony settles on if a day's gains repeat indefinitely.
+     *
+     * <p>Simulated rather than solved. The closed form has a discontinuity where the two gains meet:
+     * approach it with Food a hair below Energy and Food settles at {@code 100 x health²} while Energy
+     * saturates, but make them exactly equal and both settle at {@code 100 x health}. Running the same
+     * loop the replay runs sidesteps that entirely, and guarantees the figure the page shows is the one
+     * the colony would actually reach rather than a second formula that has to be kept in step.
+     *
+     * @param foodGain   Food a day brings in
+     * @param energyGain Energy a day brings in
+     * @param capacity   capacity the colony settles inside
+     * @return the settled gauges and population
+     */
+    public ColonyEquilibrium settle(double foodGain, double energyGain, int capacity) {
+        double food = 0.0;
+        double energy = 0.0;
+        double population = 0.0;
+
+        for (int day = 0; day < SETTLING_DAYS; day++) {
+            double loss = dailyLoss(population, capacity);
+            food = capped(Math.max(0.0, food - loss) + foodGain);
+            energy = capped(Math.max(0.0, energy - loss) + energyGain);
+            population = migrate(
+                population,
+                targetPopulation(capacity, health(food, energy)),
+                capacity
+            );
+        }
+
+        return new ColonyEquilibrium(food, energy, population);
+    }
+
+    /**
+     * Returns a gauge clamped at its ceiling, surplus discarded.
+     *
+     * @param gauge gauge value before the ceiling applies
+     * @return the gauge, never above the maximum
+     */
+    private double capped(double gauge) {
+        return Math.min(ruleset.gaugeMaximum(), gauge);
     }
 
     /**

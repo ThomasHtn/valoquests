@@ -44,22 +44,26 @@ class ColonyReplayEngineTest {
      */
     @Test
     void shouldRunTheWholeOrderOfOperationsOnTheFirstDay() {
-        // Initial state: gauges at 50, population 300, capacity 3 000.
-        // 1. loss = 14 x 300/3000 = 1.4, so both gauges drop to 48.6.
-        // 2. Food gains 7 000/500 = 14, Energy gains 14 x 7/7 = 14. Both reach 62.6.
+        // Initial state: gauges at 0, population 0, capacity 3 000.
+        // 1. loss = 14 x 0/3000 = 0, because an empty colony consumes nothing. That is the whole
+        //    point of opening on zero: day one costs nothing and earns nothing on its own.
+        // 2. Food gains 7 000/400 = 17.5, Energy gains 14 x 7/7 = 14. The squad's two games each
+        //    out-produce its own turnout, which is what leaves Energy in charge.
         // 3. no materials on the first day. 4. capacity stays 3 000.
-        // 5. health = 0.626, target = 1 878, growth is capped at 2.5% of 3 000 = 75.
+        // 5. health is the geometric mean of the two, and growth is capped at 2.5% of 3 000 = 75.
         ColonyDayState state = replayOne(new ColonyDailyInput(DAY_ONE, FULL_SQUAD_DAMAGE, 7, 0));
 
-        assertThat(state.dailyLoss()).isEqualTo(1.4, within(TOLERANCE));
-        assertThat(state.foodGain()).isEqualTo(14.0, within(TOLERANCE));
+        double expectedHealth = Math.sqrt(0.175 * 0.14);
+
+        assertThat(state.dailyLoss()).isZero();
+        assertThat(state.foodGain()).isEqualTo(17.5, within(TOLERANCE));
         assertThat(state.energyGain()).isEqualTo(14.0, within(TOLERANCE));
-        assertThat(state.food()).isEqualTo(62.6, within(TOLERANCE));
-        assertThat(state.energy()).isEqualTo(62.6, within(TOLERANCE));
+        assertThat(state.food()).isEqualTo(17.5, within(TOLERANCE));
+        assertThat(state.energy()).isEqualTo(14.0, within(TOLERANCE));
         assertThat(state.capacity()).isEqualTo(3_000);
-        assertThat(state.health()).isEqualTo(0.626, within(TOLERANCE));
-        assertThat(state.target()).isEqualTo(1_878.0, within(TOLERANCE));
-        assertThat(state.population()).isEqualTo(375.0, within(TOLERANCE));
+        assertThat(state.health()).isEqualTo(expectedHealth, within(TOLERANCE));
+        assertThat(state.target()).isEqualTo(3_000 * expectedHealth, within(TOLERANCE));
+        assertThat(state.population()).isEqualTo(75.0, within(TOLERANCE));
     }
 
     /**
@@ -121,6 +125,52 @@ class ColonyReplayEngineTest {
         ColonyDayState recovered = states.getLast();
         assertThat(recovered.population()).isGreaterThan(collapsed.population());
         assertThat(recovered.health()).isGreaterThan(0.1);
+    }
+
+    /**
+     * Verifies that a day nobody played can never leave the colony better off than it found it.
+     *
+     * <p>The regression this guards against was real and invisible. The daily loss is proportional to
+     * the population, so a small colony pays almost nothing, and the run used to open on a population
+     * of 300 with both gauges at 50 — a health of 0.5 nobody had earned, pulling towards a target of
+     * 1 458. A run <i>nobody ever played</i> therefore grew from 300 to 870 inhabitants over its first
+     * eight days before starting to fall.
+     *
+     * <p>A run nobody ever played must therefore stay flat on the floor, and no idle day may ever lift
+     * a gauge. The population is deliberately <i>not</i> asserted to fall on the first idle day: the
+     * gauges are the stock that buffers a single bad evening, so a colony still climbing towards a
+     * target its accumulated gauges justify keeps climbing for a few days after play stops. That
+     * buffer is the feature. What must not exist is growth out of nothing.
+     */
+    @Test
+    void shouldNeverRewardADayNobodyPlayed() {
+        for (ColonyDayState state : engine.replay(days(30, 0, 0), ROSTER_SIZE)) {
+            assertThat(state.population()).isZero();
+            assertThat(state.food()).isZero();
+            assertThat(state.energy()).isZero();
+        }
+
+        List<ColonyDailyInput> playedThenIdle =
+            new ArrayList<>(days(20, FULL_SQUAD_DAMAGE, ROSTER_SIZE));
+        double populationWhenPlayStopped =
+            engine.replay(playedThenIdle, ROSTER_SIZE).getLast().population();
+
+        for (int index = 0; index < 30; index++) {
+            playedThenIdle.add(new ColonyDailyInput(DAY_ONE.plusDays(20L + index), 0, 0, 0));
+        }
+
+        List<ColonyDayState> idleDays =
+            engine.replay(playedThenIdle, ROSTER_SIZE).subList(20, playedThenIdle.size());
+        ColonyDayState previous = idleDays.getFirst();
+
+        for (ColonyDayState state : idleDays) {
+            assertThat(state.food()).isLessThanOrEqualTo(previous.food() + TOLERANCE);
+            assertThat(state.energy()).isLessThanOrEqualTo(previous.energy() + TOLERANCE);
+            previous = state;
+        }
+
+        assertThat(idleDays.getLast().population()).isLessThan(populationWhenPlayStopped);
+        assertThat(idleDays.getLast().health()).isLessThan(0.01);
     }
 
     /**

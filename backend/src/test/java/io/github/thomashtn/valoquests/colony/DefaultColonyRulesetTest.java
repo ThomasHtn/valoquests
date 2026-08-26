@@ -32,14 +32,16 @@ class DefaultColonyRulesetTest {
     }
 
     /**
-     * Verifies that a competitive win is worth exactly one point of Food.
+     * Verifies that two games a day per player out-produce the Energy that turnout brings in.
      *
-     * <p>The whole reason the divisor is 500: no barème of the colony's own, just the scoring one read
-     * at a scale that makes the sentence "one competitive game, one point of Food" exact.
+     * <p>The whole reason the divisor sits below the 500 a competitive win is priced at. It is what
+     * puts Energy, and therefore turnout, in charge of the population in every ordinary regime: at two
+     * games each the squad's Food gain clears its Energy gain, so the weak link is who showed up.
      */
     @Test
-    void shouldPriceACompetitiveWinAtOnePointOfFood() {
-        assertThat(ruleset.foodDamageDivisor()).isEqualTo(500);
+    void shouldLeaveTurnoutInChargeAtTwoGamesADay() {
+        assertThat(ruleset.foodDamageDivisor()).isEqualTo(400);
+        assertThat(ruleset.foodDamageDivisor()).isLessThan(500);
     }
 
     /**
@@ -159,13 +161,17 @@ class DefaultColonyRulesetTest {
     }
 
     /**
-     * Verifies the state a run opens on.
+     * Verifies that a run opens on empty ground.
+     *
+     * <p>Both gauges and the population at zero, so an unplayed first day leaves the colony exactly
+     * where it was. A non-zero opening handed out a health nobody had earned, and since the daily loss
+     * is proportional to the population, a colony nobody ever played grew for its first eight days.
      */
     @Test
-    void shouldOpenARunOnItsInitialState() {
-        assertThat(ruleset.initialGauge()).isEqualTo(50.0);
+    void shouldOpenARunOnEmptyGround() {
+        assertThat(ruleset.initialGauge()).isZero();
         assertThat(ruleset.initialMaterials()).isZero();
-        assertThat(ruleset.initialPopulation()).isEqualTo(300.0);
+        assertThat(ruleset.initialPopulation()).isZero();
         assertThat(ruleset.capacityFor(ruleset.initialMaterials())).isEqualTo(3_000);
     }
 

@@ -14,7 +14,7 @@ export type ColonyBuilding = 'CAMP' | 'BARRACKS' | 'RESIDENTIAL_QUARTER' | 'CITA
 export type ColonyGauge = 'FOOD' | 'ENERGY';
 
 /**
- * One gauge and the day's movement on it.
+ * One gauge, the day's movement on it, and the level it settles at.
  *
  * Mirrors `ColonyGaugeResponse`.
  */
@@ -25,14 +25,46 @@ export interface ColonyGaugeState {
   readonly value: number;
 
   /**
-   * What the day brought in, before the ceiling clamped it.
+   * What the day has brought in so far, before the ceiling clamped it.
    */
   readonly gain: number;
 
   /**
-   * What the day cost, `14 × (population / capacity)`, identical on both gauges.
+   * Level this gauge settles at if the last seven days' rhythm holds, from 0 to 100. What the
+   * value is read against: the gauge holding the colony back sits far below the health it
+   * produces, so the raw figure alone reads as a famine.
    */
-  readonly loss: number;
+  readonly equilibrium: number;
+}
+
+/**
+ * What the colony is about to consume, and what it takes to cover it.
+ *
+ * Mirrors `ColonyUpkeepResponse`. Forward-looking on purpose: a day's loss is charged when the day
+ * opens, so it is already inside the value the gauge shows and the only figure left to act on is
+ * the next one.
+ */
+export interface ColonyUpkeep {
+  /**
+   * What the next daily tick takes off each gauge.
+   */
+  readonly upcomingLoss: number;
+
+  /**
+   * Match damage a day needs for Food to break even.
+   */
+  readonly damageToHold: number;
+
+  /**
+   * That damage expressed in ordinary competitive games.
+   */
+  readonly matchesToHold: number;
+
+  /**
+   * Distinct players a day needs for Energy to break even. Both requirements are needed, never
+   * either one: damage fills Food, turnout fills Energy.
+   */
+  readonly playersToHold: number;
 }
 
 /**
@@ -83,6 +115,7 @@ export interface Colony {
   readonly day: string;
   readonly food: ColonyGaugeState;
   readonly energy: ColonyGaugeState;
+  readonly upkeep: ColonyUpkeep;
   readonly healthPercentage: number;
 
   /**
@@ -111,9 +144,11 @@ export interface Colony {
   readonly limitingGauge: ColonyGauge;
 
   /**
-   * Share of capacity the colony plateaus at while today's inputs hold,
-   * `min(Food gain, Energy gain) / 14`. The model's fixed point, and the only thing about it that
-   * cannot be read off the gauges themselves.
+   * Share of capacity the colony plateaus at if the last seven days' rhythm holds. The model's
+   * fixed point, and the only thing about it that cannot be read off the gauges themselves.
+   *
+   * Resolved on complete days, never on today: today is a day in progress, so an equilibrium read
+   * off it would sit at zero every morning and climb back through the evening.
    */
   readonly equilibriumPercentage: number;
   readonly defeatedBosses: number;

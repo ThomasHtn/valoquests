@@ -29,13 +29,26 @@ public interface ColonyRuleset {
     /**
      * Returns the divisor turning a day's match damage into Food.
      *
-     * <p>A competitive win is worth 500 damage in the scoring ruleset, so it yields exactly one point
-     * of Food. No barème is created here: the damage read is the one produced <i>after</i> the daily
-     * diminishing returns, so the colony and the weekly ranking price a given match identically.
+     * <p>No barème is created here: the damage read is the one produced <i>after</i> the daily
+     * diminishing returns, so the colony and the weekly ranking price a given match identically. The
+     * divisor alone decides how much Food a competitive win is worth, and therefore how often Food
+     * rather than Energy is the gauge setting the population.
      *
      * @return match damage worth one point of Food
      */
     int foodDamageDivisor();
+
+    /**
+     * Returns the damage one ordinary competitive game is counted as being worth.
+     *
+     * <p>Used for one thing only: turning the Food a day needs into a number of games, so the page can
+     * say "about six games" rather than "2 700 damage". Derived from the scoring ruleset like every
+     * other number here, and taken at its draw value, which is what a roughly even win rate averages
+     * out at over a week.
+     *
+     * @return damage of a reference competitive game
+     */
+    int referenceMatchDamage();
 
     /**
      * Returns the coefficient governing both gauges' daily loss, applied to {@code population /

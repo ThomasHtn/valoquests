@@ -249,7 +249,9 @@
         "detail": "Elle se nourrit du nombre de joueurs présents dans la journée, et perd chaque jour 14 × population / capacité."
       },
       "movement": "{{gain}} pour {{loss}} de perte",
-      "description": "{{detail}} Pour la faire monter : {{rule}}. Aujourd'hui, {{movement}}."
+      "description": "{{detail}} Pour la faire monter : {{rule}}. Aujourd'hui, {{movement}}. {{settling}}",
+      "settling": "Elle sature au-dessus de ce que la colonie consomme et se stabilise à {{level}} : son surplus est perdu.",
+      "settlingLimiting": "C'est elle qui limite la colonie en ce moment : au rythme actuel elle se stabilise à {{level}}, et c'est ce niveau que marque le repère sur la barre."
     },
     "heading": "La colonie de l'escouade",
     "health": "Santé",
@@ -281,7 +283,16 @@
       "next": "En cours",
       "locked": "Verrouillé"
     },
-    "upgrades": "Améliorations"
+    "upgrades": "Améliorations",
+    "equilibrium": {
+      "caption": "Équilibre",
+      "label": "À votre rythme des sept derniers jours, la colonie se stabilise autour de {{share}} % de sa capacité, soit {{population}} habitants. Plafond fixé par la jauge {{gauge}} : la moins nourrie des deux décide seule, l'autre sature et perd son surplus."
+    },
+    "upkeep": {
+      "caption": "Ce soir",
+      "label": "À minuit, la colonie consommera {{loss}} sur chacune des deux jauges. Pour l'absorber il faut {{damage}} dégâts (environ {{matches}} parties) et {{players}} joueurs différents dans la journée. Les deux, pas l'un ou l'autre : les dégâts remplissent la nourriture, les joueurs remplissent l'énergie.",
+      "idle": "La colonie est vide, elle ne consomme rien. La première journée jouée y installe des habitants."
+    }
   },
   "landing": {
     "body": "Une web app où chaque bataille se mène à travers le jeu vidéo Valorant. Semaine après semaine, l'escouade repousse l'adversaire qui occupe le territoire et le reconquiert partie après partie.",

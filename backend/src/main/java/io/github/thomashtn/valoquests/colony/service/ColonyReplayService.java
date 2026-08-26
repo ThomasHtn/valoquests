@@ -9,6 +9,7 @@ import io.github.thomashtn.valoquests.run.entity.Run;
 import io.github.thomashtn.valoquests.run.service.RunService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -87,12 +88,14 @@ public class ColonyReplayService {
     }
 
     /**
-     * Replays the run in progress, if there is one.
+     * Replays the run in progress, if there is one, after settling any run that closed without it.
      *
      * @return the states written, empty while no run has been opened
      */
     @Transactional
     public List<ColonyDayState> replayCurrentRun() {
+        replayUnsettledClosedRuns();
+
         Optional<Run> currentRun = runService.currentRun();
 
         if (currentRun.isEmpty()) {
@@ -101,6 +104,41 @@ public class ColonyReplayService {
         }
 
         return replay(currentRun.orElseThrow());
+    }
+
+    /**
+     * Replays every closed run that never reached its settlement day.
+     *
+     * <p>A run is closed by the rollover on the very Monday that is its seventy-first day, and only the
+     * open run is ever replayed — so without this the settlement day was never computed for anybody. It
+     * is the day that credits the tenth week's challenges and boss and applies the last migration, so a
+     * run was ending one week of materials and one boss short of what it had actually earned, on the
+     * snapshot its final score is read from.
+     *
+     * <p>Settles a run once and never again: a run whose last day already is its settlement day is
+     * skipped, which is what keeps a closed run frozen against a later rebalancing of the ruleset.
+     *
+     * <p>Deliberately not named {@code settleClosedRuns}: SpotBugs reads any {@code void set*} method
+     * as a mutator, which would make this service look mutable and flag every class holding it.
+     */
+    @Transactional
+    public void replayUnsettledClosedRuns() {
+        for (Run run : runService.closedRuns()) {
+            LocalDate lastDay = snapshotRepository.findLastDayByRunId(run.getId()).orElse(null);
+
+            if (lastDay != null && !lastDay.isBefore(run.settlementDay())) {
+                continue;
+            }
+
+            LOGGER.info(
+                "Run {} closed on {} without its settlement day {}: settling it now.",
+                run.getNumber(),
+                lastDay,
+                run.settlementDay()
+            );
+
+            replay(run);
+        }
     }
 
     /**

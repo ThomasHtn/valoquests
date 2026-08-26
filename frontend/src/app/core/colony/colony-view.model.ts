@@ -45,6 +45,17 @@ export interface ColonyGaugeView {
    * Whether this gauge is the one currently setting the equilibrium population.
    */
   readonly isLimiting: boolean;
+
+  /**
+   * Level the bar draws its reference tick at: where this gauge settles if the recent rhythm
+   * holds. What turns a bar sitting at 33 from a famine into a colony on its mark.
+   */
+  readonly equilibriumPercentage: number;
+
+  /**
+   * Already-formatted equilibrium, to one decimal, for the reading beside the bar.
+   */
+  readonly equilibriumLabel: string;
 }
 
 /**

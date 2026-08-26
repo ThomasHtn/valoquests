@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 /**
  * Thin, square-ended progress track with a colored fill.
@@ -46,4 +46,28 @@ export class ProgressBar {
    * gauge rather than a plain indicator turn it on.
    */
   public readonly edgeMarker = input(false);
+
+  /**
+   * Draws a second, static tick at the level the fill is heading for, so the value can be read
+   * against where it is supposed to sit rather than against an empty track.
+   *
+   * The colony's gauges need this: the one holding the colony back settles far below the health it
+   * produces, so a squad comfortably holding half its capacity still sees that bar around a third.
+   * Without the tick it reads as a failure; with it, as being on the mark.
+   *
+   * `null` draws nothing.
+   */
+  public readonly targetMarker = input<number | null>(null);
+
+  /**
+   * The target tick, or `null` when there is nothing to draw.
+   *
+   * Skipped at the two ends for the same reason the leading edge is: at 0 % it sits on an empty
+   * track and reads as a value of its own, at 100 % it merges with the track's own edge.
+   */
+  protected readonly visibleTargetMarker = computed<number | null>(() => {
+    const target = this.targetMarker();
+
+    return target !== null && target > 0 && target < 100 ? target : null;
+  });
 }

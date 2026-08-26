@@ -15,6 +15,7 @@ import io.github.thomashtn.valoquests.colony.DefaultColonyRuleset;
 import io.github.thomashtn.valoquests.colony.dto.ColonyResponse;
 import io.github.thomashtn.valoquests.colony.dto.ColonyRunHistoryResponse;
 import io.github.thomashtn.valoquests.colony.dto.ColonyTrajectoryResponse;
+import io.github.thomashtn.valoquests.colony.dto.ColonyUpkeepResponse;
 import io.github.thomashtn.valoquests.colony.entity.ColonyDailySnapshot;
 import io.github.thomashtn.valoquests.colony.model.ColonyBuilding;
 import io.github.thomashtn.valoquests.colony.model.ColonyGauge;
@@ -42,6 +43,9 @@ class ColonyQueryServiceTest {
 
     /** Identifier of the fixture run. */
     private static final long RUN_ID = 1L;
+
+    /** Scale a ratio is read as a percentage on. */
+    private static final double PERCENT = 100.0;
 
     /** Run service dependency. */
     private RunService runService;
@@ -115,10 +119,13 @@ class ColonyQueryServiceTest {
     }
 
     /**
-     * Verifies that the daily loss and the population change are read against the previous day.
+     * Verifies the upkeep the colony is about to pay, and what it takes to cover it.
+     *
+     * <p>Read against <b>today</b>, not the previous day: today's loss has already been charged and is
+     * inside the value the gauge shows, so the only figure left to act on is the next one.
      */
     @Test
-    void shouldReportTheDaysLossAndPopulationChange() {
+    void shouldReportTheUpcomingUpkeepAndWhatCoversIt() {
         givenSnapshots(
             snapshot(FIRST_WEEK, 60, 60, 0, 2_000, 4_000, 12, 14),
             snapshot(FIRST_WEEK.plusDays(1), 62, 58, 0, 2_100, 4_000, 12, 14)
@@ -126,11 +133,37 @@ class ColonyQueryServiceTest {
 
         ColonyResponse colony = service.findCurrent();
 
-        // 14 x 2 000 / 4 000 = 7, both gauges alike.
-        assertThat(colony.food().loss()).isEqualTo(7.0, within(1e-9));
-        assertThat(colony.energy().loss()).isEqualTo(7.0, within(1e-9));
+        // 14 x 2 100 / 4 000 = 7.35, both gauges alike.
+        assertThat(colony.upkeep().upcomingLoss()).isEqualTo(7.35, within(1e-9));
+        // Food: 7.35 x 400 = 2 940 damage, which is 2 940 / 425 = 6.9 competitive games.
+        assertThat(colony.upkeep().damageToHold()).isEqualTo(2_940);
+        assertThat(colony.upkeep().matchesToHold()).isEqualTo(7);
+        // Energy: 7.35 x 7 / 14 = 3.675 players, so four of them have to turn up.
+        assertThat(colony.upkeep().playersToHold()).isEqualTo(4);
         assertThat(colony.populationChange()).isEqualTo(100);
         assertThat(colony.dailyMigrationLimit()).isEqualTo(100);
+    }
+
+    /**
+     * Verifies that a requirement is never rounded past the roster, nor asked of an empty colony.
+     *
+     * <p>An empty colony consumes nothing, so there is nothing to cover and no objective to state. At
+     * the other end, a loss no turnout can absorb must still ask for the squad and not for eight of it.
+     */
+    @Test
+    void shouldKeepTheUpkeepRequirementsWithinWhatCanBeAskedFor() {
+        givenSnapshots(snapshot(FIRST_WEEK, 0, 0, 0, 0, 3_000, 0, 0));
+
+        ColonyUpkeepResponse empty = service.findCurrent().upkeep();
+
+        assertThat(empty.upcomingLoss()).isZero();
+        assertThat(empty.damageToHold()).isZero();
+        assertThat(empty.matchesToHold()).isZero();
+        assertThat(empty.playersToHold()).isZero();
+
+        givenSnapshots(snapshot(FIRST_WEEK, 100, 100, 0, 3_000, 3_000, 14, 14));
+
+        assertThat(service.findCurrent().upkeep().playersToHold()).isEqualTo(7);
     }
 
     /**
@@ -147,6 +180,33 @@ class ColonyQueryServiceTest {
 
         assertThat(colony.limitingGauge()).isEqualTo(ColonyGauge.ENERGY);
         assertThat(colony.equilibriumPercentage()).isEqualTo(8.0 / 14.0 * 100.0, within(1e-9));
+    }
+
+    /**
+     * Verifies that the settling levels are resolved on the last complete days, never on today.
+     *
+     * <p>Today is a day in progress. Before anybody has played it, its gains are zero, and an
+     * equilibrium read off it would sit at zero every morning and climb back through the evening — the
+     * one reading a permanently displayed figure must never give.
+     */
+    @Test
+    void shouldResolveTheSettlingLevelsOnTheLastCompleteDaysNotOnToday() {
+        givenSnapshots(
+            snapshot(FIRST_WEEK, 100, 40, 0, 1_700, 3_000, 14, 8),
+            snapshot(FIRST_WEEK.plusDays(1), 100, 34, 0, 1_710, 3_000, 14, 8),
+            snapshot(FIRST_WEEK.plusDays(2), 100, 33, 0, 1_714, 3_000, 14, 8),
+            // Today, before a single game has been played on it.
+            snapshot(FIRST_WEEK.plusDays(3), 92, 25, 0, 1_714, 3_000, 0, 0)
+        );
+
+        ColonyResponse colony = service.findCurrent();
+
+        assertThat(colony.limitingGauge()).isEqualTo(ColonyGauge.ENERGY);
+        assertThat(colony.equilibriumPercentage()).isEqualTo(8.0 / 14.0 * PERCENT, within(0.5));
+        // Food outproduces the loss and saturates; Energy is the one that settles, at 100 x health².
+        assertThat(colony.food().equilibrium()).isEqualTo(100.0, within(1e-9));
+        assertThat(colony.energy().equilibrium())
+            .isEqualTo(PERCENT * Math.pow(8.0 / 14.0, 2), within(0.5));
     }
 
     /**

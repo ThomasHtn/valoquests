@@ -1,6 +1,12 @@
 <!-- Fill -->
 <div [class]="colorClass()" [style.width.%]="percentage()" class="h-full"></div>
 
+<!-- Target tick, under the leading edge so the two never fight when the fill sits on its mark.
+     Muted and hairline-thin: it is a reference the eye checks the fill against, not a value. -->
+@if (visibleTargetMarker(); as target) {
+  <span [style.left.%]="target" class="absolute inset-y-0 -ml-px w-px bg-text-primary/70"></span>
+}
+
 <!-- Leading-edge marker, pulled fully inside the fill by `-ml-0.5`. Skipped at 0 %, where it would
      otherwise sit on an empty track and read as a value of its own, and at 100 %, where it merges
      with the track's own edge and marks nothing. -->
