@@ -125,11 +125,11 @@ public class ColonyQueryService {
 
         double foodStock = today.getFoodStock().doubleValue();
         double population = today.getPopulation().doubleValue();
-        double consumption = engine.weeklyConsumption(population);
-        int capacity = today.getCapacity();
+        double efficiency = today.getEfficiency().doubleValue();
+        double consumption = engine.weeklyConsumption(population, efficiency);
 
-        ColonyTier tier = ruleset.tierFor(capacity);
-        ColonyTier nextTier = ruleset.nextTierFor(capacity);
+        ColonyTier tier = ruleset.tierFor(efficiency);
+        ColonyTier nextTier = ruleset.nextTierFor(efficiency);
 
         return new ColonyResponse(
             run.getNumber(),
@@ -140,18 +140,18 @@ public class ColonyQueryService {
             today.getDay(),
             rounded(population),
             rounded(today.getPopulationChange().doubleValue()),
-            capacity,
+            efficiency,
             today.getMaterials(),
             foodStock,
-            rounded(engine.feedablePopulation(foodStock)),
+            rounded(engine.feedablePopulation(foodStock, efficiency)),
             consumption,
             Math.max(0.0, foodStock - consumption),
             presenceReader.read(today.getDay(), today.getPresenceCount(), run.getRosterSize()),
             morale(today.getMorale().doubleValue()),
             toTier(tier, ColonyTierState.CURRENT),
             toTier(nextTier, ColonyTierState.LOCKED),
-            nextTier.threshold() - capacity,
-            (capacity - tier.threshold()) * PERCENT_SCALE / ruleset.tierStep(),
+            nextTier.threshold() - efficiency,
+            (efficiency - tier.threshold()) * PERCENT_SCALE / ruleset.efficiencyTierStep(),
             ladder(tier),
             weeks(run, runReader.weekStartOf(today.getDay())),
             defeatedBosses(run),
@@ -244,7 +244,7 @@ public class ColonyQueryService {
                 state = ColonyTierState.REACHED;
             }
 
-            ladder.add(toTier(ruleset.tierFor(step * ruleset.tierStep()), state));
+            ladder.add(toTier(ruleset.tierAtStep(step), state));
         }
 
         return ladder;
@@ -360,12 +360,17 @@ public class ColonyQueryService {
     ) {
         int materials = ruleset.materialsForDefeatedBoss(category, rosterSize);
 
+        // The efficiency those materials buy, read as the distance between an empty store and this one:
+        // the ruleset owns the conversion, so the tile cannot drift from the rule that pays it.
+        double efficiencyGain = ruleset.efficiencyFor(materials, rosterSize)
+            - ruleset.efficiencyFor(0, rosterSize);
+
         return new ColonyWeekResponse(
             weekIndex,
             state,
             category,
             materials,
-            ruleset.housingForMaterials(materials),
+            efficiencyGain,
             ruleset.moraleForDefeatedBoss(category)
         );
     }
@@ -416,7 +421,7 @@ public class ColonyQueryService {
         int previousStep = -1;
 
         for (ColonyDailySnapshot snapshot : snapshots) {
-            ColonyTier tier = ruleset.tierFor(snapshot.getCapacity());
+            ColonyTier tier = ruleset.tierFor(snapshot.getEfficiency().doubleValue());
 
             if (previousStep >= 0 && tier.step() > previousStep) {
                 milestones.add(new ColonyMilestoneResponse(
@@ -443,13 +448,14 @@ public class ColonyQueryService {
      */
     private ColonyTrajectoryPointResponse toPoint(Run run, ColonyDailySnapshot snapshot) {
         double foodStock = snapshot.getFoodStock().doubleValue();
+        double efficiency = snapshot.getEfficiency().doubleValue();
 
         return new ColonyTrajectoryPointResponse(
             snapshot.getDay(),
             runReader.runDayOf(run, snapshot.getDay()),
             rounded(snapshot.getPopulation().doubleValue()),
-            rounded(engine.feedablePopulation(foodStock)),
-            snapshot.getCapacity(),
+            rounded(engine.feedablePopulation(foodStock, efficiency)),
+            efficiency,
             snapshot.getMaterials(),
             foodStock,
             snapshot.getMorale().doubleValue(),
@@ -480,7 +486,9 @@ public class ColonyQueryService {
             .average()
             .orElse(0.0));
 
-        int capacity = snapshots.isEmpty() ? 0 : snapshots.getLast().getCapacity();
+        double efficiency = snapshots.isEmpty()
+            ? ruleset.efficiencyFor(0, run.getRosterSize())
+            : snapshots.getLast().getEfficiency().doubleValue();
         int materials = snapshots.isEmpty() ? 0 : snapshots.getLast().getMaterials();
 
         return new ColonyRunHistoryResponse(
@@ -490,9 +498,9 @@ public class ColonyQueryService {
             finalPopulation,
             peak,
             average,
-            capacity,
+            efficiency,
             materials,
-            toTier(ruleset.tierFor(capacity), ColonyTierState.REACHED),
+            toTier(ruleset.tierFor(efficiency), ColonyTierState.REACHED),
             defeatedBosses(run),
             ruleset.runLengthWeeks()
         );

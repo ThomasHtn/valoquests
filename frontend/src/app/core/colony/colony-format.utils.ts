@@ -58,6 +58,22 @@ export function formatGauge(value: number, language: 'fr' | 'en'): string {
 }
 
 /**
+ * Formats an efficiency movement with its sign always shown (`+0,40`).
+ *
+ * Two decimals, like every other efficiency on the page: a fight is worth fractions of a point, and
+ * the whole-number formatter used for inhabitants printed a minor boss's reward as `+0`.
+ *
+ * @param value - The movement to format.
+ * @param language - The app language whose decimal separator to use.
+ * @returns The signed movement, at two decimals.
+ */
+export function formatSignedGauge(value: number, language: 'fr' | 'en'): string {
+  const sign = value > 0 ? '+' : '';
+
+  return `${sign}${formatGauge(value, language)}`;
+}
+
+/**
  * Formats a percentage to one decimal (`84,5 %`), or to none when it is whole.
  *
  * @param value - The percentage to format.

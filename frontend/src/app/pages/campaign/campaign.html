@@ -4,9 +4,9 @@
 <app-page-header [eyebrow]="colony.eyebrow()" [heading]="'campaign.heading' | translate">
   <!-- The run's standing total and the fights won, then the day.
 
-       Housing is deliberately not among them: the food rail already closes on `feedable / capacity`,
-       so a housing counter here repeated that second figure word for word, two blocks apart and
-       under another name.
+       Efficiency is deliberately not among them: the ladder panel already carries it, both as the
+       name the town wears and as the progress towards the next one, so a raw figure here repeated
+       that two blocks apart and under another name.
 
        Stocks first, day last: the counters are what the run *has*, the day is where it stands, and
        the trailing edge of the bar is where a reader looks for the clock. The day also carries the
@@ -133,37 +133,47 @@
          hexagon sat straight on the first row of terrain and the two silhouettes fought. -->
     <div class="flex min-h-full flex-col gap-4">
       @if (colony.colony()) {
-        <!-- Resource band: the score, what sets it, and what every run before it scored. Kept short —
-             it is the page's standing figures, not its subject, and every row it gains is a row the
-             map below it loses.
+        <!-- The standing figures, as two panels on one row: the score with what sets it, then what
+             every run before it scored. Kept short — it is the page's standing figures, not its
+             subject, and every row it gains is a row the map below it loses.
 
              Nothing here is written as an instruction. A short bar asks to be filled; the shape of
              the food rail read against the mark on the hexagon says whether tonight is a night to
              play or a night to build, and it says it without a sentence. -->
-        <div
-          class="flex shrink-0 flex-col gap-3 bg-text-primary/4 px-6 py-5 sm:px-8 sm:py-6 lg:flex-row lg:items-stretch"
-        >
-          <app-colony-resource-band
-            (curveOpen)="openCurve()"
-            [delta]="colony.delta()"
-            [hexagonAriaLabel]="colony.hexagonAriaLabel()"
-            [populationLabel]="colony.populationLabel()"
-            [populationPercentage]="colony.populationPercentage()"
-            [presencePips]="colony.presencePips()"
-            [tracks]="colony.tracks()"
-          />
+        <div class="flex shrink-0 flex-col gap-4 lg:flex-row lg:items-stretch">
+          <!-- The band's own panel. `ColonyResourceBand` is hosted as `display: contents`, so this
+               div is what lays out its hexagon and its rails — the classes it carries are the row
+               they used to get from the block above. -->
+          <div
+            class="flex min-w-0 flex-1 flex-col gap-3 bg-text-primary/4 px-6 py-5 sm:px-8 sm:py-6 lg:flex-row lg:items-stretch"
+          >
+            <app-colony-resource-band
+              (curveOpen)="openCurve()"
+              [delta]="colony.delta()"
+              [hexagonAriaLabel]="colony.hexagonAriaLabel()"
+              [populationLabel]="colony.populationLabel()"
+              [populationPercentage]="colony.populationPercentage()"
+              [presencePips]="colony.presencePips()"
+              [tracks]="colony.tracks()"
+            />
+          </div>
 
           <!-- Every run before this one, as the scale the population figure is missing. Rows drawn
                as the squad's other ledgers are — the weekly ranking, the registry: notched, on a
-               grid, under a column head carrying no surface of its own. The ledger carries no frame
-               and no visible title of its own either: the column head already says what each figure
-               is, and the band it sits in is frame enough. The heading stays for assistive
-               technology, which has nothing else naming the list.
+               grid, under a column head carrying no surface of its own.
 
-               Set well clear of the rails: the ledger counts in the same figures they do, and at the
-               band's own gap the run totals read as a fourth rail rather than as the scale the three
-               of them are measured against. -->
-          <div class="flex w-full shrink-0 flex-col lg:ml-8 lg:w-[14rem]">
+               Its own panel, set apart from the rails the way the ladder is set apart from the map
+               below: the ledger counts in the same figures the rails do, and sharing one surface
+               with them the run totals read as a fourth rail rather than as the scale the three of
+               them are measured against. It carries no visible title — the column head already says
+               what each figure is — and the heading stays for assistive technology, which has
+               nothing else naming the list.
+
+               Held at the ladder's own width, so the two right-hand panels line up down the page
+               rather than stepping in by a couple of rem. -->
+          <div
+            class="flex w-full shrink-0 flex-col bg-text-primary/4 px-6 py-5 sm:px-8 sm:py-6 lg:w-[20rem]"
+          >
             <h2 class="sr-only">{{ 'colony.history.title' | translate }}</h2>
 
             <!-- Column head, hidden from assistive technology: the rows are a list rather than a
@@ -430,14 +440,14 @@
                                context bar and the ladder already count in, and it is the only part of
                                a fight's reward still standing on settlement day. The morale does not
                                fit in fifty-six pixels and rides in the tile's own title instead. -->
-                              @if (row.housingLabel) {
+                              @if (row.efficiencyLabel) {
                                 <span
                                   [class]="
-                                    row.housingEarned ? 'text-brand-500' : 'text-text-muted/60'
+                                    row.efficiencyEarned ? 'text-brand-500' : 'text-text-muted/60'
                                   "
                                   class="relative font-mono text-2xs leading-none font-medium tabular-nums"
                                 >
-                                  {{ row.housingLabel }}
+                                  {{ row.efficiencyLabel }}
                                 </span>
                               }
                             </span>
@@ -825,8 +835,8 @@
         [yAxisLabel]="'colony.population' | translate"
       />
 
-      <!-- The days buildings went up, so a step in the curve reads as capacity rather than as a good
-           week. -->
+      <!-- The days the town changed name, so a step in the curve reads as a Monday's materials
+           rather than as a good week. -->
       @if (colony.milestoneLabels().length > 0) {
         <ul class="flex flex-col gap-2">
           @for (milestone of colony.milestoneLabels(); track milestone) {

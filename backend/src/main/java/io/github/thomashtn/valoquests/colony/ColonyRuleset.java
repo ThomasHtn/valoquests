@@ -16,6 +16,11 @@ import io.github.thomashtn.valoquests.scoring.model.BossCategory;
  * <p>There is deliberately no anti-farming rule here. The daily diminishing returns and the regularity
  * bonus already exist upstream in the scoring ruleset and apply before the colony reads anything. The
  * colony consumes their output, it never recomputes it.
+ *
+ * <p>That inheritance is now load-bearing. Since the housing ceiling was removed, the scoring ruleset's
+ * diminishing returns are the <b>only</b> brake on sheer volume of play: they barely engage below six
+ * games a day per player and only bite on a grinder, which is deliberate, but retuning them upstream
+ * moves the top of the colony's scale with them.
  */
 public interface ColonyRuleset {
 
@@ -48,16 +53,22 @@ public interface ColonyRuleset {
     int referenceMatchDamage();
 
     /**
-     * Returns how many inhabitants one point of food feeds.
+     * Returns how many inhabitants one point of food feeds, given how developed the colony is.
      *
-     * <p>The single constant tying food to population, and it works both ways: {@code food x 8} is what
-     * the town can feed, {@code population / 8} is what it eats in a week. It is also the most delicate
-     * number of the whole system — it is calibrated so an ordinary run ends with its two ceilings, food
-     * and housing, neck and neck, and the moment it moves the two stop weighing the same.
+     * <p>The single number tying food to population, and it works both ways: {@code food x efficiency}
+     * is what the town can feed, {@code population / efficiency} is what it eats in a week. It is no
+     * longer a constant: materials raise it, which is how challenges and bosses pay off. There is no
+     * maximum, so a challenge validated in week ten is worth exactly what one validated in week one was.
      *
-     * @return inhabitants fed by one point of food
+     * <p>Materials are divided by the roster <b>before</b> being turned into efficiency, which is what
+     * keeps the balance identical from two players to twenty: challenges and bosses already pay per
+     * player, so without that division a large squad would climb faster than a small one.
+     *
+     * @param materials  cumulative materials of the run
+     * @param rosterSize roster size frozen on the run
+     * @return inhabitants fed by one point of food, never below the base value
      */
-    int inhabitantsPerFood();
+    double efficiencyFor(int materials, int rosterSize);
 
     /**
      * Returns the raw daily damage a player must reach to count towards turnout.
@@ -149,7 +160,7 @@ public interface ColonyRuleset {
      *
      * <p>The boss deliberately hands out no inhabitants at all. A gift of inhabitants fades at fifteen
      * percent a night and is gone three weeks later, which made the first six fights of a run pointless;
-     * materials buy housing, and housing is still standing on settlement day.
+     * materials raise efficiency, and efficiency never comes back down.
      *
      * @param category   category of the defeated boss
      * @param rosterSize roster size frozen on the run
@@ -158,66 +169,40 @@ public interface ColonyRuleset {
     int materialsForDefeatedBoss(BossCategory category, int rosterSize);
 
     /**
-     * Returns the housing a roster and a materials total open.
+     * Returns the efficiency between two consecutive tiers of the ladder.
      *
-     * <p>Continuous and unbounded: there is no threshold to cross, so a challenge validated on a Monday
-     * widens the town that same Monday. A pure function of its two arguments, which is what keeps the
-     * whole replay reproducible.
-     *
-     * @param rosterSize roster size frozen on the run
-     * @param materials  cumulative materials
-     * @return housing available
+     * @return width of one tier, in efficiency
      */
-    int capacityFor(int rosterSize, int materials);
+    double efficiencyTierStep();
 
     /**
-     * Returns the housing an amount of materials buys, on its own.
+     * Returns the tier an efficiency currently sits in.
      *
-     * <p>What lets a reward be quoted in housing rather than in materials. Materials are an intermediate
-     * currency the player never handles; housing is the axis every readout of the page already uses.
-     *
-     * @param materials materials to convert
-     * @return housing they are worth
-     */
-    int housingForMaterials(int materials);
-
-    /**
-     * Returns the materials a week's leftover food is turned into.
-     *
-     * <p>What guarantees no evening is ever wasted and the population has no maximum. A deliberately bad
-     * exchange rate that puts itself out: the bigger the town, the more food it takes to fill it, so the
-     * surplus melts on its own and housing catches food up rather than running away from it.
-     *
-     * @param foodStock food stock the Monday opens on
-     * @param capacity  housing of the week that has just closed
-     * @return materials the surplus is worth, never negative
-     */
-    int materialsForSurplus(double foodStock, int capacity);
-
-    /**
-     * Returns the housing between two consecutive tiers of the ladder.
-     *
-     * @return width of one tier
-     */
-    int tierStep();
-
-    /**
-     * Returns the tier a housing figure currently sits in.
-     *
-     * @param capacity housing available
+     * @param efficiency efficiency reached
      * @return tier reached
      */
-    ColonyTier tierFor(int capacity);
+    ColonyTier tierFor(double efficiency);
 
     /**
-     * Returns the tier following the one a housing figure sits in.
+     * Returns the tier following the one an efficiency sits in.
      *
      * <p>Never {@code null}: the ladder has no end, so there is always a next name to climb towards.
      *
-     * @param capacity housing available
+     * @param efficiency efficiency reached
      * @return next tier
      */
-    ColonyTier nextTierFor(int capacity);
+    ColonyTier nextTierFor(double efficiency);
+
+    /**
+     * Returns the tier sitting on one step of the ladder.
+     *
+     * <p>What lets a page walk the ladder by index without knowing the efficiency each step opens at.
+     * A negative step is read as the first one, so the ladder always starts on a named tier.
+     *
+     * @param step ladder step, counted from the opening efficiency
+     * @return the tier that step carries
+     */
+    ColonyTier tierAtStep(int step);
 
     /**
      * Returns the materials a run opens with.

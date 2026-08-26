@@ -165,11 +165,11 @@ public class ColonyReplayService {
         snapshotRepository.saveAll(states.stream().map(state -> toSnapshot(run, state)).toList());
 
         LOGGER.info(
-            "Colony replayed for run {}: {} day(s), population {} of a {} capacity.",
+            "Colony replayed for run {}: {} day(s), population {} at efficiency {}.",
             run.getNumber(),
             states.size(),
             states.isEmpty() ? 0 : Math.round(states.getLast().population()),
-            states.isEmpty() ? 0 : states.getLast().capacity()
+            states.isEmpty() ? 0 : states.getLast().efficiency()
         );
 
         return states;
@@ -192,7 +192,7 @@ public class ColonyReplayService {
         snapshot.setPresenceCount(state.presencePlayerCount());
         snapshot.setMorale(BigDecimal.valueOf(state.morale()).setScale(MORALE_SCALE, RoundingMode.HALF_UP));
         snapshot.setMaterials(state.materials());
-        snapshot.setCapacity(state.capacity());
+        snapshot.setEfficiency(stored(state.efficiency()));
         snapshot.setPopulation(stored(state.population()));
         snapshot.setPopulationChange(stored(state.populationChange()));
 

@@ -11,11 +11,9 @@ import java.util.List;
  * town can feed, and every night the town closes part of the gap between what it has and what it could
  * feed. There is no second population rule.
  *
- * <p>Two ceilings decide the score and the lower one commands. {@code feedablePopulation} is what the
- * food allows, {@code capacity} is what the housing allows, and the smaller of the two is what the town
- * actually climbs towards while the other is wasted. The reader is never asked to make that comparison
- * in their head: the page says it with the shape of its bars, and the two figures are handed over side
- * by side, smallest first, so it cannot be read the wrong way round.
+ * <p>One ceiling decides the score. {@code feedablePopulation} is what the food allows and the town
+ * climbs towards it; nothing is wasted and there is no second ceiling to arbitrate against. {@code
+ * efficiency} says how far one point of food carries, and it is the whole of what materials buy.
  *
  * <p>{@code foodStock} is a seven-day moving average, never a reserve. Today enters the count each night
  * and the day seven days back leaves it, so a quiet Tuesday dents it instead of emptying it, and three
@@ -29,7 +27,7 @@ import java.util.List;
  * @param day                    calendar day this state closes
  * @param population             today's population, which on the settlement day is the run's score
  * @param populationChange       inhabitants the night moved, negative when the town lost people
- * @param capacity               housing the frozen roster and the materials open
+ * @param efficiency             inhabitants one point of food feeds, raised by the materials gathered
  * @param materials              cumulative materials, which never go back down
  * @param foodStock              food of the last seven days
  * @param feedablePopulation     inhabitants that food can feed
@@ -39,10 +37,10 @@ import java.util.List;
  * @param morale                 morale and the speed it buys
  * @param tier                   step of the ladder the town sits in
  * @param nextTier               step it is climbing towards
- * @param missingCapacity        housing still needed to reach that next step
+ * @param missingEfficiency      efficiency still needed to reach that next step
  * @param tierProgressPercentage how far into the current step the town is, in {@code [0, 100]}
  * @param ladder                 the steps around the town's own, for the ladder panel
- * @param weeks                  the run's ten fights and what each was worth in housing
+ * @param weeks                  the run's ten fights and what each was worth in efficiency
  * @param defeatedBosses         bosses put down so far in the run
  * @param bossCount              bosses a run holds
  */
@@ -56,7 +54,7 @@ public record ColonyResponse(
     LocalDate day,
     int population,
     int populationChange,
-    int capacity,
+    double efficiency,
     int materials,
     double foodStock,
     int feedablePopulation,
@@ -66,7 +64,7 @@ public record ColonyResponse(
     ColonyMoraleResponse morale,
     ColonyTierResponse tier,
     ColonyTierResponse nextTier,
-    int missingCapacity,
+    double missingEfficiency,
     double tierProgressPercentage,
     List<ColonyTierResponse> ladder,
     List<ColonyWeekResponse> weeks,

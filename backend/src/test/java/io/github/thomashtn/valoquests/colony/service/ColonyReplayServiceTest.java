@@ -172,7 +172,7 @@ class ColonyReplayServiceTest {
         assertThat(snapshot.getPresenceCount()).isEqualTo(state.presencePlayerCount());
         assertThat(snapshot.getMorale().doubleValue()).isEqualTo(state.morale());
         assertThat(snapshot.getMaterials()).isEqualTo(state.materials());
-        assertThat(snapshot.getCapacity()).isEqualTo(state.capacity());
+        assertThat(snapshot.getEfficiency().doubleValue()).isEqualTo(state.efficiency(), STORED);
         assertThat(snapshot.getPopulation().doubleValue()).isEqualTo(state.population(), STORED);
         assertThat(snapshot.getPopulationChange().doubleValue())
             .isEqualTo(state.populationChange(), STORED);
@@ -298,6 +298,6 @@ class ColonyReplayServiceTest {
         assertThat(actual.getMorale()).isEqualByComparingTo(expected.getMorale());
         assertThat(actual.getPopulation()).isEqualByComparingTo(expected.getPopulation());
         assertThat(actual.getMaterials()).isEqualTo(expected.getMaterials());
-        assertThat(actual.getCapacity()).isEqualTo(expected.getCapacity());
+        assertThat(actual.getEfficiency()).isEqualByComparingTo(expected.getEfficiency());
     }
 }

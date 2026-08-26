@@ -16,11 +16,15 @@ import org.springframework.stereotype.Component;
  * many inhabitants the town can feed, and every night the town moves a little closer to that number.</b>
  * Everything below only prices that sentence.
  *
- * <p>Two ceilings decide the score and the lower one commands. Food says what the town can feed,
- * housing what it can lodge; whichever is smaller wins and the other is wasted. {@link
- * #inhabitantsPerFood()} is the number tying them, calibrated so an ordinary run finishes with the two
- * neck and neck — without it, all the work done on one of the two would be invisible in the final
- * score. It is the most delicate figure here and the one most worth revisiting after a real run.
+ * <p><b>One ceiling, and nothing is ever wasted.</b> Food alone says how far the town can grow, and
+ * {@link #efficiencyFor(int, int)} says how far one point of food carries. Materials raise that
+ * efficiency, which is how challenges and bosses pay off; there is no maximum, so a challenge validated
+ * on the last Monday is worth exactly what one validated on the first was.
+ *
+ * <p>The housing ceiling this replaced looked reasonable and did nothing. The seven-day food window
+ * means settlement day always sees a full week of production, so the food ceiling peaked exactly when
+ * it was measured and housing sat above it: taking challenge completion from 35% to 95% moved the final
+ * score by 0.2%. Efficiency moves it by 28%, which is what materials were for in the first place.
  *
  * <p>Morale is the only lever that is not a resource: it sets the speed the town closes its gap at, it
  * moves on bosses and on nothing else, and it is deliberately asymmetric — it makes the town climb
@@ -47,9 +51,18 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     private static final int FOOD_DAMAGE_DIVISOR = 85;
 
     /**
-     * Inhabitants one point of food feeds, and the divisor turning a population into what it eats.
+     * Inhabitants one point of food feeds before any material has been gathered.
      */
-    private static final int INHABITANTS_PER_FOOD = 8;
+    private static final double BASE_INHABITANTS_PER_FOOD = 8.0;
+
+    /**
+     * Materials per player buying one more inhabitant per point of food.
+     *
+     * <p>Calibrated for a threefold gap between a steady squad and one playing twice as much, chosen
+     * against the 1.4 the housing ceiling used to allow. A regular run runs from efficiency 8.00 to
+     * 16.15, linearly, which is also what sets the tier ladder's pace at one step a week.
+     */
+    private static final double MATERIALS_PER_EFFICIENCY_POINT = 150.0;
 
     /**
      * Raw daily damage one player must reach to count towards turnout.
@@ -75,10 +88,14 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     private static final double INITIAL_MORALE = 50.0;
 
     /**
-     * Morale floor, kept just above zero rather than at a playable value: a squad that loses every boss
-     * stops the town dead, and only winning one starts it again.
+     * Morale floor, low enough to hurt but never an absorbing state.
+     *
+     * <p>At one, the town closed one percent of its gap a week: nothing a squad did could start it
+     * again, which is waiting rather than losing. At twenty it closes nineteen percent a week, and the
+     * punishment is almost untouched — on a squad that wasted its first three weeks, raising the floor
+     * from one to twenty is worth two percent of the final score.
      */
-    private static final double MINIMUM_MORALE = 1.0;
+    private static final double MINIMUM_MORALE = 20.0;
 
     /**
      * Morale ceiling, and the value at which the town closes its gap at full speed.
@@ -96,41 +113,17 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     private static final int CHALLENGE_DAMAGE_TO_MATERIALS_DIVISOR = 100;
 
     /**
-     * Housing a run opens with, per player of the frozen roster.
+     * Efficiency between two consecutive tiers of the ladder.
      *
-     * <p>Three hundred rather than a round share of some total, so a seven-player squad opens on 2 100
-     * and lands <i>inside</i> its first named tier instead of on its edge. At 285 it opened at 1 995,
-     * five places short, and its town simply had no name on day one.
-     *
-     * <p>A smaller roster does open below the first named step — six players on 1 800, three on 900 —
-     * and that is left alone rather than papered over by inflating the constant: the ladder names those
-     * steps {@code CAMP} too, so the town always has a name, and the housing a squad starts on stays
-     * proportional to the squad, which is what keeps the balance identical at every size.
+     * <p>Three quarters of a point, so a regular run's climb from 8.00 to 16.15 crosses ten steps: one
+     * milestone a week, which is what the ladder is for. The ladder hangs on efficiency rather than on
+     * population because efficiency never goes back down, so a name is never lost, and because it is
+     * independent of roster size, where population is proportional to it.
      */
-    private static final int CAPACITY_PER_PLAYER = 300;
+    private static final double EFFICIENCY_TIER_STEP = 0.75;
 
     /**
-     * Materials one place of housing costs.
-     */
-    private static final int MATERIALS_PER_CAPACITY = 2;
-
-    /**
-     * Divisor turning a Monday's leftover food into materials.
-     */
-    private static final int SURPLUS_TO_MATERIALS_DIVISOR = 5;
-
-    /**
-     * Housing between two consecutive tiers of the ladder.
-     */
-    private static final int TIER_STEP = 500;
-
-    /**
-     * Ladder step the first name sits on, {@code 2 000 / 500}. Everything below wears that same name.
-     */
-    private static final int FIRST_NAMED_STEP = 4;
-
-    /**
-     * Names of the ladder, from the first named step up. The last one repeats, numbered.
+     * Names of the ladder, one per step from the opening efficiency up. The last one repeats, numbered.
      */
     private static final ColonyTierName[] TIER_NAMES = {
         ColonyTierName.CAMP,
@@ -188,8 +181,14 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     }
 
     @Override
-    public int inhabitantsPerFood() {
-        return INHABITANTS_PER_FOOD;
+    public double efficiencyFor(int materials, int rosterSize) {
+        if (rosterSize <= 0) {
+            return BASE_INHABITANTS_PER_FOOD;
+        }
+
+        double materialsPerPlayer = Math.max(0, materials) / (double) rosterSize;
+
+        return BASE_INHABITANTS_PER_FOOD + materialsPerPlayer / MATERIALS_PER_EFFICIENCY_POINT;
     }
 
     @Override
@@ -268,36 +267,23 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     }
 
     @Override
-    public int capacityFor(int rosterSize, int materials) {
-        return CAPACITY_PER_PLAYER * Math.max(0, rosterSize) + housingForMaterials(materials);
+    public double efficiencyTierStep() {
+        return EFFICIENCY_TIER_STEP;
     }
 
     @Override
-    public int housingForMaterials(int materials) {
-        return Math.max(0, materials) / MATERIALS_PER_CAPACITY;
+    public ColonyTier tierFor(double efficiency) {
+        return tierAt(stepOf(efficiency));
     }
 
     @Override
-    public int materialsForSurplus(double foodStock, int capacity) {
-        double needed = capacity / (double) INHABITANTS_PER_FOOD;
-        double surplus = Math.max(0.0, foodStock - needed);
-
-        return (int) (surplus / SURPLUS_TO_MATERIALS_DIVISOR);
+    public ColonyTier nextTierFor(double efficiency) {
+        return tierAt(stepOf(efficiency) + 1);
     }
 
     @Override
-    public int tierStep() {
-        return TIER_STEP;
-    }
-
-    @Override
-    public ColonyTier tierFor(int capacity) {
-        return tierAt(Math.max(0, capacity) / TIER_STEP);
-    }
-
-    @Override
-    public ColonyTier nextTierFor(int capacity) {
-        return tierAt(Math.max(0, capacity) / TIER_STEP + 1);
+    public ColonyTier tierAtStep(int step) {
+        return tierAt(Math.max(0, step));
     }
 
     @Override
@@ -311,23 +297,35 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     }
 
     /**
+     * Returns the ladder step an efficiency sits on.
+     *
+     * <p>Never negative: a run opens exactly on the base efficiency, which is step zero, so the town
+     * always has a name on day one whatever the roster size.
+     *
+     * @param efficiency efficiency reached
+     * @return ladder step, counted from the opening efficiency
+     */
+    private int stepOf(double efficiency) {
+        double climbed = efficiency - BASE_INHABITANTS_PER_FOOD;
+
+        return climbed <= 0 ? 0 : (int) (climbed / EFFICIENCY_TIER_STEP);
+    }
+
+    /**
      * Names one step of the ladder.
      *
-     * <p>Steps under the first named one all wear the opening name rather than none: a three-player
-     * squad opens its run at 900 housing, well under the 2 000 the spec's table starts at, and a town
-     * with no name at all on day one reads as a bug. Past the last name the ladder repeats, numbered, so
-     * it runs on without a maximum.
+     * <p>Past the last name the ladder repeats, numbered, so it runs on without a maximum: a squad
+     * validating nearly every challenge reaches efficiency 21 and enters the numbered citadels well
+     * before its run ends.
      *
-     * @param step ladder step, {@code capacity / 500}
+     * @param step ladder step, counted from the opening efficiency
      * @return the step, named
      */
     private ColonyTier tierAt(int step) {
-        int nameIndex = Math.clamp(step - FIRST_NAMED_STEP, 0, TIER_NAMES.length - 1);
+        int nameIndex = Math.clamp(step, 0, TIER_NAMES.length - 1);
         ColonyTierName name = TIER_NAMES[nameIndex];
-        int level = name == ColonyTierName.CITADEL
-            ? step - FIRST_NAMED_STEP - TIER_NAMES.length + 2
-            : 0;
+        int level = name == ColonyTierName.CITADEL ? step - TIER_NAMES.length + 2 : 0;
 
-        return new ColonyTier(step, step * TIER_STEP, name, level);
+        return new ColonyTier(step, BASE_INHABITANTS_PER_FOOD + step * EFFICIENCY_TIER_STEP, name, level);
     }
 }

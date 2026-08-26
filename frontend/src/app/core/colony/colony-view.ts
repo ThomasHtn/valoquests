@@ -4,7 +4,12 @@ import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resou
 import { Translation } from '@core/i18n/translation';
 import { ChartBar } from '@shared/chart/chart.model';
 import { ColonyApi } from './colony-api';
-import { formatPopulation, formatSignedPopulation } from './colony-format.utils';
+import {
+  formatGauge,
+  formatPopulation,
+  formatSignedGauge,
+  formatSignedPopulation,
+} from './colony-format.utils';
 import { colonyTrackColors } from './colony-gauge.utils';
 import {
   Colony,
@@ -152,16 +157,17 @@ export class ColonyView {
   );
 
   /**
-   * Share of the housing the population already fills, which is how high the hexagon is filled.
+   * Share of what the food can feed the population already fills, which is how high the hexagon is
+   * filled.
    *
-   * Housing as the denominator, never the food ceiling: the hexagon is read against the ladder
-   * beside it, and both count in housing. Clamped, since a town whose food outruns its housing
-   * produces a share above one hundred that would otherwise run the fill past the silhouette.
+   * There is only one ceiling now, so there is no denominator to choose: the town climbs towards what
+   * its food feeds and the hexagon reads against that. Still clamped, since the population trails the
+   * ceiling by a night and a sharp drop in food can briefly put it above.
    */
   public readonly populationPercentage = computed<number>(() => {
     const colony = this.colony();
 
-    return colony === null ? 0 : this.percentageOf(colony.population, colony.capacity);
+    return colony === null ? 0 : this.percentageOf(colony.population, colony.feedablePopulation);
   });
 
   /**
@@ -183,8 +189,8 @@ export class ColonyView {
   /**
    * Accessible name of the population hexagon.
    *
-   * Says exactly what the shape says: the figure, the housing it is filling towards — a full
-   * hexagon *is* the capacity reached, which is why there is no mark drawn on it — what the night
+   * Says exactly what the shape says: the figure, the ceiling it is filling towards — a full
+   * hexagon *is* the food ceiling reached, which is why there is no mark drawn on it — what the night
    * moved, and what pressing it opens. All four are carried by the fill, the silhouette and the
    * raised exponent, and none of them in text, so this is where a reader without the shapes gets
    * them.
@@ -200,7 +206,7 @@ export class ColonyView {
     return this.translation.translate('colony.hexagonAria', {
       population: formatPopulation(colony.population, language),
       change: formatSignedPopulation(colony.populationChange, language),
-      capacity: formatPopulation(colony.capacity, language),
+      ceiling: formatPopulation(colony.feedablePopulation, language),
     });
   });
 
@@ -277,7 +283,7 @@ export class ColonyView {
       value: point.population,
       detail: this.translation.translate('colony.curve.detail', {
         feedable: formatPopulation(point.feedablePopulation, language),
-        capacity: formatPopulation(point.capacity, language),
+        efficiency: formatGauge(point.efficiency, language),
       }),
       highlighted: point.population === trajectory.peakPopulation,
       muted: false,
@@ -334,10 +340,14 @@ export class ColonyView {
   }
 
   /**
-   * The food rail: what the town eats, what it has left to grow on, and the housing neither reaches.
+   * The food rail: what the town eats, and what it has left to grow on.
    *
-   * Three shapes in one track, and the reason the page needs no sentence. When the bright band
-   * disappears the town stops growing; when the muted one runs past what comes in, it shrinks.
+   * The rail is the week's stock. The muted band is what the town eats, the bright one what is left
+   * over, and the reason the page needs no sentence: when the bright band disappears the town stops
+   * growing, and when the muted one fills the rail, it shrinks.
+   *
+   * It used to draw the food ceiling inside the housing one. There is no housing any more, so there
+   * is no arbitration left to picture — only the economy that sets the single ceiling.
    *
    * @param colony - The colony.
    * @returns The display-ready rail.
@@ -345,18 +355,14 @@ export class ColonyView {
   private foodTrack(colony: Colony): ColonyTrackView {
     const language = this.translation.language();
     const colors = colonyTrackColors('FOOD');
-    const feedable = formatPopulation(colony.feedablePopulation, language);
-    const capacity = formatPopulation(colony.capacity, language);
 
     return {
       track: 'FOOD',
       label: this.translation.translate('colony.track.food.name'),
-      percentage: this.percentageOf(colony.population, colony.capacity),
-      secondaryPercentage: this.percentageOf(colony.feedablePopulation, colony.capacity),
-      // Both numbers, in this order, because they are not of the same kind: the first is what the
-      // meals allow, the second what the housing allows. One figure alone let a reader believe
-      // 3 520 people lived in a town holding 2 400.
-      valueLabel: `${feedable} / ${capacity}`,
+      percentage: this.percentageOf(colony.weeklyConsumption, colony.foodStock),
+      secondaryPercentage: 100,
+      // One number now, and it is the only ceiling there is: what this week's food can feed.
+      valueLabel: formatPopulation(colony.feedablePopulation, language),
       ariaLabel: this.translation.translate('colony.track.food.aria', {
         eaten: formatPopulation(colony.weeklyConsumption, language),
         surplus: formatPopulation(colony.weeklySurplus, language),
@@ -519,18 +525,15 @@ export class ColonyView {
       name: this.tierName(tier),
       // The active step leads with what it is climbing towards; every other one carries the
       // threshold it opens at, which is all there is to say about a step nobody stands on. The
-      // town's own housing led this row until it was read as the target: it is the one figure of
+      // town's own efficiency led this row until it was read as the target: it is the one figure of
       // the row that moves, and the top of a row is where a target is looked for.
-      valueLabel: formatPopulation(
-        isCurrent ? colony.nextTier.threshold : tier.threshold,
-        language,
-      ),
+      valueLabel: formatGauge(isCurrent ? colony.nextTier.threshold : tier.threshold, language),
       progressPercentage: isCurrent ? colony.tierProgressPercentage : null,
       progressLabel: isCurrent
         ? this.translation.translate('colony.tierProgress', {
-            current: formatPopulation(colony.capacity, language),
-            target: formatPopulation(colony.nextTier.threshold, language),
-            missing: formatPopulation(colony.missingCapacity, language),
+            current: formatGauge(colony.efficiency, language),
+            target: formatGauge(colony.nextTier.threshold, language),
+            missing: formatGauge(colony.missingEfficiency, language),
             name: this.tierName(colony.nextTier),
           })
         : '',
@@ -551,10 +554,10 @@ export class ColonyView {
       weekIndex: week.weekIndex,
       state: week.state,
       // A week not yet reached shows nothing at all: a `0` there would read as a fight already lost.
-      housingLabel: settled
-        ? formatSignedPopulation(week.state === 'DEFEATED' ? week.housingGain : 0, language)
+      efficiencyLabel: settled
+        ? formatSignedGauge(week.state === 'DEFEATED' ? week.efficiencyGain : 0, language)
         : '',
-      housingEarned: week.state === 'DEFEATED',
+      efficiencyEarned: week.state === 'DEFEATED',
       detailLabel: this.bossDetail(week, language),
     };
   }
@@ -575,7 +578,7 @@ export class ColonyView {
       week: week.weekIndex,
       category: this.translation.translate(`colony.boss.category.${week.category}`),
       materials: formatPopulation(week.materials, language),
-      housing: formatPopulation(week.housingGain, language),
+      efficiency: formatGauge(week.efficiencyGain, language),
       morale: formatSignedPopulation(week.moraleDelta, language),
     });
   }

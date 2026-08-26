@@ -14,7 +14,7 @@ import java.time.LocalDate;
  * @param runDay             that day's one-based position in the run
  * @param population         population at the end of the day
  * @param feedablePopulation inhabitants the food could feed that day
- * @param capacity           inhabitants the housing could lodge that day
+ * @param efficiency         inhabitants one point of food fed that day
  * @param materials          cumulative materials
  * @param foodStock          food of the seven days ending on this one
  * @param morale             morale the day ended on
@@ -26,7 +26,7 @@ public record ColonyTrajectoryPointResponse(
     int runDay,
     int population,
     int feedablePopulation,
-    int capacity,
+    double efficiency,
     int materials,
     double foodStock,
     double morale,

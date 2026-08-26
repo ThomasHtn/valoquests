@@ -214,10 +214,10 @@
         "ELITE": "elite"
       },
       "detail": {
-        "DEFEATED": "Week {{week}}: {{category}} boss defeated. {{materials}} materials, so +{{housing}} housing, and {{morale}} morale.",
+        "DEFEATED": "Week {{week}}: {{category}} boss defeated. {{materials}} materials, so +{{efficiency}} efficiency, and {{morale}} morale.",
         "SURVIVED": "Week {{week}}: the {{category}} boss held. No materials, and {{morale}} morale.",
-        "CURRENT": "Week {{week}}: {{category}} boss under way. {{materials}} materials at stake, so +{{housing}} housing, and {{morale}} morale.",
-        "UPCOMING": "Week {{week}}: {{category}} boss ahead. {{materials}} materials at stake, so +{{housing}} housing."
+        "CURRENT": "Week {{week}}: {{category}} boss under way. {{materials}} materials at stake, so +{{efficiency}} efficiency, and {{morale}} morale.",
+        "UPCOMING": "Week {{week}}: {{category}} boss ahead. {{materials}} materials at stake, so +{{efficiency}} efficiency."
       }
     },
     "bosses": "Bosses",
@@ -228,12 +228,12 @@
       "axis": "Day of the run",
       "caption": "Peak {{peak}} · Average {{average}}",
       "day": "D{{day}}",
-      "detail": "Feedable {{feedable}} · housed {{capacity}}",
+      "detail": "Feedable {{feedable}} · efficiency {{efficiency}}",
       "milestone": "{{tier}} · D{{day}}"
     },
     "delta": "tonight",
     "eyebrow": "Campaign · Run {{run}} · Week {{week}} of {{weeks}}",
-    "hexagonAria": "Population: {{population}} inhabitants of {{capacity}} housed, {{change}} tonight. Open the run's curve.",
+    "hexagonAria": "Population: {{population}} inhabitants of {{ceiling}} feedable, {{change}} tonight. Open the run's curve.",
     "history": {
       "title": "Run history",
       "run": "Run {{run}}",
@@ -244,7 +244,7 @@
     },
     "ladder": {
       "title": "The town's tiers",
-      "unit": "Housing"
+      "unit": "Efficiency"
     },
     "materials": "Materials",
     "population": "Population",
@@ -270,13 +270,13 @@
       "CAPITAL": "Capital",
       "CITADEL": "Citadel level {{level}}"
     },
-    "tierProgress": "{{current}} places of housing out of the tier's {{target}}. {{missing}} to go before {{name}}.",
+    "tierProgress": "Efficiency {{current}} out of the tier's {{target}}. {{missing}} to go before {{name}}.",
     "track": {
       "food": {
         "name": "Food",
         "eaten": "eaten {{food}}/wk",
         "surplus": "surplus {{food}}/wk",
-        "aria": "Food: {{eaten}} eaten per week, {{surplus}} left over. The surplus is what brings new people in."
+        "aria": "Food: {{eaten}} eaten per week, {{surplus}} left over. What is left over is what brings new people in."
       },
       "presence": {
         "name": "Turnout",
@@ -679,8 +679,8 @@
         "description": "You play, that produces food. The food says how many inhabitants the town can feed. Every night, the town moves a little closer to that number. There is no other population rule.",
         "facts": {
           "harvest": "85 damage makes 1 food. An average competitive game is therefore worth 5, and that is the barème's damage, already through the day's diminishing returns.",
-          "feeds": "1 food feeds 8 inhabitants. It is the only constant tying food to population.",
-          "eats": "The town eats population / 8 a week. The bigger it gets the more it eats, so the surplus melts on its own as it grows.",
+          "feeds": "One food feeds 8 inhabitants to begin with, and more as the town develops. It is the only figure tying food to population.",
+          "eats": "The town eats population / efficiency a week. The bigger it gets the more it eats, so what is left over melts on its own as it grows.",
           "window": "Only the last seven days count. Every night today enters the tally and the day seven days back leaves it: it is an average, not a reserve."
         },
         "presenceLabel": "Turnout",
@@ -700,16 +700,16 @@
       },
       "night": {
         "title": "The night",
-        "description": "Every night, the town closes 15 % of the gap between what it holds and the lower of its two ceilings: what the food allows, and what the housing allows.",
+        "description": "Every night, the town closes 15 % of the gap between what it holds and what its food allows. There is one ceiling only, so nothing is ever wasted.",
         "gap": "It moves fast at first and slower and slower after, and never quite arrives. That is deliberate: there is always something left to gain, and never an evening where playing is pointless. The other way round, if the food no longer stretches, it falls back at the same speed.",
-        "moraleLabel": "Morale, from 1 to 100",
+        "moraleLabel": "Morale, from 20 to 100",
         "morale": {
           "MINOR": "Minor defeated",
           "STANDARD": "Standard defeated",
           "ELITE": "Elite defeated",
           "SURVIVED": "Boss held"
         },
-        "moraleFootnote": "Morale opens at 50 and only the weekly boss moves it. It multiplies the speed of the climb: at 50 the town closes 7.5 % of the gap a night instead of 15 %. It never slows the fall, and it never drops under 1: down there the town stops climbing altogether, and only a defeated boss starts it again."
+        "moraleFootnote": "Morale starts at 50 and depends on bosses alone. It multiplies the climbing speed: at 50 the town closes 7.5 % of the gap a night instead of 15 %. It never slows the fall, and it never drops below 20: down there the town barely moves, but a defeated boss always restarts it."
       },
       "progression": {
         "description": "Some challenges ask not for an absolute threshold but for progress on yourself: beating your own K/D, ACS or headshot rate from the previous 4 weeks by a given percentage. Grinding matches at the same level does not complete them, since the measure is a rate. With no history over the last 4 weeks, the challenge stays out of reach.",
@@ -727,10 +727,10 @@
       },
       "town": {
         "title": "The town",
-        "description": "Housing is worth 300 places per squad player, plus half of the materials gathered. There is no threshold to cross: a validated challenge widens the town that same Monday, and there is no maximum.",
+        "description": "Gathered materials raise the efficiency: every 150 materials per player, one food feeds one more inhabitant. There is no threshold to cross and no maximum: a validated challenge makes the food carry further that same Monday, and one validated in the last week is worth exactly what one from the first was.",
         "materialsLabel": "Materials per validated challenge, per player",
-        "tiersLabel": "The tiers, one every 500 housing",
-        "tiersFootnote": "A defeated boss pays 60, 80 or 100 materials per squad player, never inhabitants: inhabitants would fade at 15 % a night, whereas places are still standing on settlement day. And every Monday, the food the town cannot eat is converted into materials at a deliberately bad rate: (food − housing / 8) / 5. No evening is ever wasted."
+        "tiersLabel": "The tiers, one every 0.75 efficiency",
+        "tiersFootnote": "A defeated boss pays 60, 80 or 100 materials per squad player, never inhabitants: inhabitants would fade at 15 % a night, whereas efficiency never comes back down. Materials are divided by the squad size before being converted, which keeps the balance identical from 2 players to 20. A regular run runs from 8 to 16 efficiency, one tier a week."
       }
     },
     "title": "Rules & how it works"

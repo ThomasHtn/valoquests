@@ -161,13 +161,13 @@ interface CampaignMapRow {
    * part of a fight's reward still standing on settlement day. Morale does not fit in fifty-six
    * pixels and lives in {@link detailLabel} instead.
    */
-  readonly housingLabel: string | null;
+  readonly efficiencyLabel: string | null;
 
   /**
    * Whether that housing is banked. A week whose boss held shows a flat zero, recessive; a week won
    * shows what it paid, in the brand colour.
    */
-  readonly housingEarned: boolean;
+  readonly efficiencyEarned: boolean;
 
   /**
    * The whole of what the week was worth, in one sentence, for the tile's title: its materials, the
@@ -336,24 +336,24 @@ export class Campaign {
         key: `lead-${index}`,
         node: null,
         bossColumn: -1,
-        housingLabel: null,
-        housingEarned: false,
+        efficiencyLabel: null,
+        efficiencyEarned: false,
         detailLabel: null,
       })),
       ...nodes.map((node, index) => ({
         key: node.id,
         node,
         bossColumn: resolveBossColumn(index),
-        housingLabel: bosses[index]?.housingLabel ?? null,
-        housingEarned: bosses[index]?.housingEarned ?? false,
+        efficiencyLabel: bosses[index]?.efficiencyLabel ?? null,
+        efficiencyEarned: bosses[index]?.efficiencyEarned ?? false,
         detailLabel: bosses[index]?.detailLabel ?? null,
       })),
       ...Array.from({ length: TRAIL_TERRAIN_ROWS }, (_, index) => ({
         key: `trail-${index}`,
         node: null,
         bossColumn: -1,
-        housingLabel: null,
-        housingEarned: false,
+        efficiencyLabel: null,
+        efficiencyEarned: false,
         detailLabel: null,
       })),
     ];

@@ -423,7 +423,7 @@
             {{ 'rules.sections.town.tiersLabel' | translate }}
           </p>
           <ul class="mt-2.5 flex flex-col">
-            @for (tier of colonyTierShowcase; track tier.threshold) {
+            @for (tier of colonyTierShowcase(); track tier.name) {
               <li
                 class="flex items-baseline justify-between gap-3 border-b border-text-primary/8 py-2 last:border-b-0"
               >

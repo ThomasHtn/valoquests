@@ -59,6 +59,11 @@ class ColonyQueryServiceTest {
     /** Tolerance for the double arithmetic. */
     private static final double TOLERANCE = 1e-6;
 
+    /**
+     * Efficiency the worked state sits at: 3 050 materials over a roster of seven.
+     */
+    private static final double WORKED_EFFICIENCY = 8.0 + 3_050.0 / 7.0 / 150.0;
+
     /** Run service dependency. */
     private RunService runService;
 
@@ -136,24 +141,28 @@ class ColonyQueryServiceTest {
         assertThat(colony.day()).isEqualTo(TODAY);
         assertThat(colony.population()).isEqualTo(2_400);
         assertThat(colony.populationChange()).isEqualTo(92);
-        assertThat(colony.capacity()).isEqualTo(3_625);
+        assertThat(colony.efficiency()).isEqualTo(WORKED_EFFICIENCY, within(TOLERANCE));
         assertThat(colony.materials()).isEqualTo(3_050);
     }
 
     /**
-     * Verifies the two ceilings are handed over together, along with what the town eats and what it has
-     * left over. Those four figures are the whole of the food readout.
+     * Verifies the food readout: the stock, the ceiling it buys, what the town eats and what is left.
+     *
+     * <p>All four follow the efficiency rather than a constant, which is what makes a validated
+     * challenge visible in the readout on the Monday that credits it.
      */
     @Test
-    void shouldHandOverBothCeilingsAndWhatSeparatesThem() {
+    void shouldHandOverTheCeilingAndWhatTheTownEats() {
         givenTheWorkedState();
 
         ColonyResponse colony = service.findCurrent();
 
         assertThat(colony.foodStock()).isEqualTo(440.0, within(TOLERANCE));
-        assertThat(colony.feedablePopulation()).isEqualTo(3_520);
-        assertThat(colony.weeklyConsumption()).isEqualTo(300.0, within(TOLERANCE));
-        assertThat(colony.weeklySurplus()).isEqualTo(140.0, within(TOLERANCE));
+        assertThat(colony.feedablePopulation()).isEqualTo(4_798);
+        assertThat(colony.weeklyConsumption())
+            .isEqualTo(2_400.0 / WORKED_EFFICIENCY, within(TOLERANCE));
+        assertThat(colony.weeklySurplus())
+            .isEqualTo(440.0 - 2_400.0 / WORKED_EFFICIENCY, within(TOLERANCE));
     }
 
     /**
@@ -161,7 +170,7 @@ class ColonyQueryServiceTest {
      */
     @Test
     void shouldNeverReportANegativeSurplus() {
-        givenSnapshots(snapshot(TODAY, 100.0, 3_000.0, 0.0, 55.0, 3_050, 3_625));
+        givenSnapshots(snapshot(TODAY, 100.0, 3_000.0, 0.0, 55.0, 3_050, WORKED_EFFICIENCY));
 
         assertThat(service.findCurrent().weeklySurplus()).isZero();
     }
@@ -175,7 +184,7 @@ class ColonyQueryServiceTest {
 
         assertThat(service.findCurrent().morale()).satisfies(morale -> {
             assertThat(morale.value()).isEqualTo(55.0, within(TOLERANCE));
-            assertThat(morale.floor()).isEqualTo(1.0);
+            assertThat(morale.floor()).isEqualTo(20.0);
             assertThat(morale.ceiling()).isEqualTo(100.0);
             assertThat(morale.growthPercentPerNight()).isEqualTo(8.25, within(TOLERANCE));
         });
@@ -194,11 +203,12 @@ class ColonyQueryServiceTest {
         ColonyResponse colony = service.findCurrent();
 
         assertThat(colony.tier().name()).isEqualTo(ColonyTierName.BOROUGH);
-        assertThat(colony.tier().threshold()).isEqualTo(3_500);
+        assertThat(colony.tier().threshold()).isEqualTo(10.25, within(TOLERANCE));
         assertThat(colony.tier().state()).isEqualTo(ColonyTierState.CURRENT);
-        assertThat(colony.nextTier().threshold()).isEqualTo(4_000);
-        assertThat(colony.missingCapacity()).isEqualTo(375);
-        assertThat(colony.tierProgressPercentage()).isEqualTo(25.0, within(TOLERANCE));
+        assertThat(colony.nextTier().threshold()).isEqualTo(11.0, within(TOLERANCE));
+        assertThat(colony.missingEfficiency())
+            .isEqualTo(11.0 - WORKED_EFFICIENCY, within(TOLERANCE));
+        assertThat(colony.tierProgressPercentage()).isEqualTo(87.3, within(0.1));
     }
 
     /**
@@ -210,12 +220,12 @@ class ColonyQueryServiceTest {
         givenTheWorkedState();
 
         assertThat(service.findCurrent().ladder()).satisfiesExactly(
-            step -> assertThat(step.threshold()).isEqualTo(3_000),
-            step -> assertThat(step.threshold()).isEqualTo(3_500),
-            step -> assertThat(step.threshold()).isEqualTo(4_000),
-            step -> assertThat(step.threshold()).isEqualTo(4_500),
-            step -> assertThat(step.threshold()).isEqualTo(5_000),
-            step -> assertThat(step.threshold()).isEqualTo(5_500)
+            step -> assertThat(step.threshold()).isEqualTo(9.50, within(TOLERANCE)),
+            step -> assertThat(step.threshold()).isEqualTo(10.25, within(TOLERANCE)),
+            step -> assertThat(step.threshold()).isEqualTo(11.00, within(TOLERANCE)),
+            step -> assertThat(step.threshold()).isEqualTo(11.75, within(TOLERANCE)),
+            step -> assertThat(step.threshold()).isEqualTo(12.50, within(TOLERANCE)),
+            step -> assertThat(step.threshold()).isEqualTo(13.25, within(TOLERANCE))
         );
 
         assertThat(service.findCurrent().ladder()).extracting("state").containsExactly(
@@ -246,16 +256,16 @@ class ColonyQueryServiceTest {
         assertThat(service.findCurrent().weeks()).hasSize(10).satisfies(weeks -> {
             assertThat(weeks.get(0).state()).isEqualTo(ColonyWeekOutcomeState.DEFEATED);
             assertThat(weeks.get(0).materials()).isEqualTo(420);
-            assertThat(weeks.get(0).housingGain()).isEqualTo(210);
+            assertThat(weeks.get(0).efficiencyGain()).isEqualTo(0.4, within(TOLERANCE));
             assertThat(weeks.get(0).moraleDelta()).isEqualTo(10.0);
 
             assertThat(weeks.get(1).state()).isEqualTo(ColonyWeekOutcomeState.SURVIVED);
             assertThat(weeks.get(1).materials()).isZero();
-            assertThat(weeks.get(1).housingGain()).isZero();
+            assertThat(weeks.get(1).efficiencyGain()).isZero();
             assertThat(weeks.get(1).moraleDelta()).isEqualTo(-20.0);
 
             assertThat(weeks.get(2).state()).isEqualTo(ColonyWeekOutcomeState.DEFEATED);
-            assertThat(weeks.get(2).housingGain()).isEqualTo(280);
+            assertThat(weeks.get(2).efficiencyGain()).isEqualTo(560.0 / 7 / 150, within(TOLERANCE));
             assertThat(weeks.get(2).moraleDelta()).isEqualTo(15.0);
 
             assertThat(weeks.get(3).state()).isEqualTo(ColonyWeekOutcomeState.CURRENT);
@@ -277,7 +287,7 @@ class ColonyQueryServiceTest {
         assertThat(service.findCurrent().weeks().get(3)).satisfies(week -> {
             assertThat(week.state()).isEqualTo(ColonyWeekOutcomeState.CURRENT);
             assertThat(week.category()).isEqualTo(BossCategory.ELITE);
-            assertThat(week.housingGain()).isEqualTo(350);
+            assertThat(week.efficiencyGain()).isEqualTo(700.0 / 7 / 150, within(TOLERANCE));
             assertThat(week.moraleDelta()).isEqualTo(20.0);
         });
     }
@@ -300,12 +310,12 @@ class ColonyQueryServiceTest {
         assertThat(service.findCurrent().weeks()).satisfies(weeks -> {
             assertThat(weeks.get(0).state()).isEqualTo(ColonyWeekOutcomeState.SURVIVED);
             assertThat(weeks.get(0).materials()).isZero();
-            assertThat(weeks.get(0).housingGain()).isZero();
+            assertThat(weeks.get(0).efficiencyGain()).isZero();
             assertThat(weeks.get(0).moraleDelta()).isZero();
 
             // The week today falls in is the only one under way, and it still shows its stake.
             assertThat(weeks.get(3).state()).isEqualTo(ColonyWeekOutcomeState.CURRENT);
-            assertThat(weeks.get(3).housingGain()).isEqualTo(350);
+            assertThat(weeks.get(3).efficiencyGain()).isEqualTo(700.0 / 7 / 150, within(TOLERANCE));
         });
     }
 
@@ -362,8 +372,8 @@ class ColonyQueryServiceTest {
             assertThat(trajectory.points()).singleElement().satisfies(point -> {
                 assertThat(point.runDay()).isEqualTo(26);
                 assertThat(point.population()).isEqualTo(2_400);
-                assertThat(point.feedablePopulation()).isEqualTo(3_520);
-                assertThat(point.capacity()).isEqualTo(3_625);
+                assertThat(point.feedablePopulation()).isEqualTo(4_798);
+                assertThat(point.efficiency()).isEqualTo(WORKED_EFFICIENCY, within(TOLERANCE));
                 assertThat(point.morale()).isEqualTo(55.0, within(TOLERANCE));
             });
         });
@@ -375,15 +385,15 @@ class ColonyQueryServiceTest {
     @Test
     void shouldMarkTheDaysTheTownChangedName() {
         givenSnapshots(
-            snapshot(FIRST_WEEK, 440.0, 2_400.0, 92.0, 55.0, 1_800, 3_000),
-            snapshot(FIRST_WEEK.plusDays(1), 440.0, 2_400.0, 92.0, 55.0, 1_900, 3_050),
-            snapshot(FIRST_WEEK.plusDays(2), 440.0, 2_400.0, 92.0, 55.0, 3_050, 3_625)
+            snapshot(FIRST_WEEK, 440.0, 2_400.0, 92.0, 55.0, 1_800, 9.6),
+            snapshot(FIRST_WEEK.plusDays(1), 440.0, 2_400.0, 92.0, 55.0, 1_900, 9.7),
+            snapshot(FIRST_WEEK.plusDays(2), 440.0, 2_400.0, 92.0, 55.0, 3_050, WORKED_EFFICIENCY)
         );
 
         assertThat(service.findTrajectory().milestones()).singleElement().satisfies(milestone -> {
             assertThat(milestone.name()).isEqualTo(ColonyTierName.BOROUGH);
             assertThat(milestone.runDay()).isEqualTo(3);
-            assertThat(milestone.threshold()).isEqualTo(3_500);
+            assertThat(milestone.threshold()).isEqualTo(10.25, within(TOLERANCE));
         });
     }
 
@@ -394,7 +404,7 @@ class ColonyQueryServiceTest {
     void shouldReplayARunThatHasNoSnapshotYet() {
         when(snapshotRepository.findAllByRunIdOrderByDayAsc(RUN_ID))
             .thenReturn(List.of())
-            .thenReturn(List.of(snapshot(TODAY, 440.0, 2_400.0, 92.0, 55.0, 3_050, 3_625)));
+            .thenReturn(List.of(snapshot(TODAY, 440.0, 2_400.0, 92.0, 55.0, 3_050, WORKED_EFFICIENCY)));
 
         assertThat(service.findCurrent().population()).isEqualTo(2_400);
         verify(replayService).replay(any());
@@ -410,11 +420,11 @@ class ColonyQueryServiceTest {
         closed.setClosedAt(Instant.parse("2026-08-10T00:05:00Z"));
         when(runService.closedRuns()).thenReturn(List.of(closed));
         when(snapshotRepository.findAllByRunIdOrderByDayAsc(RUN_ID))
-            .thenReturn(List.of(snapshot(TODAY, 440.0, 2_400.0, 92.0, 55.0, 3_050, 3_625)));
+            .thenReturn(List.of(snapshot(TODAY, 440.0, 2_400.0, 92.0, 55.0, 3_050, WORKED_EFFICIENCY)));
 
         assertThat(service.findHistory()).singleElement().satisfies(entry -> {
             assertThat(entry.finalPopulation()).isEqualTo(2_400);
-            assertThat(entry.capacity()).isEqualTo(3_625);
+            assertThat(entry.efficiency()).isEqualTo(WORKED_EFFICIENCY, within(TOLERANCE));
             assertThat(entry.tier().name()).isEqualTo(ColonyTierName.BOROUGH);
             assertThat(entry.bossCount()).isEqualTo(10);
         });
@@ -432,7 +442,8 @@ class ColonyQueryServiceTest {
      * Registers the worked state of the interface document as the run's only day.
      */
     private void givenTheWorkedState() {
-        givenSnapshots(snapshot(TODAY, 440.0, 2_400.0, 92.0, 55.0, 3_050, 3_625));
+        // 3 050 materials over a roster of seven is 435.7 each, which buys 2.905 points of efficiency.
+        givenSnapshots(snapshot(TODAY, 440.0, 2_400.0, 92.0, 55.0, 3_050, WORKED_EFFICIENCY));
     }
 
     /**
@@ -527,7 +538,7 @@ class ColonyQueryServiceTest {
      * @param populationChange what the night moved
      * @param morale           morale the day ends on
      * @param materials        cumulative materials
-     * @param capacity         housing available
+     * @param efficiency       inhabitants one point of food feeds
      * @return the snapshot
      */
     private static ColonyDailySnapshot snapshot(
@@ -537,7 +548,7 @@ class ColonyQueryServiceTest {
         double populationChange,
         double morale,
         int materials,
-        int capacity
+        double efficiency
     ) {
         ColonyDailySnapshot snapshot = new ColonyDailySnapshot();
         snapshot.setDay(day);
@@ -547,7 +558,7 @@ class ColonyQueryServiceTest {
         snapshot.setPresenceCount(5);
         snapshot.setMorale(BigDecimal.valueOf(morale));
         snapshot.setMaterials(materials);
-        snapshot.setCapacity(capacity);
+        snapshot.setEfficiency(BigDecimal.valueOf(efficiency));
         snapshot.setPopulation(BigDecimal.valueOf(population));
         snapshot.setPopulationChange(BigDecimal.valueOf(populationChange));
 

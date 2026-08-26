@@ -8,11 +8,11 @@ import java.time.LocalDate;
  *
  * <p>The score is the population of the settlement day, once the tenth week's materials and boss have
  * been credited. Settling that way makes the last fight a finale: its materials have only one night of
- * migration left to turn into inhabitants, but they are still the last lever on housing.
+ * migration left to turn into inhabitants, but they are still the last lever on efficiency.
  *
- * <p>There is deliberately no share of a maximum here. Housing has no ceiling — a squad that plays
- * enormously widens its town on its production alone — so any percentage would be measured against a
- * number the model does not have.
+ * <p>There is deliberately no share of a maximum here. Efficiency has no ceiling — every challenge
+ * validated raises it, on the last Monday exactly as much as on the first — so any percentage would be
+ * measured against a number the model does not have.
  *
  * @param runNumber         sequential number of the run
  * @param firstDay          first day of the run
@@ -20,7 +20,7 @@ import java.time.LocalDate;
  * @param finalPopulation   the run's score
  * @param peakPopulation    highest population the run reached
  * @param averagePopulation mean population over the run
- * @param capacity          housing the run finished on
+ * @param efficiency        efficiency the run finished on
  * @param materials         materials the run finished on
  * @param tier              step of the ladder the run finished on
  * @param defeatedBosses    bosses put down
@@ -34,7 +34,7 @@ public record ColonyRunHistoryResponse(
     int finalPopulation,
     int peakPopulation,
     int averagePopulation,
-    int capacity,
+    double efficiency,
     int materials,
     ColonyTierResponse tier,
     int defeatedBosses,

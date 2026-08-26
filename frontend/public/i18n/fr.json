@@ -214,10 +214,10 @@
         "ELITE": "élite"
       },
       "detail": {
-        "DEFEATED": "Semaine {{week}} : boss {{category}} vaincu. {{materials}} matériaux, soit +{{housing}} habitations, et {{morale}} moral.",
+        "DEFEATED": "Semaine {{week}} : boss {{category}} vaincu. {{materials}} matériaux, soit +{{efficiency}} d'efficacité, et {{morale}} moral.",
         "SURVIVED": "Semaine {{week}} : le boss {{category}} a survécu. Aucun matériau, et {{morale}} moral.",
-        "CURRENT": "Semaine {{week}} : boss {{category}} en cours. {{materials}} matériaux en jeu, soit +{{housing}} habitations, et {{morale}} moral.",
-        "UPCOMING": "Semaine {{week}} : boss {{category}} à venir. {{materials}} matériaux en jeu, soit +{{housing}} habitations."
+        "CURRENT": "Semaine {{week}} : boss {{category}} en cours. {{materials}} matériaux en jeu, soit +{{efficiency}} d'efficacité, et {{morale}} moral.",
+        "UPCOMING": "Semaine {{week}} : boss {{category}} à venir. {{materials}} matériaux en jeu, soit +{{efficiency}} d'efficacité."
       }
     },
     "bosses": "Boss",
@@ -228,12 +228,12 @@
       "axis": "Jour de la run",
       "caption": "Pic {{peak}} · Moyenne {{average}}",
       "day": "J{{day}}",
-      "detail": "Nourrissables {{feedable}} · logeables {{capacity}}",
+      "detail": "Nourrissables {{feedable}} · efficacité {{efficiency}}",
       "milestone": "{{tier}} · J{{day}}"
     },
     "delta": "cette nuit",
     "eyebrow": "Campagne · Run {{run}} · Semaine {{week}} sur {{weeks}}",
-    "hexagonAria": "Population : {{population}} habitants sur {{capacity}} logeables, {{change}} cette nuit. Ouvrir la courbe de la run.",
+    "hexagonAria": "Population : {{population}} habitants sur {{ceiling}} nourrissables, {{change}} cette nuit. Ouvrir la courbe de la run.",
     "history": {
       "title": "Historique des runs",
       "run": "Run {{run}}",
@@ -244,7 +244,7 @@
     },
     "ladder": {
       "title": "Paliers de la ville",
-      "unit": "Logement"
+      "unit": "Efficacité"
     },
     "materials": "Matériaux",
     "population": "Population",
@@ -270,13 +270,13 @@
       "CAPITAL": "Capitale",
       "CITADEL": "Citadelle niveau {{level}}"
     },
-    "tierProgress": "{{current}} logements sur les {{target}} du palier. Encore {{missing}} pour atteindre {{name}}.",
+    "tierProgress": "Efficacité {{current}} sur les {{target}} du palier. Encore {{missing}} pour atteindre {{name}}.",
     "track": {
       "food": {
         "name": "Nourriture",
         "eaten": "mangé {{food}}/sem",
-        "surplus": "surplus {{food}}/sem",
-        "aria": "Nourriture : {{eaten}} mangés par semaine, {{surplus}} de surplus. Le surplus est ce qui fait venir du monde."
+        "surplus": "reste {{food}}/sem",
+        "aria": "Nourriture : {{eaten}} mangés par semaine, {{surplus}} de reste. Le reste est ce qui fait venir du monde."
       },
       "presence": {
         "name": "Présence",
@@ -679,8 +679,8 @@
         "description": "Vous jouez, ça produit de la nourriture. La nourriture dit combien d'habitants la ville peut nourrir. Chaque nuit, la ville se rapproche un peu de ce nombre. Il n'y a pas d'autre règle de population.",
         "facts": {
           "harvest": "85 dégâts font 1 nourriture. Une compétitive moyenne en vaut donc 5, et ce sont les dégâts du barème, déjà passés par le dégressif de la journée.",
-          "feeds": "1 nourriture nourrit 8 habitants. C'est la seule constante qui relie la nourriture à la population.",
-          "eats": "La ville mange population / 8 par semaine. Plus elle est grande, plus elle mange, donc le surplus fond tout seul à mesure qu'elle grandit.",
+          "feeds": "1 nourriture nourrit 8 habitants au départ, et davantage à mesure que la ville se développe. C'est la seule grandeur qui relie la nourriture à la population.",
+          "eats": "La ville mange population / efficacité par semaine. Plus elle est grande, plus elle mange, donc le reste fond tout seul à mesure qu'elle grandit.",
           "window": "Seuls les sept derniers jours comptent. Chaque nuit, la journée d'aujourd'hui entre dans le compte et celle d'il y a sept jours en sort : c'est une moyenne, pas une réserve."
         },
         "presenceLabel": "La présence",
@@ -700,16 +700,16 @@
       },
       "night": {
         "title": "La nuit",
-        "description": "Chaque nuit, la ville comble 15 % de l'écart entre ce qu'elle compte et le plus bas de ses deux plafonds : ce que la nourriture permet, et ce que les habitations permettent.",
+        "description": "Chaque nuit, la ville comble 15 % de l'écart entre ce qu'elle compte et ce que sa nourriture permet. Il n'y a qu'un seul plafond, donc rien n'est jamais gaspillé.",
         "gap": "Elle avance vite au début puis de plus en plus lentement, et n'arrive jamais tout à fait au bout. C'est fait exprès : il y a toujours quelque chose à gagner, et jamais un soir où jouer ne sert à rien. Dans l'autre sens, si la nourriture ne suffit plus, elle redescend à la même vitesse.",
-        "moraleLabel": "Le moral, de 1 à 100",
+        "moraleLabel": "Le moral, de 20 à 100",
         "morale": {
           "MINOR": "Mineur vaincu",
           "STANDARD": "Standard vaincu",
           "ELITE": "Élite vaincu",
           "SURVIVED": "Boss survivant"
         },
-        "moraleFootnote": "Le moral démarre à 50 et ne dépend que des boss. Il multiplie la vitesse de montée : à 50, la ville comble 7,5 % de l'écart par nuit au lieu de 15 %. Il ne ralentit jamais la descente, et il ne descend jamais sous 1 : à ce niveau la ville ne monte plus du tout, et seul un boss vaincu la relance."
+        "moraleFootnote": "Le moral démarre à 50 et ne dépend que des boss. Il multiplie la vitesse de montée : à 50, la ville comble 7,5 % de l'écart par nuit au lieu de 15 %. Il ne ralentit jamais la descente, et il ne descend jamais sous 20 : à ce niveau la ville n'avance presque plus, mais un boss vaincu la relance toujours."
       },
       "progression": {
         "description": "Certains défis ne demandent pas un seuil absolu mais un progrès sur toi-même : dépasser ton propre K/D, ton ACS ou ton taux de headshots des 4 semaines précédentes, d'un pourcentage donné. Enchaîner les parties au même niveau ne les valide pas, puisque la mesure est un taux. Sans historique sur les 4 dernières semaines, le défi reste hors de portée.",
@@ -727,10 +727,10 @@
       },
       "town": {
         "title": "La ville",
-        "description": "Les habitations valent 300 places par joueur du groupe, plus la moitié des matériaux amassés. Il n'y a pas de seuil à franchir : chaque défi validé agrandit la ville le lundi même, et il n'y a pas de maximum.",
+        "description": "Les matériaux amassés augmentent l'efficacité : tous les 150 matériaux par joueur, une nourriture nourrit un habitant de plus. Il n'y a pas de seuil à franchir ni de maximum : chaque défi validé fait porter la nourriture plus loin, le lundi même, et un défi validé la dernière semaine vaut exactement ce que valait un défi de la première.",
         "materialsLabel": "Matériaux par défi validé, et par joueur",
-        "tiersLabel": "Les paliers, tous les 500 habitations",
-        "tiersFootnote": "Un boss vaincu rapporte 60, 80 ou 100 matériaux par joueur du groupe, jamais des habitants : des habitants s'effaceraient à 15 % par nuit, alors que des places restent jusqu'au jour de solde. Et chaque lundi, la nourriture que la ville ne peut pas manger est convertie en matériaux, à un mauvais taux : (nourriture − habitations / 8) / 5. Aucune soirée n'est donc jamais perdue."
+        "tiersLabel": "Les paliers, tous les 0,75 d'efficacité",
+        "tiersFootnote": "Un boss vaincu rapporte 60, 80 ou 100 matériaux par joueur du groupe, jamais des habitants : des habitants s'effaceraient à 15 % par nuit, alors que l'efficacité ne redescend jamais. Les matériaux sont divisés par la taille du groupe avant d'être convertis, ce qui rend l'équilibre identique de 2 à 20 joueurs. Une run régulière va de 8 à 16 d'efficacité, soit un palier par semaine."
       }
     },
     "title": "Règles et fonctionnement"

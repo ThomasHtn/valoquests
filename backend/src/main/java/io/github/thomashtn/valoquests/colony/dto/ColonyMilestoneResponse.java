@@ -11,7 +11,7 @@ import java.time.LocalDate;
  * @param level     citadel number once the ladder starts repeating, zero on every named step
  * @param day       calendar day the step was crossed
  * @param runDay    that day's one-based position in the run
- * @param threshold housing the step opens at
+ * @param threshold efficiency the step opens at
  */
 @Schema(description = "The day the town crossed one step of its ladder.")
 public record ColonyMilestoneResponse(
@@ -19,6 +19,6 @@ public record ColonyMilestoneResponse(
     int level,
     LocalDate day,
     int runDay,
-    int threshold
+    double threshold
 ) {
 }

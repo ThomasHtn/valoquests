@@ -28,8 +28,8 @@ class ColonyReplayEngineTest {
     /** Roster size every fixture is measured against. */
     private static final int ROSTER_SIZE = 7;
 
-    /** Housing a seven-player roster opens on, {@code 300 x 7}. */
-    private static final int OPENING_CAPACITY = 2_100;
+    /** Efficiency every run opens on, before a single material has been gathered. */
+    private static final double BASE_EFFICIENCY = 8.0;
 
     /** Match damage a full squad of seven produces on a good day, two competitive wins each. */
     private static final int FULL_SQUAD_DAMAGE = 7 * 2 * 500;
@@ -59,12 +59,13 @@ class ColonyReplayEngineTest {
         List<Double> arrivals = new ArrayList<>();
 
         for (int night = 0; night < 4; night++) {
-            double change = engine.nightlyChange(population, foodStock, 10_000, 100.0);
+            double change = engine.nightlyChange(population, foodStock, BASE_EFFICIENCY, 100.0);
             arrivals.add(change);
             population += change;
         }
 
-        assertThat(engine.feedablePopulation(foodStock)).isEqualTo(4_000.0, within(TOLERANCE));
+        assertThat(engine.feedablePopulation(foodStock, BASE_EFFICIENCY))
+            .isEqualTo(4_000.0, within(TOLERANCE));
         assertThat(arrivals.get(0)).isEqualTo(150.0, within(INHABITANT));
         assertThat(arrivals.get(1)).isEqualTo(128.0, within(INHABITANT));
         assertThat(arrivals.get(2)).isEqualTo(108.0, within(INHABITANT));
@@ -81,22 +82,21 @@ class ColonyReplayEngineTest {
     @Test
     void shouldReplayTheThreeWorkedDaysOfTheDesignDocument() {
         double population = 2_950.0;
-        int capacity = 4_600;
         double morale = 70.0;
 
         // Thursday: five of seven played eleven competitive games, and the stock lands on 556.
-        double thursday = engine.nightlyChange(population, 556.0, capacity, morale);
+        double thursday = engine.nightlyChange(population, 556.0, BASE_EFFICIENCY, morale);
         population += thursday;
         assertThat(population).isEqualTo(3_107.0, within(INHABITANT));
 
         // Friday: nobody played, so the stock falls to 330 and feeds fewer people than the town holds.
-        double friday = engine.nightlyChange(population, 330.0, capacity, morale);
+        double friday = engine.nightlyChange(population, 330.0, BASE_EFFICIENCY, morale);
         population += friday;
         assertThat(friday).isEqualTo(-70.0, within(INHABITANT));
         assertThat(population).isEqualTo(3_037.0, within(INHABITANT));
 
         // Saturday: the whole squad turned out, and the stock climbs back to 546.
-        double saturday = engine.nightlyChange(population, 546.0, capacity, morale);
+        double saturday = engine.nightlyChange(population, 546.0, BASE_EFFICIENCY, morale);
         population += saturday;
         assertThat(saturday).isEqualTo(140.0, within(INHABITANT));
         assertThat(population).isEqualTo(3_177.0, within(INHABITANT));
@@ -138,25 +138,28 @@ class ColonyReplayEngineTest {
      */
     @Test
     void shouldApplyMoraleOnTheWayUpAndNeverOnTheWayDown() {
-        double halfSpeedClimb = engine.nightlyChange(1_000.0, 250.0, 10_000, 50.0);
-        double fullSpeedClimb = engine.nightlyChange(1_000.0, 250.0, 10_000, 100.0);
+        double halfSpeedClimb = engine.nightlyChange(1_000.0, 250.0, BASE_EFFICIENCY, 50.0);
+        double fullSpeedClimb = engine.nightlyChange(1_000.0, 250.0, BASE_EFFICIENCY, 100.0);
 
         assertThat(halfSpeedClimb).isEqualTo(fullSpeedClimb / 2, within(TOLERANCE));
 
-        double demoralisedFall = engine.nightlyChange(3_000.0, 250.0, 10_000, 20.0);
-        double confidentFall = engine.nightlyChange(3_000.0, 250.0, 10_000, 100.0);
+        double demoralisedFall = engine.nightlyChange(3_000.0, 250.0, BASE_EFFICIENCY, 20.0);
+        double confidentFall = engine.nightlyChange(3_000.0, 250.0, BASE_EFFICIENCY, 100.0);
 
         assertThat(demoralisedFall).isEqualTo(confidentFall, within(TOLERANCE));
         assertThat(demoralisedFall).isNegative();
     }
 
     /**
-     * Verifies the lower of the two ceilings commands, whichever one it is.
+     * Verifies the ceiling is the food's alone, and that the efficiency scales it.
+     *
+     * <p>There is nothing to arbitrate against any more: the same stock feeds twice as many people once
+     * the materials have doubled the efficiency, and no second ceiling can hold it back.
      */
     @Test
-    void shouldClimbTowardsTheLowerOfTheTwoCeilings() {
-        assertThat(engine.ceiling(500.0, 10_000)).isEqualTo(4_000.0, within(TOLERANCE));
-        assertThat(engine.ceiling(500.0, 3_000)).isEqualTo(3_000.0, within(TOLERANCE));
+    void shouldClimbTowardsWhatTheFoodCanFeed() {
+        assertThat(engine.ceiling(500.0, BASE_EFFICIENCY)).isEqualTo(4_000.0, within(TOLERANCE));
+        assertThat(engine.ceiling(500.0, BASE_EFFICIENCY * 2)).isEqualTo(8_000.0, within(TOLERANCE));
     }
 
     /**
@@ -184,29 +187,30 @@ class ColonyReplayEngineTest {
             assertThat(state.population()).isZero();
             assertThat(state.foodStock()).isZero();
             assertThat(state.materials()).isZero();
-            assertThat(state.capacity()).isEqualTo(OPENING_CAPACITY);
+            assertThat(state.efficiency()).isEqualTo(BASE_EFFICIENCY, within(TOLERANCE));
             assertThat(state.morale()).isEqualTo(ruleset.initialMorale());
         });
     }
 
     /**
      * Verifies a rollover credits its materials and its morale before the night runs, and that the
-     * housing is recomputed from the new total straight away.
+     * efficiency is recomputed from the new total straight away.
      *
-     * <p>There is no threshold to save up for: a challenge validated over the week widens the town on
-     * the Monday that settles it.
+     * <p>There is no threshold to save up for: a challenge validated over the week makes the town's food
+     * carry further on the Monday that settles it.
      */
     @Test
     void shouldCreditARolloverBeforeTheNightRuns() {
         List<ColonyDailyInput> days = new ArrayList<>();
         days.add(new ColonyDailyInput(DAY_ONE, 0, 0, false, 0, 0.0));
-        days.add(new ColonyDailyInput(DAY_ONE.plusDays(7), 0, 0, true, 1_000, 15.0));
+        days.add(new ColonyDailyInput(DAY_ONE.plusDays(7), 0, 0, true, 1_050, 15.0));
 
         List<ColonyDayState> states = engine.replay(days, ROSTER_SIZE);
         ColonyDayState rollover = states.getLast();
 
-        assertThat(rollover.materials()).isEqualTo(1_000);
-        assertThat(rollover.capacity()).isEqualTo(OPENING_CAPACITY + 500);
+        // 1 050 materials over a roster of seven is 150 each, which buys exactly one point of efficiency.
+        assertThat(rollover.materials()).isEqualTo(1_050);
+        assertThat(rollover.efficiency()).isEqualTo(BASE_EFFICIENCY + 1.0, within(TOLERANCE));
         assertThat(rollover.morale()).isEqualTo(65.0, within(TOLERANCE));
     }
 
@@ -222,28 +226,21 @@ class ColonyReplayEngineTest {
     }
 
     /**
-     * Verifies a Monday's surplus is converted against the housing of the week that has just closed,
-     * before that Monday's own materials are counted.
+     * Verifies nothing a squad plays is ever wasted: there is one ceiling, and every extra match raises
+     * it.
      *
-     * <p>Settle it the other way round and a Monday heavy with validated challenges would erase its own
-     * surplus, which is the one ordering subtlety of the whole model.
+     * <p>This is what the housing ceiling used to break. A squad playing heavily filled its town and the
+     * rest of its food went into materials at a rate of one for five, so the effort stopped showing in
+     * the score. Ten times the damage now buys strictly more population, with no cap anywhere.
      */
     @Test
-    void shouldConvertTheSurplusAgainstTheClosingWeeksHousing() {
-        List<ColonyDailyInput> days = new ArrayList<>();
-        for (int day = 0; day < 7; day++) {
-            days.add(new ColonyDailyInput(DAY_ONE.plusDays(day), FULL_SQUAD_DAMAGE, 7, false, 0, 0.0));
-        }
-        days.add(new ColonyDailyInput(DAY_ONE.plusDays(7), 0, 0, true, 0, 0.0));
+    void shouldNeverWasteAMatch() {
+        List<ColonyDayState> ordinary = engine.replay(playedDays(14, FULL_SQUAD_DAMAGE), ROSTER_SIZE);
+        List<ColonyDayState> heavy = engine.replay(playedDays(14, FULL_SQUAD_DAMAGE * 10), ROSTER_SIZE);
 
-        List<ColonyDayState> states = engine.replay(days, ROSTER_SIZE);
-
-        // The stock on Sunday evening, converted against Sunday's housing, never against the Monday's.
-        double sundayStock = states.get(6).foodStock();
-        int expected = ruleset.materialsForSurplus(sundayStock, OPENING_CAPACITY);
-
-        assertThat(expected).isPositive();
-        assertThat(states.getLast().materials()).isEqualTo(expected);
+        assertThat(heavy.getLast().population()).isGreaterThan(ordinary.getLast().population() * 5);
+        assertThat(heavy.getLast().efficiency())
+            .isEqualTo(ordinary.getLast().efficiency(), within(TOLERANCE));
     }
 
     /**
@@ -269,8 +266,12 @@ class ColonyReplayEngineTest {
      */
     @Test
     void shouldEatTheInverseOfWhatFoodFeeds() {
-        assertThat(engine.weeklyConsumption(2_400.0)).isEqualTo(300.0, within(TOLERANCE));
-        assertThat(engine.feedablePopulation(300.0)).isEqualTo(2_400.0, within(TOLERANCE));
+        assertThat(engine.weeklyConsumption(2_400.0, BASE_EFFICIENCY)).isEqualTo(300.0, within(TOLERANCE));
+        assertThat(engine.feedablePopulation(300.0, BASE_EFFICIENCY)).isEqualTo(2_400.0, within(TOLERANCE));
+
+        // And it follows the efficiency rather than a constant, in both directions.
+        assertThat(engine.weeklyConsumption(4_800.0, 16.0)).isEqualTo(300.0, within(TOLERANCE));
+        assertThat(engine.feedablePopulation(300.0, 16.0)).isEqualTo(4_800.0, within(TOLERANCE));
     }
 
     /**

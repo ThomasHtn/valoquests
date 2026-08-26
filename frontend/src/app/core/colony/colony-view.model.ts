@@ -50,8 +50,8 @@ export interface ColonyTrackView {
   readonly secondaryPercentage: number | null;
 
   /**
-   * The fact, on the rail's trailing edge. Two numbers on the food rail, smallest first, because
-   * they are not of the same kind: one is what the meals allow, the other what the housing allows.
+   * The fact, on the rail's trailing edge. One number on the food rail: what this week's food can
+   * feed, which is the only ceiling the town has.
    */
   readonly valueLabel: string;
 
@@ -133,8 +133,8 @@ export interface ColonyTierStepView {
   /**
    * The figure beside the name. On the step the town sits in this is what it is climbing
    * <b>towards</b>, not where it stands: read at the top of a row, in the row's own weight, the
-   * town's housing was taken for the target, which is the one thing it is not. Where it stands is
-   * on the bar's own tooltip instead, in {@link progressLabel}.
+   * town's efficiency was taken for the target, which is the one thing it is not. Where it stands
+   * is on the bar's own tooltip instead, in {@link progressLabel}.
    */
   readonly valueLabel: string;
 
@@ -165,22 +165,22 @@ export interface ColonyBossView {
   readonly state: ColonyWeekOutcomeState;
 
   /**
-   * Already-formatted housing the fight is worth, written on the week's own territory: `+210` when
-   * it was taken, `0` when the boss held, empty on a week not yet reached.
+   * Already-formatted efficiency the fight is worth, written on the week's own territory: `+0,53`
+   * when it was taken, `0` when the boss held, empty on a week not yet reached.
    *
-   * Housing rather than materials or morale. Materials are an intermediate currency the player never
-   * handles, housing is the axis the whole page already counts in, and it is the only part of a
-   * fight's reward still standing on settlement day.
+   * Efficiency rather than materials or morale. Materials are an intermediate currency the player
+   * never handles, efficiency is the axis the whole page already counts in, and it is the only part
+   * of a fight's reward still standing on settlement day.
    */
-  readonly housingLabel: string;
+  readonly efficiencyLabel: string;
 
   /**
-   * Whether that housing is banked or still on the table.
+   * Whether that efficiency is banked or still on the table.
    */
-  readonly housingEarned: boolean;
+  readonly efficiencyEarned: boolean;
 
   /**
-   * The full sentence the tile's title carries: the week, the outcome, its materials, the housing
+   * The full sentence the tile's title carries: the week, the outcome, its materials, the efficiency
    * they buy and the morale it moved. Morale does not fit on a tile and lives here instead.
    */
   readonly detailLabel: string;

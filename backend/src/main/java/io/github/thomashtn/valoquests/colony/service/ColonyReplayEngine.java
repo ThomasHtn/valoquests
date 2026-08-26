@@ -54,22 +54,17 @@ public class ColonyReplayEngine {
      * <p>A rollover day settles the week that has just closed before its own night runs, in this order:
      *
      * <ol>
-     *   <li>the food surplus is converted into materials, <b>against the housing the closing week
-     *       had</b>;</li>
      *   <li>the week's completed challenges pay their materials;</li>
      *   <li>the fight pays its materials and its morale, or costs its morale if the boss held;</li>
-     *   <li>housing is recomputed from the new materials total.</li>
+     *   <li>efficiency is recomputed from the new materials total.</li>
      * </ol>
-     *
-     * <p>Step one comes first and reads the old housing on purpose. Settle it after the materials of
-     * steps two and three and a Monday heavy with validated challenges would erase its own surplus.
      *
      * <p>Then the night, on every day of the run without exception:
      *
      * <ol>
      *   <li>the day's harvest enters the stock, multiplied by the turnout;</li>
      *   <li>the harvest of seven days ago leaves it;</li>
-     *   <li>the town moves a share of the way towards the lower of its two ceilings.</li>
+     *   <li>the town moves a share of the way towards what its food can feed.</li>
      * </ol>
      *
      * <p>There is no fourth step, and the first day of a run is not a special case.
@@ -82,7 +77,7 @@ public class ColonyReplayEngine {
         double population = ruleset.initialPopulation();
         double morale = ruleset.initialMorale();
         int materials = ruleset.initialMaterials();
-        int capacity = ruleset.capacityFor(rosterSize, materials);
+        double efficiency = ruleset.efficiencyFor(materials, rosterSize);
 
         Deque<Double> window = new ArrayDeque<>();
         double foodStock = 0.0;
@@ -91,10 +86,9 @@ public class ColonyReplayEngine {
 
         for (ColonyDailyInput day : days) {
             if (day.rollover()) {
-                materials += ruleset.materialsForSurplus(foodStock, capacity);
                 materials += day.creditedMaterials();
                 morale = boundedMorale(morale + day.moraleDelta());
-                capacity = ruleset.capacityFor(rosterSize, materials);
+                efficiency = ruleset.efficiencyFor(materials, rosterSize);
             }
 
             double harvest = harvest(day.matchDamage(), day.presencePlayerCount(), rosterSize);
@@ -105,7 +99,7 @@ public class ColonyReplayEngine {
                 foodStock -= window.removeFirst();
             }
 
-            double change = nightlyChange(population, foodStock, capacity, morale);
+            double change = nightlyChange(population, foodStock, efficiency, morale);
             population = Math.max(0.0, population + change);
 
             states.add(new ColonyDayState(
@@ -116,7 +110,7 @@ public class ColonyReplayEngine {
                 day.presencePlayerCount(),
                 morale,
                 materials,
-                capacity,
+                efficiency,
                 population,
                 change
             ));
@@ -166,36 +160,38 @@ public class ColonyReplayEngine {
     /**
      * Returns the inhabitants a food stock can feed.
      *
-     * @param foodStock food of the last seven days
+     * @param foodStock  food of the last seven days
+     * @param efficiency inhabitants one point of food feeds
      * @return feedable population
      */
-    public double feedablePopulation(double foodStock) {
-        return foodStock * ruleset.inhabitantsPerFood();
+    public double feedablePopulation(double foodStock, double efficiency) {
+        return foodStock * efficiency;
     }
 
     /**
      * Returns the food a population eats in a week.
      *
      * @param population current population
+     * @param efficiency inhabitants one point of food feeds
      * @return weekly consumption
      */
-    public double weeklyConsumption(double population) {
-        return population / ruleset.inhabitantsPerFood();
+    public double weeklyConsumption(double population, double efficiency) {
+        return population / efficiency;
     }
 
     /**
-     * Returns the population the town is heading towards: the lower of its two ceilings.
+     * Returns the population the town is heading towards.
      *
-     * <p>Food says what it can feed, housing what it can lodge, and the smaller of the two commands
-     * while the other is wasted. The player is never asked to make that comparison — the page is, and
-     * says it with the shape of its bars.
+     * <p>One ceiling and one only, so nothing a squad does is ever wasted: every match raises it, and
+     * every material raises what a match is worth. The housing ceiling this replaced never bound on the
+     * day the score was read, which made the materials behind it worth 0.2% of a run.
      *
-     * @param foodStock food of the last seven days
-     * @param capacity  housing available
+     * @param foodStock  food of the last seven days
+     * @param efficiency inhabitants one point of food feeds
      * @return ceiling the town climbs towards
      */
-    public double ceiling(double foodStock, int capacity) {
-        return Math.min(feedablePopulation(foodStock), capacity);
+    public double ceiling(double foodStock, double efficiency) {
+        return feedablePopulation(foodStock, efficiency);
     }
 
     /**
@@ -207,12 +203,12 @@ public class ColonyReplayEngine {
      *
      * @param population current population
      * @param foodStock  food of the last seven days
-     * @param capacity   housing available
+     * @param efficiency inhabitants one point of food feeds
      * @param morale     current morale
      * @return signed change, negative when the town loses people
      */
-    public double nightlyChange(double population, double foodStock, int capacity, double morale) {
-        double gap = ceiling(foodStock, capacity) - population;
+    public double nightlyChange(double population, double foodStock, double efficiency, double morale) {
+        double gap = ceiling(foodStock, efficiency) - population;
         double rate = ruleset.gapClosingRatePercent() / PERCENT_SCALE;
 
         if (gap < 0) {

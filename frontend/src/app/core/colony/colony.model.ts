@@ -123,8 +123,8 @@ export interface ColonyMorale {
 /**
  * What one week of the run's fights was worth to the colony.
  *
- * Mirrors `ColonyWeekResponse`. `housingGain` is what the map writes on the week's own territory:
- * materials are an intermediate currency the player never handles, and housing is the only part of a
+ * Mirrors `ColonyWeekResponse`. `efficiencyGain` is what the map writes on the week's own territory:
+ * materials are an intermediate currency the player never handles, and efficiency is the only part of a
  * fight's reward still standing on settlement day.
  */
 export interface ColonyWeek {
@@ -132,7 +132,7 @@ export interface ColonyWeek {
   readonly state: ColonyWeekOutcomeState;
   readonly category: ColonyBossCategory | null;
   readonly materials: number;
-  readonly housingGain: number;
+  readonly efficiencyGain: number;
   readonly moraleDelta: number;
 }
 
@@ -141,9 +141,9 @@ export interface ColonyWeek {
  *
  * Mirrors `ColonyResponse` returned by `GET /api/colony`.
  *
- * Two ceilings decide the score and the lower one commands: `feedablePopulation` is what the food
- * allows, `capacity` is what the housing allows. They are handed over side by side, smallest first,
- * so the pair cannot be read the wrong way round.
+ * One ceiling decides the score: `feedablePopulation`, what the food allows. `efficiency` is how far
+ * one point of food carries, and it is the whole of what materials buy. Nothing is capped and nothing
+ * is wasted, so the page has no arbitration to explain.
  */
 export interface Colony {
   readonly runNumber: number;
@@ -164,7 +164,11 @@ export interface Colony {
    */
   readonly populationChange: number;
 
-  readonly capacity: number;
+  /**
+   * Inhabitants one point of food feeds, raised by the materials gathered. Never capped.
+   */
+  readonly efficiency: number;
+
   readonly materials: number;
 
   /**
@@ -184,7 +188,7 @@ export interface Colony {
   readonly morale: ColonyMorale;
   readonly tier: ColonyTier;
   readonly nextTier: ColonyTier;
-  readonly missingCapacity: number;
+  readonly missingEfficiency: number;
   readonly tierProgressPercentage: number;
   readonly ladder: readonly ColonyTier[];
   readonly weeks: readonly ColonyWeek[];
@@ -195,15 +199,15 @@ export interface Colony {
 /**
  * One day of the population curve.
  *
- * Mirrors `ColonyTrajectoryPointResponse`. Carries both ceilings alongside the population, because
- * the whole game reads off the three together: the town hugs whichever is lower.
+ * Mirrors `ColonyTrajectoryPointResponse`. Carries the ceiling alongside the population, and the
+ * efficiency that set it, so a step in the curve can be read as a Monday rather than as a good evening.
  */
 export interface ColonyTrajectoryPoint {
   readonly day: string;
   readonly runDay: number;
   readonly population: number;
   readonly feedablePopulation: number;
-  readonly capacity: number;
+  readonly efficiency: number;
   readonly materials: number;
   readonly foodStock: number;
   readonly morale: number;
@@ -247,7 +251,7 @@ export interface ColonyTrajectory {
  * One closed run and how it ended.
  *
  * Mirrors `ColonyRunHistoryResponse` returned by `GET /api/colony/history`. There is deliberately no
- * share of a maximum: housing has no ceiling, so any percentage would be measured against a number
+ * share of a maximum: efficiency has no ceiling, so any percentage would be measured against a number
  * the model does not have.
  */
 export interface ColonyRunHistory {
@@ -262,7 +266,7 @@ export interface ColonyRunHistory {
   readonly finalPopulation: number;
   readonly peakPopulation: number;
   readonly averagePopulation: number;
-  readonly capacity: number;
+  readonly efficiency: number;
   readonly materials: number;
   readonly tier: ColonyTier;
   readonly defeatedBosses: number;

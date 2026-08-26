@@ -37,11 +37,42 @@ class DefaultColonyRulesetTest {
     }
 
     /**
-     * Verifies the one constant tying food to population works in both directions.
+     * Verifies a run opens on the base efficiency and that materials raise it, without a ceiling.
+     *
+     * <p>The absence of a ceiling is the point of the whole mechanism: a challenge validated on the last
+     * Monday of a run is worth exactly what one validated on the first was. The housing ceiling this
+     * replaced was worth 0.2% of a run's score because it never bound on the day the score was read.
      */
     @Test
-    void shouldTieFoodToPopulationWithASingleConstant() {
-        assertThat(ruleset.inhabitantsPerFood()).isEqualTo(8);
+    void shouldOpenOnTheBaseEfficiencyAndRaiseItWithMaterials() {
+        assertThat(ruleset.efficiencyFor(0, 7)).isEqualTo(8.0, within(TOLERANCE));
+        assertThat(ruleset.efficiencyFor(1_050, 7)).isEqualTo(9.0, within(TOLERANCE));
+        assertThat(ruleset.efficiencyFor(2_100, 7)).isEqualTo(10.0, within(TOLERANCE));
+        assertThat(ruleset.efficiencyFor(100_000, 7)).isGreaterThan(90.0);
+    }
+
+    /**
+     * Verifies the same materials per player buy the same efficiency at any roster size.
+     *
+     * <p>This is what keeps the balance identical from two players to twenty. Challenges and bosses
+     * already pay per player, so dividing by the roster before converting is what stops a large squad
+     * from climbing the ladder faster than a small one for the same effort each.
+     */
+    @Test
+    void shouldBuyTheSameEfficiencyAtEveryRosterSize() {
+        assertThat(ruleset.efficiencyFor(300, 2)).isEqualTo(9.0, within(TOLERANCE));
+        assertThat(ruleset.efficiencyFor(450, 3)).isEqualTo(9.0, within(TOLERANCE));
+        assertThat(ruleset.efficiencyFor(1_050, 7)).isEqualTo(9.0, within(TOLERANCE));
+        assertThat(ruleset.efficiencyFor(3_000, 20)).isEqualTo(9.0, within(TOLERANCE));
+    }
+
+    /**
+     * Verifies an empty roster is priced at the base efficiency rather than dividing by zero.
+     */
+    @Test
+    void shouldPriceAnEmptyRosterAtTheBaseEfficiency() {
+        assertThat(ruleset.efficiencyFor(1_000, 0)).isEqualTo(8.0, within(TOLERANCE));
+        assertThat(ruleset.efficiencyFor(-50, 7)).isEqualTo(8.0, within(TOLERANCE));
     }
 
     /**
@@ -93,69 +124,50 @@ class DefaultColonyRulesetTest {
     }
 
     /**
-     * Verifies the squad opens squarely inside its first named tier rather than on its edge.
+     * Verifies every squad opens its run on the ladder's first named step, whatever its size.
      *
-     * <p>Three hundred places per player is what puts a seven-player roster on 2 100, a hundred clear of
-     * the 2 000 the first name sits on. At 285 it opened on 1 995 and its town had no name on day one.
+     * <p>The ladder hangs on efficiency, which every run opens at 8 regardless of roster, so a
+     * two-player squad and a twenty-player one both start on {@code CAMP}. Under the housing ladder they
+     * did not: a squad of twenty opened on 6 000 places, already at {@code METROPOLIS}.
      */
     @Test
-    void shouldOpenTheSquadInsideItsFirstNamedTier() {
-        assertThat(ruleset.capacityFor(7, 0)).isEqualTo(2_100);
-        assertThat(ruleset.tierFor(ruleset.capacityFor(7, 0)).threshold()).isEqualTo(2_000);
-        assertThat(ruleset.nextTierFor(ruleset.capacityFor(7, 0)).name())
-            .isEqualTo(ColonyTierName.HAMLET);
+    void shouldOpenEverySquadOnTheFirstNamedStep() {
+        assertThat(ruleset.tierFor(ruleset.efficiencyFor(0, 2)).name()).isEqualTo(ColonyTierName.CAMP);
+        assertThat(ruleset.tierFor(ruleset.efficiencyFor(0, 7)).name()).isEqualTo(ColonyTierName.CAMP);
+        assertThat(ruleset.tierFor(ruleset.efficiencyFor(0, 20)).name()).isEqualTo(ColonyTierName.CAMP);
+        assertThat(ruleset.tierFor(ruleset.efficiencyFor(0, 7)).level()).isZero();
     }
 
     /**
-     * Verifies the opening housing stays strictly proportional to the roster, which is what keeps the
-     * balance identical whatever size the squad is fielded at.
-     */
-    @Test
-    void shouldOpenOnHousingProportionalToTheRoster() {
-        assertThat(ruleset.capacityFor(3, 0)).isEqualTo(900);
-        assertThat(ruleset.capacityFor(6, 0)).isEqualTo(1_800);
-        assertThat(ruleset.capacityFor(20, 0)).isEqualTo(6_000);
-    }
-
-    /**
-     * Verifies housing is continuous: two materials buy one place, with no threshold in between.
+     * Verifies the ladder's names, one step every three quarters of a point of efficiency.
      *
-     * <p>The design document's own worked state, 3 050 materials on a roster of seven, comes to 3 625.
-     */
-    @Test
-    void shouldTurnTwoMaterialsIntoOnePlace() {
-        assertThat(ruleset.housingForMaterials(3_050)).isEqualTo(1_525);
-        assertThat(ruleset.capacityFor(7, 3_050)).isEqualTo(3_625);
-    }
-
-    /**
-     * Verifies the surplus conversion: what the town cannot eat is turned into materials at a
-     * deliberately bad rate.
-     */
-    @Test
-    void shouldConvertOnlyTheFoodTheTownCannotEat() {
-        // Housing for 4 000 needs 500 food; a stock of 600 leaves 100 over, worth 20 materials.
-        assertThat(ruleset.materialsForSurplus(600.0, 4_000)).isEqualTo(20);
-        assertThat(ruleset.materialsForSurplus(400.0, 4_000)).isZero();
-    }
-
-    /**
-     * Verifies the ladder's names against the design document's table, including the open end where it
-     * starts repeating.
+     * <p>That step is what paces the ladder at one milestone a week: a regular run climbs from 8.00 to
+     * 16.15, which crosses exactly ten of these.
      */
     @Test
     void shouldNameEveryStepOfTheLadder() {
-        assertThat(ruleset.tierFor(2_000).name()).isEqualTo(ColonyTierName.CAMP);
-        assertThat(ruleset.tierFor(2_500).name()).isEqualTo(ColonyTierName.HAMLET);
-        assertThat(ruleset.tierFor(3_000).name()).isEqualTo(ColonyTierName.VILLAGE);
-        assertThat(ruleset.tierFor(3_625).name()).isEqualTo(ColonyTierName.BOROUGH);
-        assertThat(ruleset.tierFor(4_000).name()).isEqualTo(ColonyTierName.TOWN);
-        assertThat(ruleset.tierFor(4_500).name()).isEqualTo(ColonyTierName.CITY);
-        assertThat(ruleset.tierFor(5_000).name()).isEqualTo(ColonyTierName.RESIDENTIAL_QUARTER);
-        assertThat(ruleset.tierFor(5_500).name()).isEqualTo(ColonyTierName.GREAT_CITY);
-        assertThat(ruleset.tierFor(6_000).name()).isEqualTo(ColonyTierName.METROPOLIS);
-        assertThat(ruleset.tierFor(6_500).name()).isEqualTo(ColonyTierName.MEGALOPOLIS);
-        assertThat(ruleset.tierFor(7_000).name()).isEqualTo(ColonyTierName.CAPITAL);
+        assertThat(ruleset.tierFor(8.00).name()).isEqualTo(ColonyTierName.CAMP);
+        assertThat(ruleset.tierFor(8.75).name()).isEqualTo(ColonyTierName.HAMLET);
+        assertThat(ruleset.tierFor(9.50).name()).isEqualTo(ColonyTierName.VILLAGE);
+        assertThat(ruleset.tierFor(10.25).name()).isEqualTo(ColonyTierName.BOROUGH);
+        assertThat(ruleset.tierFor(11.00).name()).isEqualTo(ColonyTierName.TOWN);
+        assertThat(ruleset.tierFor(11.75).name()).isEqualTo(ColonyTierName.CITY);
+        assertThat(ruleset.tierFor(12.50).name()).isEqualTo(ColonyTierName.RESIDENTIAL_QUARTER);
+        assertThat(ruleset.tierFor(13.25).name()).isEqualTo(ColonyTierName.GREAT_CITY);
+        assertThat(ruleset.tierFor(14.00).name()).isEqualTo(ColonyTierName.METROPOLIS);
+        assertThat(ruleset.tierFor(14.75).name()).isEqualTo(ColonyTierName.MEGALOPOLIS);
+        assertThat(ruleset.tierFor(15.50).name()).isEqualTo(ColonyTierName.CAPITAL);
+    }
+
+    /**
+     * Verifies where a regular run lands, which is the calibration the tier step was chosen against.
+     */
+    @Test
+    void shouldLandARegularRunOnTheTenthStep() {
+        ColonyTier tier = ruleset.tierFor(16.15);
+
+        assertThat(tier.step()).isEqualTo(10);
+        assertThat(tier.name()).isEqualTo(ColonyTierName.CAPITAL);
     }
 
     /**
@@ -164,25 +176,24 @@ class DefaultColonyRulesetTest {
      */
     @Test
     void shouldRepeatTheLastNameNumberedForever() {
-        assertThat(ruleset.tierFor(7_500)).isEqualTo(
-            new ColonyTier(15, 7_500, ColonyTierName.CITADEL, 1)
+        assertThat(ruleset.tierFor(16.25)).isEqualTo(
+            new ColonyTier(11, 16.25, ColonyTierName.CITADEL, 1)
         );
-        assertThat(ruleset.tierFor(8_000)).isEqualTo(
-            new ColonyTier(16, 8_000, ColonyTierName.CITADEL, 2)
+        assertThat(ruleset.tierFor(17.00)).isEqualTo(
+            new ColonyTier(12, 17.00, ColonyTierName.CITADEL, 2)
         );
-        assertThat(ruleset.tierFor(50_000).name()).isEqualTo(ColonyTierName.CITADEL);
+        assertThat(ruleset.tierFor(100.0).name()).isEqualTo(ColonyTierName.CITADEL);
     }
 
     /**
-     * Verifies a town below the first named step still has a name. A three-player squad opens on 900
-     * places, well under the 2 000 the document's table starts at, and a nameless town reads as a bug.
+     * Verifies an efficiency at or below the opening one still has a name rather than none.
      */
     @Test
-    void shouldNameATownBelowTheFirstNamedStep() {
-        ColonyTier tier = ruleset.tierFor(ruleset.capacityFor(3, 0));
+    void shouldNameATownAtTheOpeningEfficiency() {
+        ColonyTier tier = ruleset.tierFor(7.5);
 
         assertThat(tier.name()).isEqualTo(ColonyTierName.CAMP);
-        assertThat(tier.level()).isZero();
+        assertThat(tier.step()).isZero();
     }
 
     /**
@@ -190,17 +201,34 @@ class DefaultColonyRulesetTest {
      */
     @Test
     void shouldPointAtTheStepImmediatelyAbove() {
-        assertThat(ruleset.nextTierFor(3_625).threshold()).isEqualTo(4_000);
-        assertThat(ruleset.nextTierFor(4_000).threshold()).isEqualTo(4_500);
+        assertThat(ruleset.nextTierFor(8.0).threshold()).isEqualTo(8.75, within(TOLERANCE));
+        assertThat(ruleset.nextTierFor(9.0).threshold()).isEqualTo(9.50, within(TOLERANCE));
+    }
+
+    /**
+     * Verifies the ladder can be walked by index, which is what the page does to draw the steps around
+     * the town's own.
+     */
+    @Test
+    void shouldWalkTheLadderByStep() {
+        assertThat(ruleset.tierAtStep(0).name()).isEqualTo(ColonyTierName.CAMP);
+        assertThat(ruleset.tierAtStep(4).name()).isEqualTo(ColonyTierName.TOWN);
+        assertThat(ruleset.tierAtStep(4).threshold()).isEqualTo(11.0, within(TOLERANCE));
+        assertThat(ruleset.tierAtStep(-3).name()).isEqualTo(ColonyTierName.CAMP);
     }
 
     /**
      * Verifies the bounds a run's morale lives between, and the speed the ceiling buys.
+     *
+     * <p>The floor sits at twenty rather than at one so that a wrecked run is never an absorbing state:
+     * at one the town closed one percent of its gap a week and nothing the squad did started it again,
+     * which is waiting rather than losing. At twenty it closes nineteen percent, and the punishment is
+     * barely softened — two percent of final score on a squad that wasted its first three weeks.
      */
     @Test
     void shouldBoundMoraleAndSpeed() {
         assertThat(ruleset.initialMorale()).isEqualTo(50.0);
-        assertThat(ruleset.minimumMorale()).isEqualTo(1.0);
+        assertThat(ruleset.minimumMorale()).isEqualTo(20.0);
         assertThat(ruleset.maximumMorale()).isEqualTo(100.0);
         assertThat(ruleset.gapClosingRatePercent()).isEqualTo(15.0, within(TOLERANCE));
     }
@@ -213,7 +241,7 @@ class DefaultColonyRulesetTest {
         assertThat(ruleset.presenceDamageThreshold()).isEqualTo(300);
         assertThat(ruleset.foodWindowDays()).isEqualTo(7);
         assertThat(ruleset.runLengthWeeks()).isEqualTo(10);
-        assertThat(ruleset.tierStep()).isEqualTo(500);
+        assertThat(ruleset.efficiencyTierStep()).isEqualTo(0.75, within(TOLERANCE));
     }
 
     /**

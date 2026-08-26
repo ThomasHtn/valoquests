@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import io.github.thomashtn.valoquests.boss.entity.BossCatalogEntry;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
@@ -155,7 +156,7 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
 
     /**
      * Verifies a week of play end to end: one snapshot a day, the rollover's materials on the eighth,
-     * and the capacity they unlock.
+     * and the efficiency they unlock.
      */
     @Test
     void shouldBuildTheColonyFromAWeekOfPlay() {
@@ -181,8 +182,11 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
         int expectedFloor = CHALLENGE_MATERIALS + bossMaterials();
 
         assertThat(snapshots.getLast().getMaterials()).isGreaterThanOrEqualTo(expectedFloor);
-        assertThat(snapshots.getLast().getCapacity())
-            .isEqualTo(ruleset.capacityFor(ROSTER_SIZE, snapshots.getLast().getMaterials()));
+        assertThat(snapshots.getLast().getEfficiency().doubleValue())
+            .isEqualTo(
+                ruleset.efficiencyFor(snapshots.getLast().getMaterials(), ROSTER_SIZE),
+                within(0.001)
+            );
 
         // The fight is the only thing that moves the morale, and it moved it exactly once.
         assertThat(snapshots.subList(0, 7))
@@ -291,28 +295,30 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(colony.runDayCount()).isEqualTo(71);
         assertThat(colony.runWeekIndex()).isEqualTo(2);
         assertThat(colony.materials()).isGreaterThanOrEqualTo(CHALLENGE_MATERIALS + bossMaterials());
-        assertThat(colony.capacity())
-            .isEqualTo(ruleset.capacityFor(ROSTER_SIZE, colony.materials()));
+        assertThat(colony.efficiency())
+            .isEqualTo(ruleset.efficiencyFor(colony.materials(), ROSTER_SIZE), within(0.001));
         assertThat(colony.defeatedBosses()).isEqualTo(1);
         assertThat(colony.bossCount()).isEqualTo(10);
         assertThat(colony.population()).isPositive();
 
-        // The two ceilings, always handed over together. Three players open on 900 places, so their
-        // production outruns their housing early on and it is the housing that commands.
-        assertThat(colony.capacity()).isLessThan(colony.feedablePopulation());
+        // The one ceiling, which is the food's alone: the materials moved the efficiency, and the
+        // efficiency is what the stock is multiplied by. Nothing is capped and nothing is wasted.
         assertThat(colony.feedablePopulation())
-            .isEqualTo((int) Math.round(colony.foodStock() * ruleset.inhabitantsPerFood()));
+            .isEqualTo((int) Math.round(colony.foodStock() * colony.efficiency()));
 
         // The ladder always has a next step, since it has no end.
         assertThat(colony.nextTier().threshold())
-            .isEqualTo(colony.tier().threshold() + ruleset.tierStep());
-        assertThat(colony.missingCapacity())
-            .isEqualTo(colony.nextTier().threshold() - colony.capacity());
+            .isEqualTo(colony.tier().threshold() + ruleset.efficiencyTierStep(), within(0.001));
+        assertThat(colony.missingEfficiency())
+            .isEqualTo(colony.nextTier().threshold() - colony.efficiency(), within(0.001));
 
         // Ten weeks, whether or not a fight has been drawn for them.
         assertThat(colony.weeks()).hasSize(10);
-        assertThat(colony.weeks().getFirst().housingGain())
-            .isEqualTo(ruleset.housingForMaterials(bossMaterials()));
+        assertThat(colony.weeks().getFirst().efficiencyGain()).isEqualTo(
+            ruleset.efficiencyFor(bossMaterials(), ROSTER_SIZE)
+                - ruleset.efficiencyFor(0, ROSTER_SIZE),
+            within(0.001)
+        );
 
         // Nobody played the Monday itself, so the roster shows up but nobody counts.
         assertThat(colony.presence().rosterSize()).isEqualTo(ROSTER_SIZE);
@@ -527,7 +533,7 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
                 snapshot.getMorale(),
                 snapshot.getPopulation(),
                 snapshot.getMaterials(),
-                snapshot.getCapacity(),
+                snapshot.getEfficiency(),
                 snapshot.getPresenceCount()
             ))
             .toList();
@@ -541,7 +547,7 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
      * @param morale        morale the day ended on
      * @param population    population
      * @param materials     cumulative materials
-     * @param capacity      housing available
+     * @param efficiency    inhabitants one point of food feeds
      * @param presenceCount players who cleared the turnout threshold
      */
     private record SnapshotValues(
@@ -550,7 +556,7 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
         BigDecimal morale,
         BigDecimal population,
         int materials,
-        int capacity,
+        BigDecimal efficiency,
         int presenceCount
     ) {
     }

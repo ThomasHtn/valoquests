@@ -157,21 +157,21 @@ export const COLONY_MATERIALS_SHOWCASE: readonly {
 }));
 
 /**
- * The town's first named tiers, with the housing each opens at.
+ * The town's first named tiers, with the efficiency each opens at.
  *
  * Cut at the point the ladder starts repeating: past `GREAT_CITY` every further step is a numbered
  * citadel, so listing them would be listing an infinite series. Mirrors `DefaultColonyRuleset`'s own
- * name table.
+ * name table and its 0.75 step, which paces a regular run at one milestone a week.
  */
 export const COLONY_TIER_SHOWCASE: readonly { name: string; threshold: number }[] = [
-  { name: 'CAMP', threshold: 2_000 },
-  { name: 'HAMLET', threshold: 2_500 },
-  { name: 'VILLAGE', threshold: 3_000 },
-  { name: 'BOROUGH', threshold: 3_500 },
-  { name: 'TOWN', threshold: 4_000 },
-  { name: 'CITY', threshold: 4_500 },
-  { name: 'RESIDENTIAL_QUARTER', threshold: 5_000 },
-  { name: 'GREAT_CITY', threshold: 5_500 },
+  { name: 'CAMP', threshold: 8 },
+  { name: 'HAMLET', threshold: 8.75 },
+  { name: 'VILLAGE', threshold: 9.5 },
+  { name: 'BOROUGH', threshold: 10.25 },
+  { name: 'TOWN', threshold: 11 },
+  { name: 'CITY', threshold: 11.75 },
+  { name: 'RESIDENTIAL_QUARTER', threshold: 12.5 },
+  { name: 'GREAT_CITY', threshold: 13.25 },
 ];
 
 /**

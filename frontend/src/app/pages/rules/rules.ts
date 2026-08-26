@@ -4,6 +4,7 @@ import { LucidePlay } from '@lucide/angular';
 
 import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
 import { formatSquadMultiplier } from '@core/challenges/challenge-format.utils';
+import { formatGauge } from '@core/colony/colony-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
@@ -34,7 +35,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
  * Two halves. The first six beats are the weekly ranking: what a match is worth, what a challenge is
  * worth, and how the week is scored. The last three are the colony, which reads all of that a second
  * time and turns it into a town — the same damage, the same challenges and the same fights, priced
- * in food and housing instead of in points.
+ * in food and efficiency instead of in points.
  */
 @Component({
   selector: 'app-rules',
@@ -110,8 +111,16 @@ export class Rules {
 
   /**
    * The town's first named tiers, shown in the colony panel.
+   *
+   * The efficiency each opens at is formatted here rather than in the template: the steps fall on
+   * quarters, so a raw binding printed `8.75` under a French dictionary.
    */
-  protected readonly colonyTierShowcase = COLONY_TIER_SHOWCASE;
+  protected readonly colonyTierShowcase = computed(() =>
+    COLONY_TIER_SHOWCASE.map((tier) => ({
+      name: tier.name,
+      threshold: formatGauge(tier.threshold, this.translation.language()),
+    })),
+  );
 
   /**
    * Resolves a boss category's text color utility, exposed to the template.

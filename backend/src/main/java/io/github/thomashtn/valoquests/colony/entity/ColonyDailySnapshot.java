@@ -102,10 +102,10 @@ public class ColonyDailySnapshot extends AuditableEntity {
     private int materials;
 
     /**
-     * Housing the frozen roster and the materials open.
+     * Inhabitants one point of food feeds, raised by the materials gathered.
      */
-    @Column(name = "capacity", nullable = false)
-    private int capacity;
+    @Column(name = "efficiency", nullable = false, precision = 6, scale = 3)
+    private BigDecimal efficiency;
 
     /**
      * Population at the end of the day.

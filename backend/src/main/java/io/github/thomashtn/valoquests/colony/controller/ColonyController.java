@@ -46,7 +46,7 @@ public class ColonyController {
     @GetMapping
     @Operation(
         summary = "Read the colony",
-        description = "Gauges, population, capacity, materials, next building tier and the gauge "
+        description = "Gauges, population, efficiency, materials, next building tier and the gauge "
             + "currently setting the equilibrium population."
     )
     @ApiResponse(responseCode = "200", description = "Colony returned successfully.")
