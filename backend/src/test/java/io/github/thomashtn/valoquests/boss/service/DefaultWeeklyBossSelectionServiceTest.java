@@ -12,8 +12,6 @@ import io.github.thomashtn.valoquests.boss.entity.BossCatalogEntry;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.BossCatalogEntryRepository;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
-import io.github.thomashtn.valoquests.player.model.PlayerStatus;
-import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.run.entity.Run;
 import io.github.thomashtn.valoquests.run.service.RunService;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
@@ -38,7 +36,7 @@ class DefaultWeeklyBossSelectionServiceTest {
     /** Week resolved from the fixed application clock. */
     private static final LocalDate WEEK_START = LocalDate.of(2026, 7, 20);
 
-    /** Roster size every fixture is sized against. */
+    /** Roster size every fixture's run is frozen at, and therefore what its fights are sized on. */
     private static final int ACTIVE_PLAYERS = 7;
 
     /** Per-player output the calibration service is pinned to. */
@@ -59,9 +57,6 @@ class DefaultWeeklyBossSelectionServiceTest {
     /** Encounter repository dependency. */
     private WeeklyBossEncounterRepository encounterRepository;
 
-    /** Player repository dependency, sizing the boss from the active roster. */
-    private PlayerRepository playerRepository;
-
     /** Calibration dependency, measuring what a player currently contributes. */
     private BossCalibrationService calibrationService;
 
@@ -76,7 +71,6 @@ class DefaultWeeklyBossSelectionServiceTest {
     void setUp() {
         catalogRepository = mock(BossCatalogEntryRepository.class);
         encounterRepository = mock(WeeklyBossEncounterRepository.class);
-        playerRepository = mock(PlayerRepository.class);
         calibrationService = mock(BossCalibrationService.class);
         runService = mock(RunService.class);
 
@@ -84,8 +78,6 @@ class DefaultWeeklyBossSelectionServiceTest {
         lenient().when(runService.ensureRunFor(any())).thenReturn(CAMPAIGN_RUN);
         lenient().when(encounterRepository.findAllByRunIdOrderByWeekStartAsc(CAMPAIGN_RUN_ID))
             .thenReturn(List.of());
-        lenient().when(playerRepository.countByStatus(PlayerStatus.ACTIVE))
-            .thenReturn((long) ACTIVE_PLAYERS);
         lenient().when(encounterRepository.findByWeekStart(any())).thenReturn(Optional.empty());
         lenient().when(encounterRepository.save(any()))
             .thenAnswer(invocation -> invocation.getArgument(0));
@@ -96,7 +88,6 @@ class DefaultWeeklyBossSelectionServiceTest {
             catalogRepository,
             encounterRepository,
             RULESET,
-            playerRepository,
             calibrationService,
             new WeekCalendar(clock, ZoneOffset.UTC),
             runService
@@ -283,21 +274,29 @@ class DefaultWeeklyBossSelectionServiceTest {
     }
 
     /**
-     * Verifies that an absent player still weighs on the fight.
+     * Verifies that an absent player still weighs on the fight, and that the count doing the weighing is
+     * the roster <b>frozen on the run</b>.
      *
      * <p>The roster is what sizes the boss, not attendance: a player left active and away all week adds
      * their share of hit points without dealing any, which is what makes turning up a collective
-     * commitment. Deactivating them through the backoffice is the supported way to shrink a week.
+     * commitment. Deactivating them through the backoffice is the supported way to shrink a week, and it
+     * takes effect on the next run rather than in the middle of this one — with two different counts in
+     * one model, deactivating somebody in week eight made week nine's fight easier without taking
+     * anything off the materials it pays.
      */
     @Test
-    void shouldSizeOnTheRosterRatherThanOnAttendance() {
+    void shouldSizeOnTheRunsFrozenRosterRatherThanOnAttendance() {
         givenSingleBoss(BossCategory.STANDARD);
 
         WeeklyBossEncounter sevenPlayers = service.selectWeekBoss(WEEK_START);
 
-        when(playerRepository.countByStatus(PlayerStatus.ACTIVE)).thenReturn(6L);
+        Run shrunkRun = campaignRun();
+        shrunkRun.setRosterSize(6);
+        when(runService.ensureRunFor(any())).thenReturn(shrunkRun);
         WeeklyBossEncounter sixPlayers = service.selectWeekBoss(WEEK_START);
 
+        assertThat(sevenPlayers.getEffectiveHp())
+            .isEqualTo(RULESET.bossHitPoints(BossCategory.STANDARD, ACTIVE_PLAYERS, REFERENCE));
         assertThat(sixPlayers.getEffectiveHp()).isLessThan(sevenPlayers.getEffectiveHp());
     }
 
@@ -356,11 +355,12 @@ class DefaultWeeklyBossSelectionServiceTest {
         return boss;
     }
 
-    /** Creates an open encounter fixture referencing a drawn boss. */
+    /** Creates an open encounter fixture referencing a drawn boss and the run it was stamped with. */
     private WeeklyBossEncounter createEncounter(LocalDate weekStart, BossCatalogEntry boss) {
         WeeklyBossEncounter encounter = new WeeklyBossEncounter();
         encounter.setWeekStart(weekStart);
         encounter.setBossCatalogEntry(boss);
+        encounter.setRun(CAMPAIGN_RUN);
         return encounter;
     }
 }

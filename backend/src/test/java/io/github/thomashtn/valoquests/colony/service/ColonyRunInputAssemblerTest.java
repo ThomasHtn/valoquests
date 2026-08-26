@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.colony.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.colony.model.ColonyDailyInput;
 import io.github.thomashtn.valoquests.colony.model.ColonyDayActivity;
+import io.github.thomashtn.valoquests.colony.model.ColonyWeekOutcome;
 import io.github.thomashtn.valoquests.run.entity.Run;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
@@ -31,6 +33,12 @@ class ColonyRunInputAssemblerTest {
     /** Materials the fixture materials reader returns for any finished week. */
     private static final int WEEKLY_MATERIALS = 847;
 
+    /** Roster size the fixture run froze on. */
+    private static final int ROSTER_SIZE = 7;
+
+    /** Morale the fixture week's fight moves. */
+    private static final double WEEKLY_MORALE = 15.0;
+
     /** Activity reader dependency. */
     private ColonyActivityReader activityReader;
 
@@ -44,7 +52,8 @@ class ColonyRunInputAssemblerTest {
         materialsReader = mock(ColonyMaterialsReader.class);
 
         lenient().when(activityReader.readActivity(any(), any())).thenReturn(Map.of());
-        lenient().when(materialsReader.materialsOf(any())).thenReturn(WEEKLY_MATERIALS);
+        lenient().when(materialsReader.outcomeOf(any(), anyInt()))
+            .thenReturn(new ColonyWeekOutcome(WEEKLY_MATERIALS, WEEKLY_MORALE));
     }
 
     /**
@@ -71,18 +80,18 @@ class ColonyRunInputAssemblerTest {
     }
 
     /**
-     * Verifies that exactly ten days of a run credit materials: every Monday but the first.
+     * Verifies that exactly ten days of a run settle a week: every Monday but the first.
      *
-     * <p>Day eight credits week one, day fifteen credits week two, and so on to the settlement day,
-     * which credits the tenth. Without that last one, the tenth week would be the only one to bring
+     * <p>Day eight settles week one, day fifteen settles week two, and so on to the settlement day,
+     * which settles the tenth. Without that last one, the tenth week would be the only one to bring
      * nothing in.
      */
     @Test
-    void shouldCreditMaterialsOnEveryMondayButTheFirst() {
+    void shouldSettleAWeekOnEveryMondayButTheFirst() {
         List<ColonyDailyInput> days = assemble(FIRST_WEEK.plusWeeks(20));
 
         List<ColonyDailyInput> creditedDays = days.stream()
-            .filter(day -> day.creditedMaterials() > 0)
+            .filter(ColonyDailyInput::rollover)
             .toList();
 
         assertThat(creditedDays).hasSize(10);
@@ -98,20 +107,26 @@ class ColonyRunInputAssemblerTest {
             FIRST_WEEK.plusDays(63),
             FIRST_WEEK.plusDays(70)
         );
+        assertThat(days.getFirst().rollover()).isFalse();
         assertThat(days.getFirst().creditedMaterials()).isZero();
+        assertThat(creditedDays).allSatisfy(day -> {
+            assertThat(day.creditedMaterials()).isEqualTo(WEEKLY_MATERIALS);
+            assertThat(day.moraleDelta()).isEqualTo(WEEKLY_MORALE);
+        });
     }
 
     /**
-     * Verifies that each rollover credits the week that just ended, never the one it opens.
+     * Verifies that each rollover settles the week that just ended, never the one it opens, and that it
+     * is priced against the roster frozen on the run.
      */
     @Test
-    void shouldCreditTheWeekThatJustEnded() {
+    void shouldSettleTheWeekThatJustEnded() {
         assemble(FIRST_WEEK.plusWeeks(20));
 
-        verify(materialsReader).materialsOf(FIRST_WEEK);
-        verify(materialsReader).materialsOf(FIRST_WEEK.plusWeeks(9));
-        verify(materialsReader, never()).materialsOf(FIRST_WEEK.minusWeeks(1));
-        verify(materialsReader, never()).materialsOf(FIRST_WEEK.plusWeeks(10));
+        verify(materialsReader).outcomeOf(FIRST_WEEK, ROSTER_SIZE);
+        verify(materialsReader).outcomeOf(FIRST_WEEK.plusWeeks(9), ROSTER_SIZE);
+        verify(materialsReader, never()).outcomeOf(FIRST_WEEK.minusWeeks(1), ROSTER_SIZE);
+        verify(materialsReader, never()).outcomeOf(FIRST_WEEK.plusWeeks(10), ROSTER_SIZE);
     }
 
     /**
@@ -127,9 +142,9 @@ class ColonyRunInputAssemblerTest {
         List<ColonyDailyInput> days = assemble(FIRST_WEEK.plusDays(2));
 
         assertThat(days.getFirst().matchDamage()).isEqualTo(7_000);
-        assertThat(days.getFirst().activePlayerCount()).isEqualTo(7);
+        assertThat(days.getFirst().presencePlayerCount()).isEqualTo(7);
         assertThat(days.get(1).matchDamage()).isZero();
-        assertThat(days.get(1).activePlayerCount()).isZero();
+        assertThat(days.get(1).presencePlayerCount()).isZero();
     }
 
     /**

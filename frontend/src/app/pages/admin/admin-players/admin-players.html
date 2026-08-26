@@ -20,6 +20,18 @@
 <div class="page-body">
   <app-section-label [label]="'admin.players.rosterSection' | translate" />
 
+  <!-- What the roster is worth to the run in progress. Editing it here does not change that run:
+       its size was frozen when it opened, and the change lands on the next one. Without this line an
+       operator deactivating somebody in week eight would expect the colony to react tonight, and
+       nothing at all would happen. -->
+  @if (frozenRosterLabel(); as frozenRoster) {
+    <p
+      class="notch-tr mb-3 border-l-2 border-l-brand-500/50 bg-brand-500/8 px-4 py-2.5 text-sm text-text-secondary [--notch:0.625rem]"
+    >
+      {{ frozenRoster }}
+    </p>
+  }
+
   <app-resource-state
     (retry)="playersResource.reload()"
     [emptyText]="'admin.players.empty' | translate"
@@ -86,6 +98,16 @@
             <p class="mt-1 truncate font-mono text-xs text-text-secondary tabular-nums">
               {{ formatLastSync(player.lastSuccessfulSynchronizationAt) }}
             </p>
+
+            <!-- A forgotten account is not a cosmetic problem: it widens the town without feeding
+                 it, and the score follows the lower of the two ceilings. Flagged where the operator
+                 is already looking, beside the button that fixes it. -->
+            @if (player.status === 'ACTIVE' && !player.hasRecentMatch) {
+              <p class="mt-1.5 flex items-center gap-1.5 text-xs text-danger">
+                <svg aria-hidden="true" class="size-3.5 shrink-0" lucideTriangleAlert></svg>
+                {{ 'admin.players.idle' | translate }}
+              </p>
+            }
           </div>
 
           <div class="flex shrink-0 flex-wrap gap-2 lg:justify-self-end">

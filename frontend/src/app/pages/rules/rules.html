@@ -288,8 +288,7 @@
       </div>
     </app-rule-section>
 
-    <!-- 06 · What all that damage is counted for. Closes the document without a rule under it, for
-       the same reason 01 opens without one. -->
+    <!-- 06 · What all that damage is counted for. -->
     <app-rule-section
       [description]="'rules.sections.ranking.description' | translate"
       [heading]="'rules.sections.ranking.title' | translate"
@@ -310,6 +309,138 @@
           </li>
         }
       </ol>
+    </app-rule-section>
+
+    <!-- 07 · The colony. Where the first six beats are read a second time: the same damage, the same
+       challenges and the same fights, priced in food and housing instead of in points. -->
+    <app-rule-section
+      [description]="'rules.sections.colony.description' | translate"
+      [heading]="'rules.sections.colony.title' | translate"
+      index="07"
+    >
+      <div>
+        <!-- The chain, stated as the four numbers it is made of. Everything else in this beat is a
+           consequence of these. -->
+        <ol>
+          @for (fact of colonyFacts; track fact; let index = $index) {
+            <li
+              class="flex items-baseline gap-3.5 border-b border-text-primary/8 py-2.5 last:border-b-0"
+            >
+              <span aria-hidden="true" class="shrink-0 font-mono text-sm font-bold text-brand-500">
+                0{{ index + 1 }}
+              </span>
+              <span class="text-prose text-text-secondary">
+                {{ 'rules.sections.colony.facts.' + fact | translate }}
+              </span>
+            </li>
+          }
+        </ol>
+
+        <!-- Turnout. Sits under the chain because it multiplies it: everything harvested in a day is
+           multiplied by how many of the squad were there for it. -->
+        <div class="mt-5 border-t border-brand-500/30 pt-4">
+          <p class="label-caption text-text-muted">
+            {{ 'rules.sections.colony.presenceLabel' | translate }}
+          </p>
+          <p class="mt-2.5 text-prose text-text-secondary">
+            {{ 'rules.sections.colony.presence' | translate }}
+          </p>
+        </div>
+      </div>
+    </app-rule-section>
+
+    <!-- 08 · The night, and the one lever that changes its speed. -->
+    <app-rule-section
+      [description]="'rules.sections.night.description' | translate"
+      [heading]="'rules.sections.night.title' | translate"
+      index="08"
+    >
+      <div>
+        <p class="text-prose text-text-secondary">
+          {{ 'rules.sections.night.gap' | translate }}
+        </p>
+
+        <div class="mt-5 border-t border-brand-500/30 pt-4">
+          <p class="label-caption text-text-muted">
+            {{ 'rules.sections.night.moraleLabel' | translate }}
+          </p>
+          <ul class="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            @for (tier of colonyMoraleShowcase; track tier.label) {
+              <li
+                class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
+              >
+                <span class="font-mono text-2xs font-semibold text-text-secondary">
+                  {{ 'rules.sections.night.morale.' + tier.label | translate }}
+                </span>
+                <span
+                  [class]="tier.morale > 0 ? 'text-accent-violet' : 'text-danger'"
+                  class="font-display text-base leading-none font-bold tabular-nums"
+                >
+                  {{ tier.morale > 0 ? '+' : '' }}{{ tier.morale }}
+                </span>
+              </li>
+            }
+          </ul>
+          <p class="mt-3 text-prose text-text-secondary">
+            {{ 'rules.sections.night.moraleFootnote' | translate }}
+          </p>
+        </div>
+      </div>
+    </app-rule-section>
+
+    <!-- 09 · The town itself: what buys the housing, and the names it wears. Closes the document
+       without a rule under it, for the same reason 01 opens without one. -->
+    <app-rule-section
+      [description]="'rules.sections.town.description' | translate"
+      [heading]="'rules.sections.town.title' | translate"
+      index="09"
+    >
+      <div>
+        <p class="label-caption text-text-muted">
+          {{ 'rules.sections.town.materialsLabel' | translate }}
+        </p>
+        <ul class="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-5">
+          @for (tier of colonyMaterialsShowcase; track tier.difficulty) {
+            <li
+              class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
+            >
+              <span class="font-mono text-2xs font-semibold text-text-secondary">
+                {{ 'overview.weeklyChallenges.difficulty.' + tier.difficulty | translate }}
+              </span>
+              <span
+                class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
+              >
+                {{ tier.materials }}
+              </span>
+            </li>
+          }
+        </ul>
+
+        <!-- The names, and the one rule behind them. The table stops where the ladder starts
+           repeating: past the last name every further step is a numbered citadel. -->
+        <div class="mt-5 border-t border-brand-500/30 pt-4">
+          <p class="label-caption text-text-muted">
+            {{ 'rules.sections.town.tiersLabel' | translate }}
+          </p>
+          <ul class="mt-2.5 flex flex-col">
+            @for (tier of colonyTierShowcase; track tier.threshold) {
+              <li
+                class="flex items-baseline justify-between gap-3 border-b border-text-primary/8 py-2 last:border-b-0"
+              >
+                <span class="text-prose text-text-secondary">
+                  {{ 'colony.tier.' + tier.name | translate: { level: 1 } }}
+                </span>
+                <span class="font-mono text-sm font-semibold text-brand-500 tabular-nums">
+                  {{ tier.threshold }}
+                </span>
+              </li>
+            }
+          </ul>
+          <p class="mt-3 text-prose text-text-secondary">
+            {{ 'rules.sections.town.tiersFootnote' | translate }}
+          </p>
+        </div>
+      </div>
     </app-rule-section>
   </div>
 </div>

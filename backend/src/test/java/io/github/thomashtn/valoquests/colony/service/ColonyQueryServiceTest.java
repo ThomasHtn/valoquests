@@ -8,21 +8,25 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.github.thomashtn.valoquests.boss.entity.BossCatalogEntry;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
 import io.github.thomashtn.valoquests.colony.ColonyRuleset;
 import io.github.thomashtn.valoquests.colony.DefaultColonyRuleset;
 import io.github.thomashtn.valoquests.colony.dto.ColonyResponse;
-import io.github.thomashtn.valoquests.colony.dto.ColonyRunHistoryResponse;
-import io.github.thomashtn.valoquests.colony.dto.ColonyTrajectoryResponse;
-import io.github.thomashtn.valoquests.colony.dto.ColonyUpkeepResponse;
 import io.github.thomashtn.valoquests.colony.entity.ColonyDailySnapshot;
-import io.github.thomashtn.valoquests.colony.model.ColonyBuilding;
-import io.github.thomashtn.valoquests.colony.model.ColonyGauge;
+import io.github.thomashtn.valoquests.colony.model.ColonyPresenceState;
+import io.github.thomashtn.valoquests.colony.model.ColonyTierName;
+import io.github.thomashtn.valoquests.colony.model.ColonyTierState;
+import io.github.thomashtn.valoquests.colony.model.ColonyWeekOutcomeState;
 import io.github.thomashtn.valoquests.colony.repository.ColonyDailySnapshotRepository;
+import io.github.thomashtn.valoquests.player.entity.Player;
+import io.github.thomashtn.valoquests.player.model.PlayerStatus;
+import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.run.entity.Run;
 import io.github.thomashtn.valoquests.run.service.RunService;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
+import io.github.thomashtn.valoquests.scoring.model.BossCategory;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -30,11 +34,16 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
  * Tests how the colony reads off its snapshots.
+ *
+ * <p>The fixture is the worked state of the interface document: run 3, day 26 of 71, a roster frozen at
+ * seven, 3 050 materials and 440 food a week. Every figure in it recomposes, which is exactly what the
+ * page has to be able to show, so a response that stops agreeing with it fails here first.
  */
 class ColonyQueryServiceTest {
 
@@ -44,20 +53,29 @@ class ColonyQueryServiceTest {
     /** Identifier of the fixture run. */
     private static final long RUN_ID = 1L;
 
-    /** Scale a ratio is read as a percentage on. */
-    private static final double PERCENT = 100.0;
+    /** Day 26 of the run, the state the interface document is written around. */
+    private static final LocalDate TODAY = FIRST_WEEK.plusDays(25);
+
+    /** Tolerance for the double arithmetic. */
+    private static final double TOLERANCE = 1e-6;
 
     /** Run service dependency. */
     private RunService runService;
 
-    /** Replay service dependency, only reached when a run has no snapshot yet. */
-    private ColonyReplayService replayService;
-
     /** Snapshot repository dependency. */
     private ColonyDailySnapshotRepository snapshotRepository;
 
+    /** Replay service dependency, only reached when a run has no snapshot yet. */
+    private ColonyReplayService replayService;
+
     /** Encounter repository dependency. */
     private WeeklyBossEncounterRepository encounterRepository;
+
+    /** Player repository dependency, which names the turnout. */
+    private PlayerRepository playerRepository;
+
+    /** Activity reader dependency, which says what each player brought in. */
+    private ColonyActivityReader activityReader;
 
     /** Calibration the thresholds are read from. */
     private final ColonyRuleset ruleset = new DefaultColonyRuleset(new DefaultScoringRuleset());
@@ -69,332 +87,352 @@ class ColonyQueryServiceTest {
     @BeforeEach
     void setUp() {
         runService = mock(RunService.class);
-        replayService = mock(ColonyReplayService.class);
         snapshotRepository = mock(ColonyDailySnapshotRepository.class);
+        replayService = mock(ColonyReplayService.class);
         encounterRepository = mock(WeeklyBossEncounterRepository.class);
+        playerRepository = mock(PlayerRepository.class);
+        activityReader = mock(ColonyActivityReader.class);
 
         lenient().when(runService.ensureRunFor(any())).thenReturn(run());
         lenient().when(encounterRepository
             .findAllByRunIdAndFinalizedAtIsNotNullOrderByWeekStartAsc(RUN_ID))
             .thenReturn(List.of());
+        lenient().when(encounterRepository.findAllByRunIdOrderByWeekStartAsc(RUN_ID))
+            .thenReturn(List.of());
+        lenient().when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+            .thenReturn(List.of());
+        lenient().when(activityReader.readRawDamageByPlayer(any())).thenReturn(Map.of());
 
-        Clock clock = Clock.fixed(Instant.parse("2026-06-10T09:00:00Z"), ZoneOffset.UTC);
+        WeekCalendar weekCalendar = new WeekCalendar(
+            Clock.fixed(Instant.parse("2026-06-26T09:00:00Z"), ZoneOffset.UTC),
+            ZoneOffset.UTC
+        );
+
+        ColonyReplayEngine engine = new ColonyReplayEngine(ruleset);
 
         service = new ColonyQueryService(
-            runService,
-            replayService,
-            snapshotRepository,
+            new ColonyRunReader(runService, replayService, snapshotRepository, weekCalendar),
+            new ColonyPresenceReader(playerRepository, activityReader, ruleset, engine),
             encounterRepository,
             ruleset,
-            new ColonyReplayEngine(ruleset),
-            new WeekCalendar(clock, ZoneOffset.UTC)
+            engine
         );
     }
 
     /**
-     * Verifies that the last snapshot is the colony's current state, placed inside its run.
+     * Verifies the last snapshot is the colony's current state, placed inside its run.
      */
     @Test
     void shouldReadTodaysColonyOffTheLastSnapshot() {
-        givenSnapshots(
-            snapshot(FIRST_WEEK, 60, 60, 0, 400, 3_000, 12, 14),
-            snapshot(FIRST_WEEK.plusDays(9), 72, 61, 4_300, 2_690, 4_200, 11.4, 10.0)
-        );
+        givenTheWorkedState();
 
         ColonyResponse colony = service.findCurrent();
 
-        assertThat(colony.runNumber()).isEqualTo(4);
-        assertThat(colony.runDay()).isEqualTo(10);
+        assertThat(colony.runNumber()).isEqualTo(3);
+        assertThat(colony.runDay()).isEqualTo(26);
         assertThat(colony.runDayCount()).isEqualTo(71);
-        assertThat(colony.runWeekIndex()).isEqualTo(2);
+        assertThat(colony.runWeekIndex()).isEqualTo(4);
         assertThat(colony.runWeekCount()).isEqualTo(10);
-        assertThat(colony.population()).isEqualTo(2_690);
-        assertThat(colony.capacity()).isEqualTo(4_200);
-        assertThat(colony.materials()).isEqualTo(4_300);
-        assertThat(colony.maximumCapacity()).isEqualTo(7_000);
-        assertThat(colony.food().value()).isEqualTo(72.0);
-        assertThat(colony.energy().value()).isEqualTo(61.0);
-        assertThat(colony.food().gain()).isEqualTo(11.4);
-        assertThat(colony.energy().gain()).isEqualTo(10.0);
+        assertThat(colony.day()).isEqualTo(TODAY);
+        assertThat(colony.population()).isEqualTo(2_400);
+        assertThat(colony.populationChange()).isEqualTo(92);
+        assertThat(colony.capacity()).isEqualTo(3_625);
+        assertThat(colony.materials()).isEqualTo(3_050);
     }
 
     /**
-     * Verifies the upkeep the colony is about to pay, and what it takes to cover it.
-     *
-     * <p>Read against <b>today</b>, not the previous day: today's loss has already been charged and is
-     * inside the value the gauge shows, so the only figure left to act on is the next one.
+     * Verifies the two ceilings are handed over together, along with what the town eats and what it has
+     * left over. Those four figures are the whole of the food readout.
      */
     @Test
-    void shouldReportTheUpcomingUpkeepAndWhatCoversIt() {
-        givenSnapshots(
-            snapshot(FIRST_WEEK, 60, 60, 0, 2_000, 4_000, 12, 14),
-            snapshot(FIRST_WEEK.plusDays(1), 62, 58, 0, 2_100, 4_000, 12, 14)
+    void shouldHandOverBothCeilingsAndWhatSeparatesThem() {
+        givenTheWorkedState();
+
+        ColonyResponse colony = service.findCurrent();
+
+        assertThat(colony.foodStock()).isEqualTo(440.0, within(TOLERANCE));
+        assertThat(colony.feedablePopulation()).isEqualTo(3_520);
+        assertThat(colony.weeklyConsumption()).isEqualTo(300.0, within(TOLERANCE));
+        assertThat(colony.weeklySurplus()).isEqualTo(140.0, within(TOLERANCE));
+    }
+
+    /**
+     * Verifies a town eating more than it brings in reports no surplus rather than a negative one.
+     */
+    @Test
+    void shouldNeverReportANegativeSurplus() {
+        givenSnapshots(snapshot(TODAY, 100.0, 3_000.0, 0.0, 55.0, 3_050, 3_625));
+
+        assertThat(service.findCurrent().weeklySurplus()).isZero();
+    }
+
+    /**
+     * Verifies the morale is handed over with its floor, its ceiling and the speed it buys tonight.
+     */
+    @Test
+    void shouldReportTheSpeedTheMoraleBuys() {
+        givenTheWorkedState();
+
+        assertThat(service.findCurrent().morale()).satisfies(morale -> {
+            assertThat(morale.value()).isEqualTo(55.0, within(TOLERANCE));
+            assertThat(morale.floor()).isEqualTo(1.0);
+            assertThat(morale.ceiling()).isEqualTo(100.0);
+            assertThat(morale.growthPercentPerNight()).isEqualTo(8.25, within(TOLERANCE));
+        });
+    }
+
+    /**
+     * Verifies the tier the town sits in, the one above it, and how far along it is.
+     *
+     * <p>The active step carries the town's <b>real</b> housing, not the threshold it crossed: a row
+     * reading "Borough 3 500" over a bar at a quarter reads as progress towards a tier already earned.
+     */
+    @Test
+    void shouldPlaceTheTownOnItsLadder() {
+        givenTheWorkedState();
+
+        ColonyResponse colony = service.findCurrent();
+
+        assertThat(colony.tier().name()).isEqualTo(ColonyTierName.BOROUGH);
+        assertThat(colony.tier().threshold()).isEqualTo(3_500);
+        assertThat(colony.tier().state()).isEqualTo(ColonyTierState.CURRENT);
+        assertThat(colony.nextTier().threshold()).isEqualTo(4_000);
+        assertThat(colony.missingCapacity()).isEqualTo(375);
+        assertThat(colony.tierProgressPercentage()).isEqualTo(25.0, within(TOLERANCE));
+    }
+
+    /**
+     * Verifies the ladder window opens one step behind the town and four ahead of it, so the step being
+     * paid for is never pushed off the bottom of the panel.
+     */
+    @Test
+    void shouldWindowTheLadderAroundTheTown() {
+        givenTheWorkedState();
+
+        assertThat(service.findCurrent().ladder()).satisfiesExactly(
+            step -> assertThat(step.threshold()).isEqualTo(3_000),
+            step -> assertThat(step.threshold()).isEqualTo(3_500),
+            step -> assertThat(step.threshold()).isEqualTo(4_000),
+            step -> assertThat(step.threshold()).isEqualTo(4_500),
+            step -> assertThat(step.threshold()).isEqualTo(5_000),
+            step -> assertThat(step.threshold()).isEqualTo(5_500)
         );
 
-        ColonyResponse colony = service.findCurrent();
-
-        // 14 x 2 100 / 4 000 = 7.35, both gauges alike.
-        assertThat(colony.upkeep().upcomingLoss()).isEqualTo(7.35, within(1e-9));
-        // Food: 7.35 x 400 = 2 940 damage, which is 2 940 / 425 = 6.9 competitive games.
-        assertThat(colony.upkeep().damageToHold()).isEqualTo(2_940);
-        assertThat(colony.upkeep().matchesToHold()).isEqualTo(7);
-        // Energy: 7.35 x 7 / 14 = 3.675 players, so four of them have to turn up.
-        assertThat(colony.upkeep().playersToHold()).isEqualTo(4);
-        assertThat(colony.populationChange()).isEqualTo(100);
-        assertThat(colony.dailyMigrationLimit()).isEqualTo(100);
+        assertThat(service.findCurrent().ladder()).extracting("state").containsExactly(
+            ColonyTierState.REACHED,
+            ColonyTierState.CURRENT,
+            ColonyTierState.LOCKED,
+            ColonyTierState.LOCKED,
+            ColonyTierState.LOCKED,
+            ColonyTierState.LOCKED
+        );
     }
 
     /**
-     * Verifies that a requirement is never rounded past the roster, nor asked of an empty colony.
+     * Verifies every week of the run is listed with what its fight paid, in housing.
      *
-     * <p>An empty colony consumes nothing, so there is nothing to cover and no objective to state. At
-     * the other end, a loss no turnout can absorb must still ask for the squad and not for eight of it.
+     * <p>Housing rather than materials: materials are an intermediate currency the player never handles,
+     * and housing is the only part of a fight's reward still standing on settlement day.
      */
     @Test
-    void shouldKeepTheUpkeepRequirementsWithinWhatCanBeAskedFor() {
-        givenSnapshots(snapshot(FIRST_WEEK, 0, 0, 0, 0, 3_000, 0, 0));
+    void shouldPriceEveryFightInHousing() {
+        givenTheWorkedState();
+        when(encounterRepository.findAllByRunIdOrderByWeekStartAsc(RUN_ID)).thenReturn(List.of(
+            encounter(FIRST_WEEK, BossCategory.MINOR, true),
+            encounter(FIRST_WEEK.plusWeeks(1), BossCategory.STANDARD, false),
+            encounter(FIRST_WEEK.plusWeeks(2), BossCategory.STANDARD, true)
+        ));
 
-        ColonyUpkeepResponse empty = service.findCurrent().upkeep();
+        assertThat(service.findCurrent().weeks()).hasSize(10).satisfies(weeks -> {
+            assertThat(weeks.get(0).state()).isEqualTo(ColonyWeekOutcomeState.DEFEATED);
+            assertThat(weeks.get(0).materials()).isEqualTo(420);
+            assertThat(weeks.get(0).housingGain()).isEqualTo(210);
+            assertThat(weeks.get(0).moraleDelta()).isEqualTo(10.0);
 
-        assertThat(empty.upcomingLoss()).isZero();
-        assertThat(empty.damageToHold()).isZero();
-        assertThat(empty.matchesToHold()).isZero();
-        assertThat(empty.playersToHold()).isZero();
+            assertThat(weeks.get(1).state()).isEqualTo(ColonyWeekOutcomeState.SURVIVED);
+            assertThat(weeks.get(1).materials()).isZero();
+            assertThat(weeks.get(1).housingGain()).isZero();
+            assertThat(weeks.get(1).moraleDelta()).isEqualTo(-20.0);
 
-        givenSnapshots(snapshot(FIRST_WEEK, 100, 100, 0, 3_000, 3_000, 14, 14));
+            assertThat(weeks.get(2).state()).isEqualTo(ColonyWeekOutcomeState.DEFEATED);
+            assertThat(weeks.get(2).housingGain()).isEqualTo(280);
+            assertThat(weeks.get(2).moraleDelta()).isEqualTo(15.0);
 
-        assertThat(service.findCurrent().upkeep().playersToHold()).isEqualTo(7);
+            assertThat(weeks.get(3).state()).isEqualTo(ColonyWeekOutcomeState.CURRENT);
+            assertThat(weeks.get(4).state()).isEqualTo(ColonyWeekOutcomeState.UPCOMING);
+        });
     }
 
     /**
-     * Verifies that the gauge fed the least is named, along with the share of capacity it caps the
-     * colony at.
-     *
-     * <p>The one property of the model that cannot be read off the gauges themselves.
+     * Verifies the fight under way is priced at what it would pay rather than at zero, so the tile shows
+     * what is on the table instead of an empty promise.
      */
     @Test
-    void shouldNameTheLimitingGaugeAndTheCeilingItSets() {
-        givenSnapshots(snapshot(FIRST_WEEK, 100, 61, 0, 2_500, 4_200, 14.0, 8.0));
+    void shouldPriceTheFightUnderWayAtWhatItWouldPay() {
+        givenTheWorkedState();
+        when(encounterRepository.findAllByRunIdOrderByWeekStartAsc(RUN_ID)).thenReturn(List.of(
+            encounter(FIRST_WEEK.plusWeeks(3), BossCategory.ELITE, false, null)
+        ));
 
-        ColonyResponse colony = service.findCurrent();
-
-        assertThat(colony.limitingGauge()).isEqualTo(ColonyGauge.ENERGY);
-        assertThat(colony.equilibriumPercentage()).isEqualTo(8.0 / 14.0 * 100.0, within(1e-9));
+        assertThat(service.findCurrent().weeks().get(3)).satisfies(week -> {
+            assertThat(week.state()).isEqualTo(ColonyWeekOutcomeState.CURRENT);
+            assertThat(week.category()).isEqualTo(BossCategory.ELITE);
+            assertThat(week.housingGain()).isEqualTo(350);
+            assertThat(week.moraleDelta()).isEqualTo(20.0);
+        });
     }
 
     /**
-     * Verifies that the settling levels are resolved on the last complete days, never on today.
+     * Verifies a week already behind and still unsettled is not reported as the fight under way.
      *
-     * <p>Today is a day in progress. Before anybody has played it, its gains are zero, and an
-     * equilibrium read off it would sit at zero every morning and climb back through the evening — the
-     * one reading a permanently displayed figure must never give.
+     * <p>It happens when a Monday's rollover never fired. Reported as under way it put three tiles in
+     * the "fighting now" state at once; and since it settled nothing, it has to be quoted at nothing
+     * rather than at what a win would have paid.
      */
     @Test
-    void shouldResolveTheSettlingLevelsOnTheLastCompleteDaysNotOnToday() {
+    void shouldNotReportAStaleWeekAsTheFightUnderWay() {
+        givenTheWorkedState();
+        when(encounterRepository.findAllByRunIdOrderByWeekStartAsc(RUN_ID)).thenReturn(List.of(
+            encounter(FIRST_WEEK, BossCategory.ELITE, true, null),
+            encounter(FIRST_WEEK.plusWeeks(3), BossCategory.ELITE, false, null)
+        ));
+
+        assertThat(service.findCurrent().weeks()).satisfies(weeks -> {
+            assertThat(weeks.get(0).state()).isEqualTo(ColonyWeekOutcomeState.SURVIVED);
+            assertThat(weeks.get(0).materials()).isZero();
+            assertThat(weeks.get(0).housingGain()).isZero();
+            assertThat(weeks.get(0).moraleDelta()).isZero();
+
+            // The week today falls in is the only one under way, and it still shows its stake.
+            assertThat(weeks.get(3).state()).isEqualTo(ColonyWeekOutcomeState.CURRENT);
+            assertThat(weeks.get(3).housingGain()).isEqualTo(350);
+        });
+    }
+
+    /**
+     * Verifies a week nobody ever drew a boss for is quoted at nothing rather than at a stake.
+     *
+     * <p>A run is ten weeks long, not ten fights long, which is what keeps runs comparable.
+     */
+    @Test
+    void shouldQuoteAWeekWithNoFightAtNothing() {
+        givenTheWorkedState();
+
+        assertThat(service.findCurrent().weeks()).allSatisfy(week -> {
+            assertThat(week.category()).isNull();
+            assertThat(week.materials()).isZero();
+            assertThat(week.moraleDelta()).isZero();
+        });
+    }
+
+    /**
+     * Verifies the turnout names every player of the roster, and separates the ones who played under the
+     * threshold from the ones who did not play at all.
+     */
+    @Test
+    void shouldSeparatePlayingUnderTheThresholdFromNotPlaying() {
+        givenTheWorkedState();
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+            .thenReturn(List.of(player(1L, "Thomas"), player(2L, "Rémi"), player(3L, "Yanis")));
+        when(activityReader.readRawDamageByPlayer(TODAY)).thenReturn(Map.of(1L, 850, 2L, 200));
+
+        assertThat(service.findCurrent().presence()).satisfies(presence -> {
+            assertThat(presence.present()).isEqualTo(5);
+            assertThat(presence.rosterSize()).isEqualTo(7);
+            assertThat(presence.multiplier()).isEqualTo(1.714, within(1e-3));
+            assertThat(presence.threshold()).isEqualTo(300);
+            assertThat(presence.players()).extracting("state").containsExactly(
+                ColonyPresenceState.FULL,
+                ColonyPresenceState.PARTIAL,
+                ColonyPresenceState.NONE
+            );
+        });
+    }
+
+    /**
+     * Verifies the curve carries both ceilings alongside the population, which is what makes the days
+     * they cross readable.
+     */
+    @Test
+    void shouldDrawTheCurveWithBothCeilings() {
+        givenTheWorkedState();
+
+        assertThat(service.findTrajectory()).satisfies(trajectory -> {
+            assertThat(trajectory.runNumber()).isEqualTo(3);
+            assertThat(trajectory.points()).singleElement().satisfies(point -> {
+                assertThat(point.runDay()).isEqualTo(26);
+                assertThat(point.population()).isEqualTo(2_400);
+                assertThat(point.feedablePopulation()).isEqualTo(3_520);
+                assertThat(point.capacity()).isEqualTo(3_625);
+                assertThat(point.morale()).isEqualTo(55.0, within(TOLERANCE));
+            });
+        });
+    }
+
+    /**
+     * Verifies the curve marks the days the town changed name, and only those.
+     */
+    @Test
+    void shouldMarkTheDaysTheTownChangedName() {
         givenSnapshots(
-            snapshot(FIRST_WEEK, 100, 40, 0, 1_700, 3_000, 14, 8),
-            snapshot(FIRST_WEEK.plusDays(1), 100, 34, 0, 1_710, 3_000, 14, 8),
-            snapshot(FIRST_WEEK.plusDays(2), 100, 33, 0, 1_714, 3_000, 14, 8),
-            // Today, before a single game has been played on it.
-            snapshot(FIRST_WEEK.plusDays(3), 92, 25, 0, 1_714, 3_000, 0, 0)
+            snapshot(FIRST_WEEK, 440.0, 2_400.0, 92.0, 55.0, 1_800, 3_000),
+            snapshot(FIRST_WEEK.plusDays(1), 440.0, 2_400.0, 92.0, 55.0, 1_900, 3_050),
+            snapshot(FIRST_WEEK.plusDays(2), 440.0, 2_400.0, 92.0, 55.0, 3_050, 3_625)
         );
 
-        ColonyResponse colony = service.findCurrent();
-
-        assertThat(colony.limitingGauge()).isEqualTo(ColonyGauge.ENERGY);
-        assertThat(colony.equilibriumPercentage()).isEqualTo(8.0 / 14.0 * PERCENT, within(0.5));
-        // Food outproduces the loss and saturates; Energy is the one that settles, at 100 x health².
-        assertThat(colony.food().equilibrium()).isEqualTo(100.0, within(1e-9));
-        assertThat(colony.energy().equilibrium())
-            .isEqualTo(PERCENT * Math.pow(8.0 / 14.0, 2), within(0.5));
+        assertThat(service.findTrajectory().milestones()).singleElement().satisfies(milestone -> {
+            assertThat(milestone.name()).isEqualTo(ColonyTierName.BOROUGH);
+            assertThat(milestone.runDay()).isEqualTo(3);
+            assertThat(milestone.threshold()).isEqualTo(3_500);
+        });
     }
 
     /**
-     * Verifies that Food is named when it is the one falling behind.
-     */
-    @Test
-    void shouldNameFoodWhenItIsTheOneFallingBehind() {
-        givenSnapshots(snapshot(FIRST_WEEK, 40, 90, 0, 1_000, 3_000, 4.0, 14.0));
-
-        assertThat(service.findCurrent().limitingGauge()).isEqualTo(ColonyGauge.FOOD);
-    }
-
-    /**
-     * Verifies that health is the geometric mean and that distress is flagged under a quarter of it.
-     */
-    @Test
-    void shouldFlagDistressUnderAQuarterOfHealth() {
-        givenSnapshots(snapshot(FIRST_WEEK, 100, 4, 0, 200, 3_000, 14.0, 1.0));
-
-        ColonyResponse colony = service.findCurrent();
-
-        assertThat(colony.healthPercentage()).isEqualTo(20.0, within(1e-9));
-        assertThat(colony.alert()).isTrue();
-    }
-
-    /**
-     * Verifies that a healthy colony is not flagged.
-     */
-    @Test
-    void shouldNotFlagAHealthyColony() {
-        givenSnapshots(snapshot(FIRST_WEEK, 72, 61, 0, 2_690, 4_200, 11.4, 10.0));
-
-        assertThat(service.findCurrent().alert()).isFalse();
-    }
-
-    /**
-     * Verifies that every tier is reported, with the day the run reached it.
-     */
-    @Test
-    void shouldReportEveryTierAndTheDayItWentUp() {
-        givenSnapshots(
-            snapshot(FIRST_WEEK, 60, 60, 0, 400, 3_000, 12, 14),
-            snapshot(FIRST_WEEK.plusDays(21), 60, 60, 2_600, 1_200, 4_200, 12, 14),
-            snapshot(FIRST_WEEK.plusDays(28), 60, 60, 4_300, 1_800, 4_200, 12, 14)
-        );
-
-        ColonyResponse colony = service.findCurrent();
-
-        assertThat(colony.buildings()).hasSize(4);
-        assertThat(colony.buildings().getFirst().building()).isEqualTo(ColonyBuilding.CAMP);
-        assertThat(colony.buildings().getFirst().erected()).isTrue();
-        assertThat(colony.buildings().getFirst().erectedOnRunDay()).isEqualTo(1);
-        assertThat(colony.buildings().get(1).building()).isEqualTo(ColonyBuilding.BARRACKS);
-        assertThat(colony.buildings().get(1).erected()).isTrue();
-        assertThat(colony.buildings().get(1).erectedOnRunDay()).isEqualTo(22);
-        assertThat(colony.buildings().get(2).erected()).isFalse();
-        assertThat(colony.buildings().get(2).erectedOnRunDay()).isNull();
-    }
-
-    /**
-     * Verifies the progress towards the tier the run is working on.
-     */
-    @Test
-    void shouldReportProgressTowardsTheNextTier() {
-        givenSnapshots(snapshot(FIRST_WEEK, 60, 60, 5_240, 2_000, 4_200, 12, 14));
-
-        ColonyResponse colony = service.findCurrent();
-
-        assertThat(colony.nextTier().building()).isEqualTo(ColonyBuilding.RESIDENTIAL_QUARTER);
-        assertThat(colony.nextTier().materialsThreshold()).isEqualTo(6_200);
-        assertThat(colony.nextTier().missingMaterials()).isEqualTo(960);
-        assertThat(colony.nextTier().progressPercentage())
-            .isEqualTo(5_240 * 100.0 / 6_200, within(1e-9));
-    }
-
-    /**
-     * Verifies that a run holding the Citadel has no tier left to work towards.
-     */
-    @Test
-    void shouldReportNoNextTierOnceTheCitadelIsUp() {
-        givenSnapshots(snapshot(FIRST_WEEK, 90, 90, 11_000, 6_000, 7_000, 14, 14));
-
-        assertThat(service.findCurrent().nextTier()).isNull();
-    }
-
-    /**
-     * Verifies that the defeated bosses of the run are counted, and only those.
-     */
-    @Test
-    void shouldCountOnlyTheBossesTheRunPutDown() {
-        givenSnapshots(snapshot(FIRST_WEEK, 60, 60, 0, 400, 3_000, 12, 14));
-        when(encounterRepository.findAllByRunIdAndFinalizedAtIsNotNullOrderByWeekStartAsc(RUN_ID))
-            .thenReturn(List.of(encounter(true), encounter(false), encounter(true)));
-
-        ColonyResponse colony = service.findCurrent();
-
-        assertThat(colony.defeatedBosses()).isEqualTo(2);
-        assertThat(colony.bossCount()).isEqualTo(10);
-    }
-
-    /**
-     * Verifies that a run with no snapshot is replayed once rather than failing.
+     * Verifies a run with no snapshot at all is replayed once rather than failing.
      */
     @Test
     void shouldReplayARunThatHasNoSnapshotYet() {
         when(snapshotRepository.findAllByRunIdOrderByDayAsc(RUN_ID))
             .thenReturn(List.of())
-            .thenReturn(List.of(snapshot(FIRST_WEEK, 50, 50, 0, 375, 3_000, 14, 14)));
+            .thenReturn(List.of(snapshot(TODAY, 440.0, 2_400.0, 92.0, 55.0, 3_050, 3_625)));
 
-        ColonyResponse colony = service.findCurrent();
-
+        assertThat(service.findCurrent().population()).isEqualTo(2_400);
         verify(replayService).replay(any());
-        assertThat(colony.population()).isEqualTo(375);
     }
 
     /**
-     * Verifies that the curve carries its peak, its average and the days buildings went up.
-     *
-     * <p>The average is what separates a run that was held from a hollow one that ended at the same
-     * place.
+     * Verifies a closed run reports the tier it finished on, and that a run older than the colony
+     * reports zeroes rather than failing.
      */
     @Test
-    void shouldReportThePeakTheAverageAndTheMilestones() {
-        givenSnapshots(
-            snapshot(FIRST_WEEK, 60, 60, 0, 1_000, 3_000, 12, 14),
-            snapshot(FIRST_WEEK.plusDays(1), 60, 60, 2_500, 3_000, 4_200, 12, 14),
-            snapshot(FIRST_WEEK.plusDays(2), 60, 60, 2_500, 2_000, 4_200, 12, 14)
-        );
-
-        ColonyTrajectoryResponse trajectory = service.findTrajectory();
-
-        assertThat(trajectory.peakPopulation()).isEqualTo(3_000);
-        assertThat(trajectory.peakDay()).isEqualTo(FIRST_WEEK.plusDays(1));
-        assertThat(trajectory.averagePopulation()).isEqualTo(2_000);
-        assertThat(trajectory.points()).hasSize(3);
-        assertThat(trajectory.points().getFirst().runDay()).isEqualTo(1);
-        assertThat(trajectory.milestones()).singleElement()
-            .satisfies(milestone -> {
-                assertThat(milestone.building()).isEqualTo(ColonyBuilding.BARRACKS);
-                assertThat(milestone.runDay()).isEqualTo(2);
-                assertThat(milestone.capacity()).isEqualTo(4_200);
-            });
-    }
-
-    /**
-     * Verifies that a closed run's score is the population of its settlement day.
-     */
-    @Test
-    void shouldScoreAClosedRunOnItsSettlementDay() {
+    void shouldReportHowAClosedRunEnded() {
         Run closed = run();
         closed.setClosedAt(Instant.parse("2026-08-10T00:05:00Z"));
         when(runService.closedRuns()).thenReturn(List.of(closed));
+        when(snapshotRepository.findAllByRunIdOrderByDayAsc(RUN_ID))
+            .thenReturn(List.of(snapshot(TODAY, 440.0, 2_400.0, 92.0, 55.0, 3_050, 3_625)));
 
-        givenSnapshots(
-            snapshot(FIRST_WEEK, 60, 60, 0, 1_000, 3_000, 12, 14),
-            snapshot(FIRST_WEEK.plusDays(69), 80, 80, 6_500, 6_040, 5_500, 12, 14),
-            snapshot(FIRST_WEEK.plusDays(70), 80, 80, 6_500, 5_780, 5_500, 12, 14)
-        );
-
-        List<ColonyRunHistoryResponse> history = service.findHistory();
-
-        assertThat(history).singleElement().satisfies(entry -> {
-            assertThat(entry.runNumber()).isEqualTo(4);
-            assertThat(entry.settlementDay()).isEqualTo(FIRST_WEEK.plusDays(70));
-            assertThat(entry.finalPopulation()).isEqualTo(5_780);
-            assertThat(entry.maximumPercentage()).isEqualTo(5_780 * 100.0 / 7_000, within(1e-9));
-            assertThat(entry.peakPopulation()).isEqualTo(6_040);
-            assertThat(entry.erectedBuildings()).isEqualTo(3);
-            assertThat(entry.buildingCount()).isEqualTo(4);
+        assertThat(service.findHistory()).singleElement().satisfies(entry -> {
+            assertThat(entry.finalPopulation()).isEqualTo(2_400);
+            assertThat(entry.capacity()).isEqualTo(3_625);
+            assertThat(entry.tier().name()).isEqualTo(ColonyTierName.BOROUGH);
+            assertThat(entry.bossCount()).isEqualTo(10);
         });
-    }
 
-    /**
-     * Verifies that a closed run with no snapshot at all reports zeroes rather than failing.
-     */
-    @Test
-    void shouldReportZeroesForAClosedRunWithNoSnapshot() {
-        Run closed = run();
-        closed.setClosedAt(Instant.parse("2026-08-10T00:05:00Z"));
-        when(runService.closedRuns()).thenReturn(List.of(closed));
         when(snapshotRepository.findAllByRunIdOrderByDayAsc(RUN_ID)).thenReturn(List.of());
 
         assertThat(service.findHistory()).singleElement().satisfies(entry -> {
             assertThat(entry.finalPopulation()).isZero();
             assertThat(entry.peakPopulation()).isZero();
             assertThat(entry.averagePopulation()).isZero();
-            assertThat(entry.erectedBuildings()).isEqualTo(1);
         });
+    }
+
+    /**
+     * Registers the worked state of the interface document as the run's only day.
+     */
+    private void givenTheWorkedState() {
+        givenSnapshots(snapshot(TODAY, 440.0, 2_400.0, 92.0, 55.0, 3_050, 3_625));
     }
 
     /**
@@ -414,7 +452,7 @@ class ColonyQueryServiceTest {
     private static Run run() {
         Run run = new Run();
         run.setId(RUN_ID);
-        run.setNumber(4);
+        run.setNumber(3);
         run.setFirstWeekStart(FIRST_WEEK);
         run.setLastWeekStart(FIRST_WEEK.plusWeeks(9));
         run.setRosterSize(7);
@@ -423,15 +461,59 @@ class ColonyQueryServiceTest {
     }
 
     /**
+     * Builds one roster player fixture.
+     *
+     * @param id   player identifier
+     * @param name display name
+     * @return the player
+     */
+    private static Player player(long id, String name) {
+        Player player = new Player();
+        player.setId(id);
+        player.setDisplayName(name);
+
+        return player;
+    }
+
+    /**
      * Builds a finalized fight fixture.
      *
-     * @param defeated whether the boss went down
+     * @param weekStart Monday beginning the week
+     * @param category  category the boss was drawn at
+     * @param defeated  whether the boss went down
      * @return the encounter
      */
-    private static WeeklyBossEncounter encounter(boolean defeated) {
+    private static WeeklyBossEncounter encounter(
+        LocalDate weekStart,
+        BossCategory category,
+        boolean defeated
+    ) {
+        return encounter(weekStart, category, defeated, Instant.parse("2026-06-08T00:05:00Z"));
+    }
+
+    /**
+     * Builds a fight fixture, settled or not.
+     *
+     * @param weekStart   Monday beginning the week
+     * @param category    category the boss was drawn at
+     * @param defeated    whether the boss went down
+     * @param finalizedAt instant the week became immutable, {@code null} while it is still open
+     * @return the encounter
+     */
+    private static WeeklyBossEncounter encounter(
+        LocalDate weekStart,
+        BossCategory category,
+        boolean defeated,
+        Instant finalizedAt
+    ) {
+        BossCatalogEntry boss = new BossCatalogEntry();
+        boss.setCategory(category);
+
         WeeklyBossEncounter encounter = new WeeklyBossEncounter();
+        encounter.setWeekStart(weekStart);
+        encounter.setBossCatalogEntry(boss);
         encounter.setDefeated(defeated);
-        encounter.setFinalizedAt(Instant.parse("2026-06-08T00:05:00Z"));
+        encounter.setFinalizedAt(finalizedAt);
 
         return encounter;
     }
@@ -439,36 +521,35 @@ class ColonyQueryServiceTest {
     /**
      * Builds one snapshot fixture.
      *
-     * @param day        calendar day
-     * @param food       Food gauge
-     * @param energy     Energy gauge
-     * @param materials  cumulative materials
-     * @param population population
-     * @param capacity   capacity
-     * @param foodGain   Food gained that day
-     * @param energyGain Energy gained that day
+     * @param day              calendar day
+     * @param foodStock        food of the last seven days
+     * @param population       population at the end of the day
+     * @param populationChange what the night moved
+     * @param morale           morale the day ends on
+     * @param materials        cumulative materials
+     * @param capacity         housing available
      * @return the snapshot
      */
     private static ColonyDailySnapshot snapshot(
         LocalDate day,
-        double food,
-        double energy,
-        int materials,
+        double foodStock,
         double population,
-        int capacity,
-        double foodGain,
-        double energyGain
+        double populationChange,
+        double morale,
+        int materials,
+        int capacity
     ) {
         ColonyDailySnapshot snapshot = new ColonyDailySnapshot();
         snapshot.setDay(day);
-        snapshot.setFood(BigDecimal.valueOf(food));
-        snapshot.setEnergy(BigDecimal.valueOf(energy));
+        snapshot.setFoodStock(BigDecimal.valueOf(foodStock));
+        snapshot.setFoodHarvest(BigDecimal.valueOf(92.0));
+        snapshot.setMatchDamage(4_600);
+        snapshot.setPresenceCount(5);
+        snapshot.setMorale(BigDecimal.valueOf(morale));
         snapshot.setMaterials(materials);
-        snapshot.setPopulation(BigDecimal.valueOf(population));
         snapshot.setCapacity(capacity);
-        snapshot.setActivePlayerCount(7);
-        snapshot.setFoodGain(BigDecimal.valueOf(foodGain));
-        snapshot.setEnergyGain(BigDecimal.valueOf(energyGain));
+        snapshot.setPopulation(BigDecimal.valueOf(population));
+        snapshot.setPopulationChange(BigDecimal.valueOf(populationChange));
 
         return snapshot;
     }

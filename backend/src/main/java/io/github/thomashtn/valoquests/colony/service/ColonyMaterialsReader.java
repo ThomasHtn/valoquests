@@ -5,18 +5,25 @@ import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterReposit
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.colony.ColonyRuleset;
+import io.github.thomashtn.valoquests.colony.model.ColonyWeekOutcome;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Adds up the materials one finished week brings in.
+ * Adds up what one finished week hands the colony.
  *
  * <p>Both sources are credited at the weekly rollover, in one go, once the week is finalized and both
  * the completions and the fight's outcome are known. Attributing each challenge to the exact day it was
  * validated would have meant replaying the progress calculators day by day, on a subsystem that has
  * never had that notion — by far the most expensive and most fragile piece of the design, for the sole
  * comfort of seeing materials on a Tuesday rather than the following Monday.
+ *
+ * <p>The fight is the only thing in the whole model that moves morale, and it is the run's biggest
+ * lever by some distance. It pays in materials rather than in inhabitants on purpose: a gift of
+ * inhabitants fades at fifteen percent a night and is gone three weeks later, so the first six fights of
+ * a run would have counted for nothing.
  */
 @Service
 @Transactional(readOnly = true)
@@ -33,7 +40,7 @@ public class ColonyMaterialsReader {
     private final WeeklyBossEncounterRepository encounterRepository;
 
     /**
-     * Ruleset pricing a completed challenge and a defeated boss.
+     * Ruleset pricing a completed challenge, a defeated boss and a surviving one.
      */
     private final ColonyRuleset ruleset;
 
@@ -55,16 +62,36 @@ public class ColonyMaterialsReader {
     }
 
     /**
-     * Returns the materials a week is worth, challenges and boss together.
+     * Returns what a week hands over, challenges and fight together.
      *
-     * <p>A week with no encounter at all is simply a week with no boss materials. That is what keeps a
-     * run ten weeks long instead of ten fights long, and therefore what keeps runs comparable.
+     * <p>A week with no encounter at all is simply a week with no fight: no materials, and no morale
+     * either way. That is what keeps a run ten weeks long instead of ten fights long, and therefore what
+     * keeps runs comparable.
      *
-     * @param weekStart Monday identifying the finished week
-     * @return materials to credit
+     * @param weekStart  Monday identifying the finished week
+     * @param rosterSize roster size frozen on the run, which the fight's materials are priced per player
+     *     of
+     * @return the week's materials and morale
      */
-    public int materialsOf(LocalDate weekStart) {
-        return challengeMaterials(weekStart) + bossMaterials(weekStart);
+    public ColonyWeekOutcome outcomeOf(LocalDate weekStart, int rosterSize) {
+        Optional<WeeklyBossEncounter> encounter = encounterRepository.findByWeekStart(weekStart)
+            .filter(fight -> fight.getFinalizedAt() != null);
+
+        int materials = challengeMaterials(weekStart) + encounter
+            .filter(WeeklyBossEncounter::isDefeated)
+            .map(fight -> ruleset.materialsForDefeatedBoss(
+                fight.getBossCatalogEntry().getCategory(),
+                rosterSize
+            ))
+            .orElse(0);
+
+        double moraleDelta = encounter
+            .map(fight -> fight.isDefeated()
+                ? ruleset.moraleForDefeatedBoss(fight.getBossCatalogEntry().getCategory())
+                : ruleset.moraleForSurvivingBoss())
+            .orElse(0.0);
+
+        return new ColonyWeekOutcome(materials, moraleDelta);
     }
 
     /**
@@ -82,22 +109,5 @@ public class ColonyMaterialsReader {
                 progress.getWeeklyChallenge().getChallenge().getDifficulty()
             ))
             .sum();
-    }
-
-    /**
-     * Returns the materials a week's fight is worth.
-     *
-     * <p>Only a fight that was both finalized and won pays. A surviving boss brings nothing; that is its
-     * entire cost, and the reason all ten fights of a run weigh the same on the final score.
-     *
-     * @param weekStart Monday identifying the week
-     * @return boss materials
-     */
-    private int bossMaterials(LocalDate weekStart) {
-        return encounterRepository.findByWeekStart(weekStart)
-            .filter(encounter -> encounter.getFinalizedAt() != null)
-            .filter(WeeklyBossEncounter::isDefeated)
-            .map(encounter -> ruleset.materialsPerDefeatedBoss())
-            .orElse(0);
     }
 }

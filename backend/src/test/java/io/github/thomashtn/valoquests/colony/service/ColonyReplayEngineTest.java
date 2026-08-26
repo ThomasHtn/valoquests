@@ -14,21 +14,31 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests the colony's order of operations, its clamps and its migration limits.
+ * Tests the colony's one population rule, its order of operations and its food window.
+ *
+ * <p>Several of these replay the worked examples of the design document verbatim. That is deliberate:
+ * the numbers there are what the whole feature was balanced against, so a rebalancing that moves them
+ * has to move them here too, in the open, rather than drifting quietly.
  */
 class ColonyReplayEngineTest {
 
-    /** First day of every fixture run. */
+    /** First day of every fixture run, a Monday. */
     private static final LocalDate DAY_ONE = LocalDate.of(2026, 6, 1);
 
     /** Roster size every fixture is measured against. */
     private static final int ROSTER_SIZE = 7;
+
+    /** Housing a seven-player roster opens on, {@code 300 x 7}. */
+    private static final int OPENING_CAPACITY = 2_100;
 
     /** Match damage a full squad of seven produces on a good day, two competitive wins each. */
     private static final int FULL_SQUAD_DAMAGE = 7 * 2 * 500;
 
     /** Tolerance for the double arithmetic the engine runs on. */
     private static final double TOLERANCE = 1e-6;
+
+    /** Tolerance for figures the design document states rounded to the inhabitant. */
+    private static final double INHABITANT = 1.0;
 
     /** Calibration under test. */
     private final ColonyRuleset ruleset = new DefaultColonyRuleset(new DefaultScoringRuleset());
@@ -37,313 +47,253 @@ class ColonyReplayEngineTest {
     private final ColonyReplayEngine engine = new ColonyReplayEngine(ruleset);
 
     /**
-     * Verifies the exact arithmetic of the first day, step by step.
+     * Verifies the table of chapter two: a town of 3 000 whose food feeds 4 000 closes 15% of the gap
+     * every night at full morale, so it moves fast and then slower and slower.
      *
-     * <p>The initial state is the state the colony is in <i>before</i> day one is played, so day one
-     * runs the full order of operations against it rather than being a special case.
+     * <p>The document prints 150, 128, 108 and 92. Those are the same four numbers, rounded.
      */
     @Test
-    void shouldRunTheWholeOrderOfOperationsOnTheFirstDay() {
-        // Initial state: gauges at 0, population 0, capacity 3 000.
-        // 1. loss = 14 x 0/3000 = 0, because an empty colony consumes nothing. That is the whole
-        //    point of opening on zero: day one costs nothing and earns nothing on its own.
-        // 2. Food gains 7 000/400 = 17.5, Energy gains 14 x 7/7 = 14. The squad's two games each
-        //    out-produce its own turnout, which is what leaves Energy in charge.
-        // 3. no materials on the first day. 4. capacity stays 3 000.
-        // 5. health is the geometric mean of the two, and growth is capped at 2.5% of 3 000 = 75.
-        ColonyDayState state = replayOne(new ColonyDailyInput(DAY_ONE, FULL_SQUAD_DAMAGE, 7, 0));
+    void shouldCloseFifteenPercentOfTheGapEveryNightAtFullMorale() {
+        double population = 3_000.0;
+        double foodStock = 500.0;
+        List<Double> arrivals = new ArrayList<>();
 
-        double expectedHealth = Math.sqrt(0.175 * 0.14);
+        for (int night = 0; night < 4; night++) {
+            double change = engine.nightlyChange(population, foodStock, 10_000, 100.0);
+            arrivals.add(change);
+            population += change;
+        }
 
-        assertThat(state.dailyLoss()).isZero();
-        assertThat(state.foodGain()).isEqualTo(17.5, within(TOLERANCE));
-        assertThat(state.energyGain()).isEqualTo(14.0, within(TOLERANCE));
-        assertThat(state.food()).isEqualTo(17.5, within(TOLERANCE));
-        assertThat(state.energy()).isEqualTo(14.0, within(TOLERANCE));
-        assertThat(state.capacity()).isEqualTo(3_000);
-        assertThat(state.health()).isEqualTo(expectedHealth, within(TOLERANCE));
-        assertThat(state.target()).isEqualTo(3_000 * expectedHealth, within(TOLERANCE));
-        assertThat(state.population()).isEqualTo(75.0, within(TOLERANCE));
+        assertThat(engine.feedablePopulation(foodStock)).isEqualTo(4_000.0, within(TOLERANCE));
+        assertThat(arrivals.get(0)).isEqualTo(150.0, within(INHABITANT));
+        assertThat(arrivals.get(1)).isEqualTo(128.0, within(INHABITANT));
+        assertThat(arrivals.get(2)).isEqualTo(108.0, within(INHABITANT));
+        assertThat(arrivals.get(3)).isEqualTo(92.0, within(INHABITANT));
     }
 
     /**
-     * Verifies that a gauge's surplus above one hundred is discarded, never carried or converted.
+     * Verifies the three days of chapter eleven, the document's most cited worked example: a good
+     * evening, then one nobody played, then a full house.
      *
-     * <p>Converting the surplay into materials was considered and rejected: worth about 3% of a run's
-     * materials, for an extra rule, a branch, two tests and a paragraph on the page.
+     * <p>It is the example that says a missed evening costs about seventy people and a good one brings
+     * back twice that, which is the whole reason the model has neither a disaster nor a jackpot in it.
      */
     @Test
-    void shouldClampGaugesAtOneHundredAndDiscardTheSurplus() {
-        // Ten times what a full squad produces, every day for a fortnight.
-        List<ColonyDayState> states = engine.replay(
-            days(14, FULL_SQUAD_DAMAGE * 10, ROSTER_SIZE),
-            ROSTER_SIZE
-        );
+    void shouldReplayTheThreeWorkedDaysOfTheDesignDocument() {
+        double population = 2_950.0;
+        int capacity = 4_600;
+        double morale = 70.0;
+
+        // Thursday: five of seven played eleven competitive games, and the stock lands on 556.
+        double thursday = engine.nightlyChange(population, 556.0, capacity, morale);
+        population += thursday;
+        assertThat(population).isEqualTo(3_107.0, within(INHABITANT));
+
+        // Friday: nobody played, so the stock falls to 330 and feeds fewer people than the town holds.
+        double friday = engine.nightlyChange(population, 330.0, capacity, morale);
+        population += friday;
+        assertThat(friday).isEqualTo(-70.0, within(INHABITANT));
+        assertThat(population).isEqualTo(3_037.0, within(INHABITANT));
+
+        // Saturday: the whole squad turned out, and the stock climbs back to 546.
+        double saturday = engine.nightlyChange(population, 546.0, capacity, morale);
+        population += saturday;
+        assertThat(saturday).isEqualTo(140.0, within(INHABITANT));
+        assertThat(population).isEqualTo(3_177.0, within(INHABITANT));
+    }
+
+    /**
+     * Verifies that the harvest of that same Thursday matches the document: 4 600 damage brought home by
+     * five of seven players is worth 92 food, not 54.
+     */
+    @Test
+    void shouldMultiplyTheHarvestByTheDaysTurnout() {
+        assertThat(engine.presenceMultiplier(5, ROSTER_SIZE)).isEqualTo(1.714, within(1e-3));
+        assertThat(engine.harvest(4_600, 5, ROSTER_SIZE)).isEqualTo(92.0, within(INHABITANT));
+    }
+
+    /**
+     * Verifies a full house doubles the day, and that a roster shrunk to five is not punished for it.
+     */
+    @Test
+    void shouldDoubleTheDayWhenTheWholeRosterTurnedUp() {
+        assertThat(engine.presenceMultiplier(7, 7)).isEqualTo(2.0, within(TOLERANCE));
+        assertThat(engine.presenceMultiplier(5, 5)).isEqualTo(2.0, within(TOLERANCE));
+    }
+
+    /**
+     * Verifies the multiplier is capped at two even when more players turn up than the frozen roster
+     * holds. A player left out of the roster still plays, and would otherwise push it past a full house.
+     */
+    @Test
+    void shouldCapTheTurnoutAtAFullHouse() {
+        assertThat(engine.presenceMultiplier(9, ROSTER_SIZE)).isEqualTo(2.0, within(TOLERANCE));
+    }
+
+    /**
+     * Verifies morale speeds the climb and does nothing at all to the fall.
+     *
+     * <p>The asymmetry is the point: morale rewards winning fights, it never shields a squad that has
+     * stopped playing.
+     */
+    @Test
+    void shouldApplyMoraleOnTheWayUpAndNeverOnTheWayDown() {
+        double halfSpeedClimb = engine.nightlyChange(1_000.0, 250.0, 10_000, 50.0);
+        double fullSpeedClimb = engine.nightlyChange(1_000.0, 250.0, 10_000, 100.0);
+
+        assertThat(halfSpeedClimb).isEqualTo(fullSpeedClimb / 2, within(TOLERANCE));
+
+        double demoralisedFall = engine.nightlyChange(3_000.0, 250.0, 10_000, 20.0);
+        double confidentFall = engine.nightlyChange(3_000.0, 250.0, 10_000, 100.0);
+
+        assertThat(demoralisedFall).isEqualTo(confidentFall, within(TOLERANCE));
+        assertThat(demoralisedFall).isNegative();
+    }
+
+    /**
+     * Verifies the lower of the two ceilings commands, whichever one it is.
+     */
+    @Test
+    void shouldClimbTowardsTheLowerOfTheTwoCeilings() {
+        assertThat(engine.ceiling(500.0, 10_000)).isEqualTo(4_000.0, within(TOLERANCE));
+        assertThat(engine.ceiling(500.0, 3_000)).isEqualTo(3_000.0, within(TOLERANCE));
+    }
+
+    /**
+     * Verifies the food window holds seven days and no more: an eighth day pushes the first one out, so
+     * the stock is a moving average rather than a reserve that could be hoarded.
+     */
+    @Test
+    void shouldHoldSevenDaysOfHarvestAndDropTheEighth() {
+        List<ColonyDayState> states = engine.replay(playedDays(8, FULL_SQUAD_DAMAGE), ROSTER_SIZE);
+
+        double oneDay = engine.harvest(FULL_SQUAD_DAMAGE, ROSTER_SIZE, ROSTER_SIZE);
+
+        assertThat(states.get(6).foodStock()).isEqualTo(oneDay * 7, within(TOLERANCE));
+        assertThat(states.get(7).foodStock()).isEqualTo(oneDay * 7, within(TOLERANCE));
+    }
+
+    /**
+     * Verifies a run opens on empty ground and that a day nobody played leaves it exactly there.
+     */
+    @Test
+    void shouldOpenOnEmptyGroundAndStayThereWhileNobodyPlays() {
+        List<ColonyDayState> states = engine.replay(playedDays(3, 0), ROSTER_SIZE);
 
         assertThat(states).allSatisfy(state -> {
-            assertThat(state.food()).isLessThanOrEqualTo(100.0);
-            assertThat(state.energy()).isLessThanOrEqualTo(100.0);
-        });
-        assertThat(states.getLast().food()).isEqualTo(100.0, within(TOLERANCE));
-    }
-
-    /**
-     * Verifies that a gauge nobody feeds decays towards zero without ever going negative.
-     *
-     * <p>It approaches zero rather than landing on it: the loss is proportional to the population,
-     * which is itself collapsing, so both shrink together. The floor is a guarantee, not a destination.
-     */
-    @Test
-    void shouldDecayTowardsZeroWithoutEverGoingNegative() {
-        List<ColonyDayState> states = engine.replay(days(30, 0, 0), ROSTER_SIZE);
-
-        assertThat(states).allSatisfy(state -> {
-            assertThat(state.food()).isGreaterThanOrEqualTo(0.0);
-            assertThat(state.energy()).isGreaterThanOrEqualTo(0.0);
-        });
-        assertThat(states.getLast().food()).isLessThan(2.0);
-        assertThat(states.getLast().energy()).isLessThan(2.0);
-    }
-
-    /**
-     * Verifies that abandoning the colony collapses it, and that a single day of play lifts it again.
-     *
-     * <p>There is no game over: a month away costs dearly but never makes the rest of the run
-     * pointless.
-     */
-    @Test
-    void shouldCollapseOnAbandonmentAndRecoverAfterOneDayOfPlay() {
-        List<ColonyDailyInput> inputs = new ArrayList<>(days(40, 0, 0));
-        inputs.add(new ColonyDailyInput(DAY_ONE.plusDays(40), FULL_SQUAD_DAMAGE, ROSTER_SIZE, 0));
-
-        List<ColonyDayState> states = engine.replay(inputs, ROSTER_SIZE);
-
-        ColonyDayState collapsed = states.get(39);
-        assertThat(collapsed.health()).isLessThan(0.01);
-        assertThat(collapsed.population()).isLessThan(collapsed.capacity() * 0.01);
-
-        ColonyDayState recovered = states.getLast();
-        assertThat(recovered.population()).isGreaterThan(collapsed.population());
-        assertThat(recovered.health()).isGreaterThan(0.1);
-    }
-
-    /**
-     * Verifies that a day nobody played can never leave the colony better off than it found it.
-     *
-     * <p>The regression this guards against was real and invisible. The daily loss is proportional to
-     * the population, so a small colony pays almost nothing, and the run used to open on a population
-     * of 300 with both gauges at 50 — a health of 0.5 nobody had earned, pulling towards a target of
-     * 1 458. A run <i>nobody ever played</i> therefore grew from 300 to 870 inhabitants over its first
-     * eight days before starting to fall.
-     *
-     * <p>A run nobody ever played must therefore stay flat on the floor, and no idle day may ever lift
-     * a gauge. The population is deliberately <i>not</i> asserted to fall on the first idle day: the
-     * gauges are the stock that buffers a single bad evening, so a colony still climbing towards a
-     * target its accumulated gauges justify keeps climbing for a few days after play stops. That
-     * buffer is the feature. What must not exist is growth out of nothing.
-     */
-    @Test
-    void shouldNeverRewardADayNobodyPlayed() {
-        for (ColonyDayState state : engine.replay(days(30, 0, 0), ROSTER_SIZE)) {
             assertThat(state.population()).isZero();
-            assertThat(state.food()).isZero();
-            assertThat(state.energy()).isZero();
-        }
-
-        List<ColonyDailyInput> playedThenIdle =
-            new ArrayList<>(days(20, FULL_SQUAD_DAMAGE, ROSTER_SIZE));
-        double populationWhenPlayStopped =
-            engine.replay(playedThenIdle, ROSTER_SIZE).getLast().population();
-
-        for (int index = 0; index < 30; index++) {
-            playedThenIdle.add(new ColonyDailyInput(DAY_ONE.plusDays(20L + index), 0, 0, 0));
-        }
-
-        List<ColonyDayState> idleDays =
-            engine.replay(playedThenIdle, ROSTER_SIZE).subList(20, playedThenIdle.size());
-        ColonyDayState previous = idleDays.getFirst();
-
-        for (ColonyDayState state : idleDays) {
-            assertThat(state.food()).isLessThanOrEqualTo(previous.food() + TOLERANCE);
-            assertThat(state.energy()).isLessThanOrEqualTo(previous.energy() + TOLERANCE);
-            previous = state;
-        }
-
-        assertThat(idleDays.getLast().population()).isLessThan(populationWhenPlayStopped);
-        assertThat(idleDays.getLast().health()).isLessThan(0.01);
-    }
-
-    /**
-     * Verifies that growth never exceeds 2.5% of capacity in a day, however hard the squad plays.
-     *
-     * <p>The most important mechanism in the system: there is no way to accelerate a colony other than
-     * holding both gauges high day after day.
-     */
-    @Test
-    void shouldNeverGrowFasterThanTheDailyLimit() {
-        List<ColonyDayState> states = engine.replay(
-            days(60, FULL_SQUAD_DAMAGE * 5, ROSTER_SIZE),
-            ROSTER_SIZE
-        );
-
-        double previous = ruleset.initialPopulation();
-        for (ColonyDayState state : states) {
-            double limit = state.capacity() * ruleset.growthRatePercent() / 100.0;
-            assertThat(state.population() - previous).isLessThanOrEqualTo(limit + TOLERANCE);
-            previous = state.population();
-        }
-    }
-
-    /**
-     * Verifies that decline never exceeds 5% of capacity in a day, and is exactly twice the growth cap.
-     */
-    @Test
-    void shouldNeverDeclineFasterThanTwiceTheGrowthLimit() {
-        // Build a populated colony, then stop playing entirely.
-        List<ColonyDailyInput> inputs = new ArrayList<>(days(60, FULL_SQUAD_DAMAGE, ROSTER_SIZE));
-        for (int index = 0; index < 20; index++) {
-            inputs.add(new ColonyDailyInput(DAY_ONE.plusDays(60L + index), 0, 0, 0));
-        }
-
-        List<ColonyDayState> states = engine.replay(inputs, ROSTER_SIZE);
-
-        double declineLimit = 3_000 * ruleset.declineRatePercent() / 100.0;
-        double biggestDrop = 0.0;
-        for (int index = 60; index < states.size(); index++) {
-            double drop = states.get(index - 1).population() - states.get(index).population();
-            biggestDrop = Math.max(biggestDrop, drop);
-        }
-
-        assertThat(biggestDrop).isLessThanOrEqualTo(declineLimit + TOLERANCE);
-        assertThat(biggestDrop).isEqualTo(declineLimit, within(TOLERANCE));
-    }
-
-    /**
-     * Verifies that the population never leaves {@code [0, capacity]}.
-     */
-    @Test
-    void shouldKeepThePopulationWithinItsCapacity() {
-        List<ColonyDailyInput> inputs = new ArrayList<>();
-        for (int index = 0; index < 71; index++) {
-            inputs.add(new ColonyDailyInput(
-                DAY_ONE.plusDays(index),
-                FULL_SQUAD_DAMAGE * 3,
-                ROSTER_SIZE,
-                index % 7 == 0 ? 900 : 0
-            ));
-        }
-
-        List<ColonyDayState> states = engine.replay(inputs, ROSTER_SIZE);
-
-        assertThat(states).allSatisfy(state -> {
-            assertThat(state.population()).isBetween(0.0, (double) state.capacity());
+            assertThat(state.foodStock()).isZero();
+            assertThat(state.materials()).isZero();
+            assertThat(state.capacity()).isEqualTo(OPENING_CAPACITY);
+            assertThat(state.morale()).isEqualTo(ruleset.initialMorale());
         });
     }
 
     /**
-     * Verifies that materials only ever go up, and that crossing two thresholds on one day lifts the
-     * capacity straight to the higher tier.
-     */
-    @Test
-    void shouldCrossTwoBuildingThresholdsOnASingleDay() {
-        List<ColonyDayState> states = engine.replay(List.of(
-            new ColonyDailyInput(DAY_ONE, FULL_SQUAD_DAMAGE, ROSTER_SIZE, 0),
-            new ColonyDailyInput(DAY_ONE.plusDays(1), FULL_SQUAD_DAMAGE, ROSTER_SIZE, 6_300)
-        ), ROSTER_SIZE);
-
-        assertThat(states.getFirst().capacity()).isEqualTo(3_000);
-        assertThat(states.getLast().materials()).isEqualTo(6_300);
-        assertThat(states.getLast().capacity()).isEqualTo(5_500);
-    }
-
-    /**
-     * Verifies that health is the geometric mean, so neglecting one gauge costs more than an average
-     * would suggest.
-     */
-    @Test
-    void shouldMeasureHealthAsTheGeometricMeanOfBothGauges() {
-        assertThat(engine.health(100, 100)).isEqualTo(1.0, within(TOLERANCE));
-        assertThat(engine.health(80, 80)).isEqualTo(0.8, within(TOLERANCE));
-        assertThat(engine.health(100, 20)).isEqualTo(0.4472136, within(1e-6));
-        assertThat(engine.health(100, 0)).isZero();
-    }
-
-    /**
-     * Verifies that the Energy gain is proportional to the frozen roster and capped at its maximum.
+     * Verifies a rollover credits its materials and its morale before the night runs, and that the
+     * housing is recomputed from the new total straight away.
      *
-     * <p>Capped because a player left inactive still plays: without it, an eighth participant would
-     * push the numerator past a roster of seven.
+     * <p>There is no threshold to save up for: a challenge validated over the week widens the town on
+     * the Monday that settles it.
      */
     @Test
-    void shouldScaleEnergyOnTheFrozenRosterAndCapItThere() {
-        assertThat(engine.energyGain(0, 7)).isZero();
-        assertThat(engine.energyGain(4, 7)).isEqualTo(8.0, within(TOLERANCE));
-        assertThat(engine.energyGain(7, 7)).isEqualTo(14.0, within(TOLERANCE));
-        assertThat(engine.energyGain(9, 7)).isEqualTo(14.0, within(TOLERANCE));
+    void shouldCreditARolloverBeforeTheNightRuns() {
+        List<ColonyDailyInput> days = new ArrayList<>();
+        days.add(new ColonyDailyInput(DAY_ONE, 0, 0, false, 0, 0.0));
+        days.add(new ColonyDailyInput(DAY_ONE.plusDays(7), 0, 0, true, 1_000, 15.0));
+
+        List<ColonyDayState> states = engine.replay(days, ROSTER_SIZE);
+        ColonyDayState rollover = states.getLast();
+
+        assertThat(rollover.materials()).isEqualTo(1_000);
+        assertThat(rollover.capacity()).isEqualTo(OPENING_CAPACITY + 500);
+        assertThat(rollover.morale()).isEqualTo(65.0, within(TOLERANCE));
     }
 
     /**
-     * Verifies that an empty roster produces no Energy rather than dividing by zero.
+     * Verifies morale never leaves its bounds, so a run that lost every fight stays playable and a run
+     * that won them all cannot bank speed it will never use.
      */
     @Test
-    void shouldProduceNoEnergyOnAnEmptyRoster() {
-        assertThat(engine.energyGain(3, 0)).isZero();
-        assertThat(engine.replay(days(3, FULL_SQUAD_DAMAGE, 3), 0))
-            .allSatisfy(state -> assertThat(state.energyGain()).isZero());
+    void shouldHoldMoraleInsideItsBounds() {
+        assertThat(engine.boundedMorale(-40.0)).isEqualTo(ruleset.minimumMorale());
+        assertThat(engine.boundedMorale(180.0)).isEqualTo(ruleset.maximumMorale());
+        assertThat(engine.boundedMorale(55.0)).isEqualTo(55.0);
     }
 
     /**
-     * Verifies that a run with no days at all produces no state.
-     */
-    @Test
-    void shouldProduceNothingForARunWithNoDays() {
-        assertThat(engine.replay(List.of(), ROSTER_SIZE)).isEmpty();
-    }
-
-    /**
-     * Verifies that the number of matches has no effect whatsoever on the Energy gauge.
+     * Verifies a Monday's surplus is converted against the housing of the week that has just closed,
+     * before that Monday's own materials are counted.
      *
-     * <p>Two strictly independent behaviours: a gauge fed by the same thing as another one would be
-     * pointless.
+     * <p>Settle it the other way round and a Monday heavy with validated challenges would erase its own
+     * surplus, which is the one ordering subtlety of the whole model.
      */
     @Test
-    void shouldKeepTheTwoGaugesIndependent() {
-        ColonyDayState few = replayOne(new ColonyDailyInput(DAY_ONE, 1_000, 4, 0));
-        ColonyDayState many = replayOne(new ColonyDailyInput(DAY_ONE, 90_000, 4, 0));
+    void shouldConvertTheSurplusAgainstTheClosingWeeksHousing() {
+        List<ColonyDailyInput> days = new ArrayList<>();
+        for (int day = 0; day < 7; day++) {
+            days.add(new ColonyDailyInput(DAY_ONE.plusDays(day), FULL_SQUAD_DAMAGE, 7, false, 0, 0.0));
+        }
+        days.add(new ColonyDailyInput(DAY_ONE.plusDays(7), 0, 0, true, 0, 0.0));
 
-        assertThat(few.energyGain()).isEqualTo(many.energyGain());
-        assertThat(few.foodGain()).isLessThan(many.foodGain());
+        List<ColonyDayState> states = engine.replay(days, ROSTER_SIZE);
+
+        // The stock on Sunday evening, converted against Sunday's housing, never against the Monday's.
+        double sundayStock = states.get(6).foodStock();
+        int expected = ruleset.materialsForSurplus(sundayStock, OPENING_CAPACITY);
+
+        assertThat(expected).isPositive();
+        assertThat(states.getLast().materials()).isEqualTo(expected);
     }
 
     /**
-     * Replays a single day and returns its state.
-     *
-     * @param input the day
-     * @return the state it closes on
+     * Verifies the population never goes below zero, however far the food falls short.
      */
-    private ColonyDayState replayOne(ColonyDailyInput input) {
-        return engine.replay(List.of(input), ROSTER_SIZE).getFirst();
+    @Test
+    void shouldNeverDriveThePopulationBelowZero() {
+        assertThat(engine.replay(playedDays(30, 0), ROSTER_SIZE))
+            .allSatisfy(state -> assertThat(state.population()).isGreaterThanOrEqualTo(0.0));
     }
 
     /**
-     * Builds a stretch of identical days.
-     *
-     * @param count             number of days
-     * @param matchDamage       damage each day brings
-     * @param activePlayerCount players active each day
-     * @return the days, starting on {@link #DAY_ONE}
+     * Verifies a roster of zero cannot make the turnout multiplier blow up, which is the only division
+     * in the model whose denominator comes from outside it.
      */
-    private static List<ColonyDailyInput> days(int count, int matchDamage, int activePlayerCount) {
-        List<ColonyDailyInput> inputs = new ArrayList<>(count);
-        for (int index = 0; index < count; index++) {
-            inputs.add(new ColonyDailyInput(
-                DAY_ONE.plusDays(index),
+    @Test
+    void shouldSurviveAnEmptyRoster() {
+        assertThat(engine.presenceMultiplier(3, 0)).isEqualTo(1.0, within(TOLERANCE));
+    }
+
+    /**
+     * Verifies what the town eats is the exact inverse of what a point of food feeds.
+     */
+    @Test
+    void shouldEatTheInverseOfWhatFoodFeeds() {
+        assertThat(engine.weeklyConsumption(2_400.0)).isEqualTo(300.0, within(TOLERANCE));
+        assertThat(engine.feedablePopulation(300.0)).isEqualTo(2_400.0, within(TOLERANCE));
+    }
+
+    /**
+     * Builds a run of consecutive days all played the same way, none of them a rollover.
+     *
+     * @param count       days to build
+     * @param matchDamage damage each of them brought home
+     * @return the days, chronologically
+     */
+    private List<ColonyDailyInput> playedDays(int count, int matchDamage) {
+        List<ColonyDailyInput> days = new ArrayList<>();
+
+        for (int day = 0; day < count; day++) {
+            days.add(new ColonyDailyInput(
+                DAY_ONE.plusDays(day),
                 matchDamage,
-                activePlayerCount,
-                0
+                matchDamage > 0 ? ROSTER_SIZE : 0,
+                false,
+                0,
+                0.0
             ));
         }
 
-        return inputs;
+        return days;
     }
 }

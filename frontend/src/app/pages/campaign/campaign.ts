@@ -2,25 +2,23 @@ import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, effect, ElementRef, inject, signal } from '@angular/core';
 import {
   LucideCheck,
-  LucideChevronRight,
   LucideHammer,
-  LucideHeartPulse,
+  LucideHouse,
   LucideLock,
   LucideSwords,
-  LucideUsers,
-  LucideWheat,
   LucideX,
-  LucideZap,
 } from '@lucide/angular';
 
 import { BossCampaign } from '@core/boss/boss-campaign';
 import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
 import { ColonyView } from '@core/colony/colony-view';
-import { ColonyBuildingState, ColonyBuildingView } from '@core/colony/colony-view.model';
+import { ColonyTierStepView } from '@core/colony/colony-view.model';
+import { ColonyTierState } from '@core/colony/colony.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
+import { ColonyResourceBand } from '@shared/colony-resource-band/colony-resource-band';
 import { PageHeader } from '@layout/page-header/page-header';
 import { resolveSeriesColor } from '@shared/chart/chart-theme';
 import { ChartSeries } from '@shared/chart/chart.model';
@@ -42,6 +40,7 @@ import {
   resolveBossTerritoryTier,
   resolveColumnVisibilityClass,
   TERRAIN_RING_CLASS,
+  TERRITORY_FILL_CLASS,
   TILE_INNER_SCALE,
   TRAIL_TERRAIN_ROWS,
 } from './campaign-map.constants';
@@ -63,95 +62,73 @@ const SKELETON_ROW_COUNT = 8;
 const HISTORY_ROW_COUNT = 6;
 
 /**
- * Treatments one step of the building ladder is drawn in, by how far the run has got with it. The
- * marker is a hexagon like every other beat of the campaign — the map's territories, the history's
- * week markers — so the ladder reads as the same clock as the rest of the page.
+ * Treatments one step of the town's ladder is drawn in.
+ *
+ * The marker is a hexagon like every other beat of the campaign — the map's territories, the
+ * history's week markers — so the ladder reads as the same clock as the rest of the page.
+ *
+ * Three states rather than the four buildings this replaced, because housing is now continuous:
+ * there is no threshold to save up for, so a step is only ever behind the town, under it, or ahead
+ * of it. Every row carries a veil rather than an opaque plate, which is the surface the rest of the
+ * application uses.
  */
-const BUILDING_TIERS: Record<
-  ColonyBuildingState,
+const LADDER_STEPS: Record<
+  ColonyTierState,
   {
+    /**
+     * The row's own veil, which is what separates the step being climbed from the rest.
+     */
+    readonly rowClass: string;
+
     /**
      * Outline of the marker's hexagon.
      */
     readonly markerClass: string;
 
     /**
-     * Its surface. A tier that is up is a solid hexagon carrying a dark mark; one that is not is an
-     * outline around the page's own ground. That difference in *fill*, rather than in hue alone, is
-     * what makes a settled tier readable at a glance — a colored outline beside a colored outline
-     * reads as two shades of one state.
+     * Its surface. A step already crossed is a solid hexagon carrying a dark mark; one that is not
+     * is an outline around the page's own ground. That difference in *fill*, rather than in hue
+     * alone, is what makes a crossed step readable at a glance — a coloured outline beside a
+     * coloured outline reads as two shades of one state.
      */
     readonly markerFillClass: string;
     readonly markerIconClass: string;
-    readonly markerHaloClass: string | null;
-
-    /**
-     * Treatment of the tag beside the tier's name, which says in words what the marker says in
-     * shape.
-     */
-    readonly tagClass: string;
     readonly nameClass: string;
-    readonly capacityClass: string;
-
-    /**
-     * Carried by the step as a whole: a tier still out of reach is recessive against the two that
-     * are not, so the eye lands on the ladder's frontier rather than on its bottom.
-     */
-    readonly stepClass: string;
+    readonly valueClass: string;
   }
 > = {
-  erected: {
+  REACHED: {
+    rowClass: 'bg-text-primary/10',
     markerClass: 'bg-accent-green',
     markerFillClass: 'bg-accent-green',
     markerIconClass: 'text-surface-950',
-    markerHaloClass: null,
-    tagClass: 'bg-accent-green/15 text-accent-green',
-    nameClass: 'text-text-primary',
-    capacityClass: 'text-accent-green',
-    stepClass: '',
+    nameClass: 'text-text-secondary',
+    valueClass: 'text-text-secondary',
   },
-  next: {
+  CURRENT: {
+    rowClass: 'bg-brand-500/12 outline-1 -outline-offset-1 outline-brand-500/40',
     markerClass: 'bg-brand-500',
     markerFillClass: 'bg-surface-950',
     markerIconClass: 'text-brand-500',
-    markerHaloClass: 'bg-brand-500/25',
-    tagClass: 'bg-brand-500/15 text-brand-500',
-    nameClass: 'text-text-primary',
-    capacityClass: 'text-brand-500',
-    stepClass: '',
+    nameClass: 'font-bold text-text-primary',
+    valueClass: 'text-brand-500',
   },
-  locked: {
+  LOCKED: {
+    rowClass: 'bg-text-primary/6',
     markerClass: 'bg-surface-600',
     markerFillClass: 'bg-surface-950',
     markerIconClass: 'text-text-muted',
-    markerHaloClass: null,
-    tagClass: 'bg-text-primary/6 text-text-muted',
     nameClass: 'text-text-muted',
-    capacityClass: 'text-text-muted',
-    stepClass: 'opacity-60',
+    valueClass: 'text-text-muted',
   },
 };
 
 /**
- * One step of the building ladder, drawn as a vertical unlock timeline: the tier, the treatment it
- * is drawn in, and the segment of line running from its marker down to the next one.
+ * One step of the town's ladder, paired with the treatment it is drawn in.
  */
-interface CampaignBuildingStep {
-  readonly view: ColonyBuildingView;
-  readonly tier: (typeof BUILDING_TIERS)[ColonyBuildingState];
-
-  /**
-   * CSS `background` of the segment below this step's marker, or `null` on the last step, which
-   * has nothing below it to connect to.
-   */
-  readonly connectorBackground: string | null;
-
-  /**
-   * How far the materials have got towards this tier, on the one step being paid for. `null`
-   * everywhere else: a tier that is up is done, and one further down the ladder is not being paid
-   * for yet, so a bar under either would be a figure with nothing behind it.
-   */
-  readonly progressPercentage: number | null;
+interface CampaignLadderStep {
+  readonly view: ColonyTierStepView;
+  readonly tier: (typeof LADDER_STEPS)[ColonyTierState];
 }
 
 /**
@@ -176,28 +153,43 @@ interface CampaignMapRow {
   readonly bossColumn: number;
 
   /**
-   * Materials at stake on the week, carried on the tile itself — the colony's ledger read off the
-   * map rather than beside it. `null` on a terrain-only row.
+   * Housing the week's fight paid, carried on the tile itself — the colony's ledger read off the
+   * map rather than beside it. `null` on a terrain-only row, empty on a week not yet reached.
+   *
+   * Housing rather than materials or morale. Materials are an intermediate currency the player never
+   * handles, housing is the axis the context bar and the ladder already count in, and it is the only
+   * part of a fight's reward still standing on settlement day. Morale does not fit in fifty-six
+   * pixels and lives in {@link detailLabel} instead.
    */
-  readonly materialsLabel: string | null;
+  readonly housingLabel: string | null;
 
   /**
-   * Whether those materials are banked. A week not yet won shows what it is worth, recessive; a
-   * week won shows what it paid, in the brand color.
+   * Whether that housing is banked. A week whose boss held shows a flat zero, recessive; a week won
+   * shows what it paid, in the brand colour.
    */
-  readonly materialsEarned: boolean;
+  readonly housingEarned: boolean;
+
+  /**
+   * The whole of what the week was worth, in one sentence, for the tile's title: its materials, the
+   * housing they bought and the morale it moved.
+   */
+  readonly detailLabel: string | null;
 }
 
 /**
  * Campaign page: the run told as one screen — the colony it feeds, and the ground it takes.
  *
- * The two used to be separate pages, which split one run in half: the colony's population is
- * capacity × min(Food gain, Energy gain) / 14, and capacity is bought with the materials the weekly
- * bosses drop. So the page is laid out as the chain it is. The resource band on top carries the
- * population, the gauges that set it and every run before this one; the map underneath is where the
- * materials come from, each conquered week's haul written on its own hexagon; the tier ladder beside
- * it is what those materials bought. The population's own history is the one reading held back —
- * opened over the page from the hexagon carrying its current value.
+ * The two used to be separate pages, which split one run in half: the town closes part of the gap
+ * between what it holds and the lower of its two ceilings every night, and one of those ceilings is
+ * bought with the materials the weekly bosses drop. So the page is laid out as the chain it is. The
+ * resource band on top carries the population, the three rails that set it and every run before this
+ * one; the map underneath is where the housing comes from, each taken week's gain written on its own
+ * hexagon; the ladder beside it is what that housing bought. The population's own history is the one
+ * reading held back — opened over the page from the hexagon carrying its current value.
+ *
+ * Nothing on the band says what to do tonight, on purpose. A short bar asks to be filled, and the
+ * shape of the food rail against the mark on the hexagon already answers "play, or build" without a
+ * sentence being written.
  *
  * The map is a honeycomb standing whole in its panel, one row per week between a row of untouched
  * terrain at each end. Picking any week's hexagon opens the detail panel, and the panel's own title
@@ -212,21 +204,18 @@ interface CampaignMapRow {
     ResourceState,
     NgOptimizedImage,
     Avatar,
+    ColonyResourceBand,
     Drawer,
     LineChart,
     ProgressBar,
     Select,
     Tooltip,
     LucideCheck,
-    LucideChevronRight,
     LucideHammer,
-    LucideHeartPulse,
+    LucideHouse,
     LucideLock,
     LucideSwords,
-    LucideUsers,
-    LucideWheat,
     LucideX,
-    LucideZap,
     PageHeader,
   ],
   templateUrl: './campaign.html',
@@ -302,17 +291,6 @@ export class Campaign {
   protected readonly hasError = computed(() => this.campaign.hasError() || this.colony.hasError());
 
   /**
-   * Share of capacity the population currently fills, for the headline bar.
-   */
-  protected readonly populationPercentage = computed<number>(() => {
-    const colony = this.colony.colony();
-
-    return colony === null || colony.capacity === 0
-      ? 0
-      : (colony.population / colony.capacity) * 100;
-  });
-
-  /**
    * The run's population as one plotted line, day by day.
    *
    * A line rather than a column per day: the curve is read for its slope — a step up is a building
@@ -358,49 +336,39 @@ export class Campaign {
         key: `lead-${index}`,
         node: null,
         bossColumn: -1,
-        materialsLabel: null,
-        materialsEarned: false,
+        housingLabel: null,
+        housingEarned: false,
+        detailLabel: null,
       })),
       ...nodes.map((node, index) => ({
         key: node.id,
         node,
         bossColumn: resolveBossColumn(index),
-        materialsLabel: bosses[index]?.materialsLabel ?? null,
-        materialsEarned: bosses[index]?.materialsEarned ?? false,
+        housingLabel: bosses[index]?.housingLabel ?? null,
+        housingEarned: bosses[index]?.housingEarned ?? false,
+        detailLabel: bosses[index]?.detailLabel ?? null,
       })),
       ...Array.from({ length: TRAIL_TERRAIN_ROWS }, (_, index) => ({
         key: `trail-${index}`,
         node: null,
         bossColumn: -1,
-        materialsLabel: null,
-        materialsEarned: false,
+        housingLabel: null,
+        housingEarned: false,
+        detailLabel: null,
       })),
     ];
   });
 
   /**
-   * The building ladder as an unlock timeline, cheapest tier at the top: each step's treatment and
-   * the line running from its marker to the next one.
+   * The ladder as a window around the town's own step, lowest first.
    *
-   * The line is cut into one segment per step rather than drawn as a single gradient down the
-   * column because steps do not share a height — a tier with a longer sub-line is taller — so no
-   * percentage along the ladder maps to a marker's center. A segment turns from settled to locked
-   * exactly at the first tier the run has not paid for yet.
+   * A window rather than the whole ladder, because the ladder has no end: a squad that keeps
+   * building always has a next name to climb towards, and a panel this narrow can only ever show the
+   * neighbourhood of the one it stands in.
    */
-  protected readonly buildingSteps = computed<readonly CampaignBuildingStep[]>(() => {
-    const buildings = this.colony.buildings();
-    const nextTier = this.colony.colony()?.nextTier ?? null;
-
-    return buildings.map((view, index) => ({
-      view,
-      tier: BUILDING_TIERS[view.state],
-      connectorBackground:
-        index === buildings.length - 1
-          ? null
-          : this.buildingConnectorBackground(view.state, buildings[index + 1].state),
-      progressPercentage: view.state === 'next' ? (nextTier?.progressPercentage ?? 0) : null,
-    }));
-  });
+  protected readonly ladderSteps = computed<readonly CampaignLadderStep[]>(() =>
+    this.colony.ladder().map((view) => ({ view, tier: LADDER_STEPS[view.state] })),
+  );
 
   /**
    * The weeks the history view tells: every fought week, oldest first, up to and including the
@@ -455,6 +423,7 @@ export class Campaign {
   protected readonly terrainRingClass = TERRAIN_RING_CLASS;
   protected readonly tileInnerScale = TILE_INNER_SCALE;
   protected readonly legendInnerScale = LEGEND_INNER_SCALE;
+  protected readonly territoryFillClass = TERRITORY_FILL_CLASS;
 
   /**
    * Silhouette the hover card borrows from the sidebar's tooltips, so a surface floating over the
@@ -529,32 +498,6 @@ export class Campaign {
       `linear-gradient(to bottom, var(--color-brand-500) 0%, var(--color-accent-red) 50%, ` +
       `var(--color-surface-700) 50%)`
     );
-  }
-
-  /**
-   * Background for the segment of the building ladder running between two steps: settled ground in
-   * solid green down to the last tier that went up, the handover drawn as a fade on the segment
-   * where it happens, and ground not yet reached drawn as a dashed line rather than a faint solid
-   * one — a road already travelled and a road still to travel should not differ by opacity alone.
-   *
-   * @param state - How far the run has got with the step the segment hangs from.
-   * @param nextState - Same, for the step below it.
-   * @returns The CSS `background` value for that segment.
-   */
-  private buildingConnectorBackground(
-    state: ColonyBuildingState,
-    nextState: ColonyBuildingState,
-  ): string {
-    if (state !== 'erected') {
-      return (
-        `repeating-linear-gradient(to bottom, var(--color-surface-600) 0 0.25rem, ` +
-        `transparent 0.25rem 0.5rem)`
-      );
-    }
-
-    return nextState === 'erected'
-      ? 'var(--color-accent-green)'
-      : 'linear-gradient(to bottom, var(--color-accent-green) 0%, var(--color-surface-600) 100%)';
   }
 
   /**

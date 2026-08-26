@@ -5,8 +5,6 @@ import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.exception.WeeklyBossSelectionException;
 import io.github.thomashtn.valoquests.boss.repository.BossCatalogEntryRepository;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
-import io.github.thomashtn.valoquests.player.entity.Player;
-import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.run.entity.Run;
 import io.github.thomashtn.valoquests.run.service.RunService;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
@@ -84,11 +82,6 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
     private final ScoringRuleset ruleset;
 
     /**
-     * Repository used to count the players the roster holds active.
-     */
-    private final PlayerRepository playerRepository;
-
-    /**
      * Measures the per-player output a new fight is sized against.
      */
     private final BossCalibrationService calibrationService;
@@ -109,7 +102,6 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
      * @param catalogRepository   boss catalogue repository
      * @param encounterRepository weekly boss encounter repository
      * @param ruleset             scoring ruleset
-     * @param playerRepository    player repository
      * @param calibrationService  boss calibration service
      * @param weekCalendar        calendar resolving the current week
      * @param runService          service resolving the run the campaign runs in
@@ -118,7 +110,6 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
         BossCatalogEntryRepository catalogRepository,
         WeeklyBossEncounterRepository encounterRepository,
         ScoringRuleset ruleset,
-        PlayerRepository playerRepository,
         BossCalibrationService calibrationService,
         WeekCalendar weekCalendar,
         RunService runService
@@ -126,7 +117,6 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
         this.catalogRepository = catalogRepository;
         this.encounterRepository = encounterRepository;
         this.ruleset = ruleset;
-        this.playerRepository = playerRepository;
         this.calibrationService = calibrationService;
         this.weekCalendar = weekCalendar;
         this.runService = runService;
@@ -195,7 +185,7 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
     }
 
     /**
-     * Sizes one encounter from its immediate predecessor and the roster as it currently stands.
+     * Sizes one encounter from its immediate predecessor and the roster frozen on its run.
      *
      * <p>Idempotent, and deliberately derived entirely from persisted rows: the same encounter can be
      * sized again once its predecessor is finalized, which is what repairs a week drawn lazily during
@@ -206,10 +196,16 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
      * is resolved from the week's own date, so the one stamped at creation is already the right one and
      * can never need moving.
      *
-     * @param encounter encounter to size, carrying its week and its drawn boss
+     * <p>Hit points are sized on the run's <b>frozen</b> roster rather than on the players active at the
+     * moment of the fight, which is the roster the colony prices everything else against. With two
+     * different counts in one model, deactivating somebody in week eight made week nine's boss easier
+     * without taking anything off the materials it pays. One count, frozen, closes that door, and it is
+     * also the condition for a run's replay to stay deterministic.
+     *
+     * @param encounter encounter to size, carrying its week, its run and its drawn boss
      */
     private void applySizing(WeeklyBossEncounter encounter) {
-        int activePlayerCount = (int) playerRepository.countByStatus(Player.COMPETITIVE_STATUS);
+        int activePlayerCount = encounter.getRun().getRosterSize();
         int referenceDamagePerPlayer = calibrationService.referenceDamagePerPlayer();
         int effectiveHp = ruleset.bossHitPoints(
             encounter.getBossCatalogEntry().getCategory(),

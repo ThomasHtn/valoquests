@@ -61,31 +61,18 @@
       }
     },
     "players": {
-      "title": "Players",
-      "heading": "Roster",
-      "rosterSection": "Roster",
-      "addPlayer": "Add a player",
-      "edit": "Edit",
       "activate": "Activate",
-      "deactivate": "Deactivate",
-      "restore": "Restore",
-      "loading": "Loading the roster…",
-      "error": "The roster could not be loaded.",
-      "empty": "No tracked player.",
-      "neverSynchronized": "Never synchronized",
-      "created": "Player added to the roster.",
-      "updated": "Player updated.",
-      "statusChanged": "Status updated.",
+      "addPlayer": "Add a player",
       "archived": "Player archived: closed weeks depend on it. It stays restorable.",
-      "deleted": "Player deleted for good.",
       "columns": {
         "lastSync": "Last sync"
       },
-      "status": {
-        "ACTIVE": "Active",
-        "INACTIVE": "Inactive",
-        "ARCHIVED": "Archived"
-      },
+      "created": "Player added to the roster.",
+      "deactivate": "Deactivate",
+      "deleted": "Player deleted for good.",
+      "edit": "Edit",
+      "empty": "No tracked player.",
+      "error": "The roster could not be loaded.",
       "form": {
         "createHeading": "New player",
         "editHeading": "Edit player",
@@ -95,13 +82,28 @@
         "portraitNone": "No avatar",
         "status": "Initial status"
       },
+      "frozenRoster": "Run {{run}} is running on a roster frozen at {{roster}} players. Activating or deactivating somebody here only takes effect on the next run.",
+      "heading": "Roster",
+      "idle": "No match in fourteen days. An active player who has stopped playing widens the town without feeding it, and costs around 5 % of the final score.",
+      "loading": "Loading the roster…",
+      "neverSynchronized": "Never synchronized",
       "remove": {
         "action": "Remove",
         "heading": "Remove from the roster",
         "confirm": "Remove",
         "archiveBody": "This player took part in the campaign, so it will be archived rather than deleted. It leaves the public application and stops being synchronized, but the closed weeks naming it stay readable. You can restore it later.",
         "deleteBody": "This player took part in no campaign, so it will be deleted for good, along with its matches and synchronization traces. This cannot be undone."
-      }
+      },
+      "restore": "Restore",
+      "rosterSection": "Roster",
+      "status": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive",
+        "ARCHIVED": "Archived"
+      },
+      "statusChanged": "Status updated.",
+      "title": "Players",
+      "updated": "Player updated."
     },
     "maintenance": {
       "title": "Maintenance",
@@ -190,9 +192,9 @@
     "heading": "The squad's campaign",
     "historyToggle": "History",
     "legend": {
-      "current": "Week in progress",
-      "defeated": "Territory taken",
-      "survived": "Boss not defeated",
+      "current": "In battle",
+      "defeated": "Taken",
+      "survived": "Lost",
       "upcoming": "Upcoming"
     },
     "loading": "Loading the campaign…",
@@ -204,94 +206,88 @@
     "viewLabel": "Campaign view"
   },
   "colony": {
-    "alertBanner": "The colony is slipping. One day of playing together lifts it again: nothing is ever lost for good.",
     "boss": {
-      "week": "Week {{week}} · {{status}}",
-      "status": {
-        "defeated": "defeated",
-        "survived": "survived",
-        "current": "in progress",
-        "upcoming": "upcoming"
+      "undrawn": "Week {{week}}: no boss drawn.",
+      "category": {
+        "MINOR": "minor",
+        "STANDARD": "standard",
+        "ELITE": "elite"
       },
-      "materials": "+{{materials}}"
+      "detail": {
+        "DEFEATED": "Week {{week}}: {{category}} boss defeated. {{materials}} materials, so +{{housing}} housing, and {{morale}} morale.",
+        "SURVIVED": "Week {{week}}: the {{category}} boss held. No materials, and {{morale}} morale.",
+        "CURRENT": "Week {{week}}: {{category}} boss under way. {{materials}} materials at stake, so +{{housing}} housing, and {{morale}} morale.",
+        "UPCOMING": "Week {{week}}: {{category}} boss ahead. {{materials}} materials at stake, so +{{housing}} housing."
+      }
     },
-    "building": {
-      "CAMP": "Camp",
-      "BARRACKS": "Barracks",
-      "RESIDENTIAL_QUARTER": "Residential quarter",
-      "CITADEL": "Citadel",
-      "erected": "{{materials}} materials · built on day {{day}}",
-      "missing": "{{materials}} materials · {{missing}} to go"
-    },
-    "capacity": "Capacity",
-    "capacitySource": "Capacity · {{building}}",
+    "bosses": "Bosses",
     "curve": {
-      "axis": "Run day",
-      "caption": "Peak {{peak}} · Average {{average}}",
-      "close": "Close the run's population",
-      "day": "D{{day}}",
-      "detail": "Capacity {{capacity}} · active players: {{players}}",
-      "milestone": "{{building}} · D{{day}}",
+      "title": "The run's population",
       "open": "See the run's population",
-      "title": "Population over the run"
+      "close": "Close the run's population",
+      "axis": "Day of the run",
+      "caption": "Peak {{peak}} · Average {{average}}",
+      "day": "D{{day}}",
+      "detail": "Feedable {{feedable}} · housed {{capacity}}",
+      "milestone": "{{tier}} · D{{day}}"
     },
-    "error": "The colony could not be loaded.",
+    "delta": "tonight",
     "eyebrow": "Campaign · Run {{run}} · Week {{week}} of {{weeks}}",
-    "gauge": {
-      "FOOD": {
-        "name": "Food",
-        "rule": "Play a little every day",
-        "detail": "It feeds on the damage dealt during the day, and loses 14 × population / capacity every day."
-      },
-      "ENERGY": {
-        "name": "Energy",
-        "rule": "Play together",
-        "detail": "It feeds on how many players turned out during the day, and loses 14 × population / capacity every day."
-      },
-      "movement": "{{gain}} against {{loss}} lost",
-      "description": "{{detail}} To raise it: {{rule}}. Today, {{movement}}. {{settling}}",
-      "settling": "It outproduces what the colony consumes and settles at {{level}}, its surplus discarded.",
-      "settlingLimiting": "This is the gauge holding the colony back right now: at the current rhythm it settles at {{level}}, which is the level the tick on the bar marks."
-    },
-    "heading": "The squad's colony",
-    "health": "Health",
-    "healthNote": "Geometric mean of both gauges",
-    "healthDescription": "Geometric mean of Food and Energy: it only climbs when both climb, and the lower of the two drags it down.",
+    "hexagonAria": "Population: {{population}} inhabitants of {{capacity}} housed, {{change}} tonight. Open the run's curve.",
     "history": {
       "title": "Run history",
-      "column": "Run",
-      "columnHint": "One ten-week campaign, the run in progress on top and the earlier ones below.",
       "run": "Run {{run}}",
-      "final": "Final",
-      "finalHint": "Population reached at the end of the run, its score. The one in progress is still moving.",
-      "buildings": "Bld.",
-      "buildingsHint": "Buildings put up over the ones a run can erect, the free starting camp excluded.",
-      "bosses": "Bosses",
-      "bossesHint": "Bosses put down over the ones the run stands against, one a week."
+      "column": "Run",
+      "columnHint": "A ten-week campaign, the run in progress on top and the closed ones below.",
+      "final": "Score",
+      "finalHint": "The population of the settlement day, once the tenth week has been credited."
     },
-    "loading": "Loading the colony…",
+    "ladder": {
+      "title": "The town's tiers",
+      "unit": "Housing"
+    },
     "materials": "Materials",
-    "nextTier": "Next tier · {{building}}",
-    "nextTierProgress": "{{materials}} / {{threshold}} materials · {{missing}} still needed",
     "population": "Population",
+    "presence": {
+      "FULL": "{{name}} played today",
+      "PARTIAL": "{{name}} played, under the threshold",
+      "NONE": "{{name}} did not play"
+    },
     "runDay": "Day {{day}} / {{days}}",
-    "runDayHint": "Day the campaign stands on, out of the {{days}} days it lasts.",
+    "runDayHint": "A run lasts {{days}} days: ten weeks, plus a settlement day whose population is the score.",
     "runDayWord": "Day",
-    "title": "Colony",
-    "upgradeState": {
-      "erected": "Unlocked",
-      "next": "In progress",
-      "locked": "Locked"
+    "tier": {
+      "CAMP": "Camp",
+      "HAMLET": "Hamlet",
+      "VILLAGE": "Village",
+      "BOROUGH": "Borough",
+      "TOWN": "Town",
+      "CITY": "City",
+      "RESIDENTIAL_QUARTER": "Residential quarter",
+      "GREAT_CITY": "Great city",
+      "METROPOLIS": "Metropolis",
+      "MEGALOPOLIS": "Megalopolis",
+      "CAPITAL": "Capital",
+      "CITADEL": "Citadel level {{level}}"
     },
-    "upgrades": "Upgrades",
-    "equilibrium": {
-      "caption": "Settles at",
-      "label": "At your rhythm over the last seven days, the colony settles around {{share}}% of its capacity, or {{population}} settlers. The {{gauge}} gauge is what sets that ceiling: the one fed less decides alone, and the other saturates and loses its surplus."
-    },
-    "upkeep": {
-      "caption": "Tonight",
-      "label": "At midnight the colony will consume {{loss}} off each gauge. Covering it takes {{damage}} damage (about {{matches}} games) and {{players}} distinct players during the day. Both, never either one: damage fills Food, players fill Energy.",
-      "idle": "The colony is empty, so it consumes nothing. The first day played puts settlers on the ground."
+    "tierProgress": "{{current}} places of housing out of the tier's {{target}}. {{missing}} to go before {{name}}.",
+    "track": {
+      "food": {
+        "name": "Food",
+        "eaten": "eaten {{food}}/wk",
+        "surplus": "surplus {{food}}/wk",
+        "aria": "Food: {{eaten}} eaten per week, {{surplus}} left over. The surplus is what brings new people in."
+      },
+      "presence": {
+        "name": "Turnout",
+        "aria": "Turnout: {{present}} of {{roster}} players played today. A day needs {{threshold}} raw damage to count."
+      },
+      "morale": {
+        "name": "Morale",
+        "floor": "floor {{floor}}",
+        "note": "Only the weekly boss moves morale, and it only ever speeds the climb.",
+        "aria": "Morale: {{value}} of {{ceiling}}, floor at {{floor}}."
+      }
     }
   },
   "landing": {
@@ -328,7 +324,7 @@
       "loading": "Loading the boss…"
     },
     "colonySummary": {
-      "hint": "The colony of the run in progress: its population, the resources holding it up and the day it has reached.",
+      "hint": "The colony of the run in progress: its population, what it eats, the squad's turnout and its morale.",
       "link": "See the campaign"
     },
     "header": {
@@ -678,6 +674,18 @@
         "difficultyLabel": "Difficulty",
         "title": "Five challenges, one per difficulty"
       },
+      "colony": {
+        "title": "The colony",
+        "description": "You play, that produces food. The food says how many inhabitants the town can feed. Every night, the town moves a little closer to that number. There is no other population rule.",
+        "facts": {
+          "harvest": "85 damage makes 1 food. An average competitive game is therefore worth 5, and that is the barème's damage, already through the day's diminishing returns.",
+          "feeds": "1 food feeds 8 inhabitants. It is the only constant tying food to population.",
+          "eats": "The town eats population / 8 a week. The bigger it gets the more it eats, so the surplus melts on its own as it grows.",
+          "window": "Only the last seven days count. Every night today enters the tally and the day seven days back leaves it: it is an average, not a reserve."
+        },
+        "presenceLabel": "Turnout",
+        "presence": "Everything harvested in a day is multiplied by 1 + (players present / squad size). The whole squad present therefore makes the day count double. A player counts once they have dealt more than 300 raw damage that day, which is one competitive game or three deathmatches: without that threshold, a two-minute deathmatch would be enough to reach the maximum."
+      },
       "damage": {
         "description": "The mode and outcome of a match set the damage it deals. A ranked win counts for the most, but every match played, won or not, adds to the week.",
         "modeLabel": "Game mode",
@@ -689,6 +697,19 @@
       "eligibility": {
         "description": "One rule, everywhere: a match counts if it was played in a mode the tracker follows, if it played at least one round, if you scored in it, and if it was not a remake. A remake, an abandoned match or an unrecognized queue deals no damage, counts as no active day, and progresses no challenge. It still shows in your history: it was played, it simply does not count towards the week.",
         "title": "What counts as a played match"
+      },
+      "night": {
+        "title": "The night",
+        "description": "Every night, the town closes 15 % of the gap between what it holds and the lower of its two ceilings: what the food allows, and what the housing allows.",
+        "gap": "It moves fast at first and slower and slower after, and never quite arrives. That is deliberate: there is always something left to gain, and never an evening where playing is pointless. The other way round, if the food no longer stretches, it falls back at the same speed.",
+        "moraleLabel": "Morale, from 1 to 100",
+        "morale": {
+          "MINOR": "Minor defeated",
+          "STANDARD": "Standard defeated",
+          "ELITE": "Elite defeated",
+          "SURVIVED": "Boss held"
+        },
+        "moraleFootnote": "Morale opens at 50 and only the weekly boss moves it. It multiplies the speed of the climb: at 50 the town closes 7.5 % of the gap a night instead of 15 %. It never slows the fall, and it never drops under 1: down there the town stops climbing altogether, and only a defeated boss starts it again."
       },
       "progression": {
         "description": "Some challenges ask not for an absolute threshold but for progress on yourself: beating your own K/D, ACS or headshot rate from the previous 4 weeks by a given percentage. Grinding matches at the same level does not complete them, since the measure is a rate. With no history over the last 4 weeks, the challenge stays out of reach.",
@@ -703,6 +724,13 @@
           "finishingBlow": "The finishing blow on the boss is credited separately, in the fight history."
         },
         "title": "Ranking & crown"
+      },
+      "town": {
+        "title": "The town",
+        "description": "Housing is worth 300 places per squad player, plus half of the materials gathered. There is no threshold to cross: a validated challenge widens the town that same Monday, and there is no maximum.",
+        "materialsLabel": "Materials per validated challenge, per player",
+        "tiersLabel": "The tiers, one every 500 housing",
+        "tiersFootnote": "A defeated boss pays 60, 80 or 100 materials per squad player, never inhabitants: inhabitants would fade at 15 % a night, whereas places are still standing on settlement day. And every Monday, the food the town cannot eat is converted into materials at a deliberately bad rate: (food − housing / 8) / 5. No evening is ever wasted."
       }
     },
     "title": "Rules & how it works"

@@ -57,19 +57,26 @@ export const TILE_INNER_SCALE = 0.95;
 export const LEGEND_INNER_SCALE = 0.84;
 
 /**
+ * Ground inside every territory hexagon, tiles and legend samples alike.
+ *
+ * One value for the four states, and the page's own ground rather than a tint of the state's
+ * colour: a territory is read by its **outline**. Filled tiles put four coloured plates on a map
+ * whose terrain is already a field of hexagons, and the legend came out as a row of buttons; hollow,
+ * the outline and the mark inside it are the only things carrying a state, at either size.
+ */
+export const TERRITORY_FILL_CLASS = 'bg-surface-950';
+
+/**
  * Visual treatment of one territory hexagon, split across the two layers it is drawn with — see
- * {@link TILE_INNER_SCALE} for how the outline is drawn.
+ * {@link TILE_INNER_SCALE} for how the outline is drawn, and {@link TERRITORY_FILL_CLASS} for the
+ * ground they share.
  */
 export interface BossTerritoryTier {
   /**
-   * Background of the outer hexagon, read as the territory's outline.
+   * Background of the outer hexagon, read as the territory's outline — and, the tiles being hollow,
+   * the whole of what the state is told with.
    */
   readonly ringClass: string;
-
-  /**
-   * Background of the inner hexagon, read as the ground itself.
-   */
-  readonly fillClass: string;
 
   /**
    * Color of the outcome icon carved into the hexagon.
@@ -78,7 +85,7 @@ export interface BossTerritoryTier {
 
   /**
    * Utilities for the halo hexagon layered behind the tile, empty for every status but the week
-   * currently being fought — the only one allowed to pulse.
+   * currently being fought.
    */
   readonly haloClass: string;
 
@@ -92,39 +99,41 @@ export interface BossTerritoryTier {
 /**
  * Territory treatment indexed by week status.
  *
- * The four states are told through color alone, in the same vocabulary the rest of the campaign
- * uses: brand amber for ground taken, red for the fight running right now, a dulled red for an
- * assault that was repelled, and bare surface for ground nobody has reached yet.
+ * An outcome vocabulary, not a chronological one: green for ground taken, red for a week the boss
+ * held, the direction's amber for the fight running right now, bare surface for ground nobody has
+ * reached yet. Green and red are the two the application already spends on a win and a loss
+ * everywhere else, which leaves amber free to mean *live* — the same amber the day counter and the
+ * housing figures burn, and the only state on the map that is still moving.
  */
 const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritoryTier>> = {
   defeated: {
-    ringClass: 'bg-brand-500',
-    fillClass: 'bg-brand-500/18',
-    iconClass: 'text-brand-400',
+    ringClass: 'bg-success',
+    iconClass: 'text-success',
     haloClass: '',
-    damageFillClass: 'bg-brand-500/35',
+    damageFillClass: 'bg-brand-500/28',
   },
+  // A week the boss held, in the loss colour rather than in a neutral grey. Grey was what an
+  // unreached week already wore, so the map's two dullest tiles were its lost weeks and its empty
+  // ones, told apart by the mark alone.
   survived: {
-    ringClass: 'bg-accent-red/45',
-    fillClass: 'bg-surface-800',
-    iconClass: 'text-accent-red/80',
+    ringClass: 'bg-danger',
+    iconClass: 'text-danger',
     haloClass: '',
-    damageFillClass: 'bg-accent-red/15',
+    damageFillClass: 'bg-text-primary/10',
   },
+  // The one tile still moving, so the one tile with a halo. Static: the fight lasts a week, and a
+  // pulse on a state that slow reads as an alert.
   current: {
-    ringClass: 'bg-accent-red',
-    fillClass: 'bg-surface-800',
-    iconClass: 'text-accent-red',
-    haloClass: 'bg-accent-red/25 motion-safe:animate-pulse',
-    damageFillClass: 'bg-accent-red/35',
+    ringClass: 'bg-brand-500',
+    iconClass: 'text-brand-500',
+    haloClass: 'bg-brand-500/16',
+    damageFillClass: 'bg-brand-500/28',
   },
-  // Ground the campaign has not reached yet, drawn barely above the terrain around it: it carries no
-  // outcome to read, only a position and what it is worth, so anything louder competes with the
-  // weeks that do.
+  // Ground the campaign has not reached yet: it carries no outcome to read, only a position and what
+  // it is worth, so anything louder competes with the weeks that do.
   upcoming: {
-    ringClass: 'bg-surface-700/60',
-    fillClass: 'bg-surface-950/60',
-    iconClass: 'text-text-muted/40',
+    ringClass: 'bg-surface-600',
+    iconClass: 'text-text-muted',
     haloClass: '',
     damageFillClass: '',
   },
@@ -139,8 +148,11 @@ const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritor
  *
  * Only the outline is a class: the surface inside it is drawn by the `hex-terrain` utility's own
  * pseudo-element, so a terrain tile costs one node instead of three.
+ *
+ * A veil over the page's own ground rather than an opaque plate, which is the surface every other
+ * screen of the application uses; this page was the only one stacking solid coloured cards.
  */
-export const TERRAIN_RING_CLASS = 'bg-surface-800/50';
+export const TERRAIN_RING_CLASS = 'bg-text-primary/8';
 
 /**
  * Width each column of {@link MAP_COLUMNS} needs before it is drawn, as the utilities that reveal
@@ -166,15 +178,16 @@ const COLUMN_VISIBILITY_CLASSES: Readonly<Record<number, string>> = {
 };
 
 /**
- * Statuses listed in the map's legend, in the order the campaign runs through them.
+ * Statuses listed in the map's legend, the two settled outcomes first, then the fight in progress
+ * and the ground beyond it.
  *
  * Four colors over otherwise identical shapes are not self-explanatory, so the map states what each
  * one means rather than leaving it to be inferred.
  */
 export const MAP_LEGEND_STATUSES: readonly BossTimelineNodeStatus[] = [
   'defeated',
-  'current',
   'survived',
+  'current',
   'upcoming',
 ];
 

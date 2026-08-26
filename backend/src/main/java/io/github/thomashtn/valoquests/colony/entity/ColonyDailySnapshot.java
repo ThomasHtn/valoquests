@@ -22,13 +22,13 @@ import lombok.Setter;
  * The colony on one day of one run.
  *
  * <p>The only table the colony needs. Its current state is the latest snapshot of the run in progress,
- * and its erected buildings are a pure function of its materials, so there is nothing else to persist.
+ * and the tier its town wears is a pure function of its housing, so there is nothing else to persist.
  *
  * <p>Rows are never updated in place by the engine: a replay deletes the run's snapshots and writes
  * them again. Two consecutive replays therefore produce identical rows, which is what makes both the
  * daily tick and the admin recompute free of any double-application risk.
  *
- * <p>{@code foodGain}, {@code energyGain} and {@code activePlayerCount} are not needed to rebuild the
+ * <p>{@code foodHarvest}, {@code matchDamage} and {@code presenceCount} are not needed to rebuild the
  * state — the replay recomputes them from the same inputs — but they are what a recalibration would
  * have to look at, and keeping them means doing it without asking Henrik for anything again.
  */
@@ -66,16 +66,34 @@ public class ColonyDailySnapshot extends AuditableEntity {
     private LocalDate day;
 
     /**
-     * Food gauge at the end of the day, in {@code [0, 100]}.
+     * Food of the last seven days, the whole of what the town has to eat.
      */
-    @Column(name = "food", nullable = false, precision = 9, scale = 3)
-    private BigDecimal food;
+    @Column(name = "food_stock", nullable = false, precision = 11, scale = 3)
+    private BigDecimal foodStock;
 
     /**
-     * Energy gauge at the end of the day, in {@code [0, 100]}.
+     * What this day alone brought in, turnout multiplier included.
      */
-    @Column(name = "energy", nullable = false, precision = 9, scale = 3)
-    private BigDecimal energy;
+    @Column(name = "food_harvest", nullable = false, precision = 11, scale = 3)
+    private BigDecimal foodHarvest;
+
+    /**
+     * Match damage of the day, after the daily diminishing returns.
+     */
+    @Column(name = "match_damage", nullable = false)
+    private int matchDamage;
+
+    /**
+     * Players whose raw damage that day cleared the turnout threshold.
+     */
+    @Column(name = "presence_count", nullable = false)
+    private int presenceCount;
+
+    /**
+     * Morale the day ends on.
+     */
+    @Column(name = "morale", nullable = false, precision = 6, scale = 2)
+    private BigDecimal morale;
 
     /**
      * Cumulative materials, which never go back down.
@@ -84,32 +102,20 @@ public class ColonyDailySnapshot extends AuditableEntity {
     private int materials;
 
     /**
-     * Population at the end of the day, in {@code [0, capacity]}.
-     */
-    @Column(name = "population", nullable = false, precision = 11, scale = 3)
-    private BigDecimal population;
-
-    /**
-     * Capacity the cumulative materials unlock.
+     * Housing the frozen roster and the materials open.
      */
     @Column(name = "capacity", nullable = false)
     private int capacity;
 
     /**
-     * Distinct players who played at least one eligible match that day.
+     * Population at the end of the day.
      */
-    @Column(name = "active_player_count", nullable = false)
-    private int activePlayerCount;
+    @Column(name = "population", nullable = false, precision = 11, scale = 3)
+    private BigDecimal population;
 
     /**
-     * Food gained from the day's match damage.
+     * What the night moved, negative when the town lost people.
      */
-    @Column(name = "food_gain", nullable = false, precision = 9, scale = 3)
-    private BigDecimal foodGain;
-
-    /**
-     * Energy gained from the day's turnout.
-     */
-    @Column(name = "energy_gain", nullable = false, precision = 9, scale = 3)
-    private BigDecimal energyGain;
+    @Column(name = "population_change", nullable = false, precision = 11, scale = 3)
+    private BigDecimal populationChange;
 }

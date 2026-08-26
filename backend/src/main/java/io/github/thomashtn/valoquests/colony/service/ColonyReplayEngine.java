@@ -3,8 +3,9 @@ package io.github.thomashtn.valoquests.colony.service;
 import io.github.thomashtn.valoquests.colony.ColonyRuleset;
 import io.github.thomashtn.valoquests.colony.model.ColonyDailyInput;
 import io.github.thomashtn.valoquests.colony.model.ColonyDayState;
-import io.github.thomashtn.valoquests.colony.model.ColonyEquilibrium;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -34,14 +35,6 @@ public class ColonyReplayEngine {
     private static final double PERCENT_SCALE = 100.0;
 
     /**
-     * Days {@link #settle} runs before reading the plateau off.
-     *
-     * <p>Comfortably past it: the population moves by at most 2.5% of capacity a day, so it needs
-     * forty days to cross a full capacity from empty, and the gauges converge faster than that.
-     */
-    private static final int SETTLING_DAYS = 400;
-
-    /**
      * Calibration every step reads its numbers from.
      */
     private final ColonyRuleset ruleset;
@@ -58,63 +51,74 @@ public class ColonyReplayEngine {
     /**
      * Replays a run's days from its initial state, one state per day.
      *
-     * <p>For each day, in this order:
+     * <p>A rollover day settles the week that has just closed before its own night runs, in this order:
      *
      * <ol>
-     *   <li>both gauges lose {@code 14 x (population / capacity)}, floored at zero;</li>
-     *   <li>both gauges take the day's gains and are hard-clamped at one hundred, surplus discarded;</li>
-     *   <li>the rollover's materials are credited, on the one day a week that carries them;</li>
-     *   <li>capacity is recomputed from the cumulative materials;</li>
-     *   <li>health and target are recomputed, and the population migrates towards the target within
-     *       its daily limits.</li>
+     *   <li>the food surplus is converted into materials, <b>against the housing the closing week
+     *       had</b>;</li>
+     *   <li>the week's completed challenges pay their materials;</li>
+     *   <li>the fight pays its materials and its morale, or costs its morale if the boss held;</li>
+     *   <li>housing is recomputed from the new materials total.</li>
      * </ol>
      *
-     * <p>The first day is not a special case: the initial state is the state the colony is in before
-     * that day is played, so the day's loss applies to it like any other.
+     * <p>Step one comes first and reads the old housing on purpose. Settle it after the materials of
+     * steps two and three and a Monday heavy with validated challenges would erase its own surplus.
+     *
+     * <p>Then the night, on every day of the run without exception:
+     *
+     * <ol>
+     *   <li>the day's harvest enters the stock, multiplied by the turnout;</li>
+     *   <li>the harvest of seven days ago leaves it;</li>
+     *   <li>the town moves a share of the way towards the lower of its two ceilings.</li>
+     * </ol>
+     *
+     * <p>There is no fourth step, and the first day of a run is not a special case.
      *
      * @param days       the run's days in chronological order, must not be {@code null}
-     * @param rosterSize roster size frozen on the run, the Energy gauge's denominator
+     * @param rosterSize roster size frozen on the run, which sets housing, turnout and boss rewards
      * @return one state per supplied day, in the same order
      */
     public List<ColonyDayState> replay(List<ColonyDailyInput> days, int rosterSize) {
-        double food = ruleset.initialGauge();
-        double energy = ruleset.initialGauge();
         double population = ruleset.initialPopulation();
+        double morale = ruleset.initialMorale();
         int materials = ruleset.initialMaterials();
-        int capacity = ruleset.capacityFor(materials);
+        int capacity = ruleset.capacityFor(rosterSize, materials);
+
+        Deque<Double> window = new ArrayDeque<>();
+        double foodStock = 0.0;
 
         List<ColonyDayState> states = new ArrayList<>(days.size());
 
         for (ColonyDailyInput day : days) {
-            double loss = dailyLoss(population, capacity);
-            food = Math.max(0.0, food - loss);
-            energy = Math.max(0.0, energy - loss);
+            if (day.rollover()) {
+                materials += ruleset.materialsForSurplus(foodStock, capacity);
+                materials += day.creditedMaterials();
+                morale = boundedMorale(morale + day.moraleDelta());
+                capacity = ruleset.capacityFor(rosterSize, materials);
+            }
 
-            double foodGain = foodGain(day.matchDamage());
-            double energyGain = energyGain(day.activePlayerCount(), rosterSize);
-            food = capped(food + foodGain);
-            energy = capped(energy + energyGain);
+            double harvest = harvest(day.matchDamage(), day.presencePlayerCount(), rosterSize);
+            window.addLast(harvest);
+            foodStock += harvest;
 
-            materials += day.creditedMaterials();
-            capacity = ruleset.capacityFor(materials);
+            while (window.size() > ruleset.foodWindowDays()) {
+                foodStock -= window.removeFirst();
+            }
 
-            double health = health(food, energy);
-            double target = targetPopulation(capacity, health);
-            population = migrate(population, target, capacity);
+            double change = nightlyChange(population, foodStock, capacity, morale);
+            population = Math.max(0.0, population + change);
 
             states.add(new ColonyDayState(
                 day.day(),
-                food,
-                energy,
+                foodStock,
+                harvest,
+                day.matchDamage(),
+                day.presencePlayerCount(),
+                morale,
                 materials,
-                population,
                 capacity,
-                day.activePlayerCount(),
-                foodGain,
-                energyGain,
-                loss,
-                health,
-                target
+                population,
+                change
             ));
         }
 
@@ -122,149 +126,109 @@ public class ColonyReplayEngine {
     }
 
     /**
-     * Returns the state the colony settles on if a day's gains repeat indefinitely.
+     * Returns the food a day brings in, turnout included.
      *
-     * <p>Simulated rather than solved. The closed form has a discontinuity where the two gains meet:
-     * approach it with Food a hair below Energy and Food settles at {@code 100 x health²} while Energy
-     * saturates, but make them exactly equal and both settle at {@code 100 x health}. Running the same
-     * loop the replay runs sidesteps that entirely, and guarantees the figure the page shows is the one
-     * the colony would actually reach rather than a second formula that has to be kept in step.
+     * <p>No barème of its own: the damage handed in has already been through the scoring ruleset's daily
+     * diminishing returns, so the colony inherits the anti-farming for free and prices a given match
+     * exactly as the weekly ranking does. It is also what makes a thirty-game evening worth far less
+     * than six five-game ones without the colony writing a single anti-farming rule.
      *
-     * @param foodGain   Food a day brings in
-     * @param energyGain Energy a day brings in
-     * @param capacity   capacity the colony settles inside
-     * @return the settled gauges and population
+     * @param matchDamage         total match damage of the day, after diminishing returns
+     * @param presencePlayerCount players who cleared the turnout threshold
+     * @param rosterSize          roster size frozen on the run
+     * @return food harvested
      */
-    public ColonyEquilibrium settle(double foodGain, double energyGain, int capacity) {
-        double food = 0.0;
-        double energy = 0.0;
-        double population = 0.0;
-
-        for (int day = 0; day < SETTLING_DAYS; day++) {
-            double loss = dailyLoss(population, capacity);
-            food = capped(Math.max(0.0, food - loss) + foodGain);
-            energy = capped(Math.max(0.0, energy - loss) + energyGain);
-            population = migrate(
-                population,
-                targetPopulation(capacity, health(food, energy)),
-                capacity
-            );
-        }
-
-        return new ColonyEquilibrium(food, energy, population);
+    public double harvest(int matchDamage, int presencePlayerCount, int rosterSize) {
+        return matchDamage / (double) ruleset.foodDamageDivisor()
+            * presenceMultiplier(presencePlayerCount, rosterSize);
     }
 
     /**
-     * Returns a gauge clamped at its ceiling, surplus discarded.
+     * Returns the multiplier a day's turnout is worth.
      *
-     * @param gauge gauge value before the ceiling applies
-     * @return the gauge, never above the maximum
+     * <p>The whole roster present doubles the day. Divided by the roster frozen on the run rather than
+     * by a hard seven, so a five-player squad is not punished for having shrunk: five of five is still a
+     * full house. Capped at one, since a player left out of the roster still plays and would otherwise
+     * push the numerator past it.
+     *
+     * @param presencePlayerCount players who cleared the turnout threshold
+     * @param rosterSize          roster size frozen on the run
+     * @return multiplier applied to the day's harvest, between one and two
      */
-    private double capped(double gauge) {
-        return Math.min(ruleset.gaugeMaximum(), gauge);
-    }
-
-    /**
-     * Returns the Food a day's match damage is worth.
-     *
-     * <p>No barème of its own: the damage handed in has already been through the scoring ruleset's
-     * daily diminishing returns, so the colony inherits the anti-farming for free and prices a given
-     * match exactly as the weekly ranking does.
-     *
-     * @param matchDamage total match damage of the day
-     * @return Food gained
-     */
-    public double foodGain(int matchDamage) {
-        return matchDamage / (double) ruleset.foodDamageDivisor();
-    }
-
-    /**
-     * Returns the Energy a day's turnout is worth.
-     *
-     * <p>Proportional to the roster rather than a fixed amount per player, because the backoffice can
-     * activate, deactivate or archive one: with an absolute value, a roster down to five would make a
-     * full colony impossible to sustain and collapse the run's ceiling for no visible reason. The ratio
-     * is capped at one, since a player left inactive still plays and would otherwise push the numerator
-     * past the frozen roster.
-     *
-     * @param activePlayerCount distinct players who played at least one eligible match
-     * @param rosterSize        roster size frozen on the run
-     * @return Energy gained
-     */
-    public double energyGain(int activePlayerCount, int rosterSize) {
+    public double presenceMultiplier(int presencePlayerCount, int rosterSize) {
         if (rosterSize <= 0) {
-            return 0.0;
+            return 1.0;
         }
 
-        return ruleset.maximumEnergyGain()
-            * Math.min(1.0, activePlayerCount / (double) rosterSize);
+        return 1.0 + Math.min(1.0, Math.max(0, presencePlayerCount) / (double) rosterSize);
     }
 
     /**
-     * Returns the amount each gauge loses in a day.
+     * Returns the inhabitants a food stock can feed.
      *
-     * @param population population at the end of the previous day
-     * @param capacity   capacity at the end of the previous day
-     * @return loss applied to both gauges
+     * @param foodStock food of the last seven days
+     * @return feedable population
      */
-    public double dailyLoss(double population, int capacity) {
-        if (capacity <= 0) {
-            return 0.0;
-        }
-
-        return ruleset.dailyLossCoefficient() * (population / capacity);
+    public double feedablePopulation(double foodStock) {
+        return foodStock * ruleset.inhabitantsPerFood();
     }
 
     /**
-     * Returns the colony's health, the geometric mean of both gauges.
-     *
-     * <p>Geometric rather than arithmetic so neglecting one gauge costs more than an average would
-     * suggest, and so a gauge at zero collapses the colony outright: 100 and 20 give 45%, not 60%, and
-     * 100 and 0 give nothing at all.
-     *
-     * @param food   Food gauge
-     * @param energy Energy gauge
-     * @return health as a ratio in {@code [0, 1]}
-     */
-    public double health(double food, double energy) {
-        double maximum = ruleset.gaugeMaximum();
-
-        return Math.sqrt((food / maximum) * (energy / maximum));
-    }
-
-    /**
-     * Returns the population the colony is heading towards.
-     *
-     * @param capacity current capacity
-     * @param health   current health
-     * @return target population
-     */
-    public double targetPopulation(int capacity, double health) {
-        return capacity * health;
-    }
-
-    /**
-     * Moves the population towards its target, within the day's asymmetric limits.
-     *
-     * <p>The most important mechanism in the system. No amount of grinding on a single day can produce
-     * more than 2.5% of capacity in inhabitants, so there is <b>no</b> way to accelerate growth other
-     * than holding both gauges high day after day. The 1-to-2 asymmetry makes a week of neglect cost
-     * twice what a week of effort brings in.
+     * Returns the food a population eats in a week.
      *
      * @param population current population
-     * @param target     population being headed towards
-     * @param capacity   current capacity
-     * @return population after the day's migration
+     * @return weekly consumption
      */
-    private double migrate(double population, double target, int capacity) {
-        double growthLimit = capacity * ruleset.growthRatePercent() / PERCENT_SCALE;
-        double declineLimit = capacity * ruleset.declineRatePercent() / PERCENT_SCALE;
+    public double weeklyConsumption(double population) {
+        return population / ruleset.inhabitantsPerFood();
+    }
 
-        double delta = target - population;
-        double moved = delta >= 0
-            ? Math.min(delta, growthLimit)
-            : Math.max(delta, -declineLimit);
+    /**
+     * Returns the population the town is heading towards: the lower of its two ceilings.
+     *
+     * <p>Food says what it can feed, housing what it can lodge, and the smaller of the two commands
+     * while the other is wasted. The player is never asked to make that comparison — the page is, and
+     * says it with the shape of its bars.
+     *
+     * @param foodStock food of the last seven days
+     * @param capacity  housing available
+     * @return ceiling the town climbs towards
+     */
+    public double ceiling(double foodStock, int capacity) {
+        return Math.min(feedablePopulation(foodStock), capacity);
+    }
 
-        return Math.clamp(population + moved, 0.0, capacity);
+    /**
+     * Returns what one night moves the population by.
+     *
+     * <p>The one and only population rule. A share of the gap, and morale on the way up alone: a
+     * demoralised town falls exactly as fast as any other. That asymmetry is deliberate — morale is a
+     * reward for winning fights, never a shield against not playing.
+     *
+     * @param population current population
+     * @param foodStock  food of the last seven days
+     * @param capacity   housing available
+     * @param morale     current morale
+     * @return signed change, negative when the town loses people
+     */
+    public double nightlyChange(double population, double foodStock, int capacity, double morale) {
+        double gap = ceiling(foodStock, capacity) - population;
+        double rate = ruleset.gapClosingRatePercent() / PERCENT_SCALE;
+
+        if (gap < 0) {
+            return gap * rate;
+        }
+
+        return gap * rate * (morale / ruleset.maximumMorale());
+    }
+
+    /**
+     * Returns a morale value held inside the ruleset's bounds.
+     *
+     * @param morale morale before the bounds apply
+     * @return morale, never outside the floor and the ceiling
+     */
+    public double boundedMorale(double morale) {
+        return Math.clamp(morale, ruleset.minimumMorale(), ruleset.maximumMorale());
     }
 }

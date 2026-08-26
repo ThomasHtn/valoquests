@@ -13,6 +13,8 @@ import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.shared.exception.ConflictException;
 import io.github.thomashtn.valoquests.synchronization.repository.PlayerSeasonSynchronizationRepository;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationPlayerResultRepository;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,22 @@ public class PlayerAdminService {
      * Application logger.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(PlayerAdminService.class);
+
+    /**
+     * Days without a single match past which an active player is flagged as forgotten.
+     *
+     * <p>Two weeks, which is about as long as the colony's own memory: the fifteen-percent nightly
+     * catch-up means an inhabitant gained a fortnight ago has almost entirely gone, so a player
+     * absent that long has stopped contributing anything the score still carries.
+     *
+     * <p>Worth flagging because it costs real points. The roster size drives the turnout denominator,
+     * the opening housing, the fight's materials and the fight's hit points all at once, so a player
+     * left active and away widens the town without feeding it — and since the lower of the two
+     * ceilings commands, the score follows the food. Roughly five percent of a run's final score for
+     * one forgotten account. Nobody would guess that from the screen, which is why it is written on
+     * it.
+     */
+    private static final int IDLE_THRESHOLD_DAYS = 14;
 
     /**
      * Repository owning the tracked roster.
@@ -56,6 +74,11 @@ public class PlayerAdminService {
     private final PlayerCampaignContributionResolver contributionResolver;
 
     /**
+     * Application clock, deciding how far back "recently" reaches.
+     */
+    private final Clock clock;
+
+    /**
      * Creates the player administration service.
      *
      * @param playerRepository                tracked player repository
@@ -63,19 +86,22 @@ public class PlayerAdminService {
      * @param playerResultRepository          synchronization player result repository
      * @param seasonSynchronizationRepository player season synchronization repository
      * @param contributionResolver            campaign contribution resolver
+     * @param clock                           application clock, deciding how far back "recently" is
      */
     public PlayerAdminService(
         PlayerRepository playerRepository,
         PlayerMatchRepository playerMatchRepository,
         SynchronizationPlayerResultRepository playerResultRepository,
         PlayerSeasonSynchronizationRepository seasonSynchronizationRepository,
-        PlayerCampaignContributionResolver contributionResolver
+        PlayerCampaignContributionResolver contributionResolver,
+        Clock clock
     ) {
         this.playerRepository = playerRepository;
         this.playerMatchRepository = playerMatchRepository;
         this.playerResultRepository = playerResultRepository;
         this.seasonSynchronizationRepository = seasonSynchronizationRepository;
         this.contributionResolver = contributionResolver;
+        this.clock = clock;
     }
 
     /**
@@ -282,7 +308,21 @@ public class PlayerAdminService {
             player.getStatus(),
             player.getRiotPuuid(),
             player.getLastSuccessfulSynchronizationAt(),
-            contributionResolver.hasContributed(player.getId())
+            contributionResolver.hasContributed(player.getId()),
+            hasRecentMatch(player)
+        );
+    }
+
+    /**
+     * Returns whether a player has played at all in the recent past.
+     *
+     * @param player tracked player
+     * @return {@code true} when they have played inside the idle window
+     */
+    private boolean hasRecentMatch(Player player) {
+        return playerMatchRepository.existsByPlayerIdAndMatchStartedAtGreaterThanEqual(
+            player.getId(),
+            clock.instant().minus(Duration.ofDays(IDLE_THRESHOLD_DAYS))
         );
     }
 }

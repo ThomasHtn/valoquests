@@ -1,38 +1,38 @@
 package io.github.thomashtn.valoquests.colony.service;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
 import io.github.thomashtn.valoquests.colony.ColonyRuleset;
-import io.github.thomashtn.valoquests.colony.dto.ColonyBuildingResponse;
-import io.github.thomashtn.valoquests.colony.dto.ColonyGaugeResponse;
 import io.github.thomashtn.valoquests.colony.dto.ColonyMilestoneResponse;
-import io.github.thomashtn.valoquests.colony.dto.ColonyNextTierResponse;
+import io.github.thomashtn.valoquests.colony.dto.ColonyMoraleResponse;
 import io.github.thomashtn.valoquests.colony.dto.ColonyResponse;
 import io.github.thomashtn.valoquests.colony.dto.ColonyRunHistoryResponse;
+import io.github.thomashtn.valoquests.colony.dto.ColonyTierResponse;
 import io.github.thomashtn.valoquests.colony.dto.ColonyTrajectoryPointResponse;
 import io.github.thomashtn.valoquests.colony.dto.ColonyTrajectoryResponse;
-import io.github.thomashtn.valoquests.colony.dto.ColonyUpkeepResponse;
+import io.github.thomashtn.valoquests.colony.dto.ColonyWeekResponse;
 import io.github.thomashtn.valoquests.colony.entity.ColonyDailySnapshot;
-import io.github.thomashtn.valoquests.colony.model.ColonyBuildingTier;
-import io.github.thomashtn.valoquests.colony.model.ColonyEquilibrium;
-import io.github.thomashtn.valoquests.colony.model.ColonyGauge;
-import io.github.thomashtn.valoquests.colony.repository.ColonyDailySnapshotRepository;
+import io.github.thomashtn.valoquests.colony.model.ColonyTier;
+import io.github.thomashtn.valoquests.colony.model.ColonyTierState;
+import io.github.thomashtn.valoquests.colony.model.ColonyWeekOutcomeState;
 import io.github.thomashtn.valoquests.run.entity.Run;
-import io.github.thomashtn.valoquests.run.service.RunService;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.scoring.model.BossCategory;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Reads the colony off its snapshots.
  *
- * <p>Computes nothing the engine has not already decided: health, the daily loss and the equilibrium
- * all come back through {@link ColonyReplayEngine}, so the page and the replay can never disagree on a
- * formula.
+ * <p>Computes nothing the engine has not already decided: the two ceilings, what the town eats and the
+ * speed morale buys all come back through {@link ColonyReplayEngine}, so the page and the replay can
+ * never disagree on a formula.
  */
 @Service
 public class ColonyQueryService {
@@ -43,40 +43,40 @@ public class ColonyQueryService {
     private static final double PERCENT_SCALE = 100.0;
 
     /**
-     * Complete days the settling figures are averaged over.
+     * Days in a week, the unit a run is counted in.
+     */
+    private static final int DAYS_IN_WEEK = 7;
+
+    /**
+     * Steps of the ladder shown behind the town's own.
      *
-     * <p>A week, so the window covers every day of it and a quiet Tuesday cannot pass for the squad's
-     * rhythm.
+     * <p>One. The panel's subject is what comes next; a long tail of names already crossed would push
+     * the step being paid for off the bottom of a column this narrow.
      */
-    private static final int RHYTHM_DAYS = 7;
+    private static final int LADDER_STEPS_BEHIND = 1;
 
     /**
-     * Slack a whole-unit requirement is rounded up with, so floating-point noise cannot cost a unit.
+     * Steps of the ladder shown ahead of the town's own.
      */
-    private static final double CEILING_TOLERANCE = 1e-9;
+    private static final int LADDER_STEPS_AHEAD = 4;
 
     /**
-     * Service resolving the run in progress.
+     * Reader handing out the run in progress and the days it has lived.
      */
-    private final RunService runService;
+    private final ColonyRunReader runReader;
 
     /**
-     * Service rebuilding a run that has no snapshot yet.
+     * Reader naming the day's turnout.
      */
-    private final ColonyReplayService replayService;
+    private final ColonyPresenceReader presenceReader;
 
     /**
-     * Snapshot repository.
-     */
-    private final ColonyDailySnapshotRepository snapshotRepository;
-
-    /**
-     * Repository counting the bosses a run put down.
+     * Repository holding the run's fights.
      */
     private final WeeklyBossEncounterRepository encounterRepository;
 
     /**
-     * Calibration the thresholds and limits are read from.
+     * Calibration the thresholds and bounds are read from.
      */
     private final ColonyRuleset ruleset;
 
@@ -86,41 +86,30 @@ public class ColonyQueryService {
     private final ColonyReplayEngine engine;
 
     /**
-     * Calendar resolving the current week.
-     */
-    private final WeekCalendar weekCalendar;
-
-    /**
      * Creates the colony query service.
      *
-     * @param runService          run service
-     * @param replayService       colony replay service
-     * @param snapshotRepository  colony daily snapshot repository
+     * @param runReader           colony run reader
+     * @param presenceReader      colony presence reader
      * @param encounterRepository weekly boss encounter repository
      * @param ruleset             colony ruleset
      * @param engine              colony replay engine
-     * @param weekCalendar        week calendar
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
         justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
     )
     public ColonyQueryService(
-        RunService runService,
-        ColonyReplayService replayService,
-        ColonyDailySnapshotRepository snapshotRepository,
+        ColonyRunReader runReader,
+        ColonyPresenceReader presenceReader,
         WeeklyBossEncounterRepository encounterRepository,
         ColonyRuleset ruleset,
-        ColonyReplayEngine engine,
-        WeekCalendar weekCalendar
+        ColonyReplayEngine engine
     ) {
-        this.runService = runService;
-        this.replayService = replayService;
-        this.snapshotRepository = snapshotRepository;
+        this.runReader = runReader;
+        this.presenceReader = presenceReader;
         this.encounterRepository = encounterRepository;
         this.ruleset = ruleset;
         this.engine = engine;
-        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -130,67 +119,58 @@ public class ColonyQueryService {
      */
     @Transactional
     public ColonyResponse findCurrent() {
-        Run run = currentRun();
-        List<ColonyDailySnapshot> snapshots = snapshotsOf(run);
-
+        Run run = runReader.currentRun();
+        List<ColonyDailySnapshot> snapshots = runReader.snapshotsOf(run);
         ColonyDailySnapshot today = snapshots.getLast();
-        ColonyDailySnapshot yesterday = snapshots.size() > 1
-            ? snapshots.get(snapshots.size() - 2)
-            : today;
 
-        double food = today.getFood().doubleValue();
-        double energy = today.getEnergy().doubleValue();
-        double health = engine.health(food, energy);
+        double foodStock = today.getFoodStock().doubleValue();
+        double population = today.getPopulation().doubleValue();
+        double consumption = engine.weeklyConsumption(population);
+        int capacity = today.getCapacity();
 
-        ColonyRhythm rhythm = recentRhythm(snapshots);
-        ColonyEquilibrium settled =
-            engine.settle(rhythm.foodGain(), rhythm.energyGain(), today.getCapacity());
+        ColonyTier tier = ruleset.tierFor(capacity);
+        ColonyTier nextTier = ruleset.nextTierFor(capacity);
 
         return new ColonyResponse(
             run.getNumber(),
-            (int) ChronoUnit.DAYS.between(run.getFirstWeekStart(), today.getDay()) + 1,
+            runReader.runDayOf(run, today.getDay()),
             runDayCount(),
-            (int) ChronoUnit.WEEKS.between(
-                run.getFirstWeekStart(),
-                weekCalendar.weekStartOf(today.getDay())
-            ) + 1,
+            runReader.runWeekOf(run, today.getDay()),
             ruleset.runLengthWeeks(),
             today.getDay(),
-            new ColonyGaugeResponse(food, today.getFoodGain().doubleValue(), settled.food()),
-            new ColonyGaugeResponse(energy, today.getEnergyGain().doubleValue(), settled.energy()),
-            upkeep(today, run.getRosterSize()),
-            health * PERCENT_SCALE,
-            health < ruleset.alertHealthThreshold(),
-            rounded(today.getPopulation().doubleValue()),
-            rounded(engine.targetPopulation(today.getCapacity(), health)),
-            rounded(today.getPopulation().doubleValue())
-                - rounded(yesterday.getPopulation().doubleValue()),
-            rounded(today.getCapacity() * ruleset.growthRatePercent() / PERCENT_SCALE),
-            today.getCapacity(),
-            ruleset.maximumCapacity(),
+            rounded(population),
+            rounded(today.getPopulationChange().doubleValue()),
+            capacity,
             today.getMaterials(),
-            buildings(snapshots, run),
-            nextTier(today.getMaterials()),
-            limitingGauge(rhythm),
-            settled.population() * PERCENT_SCALE / today.getCapacity(),
+            foodStock,
+            rounded(engine.feedablePopulation(foodStock)),
+            consumption,
+            Math.max(0.0, foodStock - consumption),
+            presenceReader.read(today.getDay(), today.getPresenceCount(), run.getRosterSize()),
+            morale(today.getMorale().doubleValue()),
+            toTier(tier, ColonyTierState.CURRENT),
+            toTier(nextTier, ColonyTierState.LOCKED),
+            nextTier.threshold() - capacity,
+            (capacity - tier.threshold()) * PERCENT_SCALE / ruleset.tierStep(),
+            ladder(tier),
+            weeks(run, runReader.weekStartOf(today.getDay())),
             defeatedBosses(run),
-            ruleset.runLengthWeeks(),
-            ruleset.materialsPerDefeatedBoss()
+            ruleset.runLengthWeeks()
         );
     }
 
     /**
      * Returns the population curve of the run in progress.
      *
-     * @return the run's curve, with its peak, its average and its building milestones
+     * @return the run's curve, with its peak, its average and the days it changed name
      */
     @Transactional
     public ColonyTrajectoryResponse findTrajectory() {
-        Run run = currentRun();
-        List<ColonyDailySnapshot> snapshots = snapshotsOf(run);
+        Run run = runReader.currentRun();
+        List<ColonyDailySnapshot> snapshots = runReader.snapshotsOf(run);
 
         ColonyDailySnapshot peak = snapshots.stream()
-            .max(java.util.Comparator.comparing(ColonyDailySnapshot::getPopulation))
+            .max(Comparator.comparing(ColonyDailySnapshot::getPopulation))
             .orElseThrow();
 
         int average = rounded(snapshots.stream()
@@ -216,38 +196,7 @@ public class ColonyQueryService {
      */
     @Transactional(readOnly = true)
     public List<ColonyRunHistoryResponse> findHistory() {
-        return runService.closedRuns().stream().map(this::toHistory).toList();
-    }
-
-    /**
-     * Resolves the run in progress, opening one when the deployment has not seen a rollover yet.
-     *
-     * <p>Mirrors how the boss endpoint already draws a week's fight lazily: the campaign should not
-     * depend on a scheduled job having fired for a page to render.
-     *
-     * @return the run in progress
-     */
-    private Run currentRun() {
-        return runService.ensureRunFor(weekCalendar.currentWeekStart());
-    }
-
-    /**
-     * Returns a run's snapshots, replaying it once when it has none yet.
-     *
-     * @param run run to read
-     * @return the run's snapshots, oldest day first, never empty
-     */
-    private List<ColonyDailySnapshot> snapshotsOf(Run run) {
-        List<ColonyDailySnapshot> snapshots =
-            snapshotRepository.findAllByRunIdOrderByDayAsc(run.getId());
-
-        if (!snapshots.isEmpty()) {
-            return snapshots;
-        }
-
-        replayService.replay(run);
-
-        return snapshotRepository.findAllByRunIdOrderByDayAsc(run.getId());
+        return runReader.closedRuns().stream().map(this::toHistory).toList();
     }
 
     /**
@@ -256,197 +205,230 @@ public class ColonyQueryService {
      * @return days in a run
      */
     private int runDayCount() {
-        return ruleset.runLengthWeeks() * 7 + 1;
+        return ruleset.runLengthWeeks() * DAYS_IN_WEEK + 1;
     }
 
     /**
-     * Returns which gauge is setting the equilibrium population.
+     * Returns the morale and the speed it buys tonight.
      *
-     * @param rhythm the squad's recent rhythm
-     * @return the gauge fed the least
+     * @param morale today's morale
+     * @return the morale readout
      */
-    private ColonyGauge limitingGauge(ColonyRhythm rhythm) {
-        return rhythm.foodGain() <= rhythm.energyGain() ? ColonyGauge.FOOD : ColonyGauge.ENERGY;
-    }
-
-    /**
-     * Returns what the colony is about to consume, and what it takes to cover it.
-     *
-     * <p>The upcoming loss, not the one already charged: a day's loss is taken when the day opens, so
-     * it is already inside the value the gauge displays, and the only figure a player can still act on
-     * is the next one. Both requirements are stated because a day bringing damage but no turnout, or
-     * the reverse, still lets one gauge fall.
-     *
-     * @param today      today's snapshot
-     * @param rosterSize roster size frozen on the run
-     * @return the day's upkeep
-     */
-    private ColonyUpkeepResponse upkeep(ColonyDailySnapshot today, int rosterSize) {
-        double upcomingLoss = engine.dailyLoss(
-            today.getPopulation().doubleValue(),
-            today.getCapacity()
-        );
-
-        int damageToHold = atLeast(upcomingLoss * ruleset.foodDamageDivisor());
-
-        return new ColonyUpkeepResponse(
-            upcomingLoss,
-            damageToHold,
-            atLeast(damageToHold / (double) ruleset.referenceMatchDamage()),
-            Math.min(rosterSize, atLeast(upcomingLoss * rosterSize / ruleset.maximumEnergyGain()))
+    private ColonyMoraleResponse morale(double morale) {
+        return new ColonyMoraleResponse(
+            morale,
+            ruleset.minimumMorale(),
+            ruleset.maximumMorale(),
+            ruleset.gapClosingRatePercent() * morale / ruleset.maximumMorale()
         );
     }
 
     /**
-     * Rounds a requirement up to the next whole unit, absorbing floating-point noise.
+     * Returns the steps of the ladder around the town's own.
      *
-     * <p>The loss is a product of doubles: a requirement that is mathematically 2 940 comes out of the
-     * arithmetic as 2 940.000000000000 5, and a bare ceiling would then ask the squad for one more unit
-     * than the model does. The tolerance is far below anything either figure is read at.
+     * <p>A window rather than the whole ladder, since the ladder has no end.
      *
-     * @param requirement requirement before rounding
-     * @return smallest whole number covering it
+     * @param current step the town sits in
+     * @return the window, lowest step first
      */
-    private static int atLeast(double requirement) {
-        return (int) Math.ceil(requirement - CEILING_TOLERANCE);
-    }
+    private List<ColonyTierResponse> ladder(ColonyTier current) {
+        List<ColonyTierResponse> ladder = new ArrayList<>();
+        int firstStep = Math.max(0, current.step() - LADDER_STEPS_BEHIND);
 
-    /**
-     * Returns the rhythm the settling figures are resolved against.
-     *
-     * <p>The last seven <b>complete</b> days, today excluded. Today is a day in progress: before
-     * anybody has played it holds no damage and no turnout, so an equilibrium read off it would sit at
-     * zero every morning and climb back through the evening. A permanent display has to say "at your
-     * rhythm this week", not "at your rhythm since midnight". A run on its very first day has no
-     * complete day to average and falls back on that day itself.
-     *
-     * @param snapshots the run's snapshots, oldest day first, never empty
-     * @return average Food and Energy gains of the window
-     */
-    private ColonyRhythm recentRhythm(List<ColonyDailySnapshot> snapshots) {
-        List<ColonyDailySnapshot> completeDays = snapshots.subList(0, snapshots.size() - 1);
+        for (int step = firstStep; step <= current.step() + LADDER_STEPS_AHEAD; step++) {
+            ColonyTierState state = ColonyTierState.LOCKED;
 
-        if (completeDays.isEmpty()) {
-            ColonyDailySnapshot today = snapshots.getLast();
+            if (step == current.step()) {
+                state = ColonyTierState.CURRENT;
+            } else if (step < current.step()) {
+                state = ColonyTierState.REACHED;
+            }
 
-            return new ColonyRhythm(
-                today.getFoodGain().doubleValue(),
-                today.getEnergyGain().doubleValue()
-            );
+            ladder.add(toTier(ruleset.tierFor(step * ruleset.tierStep()), state));
         }
 
-        List<ColonyDailySnapshot> window = completeDays.size() <= RHYTHM_DAYS
-            ? completeDays
-            : completeDays.subList(completeDays.size() - RHYTHM_DAYS, completeDays.size());
-
-        return new ColonyRhythm(
-            window.stream().mapToDouble(day -> day.getFoodGain().doubleValue()).average().orElse(0.0),
-            window.stream().mapToDouble(day -> day.getEnergyGain().doubleValue()).average().orElse(0.0)
-        );
+        return ladder;
     }
 
     /**
-     * The squad's recent daily production, averaged over the rhythm window.
+     * Returns the run's ten fights and what each is worth to the colony.
      *
-     * @param foodGain   average daily Food gain
-     * @param energyGain average daily Energy gain
-     */
-    private record ColonyRhythm(double foodGain, double energyGain) {
-    }
-
-    /**
-     * Returns every building tier, with the day the run reached it.
+     * <p>Resolved here rather than left to the page, because what a fight pays depends on the category
+     * it was drawn at and on the roster frozen on the run — two numbers the page has no business
+     * holding. A week with no encounter drawn yet is still listed: a run is ten weeks long, not ten
+     * fights long, and the map has a tile for every one of them.
      *
-     * @param snapshots the run's snapshots, oldest day first
-     * @param run       run being read
-     * @return every tier, erected or not
+     * @param run         run being read
+     * @param currentWeek Monday of the week today falls in
+     * @return one entry per week of the run, earliest first
      */
-    private List<ColonyBuildingResponse> buildings(List<ColonyDailySnapshot> snapshots, Run run) {
-        int materials = snapshots.getLast().getMaterials();
-        List<ColonyBuildingResponse> buildings = new ArrayList<>();
+    private List<ColonyWeekResponse> weeks(Run run, LocalDate currentWeek) {
+        Map<LocalDate, WeeklyBossEncounter> encounters = new HashMap<>();
+        encounterRepository.findAllByRunIdOrderByWeekStartAsc(run.getId())
+            .forEach(encounter -> encounters.put(encounter.getWeekStart(), encounter));
 
-        for (ColonyBuildingTier tier : ruleset.buildings()) {
-            Integer erectedOn = erectedOnRunDay(snapshots, run, tier);
+        List<ColonyWeekResponse> weeks = new ArrayList<>();
 
-            buildings.add(new ColonyBuildingResponse(
-                tier.building(),
-                tier.materialsThreshold(),
-                tier.capacity(),
-                materials >= tier.materialsThreshold(),
-                erectedOn
+        for (int weekIndex = 1; weekIndex <= ruleset.runLengthWeeks(); weekIndex++) {
+            LocalDate weekStart = run.getFirstWeekStart().plusWeeks(weekIndex - 1L);
+
+            weeks.add(toWeek(
+                weekIndex,
+                weekStart,
+                currentWeek,
+                encounters.get(weekStart),
+                run.getRosterSize()
             ));
         }
 
-        return buildings;
+        return weeks;
     }
 
     /**
-     * Returns the day of the run a tier went up on.
+     * Maps one week of the run to what its fight is worth.
+     *
+     * <p>An unsettled week is priced at what it <b>would</b> pay rather than at zero, which is what lets
+     * the week under way show what is on the table instead of an empty tile.
+     *
+     * @param weekIndex   week of the run, from one
+     * @param weekStart   Monday beginning that week
+     * @param currentWeek Monday of the week today falls in
+     * @param encounter   that week's fight, {@code null} while none has been drawn
+     * @param rosterSize  roster size frozen on the run
+     * @return the week, priced
+     */
+    private ColonyWeekResponse toWeek(
+        int weekIndex,
+        LocalDate weekStart,
+        LocalDate currentWeek,
+        WeeklyBossEncounter encounter,
+        int rosterSize
+    ) {
+        if (encounter == null) {
+            return new ColonyWeekResponse(
+                weekIndex,
+                unsettledState(weekStart, currentWeek),
+                null,
+                0,
+                0,
+                0.0
+            );
+        }
+
+        BossCategory category = encounter.getBossCatalogEntry().getCategory();
+
+        if (encounter.getFinalizedAt() == null) {
+            ColonyWeekOutcomeState state = unsettledState(weekStart, currentWeek);
+
+            // A week still open is quoted at what it *would* pay, which is what lets the tile of the
+            // fight under way show what is on the table rather than an empty promise. A week already
+            // behind and still open settled nothing, so it is quoted at nothing: anything else would
+            // put a figure on the page the model never applied.
+            return state == ColonyWeekOutcomeState.SURVIVED
+                ? new ColonyWeekResponse(weekIndex, state, category, 0, 0, 0.0)
+                : priced(weekIndex, state, category, rosterSize);
+        }
+
+        if (!encounter.isDefeated()) {
+            return new ColonyWeekResponse(
+                weekIndex,
+                ColonyWeekOutcomeState.SURVIVED,
+                category,
+                0,
+                0,
+                ruleset.moraleForSurvivingBoss()
+            );
+        }
+
+        return priced(weekIndex, ColonyWeekOutcomeState.DEFEATED, category, rosterSize);
+    }
+
+    /**
+     * Prices one week at what beating its boss is worth.
+     *
+     * @param weekIndex  week of the run, from one
+     * @param state      state to report the week in
+     * @param category   category the boss was drawn at
+     * @param rosterSize roster size frozen on the run
+     * @return the week, priced at a win
+     */
+    private ColonyWeekResponse priced(
+        int weekIndex,
+        ColonyWeekOutcomeState state,
+        BossCategory category,
+        int rosterSize
+    ) {
+        int materials = ruleset.materialsForDefeatedBoss(category, rosterSize);
+
+        return new ColonyWeekResponse(
+            weekIndex,
+            state,
+            category,
+            materials,
+            ruleset.housingForMaterials(materials),
+            ruleset.moraleForDefeatedBoss(category)
+        );
+    }
+
+    /**
+     * Returns the state of a week whose fight has not been settled.
+     *
+     * <p>Three cases, not two. A week still ahead is upcoming and the week today falls in is under
+     * way, both obvious; but a week already <b>behind</b> and still unsettled is neither. It happens
+     * when a Monday's rollover never fired, and reporting it as under way put three tiles in the
+     * "fighting now" state at once. It settled nothing, so the colony was paid nothing for it, and
+     * that is exactly what a surviving boss means here.
+     *
+     * @param weekStart   Monday beginning the week
+     * @param currentWeek Monday of the week today falls in
+     * @return the state of that unsettled week
+     */
+    private ColonyWeekOutcomeState unsettledState(LocalDate weekStart, LocalDate currentWeek) {
+        if (weekStart.isAfter(currentWeek)) {
+            return ColonyWeekOutcomeState.UPCOMING;
+        }
+
+        return weekStart.isBefore(currentWeek)
+            ? ColonyWeekOutcomeState.SURVIVED
+            : ColonyWeekOutcomeState.CURRENT;
+    }
+
+    /**
+     * Maps one step of the ladder to its response.
+     *
+     * @param tier  step to map
+     * @param state where it stands relative to the town
+     * @return the step, exposed
+     */
+    private ColonyTierResponse toTier(ColonyTier tier, ColonyTierState state) {
+        return new ColonyTierResponse(tier.name(), tier.level(), tier.threshold(), state);
+    }
+
+    /**
+     * Returns the days the town changed name, for the curve to be read against.
      *
      * @param snapshots the run's snapshots, oldest day first
      * @param run       run being read
-     * @param tier      tier to place
-     * @return day of the run, or {@code null} while the tier is not up
+     * @return milestones, oldest first
      */
-    private Integer erectedOnRunDay(
-        List<ColonyDailySnapshot> snapshots,
-        Run run,
-        ColonyBuildingTier tier
-    ) {
-        return snapshots.stream()
-            .filter(snapshot -> snapshot.getMaterials() >= tier.materialsThreshold())
-            .findFirst()
-            .map(snapshot -> runDayOf(run, snapshot.getDay()))
-            .orElse(null);
-    }
-
-    /**
-     * Returns the tier a run is working towards.
-     *
-     * @param materials cumulative materials
-     * @return the next tier, or {@code null} once the last one is up
-     */
-    private ColonyNextTierResponse nextTier(int materials) {
-        return ruleset.buildings().stream()
-            .filter(tier -> materials < tier.materialsThreshold())
-            .findFirst()
-            .map(tier -> new ColonyNextTierResponse(
-                tier.building(),
-                tier.materialsThreshold(),
-                tier.capacity(),
-                tier.materialsThreshold() - materials,
-                materials * PERCENT_SCALE / tier.materialsThreshold()
-            ))
-            .orElse(null);
-    }
-
-    /**
-     * Returns the days buildings went up, for the curve to be read against.
-     *
-     * @param snapshots the run's snapshots, oldest day first
-     * @param run       run being read
-     * @return milestones, cheapest tier first, the free starting camp excluded
-     */
-    private List<ColonyMilestoneResponse> milestones(
-        List<ColonyDailySnapshot> snapshots,
-        Run run
-    ) {
+    private List<ColonyMilestoneResponse> milestones(List<ColonyDailySnapshot> snapshots, Run run) {
         List<ColonyMilestoneResponse> milestones = new ArrayList<>();
+        int previousStep = -1;
 
-        for (ColonyBuildingTier tier : ruleset.buildings()) {
-            if (tier.materialsThreshold() == 0) {
-                continue;
+        for (ColonyDailySnapshot snapshot : snapshots) {
+            ColonyTier tier = ruleset.tierFor(snapshot.getCapacity());
+
+            if (previousStep >= 0 && tier.step() > previousStep) {
+                milestones.add(new ColonyMilestoneResponse(
+                    tier.name(),
+                    tier.level(),
+                    snapshot.getDay(),
+                    runReader.runDayOf(run, snapshot.getDay()),
+                    tier.threshold()
+                ));
             }
 
-            snapshots.stream()
-                .filter(snapshot -> snapshot.getMaterials() >= tier.materialsThreshold())
-                .findFirst()
-                .ifPresent(snapshot -> milestones.add(new ColonyMilestoneResponse(
-                    tier.building(),
-                    snapshot.getDay(),
-                    runDayOf(run, snapshot.getDay()),
-                    tier.capacity()
-                )));
+            previousStep = tier.step();
         }
 
         return milestones;
@@ -460,15 +442,18 @@ public class ColonyQueryService {
      * @return curve point
      */
     private ColonyTrajectoryPointResponse toPoint(Run run, ColonyDailySnapshot snapshot) {
+        double foodStock = snapshot.getFoodStock().doubleValue();
+
         return new ColonyTrajectoryPointResponse(
             snapshot.getDay(),
-            runDayOf(run, snapshot.getDay()),
+            runReader.runDayOf(run, snapshot.getDay()),
             rounded(snapshot.getPopulation().doubleValue()),
+            rounded(engine.feedablePopulation(foodStock)),
             snapshot.getCapacity(),
             snapshot.getMaterials(),
-            snapshot.getFood().doubleValue(),
-            snapshot.getEnergy().doubleValue(),
-            snapshot.getActivePlayerCount()
+            foodStock,
+            snapshot.getMorale().doubleValue(),
+            snapshot.getPresenceCount()
         );
     }
 
@@ -479,8 +464,7 @@ public class ColonyQueryService {
      * @return history entry
      */
     private ColonyRunHistoryResponse toHistory(Run run) {
-        List<ColonyDailySnapshot> snapshots =
-            snapshotRepository.findAllByRunIdOrderByDayAsc(run.getId());
+        List<ColonyDailySnapshot> snapshots = runReader.settledSnapshotsOf(run);
 
         int finalPopulation = snapshots.isEmpty()
             ? 0
@@ -496,21 +480,19 @@ public class ColonyQueryService {
             .average()
             .orElse(0.0));
 
+        int capacity = snapshots.isEmpty() ? 0 : snapshots.getLast().getCapacity();
         int materials = snapshots.isEmpty() ? 0 : snapshots.getLast().getMaterials();
-        int erected = (int) ruleset.buildings().stream()
-            .filter(tier -> materials >= tier.materialsThreshold())
-            .count();
 
         return new ColonyRunHistoryResponse(
             run.getNumber(),
             run.getFirstWeekStart(),
             run.settlementDay(),
             finalPopulation,
-            finalPopulation * PERCENT_SCALE / ruleset.maximumCapacity(),
             peak,
             average,
-            erected,
-            ruleset.buildings().size(),
+            capacity,
+            materials,
+            toTier(ruleset.tierFor(capacity), ColonyTierState.REACHED),
             defeatedBosses(run),
             ruleset.runLengthWeeks()
         );
@@ -526,19 +508,8 @@ public class ColonyQueryService {
         return (int) encounterRepository
             .findAllByRunIdAndFinalizedAtIsNotNullOrderByWeekStartAsc(run.getId())
             .stream()
-            .filter(encounter -> encounter.isDefeated())
+            .filter(WeeklyBossEncounter::isDefeated)
             .count();
-    }
-
-    /**
-     * Places a calendar day inside its run, counting from one.
-     *
-     * @param run run the day belongs to
-     * @param day day to place
-     * @return the day's one-based position in the run
-     */
-    private int runDayOf(Run run, LocalDate day) {
-        return (int) ChronoUnit.DAYS.between(run.getFirstWeekStart(), day) + 1;
     }
 
     /**

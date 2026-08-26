@@ -11,6 +11,10 @@ import { PageHeader } from '@layout/page-header/page-header';
 import { RuleSection } from './rule-section/rule-section';
 import {
   BOSS_CATEGORY_SHOWCASE,
+  COLONY_FACTS,
+  COLONY_MATERIALS_SHOWCASE,
+  COLONY_MORALE_SHOWCASE,
+  COLONY_TIER_SHOWCASE,
   DIFFICULTY_SHOWCASE,
   MATCH_DAMAGE_SHOWCASE,
   MATCH_DECAY_SHOWCASE,
@@ -23,9 +27,14 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 /**
  * Rules page.
  *
- * Static walkthrough of the weekly loop, read top to bottom: one section per beat, each pairing a
+ * Static walkthrough of the whole game, read top to bottom: one section per beat, each pairing a
  * short narrative with the numbers behind it, for anyone landing on the tracker without prior
  * context.
+ *
+ * Two halves. The first six beats are the weekly ranking: what a match is worth, what a challenge is
+ * worth, and how the week is scored. The last three are the colony, which reads all of that a second
+ * time and turns it into a town — the same damage, the same challenges and the same fights, priced
+ * in food and housing instead of in points.
  */
 @Component({
   selector: 'app-rules',
@@ -83,6 +92,26 @@ export class Rules {
    * Facts closing the ranking panel, exposed to the template.
    */
   protected readonly rankingFacts = RANKING_FACTS;
+
+  /**
+   * The four numbers the colony's chain is made of, exposed to the template.
+   */
+  protected readonly colonyFacts = COLONY_FACTS;
+
+  /**
+   * Materials a completed challenge is worth, shown in the colony panel.
+   */
+  protected readonly colonyMaterialsShowcase = COLONY_MATERIALS_SHOWCASE;
+
+  /**
+   * What a Monday's fight moves the morale by, shown in the colony panel.
+   */
+  protected readonly colonyMoraleShowcase = COLONY_MORALE_SHOWCASE;
+
+  /**
+   * The town's first named tiers, shown in the colony panel.
+   */
+  protected readonly colonyTierShowcase = COLONY_TIER_SHOWCASE;
 
   /**
    * Resolves a boss category's text color utility, exposed to the template.

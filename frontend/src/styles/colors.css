@@ -46,6 +46,14 @@
   --color-accent-blue: #5a96be;
   --color-accent-green: #5fb88a;
   --color-accent-cyan: #2dd4bf;
+
+  /*
+   * Morale, on the campaign's resource band. Deliberately not `accent-purple`, which the note under
+   * the chart series below explains: the accent violets sit above this ground's lightness band and
+   * glare rather than read, which a fourteen-pixel filled bar makes very visible beside the muted
+   * amber and cyan it stands with. This is the value the direction's own mock-up settled on.
+   */
+  --color-accent-violet: #8c6fdc;
   --color-accent-pink: #ec4899;
 
   /*

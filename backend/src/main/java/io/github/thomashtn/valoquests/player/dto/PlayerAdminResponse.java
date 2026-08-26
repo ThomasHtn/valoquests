@@ -15,6 +15,7 @@ import java.time.Instant;
  *                                 resolves it
  * @param hasCampaignContribution  whether the player took part in the campaign, which is what
  *                                 decides between deletion and archiving
+ * @param hasRecentMatch           whether the player has played at all in the last two weeks
  */
 @Schema(description = "Tracked player as seen by the administration screens.")
 public record PlayerAdminResponse(
@@ -27,6 +28,7 @@ public record PlayerAdminResponse(
     PlayerStatus status,
     String riotPuuid,
     Instant lastSuccessfulSynchronizationAt,
-    boolean hasCampaignContribution
+    boolean hasCampaignContribution,
+    boolean hasRecentMatch
 ) {
 }

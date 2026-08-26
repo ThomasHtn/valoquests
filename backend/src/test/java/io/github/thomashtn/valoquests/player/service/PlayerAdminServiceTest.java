@@ -21,6 +21,9 @@ import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.shared.exception.ConflictException;
 import io.github.thomashtn.valoquests.synchronization.repository.PlayerSeasonSynchronizationRepository;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationPlayerResultRepository;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,7 +83,8 @@ class PlayerAdminServiceTest {
             playerMatchRepository,
             playerResultRepository,
             seasonSynchronizationRepository,
-            contributionResolver
+            contributionResolver,
+            Clock.fixed(Instant.parse("2026-06-26T09:00:00Z"), ZoneOffset.UTC)
         );
     }
 

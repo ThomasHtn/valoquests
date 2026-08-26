@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.colony.service;
 
 import io.github.thomashtn.valoquests.colony.model.ColonyDailyInput;
 import io.github.thomashtn.valoquests.colony.model.ColonyDayActivity;
+import io.github.thomashtn.valoquests.colony.model.ColonyWeekOutcome;
 import io.github.thomashtn.valoquests.run.entity.Run;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
@@ -85,12 +86,18 @@ public class ColonyRunInputAssembler {
         List<ColonyDailyInput> days = new ArrayList<>();
         for (LocalDate day = firstDay; !day.isAfter(lastDay); day = day.plusDays(1)) {
             ColonyDayActivity activity = activityByDay.getOrDefault(day, ColonyDayActivity.IDLE);
+            boolean rollover = isRollover(run, day);
+            ColonyWeekOutcome outcome = rollover
+                ? materialsReader.outcomeOf(day.minusWeeks(1), run.getRosterSize())
+                : ColonyWeekOutcome.NONE;
 
             days.add(new ColonyDailyInput(
                 day,
                 activity.matchDamage(),
-                activity.activePlayerCount(),
-                creditedMaterials(run, day)
+                activity.presencePlayerCount(),
+                rollover,
+                outcome.materials(),
+                outcome.moraleDelta()
             ));
         }
 
@@ -110,21 +117,17 @@ public class ColonyRunInputAssembler {
     }
 
     /**
-     * Returns the materials a rollover credits on one day of the run.
+     * Returns whether a day settles the week that has just closed.
      *
-     * <p>Non-zero on exactly ten days: every Monday of the run except its first, which credits nothing
+     * <p>True on exactly ten days: every Monday of the run except its first, which settles nothing
      * because no week of this run has closed yet. The last of them is the settlement day, the run's
      * seventy-first, which is what stops the tenth week from being the only one to bring nothing in.
      *
      * @param run run being replayed
-     * @param day day being credited
-     * @return materials to credit that day
+     * @param day day being assembled
+     * @return whether the day carries a rollover
      */
-    private int creditedMaterials(Run run, LocalDate day) {
-        if (!weekCalendar.isWeekStart(day) || day.equals(run.getFirstWeekStart())) {
-            return 0;
-        }
-
-        return materialsReader.materialsOf(day.minusWeeks(1));
+    private boolean isRollover(Run run, LocalDate day) {
+        return weekCalendar.isWeekStart(day) && !day.equals(run.getFirstWeekStart());
     }
 }

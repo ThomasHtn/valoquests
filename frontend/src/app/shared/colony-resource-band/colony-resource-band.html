@@ -1,0 +1,235 @@
+<!-- Population, in the direction's hexagon: the run's score, and the one figure every other rail is
+     either feeding or spending towards. The hexagon fills from the bottom with the share of housing
+     already settled, and at full size it opens the run's curve — where that figure has been, which a
+     single number cannot say. -->
+<div [class]="metrics().hexagonSeat">
+  @if (compact()) {
+    <span [class]="metrics().hexagon">
+      <ng-container [ngTemplateOutlet]="hexagon"></ng-container>
+    </span>
+  } @else {
+    <button
+      (click)="curveOpen.emit()"
+      [attr.aria-label]="hexagonAriaLabel()"
+      [class]="metrics().hexagon"
+      type="button"
+    >
+      <ng-container [ngTemplateOutlet]="hexagon"></ng-container>
+    </button>
+  }
+</div>
+
+<ng-template #hexagon>
+  <span aria-hidden="true" class="clip-hex absolute inset-0 bg-brand-500"></span>
+  <span
+    [style.scale]="hexagonInnerScale"
+    aria-hidden="true"
+    class="clip-hex absolute inset-0 overflow-hidden bg-surface-950"
+  >
+    <!-- Share of housing already settled, rising from the bottom. A plain rectangle clipped by the
+         hexagon above it, never a hexagon of its own: at a low fill its own silhouette would be a
+         wide flat band sticking out past the sides. -->
+    <span
+      [style.height.%]="populationPercentage()"
+      class="absolute inset-x-0 bottom-0 bg-brand-500/25"
+    ></span>
+  </span>
+
+  <span class="absolute inset-0 flex flex-col items-center justify-center gap-1">
+    <!-- The figure is settlers, and the glyph says so before the caption is read — the same
+         shorthand the rails below carry. -->
+    <svg
+      [class]="metrics().hexagonIcon"
+      aria-hidden="true"
+      class="text-brand-500"
+      lucideUsers
+    ></svg>
+    <span class="label-caption text-text-muted">{{ 'colony.population' | translate }}</span>
+
+    <!-- What the night moved, raised on the figure it moved rather than written under it: an
+         exponent belongs to the number it rides on, so the period it covers no longer needs a word of
+         its own. A full-size band spells it out in the hexagon's own `aria-label`; a compact one has
+         no button to hang that on and carries the caption for assistive technology instead. -->
+    <span class="flex items-start gap-0.5">
+      <span
+        [class]="metrics().hexagonFigure"
+        class="font-display leading-none font-bold text-text-primary tabular-nums"
+      >
+        {{ populationLabel() }}
+      </span>
+      @if (delta(); as delta) {
+        <span
+          [class]="
+            (delta.isPositive
+              ? 'text-success'
+              : delta.isNegative
+                ? 'text-danger'
+                : 'text-text-muted') +
+            ' ' +
+            metrics().hexagonDelta
+          "
+          class="font-display leading-none font-bold tabular-nums"
+        >
+          {{ delta.label }}
+        </span>
+      }
+    </span>
+    @if (compact()) {
+      <span class="sr-only">{{ 'colony.delta' | translate }}</span>
+    }
+  </span>
+</ng-template>
+
+<!-- The three rails, one grammar: a glyph in its socket, a track, then the fact it is worth. Nothing
+     is written under a track — the detail of each one lives in the card its own button opens, so the
+     band keeps a single density. -->
+<!-- Set tight on purpose: the three rails are one reading, not three blocks, and a gap as wide as the
+     rails are tall broke them into a list of unrelated figures. -->
+<ul [class]="metrics().rails">
+  @for (track of tracks(); track track.track) {
+    <li class="group relative flex items-center gap-3">
+      <!-- The glyph is seated in the direction's hexagon, the same socket the population figure and
+           the map's tiles are drawn in — the outline is the rail's own colour, the seat under it the
+           ground it is set in. The rail carries no written name: the socket is the name. -->
+      <span
+        [class]="metrics().socket"
+        aria-hidden="true"
+        class="relative grid shrink-0 place-items-center"
+      >
+        <span [class]="track.socketClass" class="clip-hex absolute inset-0 opacity-40"></span>
+        <span
+          [style.scale]="socketInnerScale"
+          class="clip-hex absolute inset-0 bg-surface-sunken"
+        ></span>
+        <span [class]="track.textClass + ' ' + metrics().socketGlyph" class="relative">
+          @switch (track.glyph) {
+            @case ('FOOD') {
+              <svg lucideWheat></svg>
+            }
+            @case ('PRESENCE') {
+              <svg lucideUserCheck></svg>
+            }
+            @case ('MORALE_GOOD') {
+              <svg lucideSmile></svg>
+            }
+            @case ('MORALE_BAD') {
+              <svg lucideFrown></svg>
+            }
+            @default {
+              <svg lucideMeh></svg>
+            }
+          }
+        </span>
+      </span>
+
+      @if (compact()) {
+        <!-- No button, and no card: a compact band sits inside a link, which may hold neither. What
+             the card would have said is read out here instead, so nothing is lost off the pointer. -->
+        <span class="sr-only">{{ track.ariaLabel }}</span>
+        <span class="block min-w-0 flex-1">
+          <ng-container
+            [ngTemplateOutletContext]="{ $implicit: track }"
+            [ngTemplateOutlet]="rail"
+          ></ng-container>
+        </span>
+      } @else {
+        <!-- The track itself is the button, so its card opens on hover and on keyboard alike. The
+             button carries in `aria-label` everything the card shows, which is what keeps the band
+             free of anything existing only under a pointer. -->
+        <button
+          [attr.aria-label]="track.ariaLabel"
+          class="focus-ring block min-w-0 max-w-[30rem] flex-1 cursor-help"
+          type="button"
+        >
+          <ng-container
+            [ngTemplateOutletContext]="{ $implicit: track }"
+            [ngTemplateOutlet]="rail"
+          ></ng-container>
+        </button>
+      }
+
+      <!-- The fact, and nothing under it. What the fact *does* is the card's job: three captions
+           stacked here turned one reading into three, and the socket beside the track already names
+           what is being counted.
+
+           A column just wide enough for the longest of the three figures, so the numbers still line
+           up with one another while sitting against the end of their own rail. -->
+      <div [class]="metrics().value" class="shrink-0 text-right">
+        <p
+          [class]="track.textClass"
+          class="font-display leading-none font-bold whitespace-nowrap tabular-nums"
+        >
+          {{ track.valueLabel }}
+        </p>
+      </div>
+
+      <!-- What the rail itself cannot hold. Drawn from the same floating surface the map's hover card
+           is. Purely a pointer enhancement — the button's own `aria-label` says the same thing — so it
+           is dropped below `sm`, where there is no hover and no room to float it. -->
+      @if (!compact()) {
+        <div
+          [class]="tooltipSurfaceClass"
+          aria-hidden="true"
+          class="pointer-events-none absolute top-full left-0 z-30 mt-2.5 hidden w-72 px-4 py-3.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none sm:block"
+        >
+          <p class="flex items-baseline justify-between gap-3">
+            <span class="label-caption text-text-muted">{{ track.label }}</span>
+            <span [class]="track.textClass" class="font-mono text-2xs font-medium tabular-nums">
+              {{ track.valueLabel }}
+            </span>
+          </p>
+
+          <!-- One swatch per band of the track, each worth the width of its own band rather than the
+               point where it ends. -->
+          @if (track.legend.length > 0) {
+            <ul class="mt-3 flex flex-col gap-2">
+              @for (entry of track.legend; track entry.label) {
+                <li class="label-caption flex items-center gap-2 text-text-secondary">
+                  <span [class]="entry.colorClass" class="clip-hex block h-2.5 w-2"></span>
+                  {{ entry.label }}
+                </li>
+              }
+            </ul>
+          }
+
+          <!-- The roster, pip by pip. Lit when the player cleared the threshold, half-lit when they
+               played under it — an evening of two deathmatches brings food in and still does not
+               count, and drawing that as "did not play" would be false. The unlit pips are the social
+               engine of the whole feature. -->
+          @if (track.track === 'PRESENCE') {
+            <ul class="mt-3 flex flex-wrap gap-2">
+              @for (pip of presencePips(); track pip.playerId) {
+                <li class="flex w-7 flex-col items-center gap-1">
+                  <span [class]="pip.fillClass" class="clip-hex block h-3.5 w-3"></span>
+                  <span
+                    [class]="pip.state === 'NONE' ? 'text-text-muted' : 'text-text-secondary'"
+                    class="label-caption"
+                  >
+                    {{ pip.initials }}
+                  </span>
+                </li>
+              }
+            </ul>
+          }
+
+          @if (track.note) {
+            <p class="mt-3 text-sm leading-relaxed text-text-secondary">{{ track.note }}</p>
+          }
+        </div>
+      }
+    </li>
+  }
+</ul>
+
+<!-- The track of one rail, drawn the same whether it is seated in a button or in a plain span. -->
+<ng-template #rail let-track>
+  <app-progress-bar
+    [colorClass]="track.primaryClass"
+    [heightClass]="metrics().barHeight"
+    [percentage]="track.percentage"
+    [secondaryColorClass]="track.secondaryClass"
+    [secondaryPercentage]="track.secondaryPercentage"
+    class="block w-full"
+    radiusClass="rounded-full"
+  />
+</ng-template>

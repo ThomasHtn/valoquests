@@ -15,9 +15,10 @@ import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
+import io.github.thomashtn.valoquests.colony.ColonyRuleset;
 import io.github.thomashtn.valoquests.colony.dto.ColonyResponse;
 import io.github.thomashtn.valoquests.colony.entity.ColonyDailySnapshot;
-import io.github.thomashtn.valoquests.colony.model.ColonyGauge;
+import io.github.thomashtn.valoquests.colony.model.ColonyPresenceState;
 import io.github.thomashtn.valoquests.colony.repository.ColonyDailySnapshotRepository;
 import io.github.thomashtn.valoquests.colony.service.ColonyQueryService;
 import io.github.thomashtn.valoquests.colony.service.ColonyReplayService;
@@ -36,6 +37,7 @@ import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.run.entity.Run;
 import io.github.thomashtn.valoquests.run.repository.RunRepository;
 import io.github.thomashtn.valoquests.run.service.RunService;
+import io.github.thomashtn.valoquests.scoring.model.BossCategory;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -80,6 +82,12 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
 
     /** Roster the run is measured against. */
     private static final int ROSTER_SIZE = 3;
+
+    /** Materials three players completing one HARD challenge each are worth. */
+    private static final int CHALLENGE_MATERIALS = 3 * 32;
+
+    /** Category the fixture fight was drawn at, read off the seeded catalogue. */
+    private BossCategory seededBossCategory;
 
     /** Player repository. */
     @Autowired
@@ -141,6 +149,10 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
     @Autowired
     private MutableClock mutableClock;
 
+    /** Calibration the expected figures are derived from. */
+    @Autowired
+    private ColonyRuleset ruleset;
+
     /**
      * Verifies a week of play end to end: one snapshot a day, the rollover's materials on the eighth,
      * and the capacity they unlock.
@@ -164,9 +176,39 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(snapshots.subList(0, 7))
             .allSatisfy(snapshot -> assertThat(snapshot.getMaterials()).isZero());
 
-        // Day eight credits three players' HARD challenge, at 32 each, plus 400 for the boss.
-        assertThat(snapshots.getLast().getMaterials()).isEqualTo(3 * 32 + 400);
-        assertThat(snapshots.getLast().getCapacity()).isEqualTo(3_000);
+        // Day eight credits three players' HARD challenge, at 32 each, plus the fight, priced per
+        // player of the frozen roster, plus whatever the week's leftover food converted to.
+        int expectedFloor = CHALLENGE_MATERIALS + bossMaterials();
+
+        assertThat(snapshots.getLast().getMaterials()).isGreaterThanOrEqualTo(expectedFloor);
+        assertThat(snapshots.getLast().getCapacity())
+            .isEqualTo(ruleset.capacityFor(ROSTER_SIZE, snapshots.getLast().getMaterials()));
+
+        // The fight is the only thing that moves the morale, and it moved it exactly once.
+        assertThat(snapshots.subList(0, 7))
+            .allSatisfy(snapshot ->
+                assertThat(snapshot.getMorale().doubleValue()).isEqualTo(ruleset.initialMorale()));
+        assertThat(snapshots.getLast().getMorale().doubleValue())
+            .isEqualTo(ruleset.initialMorale() + ruleset.moraleForDefeatedBoss(seededBossCategory));
+    }
+
+    /**
+     * Verifies the food stock is a seven-day window rather than a reserve: an eighth day of the same
+     * play leaves it exactly where the seventh did.
+     */
+    @Test
+    void shouldHoldTheFoodStockToSevenDays() {
+        Run run = seedRunAndWeekOfPlay();
+        mutableClock.setInstant(RUN_START.plus(java.time.Duration.ofDays(7)));
+        replayService.replayCurrentRun();
+
+        List<ColonyDailySnapshot> snapshots =
+            snapshotRepository.findAllByRunIdOrderByDayAsc(run.getId());
+
+        // Day seven closed a full window; day eight brought nothing in and dropped day one out.
+        assertThat(snapshots.get(6).getFoodStock().doubleValue()).isPositive();
+        assertThat(snapshots.get(7).getFoodStock().doubleValue())
+            .isLessThan(snapshots.get(6).getFoodStock().doubleValue());
     }
 
     /**
@@ -190,8 +232,8 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies that archiving a player mid-run changes no day already computed.
      *
-     * <p>Two things make this hold. The roster size is frozen on the run, so the Energy denominator
-     * cannot move; and the gauges count every player's matches whatever their status, so a player
+     * <p>Two things make this hold. The roster size is frozen on the run, so the turnout denominator
+     * cannot move; and the reader counts every player's matches whatever their status, so a player
      * leaving the roster does not retroactively erase the games they played.
      */
     @Test
@@ -234,8 +276,8 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Verifies that the query service reads the colony back with its run position, its buildings and
-     * the gauge that is limiting it.
+     * Verifies that the query service reads the colony back with its run position, its two ceilings and
+     * its ladder.
      */
     @Test
     void shouldReadTheColonyBackThroughTheApi() {
@@ -248,18 +290,49 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(colony.runDay()).isEqualTo(8);
         assertThat(colony.runDayCount()).isEqualTo(71);
         assertThat(colony.runWeekIndex()).isEqualTo(2);
-        assertThat(colony.materials()).isEqualTo(3 * 32 + 400);
-        assertThat(colony.capacity()).isEqualTo(3_000);
-        assertThat(colony.maximumCapacity()).isEqualTo(7_000);
+        assertThat(colony.materials()).isGreaterThanOrEqualTo(CHALLENGE_MATERIALS + bossMaterials());
+        assertThat(colony.capacity())
+            .isEqualTo(ruleset.capacityFor(ROSTER_SIZE, colony.materials()));
         assertThat(colony.defeatedBosses()).isEqualTo(1);
         assertThat(colony.bossCount()).isEqualTo(10);
-        assertThat(colony.buildings()).hasSize(4);
-        assertThat(colony.nextTier().materialsThreshold()).isEqualTo(2_500);
         assertThat(colony.population()).isPositive();
 
-        // Three players out of three turned up on the last day, so Energy is saturated and Food, fed
-        // by a single match each, is what holds the colony back.
-        assertThat(colony.limitingGauge()).isEqualTo(ColonyGauge.FOOD);
+        // The two ceilings, always handed over together. Three players open on 900 places, so their
+        // production outruns their housing early on and it is the housing that commands.
+        assertThat(colony.capacity()).isLessThan(colony.feedablePopulation());
+        assertThat(colony.feedablePopulation())
+            .isEqualTo((int) Math.round(colony.foodStock() * ruleset.inhabitantsPerFood()));
+
+        // The ladder always has a next step, since it has no end.
+        assertThat(colony.nextTier().threshold())
+            .isEqualTo(colony.tier().threshold() + ruleset.tierStep());
+        assertThat(colony.missingCapacity())
+            .isEqualTo(colony.nextTier().threshold() - colony.capacity());
+
+        // Ten weeks, whether or not a fight has been drawn for them.
+        assertThat(colony.weeks()).hasSize(10);
+        assertThat(colony.weeks().getFirst().housingGain())
+            .isEqualTo(ruleset.housingForMaterials(bossMaterials()));
+
+        // Nobody played the Monday itself, so the roster shows up but nobody counts.
+        assertThat(colony.presence().rosterSize()).isEqualTo(ROSTER_SIZE);
+        assertThat(colony.presence().present()).isZero();
+        assertThat(colony.presence().players())
+            .hasSize(ROSTER_SIZE)
+            .allSatisfy(player -> assertThat(player.state()).isEqualTo(ColonyPresenceState.NONE));
+
+        // Morale moved on the fight and on nothing else.
+        assertThat(colony.morale().value())
+            .isEqualTo(ruleset.initialMorale() + ruleset.moraleForDefeatedBoss(seededBossCategory));
+    }
+
+    /**
+     * Returns what the fixture fight pays, priced per player of the frozen roster.
+     *
+     * @return the fight's materials
+     */
+    private int bossMaterials() {
+        return ruleset.materialsForDefeatedBoss(seededBossCategory, ROSTER_SIZE);
     }
 
     /**
@@ -425,6 +498,7 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
      */
     private void persistDefeatedBoss(Run run) {
         BossCatalogEntry catalogEntry = bossCatalogEntryRepository.findAll().getFirst();
+        seededBossCategory = catalogEntry.getCategory();
 
         WeeklyBossEncounter encounter = new WeeklyBossEncounter();
         encounter.setWeekStart(FIRST_WEEK);
@@ -449,12 +523,12 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
         return snapshotRepository.findAllByRunIdOrderByDayAsc(run.getId()).stream()
             .map(snapshot -> new SnapshotValues(
                 snapshot.getDay(),
-                snapshot.getFood(),
-                snapshot.getEnergy(),
+                snapshot.getFoodStock(),
+                snapshot.getMorale(),
                 snapshot.getPopulation(),
                 snapshot.getMaterials(),
                 snapshot.getCapacity(),
-                snapshot.getActivePlayerCount()
+                snapshot.getPresenceCount()
             ))
             .toList();
     }
@@ -462,22 +536,22 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * One snapshot reduced to the values a replay must reproduce exactly.
      *
-     * @param day               calendar day
-     * @param food              Food gauge
-     * @param energy            Energy gauge
-     * @param population        population
-     * @param materials         cumulative materials
-     * @param capacity          capacity
-     * @param activePlayerCount distinct active players
+     * @param day           calendar day
+     * @param foodStock     food of the last seven days
+     * @param morale        morale the day ended on
+     * @param population    population
+     * @param materials     cumulative materials
+     * @param capacity      housing available
+     * @param presenceCount players who cleared the turnout threshold
      */
     private record SnapshotValues(
         LocalDate day,
-        BigDecimal food,
-        BigDecimal energy,
+        BigDecimal foodStock,
+        BigDecimal morale,
         BigDecimal population,
         int materials,
         int capacity,
-        int activePlayerCount
+        int presenceCount
     ) {
     }
 

@@ -1,123 +1,189 @@
-import { ColonyBuilding, ColonyGauge } from './colony.model';
+import { ColonyPresenceState, ColonyTierState, ColonyWeekOutcomeState } from './colony.model';
+import { ColonyTrack } from './colony-gauge.utils';
 
 /**
- * One gauge, resolved into everything the page lays out.
+ * The glyph seated in a rail's hexagonal socket.
+ *
+ * Morale carries a face rather than a heart or a banner: a heart is hit points, which is exactly the
+ * bar this replaced, and a banner does not say whether the morale is good. The three faces are set at
+ * what a single fight moves in a week, so the glyph changes about as often as the fight does.
  */
-export interface ColonyGaugeView {
-  readonly gauge: ColonyGauge;
+export type ColonyTrackGlyph =
+  'FOOD' | 'PRESENCE' | 'MORALE_GOOD' | 'MORALE_NEUTRAL' | 'MORALE_BAD';
+
+/**
+ * One swatch of a rail's hover card: a mark in the band's own colour, and what that band is worth.
+ *
+ * Each swatch is worth <b>the width of its own band</b>, never the point where it ends. Writing the
+ * whole stock against the bright band, which is only the surplus, gave a reader who lined the two up
+ * a number that was not the one they were looking at.
+ */
+export interface ColonyTrackLegendView {
+  readonly colorClass: string;
+  readonly label: string;
+}
+
+/**
+ * One rail of the resource band, resolved into everything the page lays out.
+ *
+ * The band draws three rails and writes no label on any of them: the glyph in the socket names the
+ * rail, and the figure and subtitle on its trailing edge say what it is worth. `label` stays in the
+ * markup for assistive technology, which has neither a glyph nor a hover.
+ */
+export interface ColonyTrackView {
+  readonly track: ColonyTrack;
+  readonly glyph: ColonyTrackGlyph;
 
   /**
-   * Single letter carried by the gauge's hexagonal badge.
-   */
-  readonly initial: string;
-
-  /**
-   * Already-translated gauge name.
+   * Already-translated rail name, for assistive technology only.
    */
   readonly label: string;
 
+  /**
+   * Where the first band ends: what the town already eats, or the morale's unreachable floor.
+   */
   readonly percentage: number;
 
   /**
-   * Already-formatted value, to one decimal.
+   * Where the second band ends, or `null` on a single-band rail.
+   */
+  readonly secondaryPercentage: number | null;
+
+  /**
+   * The fact, on the rail's trailing edge. Two numbers on the food rail, smallest first, because
+   * they are not of the same kind: one is what the meals allow, the other what the housing allows.
    */
   readonly valueLabel: string;
 
   /**
-   * What the gauge is, in one already-translated sentence: what feeds it, how it is played and what
-   * the day moved on it. The band draws the gauges as bars alone, so the hover card this fills is
-   * the only place a reader is told what a bar means. The name and the figure are laid out around
-   * it rather than baked in.
+   * Already-translated sentence the rail's hover card shows, and the button's own accessible name —
+   * so nothing on the band exists only on hover.
    */
-  readonly descriptionLabel: string;
+  readonly ariaLabel: string;
 
   /**
-   * Tailwind background utility for the bar's fill and the gauge's hexagonal badge.
+   * Swatches the rail's hover card lists, empty on a rail whose card shows something else.
+   */
+  readonly legend: readonly ColonyTrackLegendView[];
+
+  /**
+   * One already-translated line closing that card, empty when there is nothing to add.
+   */
+  readonly note: string;
+
+  /**
+   * Tailwind background utility of the rim around the rail's glyph socket.
+   *
+   * The rail's own colour at full strength, on all three rails, so the three sockets read as one
+   * family. Deliberately not the first band's utility: that one is muted on two rails out of three,
+   * which drew a bright cyan rim beside two washed-out ones.
+   */
+  readonly socketClass: string;
+
+  /**
+   * Tailwind background utility of the first band.
+   */
+  readonly primaryClass: string;
+
+  /**
+   * Tailwind background utility of the second band, empty on a single-band rail.
+   */
+  readonly secondaryClass: string;
+
+  readonly textClass: string;
+}
+
+/**
+ * One pip of the turnout card: a player of the roster, lit by how far into the day they got.
+ */
+export interface ColonyPresencePipView {
+  readonly playerId: number;
+  readonly name: string;
+  readonly state: ColonyPresenceState;
+
+  /**
+   * Two or three letters under the pip. Enough to recognise a squad of seven, short enough that
+   * seven of them fit on one line.
+   */
+  readonly initials: string;
+
+  /**
+   * Tailwind background utility: lit, half-lit, or the empty track's own colour.
    */
   readonly fillClass: string;
 
   /**
-   * Tailwind text utility matching {@link fillClass}.
+   * Already-translated name and state, since the pip itself carries neither in text.
    */
-  readonly textClass: string;
-
-  /**
-   * Whether this gauge is the one currently setting the equilibrium population.
-   */
-  readonly isLimiting: boolean;
-
-  /**
-   * Level the bar draws its reference tick at: where this gauge settles if the recent rhythm
-   * holds. What turns a bar sitting at 33 from a famine into a colony on its mark.
-   */
-  readonly equilibriumPercentage: number;
-
-  /**
-   * Already-formatted equilibrium, to one decimal, for the reading beside the bar.
-   */
-  readonly equilibriumLabel: string;
+  readonly ariaLabel: string;
 }
 
 /**
- * How far a run has got with one building.
+ * One step of the ladder, resolved into everything the panel lays out.
  */
-export type ColonyBuildingState = 'erected' | 'next' | 'locked';
-
-/**
- * One building tier, resolved into everything the page lays out.
- */
-export interface ColonyBuildingView {
-  readonly building: ColonyBuilding;
+export interface ColonyTierStepView {
+  readonly threshold: number;
+  readonly state: ColonyTierState;
 
   /**
-   * Already-translated building name.
+   * Already-translated step name, citadel number included.
    */
   readonly name: string;
-  readonly state: ColonyBuildingState;
 
   /**
-   * Already-formatted capacity the tier opens.
+   * The figure beside the name. On the step the town sits in this is what it is climbing
+   * <b>towards</b>, not where it stands: read at the top of a row, in the row's own weight, the
+   * town's housing was taken for the target, which is the one thing it is not. Where it stands is
+   * on the bar's own tooltip instead, in {@link progressLabel}.
    */
-  readonly capacityLabel: string;
+  readonly valueLabel: string;
 
   /**
-   * Already-translated sub-line: what it cost and when it went up, or what is still missing.
+   * Progress towards the next step, or `null` on every step but the town's own.
    */
-  readonly detailLabel: string;
+  readonly progressPercentage: number | null;
+
+  /**
+   * Already-translated sentence the bar hands to its tooltip: where the town stands, what the step
+   * it is climbing runs to, and what is left to cross it. Empty off the active step.
+   *
+   * In a tooltip rather than under the bar: a second row of figures under the active step was read
+   * as the step's own target, which is what the figure beside the name already is. The bar carries
+   * the position, and only says it in figures when asked.
+   */
+  readonly progressLabel: string;
 }
 
 /**
- * How one week of the run's boss row ended.
- */
-export type ColonyBossState = 'defeated' | 'survived' | 'current' | 'upcoming';
-
-/**
- * One of the run's ten fights, resolved into everything the page lays out.
+ * One of the run's ten fights, resolved into everything the map lays out.
  */
 export interface ColonyBossView {
   /**
    * Week of the run, from one.
    */
   readonly weekIndex: number;
-  readonly state: ColonyBossState;
+  readonly state: ColonyWeekOutcomeState;
 
   /**
-   * Already-translated accessible name for the hexagon.
+   * Already-formatted housing the fight is worth, written on the week's own territory: `+210` when
+   * it was taken, `0` when the boss held, empty on a week not yet reached.
+   *
+   * Housing rather than materials or morale. Materials are an intermediate currency the player never
+   * handles, housing is the axis the whole page already counts in, and it is the only part of a
+   * fight's reward still standing on settlement day.
    */
-  readonly label: string;
+  readonly housingLabel: string;
 
   /**
-   * Already-formatted materials at stake on this week: what the fight brought in once it is won,
-   * what it stands to bring in until then. The figure is the same either way — see
-   * {@link materialsEarned} for which of the two it is.
+   * Whether that housing is banked or still on the table.
    */
-  readonly materialsLabel: string;
+  readonly housingEarned: boolean;
 
   /**
-   * Whether those materials are banked or still on the table, which is what separates a haul from
-   * a prize.
+   * The full sentence the tile's title carries: the week, the outcome, its materials, the housing
+   * they buy and the morale it moved. Morale does not fit on a tile and lives here instead.
    */
-  readonly materialsEarned: boolean;
+  readonly detailLabel: string;
 }
 
 /**
@@ -140,16 +206,26 @@ export interface ColonyRunView {
    * Already-formatted final population, the run's score.
    */
   readonly finalLabel: string;
+}
+
+/**
+ * What the night moved, and which way.
+ *
+ * Carried as a pair rather than as a signed string alone: the figure is coloured by its direction,
+ * and a template deriving that from a leading `-` would break the moment the language changes its
+ * minus sign.
+ */
+export interface ColonyDeltaView {
+  /**
+   * Already-formatted movement, sign always shown.
+   */
+  readonly label: string;
 
   /**
-   * Buildings earned over the three a run can put up, the free starting camp excluded.
+   * Whether the town grew. A night that moved nobody counts as neither, and reads muted.
    */
-  readonly buildingsLabel: string;
-
-  /**
-   * Bosses put down over the ten a run holds.
-   */
-  readonly bossesLabel: string;
+  readonly isPositive: boolean;
+  readonly isNegative: boolean;
 }
 
 /**

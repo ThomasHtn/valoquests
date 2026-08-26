@@ -61,31 +61,18 @@
       }
     },
     "players": {
-      "title": "Joueurs",
-      "heading": "Escouade",
-      "rosterSection": "Effectif",
-      "addPlayer": "Ajouter un joueur",
-      "edit": "Modifier",
       "activate": "Activer",
-      "deactivate": "Désactiver",
-      "restore": "Restaurer",
-      "loading": "Chargement de l'effectif…",
-      "error": "Impossible de charger l'effectif.",
-      "empty": "Aucun joueur suivi.",
-      "neverSynchronized": "Jamais synchronisé",
-      "created": "Joueur ajouté à l'effectif.",
-      "updated": "Joueur mis à jour.",
-      "statusChanged": "Statut mis à jour.",
+      "addPlayer": "Ajouter un joueur",
       "archived": "Joueur archivé : des semaines closes en dépendent. Il reste restaurable.",
-      "deleted": "Joueur supprimé définitivement.",
       "columns": {
         "lastSync": "Dernière synchro"
       },
-      "status": {
-        "ACTIVE": "Actif",
-        "INACTIVE": "Inactif",
-        "ARCHIVED": "Archivé"
-      },
+      "created": "Joueur ajouté à l'effectif.",
+      "deactivate": "Désactiver",
+      "deleted": "Joueur supprimé définitivement.",
+      "edit": "Modifier",
+      "empty": "Aucun joueur suivi.",
+      "error": "Impossible de charger l'effectif.",
       "form": {
         "createHeading": "Nouveau joueur",
         "editHeading": "Modifier le joueur",
@@ -95,13 +82,28 @@
         "portraitNone": "Aucun avatar",
         "status": "Statut initial"
       },
+      "frozenRoster": "La run {{run}} tourne sur un roster figé à {{roster}} joueurs. Activer ou désactiver quelqu'un ici ne prendra effet qu'à la run suivante.",
+      "heading": "Escouade",
+      "idle": "Aucun match depuis quatorze jours. Un joueur actif qui ne joue plus agrandit la ville sans la nourrir, et coûte environ 5 % du score final.",
+      "loading": "Chargement de l'effectif…",
+      "neverSynchronized": "Jamais synchronisé",
       "remove": {
         "action": "Retirer",
         "heading": "Retirer du roster",
         "confirm": "Retirer",
         "archiveBody": "Ce joueur a participé à la campagne : il sera archivé, pas supprimé. Il disparaît de l'application publique et n'est plus synchronisé, mais les semaines closes qui le citent restent lisibles. Tu pourras le restaurer.",
         "deleteBody": "Ce joueur n'a participé à aucune campagne : il sera supprimé définitivement, avec ses matchs et ses traces de synchronisation. Cette action est irréversible."
-      }
+      },
+      "restore": "Restaurer",
+      "rosterSection": "Effectif",
+      "status": {
+        "ACTIVE": "Actif",
+        "INACTIVE": "Inactif",
+        "ARCHIVED": "Archivé"
+      },
+      "statusChanged": "Statut mis à jour.",
+      "title": "Joueurs",
+      "updated": "Joueur mis à jour."
     },
     "maintenance": {
       "title": "Maintenance",
@@ -190,9 +192,9 @@
     "heading": "La campagne de l'escouade",
     "historyToggle": "Historique",
     "legend": {
-      "current": "Semaine en cours",
-      "defeated": "Territoire conquis",
-      "survived": "Boss non vaincu",
+      "current": "En combat",
+      "defeated": "Conquis",
+      "survived": "Perdu",
       "upcoming": "À venir"
     },
     "loading": "Chargement de la campagne…",
@@ -204,94 +206,88 @@
     "viewLabel": "Vue de la campagne"
   },
   "colony": {
-    "alertBanner": "La colonie décroche. Une journée de jeu à plusieurs la fait remonter : rien n'est jamais définitivement perdu.",
     "boss": {
-      "week": "Semaine {{week}} · {{status}}",
-      "status": {
-        "defeated": "vaincu",
-        "survived": "survivant",
-        "current": "en cours",
-        "upcoming": "à venir"
+      "undrawn": "Semaine {{week}} : aucun boss tiré.",
+      "category": {
+        "MINOR": "mineur",
+        "STANDARD": "standard",
+        "ELITE": "élite"
       },
-      "materials": "+{{materials}}"
+      "detail": {
+        "DEFEATED": "Semaine {{week}} : boss {{category}} vaincu. {{materials}} matériaux, soit +{{housing}} habitations, et {{morale}} moral.",
+        "SURVIVED": "Semaine {{week}} : le boss {{category}} a survécu. Aucun matériau, et {{morale}} moral.",
+        "CURRENT": "Semaine {{week}} : boss {{category}} en cours. {{materials}} matériaux en jeu, soit +{{housing}} habitations, et {{morale}} moral.",
+        "UPCOMING": "Semaine {{week}} : boss {{category}} à venir. {{materials}} matériaux en jeu, soit +{{housing}} habitations."
+      }
     },
-    "building": {
-      "CAMP": "Campement",
-      "BARRACKS": "Baraquements",
-      "RESIDENTIAL_QUARTER": "Quartier résidentiel",
-      "CITADEL": "Citadelle",
-      "erected": "{{materials}} matériaux · érigé au jour {{day}}",
-      "missing": "{{materials}} matériaux · {{missing}} restants"
-    },
-    "capacity": "Capacité",
-    "capacitySource": "Capacité · {{building}}",
+    "bosses": "Boss",
     "curve": {
+      "title": "Population de la run",
+      "open": "Voir la population de la run",
+      "close": "Fermer la population de la run",
       "axis": "Jour de la run",
       "caption": "Pic {{peak}} · Moyenne {{average}}",
-      "close": "Fermer la population de la run",
       "day": "J{{day}}",
-      "detail": "Capacité {{capacity}} · joueurs actifs : {{players}}",
-      "milestone": "{{building}} · J{{day}}",
-      "open": "Voir la population de la run",
-      "title": "Population de la run"
+      "detail": "Nourrissables {{feedable}} · logeables {{capacity}}",
+      "milestone": "{{tier}} · J{{day}}"
     },
-    "error": "Impossible de charger la colonie.",
+    "delta": "cette nuit",
     "eyebrow": "Campagne · Run {{run}} · Semaine {{week}} sur {{weeks}}",
-    "gauge": {
-      "FOOD": {
-        "name": "Nourriture",
-        "rule": "Jouer un peu chaque jour",
-        "detail": "Elle se nourrit des dégâts infligés dans la journée, et perd chaque jour 14 × population / capacité."
-      },
-      "ENERGY": {
-        "name": "Énergie",
-        "rule": "Jouer à plusieurs",
-        "detail": "Elle se nourrit du nombre de joueurs présents dans la journée, et perd chaque jour 14 × population / capacité."
-      },
-      "movement": "{{gain}} pour {{loss}} de perte",
-      "description": "{{detail}} Pour la faire monter : {{rule}}. Aujourd'hui, {{movement}}. {{settling}}",
-      "settling": "Elle sature au-dessus de ce que la colonie consomme et se stabilise à {{level}} : son surplus est perdu.",
-      "settlingLimiting": "C'est elle qui limite la colonie en ce moment : au rythme actuel elle se stabilise à {{level}}, et c'est ce niveau que marque le repère sur la barre."
-    },
-    "heading": "La colonie de l'escouade",
-    "health": "Santé",
-    "healthNote": "Moyenne géométrique des deux jauges",
-    "healthDescription": "Moyenne géométrique de la nourriture et de l'énergie : elle ne remonte que si les deux remontent, et la plus basse des deux la tire vers le bas.",
+    "hexagonAria": "Population : {{population}} habitants sur {{capacity}} logeables, {{change}} cette nuit. Ouvrir la courbe de la run.",
     "history": {
       "title": "Historique des runs",
+      "run": "Run {{run}}",
       "column": "Run",
       "columnHint": "Une campagne de dix semaines, la run en cours en tête et les précédentes en dessous.",
-      "run": "Run {{run}}",
-      "final": "Finale",
-      "finalHint": "Population atteinte à la fin de la run, son score. Celle de la run en cours bouge encore.",
-      "buildings": "Bât.",
-      "buildingsHint": "Bâtiments construits sur ceux qu'une run peut ériger, le camp de départ offert exclu.",
-      "bosses": "Boss",
-      "bossesHint": "Boss vaincus sur ceux que la run oppose, un par semaine."
+      "final": "Score",
+      "finalHint": "La population du jour de solde, une fois la dixième semaine créditée."
     },
-    "loading": "Chargement de la colonie…",
+    "ladder": {
+      "title": "Paliers de la ville",
+      "unit": "Logement"
+    },
     "materials": "Matériaux",
-    "nextTier": "Prochain palier · {{building}}",
-    "nextTierProgress": "{{materials}} / {{threshold}} matériaux · il manque {{missing}}",
     "population": "Population",
+    "presence": {
+      "FULL": "{{name}} a joué aujourd'hui",
+      "PARTIAL": "{{name}} a joué, sous le seuil",
+      "NONE": "{{name}} n'a pas joué"
+    },
     "runDay": "Jour {{day}} / {{days}}",
-    "runDayHint": "Jour en cours de la campagne, sur les {{days}} jours qu'elle dure.",
+    "runDayHint": "Une run dure {{days}} jours : dix semaines, plus un jour de solde dont la population est le score.",
     "runDayWord": "Jour",
-    "title": "Colonie",
-    "upgradeState": {
-      "erected": "Débloqué",
-      "next": "En cours",
-      "locked": "Verrouillé"
+    "tier": {
+      "CAMP": "Campement",
+      "HAMLET": "Hameau",
+      "VILLAGE": "Village",
+      "BOROUGH": "Bourg",
+      "TOWN": "Ville",
+      "CITY": "Cité",
+      "RESIDENTIAL_QUARTER": "Quartier résidentiel",
+      "GREAT_CITY": "Grande cité",
+      "METROPOLIS": "Métropole",
+      "MEGALOPOLIS": "Mégalopole",
+      "CAPITAL": "Capitale",
+      "CITADEL": "Citadelle niveau {{level}}"
     },
-    "upgrades": "Améliorations",
-    "equilibrium": {
-      "caption": "Équilibre",
-      "label": "À votre rythme des sept derniers jours, la colonie se stabilise autour de {{share}} % de sa capacité, soit {{population}} habitants. Plafond fixé par la jauge {{gauge}} : la moins nourrie des deux décide seule, l'autre sature et perd son surplus."
-    },
-    "upkeep": {
-      "caption": "Ce soir",
-      "label": "À minuit, la colonie consommera {{loss}} sur chacune des deux jauges. Pour l'absorber il faut {{damage}} dégâts (environ {{matches}} parties) et {{players}} joueurs différents dans la journée. Les deux, pas l'un ou l'autre : les dégâts remplissent la nourriture, les joueurs remplissent l'énergie.",
-      "idle": "La colonie est vide, elle ne consomme rien. La première journée jouée y installe des habitants."
+    "tierProgress": "{{current}} logements sur les {{target}} du palier. Encore {{missing}} pour atteindre {{name}}.",
+    "track": {
+      "food": {
+        "name": "Nourriture",
+        "eaten": "mangé {{food}}/sem",
+        "surplus": "surplus {{food}}/sem",
+        "aria": "Nourriture : {{eaten}} mangés par semaine, {{surplus}} de surplus. Le surplus est ce qui fait venir du monde."
+      },
+      "presence": {
+        "name": "Présence",
+        "aria": "Présence : {{present}} joueurs sur {{roster}} ont joué aujourd'hui. Il faut {{threshold}} dégâts bruts dans la journée pour compter."
+      },
+      "morale": {
+        "name": "Moral",
+        "floor": "plancher {{floor}}",
+        "note": "Seuls les boss font bouger le moral, et il n'accélère que la montée.",
+        "aria": "Moral : {{value}} sur {{ceiling}}, plancher à {{floor}}."
+      }
     }
   },
   "landing": {
@@ -328,7 +324,7 @@
       "loading": "Chargement du boss…"
     },
     "colonySummary": {
-      "hint": "La colonie de la campagne en cours : sa population, les ressources qui la soutiennent et le jour atteint.",
+      "hint": "La colonie de la campagne en cours : sa population, ce qu'elle mange, la présence de l'escouade et son moral.",
       "link": "Voir la campagne"
     },
     "header": {
@@ -678,6 +674,18 @@
         "difficultyLabel": "Difficulté",
         "title": "Cinq défis, un par difficulté"
       },
+      "colony": {
+        "title": "La colonie",
+        "description": "Vous jouez, ça produit de la nourriture. La nourriture dit combien d'habitants la ville peut nourrir. Chaque nuit, la ville se rapproche un peu de ce nombre. Il n'y a pas d'autre règle de population.",
+        "facts": {
+          "harvest": "85 dégâts font 1 nourriture. Une compétitive moyenne en vaut donc 5, et ce sont les dégâts du barème, déjà passés par le dégressif de la journée.",
+          "feeds": "1 nourriture nourrit 8 habitants. C'est la seule constante qui relie la nourriture à la population.",
+          "eats": "La ville mange population / 8 par semaine. Plus elle est grande, plus elle mange, donc le surplus fond tout seul à mesure qu'elle grandit.",
+          "window": "Seuls les sept derniers jours comptent. Chaque nuit, la journée d'aujourd'hui entre dans le compte et celle d'il y a sept jours en sort : c'est une moyenne, pas une réserve."
+        },
+        "presenceLabel": "La présence",
+        "presence": "Tout ce que vous récoltez dans la journée est multiplié par 1 + (joueurs présents / taille du groupe). Le groupe entier présent fait donc compter la journée double. Un joueur compte s'il a fait plus de 300 dégâts bruts dans la journée, soit une compétitive ou trois deathmatchs : sans ce seuil, un deathmatch de deux minutes suffirait à toucher le maximum."
+      },
       "damage": {
         "description": "Le mode et l'issue du match déterminent les dégâts infligés. Une victoire en compétitif pèse le plus, mais toute partie jouée, gagnée ou non, y contribue.",
         "modeLabel": "Mode de jeu",
@@ -689,6 +697,19 @@
       "eligibility": {
         "description": "Une seule règle, partout : une partie compte si elle s'est jouée dans un mode suivi par le tracker, si elle a joué au moins un round, si tu y as marqué des points, et si ce n'est pas un remake. Un remake, une partie abandonnée ou une file d'attente non reconnue ne rapporte aucun dégât, ne compte pas comme jour joué, et ne fait progresser aucun défi. Elle reste visible dans ton historique : elle a été jouée, elle ne compte simplement pas pour la semaine.",
         "title": "Ce qui compte comme partie jouée"
+      },
+      "night": {
+        "title": "La nuit",
+        "description": "Chaque nuit, la ville comble 15 % de l'écart entre ce qu'elle compte et le plus bas de ses deux plafonds : ce que la nourriture permet, et ce que les habitations permettent.",
+        "gap": "Elle avance vite au début puis de plus en plus lentement, et n'arrive jamais tout à fait au bout. C'est fait exprès : il y a toujours quelque chose à gagner, et jamais un soir où jouer ne sert à rien. Dans l'autre sens, si la nourriture ne suffit plus, elle redescend à la même vitesse.",
+        "moraleLabel": "Le moral, de 1 à 100",
+        "morale": {
+          "MINOR": "Mineur vaincu",
+          "STANDARD": "Standard vaincu",
+          "ELITE": "Élite vaincu",
+          "SURVIVED": "Boss survivant"
+        },
+        "moraleFootnote": "Le moral démarre à 50 et ne dépend que des boss. Il multiplie la vitesse de montée : à 50, la ville comble 7,5 % de l'écart par nuit au lieu de 15 %. Il ne ralentit jamais la descente, et il ne descend jamais sous 1 : à ce niveau la ville ne monte plus du tout, et seul un boss vaincu la relance."
       },
       "progression": {
         "description": "Certains défis ne demandent pas un seuil absolu mais un progrès sur toi-même : dépasser ton propre K/D, ton ACS ou ton taux de headshots des 4 semaines précédentes, d'un pourcentage donné. Enchaîner les parties au même niveau ne les valide pas, puisque la mesure est un taux. Sans historique sur les 4 dernières semaines, le défi reste hors de portée.",
@@ -703,6 +724,13 @@
           "finishingBlow": "Le coup de grâce sur le boss est crédité à part, dans l'historique des combats."
         },
         "title": "Classement & couronne"
+      },
+      "town": {
+        "title": "La ville",
+        "description": "Les habitations valent 300 places par joueur du groupe, plus la moitié des matériaux amassés. Il n'y a pas de seuil à franchir : chaque défi validé agrandit la ville le lundi même, et il n'y a pas de maximum.",
+        "materialsLabel": "Matériaux par défi validé, et par joueur",
+        "tiersLabel": "Les paliers, tous les 500 habitations",
+        "tiersFootnote": "Un boss vaincu rapporte 60, 80 ou 100 matériaux par joueur du groupe, jamais des habitants : des habitants s'effaceraient à 15 % par nuit, alors que des places restent jusqu'au jour de solde. Et chaque lundi, la nourriture que la ville ne peut pas manger est convertie en matériaux, à un mauvais taux : (nourriture − habitations / 8) / 5. Aucune soirée n'est donc jamais perdue."
       }
     },
     "title": "Règles et fonctionnement"

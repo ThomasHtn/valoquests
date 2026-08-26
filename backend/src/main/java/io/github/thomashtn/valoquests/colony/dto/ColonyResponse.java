@@ -1,6 +1,5 @@
 package io.github.thomashtn.valoquests.colony.dto;
 
-import io.github.thomashtn.valoquests.colony.model.ColonyGauge;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.List;
@@ -8,43 +7,44 @@ import java.util.List;
 /**
  * Exposes the colony as it stands today.
  *
- * <p>{@code limitingGauge} and {@code equilibriumPercentage} carry the one property of the model that
- * cannot be read off the gauges themselves: the population settles at
- * {@code capacity x min(Food gain, Energy gain) / 14}, so the gauge that is fed less alone decides how
- * full the colony can get, and the other one saturates and loses its surplus.
+ * <p>The whole model in one sentence: you play, that produces food, food says how many inhabitants the
+ * town can feed, and every night the town closes part of the gap between what it has and what it could
+ * feed. There is no second population rule.
  *
- * <p>Everything settling-related is resolved against the <b>last seven complete days</b>, never against
- * today. Today is a day in progress: before anybody has played it holds no damage and no turnout, so an
- * equilibrium read off it would collapse to zero every morning and climb back through the evening,
- * which is exactly the reading a permanent display must not give.
+ * <p>Two ceilings decide the score and the lower one commands. {@code feedablePopulation} is what the
+ * food allows, {@code capacity} is what the housing allows, and the smaller of the two is what the town
+ * actually climbs towards while the other is wasted. The reader is never asked to make that comparison
+ * in their head: the page says it with the shape of its bars, and the two figures are handed over side
+ * by side, smallest first, so it cannot be read the wrong way round.
  *
- * @param runNumber             sequential number of the run in progress
- * @param runDay                day of the run, from one
- * @param runDayCount           days a run spans, settlement day included
- * @param runWeekIndex          week of the run, from one
- * @param runWeekCount          weeks a run spans
- * @param day                   calendar day this state closes
- * @param food                  Food gauge and today's movement on it
- * @param energy                Energy gauge and today's movement on it
- * @param upkeep                what the colony is about to consume, and what covers it
- * @param healthPercentage      geometric mean of both gauges, in {@code [0, 100]}
- * @param alert                 whether health has fallen under the distress threshold; a display flag
- *     with no mechanical effect
- * @param population            today's population
- * @param targetPopulation      population the colony is heading towards
- * @param populationChange      inhabitants gained or lost today
- * @param dailyMigrationLimit   most inhabitants a single day can bring in
- * @param capacity              capacity the erected buildings open
- * @param maximumCapacity       capacity of the last tier, a run's theoretical maximum score
- * @param materials             cumulative materials
- * @param buildings             every tier, erected or not
- * @param nextTier              tier being worked towards, {@code null} once the last one is up
- * @param limitingGauge         gauge currently setting the equilibrium population
- * @param equilibriumPercentage share of capacity the colony plateaus at if the last seven days' rhythm
- *     holds
- * @param defeatedBosses        bosses put down so far in the run
- * @param bossCount             bosses a run holds
- * @param materialsPerBoss      materials one defeated boss brings in
+ * <p>{@code foodStock} is a seven-day moving average, never a reserve. Today enters the count each night
+ * and the day seven days back leaves it, so a quiet Tuesday dents it instead of emptying it, and three
+ * intense weeks cannot be banked against a month of silence.
+ *
+ * @param runNumber              sequential number of the run in progress
+ * @param runDay                 day of the run, from one
+ * @param runDayCount            days a run spans, settlement day included
+ * @param runWeekIndex           week of the run, from one
+ * @param runWeekCount           weeks a run spans
+ * @param day                    calendar day this state closes
+ * @param population             today's population, which on the settlement day is the run's score
+ * @param populationChange       inhabitants the night moved, negative when the town lost people
+ * @param capacity               housing the frozen roster and the materials open
+ * @param materials              cumulative materials, which never go back down
+ * @param foodStock              food of the last seven days
+ * @param feedablePopulation     inhabitants that food can feed
+ * @param weeklyConsumption      food the town eats in a week
+ * @param weeklySurplus          food left over once the town has eaten, never negative
+ * @param presence               the day's turnout and what it multiplies the harvest by
+ * @param morale                 morale and the speed it buys
+ * @param tier                   step of the ladder the town sits in
+ * @param nextTier               step it is climbing towards
+ * @param missingCapacity        housing still needed to reach that next step
+ * @param tierProgressPercentage how far into the current step the town is, in {@code [0, 100]}
+ * @param ladder                 the steps around the town's own, for the ladder panel
+ * @param weeks                  the run's ten fights and what each was worth in housing
+ * @param defeatedBosses         bosses put down so far in the run
+ * @param bossCount              bosses a run holds
  */
 @Schema(description = "The squad's colony as it stands today.")
 public record ColonyResponse(
@@ -54,30 +54,31 @@ public record ColonyResponse(
     int runWeekIndex,
     int runWeekCount,
     LocalDate day,
-    ColonyGaugeResponse food,
-    ColonyGaugeResponse energy,
-    ColonyUpkeepResponse upkeep,
-    double healthPercentage,
-    boolean alert,
     int population,
-    int targetPopulation,
     int populationChange,
-    int dailyMigrationLimit,
     int capacity,
-    int maximumCapacity,
     int materials,
-    List<ColonyBuildingResponse> buildings,
-    ColonyNextTierResponse nextTier,
-    ColonyGauge limitingGauge,
-    double equilibriumPercentage,
+    double foodStock,
+    int feedablePopulation,
+    double weeklyConsumption,
+    double weeklySurplus,
+    ColonyPresenceResponse presence,
+    ColonyMoraleResponse morale,
+    ColonyTierResponse tier,
+    ColonyTierResponse nextTier,
+    int missingCapacity,
+    double tierProgressPercentage,
+    List<ColonyTierResponse> ladder,
+    List<ColonyWeekResponse> weeks,
     int defeatedBosses,
-    int bossCount,
-    int materialsPerBoss
+    int bossCount
 ) {
+
     /**
      * Creates an immutable colony response.
      */
     public ColonyResponse {
-        buildings = List.copyOf(buildings);
+        ladder = List.copyOf(ladder);
+        weeks = List.copyOf(weeks);
     }
 }

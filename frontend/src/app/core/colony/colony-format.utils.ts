@@ -21,36 +21,40 @@ export function formatPopulation(value: number, language: 'fr' | 'en'): string {
 }
 
 /**
- * Formats a gauge value or a daily movement to one decimal (`72,0`, `11,4`).
+ * Formats a count with its sign always shown (`+92`, `-70`).
  *
- * The gauges move by fractions of a point a day, so rounding them to whole numbers would show two
- * consecutive days as identical when they are not.
+ * What the night moved, and what a fight paid, are both read as directions before they are read as
+ * amounts: a growing town and a shrinking one sit in exactly the same place on the page, so the sign
+ * is what tells them apart rather than their position.
  *
- * @param value - The value to format.
- * @param language - The app language whose decimal separator to use.
- * @returns The value at one decimal.
+ * @param value - The movement to format.
+ * @param language - The app language whose grouping separator to use.
+ * @returns The signed, grouped movement.
  */
-export function formatGauge(value: number, language: 'fr' | 'en'): string {
-  return new Intl.NumberFormat(COLONY_LOCALES[language], {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  }).format(value);
+export function formatSignedPopulation(value: number, language: 'fr' | 'en'): string {
+  // `|| 0` collapses the negative zero `Math.round` returns for a movement just under nothing,
+  // which `Intl` would otherwise print as `-0`.
+  const rounded = Math.round(value) || 0;
+  const sign = rounded > 0 ? '+' : '';
+
+  return `${sign}${formatPopulation(rounded, language)}`;
 }
 
 /**
- * Formats a daily movement with its sign always shown (`+11,4`, `-9,0`).
+ * Formats a multiplier to two decimals (`1,71`).
  *
- * A gain and a loss sit side by side on the same line, so the sign is what tells them apart rather
- * than their position.
+ * The turnout multiplier moves by sevenths, so one decimal would show five players out of seven and
+ * six out of seven as the same figure.
  *
- * @param value - The movement to format.
+ * @param value - The value to format.
  * @param language - The app language whose decimal separator to use.
- * @returns The signed movement at one decimal.
+ * @returns The value at two decimals.
  */
-export function formatSignedGauge(value: number, language: 'fr' | 'en'): string {
-  const sign = value > 0 ? '+' : '';
-
-  return `${sign}${formatGauge(value, language)}`;
+export function formatGauge(value: number, language: 'fr' | 'en'): string {
+  return new Intl.NumberFormat(COLONY_LOCALES[language], {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 /**

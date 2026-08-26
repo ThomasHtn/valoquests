@@ -1,27 +1,48 @@
 import { computed, inject, Service, Signal } from '@angular/core';
 
-import { BossApi } from '@core/boss/boss-api';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Translation } from '@core/i18n/translation';
 import { ChartBar } from '@shared/chart/chart.model';
 import { ColonyApi } from './colony-api';
+import { formatPopulation, formatSignedPopulation } from './colony-format.utils';
+import { colonyTrackColors } from './colony-gauge.utils';
 import {
-  formatGauge,
-  formatPercentage,
-  formatPopulation,
-  formatSignedGauge,
-} from './colony-format.utils';
-import { colonyGaugeColors } from './colony-gauge.utils';
-import { Colony, ColonyBuildingTier, ColonyGauge, ColonyRunHistory } from './colony.model';
+  Colony,
+  ColonyPresencePlayer,
+  ColonyRunHistory,
+  ColonyTier,
+  ColonyWeek,
+} from './colony.model';
 import {
-  ColonyBossState,
   ColonyBossView,
-  ColonyBuildingState,
-  ColonyBuildingView,
-  ColonyGaugeView,
+  ColonyDeltaView,
+  ColonyPresencePipView,
   ColonyRunView,
+  ColonyTierStepView,
+  ColonyTrackGlyph,
+  ColonyTrackView,
   RunDayParts,
 } from './colony-view.model';
+
+/**
+ * Letters of a player's name kept for a turnout pip.
+ *
+ * Three: enough to tell a squad of seven apart, short enough that seven of them fit on one line of
+ * the hover card without wrapping.
+ */
+const INITIALS_LENGTH = 3;
+
+/**
+ * Morale from which the face in the socket smiles.
+ *
+ * Seventy: at least one fight's worth of morale ahead of the fifty a run opens on.
+ */
+const MORALE_GOOD = 70;
+
+/**
+ * Morale below which it frowns, close enough to the floor to say so.
+ */
+const MORALE_BAD = 40;
 
 /**
  * The squad's colony, resolved once into everything the page lays out.
@@ -40,11 +61,6 @@ export class ColonyView {
   private readonly colonyApi = inject(ColonyApi);
 
   /**
-   * Data-access service backing the run's fights, which the boss row reads.
-   */
-  private readonly bossApi = inject(BossApi);
-
-  /**
    * i18n service resolving every translated label baked into a view model.
    */
   private readonly translation = inject(Translation);
@@ -55,8 +71,6 @@ export class ColonyView {
   private readonly colonyResource = this.colonyApi.colony;
   private readonly trajectoryResource = this.colonyApi.trajectory;
   private readonly historyResource = this.colonyApi.history;
-  private readonly bossHistoryResource = this.bossApi.history;
-  private readonly currentBossResource = this.bossApi.current;
 
   /**
    * Whether any backing resource is still loading.
@@ -65,8 +79,6 @@ export class ColonyView {
     this.colonyResource,
     this.trajectoryResource,
     this.historyResource,
-    this.bossHistoryResource,
-    this.currentBossResource,
   );
 
   /**
@@ -76,8 +88,6 @@ export class ColonyView {
     this.colonyResource,
     this.trajectoryResource,
     this.historyResource,
-    this.bossHistoryResource,
-    this.currentBossResource,
   );
 
   /**
@@ -131,209 +141,115 @@ export class ColonyView {
    * Already-formatted headline figures of the population block.
    */
   public readonly populationLabel = computed<string>(() =>
-    this.population((colony) => colony.population),
-  );
-  public readonly capacityLabel = computed<string>(() =>
-    this.population((colony) => colony.capacity),
+    this.grouped((colony) => colony.population),
   );
 
   /**
-   * Materials banked, the run's one spendable figure.
+   * Materials banked, the run's one intermediate currency.
    */
   public readonly materialsLabel = computed<string>(() =>
-    this.population((colony) => colony.materials),
+    this.grouped((colony) => colony.materials),
   );
 
   /**
-   * What the tier being worked towards costs, so the materials figure can be read against the bar
-   * it is filling rather than as a bare total. Empty once the last tier is up and materials buy
-   * nothing more.
+   * Share of the housing the population already fills, which is how high the hexagon is filled.
+   *
+   * Housing as the denominator, never the food ceiling: the hexagon is read against the ladder
+   * beside it, and both count in housing. Clamped, since a town whose food outruns its housing
+   * produces a share above one hundred that would otherwise run the fill past the silhouette.
    */
-  public readonly nextTierThresholdLabel = computed<string>(() => {
-    const nextTier = this.colony()?.nextTier;
-
-    return nextTier === null || nextTier === undefined
-      ? ''
-      : formatPopulation(nextTier.materialsThreshold, this.translation.language());
-  });
-
-  /**
-   * Health, as a whole percentage. Fractions of a point would suggest a precision the geometric
-   * mean of two moving gauges does not have.
-   */
-  public readonly healthLabel = computed<string>(() => {
+  public readonly populationPercentage = computed<number>(() => {
     const colony = this.colony();
 
-    return colony === null ? '' : `${Math.round(colony.healthPercentage)}`;
+    return colony === null ? 0 : this.percentageOf(colony.population, colony.capacity);
   });
 
   /**
-   * What health is, in one sentence: the mean it comes from. The band draws it as a bar among the
-   * two it is derived from, and nothing there says it is never fed directly.
+   * What the night moved, and which way.
    */
-  public readonly healthDescription = computed<string>(() =>
-    this.translation.translate('colony.healthDescription'),
-  );
-
-  /**
-   * Where the colony is heading at the rhythm it has actually been played.
-   *
-   * The model's fixed point, and the only thing about it that cannot be read off the gauges — which
-   * is exactly why it is carried permanently rather than left to a hover. Named with the gauge
-   * setting it, because "which of the two is holding us back" is the actionable half of the answer.
-   */
-  public readonly equilibriumLabel = computed<string>(() => {
+  public readonly delta = computed<ColonyDeltaView | null>(() => {
     const colony = this.colony();
     if (colony === null) {
-      return '';
+      return null;
+    }
+
+    return {
+      label: formatSignedPopulation(colony.populationChange, this.translation.language()),
+      isPositive: colony.populationChange > 0,
+      isNegative: colony.populationChange < 0,
+    };
+  });
+
+  /**
+   * Accessible name of the population hexagon.
+   *
+   * Says exactly what the shape says: the figure, the housing it is filling towards — a full
+   * hexagon *is* the capacity reached, which is why there is no mark drawn on it — what the night
+   * moved, and what pressing it opens. All four are carried by the fill, the silhouette and the
+   * raised exponent, and none of them in text, so this is where a reader without the shapes gets
+   * them.
+   */
+  public readonly hexagonAriaLabel = computed<string>(() => {
+    const colony = this.colony();
+    if (colony === null) {
+      return this.translation.translate('colony.curve.open');
     }
 
     const language = this.translation.language();
 
-    return this.translation.translate('colony.equilibrium.label', {
-      share: Math.round(colony.equilibriumPercentage),
-      population: formatPopulation(
-        Math.round((colony.equilibriumPercentage / 100) * colony.capacity),
-        language,
-      ),
-      gauge: this.translation.translate(`colony.gauge.${colony.limitingGauge}.name`),
+    return this.translation.translate('colony.hexagonAria', {
+      population: formatPopulation(colony.population, language),
+      change: formatSignedPopulation(colony.populationChange, language),
+      capacity: formatPopulation(colony.capacity, language),
     });
   });
 
   /**
-   * Tonight's instruction: what the next tick takes, and what cancels it.
+   * Fights won over the ten a run holds.
    *
-   * Both requirements are always stated, never either one. Damage fills Food and turnout fills
-   * Energy, so a night bringing only one of them still lets the other gauge fall — which is the
-   * single most common way a squad that did play still wakes up to a colony that shrank.
-   *
-   * An empty colony consumes nothing, so there is no objective to state and the line says so
-   * instead of asking for zero of everything.
+   * The denominator is the whole run, never the weeks elapsed: `2 / 3` on a Monday of week four
+   * reads as a total, and a total that moves every week is not a total.
    */
-  public readonly upkeepLabel = computed<string>(() => {
+  public readonly bossesLabel = computed<string>(() => {
     const colony = this.colony();
-    if (colony === null) {
-      return '';
-    }
 
-    const language = this.translation.language();
-    const upkeep = colony.upkeep;
-
-    if (upkeep.upcomingLoss <= 0) {
-      return this.translation.translate('colony.upkeep.idle');
-    }
-
-    return this.translation.translate('colony.upkeep.label', {
-      loss: formatGauge(upkeep.upcomingLoss, language),
-      damage: formatPopulation(upkeep.damageToHold, language),
-      matches: upkeep.matchesToHold,
-      players: upkeep.playersToHold,
-    });
+    return colony === null ? '' : `${colony.defeatedBosses} / ${colony.bossCount}`;
   });
 
   /**
-   * What the current capacity comes from, so the figure beside the population is attributable.
+   * The three rails, food first.
    */
-  public readonly capacitySourceLabel = computed<string>(() => {
-    const colony = this.colony();
-    if (colony === null) {
-      return '';
-    }
-
-    const highest = [...colony.buildings].reverse().find((tier) => tier.erected);
-
-    return this.translation.translate('colony.capacitySource', {
-      building: this.translation.translate(`colony.building.${highest?.building ?? 'CAMP'}`),
-    });
-  });
-
-  /**
-   * The tier being worked towards, named.
-   */
-  public readonly nextTierLabel = computed<string>(() => {
-    const nextTier = this.colony()?.nextTier;
-
-    return nextTier == null
-      ? ''
-      : this.translation.translate('colony.nextTier', {
-          building: this.translation.translate(`colony.building.${nextTier.building}`),
-        });
-  });
-
-  /**
-   * Progress towards that tier, as a percentage.
-   */
-  public readonly nextTierPercentageLabel = computed<string>(() => {
-    const nextTier = this.colony()?.nextTier;
-
-    return nextTier == null
-      ? ''
-      : `${formatPercentage(nextTier.progressPercentage, this.translation.language())} %`;
-  });
-
-  /**
-   * Materials gathered against materials needed, and what is still missing.
-   */
-  public readonly nextTierProgressLabel = computed<string>(() => {
-    const colony = this.colony();
-    if (colony === null || colony.nextTier === null) {
-      return '';
-    }
-
-    const language = this.translation.language();
-
-    return this.translation.translate('colony.nextTierProgress', {
-      materials: formatPopulation(colony.materials, language),
-      threshold: formatPopulation(colony.nextTier.materialsThreshold, language),
-      missing: formatPopulation(colony.nextTier.missingMaterials, language),
-    });
-  });
-
-  /**
-   * The two gauges, Food first.
-   */
-  public readonly gauges = computed<readonly ColonyGaugeView[]>(() => {
+  public readonly tracks = computed<readonly ColonyTrackView[]>(() => {
     const colony = this.colony();
     if (colony === null) {
       return [];
     }
 
-    return [
-      this.toGaugeView('FOOD', colony.food, colony),
-      this.toGaugeView('ENERGY', colony.energy, colony),
-    ];
+    return [this.foodTrack(colony), this.presenceTrack(colony), this.moraleTrack(colony)];
   });
 
   /**
-   * Every building tier, cheapest first.
+   * One pip per player of the roster, lit by how far into today they got.
+   *
+   * The unlit pips are the social engine of the whole feature: the first game of everybody's evening
+   * is the most valuable one of the week, and this is where that shows.
    */
-  public readonly buildings = computed<readonly ColonyBuildingView[]>(() => {
+  public readonly presencePips = computed<readonly ColonyPresencePipView[]>(() => {
+    const players = this.colony()?.presence.players ?? [];
+
+    return players.map((player) => this.toPip(player));
+  });
+
+  /**
+   * The steps of the ladder around the town's own, lowest first.
+   */
+  public readonly ladder = computed<readonly ColonyTierStepView[]>(() => {
     const colony = this.colony();
     if (colony === null) {
       return [];
     }
 
-    return colony.buildings.map((tier) => this.toBuildingView(tier, colony));
-  });
-
-  /**
-   * Buildings earned over the three a run can put up.
-   *
-   * The starting camp is excluded from both terms: it costs nothing and is there from day one, so
-   * counting it would make every run open on `1/4`.
-   */
-  public readonly buildingsProgressLabel = computed<string>(() => {
-    const colony = this.colony();
-    if (colony === null) {
-      return '';
-    }
-
-    const earned = colony.buildings.filter(
-      (tier) => tier.erected && tier.materialsThreshold > 0,
-    ).length;
-    const total = colony.buildings.filter((tier) => tier.materialsThreshold > 0).length;
-
-    return `${earned}/${total}`;
+    return colony.ladder.map((tier) => this.toTierStep(tier, colony));
   });
 
   /**
@@ -341,17 +257,8 @@ export class ColonyView {
    */
   public readonly bosses = computed<readonly ColonyBossView[]>(() => {
     const colony = this.colony();
-    if (colony === null) {
-      return [];
-    }
 
-    // The history endpoint is run-scoped and ordered most recent first, so reversing it yields
-    // exactly this run's finalized weeks in order: week one is its first element.
-    const finalized = [...(resourceValue(this.bossHistoryResource, null)?.content ?? [])].reverse();
-
-    return Array.from({ length: colony.bossCount }, (_, index) =>
-      this.toBossView(index + 1, colony, finalized[index]?.defeated),
-    );
+    return (colony?.weeks ?? []).map((week) => this.toBossView(week));
   });
 
   /**
@@ -369,8 +276,8 @@ export class ColonyView {
       label: this.translation.translate('colony.curve.day', { day: point.runDay }),
       value: point.population,
       detail: this.translation.translate('colony.curve.detail', {
+        feedable: formatPopulation(point.feedablePopulation, language),
         capacity: formatPopulation(point.capacity, language),
-        players: point.activePlayerCount,
       }),
       highlighted: point.population === trajectory.peakPopulation,
       muted: false,
@@ -395,14 +302,15 @@ export class ColonyView {
   });
 
   /**
-   * Days buildings went up, spelled out under the curve so it can be read against them.
+   * Days the town changed name, spelled out under the curve so a step in it reads as housing rather
+   * than as a good week.
    */
   public readonly milestoneLabels = computed<readonly string[]>(() => {
     const trajectory = this.trajectory();
 
     return (trajectory?.milestones ?? []).map((milestone) =>
       this.translation.translate('colony.curve.milestone', {
-        building: this.translation.translate(`colony.building.${milestone.building}`),
+        tier: this.tierName(milestone),
         day: milestone.runDay,
       }),
     );
@@ -422,151 +330,254 @@ export class ColonyView {
    * Reloads every backing resource after a failure.
    */
   public reload(): void {
-    reloadAll(
-      this.colonyResource,
-      this.trajectoryResource,
-      this.historyResource,
-      this.bossHistoryResource,
-      this.currentBossResource,
-    );
+    reloadAll(this.colonyResource, this.trajectoryResource, this.historyResource);
   }
 
   /**
-   * Formats one figure of the colony, or returns nothing while it has not resolved.
+   * The food rail: what the town eats, what it has left to grow on, and the housing neither reaches.
    *
-   * @param pick - Which figure to read.
-   * @returns The grouped figure.
-   */
-  private population(pick: (colony: Colony) => number): string {
-    const colony = this.colony();
-
-    return colony === null ? '' : formatPopulation(pick(colony), this.translation.language());
-  }
-
-  /**
-   * Resolves one gauge into its view model.
+   * Three shapes in one track, and the reason the page needs no sentence. When the bright band
+   * disappears the town stops growing; when the muted one runs past what comes in, it shrinks.
    *
-   * @param gauge - Which gauge this is.
-   * @param state - Its value and the day's movement on it.
-   * @param colony - The colony it belongs to.
-   * @returns The display-ready gauge.
+   * @param colony - The colony.
+   * @returns The display-ready rail.
    */
-  private toGaugeView(gauge: ColonyGauge, state: Colony['food'], colony: Colony): ColonyGaugeView {
+  private foodTrack(colony: Colony): ColonyTrackView {
     const language = this.translation.language();
-    const colors = colonyGaugeColors(gauge, colony.alert);
-    const label = this.translation.translate(`colony.gauge.${gauge}.name`);
-    const valueLabel = formatGauge(state.value, language);
+    const colors = colonyTrackColors('FOOD');
+    const feedable = formatPopulation(colony.feedablePopulation, language);
+    const capacity = formatPopulation(colony.capacity, language);
 
     return {
-      gauge,
-      initial: label.charAt(0),
-      label,
-      percentage: state.value,
-      valueLabel,
-      // The four fragments the sentence is made of are separate keys rather than one block of copy
-      // per gauge: what feeds a gauge and how it is played are two different answers, and both the
-      // day's movement and the level it settles at are figures that have to be interpolated anyway.
-      descriptionLabel: this.translation.translate('colony.gauge.description', {
-        detail: this.translation.translate(`colony.gauge.${gauge}.detail`),
-        rule: this.translation.translate(`colony.gauge.${gauge}.rule`),
-        movement: this.translation.translate('colony.gauge.movement', {
-          gain: formatSignedGauge(state.gain, language),
-          loss: formatSignedGauge(-colony.upkeep.upcomingLoss, language),
-        }),
-        settling: this.translation.translate(
-          colony.limitingGauge === gauge
-            ? 'colony.gauge.settlingLimiting'
-            : 'colony.gauge.settling',
-          { level: formatGauge(state.equilibrium, language) },
-        ),
+      track: 'FOOD',
+      label: this.translation.translate('colony.track.food.name'),
+      percentage: this.percentageOf(colony.population, colony.capacity),
+      secondaryPercentage: this.percentageOf(colony.feedablePopulation, colony.capacity),
+      // Both numbers, in this order, because they are not of the same kind: the first is what the
+      // meals allow, the second what the housing allows. One figure alone let a reader believe
+      // 3 520 people lived in a town holding 2 400.
+      valueLabel: `${feedable} / ${capacity}`,
+      ariaLabel: this.translation.translate('colony.track.food.aria', {
+        eaten: formatPopulation(colony.weeklyConsumption, language),
+        surplus: formatPopulation(colony.weeklySurplus, language),
       }),
-      fillClass: colors.fill,
+      // Two swatches, not three. The stock is not a band of the rail, it is the sum of the two, and
+      // the band already says what it allows.
+      legend: [
+        {
+          colorClass: colors.muted,
+          label: this.translation.translate('colony.track.food.eaten', {
+            food: formatPopulation(colony.weeklyConsumption, language),
+          }),
+        },
+        {
+          colorClass: colors.fill,
+          label: this.translation.translate('colony.track.food.surplus', {
+            food: formatPopulation(colony.weeklySurplus, language),
+          }),
+        },
+      ],
+      note: '',
+      glyph: 'FOOD',
+      socketClass: colors.fill,
+      primaryClass: colors.muted,
+      secondaryClass: colors.fill,
       textClass: colors.text,
-      isLimiting: colony.limitingGauge === gauge,
-      equilibriumPercentage: state.equilibrium,
-      equilibriumLabel: formatGauge(state.equilibrium, language),
     };
   }
 
   /**
-   * Resolves one building tier into its view model.
+   * The turnout rail: how many of the squad turned up, against the roster frozen on the run.
    *
-   * @param tier - The tier.
-   * @param colony - The colony it belongs to.
-   * @returns The display-ready tier.
+   * @param colony - The colony.
+   * @returns The display-ready rail.
    */
-  private toBuildingView(tier: ColonyBuildingTier, colony: Colony): ColonyBuildingView {
-    const language = this.translation.language();
-    const isNext = colony.nextTier?.building === tier.building;
-    const state: ColonyBuildingState = tier.erected ? 'erected' : isNext ? 'next' : 'locked';
+  private presenceTrack(colony: Colony): ColonyTrackView {
+    const colors = colonyTrackColors('PRESENCE');
+    const presence = colony.presence;
 
     return {
-      building: tier.building,
-      name: this.translation.translate(`colony.building.${tier.building}`),
-      state,
-      capacityLabel: formatPopulation(tier.capacity, language),
-      detailLabel: this.buildingDetail(tier, colony, language),
+      track: 'PRESENCE',
+      label: this.translation.translate('colony.track.presence.name'),
+      percentage: this.percentageOf(presence.present, presence.rosterSize),
+      secondaryPercentage: null,
+      valueLabel: `${presence.present} / ${presence.rosterSize}`,
+      ariaLabel: this.translation.translate('colony.track.presence.aria', {
+        present: presence.present,
+        roster: presence.rosterSize,
+        threshold: presence.threshold,
+      }),
+      // The card shows the roster pip by pip instead of a swatch: who is missing is the whole point.
+      legend: [],
+      note: '',
+      glyph: 'PRESENCE',
+      socketClass: colors.fill,
+      primaryClass: colors.fill,
+      secondaryClass: '',
+      textClass: colors.text,
     };
   }
 
   /**
-   * Builds one tier's sub-line: what it cost and when it went up, or what is still missing.
+   * The morale rail: the speed the town moves at, with its floor painted rather than implied.
    *
-   * @param tier - The tier.
-   * @param colony - The colony it belongs to.
-   * @param language - Active language.
-   * @returns The already-translated sub-line.
+   * A bar reading `55 / 100` while filling to a different share of its track would make its own figure
+   * a lie, so the unreachable slice under the floor is drawn in a muted version of the same colour, the
+   * way the food rail splits what the town eats from what it grows on. With the floor down at 1 that
+   * slice is a hairline, and the split reads as a plain fill.
+   *
+   * @param colony - The colony.
+   * @returns The display-ready rail.
    */
-  private buildingDetail(tier: ColonyBuildingTier, colony: Colony, language: 'fr' | 'en'): string {
-    const materials = formatPopulation(tier.materialsThreshold, language);
+  private moraleTrack(colony: Colony): ColonyTrackView {
+    const colors = colonyTrackColors('MORALE');
+    const morale = colony.morale;
 
-    if (tier.erected) {
-      return this.translation.translate('colony.building.erected', {
-        materials,
-        day: tier.erectedOnRunDay ?? 1,
-      });
+    return {
+      track: 'MORALE',
+      label: this.translation.translate('colony.track.morale.name'),
+      percentage: this.percentageOf(morale.floor, morale.ceiling),
+      secondaryPercentage: this.percentageOf(morale.value, morale.ceiling),
+      valueLabel: `${Math.round(morale.value)} / ${Math.round(morale.ceiling)}`,
+      ariaLabel: this.translation.translate('colony.track.morale.aria', {
+        value: Math.round(morale.value),
+        ceiling: Math.round(morale.ceiling),
+        floor: Math.round(morale.floor),
+      }),
+      legend: [
+        {
+          colorClass: colors.muted,
+          label: this.translation.translate('colony.track.morale.floor', {
+            floor: Math.round(morale.floor),
+          }),
+        },
+      ],
+      note: this.translation.translate('colony.track.morale.note'),
+      glyph: this.moraleGlyph(morale.value),
+      socketClass: colors.fill,
+      primaryClass: colors.muted,
+      secondaryClass: colors.fill,
+      textClass: colors.text,
+    };
+  }
+
+  /**
+   * Picks the face the morale socket wears.
+   *
+   * @param morale - Today's morale.
+   * @returns The glyph.
+   */
+  private moraleGlyph(morale: number): ColonyTrackGlyph {
+    if (morale >= MORALE_GOOD) {
+      return 'MORALE_GOOD';
     }
 
-    return this.translation.translate('colony.building.missing', {
-      materials,
-      missing: formatPopulation(tier.materialsThreshold - colony.materials, language),
-    });
+    return morale < MORALE_BAD ? 'MORALE_BAD' : 'MORALE_NEUTRAL';
   }
 
   /**
-   * Resolves one week of the boss row into its view model.
+   * Resolves one roster player into their turnout pip.
    *
-   * @param weekIndex - Week of the run, from one.
-   * @param colony - The colony the run belongs to.
-   * @param defeated - Whether that week's fight was won, `undefined` while it is not settled.
-   * @returns The display-ready fight.
+   * @param player - The player and what they brought to today.
+   * @returns The display-ready pip.
    */
-  private toBossView(
-    weekIndex: number,
-    colony: Colony,
-    defeated: boolean | undefined,
-  ): ColonyBossView {
-    const state: ColonyBossState =
-      defeated === undefined
-        ? weekIndex === colony.runWeekIndex
-          ? 'current'
-          : 'upcoming'
-        : defeated
-          ? 'defeated'
-          : 'survived';
+  private toPip(player: ColonyPresencePlayer): ColonyPresencePipView {
+    const colors = colonyTrackColors('PRESENCE');
+    const fillClass =
+      player.state === 'FULL'
+        ? colors.fill
+        : player.state === 'PARTIAL'
+          ? colors.muted
+          : 'bg-surface-700';
 
     return {
-      weekIndex,
-      state,
-      label: this.translation.translate('colony.boss.week', {
-        week: weekIndex,
-        status: this.translation.translate(`colony.boss.status.${state}`),
+      playerId: player.playerId,
+      name: player.name,
+      state: player.state,
+      initials: player.name.slice(0, INITIALS_LENGTH).toUpperCase(),
+      fillClass,
+      ariaLabel: this.translation.translate(`colony.presence.${player.state}`, {
+        name: player.name,
       }),
-      materialsLabel: this.translation.translate('colony.boss.materials', {
-        materials: colony.materialsPerBoss,
-      }),
-      materialsEarned: state === 'defeated',
     };
+  }
+
+  /**
+   * Resolves one step of the ladder into its row.
+   *
+   * @param tier - The step.
+   * @param colony - The colony climbing it.
+   * @returns The display-ready step.
+   */
+  private toTierStep(tier: ColonyTier, colony: Colony): ColonyTierStepView {
+    const language = this.translation.language();
+    const isCurrent = tier.state === 'CURRENT';
+
+    return {
+      threshold: tier.threshold,
+      state: tier.state,
+      name: this.tierName(tier),
+      // The active step leads with what it is climbing towards; every other one carries the
+      // threshold it opens at, which is all there is to say about a step nobody stands on. The
+      // town's own housing led this row until it was read as the target: it is the one figure of
+      // the row that moves, and the top of a row is where a target is looked for.
+      valueLabel: formatPopulation(
+        isCurrent ? colony.nextTier.threshold : tier.threshold,
+        language,
+      ),
+      progressPercentage: isCurrent ? colony.tierProgressPercentage : null,
+      progressLabel: isCurrent
+        ? this.translation.translate('colony.tierProgress', {
+            current: formatPopulation(colony.capacity, language),
+            target: formatPopulation(colony.nextTier.threshold, language),
+            missing: formatPopulation(colony.missingCapacity, language),
+            name: this.tierName(colony.nextTier),
+          })
+        : '',
+    };
+  }
+
+  /**
+   * Resolves one week of the run into what its territory tile shows.
+   *
+   * @param week - The week and what its fight was worth.
+   * @returns The display-ready fight.
+   */
+  private toBossView(week: ColonyWeek): ColonyBossView {
+    const language = this.translation.language();
+    const settled = week.state === 'DEFEATED' || week.state === 'SURVIVED';
+
+    return {
+      weekIndex: week.weekIndex,
+      state: week.state,
+      // A week not yet reached shows nothing at all: a `0` there would read as a fight already lost.
+      housingLabel: settled
+        ? formatSignedPopulation(week.state === 'DEFEATED' ? week.housingGain : 0, language)
+        : '',
+      housingEarned: week.state === 'DEFEATED',
+      detailLabel: this.bossDetail(week, language),
+    };
+  }
+
+  /**
+   * Builds the sentence a territory tile's title carries.
+   *
+   * @param week - The week and what its fight was worth.
+   * @param language - Active language.
+   * @returns The already-translated sentence.
+   */
+  private bossDetail(week: ColonyWeek, language: 'fr' | 'en'): string {
+    if (week.category === null) {
+      return this.translation.translate('colony.boss.undrawn', { week: week.weekIndex });
+    }
+
+    return this.translation.translate(`colony.boss.detail.${week.state}`, {
+      week: week.weekIndex,
+      category: this.translation.translate(`colony.boss.category.${week.category}`),
+      materials: formatPopulation(week.materials, language),
+      housing: formatPopulation(week.housingGain, language),
+      morale: formatSignedPopulation(week.moraleDelta, language),
+    });
   }
 
   /**
@@ -580,19 +591,11 @@ export class ColonyView {
       return null;
     }
 
-    const language = this.translation.language();
-    const earned = colony.buildings.filter(
-      (tier) => tier.erected && tier.materialsThreshold > 0,
-    ).length;
-    const total = colony.buildings.filter((tier) => tier.materialsThreshold > 0).length;
-
     return {
       runNumber: colony.runNumber,
       label: this.translation.translate('colony.history.run', { run: colony.runNumber }),
       isCurrent: true,
-      finalLabel: formatPopulation(colony.population, language),
-      buildingsLabel: `${earned}/${total}`,
-      bossesLabel: `${colony.defeatedBosses}/${colony.bossCount}`,
+      finalLabel: formatPopulation(colony.population, this.translation.language()),
     };
   }
 
@@ -603,16 +606,48 @@ export class ColonyView {
    * @returns The display-ready run.
    */
   private toClosedRunView(run: ColonyRunHistory): ColonyRunView {
-    const language = this.translation.language();
-
     return {
       runNumber: run.runNumber,
       label: this.translation.translate('colony.history.run', { run: run.runNumber }),
       isCurrent: false,
-      finalLabel: formatPopulation(run.finalPopulation, language),
-      // The free starting camp is excluded from both terms, as it is everywhere else on the page.
-      buildingsLabel: `${run.erectedBuildings - 1}/${run.buildingCount - 1}`,
-      bossesLabel: `${run.defeatedBosses}/${run.bossCount}`,
+      finalLabel: formatPopulation(run.finalPopulation, this.translation.language()),
     };
+  }
+
+  /**
+   * Names one step of the ladder, numbering it once the names start repeating.
+   *
+   * @param tier - The step, or a milestone carrying the same two fields.
+   * @returns The already-translated name.
+   */
+  private tierName(tier: { name: string; level: number }): string {
+    return this.translation.translate(`colony.tier.${tier.name}`, { level: tier.level });
+  }
+
+  /**
+   * Formats one figure of the colony, or returns nothing while it has not resolved.
+   *
+   * @param pick - Which figure to read.
+   * @returns The grouped figure.
+   */
+  private grouped(pick: (colony: Colony) => number): string {
+    const colony = this.colony();
+
+    return colony === null ? '' : formatPopulation(pick(colony), this.translation.language());
+  }
+
+  /**
+   * Reads one figure as a share of another, clamped to the track it is drawn on.
+   *
+   * Clamped rather than left free because both ends really do happen: an empty run divides by a
+   * housing of zero, and a town whose food outruns its housing produces a share above one hundred
+   * that would otherwise run a band past the end of its rail.
+   *
+   * @param value - Figure to read.
+   * @param total - Figure it is read against.
+   * @returns The share, in `[0, 100]`.
+   */
+  private percentageOf(value: number, total: number): number {
+    return total <= 0 ? 0 : Math.min(100, Math.max(0, (value / total) * 100));
   }
 }

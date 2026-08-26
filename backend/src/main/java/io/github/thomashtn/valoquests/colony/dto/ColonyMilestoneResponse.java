@@ -1,22 +1,24 @@
 package io.github.thomashtn.valoquests.colony.dto;
 
-import io.github.thomashtn.valoquests.colony.model.ColonyBuilding;
+import io.github.thomashtn.valoquests.colony.model.ColonyTierName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 
 /**
- * Exposes the day a building went up, so the curve can be read against it.
+ * Exposes the day the town crossed one step of its ladder, for the curve to be read against.
  *
- * @param building the structure
- * @param day      calendar day it went up
- * @param runDay   day of the run it went up on, from one
- * @param capacity population capacity it opened
+ * @param name      name the town took on that day
+ * @param level     citadel number once the ladder starts repeating, zero on every named step
+ * @param day       calendar day the step was crossed
+ * @param runDay    that day's one-based position in the run
+ * @param threshold housing the step opens at
  */
-@Schema(description = "The day a colony building went up.")
+@Schema(description = "The day the town crossed one step of its ladder.")
 public record ColonyMilestoneResponse(
-    ColonyBuilding building,
+    ColonyTierName name,
+    int level,
     LocalDate day,
     int runDay,
-    int capacity
+    int threshold
 ) {
 }

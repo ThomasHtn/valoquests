@@ -1,42 +1,35 @@
 package io.github.thomashtn.valoquests.colony;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.colony.model.ColonyBuilding;
-import io.github.thomashtn.valoquests.colony.model.ColonyBuildingTier;
+import io.github.thomashtn.valoquests.colony.model.ColonyTier;
+import io.github.thomashtn.valoquests.colony.model.ColonyTierName;
 import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.MatchOutcome;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import java.util.List;
+import io.github.thomashtn.valoquests.scoring.model.BossCategory;
 import org.springframework.stereotype.Component;
 
 /**
  * The colony's calibration in force.
  *
- * <p>Tuned around one sentence: <b>a full colony is the seven players present every day, roughly two
- * competitive games each.</b> The same number, fourteen, governs both gauges' daily loss and the
- * maximum daily Energy gain, which is what makes that sentence exact rather than approximate.
+ * <p>The whole feature reduces to one sentence: <b>you play Valorant, that produces food, food says how
+ * many inhabitants the town can feed, and every night the town moves a little closer to that number.</b>
+ * Everything below only prices that sentence.
  *
- * <p>The model self-regulates, and its fixed point is one line:
- * {@code equilibrium population = capacity x min(Food gain, Energy gain) / 14}. The weakest gauge alone
- * sets the population and the other one saturates, losing its surplus — which is what makes the hard
- * clamp on both gauges regret-free, and what gives the feature its anti-farming guarantee without a
- * single dedicated rule. Two players grinding ten games each produce more Food than four reasonable
- * ones and still cap at 29% of capacity, because Energy is what limits them.
+ * <p>Two ceilings decide the score and the lower one commands. Food says what the town can feed,
+ * housing what it can lodge; whichever is smaller wins and the other is wasted. {@link
+ * #inhabitantsPerFood()} is the number tying them, calibrated so an ordinary run finishes with the two
+ * neck and neck — without it, all the work done on one of the two would be invisible in the final
+ * score. It is the most delicate figure here and the one most worth revisiting after a real run.
  *
- * <p>Past roughly two games a day per player, Energy is what limits the colony in every regime the
- * squad actually plays. That is deliberate: turnout is the thing worth rewarding, and it is the one
- * number no amount of grinding on a single account can move.
+ * <p>Morale is the only lever that is not a resource: it sets the speed the town closes its gap at, it
+ * moves on bosses and on nothing else, and it is deliberately asymmetric — it makes the town climb
+ * faster but never slows its fall. Everything else the squad does is already measured by the seven-day
+ * food window; a second bar measuring the same thing would have added nothing. The boss was measured
+ * nowhere.
  *
- * <p>A run opens on nothing at all — no population, both gauges at zero. An earlier calibration opened
- * on 300 inhabitants and both gauges at 50, which handed out a free half-health: the daily loss is
- * proportional to the population, so a small colony paid almost nothing while that inherited health
- * kept pulling it upwards. A run where <i>nobody ever played</i> grew from 300 to 870 inhabitants over
- * its first eight days before starting to fall. Opening at zero is what makes the first day of a run
- * obey the same rule as its fortieth.
- *
- * <p>Roughly fifteen of these numbers are calibrated a priori and should be read as an experimental
- * first pass; {@code colony_daily_snapshot} is deliberately rich enough to recalibrate them afterwards
- * without asking Henrik for anything again.
+ * <p>These numbers are an experimental first pass; {@code colony_daily_snapshot} is deliberately rich
+ * enough to recalibrate them afterwards without asking Henrik for anything again.
  */
 @Component
 public final class DefaultColonyRuleset implements ColonyRuleset {
@@ -47,23 +40,55 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     private static final int RUN_LENGTH_WEEKS = 10;
 
     /**
-     * Match damage worth one point of Food.
+     * Match damage worth one point of food.
      *
-     * <p>Below the 500 a competitive win is priced at, so two games a day already produce slightly more
-     * Food than the turnout they came with produces Energy. That one-sided margin is what puts Energy in
-     * charge of the population in every ordinary regime.
+     * <p>Under the 425 an average competitive game is priced at, so one such game is worth five food.
      */
-    private static final int FOOD_DAMAGE_DIVISOR = 400;
+    private static final int FOOD_DAMAGE_DIVISOR = 85;
 
     /**
-     * Daily loss coefficient of both gauges, and the maximum daily Energy gain.
+     * Inhabitants one point of food feeds, and the divisor turning a population into what it eats.
      */
-    private static final double LOSS_AND_MAXIMUM_ENERGY_GAIN = 14.0;
+    private static final int INHABITANTS_PER_FOOD = 8;
 
     /**
-     * Value both gauges are hard-clamped at.
+     * Raw daily damage one player must reach to count towards turnout.
+     *
+     * <p>One competitive game, or three deathmatches. Without a threshold everybody would fire up a
+     * two-minute deathmatch to reach the maximum multiplier.
      */
-    private static final double GAUGE_MAXIMUM = 100.0;
+    private static final int PRESENCE_DAMAGE_THRESHOLD = 300;
+
+    /**
+     * Days of harvest the food stock holds.
+     */
+    private static final int FOOD_WINDOW_DAYS = 7;
+
+    /**
+     * Share of the gap the town closes in one night, at full morale.
+     */
+    private static final double GAP_CLOSING_RATE_PERCENT = 15.0;
+
+    /**
+     * Morale a run opens on, halfway up the bar.
+     */
+    private static final double INITIAL_MORALE = 50.0;
+
+    /**
+     * Morale floor, kept just above zero rather than at a playable value: a squad that loses every boss
+     * stops the town dead, and only winning one starts it again.
+     */
+    private static final double MINIMUM_MORALE = 1.0;
+
+    /**
+     * Morale ceiling, and the value at which the town closes its gap at full speed.
+     */
+    private static final double MAXIMUM_MORALE = 100.0;
+
+    /**
+     * Morale a surviving boss costs.
+     */
+    private static final double MORALE_FOR_SURVIVING_BOSS = -20.0;
 
     /**
      * Divisor turning a challenge's scoring damage into the materials it is worth per player.
@@ -71,27 +96,56 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     private static final int CHALLENGE_DAMAGE_TO_MATERIALS_DIVISOR = 100;
 
     /**
-     * Materials a defeated boss brings in, about a third of a perfect run's total.
-     */
-    private static final int MATERIALS_PER_DEFEATED_BOSS = 400;
-
-    /**
-     * Share of capacity the population may gain in one day.
-     */
-    private static final double GROWTH_RATE_PERCENT = 2.5;
-
-    /**
-     * Share of capacity the population may lose in one day.
-     */
-    private static final double DECLINE_RATE_PERCENT = 5.0;
-
-    /**
-     * Value both gauges open a run at.
+     * Housing a run opens with, per player of the frozen roster.
      *
-     * <p>Zero, so the first day of a run is earned like any other. See this class's own documentation
-     * for what a non-zero opening did to a run nobody played.
+     * <p>Three hundred rather than a round share of some total, so a seven-player squad opens on 2 100
+     * and lands <i>inside</i> its first named tier instead of on its edge. At 285 it opened at 1 995,
+     * five places short, and its town simply had no name on day one.
+     *
+     * <p>A smaller roster does open below the first named step — six players on 1 800, three on 900 —
+     * and that is left alone rather than papered over by inflating the constant: the ladder names those
+     * steps {@code CAMP} too, so the town always has a name, and the housing a squad starts on stays
+     * proportional to the squad, which is what keeps the balance identical at every size.
      */
-    private static final double INITIAL_GAUGE = 0.0;
+    private static final int CAPACITY_PER_PLAYER = 300;
+
+    /**
+     * Materials one place of housing costs.
+     */
+    private static final int MATERIALS_PER_CAPACITY = 2;
+
+    /**
+     * Divisor turning a Monday's leftover food into materials.
+     */
+    private static final int SURPLUS_TO_MATERIALS_DIVISOR = 5;
+
+    /**
+     * Housing between two consecutive tiers of the ladder.
+     */
+    private static final int TIER_STEP = 500;
+
+    /**
+     * Ladder step the first name sits on, {@code 2 000 / 500}. Everything below wears that same name.
+     */
+    private static final int FIRST_NAMED_STEP = 4;
+
+    /**
+     * Names of the ladder, from the first named step up. The last one repeats, numbered.
+     */
+    private static final ColonyTierName[] TIER_NAMES = {
+        ColonyTierName.CAMP,
+        ColonyTierName.HAMLET,
+        ColonyTierName.VILLAGE,
+        ColonyTierName.BOROUGH,
+        ColonyTierName.TOWN,
+        ColonyTierName.CITY,
+        ColonyTierName.RESIDENTIAL_QUARTER,
+        ColonyTierName.GREAT_CITY,
+        ColonyTierName.METROPOLIS,
+        ColonyTierName.MEGALOPOLIS,
+        ColonyTierName.CAPITAL,
+        ColonyTierName.CITADEL
+    };
 
     /**
      * Materials a run opens with.
@@ -99,31 +153,10 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     private static final int INITIAL_MATERIALS = 0;
 
     /**
-     * Population a run opens with.
-     *
-     * <p>Empty ground. With both gauges also at zero, an unplayed day leaves the colony exactly where it
-     * was, and the first inhabitants only arrive once somebody has fed it.
+     * Population a run opens with. Empty ground: the first inhabitants only arrive once somebody has fed
+     * the place.
      */
     private static final double INITIAL_POPULATION = 0.0;
-
-    /**
-     * Health below which the colony is flagged as in distress.
-     */
-    private static final double ALERT_HEALTH_THRESHOLD = 0.25;
-
-    /**
-     * Building tiers, cheapest first.
-     *
-     * <p>The Citadel asks for roughly 85% challenge completion and eight bosses out of ten. It is a
-     * prestige reward, calibrated to fall in week nine at the earliest, which leaves just enough time to
-     * populate the capacity it opens.
-     */
-    private static final List<ColonyBuildingTier> BUILDINGS = List.of(
-        new ColonyBuildingTier(ColonyBuilding.CAMP, 0, 3_000),
-        new ColonyBuildingTier(ColonyBuilding.BARRACKS, 2_500, 4_200),
-        new ColonyBuildingTier(ColonyBuilding.RESIDENTIAL_QUARTER, 6_200, 5_500),
-        new ColonyBuildingTier(ColonyBuilding.CITADEL, 10_200, 7_000)
-    );
 
     /**
      * Scoring barèmes the challenge materials are derived from.
@@ -155,18 +188,63 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     }
 
     @Override
-    public double dailyLossCoefficient() {
-        return LOSS_AND_MAXIMUM_ENERGY_GAIN;
+    public int inhabitantsPerFood() {
+        return INHABITANTS_PER_FOOD;
     }
 
     @Override
-    public double maximumEnergyGain() {
-        return LOSS_AND_MAXIMUM_ENERGY_GAIN;
+    public int presenceDamageThreshold() {
+        return PRESENCE_DAMAGE_THRESHOLD;
     }
 
     @Override
-    public double gaugeMaximum() {
-        return GAUGE_MAXIMUM;
+    public int foodWindowDays() {
+        return FOOD_WINDOW_DAYS;
+    }
+
+    @Override
+    public double gapClosingRatePercent() {
+        return GAP_CLOSING_RATE_PERCENT;
+    }
+
+    @Override
+    public double initialMorale() {
+        return INITIAL_MORALE;
+    }
+
+    @Override
+    public double minimumMorale() {
+        return MINIMUM_MORALE;
+    }
+
+    @Override
+    public double maximumMorale() {
+        return MAXIMUM_MORALE;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Calibrated against the twenty points a surviving boss costs: a minor win only half repairs a
+     * loss, an elite win exactly repairs it. Ten fights are what a run's morale is made of, and nothing
+     * else touches it.
+     */
+    @Override
+    public double moraleForDefeatedBoss(BossCategory category) {
+        if (category == null) {
+            return 0.0;
+        }
+
+        return switch (category) {
+            case MINOR -> 10.0;
+            case STANDARD -> 15.0;
+            case ELITE -> 20.0;
+        };
+    }
+
+    @Override
+    public double moraleForSurvivingBoss() {
+        return MORALE_FOR_SURVIVING_BOSS;
     }
 
     @Override
@@ -175,46 +253,51 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     }
 
     @Override
-    public int materialsPerDefeatedBoss() {
-        return MATERIALS_PER_DEFEATED_BOSS;
-    }
-
-    @Override
-    public List<ColonyBuildingTier> buildings() {
-        return BUILDINGS;
-    }
-
-    @Override
-    public int capacityFor(int materials) {
-        int capacity = BUILDINGS.getFirst().capacity();
-
-        for (ColonyBuildingTier tier : BUILDINGS) {
-            if (materials >= tier.materialsThreshold()) {
-                capacity = tier.capacity();
-            }
+    public int materialsForDefeatedBoss(BossCategory category, int rosterSize) {
+        if (category == null) {
+            return 0;
         }
 
-        return capacity;
+        int materialsPerPlayer = switch (category) {
+            case MINOR -> 60;
+            case STANDARD -> 80;
+            case ELITE -> 100;
+        };
+
+        return materialsPerPlayer * Math.max(0, rosterSize);
     }
 
     @Override
-    public int maximumCapacity() {
-        return BUILDINGS.getLast().capacity();
+    public int capacityFor(int rosterSize, int materials) {
+        return CAPACITY_PER_PLAYER * Math.max(0, rosterSize) + housingForMaterials(materials);
     }
 
     @Override
-    public double growthRatePercent() {
-        return GROWTH_RATE_PERCENT;
+    public int housingForMaterials(int materials) {
+        return Math.max(0, materials) / MATERIALS_PER_CAPACITY;
     }
 
     @Override
-    public double declineRatePercent() {
-        return DECLINE_RATE_PERCENT;
+    public int materialsForSurplus(double foodStock, int capacity) {
+        double needed = capacity / (double) INHABITANTS_PER_FOOD;
+        double surplus = Math.max(0.0, foodStock - needed);
+
+        return (int) (surplus / SURPLUS_TO_MATERIALS_DIVISOR);
     }
 
     @Override
-    public double initialGauge() {
-        return INITIAL_GAUGE;
+    public int tierStep() {
+        return TIER_STEP;
+    }
+
+    @Override
+    public ColonyTier tierFor(int capacity) {
+        return tierAt(Math.max(0, capacity) / TIER_STEP);
+    }
+
+    @Override
+    public ColonyTier nextTierFor(int capacity) {
+        return tierAt(Math.max(0, capacity) / TIER_STEP + 1);
     }
 
     @Override
@@ -227,8 +310,24 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
         return INITIAL_POPULATION;
     }
 
-    @Override
-    public double alertHealthThreshold() {
-        return ALERT_HEALTH_THRESHOLD;
+    /**
+     * Names one step of the ladder.
+     *
+     * <p>Steps under the first named one all wear the opening name rather than none: a three-player
+     * squad opens its run at 900 housing, well under the 2 000 the spec's table starts at, and a town
+     * with no name at all on day one reads as a bug. Past the last name the ladder repeats, numbered, so
+     * it runs on without a maximum.
+     *
+     * @param step ladder step, {@code capacity / 500}
+     * @return the step, named
+     */
+    private ColonyTier tierAt(int step) {
+        int nameIndex = Math.clamp(step - FIRST_NAMED_STEP, 0, TIER_NAMES.length - 1);
+        ColonyTierName name = TIER_NAMES[nameIndex];
+        int level = name == ColonyTierName.CITADEL
+            ? step - FIRST_NAMED_STEP - TIER_NAMES.length + 2
+            : 0;
+
+        return new ColonyTier(step, step * TIER_STEP, name, level);
     }
 }

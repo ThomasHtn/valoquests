@@ -176,6 +176,7 @@ class PlayerAdminControllerTest {
             status,
             null,
             null,
+            true,
             true
         );
     }

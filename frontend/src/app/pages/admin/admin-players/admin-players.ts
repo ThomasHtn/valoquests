@@ -5,12 +5,14 @@ import {
   LucideRotateCcw,
   LucideSquarePen,
   LucideTrash2,
+  LucideTriangleAlert,
 } from '@lucide/angular';
 
 import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminCommandRunner } from '@core/admin/admin-command-runner';
 import { AdminPlayer, AdminPlayerStatus } from '@core/admin/admin.model';
+import { ColonyApi } from '@core/colony/colony-api';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -33,6 +35,13 @@ import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-fo
  * instead of deleted, so that finalized weeks crediting it with a boss kill stay readable. The
  * table says which fate awaits each player before the operator asks, and the confirmation says
  * which one actually happened.
+ *
+ * It is also where the colony's roster is kept honest, which is a real part of playing rather than
+ * housekeeping: the roster size drives the turnout denominator, the opening housing and both sides
+ * of the weekly fight at once, so an account left active and away widens the town without feeding
+ * it. Two lines carry that here — a warning on any active player who has not played in a fortnight,
+ * and a notice saying that editing the roster only takes effect on the next run, since the current
+ * one froze its size when it opened.
  */
 @Component({
   selector: 'app-admin-players',
@@ -48,6 +57,7 @@ import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-fo
     LucideRotateCcw,
     LucideSquarePen,
     LucideTrash2,
+    LucideTriangleAlert,
     PageHeader,
     StatusBadge,
   ],
@@ -55,6 +65,11 @@ import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-fo
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class AdminPlayers {
+  /**
+   * Data-access service backing the colony, read for the size the run in progress froze on.
+   */
+  private readonly colonyApi = inject(ColonyApi);
+
   /**
    * Data-access service backing the roster resource and every command.
    */
@@ -84,6 +99,25 @@ export class AdminPlayers {
    * Every player, ordered as the backend returns them.
    */
   protected readonly players = computed(() => resourceValue(this.playersResource, []));
+
+  /**
+   * What the run in progress froze its roster at, and the reminder that editing it here lands on the
+   * next run rather than on this one.
+   *
+   * Empty while the colony has not resolved: this screen must keep working when the colony endpoint
+   * does not, since the roster is what an operator comes here to repair.
+   */
+  protected readonly frozenRosterLabel = computed<string>(() => {
+    const colony = resourceValue(this.colonyApi.colony, null) ?? null;
+    if (colony === null) {
+      return '';
+    }
+
+    return this.translation.translate('admin.players.frozenRoster', {
+      roster: colony.presence.rosterSize,
+      run: colony.runNumber,
+    });
+  });
 
   /**
    * Player currently being edited, or `null` when the form is adding a new one.

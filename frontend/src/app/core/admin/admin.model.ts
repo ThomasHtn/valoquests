@@ -46,6 +46,16 @@ export interface AdminPlayer {
    * operator asks for one.
    */
   readonly hasCampaignContribution: boolean;
+
+  /**
+   * Whether the player has played at all in the last two weeks.
+   *
+   * Shown because an active player who has stopped playing costs the colony real points: the roster
+   * size drives the turnout denominator, the opening housing and both sides of the weekly fight at
+   * once, so an account left active and away widens the town without feeding it. Roughly five
+   * percent of a run's final score, which nobody would guess from this screen.
+   */
+  readonly hasRecentMatch: boolean;
 }
 
 /**

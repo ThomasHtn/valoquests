@@ -3,38 +3,35 @@ package io.github.thomashtn.valoquests.colony.model;
 import java.time.LocalDate;
 
 /**
- * The colony at the end of one day, as the replay engine computed it.
+ * The colony as one day of a run leaves it.
  *
- * <p>Carries more than {@code colony_daily_snapshot} stores. The daily loss, the health and the target
- * are pure functions of the fields that are persisted, so keeping a column for them would be storing an
- * answer the table already contains; they ride here because the API reads them and the engine has just
- * computed them anyway.
+ * <p>Everything the model needs to carry to the next day, plus the two figures a page reads it by. What
+ * is left out is left out because it is a multiplication away: what the town can feed is {@code
+ * foodStock x 8}, what it eats in a week is {@code population / 8}, and the tier it sits in is
+ * {@code capacity / 500}. Persisting either would let a stored figure disagree with the rule producing
+ * it.
  *
- * @param day               calendar day this state closes
- * @param food              Food gauge after the day, in {@code [0, 100]}
- * @param energy            Energy gauge after the day, in {@code [0, 100]}
- * @param materials         cumulative materials, which never go back down
- * @param population        population after the day's migration, in {@code [0, capacity]}
- * @param capacity          capacity the cumulative materials unlock
- * @param activePlayerCount distinct players who played at least one eligible match that day
- * @param foodGain          Food gained from the day's match damage
- * @param energyGain        Energy gained from the day's turnout
- * @param dailyLoss         amount each gauge lost before the gains applied
- * @param health            geometric mean of both gauges, in {@code [0, 1]}
- * @param target            population the colony is heading towards, {@code capacity x health}
+ * @param day                 calendar day this state closes
+ * @param foodStock           food of the last seven days, the whole of what the town has to eat
+ * @param foodHarvest         what this day alone brought in, turnout multiplier included
+ * @param matchDamage         match damage of the day, kept so the calibration can be revisited later
+ * @param presencePlayerCount players who cleared the turnout threshold that day
+ * @param morale              morale the day ends on, between the ruleset's floor and its ceiling
+ * @param materials           cumulative materials, which never decrease
+ * @param capacity            housing the materials and the frozen roster open
+ * @param population          inhabitants the night leaves behind
+ * @param populationChange    what the night moved, negative when the town lost people
  */
 public record ColonyDayState(
     LocalDate day,
-    double food,
-    double energy,
+    double foodStock,
+    double foodHarvest,
+    int matchDamage,
+    int presencePlayerCount,
+    double morale,
     int materials,
-    double population,
     int capacity,
-    int activePlayerCount,
-    double foodGain,
-    double energyGain,
-    double dailyLoss,
-    double health,
-    double target
+    double population,
+    double populationChange
 ) {
 }

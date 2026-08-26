@@ -1,8 +1,8 @@
 package io.github.thomashtn.valoquests.colony;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.colony.model.ColonyBuildingTier;
-import java.util.List;
+import io.github.thomashtn.valoquests.colony.model.ColonyTier;
+import io.github.thomashtn.valoquests.scoring.model.BossCategory;
 
 /**
  * Every number the colony is calibrated with.
@@ -27,54 +27,108 @@ public interface ColonyRuleset {
     int runLengthWeeks();
 
     /**
-     * Returns the divisor turning a day's match damage into Food.
+     * Returns the divisor turning a day's match damage into food.
      *
      * <p>No barème is created here: the damage read is the one produced <i>after</i> the daily
-     * diminishing returns, so the colony and the weekly ranking price a given match identically. The
-     * divisor alone decides how much Food a competitive win is worth, and therefore how often Food
-     * rather than Energy is the gauge setting the population.
+     * diminishing returns, so the colony and the weekly ranking price a given match identically.
      *
-     * @return match damage worth one point of Food
+     * @return match damage worth one point of food
      */
     int foodDamageDivisor();
 
     /**
      * Returns the damage one ordinary competitive game is counted as being worth.
      *
-     * <p>Used for one thing only: turning the Food a day needs into a number of games, so the page can
-     * say "about six games" rather than "2 700 damage". Derived from the scoring ruleset like every
-     * other number here, and taken at its draw value, which is what a roughly even win rate averages
-     * out at over a week.
+     * <p>Used for one thing only: turning an amount of food into a number of games, so a page can say
+     * "about six games" rather than "2 700 damage". Taken at its draw value, which is what a roughly
+     * even win rate averages out at over a week.
      *
      * @return damage of a reference competitive game
      */
     int referenceMatchDamage();
 
     /**
-     * Returns the coefficient governing both gauges' daily loss, applied to {@code population /
-     * capacity}.
+     * Returns how many inhabitants one point of food feeds.
      *
-     * <p>The same number as {@link #maximumEnergyGain()}, which is what reduces the whole model to one
-     * sentence: a full colony is the seven players present every day, roughly two competitive games
-     * each.
+     * <p>The single constant tying food to population, and it works both ways: {@code food x 8} is what
+     * the town can feed, {@code population / 8} is what it eats in a week. It is also the most delicate
+     * number of the whole system — it is calibrated so an ordinary run ends with its two ceilings, food
+     * and housing, neck and neck, and the moment it moves the two stop weighing the same.
      *
-     * @return daily loss coefficient
+     * @return inhabitants fed by one point of food
      */
-    double dailyLossCoefficient();
+    int inhabitantsPerFood();
 
     /**
-     * Returns the Energy gained on a day when the whole roster played.
+     * Returns the raw daily damage a player must reach to count towards turnout.
      *
-     * @return maximum daily Energy gain
+     * <p>Read on <b>raw</b> damage, before the daily diminishing returns: those exist to stop farming,
+     * not to decide whether somebody logged in tonight. Without that precision a player stringing
+     * fifteen games together could watch their own turnout drop by playing more.
+     *
+     * @return raw damage threshold for one player's day to count
      */
-    double maximumEnergyGain();
+    int presenceDamageThreshold();
 
     /**
-     * Returns the value both gauges are hard-clamped at, surplus discarded.
+     * Returns how many days of harvest the food stock holds.
      *
-     * @return gauge ceiling
+     * <p>A moving average, never a reserve. Each night today enters the count and the day seven days
+     * back leaves it, so a quiet Tuesday dents the stock instead of emptying it, and three intense weeks
+     * cannot be banked against a month of silence.
+     *
+     * @return length of the food window, in days
      */
-    double gaugeMaximum();
+    int foodWindowDays();
+
+    /**
+     * Returns the share of the gap between the town and its ceiling that is closed in one night.
+     *
+     * <p>The only population rule there is. The town moves fast at first and slower and slower after,
+     * and never quite arrives, which is what leaves something to gain on every single evening of a run.
+     *
+     * @return share of the gap closed per night, as a percentage
+     */
+    double gapClosingRatePercent();
+
+    /**
+     * Returns the morale a run opens on.
+     *
+     * @return initial morale
+     */
+    double initialMorale();
+
+    /**
+     * Returns the morale floor.
+     *
+     * <p>Sits just above zero rather than at a comfortable value: the floor only keeps the speed
+     * multiplier positive, so a town that has lost every boss is frozen until it wins one back.
+     *
+     * @return lowest morale reachable
+     */
+    double minimumMorale();
+
+    /**
+     * Returns the morale ceiling, which is also the value at which the town moves at full speed.
+     *
+     * @return highest morale reachable
+     */
+    double maximumMorale();
+
+    /**
+     * Returns the morale a defeated boss of a category is worth.
+     *
+     * @param category category of the defeated boss
+     * @return morale gained
+     */
+    double moraleForDefeatedBoss(BossCategory category);
+
+    /**
+     * Returns the morale a surviving boss costs, as a negative number.
+     *
+     * @return morale lost when the week's boss holds
+     */
+    double moraleForSurvivingBoss();
 
     /**
      * Returns the materials one player earns by completing a challenge of a difficulty.
@@ -90,62 +144,80 @@ public interface ColonyRuleset {
     /**
      * Returns the materials a defeated boss brings in.
      *
-     * <p>A surviving boss brings nothing; that is its entire cost. Materials are permanent and raise
-     * capacity, hence the ceiling of the final score, which is what makes all ten bosses count equally.
+     * <p>Priced per player of the frozen roster, so a fight is worth what the squad it was sized against
+     * is worth. A surviving boss brings nothing; that is its entire cost.
      *
-     * @return materials credited for a defeated boss
+     * <p>The boss deliberately hands out no inhabitants at all. A gift of inhabitants fades at fifteen
+     * percent a night and is gone three weeks later, which made the first six fights of a run pointless;
+     * materials buy housing, and housing is still standing on settlement day.
+     *
+     * @param category   category of the defeated boss
+     * @param rosterSize roster size frozen on the run
+     * @return materials credited for the defeated boss
      */
-    int materialsPerDefeatedBoss();
+    int materialsForDefeatedBoss(BossCategory category, int rosterSize);
 
     /**
-     * Returns the building tiers, ordered from the cheapest to the most expensive.
+     * Returns the housing a roster and a materials total open.
      *
-     * @return ordered building tiers, the first one costing nothing
+     * <p>Continuous and unbounded: there is no threshold to cross, so a challenge validated on a Monday
+     * widens the town that same Monday. A pure function of its two arguments, which is what keeps the
+     * whole replay reproducible.
+     *
+     * @param rosterSize roster size frozen on the run
+     * @param materials  cumulative materials
+     * @return housing available
      */
-    List<ColonyBuildingTier> buildings();
+    int capacityFor(int rosterSize, int materials);
 
     /**
-     * Returns the capacity a cumulative materials total unlocks.
+     * Returns the housing an amount of materials buys, on its own.
      *
-     * <p>A pure function of materials: no erection event to schedule, no list of buildings to persist,
-     * no ordering to guarantee.
+     * <p>What lets a reward be quoted in housing rather than in materials. Materials are an intermediate
+     * currency the player never handles; housing is the axis every readout of the page already uses.
      *
-     * @param materials cumulative materials
-     * @return capacity of the highest tier reached
+     * @param materials materials to convert
+     * @return housing they are worth
      */
-    int capacityFor(int materials);
+    int housingForMaterials(int materials);
 
     /**
-     * Returns the capacity of the last building tier, which is a run's theoretical maximum score.
+     * Returns the materials a week's leftover food is turned into.
      *
-     * @return highest reachable capacity
+     * <p>What guarantees no evening is ever wasted and the population has no maximum. A deliberately bad
+     * exchange rate that puts itself out: the bigger the town, the more food it takes to fill it, so the
+     * surplus melts on its own and housing catches food up rather than running away from it.
+     *
+     * @param foodStock food stock the Monday opens on
+     * @param capacity  housing of the week that has just closed
+     * @return materials the surplus is worth, never negative
      */
-    int maximumCapacity();
+    int materialsForSurplus(double foodStock, int capacity);
 
     /**
-     * Returns the share of capacity the population may gain in one day.
+     * Returns the housing between two consecutive tiers of the ladder.
      *
-     * @return daily growth limit, as a percentage of capacity
+     * @return width of one tier
      */
-    double growthRatePercent();
+    int tierStep();
 
     /**
-     * Returns the share of capacity the population may lose in one day.
+     * Returns the tier a housing figure currently sits in.
      *
-     * <p>Twice {@link #growthRatePercent()}: a week of neglect costs twice what a week of effort brings
-     * in. This asymmetry, together with the growth limit, is what makes it impossible to accelerate a
-     * colony any way other than holding both gauges high day after day.
-     *
-     * @return daily decline limit, as a percentage of capacity
+     * @param capacity housing available
+     * @return tier reached
      */
-    double declineRatePercent();
+    ColonyTier tierFor(int capacity);
 
     /**
-     * Returns the value both gauges open a run at.
+     * Returns the tier following the one a housing figure sits in.
      *
-     * @return initial gauge value
+     * <p>Never {@code null}: the ladder has no end, so there is always a next name to climb towards.
+     *
+     * @param capacity housing available
+     * @return next tier
      */
-    double initialGauge();
+    ColonyTier nextTierFor(int capacity);
 
     /**
      * Returns the materials a run opens with.
@@ -160,15 +232,4 @@ public interface ColonyRuleset {
      * @return initial population
      */
     double initialPopulation();
-
-    /**
-     * Returns the health below which the colony is flagged as in distress.
-     *
-     * <p>Strictly a derived display flag, with no mechanical effect whatsoever. An earlier design made
-     * it a persisted state with hysteresis and a third decay rate, which was a column, a branch in the
-     * order of operations and a scheduling subtlety for an effect nobody measures.
-     *
-     * @return alert threshold, as a ratio in {@code [0, 1]}
-     */
-    double alertHealthThreshold();
 }

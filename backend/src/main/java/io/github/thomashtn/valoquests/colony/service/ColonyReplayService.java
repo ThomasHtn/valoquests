@@ -44,6 +44,11 @@ public class ColonyReplayService {
     private static final int STORED_SCALE = 3;
 
     /**
+     * Decimals the morale column keeps, which is narrower than the rest.
+     */
+    private static final int MORALE_SCALE = 2;
+
+    /**
      * Service resolving the run in progress.
      */
     private final RunService runService;
@@ -181,14 +186,15 @@ public class ColonyReplayService {
         ColonyDailySnapshot snapshot = new ColonyDailySnapshot();
         snapshot.setRun(run);
         snapshot.setDay(state.day());
-        snapshot.setFood(stored(state.food()));
-        snapshot.setEnergy(stored(state.energy()));
+        snapshot.setFoodStock(stored(state.foodStock()));
+        snapshot.setFoodHarvest(stored(state.foodHarvest()));
+        snapshot.setMatchDamage(state.matchDamage());
+        snapshot.setPresenceCount(state.presencePlayerCount());
+        snapshot.setMorale(BigDecimal.valueOf(state.morale()).setScale(MORALE_SCALE, RoundingMode.HALF_UP));
         snapshot.setMaterials(state.materials());
-        snapshot.setPopulation(stored(state.population()));
         snapshot.setCapacity(state.capacity());
-        snapshot.setActivePlayerCount(state.activePlayerCount());
-        snapshot.setFoodGain(stored(state.foodGain()));
-        snapshot.setEnergyGain(stored(state.energyGain()));
+        snapshot.setPopulation(stored(state.population()));
+        snapshot.setPopulationChange(stored(state.populationChange()));
 
         return snapshot;
     }

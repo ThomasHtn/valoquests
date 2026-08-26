@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.colony.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -36,6 +38,9 @@ class ColonyReplayServiceTest {
 
     /** Roster the fixture run is frozen with. */
     private static final int ROSTER_SIZE = 7;
+
+    /** Scale the NUMERIC columns keep, which is display precision rather than the engine's. */
+    private static final Offset<Double> STORED = within(0.001);
 
     /** Run service dependency. */
     private RunService runService;
@@ -160,13 +165,17 @@ class ColonyReplayServiceTest {
 
         assertThat(snapshot.getRun()).isSameAs(run);
         assertThat(snapshot.getDay()).isEqualTo(state.day());
-        assertThat(snapshot.getFood().doubleValue()).isEqualTo(state.food());
-        assertThat(snapshot.getEnergy().doubleValue()).isEqualTo(state.energy());
+        // Compared at the scale the column keeps: the row is display precision, the state is not.
+        assertThat(snapshot.getFoodStock().doubleValue()).isEqualTo(state.foodStock(), STORED);
+        assertThat(snapshot.getFoodHarvest().doubleValue()).isEqualTo(state.foodHarvest(), STORED);
+        assertThat(snapshot.getMatchDamage()).isEqualTo(state.matchDamage());
+        assertThat(snapshot.getPresenceCount()).isEqualTo(state.presencePlayerCount());
+        assertThat(snapshot.getMorale().doubleValue()).isEqualTo(state.morale());
         assertThat(snapshot.getMaterials()).isEqualTo(state.materials());
         assertThat(snapshot.getCapacity()).isEqualTo(state.capacity());
-        assertThat(snapshot.getActivePlayerCount()).isEqualTo(state.activePlayerCount());
-        assertThat(snapshot.getFoodGain().doubleValue()).isEqualTo(state.foodGain());
-        assertThat(snapshot.getEnergyGain().doubleValue()).isEqualTo(state.energyGain());
+        assertThat(snapshot.getPopulation().doubleValue()).isEqualTo(state.population(), STORED);
+        assertThat(snapshot.getPopulationChange().doubleValue())
+            .isEqualTo(state.populationChange(), STORED);
     }
 
     /**
@@ -256,11 +265,15 @@ class ColonyReplayServiceTest {
 
         List<ColonyDailyInput> days = new ArrayList<>(dayCount);
         for (int index = 0; index < dayCount; index++) {
+            boolean rollover = index % 7 == 0 && index > 0;
+
             days.add(new ColonyDailyInput(
                 FIRST_WEEK.plusDays(index),
                 index % 3 == 0 ? 7_000 : 2_000,
                 index % 3 == 0 ? 7 : 3,
-                index % 7 == 0 && index > 0 ? 847 : 0
+                rollover,
+                rollover ? 847 : 0,
+                rollover ? 15.0 : 0.0
             ));
         }
 
@@ -281,8 +294,8 @@ class ColonyReplayServiceTest {
         ColonyDailySnapshot actual
     ) {
         assertThat(actual.getDay()).isEqualTo(expected.getDay());
-        assertThat(actual.getFood()).isEqualByComparingTo(expected.getFood());
-        assertThat(actual.getEnergy()).isEqualByComparingTo(expected.getEnergy());
+        assertThat(actual.getFoodStock()).isEqualByComparingTo(expected.getFoodStock());
+        assertThat(actual.getMorale()).isEqualByComparingTo(expected.getMorale());
         assertThat(actual.getPopulation()).isEqualByComparingTo(expected.getPopulation());
         assertThat(actual.getMaterials()).isEqualTo(expected.getMaterials());
         assertThat(actual.getCapacity()).isEqualTo(expected.getCapacity());

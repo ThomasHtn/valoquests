@@ -2,10 +2,75 @@
      day. The two tellings of the campaign are not swapped from here but from the map panel's own
      title, which is the thing being swapped. -->
 <app-page-header [eyebrow]="colony.eyebrow()" [heading]="'campaign.heading' | translate">
+  <!-- The run's standing total and the fights won, then the day.
+
+       Housing is deliberately not among them: the food rail already closes on `feedable / capacity`,
+       so a housing counter here repeated that second figure word for word, two blocks apart and
+       under another name.
+
+       Stocks first, day last: the counters are what the run *has*, the day is where it stands, and
+       the trailing edge of the bar is where a reader looks for the clock. The day also carries the
+       direction's gold, so ending on it closes the bar on its one moving figure.
+
+       Glyph and figure only, with the word behind a tooltip: this group never shrinks — a long
+       title truncates against it instead — so written labels here cost the page's own heading its
+       room. It is the arrangement the run history's column heads already use for the same reason.
+
+       Each glyph is seated in the direction's hexagon, the same socket the resource band's rails
+       and the map's tiles are drawn in, and in the direction's gold rather than in the muted grey
+       body colour: these are the run's stock counters, the thing a management screen reads first,
+       and grey-on-grey read as disabled chrome. -->
+  @if (colony.colony()) {
+    <span
+      [appTooltip]="'colony.materials' | translate"
+      appTooltipPosition="below"
+      class="hidden shrink-0 cursor-help items-center gap-2 sm:flex"
+    >
+      <!-- Sized `24 × 28`, the `1 : 1.1547` box `clip-hex` needs to come out a regular hexagon
+           rather than a squat one — see `TILE_INNER_SCALE`. -->
+      <span
+        aria-hidden="true"
+        class="clip-hex grid h-7 w-6 shrink-0 place-items-center bg-brand-500/15 text-brand-500 [&>svg]:size-3.5"
+      >
+        <svg lucideHammer></svg>
+      </span>
+      <span class="sr-only">{{ 'colony.materials' | translate }}</span>
+      <span class="font-display text-base leading-none font-bold text-text-primary tabular-nums">
+        {{ colony.materialsLabel() }}
+      </span>
+    </span>
+
+    <!-- Fights won over the ten a run holds, never over the weeks elapsed: a denominator that moves
+         every Monday reads as a total when it is not one. -->
+    <span
+      [appTooltip]="'colony.bosses' | translate"
+      appTooltipPosition="below"
+      class="hidden shrink-0 cursor-help items-center gap-2 lg:flex"
+    >
+      <span
+        aria-hidden="true"
+        class="clip-hex grid h-7 w-6 shrink-0 place-items-center bg-brand-500/15 text-brand-500 [&>svg]:size-3.5"
+      >
+        <svg lucideSwords></svg>
+      </span>
+      <span class="sr-only">{{ 'colony.bosses' | translate }}</span>
+      <span class="font-display text-base leading-none font-bold text-text-primary tabular-nums">
+        {{ colony.bossesLabel() }}
+      </span>
+    </span>
+  }
+
   <!-- The day is the one figure of the bar that moves every morning, so it carries the direction's
-       gold; the word and the run's length stay muted around it. Read end to end it is still the
-       one phrase, `Day 3 / 71`. -->
+       gold and closes the bar; the word and the run's length stay muted around it. Read end to end
+       it is still the one phrase, `Day 3 / 71`. -->
   @if (colony.runDayParts(); as runDay) {
+    @if (colony.colony()) {
+      <span
+        aria-hidden="true"
+        class="hidden h-3.5 w-px shrink-0 bg-text-primary/15 sm:block"
+      ></span>
+    }
+
     <span
       [appTooltip]="runDay.hint"
       appTooltipPosition="below"
@@ -38,9 +103,9 @@
   >
     <div class="flex flex-col gap-3" skeleton>
       <div class="grid gap-3 lg:grid-cols-[13rem_minmax(0,1fr)_21rem]">
-        <div class="h-40 bg-surface-800"></div>
-        <div class="h-40 bg-surface-800"></div>
-        <div class="h-40 bg-surface-800"></div>
+        <div class="h-40 border border-text-primary/15 bg-text-primary/4"></div>
+        <div class="h-40 border border-text-primary/15 bg-text-primary/4"></div>
+        <div class="h-40 border border-text-primary/15 bg-text-primary/4"></div>
       </div>
       <div class="@container">
         <div
@@ -49,12 +114,12 @@
           @for (row of skeletonRows; track row; let isOdd = $odd) {
             <div
               [style.margin-inline-start]="isOdd ? 'calc((var(--hex-w) + var(--hex-gap)) / 2)' : ''"
-              class="-mb-[calc(var(--hex-h)*0.25)] flex gap-[var(--hex-gap)]"
+              class="mb-[calc(var(--hex-gap)*0.866-var(--hex-h)*0.25)] flex gap-[var(--hex-gap)]"
             >
               @for (column of columns; track column) {
                 <span
                   [class]="columnVisibilityClass(column)"
-                  class="clip-hex h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 bg-surface-800"
+                  class="clip-hex h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 bg-text-primary/8"
                 ></span>
               }
             </div>
@@ -63,267 +128,42 @@
       </div>
     </div>
 
-    <!-- Bands stacked flush and parted by a rule: the standing figures are read against the ground
-         they pay for, so only the context bar above is set off by a gap. -->
-    <div class="flex min-h-full flex-col">
-      @if (colony.colony(); as colonyState) {
-        <!-- Distress banner. A derived display flag and nothing else: a gauge at zero collapses the
-             population, but a single day of play lifts it again. There is no game over, so the
-             banner says what is happening rather than warning of a loss. -->
-        @if (colonyState.alert) {
-          <p
-            class="flex shrink-0 items-center gap-3 border-b border-danger/50 bg-danger/15 px-6 py-2.5 text-sm text-text-primary sm:px-8"
-          >
-            <span aria-hidden="true" class="size-2 shrink-0 rotate-45 bg-danger"></span>
-            {{ 'colony.alertBanner' | translate }}
-          </p>
-        }
-
+    <!-- Two bands, set apart by a gap rather than run flush into one another: the standing figures
+         and the ground they pay for are one reading, but stacked edge to edge the population
+         hexagon sat straight on the first row of terrain and the two silhouettes fought. -->
+    <div class="flex min-h-full flex-col gap-4">
+      @if (colony.colony()) {
         <!-- Resource band: the score, what sets it, and what every run before it scored. Kept short —
              it is the page's standing figures, not its subject, and every row it gains is a row the
-             map below it loses. -->
+             map below it loses.
+
+             Nothing here is written as an instruction. A short bar asks to be filled; the shape of
+             the food rail read against the mark on the hexagon says whether tonight is a night to
+             play or a night to build, and it says it without a sentence. -->
         <div
-          class="flex shrink-0 flex-col gap-3 border-b border-text-primary/10 bg-surface-sunken/40 px-6 py-5 sm:px-8 sm:py-6 lg:flex-row lg:items-stretch"
+          class="flex shrink-0 flex-col gap-3 bg-text-primary/4 px-6 py-5 sm:px-8 sm:py-6 lg:flex-row lg:items-stretch"
         >
-          <!-- Population, in the direction's hexagon: the run's score, and the one figure every
-               other zone is either feeding or spending towards. The hexagon fills from the bottom
-               with the share of capacity already settled, and opens the run's curve — where that
-               figure has been, which a single number cannot say. -->
-          <div class="flex shrink-0 items-center justify-center lg:w-[11rem]">
-            <button
-              (click)="openCurve()"
-              [attr.aria-label]="'colony.curve.open' | translate"
-              class="focus-ring relative h-44 w-44 shrink-0 cursor-pointer transition-transform duration-200 hover:scale-[1.04] motion-reduce:transition-none"
-              type="button"
-            >
-              <span
-                [class]="colonyState.alert ? 'bg-danger' : 'bg-brand-500'"
-                aria-hidden="true"
-                class="clip-hex absolute inset-0"
-              ></span>
-              <span
-                [style.scale]="tileInnerScale"
-                aria-hidden="true"
-                class="clip-hex absolute inset-0 overflow-hidden bg-surface-950"
-              >
-                <!-- Share of capacity already settled, rising from the bottom. A plain rectangle
-                     clipped by the hexagon above it, never a hexagon of its own: at a low fill its
-                     own silhouette would be a wide flat band sticking out past the sides. -->
-                <span
-                  [style.height.%]="populationPercentage()"
-                  class="absolute inset-x-0 bottom-0 bg-brand-500/25"
-                ></span>
-              </span>
-              <span class="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                <!-- The figure is settlers, and the glyph says so before the caption is read — the
-                     same shorthand the resource rows below carry. -->
-                <svg
-                  [class]="colonyState.alert ? 'text-danger' : 'text-brand-500'"
-                  aria-hidden="true"
-                  class="size-5"
-                  lucideUsers
-                ></svg>
-                <span class="label-caption text-text-muted">
-                  {{ 'colony.population' | translate }}
-                </span>
-                <!-- The figure alone: capacity is what the hexagon's own fill height says, and the
-                     building ladder states it in full a panel away. -->
-                <span
-                  class="font-display text-3xl leading-none font-bold text-text-primary tabular-nums"
-                >
-                  {{ colony.populationLabel() }}
-                </span>
-              </span>
-            </button>
-          </div>
-
-          <!-- The two gauges and the health they produce, on one track each: the bar that is
-               shortest is the one deciding how full the colony can get.
-
-               Neither a panel nor plates under the rows: two lines and a socket already set a
-               resource apart from the next, and the band is ground enough for all three. What the
-               gauges stand in is the list itself. -->
-          <ul class="flex min-w-0 flex-1 flex-col justify-center gap-2 lg:ml-6">
-            @for (gauge of colony.gauges(); track gauge.gauge) {
-              <!-- The row names nothing on its face: the glyph says which resource it is, and what
-                   the resource means, how it is fed and where it stands are read from the card
-                   below. The name stays in the markup for assistive technology, which has no glyph
-                   and no hover. -->
-              <li class="group relative flex cursor-help items-center gap-3">
-                <!-- The glyph is seated in the direction's hexagon, the same socket the population
-                     figure and the map's tiles are drawn in — the outline is the resource's own
-                     color, the seat under it the ground it is set in. -->
-                <span aria-hidden="true" class="relative grid size-9 shrink-0 place-items-center">
-                  <span
-                    [class]="gauge.fillClass"
-                    class="clip-hex absolute inset-0 opacity-40"
-                  ></span>
-                  <span
-                    [style.scale]="legendInnerScale"
-                    class="clip-hex absolute inset-0 bg-surface-sunken"
-                  ></span>
-                  <span [class]="gauge.textClass" class="relative [&_svg]:size-4">
-                    @switch (gauge.gauge) {
-                      @case ('FOOD') {
-                        <svg lucideWheat></svg>
-                      }
-                      @default {
-                        <svg lucideZap></svg>
-                      }
-                    }
-                  </span>
-                </span>
-
-                <!-- The bar and its reading, capped rather than running to the ledger: a gauge two
-                     feet long is read as a landscape, not as a level. -->
-                <div class="flex min-w-0 max-w-[30rem] flex-1 items-center gap-2">
-                  <span class="sr-only">{{ gauge.label }}</span>
-
-                  <!-- The tick is where this gauge settles at the squad's rhythm of the week. The
-                       gauge holding the colony back sits far under the health it produces, so the
-                       fill alone reads as a famine; against the tick it reads as being on the
-                       mark, and falling behind it reads as falling behind. -->
-                  <app-progress-bar
-                    [colorClass]="gauge.fillClass"
-                    [percentage]="gauge.percentage"
-                    [targetMarker]="gauge.equilibriumPercentage"
-                    class="min-w-0 flex-1 rounded-md"
-                    heightClass="h-3"
-                  />
-
-                  <!-- Beside the rail, never over it: the fill would mask the figure the moment the
-                       gauge tops out, and cream on the accent falls to about 2:1, under the
-                       contrast floor. -->
-                  <span
-                    [class]="gauge.textClass"
-                    class="w-12 shrink-0 text-right font-display text-lg leading-none font-bold whitespace-nowrap tabular-nums"
-                  >
-                    {{ gauge.valueLabel }}
-                  </span>
-                </div>
-
-                <!-- What the row itself cannot hold: the resource's name, where it stands against
-                     its ceiling, and the sentence that says what feeds it. Drawn as the battle
-                     map's hover card is, from the same floating surface. Purely a pointer
-                     enhancement — the rules page states the same mechanics in full — so it is
-                     dropped below `sm`, where there is no hover and no room to float it. -->
-                <div
-                  [class]="tooltipSurfaceClass"
-                  aria-hidden="true"
-                  class="pointer-events-none absolute top-full left-0 z-30 mt-2.5 hidden w-72 px-4 py-3.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 motion-reduce:transition-none sm:block"
-                >
-                  <p class="flex items-baseline justify-between gap-3">
-                    <span class="label-caption text-text-muted">{{ gauge.label }}</span>
-                    <span
-                      [class]="gauge.textClass"
-                      class="font-mono text-2xs font-medium tabular-nums"
-                    >
-                      {{ gauge.valueLabel }} / 100
-                    </span>
-                  </p>
-
-                  <p class="mt-3 text-sm leading-relaxed text-text-secondary">
-                    {{ gauge.descriptionLabel }}
-                  </p>
-                </div>
-              </li>
-            }
-
-            <!-- Health is never fed, only derived: the geometric mean of the two bars above, which
-                 is what turns them into a single readable number. -->
-            <li class="group relative flex cursor-help items-center gap-3">
-              <span aria-hidden="true" class="relative grid size-9 shrink-0 place-items-center">
-                <span
-                  [class]="colonyState.alert ? 'bg-danger' : 'bg-text-primary/50'"
-                  class="clip-hex absolute inset-0 opacity-40"
-                ></span>
-                <span
-                  [style.scale]="legendInnerScale"
-                  class="clip-hex absolute inset-0 bg-surface-sunken"
-                ></span>
-                <span
-                  [class]="colonyState.alert ? 'text-danger' : 'text-text-secondary'"
-                  class="relative [&_svg]:size-4"
-                >
-                  <svg lucideHeartPulse></svg>
-                </span>
-              </span>
-
-              <div class="flex min-w-0 max-w-[30rem] flex-1 items-center gap-2">
-                <span class="sr-only">{{ 'colony.health' | translate }}</span>
-
-                <app-progress-bar
-                  [colorClass]="colonyState.alert ? 'bg-danger' : 'bg-text-primary/50'"
-                  [percentage]="colonyState.healthPercentage"
-                  class="min-w-0 flex-1 rounded-md"
-                  heightClass="h-3"
-                />
-
-                <span
-                  [class]="colonyState.alert ? 'text-danger' : 'text-text-primary'"
-                  class="w-12 shrink-0 text-right font-display text-lg leading-none font-bold whitespace-nowrap tabular-nums"
-                >
-                  {{ colony.healthLabel() }}
-                </span>
-              </div>
-
-              <div
-                [class]="tooltipSurfaceClass"
-                aria-hidden="true"
-                class="pointer-events-none absolute top-full left-0 z-30 mt-2.5 hidden w-72 px-4 py-3.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 motion-reduce:transition-none sm:block"
-              >
-                <p class="flex items-baseline justify-between gap-3">
-                  <span class="label-caption text-text-muted">
-                    {{ 'colony.health' | translate }}
-                  </span>
-                  <span
-                    [class]="colonyState.alert ? 'text-danger' : 'text-text-primary'"
-                    class="font-mono text-2xs font-medium tabular-nums"
-                  >
-                    {{ colony.healthLabel() }} %
-                  </span>
-                </p>
-
-                <p class="mt-3 text-sm leading-relaxed text-text-secondary">
-                  {{ colony.healthDescription() }}
-                </p>
-              </div>
-            </li>
-
-            <!-- What the three bars above cannot say on their own. The equilibrium is the one
-                 property of the model that cannot be read off a gauge at all, and it is what the
-                 tick on each bar marks; the objective turns it into tonight's instruction. Set
-                 below the bars behind a hairline, as text rather than as a fourth track: neither
-                 is a level, and drawing them as one would invite the eye to compare them with the
-                 gauges they explain. -->
-            <li class="mt-1 flex flex-col gap-1 border-t border-text-primary/10 pt-3">
-              <p class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <span class="label-caption shrink-0 text-text-muted">
-                  {{ 'colony.equilibrium.caption' | translate }}
-                </span>
-                <span class="min-w-0 text-sm leading-snug text-text-secondary">
-                  {{ colony.equilibriumLabel() }}
-                </span>
-              </p>
-
-              <p class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <span class="label-caption shrink-0 text-text-muted">
-                  {{ 'colony.upkeep.caption' | translate }}
-                </span>
-                <span class="min-w-0 text-sm leading-snug text-text-secondary">
-                  {{ colony.upkeepLabel() }}
-                </span>
-              </p>
-            </li>
-          </ul>
+          <app-colony-resource-band
+            (curveOpen)="openCurve()"
+            [delta]="colony.delta()"
+            [hexagonAriaLabel]="colony.hexagonAriaLabel()"
+            [populationLabel]="colony.populationLabel()"
+            [populationPercentage]="colony.populationPercentage()"
+            [presencePips]="colony.presencePips()"
+            [tracks]="colony.tracks()"
+          />
 
           <!-- Every run before this one, as the scale the population figure is missing. Rows drawn
                as the squad's other ledgers are — the weekly ranking, the registry: notched, on a
                grid, under a column head carrying no surface of its own. The ledger carries no frame
                and no visible title of its own either: the column head already says what each figure
                is, and the band it sits in is frame enough. The heading stays for assistive
-               technology, which has nothing else naming the list. -->
-          <div class="flex w-full shrink-0 flex-col lg:w-[28rem]">
+               technology, which has nothing else naming the list.
+
+               Set well clear of the rails: the ledger counts in the same figures they do, and at the
+               band's own gap the run totals read as a fourth rail rather than as the scale the three
+               of them are measured against. -->
+          <div class="flex w-full shrink-0 flex-col lg:ml-8 lg:w-[14rem]">
             <h2 class="sr-only">{{ 'colony.history.title' | translate }}</h2>
 
             <!-- Column head, hidden from assistive technology: the rows are a list rather than a
@@ -331,10 +171,7 @@
                  its own caption instead, read out beside it. The captions are abbreviations a
                  column wide, so each one hands what it counts to a tooltip, the way the ranking's
                  own column heads do. -->
-            <div
-              aria-hidden="true"
-              class="grid grid-cols-[4.5rem_minmax(0,1fr)_2.75rem_2.75rem] gap-x-2 px-3"
-            >
+            <div aria-hidden="true" class="grid grid-cols-[minmax(0,1fr)_4rem] gap-x-2 px-3">
               <span
                 [appTooltip]="'colony.history.columnHint' | translate"
                 appTooltipPosition="above"
@@ -348,20 +185,6 @@
                 class="label-caption ml-auto w-fit cursor-help text-right text-text-muted"
               >
                 {{ 'colony.history.final' | translate }}
-              </span>
-              <span
-                [appTooltip]="'colony.history.buildingsHint' | translate"
-                appTooltipPosition="above"
-                class="label-caption ml-auto w-fit cursor-help text-right text-text-muted"
-              >
-                {{ 'colony.history.buildings' | translate }}
-              </span>
-              <span
-                [appTooltip]="'colony.history.bossesHint' | translate"
-                appTooltipPosition="above"
-                class="label-caption ml-auto w-fit cursor-help text-right text-text-muted"
-              >
-                {{ 'colony.history.bosses' | translate }}
               </span>
             </div>
 
@@ -377,7 +200,7 @@
                       ? 'border-l-brand-500 bg-brand-500/10'
                       : 'border-l-text-primary/15 bg-text-primary/4'
                   "
-                  class="notch-tr grid shrink-0 grid-cols-[4.5rem_minmax(0,1fr)_2.75rem_2.75rem] items-center gap-x-2 border-l-2 px-3 py-2 [--notch:0.625rem]"
+                  class="notch-tr grid shrink-0 grid-cols-[minmax(0,1fr)_4rem] items-center gap-x-2 border-l-2 px-3 py-2 [--notch:0.625rem]"
                 >
                   <span
                     [class]="run.isCurrent ? 'text-brand-500' : 'text-text-primary'"
@@ -393,20 +216,6 @@
                       class="font-display text-sm leading-none font-bold tabular-nums"
                     >
                       {{ run.finalLabel }}
-                    </span>
-                  </span>
-
-                  <span class="text-right">
-                    <span class="sr-only">{{ 'colony.history.buildings' | translate }}</span>
-                    <span class="font-mono text-2xs text-text-muted tabular-nums">
-                      {{ run.buildingsLabel }}
-                    </span>
-                  </span>
-
-                  <span class="text-right">
-                    <span class="sr-only">{{ 'colony.history.bosses' | translate }}</span>
-                    <span class="font-mono text-2xs text-text-muted tabular-nums">
-                      {{ run.bossesLabel }}
                     </span>
                   </span>
                 </li>
@@ -427,23 +236,22 @@
         </div>
       }
 
-      <!-- The ground, and what taking it did to the population. Two unframed panels running into
-             one another, neither ruled nor parted by a gap: the ladder is read against the map that
-             pays for it, and anything between them makes two subjects of one. Their heads, still
-             closed by a rule of their own, are what says where one ends and the other starts. -->
+      <!-- The ground, and what taking it did to the population. Two unframed panels set apart by a
+             gap: the ladder is read against the map that pays for it, but run flush the two veils
+             merged into one surface and the field looked like it ran under the ladder's rows. -->
       <!-- Grows into the space the scroller leaves, never shrinks below the field it holds: with
              `flex-1` the band was squashed under its own map, which then drew straight over the
              buildings below it. -->
-      <div class="flex shrink-0 grow flex-col bg-surface-sunken/20 xl:flex-row">
-        <section class="flex min-w-0 flex-1 flex-col bg-surface-sunken/30">
-          <!-- Both panels open on a head of the same height, so the rule under them runs unbroken
-               across the band. Side by side the height is pinned rather than left to each head's
-               own content: this one is as tall as the select it holds and grows when its legend
-               wraps, the other never leaves its floor, and the two rules came out a few pixels
-               apart. Below `xl` the panels are stacked, no rule has to meet another, and the head
-               is free to wrap again. -->
+      <div class="flex shrink-0 grow flex-col gap-4 xl:flex-row">
+        <section class="flex min-w-0 flex-1 flex-col bg-text-primary/4">
+          <!-- Both panels open on a head of the same height, so the two rules closing them sit
+               level across the band. Side by side the height is pinned rather than left to each
+               head's own content: this one is as tall as the select it holds and grows when its
+               legend wraps, the other never leaves its floor, and the two rules came out a few
+               pixels apart. Below `xl` the panels are stacked, no rule has to meet another, and the
+               head is free to wrap again. -->
           <div
-            class="flex min-h-10 shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-text-primary/8 bg-surface-sunken/50 pr-3 xl:h-10 xl:flex-nowrap xl:overflow-hidden"
+            class="flex min-h-10 shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-text-primary/8 pr-3 xl:h-10 xl:flex-nowrap xl:overflow-hidden"
           >
             <!-- The panel is titled by whichever telling is on screen, and that title is the control
                  that changes it: picking "Historique" swaps the field for the chronology in place. -->
@@ -458,16 +266,22 @@
               <span aria-hidden="true" class="h-3 w-px shrink-0 bg-text-primary/15"></span>
 
               <!-- Legend of the map's territory states. Only meaningful over the map itself, so it
-                   goes with it when the panel swaps to the battle history. -->
+                   goes with it when the panel swaps to the battle history.
+
+                   The samples are the tiles in miniature: the same hollow hexagon, the same outline
+                   colour, nothing inside. No mark is needed now the four states are four colours —
+                   green taken, red held, amber live, grey unreached — and a 10 px glyph inside a
+                   14 px hexagon was a smudge, not a shape. Sized `16 × 18`, the `1 : 1.1547` box
+                   `clip-hex` needs to come out a regular hexagon rather than a squat one. -->
               <ul class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 xl:flex-nowrap">
                 @for (status of legendStatuses; track status) {
                   @let legendTier = territoryTier(status);
 
                   <li class="flex items-center gap-1.5">
-                    <span aria-hidden="true" class="relative size-2.5 shrink-0">
+                    <span aria-hidden="true" class="relative h-[1.125rem] w-4 shrink-0">
                       <span [class]="legendTier.ringClass" class="clip-hex absolute inset-0"></span>
                       <span
-                        [class]="legendTier.fillClass"
+                        [class]="territoryFillClass"
                         [style.scale]="legendInnerScale"
                         class="clip-hex absolute inset-0"
                       ></span>
@@ -483,17 +297,24 @@
 
           @if (view() === 'map') {
             <!-- Battle map: a honeycomb scrolling top to bottom, one row per week, framed above and
-             below by terrain the front has not reached. Rows interlock by a quarter of a hexagon's
-             height and every other one is nudged half a hexagon to the right, which is what makes flat
-             tiles read as a tiled field. Each week's row hands one hexagon to its boss — placed along a
-             serpentine path, see `resolveBossColumn` — and leaves the rest as terrain; the outermost
-             columns only appear once the panel can hold them, so the field widens with it while the
-             path stays put. Twelve rows for a ten-week run, terrain included, which is what lets the
-             whole field stand in its panel without a scrollbar of its own. -->
+             below by terrain the front has not reached. Every other row is nudged half a horizontal
+             pitch to the right, which is what makes flat tiles read as a tiled field. Each week's row
+             hands one hexagon to its boss — placed along a serpentine path, see `resolveBossColumn` —
+             and leaves the rest as terrain; the outermost columns only appear once the panel can hold
+             them, so the field widens with it while the path stays put. Twelve rows for a ten-week
+             run, terrain included, which is what lets the whole field stand in its panel without a
+             scrollbar of its own.
+
+             Row pitch: a honeycomb with a gap `g` between neighbours is the perfect tiling of
+             hexagons `w + g` wide, each one shrunk back to `w`. Its row pitch is therefore
+             `0.75 × 1.1547 × (w + g)`, so a row sits `0.866g - 0.25h` from the bottom of the one
+             above it, not `-0.25h`: at a flat quarter-height overlap the tiles touched vertically
+             while keeping `g` on their sides, and the field came out squashed. `pb` on the list
+             cancels the last row's own negative margin. -->
             <div class="@container min-w-0 flex-1 p-3">
               <ol
                 [attr.aria-label]="'campaign.map.ariaLabel' | translate"
-                class="mx-auto w-fit pb-[calc(var(--hex-h)*0.25)] [--hex-gap:0.25rem] [--hex-h:calc(var(--hex-w)*1.1547)] [--hex-w:3.25rem] @md:[--hex-w:3.5rem] @3xl:[--hex-w:4rem] @5xl:[--hex-w:4.5rem]"
+                class="mx-auto w-fit pb-[calc(var(--hex-h)*0.25-var(--hex-gap)*0.866)] [--hex-gap:0.25rem] [--hex-h:calc(var(--hex-w)*1.1547)] [--hex-w:3.25rem] @md:[--hex-w:3.5rem] @3xl:[--hex-w:4rem] @5xl:[--hex-w:4.5rem]"
                 role="list"
               >
                 @for (row of rows(); track row.key; let isOdd = $odd) {
@@ -502,7 +323,7 @@
                     [style.margin-inline-start]="
                       isOdd ? 'calc((var(--hex-w) + var(--hex-gap)) / 2)' : ''
                     "
-                    class="-mb-[calc(var(--hex-h)*0.25)] flex gap-[var(--hex-gap)]"
+                    class="mb-[calc(var(--hex-gap)*0.866-var(--hex-h)*0.25)] flex gap-[var(--hex-gap)]"
                   >
                     @for (column of columns; track column) {
                       @if (column === row.bossColumn ? row.node : null; as node) {
@@ -534,6 +355,7 @@
                               node.statusLabel
                             "
                             [attr.data-battlemap-current]="node.status === 'current' ? '' : null"
+                            [attr.title]="row.detailLabel"
                             class="focus-ring absolute inset-0 cursor-pointer transition-transform duration-200 hover:scale-[1.07] motion-reduce:transition-none"
                             type="button"
                           >
@@ -542,7 +364,7 @@
                             <!-- Scaled down rather than inset, so the outline keeps a constant width
                              all the way around the hexagon — see `TILE_INNER_SCALE`. -->
                             <span
-                              [class]="tier.fillClass"
+                              [class]="territoryFillClass"
                               [style.scale]="tileInnerScale"
                               class="clip-hex absolute inset-0 flex flex-col items-center justify-center gap-0.5"
                             >
@@ -574,10 +396,16 @@
                               <!-- The week's verdict, carried by the shape of the mark rather than by
                                its color alone: taken, lost, still being fought, or not yet
                                reached. -->
+                              <!-- Sized off the tile's own width rather than off a viewport
+                               breakpoint. The hexagon grows on the *panel*'s width (`@md` /
+                               `@3xl` / `@5xl`, see `--hex-w`), so a `sm:` step on the glyph
+                               changed it at a width the tile under it did not move at: on a
+                               narrow panel beside a wide window the mark was two thirds of its
+                               own hexagon and pushed the housing figure onto the slanted edge. -->
                               <span
                                 [class]="tier.iconClass"
                                 aria-hidden="true"
-                                class="relative [&>svg]:size-5 sm:[&>svg]:size-6"
+                                class="relative [&>svg]:size-[calc(var(--hex-w)*0.3)]"
                               >
                                 @switch (node.status) {
                                   @case ('defeated') {
@@ -595,17 +423,21 @@
                                 }
                               </span>
 
-                              <!-- What taking this ground was worth: the materials the week paid the
-                               colony, written on the territory that produced them rather than tallied
-                               somewhere else on the page. -->
-                              @if (row.materialsLabel; as materialsLabel) {
+                              <!-- What taking this ground was worth, in housing: written on the
+                               territory that produced it rather than tallied somewhere else on the
+                               page. Housing rather than materials or morale — materials are an
+                               intermediate currency the player never handles, housing is the axis the
+                               context bar and the ladder already count in, and it is the only part of
+                               a fight's reward still standing on settlement day. The morale does not
+                               fit in fifty-six pixels and rides in the tile's own title instead. -->
+                              @if (row.housingLabel) {
                                 <span
                                   [class]="
-                                    row.materialsEarned ? 'text-brand-500' : 'text-text-muted/60'
+                                    row.housingEarned ? 'text-brand-500' : 'text-text-muted/60'
                                   "
                                   class="relative font-mono text-2xs leading-none font-medium tabular-nums"
                                 >
-                                  {{ materialsLabel }}
+                                  {{ row.housingLabel }}
                                 </span>
                               }
                             </span>
@@ -854,85 +686,54 @@
           }
         </section>
 
-        <!-- What the materials bought, beside the ground that pays for them: the ladder climbs as
-             the map is taken, so the two are read against each other rather than a page apart. An
-             unlock timeline running down the column, cheapest tier at the top — the tiers are one
-             ordered path, not four independent rows, and a line makes that path readable: what is
-             already settled, the one being paid for, and what is still out of reach. -->
+        <!-- What the housing bought, beside the ground that pays for it: the ladder climbs as the
+             map is taken, so the two are read against each other rather than a page apart.
+
+             A window on an endless ladder rather than a fixed list of buildings. Housing is
+             continuous now — there is no threshold to save up for, so a challenge validated over the
+             week widens the town on the Monday that settles it — and the names simply keep going,
+             one every five hundred. -->
         @if (colony.colony()) {
-          <section class="flex min-w-0 shrink-0 flex-col bg-surface-sunken/30 xl:w-[20rem]">
+          <section class="flex min-w-0 shrink-0 flex-col bg-text-primary/4 xl:w-[20rem]">
             <!-- Same height as the map panel's own head, so the rule closing them runs level across
                  the band. -->
             <div
-              class="flex min-h-10 shrink-0 items-center justify-between gap-3 border-b border-text-primary/8 bg-surface-sunken/50 px-4 xl:h-10"
+              class="flex min-h-10 shrink-0 items-center gap-3 border-b border-text-primary/8 px-4 xl:h-10"
             >
               <h2 class="label-caption text-text-secondary">
-                {{ 'colony.upgrades' | translate }}
+                {{ 'colony.ladder.title' | translate }}
               </h2>
 
-              <!-- The stock, on the head's trailing edge and read against what the next tier costs:
-                   the panel's whole subject is what materials buy, so the figure belongs where the
-                   panel is named, not in a block of its own. The denominator moves up to the next
-                   threshold as each tier goes up, so the pair is always the purchase in progress. -->
-              <p class="flex shrink-0 items-baseline gap-1.5">
-                <span aria-hidden="true" class="self-center text-brand-500 [&>svg]:size-3.5">
-                  <svg lucideHammer></svg>
-                </span>
-                <span class="sr-only">{{ 'colony.materials' | translate }}</span>
-                <span
-                  class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
-                >
-                  {{ colony.materialsLabel() }}
-                </span>
-                @if (colony.nextTierThresholdLabel(); as thresholdLabel) {
-                  <span class="font-mono text-2xs text-text-muted tabular-nums">
-                    / {{ thresholdLabel }}
-                  </span>
-                }
-              </p>
+              <!-- What the column of figures below counts, said once at its head rather than
+                   repeated on every row. Three bare numbers under a heading naming a tier were read
+                   as a cost in materials, which is the one currency they are not. -->
+              <span aria-hidden="true" class="label-caption ml-auto text-text-muted">
+                {{ 'colony.ladder.unit' | translate }}
+              </span>
             </div>
 
-            <ol class="flex min-w-0 flex-1 flex-col px-4 py-3">
-              @for (step of buildingSteps(); track step.view.building) {
+            <ol class="flex min-w-0 flex-1 flex-col gap-0.5 px-4 py-3">
+              @for (step of ladderSteps(); track step.view.threshold) {
                 <li
-                  [class]="step.tier.stepClass"
-                  class="relative grid flex-1 grid-cols-[2rem_minmax(0,1fr)] items-start gap-3"
+                  [class]="step.tier.rowClass"
+                  class="relative grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-x-3 px-2.5 py-2"
                 >
-                  <!-- This step's slice of the line, running from under its marker to the next one's
-                       — the segments are drawn per step rather than as one gradient down the column
-                       because steps do not share a height, so no percentage along the ladder lands
-                       on a marker. -->
-                  @if (step.connectorBackground; as connectorBackground) {
-                    <span
-                      [style.background]="connectorBackground"
-                      aria-hidden="true"
-                      class="pointer-events-none absolute top-9 bottom-0 left-4 w-0.5 -translate-x-1/2"
-                    ></span>
-                  }
-
-                  <!-- The tier's marker, a hexagon like every other beat of the campaign. A tier
-                       that is up is a solid hexagon with a dark check struck through it; the one
-                       being paid for is an outline under a halo; one still out of reach is a grey
-                       outline. Shape first, color second — see `BUILDING_TIERS`. -->
+                  <!-- The step's marker, a hexagon like every other beat of the campaign. A step
+                       already crossed is a solid hexagon with a dark check struck through it; the one
+                       the town stands in carries the house it has built; one still ahead is a grey
+                       outline holding a lock. Shape first, colour second — see `LADDER_STEPS`. -->
                   <span aria-hidden="true" class="relative block h-9 w-8 shrink-0">
-                    @if (step.tier.markerHaloClass) {
-                      <span
-                        [class]="step.tier.markerHaloClass"
-                        class="clip-hex absolute -inset-1"
-                      ></span>
-                    }
-
                     <span [class]="step.tier.markerClass" class="clip-hex absolute inset-0">
                       <span
                         [class]="[step.tier.markerFillClass, step.tier.markerIconClass]"
                         class="clip-hex absolute inset-0.5 flex items-center justify-center [&>svg]:size-4"
                       >
                         @switch (step.view.state) {
-                          @case ('erected') {
+                          @case ('REACHED') {
                             <svg lucideCheck></svg>
                           }
-                          @case ('next') {
-                            <svg lucideChevronRight></svg>
+                          @case ('CURRENT') {
+                            <svg lucideHouse></svg>
                           }
                           @default {
                             <svg lucideLock></svg>
@@ -942,56 +743,50 @@
                     </span>
                   </span>
 
-                  <!-- Name over capacity rather than beside it, and wrapping rather than clipped:
-                       in a column this narrow the longer tier names were cut off mid-word by the
-                       figure next to them. -->
-                  <span class="flex min-w-0 flex-col gap-1.5 pb-5">
-                    <!-- The state, said in words beside the name: the marker carries it in shape and
-                         color, and a ladder read at a glance should not need either decoded. -->
-                    <span
-                      [class]="step.tier.tagClass"
-                      class="tracking-label w-fit px-1.5 py-0.5 font-mono text-2xs font-bold uppercase"
-                    >
-                      {{ 'colony.upgradeState.' + step.view.state | translate }}
-                    </span>
-
-                    <span
-                      [class]="step.tier.nameClass"
-                      class="font-display text-xs leading-tight font-bold uppercase"
-                    >
-                      {{ step.view.name }}
-                    </span>
-
-                    <span class="flex items-baseline gap-1.5">
-                      <span
-                        [class]="step.tier.capacityClass"
-                        class="font-display text-lg leading-none font-bold tabular-nums"
-                      >
-                        {{ step.view.capacityLabel }}
-                      </span>
-                      <span class="label-caption text-text-muted">
-                        {{ 'colony.capacity' | translate }}
-                      </span>
-                    </span>
-
-                    <!-- The bar rides on the one tier being paid for, and nowhere else: it is what
-                         separates the frontier of the ladder from the tiers behind and ahead of
-                         it. -->
-                    @if (step.progressPercentage !== null) {
-                      <app-progress-bar
-                        [percentage]="step.progressPercentage"
-                        class="mt-0.5 w-full"
-                        colorClass="bg-brand-500"
-                        heightClass="h-1.5"
-                      />
-                    }
-
-                    <!-- What the tier cost and when it went up, or what is still missing on it —
-                         the sub-line the row layout had no room for. -->
-                    <span class="font-mono text-2xs text-text-muted tabular-nums">
-                      {{ step.view.detailLabel }}
-                    </span>
+                  <span
+                    [class]="step.tier.nameClass"
+                    class="min-w-0 truncate font-display text-sm leading-tight uppercase"
+                  >
+                    {{ step.view.name }}
                   </span>
+
+                  <!-- The active step carries the housing it is climbing towards, every other one the
+                       threshold it opens at. The town's own housing sat here and was read as the
+                       target: at the top of the row, in the row's weight, a moving figure is taken
+                       for the goal. It is under the bar now, where it reads as a position. -->
+                  <span
+                    [class]="step.tier.valueClass"
+                    class="font-display text-sm leading-none font-bold tabular-nums"
+                  >
+                    {{ step.view.valueLabel }}
+                  </span>
+
+                  <!-- The bar rides on the one step the town stands in, and nowhere else. Its
+                       figures are behind a tooltip: written under it they were read as the step's
+                       own target, which the figure beside the name already is, and two targets on
+                       one row is what sent a reader looking for the wrong one.
+
+                       The wrapper is what carries the hover, not the bar: a one-pixel track is not
+                       a target a pointer can hold. Its padding is the surface, and the sentence is
+                       also written out for assistive technology, which the track itself is hidden
+                       from — see `ProgressBar`, which asks every call site drawing a bare bar to
+                       carry the value itself. -->
+                  @if (step.view.progressPercentage !== null) {
+                    <span
+                      [appTooltip]="step.view.progressLabel"
+                      appTooltipPosition="above"
+                      class="col-span-3 mt-1 block w-full cursor-help py-1.5"
+                    >
+                      <span class="sr-only">{{ step.view.progressLabel }}</span>
+
+                      <app-progress-bar
+                        [percentage]="step.view.progressPercentage"
+                        class="w-full"
+                        colorClass="bg-brand-500"
+                        heightClass="h-1"
+                      />
+                    </span>
+                  }
                 </li>
               }
             </ol>

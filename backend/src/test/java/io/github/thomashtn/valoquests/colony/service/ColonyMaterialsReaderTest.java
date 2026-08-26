@@ -6,6 +6,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.github.thomashtn.valoquests.boss.entity.BossCatalogEntry;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
@@ -16,6 +17,7 @@ import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgre
 import io.github.thomashtn.valoquests.colony.ColonyRuleset;
 import io.github.thomashtn.valoquests.colony.DefaultColonyRuleset;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
+import io.github.thomashtn.valoquests.scoring.model.BossCategory;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -24,12 +26,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests what a finished week is worth in materials.
+ * Tests what a finished week hands the colony: its materials, and the morale its fight moved.
  */
 class ColonyMaterialsReaderTest {
 
     /** Week being priced. */
     private static final LocalDate WEEK = LocalDate.of(2026, 6, 1);
+
+    /** Roster size the fixture run froze on. */
+    private static final int ROSTER_SIZE = 7;
 
     /** Progress repository dependency. */
     private PlayerChallengeProgressRepository progressRepository;
@@ -68,7 +73,7 @@ class ColonyMaterialsReaderTest {
             progress(ChallengeDifficulty.VERY_HARD, false)
         );
 
-        assertThat(reader.materialsOf(WEEK)).isEqualTo(32 + 8);
+        assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE).materials()).isEqualTo(32 + 8);
     }
 
     /**
@@ -89,41 +94,69 @@ class ColonyMaterialsReaderTest {
 
         givenProgress(perfectWeek.toArray(new PlayerChallengeProgress[0]));
 
-        assertThat(reader.materialsOf(WEEK)).isEqualTo(847);
+        assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE).materials()).isEqualTo(847);
     }
 
     /**
-     * Verifies that a defeated boss adds four hundred materials.
+     * Verifies a defeated boss pays per player of the frozen roster, and lifts the morale by what its
+     * category is worth.
      */
     @Test
-    void shouldPayFourHundredForADefeatedBoss() {
-        givenEncounter(true, true);
+    void shouldPayADefeatedBossPerPlayerOfTheFrozenRoster() {
+        givenEncounter(BossCategory.STANDARD, true, true);
 
-        assertThat(reader.materialsOf(WEEK)).isEqualTo(400);
+        assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE)).satisfies(outcome -> {
+            assertThat(outcome.materials()).isEqualTo(560);
+            assertThat(outcome.moraleDelta()).isEqualTo(15.0);
+        });
     }
 
     /**
-     * Verifies that a surviving boss brings nothing, which is its entire cost.
+     * Verifies the three categories are priced apart, in materials and in morale alike.
      */
     @Test
-    void shouldPayNothingForASurvivingBoss() {
-        givenEncounter(true, false);
+    void shouldPriceTheThreeCategoriesApart() {
+        givenEncounter(BossCategory.MINOR, true, true);
+        assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE).materials()).isEqualTo(420);
 
-        assertThat(reader.materialsOf(WEEK)).isZero();
+        givenEncounter(BossCategory.ELITE, true, true);
+        assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE)).satisfies(outcome -> {
+            assertThat(outcome.materials()).isEqualTo(700);
+            assertThat(outcome.moraleDelta()).isEqualTo(20.0);
+        });
     }
 
     /**
-     * Verifies that a fight still open pays nothing, however it currently stands.
+     * Verifies a surviving boss brings no materials and costs morale, whatever it was drawn at.
+     *
+     * <p>That cost is its entire penalty, and it is the only thing in the model that drives morale down.
      */
     @Test
-    void shouldPayNothingForAFightThatIsNotFinalized() {
-        givenEncounter(false, true);
+    void shouldCostMoraleAndPayNothingWhenTheBossHolds() {
+        givenEncounter(BossCategory.ELITE, true, false);
 
-        assertThat(reader.materialsOf(WEEK)).isZero();
+        assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE)).satisfies(outcome -> {
+            assertThat(outcome.materials()).isZero();
+            assertThat(outcome.moraleDelta()).isEqualTo(-20.0);
+        });
     }
 
     /**
-     * Verifies that a week with no fight at all is simply a week with no boss materials.
+     * Verifies a fight still open settles nothing, however it currently stands.
+     */
+    @Test
+    void shouldSettleNothingForAFightThatIsNotFinalized() {
+        givenEncounter(BossCategory.STANDARD, false, true);
+
+        assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE)).satisfies(outcome -> {
+            assertThat(outcome.materials()).isZero();
+            assertThat(outcome.moraleDelta()).isZero();
+        });
+    }
+
+    /**
+     * Verifies that a week with no fight at all is simply a week with no boss materials and no morale
+     * movement either way.
      *
      * <p>What keeps a run ten weeks long instead of ten fights long, and therefore what keeps runs
      * comparable to one another.
@@ -132,7 +165,9 @@ class ColonyMaterialsReaderTest {
     void shouldTreatAWeekWithoutAFightAsAWeekWithoutBossMaterials() {
         givenProgress(progress(ChallengeDifficulty.MEDIUM, true));
 
-        assertThat(reader.materialsOf(WEEK)).isEqualTo(22);
+        assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE).moraleDelta()).isZero();
+
+        assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE).materials()).isEqualTo(22);
     }
 
     /**
@@ -149,12 +184,17 @@ class ColonyMaterialsReaderTest {
     /**
      * Registers the week's fight.
      *
+     * @param category  category the boss was drawn at
      * @param finalized whether the fight was closed
      * @param defeated  whether the boss went down
      */
-    private void givenEncounter(boolean finalized, boolean defeated) {
+    private void givenEncounter(BossCategory category, boolean finalized, boolean defeated) {
+        BossCatalogEntry boss = new BossCatalogEntry();
+        boss.setCategory(category);
+
         WeeklyBossEncounter encounter = new WeeklyBossEncounter();
         encounter.setWeekStart(WEEK);
+        encounter.setBossCatalogEntry(boss);
         encounter.setDefeated(defeated);
         encounter.setFinalizedAt(finalized ? Instant.parse("2026-06-08T00:05:00Z") : null);
 

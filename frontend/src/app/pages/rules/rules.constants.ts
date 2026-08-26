@@ -126,3 +126,57 @@ export const RANKING_FACTS: readonly string[] = [
   'crown',
   'finishingBlow',
 ];
+
+/**
+ * One line of the colony's morale table: what a Monday's fight moves it by.
+ *
+ * Mirrors `DefaultColonyRuleset#moraleForDefeatedBoss` and `#moraleForSurvivingBoss`. The fight is
+ * the only thing in the whole model that touches morale, which is exactly why it is worth a table of
+ * its own: everything else the squad does is already measured by the seven-day food window.
+ */
+export const COLONY_MORALE_SHOWCASE: readonly { label: string; morale: number }[] = [
+  { label: 'MINOR', morale: 10 },
+  { label: 'STANDARD', morale: 15 },
+  { label: 'ELITE', morale: 20 },
+  { label: 'SURVIVED', morale: -20 },
+];
+
+/**
+ * Materials one player earns by completing a challenge, by difficulty.
+ *
+ * Mirrors `DefaultColonyRuleset#materialsForChallenge`, which divides the same challenge damage the
+ * ladder above uses by a hundred — so the colony cannot drift from the ranking on what a `HARD` is
+ * worth, and the two tables on this page are one table read twice.
+ */
+export const COLONY_MATERIALS_SHOWCASE: readonly {
+  difficulty: ChallengeDifficulty;
+  materials: number;
+}[] = DIFFICULTY_SHOWCASE.map((tier) => ({
+  difficulty: tier.difficulty,
+  materials: Math.floor(tier.damage / 100),
+}));
+
+/**
+ * The town's first named tiers, with the housing each opens at.
+ *
+ * Cut at the point the ladder starts repeating: past `GREAT_CITY` every further step is a numbered
+ * citadel, so listing them would be listing an infinite series. Mirrors `DefaultColonyRuleset`'s own
+ * name table.
+ */
+export const COLONY_TIER_SHOWCASE: readonly { name: string; threshold: number }[] = [
+  { name: 'CAMP', threshold: 2_000 },
+  { name: 'HAMLET', threshold: 2_500 },
+  { name: 'VILLAGE', threshold: 3_000 },
+  { name: 'BOROUGH', threshold: 3_500 },
+  { name: 'TOWN', threshold: 4_000 },
+  { name: 'CITY', threshold: 4_500 },
+  { name: 'RESIDENTIAL_QUARTER', threshold: 5_000 },
+  { name: 'GREAT_CITY', threshold: 5_500 },
+];
+
+/**
+ * The four numbers the colony's whole chain is made of, as the ordered facts of its beat.
+ *
+ * Each entry is the last segment of its `rules.sections.colony.facts.*` translation key.
+ */
+export const COLONY_FACTS: readonly string[] = ['harvest', 'feeds', 'eats', 'window'];

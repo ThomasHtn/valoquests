@@ -19,7 +19,7 @@ import { Component, computed, input } from '@angular/core';
   templateUrl: './progress-bar.html',
   host: {
     class: 'relative block overflow-hidden bg-surface-sunken',
-    '[class]': 'heightClass()',
+    '[class]': 'heightClass() + " " + radiusClass()',
     'aria-hidden': 'true',
   },
 })
@@ -36,9 +36,39 @@ export class ProgressBar {
   public readonly colorClass = input.required<string>();
 
   /**
+   * Level a second band, drawn from the fill's head, reaches. `null` draws a single-band bar.
+   *
+   * The colony's food bar is what this exists for: the first band is what the town already eats,
+   * the second is what is left over to make it grow, and the empty remainder is the housing the
+   * food does not reach. Three shapes in one track, so "should we play tonight" is answered by
+   * looking at it rather than by reading a sentence. The morale bar reuses it the other way round,
+   * with its unreachable floor as the first band.
+   *
+   * The two bands meet flush: the colour change is the split, and the dark seam that used to be cut
+   * between them read as a notch in the track rather than as a boundary.
+   */
+  public readonly secondaryPercentage = input<number | null>(null);
+
+  /**
+   * Tailwind background color utility applied to the second band.
+   */
+  public readonly secondaryColorClass = input('');
+
+  /**
    * Tailwind height utility applied to the track, for the few call sites needing a taller bar.
    */
   public readonly heightClass = input('h-1');
+
+  /**
+   * Tailwind border-radius utility applied to the track.
+   *
+   * Square by default, which is the direction's own silhouette everywhere a bar reads as a plain
+   * indicator — a win rate, a challenge, a ranking row. The colony's resource rails opt into a
+   * rounded track instead: they are the gauges of a management screen, read as a row of capsules
+   * rather than as a column of ledger figures. The host clips its own overflow, so this rounds the
+   * fill and both bands with it.
+   */
+  public readonly radiusClass = input('');
 
   /**
    * Draws a bright hairline at the fill's head, the game-style marker the boss health bar uses.
@@ -51,13 +81,22 @@ export class ProgressBar {
    * Draws a second, static tick at the level the fill is heading for, so the value can be read
    * against where it is supposed to sit rather than against an empty track.
    *
-   * The colony's gauges need this: the one holding the colony back settles far below the health it
-   * produces, so a squad comfortably holding half its capacity still sees that bar around a third.
-   * Without the tick it reads as a failure; with it, as being on the mark.
-   *
    * `null` draws nothing.
    */
   public readonly targetMarker = input<number | null>(null);
+
+  /**
+   * The second band's width, or `null` when there is no second band to draw.
+   *
+   * Clamped at the fill's head rather than allowed to run backwards: the two bands describe one
+   * quantity split in two, so a second level under the first is a caller bug, and drawing it as a
+   * negative width would put a stray sliver at the wrong end of the track.
+   */
+  protected readonly secondaryWidth = computed<number | null>(() => {
+    const secondary = this.secondaryPercentage();
+
+    return secondary === null ? null : Math.max(0, secondary - this.percentage());
+  });
 
   /**
    * The target tick, or `null` when there is nothing to draw.
