@@ -31,6 +31,10 @@ public record CurrentChallengesResponse(
      * @param metric               metric the challenge measures
      * @param targetValue          value a player must reach to complete it
      * @param damage               base damage awarded on completion, before the squad bonus
+     * @param materials            materials one player banks for the colony by validating it. The other
+     *                             half of what a challenge is worth: the damage moves the weekly
+     *                             ranking and the fight, the materials move the town, and nothing in the
+     *                             interface said the second half existed.
      * @param teamBonusPercent     squad bonus currently earned, as a percentage of {@code damage}
      * @param completedPlayers     tracked players who completed it
      * @param totalPlayers         tracked players it applies to
@@ -45,6 +49,7 @@ public record CurrentChallengesResponse(
         String metric,
         BigDecimal targetValue,
         int damage,
+        int materials,
         int teamBonusPercent,
         int completedPlayers,
         int totalPlayers,

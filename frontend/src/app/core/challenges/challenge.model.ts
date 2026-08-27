@@ -33,6 +33,15 @@ export interface ChallengeProgress {
   readonly damage: number;
 
   /**
+   * Materials one player banks for the colony by validating it.
+   *
+   * The other half of what a challenge is worth: the damage moves the weekly ranking and the boss
+   * fight, the materials move the town. Derived by the backend from that same damage, so the two can
+   * never disagree.
+   */
+  readonly materials: number;
+
+  /**
    * Squad bonus currently earned, as a percentage of {@link damage}, resolved by the backend from
    * the week's own scoring ruleset. Grows as teammates complete the same challenge, and applies
    * retroactively to everyone who already had.

@@ -77,6 +77,15 @@ export interface BossHistoryWeek {
    * Sunday identifying the week, as an ISO-8601 date (`YYYY-MM-DD`).
    */
   readonly weekEnd: string;
+
+  /**
+   * Position of the week inside its run, from one — where the campaign map places it.
+   *
+   * Sent rather than inferred from the fight's position in the history: a week that closed without a
+   * fight leaves a hole, and a map placing fights by list position would shift every reward after it
+   * onto the wrong week.
+   */
+  readonly runWeekIndex: number;
   readonly boss: Boss;
   readonly effectiveHp: number;
   readonly totalDamageDealt: number;

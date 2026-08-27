@@ -5,13 +5,14 @@ import io.github.thomashtn.valoquests.colony.model.ColonyDayActivity;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
-import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.service.MatchDamageCalculator;
 import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
@@ -31,21 +32,24 @@ import org.springframework.transaction.annotation.Transactional;
  *       player stringing fifteen games together could watch their own turnout drop by playing more.</li>
  * </ul>
  *
- * <p>Every player counts, whatever their status. Archiving a player does not delete their matches, so a
- * numerator built this way is stable — which is what makes the replay genuinely pure, and what would
- * break if this filtered on the roster as it currently stands.
+ * <p>Only players holding {@link Player#COMPETITIVE_STATUS} count. This used to read every match
+ * whatever the player's status, on the argument that a numerator ignoring the roster is stable across
+ * a deactivation and therefore keeps the replay pure. It bought that purity at the price of a town no
+ * gauge could account for: a deactivated player kept bringing food in while appearing on none of the
+ * roster the turnout rail draws, so an evening's harvest had no author anywhere in the interface, and
+ * an operator who had deliberately taken somebody off the roster went on being fed by them.
+ *
+ * <p>The status is the one the player holds now, so deactivating somebody rewrites the run's past days
+ * on the next replay. That is the intended reading — the roster is a statement about who is in the
+ * campaign, not only about who is in it today — and it is what the turnout readout has always done,
+ * having named the current roster on every day it draws since it was written.
  */
 @Service
 @Transactional(readOnly = true)
 public class ColonyActivityReader {
 
     /**
-     * Repository listing the players whose matches feed the colony.
-     */
-    private final PlayerRepository playerRepository;
-
-    /**
-     * Repository loading one player's matches over a period.
+     * Repository loading every tracked player's matches over a period.
      */
     private final PlayerMatchRepository playerMatchRepository;
 
@@ -77,7 +81,6 @@ public class ColonyActivityReader {
     /**
      * Creates the activity reader.
      *
-     * @param playerRepository      player repository
      * @param playerMatchRepository player match repository
      * @param damageResolver        weekly match damage resolver
      * @param damageCalculator      match damage calculator
@@ -86,7 +89,6 @@ public class ColonyActivityReader {
      * @param weekCalendar          week calendar
      */
     public ColonyActivityReader(
-        PlayerRepository playerRepository,
         PlayerMatchRepository playerMatchRepository,
         WeeklyMatchDamageResolver damageResolver,
         MatchDamageCalculator damageCalculator,
@@ -94,7 +96,6 @@ public class ColonyActivityReader {
         ColonyRuleset colonyRuleset,
         WeekCalendar weekCalendar
     ) {
-        this.playerRepository = playerRepository;
         this.playerMatchRepository = playerMatchRepository;
         this.damageResolver = damageResolver;
         this.damageCalculator = damageCalculator;
@@ -158,7 +159,15 @@ public class ColonyActivityReader {
     }
 
     /**
-     * Walks every player's weeks over a range and folds both readings into one pass.
+     * Reads every player's matches over a range in one query and folds both readings into one pass.
+     *
+     * <p>Whole weeks are loaded because the daily diminishing returns are ranked inside a player's
+     * week: a range cut mid-week would rank a Monday's games against a partial week and price them
+     * above what the weekly ranking pays.
+     *
+     * <p>One query for the whole roster and the whole range, then grouped in memory. Asking per player
+     * and per week instead cost {@code players x weeks} round trips on a call the replay makes after
+     * every synchronization — eleven weeks against a roster that is free to grow.
      *
      * @param firstDay first day of the range, inclusive
      * @param lastDay  last day of the range, inclusive
@@ -167,40 +176,45 @@ public class ColonyActivityReader {
     private Reading read(LocalDate firstDay, LocalDate lastDay) {
         Reading reading = new Reading(new HashMap<>(), new HashMap<>());
 
-        List<Player> players = playerRepository.findAllByOrderByIdAsc();
-        LocalDate lastWeek = weekCalendar.weekStartOf(lastDay);
+        List<PlayerMatch> matches = playerMatchRepository.findAllForPeriod(
+            Player.COMPETITIVE_STATUS,
+            weekCalendar.startOf(weekCalendar.weekStartOf(firstDay)),
+            weekCalendar.endOf(weekCalendar.weekStartOf(lastDay))
+        );
 
-        for (
-            LocalDate week = weekCalendar.weekStartOf(firstDay);
-            !week.isAfter(lastWeek);
-            week = week.plusWeeks(1)
-        ) {
-            for (Player player : players) {
-                accumulateWeek(player, week, reading);
-            }
-        }
+        groupByPlayerAndWeek(matches).values().forEach(week -> accumulateWeek(week, reading));
 
         return reading;
     }
 
     /**
-     * Prices one player's week and folds it into both accumulators.
+     * Splits a flat list of matches into the player-weeks the resolver prices one at a time.
      *
-     * @param player  player whose week is being read
-     * @param week    Monday identifying the week
-     * @param reading accumulators to fold into
+     * @param matches every match of the range, whoever played them
+     * @return matches grouped by the player and the week they belong to
      */
-    private void accumulateWeek(Player player, LocalDate week, Reading reading) {
-        List<PlayerMatch> matches = playerMatchRepository.findForChallengePeriod(
-            player.getId(),
-            weekCalendar.startOf(week),
-            weekCalendar.endOf(week)
-        );
+    private Map<PlayerWeek, List<PlayerMatch>> groupByPlayerAndWeek(List<PlayerMatch> matches) {
+        Map<PlayerWeek, List<PlayerMatch>> grouped = new LinkedHashMap<>();
 
-        if (matches.isEmpty()) {
-            return;
+        for (PlayerMatch match : matches) {
+            PlayerWeek key = new PlayerWeek(
+                match.getPlayer().getId(),
+                weekCalendar.weekStartOf(match.getMatch().getStartedAt())
+            );
+
+            grouped.computeIfAbsent(key, ignored -> new ArrayList<>()).add(match);
         }
 
+        return grouped;
+    }
+
+    /**
+     * Prices one player's week and folds it into both accumulators.
+     *
+     * @param matches that player-week's matches, chronologically ordered
+     * @param reading accumulators to fold into
+     */
+    private void accumulateWeek(List<PlayerMatch> matches, Reading reading) {
         Map<Long, Integer> damageByMatchId = damageResolver.resolve(matches, scoringRuleset);
 
         for (PlayerMatch match : matches) {
@@ -213,9 +227,18 @@ public class ColonyActivityReader {
             if (rawDamage > 0) {
                 reading.rawDamageByDayAndPlayer()
                     .computeIfAbsent(day, ignored -> new HashMap<>())
-                    .merge(player.getId(), rawDamage, Integer::sum);
+                    .merge(match.getPlayer().getId(), rawDamage, Integer::sum);
             }
         }
+    }
+
+    /**
+     * One player's slice of one week, the unit the daily diminishing returns are ranked inside.
+     *
+     * @param playerId  internal player identifier
+     * @param weekStart Monday identifying the week
+     */
+    private record PlayerWeek(Long playerId, LocalDate weekStart) {
     }
 
     /**

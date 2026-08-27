@@ -22,6 +22,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +51,9 @@ class DefaultWeeklyBossSelectionServiceTest {
 
     /** Run every fixture's campaign runs in. */
     private static final Run CAMPAIGN_RUN = campaignRun();
+
+    /** Weeks a run spans, and therefore the length of the difficulty ladder. */
+    private static final int RUN_LENGTH_WEEKS = 10;
 
     /** Catalogue repository dependency. */
     private BossCatalogEntryRepository catalogRepository;
@@ -138,7 +142,7 @@ class DefaultWeeklyBossSelectionServiceTest {
         when(catalogRepository.findAllByEnabledTrueOrderByIdAsc())
             .thenReturn(List.of(bossA, bossB, bossC));
 
-        // Two of the three bosses were already drawn in previous weeks of this act, still within one
+        // Two of the three bosses were already drawn in previous weeks of this run, still within one
         // cycle.
         when(encounterRepository.findAllByRunIdOrderByWeekStartAsc(CAMPAIGN_RUN_ID))
             .thenReturn(List.of(
@@ -334,6 +338,93 @@ class DefaultWeeklyBossSelectionServiceTest {
 
         assertThat(service.resizeWeekBoss(WEEK_START)).isEmpty();
         verify(encounterRepository, never()).save(any());
+    }
+
+    /**
+     * Verifies the week's weight class comes from its position in the run, not from the draw.
+     *
+     * <p>This is the whole point of the ladder: a run has a shape, with a peak halfway through and
+     * another on its closing week, each followed by a breather. Handed one boss per class, the draw has
+     * no freedom left, so what comes back is the ladder itself.
+     */
+    @Test
+    void shouldFightTheWeightClassItsRunSchedules() {
+        when(catalogRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(List.of(
+            createBoss(1L, "BOSS_MINOR", BossCategory.MINOR),
+            createBoss(2L, "BOSS_STANDARD", BossCategory.STANDARD),
+            createBoss(3L, "BOSS_ELITE", BossCategory.ELITE)
+        ));
+
+        List<BossCategory> fought = new ArrayList<>();
+        for (int week = 0; week < RUN_LENGTH_WEEKS; week++) {
+            LocalDate weekStart = CAMPAIGN_RUN.getFirstWeekStart().plusWeeks(week);
+            fought.add(service.selectWeekBoss(weekStart).getBossCatalogEntry().getCategory());
+        }
+
+        assertThat(fought).containsExactly(
+            BossCategory.MINOR,
+            BossCategory.STANDARD,
+            BossCategory.STANDARD,
+            BossCategory.STANDARD,
+            BossCategory.ELITE,
+            BossCategory.MINOR,
+            BossCategory.STANDARD,
+            BossCategory.STANDARD,
+            BossCategory.STANDARD,
+            BossCategory.ELITE
+        );
+    }
+
+    /**
+     * Verifies the no-repeat cycle is tracked per weight class rather than over the whole catalogue.
+     *
+     * <p>The ladder does not spend the classes evenly — six standard weeks against two of each other
+     * class — so a single shared cycle would be reset by the standard weeks and let one of them repeat
+     * while untouched bosses of the other classes sat in the catalogue.
+     */
+    @Test
+    void shouldTrackTheNoRepeatCyclePerWeightClass() {
+        BossCatalogEntry standardA = createBoss(1L, "STANDARD_A", BossCategory.STANDARD);
+        BossCatalogEntry standardB = createBoss(2L, "STANDARD_B", BossCategory.STANDARD);
+        BossCatalogEntry standardC = createBoss(3L, "STANDARD_C", BossCategory.STANDARD);
+        BossCatalogEntry minor = createBoss(4L, "MINOR_A", BossCategory.MINOR);
+        BossCatalogEntry elite = createBoss(5L, "ELITE_A", BossCategory.ELITE);
+
+        when(catalogRepository.findAllByEnabledTrueOrderByIdAsc())
+            .thenReturn(List.of(standardA, standardB, standardC, minor, elite));
+
+        // Two of the three standard bosses are spent, with the run's minor and elite weeks in between.
+        // Counted over the whole catalogue those five draws would have closed a cycle twice over.
+        when(encounterRepository.findAllByRunIdOrderByWeekStartAsc(CAMPAIGN_RUN_ID))
+            .thenReturn(List.of(
+                createEncounter(WEEK_START.minusWeeks(4), minor),
+                createEncounter(WEEK_START.minusWeeks(3), standardA),
+                createEncounter(WEEK_START.minusWeeks(2), elite),
+                createEncounter(WEEK_START.minusWeeks(1), standardB)
+            ));
+
+        WeeklyBossEncounter result = service.selectWeekBoss(WEEK_START);
+
+        assertThat(result.getBossCatalogEntry()).isSameAs(standardC);
+    }
+
+    /**
+     * Verifies a class the catalogue holds nothing for costs the campaign its peak, not its Monday.
+     *
+     * <p>The backoffice can disable any catalogue entry, elites included. The week still has to have a
+     * boss, so the draw falls back on whatever is enabled rather than failing the rollover.
+     */
+    @Test
+    void shouldFallBackOnTheWholeCatalogueWhenItsClassIsEmpty() {
+        BossCatalogEntry onlyMinor = createBoss(1L, "MINOR_A", BossCategory.MINOR);
+        when(catalogRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(List.of(onlyMinor));
+
+        // The run's fifth week, which the ladder schedules as elite.
+        LocalDate eliteWeek = CAMPAIGN_RUN.getFirstWeekStart().plusWeeks(4);
+
+        WeeklyBossEncounter result = service.selectWeekBoss(eliteWeek);
+
+        assertThat(result.getBossCatalogEntry()).isSameAs(onlyMinor);
     }
 
     /** Registers a one-entry catalogue and returns the boss every draw resolves to. */

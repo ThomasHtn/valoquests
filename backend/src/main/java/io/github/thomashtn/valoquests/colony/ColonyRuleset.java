@@ -71,6 +71,21 @@ public interface ColonyRuleset {
     double efficiencyFor(int materials, int rosterSize);
 
     /**
+     * Returns the cumulative materials a roster must bank to reach an efficiency.
+     *
+     * <p>The inverse of {@link #efficiencyFor(int, int)}, and the only reason it exists is the page: a
+     * ladder step is defined by an efficiency, which is a number the squad has no way to act on, while
+     * the materials behind it are exactly what challenges and bosses pay. Rounded up, so
+     * {@code efficiencyFor(materialsForEfficiency(e, r), r) >= e} always holds and a step never reads as
+     * affordable one material short.
+     *
+     * @param efficiency target efficiency
+     * @param rosterSize roster size frozen on the run
+     * @return materials needed to reach it, zero at or below the base efficiency and on an empty roster
+     */
+    int materialsForEfficiency(double efficiency, int rosterSize);
+
+    /**
      * Returns the raw daily damage a player must reach to count towards turnout.
      *
      * <p>Read on <b>raw</b> damage, before the daily diminishing returns: those exist to stop farming,
@@ -112,8 +127,9 @@ public interface ColonyRuleset {
     /**
      * Returns the morale floor.
      *
-     * <p>Sits just above zero rather than at a comfortable value: the floor only keeps the speed
-     * multiplier positive, so a town that has lost every boss is frozen until it wins one back.
+     * <p>Set well above zero rather than just off it. A floor grazing zero froze a town that had lost
+     * everything, which is waiting rather than losing; this one still leaves it crawling forward, so a
+     * ruined run is punished without ever becoming unplayable.
      *
      * @return lowest morale reachable
      */
@@ -128,6 +144,10 @@ public interface ColonyRuleset {
 
     /**
      * Returns the morale a defeated boss of a category is worth.
+     *
+     * <p>The ten fights a run schedules pay, between them, exactly the distance from the opening morale
+     * to the ceiling. That is a property of the table rather than an accident of it: it is what stops
+     * the gauge topping out mid-run and leaving the later fights worth nothing.
      *
      * @param category category of the defeated boss
      * @return morale gained

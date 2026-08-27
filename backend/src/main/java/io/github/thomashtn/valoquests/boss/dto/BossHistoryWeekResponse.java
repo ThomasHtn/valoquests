@@ -11,6 +11,10 @@ import java.time.LocalDate;
  *
  * @param weekStart                Monday beginning the week
  * @param weekEnd                  Sunday ending the week
+ * @param runWeekIndex             the week's one-based position in its run, which is what places it on
+ *                                 the campaign map. Without it the map can only join fights to the
+ *                                 colony's weeks by list position, and a single week that closed
+ *                                 without a fight shifts every reward label after it by one.
  * @param finalizedAt              instant the week's outcome became immutable
  * @param boss                     drawn boss identity
  * @param effectiveHp              hit points the boss had to lose to be defeated that week
@@ -25,6 +29,7 @@ import java.time.LocalDate;
 public record BossHistoryWeekResponse(
     LocalDate weekStart,
     LocalDate weekEnd,
+    int runWeekIndex,
     Instant finalizedAt,
     BossResponse boss,
     int effectiveHp,

@@ -1,4 +1,4 @@
--- Inserts the six Valorant accounts tracked by the application.
+-- Inserts the seven Valorant accounts tracked by the application.
 --
 -- The Riot PUUID is intentionally left null. It will be resolved from the
 -- game name and tag line during the player's first synchronization.

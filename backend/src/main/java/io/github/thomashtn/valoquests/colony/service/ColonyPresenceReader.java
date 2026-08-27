@@ -21,6 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
  * is frozen on the run, not its membership, so a roster edited mid-run shows more or fewer pips than the
  * denominator. That discrepancy is real and worth seeing — it is exactly what the backoffice exists to
  * resolve.
+ *
+ * <p>The <b>count</b> is held to the denominator all the same, because the two are read as one figure.
+ * Activating an eighth player on a run frozen at seven let all eight clear the threshold and published
+ * {@code 8 / 7}, a fraction claiming a turnout above a full house on a rail whose whole subject is how
+ * much of the squad turned up. The multiplier never went above two either way — {@link
+ * ColonyReplayEngine#presenceMultiplier(int, int)} caps its ratio at one — so capping the count here
+ * publishes exactly what the model applied, rather than a numerator the model had already discarded.
  */
 @Service
 @Transactional(readOnly = true)
@@ -89,10 +96,13 @@ public class ColonyPresenceReader {
             ));
         }
 
+        // Held to the denominator, which is the ratio the multiplier itself is capped at.
+        int counted = Math.clamp(presenceCount, 0, Math.max(0, rosterSize));
+
         return new ColonyPresenceResponse(
-            presenceCount,
+            counted,
             rosterSize,
-            engine.presenceMultiplier(presenceCount, rosterSize),
+            engine.presenceMultiplier(counted, rosterSize),
             ruleset.presenceDamageThreshold(),
             players
         );

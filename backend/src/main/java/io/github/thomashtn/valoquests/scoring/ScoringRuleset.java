@@ -89,6 +89,18 @@ public interface ScoringRuleset {
     int bossHitPoints(BossCategory category, int activePlayerCount, int referenceDamagePerPlayer);
 
     /**
+     * Returns the weight class the campaign schedules for one week of a run.
+     *
+     * <p>The category a week fights is a property of the calendar, not of the draw. The draw only
+     * chooses <em>which</em> boss of that class turns up, which is what makes a run a shaped campaign
+     * with two peaks rather than ten independent coin flips.
+     *
+     * @param weekIndexInRun one-based position of the week inside its run
+     * @return scheduled weight class, clamped to the ladder's ends outside the run
+     */
+    BossCategory bossCategoryForRunWeek(int weekIndexInRun);
+
+    /**
      * Returns the per-player weekly output a fight is sized against before any history exists.
      *
      * <p>Only used to open a campaign. From the second closed week onwards the reference is measured

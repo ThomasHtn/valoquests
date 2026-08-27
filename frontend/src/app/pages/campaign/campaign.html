@@ -38,6 +38,15 @@
       <span class="font-display text-base leading-none font-bold text-text-primary tabular-nums">
         {{ colony.materialsLabel() }}
       </span>
+
+      <!-- What the week already holds and Monday will credit. The banked total only moves on a
+           Monday, so on its own it reads as a flat zero for a whole first week while the squad is in
+           fact earning — which is the one thing it must not say. -->
+      @if (colony.pendingMaterialsLabel(); as pending) {
+        <span class="font-mono text-2xs leading-none text-brand-500 tabular-nums">
+          {{ pending }}
+        </span>
+      }
     </span>
 
     <!-- Fights won over the ten a run holds, never over the weeks elapsed: a denominator that moves
@@ -141,21 +150,47 @@
              the food rail read against the mark on the hexagon says whether tonight is a night to
              play or a night to build, and it says it without a sentence. -->
         <div class="flex shrink-0 flex-col gap-4 lg:flex-row lg:items-stretch">
-          <!-- The band's own panel. `ColonyResourceBand` is hosted as `display: contents`, so this
-               div is what lays out its hexagon and its rails — the classes it carries are the row
-               they used to get from the block above. -->
+          <!-- The band's own panel. `ColonyResourceBand` is hosted as `display: contents`, so the
+               inner row is what lays out its hexagon and its rails — the classes it carries are
+               the row they used to get from the block above. The ratio badge sits below that row,
+               inside the same panel rather than beside it: `display: contents` gives the panel
+               only two flex items (hexagon, rails), so a third element placed alongside them would
+               read as a fourth rail rather than as a footnote under the three. -->
           <div
-            class="flex min-w-0 flex-1 flex-col gap-3 bg-text-primary/4 px-6 py-5 sm:px-8 sm:py-6 lg:flex-row lg:items-stretch"
+            class="flex min-w-0 flex-1 flex-col gap-3 bg-text-primary/4 px-6 py-5 sm:px-8 sm:py-6"
           >
-            <app-colony-resource-band
-              (curveOpen)="openCurve()"
-              [delta]="colony.delta()"
-              [hexagonAriaLabel]="colony.hexagonAriaLabel()"
-              [populationLabel]="colony.populationLabel()"
-              [populationPercentage]="colony.populationPercentage()"
-              [presencePips]="colony.presencePips()"
-              [tracks]="colony.tracks()"
-            />
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-stretch">
+              <app-colony-resource-band
+                (curveOpen)="openCurve()"
+                [delta]="colony.delta()"
+                [foodDays]="colony.foodDays()"
+                [hexagonAriaLabel]="colony.hexagonAriaLabel()"
+                [populationLabel]="colony.populationLabel()"
+                [populationPercentage]="colony.populationPercentage()"
+                [presencePips]="colony.presencePips()"
+                [tracks]="colony.tracks()"
+              />
+            </div>
+
+            <!-- The efficiency the food rail's `×` already carries, read here as the ratio it is
+                 rather than as a bare factor: one food icon against the inhabitant icons it feeds,
+                 the count between them live off `colony.efficiency`. -->
+            <div
+              class="flex shrink-0 items-center gap-2 border-t border-text-primary/8 pt-3 text-text-secondary"
+            >
+              <span aria-hidden="true" class="flex items-center gap-1.5 [&>svg]:size-4">
+                <svg lucideWheat></svg>
+                <span class="font-display text-sm leading-none font-bold">1</span>
+              </span>
+              <span aria-hidden="true" class="text-text-muted">=</span>
+              <span aria-hidden="true" class="flex items-center gap-1.5 [&>svg]:size-4">
+                <svg lucideUsers></svg>
+                <span class="font-display text-sm leading-none font-bold tabular-nums">
+                  {{ efficiencyRatioLabel() }}
+                </span>
+              </span>
+              <span class="sr-only">{{ efficiencyRatioAriaLabel() }}</span>
+            </div>
           </div>
 
           <!-- Every run before this one, as the scale the population figure is missing. Rows drawn
@@ -337,8 +372,13 @@
                   >
                     @for (column of columns; track column) {
                       @if (column === row.bossColumn ? row.node : null; as node) {
+                        <!-- The tile being fought is lifted out of the flow at rest, not only on
+                         hover: its shockwave expands past its own hexagon, and with every tile at
+                         `z-auto` the rings slid *under* whichever neighbours follow it in the grid.
+                         Below the `z-20` the pointer still claims, so hovering keeps winning. -->
                         <div
                           [class]="columnVisibilityClass(column)"
+                          [class.z-10]="node.status === 'current'"
                           class="group relative h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 hover:z-20 focus-within:z-20"
                         >
                           @let tier = territoryTier(node.status);
@@ -348,6 +388,18 @@
                               [class]="tier.haloClass"
                               aria-hidden="true"
                               class="clip-hex absolute -inset-1"
+                            ></span>
+                          }
+
+                          <!-- The shockwave the tile being fought sends out, layered under the tile
+                           and outside its clip so it can expand past the hexagon's own edge. Its
+                           two rings are pseudo-elements of this span, which is why the span itself
+                           is unclipped and only tinted. -->
+                          @if (tier.liveAccentClass) {
+                            <span
+                              [class]="tier.liveAccentClass"
+                              aria-hidden="true"
+                              class="battle-ripple pointer-events-none absolute -inset-1"
                             ></span>
                           }
 
@@ -365,7 +417,6 @@
                               node.statusLabel
                             "
                             [attr.data-battlemap-current]="node.status === 'current' ? '' : null"
-                            [attr.title]="row.detailLabel"
                             class="focus-ring absolute inset-0 cursor-pointer transition-transform duration-200 hover:scale-[1.07] motion-reduce:transition-none"
                             type="button"
                           >
@@ -394,9 +445,17 @@
                               <!-- Ground gained: the surface fills from the bottom as the boss takes
                                damage, so a week reads as taken, contested or untouched at a
                                glance. -->
+                              <!-- The tile of the fight running now carries a crest on that surface,
+                               so the ground being taken reads as a level still rising. Settled weeks
+                               get a flat fill: their number stopped moving when the week closed. -->
                               @if (node.damagePercentage > 0) {
                                 <span
-                                  [class]="tier.damageFillClass"
+                                  [class]="
+                                    tier.damageFillClass +
+                                    (tier.liveAccentClass
+                                      ? ' liquid-wave ' + tier.liveAccentClass
+                                      : '')
+                                  "
                                   [style.height.%]="node.damagePercentage"
                                   aria-hidden="true"
                                   class="absolute inset-x-0 bottom-0 transition-[height] duration-500 motion-reduce:transition-none"
@@ -425,7 +484,13 @@
                                     <svg lucideX></svg>
                                   }
                                   @case ('current') {
-                                    <svg lucideSwords></svg>
+                                    <!-- The ring already carries the week's outcome, so this glyph is
+                                     free to say something else: which boss it is, colored by its
+                                     difficulty rather than by the tier's flat amber. -->
+                                    <svg
+                                      [class]="currentBossIconColorClass(node.category)"
+                                      lucideSkull
+                                    ></svg>
                                   }
                                   @default {
                                     <svg lucideLock></svg>
@@ -433,21 +498,24 @@
                                 }
                               </span>
 
-                              <!-- What taking this ground was worth, in housing: written on the
-                               territory that produced it rather than tallied somewhere else on the
-                               page. Housing rather than materials or morale — materials are an
-                               intermediate currency the player never handles, housing is the axis the
-                               context bar and the ladder already count in, and it is the only part of
-                               a fight's reward still standing on settlement day. The morale does not
-                               fit in fifty-six pixels and rides in the tile's own title instead. -->
-                              @if (row.efficiencyLabel) {
+                              <!-- Whether this ground pays in materials, marked rather than tallied:
+                               the figure itself, what it converts to in efficiency, and the morale
+                               at stake do not fit in fifty-six pixels and ride in the hover card
+                               instead. A settled tile marks what was banked and the tile being
+                               fought what is on the table; a locked tile carries no icon, having no
+                               boss drawn yet to price. -->
+                              @if (row.boss?.materialsLabel) {
                                 <span
                                   [class]="
-                                    row.efficiencyEarned ? 'text-brand-500' : 'text-text-muted/60'
+                                    row.boss?.earned ? 'text-brand-500' : 'text-text-muted/70'
                                   "
-                                  class="relative font-mono text-2xs leading-none font-medium tabular-nums"
+                                  class="relative flex items-center"
                                 >
-                                  {{ row.efficiencyLabel }}
+                                  <svg
+                                    aria-hidden="true"
+                                    class="size-2.5 shrink-0"
+                                    lucideHammer
+                                  ></svg>
                                 </span>
                               }
                             </span>
@@ -466,7 +534,7 @@
                             >
                               <p class="flex items-baseline justify-between gap-3">
                                 <span class="label-caption text-text-muted">
-                                  {{ node.weekLabel }}
+                                  {{ bossNumberLabel(node.runWeekIndex) }}
                                 </span>
                                 @if (node.dateRangeLabel; as dateRangeLabel) {
                                   <span class="font-mono text-2xs text-text-secondary tabular-nums">
@@ -497,15 +565,86 @@
                                 </span>
                               </p>
 
-                              @if (node.contributions.length > 0) {
-                                <div class="mt-3.5 flex flex-wrap items-center gap-1.5">
-                                  @for (
-                                    contribution of node.contributions;
-                                    track contribution.playerId
-                                  ) {
-                                    <app-avatar [src]="contribution.avatarUrl" size="xs" />
-                                  }
-                                </div>
+                              <!-- What the week pays the colony, in materials — the one currency the
+                                   map, the ladder and this card all read in — and morale. Split from
+                                   what a loss costs rather than folded into one list: a reader glancing
+                                   at a tile mid-fight is weighing whether to push for the win, and the
+                                   two outcomes read as a trade-off only kept apart. -->
+                              @if (row.boss; as boss) {
+                                @if (boss.materialsLabel) {
+                                  <div class="mt-3 border-t border-text-primary/10 pt-3">
+                                    <!-- The word rather than the whole block: framed so the eye lands
+                                         here first on a card that is otherwise all neutral labels, the
+                                         same gold the materials figure below already carries. -->
+                                    <p
+                                      class="label-caption inline-block border border-accent-gold/35 bg-accent-gold/15 px-1.5 py-0.5 text-accent-gold"
+                                    >
+                                      {{ 'colony.boss.rewards' | translate }}
+                                    </p>
+                                    <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                                      <dt class="label-caption text-text-muted">
+                                        {{ 'colony.materials' | translate }}
+                                      </dt>
+                                      <dd
+                                        class="text-right font-mono text-2xs font-semibold text-brand-500 tabular-nums"
+                                      >
+                                        {{ boss.materialsLabel }}
+                                      </dd>
+                                      @if (boss.efficiencyLabel) {
+                                        <dt class="label-caption text-text-muted">
+                                          {{ 'colony.boss.efficiency' | translate }}
+                                        </dt>
+                                        <dd
+                                          class="text-right font-mono text-2xs font-semibold text-text-secondary tabular-nums"
+                                        >
+                                          {{ boss.efficiencyLabel }}
+                                        </dd>
+                                      }
+                                      <dt class="label-caption text-text-muted">
+                                        {{ 'colony.track.morale.name' | translate }}
+                                      </dt>
+                                      <dd
+                                        class="text-right font-mono text-2xs font-semibold text-text-secondary tabular-nums"
+                                      >
+                                        {{ boss.moraleLabel }}
+                                      </dd>
+                                    </dl>
+                                  </div>
+                                }
+
+                                @if (boss.state === 'CURRENT') {
+                                  <div class="mt-3 border-t border-text-primary/10 pt-3">
+                                    <p class="label-caption text-text-muted">
+                                      {{ 'colony.boss.ifDefeated' | translate }}
+                                    </p>
+                                    <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                                      <dt class="label-caption text-text-muted">
+                                        {{ 'colony.track.morale.name' | translate }}
+                                      </dt>
+                                      <dd
+                                        class="text-right font-mono text-2xs font-semibold text-danger tabular-nums"
+                                      >
+                                        {{ colony.defeatMoraleLabel() }}
+                                      </dd>
+                                    </dl>
+                                  </div>
+                                } @else if (boss.state === 'SURVIVED') {
+                                  <div class="mt-3 border-t border-text-primary/10 pt-3">
+                                    <p class="label-caption text-text-muted">
+                                      {{ 'colony.boss.defeat' | translate }}
+                                    </p>
+                                    <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                                      <dt class="label-caption text-text-muted">
+                                        {{ 'colony.track.morale.name' | translate }}
+                                      </dt>
+                                      <dd
+                                        class="text-right font-mono text-2xs font-semibold text-danger tabular-nums"
+                                      >
+                                        {{ boss.moraleLabel }}
+                                      </dd>
+                                    </dl>
+                                  </div>
+                                }
                               }
                             </div>
                           }
@@ -696,13 +835,12 @@
           }
         </section>
 
-        <!-- What the housing bought, beside the ground that pays for it: the ladder climbs as the
+        <!-- What the materials bought, beside the ground that pays for them: the ladder climbs as the
              map is taken, so the two are read against each other rather than a page apart.
 
-             A window on an endless ladder rather than a fixed list of buildings. Housing is
-             continuous now — there is no threshold to save up for, so a challenge validated over the
-             week widens the town on the Monday that settles it — and the names simply keep going,
-             one every five hundred. -->
+             A window on an endless ladder rather than a fixed list of buildings. There is no
+             threshold to save up for — a challenge validated over the week widens the town on the
+             Monday that settles it — and the names simply keep going. -->
         @if (colony.colony()) {
           <section class="flex min-w-0 shrink-0 flex-col bg-text-primary/4 xl:w-[20rem]">
             <!-- Same height as the map panel's own head, so the rule closing them runs level across
@@ -713,13 +851,6 @@
               <h2 class="label-caption text-text-secondary">
                 {{ 'colony.ladder.title' | translate }}
               </h2>
-
-              <!-- What the column of figures below counts, said once at its head rather than
-                   repeated on every row. Three bare numbers under a heading naming a tier were read
-                   as a cost in materials, which is the one currency they are not. -->
-              <span aria-hidden="true" class="label-caption ml-auto text-text-muted">
-                {{ 'colony.ladder.unit' | translate }}
-              </span>
             </div>
 
             <ol class="flex min-w-0 flex-1 flex-col gap-0.5 px-4 py-3">
@@ -728,25 +859,31 @@
                   [class]="step.tier.rowClass"
                   class="relative grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-x-3 px-2.5 py-2"
                 >
-                  <!-- The step's marker, a hexagon like every other beat of the campaign. A step
-                       already crossed is a solid hexagon with a dark check struck through it; the one
-                       the town stands in carries the house it has built; one still ahead is a grey
-                       outline holding a lock. Shape first, colour second — see `LADDER_STEPS`. -->
+                  <!-- The step's marker, a hexagon like every other beat of the campaign. Its fill
+                       and colour carry the state — solid green crossed, solid brand for the step the
+                       town stands in, brand outline for the one it is climbing, grey locked, see
+                       `LADDER_STEPS` — which frees the glyph inside to carry the *step*:
+                       a camp, then houses, then a skyline, then a monument. It used to hold a
+                       check / house / lock, which only repeated what the solid green hexagon around
+                       it was already saying. -->
                   <span aria-hidden="true" class="relative block h-9 w-8 shrink-0">
                     <span [class]="step.tier.markerClass" class="clip-hex absolute inset-0">
                       <span
                         [class]="[step.tier.markerFillClass, step.tier.markerIconClass]"
                         class="clip-hex absolute inset-0.5 flex items-center justify-center [&>svg]:size-4"
                       >
-                        @switch (step.view.state) {
-                          @case ('REACHED') {
-                            <svg lucideCheck></svg>
+                        @switch (step.view.glyph) {
+                          @case ('CAMP') {
+                            <svg lucideTent></svg>
                           }
-                          @case ('CURRENT') {
+                          @case ('HOUSES') {
                             <svg lucideHouse></svg>
                           }
+                          @case ('SKYLINE') {
+                            <svg lucideBuilding2></svg>
+                          }
                           @default {
-                            <svg lucideLock></svg>
+                            <svg lucideLandmark></svg>
                           }
                         }
                       </span>
@@ -760,21 +897,30 @@
                     {{ step.view.name }}
                   </span>
 
-                  <!-- The active step carries the housing it is climbing towards, every other one the
-                       threshold it opens at. The town's own housing sat here and was read as the
-                       target: at the top of the row, in the row's weight, a moving figure is taken
-                       for the goal. It is under the bar now, where it reads as a position. -->
+                  <!-- What the step still costs, in the one currency the squad can act on. It used
+                       to carry the step's efficiency — a bare `8,75` naming no unit, appearing
+                       nowhere else on the page, and that nothing anybody does moves directly.
+                       A step already paid prints a plain `0`, without the hammer the rows still to
+                       gather carry: the column is headed "left to gather", and leaving those rows
+                       blank made the step the town stands in look unsettled next to the ones below
+                       it. -->
                   <span
+                    [appTooltip]="'colony.ladder.hint' | translate"
                     [class]="step.tier.valueClass"
-                    class="font-display text-sm leading-none font-bold tabular-nums"
+                    appTooltipPosition="left"
+                    class="font-display flex cursor-help items-center gap-1 text-sm leading-none font-bold tabular-nums"
                   >
-                    {{ step.view.valueLabel }}
+                    @if (step.view.state === 'LOCKED') {
+                      <svg aria-hidden="true" class="size-3 shrink-0" lucideHammer></svg>
+                    }
+                    {{ step.view.missingMaterialsLabel }}
                   </span>
 
-                  <!-- The bar rides on the one step the town stands in, and nowhere else. Its
-                       figures are behind a tooltip: written under it they were read as the step's
-                       own target, which the figure beside the name already is, and two targets on
-                       one row is what sent a reader looking for the wrong one.
+                  <!-- The bar rides on the step being climbed, and nowhere else. It used to sit on
+                       the step the town stands in, one row above: that step is already paid for, so
+                       a bar under it read as its own progress when it measured the climb towards the
+                       row below. On the target row it is read against the cost written beside the
+                       name, both saying the same thing.
 
                        The wrapper is what carries the hover, not the bar: a one-pixel track is not
                        a target a pointer can hold. Its padding is the surface, and the sentence is

@@ -207,18 +207,15 @@
   },
   "colony": {
     "boss": {
-      "undrawn": "Semaine {{week}} : aucun boss tiré.",
       "category": {
         "MINOR": "mineur",
         "STANDARD": "standard",
         "ELITE": "élite"
       },
-      "detail": {
-        "DEFEATED": "Semaine {{week}} : boss {{category}} vaincu. {{materials}} matériaux, soit +{{efficiency}} d'efficacité, et {{morale}} moral.",
-        "SURVIVED": "Semaine {{week}} : le boss {{category}} a survécu. Aucun matériau, et {{morale}} moral.",
-        "CURRENT": "Semaine {{week}} : boss {{category}} en cours. {{materials}} matériaux en jeu, soit +{{efficiency}} d'efficacité, et {{morale}} moral.",
-        "UPCOMING": "Semaine {{week}} : boss {{category}} à venir. {{materials}} matériaux en jeu, soit +{{efficiency}} d'efficacité."
-      }
+      "rewards": "Récompenses",
+      "efficiency": "Efficacité",
+      "defeat": "Défaite",
+      "ifDefeated": "En cas de défaite"
     },
     "bosses": "Boss",
     "curve": {
@@ -244,9 +241,11 @@
     },
     "ladder": {
       "title": "Paliers de la ville",
-      "unit": "Efficacité"
+      "unit": "Reste à réunir",
+      "hint": "Chaque palier s'achète en matériaux. Vous en gagnez en validant les défis de la semaine et en battant le boss du lundi."
     },
     "materials": "Matériaux",
+    "materialsPending": "+{{materials}} lundi",
     "population": "Population",
     "presence": {
       "FULL": "{{name}} a joué aujourd'hui",
@@ -270,13 +269,20 @@
       "CAPITAL": "Capitale",
       "CITADEL": "Citadelle niveau {{level}}"
     },
-    "tierProgress": "Efficacité {{current}} sur les {{target}} du palier. Encore {{missing}} pour atteindre {{name}}.",
+    "tierProgress": "Encore {{materials}} matériaux pour atteindre {{name}}.",
     "track": {
       "food": {
         "name": "Nourriture",
-        "eaten": "mangé {{food}}/sem",
-        "surplus": "reste {{food}}/sem",
-        "aria": "Nourriture : {{eaten}} mangés par semaine, {{surplus}} de reste. Le reste est ce qui fait venir du monde."
+        "day": "{{day}} : {{food}} de récolte",
+        "dayExpiring": "{{day}} : {{food}} de récolte, oubliés cette nuit",
+        "expiring": "{{food}} cette nuit",
+        "efficiency": "1 nourriture nourrit",
+        "efficiencyValue": "{{inhabitants}} habitants",
+        "consumption": "Consommation",
+        "surplus": "Surplus",
+        "note": "Chaque nourriture porte d'autant plus loin que le groupe a amassé de matériaux, en validant les défis et en battant les boss. La ville tient sur sa consommation et grandit sur son surplus.",
+        "aria": "Nourriture : {{stock}} en stock, apportés par les {{days}} derniers jours. Chaque nourriture nourrit {{efficiency}} habitants, soit {{feedable}} nourrissables.",
+        "ariaExpiring": "{{food}} sortent de la fenêtre cette nuit."
       },
       "presence": {
         "name": "Présence",
@@ -284,9 +290,9 @@
       },
       "morale": {
         "name": "Moral",
-        "floor": "plancher {{floor}}",
+        "speed": "{{percent}} %/nuit",
         "note": "Seuls les boss font bouger le moral, et il n'accélère que la montée.",
-        "aria": "Moral : {{value}} sur {{ceiling}}, plancher à {{floor}}."
+        "aria": "Moral : {{value}} sur {{ceiling}}, soit {{percent}} % de l'écart comblé cette nuit."
       }
     }
   },
@@ -656,16 +662,18 @@
       },
       "boss": {
         "categories": {
-          "ELITE": "Environ 125 % d'une semaine type. Sans une grosse semaine collective, il survit.",
-          "MINOR": "Environ 80 % d'une semaine type de l'escouade. Elle le plie souvent en milieu de semaine.",
-          "STANDARD": "Exactement une semaine type de l'escouade. Il faut que tout le monde s'y mette."
+          "ELITE": "Environ 105 % d'une semaine type. Il faut pousser un peu plus que d'habitude.",
+          "MINOR": "Environ 65 % d'une semaine type de l'escouade. Elle le plie souvent en milieu de semaine.",
+          "STANDARD": "Environ 85 % d'une semaine type de l'escouade. Une semaine creuse reste rattrapable."
         },
-        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade. Sa barre n'est pas un chiffre figé : elle est calculée d'après ce que l'escouade a réellement produit lors des dernières semaines closes, multiplié par le nombre de joueurs actifs. Un joueur actif qui ne joue pas alourdit donc le boss sans l'entamer. Terrasse-le avant dimanche soir. La campagne, elle, ne court que sur l'act en cours : au changement d'act la carte repart à zéro, sans effacer les combats déjà livrés.",
+        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade. Sa barre n'est pas un chiffre figé : elle est calculée d'après ce que l'escouade a réellement produit lors des dernières semaines closes, multiplié par le nombre de joueurs actifs. Un joueur actif qui ne joue pas alourdit donc le boss sans l'entamer. Terrasse-le avant dimanche soir. La campagne, elle, ne court que sur la run en cours, soit dix combats : à la run suivante la carte repart à zéro, sans effacer les combats déjà livrés.",
+        "ladderFootnote": "La classe du boss ne sort pas du tirage : elle est fixée par la place de la semaine dans la run. Les semaines 5 et 10 sont les deux pics, chacune suivie d'un boss mineur pour souffler. Le tirage ne décide que de quel boss de cette classe se présente, et un boss ne revient jamais deux fois dans la même run.",
+        "ladderLabel": "Palier de difficulté, semaine par semaine",
         "title": "Un boss, une barre de vie commune"
       },
       "calibration": {
         "bounds": "La référence ne peut pas s'emballer : elle reste encadrée, pour qu'un arrêt total ne fasse pas tomber le boss en un match et qu'une envolée ne le rende pas inatteignable.",
-        "description": "La difficulté ne se règle pas à la main : la barre du boss suit la médiane de ce que l'escouade a réellement produit lors des 4 dernières semaines closes. Si le groupe joue plus, le boss grossit ; s'il lève le pied, le boss maigrit. Une semaine marathon isolée ne compte pas, la médiane l'ignore.",
+        "description": "La barre du boss ne se règle pas à la main : elle suit la médiane de ce que l'escouade a réellement produit lors des 4 dernières semaines closes. Si le groupe joue plus, le boss grossit ; s'il lève le pied, le boss maigrit. Une semaine marathon isolée ne compte pas, la médiane l'ignore. Le calibrage joue sur la taille du combat, jamais sur sa classe : celle-là est fixée par le calendrier de la run.",
         "title": "Une difficulté qui s'ajuste toute seule"
       },
       "challenges": {
@@ -709,7 +717,7 @@
           "ELITE": "Élite vaincu",
           "SURVIVED": "Boss survivant"
         },
-        "moraleFootnote": "Le moral démarre à 50 et ne dépend que des boss. Il multiplie la vitesse de montée : à 50, la ville comble 7,5 % de l'écart par nuit au lieu de 15 %. Il ne ralentit jamais la descente, et il ne descend jamais sous 20 : à ce niveau la ville n'avance presque plus, mais un boss vaincu la relance toujours."
+        "moraleFootnote": "Le moral démarre à 50 et ne dépend que des boss. Il multiplie la vitesse de montée : à 50, la ville comble 7,5 % de l'écart par nuit au lieu de 15 %. Il ne ralentit jamais la descente. Les dix combats d'une run rapportent 50 de moral à eux tous, soit exactement la place jusqu'au plafond : une run sans faute n'atteint 100 qu'à son dixième combat, donc aucun boss n'est jamais sans effet. Au plancher, il reste 3 % par nuit, soit environ 19 % par semaine : une run mal partie rampe, mais elle n'est jamais bloquée."
       },
       "progression": {
         "description": "Certains défis ne demandent pas un seuil absolu mais un progrès sur toi-même : dépasser ton propre K/D, ton ACS ou ton taux de headshots des 4 semaines précédentes, d'un pourcentage donné. Enchaîner les parties au même niveau ne les valide pas, puisque la mesure est un taux. Sans historique sur les 4 dernières semaines, le défi reste hors de portée.",
@@ -728,9 +736,10 @@
       "town": {
         "title": "La ville",
         "description": "Les matériaux amassés augmentent l'efficacité : tous les 150 matériaux par joueur, une nourriture nourrit un habitant de plus. Il n'y a pas de seuil à franchir ni de maximum : chaque défi validé fait porter la nourriture plus loin, le lundi même, et un défi validé la dernière semaine vaut exactement ce que valait un défi de la première.",
+        "bossMaterialsLabel": "Matériaux par boss vaincu, et par joueur",
         "materialsLabel": "Matériaux par défi validé, et par joueur",
         "tiersLabel": "Les paliers, tous les 0,75 d'efficacité",
-        "tiersFootnote": "Un boss vaincu rapporte 60, 80 ou 100 matériaux par joueur du groupe, jamais des habitants : des habitants s'effaceraient à 15 % par nuit, alors que l'efficacité ne redescend jamais. Les matériaux sont divisés par la taille du groupe avant d'être convertis, ce qui rend l'équilibre identique de 2 à 20 joueurs. Une run régulière va de 8 à 16 d'efficacité, soit un palier par semaine."
+        "tiersFootnote": "Un boss vaincu rapporte ses matériaux à chaque joueur du groupe, jamais des habitants : des habitants s'effaceraient à 15 % par nuit, alors que l'efficacité ne redescend jamais. Les matériaux sont divisés par la taille du groupe avant d'être convertis, ce qui rend l'équilibre identique de 2 à 20 joueurs. Une run régulière va de 8 à 16 d'efficacité, soit un palier par semaine."
       }
     },
     "title": "Règles et fonctionnement"

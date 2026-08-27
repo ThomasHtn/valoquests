@@ -38,6 +38,18 @@ public class RunService {
     private static final int FIRST_RUN_NUMBER = 1;
 
     /**
+     * Smallest roster size a run may be frozen with.
+     *
+     * <p>Zero is reachable, and it is a trap: a run opens lazily on the first page view, so a
+     * deployment whose roster has not been filled in yet freezes that run at zero for ten weeks.
+     * Every per-player figure is then multiplied by it — a defeated boss pays {@code 0} materials,
+     * efficiency never leaves its base, and no amount of play can move the run. Flooring it at one
+     * costs a single-player deployment nothing it did not already have and turns a dead run into a
+     * playable one.
+     */
+    private static final int MINIMUM_ROSTER_SIZE = 1;
+
+    /**
      * Run repository.
      */
     private final RunRepository runRepository;
@@ -196,7 +208,10 @@ public class RunService {
      * @return the run covering that week, whether this call created it or lost the race
      */
     private Run openRun(int number, LocalDate weekStart) {
-        int rosterSize = (int) playerRepository.countByStatus(Player.COMPETITIVE_STATUS);
+        int rosterSize = Math.max(
+            MINIMUM_ROSTER_SIZE,
+            (int) playerRepository.countByStatus(Player.COMPETITIVE_STATUS)
+        );
         LocalDate lastWeekStart = weekStart.plusWeeks(ruleset.runLengthWeeks() - 1L);
 
         runRepository.insertIfAbsent(number, weekStart, lastWeekStart, rosterSize);

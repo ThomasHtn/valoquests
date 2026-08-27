@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -104,5 +105,19 @@ public class Run extends AuditableEntity {
      */
     public boolean covers(LocalDate day) {
         return !day.isBefore(firstWeekStart) && !day.isAfter(settlementDay());
+    }
+
+    /**
+     * Places one week inside this run, counting from one.
+     *
+     * <p>The run's own position, which is what the campaign's difficulty ladder and the boss timeline
+     * both read. Not clamped here: a caller handed a week outside the run gets a value outside the
+     * range and decides for itself what that means.
+     *
+     * @param weekStart Monday identifying the week, must not be {@code null}
+     * @return the week's one-based position in the run
+     */
+    public int weekIndexOf(LocalDate weekStart) {
+        return (int) ChronoUnit.WEEKS.between(firstWeekStart, weekStart) + 1;
     }
 }

@@ -227,34 +227,63 @@ export class BossCampaign {
   });
 
   /**
-   * The full campaign: every finalized week oldest-first, the active week, then locked placeholders
-   * up to the run's own length.
+   * The full campaign: one node per week of the run, in run order, each at its own index.
    *
    * The map is exactly as long as a run, whatever has been fought so far, because a run is ten
    * weekly rollovers rather than ten fights — a week can go by with no boss drawn at all, and
    * counting fights would make the map shrink and grow for reasons nobody could read.
+   *
+   * Each fight is placed at the run week the backend stamps it with, never at its position in the
+   * history. Those two only agree while every week of the run had a fight: one week that closed
+   * without one — a rollover that never fired, a week nobody's page view reached — used to shift
+   * every later week up a slot, so the map wrote each fight's colony reward onto its neighbour's
+   * hexagon.
    */
   public readonly nodes: Signal<readonly BossTimelineNode[]> = computed(() => {
     const contributionsByWeekStart = this.contributionsByWeekStart();
-
-    const historyNodes = [...(resourceValue(this.historyResource, null)?.content ?? [])]
-      .reverse()
-      .map((week) => this.toHistoryNode(week, contributionsByWeekStart.get(week.weekStart) ?? []));
-
     const currentBoss = resourceValue(this.currentResource, null);
-    const currentNode = currentBoss
-      ? [this.toCurrentNode(currentBoss, contributionsByWeekStart.get(currentBoss.weekStart) ?? [])]
-      : [];
 
-    const upcomingCount = currentBoss
-      ? Math.max(0, currentBoss.runWeekCount - historyNodes.length - currentNode.length)
-      : FALLBACK_PLACEHOLDER_COUNT;
+    const foughtByRunWeek = new Map<number, BossTimelineNode>();
 
-    const upcomingNodes = Array.from({ length: upcomingCount }, (_, index) =>
-      this.toUpcomingNode(index, currentBoss?.weekEnd ?? null),
+    for (const week of resourceValue(this.historyResource, null)?.content ?? []) {
+      foughtByRunWeek.set(
+        week.runWeekIndex,
+        this.toHistoryNode(week, contributionsByWeekStart.get(week.weekStart) ?? []),
+      );
+    }
+
+    if (!currentBoss) {
+      // No active week means no calendar anchor and no known run length: show what was fought, in
+      // run order, followed by a short tail so the map still reads as a map.
+      const fought = [...foughtByRunWeek.entries()]
+        .sort(([left], [right]) => left - right)
+        .map(([, node]) => node);
+
+      return [
+        ...fought,
+        ...Array.from({ length: FALLBACK_PLACEHOLDER_COUNT }, (_, index) =>
+          this.toUpcomingNode(fought.length + index + 1, null),
+        ),
+      ];
+    }
+
+    foughtByRunWeek.set(
+      currentBoss.runWeekIndex,
+      this.toCurrentNode(currentBoss, contributionsByWeekStart.get(currentBoss.weekStart) ?? []),
     );
 
-    return [...historyNodes, ...currentNode, ...upcomingNodes];
+    return Array.from({ length: currentBoss.runWeekCount }, (_, index) => {
+      const runWeekIndex = index + 1;
+      const fought = foughtByRunWeek.get(runWeekIndex);
+
+      return (
+        fought ??
+        this.toUpcomingNode(
+          runWeekIndex,
+          addDays(currentBoss.weekStart, (runWeekIndex - currentBoss.runWeekIndex) * 7),
+        )
+      );
+    });
   });
 
   /**
@@ -311,6 +340,7 @@ export class BossCampaign {
       ...this.toFoughtNode(
         week.weekStart,
         week.weekEnd,
+        week.runWeekIndex,
         status,
         week.boss,
         week.effectiveHp,
@@ -352,6 +382,7 @@ export class BossCampaign {
       ...this.toFoughtNode(
         current.weekStart,
         current.weekEnd,
+        current.runWeekIndex,
         'current',
         current.boss,
         current.effectiveHp,
@@ -369,6 +400,7 @@ export class BossCampaign {
    *
    * @param weekStart - Monday identifying the week, as `YYYY-MM-DD`.
    * @param weekEnd - Sunday identifying the week, as `YYYY-MM-DD`.
+   * @param runWeekIndex - Position of the week inside its run, from one.
    * @param status - The week's outcome/state.
    * @param boss - The boss drawn for that week.
    * @param effectiveHp - The hit points the boss must lose to be defeated this week.
@@ -379,6 +411,7 @@ export class BossCampaign {
   private toFoughtNode(
     weekStart: string,
     weekEnd: string,
+    runWeekIndex: number,
     status: 'defeated' | 'survived' | 'current',
     boss: BossHistoryWeek['boss'],
     effectiveHp: number,
@@ -392,6 +425,7 @@ export class BossCampaign {
     return {
       id: weekStart,
       status,
+      runWeekIndex,
       weekNumber: isoWeekNumber(weekStart),
       weekLabel: this.translation.translate('boss.week.label', {
         number: isoWeekNumber(weekStart),
@@ -401,6 +435,7 @@ export class BossCampaign {
       bossName: boss.name,
       bossDescription: boss.description,
       categoryLabel: this.translation.translate(`boss.category.${boss.category}`),
+      category: boss.category,
       portraitUrl: boss.imageUrl,
       hasDamage: true,
       hpPercentage: percentage,
@@ -420,23 +455,22 @@ export class BossCampaign {
   }
 
   /**
-   * Builds one locked placeholder node for a week ahead with no boss drawn yet.
+   * Builds one locked placeholder node for a week of the run with no boss drawn.
    *
    * The week itself is known even though its boss isn't — the calendar runs on fixed Monday-to-
    * Sunday periods — so the node still carries its number and dates, and only the opponent stays
-   * sealed. They fall back to blank in the one case the anchor is missing: the active week failing
-   * to load, which leaves nothing to count forward from.
+   * sealed. They fall back to blank in the one case there is no anchor: the active week failing to
+   * load, which leaves nothing to count the calendar from.
    *
-   * @param index - Zero-based position among the upcoming placeholders.
-   * @param currentWeekEnd - The active week's end date as `YYYY-MM-DD`, or `null` when unknown.
+   * @param runWeekIndex - Position of the week inside its run, from one.
+   * @param weekStart - Monday beginning that week as `YYYY-MM-DD`, or `null` when unknown.
    * @returns The display-ready node.
    */
-  private toUpcomingNode(index: number, currentWeekEnd: string | null): BossTimelineNode {
-    const weekStart = currentWeekEnd === null ? null : addDays(currentWeekEnd, 1 + index * 7);
-
+  private toUpcomingNode(runWeekIndex: number, weekStart: string | null): BossTimelineNode {
     return {
-      id: `upcoming-${index}`,
+      id: `upcoming-${runWeekIndex}`,
       status: 'upcoming',
+      runWeekIndex,
       weekNumber: weekStart === null ? null : isoWeekNumber(weekStart),
       weekLabel:
         weekStart === null
@@ -447,6 +481,7 @@ export class BossCampaign {
       bossName: this.translation.translate('boss.upcoming.name'),
       bossDescription: this.translation.translate('boss.upcoming.description'),
       categoryLabel: null,
+      category: null,
       portraitUrl: null,
       hasDamage: false,
       hpPercentage: 0,

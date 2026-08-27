@@ -26,12 +26,15 @@
     aria-hidden="true"
     class="clip-hex absolute inset-0 overflow-hidden bg-surface-950"
   >
-    <!-- Share of housing already settled, rising from the bottom. A plain rectangle clipped by the
-         hexagon above it, never a hexagon of its own: at a low fill its own silhouette would be a
-         wide flat band sticking out past the sides. -->
+    <!-- Share of what the food can feed the town already holds, rising from the bottom. A plain
+         rectangle clipped by the hexagon above it, never a hexagon of its own: at a low fill its own
+         silhouette would be a wide flat band sticking out past the sides.
+
+         A transition on its height, so the nightly move is visible as motion, not only as a
+         number. -->
     <span
       [style.height.%]="populationPercentage()"
-      class="absolute inset-x-0 bottom-0 bg-brand-500/25"
+      class="absolute inset-x-0 bottom-0 bg-brand-500/25 transition-[height] duration-700 ease-out motion-reduce:transition-none"
     ></span>
   </span>
 
@@ -81,96 +84,112 @@
 </ng-template>
 
 <!-- The three rails, one grammar: a glyph in its socket, a track, then the fact it is worth. Nothing
-     is written under a track — the detail of each one lives in the card its own button opens, so the
+     is written under a track — the detail of each one lives in the card the socket opens, so the
      band keeps a single density. -->
 <!-- Set tight on purpose: the three rails are one reading, not three blocks, and a gap as wide as the
      rails are tall broke them into a list of unrelated figures. -->
 <ul [class]="metrics().rails">
   @for (track of tracks(); track track.track) {
-    <li class="group relative flex items-center gap-3">
-      <!-- The glyph is seated in the direction's hexagon, the same socket the population figure and
-           the map's tiles are drawn in — the outline is the rail's own colour, the seat under it the
-           ground it is set in. The rail carries no written name: the socket is the name. -->
-      <span
-        [class]="metrics().socket"
-        aria-hidden="true"
-        class="relative grid shrink-0 place-items-center"
-      >
-        <span [class]="track.socketClass" class="clip-hex absolute inset-0 opacity-40"></span>
-        <span
-          [style.scale]="socketInnerScale"
-          class="clip-hex absolute inset-0 bg-surface-sunken"
-        ></span>
-        <span [class]="track.textClass + ' ' + metrics().socketGlyph" class="relative">
-          @switch (track.glyph) {
-            @case ('FOOD') {
-              <svg lucideWheat></svg>
-            }
-            @case ('PRESENCE') {
-              <svg lucideUserCheck></svg>
-            }
-            @case ('MORALE_GOOD') {
-              <svg lucideSmile></svg>
-            }
-            @case ('MORALE_BAD') {
-              <svg lucideFrown></svg>
-            }
-            @default {
-              <svg lucideMeh></svg>
-            }
-          }
-        </span>
-      </span>
-
+    <li class="relative flex items-center gap-3">
+      <!-- The socket is the card's handle, and the track is left alone.
+           One trigger covering the whole rail meant a pointer resting on a single evening of the food
+           strip opened the rail's card over the very figures it had stopped to read. The socket is
+           the rail's name, so hanging "tell me about this rail" on it is where a reader already
+           points; the track beneath is then free to answer for each of its own parts. -->
       @if (compact()) {
         <!-- No button, and no card: a compact band sits inside a link, which may hold neither. What
              the card would have said is read out here instead, so nothing is lost off the pointer. -->
-        <span class="sr-only">{{ track.ariaLabel }}</span>
-        <span class="block min-w-0 flex-1">
+        <span
+          [class]="metrics().socket"
+          aria-hidden="true"
+          class="relative grid shrink-0 place-items-center"
+        >
           <ng-container
             [ngTemplateOutletContext]="{ $implicit: track }"
-            [ngTemplateOutlet]="rail"
+            [ngTemplateOutlet]="socket"
           ></ng-container>
         </span>
+        <span class="sr-only">{{ track.ariaLabel }}</span>
       } @else {
-        <!-- The track itself is the button, so its card opens on hover and on keyboard alike. The
-             button carries in `aria-label` everything the card shows, which is what keeps the band
-             free of anything existing only under a pointer. -->
+        <!-- `peer`, not `group`: the card is a later sibling of this button rather than a descendant
+             of it, and it has to be — a button's content model is phrasing content, which the card's
+             paragraphs and lists are not. -->
         <button
           [attr.aria-label]="track.ariaLabel"
-          class="focus-ring block min-w-0 max-w-[30rem] flex-1 cursor-help"
+          [class]="metrics().socket"
+          class="focus-ring peer/socket relative grid shrink-0 cursor-help place-items-center"
           type="button"
         >
           <ng-container
             [ngTemplateOutletContext]="{ $implicit: track }"
-            [ngTemplateOutlet]="rail"
+            [ngTemplateOutlet]="socket"
           ></ng-container>
         </button>
       }
+
+      <!-- The gauge itself is a second handle on the same card wherever it has one to show: a bar
+           already carries the figure the card explains, so a pointer that lands on the bar first
+           should not have to travel to the socket to read it. Food has no bar here, and keeps its
+           total as its own second handle instead. -->
+      <span
+        [class]="!compact() && track.hasBar ? ' peer/bar cursor-help' : ''"
+        class="block min-w-0 max-w-[30rem] flex-1"
+      >
+        <ng-container
+          [ngTemplateOutletContext]="{ $implicit: track }"
+          [ngTemplateOutlet]="rail"
+        ></ng-container>
+      </span>
 
       <!-- The fact, and nothing under it. What the fact *does* is the card's job: three captions
            stacked here turned one reading into three, and the socket beside the track already names
            what is being counted.
 
            A column just wide enough for the longest of the three figures, so the numbers still line
-           up with one another while sitting against the end of their own rail. -->
-      <div [class]="metrics().value" class="shrink-0 text-right">
+           up with one another while sitting against the end of their own rail.
+
+           Every rail's total is also a peer of its own card, alongside the socket and — on a bar
+           rail — the bar itself: whichever of the three a reader's pointer lands on first, the card
+           should answer there rather than sending it back to the socket. Food's figure carries the
+           most reason to be one, being `surplus / consumption` rather than the plain stock the other
+           two show on their bar already. -->
+      <div
+        [class]="metrics().value + (!compact() ? ' peer/value cursor-help' : '')"
+        class="shrink-0 text-right"
+      >
         <p
           [class]="track.textClass"
           class="font-display leading-none font-bold whitespace-nowrap tabular-nums"
         >
           {{ track.valueLabel }}
+          @if (track.multiplierLabel) {
+            <span class="text-2xs font-medium text-text-muted">{{ track.multiplierLabel }}</span>
+          }
         </p>
+
+        <!-- What tonight takes off that figure, on food alone. It clears neither the socket's height
+             nor the value column's width, so the rail it sits under stays the same height as the
+             other two and the band keeps one baseline. -->
+        @if (track.valueDeltaLabel) {
+          <p class="label-caption mt-1 whitespace-nowrap text-text-muted">
+            {{ track.valueDeltaLabel }}
+          </p>
+        }
       </div>
 
       <!-- What the rail itself cannot hold. Drawn from the same floating surface the map's hover card
-           is. Purely a pointer enhancement — the button's own `aria-label` says the same thing — so it
+           is. Purely a pointer enhancement — the socket's own `aria-label` says the same thing — so it
            is dropped below `sm`, where there is no hover and no room to float it. -->
       @if (!compact()) {
+        <!-- Anchored under whichever of the rail's own triggers actually opened it: the socket, on
+             the rail's left, on every rail; a bar rail's own gauge, centred under the rail it just
+             answered for; and food's total, which has no bar to stand in for, at the rail's own right
+             edge instead. Each trigger gets the card to appear where the pointer already is, rather
+             than sending a reader's eye back to the socket every time. -->
         <div
           [class]="tooltipSurfaceClass"
           aria-hidden="true"
-          class="pointer-events-none absolute top-full left-0 z-30 mt-2.5 hidden w-72 px-4 py-3.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none sm:block"
+          class="pointer-events-none absolute top-full z-30 mt-2.5 hidden w-72 px-4 py-3.5 opacity-0 transition-opacity duration-150 peer-hover/socket:left-0 peer-hover/socket:opacity-100 peer-focus/socket:left-0 peer-focus/socket:opacity-100 peer-hover/bar:left-1/2 peer-hover/bar:-translate-x-1/2 peer-hover/bar:opacity-100 peer-hover/value:right-0 peer-hover/value:opacity-100 motion-reduce:transition-none sm:block"
         >
           <p class="flex items-baseline justify-between gap-3">
             <span class="label-caption text-text-muted">{{ track.label }}</span>
@@ -178,6 +197,23 @@
               {{ track.valueLabel }}
             </span>
           </p>
+
+          <!-- The figures the rail's own shape cannot state. The week is on the rail now, so drawing
+               it a second time here said nothing new; what the pills genuinely cannot say is how much
+               of the stock the town needs just to stand still, and how much is over. The surplus is
+               the whole reason to play, and it appears nowhere else on the page. -->
+          @if (track.facts.length > 0) {
+            <ul class="mt-3 flex flex-col gap-2">
+              @for (fact of track.facts; track fact.label) {
+                <li class="flex items-baseline justify-between gap-3">
+                  <span class="label-caption text-text-muted">{{ fact.label }}</span>
+                  <span class="font-mono text-2xs font-medium text-text-secondary tabular-nums">{{
+                    fact.value
+                  }}</span>
+                </li>
+              }
+            </ul>
+          }
 
           <!-- One swatch per band of the track, each worth the width of its own band rather than the
                point where it ends. -->
@@ -221,15 +257,102 @@
   }
 </ul>
 
-<!-- The track of one rail, drawn the same whether it is seated in a button or in a plain span. -->
+<!-- The glyph seated in the direction's hexagon, the same socket the population figure and the map's
+     tiles are drawn in — the outline is the rail's own colour, the seat under it the ground it is set
+     in. The rail carries no written name: the socket is the name.
+
+     A template rather than markup written twice: the socket is a button on a full band and a plain
+     span on a compact one, and the four layers inside it are the same either way. -->
+<ng-template #socket let-track>
+  <span [class]="track.socketClass" class="clip-hex absolute inset-0 opacity-40"></span>
+  <span [style.scale]="socketInnerScale" class="clip-hex absolute inset-0 bg-surface-sunken"></span>
+  <span [class]="track.textClass + ' ' + metrics().socketGlyph" class="relative">
+    @switch (track.glyph) {
+      @case ('FOOD') {
+        <svg lucideWheat></svg>
+      }
+      @case ('PRESENCE') {
+        <svg lucideUserCheck></svg>
+      }
+      @case ('MORALE_GOOD') {
+        <svg lucideSmile></svg>
+      }
+      @case ('MORALE_BAD') {
+        <svg lucideFrown></svg>
+      }
+      @default {
+        <svg lucideMeh></svg>
+      }
+    }
+  </span>
+</ng-template>
+
+<!-- The track of one rail, drawn the same whether the band is full or compact. -->
 <ng-template #rail let-track>
-  <app-progress-bar
-    [colorClass]="track.primaryClass"
-    [heightClass]="metrics().barHeight"
-    [percentage]="track.percentage"
-    [secondaryColorClass]="track.secondaryClass"
-    [secondaryPercentage]="track.secondaryPercentage"
-    class="block w-full"
-    radiusClass="rounded-full"
-  />
+  @if (track.hasBar) {
+    <app-progress-bar
+      [colorClass]="track.primaryClass"
+      [heightClass]="metrics().barHeight"
+      [live]="track.isLive"
+      [percentage]="track.percentage"
+      [secondaryColorClass]="track.secondaryClass"
+      [secondaryPercentage]="track.secondaryPercentage"
+      class="block w-full"
+      radiusClass="rounded-full"
+    />
+  } @else {
+    <!-- Food, which has no bar: a rolling seven-day sum has no ceiling, and every denominator tried
+         against it was either the population hexagon read a second time or a number invented for the
+         occasion. The window itself is the track — seven evenings against the best of them, the
+         oldest on the left because that is the one tonight forgets. The figure beside it is the
+         stock, and the line under that figure is what tonight takes off it.
+
+         Each evening fills along its own length rather than rising in place. The rail is fourteen
+         pixels tall and about seventy wide per day, so a column put an evening worth a fifth of the
+         week under three pixels, which read as no evening at all; the same fifth is a legible
+         thirteen pixels across.
+
+         The gap is deliberately wide. Seven fills touching end to end are the segmented-battery
+         idiom, which is read cumulatively — "three of seven" instead of seven separate evenings.
+         Seven clearly parted pills, each with its own visible hollow, cannot be read that way. -->
+    <span [class]="metrics().barHeight" class="flex w-full items-stretch gap-1.5">
+      @for (foodDay of foodDays(); track foodDay.day) {
+        <!-- Each evening answers for itself. A pill is a length a reader can only estimate, so the
+             one thing it cannot do is state its own figure — and the rail's card, hung off the socket
+             now, is about the week rather than about any day of it. The shared bubble is a native
+             popover in the top layer, which is what lets it escape the pill's own `overflow-hidden`.
+             Disabled on a compact band, which shows nothing under a pointer. -->
+        <span
+          [appTooltip]="foodDay.ariaLabel"
+          [appTooltipDisabled]="compact()"
+          appTooltipPosition="above"
+          class="relative flex-1 overflow-hidden rounded-full bg-text-primary/10"
+        >
+          <!-- `min-w` rather than a floored percentage: an evening nobody played is worth zero and
+               must read as zero, but it still needs a stub, or its pill is indistinguishable from a
+               hollow one. -->
+          <span
+            [class]="
+              foodDay.isExpiring
+                ? 'bg-danger/70'
+                : foodDay.isToday
+                  ? track.primaryClass
+                  : 'bg-text-primary/30'
+            "
+            [style.width.%]="foodDay.percentage"
+            class="absolute inset-y-0 left-0 min-w-[2px] rounded-full"
+          ></span>
+        </span>
+      }
+    </span>
+
+    <!-- The seven figures, off the pointer. The pills carry them in a bubble a mouse opens, and the
+         socket's own `aria-label` covers the week as a whole but not evening by evening — this is
+         what keeps the detail reachable without one. -->
+    <span class="sr-only">
+      @for (foodDay of foodDays(); track foodDay.day) {
+        {{ foodDay.ariaLabel }}
+      }
+    </span>
+  }
 </ng-template>

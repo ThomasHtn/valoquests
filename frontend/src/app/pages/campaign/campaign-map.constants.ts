@@ -94,6 +94,13 @@ export interface BossTerritoryTier {
    * territory visibly fills up as the group takes it.
    */
   readonly damageFillClass: string;
+
+  /**
+   * Text colour tinting the shockwave expanding out of the tile, and the crest riding on its fill —
+   * both take theirs from `currentColor`. Empty on every status but the week being fought, which is
+   * the only tile on the map whose numbers are still moving.
+   */
+  readonly liveAccentClass: string;
 }
 
 /**
@@ -111,6 +118,7 @@ const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritor
     iconClass: 'text-success',
     haloClass: '',
     damageFillClass: 'bg-brand-500/28',
+    liveAccentClass: '',
   },
   // A week the boss held, in the loss colour rather than in a neutral grey. Grey was what an
   // unreached week already wore, so the map's two dullest tiles were its lost weeks and its empty
@@ -120,14 +128,17 @@ const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritor
     iconClass: 'text-danger',
     haloClass: '',
     damageFillClass: 'bg-text-primary/10',
+    liveAccentClass: '',
   },
-  // The one tile still moving, so the one tile with a halo. Static: the fight lasts a week, and a
-  // pulse on a state that slow reads as an alert.
+  // The one tile still moving, so the one tile that moves: a standing halo, a shockwave rolling out
+  // of it every three seconds, and a crest riding on the damage already dealt. Slow and wide rather
+  // than a pulse — the fight lasts a week, and a blink on a state that slow reads as an alert.
   current: {
     ringClass: 'bg-brand-500',
     iconClass: 'text-brand-500',
     haloClass: 'bg-brand-500/16',
     damageFillClass: 'bg-brand-500/28',
+    liveAccentClass: 'text-brand-500/40',
   },
   // Ground the campaign has not reached yet: it carries no outcome to read, only a position and what
   // it is worth, so anything louder competes with the weeks that do.
@@ -136,6 +147,7 @@ const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritor
     iconClass: 'text-text-muted',
     haloClass: '',
     damageFillClass: '',
+    liveAccentClass: '',
   },
 };
 
@@ -219,4 +231,16 @@ export function resolveColumnVisibilityClass(column: number): string {
  */
 export function resolveBossTerritoryTier(status: BossTimelineNodeStatus): BossTerritoryTier {
   return BOSS_TERRITORY_TIERS[status];
+}
+
+/**
+ * Resolves a week's position in its run as the two-digit boss number the hover card leads with
+ * (`01`, `02`, … up to a run's ten weeks), rather than the ISO calendar week `weekLabel` carries —
+ * the calendar week means nothing to a squad that thinks of the run as ten fights, not as a date.
+ *
+ * @param runWeekIndex - Position of the week inside its run, from one.
+ * @returns The zero-padded boss number.
+ */
+export function resolveBossNumberLabel(runWeekIndex: number): string {
+  return String(runWeekIndex).padStart(2, '0');
 }

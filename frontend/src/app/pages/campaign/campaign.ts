@@ -1,23 +1,31 @@
 import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, effect, ElementRef, inject, signal } from '@angular/core';
 import {
+  LucideBuilding2,
   LucideCheck,
   LucideHammer,
   LucideHouse,
+  LucideLandmark,
   LucideLock,
+  LucideSkull,
   LucideSwords,
+  LucideTent,
+  LucideUsers,
+  LucideWheat,
   LucideX,
 } from '@lucide/angular';
 
 import { BossCampaign } from '@core/boss/boss-campaign';
+import { BossCategory } from '@core/boss/boss.model';
+import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
 import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
+import { formatPopulation } from '@core/colony/colony-format.utils';
 import { ColonyView } from '@core/colony/colony-view';
-import { ColonyTierStepView } from '@core/colony/colony-view.model';
+import { ColonyBossView, ColonyTierStepView } from '@core/colony/colony-view.model';
 import { ColonyTierState } from '@core/colony/colony.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { Avatar } from '@shared/avatar/avatar';
 import { ColonyResourceBand } from '@shared/colony-resource-band/colony-resource-band';
 import { PageHeader } from '@layout/page-header/page-header';
 import { resolveSeriesColor } from '@shared/chart/chart-theme';
@@ -37,6 +45,7 @@ import {
   MAP_COLUMNS,
   MAP_LEGEND_STATUSES,
   resolveBossColumn,
+  resolveBossNumberLabel,
   resolveBossTerritoryTier,
   resolveColumnVisibilityClass,
   TERRAIN_RING_CLASS,
@@ -67,13 +76,17 @@ const HISTORY_ROW_COUNT = 6;
  * The marker is a hexagon like every other beat of the campaign — the map's territories, the
  * history's week markers — so the ladder reads as the same clock as the rest of the page.
  *
- * Three states rather than the four buildings this replaced, because housing is now continuous:
- * there is no threshold to save up for, so a step is only ever behind the town, under it, or ahead
- * of it. Every row carries a veil rather than an opaque plate, which is the surface the rest of the
- * application uses.
+ * Four treatments for three backend states: the step right above the town's own is drawn apart from
+ * the rest of the locked ones, because it is the only row anything the squad does moves. Every row
+ * carries a veil rather than an opaque plate, which is the surface the rest of the application uses.
+ *
+ * A filled marker means the step is paid for, an outlined one that it is not — which is what tells
+ * the town's own step apart from the one it is climbing. Both wear the brand colour, since one is
+ * where the town stands and the other where it is heading; everything further behind is green, and
+ * everything further ahead grey.
  */
 const LADDER_STEPS: Record<
-  ColonyTierState,
+  ColonyTierState | 'NEXT',
   {
     /**
      * The row's own veil, which is what separates the step being climbed from the rest.
@@ -105,12 +118,25 @@ const LADDER_STEPS: Record<
     nameClass: 'text-text-secondary',
     valueClass: 'text-text-secondary',
   },
+  // The step the town stands in: paid for, so a solid marker like the crossed ones behind it, and
+  // brand rather than green because it is the name the town currently answers to. It carries no
+  // outline and no bar — both belong to the row below, which is the one still to open.
   CURRENT: {
+    rowClass: 'bg-text-primary/10',
+    markerClass: 'bg-brand-500',
+    markerFillClass: 'bg-brand-500',
+    markerIconClass: 'text-surface-950',
+    nameClass: 'font-bold text-text-primary',
+    valueClass: 'text-text-secondary',
+  },
+  // The step being climbed: the panel's active row, outlined and lit, carrying both the cost still
+  // to gather and the bar that measures it.
+  NEXT: {
     rowClass: 'bg-brand-500/12 outline-1 -outline-offset-1 outline-brand-500/40',
     markerClass: 'bg-brand-500',
     markerFillClass: 'bg-surface-950',
     markerIconClass: 'text-brand-500',
-    nameClass: 'font-bold text-text-primary',
+    nameClass: 'font-semibold text-text-primary',
     valueClass: 'text-brand-500',
   },
   LOCKED: {
@@ -128,7 +154,7 @@ const LADDER_STEPS: Record<
  */
 interface CampaignLadderStep {
   readonly view: ColonyTierStepView;
-  readonly tier: (typeof LADDER_STEPS)[ColonyTierState];
+  readonly tier: (typeof LADDER_STEPS)[ColonyTierState | 'NEXT'];
 }
 
 /**
@@ -153,27 +179,13 @@ interface CampaignMapRow {
   readonly bossColumn: number;
 
   /**
-   * Housing the week's fight paid, carried on the tile itself — the colony's ledger read off the
-   * map rather than beside it. `null` on a terrain-only row, empty on a week not yet reached.
+   * The whole of what the week's fight is worth, or `null` on a terrain-only row.
    *
-   * Housing rather than materials or morale. Materials are an intermediate currency the player never
-   * handles, housing is the axis the context bar and the ladder already count in, and it is the only
-   * part of a fight's reward still standing on settlement day. Morale does not fit in fifty-six
-   * pixels and lives in {@link detailLabel} instead.
+   * The tile writes the materials off it, the hover card writes materials and morale both. Held as
+   * one object rather than flattened into the row: the row's job is to place a week on the grid, not
+   * to restate the colony's own view model field by field.
    */
-  readonly efficiencyLabel: string | null;
-
-  /**
-   * Whether that housing is banked. A week whose boss held shows a flat zero, recessive; a week won
-   * shows what it paid, in the brand colour.
-   */
-  readonly efficiencyEarned: boolean;
-
-  /**
-   * The whole of what the week was worth, in one sentence, for the tile's title: its materials, the
-   * housing they bought and the morale it moved.
-   */
-  readonly detailLabel: string | null;
+  readonly boss: ColonyBossView | null;
 }
 
 /**
@@ -203,18 +215,23 @@ interface CampaignMapRow {
     BossDetail,
     ResourceState,
     NgOptimizedImage,
-    Avatar,
     ColonyResourceBand,
     Drawer,
     LineChart,
     ProgressBar,
     Select,
     Tooltip,
+    LucideBuilding2,
     LucideCheck,
     LucideHammer,
     LucideHouse,
+    LucideLandmark,
     LucideLock,
+    LucideSkull,
     LucideSwords,
+    LucideTent,
+    LucideUsers,
+    LucideWheat,
     LucideX,
     PageHeader,
   ],
@@ -317,8 +334,9 @@ export class Campaign {
    * has not reached — the field extends past both ends of the path it carves through it.
    *
    * Every week's tile carries what its fight brought the colony in. The two lists are the same ten
-   * weeks in the same order, so they are joined by position; a week the colony has no entry for
-   * simply carries nothing.
+   * weeks, joined on the run week each of them carries — never on their position in the list. A
+   * single week that closed without a fight makes those two disagree, and joining by position then
+   * wrote every fight's reward onto its neighbour's hexagon.
    *
    * Empty while the campaign itself is, so an unresolved page shows no field at all rather than
    * bare terrain rows with nothing to fight over.
@@ -329,32 +347,30 @@ export class Campaign {
       return [];
     }
 
-    const bosses = this.colony.bosses();
+    const bossByRunWeek = new Map(this.colony.bosses().map((boss) => [boss.weekIndex, boss]));
 
     return [
       ...Array.from({ length: LEAD_TERRAIN_ROWS }, (_, index) => ({
         key: `lead-${index}`,
         node: null,
         bossColumn: -1,
-        efficiencyLabel: null,
-        efficiencyEarned: false,
-        detailLabel: null,
+        boss: null,
       })),
-      ...nodes.map((node, index) => ({
-        key: node.id,
-        node,
-        bossColumn: resolveBossColumn(index),
-        efficiencyLabel: bosses[index]?.efficiencyLabel ?? null,
-        efficiencyEarned: bosses[index]?.efficiencyEarned ?? false,
-        detailLabel: bosses[index]?.detailLabel ?? null,
-      })),
+      ...nodes.map((node, index) => {
+        const boss = bossByRunWeek.get(node.runWeekIndex) ?? null;
+
+        return {
+          key: node.id,
+          node,
+          bossColumn: resolveBossColumn(index),
+          boss,
+        };
+      }),
       ...Array.from({ length: TRAIL_TERRAIN_ROWS }, (_, index) => ({
         key: `trail-${index}`,
         node: null,
         bossColumn: -1,
-        efficiencyLabel: null,
-        efficiencyEarned: false,
-        detailLabel: null,
+        boss: null,
       })),
     ];
   });
@@ -367,8 +383,40 @@ export class Campaign {
    * neighbourhood of the one it stands in.
    */
   protected readonly ladderSteps = computed<readonly CampaignLadderStep[]>(() =>
-    this.colony.ladder().map((view) => ({ view, tier: LADDER_STEPS[view.state] })),
+    this.colony
+      .ladder()
+      .map((view) => ({ view, tier: LADDER_STEPS[view.isNext ? 'NEXT' : view.state] })),
   );
+
+  /**
+   * Inhabitants one point of food currently feeds, rounded — the same figure the food rail's `×`
+   * carries, read here as the two icons it sits between instead of a bare factor.
+   */
+  protected readonly efficiencyRatioLabel = computed(() => {
+    const currentColony = this.colony.colony();
+    return currentColony
+      ? formatPopulation(currentColony.efficiency, this.translation.language())
+      : '';
+  });
+
+  /**
+   * What the ratio icons say, spelled out for assistive technology. Reuses the food rail's own
+   * fact sentence rather than a new string, so the two readings of the same figure cannot drift.
+   */
+  protected readonly efficiencyRatioAriaLabel = computed(() => {
+    const currentColony = this.colony.colony();
+    if (!currentColony) {
+      return '';
+    }
+
+    const language = this.translation.language();
+    const label = this.translation.translate('colony.track.food.efficiency');
+    const value = this.translation.translate('colony.track.food.efficiencyValue', {
+      inhabitants: formatPopulation(currentColony.efficiency, language),
+    });
+
+    return `${label} ${value}`;
+  });
 
   /**
    * The weeks the history view tells: every fought week, oldest first, up to and including the
@@ -418,6 +466,7 @@ export class Campaign {
   protected readonly columns = MAP_COLUMNS;
   protected readonly legendStatuses = MAP_LEGEND_STATUSES;
   protected readonly territoryTier = resolveBossTerritoryTier;
+  protected readonly bossNumberLabel = resolveBossNumberLabel;
   protected readonly timelineTier = resolveBossTimelineTier;
   protected readonly columnVisibilityClass = resolveColumnVisibilityClass;
   protected readonly terrainRingClass = TERRAIN_RING_CLASS;
@@ -546,5 +595,20 @@ export class Campaign {
     this.hasScrolledToHistoryCurrentNode = false;
     this.campaign.reload();
     this.colony.reload();
+  }
+
+  /**
+   * Icon color for the week currently being fought: the boss's own difficulty once it's drawn,
+   * rather than the tier's flat amber, so the one mark that isn't an outcome yet still says
+   * something about the fight. The hexagon's ring stays the outcome's alone (see
+   * {@link resolveBossTerritoryTier}) — this only ever touches the glyph riding on top of it.
+   *
+   * @param category - The active week's boss category, or `null` for the one tick before it's drawn.
+   * @returns The Tailwind text color utility to apply to the boss icon.
+   */
+  protected currentBossIconColorClass(category: BossCategory | null): string {
+    return category === null
+      ? this.territoryTier('current').iconClass
+      : resolveBossCategoryColorClass(category);
   }
 }

@@ -63,7 +63,28 @@ export interface ColonyTier {
   readonly level: number;
 
   readonly threshold: number;
+
+  /**
+   * Cumulative materials the run's roster must bank to open this step.
+   *
+   * The same threshold, priced in the one currency the squad can act on. An efficiency says nothing
+   * about what to do tonight; a materials figure points straight at the challenges and the boss.
+   */
+  readonly materialsRequired: number;
+
   readonly state: ColonyTierState;
+}
+
+/**
+ * One day of the seven-day harvest the food stock is made of.
+ *
+ * Mirrors `ColonyFoodDayResponse`. The stock is a rolling window, never a reserve, so these seven days
+ * are the only reading of the food that says *when* the squad played — and the only one that is not
+ * the population figure seen a second time.
+ */
+export interface ColonyFoodDay {
+  readonly day: string;
+  readonly harvest: number;
 }
 
 /**
@@ -105,17 +126,13 @@ export interface ColonyPresence {
  */
 export interface ColonyMorale {
   readonly value: number;
-
-  /**
-   * Lowest morale reachable, so a badly started run stays playable. Drawn on the bar rather than
-   * implied, otherwise a value of 55 sitting at 44 % of the track makes its own figure a lie.
-   */
-  readonly floor: number;
-
   readonly ceiling: number;
 
   /**
-   * Share of the gap tonight closes at this morale.
+   * Share of the gap tonight closes at this morale, which is the whole of what morale does.
+   *
+   * Drawn on the rail beside the value, in the slot turnout uses for its own multiplier: the two are
+   * both factors on what an evening is worth, and morale's was the one left unsaid.
    */
   readonly growthPercentPerNight: number;
 }
@@ -123,9 +140,11 @@ export interface ColonyMorale {
 /**
  * What one week of the run's fights was worth to the colony.
  *
- * Mirrors `ColonyWeekResponse`. `efficiencyGain` is what the map writes on the week's own territory:
- * materials are an intermediate currency the player never handles, and efficiency is the only part of a
- * fight's reward still standing on settlement day.
+ * Mirrors `ColonyWeekResponse`. Priced in materials, which is the one currency the map, the ladder and
+ * the hover card all read in: a tile's figure can then be compared straight against the step of the
+ * ladder it helps pay for. `efficiencyGain` is that same reward read the other way, as the fraction of
+ * an efficiency point it buys back, for the hover card that already carries the materials figure and can
+ * afford the second one beside it.
  */
 export interface ColonyWeek {
   readonly weekIndex: number;
@@ -166,15 +185,40 @@ export interface Colony {
 
   /**
    * Inhabitants one point of food feeds, raised by the materials gathered. Never capped.
+   *
+   * The one figure joining the two halves of the page: the food rail counts food, the hexagon counts
+   * inhabitants, and this is the rate between them. Drawn on the food rail as the factor it is,
+   * `×12,44`, rather than left implicit — without it, every challenge and every fight paid into a
+   * ladder of decorative names and the page never said what that bought.
    */
   readonly efficiency: number;
 
   readonly materials: number;
 
   /**
+   * Materials this week's validated challenges have already secured, credited at the next rollover.
+   *
+   * Sent because `materials` only ever moves on a Monday, so it reads as a flat zero for the whole
+   * first week of a run while the squad is in fact earning.
+   */
+  readonly pendingMaterials: number;
+
+  /**
    * Food of the last seven days. A moving average, never a reserve.
    */
   readonly foodStock: number;
+
+  /**
+   * The seven daily harvests behind that stock, oldest first. Shorter than `foodWindowDays` while a
+   * young run's window is still filling.
+   */
+  readonly foodWindow: readonly ColonyFoodDay[];
+
+  /**
+   * Days the window spans once full. What tells a window still filling — where nothing expires yet —
+   * from one dropping its oldest day every night.
+   */
+  readonly foodWindowDays: number;
 
   readonly feedablePopulation: number;
   readonly weeklyConsumption: number;
@@ -188,7 +232,6 @@ export interface Colony {
   readonly morale: ColonyMorale;
   readonly tier: ColonyTier;
   readonly nextTier: ColonyTier;
-  readonly missingEfficiency: number;
   readonly tierProgressPercentage: number;
   readonly ladder: readonly ColonyTier[];
   readonly weeks: readonly ColonyWeek[];

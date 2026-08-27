@@ -95,6 +95,17 @@
                 {{ multiplier }}
               </span>
             }
+
+            <!-- The other half of what clearing this is worth. The damage above moves the ranking and
+               the week's boss; these materials move the town's tiers, and this is the only screen
+               that can say where they come from. -->
+            <span
+              class="mt-3 flex items-center justify-end gap-1 border-t border-text-primary/10 pt-2 font-mono text-2xs text-text-secondary tabular-nums"
+            >
+              <svg aria-hidden="true" class="size-3 shrink-0 text-brand-500" lucideHammer></svg>
+              <span class="sr-only">{{ 'colony.materials' | translate }}</span>
+              +{{ row.materials }}
+            </span>
           </p>
         </article>
       }

@@ -11,11 +11,13 @@ import {
 
 import {
   ColonyDeltaView,
+  ColonyFoodDayView,
   ColonyPresencePipView,
   ColonyTrackView,
 } from '@core/colony/colony-view.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { TOOLTIP_SURFACE_CLASS } from '@shared/tooltip/tooltip.constants';
 
 /**
@@ -114,6 +116,7 @@ const COMPACT_METRICS: ColonyBandMetrics = {
     TranslatePipe,
     NgTemplateOutlet,
     ProgressBar,
+    Tooltip,
     LucideFrown,
     LucideMeh,
     LucideSmile,
@@ -156,6 +159,16 @@ export class ColonyResourceBand {
    * band, which has no hover cards.
    */
   public readonly presencePips = input<readonly ColonyPresencePipView[]>([]);
+
+  /**
+   * One column per day of the food window. **Required in practice on both densities**: the food rail
+   * has no bar, so this is its track, not merely the content of its hover card. A band left without
+   * it draws a rail with nothing on it.
+   *
+   * The stock is a rolling seven-day window rather than a reserve, so its days are the only reading
+   * of the food that says *when* the squad played — and which evening tonight forgets.
+   */
+  public readonly foodDays = input<readonly ColonyFoodDayView[]>([]);
 
   /**
    * Whether the band is drawn small and inert.

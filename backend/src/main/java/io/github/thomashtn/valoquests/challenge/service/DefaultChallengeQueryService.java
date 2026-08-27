@@ -9,6 +9,7 @@ import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
+import io.github.thomashtn.valoquests.colony.ColonyRuleset;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
@@ -57,6 +58,15 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
     private final ScoringRuleset ruleset;
 
     /**
+     * Calibration saying what a challenge of each difficulty hands the colony.
+     *
+     * <p>Read here rather than derived by the client: the colony prices a challenge from the very
+     * damage this class already advertises, and a client doing that division itself would carry a
+     * second copy of the rule.
+     */
+    private final ColonyRuleset colonyRuleset;
+
+    /**
      * Calendar resolving the current week.
      */
     private final WeekCalendar weekCalendar;
@@ -69,6 +79,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
      * @param playerRepository          tracked-player repository
      * @param definitionParser          challenge-definition parser
      * @param ruleset                   scoring ruleset
+     * @param colonyRuleset             colony ruleset pricing a challenge in materials
      * @param weekCalendar       calendar resolving the current week
      */
     public DefaultChallengeQueryService(
@@ -77,6 +88,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
         PlayerRepository playerRepository,
         ChallengeDefinitionParser definitionParser,
         ScoringRuleset ruleset,
+        ColonyRuleset colonyRuleset,
         WeekCalendar weekCalendar
     ) {
         this.weeklyChallengeRepository = weeklyChallengeRepository;
@@ -84,6 +96,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
         this.playerRepository = playerRepository;
         this.definitionParser = definitionParser;
         this.ruleset = ruleset;
+        this.colonyRuleset = colonyRuleset;
         this.weekCalendar = weekCalendar;
     }
 
@@ -190,6 +203,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             resolveMetricLabel(definition),
             resolveTargetValue(definition, progressRows),
             baseDamage,
+            colonyRuleset.materialsForChallenge(difficulty),
             resolveTeamBonusPercent(difficulty, baseDamage, completedPlayers),
             completedPlayers,
             totalPlayers,

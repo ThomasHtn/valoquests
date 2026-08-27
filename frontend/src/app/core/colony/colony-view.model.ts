@@ -12,6 +12,15 @@ export type ColonyTrackGlyph =
   'FOOD' | 'PRESENCE' | 'MORALE_GOOD' | 'MORALE_NEUTRAL' | 'MORALE_BAD';
 
 /**
+ * The silhouette one step of the ladder wears.
+ *
+ * Four bands rather than one glyph per name: twelve icons in a panel this narrow would each be read
+ * as a different kind of thing, where the point is that they are one thing growing. The bands are the
+ * ladder's own arc — a camp, then houses, then a skyline, then a monument.
+ */
+export type ColonyTierGlyph = 'CAMP' | 'HOUSES' | 'SKYLINE' | 'MONUMENT';
+
+/**
  * One swatch of a rail's hover card: a mark in the band's own colour, and what that band is worth.
  *
  * Each swatch is worth <b>the width of its own band</b>, never the point where it ends. Writing the
@@ -21,6 +30,19 @@ export type ColonyTrackGlyph =
 export interface ColonyTrackLegendView {
   readonly colorClass: string;
   readonly label: string;
+}
+
+/**
+ * One named figure of a rail's hover card: what it is, and what it is worth.
+ *
+ * Where a rail's track carries a shape a reader can only estimate, this carries the numbers behind
+ * it. Food uses it for the three figures its pills cannot state — what one point of food is worth in
+ * inhabitants, what the town needs, and what is left over — which is the whole of what the card is
+ * for now that the week itself is on the rail.
+ */
+export interface ColonyTrackFactView {
+  readonly label: string;
+  readonly value: string;
 }
 
 /**
@@ -40,20 +62,62 @@ export interface ColonyTrackView {
   readonly label: string;
 
   /**
-   * Where the first band ends: what the town already eats, or the morale's unreachable floor.
+   * Whether the rail draws a bar at all.
+   *
+   * False on food alone. A bar states a level against a ceiling, and the food stock is a rolling
+   * seven-day sum with no ceiling to state it against — every denominator tried was either the
+   * population figure seen a second time or a number invented for the occasion. That rail draws its
+   * window day by day instead, which is what the stock actually is.
+   */
+  readonly hasBar: boolean;
+
+  /**
+   * Where the fill ends: the turnout out of the frozen roster, or the morale out of its ceiling.
+   * Ignored off a rail with a bar.
    */
   readonly percentage: number;
 
   /**
-   * Where the second band ends, or `null` on a single-band rail.
+   * Where a second band ends, or `null` on a single-band rail, which all three currently are.
    */
   readonly secondaryPercentage: number | null;
 
   /**
-   * The fact, on the rail's trailing edge. One number on the food rail: what this week's food can
-   * feed, which is the only ceiling the town has.
+   * Whether the fill is a value still moving, which is what earns it the travelling highlight.
+   *
+   * False on food alone, which draws no bar at all.
+   */
+  readonly isLive: boolean;
+
+  /**
+   * The fact, on the rail's trailing edge.
+   *
+   * A part of a whole where the rail has one — `5 / 7` turnout, `55 / 100` morale — and a plain
+   * total where it does not: food is a rolling seven-day sum with no ceiling, so its rail carries
+   * the stock itself. The fraction form is reserved for genuine parts of a whole. Food briefly wrote
+   * `surplus / consumption` in it, and a reader who knew the other two rails read a stock not quite
+   * half full when neither figure was the whole.
    */
   readonly valueLabel: string;
+
+  /**
+   * The factor that fact is worth, set beside it in a smaller size, or empty on a rail whose value
+   * carries no factor of its own.
+   *
+   * Two of the three rails have one, and in both cases it is the reason to read the rail at all: a
+   * head count does not say what tonight's harvest is worth, and a morale does not say what it
+   * speeds up. Food carries the efficiency here, which is what turns its stock into the inhabitants
+   * the hexagon counts.
+   */
+  readonly multiplierLabel: string;
+
+  /**
+   * What the night takes off that fact, under it, or empty when nothing is coming off.
+   *
+   * Only food has one: its oldest day expires tonight, and that is the single thing about a rolling
+   * window a reader has to know before deciding whether to play.
+   */
+  readonly valueDeltaLabel: string;
 
   /**
    * Already-translated sentence the rail's hover card shows, and the button's own accessible name —
@@ -65,6 +129,11 @@ export interface ColonyTrackView {
    * Swatches the rail's hover card lists, empty on a rail whose card shows something else.
    */
   readonly legend: readonly ColonyTrackLegendView[];
+
+  /**
+   * Named figures the rail's hover card lists, empty on a rail whose card shows something else.
+   */
+  readonly facts: readonly ColonyTrackFactView[];
 
   /**
    * One already-translated line closing that card, empty when there is nothing to add.
@@ -91,6 +160,54 @@ export interface ColonyTrackView {
   readonly secondaryClass: string;
 
   readonly textClass: string;
+}
+
+/**
+ * One day of the food week strip: a harvest, drawn as a share of the best day of the window.
+ *
+ * The food rail's own track, since that rail has no bar — the counterpart of
+ * {@link ColonyPresencePipView}, which is the other rail whose card the band fills itself. The stock
+ * is a rolling seven-day window rather than a reserve, so these seven pills are the honest picture
+ * of it: a total says how much food there is, the pills say which evenings put it there and which
+ * one is about to be forgotten.
+ *
+ * Each pill fills along its own length rather than rising in place. The rail is fourteen pixels
+ * tall and around seventy wide per day, so height gave an evening worth a fifth of the week under
+ * three pixels — a magnitude nobody could read, and one that could not even be told apart from an
+ * evening nobody played.
+ *
+ * There is one pill per day the window holds, which is fewer than seven only while a young run's
+ * window is still filling. No hollow pill ever stands in for a day before the run began: the strip
+ * is laid out `flex-1`, so four pills fill the rail exactly as seven do.
+ */
+export interface ColonyFoodDayView {
+  /**
+   * ISO day, and the `@for` track expression's identity.
+   */
+  readonly day: string;
+
+  /**
+   * How far the pill fills, as a share of the window's best day, in `[0, 100]`.
+   */
+  readonly percentage: number;
+
+  /**
+   * Whether this is the day being lived, which the strip marks so the row can be read from it.
+   */
+  readonly isToday: boolean;
+
+  /**
+   * Whether tonight drops this day out of the window.
+   *
+   * Never true while the window is still filling, where the run has simply not lived seven days yet
+   * and nothing is being lost.
+   */
+  readonly isExpiring: boolean;
+
+  /**
+   * Already-translated day and harvest, since the column itself carries neither in text.
+   */
+  readonly ariaLabel: string;
 }
 
 /**
@@ -123,7 +240,32 @@ export interface ColonyPresencePipView {
  */
 export interface ColonyTierStepView {
   readonly threshold: number;
+
+  /**
+   * What the step still costs, already formatted: the materials to bank before it opens.
+   *
+   * The column used to carry the step's efficiency, a bare `8,75` that names no unit, appears nowhere
+   * else on the page and that no action moves directly. The materials still missing are the same
+   * threshold said in the currency challenges and bosses actually pay. A step already paid reads
+   * `0` rather than blank, so the town's own step is visibly settled instead of merely silent.
+   */
+  readonly missingMaterialsLabel: string;
+
+  /**
+   * Which silhouette the step's marker wears, so the ladder reads as a settlement growing rather than
+   * as a list of names. The step's *state* is carried by the marker's colour and fill, which is why
+   * the icon is free to carry the step itself.
+   */
+  readonly glyph: ColonyTierGlyph;
   readonly state: ColonyTierState;
+
+  /**
+   * Whether this is the step the town is climbing towards, one above its own.
+   *
+   * Drawn as the panel's active row rather than the town's own step: the step below is already paid,
+   * and the row a reader has to act on is the one still to open.
+   */
+  readonly isNext: boolean;
 
   /**
    * Already-translated step name, citadel number included.
@@ -131,21 +273,13 @@ export interface ColonyTierStepView {
   readonly name: string;
 
   /**
-   * The figure beside the name. On the step the town sits in this is what it is climbing
-   * <b>towards</b>, not where it stands: read at the top of a row, in the row's own weight, the
-   * town's efficiency was taken for the target, which is the one thing it is not. Where it stands
-   * is on the bar's own tooltip instead, in {@link progressLabel}.
-   */
-  readonly valueLabel: string;
-
-  /**
-   * Progress towards the next step, or `null` on every step but the town's own.
+   * How far the town has climbed towards this step, or `null` on every step but the next one.
    */
   readonly progressPercentage: number | null;
 
   /**
-   * Already-translated sentence the bar hands to its tooltip: where the town stands, what the step
-   * it is climbing runs to, and what is left to cross it. Empty off the active step.
+   * Already-translated sentence the bar hands to its tooltip: what the step still costs to open.
+   * Empty off the step being climbed.
    *
    * In a tooltip rather than under the bar: a second row of figures under the active step was read
    * as the step's own target, which is what the figure beside the name already is. The bar carries
@@ -165,25 +299,34 @@ export interface ColonyBossView {
   readonly state: ColonyWeekOutcomeState;
 
   /**
-   * Already-formatted efficiency the fight is worth, written on the week's own territory: `+0,53`
-   * when it was taken, `0` when the boss held, empty on a week not yet reached.
+   * Already-formatted materials the fight is worth, written on the week's own territory: `560` when
+   * it was taken or is still on the table, empty on a week whose boss held.
    *
-   * Efficiency rather than materials or morale. Materials are an intermediate currency the player
-   * never handles, efficiency is the axis the whole page already counts in, and it is the only part
-   * of a fight's reward still standing on settlement day.
+   * Materials rather than the efficiency they buy, which is what the tile used to carry. Efficiency
+   * is a figure nothing else on the page counts in and that the squad cannot act on; materials are
+   * the unit the ladder is priced in and the one challenges pay, so the map, the ladder and the
+   * header now read as one currency.
+   */
+  readonly materialsLabel: string;
+
+  /**
+   * Already-formatted efficiency those materials buy back, as the factor it is (`×0,27`): empty
+   * wherever `materialsLabel` is, since there is nothing to convert on a week that settled nothing.
+   *
+   * Lives in the hover card only, beside the materials figure it explains — the tile itself stays
+   * priced in materials alone, the one currency the map and the ladder share.
    */
   readonly efficiencyLabel: string;
 
   /**
-   * Whether that efficiency is banked or still on the table.
+   * Whether those materials are banked, as opposed to still on the table.
    */
-  readonly efficiencyEarned: boolean;
+  readonly earned: boolean;
 
   /**
-   * The full sentence the tile's title carries: the week, the outcome, its materials, the efficiency
-   * they buy and the morale it moved. Morale does not fit on a tile and lives here instead.
+   * Already-formatted morale the fight moved, signed.
    */
-  readonly detailLabel: string;
+  readonly moraleLabel: string;
 }
 
 /**

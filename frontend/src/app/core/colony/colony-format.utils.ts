@@ -58,30 +58,30 @@ export function formatGauge(value: number, language: 'fr' | 'en'): string {
 }
 
 /**
- * Formats an efficiency movement with its sign always shown (`+0,40`).
+ * Formats a multiplier as the factor it applies (`×1,71`).
  *
- * Two decimals, like every other efficiency on the page: a fight is worth fractions of a point, and
- * the whole-number formatter used for inhabitants printed a minor boss's reward as `+0`.
- *
- * @param value - The movement to format.
+ * @param value - The multiplier to format.
  * @param language - The app language whose decimal separator to use.
- * @returns The signed movement, at two decimals.
+ * @returns The multiplier, prefixed with `×`.
  */
-export function formatSignedGauge(value: number, language: 'fr' | 'en'): string {
-  const sign = value > 0 ? '+' : '';
-
-  return `${sign}${formatGauge(value, language)}`;
+export function formatMultiplier(value: number, language: 'fr' | 'en'): string {
+  return `×${formatGauge(value, language)}`;
 }
 
 /**
- * Formats a percentage to one decimal (`84,5 %`), or to none when it is whole.
+ * Formats a rate to one decimal (`8,3`).
  *
- * @param value - The percentage to format.
+ * One decimal rather than the two a multiplier gets: the morale rate moves by twentieths of a point
+ * over the run, and a second decimal on a figure captioned "per night" reads as a precision the
+ * model does not have.
+ *
+ * @param value - The rate to format.
  * @param language - The app language whose decimal separator to use.
- * @returns The percentage, without its unit.
+ * @returns The rate at one decimal.
  */
-export function formatPercentage(value: number, language: 'fr' | 'en'): string {
+export function formatRate(value: number, language: 'fr' | 'en'): string {
   return new Intl.NumberFormat(COLONY_LOCALES[language], {
+    minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   }).format(value);
 }

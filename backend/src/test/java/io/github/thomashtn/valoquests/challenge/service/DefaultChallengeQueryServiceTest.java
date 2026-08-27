@@ -17,6 +17,7 @@ import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
+import io.github.thomashtn.valoquests.colony.DefaultColonyRuleset;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
@@ -69,12 +70,15 @@ class DefaultChallengeQueryServiceTest {
 
     @BeforeEach
     void setUp() {
+        DefaultScoringRuleset scoringRuleset = new DefaultScoringRuleset();
+
         service = new DefaultChallengeQueryService(
             weeklyChallengeRepository,
             progressRepository,
             playerRepository,
             definitionParser,
-            new DefaultScoringRuleset(),
+            scoringRuleset,
+            new DefaultColonyRuleset(scoringRuleset),
             new WeekCalendar(Clock.fixed(MIDWEEK, ZoneOffset.UTC), ZoneOffset.UTC)
         );
     }
@@ -169,6 +173,10 @@ class DefaultChallengeQueryServiceTest {
         assertThat(response.damage()).isEqualTo(2_200);
         assertThat(response.metric()).isEqualTo("KILLS");
         assertThat(response.targetValue()).isEqualByComparingTo("50");
+
+        // The other half of what a challenge is worth: the damage moves the ranking and the fight, the
+        // materials move the town. Derived from that same damage, so the two can never disagree.
+        assertThat(response.materials()).isEqualTo(22);
     }
 
     @Test

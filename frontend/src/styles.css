@@ -333,6 +333,142 @@
   }
 }
 
+/* The three motions the campaign screen owns. They exist as utilities rather than as classes on a
+   component because all three ride on pseudo-elements: an animated layer that has to sit inside a
+   clipped hexagon cannot be a template node without adding a wrapper to every tile the map draws.
+
+   All three take their colour from `currentColor`, so a call site tints them with the same
+   `text-*` utility it would use anywhere else and no keyframe hardcodes a palette token. */
+
+/* Liquid surface riding on top of a fill layer: the population hexagon, and the tile of the fight
+   still running.
+
+   A sine, not a row of scallops. The mask is one full period of a wave closed down to its own
+   baseline, tiled horizontally; the two crests then run at different speeds *in opposite
+   directions*, and it is their interference that reads as water rather than as a texture sliding
+   past. A single crest, whatever its shape, always reads as a conveyor belt.
+
+   The drift is exactly one mask tile — a third of a pseudo-element three times its parent's width —
+   so the loop has no seam. `bottom` overlaps the fill by a pixel for the same reason: a hairline of
+   background between the crest and the body it rides on is the one thing that gives the trick away.
+
+   The element is expected to sit inside a clipped parent. On the map and in the hexagon the
+   `clip-hex` silhouette does that, so a crest running past the fill is cut by the shape itself. */
+@utility liquid-wave {
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: calc(100% - 1px);
+    left: -100%;
+    width: 300%;
+    height: 0.7rem;
+    background-color: currentColor;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'%3E%3Cpath d='M0 10 C 12 2, 38 2, 50 10 S 88 18, 100 10 L 100 20 L 0 20 Z' fill='%23000'/%3E%3C/svg%3E");
+    mask-size: 33.3333% 100%;
+    mask-repeat: repeat-x;
+    animation: liquid-wave 4.2s linear infinite;
+  }
+
+  &::after {
+    height: 0.5rem;
+    opacity: 0.55;
+    animation-duration: 6.8s;
+    animation-direction: reverse;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before,
+    &::after {
+      animation: none;
+    }
+  }
+}
+
+@keyframes liquid-wave {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(33.3333%);
+  }
+}
+
+/* Hexagonal shockwave expanding out of the tile being fought, staggered in two so the field never
+   goes fully quiet between beats. Scale and opacity only, both compositor properties, so a map
+   drawing one of these costs no layout. */
+@utility battle-ripple {
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background-color: currentColor;
+    animation: battle-ripple 3s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+  }
+
+  &::after {
+    animation-delay: 1.5s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before,
+    &::after {
+      animation: none;
+      opacity: 0.5;
+    }
+  }
+}
+
+@keyframes battle-ripple {
+  from {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Highlight travelling along a gauge that is still being filled, so a live rail is told apart from
+   a settled one without a caption. Deliberately faint: three of these run side by side on the
+   colony band, and anything brighter turned the band into a light show. */
+@utility gauge-sheen {
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in oklab, var(--color-text-primary) 22%, transparent) 50%,
+      transparent 100%
+    );
+    animation: gauge-sheen 2.6s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+      opacity: 0;
+    }
+  }
+}
+
+@keyframes gauge-sheen {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
 /* Scrollbars, styled to match the dark surface palette instead of the OS default. */
 @layer base {
   * {

@@ -2,10 +2,8 @@ package io.github.thomashtn.valoquests.colony.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.colony.DefaultColonyRuleset;
 import io.github.thomashtn.valoquests.colony.model.ColonyDayActivity;
@@ -17,7 +15,7 @@ import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.match.service.MatchEligibility;
 import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import io.github.thomashtn.valoquests.player.entity.Player;
-import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.service.MatchDamageCalculator;
 import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver;
@@ -27,6 +25,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,11 +48,11 @@ class ColonyActivityReaderTest {
     /** Damage a deathmatch is priced at short of its forty-kill victory. */
     private static final int DEATHMATCH = 100;
 
-    /** Player repository dependency. */
-    private PlayerRepository playerRepository;
-
     /** Player match repository dependency. */
     private PlayerMatchRepository playerMatchRepository;
+
+    /** Every fixture match, whoever played it, as the single range query would return them. */
+    private List<PlayerMatch> storedMatches;
 
     /** Next identifier handed to a fixture match. */
     private long nextMatchId = 1L;
@@ -64,8 +63,8 @@ class ColonyActivityReaderTest {
     /** Creates the collaborators before each test, wiring the real scoring pipeline. */
     @BeforeEach
     void setUp() {
-        playerRepository = mock(PlayerRepository.class);
         playerMatchRepository = mock(PlayerMatchRepository.class);
+        storedMatches = new ArrayList<>();
 
         Clock clock = Clock.fixed(Instant.parse("2026-06-08T00:15:00Z"), ZoneOffset.UTC);
         WeekCalendar weekCalendar = new WeekCalendar(clock, ZoneOffset.UTC);
@@ -77,11 +76,27 @@ class ColonyActivityReaderTest {
         WeeklyMatchDamageResolver damageResolver =
             new WeeklyMatchDamageResolver(damageCalculator, weekCalendar);
 
-        lenient().when(playerMatchRepository.findForChallengePeriod(any(), any(), any()))
-            .thenReturn(List.of());
+        // The range query, faked rather than stubbed flat: the reader now groups a single flat list
+        // by player and week itself, so a stub returning everything unconditionally would not exercise
+        // the grouping the diminishing returns depend on. The status is honoured for the same reason —
+        // the reader asking for one is the whole of how a deactivated player leaves the colony.
+        lenient().when(playerMatchRepository.findAllForPeriod(any(), any(), any()))
+            .thenAnswer(invocation -> {
+                PlayerStatus status = invocation.getArgument(0);
+                Instant from = invocation.getArgument(1);
+                Instant to = invocation.getArgument(2);
+
+                return storedMatches.stream()
+                    .filter(match -> match.getPlayer().getStatus() == status)
+                    .filter(match -> !match.getMatch().getStartedAt().isBefore(from)
+                        && match.getMatch().getStartedAt().isBefore(to))
+                    .sorted(Comparator
+                        .comparing((PlayerMatch match) -> match.getMatch().getStartedAt())
+                        .thenComparing(PlayerMatch::getId))
+                    .toList();
+            });
 
         reader = new ColonyActivityReader(
-            playerRepository,
             playerMatchRepository,
             damageResolver,
             damageCalculator,
@@ -106,6 +121,40 @@ class ColonyActivityReaderTest {
 
         assertThat(activity.get(MONDAY).matchDamage()).isEqualTo(3 * COMPETITIVE_WIN);
         assertThat(activity.get(MONDAY).presencePlayerCount()).isEqualTo(2);
+    }
+
+    /**
+     * Verifies that a player off the roster feeds neither the harvest nor the turnout.
+     *
+     * <p>The regression this reader was built the other way round for. A deactivated player used to
+     * keep bringing food in while appearing on none of the gauges the roster draws, so a day's harvest
+     * could have no author anywhere in the interface — and an operator who had deliberately taken
+     * somebody off the roster went on being fed by them.
+     */
+    @Test
+    void shouldIgnoreAPlayerOffTheRoster() {
+        Player rostered = givenPlayer(1L);
+        Player deactivated = givenPlayer(2L, PlayerStatus.INACTIVE);
+
+        givenMatches(rostered, matches(MONDAY, 1));
+        givenMatches(deactivated, matches(MONDAY, 4));
+
+        Map<LocalDate, ColonyDayActivity> activity = reader.readActivity(MONDAY, MONDAY);
+
+        assertThat(activity.get(MONDAY).matchDamage()).isEqualTo(COMPETITIVE_WIN);
+        assertThat(activity.get(MONDAY).presencePlayerCount()).isEqualTo(1);
+        assertThat(reader.readRawDamageByPlayer(MONDAY)).containsOnlyKeys(1L);
+    }
+
+    /**
+     * Verifies that a day only the deactivated played reads as a day nobody played.
+     */
+    @Test
+    void shouldReportNoActivityOnADayOnlyAPlayerOffTheRosterPlayed() {
+        Player deactivated = givenPlayer(2L, PlayerStatus.ARCHIVED);
+        givenMatches(deactivated, matches(MONDAY, 6));
+
+        assertThat(reader.readActivity(MONDAY, MONDAY)).isEmpty();
     }
 
     /**
@@ -243,33 +292,35 @@ class ColonyActivityReaderTest {
      * @return the player
      */
     private Player givenPlayer(long id) {
+        return givenPlayer(id, Player.COMPETITIVE_STATUS);
+    }
+
+    /**
+     * Creates a player holding a given status.
+     *
+     * @param id     internal identifier
+     * @param status status the player holds
+     * @return the player
+     */
+    private Player givenPlayer(long id, PlayerStatus status) {
         Player player = new Player();
         player.setId(id);
         player.setGameName("Player" + id);
         player.setTagLine("EUW");
-
-        List<Player> roster = new ArrayList<>(
-            playerRepository.findAllByOrderByIdAsc() == null
-                ? List.of()
-                : playerRepository.findAllByOrderByIdAsc()
-        );
-        roster.add(player);
-        when(playerRepository.findAllByOrderByIdAsc()).thenReturn(roster);
+        player.setStatus(status);
 
         return player;
     }
 
     /**
-     * Registers one player's matches for the week containing the fixture Monday.
+     * Registers one player's matches.
      *
      * @param player  player who played them
      * @param matches their matches
      */
     private void givenMatches(Player player, List<PlayerMatch> matches) {
         matches.forEach(match -> match.setPlayer(player));
-
-        when(playerMatchRepository.findForChallengePeriod(eq(player.getId()), any(), any()))
-            .thenReturn(matches);
+        storedMatches.addAll(matches);
     }
 
     /**

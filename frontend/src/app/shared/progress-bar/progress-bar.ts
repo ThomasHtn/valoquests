@@ -86,6 +86,15 @@ export class ProgressBar {
   public readonly targetMarker = input<number | null>(null);
 
   /**
+   * Runs a faint highlight along the fill, marking a gauge whose value is still moving.
+   *
+   * Opt-in, and only for the handful of tracks that really are live — the colony's rails and the
+   * health bar of the fight running now. A win rate or a finalized week is a settled figure, and
+   * animating one would promise a change that is never coming.
+   */
+  public readonly live = input(false);
+
+  /**
    * The second band's width, or `null` when there is no second band to draw.
    *
    * Clamped at the fill's head rather than allowed to run backwards: the two bands describe one

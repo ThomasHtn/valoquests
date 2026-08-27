@@ -16,7 +16,6 @@ import io.github.thomashtn.valoquests.shared.dto.PageResponse;
 import io.github.thomashtn.valoquests.shared.util.PaginationGuard;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -107,20 +106,9 @@ public class DefaultBossQueryService implements BossQueryService {
             encounter.getEffectiveHp(),
             totalDamageDealt(weekStart),
             run.getNumber(),
-            weekIndexInRun(run, weekStart),
+            run.weekIndexOf(weekStart),
             colonyRuleset.runLengthWeeks()
         );
-    }
-
-    /**
-     * Places one week inside its run, counting from one.
-     *
-     * @param run       run the week belongs to
-     * @param weekStart Monday identifying the week
-     * @return the week's one-based position in the run
-     */
-    private int weekIndexInRun(Run run, LocalDate weekStart) {
-        return (int) ChronoUnit.WEEKS.between(run.getFirstWeekStart(), weekStart) + 1;
     }
 
     /**
@@ -193,6 +181,7 @@ public class DefaultBossQueryService implements BossQueryService {
         return new BossHistoryWeekResponse(
             encounter.getWeekStart(),
             encounter.getWeekStart().plusDays(6),
+            encounter.getRun().weekIndexOf(encounter.getWeekStart()),
             encounter.getFinalizedAt(),
             toBossResponse(encounter.getBossCatalogEntry()),
             encounter.getEffectiveHp(),

@@ -11,16 +11,21 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * roughly once a week. There is no threshold to save up for either — efficiency is continuous, so a
  * challenge validated on a Monday makes the town's food carry further that same Monday.
  *
- * @param name      name the town wears from this step on
- * @param level     citadel number once the ladder starts repeating, zero on every named step
- * @param threshold efficiency the step opens at
- * @param state     where the step stands relative to the town
+ * @param name              name the town wears from this step on
+ * @param level             citadel number once the ladder starts repeating, zero on every named step
+ * @param threshold         efficiency the step opens at
+ * @param materialsRequired cumulative materials the run's roster must bank to open it. The same
+ *                          threshold, priced in the one currency the squad can act on: an efficiency
+ *                          says nothing about what to do tonight, a materials figure does. Zero on the
+ *                          opening step.
+ * @param state             where the step stands relative to the town
  */
 @Schema(description = "One step of the town's ladder.")
 public record ColonyTierResponse(
     ColonyTierName name,
     int level,
     double threshold,
+    int materialsRequired,
     ColonyTierState state
 ) {
 }

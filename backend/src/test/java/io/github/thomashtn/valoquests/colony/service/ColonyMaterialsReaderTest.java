@@ -107,7 +107,7 @@ class ColonyMaterialsReaderTest {
 
         assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE)).satisfies(outcome -> {
             assertThat(outcome.materials()).isEqualTo(560);
-            assertThat(outcome.moraleDelta()).isEqualTo(15.0);
+            assertThat(outcome.moraleDelta()).isEqualTo(5.0);
         });
     }
 
@@ -117,12 +117,12 @@ class ColonyMaterialsReaderTest {
     @Test
     void shouldPriceTheThreeCategoriesApart() {
         givenEncounter(BossCategory.MINOR, true, true);
-        assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE).materials()).isEqualTo(420);
+        assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE).materials()).isEqualTo(280);
 
         givenEncounter(BossCategory.ELITE, true, true);
         assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE)).satisfies(outcome -> {
-            assertThat(outcome.materials()).isEqualTo(700);
-            assertThat(outcome.moraleDelta()).isEqualTo(20.0);
+            assertThat(outcome.materials()).isEqualTo(980);
+            assertThat(outcome.moraleDelta()).isEqualTo(7.0);
         });
     }
 
@@ -137,7 +137,7 @@ class ColonyMaterialsReaderTest {
 
         assertThat(reader.outcomeOf(WEEK, ROSTER_SIZE)).satisfies(outcome -> {
             assertThat(outcome.materials()).isZero();
-            assertThat(outcome.moraleDelta()).isEqualTo(-20.0);
+            assertThat(outcome.moraleDelta()).isEqualTo(-7.0);
         });
     }
 

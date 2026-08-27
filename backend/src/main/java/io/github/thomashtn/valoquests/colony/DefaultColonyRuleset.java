@@ -90,6 +90,10 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     /**
      * Morale floor, low enough to hurt but never an absorbing state.
      *
+     * <p>Reached after five straight defeats rather than after two, since a surviving boss costs seven
+     * and no longer twenty. A wiped-out run slides towards the floor over half a season instead of
+     * hitting it in a fortnight.
+     *
      * <p>At one, the town closed one percent of its gap a week: nothing a squad did could start it
      * again, which is waiting rather than losing. At twenty it closes nineteen percent a week, and the
      * punishment is almost untouched — on a squad that wasted its first three weeks, raising the floor
@@ -104,8 +108,11 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
 
     /**
      * Morale a surviving boss costs.
+     *
+     * <p>Exactly what an elite win pays, which is the invariant the whole table is built on: the
+     * hardest fight of the run repairs one loss and no more.
      */
-    private static final double MORALE_FOR_SURVIVING_BOSS = -20.0;
+    private static final double MORALE_FOR_SURVIVING_BOSS = -7.0;
 
     /**
      * Divisor turning a challenge's scoring damage into the materials it is worth per player.
@@ -192,6 +199,17 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     }
 
     @Override
+    public int materialsForEfficiency(double efficiency, int rosterSize) {
+        double climb = efficiency - BASE_INHABITANTS_PER_FOOD;
+
+        if (rosterSize <= 0 || climb <= 0) {
+            return 0;
+        }
+
+        return (int) Math.ceil(climb * rosterSize * MATERIALS_PER_EFFICIENCY_POINT);
+    }
+
+    @Override
     public int presenceDamageThreshold() {
         return PRESENCE_DAMAGE_THRESHOLD;
     }
@@ -224,9 +242,22 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     /**
      * {@inheritDoc}
      *
-     * <p>Calibrated against the twenty points a surviving boss costs: a minor win only half repairs a
-     * loss, an elite win exactly repairs it. Ten fights are what a run's morale is made of, and nothing
-     * else touches it.
+     * <p><b>The table is sized against the room, not against the fight.</b> A run schedules two minor
+     * fights, six standard ones and two elite ones, so winning every one of them offers
+     * {@code 2x3 + 6x5 + 2x7 = 50} morale — exactly the distance from the fifty a run opens on to the
+     * hundred it tops out at. A flawless run therefore lands on the ceiling with its <b>tenth</b> fight
+     * and not before, which is the whole point: every one of the ten moves the gauge.
+     *
+     * <p>These numbers used to be 10, 15 and 20, and offered 150 morale into 50 points of room. The
+     * ceiling was reached on week four of any decent run, after which six fights out of ten changed
+     * nothing at all and the categories stopped meaning anything — the boss was an on/off switch rather
+     * than a graded lever. Adding a weekly decay was considered and dropped: at five a week it bought
+     * one week of headroom, and at the ten a week that would have worked a minor win nets zero, which
+     * puts the dead fight back in a different place.
+     *
+     * <p>The loss stays worth exactly one elite win, so the break-even sits at a 58% win rate, within a
+     * point of what the old table asked. Losing every fight now takes five weeks to reach the floor
+     * rather than two: the punishment is spread over the run instead of bottoming out in a fortnight.
      */
     @Override
     public double moraleForDefeatedBoss(BossCategory category) {
@@ -235,9 +266,9 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
         }
 
         return switch (category) {
-            case MINOR -> 10.0;
-            case STANDARD -> 15.0;
-            case ELITE -> 20.0;
+            case MINOR -> 3.0;
+            case STANDARD -> 5.0;
+            case ELITE -> 7.0;
         };
     }
 
@@ -251,6 +282,16 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
         return scoringRuleset.challengeDamage(difficulty) / CHALLENGE_DAMAGE_TO_MATERIALS_DIVISOR;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Spread wide on purpose, and wider than the morale the same fight moves. The campaign schedules
+     * its weight classes rather than drawing them, so a run always pays two minor fights, six standard
+     * ones and two elite ones: the two elite weeks are the only ones that can move the town by a step
+     * on their own, and they only read that way if they are worth several ordinary ones. Morale keeps
+     * its narrower ladder because it is calibrated against what a surviving boss costs, not against
+     * what the town can build.
+     */
     @Override
     public int materialsForDefeatedBoss(BossCategory category, int rosterSize) {
         if (category == null) {
@@ -258,9 +299,9 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
         }
 
         int materialsPerPlayer = switch (category) {
-            case MINOR -> 60;
+            case MINOR -> 40;
             case STANDARD -> 80;
-            case ELITE -> 100;
+            case ELITE -> 140;
         };
 
         return materialsPerPlayer * Math.max(0, rosterSize);

@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.match.repository;
 
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
+import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -61,6 +62,45 @@ public interface PlayerMatchRepository
     )
     List<PlayerMatch> findForChallengePeriod(
         @Param("playerId") Long playerId,
+        @Param("periodStart") Instant periodStart,
+        @Param("periodEnd") Instant periodEnd
+    );
+
+    /**
+     * Retrieves the matches of every player holding one status over a half-open period, in one query.
+     *
+     * <p>The beginning is inclusive and the end is exclusive, as in {@link #findForChallengePeriod}.
+     * Exists for the colony replay, which prices a whole run — eleven weeks — for the entire roster:
+     * asking per player and per week made that one call cost {@code players x weeks} round trips, and
+     * the replay runs after every synchronization. Both the player and the Valorant match are fetched
+     * in the same query, since the caller reads both on every row.
+     *
+     * <p>Filtered on the status rather than left open. The colony names its roster through
+     * {@link io.github.thomashtn.valoquests.player.entity.Player#COMPETITIVE_STATUS} everywhere else —
+     * the size a run freezes, the turnout readout, the ranking — and this query being the one place
+     * that did not meant a deactivated player kept feeding the town while appearing on none of its
+     * gauges. A day's harvest could then have no author anywhere in the interface.
+     *
+     * @param status      status a player must hold for their matches to be returned
+     * @param periodStart inclusive beginning of the period
+     * @param periodEnd   exclusive end of the period
+     * @return those players' matches over the period, ordered chronologically
+     */
+    @Query(
+        """
+            SELECT playerMatch
+            FROM PlayerMatch playerMatch
+            JOIN FETCH playerMatch.match valorantMatch
+            JOIN FETCH playerMatch.player player
+            WHERE player.status = :status
+              AND valorantMatch.startedAt >= :periodStart
+              AND valorantMatch.startedAt < :periodEnd
+            ORDER BY valorantMatch.startedAt ASC,
+                     playerMatch.id ASC
+            """
+    )
+    List<PlayerMatch> findAllForPeriod(
+        @Param("status") PlayerStatus status,
         @Param("periodStart") Instant periodStart,
         @Param("periodEnd") Instant periodEnd
     );

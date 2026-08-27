@@ -103,10 +103,12 @@
             aria-hidden="true"
             class="notch-tr notch-tr-edge relative mt-4 h-6 border border-text-primary/15 bg-surface-sunken [--notch:0.5rem]"
           >
+            <!-- The travelling highlight marks a fight still running: this bar is the only one on
+                 the overview whose value moves between two page loads. -->
             <div
               [class]="hpBarColorClass()"
               [style.width.%]="remainingPercentage()"
-              class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
+              class="gauge-sheen absolute inset-y-0 left-0 overflow-hidden transition-[width] duration-500 motion-reduce:transition-none"
             ></div>
             <!-- Skipped on an untouched boss: at 100 % the marker lands on the cut corner and is
                  sliced into a stray wedge, and there is no drained edge for it to mark yet. -->

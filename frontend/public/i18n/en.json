@@ -207,18 +207,15 @@
   },
   "colony": {
     "boss": {
-      "undrawn": "Week {{week}}: no boss drawn.",
       "category": {
         "MINOR": "minor",
         "STANDARD": "standard",
         "ELITE": "elite"
       },
-      "detail": {
-        "DEFEATED": "Week {{week}}: {{category}} boss defeated. {{materials}} materials, so +{{efficiency}} efficiency, and {{morale}} morale.",
-        "SURVIVED": "Week {{week}}: the {{category}} boss held. No materials, and {{morale}} morale.",
-        "CURRENT": "Week {{week}}: {{category}} boss under way. {{materials}} materials at stake, so +{{efficiency}} efficiency, and {{morale}} morale.",
-        "UPCOMING": "Week {{week}}: {{category}} boss ahead. {{materials}} materials at stake, so +{{efficiency}} efficiency."
-      }
+      "rewards": "Rewards",
+      "efficiency": "Efficiency",
+      "defeat": "Defeat",
+      "ifDefeated": "If defeated"
     },
     "bosses": "Bosses",
     "curve": {
@@ -244,9 +241,11 @@
     },
     "ladder": {
       "title": "The town's tiers",
-      "unit": "Efficiency"
+      "unit": "Left to gather",
+      "hint": "Every tier is bought with materials. You earn them by clearing the week's challenges and by putting down Monday's boss."
     },
     "materials": "Materials",
+    "materialsPending": "+{{materials}} on Monday",
     "population": "Population",
     "presence": {
       "FULL": "{{name}} played today",
@@ -270,13 +269,20 @@
       "CAPITAL": "Capital",
       "CITADEL": "Citadel level {{level}}"
     },
-    "tierProgress": "Efficiency {{current}} out of the tier's {{target}}. {{missing}} to go before {{name}}.",
+    "tierProgress": "{{materials}} materials to go before {{name}}.",
     "track": {
       "food": {
         "name": "Food",
-        "eaten": "eaten {{food}}/wk",
-        "surplus": "surplus {{food}}/wk",
-        "aria": "Food: {{eaten}} eaten per week, {{surplus}} left over. What is left over is what brings new people in."
+        "day": "{{day}}: {{food}} harvested",
+        "dayExpiring": "{{day}}: {{food}} harvested, forgotten tonight",
+        "expiring": "{{food}} tonight",
+        "efficiency": "1 food feeds",
+        "efficiencyValue": "{{inhabitants}} inhabitants",
+        "consumption": "Consumption",
+        "surplus": "Surplus",
+        "note": "Each point of food carries further the more materials the squad has gathered, by clearing challenges and beating bosses. The town holds on its consumption and grows on its surplus.",
+        "aria": "Food: {{stock}} in stock, brought in over the last {{days}} days. Each point of food feeds {{efficiency}} inhabitants, which is {{feedable}} feedable.",
+        "ariaExpiring": "{{food}} drop out of the window tonight."
       },
       "presence": {
         "name": "Turnout",
@@ -284,9 +290,9 @@
       },
       "morale": {
         "name": "Morale",
-        "floor": "floor {{floor}}",
+        "speed": "{{percent}}%/night",
         "note": "Only the weekly boss moves morale, and it only ever speeds the climb.",
-        "aria": "Morale: {{value}} of {{ceiling}}, floor at {{floor}}."
+        "aria": "Morale: {{value}} of {{ceiling}}, closing {{percent}} % of the gap tonight."
       }
     }
   },
@@ -656,16 +662,18 @@
       },
       "boss": {
         "categories": {
-          "ELITE": "Around 125% of a usual week. Without a big collective week, it survives.",
-          "MINOR": "Around 80% of the squad's usual week. Usually folded by midweek.",
-          "STANDARD": "Exactly the squad's usual week. Everyone has to pitch in."
+          "ELITE": "Around 105% of a usual week. It asks the squad to push a little harder than usual.",
+          "MINOR": "Around 65% of the squad's usual week. Usually folded by midweek.",
+          "STANDARD": "Around 85% of the squad's usual week. One slow week is still recoverable."
         },
-        "description": "Every week a boss shows up with a health pool shared by the whole squad. That pool is not a fixed number: it is computed from what the squad actually produced over the recent closed weeks, multiplied by the number of active players. An active player who does not play therefore makes the boss heavier without draining it. Bring it down before Sunday night. The campaign itself only runs for the act in progress: it starts over on a new act, without erasing the fights already won.",
+        "description": "Every week a boss shows up with a health pool shared by the whole squad. That pool is not a fixed number: it is computed from what the squad actually produced over the recent closed weeks, multiplied by the number of active players. An active player who does not play therefore makes the boss heavier without draining it. Bring it down before Sunday night. The campaign itself only covers the run in progress, ten fights: it starts over on the next run, without erasing the fights already won.",
+        "ladderFootnote": "A boss's class does not come out of the draw: it is set by where the week falls in the run. Weeks 5 and 10 are the two peaks, each followed by a minor boss to catch a breath. The draw only decides which boss of that class shows up, and no boss ever comes back twice within one run.",
+        "ladderLabel": "Difficulty ladder, week by week",
         "title": "One boss, one shared health bar"
       },
       "calibration": {
         "bounds": "The reference cannot run away: it stays bounded, so a full stop never makes the boss fall to a single match and a surge never makes it unreachable.",
-        "description": "Difficulty is never set by hand: the boss's bar tracks the median of what the squad actually produced over the last 4 closed weeks. Play more and the boss grows, ease off and it shrinks. A one-off marathon week does not count, the median ignores it.",
+        "description": "The boss's bar is never set by hand: it tracks the median of what the squad actually produced over the last 4 closed weeks. Play more and the boss grows, ease off and it shrinks. A one-off marathon week does not count, the median ignores it. Calibration moves the size of the fight, never its class: that one is set by the run's calendar.",
         "title": "Difficulty that tunes itself"
       },
       "challenges": {
@@ -709,7 +717,7 @@
           "ELITE": "Elite defeated",
           "SURVIVED": "Boss held"
         },
-        "moraleFootnote": "Morale starts at 50 and depends on bosses alone. It multiplies the climbing speed: at 50 the town closes 7.5 % of the gap a night instead of 15 %. It never slows the fall, and it never drops below 20: down there the town barely moves, but a defeated boss always restarts it."
+        "moraleFootnote": "Morale starts at 50 and depends on bosses alone. It multiplies the climbing speed: at 50 the town closes 7.5 % of the gap a night instead of 15 %. It never slows the fall. The ten fights of a run pay 50 morale between them, exactly the room up to the ceiling: a flawless run only reaches 100 on its tenth fight, so no boss is ever without effect. At the floor, 3 % a night is left, around 19 % a week: a badly started run crawls, but it is never stuck."
       },
       "progression": {
         "description": "Some challenges ask not for an absolute threshold but for progress on yourself: beating your own K/D, ACS or headshot rate from the previous 4 weeks by a given percentage. Grinding matches at the same level does not complete them, since the measure is a rate. With no history over the last 4 weeks, the challenge stays out of reach.",
@@ -728,9 +736,10 @@
       "town": {
         "title": "The town",
         "description": "Gathered materials raise the efficiency: every 150 materials per player, one food feeds one more inhabitant. There is no threshold to cross and no maximum: a validated challenge makes the food carry further that same Monday, and one validated in the last week is worth exactly what one from the first was.",
+        "bossMaterialsLabel": "Materials per defeated boss, per player",
         "materialsLabel": "Materials per validated challenge, per player",
         "tiersLabel": "The tiers, one every 0.75 efficiency",
-        "tiersFootnote": "A defeated boss pays 60, 80 or 100 materials per squad player, never inhabitants: inhabitants would fade at 15 % a night, whereas efficiency never comes back down. Materials are divided by the squad size before being converted, which keeps the balance identical from 2 players to 20. A regular run runs from 8 to 16 efficiency, one tier a week."
+        "tiersFootnote": "A defeated boss pays its materials to every squad player, never inhabitants: inhabitants would fade at 15 % a night, whereas efficiency never comes back down. Materials are divided by the squad size before being converted, which keeps the balance identical from 2 players to 20. A regular run runs from 8 to 16 efficiency, one tier a week."
       }
     },
     "title": "Rules & how it works"

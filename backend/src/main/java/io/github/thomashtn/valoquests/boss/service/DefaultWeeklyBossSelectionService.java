@@ -8,6 +8,7 @@ import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterReposit
 import io.github.thomashtn.valoquests.run.entity.Run;
 import io.github.thomashtn.valoquests.run.service.RunService;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
+import io.github.thomashtn.valoquests.scoring.model.BossCategory;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -16,17 +17,22 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Draws a deterministic, non-repeating boss for each week.
+ * Draws a deterministic, non-repeating boss for each week, inside the weight class its run schedules.
  *
  * <p>The boss a week fights is never replaced once drawn. Its hit points come from the roster's own
  * measured output rather than from any state carried between weeks, so the whole boss timeline can be
  * rebuilt from persisted rows alone.
+ *
+ * <p>Difficulty is a property of the calendar, not of the draw: the ruleset's ladder decides which
+ * weight class each week of a run fights, and the draw only chooses which boss of that class turns up.
+ * A run therefore always has the same shape, with a peak halfway through and another on its last week.
  */
 @Service
 public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionService {
@@ -227,7 +233,15 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
     }
 
     /**
-     * Draws the boss for a week, avoiding repetition until the whole catalogue has been cycled through.
+     * Draws the boss for a week: the campaign schedules its weight class, the draw picks inside it.
+     *
+     * <p>Splitting the two is what turns ten independent draws into a shaped run. The class comes from
+     * the week's own position in the run, so the two hard weeks always land on the halfway mark and the
+     * closing week; only which boss of that class turns up is left to the hash.
+     *
+     * <p>A week landing on a class the catalogue holds nothing for falls back on the whole catalogue
+     * rather than failing. Disabling every elite through the backoffice must cost the campaign its
+     * peak, not its Monday.
      *
      * @param weekStart selected week
      * @param catalog   enabled catalogue entries
@@ -239,16 +253,31 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
         List<BossCatalogEntry> catalog,
         Run run
     ) {
-        Set<Long> usedInCurrentCycle = usedBossIdsInCurrentCycle(catalog.size(), run);
+        BossCategory scheduledCategory = ruleset.bossCategoryForRunWeek(run.weekIndexOf(weekStart));
 
-        List<BossCatalogEntry> candidates = catalog.stream()
+        List<BossCatalogEntry> classCatalog = catalog.stream()
+            .filter(entry -> entry.getCategory() == scheduledCategory)
+            .toList();
+
+        if (classCatalog.isEmpty()) {
+            LOGGER.warn(
+                "No enabled boss of category {} for week {}: falling back on the whole catalogue.",
+                scheduledCategory,
+                weekStart
+            );
+            classCatalog = catalog;
+        }
+
+        Set<Long> usedInCurrentCycle = usedBossIdsInCurrentCycle(classCatalog, run);
+
+        List<BossCatalogEntry> candidates = classCatalog.stream()
             .filter(entry -> !usedInCurrentCycle.contains(entry.getId()))
             .toList();
 
         // Defensive fallback only: the cycle-tracking logic above always clears itself before it can
         // exhaust every candidate, so this never triggers in practice.
         if (candidates.isEmpty()) {
-            candidates = catalog;
+            candidates = classCatalog;
         }
 
         return candidates.stream()
@@ -257,27 +286,42 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
     }
 
     /**
-     * Replays every past selection to determine which bosses were already used in the cycle still in
-     * progress, resetting whenever a cycle completes.
+     * Replays the campaign's past selections to determine which bosses of one weight class were already
+     * used in the cycle still in progress, resetting whenever that class's cycle completes.
+     *
+     * <p>Tracked per weight class rather than over the whole catalogue, because the ladder no longer
+     * spends the classes evenly: a run fights six standard bosses against two of each other class, so a
+     * single shared cycle would have been reset by the standard weeks and let one of them repeat while
+     * untouched minor bosses sat in the catalogue.
      *
      * <p>Replayed over the campaign in progress, not over the whole history: a run starts a fresh
      * campaign, and one opening on only the bosses its predecessor had not reached yet would face a
      * shrinking catalogue instead of a new run.
      *
-     * @param catalogSize number of currently enabled catalogue entries
-     * @param run         run the campaign currently runs in
-     * @return identifiers of bosses used since the last completed cycle
+     * @param classCatalog enabled catalogue entries of the week's scheduled weight class
+     * @param run          run the campaign currently runs in
+     * @return identifiers of that class's bosses used since its last completed cycle
      */
-    private Set<Long> usedBossIdsInCurrentCycle(int catalogSize, Run run) {
+    private Set<Long> usedBossIdsInCurrentCycle(List<BossCatalogEntry> classCatalog, Run run) {
+        Set<Long> classIds = classCatalog.stream()
+            .map(BossCatalogEntry::getId)
+            .collect(Collectors.toSet());
+
         Set<Long> usedIds = new HashSet<>();
 
         List<WeeklyBossEncounter> campaignEncounters =
             encounterRepository.findAllByRunIdOrderByWeekStartAsc(run.getId());
 
         for (WeeklyBossEncounter encounter : campaignEncounters) {
-            usedIds.add(encounter.getBossCatalogEntry().getId());
+            Long usedId = encounter.getBossCatalogEntry().getId();
 
-            if (usedIds.size() >= catalogSize) {
+            if (!classIds.contains(usedId)) {
+                continue;
+            }
+
+            usedIds.add(usedId);
+
+            if (usedIds.size() >= classIds.size()) {
                 usedIds.clear();
             }
         }

@@ -95,8 +95,13 @@
              ground, same tally size — so the bar reads as the one the reader just clicked, seen
              closer up rather than redrawn. -->
       <div class="relative mt-2 h-6 border border-text-primary/15 bg-surface-sunken">
+        <!-- The travelling highlight is reserved for the week still being fought: on a settled week
+             it would promise a number that stopped moving when the week closed. -->
         <div
-          [class]="tier().barFillClass"
+          [class]="
+            tier().barFillClass +
+            (node().status === 'current' ? ' gauge-sheen overflow-hidden' : '')
+          "
           [style.width.%]="node().hpPercentage"
           aria-hidden="true"
           class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"

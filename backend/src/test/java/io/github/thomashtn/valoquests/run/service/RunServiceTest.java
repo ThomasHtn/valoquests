@@ -139,6 +139,22 @@ class RunServiceTest {
     }
 
     /**
+     * Verifies that an empty roster never freezes a run at zero.
+     *
+     * <p>A run opens lazily on the first page view, so a deployment whose roster has not been filled
+     * in yet would freeze it at zero for ten weeks — and every per-player figure is multiplied by it,
+     * so a defeated boss would pay nothing and no amount of play could move the run.
+     */
+    @Test
+    void shouldNeverFreezeARunOnAnEmptyRoster() {
+        when(playerRepository.countByStatus(PlayerStatus.ACTIVE)).thenReturn(0L);
+
+        Run run = service.ensureRunFor(FIRST_WEEK);
+
+        assertThat(run.getRosterSize()).isEqualTo(1);
+    }
+
+    /**
      * Verifies that a run spans ten weeks plus a settlement day, whatever happens inside it.
      *
      * <p>Counting rollovers rather than boss encounters is what guarantees this: a week can go by with

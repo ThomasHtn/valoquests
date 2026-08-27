@@ -6,11 +6,13 @@ import { ChartBar } from '@shared/chart/chart.model';
 import { ColonyApi } from './colony-api';
 import {
   formatGauge,
+  formatMultiplier,
   formatPopulation,
-  formatSignedGauge,
+  formatRate,
   formatSignedPopulation,
 } from './colony-format.utils';
 import { colonyTrackColors } from './colony-gauge.utils';
+import { tierGlyphFor } from './colony-tier.utils';
 import {
   Colony,
   ColonyPresencePlayer,
@@ -21,6 +23,7 @@ import {
 import {
   ColonyBossView,
   ColonyDeltaView,
+  ColonyFoodDayView,
   ColonyPresencePipView,
   ColonyRunView,
   ColonyTierStepView,
@@ -40,14 +43,33 @@ const INITIALS_LENGTH = 3;
 /**
  * Morale from which the face in the socket smiles.
  *
- * Seventy: at least one fight's worth of morale ahead of the fifty a run opens on.
+ * Seventy: twenty points ahead of the fifty a run opens on, which is four net wins. A single fight
+ * moves the gauge by three to seven, so the face is a statement about how the run is going rather
+ * than about how last Monday went — it takes half a run of winning to earn the smile.
  */
 const MORALE_GOOD = 70;
 
 /**
  * Morale below which it frowns, close enough to the floor to say so.
+ *
+ * Forty: ten under the opening, which is about two net losses.
  */
 const MORALE_BAD = 40;
+
+/**
+ * Morale a surviving boss costs, mirrored from `DefaultColonyRuleset#moraleForSurvivingBoss`.
+ *
+ * Exactly what an elite win pays, which is the invariant the morale table is built on.
+ */
+const MORALE_FOR_SURVIVING_BOSS = -7;
+
+/**
+ * Locales the weekday names of the food strip are resolved in.
+ *
+ * Only ever spoken, never drawn: the pills are too short to carry a letter, so the day each one
+ * stands for reaches a reader through its accessible name alone.
+ */
+const WEEKDAY_LOCALES: Record<'fr' | 'en', string> = { fr: 'fr-FR', en: 'en-US' };
 
 /**
  * The squad's colony, resolved once into everything the page lays out.
@@ -150,11 +172,39 @@ export class ColonyView {
   );
 
   /**
-   * Materials banked, the run's one intermediate currency.
+   * Materials banked, the currency the ladder is priced in.
    */
   public readonly materialsLabel = computed<string>(() =>
     this.grouped((colony) => colony.materials),
   );
+
+  /**
+   * What a boss still standing costs the colony, for the fight under way's hover card — a fixed
+   * penalty, so it holds regardless of which week is asking.
+   *
+   * Mirrors `DefaultColonyRuleset#moraleForSurvivingBoss`.
+   */
+  public readonly defeatMoraleLabel = computed<string>(() =>
+    formatSignedPopulation(MORALE_FOR_SURVIVING_BOSS, this.translation.language()),
+  );
+
+  /**
+   * What this week has already secured and Monday will credit, or `null` when nothing has been.
+   *
+   * The banked total only ever moves on a Monday, so it reads as a flat zero for the whole first week
+   * of a run while the squad is in fact earning. This is the figure that says so, and it is dropped
+   * entirely rather than shown as `+0`: a zero here would state that nothing is coming, which on a
+   * Tuesday is a different claim from saying nothing at all.
+   */
+  public readonly pendingMaterialsLabel = computed<string | null>(() => {
+    const pending = this.colony()?.pendingMaterials ?? 0;
+
+    return pending <= 0
+      ? null
+      : this.translation.translate('colony.materialsPending', {
+          materials: formatPopulation(pending, this.translation.language()),
+        });
+  });
 
   /**
    * Share of what the food can feed the population already fills, which is how high the hexagon is
@@ -247,6 +297,46 @@ export class ColonyView {
   });
 
   /**
+   * The seven days behind the food stock, oldest first — the food rail's own track, and the strip its
+   * card draws at a size that can carry weekday letters.
+   *
+   * The counterpart of {@link presencePips} on the other rail: the stock is a rolling window, so its
+   * days are what say *when* the squad played. Each column is drawn against the best day of the
+   * window, which puts the seven on one scale without inventing a ceiling the stock does not have.
+   *
+   * One pill per day the window actually holds, never a fixed seven. The strip was padded at the old
+   * end while a young run's window filled, so that it kept its width from day one — but on a run four
+   * days old that put three hollow pills before the first evening and left the opening Monday sitting
+   * in the middle of the rail, which reads as a broken strip rather than as days that have not
+   * happened. Pills are laid out `flex-1`, so four of them fill the rail exactly as seven do; only
+   * their width changes, and only over the opening week.
+   */
+  public readonly foodDays = computed<readonly ColonyFoodDayView[]>(() => {
+    const colony = this.colony();
+    if (colony === null) {
+      return [];
+    }
+
+    const best = this.bestHarvest(colony);
+    const language = this.translation.language();
+    const expiring = this.expiringDay(colony);
+
+    return colony.foodWindow.map((entry) => ({
+      day: entry.day,
+      percentage: this.percentageOf(entry.harvest, best),
+      isToday: entry.day === colony.day,
+      isExpiring: entry.day === expiring,
+      ariaLabel: this.translation.translate(
+        entry.day === expiring ? 'colony.track.food.dayExpiring' : 'colony.track.food.day',
+        {
+          day: this.weekdayName(entry.day),
+          food: formatPopulation(entry.harvest, language),
+        },
+      ),
+    }));
+  });
+
+  /**
    * The steps of the ladder around the town's own, lowest first.
    */
   public readonly ladder = computed<readonly ColonyTierStepView[]>(() => {
@@ -255,7 +345,14 @@ export class ColonyView {
       return [];
     }
 
-    return colony.ladder.map((tier) => this.toTierStep(tier, colony));
+    // The ladder is ordered lowest step first, so the step being climbed is the one right after the
+    // town's own. Found by position rather than by comparing thresholds with `nextTier`: the two are
+    // the same step, but one is a float the other computes again.
+    const currentIndex = colony.ladder.findIndex((tier) => tier.state === 'CURRENT');
+
+    return colony.ladder.map((tier, index) =>
+      this.toTierStep(tier, colony, currentIndex >= 0 && index === currentIndex + 1),
+    );
   });
 
   /**
@@ -340,14 +437,32 @@ export class ColonyView {
   }
 
   /**
-   * The food rail: what the town eats, and what it has left to grow on.
+   * The food rail: the stock the town holds, what one point of it is worth, and the seven evenings
+   * that put it there.
    *
-   * The rail is the week's stock. The muted band is what the town eats, the bright one what is left
-   * over, and the reason the page needs no sentence: when the bright band disappears the town stops
-   * growing, and when the muted one fills the rail, it shrinks.
+   * The only rail with no bar, because food is the only resource with no ceiling. Two denominators
+   * were tried and both were wrong. Drawing what the town eats against the stock is the population
+   * hexagon a second time — `consumption / stock` simplifies to `population / feedable` — and it sat
+   * near full at every hour of every day. Drawing tonight's harvest against the best evening of the
+   * week did say something no other shape said, *did we play tonight*, but it answered a question
+   * about attendance while carrying a figure about food, and the two never lined up.
    *
-   * It used to draw the food ceiling inside the housing one. There is no housing any more, so there
-   * is no arbitration left to picture — only the economy that sets the single ceiling.
+   * So the rail stops pretending to be a level. The stock is a rolling seven-day sum, and what it is
+   * made of is seven daily harvests with the oldest falling out tonight — {@link foodDays} draws
+   * exactly that, and the figure beside it is the stock itself, in food, with what tonight takes off
+   * it underneath.
+   *
+   * The figure is a plain total and not a fraction. It briefly read `surplus / consumption`, which
+   * broke the one grammar the band has: the two other rails write `a / b` for a part of a whole,
+   * `5 / 7` and `55 / 100`, so a food rail reading `140 / 300` was taken for a rail not quite half
+   * full when the stock behind it was 440 and neither number was the whole. Both figures still
+   * exist, in the card, where they can carry a name.
+   *
+   * What sits beside the total instead is the efficiency, as the factor it is — `×12,44` — and it is
+   * the one figure that joins the two halves of the page. The rail counts food, the hexagon counts
+   * inhabitants, and until this was drawn nothing on the page said that the first becomes the second
+   * or that materials are what moves the rate. Every challenge and every fight paid into a ladder of
+   * decorative names and stopped there.
    *
    * @param colony - The colony.
    * @returns The display-ready rail.
@@ -355,41 +470,118 @@ export class ColonyView {
   private foodTrack(colony: Colony): ColonyTrackView {
     const language = this.translation.language();
     const colors = colonyTrackColors('FOOD');
+    const expiring = this.expiringHarvest(colony);
 
     return {
       track: 'FOOD',
       label: this.translation.translate('colony.track.food.name'),
-      percentage: this.percentageOf(colony.weeklyConsumption, colony.foodStock),
-      secondaryPercentage: 100,
-      // One number now, and it is the only ceiling there is: what this week's food can feed.
-      valueLabel: formatPopulation(colony.feedablePopulation, language),
-      ariaLabel: this.translation.translate('colony.track.food.aria', {
-        eaten: formatPopulation(colony.weeklyConsumption, language),
-        surplus: formatPopulation(colony.weeklySurplus, language),
-      }),
-      // Two swatches, not three. The stock is not a band of the rail, it is the sum of the two, and
-      // the band already says what it allows.
-      legend: [
+      hasBar: false,
+      percentage: 0,
+      secondaryPercentage: null,
+      isLive: false,
+      valueLabel: formatPopulation(colony.foodStock, language),
+      multiplierLabel: formatMultiplier(colony.efficiency, language),
+      valueDeltaLabel:
+        expiring > 0
+          ? this.translation.translate('colony.track.food.expiring', {
+              food: formatSignedPopulation(-expiring, language),
+            })
+          : '',
+      ariaLabel: [
+        this.translation.translate('colony.track.food.aria', {
+          stock: formatPopulation(colony.foodStock, language),
+          days: colony.foodWindowDays,
+          efficiency: formatGauge(colony.efficiency, language),
+          feedable: formatPopulation(colony.feedablePopulation, language),
+        }),
+        expiring > 0
+          ? this.translation.translate('colony.track.food.ariaExpiring', {
+              food: formatPopulation(expiring, language),
+            })
+          : '',
+      ]
+        .filter((sentence) => sentence !== '')
+        .join(' '),
+      legend: [],
+      // The week itself is on the rail now, so the card is free for the figures the pills cannot
+      // state. The rate comes first because it is what the `×` beside the total means, and it is
+      // the only line on the page that spells out food becoming inhabitants; then what the town
+      // needs to hold its ground, and what is left on top of that, which is the reason to play.
+      facts: [
         {
-          colorClass: colors.muted,
-          label: this.translation.translate('colony.track.food.eaten', {
-            food: formatPopulation(colony.weeklyConsumption, language),
+          label: this.translation.translate('colony.track.food.efficiency'),
+          value: this.translation.translate('colony.track.food.efficiencyValue', {
+            inhabitants: formatGauge(colony.efficiency, language),
           }),
         },
         {
-          colorClass: colors.fill,
-          label: this.translation.translate('colony.track.food.surplus', {
-            food: formatPopulation(colony.weeklySurplus, language),
-          }),
+          label: this.translation.translate('colony.track.food.consumption'),
+          value: formatPopulation(colony.weeklyConsumption, language),
+        },
+        {
+          label: this.translation.translate('colony.track.food.surplus'),
+          value: formatPopulation(colony.weeklySurplus, language),
         },
       ],
-      note: '',
+      note: this.translation.translate('colony.track.food.note'),
       glyph: 'FOOD',
       socketClass: colors.fill,
-      primaryClass: colors.muted,
-      secondaryClass: colors.fill,
+      primaryClass: colors.fill,
+      secondaryClass: '',
       textClass: colors.text,
     };
+  }
+
+  /**
+   * Returns the day tonight drops out of the window, or `null` when nothing is being lost.
+   *
+   * A window still filling loses nothing: a run six days old has simply not lived a seventh day yet,
+   * and marking its opening day as expiring would announce a loss that is not coming.
+   *
+   * @param colony - The colony.
+   * @returns The expiring day, as `YYYY-MM-DD`, or `null`.
+   */
+  private expiringDay(colony: Colony): string | null {
+    return colony.foodWindow.length < colony.foodWindowDays
+      ? null
+      : (colony.foodWindow[0]?.day ?? null);
+  }
+
+  /**
+   * Returns the harvest tonight drops out of the window, zero while the window is still filling.
+   *
+   * @param colony - The colony.
+   * @returns The expiring harvest.
+   */
+  private expiringHarvest(colony: Colony): number {
+    return colony.foodWindow.length < colony.foodWindowDays
+      ? 0
+      : (colony.foodWindow[0]?.harvest ?? 0);
+  }
+
+  /**
+   * Returns the biggest harvest of the seven-day window, which the rail is read against.
+   *
+   * @param colony - The colony.
+   * @returns The best day's harvest, zero on a week nobody played.
+   */
+  private bestHarvest(colony: Colony): number {
+    return colony.foodWindow.reduce((best, day) => Math.max(best, day.harvest), 0);
+  }
+
+  /**
+   * Names one weekday in the active language.
+   *
+   * `Intl` rather than a translated list of seven: the dictionaries would carry fourteen entries for
+   * something the platform already knows in every locale.
+   *
+   * @param isoDay - The day, as `YYYY-MM-DD`.
+   * @returns The weekday, spelled out.
+   */
+  private weekdayName(isoDay: string): string {
+    return new Intl.DateTimeFormat(WEEKDAY_LOCALES[this.translation.language()], {
+      weekday: 'long',
+    }).format(new Date(`${isoDay}T00:00:00Z`));
   }
 
   /**
@@ -401,13 +593,18 @@ export class ColonyView {
   private presenceTrack(colony: Colony): ColonyTrackView {
     const colors = colonyTrackColors('PRESENCE');
     const presence = colony.presence;
+    const language = this.translation.language();
 
     return {
       track: 'PRESENCE',
       label: this.translation.translate('colony.track.presence.name'),
+      hasBar: true,
       percentage: this.percentageOf(presence.present, presence.rosterSize),
       secondaryPercentage: null,
+      isLive: true,
       valueLabel: `${presence.present} / ${presence.rosterSize}`,
+      multiplierLabel: formatMultiplier(presence.multiplier, language),
+      valueDeltaLabel: '',
       ariaLabel: this.translation.translate('colony.track.presence.aria', {
         present: presence.present,
         roster: presence.rosterSize,
@@ -415,6 +612,7 @@ export class ColonyView {
       }),
       // The card shows the roster pip by pip instead of a swatch: who is missing is the whole point.
       legend: [],
+      facts: [],
       note: '',
       glyph: 'PRESENCE',
       socketClass: colors.fill,
@@ -425,12 +623,17 @@ export class ColonyView {
   }
 
   /**
-   * The morale rail: the speed the town moves at, with its floor painted rather than implied.
+   * The morale rail: the speed the town moves at.
    *
-   * A bar reading `55 / 100` while filling to a different share of its track would make its own figure
-   * a lie, so the unreachable slice under the floor is drawn in a muted version of the same colour, the
-   * way the food rail splits what the town eats from what it grows on. With the floor down at 1 that
-   * slice is a hairline, and the split reads as a plain fill.
+   * A plain fill running the whole track, so the shape agrees with the `55 / 100` written beside it.
+   * The floor used to be painted as a first band and is not drawn any more, but it is no secret
+   * either: the rules page states the range in prose, and a page hiding what another page prints is
+   * not withholding anything, only disagreeing with itself.
+   *
+   * The rail carries the speed that morale buys, in the same slot turnout carries its multiplier.
+   * Morale exists for that one thing and for nothing else, and a bar reading `55 / 100` beside a
+   * face said how the squad felt while saying nothing about what it changed — which is the whole of
+   * why the number is on the page.
    *
    * @param colony - The colony.
    * @returns The display-ready rail.
@@ -438,31 +641,32 @@ export class ColonyView {
   private moraleTrack(colony: Colony): ColonyTrackView {
     const colors = colonyTrackColors('MORALE');
     const morale = colony.morale;
+    const language = this.translation.language();
 
     return {
       track: 'MORALE',
       label: this.translation.translate('colony.track.morale.name'),
-      percentage: this.percentageOf(morale.floor, morale.ceiling),
-      secondaryPercentage: this.percentageOf(morale.value, morale.ceiling),
+      hasBar: true,
+      percentage: this.percentageOf(morale.value, morale.ceiling),
+      secondaryPercentage: null,
+      isLive: true,
       valueLabel: `${Math.round(morale.value)} / ${Math.round(morale.ceiling)}`,
+      multiplierLabel: this.translation.translate('colony.track.morale.speed', {
+        percent: formatRate(morale.growthPercentPerNight, language),
+      }),
+      valueDeltaLabel: '',
       ariaLabel: this.translation.translate('colony.track.morale.aria', {
         value: Math.round(morale.value),
         ceiling: Math.round(morale.ceiling),
-        floor: Math.round(morale.floor),
+        percent: formatRate(morale.growthPercentPerNight, language),
       }),
-      legend: [
-        {
-          colorClass: colors.muted,
-          label: this.translation.translate('colony.track.morale.floor', {
-            floor: Math.round(morale.floor),
-          }),
-        },
-      ],
+      legend: [],
+      facts: [],
       note: this.translation.translate('colony.track.morale.note'),
       glyph: this.moraleGlyph(morale.value),
       socketClass: colors.fill,
-      primaryClass: colors.muted,
-      secondaryClass: colors.fill,
+      primaryClass: colors.fill,
+      secondaryClass: '',
       textClass: colors.text,
     };
   }
@@ -513,28 +717,32 @@ export class ColonyView {
    *
    * @param tier - The step.
    * @param colony - The colony climbing it.
+   * @param isNext - Whether this is the step the town is climbing towards.
    * @returns The display-ready step.
    */
-  private toTierStep(tier: ColonyTier, colony: Colony): ColonyTierStepView {
+  private toTierStep(tier: ColonyTier, colony: Colony, isNext: boolean): ColonyTierStepView {
     const language = this.translation.language();
-    const isCurrent = tier.state === 'CURRENT';
+    const missing = Math.max(0, tier.materialsRequired - colony.materials);
 
     return {
       threshold: tier.threshold,
       state: tier.state,
+      isNext,
       name: this.tierName(tier),
-      // The active step leads with what it is climbing towards; every other one carries the
-      // threshold it opens at, which is all there is to say about a step nobody stands on. The
-      // town's own efficiency led this row until it was read as the target: it is the one figure of
-      // the row that moves, and the top of a row is where a target is looked for.
-      valueLabel: formatGauge(isCurrent ? colony.nextTier.threshold : tier.threshold, language),
-      progressPercentage: isCurrent ? colony.tierProgressPercentage : null,
-      progressLabel: isCurrent
+      glyph: tierGlyphFor(tier),
+      // What the step still costs, in the currency challenges and bosses pay. The column used to
+      // carry the step's efficiency — a bare `8,75` naming no unit, appearing nowhere else on the
+      // page, and that nothing the squad does moves directly. A step already paid prints a `0`
+      // rather than nothing: the column is headed "left to gather", and a blank there left the town's
+      // own step looking unsettled next to the figures below it.
+      missingMaterialsLabel: formatPopulation(missing, language),
+      // The bar belongs to the step being climbed, not to the one the town stands in: it is that
+      // step's own gauge, read against the cost written beside it on the same row.
+      progressPercentage: isNext ? colony.tierProgressPercentage : null,
+      progressLabel: isNext
         ? this.translation.translate('colony.tierProgress', {
-            current: formatGauge(colony.efficiency, language),
-            target: formatGauge(colony.nextTier.threshold, language),
-            missing: formatGauge(colony.missingEfficiency, language),
-            name: this.tierName(colony.nextTier),
+            name: this.tierName(tier),
+            materials: formatPopulation(missing, language),
           })
         : '',
     };
@@ -548,39 +756,27 @@ export class ColonyView {
    */
   private toBossView(week: ColonyWeek): ColonyBossView {
     const language = this.translation.language();
-    const settled = week.state === 'DEFEATED' || week.state === 'SURVIVED';
 
     return {
       weekIndex: week.weekIndex,
       state: week.state,
-      // A week not yet reached shows nothing at all: a `0` there would read as a fight already lost.
-      efficiencyLabel: settled
-        ? formatSignedGauge(week.state === 'DEFEATED' ? week.efficiencyGain : 0, language)
-        : '',
-      efficiencyEarned: week.state === 'DEFEATED',
-      detailLabel: this.bossDetail(week, language),
+      // Two states show nothing. A week whose boss held settled nothing, and a `0` there competes
+      // with the figures of the weeks that did pay. A week still locked has no boss drawn yet, so
+      // the backend prices it at zero as well — writing that on the tile quoted every week ahead at
+      // nothing, which reads as a promise of nothing rather than as an unknown. What is banked
+      // belongs on a settled tile, what is on the table on the tile being fought, and a locked tile
+      // carries neither.
+      materialsLabel:
+        week.state === 'SURVIVED' || week.state === 'UPCOMING'
+          ? ''
+          : formatPopulation(week.materials, language),
+      efficiencyLabel:
+        week.state === 'SURVIVED' || week.state === 'UPCOMING'
+          ? ''
+          : formatMultiplier(week.efficiencyGain, language),
+      earned: week.state === 'DEFEATED',
+      moraleLabel: formatSignedPopulation(week.moraleDelta, language),
     };
-  }
-
-  /**
-   * Builds the sentence a territory tile's title carries.
-   *
-   * @param week - The week and what its fight was worth.
-   * @param language - Active language.
-   * @returns The already-translated sentence.
-   */
-  private bossDetail(week: ColonyWeek, language: 'fr' | 'en'): string {
-    if (week.category === null) {
-      return this.translation.translate('colony.boss.undrawn', { week: week.weekIndex });
-    }
-
-    return this.translation.translate(`colony.boss.detail.${week.state}`, {
-      week: week.weekIndex,
-      category: this.translation.translate(`colony.boss.category.${week.category}`),
-      materials: formatPopulation(week.materials, language),
-      efficiency: formatGauge(week.efficiencyGain, language),
-      morale: formatSignedPopulation(week.moraleDelta, language),
-    });
   }
 
   /**

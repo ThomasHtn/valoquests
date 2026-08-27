@@ -13,15 +13,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * town falls exactly as fast as any other, because morale is a reward for winning fights, never a shield
  * against not playing.
  *
+ * <p>The floor is not exposed. It used to be, and nothing read it: the bar fills from zero to the
+ * ceiling, which is what its own figure says, and the rules page states the range in prose. A field
+ * shipped on every request and consumed by no one is a field that will drift.
+ *
  * @param value                 today's morale
- * @param floor                 lowest morale reachable, just above zero: a run that loses every boss stalls
  * @param ceiling               highest morale reachable, where the town moves at full speed
- * @param growthPercentPerNight share of the gap tonight closes at this morale
+ * @param growthPercentPerNight share of the gap tonight closes at this morale, the whole of what morale
+ *                              does and therefore the figure the rail has to carry beside its value
  */
 @Schema(description = "The colony's morale and the speed it buys.")
 public record ColonyMoraleResponse(
     double value,
-    double floor,
     double ceiling,
     double growthPercentPerNight
 ) {

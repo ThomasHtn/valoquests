@@ -1,3 +1,4 @@
+import { BossCategory } from './boss.model';
 import { BossTimelineNodeStatus } from './boss-timeline.constants';
 
 /**
@@ -57,6 +58,13 @@ export interface BossTimelineNode {
   readonly status: BossTimelineNodeStatus;
 
   /**
+   * Position of the week inside its run, from one. This is what the campaign map joins on to write
+   * a week's colony reward on its own hexagon — never the node's position in the list, which a week
+   * that closed without a fight would shift.
+   */
+  readonly runWeekIndex: number;
+
+  /**
    * ISO week number shown inside the hex marker, or `null` for an `'upcoming'` placeholder whose
    * week isn't determined yet.
    */
@@ -81,6 +89,12 @@ export interface BossTimelineNode {
    * `null` for an `'upcoming'` placeholder, whose boss category isn't drawn yet.
    */
   readonly categoryLabel: string | null;
+
+  /**
+   * The raw weight class behind {@link categoryLabel}, kept alongside the translated string so the
+   * map can color the active week's icon by difficulty without re-deriving it from the label.
+   */
+  readonly category: BossCategory | null;
   readonly portraitUrl: string | null;
 
   /**

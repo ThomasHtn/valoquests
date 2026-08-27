@@ -4,8 +4,8 @@ The site people actually look at. Angular 22, standalone, zoneless, and delibera
 computing anything**: every number on screen was calculated by the
 [backend](../backend/README.md) and is rendered here as-is.
 
-> New here? Start with the [root README](../README.md) — it covers the product and the system-wide
-> architecture this document assumes you have already seen.
+> New here? Start with the [root README](../README.md) — it covers the product, and its Part II walks
+> through running the whole stack from scratch.
 
 ## Role in the system
 
@@ -16,8 +16,9 @@ A read-only HTTP consumer of `/api/**`, plus a small session-gated backoffice on
 - No client-side state machine. Server data *is* the state; the UI is a projection of it.
 - The backend must be running and reachable, or every data screen shows its error state.
 
-What the frontend does own: routing, layout, i18n, the design system, loading/error/empty presentation,
-and the backoffice's session handling.
+What the frontend does own: routing, layout, i18n, the design system, loading/error/empty
+presentation, the read models that turn API payloads into display-ready shapes, and the backoffice's
+session handling.
 
 ## Stack
 
@@ -27,6 +28,7 @@ and the backoffice's session handling.
 | Change detection | Zoneless | `provideHttpClient(withFetch())` — the fetch backend, not the legacy XHR one |
 | Server state | Signals + `httpResource` | No NgRx, no Akita, no RxJS store |
 | Styling | Tailwind v4, CSS-first | No `tailwind.config.js`; the theme is `@theme` blocks in `src/styles/` |
+| Charts | `chart.js` | Loaded only by the player profile, which is why that route is lazy |
 | Icons | `@lucide/angular` | |
 | i18n | Hand-rolled | JSON dictionaries in `public/i18n/`, English and French |
 | Tests | Vitest via `@angular/build:unit-test` | No separate `vitest.config.ts` |
@@ -34,14 +36,16 @@ and the backoffice's session handling.
 
 ## Getting it running
 
+Prerequisite: **Node 22 LTS or newer** — Angular 22 refuses older runtimes.
+
 ```bash
-npm install
+npm ci           # or `npm install` if you plan to change dependencies
 npm start        # http://localhost:4200
 ```
 
 `npm start` proxies every `/api/...` request to `http://localhost:8080` (`proxy.conf.json`), so the
 dev server and the API stay same-origin and no CORS setup is needed locally. Start the
-[backend](../backend/README.md) first or you will get a site full of error states.
+[backend](../backend/README.md) first, or you will get a site full of error states.
 
 ## Commands
 
@@ -83,31 +87,41 @@ relative `../../../` imports across these boundaries will not survive review.
 ```text
 core/
 ├── http/         api-endpoints.ts, page-response.model.ts, resource-state.utils.ts
-├── players/  matches/  challenges/  ranking/  boss/    *-api.ts + *.model.ts + *.utils.ts
+├── players/  matches/  challenges/  ranking/      *-api.ts + *.model.ts + *.utils.ts
+├── boss/         BossApi + BossCampaign — the run's weeks as timeline nodes
+├── colony/       ColonyApi + ColonyView — population, food, morale, turnout, tier ladder
 ├── admin/        session, guard, HTTP interceptor, command runner
 ├── i18n/         Translation service, TranslatePipe, TranslatedTitleStrategy
 ├── date/         week-period and countdown helpers
+├── viewport/     breakpoint observation
 ├── landing/  tour/   one-time-entry guards and their visit records
 └── snackbar/     the global outcome queue
 ```
 
 ## Routing
 
-Every route in `app.routes.ts` is lazy-loaded via `loadComponent`, so code splitting stays automatic.
-Route `title`s are **translation keys**, resolved against the active dictionary by
-`TranslatedTitleStrategy` and suffixed with the application name.
-
-The route table has a shape worth understanding before editing it:
+The route table in `app.routes.ts` has a shape worth understanding before editing it:
 
 ```text
 ''            (pathMatch: 'full')  → Landing      chrome-free doorway, landingEntryGuard
 'tour'                             → Tour         chrome-free briefing, tourEntryGuard
 'admin/login'                      → AdminLogin   chrome-free sign-in
 ''                                 → Shell        the sidebar layout
-   ├── overview | challenges | leaderboard | players | players/:id | campaign | rules
-   ├── admin/operations | admin/players | admin/maintenance | admin/design-system   (adminGuard)
+   ├── overview | challenges | leaderboard | players | campaign | rules
+   ├── players/:id                          (lazy — it owns chart.js)
+   ├── colony                               (redirect to campaign)
+   ├── admin/operations | admin/players | admin/maintenance   (lazy, adminGuard)
    └── '**'                        → NotFound
 ```
+
+**Public pages are referenced eagerly on purpose.** Route-level splitting used to be the rule, but a
+bundler chunk is emitted per shared primitive — some under a kilobyte — and the public site ended up
+pulling around twenty-five of them per screen. Only `players/:id` (which owns `chart.js`) and the
+backoffice still use `loadComponent`. The file's own comment records this; read it before splitting a
+route again.
+
+Route `title`s are **translation keys**, resolved against the active dictionary by
+`TranslatedTitleStrategy` and suffixed with the application name.
 
 Two empty paths coexist: the first matches the root URL exactly and serves the landing page;
 everything else falls through to the second, which activates `Shell`.
@@ -127,6 +141,25 @@ sidebar's entries rather than replacing the layout, so the operator stays in the
 visitors to `/overview`. Both honour the same `?replay` query parameter — one convention, reused
 rather than redeclared — which is what the rules page's "replay the tour" link relies on. The visit
 record itself lives in `LandingVisit` / `TourVisit`.
+
+## Campaign and colony
+
+The campaign pillar lives on `/campaign` — the run's map, its boss timeline and every colony gauge —
+plus the `colony-summary` and `boss-encounter` blocks on `/overview`. `/colony` is only a redirect.
+
+Both read models are resolved in `core/`, **never in templates**:
+
+- `BossCampaign` (`core/boss/`) turns the run's weeks into display-ready timeline nodes, already
+  translated and formatted, padding to the run's fixed ten rollovers so the map has its final size
+  from the moment it opens. A player's damage to a boss is their weekly total **minus the regularity
+  bonus** — the same subtraction `DefaultBossQueryService` makes on the backend, so the rows add up to
+  the health bar above them.
+- `ColonyView` (`core/colony/`) does the same for population, food, morale, turnout and the tier
+  ladder, with `colony-format.utils.ts` and `colony-tier.utils.ts` alongside it.
+
+Any constant these mirror from the backend's `DefaultColonyRuleset` or `DefaultScoringRuleset` is
+documented as such at its declaration. **When a backend number moves, grep `colony-view.ts` and
+`rules.constants.ts` for it** — the rules page shows the barème, so it duplicates it by nature.
 
 ## State management
 
@@ -236,6 +269,9 @@ Detail pages pass `backLink` (which turns the eyebrow line into the way back to 
 itself as `display: contents` slips through that rule and comes out flush, which is why
 `app-resource-state` and `app-rule-section` carry a box of their own.
 
+`<app-section-label>` (`shared/section-label/`) is the mono caption set against the trailing edge above
+a block. It renders nothing without a label.
+
 ## Styling
 
 Tailwind v4, configured in CSS. `src/styles.css` imports the token files and declares the project's
@@ -259,10 +295,10 @@ version had already drifted between screens**:
 - `focus-ring` / `focus-ring-inset` — custom `@utility` classes replacing the default outline, which is
   invisible against `surface-950`
 
-**`/admin/design-system` is the live catalogue** of every token and shared component, rendered against
-fixed mock data. Add a section to it when you add a shared primitive. Its comments also record the
-patterns that deliberately have *no* component — panels, cards, grid-based tables, background
-treatments — which is worth reading before you invent one.
+Shared presentational components live in `shared/` (`avatar`, `progress-bar`, `progress-circle`,
+`stat-tile`, `colony-resource-band`, `week-countdown`, `tooltip`, `select`, `multi-select`, …). Put a
+new primitive there rather than inlining it in a page, and reuse the existing tokens instead of a
+one-off hex.
 
 ## Internationalization
 
@@ -317,10 +353,10 @@ npm test
 npm test -- --watch=false   # what CI runs
 ```
 
-> **Known gap, not a design choice.** Coverage is thin: five spec files today, concentrated on the
-> admin session, the HTTP interceptor, the command runner and the resource-state helpers — the pieces
-> whose failure modes are silent. Pages and shared components are untested. New logic in `core/`
-> should arrive with a spec.
+> **Known gap, not a design choice.** Coverage is thin: eight spec files today, concentrated on the
+> admin session, the HTTP interceptor, the command runner, the resource-state helpers and a couple of
+> pure utilities — the pieces whose failure modes are silent. Pages and most shared components are
+> untested. New logic in `core/` should arrive with a spec.
 >
 > Single-file filtering through the CLI has not been confirmed against the installed `@angular/build`
 > version; check before relying on a specific flag.
@@ -344,9 +380,10 @@ Enforced by `eslint.config.js` — these fail `npm run lint`, not review:
 
 | You want to… | Do this |
 | --- | --- |
-| Add a screen | Add a lazy `loadComponent` route (as a `Shell` child unless it must be chrome-free), a `title` translation key in both dictionaries, and render `<app-page-header>` first |
+| Add a screen | Add a route as a `Shell` child unless it must be chrome-free, a `title` translation key in both dictionaries, and render `<app-page-header>` first. Reference the component eagerly unless it drags a heavy dependency in |
 | Consume a new endpoint | Add it to `API_ENDPOINTS`, then expose an `httpResource` from the domain's `*-api.ts` — shared if parameterless, a function if not |
-| Add a shared component | Put it in `shared/`, then add a section to `/admin/design-system` |
+| Show a computed shape | Resolve it in `core/` (as `BossCampaign` and `ColonyView` do), never in a template |
+| Add a shared component | Put it in `shared/`, reusing the existing tokens and utilities |
 | Add a color, size or motion | Extend the `@theme` block in `src/styles/`, never a one-off hex in a template |
 | Add an admin action | Route it through `AdminCommandRunner`; report the outcome through `Snackbar` |
 | Add copy | Both `en.json` and `fr.json` |
@@ -359,12 +396,13 @@ Enforced by `eslint.config.js` — these fail `npm run lint`, not review:
 | A screen breaks on navigation instead of showing an error | Somewhere a template calls `value()` directly. Use `resourceValue()` |
 | Raw translation keys on screen | The key is missing from the active dictionary |
 | A page has no burger below `lg` | It is not rendering `<app-page-header>` as its first child |
-| `npm start` fails immediately | `npm install` first |
+| `npm start` fails immediately | Run `npm ci` first |
 | CI fails on `format:check` but the app works | Run `npm run format` |
 | Production build warns about bundle size | Expected at the 500 kB threshold — investigate if it moved on a change that should not have added weight |
 | Redirected to `/overview` when opening `/` or `/tour` | The one-time-entry guards. Append `?replay` |
+| Empty campaign or colony screen | No run has been opened yet. Force the week's selection from `/admin/operations` |
 
 ## Related documents
 
-- [Root README](../README.md) — the product and the system-wide architecture.
+- [Root README](../README.md) — the product, and the from-scratch setup walkthrough.
 - [backend/README.md](../backend/README.md) — the API this site consumes, and its Swagger contract.

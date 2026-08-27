@@ -7,6 +7,7 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.colony.model.ColonyTier;
 import io.github.thomashtn.valoquests.colony.model.ColonyTierName;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
+import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.model.BossCategory;
 import org.junit.jupiter.api.Test;
 
@@ -96,10 +97,23 @@ class DefaultColonyRulesetTest {
      */
     @Test
     void shouldPriceAFightPerPlayerOfTheFrozenRoster() {
-        assertThat(ruleset.materialsForDefeatedBoss(BossCategory.MINOR, 7)).isEqualTo(420);
+        assertThat(ruleset.materialsForDefeatedBoss(BossCategory.MINOR, 7)).isEqualTo(280);
         assertThat(ruleset.materialsForDefeatedBoss(BossCategory.STANDARD, 7)).isEqualTo(560);
-        assertThat(ruleset.materialsForDefeatedBoss(BossCategory.ELITE, 7)).isEqualTo(700);
+        assertThat(ruleset.materialsForDefeatedBoss(BossCategory.ELITE, 7)).isEqualTo(980);
         assertThat(ruleset.materialsForDefeatedBoss(BossCategory.STANDARD, 3)).isEqualTo(240);
+    }
+
+    /**
+     * The reason the gap between the classes is wide: the campaign now schedules exactly two elite
+     * fights per run, and those two weeks are meant to decide how far the town gets. A class worth
+     * barely more than the one below it would have made them ordinary weeks with a scarier name.
+     */
+    @Test
+    void shouldMakeAnEliteFightWorthSeveralMinorOnes() {
+        int minor = ruleset.materialsForDefeatedBoss(BossCategory.MINOR, 7);
+        int elite = ruleset.materialsForDefeatedBoss(BossCategory.ELITE, 7);
+
+        assertThat(elite).isGreaterThanOrEqualTo(minor * 3);
     }
 
     /**
@@ -107,10 +121,47 @@ class DefaultColonyRulesetTest {
      */
     @Test
     void shouldMoveMoraleOnlyByTheAmountsTheFightIsWorth() {
-        assertThat(ruleset.moraleForDefeatedBoss(BossCategory.MINOR)).isEqualTo(10.0);
-        assertThat(ruleset.moraleForDefeatedBoss(BossCategory.STANDARD)).isEqualTo(15.0);
-        assertThat(ruleset.moraleForDefeatedBoss(BossCategory.ELITE)).isEqualTo(20.0);
-        assertThat(ruleset.moraleForSurvivingBoss()).isEqualTo(-20.0);
+        assertThat(ruleset.moraleForDefeatedBoss(BossCategory.MINOR)).isEqualTo(3.0);
+        assertThat(ruleset.moraleForDefeatedBoss(BossCategory.STANDARD)).isEqualTo(5.0);
+        assertThat(ruleset.moraleForDefeatedBoss(BossCategory.ELITE)).isEqualTo(7.0);
+        assertThat(ruleset.moraleForSurvivingBoss()).isEqualTo(-7.0);
+    }
+
+    /**
+     * Verifies a flawless run reaches the morale ceiling on its <b>last</b> fight and never before.
+     *
+     * <p>The property the morale table exists for, and the one a rebalancing is most likely to break
+     * silently. The ten scheduled fights pay, between them, exactly the distance from the opening
+     * morale to the ceiling: offer more and the gauge tops out mid-run, after which the remaining
+     * fights change nothing and the categories stop meaning anything. That is what the previous table
+     * did — 150 morale poured into 50 points of room, ceiling reached on week four.
+     */
+    @Test
+    void shouldReachTheMoraleCeilingOnTheLastFightOfAFlawlessRun() {
+        ScoringRuleset scoringRuleset = new DefaultScoringRuleset();
+        double morale = ruleset.initialMorale();
+
+        for (int week = 1; week <= ruleset.runLengthWeeks(); week++) {
+            assertThat(morale)
+                .as("morale must still have room to move on week %d", week)
+                .isLessThan(ruleset.maximumMorale());
+
+            morale += ruleset.moraleForDefeatedBoss(scoringRuleset.bossCategoryForRunWeek(week));
+        }
+
+        assertThat(morale).isEqualTo(ruleset.maximumMorale(), within(TOLERANCE));
+    }
+
+    /**
+     * Verifies an elite win repairs one loss exactly, which is what the loss is priced against.
+     *
+     * <p>Keeps the break-even win rate where the previous table put it: a squad taking the average
+     * fight has to win about three out of five to hold its morale steady.
+     */
+    @Test
+    void shouldPriceALossAtExactlyOneEliteWin() {
+        assertThat(ruleset.moraleForSurvivingBoss())
+            .isEqualTo(-ruleset.moraleForDefeatedBoss(BossCategory.ELITE), within(TOLERANCE));
     }
 
     /**
@@ -251,5 +302,48 @@ class DefaultColonyRulesetTest {
     void shouldOpenARunOnNothing() {
         assertThat(ruleset.initialMaterials()).isZero();
         assertThat(ruleset.initialPopulation()).isZero();
+    }
+
+    /**
+     * Verifies pricing a step in materials always buys at least the efficiency it was asked for.
+     *
+     * <p>The rounding has to go up: quoted one material short, a step would read as affordable on the
+     * page and then fail to open, which is the one way a figure meant to be actionable can lie.
+     */
+    @Test
+    void shouldPriceAStepInEnoughMaterialsToActuallyOpenIt() {
+        for (int rosterSize : new int[] {1, 2, 5, 7, 20}) {
+            for (int step = 1; step <= 12; step++) {
+                double threshold = ruleset.tierAtStep(step).threshold();
+                int materials = ruleset.materialsForEfficiency(threshold, rosterSize);
+
+                assertThat(ruleset.efficiencyFor(materials, rosterSize))
+                    .isGreaterThanOrEqualTo(threshold);
+            }
+        }
+    }
+
+    /**
+     * Verifies a step costs proportionally more to a larger squad, which is what keeps the ladder
+     * independent of roster size: materials are earned per player, so a step has to be priced per
+     * player too.
+     */
+    @Test
+    void shouldPriceAStepPerPlayerOfTheRoster() {
+        double threshold = ruleset.tierAtStep(4).threshold();
+
+        assertThat(ruleset.materialsForEfficiency(threshold, 14))
+            .isEqualTo(2 * ruleset.materialsForEfficiency(threshold, 7));
+    }
+
+    /**
+     * Verifies the two ends of the pricing: the opening step is free, and an empty roster is priced at
+     * nothing rather than dividing by it.
+     */
+    @Test
+    void shouldPriceTheOpeningStepAndAnEmptyRosterAtNothing() {
+        assertThat(ruleset.materialsForEfficiency(ruleset.tierAtStep(0).threshold(), 7)).isZero();
+        assertThat(ruleset.materialsForEfficiency(4.0, 7)).isZero();
+        assertThat(ruleset.materialsForEfficiency(12.0, 0)).isZero();
     }
 }

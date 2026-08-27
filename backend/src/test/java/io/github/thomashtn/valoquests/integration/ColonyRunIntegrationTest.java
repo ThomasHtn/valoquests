@@ -309,16 +309,11 @@ class ColonyRunIntegrationTest extends PostgreSqlIntegrationTest {
         // The ladder always has a next step, since it has no end.
         assertThat(colony.nextTier().threshold())
             .isEqualTo(colony.tier().threshold() + ruleset.efficiencyTierStep(), within(0.001));
-        assertThat(colony.missingEfficiency())
-            .isEqualTo(colony.nextTier().threshold() - colony.efficiency(), within(0.001));
 
-        // Ten weeks, whether or not a fight has been drawn for them.
+        // Ten weeks, whether or not a fight has been drawn for them. A settled week is priced in the
+        // materials the ladder beside it is priced in, so the two panels read in one currency.
         assertThat(colony.weeks()).hasSize(10);
-        assertThat(colony.weeks().getFirst().efficiencyGain()).isEqualTo(
-            ruleset.efficiencyFor(bossMaterials(), ROSTER_SIZE)
-                - ruleset.efficiencyFor(0, ROSTER_SIZE),
-            within(0.001)
-        );
+        assertThat(colony.weeks().getFirst().materials()).isEqualTo(bossMaterials());
 
         // Nobody played the Monday itself, so the roster shows up but nobody counts.
         assertThat(colony.presence().rosterSize()).isEqualTo(ROSTER_SIZE);

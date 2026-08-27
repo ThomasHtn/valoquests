@@ -12,6 +12,8 @@ import { PageHeader } from '@layout/page-header/page-header';
 import { RuleSection } from './rule-section/rule-section';
 import {
   BOSS_CATEGORY_SHOWCASE,
+  BOSS_LADDER_SHOWCASE,
+  BOSS_MATERIALS_SHOWCASE,
   COLONY_FACTS,
   COLONY_MATERIALS_SHOWCASE,
   COLONY_MORALE_SHOWCASE,
@@ -88,6 +90,16 @@ export class Rules {
    * Boss weight classes shown in the boss panel, exposed to the template.
    */
   protected readonly bossCategoryShowcase = BOSS_CATEGORY_SHOWCASE;
+
+  /**
+   * The weight class each week of a run fights, shown under the boss panel.
+   */
+  protected readonly bossLadderShowcase = BOSS_LADDER_SHOWCASE;
+
+  /**
+   * Materials a defeated boss pays per player, shown in the colony panel.
+   */
+  protected readonly bossMaterialsShowcase = BOSS_MATERIALS_SHOWCASE;
 
   /**
    * Facts closing the ranking panel, exposed to the template.

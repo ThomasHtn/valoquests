@@ -3,6 +3,7 @@ package io.github.thomashtn.valoquests.colony.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -18,6 +19,7 @@ import io.github.thomashtn.valoquests.colony.entity.ColonyDailySnapshot;
 import io.github.thomashtn.valoquests.colony.model.ColonyPresenceState;
 import io.github.thomashtn.valoquests.colony.model.ColonyTierName;
 import io.github.thomashtn.valoquests.colony.model.ColonyTierState;
+import io.github.thomashtn.valoquests.colony.model.ColonyWeekOutcome;
 import io.github.thomashtn.valoquests.colony.model.ColonyWeekOutcomeState;
 import io.github.thomashtn.valoquests.colony.repository.ColonyDailySnapshotRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
@@ -82,6 +84,9 @@ class ColonyQueryServiceTest {
     /** Activity reader dependency, which says what each player brought in. */
     private ColonyActivityReader activityReader;
 
+    /** Materials reader dependency, which prices the week still open. */
+    private ColonyMaterialsReader materialsReader;
+
     /** Calibration the thresholds are read from. */
     private final ColonyRuleset ruleset = new DefaultColonyRuleset(new DefaultScoringRuleset());
 
@@ -97,7 +102,10 @@ class ColonyQueryServiceTest {
         encounterRepository = mock(WeeklyBossEncounterRepository.class);
         playerRepository = mock(PlayerRepository.class);
         activityReader = mock(ColonyActivityReader.class);
+        materialsReader = mock(ColonyMaterialsReader.class);
 
+        lenient().when(materialsReader.outcomeOf(any(), anyInt()))
+            .thenReturn(ColonyWeekOutcome.NONE);
         lenient().when(runService.ensureRunFor(any())).thenReturn(run());
         lenient().when(encounterRepository
             .findAllByRunIdAndFinalizedAtIsNotNullOrderByWeekStartAsc(RUN_ID))
@@ -118,6 +126,7 @@ class ColonyQueryServiceTest {
         service = new ColonyQueryService(
             new ColonyRunReader(runService, replayService, snapshotRepository, weekCalendar),
             new ColonyPresenceReader(playerRepository, activityReader, ruleset, engine),
+            materialsReader,
             encounterRepository,
             ruleset,
             engine
@@ -176,7 +185,10 @@ class ColonyQueryServiceTest {
     }
 
     /**
-     * Verifies the morale is handed over with its floor, its ceiling and the speed it buys tonight.
+     * Verifies the morale is handed over with its ceiling and the speed it buys tonight.
+     *
+     * <p>The speed is the whole of what morale does, and the rail carries it beside the value: at 55 out
+     * of 100 the town closes 8,25 % of its gap rather than the full 15 %.
      */
     @Test
     void shouldReportTheSpeedTheMoraleBuys() {
@@ -184,7 +196,6 @@ class ColonyQueryServiceTest {
 
         assertThat(service.findCurrent().morale()).satisfies(morale -> {
             assertThat(morale.value()).isEqualTo(55.0, within(TOLERANCE));
-            assertThat(morale.floor()).isEqualTo(20.0);
             assertThat(morale.ceiling()).isEqualTo(100.0);
             assertThat(morale.growthPercentPerNight()).isEqualTo(8.25, within(TOLERANCE));
         });
@@ -206,8 +217,6 @@ class ColonyQueryServiceTest {
         assertThat(colony.tier().threshold()).isEqualTo(10.25, within(TOLERANCE));
         assertThat(colony.tier().state()).isEqualTo(ColonyTierState.CURRENT);
         assertThat(colony.nextTier().threshold()).isEqualTo(11.0, within(TOLERANCE));
-        assertThat(colony.missingEfficiency())
-            .isEqualTo(11.0 - WORKED_EFFICIENCY, within(TOLERANCE));
         assertThat(colony.tierProgressPercentage()).isEqualTo(87.3, within(0.1));
     }
 
@@ -255,18 +264,19 @@ class ColonyQueryServiceTest {
 
         assertThat(service.findCurrent().weeks()).hasSize(10).satisfies(weeks -> {
             assertThat(weeks.get(0).state()).isEqualTo(ColonyWeekOutcomeState.DEFEATED);
-            assertThat(weeks.get(0).materials()).isEqualTo(420);
-            assertThat(weeks.get(0).efficiencyGain()).isEqualTo(0.4, within(TOLERANCE));
-            assertThat(weeks.get(0).moraleDelta()).isEqualTo(10.0);
+            assertThat(weeks.get(0).materials()).isEqualTo(280);
+            assertThat(weeks.get(0).efficiencyGain()).isEqualTo(280.0 / 7 / 150, within(TOLERANCE));
+            assertThat(weeks.get(0).moraleDelta()).isEqualTo(3.0);
 
             assertThat(weeks.get(1).state()).isEqualTo(ColonyWeekOutcomeState.SURVIVED);
             assertThat(weeks.get(1).materials()).isZero();
             assertThat(weeks.get(1).efficiencyGain()).isZero();
-            assertThat(weeks.get(1).moraleDelta()).isEqualTo(-20.0);
+            assertThat(weeks.get(1).moraleDelta()).isEqualTo(-7.0);
 
             assertThat(weeks.get(2).state()).isEqualTo(ColonyWeekOutcomeState.DEFEATED);
+            assertThat(weeks.get(2).materials()).isEqualTo(560);
             assertThat(weeks.get(2).efficiencyGain()).isEqualTo(560.0 / 7 / 150, within(TOLERANCE));
-            assertThat(weeks.get(2).moraleDelta()).isEqualTo(15.0);
+            assertThat(weeks.get(2).moraleDelta()).isEqualTo(5.0);
 
             assertThat(weeks.get(3).state()).isEqualTo(ColonyWeekOutcomeState.CURRENT);
             assertThat(weeks.get(4).state()).isEqualTo(ColonyWeekOutcomeState.UPCOMING);
@@ -287,8 +297,9 @@ class ColonyQueryServiceTest {
         assertThat(service.findCurrent().weeks().get(3)).satisfies(week -> {
             assertThat(week.state()).isEqualTo(ColonyWeekOutcomeState.CURRENT);
             assertThat(week.category()).isEqualTo(BossCategory.ELITE);
-            assertThat(week.efficiencyGain()).isEqualTo(700.0 / 7 / 150, within(TOLERANCE));
-            assertThat(week.moraleDelta()).isEqualTo(20.0);
+            assertThat(week.materials()).isEqualTo(980);
+            assertThat(week.efficiencyGain()).isEqualTo(980.0 / 7 / 150, within(TOLERANCE));
+            assertThat(week.moraleDelta()).isEqualTo(7.0);
         });
     }
 
@@ -315,7 +326,7 @@ class ColonyQueryServiceTest {
 
             // The week today falls in is the only one under way, and it still shows its stake.
             assertThat(weeks.get(3).state()).isEqualTo(ColonyWeekOutcomeState.CURRENT);
-            assertThat(weeks.get(3).efficiencyGain()).isEqualTo(700.0 / 7 / 150, within(TOLERANCE));
+            assertThat(weeks.get(3).materials()).isEqualTo(980);
         });
     }
 
@@ -331,6 +342,7 @@ class ColonyQueryServiceTest {
         assertThat(service.findCurrent().weeks()).allSatisfy(week -> {
             assertThat(week.category()).isNull();
             assertThat(week.materials()).isZero();
+            assertThat(week.efficiencyGain()).isZero();
             assertThat(week.moraleDelta()).isZero();
         });
     }
@@ -356,6 +368,28 @@ class ColonyQueryServiceTest {
                 ColonyPresenceState.PARTIAL,
                 ColonyPresenceState.NONE
             );
+        });
+    }
+
+    /**
+     * Verifies a turnout above the frozen roster is published at the roster rather than above it.
+     *
+     * <p>A run freezes the roster's size, never its membership, so activating an eighth player on a run
+     * frozen at seven let all eight clear the threshold. The rail then read {@code 8 / 7}, a fraction
+     * claiming more than a full house on the one gauge whose subject is how much of the squad turned up.
+     * The multiplier had already discarded that eighth player, its ratio being capped at one, so the
+     * count is held to the same bound and the pair says exactly what the model applied.
+     */
+    @Test
+    void shouldHoldTheTurnoutToTheFrozenRoster() {
+        ColonyDailySnapshot today = snapshot(TODAY, 440.0, 2_400.0, 92.0, 55.0, 3_050, WORKED_EFFICIENCY);
+        today.setPresenceCount(8);
+        givenSnapshots(today);
+
+        assertThat(service.findCurrent().presence()).satisfies(presence -> {
+            assertThat(presence.present()).isEqualTo(7);
+            assertThat(presence.rosterSize()).isEqualTo(7);
+            assertThat(presence.multiplier()).isEqualTo(2.0, within(TOLERANCE));
         });
     }
 
@@ -436,6 +470,83 @@ class ColonyQueryServiceTest {
             assertThat(entry.peakPopulation()).isZero();
             assertThat(entry.averagePopulation()).isZero();
         });
+    }
+
+    /**
+     * Verifies the page is handed the seven daily harvests the stock is made of, and only those.
+     *
+     * <p>The stock is a rolling window rather than a reserve, so its seven days are the only reading
+     * that says <b>when</b> the squad played. The total alone cannot, and the ratio the food rail used
+     * to draw was algebraically the population figure over again.
+     */
+    @Test
+    void shouldHandOverTheSevenDaysBehindTheStock() {
+        ColonyDailySnapshot[] days = new ColonyDailySnapshot[9];
+        for (int index = 0; index < days.length; index++) {
+            days[index] = snapshot(
+                TODAY.minusDays(days.length - 1L - index),
+                440.0,
+                2_400.0,
+                92.0,
+                55.0,
+                3_050,
+                WORKED_EFFICIENCY
+            );
+        }
+        givenSnapshots(days);
+
+        ColonyResponse colony = service.findCurrent();
+
+        assertThat(colony.foodWindow()).hasSize(7);
+        assertThat(colony.foodWindow().getFirst().day()).isEqualTo(TODAY.minusDays(6));
+        assertThat(colony.foodWindow().getLast().day()).isEqualTo(TODAY);
+        assertThat(colony.foodWindow().getLast().harvest()).isEqualTo(92.0, within(TOLERANCE));
+    }
+
+    /**
+     * Verifies a run shorter than the window hands over the days it actually has.
+     */
+    @Test
+    void shouldHandOverAShortWindowAtTheStartOfARun() {
+        givenTheWorkedState();
+
+        assertThat(service.findCurrent().foodWindow()).hasSize(1);
+    }
+
+    /**
+     * Verifies the week still open reports what it has already secured.
+     *
+     * <p>Materials only ever move on a Monday, so the banked total reads as a flat zero for a whole
+     * first week while the squad is in fact earning. This is the figure that says so.
+     */
+    @Test
+    void shouldReportWhatTheOpenWeekWillCreditOnMonday() {
+        givenTheWorkedState();
+        when(materialsReader.outcomeOf(FIRST_WEEK.plusWeeks(3), 7))
+            .thenReturn(new ColonyWeekOutcome(340, 0.0));
+
+        assertThat(service.findCurrent().pendingMaterials()).isEqualTo(340);
+    }
+
+    /**
+     * Verifies every step of the ladder is priced in the one currency the squad can act on.
+     *
+     * <p>A step is defined by an efficiency, which says nothing about what to do tonight; the materials
+     * behind it are exactly what challenges and bosses pay.
+     */
+    @Test
+    void shouldPriceEveryLadderStepInMaterials() {
+        givenTheWorkedState();
+
+        ColonyResponse colony = service.findCurrent();
+
+        assertThat(colony.tier().materialsRequired())
+            .isEqualTo(ruleset.materialsForEfficiency(colony.tier().threshold(), 7));
+        assertThat(colony.nextTier().materialsRequired())
+            .isGreaterThan(colony.tier().materialsRequired());
+        assertThat(colony.ladder()).isNotEmpty().allSatisfy(step ->
+            assertThat(step.materialsRequired())
+                .isEqualTo(ruleset.materialsForEfficiency(step.threshold(), 7)));
     }
 
     /**

@@ -37,6 +37,39 @@ export const DIFFICULTY_SHOWCASE: readonly DifficultyShowcase[] = (
 export const BOSS_CATEGORY_SHOWCASE: readonly BossCategory[] = ['MINOR', 'STANDARD', 'ELITE'];
 
 /**
+ * The weight class each week of a run fights, first week to last.
+ *
+ * Mirrors `DefaultScoringRuleset#bossCategoryForRunWeek`. Worth showing rather than describing
+ * because the class is scheduled, not drawn: a reader can look up which week the run peaks on
+ * before it happens, which is the whole difference with the random draw this replaced.
+ */
+export const BOSS_LADDER_SHOWCASE: readonly BossCategory[] = [
+  'MINOR',
+  'STANDARD',
+  'STANDARD',
+  'STANDARD',
+  'ELITE',
+  'MINOR',
+  'STANDARD',
+  'STANDARD',
+  'STANDARD',
+  'ELITE',
+];
+
+/**
+ * Materials one player earns from a defeated boss, by weight class.
+ *
+ * Mirrors `DefaultColonyRuleset#materialsForDefeatedBoss`. The spread is wider than the morale
+ * table's on purpose: a run schedules exactly two elite weeks, and they are the only ones that can
+ * move the town by a step on their own.
+ */
+export const BOSS_MATERIALS_SHOWCASE: readonly { category: BossCategory; materials: number }[] = [
+  { category: 'MINOR', materials: 40 },
+  { category: 'STANDARD', materials: 80 },
+  { category: 'ELITE', materials: 140 },
+];
+
+/**
  * Damage a single synced match awards for one game mode, by outcome.
  *
  * `draw` is `null` for the two modes that cannot end on a draw (`SPIKE_RUSH`, `DEATHMATCH`).
@@ -133,12 +166,17 @@ export const RANKING_FACTS: readonly string[] = [
  * Mirrors `DefaultColonyRuleset#moraleForDefeatedBoss` and `#moraleForSurvivingBoss`. The fight is
  * the only thing in the whole model that touches morale, which is exactly why it is worth a table of
  * its own: everything else the squad does is already measured by the seven-day food window.
+ *
+ * The four figures look small beside the eighty points the gauge spans, and that is the calibration:
+ * the ten fights a run schedules pay fifty morale between them, which is exactly the room between the
+ * fifty a run opens on and the hundred it tops out at. A flawless run lands on the ceiling with its
+ * tenth fight rather than its fourth, so no fight of the run is ever worth nothing.
  */
 export const COLONY_MORALE_SHOWCASE: readonly { label: string; morale: number }[] = [
-  { label: 'MINOR', morale: 10 },
-  { label: 'STANDARD', morale: 15 },
-  { label: 'ELITE', morale: 20 },
-  { label: 'SURVIVED', morale: -20 },
+  { label: 'MINOR', morale: 3 },
+  { label: 'STANDARD', morale: 5 },
+  { label: 'ELITE', morale: 7 },
+  { label: 'SURVIVED', morale: -7 },
 ];
 
 /**

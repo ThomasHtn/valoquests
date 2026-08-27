@@ -97,6 +97,27 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
      */
     private static final double PERCENT_SCALE = 100.0;
 
+    /**
+     * Weight class scheduled for each week of a run, index 0 being its first week.
+     *
+     * <p>Two peaks, at the halfway mark and on the closing week, each followed by a breather — the
+     * first week counting as the breather after the previous run's closing elite. Everything between a
+     * breather and a peak is standard, so the run reads as a slope rather than as a flat line with two
+     * spikes in it.
+     */
+    private static final BossCategory[] BOSS_CATEGORY_BY_RUN_WEEK = {
+        BossCategory.MINOR,
+        BossCategory.STANDARD,
+        BossCategory.STANDARD,
+        BossCategory.STANDARD,
+        BossCategory.ELITE,
+        BossCategory.MINOR,
+        BossCategory.STANDARD,
+        BossCategory.STANDARD,
+        BossCategory.STANDARD,
+        BossCategory.ELITE,
+    };
+
     @Override
     public int matchDamage(GameMode gameMode, MatchOutcome outcome) {
         if (gameMode == null || outcome == null) {
@@ -213,10 +234,23 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
      * the supported way to shrink a week.
      *
      * <p>Expressed as a share of what a player is currently observed to contribute, not as a fixed
-     * number of hit points. A standard boss asks the roster to repeat its own recent median week, a
-     * minor one to fall a fifth short of it, an elite one to beat it by a quarter. The reference itself
-     * is measured from finalized weeks, so the fight follows the group as it gets better, busier or
-     * quieter, and nobody has to re-tune a constant when it does.
+     * number of hit points. The reference itself is measured from finalized weeks, so the fight follows
+     * the group as it gets better, busier or quieter, and nobody has to re-tune a constant when it does.
+     *
+     * <p><b>All three weights sit below or barely above that reference, and that margin is the point.</b>
+     * The reference is the squad's <em>own</em> recent median, so a weight of one asks it to repeat
+     * itself exactly: a win by zero margin, which ordinary week-to-week noise decides instead of effort.
+     * Measured over a full run, a squad whose volume wobbles by a tenth went from seven fights won to
+     * four on that setting, and an elite boss a quarter above the median was unwinnable by construction
+     * for any squad that was merely regular. At eighty-five percent a standard boss leaves room for one
+     * slow week; at a hundred and five an elite one asks the squad to actually push; a minor one is what
+     * a squad that turned up has already done.
+     *
+     * <p>The margin is also what keeps the fight neutral to roster size. A player's contribution
+     * includes the challenge team bonus, which caps at five extra players, so a player in a pair deals
+     * about a fifth less than a player in a group of six while carrying the same share of hit points.
+     * On the old weights that gap landed squarely on the line between winning and losing; below the
+     * reference it decides nothing, and a squad of two scores what a squad of twenty does.
      *
      * <p>This is the whole of the fight's difficulty. There is no modifier layered on top and nothing
      * carried over from the previous boss: measuring the reference already moves the bar in the same
@@ -233,9 +267,9 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
         }
 
         int categoryWeightPercent = switch (category) {
-            case MINOR -> 80;
-            case STANDARD -> 100;
-            case ELITE -> 125;
+            case MINOR -> 65;
+            case STANDARD -> 85;
+            case ELITE -> 105;
         };
 
         long hpPerPlayer = Math.round(
@@ -243,6 +277,25 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
         );
 
         return (int) (hpPerPlayer * Math.max(1, activePlayerCount));
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Fixed per week rather than drawn with the boss. A random weight class made a run's shape a
+     * matter of luck: three elites in a row was as likely as none at all, and neither reads as a
+     * campaign. Scheduling the class instead lets the colony's whole economy be known a run ahead,
+     * while the draw still decides which of that class's bosses actually shows up.
+     *
+     * <p>The ladder is deliberately neutral on volume. Over a run it pays 2 minor, 6 standard and 2
+     * elite fights, whose materials and morale come to exactly what ten uniformly drawn fights averaged
+     * before, so no colony threshold had to move for it.
+     */
+    @Override
+    public BossCategory bossCategoryForRunWeek(int weekIndexInRun) {
+        int ladderIndex = Math.clamp(weekIndexInRun - 1L, 0, BOSS_CATEGORY_BY_RUN_WEEK.length - 1);
+
+        return BOSS_CATEGORY_BY_RUN_WEEK[ladderIndex];
     }
 
     /**

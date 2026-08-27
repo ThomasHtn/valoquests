@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
 import io.github.thomashtn.valoquests.colony.ColonyRuleset;
+import io.github.thomashtn.valoquests.colony.dto.ColonyFoodDayResponse;
 import io.github.thomashtn.valoquests.colony.dto.ColonyMilestoneResponse;
 import io.github.thomashtn.valoquests.colony.dto.ColonyMoraleResponse;
 import io.github.thomashtn.valoquests.colony.dto.ColonyResponse;
@@ -71,6 +72,11 @@ public class ColonyQueryService {
     private final ColonyPresenceReader presenceReader;
 
     /**
+     * Reader pricing what a week hands over, used here for the week still open.
+     */
+    private final ColonyMaterialsReader materialsReader;
+
+    /**
      * Repository holding the run's fights.
      */
     private final WeeklyBossEncounterRepository encounterRepository;
@@ -90,6 +96,7 @@ public class ColonyQueryService {
      *
      * @param runReader           colony run reader
      * @param presenceReader      colony presence reader
+     * @param materialsReader     colony materials reader
      * @param encounterRepository weekly boss encounter repository
      * @param ruleset             colony ruleset
      * @param engine              colony replay engine
@@ -101,12 +108,14 @@ public class ColonyQueryService {
     public ColonyQueryService(
         ColonyRunReader runReader,
         ColonyPresenceReader presenceReader,
+        ColonyMaterialsReader materialsReader,
         WeeklyBossEncounterRepository encounterRepository,
         ColonyRuleset ruleset,
         ColonyReplayEngine engine
     ) {
         this.runReader = runReader;
         this.presenceReader = presenceReader;
+        this.materialsReader = materialsReader;
         this.encounterRepository = encounterRepository;
         this.ruleset = ruleset;
         this.engine = engine;
@@ -128,6 +137,9 @@ public class ColonyQueryService {
         double efficiency = today.getEfficiency().doubleValue();
         double consumption = engine.weeklyConsumption(population, efficiency);
 
+        int rosterSize = run.getRosterSize();
+        LocalDate weekStart = runReader.weekStartOf(today.getDay());
+
         ColonyTier tier = ruleset.tierFor(efficiency);
         ColonyTier nextTier = ruleset.nextTierFor(efficiency);
 
@@ -142,21 +154,58 @@ public class ColonyQueryService {
             rounded(today.getPopulationChange().doubleValue()),
             efficiency,
             today.getMaterials(),
+            pendingMaterials(weekStart, rosterSize),
             foodStock,
+            foodWindow(snapshots),
+            ruleset.foodWindowDays(),
             rounded(engine.feedablePopulation(foodStock, efficiency)),
             consumption,
             Math.max(0.0, foodStock - consumption),
-            presenceReader.read(today.getDay(), today.getPresenceCount(), run.getRosterSize()),
+            presenceReader.read(today.getDay(), today.getPresenceCount(), rosterSize),
             morale(today.getMorale().doubleValue()),
-            toTier(tier, ColonyTierState.CURRENT),
-            toTier(nextTier, ColonyTierState.LOCKED),
-            nextTier.threshold() - efficiency,
+            toTier(tier, ColonyTierState.CURRENT, rosterSize),
+            toTier(nextTier, ColonyTierState.LOCKED, rosterSize),
             (efficiency - tier.threshold()) * PERCENT_SCALE / ruleset.efficiencyTierStep(),
-            ladder(tier),
-            weeks(run, runReader.weekStartOf(today.getDay())),
+            ladder(tier, rosterSize),
+            weeks(run, weekStart),
             defeatedBosses(run),
             ruleset.runLengthWeeks()
         );
+    }
+
+    /**
+     * Returns what the week still open has already secured, and which Monday will credit.
+     *
+     * <p>Read through the same reader the rollover itself uses, which filters an encounter on its
+     * finalization: an open week therefore contributes its validated challenges and nothing else, since
+     * its fight has not been settled and pays nothing yet. What that fight <b>would</b> pay is on its
+     * own tile, quoted as what is on the table.
+     *
+     * @param weekStart  Monday of the week today falls in
+     * @param rosterSize roster size frozen on the run
+     * @return materials the next rollover will credit
+     */
+    private int pendingMaterials(LocalDate weekStart, int rosterSize) {
+        return materialsReader.outcomeOf(weekStart, rosterSize).materials();
+    }
+
+    /**
+     * Returns the seven daily harvests the food stock is made of, oldest first.
+     *
+     * <p>A slice of the snapshots already loaded, so it costs nothing. Shorter than seven days at the
+     * very start of a run, which is correct: the window fills as the run does.
+     *
+     * @param snapshots the run's snapshots, oldest day first
+     * @return the window's days
+     */
+    private List<ColonyFoodDayResponse> foodWindow(List<ColonyDailySnapshot> snapshots) {
+        return snapshots.stream()
+            .skip(Math.max(0, snapshots.size() - ruleset.foodWindowDays()))
+            .map(snapshot -> new ColonyFoodDayResponse(
+                snapshot.getDay(),
+                snapshot.getFoodHarvest().doubleValue()
+            ))
+            .toList();
     }
 
     /**
@@ -217,7 +266,6 @@ public class ColonyQueryService {
     private ColonyMoraleResponse morale(double morale) {
         return new ColonyMoraleResponse(
             morale,
-            ruleset.minimumMorale(),
             ruleset.maximumMorale(),
             ruleset.gapClosingRatePercent() * morale / ruleset.maximumMorale()
         );
@@ -228,10 +276,11 @@ public class ColonyQueryService {
      *
      * <p>A window rather than the whole ladder, since the ladder has no end.
      *
-     * @param current step the town sits in
+     * @param current    step the town sits in
+     * @param rosterSize roster size frozen on the run, which prices every step in materials
      * @return the window, lowest step first
      */
-    private List<ColonyTierResponse> ladder(ColonyTier current) {
+    private List<ColonyTierResponse> ladder(ColonyTier current, int rosterSize) {
         List<ColonyTierResponse> ladder = new ArrayList<>();
         int firstStep = Math.max(0, current.step() - LADDER_STEPS_BEHIND);
 
@@ -244,7 +293,7 @@ public class ColonyQueryService {
                 state = ColonyTierState.REACHED;
             }
 
-            ladder.add(toTier(ruleset.tierAtStep(step), state));
+            ladder.add(toTier(ruleset.tierAtStep(step), state, rosterSize));
         }
 
         return ladder;
@@ -310,7 +359,7 @@ public class ColonyQueryService {
                 unsettledState(weekStart, currentWeek),
                 null,
                 0,
-                0,
+                0.0,
                 0.0
             );
         }
@@ -325,7 +374,7 @@ public class ColonyQueryService {
             // behind and still open settled nothing, so it is quoted at nothing: anything else would
             // put a figure on the page the model never applied.
             return state == ColonyWeekOutcomeState.SURVIVED
-                ? new ColonyWeekResponse(weekIndex, state, category, 0, 0, 0.0)
+                ? new ColonyWeekResponse(weekIndex, state, category, 0, 0.0, 0.0)
                 : priced(weekIndex, state, category, rosterSize);
         }
 
@@ -335,7 +384,7 @@ public class ColonyQueryService {
                 ColonyWeekOutcomeState.SURVIVED,
                 category,
                 0,
-                0,
+                0.0,
                 ruleset.moraleForSurvivingBoss()
             );
         }
@@ -359,11 +408,7 @@ public class ColonyQueryService {
         int rosterSize
     ) {
         int materials = ruleset.materialsForDefeatedBoss(category, rosterSize);
-
-        // The efficiency those materials buy, read as the distance between an empty store and this one:
-        // the ruleset owns the conversion, so the tile cannot drift from the rule that pays it.
-        double efficiencyGain = ruleset.efficiencyFor(materials, rosterSize)
-            - ruleset.efficiencyFor(0, rosterSize);
+        double efficiencyGain = ruleset.efficiencyFor(materials, rosterSize) - ruleset.efficiencyFor(0, rosterSize);
 
         return new ColonyWeekResponse(
             weekIndex,
@@ -401,12 +446,19 @@ public class ColonyQueryService {
     /**
      * Maps one step of the ladder to its response.
      *
-     * @param tier  step to map
-     * @param state where it stands relative to the town
+     * @param tier       step to map
+     * @param state      where it stands relative to the town
+     * @param rosterSize roster size frozen on the run, which prices the step in materials
      * @return the step, exposed
      */
-    private ColonyTierResponse toTier(ColonyTier tier, ColonyTierState state) {
-        return new ColonyTierResponse(tier.name(), tier.level(), tier.threshold(), state);
+    private ColonyTierResponse toTier(ColonyTier tier, ColonyTierState state, int rosterSize) {
+        return new ColonyTierResponse(
+            tier.name(),
+            tier.level(),
+            tier.threshold(),
+            ruleset.materialsForEfficiency(tier.threshold(), rosterSize),
+            state
+        );
     }
 
     /**
@@ -500,7 +552,7 @@ public class ColonyQueryService {
             average,
             efficiency,
             materials,
-            toTier(ruleset.tierFor(efficiency), ColonyTierState.REACHED),
+            toTier(ruleset.tierFor(efficiency), ColonyTierState.REACHED, run.getRosterSize()),
             defeatedBosses(run),
             ruleset.runLengthWeeks()
         );

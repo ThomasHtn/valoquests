@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { LucideHammer } from '@lucide/angular';
 import { interval } from 'rxjs';
 
 import { CurrentChallenges } from '@core/challenges/challenge.model';
@@ -35,7 +36,7 @@ import { ChallengeRow } from './challenges.model';
  */
 @Component({
   selector: 'app-challenges',
-  imports: [TranslatePipe, PageHeader, ResourceState, SectionLabel, WeekCountdown],
+  imports: [TranslatePipe, LucideHammer, PageHeader, ResourceState, SectionLabel, WeekCountdown],
   templateUrl: './challenges.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })
@@ -119,6 +120,7 @@ export class Challenges {
       description: challenge.description,
       difficulty: challenge.difficulty,
       damage: formatDamage(challenge.damage, language),
+      materials: formatDamage(challenge.materials, language),
       squadMultiplier: formatSquadMultiplier(challenge.teamBonusPercent, language),
       visual: resolveChallengeVisual(challenge.metric, challenge.difficulty),
     }));

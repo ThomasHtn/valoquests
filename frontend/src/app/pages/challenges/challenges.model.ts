@@ -22,6 +22,15 @@ export interface ChallengeRow {
   readonly damage: string;
 
   /**
+   * Materials one player banks for the colony by clearing it, already grouped.
+   *
+   * The other half of what a challenge is worth, and the half nothing used to state: the damage
+   * moves the weekly ranking and the boss fight, the materials move the town's tiers. Without it the
+   * campaign page asks for materials and no screen says where they come from.
+   */
+  readonly materials: string;
+
+  /**
    * Squad multiplier currently applied to {@link damage}, as `"×1,2"`, or `null` while no bonus is
    * earned yet — a lone completer multiplies by one, and showing that reads as a penalty.
    */

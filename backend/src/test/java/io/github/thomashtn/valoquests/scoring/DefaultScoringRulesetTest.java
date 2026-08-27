@@ -19,6 +19,9 @@ class DefaultScoringRulesetTest {
     /** Average value of a competitive match over an even win/loss split. */
     private static final int AVERAGE_COMPETITIVE_DAMAGE = 425;
 
+    /** Weeks a run spans, the span the difficulty ladder is written over. */
+    private static final int RUN_LENGTH_WEEKS = 10;
+
     @Test
     void shouldPriceEveryValuedModeAndLeaveTheRestAtZero() {
         assertThat(ruleset.matchDamage(GameMode.COMPETITIVE, MatchOutcome.WIN)).isEqualTo(500);
@@ -125,23 +128,35 @@ class DefaultScoringRulesetTest {
     void shouldSizeBossHitPointsOnTheActiveRosterAndTheMeasuredReference() {
         int reference = 10_000;
 
-        assertThat(ruleset.bossHitPoints(BossCategory.MINOR, 7, reference)).isEqualTo(56_000);
-        assertThat(ruleset.bossHitPoints(BossCategory.STANDARD, 7, reference)).isEqualTo(70_000);
-        assertThat(ruleset.bossHitPoints(BossCategory.ELITE, 7, reference)).isEqualTo(87_500);
-        assertThat(ruleset.bossHitPoints(BossCategory.STANDARD, 4, reference)).isEqualTo(40_000);
+        assertThat(ruleset.bossHitPoints(BossCategory.MINOR, 7, reference)).isEqualTo(45_500);
+        assertThat(ruleset.bossHitPoints(BossCategory.STANDARD, 7, reference)).isEqualTo(59_500);
+        assertThat(ruleset.bossHitPoints(BossCategory.ELITE, 7, reference)).isEqualTo(73_500);
+        assertThat(ruleset.bossHitPoints(BossCategory.STANDARD, 4, reference)).isEqualTo(34_000);
     }
 
     /**
-     * The point of the categories once hit points are calibrated: a standard boss asks the roster to
-     * repeat its own recent week, a minor one to fall short of it, an elite one to beat it.
+     * Encodes why every weight sits at or below the measured reference.
+     *
+     * <p>The reference is the squad's own recent median, so asking for exactly it is a win by zero
+     * margin that week-to-week noise decides rather than effort — and an elite boss well above it is
+     * unwinnable by construction for a squad that is merely regular. A standard boss must therefore
+     * leave room for one slow week, and an elite one must ask for a push rather than a miracle.
      */
     @Test
-    void shouldAskAStandardBossForExactlyTheMeasuredReference() {
+    void shouldLeaveAStandardBossRoomForOneSlowWeek() {
         int reference = 12_345;
 
-        assertThat(ruleset.bossHitPoints(BossCategory.STANDARD, 1, reference)).isEqualTo(reference);
-        assertThat(ruleset.bossHitPoints(BossCategory.MINOR, 1, reference)).isLessThan(reference);
-        assertThat(ruleset.bossHitPoints(BossCategory.ELITE, 1, reference)).isGreaterThan(reference);
+        int minor = ruleset.bossHitPoints(BossCategory.MINOR, 1, reference);
+        int standard = ruleset.bossHitPoints(BossCategory.STANDARD, 1, reference);
+        int elite = ruleset.bossHitPoints(BossCategory.ELITE, 1, reference);
+
+        assertThat(standard).isLessThan(reference);
+        assertThat(minor).isLessThan(standard);
+        assertThat(elite).isGreaterThan(reference);
+
+        // An elite boss asks for a push, not a miracle: a fifth above the median would be out of a
+        // regular squad's reach whatever it did, which is what made the category a guaranteed loss.
+        assertThat(elite).isLessThan((int) (reference * 1.1));
     }
 
     /**
@@ -159,6 +174,49 @@ class DefaultScoringRulesetTest {
     void shouldNeverSizeABossBelowASinglePlayer() {
         assertThat(ruleset.bossHitPoints(BossCategory.MINOR, 0, 10_000))
             .isEqualTo(ruleset.bossHitPoints(BossCategory.MINOR, 1, 10_000));
+    }
+
+    @Test
+    void shouldWalkTheRunThroughItsDifficultyLadder() {
+        assertThat(ruleset.bossCategoryForRunWeek(1)).isEqualTo(BossCategory.MINOR);
+        assertThat(ruleset.bossCategoryForRunWeek(2)).isEqualTo(BossCategory.STANDARD);
+        assertThat(ruleset.bossCategoryForRunWeek(3)).isEqualTo(BossCategory.STANDARD);
+        assertThat(ruleset.bossCategoryForRunWeek(4)).isEqualTo(BossCategory.STANDARD);
+        assertThat(ruleset.bossCategoryForRunWeek(5)).isEqualTo(BossCategory.ELITE);
+        assertThat(ruleset.bossCategoryForRunWeek(6)).isEqualTo(BossCategory.MINOR);
+        assertThat(ruleset.bossCategoryForRunWeek(7)).isEqualTo(BossCategory.STANDARD);
+        assertThat(ruleset.bossCategoryForRunWeek(8)).isEqualTo(BossCategory.STANDARD);
+        assertThat(ruleset.bossCategoryForRunWeek(9)).isEqualTo(BossCategory.STANDARD);
+        assertThat(ruleset.bossCategoryForRunWeek(10)).isEqualTo(BossCategory.ELITE);
+    }
+
+    /**
+     * The shape of the ladder, stated as the rules state it: a peak is always followed by a breather,
+     * and a run always opens on one. Week one counts as following the previous run's closing elite,
+     * which is why the ladder wraps rather than starting mid-slope.
+     */
+    @Test
+    void shouldFollowEveryEliteWithAMinor() {
+        assertThat(ruleset.bossCategoryForRunWeek(1)).isEqualTo(BossCategory.MINOR);
+
+        for (int week = 1; week < RUN_LENGTH_WEEKS; week++) {
+            if (ruleset.bossCategoryForRunWeek(week) == BossCategory.ELITE) {
+                assertThat(ruleset.bossCategoryForRunWeek(week + 1)).isEqualTo(BossCategory.MINOR);
+            }
+        }
+    }
+
+    /**
+     * The ladder is read by whoever holds a week index, and nothing guarantees that index stays inside
+     * the run: a week drawn before its run was opened, or a run length shortened under a campaign in
+     * progress, would both land outside. Clamping keeps that a duller boss rather than a crash.
+     */
+    @Test
+    void shouldClampWeekIndexesOutsideTheRun() {
+        assertThat(ruleset.bossCategoryForRunWeek(0)).isEqualTo(ruleset.bossCategoryForRunWeek(1));
+        assertThat(ruleset.bossCategoryForRunWeek(-3)).isEqualTo(ruleset.bossCategoryForRunWeek(1));
+        assertThat(ruleset.bossCategoryForRunWeek(99))
+            .isEqualTo(ruleset.bossCategoryForRunWeek(RUN_LENGTH_WEEKS));
     }
 
     @Test
