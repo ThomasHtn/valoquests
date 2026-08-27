@@ -22,6 +22,28 @@ export interface ChartSeries {
 }
 
 /**
+ * One arc of a half-donut gauge.
+ */
+export interface ChartGaugeSegment {
+  /**
+   * The arc's own weight, out of the sum of every segment's weight. Equal across every segment for
+   * a gauge whose slots must all read the same size regardless of what they hold (the food ring's
+   * days); a fill/track pair for a gauge reading a single percentage instead (attractivity).
+   */
+  readonly value: number;
+
+  /**
+   * The arc's fill.
+   */
+  readonly color: string;
+
+  /**
+   * Already-translated label, shown in the arc's own tooltip.
+   */
+  readonly label: string;
+}
+
+/**
  * One bar of a categorical bar chart.
  */
 export interface ChartBar {

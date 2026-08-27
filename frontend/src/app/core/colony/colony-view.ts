@@ -9,10 +9,16 @@ import {
   formatGauge,
   formatMultiplier,
   formatPopulation,
-  formatRate,
   formatSignedPopulation,
 } from './colony-format.utils';
-import { colonyTrackColors } from './colony-gauge.utils';
+import {
+  FOOD_SEGMENT_EMPTY_COLOR,
+  FOOD_SEGMENT_LAST_DAY_COLOR,
+  FOOD_SEGMENT_TODAY_COLOR,
+  foodSegmentPlayedColor,
+  PRESENCE_PIP_FULL_CLASS,
+  PRESENCE_PIP_PARTIAL_CLASS,
+} from './colony-gauge.utils';
 import { tierGlyphFor } from './colony-tier.utils';
 import {
   Colony,
@@ -22,14 +28,15 @@ import {
   ColonyWeek,
 } from './colony.model';
 import {
+  ColonyAttractivityView,
+  ColonyBatteryView,
   ColonyBossView,
   ColonyDeltaView,
   ColonyFoodDayView,
+  ColonyFoodRingView,
   ColonyPresencePipView,
   ColonyRunView,
   ColonyTierStepView,
-  ColonyTrackGlyph,
-  ColonyTrackView,
   RunDayParts,
 } from './colony-view.model';
 
@@ -40,22 +47,6 @@ import {
  * the hover card without wrapping.
  */
 const INITIALS_LENGTH = 3;
-
-/**
- * Morale from which the face in the socket smiles.
- *
- * Seventy: twenty points ahead of the fifty a run opens on, which is four net wins. A single fight
- * moves the gauge by three to seven, so the face is a statement about how the run is going rather
- * than about how last Monday went — it takes half a run of winning to earn the smile.
- */
-const MORALE_GOOD = 70;
-
-/**
- * Morale below which it frowns, close enough to the floor to say so.
- *
- * Forty: ten under the opening, which is about two net losses.
- */
-const MORALE_BAD = 40;
 
 /**
  * Morale a surviving boss costs, mirrored from `DefaultColonyRuleset#moraleForSurvivingBoss`.
@@ -274,15 +265,30 @@ export class ColonyView {
   });
 
   /**
-   * The three rails, food first.
+   * The turnout battery: one cell per roster member, lit by tonight's head count.
    */
-  public readonly tracks = computed<readonly ColonyTrackView[]>(() => {
+  public readonly battery = computed<ColonyBatteryView | null>(() => {
     const colony = this.colony();
-    if (colony === null) {
-      return [];
-    }
 
-    return [this.foodTrack(colony), this.presenceTrack(colony), this.moraleTrack(colony)];
+    return colony === null ? null : this.batteryView(colony);
+  });
+
+  /**
+   * The morale bar, read as what it buys: tonight's arrivals.
+   */
+  public readonly attractivity = computed<ColonyAttractivityView | null>(() => {
+    const colony = this.colony();
+
+    return colony === null ? null : this.attractivityView(colony);
+  });
+
+  /**
+   * The food ring: the week's seven evenings around the sum they add up to.
+   */
+  public readonly foodRing = computed<ColonyFoodRingView | null>(() => {
+    const colony = this.colony();
+
+    return colony === null ? null : this.foodRingView(colony);
   });
 
   /**
@@ -298,19 +304,18 @@ export class ColonyView {
   });
 
   /**
-   * The seven days behind the food stock, oldest first — the food rail's own track, and the strip its
-   * card draws at a size that can carry weekday letters.
+   * The food window's `foodWindowDays` slots, oldest first — the food rail's own track, and the
+   * ring the resource band draws it in.
    *
    * The counterpart of {@link presencePips} on the other rail: the stock is a rolling window, so its
-   * days are what say *when* the squad played. Each column is drawn against the best day of the
-   * window, which puts the seven on one scale without inventing a ceiling the stock does not have.
+   * days are what say *when* the squad played. Each played day is drawn against the best day of the
+   * window, which puts them on one scale without inventing a ceiling the stock does not have.
    *
-   * One pill per day the window actually holds, never a fixed seven. The strip was padded at the old
-   * end while a young run's window filled, so that it kept its width from day one — but on a run four
-   * days old that put three hollow pills before the first evening and left the opening Monday sitting
-   * in the middle of the rail, which reads as a broken strip rather than as days that have not
-   * happened. Pills are laid out `flex-1`, so four of them fill the rail exactly as seven do; only
-   * their width changes, and only over the opening week.
+   * Always `foodWindowDays` slots, never just what the window holds: a run still filling its first
+   * week gets its lived days padded out with {@link ColonyFoodDayView.isPlaceholder} slots trailing
+   * after the most recent one, so every pod keeps the same size around the ring from day one rather
+   * than the few lived days stretching to fill the whole ring, and the sweep still reads oldest to
+   * newest to not-lived-yet, left to right.
    */
   public readonly foodDays = computed<readonly ColonyFoodDayView[]>(() => {
     const colony = this.colony();
@@ -320,21 +325,46 @@ export class ColonyView {
 
     const best = this.bestHarvest(colony);
     const language = this.translation.language();
-    const expiring = this.expiringDay(colony);
 
-    return colony.foodWindow.map((entry) => ({
-      day: entry.day,
-      percentage: this.percentageOf(entry.harvest, best),
-      isToday: entry.day === colony.day,
-      isExpiring: entry.day === expiring,
-      ariaLabel: this.translation.translate(
-        entry.day === expiring ? 'colony.track.food.dayExpiring' : 'colony.track.food.day',
-        {
+    // Oldest first on the wire, kept in that order: the most recent day — the one still open,
+    // closing at tonight's reset — trails the sweep rather than leading it.
+    const lived = colony.foodWindow.map((entry, index, array) => {
+      const percentage = this.percentageOf(entry.harvest, best);
+      const isLast = index === array.length - 1;
+      const isToday = entry.day === colony.day;
+
+      return {
+        day: entry.day,
+        percentage,
+        isLast,
+        isToday,
+        isPlaceholder: false,
+        segmentColor: isLast
+          ? FOOD_SEGMENT_LAST_DAY_COLOR
+          : isToday
+            ? FOOD_SEGMENT_TODAY_COLOR
+            : percentage > 0
+              ? foodSegmentPlayedColor(percentage)
+              : FOOD_SEGMENT_EMPTY_COLOR,
+        ariaLabel: this.translation.translate('colony.track.food.day', {
           day: this.weekdayName(entry.day),
           food: formatPopulation(entry.harvest, language),
-        },
-      ),
+        }),
+      };
+    });
+
+    const placeholderCount = Math.max(0, colony.foodWindowDays - lived.length);
+    const placeholders = Array.from({ length: placeholderCount }, (_, index) => ({
+      day: `placeholder-${index}`,
+      percentage: 0,
+      isLast: false,
+      isToday: false,
+      isPlaceholder: true,
+      segmentColor: FOOD_SEGMENT_EMPTY_COLOR,
+      ariaLabel: this.translation.translate('colony.track.food.dayUnplayed'),
     }));
+
+    return [...lived, ...placeholders];
   });
 
   /**
@@ -438,111 +468,37 @@ export class ColonyView {
   }
 
   /**
-   * The food rail: what the week nets, and the seven evenings that put it there.
-   *
-   * The only rail with no bar, because food is the only resource with no ceiling — its track is the
-   * seven daily harvests {@link foodDays} draws, oldest first, with the one falling out tonight
-   * marked.
+   * The food ring: the week's seven evenings, and the small sum they add up to.
    *
    * The headline used to be the raw stock beside the efficiency as a bare factor, `440 ×8,00`, which
    * read as a multiplication with no operands. It is the weekly surplus instead — what the harvest
-   * nets once the town has eaten, signed and already the answer to "is tonight worth playing". The
-   * stock and the efficiency it is worth are still in the card, named this time, alongside what the
-   * town spends: `récolte − consommation = surplus`, the same sum spelled out in three rows rather
-   * than packed into a symbol beside the total.
+   * nets once the town has eaten, signed and already the answer to "is tonight worth playing" — with
+   * what it came from written above it: `récolte − consommation = surplus`, at the ring's own centre
+   * rather than packed into a symbol beside a total.
    *
    * @param colony - The colony.
-   * @returns The display-ready rail.
+   * @returns The display-ready ring.
    */
-  private foodTrack(colony: Colony): ColonyTrackView {
+  private foodRingView(colony: Colony): ColonyFoodRingView {
     const language = this.translation.language();
-    const colors = colonyTrackColors('FOOD');
-    const expiring = this.expiringHarvest(colony);
 
     return {
-      track: 'FOOD',
-      label: this.translation.translate('colony.track.food.name'),
-      hasBar: false,
-      percentage: 0,
-      secondaryPercentage: null,
-      isLive: false,
-      valueLabel: formatSignedPopulation(colony.weeklySurplus, language),
-      valueDeltaLabel:
-        expiring > 0
-          ? this.translation.translate('colony.track.food.expiring', {
-              food: formatSignedPopulation(-expiring, language),
-            })
-          : '',
-      ariaLabel: [
-        this.translation.translate('colony.track.food.aria', {
-          stock: formatPopulation(colony.foodStock, language),
-          days: colony.foodWindowDays,
-          efficiency: formatGauge(colony.efficiency, language),
-          feedable: formatPopulation(colony.feedablePopulation, language),
-        }),
-        expiring > 0
-          ? this.translation.translate('colony.track.food.ariaExpiring', {
-              food: formatPopulation(expiring, language),
-            })
-          : '',
-      ]
-        .filter((sentence) => sentence !== '')
-        .join(' '),
-      legend: [],
-      // The week's whole sum, spelled out one row per term: what came in, what one point of it
-      // feeds, what the town spends, so the signed total beside the gauge is never a number without
-      // its own arithmetic.
-      facts: [
-        {
-          label: this.translation.translate('colony.track.food.stock'),
-          value: formatPopulation(colony.foodStock, language),
-        },
-        {
-          label: this.translation.translate('colony.track.food.efficiency'),
-          value: this.translation.translate('colony.track.food.efficiencyValue', {
-            inhabitants: formatGauge(colony.efficiency, language),
-          }),
-        },
-        {
-          label: this.translation.translate('colony.track.food.consumption'),
-          value: formatPopulation(colony.weeklyConsumption, language),
-        },
-      ],
+      days: this.foodDays(),
+      consumptionLabel: formatPopulation(colony.weeklyConsumption, language),
+      surplusLabel: formatSignedPopulation(colony.weeklySurplus, language),
+      efficiencyLabel: this.translation.translate('colony.track.food.efficiencyValue', {
+        inhabitants: formatGauge(colony.efficiency, language),
+      }),
+      efficiencyFactorLabel: formatMultiplier(colony.efficiency, language),
+      ariaLabel: this.translation.translate('colony.track.food.aria', {
+        stock: formatPopulation(colony.foodStock, language),
+        days: colony.foodWindowDays,
+        efficiency: formatGauge(colony.efficiency, language),
+        feedable: formatPopulation(colony.feedablePopulation, language),
+      }),
       description: this.translation.translate('colony.track.food.description'),
-      note: this.translation.translate('colony.track.food.note'),
-      glyph: 'FOOD',
-      socketClass: colors.fill,
-      primaryClass: colors.fill,
-      secondaryClass: '',
-      textClass: colors.text,
+      purpose: this.translation.translate('colony.track.food.note'),
     };
-  }
-
-  /**
-   * Returns the day tonight drops out of the window, or `null` when nothing is being lost.
-   *
-   * A window still filling loses nothing: a run six days old has simply not lived a seventh day yet,
-   * and marking its opening day as expiring would announce a loss that is not coming.
-   *
-   * @param colony - The colony.
-   * @returns The expiring day, as `YYYY-MM-DD`, or `null`.
-   */
-  private expiringDay(colony: Colony): string | null {
-    return colony.foodWindow.length < colony.foodWindowDays
-      ? null
-      : (colony.foodWindow[0]?.day ?? null);
-  }
-
-  /**
-   * Returns the harvest tonight drops out of the window, zero while the window is still filling.
-   *
-   * @param colony - The colony.
-   * @returns The expiring harvest.
-   */
-  private expiringHarvest(colony: Colony): number {
-    return colony.foodWindow.length < colony.foodWindowDays
-      ? 0
-      : (colony.foodWindow[0]?.harvest ?? 0);
   }
 
   /**
@@ -571,122 +527,70 @@ export class ColonyView {
   }
 
   /**
-   * The turnout rail: how many of the squad turned up, against the roster frozen on the run.
+   * The turnout battery: a cell per roster member, lit bottom-up by tonight's head count.
+   *
+   * Read as a charge rather than a fraction: `5 / 7` made a reader do the division themselves to
+   * learn what turning up was worth, where a level read at a glance and the multiplier beside it —
+   * still the figure that matters, since it is what turnout actually buys — only confirms it.
    *
    * @param colony - The colony.
-   * @returns The display-ready rail.
+   * @returns The display-ready battery.
    */
-  private presenceTrack(colony: Colony): ColonyTrackView {
-    const colors = colonyTrackColors('PRESENCE');
+  private batteryView(colony: Colony): ColonyBatteryView {
     const presence = colony.presence;
     const language = this.translation.language();
+    const cells = Array.from(
+      { length: presence.rosterSize },
+      (_, index) => index < presence.present,
+    );
 
     return {
-      track: 'PRESENCE',
-      label: this.translation.translate('colony.track.presence.name'),
-      hasBar: true,
-      percentage: this.percentageOf(presence.present, presence.rosterSize),
-      secondaryPercentage: null,
-      isLive: true,
-      valueLabel: `${presence.present} / ${presence.rosterSize}`,
-      valueDeltaLabel: '',
+      cellCount: presence.rosterSize,
+      cells,
+      isFull: presence.rosterSize > 0 && presence.present >= presence.rosterSize,
+      multiplierLabel: formatMultiplier(presence.multiplier, language),
       ariaLabel: this.translation.translate('colony.track.presence.aria', {
         present: presence.present,
         roster: presence.rosterSize,
         threshold: presence.threshold,
       }),
-      // The card shows the roster pip by pip instead of a swatch: who is missing is the whole point.
-      legend: [],
-      // What the head count buys, since a count on its own does not say what turning up is worth.
-      facts: [
-        {
-          label: this.translation.translate('colony.track.presence.bonus'),
-          value: formatMultiplier(presence.multiplier, language),
-        },
-      ],
       description: this.translation.translate('colony.track.presence.description', {
         threshold: presence.threshold,
       }),
-      note: this.translation.translate('colony.track.presence.purpose', {
+      purpose: this.translation.translate('colony.track.presence.purpose', {
         roster: presence.rosterSize,
       }),
-      glyph: 'PRESENCE',
-      socketClass: colors.fill,
-      primaryClass: colors.fill,
-      secondaryClass: '',
-      textClass: colors.text,
     };
   }
 
   /**
-   * The morale rail: the speed the town moves at.
+   * The attractivity bar: what morale is worth, read as tonight's arrivals rather than as a level.
    *
-   * A plain fill running the whole track, so the shape agrees with the `55 / 100` written beside it.
-   * The floor used to be painted as a first band and is not drawn any more, but it is no secret
-   * either: the rules page states the range in prose, and a page hiding what another page prints is
-   * not withholding anything, only disagreeing with itself.
-   *
-   * The rail carries the speed that morale buys, in the same slot turnout carries its multiplier.
-   * Morale exists for that one thing and for nothing else, and a bar reading `55 / 100` beside a
-   * face said how the squad felt while saying nothing about what it changed — which is the whole of
-   * why the number is on the page.
+   * The bar still fills on morale itself — the fill is what a reader watches move fight over fight —
+   * but the figure beside it used to be the same `55 / 100` the bar already draws, or the raw
+   * percentage of the gap it closes, neither of which says what a reader actually wants to know:
+   * how many are moving in tonight. `colony.populationChange` already carries that, read a second
+   * time as this bar's own cause rather than only as the hexagon's consequence.
    *
    * @param colony - The colony.
-   * @returns The display-ready rail.
+   * @returns The display-ready bar.
    */
-  private moraleTrack(colony: Colony): ColonyTrackView {
-    const colors = colonyTrackColors('MORALE');
+  private attractivityView(colony: Colony): ColonyAttractivityView {
     const morale = colony.morale;
     const language = this.translation.language();
 
     return {
-      track: 'MORALE',
-      label: this.translation.translate('colony.track.morale.name'),
-      hasBar: true,
       percentage: this.percentageOf(morale.value, morale.ceiling),
-      secondaryPercentage: null,
-      isLive: true,
-      valueLabel: `${Math.round(morale.value)} / ${Math.round(morale.ceiling)}`,
-      valueDeltaLabel: '',
+      moraleLabel: `${Math.round(morale.value)} / ${Math.round(morale.ceiling)}`,
+      moraleValueLabel: `${Math.round(morale.value)}`,
       ariaLabel: this.translation.translate('colony.track.morale.aria', {
         value: Math.round(morale.value),
         ceiling: Math.round(morale.ceiling),
-        percent: formatRate(morale.growthPercentPerNight, language),
+        arrivals: formatSignedPopulation(colony.populationChange, language),
       }),
-      legend: [],
-      // What morale actually buys: not its own growth, but how much of tonight's population gap
-      // closes. Read alone as "7,5 %/nuit" this was taken for morale climbing on its own; named
-      // against the gap it closes, it says what the figure is a share of.
-      facts: [
-        {
-          label: this.translation.translate('colony.track.morale.speedLabel'),
-          value: this.translation.translate('colony.track.morale.speedValue', {
-            percent: formatRate(morale.growthPercentPerNight, language),
-          }),
-        },
-      ],
       description: this.translation.translate('colony.track.morale.description'),
-      note: this.translation.translate('colony.track.morale.purpose'),
-      glyph: this.moraleGlyph(morale.value),
-      socketClass: colors.fill,
-      primaryClass: colors.fill,
-      secondaryClass: '',
-      textClass: colors.text,
+      purpose: this.translation.translate('colony.track.morale.purpose'),
     };
-  }
-
-  /**
-   * Picks the face the morale socket wears.
-   *
-   * @param morale - Today's morale.
-   * @returns The glyph.
-   */
-  private moraleGlyph(morale: number): ColonyTrackGlyph {
-    if (morale >= MORALE_GOOD) {
-      return 'MORALE_GOOD';
-    }
-
-    return morale < MORALE_BAD ? 'MORALE_BAD' : 'MORALE_NEUTRAL';
   }
 
   /**
@@ -696,12 +600,11 @@ export class ColonyView {
    * @returns The display-ready pip.
    */
   private toPip(player: ColonyPresencePlayer): ColonyPresencePipView {
-    const colors = colonyTrackColors('PRESENCE');
     const fillClass =
       player.state === 'FULL'
-        ? colors.fill
+        ? PRESENCE_PIP_FULL_CLASS
         : player.state === 'PARTIAL'
-          ? colors.muted
+          ? PRESENCE_PIP_PARTIAL_CLASS
           : 'bg-surface-700';
 
     return {

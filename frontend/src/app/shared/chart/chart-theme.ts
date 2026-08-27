@@ -1,8 +1,10 @@
 import {
+  ArcElement,
   BarController,
   BarElement,
   CategoryScale,
   Chart,
+  DoughnutController,
   LinearScale,
   LineController,
   LineElement,
@@ -97,9 +99,11 @@ export function registerChartComponents(): void {
   Chart.register(
     LineController,
     BarController,
+    DoughnutController,
     LineElement,
     PointElement,
     BarElement,
+    ArcElement,
     LinearScale,
     CategoryScale,
     Tooltip,
@@ -120,6 +124,30 @@ export function registerChartComponents(): void {
 function token(variable: string, fallback: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
   return value || fallback;
+}
+
+/**
+ * Resolves any CSS colour expression — a custom property, a `color-mix()`, anything the cascade
+ * understands — into the literal value the browser computed for it.
+ *
+ * `token()` above only reads a bare custom property; this is the general form, for a caller
+ * handing Chart.js a whole expression such as `color-mix(in oklab, var(--color-brand-500) 15%,
+ * transparent)`. Canvas's `fillStyle` cannot resolve `var()` or an unresolved `color-mix()` itself
+ * — it wants a value already computed, which is why every colour this app hands to Chart.js has to
+ * pass through here first rather than being written straight into a dataset.
+ *
+ * @param expression - Any valid CSS colour, as a string.
+ * @returns The resolved literal colour, in the form `getComputedStyle` reports it (`rgb(...)` /
+ *   `rgba(...)`).
+ */
+export function resolveCssColor(expression: string): string {
+  const probe = document.createElement('span');
+  probe.style.color = expression;
+  document.body.appendChild(probe);
+  const resolved = getComputedStyle(probe).color;
+  probe.remove();
+
+  return resolved;
 }
 
 /**

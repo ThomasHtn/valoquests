@@ -1,69 +1,45 @@
 /**
- * The three tracks the resource band draws, in the order it draws them.
- *
- * Not three gauges of the same kind: food is a quantity read against two ceilings, turnout is a head
- * count read against the frozen roster, morale is a speed read against a hundred. They share a
- * grammar — glyph socket, rail, figure, subtitle — and nothing else.
+ * Tailwind utility of a turnout pip that cleared the threshold.
  */
-export type ColonyTrack = 'FOOD' | 'PRESENCE' | 'MORALE';
+export const PRESENCE_PIP_FULL_CLASS = 'bg-accent-cyan';
 
 /**
- * The Tailwind utilities one track is drawn in.
+ * Tailwind utility of a turnout pip that played, but under the threshold.
  */
-export interface ColonyTrackColors {
-  /**
-   * The band carrying the track's own value.
-   */
-  readonly fill: string;
-
-  /**
-   * The same hue, muted: what the town already eats on the food rail, the unreachable floor on the
-   * morale one. Both are the track's own quantity, so both are its own colour.
-   */
-  readonly muted: string;
-
-  /**
-   * The figure set beside the rail, and the glyph in the socket.
-   */
-  readonly text: string;
-}
+export const PRESENCE_PIP_PARTIAL_CLASS = 'bg-accent-cyan/30';
 
 /**
- * Tailwind utilities each track is drawn in.
- *
- * Food keeps the brand amber the population is drawn in, because it is the same quantity seen twice:
- * the bar says what the town eats and what it has left to grow on, and the hexagon beside it says how
- * far that has got. Turnout and morale take accents of their own so a rail is never mistaken for the
- * figure it feeds.
+ * Colour of the food ring's segment for the most recent day of the window — the one still open,
+ * closing at tonight's reset. The one segment the ring must draw attention to, which is worth a
+ * colour no other day on the ring wears.
  */
-const TRACK_COLORS: Record<ColonyTrack, ColonyTrackColors> = {
-  FOOD: {
-    fill: 'bg-brand-500',
-    muted: 'bg-brand-500/30',
-    text: 'text-brand-500',
-  },
-  PRESENCE: {
-    fill: 'bg-accent-cyan',
-    muted: 'bg-accent-cyan/30',
-    text: 'text-accent-cyan',
-  },
-  MORALE: {
-    fill: 'bg-accent-violet',
-    muted: 'bg-accent-violet/35',
-    text: 'text-accent-violet',
-  },
-};
+export const FOOD_SEGMENT_LAST_DAY_COLOR = 'var(--color-danger)';
 
 /**
- * Resolves the utilities one track is drawn in.
- *
- * Shared by the campaign page's resource band and the overview's summary of it, so a track is the
- * same colour on both screens — the summary exists precisely to be recognised again on the page it
- * links to.
- *
- * @param track - Which track this is.
- * @returns The fill, muted and text utilities.
+ * Colour of the food ring's segment for the day actually being lived, when that is not also the
+ * last day of the window — a live marker distinct from the countdown red, since the two can land on
+ * different segments once today's harvest has not posted yet.
  */
-export function colonyTrackColors(track: ColonyTrack): ColonyTrackColors {
-  return TRACK_COLORS[track];
+export const FOOD_SEGMENT_TODAY_COLOR = 'var(--color-brand-400)';
+
+/**
+ * Colour of the food ring's segment for a day nobody played, or not yet lived.
+ */
+export const FOOD_SEGMENT_EMPTY_COLOR =
+  'color-mix(in oklab, var(--color-brand-500) 15%, transparent)';
+
+/**
+ * Colour of a played day, brighter the closer its harvest is to the window's best day.
+ *
+ * The ring used to carry this as the pod's own opacity; the conic-gradient segment reads the same
+ * share as a colour-mix percentage instead, so a strong evening still stands out among duller ones
+ * without the ring needing a second visual channel.
+ *
+ * @param percentage - Share of the window's best day, in `[0, 100]`.
+ * @returns The `color-mix` expression the segment's `conic-gradient` stop is drawn in.
+ */
+export function foodSegmentPlayedColor(percentage: number): string {
+  const alpha = 30 + percentage * 0.5;
+
+  return `color-mix(in oklab, var(--color-brand-500) ${alpha}%, transparent)`;
 }

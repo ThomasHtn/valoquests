@@ -3,6 +3,7 @@ import { Component, computed, effect, ElementRef, inject, signal } from '@angula
 import {
   LucideBuilding2,
   LucideCheck,
+  LucideGauge,
   LucideHammer,
   LucideHouse,
   LucideLandmark,
@@ -220,6 +221,7 @@ interface CampaignMapRow {
     Tooltip,
     LucideBuilding2,
     LucideCheck,
+    LucideGauge,
     LucideHammer,
     LucideHouse,
     LucideLandmark,

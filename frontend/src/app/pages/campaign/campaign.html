@@ -159,13 +159,14 @@
             <div class="flex flex-col gap-3 lg:flex-row lg:items-stretch">
               <app-colony-resource-band
                 (curveOpen)="openCurve()"
+                [attractivity]="colony.attractivity()"
+                [battery]="colony.battery()"
                 [delta]="colony.delta()"
-                [foodDays]="colony.foodDays()"
+                [foodRing]="colony.foodRing()"
                 [hexagonAriaLabel]="colony.hexagonAriaLabel()"
                 [populationLabel]="colony.populationLabel()"
                 [populationPercentage]="colony.populationPercentage()"
                 [presencePips]="colony.presencePips()"
-                [tracks]="colony.tracks()"
               />
             </div>
           </div>
@@ -547,7 +548,10 @@
                                         {{ boss.materialsLabel }}
                                       </dd>
                                       @if (boss.efficiencyLabel) {
-                                        <dt class="label-caption text-text-muted">
+                                        <dt
+                                          class="flex items-center gap-1 label-caption text-text-muted"
+                                        >
+                                          <svg class="size-3" lucideGauge></svg>
                                           {{ 'colony.boss.efficiency' | translate }}
                                         </dt>
                                         <dd

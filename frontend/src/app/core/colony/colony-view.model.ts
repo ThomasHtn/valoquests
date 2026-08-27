@@ -1,15 +1,4 @@
 import { ColonyPresenceState, ColonyTierState, ColonyWeekOutcomeState } from './colony.model';
-import { ColonyTrack } from './colony-gauge.utils';
-
-/**
- * The glyph seated in a rail's hexagonal socket.
- *
- * Morale carries a face rather than a heart or a banner: a heart is hit points, which is exactly the
- * bar this replaced, and a banner does not say whether the morale is good. The three faces are set at
- * what a single fight moves in a week, so the glyph changes about as often as the fight does.
- */
-export type ColonyTrackGlyph =
-  'FOOD' | 'PRESENCE' | 'MORALE_GOOD' | 'MORALE_NEUTRAL' | 'MORALE_BAD';
 
 /**
  * The silhouette one step of the ladder wears.
@@ -21,187 +10,194 @@ export type ColonyTrackGlyph =
 export type ColonyTierGlyph = 'CAMP' | 'HOUSES' | 'SKYLINE' | 'MONUMENT';
 
 /**
- * One swatch of a rail's hover card: a mark in the band's own colour, and what that band is worth.
+ * One day of the food week ring: a harvest, drawn as a share of the best day of the window.
  *
- * Each swatch is worth <b>the width of its own band</b>, never the point where it ends. Writing the
- * whole stock against the bright band, which is only the surplus, gave a reader who lined the two up
- * a number that was not the one they were looking at.
- */
-export interface ColonyTrackLegendView {
-  readonly colorClass: string;
-  readonly label: string;
-}
-
-/**
- * One named figure of a rail's hover card: what it is, and what it is worth.
- *
- * Where a rail's track carries a shape a reader can only estimate, this carries the numbers behind
- * it. Food uses it for the three figures its pills cannot state — what one point of food is worth in
- * inhabitants, what the town needs, and what is left over — which is the whole of what the card is
- * for now that the week itself is on the rail.
- */
-export interface ColonyTrackFactView {
-  readonly label: string;
-  readonly value: string;
-}
-
-/**
- * One rail of the resource band, resolved into everything the page lays out.
- *
- * The band draws three rails and writes no label on any of them: the glyph in the socket names the
- * rail, and the figure and subtitle on its trailing edge say what it is worth. `label` stays in the
- * markup for assistive technology, which has neither a glyph nor a hover.
- */
-export interface ColonyTrackView {
-  readonly track: ColonyTrack;
-  readonly glyph: ColonyTrackGlyph;
-
-  /**
-   * Already-translated rail name, for assistive technology only.
-   */
-  readonly label: string;
-
-  /**
-   * Whether the rail draws a bar at all.
-   *
-   * False on food alone. A bar states a level against a ceiling, and the food stock is a rolling
-   * seven-day sum with no ceiling to state it against — every denominator tried was either the
-   * population figure seen a second time or a number invented for the occasion. That rail draws its
-   * window day by day instead, which is what the stock actually is.
-   */
-  readonly hasBar: boolean;
-
-  /**
-   * Where the fill ends: the turnout out of the frozen roster, or the morale out of its ceiling.
-   * Ignored off a rail with a bar.
-   */
-  readonly percentage: number;
-
-  /**
-   * Where a second band ends, or `null` on a single-band rail, which all three currently are.
-   */
-  readonly secondaryPercentage: number | null;
-
-  /**
-   * Whether the fill is a value still moving, which is what earns it the travelling highlight.
-   *
-   * False on food alone, which draws no bar at all.
-   */
-  readonly isLive: boolean;
-
-  /**
-   * The fact, on the rail's trailing edge.
-   *
-   * A part of a whole where the rail has one — `5 / 7` turnout, `55 / 100` morale — and a plain
-   * total where it does not: food is a rolling seven-day sum with no ceiling, so its rail carries
-   * the stock itself. The fraction form is reserved for genuine parts of a whole. Food briefly wrote
-   * `surplus / consumption` in it, and a reader who knew the other two rails read a stock not quite
-   * half full when neither figure was the whole.
-   */
-  readonly valueLabel: string;
-
-  /**
-   * What the night takes off that fact, under it, or empty when nothing is coming off.
-   *
-   * Only food has one: its oldest day expires tonight, and that is the single thing about a rolling
-   * window a reader has to know before deciding whether to play.
-   */
-  readonly valueDeltaLabel: string;
-
-  /**
-   * Already-translated sentence the rail's hover card shows, and the button's own accessible name —
-   * so nothing on the band exists only on hover.
-   */
-  readonly ariaLabel: string;
-
-  /**
-   * Swatches the rail's hover card lists, empty on a rail whose card shows something else.
-   */
-  readonly legend: readonly ColonyTrackLegendView[];
-
-  /**
-   * Named figures the rail's hover card lists, empty on a rail whose card shows something else.
-   */
-  readonly facts: readonly ColonyTrackFactView[];
-
-  /**
-   * Already-translated sentence opening the card: how this resource is obtained.
-   */
-  readonly description: string;
-
-  /**
-   * Already-translated sentence closing the card: what this resource is for.
-   */
-  readonly note: string;
-
-  /**
-   * Tailwind background utility of the rim around the rail's glyph socket.
-   *
-   * The rail's own colour at full strength, on all three rails, so the three sockets read as one
-   * family. Deliberately not the first band's utility: that one is muted on two rails out of three,
-   * which drew a bright cyan rim beside two washed-out ones.
-   */
-  readonly socketClass: string;
-
-  /**
-   * Tailwind background utility of the first band.
-   */
-  readonly primaryClass: string;
-
-  /**
-   * Tailwind background utility of the second band, empty on a single-band rail.
-   */
-  readonly secondaryClass: string;
-
-  readonly textClass: string;
-}
-
-/**
- * One day of the food week strip: a harvest, drawn as a share of the best day of the window.
- *
- * The food rail's own track, since that rail has no bar — the counterpart of
- * {@link ColonyPresencePipView}, which is the other rail whose card the band fills itself. The stock
- * is a rolling seven-day window rather than a reserve, so these seven pills are the honest picture
- * of it: a total says how much food there is, the pills say which evenings put it there and which
- * one is about to be forgotten.
- *
- * Each pill fills along its own length rather than rising in place. The rail is fourteen pixels
- * tall and around seventy wide per day, so height gave an evening worth a fifth of the week under
- * three pixels — a magnitude nobody could read, and one that could not even be told apart from an
- * evening nobody played.
- *
- * There is one pill per day the window holds, which is fewer than seven only while a young run's
- * window is still filling. No hollow pill ever stands in for a day before the run began: the strip
- * is laid out `flex-1`, so four pills fill the rail exactly as seven do.
+ * The stock is a rolling seven-day window rather than a reserve, so these seven pods are the
+ * honest picture of it: a total says how much food there is, the pods say which evenings put it
+ * there. The ring always draws a fixed `foodWindowDays` slots, newest first from the top going
+ * clockwise, so every pod keeps the same size around the circle: a young run's window, still
+ * filling, pads the remainder with {@link isPlaceholder} slots rather than stretching what it has
+ * around the whole circle.
  */
 export interface ColonyFoodDayView {
   /**
-   * ISO day, and the `@for` track expression's identity.
+   * ISO day, or a synthetic key for a placeholder slot — the `@for` track expression's identity.
    */
   readonly day: string;
 
   /**
-   * How far the pill fills, as a share of the window's best day, in `[0, 100]`.
+   * How far the pod fills, as a share of the window's best day, in `[0, 100]`.
    */
   readonly percentage: number;
 
   /**
-   * Whether this is the day being lived, which the strip marks so the row can be read from it.
+   * Whether this is the most recent day of the window — the one still open, closing at tonight's
+   * reset — which the ring colours to mark it. Set from the day's position in the window, never
+   * from the calendar: what the colour says is "tonight's rollover empties this one", not "this is
+   * today".
+   */
+  readonly isLast: boolean;
+
+  /**
+   * Whether this is the day actually being lived, by the calendar rather than by position. Never
+   * true for a placeholder. Marked with a live shimmer rather than a colour of its own, since it can
+   * land on the same segment {@link isLast} already colours, or, once the window is full and today's
+   * harvest has not posted yet, on a different one entirely.
    */
   readonly isToday: boolean;
 
   /**
-   * Whether tonight drops this day out of the window.
-   *
-   * Never true while the window is still filling, where the run has simply not lived seven days yet
-   * and nothing is being lost.
+   * Whether this slot pads a window still filling: a day the run has not lived yet, rather than one
+   * it lived without playing.
    */
-  readonly isExpiring: boolean;
+  readonly isPlaceholder: boolean;
 
   /**
-   * Already-translated day and harvest, since the column itself carries neither in text.
+   * Colour the ring's conic-gradient draws this day's segment in, already resolved from
+   * {@link isLast}, {@link isPlaceholder} and {@link percentage} — see `colony-gauge.utils`.
+   */
+  readonly segmentColor: string;
+
+  /**
+   * Already-translated day and harvest, since the pod itself carries neither in text. Empty on a
+   * placeholder slot, which has nothing to say.
    */
   readonly ariaLabel: string;
+}
+
+/**
+ * The turnout rail, redrawn as a charge rather than a fraction: one cell of the battery per player
+ * the roster is frozen on, lit bottom-up by how many turned up tonight.
+ *
+ * Read as a level rather than a count on purpose — the same reason a fuel gauge outsells a litre
+ * counter: what a reader needs to decide whether tonight is worth playing is "how full", not the
+ * two figures a fraction makes them subtract themselves.
+ */
+export interface ColonyBatteryView {
+  /**
+   * Cells the battery is built from — the roster size frozen on the run.
+   */
+  readonly cellCount: number;
+
+  /**
+   * One flag per cell, lit from index zero: `cells[i]` is lit when `i` is under tonight's turnout.
+   *
+   * Resolved here rather than left to the template, which has no clean way to build a fixed-length
+   * array from a count alone.
+   */
+  readonly cells: readonly boolean[];
+
+  /**
+   * Whether every cell is lit, which is what earns the battery its glow.
+   */
+  readonly isFull: boolean;
+
+  /**
+   * Already-formatted factor the charge is worth on tonight's harvest, `×1,43`.
+   */
+  readonly multiplierLabel: string;
+
+  /**
+   * Already-translated sentence the battery's hover card shows, and its own accessible name.
+   */
+  readonly ariaLabel: string;
+
+  /**
+   * Already-translated sentence opening the card: how the charge is built.
+   */
+  readonly description: string;
+
+  /**
+   * Already-translated sentence closing the card: what the charge is spent on.
+   */
+  readonly purpose: string;
+}
+
+/**
+ * The morale rail: what it is, read as a fill against its own ceiling — what it buys is the
+ * band's own arrival mark, drawn once the food dome and this one are both on the page.
+ */
+export interface ColonyAttractivityView {
+  /**
+   * Where the bar's fill ends: morale itself, out of its ceiling.
+   */
+  readonly percentage: number;
+
+  /**
+   * Already-formatted morale itself, `50 / 100` — what the hover card and assistive technology
+   * read the bar's fill as.
+   */
+  readonly moraleLabel: string;
+
+  /**
+   * Morale alone, `50` — the dome's own headline, read in its hollow against the fill already
+   * drawing it out of its ceiling, which is why the ceiling is not repeated in text.
+   */
+  readonly moraleValueLabel: string;
+
+  /**
+   * Already-translated sentence the bar's hover card shows, and its own accessible name.
+   */
+  readonly ariaLabel: string;
+
+  /**
+   * Already-translated sentence opening the card: how morale moves.
+   */
+  readonly description: string;
+
+  /**
+   * Already-translated sentence closing the card: what morale buys.
+   */
+  readonly purpose: string;
+}
+
+/**
+ * The food rail, redrawn as a ring: the week's seven evenings arranged around the stock they add
+ * up to, and the stock itself read as the small sum it actually is — a harvest, a consumption, and
+ * what is left once the town has eaten.
+ */
+export interface ColonyFoodRingView {
+  /**
+   * The window's own days, oldest first — the ring's own track, positioned by the template.
+   */
+  readonly days: readonly ColonyFoodDayView[];
+
+  /**
+   * Already-formatted weekly consumption, what the town eats regardless of what it plays.
+   */
+  readonly consumptionLabel: string;
+
+  /**
+   * Already-formatted, signed weekly surplus — the ring centre's one bold figure.
+   */
+  readonly surplusLabel: string;
+
+  /**
+   * Already-formatted efficiency, for the hover card alone: what one point of stock is worth.
+   */
+  readonly efficiencyLabel: string;
+
+  /**
+   * Efficiency as the bare factor it is, `×8,00` — read beside the dome's own title, since it is
+   * what materials from challenges and bosses buy and is otherwise not shown anywhere the page
+   * does not need a hover to reach.
+   */
+  readonly efficiencyFactorLabel: string;
+
+  /**
+   * Already-translated sentence the ring's hover card shows, and its own accessible name.
+   */
+  readonly ariaLabel: string;
+
+  /**
+   * Already-translated sentence opening the card: how food is harvested.
+   */
+  readonly description: string;
+
+  /**
+   * Already-translated sentence closing the card: what food is for.
+   */
+  readonly purpose: string;
 }
 
 /**

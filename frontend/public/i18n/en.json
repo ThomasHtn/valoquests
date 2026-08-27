@@ -274,8 +274,7 @@
       "food": {
         "name": "Food",
         "day": "{{day}}: {{food}} harvested",
-        "dayExpiring": "{{day}}: {{food}} harvested, forgotten tonight",
-        "expiring": "{{food}} tonight",
+        "dayUnplayed": "Day not yet lived",
         "description": "Every night, damage dealt in matches turns into food; the more of the squad plays, the bigger the harvest. It keeps for 7 days before being lost.",
         "stock": "Stock (7 days)",
         "efficiency": "1 food feeds",
@@ -283,8 +282,7 @@
         "consumption": "Consumption / week",
         "surplus": "Surplus",
         "note": "Each point of food carries further the more materials the squad has gathered, by clearing challenges and beating bosses. The town holds on its consumption and grows on its surplus.",
-        "aria": "Food: {{stock}} in stock, brought in over the last {{days}} days. Each point of food feeds {{efficiency}} inhabitants, which is {{feedable}} feedable.",
-        "ariaExpiring": "{{food}} drop out of the window tonight."
+        "aria": "Food: {{stock}} in stock, brought in over the last {{days}} days. Each point of food feeds {{efficiency}} inhabitants, which is {{feedable}} feedable."
       },
       "presence": {
         "name": "Turnout",
@@ -294,12 +292,13 @@
         "aria": "Turnout: {{present}} of {{roster}} players played today. A day needs {{threshold}} raw damage to count."
       },
       "morale": {
-        "name": "Morale",
+        "name": "Attractivity",
         "description": "A defeated boss raises morale (+3 minor, +5 standard, +7 elite); a surviving boss lowers it (−7).",
         "purpose": "It sets how fast the population catches up to what the food can feed: at 100 morale, the gap closes 15% every night.",
-        "speedLabel": "Gap closed tonight",
-        "speedValue": "{{percent}}%",
-        "aria": "Morale: {{value}} of {{ceiling}}, closing {{percent}} % of the gap tonight."
+        "aria": "Attractivity: morale {{value}} of {{ceiling}}, {{arrivals}} inhabitants tonight."
+      },
+      "arrivals": {
+        "name": "Arrivals"
       }
     }
   },
