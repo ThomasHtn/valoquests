@@ -101,17 +101,6 @@ export interface ColonyTrackView {
   readonly valueLabel: string;
 
   /**
-   * The factor that fact is worth, set beside it in a smaller size, or empty on a rail whose value
-   * carries no factor of its own.
-   *
-   * Two of the three rails have one, and in both cases it is the reason to read the rail at all: a
-   * head count does not say what tonight's harvest is worth, and a morale does not say what it
-   * speeds up. Food carries the efficiency here, which is what turns its stock into the inhabitants
-   * the hexagon counts.
-   */
-  readonly multiplierLabel: string;
-
-  /**
    * What the night takes off that fact, under it, or empty when nothing is coming off.
    *
    * Only food has one: its oldest day expires tonight, and that is the single thing about a rolling
@@ -136,7 +125,12 @@ export interface ColonyTrackView {
   readonly facts: readonly ColonyTrackFactView[];
 
   /**
-   * One already-translated line closing that card, empty when there is nothing to add.
+   * Already-translated sentence opening the card: how this resource is obtained.
+   */
+  readonly description: string;
+
+  /**
+   * Already-translated sentence closing the card: what this resource is for.
    */
   readonly note: string;
 
@@ -310,8 +304,8 @@ export interface ColonyBossView {
   readonly materialsLabel: string;
 
   /**
-   * Already-formatted efficiency those materials buy back, as the factor it is (`×0,27`): empty
-   * wherever `materialsLabel` is, since there is nothing to convert on a week that settled nothing.
+   * Already-formatted efficiency those materials add to the town's rate (`+0,27`), never a factor:
+   * empty wherever `materialsLabel` is, since there is nothing to add on a week that settled nothing.
    *
    * Lives in the hover card only, beside the materials figure it explains — the tile itself stays
    * priced in materials alone, the one currency the map and the ladder share.

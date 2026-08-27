@@ -69,6 +69,20 @@ export function formatMultiplier(value: number, language: 'fr' | 'en'): string {
 }
 
 /**
+ * Formats an efficiency gain as the addition it is to the base rate (`+0,27`).
+ *
+ * A boss's materials raise `efficiency` by this amount permanently — they add to the rate rather
+ * than multiply it, which is why this is prefixed with `+` and not `×`.
+ *
+ * @param value - The efficiency gain to format.
+ * @param language - The app language whose decimal separator to use.
+ * @returns The gain, prefixed with `+`.
+ */
+export function formatEfficiencyGain(value: number, language: 'fr' | 'en'): string {
+  return `+${formatGauge(value, language)}`;
+}
+
+/**
  * Formats a rate to one decimal (`8,3`).
  *
  * One decimal rather than the two a multiplier gets: the morale rate moves by twentieths of a point

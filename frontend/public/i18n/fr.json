@@ -246,7 +246,7 @@
     },
     "materials": "Matériaux",
     "materialsPending": "+{{materials}} lundi",
-    "population": "Population",
+    "population": "Habitants",
     "presence": {
       "FULL": "{{name}} a joué aujourd'hui",
       "PARTIAL": "{{name}} a joué, sous le seuil",
@@ -276,9 +276,11 @@
         "day": "{{day}} : {{food}} de récolte",
         "dayExpiring": "{{day}} : {{food}} de récolte, oubliés cette nuit",
         "expiring": "{{food}} cette nuit",
+        "description": "Chaque soir, les dégâts encaissés en match rapportent de la nourriture ; plus l'escouade est nombreuse à jouer, plus la récolte est multipliée. Elle se garde 7 jours avant d'être perdue.",
+        "stock": "Stock (7 jours)",
         "efficiency": "1 nourriture nourrit",
         "efficiencyValue": "{{inhabitants}} habitants",
-        "consumption": "Consommation",
+        "consumption": "Consommation / semaine",
         "surplus": "Surplus",
         "note": "Chaque nourriture porte d'autant plus loin que le groupe a amassé de matériaux, en validant les défis et en battant les boss. La ville tient sur sa consommation et grandit sur son surplus.",
         "aria": "Nourriture : {{stock}} en stock, apportés par les {{days}} derniers jours. Chaque nourriture nourrit {{efficiency}} habitants, soit {{feedable}} nourrissables.",
@@ -286,12 +288,17 @@
       },
       "presence": {
         "name": "Présence",
+        "description": "Un·e joueur·se compte dès qu'il ou elle dépasse {{threshold}} dégâts bruts dans la journée.",
+        "purpose": "Plus l'escouade est au complet, plus la récolte de nourriture du soir est multipliée : de ×1 seul à ×2 à {{roster}}.",
+        "bonus": "Bonus sur la récolte de ce soir",
         "aria": "Présence : {{present}} joueurs sur {{roster}} ont joué aujourd'hui. Il faut {{threshold}} dégâts bruts dans la journée pour compter."
       },
       "morale": {
         "name": "Moral",
-        "speed": "{{percent}} %/nuit",
-        "note": "Seuls les boss font bouger le moral, et il n'accélère que la montée.",
+        "description": "Un boss vaincu fait monter le moral (+3 mineur, +5 standard, +7 élite) ; un boss qui survit le fait descendre (−7).",
+        "purpose": "Il fixe la vitesse à laquelle la population rejoint ce que la nourriture peut nourrir : à 100 de moral, l'écart se comble de 15 % chaque nuit.",
+        "speedLabel": "Écart comblé cette nuit",
+        "speedValue": "{{percent}} %",
         "aria": "Moral : {{value}} sur {{ceiling}}, soit {{percent}} % de l'écart comblé cette nuit."
       }
     }

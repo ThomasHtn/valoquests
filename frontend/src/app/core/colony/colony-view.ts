@@ -5,6 +5,7 @@ import { Translation } from '@core/i18n/translation';
 import { ChartBar } from '@shared/chart/chart.model';
 import { ColonyApi } from './colony-api';
 import {
+  formatEfficiencyGain,
   formatGauge,
   formatMultiplier,
   formatPopulation,
@@ -437,32 +438,18 @@ export class ColonyView {
   }
 
   /**
-   * The food rail: the stock the town holds, what one point of it is worth, and the seven evenings
-   * that put it there.
+   * The food rail: what the week nets, and the seven evenings that put it there.
    *
-   * The only rail with no bar, because food is the only resource with no ceiling. Two denominators
-   * were tried and both were wrong. Drawing what the town eats against the stock is the population
-   * hexagon a second time — `consumption / stock` simplifies to `population / feedable` — and it sat
-   * near full at every hour of every day. Drawing tonight's harvest against the best evening of the
-   * week did say something no other shape said, *did we play tonight*, but it answered a question
-   * about attendance while carrying a figure about food, and the two never lined up.
+   * The only rail with no bar, because food is the only resource with no ceiling — its track is the
+   * seven daily harvests {@link foodDays} draws, oldest first, with the one falling out tonight
+   * marked.
    *
-   * So the rail stops pretending to be a level. The stock is a rolling seven-day sum, and what it is
-   * made of is seven daily harvests with the oldest falling out tonight — {@link foodDays} draws
-   * exactly that, and the figure beside it is the stock itself, in food, with what tonight takes off
-   * it underneath.
-   *
-   * The figure is a plain total and not a fraction. It briefly read `surplus / consumption`, which
-   * broke the one grammar the band has: the two other rails write `a / b` for a part of a whole,
-   * `5 / 7` and `55 / 100`, so a food rail reading `140 / 300` was taken for a rail not quite half
-   * full when the stock behind it was 440 and neither number was the whole. Both figures still
-   * exist, in the card, where they can carry a name.
-   *
-   * What sits beside the total instead is the efficiency, as the factor it is — `×12,44` — and it is
-   * the one figure that joins the two halves of the page. The rail counts food, the hexagon counts
-   * inhabitants, and until this was drawn nothing on the page said that the first becomes the second
-   * or that materials are what moves the rate. Every challenge and every fight paid into a ladder of
-   * decorative names and stopped there.
+   * The headline used to be the raw stock beside the efficiency as a bare factor, `440 ×8,00`, which
+   * read as a multiplication with no operands. It is the weekly surplus instead — what the harvest
+   * nets once the town has eaten, signed and already the answer to "is tonight worth playing". The
+   * stock and the efficiency it is worth are still in the card, named this time, alongside what the
+   * town spends: `récolte − consommation = surplus`, the same sum spelled out in three rows rather
+   * than packed into a symbol beside the total.
    *
    * @param colony - The colony.
    * @returns The display-ready rail.
@@ -479,8 +466,7 @@ export class ColonyView {
       percentage: 0,
       secondaryPercentage: null,
       isLive: false,
-      valueLabel: formatPopulation(colony.foodStock, language),
-      multiplierLabel: formatMultiplier(colony.efficiency, language),
+      valueLabel: formatSignedPopulation(colony.weeklySurplus, language),
       valueDeltaLabel:
         expiring > 0
           ? this.translation.translate('colony.track.food.expiring', {
@@ -503,11 +489,14 @@ export class ColonyView {
         .filter((sentence) => sentence !== '')
         .join(' '),
       legend: [],
-      // The week itself is on the rail now, so the card is free for the figures the pills cannot
-      // state. The rate comes first because it is what the `×` beside the total means, and it is
-      // the only line on the page that spells out food becoming inhabitants; then what the town
-      // needs to hold its ground, and what is left on top of that, which is the reason to play.
+      // The week's whole sum, spelled out one row per term: what came in, what one point of it
+      // feeds, what the town spends, so the signed total beside the gauge is never a number without
+      // its own arithmetic.
       facts: [
+        {
+          label: this.translation.translate('colony.track.food.stock'),
+          value: formatPopulation(colony.foodStock, language),
+        },
         {
           label: this.translation.translate('colony.track.food.efficiency'),
           value: this.translation.translate('colony.track.food.efficiencyValue', {
@@ -518,11 +507,8 @@ export class ColonyView {
           label: this.translation.translate('colony.track.food.consumption'),
           value: formatPopulation(colony.weeklyConsumption, language),
         },
-        {
-          label: this.translation.translate('colony.track.food.surplus'),
-          value: formatPopulation(colony.weeklySurplus, language),
-        },
       ],
+      description: this.translation.translate('colony.track.food.description'),
       note: this.translation.translate('colony.track.food.note'),
       glyph: 'FOOD',
       socketClass: colors.fill,
@@ -603,7 +589,6 @@ export class ColonyView {
       secondaryPercentage: null,
       isLive: true,
       valueLabel: `${presence.present} / ${presence.rosterSize}`,
-      multiplierLabel: formatMultiplier(presence.multiplier, language),
       valueDeltaLabel: '',
       ariaLabel: this.translation.translate('colony.track.presence.aria', {
         present: presence.present,
@@ -612,8 +597,19 @@ export class ColonyView {
       }),
       // The card shows the roster pip by pip instead of a swatch: who is missing is the whole point.
       legend: [],
-      facts: [],
-      note: '',
+      // What the head count buys, since a count on its own does not say what turning up is worth.
+      facts: [
+        {
+          label: this.translation.translate('colony.track.presence.bonus'),
+          value: formatMultiplier(presence.multiplier, language),
+        },
+      ],
+      description: this.translation.translate('colony.track.presence.description', {
+        threshold: presence.threshold,
+      }),
+      note: this.translation.translate('colony.track.presence.purpose', {
+        roster: presence.rosterSize,
+      }),
       glyph: 'PRESENCE',
       socketClass: colors.fill,
       primaryClass: colors.fill,
@@ -651,9 +647,6 @@ export class ColonyView {
       secondaryPercentage: null,
       isLive: true,
       valueLabel: `${Math.round(morale.value)} / ${Math.round(morale.ceiling)}`,
-      multiplierLabel: this.translation.translate('colony.track.morale.speed', {
-        percent: formatRate(morale.growthPercentPerNight, language),
-      }),
       valueDeltaLabel: '',
       ariaLabel: this.translation.translate('colony.track.morale.aria', {
         value: Math.round(morale.value),
@@ -661,8 +654,19 @@ export class ColonyView {
         percent: formatRate(morale.growthPercentPerNight, language),
       }),
       legend: [],
-      facts: [],
-      note: this.translation.translate('colony.track.morale.note'),
+      // What morale actually buys: not its own growth, but how much of tonight's population gap
+      // closes. Read alone as "7,5 %/nuit" this was taken for morale climbing on its own; named
+      // against the gap it closes, it says what the figure is a share of.
+      facts: [
+        {
+          label: this.translation.translate('colony.track.morale.speedLabel'),
+          value: this.translation.translate('colony.track.morale.speedValue', {
+            percent: formatRate(morale.growthPercentPerNight, language),
+          }),
+        },
+      ],
+      description: this.translation.translate('colony.track.morale.description'),
+      note: this.translation.translate('colony.track.morale.purpose'),
       glyph: this.moraleGlyph(morale.value),
       socketClass: colors.fill,
       primaryClass: colors.fill,
@@ -773,7 +777,7 @@ export class ColonyView {
       efficiencyLabel:
         week.state === 'SURVIVED' || week.state === 'UPCOMING'
           ? ''
-          : formatMultiplier(week.efficiencyGain, language),
+          : formatEfficiencyGain(week.efficiencyGain, language),
       earned: week.state === 'DEFEATED',
       moraleLabel: formatSignedPopulation(week.moraleDelta, language),
     };

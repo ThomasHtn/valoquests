@@ -10,8 +10,6 @@ import {
   LucideSkull,
   LucideSwords,
   LucideTent,
-  LucideUsers,
-  LucideWheat,
   LucideX,
 } from '@lucide/angular';
 
@@ -20,7 +18,6 @@ import { BossCategory } from '@core/boss/boss.model';
 import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
 import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
-import { formatPopulation } from '@core/colony/colony-format.utils';
 import { ColonyView } from '@core/colony/colony-view';
 import { ColonyBossView, ColonyTierStepView } from '@core/colony/colony-view.model';
 import { ColonyTierState } from '@core/colony/colony.model';
@@ -230,8 +227,6 @@ interface CampaignMapRow {
     LucideSkull,
     LucideSwords,
     LucideTent,
-    LucideUsers,
-    LucideWheat,
     LucideX,
     PageHeader,
   ],
@@ -387,36 +382,6 @@ export class Campaign {
       .ladder()
       .map((view) => ({ view, tier: LADDER_STEPS[view.isNext ? 'NEXT' : view.state] })),
   );
-
-  /**
-   * Inhabitants one point of food currently feeds, rounded — the same figure the food rail's `×`
-   * carries, read here as the two icons it sits between instead of a bare factor.
-   */
-  protected readonly efficiencyRatioLabel = computed(() => {
-    const currentColony = this.colony.colony();
-    return currentColony
-      ? formatPopulation(currentColony.efficiency, this.translation.language())
-      : '';
-  });
-
-  /**
-   * What the ratio icons say, spelled out for assistive technology. Reuses the food rail's own
-   * fact sentence rather than a new string, so the two readings of the same figure cannot drift.
-   */
-  protected readonly efficiencyRatioAriaLabel = computed(() => {
-    const currentColony = this.colony.colony();
-    if (!currentColony) {
-      return '';
-    }
-
-    const language = this.translation.language();
-    const label = this.translation.translate('colony.track.food.efficiency');
-    const value = this.translation.translate('colony.track.food.efficiencyValue', {
-      inhabitants: formatPopulation(currentColony.efficiency, language),
-    });
-
-    return `${label} ${value}`;
-  });
 
   /**
    * The weeks the history view tells: every fought week, oldest first, up to and including the

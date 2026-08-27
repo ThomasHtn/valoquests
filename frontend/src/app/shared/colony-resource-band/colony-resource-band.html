@@ -91,119 +91,88 @@
 <ul [class]="metrics().rails">
   @for (track of tracks(); track track.track) {
     <li class="relative flex items-center gap-3">
-      <!-- The socket is the card's handle, and the track is left alone.
-           One trigger covering the whole rail meant a pointer resting on a single evening of the food
-           strip opened the rail's card over the very figures it had stopped to read. The socket is
-           the rail's name, so hanging "tell me about this rail" on it is where a reader already
-           points; the track beneath is then free to answer for each of its own parts. -->
+      <!-- The socket only names the rail now; it opens nothing. A pointer resting on the bar or on
+           the socket used to open the same card the number does, which meant a reader skimming the
+           gauges kept tripping a card they had not asked to read. The number is the one thing on the
+           rail that cannot be read without the arithmetic behind it, so it is the only handle left. -->
+      <span
+        [class]="metrics().socket"
+        aria-hidden="true"
+        class="relative grid shrink-0 place-items-center"
+      >
+        <ng-container
+          [ngTemplateOutletContext]="{ $implicit: track }"
+          [ngTemplateOutlet]="socket"
+        ></ng-container>
+      </span>
       @if (compact()) {
-        <!-- No button, and no card: a compact band sits inside a link, which may hold neither. What
-             the card would have said is read out here instead, so nothing is lost off the pointer. -->
-        <span
-          [class]="metrics().socket"
-          aria-hidden="true"
-          class="relative grid shrink-0 place-items-center"
-        >
-          <ng-container
-            [ngTemplateOutletContext]="{ $implicit: track }"
-            [ngTemplateOutlet]="socket"
-          ></ng-container>
-        </span>
         <span class="sr-only">{{ track.ariaLabel }}</span>
-      } @else {
-        <!-- `peer`, not `group`: the card is a later sibling of this button rather than a descendant
-             of it, and it has to be — a button's content model is phrasing content, which the card's
-             paragraphs and lists are not. -->
-        <button
-          [attr.aria-label]="track.ariaLabel"
-          [class]="metrics().socket"
-          class="focus-ring peer/socket relative grid shrink-0 cursor-help place-items-center"
-          type="button"
-        >
-          <ng-container
-            [ngTemplateOutletContext]="{ $implicit: track }"
-            [ngTemplateOutlet]="socket"
-          ></ng-container>
-        </button>
       }
 
-      <!-- The gauge itself is a second handle on the same card wherever it has one to show: a bar
-           already carries the figure the card explains, so a pointer that lands on the bar first
-           should not have to travel to the socket to read it. Food has no bar here, and keeps its
-           total as its own second handle instead. -->
-      <span
-        [class]="!compact() && track.hasBar ? ' peer/bar cursor-help' : ''"
-        class="block min-w-0 max-w-[30rem] flex-1"
-      >
+      <span class="block min-w-0 max-w-[30rem] flex-1">
         <ng-container
           [ngTemplateOutletContext]="{ $implicit: track }"
           [ngTemplateOutlet]="rail"
         ></ng-container>
       </span>
 
-      <!-- The fact, and nothing under it. What the fact *does* is the card's job: three captions
-           stacked here turned one reading into three, and the socket beside the track already names
-           what is being counted.
-
-           A column just wide enough for the longest of the three figures, so the numbers still line
-           up with one another while sitting against the end of their own rail.
-
-           Every rail's total is also a peer of its own card, alongside the socket and — on a bar
-           rail — the bar itself: whichever of the three a reader's pointer lands on first, the card
-           should answer there rather than sending it back to the socket. Food's figure carries the
-           most reason to be one, being `surplus / consumption` rather than the plain stock the other
-           two show on their bar already. -->
-      <div
-        [class]="metrics().value + (!compact() ? ' peer/value cursor-help' : '')"
-        class="shrink-0 text-right"
-      >
-        <p
-          [class]="track.textClass"
-          class="font-display leading-none font-bold whitespace-nowrap tabular-nums"
+      <!-- The fact, and the card's one handle. `peer`, not `group`: the card is a later sibling of
+           this button rather than a descendant of it, and it has to be — a button's content model is
+           phrasing content, which the card's paragraphs and lists are not. -->
+      @if (compact()) {
+        <div [class]="metrics().value" class="shrink-0 text-right">
+          <ng-container
+            [ngTemplateOutletContext]="{ $implicit: track }"
+            [ngTemplateOutlet]="valueFigure"
+          ></ng-container>
+        </div>
+      } @else {
+        <button
+          [attr.aria-label]="track.ariaLabel"
+          [class]="metrics().value"
+          class="focus-ring peer/value shrink-0 cursor-help text-right"
+          type="button"
         >
-          {{ track.valueLabel }}
-          @if (track.multiplierLabel) {
-            <span class="text-2xs font-medium text-text-muted">{{ track.multiplierLabel }}</span>
-          }
-        </p>
-
-        <!-- What tonight takes off that figure, on food alone. It clears neither the socket's height
-             nor the value column's width, so the rail it sits under stays the same height as the
-             other two and the band keeps one baseline. -->
-        @if (track.valueDeltaLabel) {
-          <p class="label-caption mt-1 whitespace-nowrap text-text-muted">
-            {{ track.valueDeltaLabel }}
-          </p>
-        }
-      </div>
+          <ng-container
+            [ngTemplateOutletContext]="{ $implicit: track }"
+            [ngTemplateOutlet]="valueFigure"
+          ></ng-container>
+        </button>
+      }
 
       <!-- What the rail itself cannot hold. Drawn from the same floating surface the map's hover card
-           is. Purely a pointer enhancement — the socket's own `aria-label` says the same thing — so it
+           is. Purely a pointer enhancement — the button's own `aria-label` says the same thing — so it
            is dropped below `sm`, where there is no hover and no room to float it. -->
       @if (!compact()) {
-        <!-- Anchored under whichever of the rail's own triggers actually opened it: the socket, on
-             the rail's left, on every rail; a bar rail's own gauge, centred under the rail it just
-             answered for; and food's total, which has no bar to stand in for, at the rail's own right
-             edge instead. Each trigger gets the card to appear where the pointer already is, rather
-             than sending a reader's eye back to the socket every time. -->
         <div
           [class]="tooltipSurfaceClass"
           aria-hidden="true"
-          class="pointer-events-none absolute top-full z-30 mt-2.5 hidden w-72 px-4 py-3.5 opacity-0 transition-opacity duration-150 peer-hover/socket:left-0 peer-hover/socket:opacity-100 peer-focus/socket:left-0 peer-focus/socket:opacity-100 peer-hover/bar:left-1/2 peer-hover/bar:-translate-x-1/2 peer-hover/bar:opacity-100 peer-hover/value:right-0 peer-hover/value:opacity-100 motion-reduce:transition-none sm:block"
+          class="pointer-events-none absolute top-full right-0 z-30 mt-2.5 hidden w-72 px-4 py-3.5 opacity-0 transition-opacity duration-150 peer-hover/value:opacity-100 peer-focus/value:opacity-100 motion-reduce:transition-none sm:block"
         >
           <p class="flex items-baseline justify-between gap-3">
-            <span class="label-caption text-text-muted">{{ track.label }}</span>
+            <span class="flex items-center gap-1.5 label-caption text-text-muted">
+              <span [class]="track.textClass" aria-hidden="true" class="[&>svg]:size-3">
+                <ng-container
+                  [ngTemplateOutletContext]="{ $implicit: track }"
+                  [ngTemplateOutlet]="trackIcon"
+                ></ng-container>
+              </span>
+              {{ track.label }}
+            </span>
             <span [class]="track.textClass" class="font-mono text-2xs font-medium tabular-nums">
               {{ track.valueLabel }}
             </span>
           </p>
 
-          <!-- The figures the rail's own shape cannot state. The week is on the rail now, so drawing
-               it a second time here said nothing new; what the pills genuinely cannot say is how much
-               of the stock the town needs just to stand still, and how much is over. The surplus is
-               the whole reason to play, and it appears nowhere else on the page. -->
+          <!-- How the resource is obtained, read before any of its figures. -->
+          @if (track.description) {
+            <p class="mt-2 text-sm leading-relaxed text-text-secondary">{{ track.description }}</p>
+          }
+
+          <!-- The figures the rail's own shape cannot state, one row per term of the sum the headline
+               figure is the answer to. -->
           @if (track.facts.length > 0) {
-            <ul class="mt-3 flex flex-col gap-2">
+            <ul class="mt-3 flex flex-col gap-2 border-t border-text-primary/10 pt-3">
               @for (fact of track.facts; track fact.label) {
                 <li class="flex items-baseline justify-between gap-3">
                   <span class="label-caption text-text-muted">{{ fact.label }}</span>
@@ -248,6 +217,7 @@
             </ul>
           }
 
+          <!-- What the resource is for, closing the card. -->
           @if (track.note) {
             <p class="mt-3 text-sm leading-relaxed text-text-secondary">{{ track.note }}</p>
           }
@@ -256,6 +226,26 @@
     </li>
   }
 </ul>
+
+<!-- The value block's own content, shared between the compact band (a plain, inert figure) and the
+     full one (the same figure, now the card's one trigger). -->
+<ng-template #valueFigure let-track>
+  <p
+    [class]="track.textClass"
+    class="font-display leading-none font-bold whitespace-nowrap tabular-nums"
+  >
+    {{ track.valueLabel }}
+  </p>
+
+  <!-- What tonight takes off that figure, on food alone. It clears neither the socket's height
+       nor the value column's width, so the rail it sits under stays the same height as the
+       other two and the band keeps one baseline. -->
+  @if (track.valueDeltaLabel) {
+    <p class="label-caption mt-1 whitespace-nowrap text-text-muted">
+      {{ track.valueDeltaLabel }}
+    </p>
+  }
+</ng-template>
 
 <!-- The glyph seated in the direction's hexagon, the same socket the population figure and the map's
      tiles are drawn in — the outline is the rail's own colour, the seat under it the ground it is set
@@ -267,24 +257,33 @@
   <span [class]="track.socketClass" class="clip-hex absolute inset-0 opacity-40"></span>
   <span [style.scale]="socketInnerScale" class="clip-hex absolute inset-0 bg-surface-sunken"></span>
   <span [class]="track.textClass + ' ' + metrics().socketGlyph" class="relative">
-    @switch (track.glyph) {
-      @case ('FOOD') {
-        <svg lucideWheat></svg>
-      }
-      @case ('PRESENCE') {
-        <svg lucideUserCheck></svg>
-      }
-      @case ('MORALE_GOOD') {
-        <svg lucideSmile></svg>
-      }
-      @case ('MORALE_BAD') {
-        <svg lucideFrown></svg>
-      }
-      @default {
-        <svg lucideMeh></svg>
-      }
-    }
+    <ng-container
+      [ngTemplateOutletContext]="{ $implicit: track }"
+      [ngTemplateOutlet]="trackIcon"
+    ></ng-container>
   </span>
+</ng-template>
+
+<!-- The glyph alone, without the socket's hexagon chrome around it — the same icon, read again beside
+     the rail's name at the top of its own card. -->
+<ng-template #trackIcon let-track>
+  @switch (track.glyph) {
+    @case ('FOOD') {
+      <svg lucideWheat></svg>
+    }
+    @case ('PRESENCE') {
+      <svg lucideUserCheck></svg>
+    }
+    @case ('MORALE_GOOD') {
+      <svg lucideSmile></svg>
+    }
+    @case ('MORALE_BAD') {
+      <svg lucideFrown></svg>
+    }
+    @default {
+      <svg lucideMeh></svg>
+    }
+  }
 </ng-template>
 
 <!-- The track of one rail, drawn the same whether the band is full or compact. -->
