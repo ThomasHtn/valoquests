@@ -65,6 +65,19 @@ export class BarChart {
   public readonly yAxisLabel = input('');
 
   /**
+   * Tailwind classes sizing the chart's box, so a caller with a tighter seat than the chart's own
+   * default can still fit it.
+   */
+  public readonly heightClass = input('h-52 w-full sm:h-56');
+
+  /**
+   * Prints every bar's own value above it, rather than only the highlighted one's. For a chart with
+   * no single "best" bar to single out — every bar is its own reading, not a contender against the
+   * others.
+   */
+  public readonly showAllValues = input(false);
+
+  /**
    * Canvas the chart paints on.
    */
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
@@ -200,39 +213,46 @@ export class BarChart {
   }
 
   /**
-   * Builds the plugin printing the highlighted bar's value above it.
+   * Builds the plugin printing a bar's value above it.
    *
-   * Only that one bar is labeled. A number over every bar is noise the axis already carries, but
-   * the bar the section singles out has to say what makes it the best without the reader hovering
-   * it — and without the claim resting on its color alone.
+   * By default only the highlighted bar is labeled: a number over every bar is noise the axis
+   * already carries, but the bar the section singles out has to say what makes it the best without
+   * the reader hovering it — and without the claim resting on its color alone. `showAllValues`
+   * flips that for a chart with no single "best" bar, where every bar's own reading is the point.
+   * A muted bar (no sample yet) is never labeled either way — it has nothing to state.
    *
    * @returns the value-label plugin, scoped to one chart instance
    */
   private highlightLabel(): Plugin<'bar'> {
     const bars = (): readonly ChartBar[] => this.bars();
     const suffix = (): string => this.valueSuffix();
+    const showAll = (): boolean => this.showAllValues();
     const theme = this.theme;
 
     return {
       id: 'highlightLabel',
       afterDatasetsDraw(chart) {
-        const index = bars().findIndex((bar) => bar.highlighted);
-        if (index < 0) {
-          return;
-        }
-
-        const element = chart.getDatasetMeta(0).data[index];
-        if (!element) {
-          return;
-        }
-
+        const meta = chart.getDatasetMeta(0).data;
         const { ctx } = chart;
         ctx.save();
-        ctx.fillStyle = theme.highlight;
         ctx.font = '600 15px "Barlow Condensed", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
-        ctx.fillText(`${bars()[index].value}${suffix()}`, element.x, element.y - 6);
+
+        bars().forEach((bar, index) => {
+          if (bar.muted || (!showAll() && !bar.highlighted)) {
+            return;
+          }
+
+          const element = meta[index];
+          if (!element) {
+            return;
+          }
+
+          ctx.fillStyle = bar.highlighted ? theme.highlight : theme.tick;
+          ctx.fillText(`${bar.value}${suffix()}`, element.x, element.y - 6);
+        });
+
         ctx.restore();
       },
     };

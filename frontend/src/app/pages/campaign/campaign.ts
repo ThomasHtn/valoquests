@@ -37,8 +37,9 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { ColonyCard, ColonyCardFormulaRow } from './colony-card/colony-card';
 import { PageHeader } from '@layout/page-header/page-header';
-import { resolveCssColor, resolveSeriesColor } from '@shared/chart/chart-theme';
-import { ChartSeries } from '@shared/chart/chart.model';
+import { BarChart } from '@shared/chart/bar-chart';
+import { resolveSeriesColor } from '@shared/chart/chart-theme';
+import { ChartBar, ChartSeries } from '@shared/chart/chart.model';
 import { LineChart } from '@shared/chart/line-chart';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ProgressCircle } from '@shared/progress-circle/progress-circle';
@@ -227,6 +228,7 @@ interface CampaignMapRow {
     NgOptimizedImage,
     ColonyCard,
     Drawer,
+    BarChart,
     LineChart,
     ProgressBar,
     ProgressCircle,
@@ -347,39 +349,23 @@ export class Campaign {
   });
 
   /**
-   * The week's harvest as one plotted line, one point per day of the food window.
-   *
-   * A line rather than the histogram it replaces: the same idiom the growth curve already reads
-   * in, with the area under it filled (see the template's `filled` input) so the week's stock
-   * reads as a level rather than as seven independent bars.
+   * The week's harvest as one bar per day of the food window: a placeholder slot (a day not lived
+   * yet) is drawn recessive at zero, and today's own bar is highlighted since it is still the one
+   * closing at tonight's rollover.
    */
-  protected readonly foodWeekSeries = computed<readonly ChartSeries[]>(() => {
-    const days = this.colony.foodDays();
-    if (days.length === 0) {
-      return [];
-    }
-
-    return [
-      {
-        label: this.translation.translate('colony.track.food.name'),
-        color: resolveCssColor('var(--color-brand-500)'),
-        points: days.map((day) => day.harvestValue),
-      },
-    ];
-  });
-
-  /**
-   * The food line's own x axis: each day's weekday initial, the same letters the histogram it
-   * replaces printed under every bar.
-   */
-  protected readonly foodWeekLabels = computed<readonly string[]>(() =>
-    this.colony.foodDays().map((day) => day.weekdayInitial),
+  protected readonly foodWeekBars = computed<readonly ChartBar[]>(() =>
+    this.colony.foodDays().map((day) => ({
+      label: day.weekdayInitial,
+      value: day.harvestValue ?? 0,
+      detail: day.ariaLabel,
+      highlighted: day.isToday,
+      muted: day.isPlaceholder,
+    })),
   );
 
   /**
-   * Sr-only prose standing in for the food line, each day's own accessible label read in sequence
-   * — the canvas is one opaque image to assistive technology, so this is where the per-day figures
-   * the histogram used to print in text now reach a reader without the plot.
+   * Sr-only prose standing in for the food bars, each day's own accessible label read in sequence
+   * — the canvas is one opaque image to assistive technology.
    */
   protected readonly foodWeekSummary = computed<string>(() =>
     this.colony
@@ -428,27 +414,6 @@ export class Campaign {
       },
     ];
   });
-
-  /**
-   * The Participation tile's own bar: tonight's turnout, out of the roster it is read against.
-   */
-  protected readonly presencePercentage = computed<number>(() => {
-    const battery = this.colony.battery();
-
-    return battery === null || battery.cellCount <= 0
-      ? 0
-      : Math.min(100, (battery.presentCount / battery.cellCount) * 100);
-  });
-
-  /**
-   * The Efficiency tile's own ring: efficiency itself has no ceiling (see `Colony.efficiency`), so
-   * the fill reads the same climb the ladder panel already tracks — the materials still to gather
-   * before the next tier's efficiency gain lands — rather than a percentage of a number the model
-   * does not have.
-   */
-  protected readonly efficiencyProgressPercentage = computed<number>(
-    () => this.colony.colony()?.tierProgressPercentage ?? 0,
-  );
 
   /**
    * The map, row by row, oldest week at the top, framed above and below by terrain the campaign

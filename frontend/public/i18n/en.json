@@ -294,7 +294,7 @@
         "description": "A player counts once they pass {{threshold}} raw damage in the day.",
         "purpose": "The fuller the squad, the more tonight's food harvest is multiplied: from ×1 alone to ×2 at {{roster}}.",
         "bonus": "Bonus on tonight's harvest",
-        "caption": "Players active today",
+        "caption": "{{present}}/{{roster}} players active today",
         "aria": "Turnout: {{present}} of {{roster}} players played today. A day needs {{threshold}} raw damage to count."
       },
       "morale": {
@@ -309,18 +309,6 @@
         "description": "What morale and food add or take from the population, every night.",
         "purpose": "The result of the Food and Attractivity gauges combined.",
         "caption": "New inhabitants per day"
-      },
-      "growth": {
-        "name": "Growth",
-        "description": "Population across the whole campaign, day by day.",
-        "purpose": "A step marks a change of name; a broken slope flags a quiet week.",
-        "peakUnit": "population peak"
-      },
-      "foodToday": {
-        "name": "Today's harvest",
-        "description": "Damage dealt in tonight's matches, multiplied by how much of the squad turned up.",
-        "purpose": "Joins the week's stock the moment tonight closes.",
-        "caption": "Harvested today"
       },
       "foodStock": {
         "name": "Stock",
@@ -350,7 +338,8 @@
         "name": "Materials",
         "description": "Every cleared challenge and every defeated boss bring in materials, banked without ever expiring or being spent.",
         "purpose": "They raise efficiency and step the town up a tier once the next one's threshold is met.",
-        "caption": "Banked since the campaign began"
+        "caption": "Next city tier",
+        "captionAt": "at"
       }
     }
   },

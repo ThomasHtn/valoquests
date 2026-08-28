@@ -181,6 +181,23 @@ export class ColonyView {
   );
 
   /**
+   * Cumulative materials the next step of the ladder costs, for the Materials tile's own caption —
+   * the same figure {@link toTierStep} prices the ladder's own next row at.
+   */
+  public readonly nextTierMaterialsLabel = computed<string>(() =>
+    this.grouped((colony) => colony.nextTier.materialsRequired),
+  );
+
+  /**
+   * Already-translated name of the next step of the ladder, for the Materials tile's own caption —
+   * the same name {@link toTierStep} gives the ladder's own next row.
+   */
+  public readonly nextTierNameLabel = computed<string>(() => {
+    const colony = this.colony();
+    return colony === null ? '' : this.tierName(colony.nextTier);
+  });
+
+  /**
    * What a boss still standing costs the colony, for the fight under way's hover card — a fixed
    * penalty, so it holds regardless of which week is asking.
    *
@@ -189,24 +206,6 @@ export class ColonyView {
   public readonly defeatMoraleLabel = computed<string>(() =>
     formatSignedPopulation(MORALE_FOR_SURVIVING_BOSS, this.translation.language()),
   );
-
-  /**
-   * What today alone has harvested, signed — the Food tile's own headline, distinct from
-   * {@link foodRing}'s weekly stock. `null` before the colony has resolved or before today's
-   * entry has posted to {@link Colony.foodWindow}.
-   */
-  public readonly todayFoodLabel = computed<string | null>(() => {
-    const colony = this.colony();
-    if (colony === null) {
-      return null;
-    }
-
-    const today = colony.foodWindow.find((entry) => entry.day === colony.day);
-
-    return today === undefined
-      ? null
-      : formatSignedPopulation(today.harvest, this.translation.language());
-  });
 
   /**
    * The weekly consumption, signed negative — what {@link foodRing} states as a bare magnitude,
@@ -450,17 +449,6 @@ export class ColonyView {
       highlighted: point.population === trajectory.peakPopulation,
       muted: false,
     }));
-  });
-
-  /**
-   * The run's own peak population, already formatted, for the Growth tile's headline figure.
-   */
-  public readonly peakPopulationLabel = computed<string>(() => {
-    const trajectory = this.trajectory();
-
-    return trajectory === null
-      ? ''
-      : formatPopulation(trajectory.peakPopulation, this.translation.language());
   });
 
   /**

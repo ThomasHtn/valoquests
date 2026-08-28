@@ -114,31 +114,38 @@
          hexagon sat straight on the first row of terrain and the two silhouettes fought. -->
     <div class="flex min-h-full flex-col gap-4">
       @if (colony.colony()) {
-        <!-- The standing figures, as a grid of tiles rather than a band-plus-sidebar row: the score
-             with what sets it and every run before it on top, what the week harvested and where the
-             population has been under it, then the eight short figures behind all of it in a dense
-             grid. Every tile shares `app-colony-card`'s own frame and info bubble, so the page reads
-             as one instrument panel rather than a mismatched set of cards. Each row is `items-stretch`
-             (the grid default) so every tile in it fills the row's own height, whichever tile sets
-             it — a run ledger and a hexagon button do not naturally agree on a height otherwise.
+        <!-- The standing figures, as a grid of tiles rather than a band-plus-sidebar row: the
+             population hexagon stands two rows tall beside the week's harvest, the week's own flow —
+             stock, consumption, surplus — fills the row under that harvest in the same width, and
+             the six short figures behind all of it split the same way one row further down:
+             presence and efficiency narrow under the hexagon, attractivity, arrivals and materials
+             wide under the flow. Every tile shares `app-colony-card`'s own frame and info bubble, so
+             the page reads as one instrument panel rather than a mismatched set of cards. Each row is
+             `items-stretch` (the grid default) so every tile in it fills the row's own height,
+             whichever tile sets it.
 
              Nothing here is written as an instruction. A short bar asks to be filled; the shape of
              the food figures read against the population mark already answers whether tonight is a
              night to play or a night to build, without a sentence saying so. -->
-        <!-- A single six-column grid carries both this row and the food/short-figures row below it,
-             rather than each picking its own column count: three equal tiles here and a 2fr/1fr
-             split below land on the same fractions once gaps are subtracted, but the two rows'
-             gutters do not actually coincide unless both are laid out on one shared track
-             definition — see the boundary comment further down. -->
+        <!-- Twenty columns, sized on the short tile rather than on the hexagon: every individual
+             tile below the harvest — the flow's three, the short figures' five — is four columns
+             wide, and the hexagon and the harvest are only ever a whole multiple of that same
+             four-wide unit (two tiles' worth and three tiles' worth) rather than a fraction of the
+             page picked on its own. One shared grid is what keeps the three rows' gutters lined up;
+             three independently-sized rows never actually coincide.
+
+             Three explicit row heights, not one repeated floor: the harvest keeps the tall floor the
+             hexagon's own two rows need, but the flow and the short figures under it are readouts,
+             not charts, and a floor sized for a chart line-height left them mostly empty air. -->
         <div
-          class="grid shrink-0 grid-cols-1 gap-3 lg:grid-cols-6 lg:auto-rows-[minmax(11.5rem,auto)]"
+          class="grid shrink-0 grid-cols-1 gap-3 lg:grid-cols-[repeat(20,minmax(0,1fr))] lg:grid-rows-[minmax(11.5rem,auto)_minmax(5.75rem,auto)_minmax(5.75rem,auto)]"
         >
           <!-- The population hexagon keeps its existing behaviour: pressing it still opens the run's
-               full curve in a drawer. The Trajectory tile beside it is a static two-week preview, not
-               a second way to open the same drawer. -->
+               full curve in a drawer. Two rows tall, the same height the harvest tile and its own
+               flow row take up together. -->
           <app-colony-card
             accentClass="border-t-brand-500"
-            class="lg:col-span-2"
+            class="lg:col-span-8 lg:row-span-2"
             [infoDescription]="'colony.track.population.description' | translate"
             [infoPurpose]="'colony.track.population.purpose' | translate"
             [isHero]="true"
@@ -188,111 +195,10 @@
             </div>
           </app-colony-card>
 
-          <!-- The population hexagon beside it stays the one control that opens the full curve in
-               its own drawer. Same `app-line-chart`, same `curveSeries`, at a shorter height. -->
-          <app-colony-card
-            accentClass="border-t-accent-blue"
-            class="lg:col-span-2"
-            [infoDescription]="'colony.track.growth.description' | translate"
-            [infoPurpose]="'colony.track.growth.purpose' | translate"
-            [title]="'colony.track.growth.name' | translate"
-          >
-            <svg class="text-accent-blue" icon lucideTrendingUp></svg>
-            <svg class="text-accent-blue" infoIcon lucideTrendingUp></svg>
-
-            <!-- A fixed height rather than a flex-filled one: Chart.js measures its canvas once, on
-                 the next frame after creation, and a percentage height chained through this many
-                 flex parents is not always settled by then — the chart drew past its own card into
-                 the row below it before this was pinned down.
-
-                 The peak is marked on the curve itself — a dashed rule through its highest point,
-                 the figure written beside it — rather than repeated as a header above the chart. -->
-            <app-line-chart
-              [ariaLabel]="'colony.track.growth.name' | translate"
-              class="flex h-full min-h-[11rem] items-center"
-              heightClass="h-full w-full"
-              [peakLabel]="colony.peakPopulationLabel()"
-              [series]="curveSeries()"
-            />
-          </app-colony-card>
-
-          <!-- Every run before this one, as the scale the population figure is missing. Same rows
-               the run ledger always drew, now framed as a tile among the others instead of a sidebar
-               beside the band. -->
-          <app-colony-card
-            accentClass="border-t-podium-bronze"
-            class="lg:col-span-2"
-            [infoDescription]="'colony.history.columnHint' | translate"
-            [infoPurpose]="'colony.history.finalHint' | translate"
-            [title]="'colony.history.title' | translate"
-          >
-            <svg class="text-podium-bronze" icon lucideSwords></svg>
-            <svg class="text-podium-bronze" infoIcon lucideSwords></svg>
-
-            <div class="flex h-full min-h-[9.5rem] flex-col">
-              <div aria-hidden="true" class="grid grid-cols-[minmax(0,1fr)_4rem] gap-x-2 px-1">
-                <span class="label-caption text-text-muted">{{
-                  'colony.history.column' | translate
-                }}</span>
-                <span class="label-caption ml-auto text-right text-text-muted">{{
-                  'colony.history.final' | translate
-                }}</span>
-              </div>
-
-              <!-- Grows to the row's own height and scrolls past it, so a ledger ten runs deep costs
-                   it the same height as one two runs deep. -->
-              <ul class="scroll-subtle mt-1.5 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
-                @for (run of colony.runs(); track run.runNumber) {
-                  <li
-                    [class]="
-                      run.isCurrent
-                        ? 'border-l-brand-500 bg-brand-500/10'
-                        : 'border-l-text-primary/15 bg-text-primary/4'
-                    "
-                    class="notch-tr grid shrink-0 grid-cols-[minmax(0,1fr)_4rem] items-center gap-x-2 border-l-2 px-3 py-2 [--notch:0.625rem]"
-                  >
-                    <span
-                      [class]="run.isCurrent ? 'text-brand-500' : 'text-text-primary'"
-                      class="truncate font-display text-xs font-bold uppercase"
-                    >
-                      {{ run.label }}
-                    </span>
-
-                    <span class="text-right">
-                      <span class="sr-only">{{ 'colony.history.final' | translate }}</span>
-                      <span
-                        [class]="run.isCurrent ? 'text-brand-500' : 'text-text-primary'"
-                        class="font-display text-sm leading-none font-bold tabular-nums"
-                      >
-                        {{ run.finalLabel }}
-                      </span>
-                    </span>
-                  </li>
-                }
-
-                <!-- Berths for the runs still to come. A run history one row long reads as a ledger
-                     that only ever holds one; the empty rows say it keeps growing. -->
-                @for (slot of historyPlaceholders(); track slot) {
-                  <li
-                    aria-hidden="true"
-                    class="notch-tr flex shrink-0 items-center border-l-2 border-l-text-primary/10 px-3 py-2 [--notch:0.625rem]"
-                  >
-                    <span class="block h-px w-8 bg-text-primary/15"></span>
-                  </li>
-                }
-              </ul>
-            </div>
-          </app-colony-card>
-
-          <!-- Nourriture cette semaine shares its row with Présence, Efficacité and Matériaux to
-               its right - the run's three standing rates read beside the stock they draw on
-               rather than stacked under it. The six figures behind today's harvest, the food
-               reserve and the colony's growth fill the row below, one tile each, in the same
-               six-column grid: a shared track definition is what makes both rows' gutters land
-               on the same fraction, which two independently-sized column blocks never do. -->
+          <!-- Nourriture cette semaine, twelve columns wide beside the hexagon's six. -->
           <app-colony-card
             accentClass="border-t-brand-500"
-            class="lg:col-span-3"
+            class="lg:col-span-12"
             [infoDescription]="'colony.track.food.description' | translate"
             [infoFormulaRows]="foodWeekFormulaRows()"
             [infoPurpose]="'colony.track.food.note' | translate"
@@ -302,140 +208,20 @@
             <svg class="text-brand-500" infoIcon lucideWheat></svg>
 
             <div class="flex h-full min-h-[6.125rem] flex-col">
-              <app-line-chart
+              <app-bar-chart
                 [ariaLabel]="'colony.track.food.weekTitle' | translate"
+                [bars]="foodWeekBars()"
                 class="flex-1"
-                [filled]="true"
                 heightClass="h-full w-full"
-                [series]="foodWeekSeries()"
+                [showAllValues]="true"
                 [summary]="foodWeekSummary()"
-                [xLabels]="foodWeekLabels()"
               />
             </div>
           </app-colony-card>
 
-          @if (colony.battery(); as battery) {
-            <app-colony-card
-              accentClass="border-t-accent-cyan"
-              [infoDescription]="battery.description"
-              [infoFormulaRows]="participationFormulaRows()"
-              [infoPurpose]="battery.purpose"
-              [isCompact]="true"
-              [title]="'colony.track.presence.name' | translate"
-            >
-              <svg class="text-accent-cyan" icon lucideUserCheck></svg>
-              <svg class="text-accent-cyan" infoIcon lucideUserCheck></svg>
-
-              <div class="flex h-full flex-col justify-between gap-1.5">
-                <div class="flex flex-1 flex-col justify-center gap-1.5">
-                  <div class="flex items-baseline gap-1.5">
-                    <span
-                      class="font-display text-2xl leading-none font-bold text-text-primary tabular-nums"
-                    >
-                      {{ battery.multiplierLabel }}
-                    </span>
-                    <span class="font-mono text-sm text-text-secondary tabular-nums">
-                      {{ battery.presentCount }}/{{ battery.cellCount }}
-                    </span>
-                  </div>
-                  <app-progress-bar
-                    [percentage]="presencePercentage()"
-                    class="w-full"
-                    colorClass="bg-accent-cyan"
-                    heightClass="h-1.5"
-                    radiusClass="rounded-full"
-                  />
-                </div>
-                <span class="text-xs text-text-secondary">{{
-                  'colony.track.presence.caption' | translate
-                }}</span>
-              </div>
-            </app-colony-card>
-          }
-
-          @if (colony.foodRing(); as ring) {
-            <app-colony-card
-              accentClass="border-t-accent-pink"
-              [infoDescription]="'colony.track.efficiency.description' | translate"
-              [infoPurpose]="'colony.track.efficiency.purpose' | translate"
-              [isCompact]="true"
-              [title]="'colony.track.efficiency.name' | translate"
-            >
-              <svg class="text-accent-pink" icon lucideGauge></svg>
-              <svg class="text-accent-pink" infoIcon lucideGauge></svg>
-
-              <div class="flex h-full flex-col justify-between gap-1.5">
-                <div class="flex flex-1 items-center">
-                  <span class="relative flex size-11 shrink-0 items-center justify-center">
-                    <app-progress-circle
-                      class="absolute inset-0 size-full"
-                      colorClass="text-accent-pink"
-                      [percentage]="efficiencyProgressPercentage()"
-                    />
-                    <span
-                      class="relative font-display text-2xs font-bold text-accent-pink tabular-nums"
-                    >
-                      {{ ring.efficiencyFactorLabel }}
-                    </span>
-                  </span>
-                </div>
-                <span class="text-xs text-text-secondary">{{
-                  'colony.track.efficiency.caption' | translate
-                }}</span>
-              </div>
-            </app-colony-card>
-          }
-
-          <app-colony-card
-            accentClass="border-t-accent-gold"
-            [infoDescription]="'colony.track.materials.description' | translate"
-            [infoPurpose]="'colony.track.materials.purpose' | translate"
-            [isCompact]="true"
-            [title]="'colony.track.materials.name' | translate"
-          >
-            <svg class="text-accent-gold" icon lucideHammer></svg>
-            <svg class="text-accent-gold" infoIcon lucideHammer></svg>
-
-            <div class="flex h-full flex-col justify-between gap-1.5">
-              <div class="flex flex-1 items-center">
-                <span
-                  class="font-display text-2xl leading-none font-bold text-accent-gold tabular-nums"
-                >
-                  {{ colony.materialsLabel() }}
-                </span>
-              </div>
-              <span class="text-xs text-text-secondary">{{
-                'colony.track.materials.caption' | translate
-              }}</span>
-            </div>
-          </app-colony-card>
-
           <app-colony-card
             accentClass="border-t-brand-400"
-            [infoDescription]="'colony.track.foodToday.description' | translate"
-            [infoPurpose]="'colony.track.foodToday.purpose' | translate"
-            [isCompact]="true"
-            [title]="'colony.track.foodToday.name' | translate"
-          >
-            <svg class="text-brand-400" icon lucideWheat></svg>
-            <svg class="text-brand-400" infoIcon lucideWheat></svg>
-
-            <div class="flex h-full flex-col justify-between gap-1.5">
-              <div class="flex flex-1 items-center">
-                <span
-                  class="font-display text-2xl leading-none font-bold text-brand-400 tabular-nums"
-                >
-                  {{ colony.todayFoodLabel() ?? '—' }}
-                </span>
-              </div>
-              <span class="text-xs text-text-secondary">{{
-                'colony.track.foodToday.caption' | translate
-              }}</span>
-            </div>
-          </app-colony-card>
-
-          <app-colony-card
-            accentClass="border-t-brand-400"
+            class="lg:col-span-4"
             [infoDescription]="'colony.track.foodStock.description' | translate"
             [infoPurpose]="'colony.track.foodStock.purpose' | translate"
             [isCompact]="true"
@@ -460,6 +246,7 @@
 
           <app-colony-card
             accentClass="border-t-brand-400"
+            class="lg:col-span-4"
             [infoDescription]="'colony.track.consumption.description' | translate"
             [infoPurpose]="'colony.track.consumption.purpose' | translate"
             [isCompact]="true"
@@ -485,6 +272,7 @@
           @if (colony.foodRing(); as ring) {
             <app-colony-card
               accentClass="border-t-success"
+              class="lg:col-span-4"
               [infoDescription]="'colony.track.surplus.description' | translate"
               [infoPurpose]="'colony.track.surplus.purpose' | translate"
               [isCompact]="true"
@@ -508,9 +296,66 @@
             </app-colony-card>
           }
 
+          @if (colony.battery(); as battery) {
+            <app-colony-card
+              accentClass="border-t-accent-cyan"
+              class="lg:col-span-4"
+              [infoDescription]="battery.description"
+              [infoFormulaRows]="participationFormulaRows()"
+              [infoPurpose]="battery.purpose"
+              [isCompact]="true"
+              [title]="'colony.track.presence.name' | translate"
+            >
+              <svg class="text-accent-cyan" icon lucideUserCheck></svg>
+              <svg class="text-accent-cyan" infoIcon lucideUserCheck></svg>
+
+              <div class="flex h-full flex-col justify-between gap-1.5">
+                <div class="flex flex-1 items-center">
+                  <span
+                    class="font-display text-2xl leading-none font-bold text-accent-cyan tabular-nums"
+                  >
+                    {{ battery.multiplierLabel }}
+                  </span>
+                </div>
+                <span class="text-xs text-text-secondary">{{
+                  'colony.track.presence.caption'
+                    | translate: { present: battery.presentCount, roster: battery.cellCount }
+                }}</span>
+              </div>
+            </app-colony-card>
+          }
+
+          @if (colony.foodRing(); as ring) {
+            <app-colony-card
+              accentClass="border-t-accent-pink"
+              class="lg:col-span-4"
+              [infoDescription]="'colony.track.efficiency.description' | translate"
+              [infoPurpose]="'colony.track.efficiency.purpose' | translate"
+              [isCompact]="true"
+              [title]="'colony.track.efficiency.name' | translate"
+            >
+              <svg class="text-accent-pink" icon lucideGauge></svg>
+              <svg class="text-accent-pink" infoIcon lucideGauge></svg>
+
+              <div class="flex h-full flex-col justify-between gap-1.5">
+                <div class="flex flex-1 items-center">
+                  <span
+                    class="font-display text-2xl leading-none font-bold text-accent-pink tabular-nums"
+                  >
+                    {{ ring.efficiencyFactorLabel }}
+                  </span>
+                </div>
+                <span class="text-xs text-text-secondary">{{
+                  'colony.track.efficiency.caption' | translate
+                }}</span>
+              </div>
+            </app-colony-card>
+          }
+
           @if (colony.attractivity(); as attractivity) {
             <app-colony-card
               accentClass="border-t-accent-violet"
+              class="lg:col-span-4"
               [infoDescription]="attractivity.description"
               [infoPurpose]="attractivity.purpose"
               [isCompact]="true"
@@ -521,17 +366,10 @@
 
               <div class="flex h-full flex-col justify-between gap-1.5">
                 <div class="flex flex-1 items-center">
-                  <span class="relative flex size-11 shrink-0 items-center justify-center">
-                    <app-progress-circle
-                      class="absolute inset-0 size-full"
-                      colorClass="text-accent-violet"
-                      [percentage]="attractivity.percentage"
-                    />
-                    <span
-                      class="relative font-display text-2xs font-bold text-accent-violet tabular-nums"
-                    >
-                      {{ attractivity.moraleValueLabel }}
-                    </span>
+                  <span
+                    class="font-display text-2xl leading-none font-bold text-accent-violet tabular-nums"
+                  >
+                    {{ attractivity.moraleLabel }}
                   </span>
                 </div>
                 <span class="text-xs text-text-secondary">{{
@@ -544,6 +382,7 @@
           @if (colony.delta(); as delta) {
             <app-colony-card
               accentClass="border-t-success"
+              class="lg:col-span-4"
               [infoDescription]="'colony.track.arrivals.description' | translate"
               [infoPurpose]="'colony.track.arrivals.purpose' | translate"
               [isCompact]="true"
@@ -567,6 +406,37 @@
               </div>
             </app-colony-card>
           }
+
+          <app-colony-card
+            accentClass="border-t-accent-gold"
+            class="lg:col-span-4"
+            [infoDescription]="'colony.track.materials.description' | translate"
+            [infoPurpose]="'colony.track.materials.purpose' | translate"
+            [isCompact]="true"
+            [title]="'colony.track.materials.name' | translate"
+          >
+            <svg class="text-accent-gold" icon lucideHammer></svg>
+            <svg class="text-accent-gold" infoIcon lucideHammer></svg>
+
+            <div class="flex h-full flex-col justify-between gap-1.5">
+              <div class="flex flex-1 items-center">
+                <span
+                  class="font-display text-2xl leading-none font-bold text-accent-gold tabular-nums"
+                >
+                  {{ colony.materialsLabel() }}
+                </span>
+              </div>
+              <span class="text-xs text-text-secondary">
+                {{ 'colony.track.materials.caption' | translate }}
+                "<span class="font-bold text-text-primary">{{ colony.nextTierNameLabel() }}</span
+                >"
+                {{ 'colony.track.materials.captionAt' | translate }}
+                <span class="font-bold text-text-primary">{{
+                  colony.nextTierMaterialsLabel()
+                }}</span>
+              </span>
+            </div>
+          </app-colony-card>
         </div>
       }
 
@@ -1225,6 +1095,76 @@
           </section>
         }
       </div>
+
+      @if (colony.colony()) {
+        <!-- Every run before this one, as the scale the population figure is missing — a band of
+             its own below the ground it was won on, now that the tile grid above only carries the
+             run under way. -->
+        <app-colony-card
+          accentClass="border-t-podium-bronze"
+          class="h-64"
+          [infoDescription]="'colony.history.columnHint' | translate"
+          [infoPurpose]="'colony.history.finalHint' | translate"
+          [title]="'colony.history.title' | translate"
+        >
+          <svg class="text-podium-bronze" icon lucideSwords></svg>
+          <svg class="text-podium-bronze" infoIcon lucideSwords></svg>
+
+          <div class="flex h-full flex-col">
+            <div aria-hidden="true" class="grid grid-cols-[minmax(0,1fr)_4rem] gap-x-2 px-1">
+              <span class="label-caption text-text-muted">{{
+                'colony.history.column' | translate
+              }}</span>
+              <span class="label-caption ml-auto text-right text-text-muted">{{
+                'colony.history.final' | translate
+              }}</span>
+            </div>
+
+            <!-- Grows to the band's own height and scrolls past it, so a ledger ten runs deep costs
+                 it the same height as one two runs deep. -->
+            <ul class="scroll-subtle mt-1.5 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
+              @for (run of colony.runs(); track run.runNumber) {
+                <li
+                  [class]="
+                    run.isCurrent
+                      ? 'border-l-brand-500 bg-brand-500/10'
+                      : 'border-l-text-primary/15 bg-text-primary/4'
+                  "
+                  class="notch-tr grid shrink-0 grid-cols-[minmax(0,1fr)_4rem] items-center gap-x-2 border-l-2 px-3 py-2 [--notch:0.625rem]"
+                >
+                  <span
+                    [class]="run.isCurrent ? 'text-brand-500' : 'text-text-primary'"
+                    class="truncate font-display text-xs font-bold uppercase"
+                  >
+                    {{ run.label }}
+                  </span>
+
+                  <span class="text-right">
+                    <span class="sr-only">{{ 'colony.history.final' | translate }}</span>
+                    <span
+                      [class]="run.isCurrent ? 'text-brand-500' : 'text-text-primary'"
+                      class="font-display text-sm leading-none font-bold tabular-nums"
+                    >
+                      {{ run.finalLabel }}
+                    </span>
+                  </span>
+                </li>
+              }
+
+              <!-- Berths for the runs still to come. A run history one row long reads as a ledger
+                   that only ever holds one; the empty rows say it keeps growing. -->
+              @for (slot of historyPlaceholders(); track slot) {
+                <li
+                  aria-hidden="true"
+                  class="notch-tr flex shrink-0 items-center border-l-2 border-l-text-primary/10 px-3 py-2 [--notch:0.625rem]"
+                >
+                  <span class="block h-px w-8 bg-text-primary/15"></span>
+                </li>
+              }
+            </ul>
+          </div>
+        </app-colony-card>
+      }
     </div>
   </app-resource-state>
 

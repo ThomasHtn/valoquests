@@ -294,7 +294,7 @@
         "description": "Un·e joueur·se compte dès qu'il ou elle dépasse {{threshold}} dégâts bruts dans la journée.",
         "purpose": "Plus l'escouade est au complet, plus la récolte de nourriture du soir est multipliée : de ×1 seul à ×2 à {{roster}}.",
         "bonus": "Bonus sur la récolte de ce soir",
-        "caption": "Joueurs actifs aujourd'hui",
+        "caption": "{{present}}/{{roster}} joueurs actifs aujourd'hui",
         "aria": "Présence : {{present}} joueurs sur {{roster}} ont joué aujourd'hui. Il faut {{threshold}} dégâts bruts dans la journée pour compter."
       },
       "morale": {
@@ -309,18 +309,6 @@
         "description": "Ce que le moral et la nourriture ajoutent ou retirent à la population, chaque nuit.",
         "purpose": "Le résultat des jauges Nourriture et Attractivité combinées.",
         "caption": "Nouveaux habitants par jour"
-      },
-      "growth": {
-        "name": "Croissance",
-        "description": "Population de toute la campagne, jour par jour.",
-        "purpose": "Un palier marque un changement de nom, une pente qui casse signale une semaine calme.",
-        "peakUnit": "pic d'habitants"
-      },
-      "foodToday": {
-        "name": "Récolte du jour",
-        "description": "Les dégâts encaissés en match ce soir, multipliés par la présence de l'escouade.",
-        "purpose": "Vient s'ajouter au stock de la semaine dès que la nuit se referme.",
-        "caption": "Récolté aujourd'hui"
       },
       "foodStock": {
         "name": "Stock",
@@ -350,7 +338,8 @@
         "name": "Matériaux",
         "description": "Chaque défi validé et chaque boss vaincu rapportent des matériaux, amassés sans jamais expirer ni se dépenser.",
         "purpose": "Ils relèvent l'efficacité et font grimper la ville d'un palier une fois le seuil du suivant atteint.",
-        "caption": "Amassés depuis le début de la campagne"
+        "caption": "Prochain palier de ville",
+        "captionAt": "à"
       }
     }
   },

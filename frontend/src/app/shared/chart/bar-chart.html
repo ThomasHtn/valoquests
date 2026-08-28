@@ -1,7 +1,7 @@
 <!-- The canvas is taken out of flow and pinned to this box: as an inline child it added its own
      descender space to the box it was measured against, so Chart.js sized the backing store for a
      height the canvas never actually got and the browser stretched the result. -->
-<div class="relative h-52 w-full sm:h-56">
+<div [class]="heightClass()" class="relative">
   <canvas
     #canvas
     [attr.aria-label]="ariaLabel()"
