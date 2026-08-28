@@ -5,6 +5,7 @@ import {
   CategoryScale,
   Chart,
   DoughnutController,
+  Filler,
   LinearScale,
   LineController,
   LineElement,
@@ -107,6 +108,7 @@ export function registerChartComponents(): void {
     LinearScale,
     CategoryScale,
     Tooltip,
+    Filler,
   );
   registered = true;
 }

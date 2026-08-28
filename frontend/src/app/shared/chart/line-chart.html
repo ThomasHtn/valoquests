@@ -1,7 +1,7 @@
 <!-- The canvas is sized by this box, never by its own attributes: Chart.js resizes to its parent,
      and `maintainAspectRatio: false` is what lets a two-hundred-point series stay a readable band
      instead of growing a metre tall. -->
-<div class="relative h-64 w-full sm:h-72">
+<div [class]="heightClass()" class="relative">
   <canvas
     #canvas
     [attr.aria-label]="ariaLabel()"

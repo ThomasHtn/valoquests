@@ -164,7 +164,17 @@ export class ColonyView {
   );
 
   /**
-   * Materials banked, the currency the ladder is priced in.
+   * Food of the last seven days, the Food-this-week tile's own headline — the same rolling stock
+   * {@link foodRing} reads its surplus and consumption from.
+   */
+  public readonly foodStockLabel = computed<string>(() =>
+    this.grouped((colony) => colony.foodStock),
+  );
+
+  /**
+   * Materials the run has banked so far — earned from challenges and defeated bosses, never
+   * expiring, never spent. The one figure {@link ColonyFoodRingView.efficiencyFactorLabel} and the
+   * ladder's own steps are both priced in, shown here as the bare count neither reads directly.
    */
   public readonly materialsLabel = computed<string>(() =>
     this.grouped((colony) => colony.materials),
@@ -181,21 +191,33 @@ export class ColonyView {
   );
 
   /**
-   * What this week has already secured and Monday will credit, or `null` when nothing has been.
-   *
-   * The banked total only ever moves on a Monday, so it reads as a flat zero for the whole first week
-   * of a run while the squad is in fact earning. This is the figure that says so, and it is dropped
-   * entirely rather than shown as `+0`: a zero here would state that nothing is coming, which on a
-   * Tuesday is a different claim from saying nothing at all.
+   * What today alone has harvested, signed — the Food tile's own headline, distinct from
+   * {@link foodRing}'s weekly stock. `null` before the colony has resolved or before today's
+   * entry has posted to {@link Colony.foodWindow}.
    */
-  public readonly pendingMaterialsLabel = computed<string | null>(() => {
-    const pending = this.colony()?.pendingMaterials ?? 0;
+  public readonly todayFoodLabel = computed<string | null>(() => {
+    const colony = this.colony();
+    if (colony === null) {
+      return null;
+    }
 
-    return pending <= 0
+    const today = colony.foodWindow.find((entry) => entry.day === colony.day);
+
+    return today === undefined
       ? null
-      : this.translation.translate('colony.materialsPending', {
-          materials: formatPopulation(pending, this.translation.language()),
-        });
+      : formatSignedPopulation(today.harvest, this.translation.language());
+  });
+
+  /**
+   * The weekly consumption, signed negative — what {@link foodRing} states as a bare magnitude,
+   * read here as its own tile's headline instead of a line inside the food ring's hover card.
+   */
+  public readonly consumptionSignedLabel = computed<string>(() => {
+    const colony = this.colony();
+
+    return colony === null
+      ? ''
+      : formatSignedPopulation(-colony.weeklyConsumption, this.translation.language());
   });
 
   /**
@@ -350,10 +372,17 @@ export class ColonyView {
           day: this.weekdayName(entry.day),
           food: formatPopulation(entry.harvest, language),
         }),
+        harvestLabel: formatPopulation(entry.harvest, language),
+        harvestValue: entry.harvest,
+        weekdayInitial: this.weekdayName(entry.day).charAt(0).toUpperCase(),
       };
     });
 
     const placeholderCount = Math.max(0, colony.foodWindowDays - lived.length);
+    // Placeholders trail the window (see the class doc), so each one's own weekday is projected
+    // forward from the last lived day rather than left blank — a young run's histogram otherwise
+    // reads as missing days of the week rather than as days not lived yet.
+    const lastLivedDay = lived.length > 0 ? colony.foodWindow[lived.length - 1].day : colony.day;
     const placeholders = Array.from({ length: placeholderCount }, (_, index) => ({
       day: `placeholder-${index}`,
       percentage: 0,
@@ -362,6 +391,11 @@ export class ColonyView {
       isPlaceholder: true,
       segmentColor: FOOD_SEGMENT_EMPTY_COLOR,
       ariaLabel: this.translation.translate('colony.track.food.dayUnplayed'),
+      harvestLabel: '',
+      harvestValue: null,
+      weekdayInitial: this.weekdayName(this.addDays(lastLivedDay, index + 1))
+        .charAt(0)
+        .toUpperCase(),
     }));
 
     return [...lived, ...placeholders];
@@ -416,6 +450,17 @@ export class ColonyView {
       highlighted: point.population === trajectory.peakPopulation,
       muted: false,
     }));
+  });
+
+  /**
+   * The run's own peak population, already formatted, for the Growth tile's headline figure.
+   */
+  public readonly peakPopulationLabel = computed<string>(() => {
+    const trajectory = this.trajectory();
+
+    return trajectory === null
+      ? ''
+      : formatPopulation(trajectory.peakPopulation, this.translation.language());
   });
 
   /**
@@ -527,6 +572,21 @@ export class ColonyView {
   }
 
   /**
+   * Offsets an ISO day by a number of calendar days, for a food window placeholder projecting the
+   * weekday of a day not lived yet.
+   *
+   * @param isoDay - The day to offset from, as `YYYY-MM-DD`.
+   * @param days - How many days forward to move.
+   * @returns The offset day, as `YYYY-MM-DD`.
+   */
+  private addDays(isoDay: string, days: number): string {
+    const date = new Date(`${isoDay}T00:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + days);
+
+    return date.toISOString().slice(0, 10);
+  }
+
+  /**
    * The turnout battery: a cell per roster member, lit bottom-up by tonight's head count.
    *
    * Read as a charge rather than a fraction: `5 / 7` made a reader do the division themselves to
@@ -548,6 +608,7 @@ export class ColonyView {
       cellCount: presence.rosterSize,
       cells,
       isFull: presence.rosterSize > 0 && presence.present >= presence.rosterSize,
+      presentCount: presence.present,
       multiplierLabel: formatMultiplier(presence.multiplier, language),
       ariaLabel: this.translation.translate('colony.track.presence.aria', {
         present: presence.present,

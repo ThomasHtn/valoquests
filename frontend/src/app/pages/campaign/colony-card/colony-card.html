@@ -1,0 +1,66 @@
+<!-- The tile's own frame: hero glow or flat surface + coloured rule, then the header carrying the
+     projected icon, the title and the info button — and the body, left entirely to the caller.
+     `h-full` so every tile in a grid row fills the height the tallest one sets, rather than sitting
+     in a taller cell than its own content needs — the row would otherwise draw the shorter tiles'
+     borders short of the row's own bottom edge. -->
+<div [class]="frameClass() + ' ' + paddingClass()" class="relative flex h-full flex-col gap-3">
+  <div class="flex items-center justify-between gap-2">
+    <span [class]="'flex items-center gap-1.5 ' + titleClass()">
+      <ng-content select="[icon]" />
+      {{ title() }}
+    </span>
+
+    <div class="relative shrink-0">
+      <!-- Focus (which a click already gives the button) and hover are the peer's two triggers, so
+           this single native button already answers "click or hover" without extra state. -->
+      <button
+        [attr.aria-label]="'colony.cardInfo' | translate: { title: title() }"
+        class="peer/info focus-ring flex size-5 items-center justify-center rounded-full border border-text-primary/15 bg-text-primary/5 text-text-muted transition-colors hover:border-brand-500/50 hover:bg-brand-500/10 hover:text-brand-400"
+        type="button"
+      >
+        <svg class="size-3" lucideInfo></svg>
+      </button>
+
+      <div
+        [class]="tooltipSurfaceClass"
+        aria-hidden="true"
+        class="pointer-events-none absolute top-full right-0 z-30 mt-2.5 hidden w-80 px-4 py-3.5 opacity-0 shadow-xl shadow-surface-950/40 transition-opacity duration-150 peer-hover/info:opacity-100 peer-focus/info:opacity-100 motion-reduce:transition-none sm:block"
+      >
+        <p
+          class="flex items-center gap-1.5 font-display text-xs font-bold text-text-primary uppercase"
+        >
+          <ng-content select="[infoIcon]" />
+          {{ title() }}
+        </p>
+
+        <p class="mt-2.5 text-sm leading-relaxed text-text-secondary">{{ infoDescription() }}</p>
+
+        @if (infoFormulaRows().length > 0) {
+          <ul class="mt-3 flex flex-col gap-2 border-t border-text-primary/10 pt-3">
+            @for (row of infoFormulaRows(); track row.label) {
+              <li class="flex items-baseline justify-between gap-3">
+                <span class="label-caption text-text-muted">{{ row.label }}</span>
+                <span class="font-mono text-2xs font-medium text-text-secondary tabular-nums">{{
+                  row.value
+                }}</span>
+              </li>
+            }
+          </ul>
+        }
+
+        <p
+          class="mt-3 border-t border-text-primary/10 pt-3 text-sm leading-relaxed text-text-secondary"
+        >
+          {{ infoPurpose() }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- `flex-1` alone, no forced column/justify: the body's own layout (a button, a histogram, a
+       gauge row) is the caller's, this only ever gives it the row's leftover height to grow into
+       so a tile with a short body still anchors it the same way one with a tall body would. -->
+  <div class="flex-1">
+    <ng-content />
+  </div>
+</div>

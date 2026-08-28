@@ -8,6 +8,7 @@ import {
   LucideWheat,
 } from '@lucide/angular';
 
+import { attractivityGaugeSegments, presenceGaugeSegments } from '@core/colony/colony-gauge.utils';
 import {
   ColonyAttractivityView,
   ColonyBatteryView,
@@ -16,8 +17,8 @@ import {
   ColonyPresencePipView,
 } from '@core/colony/colony-view.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { ChartGaugeSegment } from '@shared/chart/chart.model';
 import { resolveCssColor } from '@shared/chart/chart-theme';
+import { ChartGaugeSegment } from '@shared/chart/chart.model';
 import { HalfDonutChart } from '@shared/chart/half-donut-chart';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { TOOLTIP_SURFACE_CLASS } from '@shared/tooltip/tooltip.constants';
@@ -27,23 +28,6 @@ import { TOOLTIP_SURFACE_CLASS } from '@shared/tooltip/tooltip.constants';
  * outline reads as a rim of even thickness on every side.
  */
 const HEXAGON_INNER_SCALE = 0.95;
-
-/**
- * Fill of the presence and attractivity domes' unfilled share — the same muted track every other
- * progress indicator in the app fills against, so a half-empty gauge here reads the same as one on
- * the ranking matrix.
- */
-const GAUGE_TRACK_COLOR = 'color-mix(in oklab, var(--color-text-primary) 12%, transparent)';
-
-/**
- * Fill of a presence cell tonight's turnout has lit.
- */
-const PRESENCE_LIT_COLOR = 'var(--color-accent-cyan)';
-
-/**
- * Fill of the attractivity dome's filled share.
- */
-const ATTRACTIVITY_FILL_COLOR = 'var(--color-accent-violet)';
 
 /**
  * One gauge's own geometry and type sizes, at one of the band's two densities.
@@ -289,13 +273,9 @@ export class ColonyResourceBand {
    * The presence dome's own arcs: one per roster cell, lit clockwise from the left by tonight's head
    * count — the same cells the battery used to fill bottom-up, read here around a gauge instead.
    */
-  protected readonly presenceSegments = computed<readonly ChartGaugeSegment[]>(() => {
-    const cells = this.battery()?.cells ?? [];
-    const lit = resolveCssColor(PRESENCE_LIT_COLOR);
-    const track = resolveCssColor(GAUGE_TRACK_COLOR);
-
-    return cells.map((isLit) => ({ value: 1, color: isLit ? lit : track, label: '' }));
-  });
+  protected readonly presenceSegments = computed<readonly ChartGaugeSegment[]>(() =>
+    presenceGaugeSegments(this.battery()?.cells ?? []),
+  );
 
   /**
    * The food dome's own arcs: one per day, every one the same weight regardless of what it holds so
@@ -319,17 +299,10 @@ export class ColonyResourceBand {
    */
   protected readonly attractivitySegments = computed<readonly ChartGaugeSegment[]>(() => {
     const attractivity = this.attractivity();
-    if (attractivity === null) {
-      return [];
-    }
 
-    const fill = resolveCssColor(ATTRACTIVITY_FILL_COLOR);
-    const track = resolveCssColor(GAUGE_TRACK_COLOR);
-
-    return [
-      { value: attractivity.percentage, color: fill, label: attractivity.moraleLabel },
-      { value: 100 - attractivity.percentage, color: track, label: attractivity.moraleLabel },
-    ];
+    return attractivity === null
+      ? []
+      : attractivityGaugeSegments(attractivity.percentage, attractivity.moraleLabel);
   });
 
   /**

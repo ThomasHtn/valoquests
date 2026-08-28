@@ -20,6 +20,7 @@ import {
   prefersReducedMotion,
   registerChartComponents,
   resolveChartTheme,
+  resolveCssColor,
 } from './chart-theme';
 import { ChartSeries } from './chart.model';
 
@@ -75,6 +76,35 @@ export class LineChart {
    * Already-translated name of the y axis. Empty leaves the axis unnamed.
    */
   public readonly yAxisLabel = input('');
+
+  /**
+   * Tailwind height utility of the chart's own box. Defaults to the full-page reading (the run's
+   * curve, opened in a drawer); a caller drawing the same shape as a tile preview — the campaign
+   * page's compact Trajectory tile — passes a shorter one instead.
+   */
+  public readonly heightClass = input('h-64 w-full sm:h-72');
+
+  /**
+   * Already-formatted value to mark at the first series' own highest point: a dashed rule through
+   * it, the figure written beside it in the series' own color. Empty draws neither — the shape
+   * every other chart in the app already keeps.
+   */
+  public readonly peakLabel = input('');
+
+  /**
+   * Already-translated label for each position on the shared axis, overriding the generated
+   * `1, 2, 3…` index labels. Empty falls back to the index labels; a caller with a short,
+   * meaningful axis — the food-this-week line's own weekdays — passes one entry per point instead.
+   */
+  public readonly xLabels = input<readonly string[]>([]);
+
+  /**
+   * Whether to shade the area between each curve and the chart's bottom edge, in a transparent
+   * tint of the curve's own color. Off by default: with several curves overlaid a filled area
+   * under every one of them would fuse into a wash and bury the lines underneath — only a caller
+   * plotting a single curve (the food-this-week line) turns it on.
+   */
+  public readonly filled = input(false);
 
   /**
    * Canvas the chart paints on.
@@ -138,6 +168,11 @@ export class LineChart {
    * @returns the axis labels
    */
   private labels(): string[] {
+    const custom = this.xLabels();
+    if (custom.length > 0) {
+      return [...custom];
+    }
+
     return Array.from({ length: this.pointCount() }, (_, index) => String(index + 1));
   }
 
@@ -147,11 +182,17 @@ export class LineChart {
    * @returns the datasets to plot
    */
   private datasets(): ChartConfiguration<'line'>['data']['datasets'] {
+    const filled = this.filled();
+
     return this.series().map((series) => ({
       label: series.label,
       data: [...series.points],
       borderColor: series.color,
-      backgroundColor: series.color,
+      // Filled: a transparent tint of the line's own color, resolved to a literal value since
+      // canvas cannot compute `color-mix()` itself. Unfilled: the flat color, unused as a fill.
+      backgroundColor: filled
+        ? resolveCssColor(`color-mix(in oklab, ${series.color} 20%, transparent)`)
+        : series.color,
       borderWidth: 2,
       // A season runs to hundreds of matches: a marker on every one of them would fuse into a
       // solid band and bury the trend the chart exists to show.
@@ -160,6 +201,9 @@ export class LineChart {
       pointHoverBorderWidth: 0,
       tension: 0.2,
       spanGaps: false,
+      // 'origin' shades down to zero, clipped to the chart area's own bottom edge when zero falls
+      // outside the visible scale — exactly the "between the point and the bottom" band asked for.
+      fill: filled ? 'origin' : false,
     }));
   }
 
@@ -215,7 +259,65 @@ export class LineChart {
           },
         },
       },
-      plugins: [LineChart.crosshair(theme)],
+      plugins: [LineChart.crosshair(theme), this.peakMarker(theme)],
+    };
+  }
+
+  /**
+   * Builds the dashed rule marking the first series' own highest point, with {@link peakLabel}
+   * written beside it in the series' own color.
+   *
+   * Reads {@link peakLabel} at draw time rather than once at chart creation, so the mark stays
+   * live across the `chart.update('none')` calls the input effect already drives — no separate
+   * wiring needed for this one input.
+   *
+   * @param theme resolved chart palette
+   * @returns the peak-marker plugin, scoped to one chart instance
+   */
+  private peakMarker(theme: ChartTheme): Plugin<'line'> {
+    return {
+      id: 'peakMarker',
+      afterDatasetsDraw: (chart) => {
+        const label = this.peakLabel();
+        const dataset = chart.data.datasets[0];
+        if (label.length === 0 || !dataset) {
+          return;
+        }
+
+        const points = dataset.data as (number | null)[];
+        let peakIndex = -1;
+        let peakValue = -Infinity;
+        points.forEach((value, index) => {
+          if (value !== null && value > peakValue) {
+            peakValue = value;
+            peakIndex = index;
+          }
+        });
+        const point = peakIndex === -1 ? undefined : chart.getDatasetMeta(0).data[peakIndex];
+        if (!point) {
+          return;
+        }
+
+        const { ctx, chartArea } = chart;
+        const color = typeof dataset.borderColor === 'string' ? dataset.borderColor : theme.tick;
+
+        ctx.save();
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = theme.grid;
+        ctx.beginPath();
+        ctx.moveTo(chartArea.left, point.y);
+        ctx.lineTo(chartArea.right, point.y);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.font = `${AXIS_TICK_FONT.size}px ${AXIS_TICK_FONT.family}`;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(label, chartArea.left + 4, Math.max(chartArea.top + 12, point.y - 4));
+        ctx.restore();
+      },
     };
   }
 

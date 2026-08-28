@@ -63,6 +63,24 @@ export interface ColonyFoodDayView {
    * placeholder slot, which has nothing to say.
    */
   readonly ariaLabel: string;
+
+  /**
+   * Already-formatted harvest of this day, for the food-this-week tile's tooltip. Empty on a
+   * placeholder slot.
+   */
+  readonly harvestLabel: string;
+
+  /**
+   * Raw harvest of this day, for the food-this-week line's own point. `null` on a placeholder
+   * slot, so the line stops rather than dipping to zero for a day not lived yet.
+   */
+  readonly harvestValue: number | null;
+
+  /**
+   * First letter of the day's name, already translated, for the food-this-week line's own axis.
+   * Empty on a placeholder slot.
+   */
+  readonly weekdayInitial: string;
 }
 
 /**
@@ -91,6 +109,12 @@ export interface ColonyBatteryView {
    * Whether every cell is lit, which is what earns the battery its glow.
    */
   readonly isFull: boolean;
+
+  /**
+   * Cells lit by tonight's turnout, out of {@link cellCount} — the Participation tile's own
+   * headline count, read beside the roster size rather than only as a level.
+   */
+  readonly presentCount: number;
 
   /**
    * Already-formatted factor the charge is worth on tonight's harvest, `×1,43`.

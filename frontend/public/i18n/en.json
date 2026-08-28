@@ -218,6 +218,7 @@
       "ifDefeated": "If defeated"
     },
     "bosses": "Bosses",
+    "cardInfo": "Detail {{title}}",
     "curve": {
       "title": "The run's population",
       "open": "See the run's population",
@@ -244,8 +245,8 @@
       "unit": "Left to gather",
       "hint": "Every tier is bought with materials. You earn them by clearing the week's challenges and by putting down Monday's boss."
     },
+    "campTitle": "Camp",
     "materials": "Materials",
-    "materialsPending": "+{{materials}} on Monday",
     "population": "Inhabitants",
     "presence": {
       "FULL": "{{name}} played today",
@@ -271,12 +272,16 @@
     },
     "tierProgress": "{{materials}} materials to go before {{name}}.",
     "track": {
+      "population": {
+        "description": "The population climbs every night towards what the food can feed.",
+        "purpose": "How fast it catches up depends on morale; its ceiling depends on the food in stock."
+      },
       "food": {
         "name": "Food",
+        "weekTitle": "Food this week",
         "day": "{{day}}: {{food}} harvested",
         "dayUnplayed": "Day not yet lived",
         "description": "Every night, damage dealt in matches turns into food; the more of the squad plays, the bigger the harvest. It keeps for 7 days before being lost.",
-        "stock": "Stock (7 days)",
         "efficiency": "1 food feeds",
         "efficiencyValue": "{{inhabitants}} inhabitants",
         "consumption": "Consumption / week",
@@ -289,16 +294,63 @@
         "description": "A player counts once they pass {{threshold}} raw damage in the day.",
         "purpose": "The fuller the squad, the more tonight's food harvest is multiplied: from ×1 alone to ×2 at {{roster}}.",
         "bonus": "Bonus on tonight's harvest",
+        "caption": "Players active today",
         "aria": "Turnout: {{present}} of {{roster}} players played today. A day needs {{threshold}} raw damage to count."
       },
       "morale": {
         "name": "Attractivity",
         "description": "A defeated boss raises morale (+3 minor, +5 standard, +7 elite); a surviving boss lowers it (−7).",
         "purpose": "It sets how fast the population catches up to what the food can feed: at 100 morale, the gap closes 15% every night.",
+        "caption": "Speeds up new arrivals",
         "aria": "Attractivity: morale {{value}} of {{ceiling}}, {{arrivals}} inhabitants tonight."
       },
       "arrivals": {
-        "name": "Arrivals"
+        "name": "Arrivals",
+        "description": "What morale and food add or take from the population, every night.",
+        "purpose": "The result of the Food and Attractivity gauges combined.",
+        "caption": "New inhabitants per day"
+      },
+      "growth": {
+        "name": "Growth",
+        "description": "Population across the whole campaign, day by day.",
+        "purpose": "A step marks a change of name; a broken slope flags a quiet week.",
+        "peakUnit": "population peak"
+      },
+      "foodToday": {
+        "name": "Today's harvest",
+        "description": "Damage dealt in tonight's matches, multiplied by how much of the squad turned up.",
+        "purpose": "Joins the week's stock the moment tonight closes.",
+        "caption": "Harvested today"
+      },
+      "foodStock": {
+        "name": "Stock",
+        "description": "The week's harvest kept in store, expiring seven days after it was gathered.",
+        "purpose": "What consumption draws from every week, and what raises the population's fed ceiling.",
+        "caption": "Kept for 7 days"
+      },
+      "consumption": {
+        "name": "Consumption",
+        "description": "What the town eats every week, whatever the stock holds.",
+        "purpose": "Paid first out of the harvest; what is left over becomes the surplus.",
+        "caption": "Eaten every week, whatever happens"
+      },
+      "surplus": {
+        "name": "Surplus",
+        "description": "The week's harvest, once consumption is paid. Never negative.",
+        "purpose": "What makes the town grow: the higher it is, the higher the fed ceiling climbs.",
+        "caption": "Draws in new inhabitants"
+      },
+      "efficiency": {
+        "name": "Efficiency",
+        "description": "Every material earned by beating a boss or clearing a challenge raises this factor, with no ceiling.",
+        "purpose": "It multiplies every point of food into feedable inhabitants: the higher it is, the more the same stock feeds.",
+        "caption": "Inhabitants fed per food"
+      },
+      "materials": {
+        "name": "Materials",
+        "description": "Every cleared challenge and every defeated boss bring in materials, banked without ever expiring or being spent.",
+        "purpose": "They raise efficiency and step the town up a tier once the next one's threshold is met.",
+        "caption": "Banked since the campaign began"
       }
     }
   },

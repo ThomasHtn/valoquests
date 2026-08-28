@@ -1,6 +1,7 @@
 import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, effect, ElementRef, inject, signal } from '@angular/core';
 import {
+  LucideArrowDown,
   LucideBuilding2,
   LucideCheck,
   LucideGauge,
@@ -8,9 +9,15 @@ import {
   LucideHouse,
   LucideLandmark,
   LucideLock,
+  LucideMagnet,
+  LucidePackage,
   LucideSkull,
   LucideSwords,
   LucideTent,
+  LucideTrendingUp,
+  LucideUserCheck,
+  LucideUsers,
+  LucideWheat,
   LucideX,
 } from '@lucide/angular';
 
@@ -20,16 +27,21 @@ import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
 import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
 import { ColonyView } from '@core/colony/colony-view';
-import { ColonyBossView, ColonyTierStepView } from '@core/colony/colony-view.model';
+import {
+  ColonyBossView,
+  ColonyDeltaView,
+  ColonyTierStepView,
+} from '@core/colony/colony-view.model';
 import { ColonyTierState } from '@core/colony/colony.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { ColonyResourceBand } from '@shared/colony-resource-band/colony-resource-band';
+import { ColonyCard, ColonyCardFormulaRow } from './colony-card/colony-card';
 import { PageHeader } from '@layout/page-header/page-header';
-import { resolveSeriesColor } from '@shared/chart/chart-theme';
+import { resolveCssColor, resolveSeriesColor } from '@shared/chart/chart-theme';
 import { ChartSeries } from '@shared/chart/chart.model';
 import { LineChart } from '@shared/chart/line-chart';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
+import { ProgressCircle } from '@shared/progress-circle/progress-circle';
 import { Drawer } from '@shared/drawer/drawer';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { Select } from '@shared/select/select';
@@ -213,12 +225,14 @@ interface CampaignMapRow {
     BossDetail,
     ResourceState,
     NgOptimizedImage,
-    ColonyResourceBand,
+    ColonyCard,
     Drawer,
     LineChart,
     ProgressBar,
+    ProgressCircle,
     Select,
     Tooltip,
+    LucideArrowDown,
     LucideBuilding2,
     LucideCheck,
     LucideGauge,
@@ -226,9 +240,15 @@ interface CampaignMapRow {
     LucideHouse,
     LucideLandmark,
     LucideLock,
+    LucideMagnet,
+    LucidePackage,
     LucideSkull,
     LucideSwords,
     LucideTent,
+    LucideTrendingUp,
+    LucideUserCheck,
+    LucideUsers,
+    LucideWheat,
     LucideX,
     PageHeader,
   ],
@@ -325,6 +345,110 @@ export class Campaign {
       },
     ];
   });
+
+  /**
+   * The week's harvest as one plotted line, one point per day of the food window.
+   *
+   * A line rather than the histogram it replaces: the same idiom the growth curve already reads
+   * in, with the area under it filled (see the template's `filled` input) so the week's stock
+   * reads as a level rather than as seven independent bars.
+   */
+  protected readonly foodWeekSeries = computed<readonly ChartSeries[]>(() => {
+    const days = this.colony.foodDays();
+    if (days.length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        label: this.translation.translate('colony.track.food.name'),
+        color: resolveCssColor('var(--color-brand-500)'),
+        points: days.map((day) => day.harvestValue),
+      },
+    ];
+  });
+
+  /**
+   * The food line's own x axis: each day's weekday initial, the same letters the histogram it
+   * replaces printed under every bar.
+   */
+  protected readonly foodWeekLabels = computed<readonly string[]>(() =>
+    this.colony.foodDays().map((day) => day.weekdayInitial),
+  );
+
+  /**
+   * Sr-only prose standing in for the food line, each day's own accessible label read in sequence
+   * — the canvas is one opaque image to assistive technology, so this is where the per-day figures
+   * the histogram used to print in text now reach a reader without the plot.
+   */
+  protected readonly foodWeekSummary = computed<string>(() =>
+    this.colony
+      .foodDays()
+      .map((day) => day.ariaLabel)
+      .join(', '),
+  );
+
+  /**
+   * The Food-this-week tile's own formula rows: the same consumption and efficiency figures
+   * `ColonyResourceBand`'s own food hover card states, read a second time as the tile's own bubble
+   * now that the tile stands apart from the band.
+   */
+  protected readonly foodWeekFormulaRows = computed<readonly ColonyCardFormulaRow[]>(() => {
+    const ring = this.colony.foodRing();
+    if (ring === null) {
+      return [];
+    }
+
+    return [
+      {
+        label: this.translation.translate('colony.track.food.consumption'),
+        value: ring.consumptionLabel,
+      },
+      {
+        label: this.translation.translate('colony.track.food.efficiency'),
+        value: ring.efficiencyLabel,
+      },
+    ];
+  });
+
+  /**
+   * The Participation tile's own formula row: tonight's turnout multiplier, the same bonus row
+   * the presence hover card already states.
+   */
+  protected readonly participationFormulaRows = computed<readonly ColonyCardFormulaRow[]>(() => {
+    const battery = this.colony.battery();
+    if (battery === null) {
+      return [];
+    }
+
+    return [
+      {
+        label: this.translation.translate('colony.track.presence.bonus'),
+        value: battery.multiplierLabel,
+      },
+    ];
+  });
+
+  /**
+   * The Participation tile's own bar: tonight's turnout, out of the roster it is read against.
+   */
+  protected readonly presencePercentage = computed<number>(() => {
+    const battery = this.colony.battery();
+
+    return battery === null || battery.cellCount <= 0
+      ? 0
+      : Math.min(100, (battery.presentCount / battery.cellCount) * 100);
+  });
+
+  /**
+   * The Efficiency tile's own ring: efficiency itself has no ceiling (see `Colony.efficiency`), so
+   * the fill reads the same climb the ladder panel already tracks — the materials still to gather
+   * before the next tier's efficiency gain lands — rather than a percentage of a number the model
+   * does not have.
+   */
+  protected readonly efficiencyProgressPercentage = computed<number>(
+    () => this.colony.colony()?.tierProgressPercentage ?? 0,
+  );
 
   /**
    * The map, row by row, oldest week at the top, framed above and below by terrain the campaign
@@ -577,5 +701,16 @@ export class Campaign {
     return category === null
       ? this.territoryTier('current').iconClass
       : resolveBossCategoryColorClass(category);
+  }
+
+  /**
+   * Text color of the Arrivals tile's own figure, by the direction the night moved — the same
+   * rule `ColonyResourceBand`'s own arrival mark is coloured by.
+   *
+   * @param delta - What the night moved.
+   * @returns The colour utility.
+   */
+  protected deltaColorClass(delta: ColonyDeltaView): string {
+    return delta.isPositive ? 'text-success' : delta.isNegative ? 'text-danger' : 'text-text-muted';
   }
 }

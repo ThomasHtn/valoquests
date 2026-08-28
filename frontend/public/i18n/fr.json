@@ -218,6 +218,7 @@
       "ifDefeated": "En cas de défaite"
     },
     "bosses": "Boss",
+    "cardInfo": "Détail {{title}}",
     "curve": {
       "title": "Population de la run",
       "open": "Voir la population de la run",
@@ -244,8 +245,8 @@
       "unit": "Reste à réunir",
       "hint": "Chaque palier s'achète en matériaux. Vous en gagnez en validant les défis de la semaine et en battant le boss du lundi."
     },
+    "campTitle": "Campement",
     "materials": "Matériaux",
-    "materialsPending": "+{{materials}} lundi",
     "population": "Habitants",
     "presence": {
       "FULL": "{{name}} a joué aujourd'hui",
@@ -271,12 +272,16 @@
     },
     "tierProgress": "Encore {{materials}} matériaux pour atteindre {{name}}.",
     "track": {
+      "population": {
+        "description": "La population grimpe chaque nuit vers ce que la nourriture peut nourrir.",
+        "purpose": "Sa vitesse de rattrapage dépend du moral ; son plafond, de la nourriture en stock."
+      },
       "food": {
         "name": "Nourriture",
+        "weekTitle": "Nourriture cette semaine",
         "day": "{{day}} : {{food}} de récolte",
         "dayUnplayed": "Jour à venir",
         "description": "Chaque soir, les dégâts encaissés en match rapportent de la nourriture ; plus l'escouade est nombreuse à jouer, plus la récolte est multipliée. Elle se garde 7 jours avant d'être perdue.",
-        "stock": "Stock (7 jours)",
         "efficiency": "1 nourriture nourrit",
         "efficiencyValue": "{{inhabitants}} habitants",
         "consumption": "Consommation / semaine",
@@ -289,16 +294,63 @@
         "description": "Un·e joueur·se compte dès qu'il ou elle dépasse {{threshold}} dégâts bruts dans la journée.",
         "purpose": "Plus l'escouade est au complet, plus la récolte de nourriture du soir est multipliée : de ×1 seul à ×2 à {{roster}}.",
         "bonus": "Bonus sur la récolte de ce soir",
+        "caption": "Joueurs actifs aujourd'hui",
         "aria": "Présence : {{present}} joueurs sur {{roster}} ont joué aujourd'hui. Il faut {{threshold}} dégâts bruts dans la journée pour compter."
       },
       "morale": {
         "name": "Attractivité",
         "description": "Un boss vaincu fait monter le moral (+3 mineur, +5 standard, +7 élite) ; un boss qui survit le fait descendre (−7).",
         "purpose": "Il fixe la vitesse à laquelle la population rejoint ce que la nourriture peut nourrir : à 100 de moral, l'écart se comble de 15 % chaque nuit.",
+        "caption": "Accélère l'arrivée des habitants",
         "aria": "Attractivité : moral {{value}} sur {{ceiling}}, {{arrivals}} habitants ce soir."
       },
       "arrivals": {
-        "name": "Arrivées"
+        "name": "Arrivées",
+        "description": "Ce que le moral et la nourriture ajoutent ou retirent à la population, chaque nuit.",
+        "purpose": "Le résultat des jauges Nourriture et Attractivité combinées.",
+        "caption": "Nouveaux habitants par jour"
+      },
+      "growth": {
+        "name": "Croissance",
+        "description": "Population de toute la campagne, jour par jour.",
+        "purpose": "Un palier marque un changement de nom, une pente qui casse signale une semaine calme.",
+        "peakUnit": "pic d'habitants"
+      },
+      "foodToday": {
+        "name": "Récolte du jour",
+        "description": "Les dégâts encaissés en match ce soir, multipliés par la présence de l'escouade.",
+        "purpose": "Vient s'ajouter au stock de la semaine dès que la nuit se referme.",
+        "caption": "Récolté aujourd'hui"
+      },
+      "foodStock": {
+        "name": "Stock",
+        "description": "La récolte de la semaine gardée en réserve, qui expire sept jours après avoir été récoltée.",
+        "purpose": "Ce que la consommation puise chaque semaine, et ce qui relève le plafond nourri de la population.",
+        "caption": "Conservé 7 jours"
+      },
+      "consumption": {
+        "name": "Consommation",
+        "description": "Ce que la ville mange chaque semaine, quel que soit le stock disponible.",
+        "purpose": "Payée en priorité sur la récolte ; ce qu'il en reste devient le surplus.",
+        "caption": "Mangé chaque semaine, quoi qu'il arrive"
+      },
+      "surplus": {
+        "name": "Surplus",
+        "description": "La récolte de la semaine, une fois la consommation payée. Jamais négatif.",
+        "purpose": "C'est lui qui fait grandir la ville : plus il est élevé, plus le plafond nourri s'élève.",
+        "caption": "Attire de nouveaux habitants"
+      },
+      "efficiency": {
+        "name": "Efficacité",
+        "description": "Chaque matériau gagné en battant un boss ou en validant un défi relève ce facteur, sans plafond.",
+        "purpose": "Il multiplie chaque nourriture en habitants nourrissables : plus il est haut, plus le même stock nourrit de monde.",
+        "caption": "Habitants nourris par nourriture"
+      },
+      "materials": {
+        "name": "Matériaux",
+        "description": "Chaque défi validé et chaque boss vaincu rapportent des matériaux, amassés sans jamais expirer ni se dépenser.",
+        "purpose": "Ils relèvent l'efficacité et font grimper la ville d'un palier une fois le seuil du suivant atteint.",
+        "caption": "Amassés depuis le début de la campagne"
       }
     }
   },
