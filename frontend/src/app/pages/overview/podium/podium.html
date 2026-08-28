@@ -40,12 +40,16 @@
          mirror of where those two blocks put theirs.
          No ground coming up under the pointer here, unlike them: every row of this block is
          already its own link to a player, so the block cannot be one link over them. The rows
-         carry the affordance instead, each with its own hover. -->
+         carry the affordance instead, each with its own hover.
+         A fixed gap rather than `justify-between`: the roster is fixed at seven, so the rest-list
+         is rarely tall enough to reach the block's own bottom edge, and spreading the leftover
+         height into the single gap between the two put an oversized void right under the podium
+         instead of leaving it, unnoticed, past the last row. -->
     <div
       [appTooltip]="'overview.podium.hint' | translate"
       [appTooltipDelay]="tooltipDelayMs"
       appTooltipPosition="left"
-      class="mt-4 flex flex-1 flex-col justify-between gap-6 [--podium-base:clamp(6rem,9vh,7.5rem)]"
+      class="mt-4 flex flex-1 flex-col gap-6 [--podium-base:clamp(6rem,9vh,7.5rem)]"
     >
       <!-- Podium spotlight: 1st place rendered larger and centered via `order`, so the DOM keeps its
            natural reading order (1st, 2nd, 3rd) for assistive technology while the visual layout

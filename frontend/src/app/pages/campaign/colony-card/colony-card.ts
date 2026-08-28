@@ -24,15 +24,13 @@ const COMPACT_PADDING = 'px-4 py-3.5';
  * worked out, and a body left entirely to the caller.
  *
  * Every tile shares one frame — a title row capped by the coloured rule {@link accentClass}
- * carries, and a small info button opening the same hover-card shape `colony-resource-band`
- * already uses for its own gauges (title, the rule the figure is built from, an optional formula
- * table, then what the figure is for). Extracted here rather than left inline three more times,
- * now that the campaign page's stat grid needs it a dozen times over.
+ * carries, and a small info button opening a hover card (title, the rule the figure is built
+ * from, an optional formula table, then what the figure is for). Extracted here rather than left
+ * inline three more times, now that the campaign page's stat grid needs it a dozen times over.
  *
  * The icon is projected twice — once beside the title, once again inside the bubble's own title
  * line — because a single `<ng-content>` selector can only ever claim one outlet, and duplicating
- * a two-line `<svg>` at the call site is the `colony-resource-band` hover cards' own arrangement
- * already.
+ * a two-line `<svg>` at the call site is simpler than a second content projection path.
  *
  * The info button opens on hover *and* on click: a button takes focus when clicked, and focus is
  * already one of the two triggers the peer-driven bubble below reacts to, so no extra state is

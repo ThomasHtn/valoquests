@@ -13,28 +13,21 @@
 </app-page-header>
 
 <div class="page-body">
-  <app-boss-encounter />
+  <!-- The run's own standing beside the week's fight: the population tile is the run's whole
+       answer in one figure, so it stands narrow at the boss card's side rather than under its own
+       heading, and doubles as the link into `/campaign` the way the retired summary band did. -->
+  <div class="grid gap-4 lg:grid-cols-4">
+    <app-population-tile class="lg:col-span-1" />
+    <app-boss-encounter class="lg:col-span-3" />
+  </div>
 
-  <!-- The week's state on the left, the week's ranking on the right: both summarize "how is the
-     week going" and share the screen evenly rather than stacking as full-width strips.
+  <!-- The week's ranking on the right, the week's collective progress on the left: both summarize
+     "how is the week going" and share the screen evenly rather than stacking as full-width strips.
 
-     Left to stretch rather than aligned to the start: every panel is a section rule opening on the
-     same line, and letting the two columns share the row's height makes them close on the same
-     line too.
-
-     The left column carries two blocks, read top to bottom as the two scales the week is played
-     on: the run it belongs to, then the week itself. The run's block sits at its natural height
-     and the progress panel takes what is left, which is what keeps the column's bottom edge on
-     the podium's. -->
-  <!-- The column gap stays wider than the gap inside the left column: the two are different
-       joints. Between the columns it is what parts the week's state from the week's ranking;
-       inside, it only stacks two blocks of the same column. Equal gaps would read the left column
-       as three panels in a row rather than two beside one. -->
+     Left to stretch rather than aligned to the start: both panels are a section rule opening on
+     the same line, and letting the row share its height makes them close on the same line too. -->
   <div class="grid gap-6 lg:grid-cols-2 lg:gap-x-12">
-    <div class="flex flex-col gap-10">
-      <app-colony-summary />
-      <app-team-progress />
-    </div>
+    <app-team-progress />
     <app-podium />
   </div>
 </div>

@@ -215,7 +215,8 @@
       "rewards": "Rewards",
       "efficiency": "Efficiency",
       "defeat": "Defeat",
-      "ifDefeated": "If defeated"
+      "ifDefeated": "Failure",
+      "number": "Boss {{number}}"
     },
     "bosses": "Bosses",
     "cardInfo": "Detail {{title}}",
@@ -233,10 +234,10 @@
     "eyebrow": "Campaign · Run {{run}} · Week {{week}} of {{weeks}}",
     "hexagonAria": "Population: {{population}} inhabitants of {{ceiling}} feedable, {{change}} tonight. Open the run's curve.",
     "history": {
-      "title": "Run history",
-      "run": "Run {{run}}",
-      "column": "Run",
-      "columnHint": "A ten-week campaign, the run in progress on top and the closed ones below.",
+      "title": "Campaign history",
+      "run": "Campaign {{run}}",
+      "column": "Campaign",
+      "columnHint": "A ten-week campaign, the campaign in progress on top and the closed ones below.",
       "final": "Score",
       "finalHint": "The population of the settlement day, once the tenth week has been credited."
     },
@@ -374,11 +375,8 @@
       "eyebrow": "Weekly boss",
       "hpUnit": "HP",
       "hpValue": "{{remaining}} / {{total}} HP",
-      "loading": "Loading the boss…"
-    },
-    "colonySummary": {
-      "hint": "The colony of the run in progress: its population, what it eats, the squad's turnout and its morale.",
-      "link": "See the campaign"
+      "loading": "Loading the boss…",
+      "title": "Boss to defeat this week"
     },
     "header": {
       "subheading": "The squad's progress this week",
@@ -394,6 +392,10 @@
         "3": "3rd place"
       },
       "title": "This week's podium"
+    },
+    "populationTile": {
+      "link": "See the campaign",
+      "title": "Campaign progress"
     },
     "teamProgress": {
       "completedLabel": "squad challenges completed",

@@ -1,6 +1,3 @@
-import { resolveCssColor } from '@shared/chart/chart-theme';
-import { ChartGaugeSegment } from '@shared/chart/chart.model';
-
 /**
  * Tailwind utility of a turnout pip that cleared the threshold.
  */
@@ -45,47 +42,4 @@ export function foodSegmentPlayedColor(percentage: number): string {
   const alpha = 30 + percentage * 0.5;
 
   return `color-mix(in oklab, var(--color-brand-500) ${alpha}%, transparent)`;
-}
-
-/**
- * Fill of a half-donut gauge's unfilled share, shared by every gauge on the campaign page and the
- * colony resource band — a half-empty gauge reads the same wherever it is drawn.
- */
-export const GAUGE_TRACK_COLOR = 'color-mix(in oklab, var(--color-text-primary) 12%, transparent)';
-
-/**
- * The turnout gauge's own arcs: one per roster cell, lit clockwise from the left by tonight's head
- * count.
- *
- * Shared by `ColonyResourceBand`'s own presence dome and the campaign page's compact Participation
- * tile, so the same roster reads as the same gauge wherever it is drawn.
- *
- * @param cells - One flag per roster cell, lit when that cell's player turned up tonight.
- * @returns The gauge's own arcs, in draw order.
- */
-export function presenceGaugeSegments(cells: readonly boolean[]): ChartGaugeSegment[] {
-  const lit = resolveCssColor('var(--color-accent-cyan)');
-  const track = resolveCssColor(GAUGE_TRACK_COLOR);
-
-  return cells.map((isLit) => ({ value: 1, color: isLit ? lit : track, label: '' }));
-}
-
-/**
- * The attractivity gauge's own arcs: morale itself against the ceiling it climbs towards.
- *
- * Shared by `ColonyResourceBand`'s own attractivity dome and the campaign page's compact Moral
- * tile.
- *
- * @param percentage - Where the fill ends: morale itself, out of its ceiling, in `[0, 100]`.
- * @param label - Already-translated reading of the fill, shown in each arc's own tooltip.
- * @returns The gauge's own arcs, in draw order.
- */
-export function attractivityGaugeSegments(percentage: number, label: string): ChartGaugeSegment[] {
-  const fill = resolveCssColor('var(--color-accent-violet)');
-  const track = resolveCssColor(GAUGE_TRACK_COLOR);
-
-  return [
-    { value: percentage, color: fill, label },
-    { value: 100 - percentage, color: track, label },
-  ];
 }

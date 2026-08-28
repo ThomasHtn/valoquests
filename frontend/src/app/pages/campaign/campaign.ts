@@ -2,18 +2,14 @@ import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, effect, ElementRef, inject, signal } from '@angular/core';
 import {
   LucideArrowDown,
-  LucideBuilding2,
   LucideCheck,
   LucideGauge,
   LucideHammer,
-  LucideHouse,
-  LucideLandmark,
   LucideLock,
   LucideMagnet,
   LucidePackage,
   LucideSkull,
   LucideSwords,
-  LucideTent,
   LucideTrendingUp,
   LucideUserCheck,
   LucideUsers,
@@ -27,12 +23,8 @@ import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
 import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
 import { ColonyView } from '@core/colony/colony-view';
-import {
-  ColonyBossView,
-  ColonyDeltaView,
-  ColonyTierStepView,
-} from '@core/colony/colony-view.model';
-import { ColonyTierState } from '@core/colony/colony.model';
+import { ColonyBossView } from '@core/colony/colony-view.model';
+import { resolveColonyDeltaColorClass } from '@core/colony/colony-visual.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { ColonyCard, ColonyCardFormulaRow } from './colony-card/colony-card';
@@ -41,7 +33,6 @@ import { BarChart } from '@shared/chart/bar-chart';
 import { resolveSeriesColor } from '@shared/chart/chart-theme';
 import { ChartBar, ChartSeries } from '@shared/chart/chart.model';
 import { LineChart } from '@shared/chart/line-chart';
-import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ProgressCircle } from '@shared/progress-circle/progress-circle';
 import { Drawer } from '@shared/drawer/drawer';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -80,93 +71,6 @@ const SKELETON_ROW_COUNT = 8;
  * each time.
  */
 const HISTORY_ROW_COUNT = 6;
-
-/**
- * Treatments one step of the town's ladder is drawn in.
- *
- * The marker is a hexagon like every other beat of the campaign — the map's territories, the
- * history's week markers — so the ladder reads as the same clock as the rest of the page.
- *
- * Four treatments for three backend states: the step right above the town's own is drawn apart from
- * the rest of the locked ones, because it is the only row anything the squad does moves. Every row
- * carries a veil rather than an opaque plate, which is the surface the rest of the application uses.
- *
- * A filled marker means the step is paid for, an outlined one that it is not — which is what tells
- * the town's own step apart from the one it is climbing. Both wear the brand colour, since one is
- * where the town stands and the other where it is heading; everything further behind is green, and
- * everything further ahead grey.
- */
-const LADDER_STEPS: Record<
-  ColonyTierState | 'NEXT',
-  {
-    /**
-     * The row's own veil, which is what separates the step being climbed from the rest.
-     */
-    readonly rowClass: string;
-
-    /**
-     * Outline of the marker's hexagon.
-     */
-    readonly markerClass: string;
-
-    /**
-     * Its surface. A step already crossed is a solid hexagon carrying a dark mark; one that is not
-     * is an outline around the page's own ground. That difference in *fill*, rather than in hue
-     * alone, is what makes a crossed step readable at a glance — a coloured outline beside a
-     * coloured outline reads as two shades of one state.
-     */
-    readonly markerFillClass: string;
-    readonly markerIconClass: string;
-    readonly nameClass: string;
-    readonly valueClass: string;
-  }
-> = {
-  REACHED: {
-    rowClass: 'bg-text-primary/10',
-    markerClass: 'bg-accent-green',
-    markerFillClass: 'bg-accent-green',
-    markerIconClass: 'text-surface-950',
-    nameClass: 'text-text-secondary',
-    valueClass: 'text-text-secondary',
-  },
-  // The step the town stands in: paid for, so a solid marker like the crossed ones behind it, and
-  // brand rather than green because it is the name the town currently answers to. It carries no
-  // outline and no bar — both belong to the row below, which is the one still to open.
-  CURRENT: {
-    rowClass: 'bg-text-primary/10',
-    markerClass: 'bg-brand-500',
-    markerFillClass: 'bg-brand-500',
-    markerIconClass: 'text-surface-950',
-    nameClass: 'font-bold text-text-primary',
-    valueClass: 'text-text-secondary',
-  },
-  // The step being climbed: the panel's active row, outlined and lit, carrying both the cost still
-  // to gather and the bar that measures it.
-  NEXT: {
-    rowClass: 'bg-brand-500/12 outline-1 -outline-offset-1 outline-brand-500/40',
-    markerClass: 'bg-brand-500',
-    markerFillClass: 'bg-surface-950',
-    markerIconClass: 'text-brand-500',
-    nameClass: 'font-semibold text-text-primary',
-    valueClass: 'text-brand-500',
-  },
-  LOCKED: {
-    rowClass: 'bg-text-primary/6',
-    markerClass: 'bg-surface-600',
-    markerFillClass: 'bg-surface-950',
-    markerIconClass: 'text-text-muted',
-    nameClass: 'text-text-muted',
-    valueClass: 'text-text-muted',
-  },
-};
-
-/**
- * One step of the town's ladder, paired with the treatment it is drawn in.
- */
-interface CampaignLadderStep {
-  readonly view: ColonyTierStepView;
-  readonly tier: (typeof LADDER_STEPS)[ColonyTierState | 'NEXT'];
-}
 
 /**
  * One row of the battle map.
@@ -230,23 +134,18 @@ interface CampaignMapRow {
     Drawer,
     BarChart,
     LineChart,
-    ProgressBar,
     ProgressCircle,
     Select,
     Tooltip,
     LucideArrowDown,
-    LucideBuilding2,
     LucideCheck,
     LucideGauge,
     LucideHammer,
-    LucideHouse,
-    LucideLandmark,
     LucideLock,
     LucideMagnet,
     LucidePackage,
     LucideSkull,
     LucideSwords,
-    LucideTent,
     LucideTrendingUp,
     LucideUserCheck,
     LucideUsers,
@@ -375,9 +274,8 @@ export class Campaign {
   );
 
   /**
-   * The Food-this-week tile's own formula rows: the same consumption and efficiency figures
-   * `ColonyResourceBand`'s own food hover card states, read a second time as the tile's own bubble
-   * now that the tile stands apart from the band.
+   * The Food-this-week tile's own formula rows: consumption and efficiency, read a second time as
+   * the tile's own bubble.
    */
   protected readonly foodWeekFormulaRows = computed<readonly ColonyCardFormulaRow[]>(() => {
     const ring = this.colony.foodRing();
@@ -462,17 +360,29 @@ export class Campaign {
   });
 
   /**
-   * The ladder as a window around the town's own step, lowest first.
+   * The week currently being fought, or `null` while no week is active.
    *
-   * A window rather than the whole ladder, because the ladder has no end: a squad that keeps
-   * building always has a next name to climb towards, and a panel this narrow can only ever show the
-   * neighbourhood of the one it stands in.
+   * What used to only surface on hover, over the map tile being fought, now stands permanently
+   * beside the map — see {@link currentColonyBoss} for the reward figures paired with it.
    */
-  protected readonly ladderSteps = computed<readonly CampaignLadderStep[]>(() =>
-    this.colony
-      .ladder()
-      .map((view) => ({ view, tier: LADDER_STEPS[view.isNext ? 'NEXT' : view.state] })),
-  );
+  protected readonly currentBossNode = computed<BossTimelineNode | null>(() => {
+    const index = this.campaign.currentNodeIndex();
+    return index >= 0 ? this.campaign.nodes()[index] : null;
+  });
+
+  /**
+   * What the week being fought is worth the colony: materials on the table, and what surviving it
+   * would cost. `null` until {@link currentBossNode} resolves, joined on the run week exactly as the
+   * map's own tiles are (see `rows`).
+   */
+  protected readonly currentColonyBoss = computed<ColonyBossView | null>(() => {
+    const node = this.currentBossNode();
+    if (node === null) {
+      return null;
+    }
+
+    return this.colony.bosses().find((boss) => boss.weekIndex === node.runWeekIndex) ?? null;
+  });
 
   /**
    * The weeks the history view tells: every fought week, oldest first, up to and including the
@@ -498,6 +408,20 @@ export class Campaign {
   protected readonly selectedNode = computed<BossTimelineNode | null>(
     () => this.activeNodes().find((node) => node.id === this.selectedNodeId()) ?? null,
   );
+
+  /**
+   * What {@link selectedNode}'s fight is worth the colony, joined on the run week exactly as
+   * {@link currentColonyBoss} is — the panel reads the same figures whichever week it was opened
+   * on, not only the one under way.
+   */
+  protected readonly selectedColonyBoss = computed<ColonyBossView | null>(() => {
+    const node = this.selectedNode();
+    if (node === null) {
+      return null;
+    }
+
+    return this.colony.bosses().find((boss) => boss.weekIndex === node.runWeekIndex) ?? null;
+  });
 
   /**
    * Position of {@link selectedNode} within {@link activeNodes}, or `-1` while the panel is
@@ -529,6 +453,11 @@ export class Campaign {
   protected readonly tileInnerScale = TILE_INNER_SCALE;
   protected readonly legendInnerScale = LEGEND_INNER_SCALE;
   protected readonly territoryFillClass = TERRITORY_FILL_CLASS;
+
+  /**
+   * Text color of the Arrivals tile's own figure, by the direction the night moved.
+   */
+  protected readonly deltaColorClass = resolveColonyDeltaColorClass;
 
   /**
    * Silhouette the hover card borrows from the sidebar's tooltips, so a surface floating over the
@@ -666,16 +595,5 @@ export class Campaign {
     return category === null
       ? this.territoryTier('current').iconClass
       : resolveBossCategoryColorClass(category);
-  }
-
-  /**
-   * Text color of the Arrivals tile's own figure, by the direction the night moved — the same
-   * rule `ColonyResourceBand`'s own arrival mark is coloured by.
-   *
-   * @param delta - What the night moved.
-   * @returns The colour utility.
-   */
-  protected deltaColorClass(delta: ColonyDeltaView): string {
-    return delta.isPositive ? 'text-success' : delta.isNegative ? 'text-danger' : 'text-text-muted';
   }
 }

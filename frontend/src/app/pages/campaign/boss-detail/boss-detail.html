@@ -28,50 +28,36 @@
     </button>
   </div>
 
-  <div>
-    <p class="label-caption">
-      <span [class]="tier().accentTextClass">{{ node().statusLabel }}</span>
-      @if (node().dateRangeLabel; as dateRangeLabel) {
-        <span class="text-text-muted"> · {{ dateRangeLabel }}</span>
-      }
-    </p>
+  <div class="flex items-center gap-2.5" id="boss-detail-title">
+    <!-- No boss name: the number is what ties this panel to its own hexagon on the map, the same
+         badge the always-visible current-boss panel carries. Sized to the two lines it now stands
+         beside — the number's own row and the status trailing under it — rather than to either one
+         alone. -->
+    <span
+      aria-hidden="true"
+      class="clip-hex grid h-10 w-8 shrink-0 place-items-center bg-brand-500/15 text-brand-500 [&>svg]:size-4"
+    >
+      <svg lucideSkull></svg>
+    </span>
 
-    <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-      <h2 class="font-display text-2xl leading-none font-bold uppercase" id="boss-detail-title">
-        {{ node().bossName }}
-      </h2>
-      @if (node().categoryLabel; as categoryLabel) {
-        <span class="label-caption text-text-muted">
-          {{ 'boss.difficulty' | translate }}
-          <span aria-hidden="true">·</span>
-          {{ categoryLabel }}
+    <div class="flex flex-col gap-1">
+      <p class="flex items-center gap-2">
+        <span class="label-caption text-brand-500">
+          {{ 'colony.boss.number' | translate: { number: bossNumberLabel(node().runWeekIndex) } }}
         </span>
-      }
+        @if (node().categoryLabel; as categoryLabel) {
+          <span aria-hidden="true" class="h-3 w-px shrink-0 bg-text-primary/15"></span>
+          <span class="label-caption text-text-muted">{{ categoryLabel }}</span>
+        }
+      </p>
+
+      <p class="label-caption">
+        <span [class]="tier().accentTextClass">{{ node().statusLabel }}</span>
+        @if (node().dateRangeLabel; as dateRangeLabel) {
+          <span class="text-text-muted"> · {{ dateRangeLabel }}</span>
+        }
+      </p>
     </div>
-  </div>
-
-  <!-- Boss artwork, or the tinted plate standing in for it until the catalogue gets real
-         artwork (`imageUrl` is `null` for every entry today). -->
-  <div
-    [class]="tier().panelClass"
-    class="notch-tr notch-tr-edge relative flex h-44 shrink-0 items-center justify-center overflow-hidden border bg-linear-[135deg] to-surface-950 [--notch:1.125rem]"
-  >
-    @if (node().portraitUrl; as portraitUrl) {
-      <img
-        [height]="176"
-        [ngSrc]="portraitUrl"
-        [width]="416"
-        alt=""
-        class="h-full w-full object-cover"
-      />
-    } @else {
-      <span class="flex flex-col items-center gap-3 text-text-muted">
-        <svg class="size-9" lucideSkull></svg>
-        <span class="label-caption">
-          {{ 'boss.panel.portrait' | translate }}
-        </span>
-      </span>
-    }
   </div>
 
   @if (node().hasDamage) {
@@ -111,17 +97,6 @@
           >{{ node().hpLabel }}</span
         >
       </div>
-
-      @if (node().panelMetaLabel; as metaLabel) {
-        <p class="mt-4 flex items-center gap-2.5 text-sm text-text-secondary">
-          <span
-            [class]="tier().barFillClass"
-            aria-hidden="true"
-            class="size-1.5 shrink-0 rotate-45"
-          ></span>
-          {{ metaLabel }}
-        </p>
-      }
     </div>
   } @else {
     <p
@@ -132,60 +107,89 @@
     </p>
   }
 
+  <!-- What the week is worth the colony, read the same way the map's own hover card and the
+       always-visible current-boss panel already read it: rewards banked or still on the table, and
+       what letting the fight stand costs — as a hypothetical for the week under way, as a settled
+       loss for one the boss held. Absent on a week the colony has nothing to report on yet. -->
+  @if (colonyBoss(); as boss) {
+    @if (boss.materialsLabel) {
+      <div>
+        <p
+          class="label-caption inline-block border border-accent-gold/35 bg-accent-gold/15 px-1.5 py-0.5 text-accent-gold"
+        >
+          {{ 'colony.boss.rewards' | translate }}
+        </p>
+        <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+          <dt class="flex items-center gap-1 label-caption text-text-muted">
+            <svg class="size-3 text-accent-gold" lucideHammer></svg>
+            {{ 'colony.materials' | translate }}
+          </dt>
+          <dd class="text-right font-mono text-xs font-semibold text-accent-gold tabular-nums">
+            {{ boss.materialsLabel }}
+          </dd>
+          @if (boss.efficiencyLabel) {
+            <dt class="flex items-center gap-1 label-caption text-text-muted">
+              <svg class="size-3 text-accent-pink" lucideGauge></svg>
+              {{ 'colony.boss.efficiency' | translate }}
+            </dt>
+            <dd class="text-right font-mono text-xs font-semibold text-accent-pink tabular-nums">
+              {{ boss.efficiencyLabel }}
+            </dd>
+          }
+          <dt class="flex items-center gap-1 label-caption text-text-muted">
+            <svg class="size-3 text-accent-violet" lucideMagnet></svg>
+            {{ 'colony.track.morale.name' | translate }}
+          </dt>
+          <dd class="text-right font-mono text-xs font-semibold text-accent-violet tabular-nums">
+            {{ boss.moraleLabel }}
+          </dd>
+        </dl>
+      </div>
+    }
+
+    @if (boss.state === 'CURRENT') {
+      <div>
+        <p
+          class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
+        >
+          {{ 'colony.boss.ifDefeated' | translate }}
+        </p>
+        <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+          <dt class="flex items-center gap-1 label-caption text-text-muted">
+            <svg class="size-3 text-accent-violet" lucideMagnet></svg>
+            {{ 'colony.track.morale.name' | translate }}
+          </dt>
+          <dd class="text-right font-mono text-xs font-semibold text-accent-violet tabular-nums">
+            {{ defeatMoraleLabel() }}
+          </dd>
+        </dl>
+      </div>
+    } @else if (boss.state === 'SURVIVED') {
+      <div>
+        <!-- The same pill treatment as "Récompenses", in the danger colour: what a held boss costs
+             is read against what a defeated one pays, not merely noted underneath it. -->
+        <p
+          class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
+        >
+          {{ 'colony.boss.defeat' | translate }}
+        </p>
+        <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+          <dt class="flex items-center gap-1 label-caption text-text-muted">
+            <svg class="size-3" lucideMagnet></svg>
+            {{ 'colony.track.morale.name' | translate }}
+          </dt>
+          <dd class="text-right font-mono text-xs font-semibold text-danger tabular-nums">
+            {{ boss.moraleLabel }}
+          </dd>
+        </dl>
+      </div>
+    }
+
+    <div aria-hidden="true" class="border-t border-text-primary/10"></div>
+  }
+
   <!-- Who actually did the damage. Reconstructed from the week's ranking, so it is absent for a
          week the ranking does not cover — a locked week ahead, or one finalized before the group
          started being tracked. -->
-  @if (node().contributions.length > 0) {
-    <div>
-      <div class="flex items-baseline justify-between gap-4">
-        <h3 class="label-caption text-text-muted">
-          {{ 'boss.panel.ranking' | translate }}
-        </h3>
-        <div class="label-caption flex gap-4 text-text-muted">
-          <span>{{ 'boss.panel.quests' | translate }}</span>
-          <span class="w-16 text-right">{{ 'boss.panel.damage' | translate }}</span>
-        </div>
-      </div>
-
-      <ol class="mt-3 flex flex-col gap-2">
-        @for (contribution of node().contributions; track contribution.playerId) {
-          <!-- The registry's row treatment — notched corner, leading rule, flat wash — as used by
-                 the players page, the ranking and the podium's field, so a player row means the
-                 same thing here as everywhere else. Only the padding is tighter, for the drawer's
-                 width. The leading rule carries the top contributor's emphasis. -->
-          <li
-            [class]="contribution.position === 1 ? 'border-brand-500/70' : 'border-text-primary/15'"
-            class="notch-tr flex items-center gap-3 border-l-2 bg-text-primary/4 px-3 py-2.5 [--notch:0.625rem]"
-          >
-            <app-position-badge [position]="contribution.position" />
-            <app-avatar
-              [champion]="contribution.isChampion"
-              [src]="contribution.avatarUrl"
-              size="sm"
-            />
-            <span class="flex min-w-0 flex-1 items-center gap-2">
-              <span
-                [class.text-accent-gold]="contribution.isChampion"
-                [class.text-text-primary]="!contribution.isChampion"
-                class="font-display truncate text-lg leading-tight font-semibold"
-              >
-                {{ contribution.displayName }}
-              </span>
-              @if (contribution.isChampion) {
-                <app-champion-badge />
-              }
-            </span>
-            <span class="shrink-0 font-mono text-2xs text-text-muted tabular-nums">
-              {{ contribution.questsLabel }}
-            </span>
-            <span
-              class="font-display w-16 shrink-0 text-right text-base leading-none font-bold text-brand-500 tabular-nums"
-            >
-              {{ contribution.damageLabel }}
-            </span>
-          </li>
-        }
-      </ol>
-    </div>
-  }
+  <app-boss-contributions [contributions]="node().contributions" />
 </app-drawer>

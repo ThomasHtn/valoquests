@@ -11,8 +11,8 @@ import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { WeekSummary } from './overview.model';
 import { BossEncounter } from './boss-encounter/boss-encounter';
-import { ColonySummary } from './colony-summary/colony-summary';
 import { Podium } from './podium/podium';
+import { PopulationTile } from './population-tile/population-tile';
 import { TeamProgress } from './team-progress/team-progress';
 
 /**
@@ -31,9 +31,9 @@ import { TeamProgress } from './team-progress/team-progress';
   imports: [
     TranslatePipe,
     BossEncounter,
-    ColonySummary,
     PageHeader,
     Podium,
+    PopulationTile,
     TeamProgress,
     WeekCountdown,
   ],

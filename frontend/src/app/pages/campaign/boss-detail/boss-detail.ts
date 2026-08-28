@@ -1,14 +1,20 @@
-import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
-import { LucideChevronLeft, LucideChevronRight, LucideSkull } from '@lucide/angular';
+import {
+  LucideChevronLeft,
+  LucideChevronRight,
+  LucideGauge,
+  LucideHammer,
+  LucideMagnet,
+  LucideSkull,
+} from '@lucide/angular';
 
 import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
+import { ColonyBossView } from '@core/colony/colony-view.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { Avatar } from '@shared/avatar/avatar';
-import { ChampionBadge } from '@shared/champion-badge/champion-badge';
+import { BossContributions } from '@shared/boss-contributions/boss-contributions';
 import { Drawer } from '@shared/drawer/drawer';
-import { PositionBadge } from '@shared/position-badge/position-badge';
+import { resolveBossNumberLabel } from '../campaign-map.constants';
 
 /**
  * Detail panel for one week of the campaign, opened from the battle map or the legacy timeline.
@@ -21,13 +27,13 @@ import { PositionBadge } from '@shared/position-badge/position-badge';
   selector: 'app-boss-detail',
   imports: [
     TranslatePipe,
-    Avatar,
-    ChampionBadge,
-    PositionBadge,
+    BossContributions,
     Drawer,
-    NgOptimizedImage,
     LucideChevronLeft,
     LucideChevronRight,
+    LucideGauge,
+    LucideHammer,
+    LucideMagnet,
     LucideSkull,
   ],
   templateUrl: './boss-detail.html',
@@ -37,6 +43,19 @@ export class BossDetail {
    * The week being detailed.
    */
   public readonly node = input.required<BossTimelineNode>();
+
+  /**
+   * What the week's fight is worth the colony — the same figures the map's own hover card and the
+   * always-visible current-boss panel read, joined on the node by its caller. `null` for a week the
+   * colony has nothing to report on yet (a locked week ahead).
+   */
+  public readonly colonyBoss = input<ColonyBossView | null>(null);
+
+  /**
+   * What a boss still standing costs the colony, a fixed penalty read here only for the week
+   * currently being fought, since it is not yet a settled cost.
+   */
+  public readonly defeatMoraleLabel = input('');
 
   /**
    * Whether the timeline holds an earlier / later week to step to.
@@ -60,4 +79,10 @@ export class BossDetail {
    * Visual treatment matching the detailed week's status, shared with its timeline node.
    */
   protected readonly tier = computed(() => resolveBossTimelineTier(this.node().status));
+
+  /**
+   * Position of the week inside its run, as the two-digit boss number the header badge leads with —
+   * the same number the map's own hexagons carry.
+   */
+  protected readonly bossNumberLabel = resolveBossNumberLabel;
 }

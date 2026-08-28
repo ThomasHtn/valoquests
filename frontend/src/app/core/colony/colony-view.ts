@@ -164,6 +164,17 @@ export class ColonyView {
   );
 
   /**
+   * Title the population hexagon wears: the name of the step the town currently stands on, so the
+   * card the run is read off evolves with the ladder instead of naming a camp forever.
+   */
+  public readonly campTitleLabel = computed<string>(() => {
+    const colony = this.colony();
+    const current = colony?.ladder.find((tier) => tier.state === 'CURRENT');
+
+    return current ? this.tierName(current) : this.translation.translate('colony.campTitle');
+  });
+
+  /**
    * Food of the last seven days, the Food-this-week tile's own headline — the same rolling stock
    * {@link foodRing} reads its surplus and consumption from.
    */

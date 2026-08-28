@@ -35,9 +35,9 @@
       </div>
 
       <!-- Everything under the rule is the link to the challenge board, which details the five
-           draws this panel only counts. Same treatment as the run's summary above: no frame at
-           rest, the ground coming up under the pointer and bled past the content so the figures
-           stay flush with the rule.
+           draws this panel only counts. No hover ground of its own: each challenge row below
+           already carries its own affordance, so a second one washing the whole zone only
+           doubled up on it.
            Its tooltip hangs off the whole zone, on the same delay, and carries the rule the
            figures cannot state — a challenge counts as cleared only once every tracked player has
            cleared it, which is what makes this a collective count rather than a sum of individual
@@ -48,7 +48,7 @@
         [attr.aria-label]="'overview.teamProgress.link' | translate"
         [routerLink]="'/challenges'"
         appTooltipPosition="right"
-        class="focus-ring -mx-3 mt-2 flex flex-1 flex-col gap-6 px-3 py-3 transition-colors hover:bg-text-primary/4"
+        class="focus-ring mt-4 flex flex-1 flex-col gap-8"
       >
         <div>
           <!-- Headline: how many of the week's challenges the squad has cleared, and how long is
@@ -83,7 +83,7 @@
              abstract percentage. Kept gold regardless of a challenge's own difficulty color: this
              bar is the squad's overall pace, not a breakdown. Hidden from assistive technology,
              since the headline above states the same count. -->
-          <div aria-hidden="true" class="mt-5 flex gap-2">
+          <div aria-hidden="true" class="mt-6 flex gap-2">
             @for (filled of segments(); track $index) {
               <!-- Gold rim painted as a filled outer slot with the fill inset one pixel inside it,
                  rather than stroked as a border: `clip-path` cuts the sheared sides off any real
@@ -100,25 +100,29 @@
           </div>
         </div>
 
-        <!-- One tile per challenge, tinted by its difficulty tier the same way as the weekly
+        <!-- One row per challenge, tinted by its difficulty tier the same way as the weekly
            challenges board: a hex badge (a checkmark once the whole squad has cleared it, its
            roman-numeral tier otherwise), the challenge's name and difficulty, and how many
            tracked players have completed it so far.
-           Five tiles abreast rather than five rows stacked: the week always draws exactly five
-           challenges, one per difficulty, so they are a set to be taken in at a glance rather than
-           a list to be read down — and the height that frees is what the run's summary above the
-           panel stands in. Below `sm` there is no room for five columns and the set folds to two,
-           the last tile spanning the pair so the grid closes square. -->
-        <ul class="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-5">
+           Five rows stacked rather than tiles abreast, the same horizontal treatment the podium's
+           own rest-of-field rows use, so every list of five on the page reads as one system.
+           `justify-between` rather than a fixed gap: the row count never changes, so the leftover
+           height the headline above leaves is spread evenly between the five rather than left
+           standing empty under the last one — the same bottom edge as the podium beside it. Sized
+           close to the podium's own rest-list rows so neither block needs much of that leftover
+           to begin with. A tighter gap than the headline above it: five rows read as one set,
+           not five separate blocks, so they sit close while the headline and the bar it explains
+           keep the room around them. -->
+        <ul class="flex flex-1 flex-col justify-between gap-1.5">
           @for (row of rows(); track row.id) {
             <li
               [class]="row.visual.panelClass"
-              class="notch-tr notch-tr-edge flex flex-col items-center gap-2 border bg-linear-[115deg] to-surface-sunken/60 px-2 py-3 text-center max-sm:last:col-span-2 [--notch:0.625rem]"
+              class="notch-tr notch-tr-edge flex items-center gap-3 border bg-linear-[115deg] to-surface-sunken/60 px-4 py-3 [--notch:0.625rem]"
             >
               <span
                 [class]="row.visual.barClass"
                 aria-hidden="true"
-                class="clip-hex relative h-9 w-8 shrink-0"
+                class="clip-hex relative h-10 w-9 shrink-0"
               >
                 <span
                   [class]="row.visual.iconClass"
@@ -128,25 +132,24 @@
                 </span>
               </span>
 
-              <p
-                [class]="row.visual.iconClass"
-                class="tracking-label font-mono text-2xs font-medium uppercase"
-              >
-                {{ 'overview.weeklyChallenges.difficulty.' + row.difficulty | translate }}
-              </p>
+              <span class="min-w-0 flex-1">
+                <p
+                  [class]="row.visual.iconClass"
+                  class="tracking-label font-mono text-2xs font-medium uppercase"
+                >
+                  {{ 'overview.weeklyChallenges.difficulty.' + row.difficulty | translate }}
+                </p>
+                <p
+                  class="font-display truncate text-sm leading-snug font-semibold text-text-primary"
+                >
+                  {{ row.name }}
+                </p>
+              </span>
 
-              <!-- The name wraps rather than being truncated: a column this narrow would cut most of
-                 them off at the first word, and the tile has the height to spare. -->
-              <p
-                class="font-display min-w-0 flex-1 text-xs leading-snug font-semibold text-balance text-text-primary hyphens-auto"
-              >
-                {{ row.name }}
-              </p>
-
-              <!-- The count is the tile's figure, set off by a rule rather than a caption: the same
-                 label repeated five times across the row would read as noise, so it is left to
-                 assistive technology. -->
-              <p class="w-full border-t border-text-primary/10 pt-2">
+              <!-- The count sits at the row's trailing edge rather than under a rule: a single line
+                 already reads left to right as badge, name, figure, so a divider between the last
+                 two would only repeat what the layout already says. -->
+              <p class="shrink-0 text-right">
                 <span class="sr-only">{{ 'overview.teamProgress.rowPlayers' | translate }}</span>
                 <span
                   class="font-display text-base leading-none font-bold text-text-primary tabular-nums"

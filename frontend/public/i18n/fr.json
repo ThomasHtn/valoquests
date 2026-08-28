@@ -215,7 +215,8 @@
       "rewards": "Récompenses",
       "efficiency": "Efficacité",
       "defeat": "Défaite",
-      "ifDefeated": "En cas de défaite"
+      "ifDefeated": "Échec",
+      "number": "Boss {{number}}"
     },
     "bosses": "Boss",
     "cardInfo": "Détail {{title}}",
@@ -233,10 +234,10 @@
     "eyebrow": "Campagne · Run {{run}} · Semaine {{week}} sur {{weeks}}",
     "hexagonAria": "Population : {{population}} habitants sur {{ceiling}} nourrissables, {{change}} cette nuit. Ouvrir la courbe de la run.",
     "history": {
-      "title": "Historique des runs",
-      "run": "Run {{run}}",
-      "column": "Run",
-      "columnHint": "Une campagne de dix semaines, la run en cours en tête et les précédentes en dessous.",
+      "title": "Historique des campagnes",
+      "run": "Campagne {{run}}",
+      "column": "Campagne",
+      "columnHint": "Une campagne de dix semaines, la campagne en cours en tête et les précédentes en dessous.",
       "final": "Score",
       "finalHint": "La population du jour de solde, une fois la dixième semaine créditée."
     },
@@ -374,11 +375,8 @@
       "eyebrow": "Boss hebdomadaire",
       "hpUnit": "PV",
       "hpValue": "{{remaining}} / {{total}} PV",
-      "loading": "Chargement du boss…"
-    },
-    "colonySummary": {
-      "hint": "La colonie de la campagne en cours : sa population, ce qu'elle mange, la présence de l'escouade et son moral.",
-      "link": "Voir la campagne"
+      "loading": "Chargement du boss…",
+      "title": "Boss à vaincre cette semaine"
     },
     "header": {
       "subheading": "Avancement de l'escouade cette semaine",
@@ -394,6 +392,10 @@
         "3": "3e place"
       },
       "title": "Podium de la semaine"
+    },
+    "populationTile": {
+      "link": "Voir la campagne",
+      "title": "Avancement de la campagne"
     },
     "teamProgress": {
       "completedLabel": "défis d'escouade terminés",
