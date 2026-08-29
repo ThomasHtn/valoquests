@@ -182,9 +182,6 @@
       "current": "En cours",
       "upcoming": "À venir"
     },
-    "timeline": {
-      "ariaLabel": "Historique des combats de boss"
-    },
     "title": "Historique des combats",
     "upcoming": {
       "description": "Le prochain adversaire n'est pas encore déterminé.",
@@ -198,7 +195,6 @@
   "campaign": {
     "error": "Impossible de charger la campagne.",
     "heading": "La campagne de l'escouade",
-    "historyToggle": "Chronologie",
     "legend": {
       "current": "Menace en cours",
       "defeated": "Repoussée",
@@ -210,8 +206,7 @@
       "ariaLabel": "Carte des menaces sur la colonie, une par semaine de la run"
     },
     "territory": "Carte des menaces",
-    "title": "Campagne",
-    "viewLabel": "Vue de la campagne"
+    "title": "Campagne"
   },
   "colony": {
     "boss": {

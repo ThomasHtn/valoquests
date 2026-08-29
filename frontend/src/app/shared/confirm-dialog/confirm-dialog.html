@@ -54,9 +54,16 @@
         appButton="danger"
         (click)="confirmed.emit()"
         [disabled]="!canConfirm()"
-        class="flex min-h-10 items-center gap-2 px-4 py-2 text-sm font-medium [--notch:0.5rem]"
+        class="flex min-h-10 items-center justify-center gap-2 px-4 py-2 text-sm font-medium [--notch:0.5rem]"
         type="button"
       >
+        @if (busy()) {
+          <svg
+            aria-hidden="true"
+            class="h-4 w-4 shrink-0 motion-safe:animate-spin"
+            lucideLoaderCircle
+          ></svg>
+        }
         {{ confirmLabel() }}
       </button>
     </div>

@@ -182,9 +182,6 @@
       "current": "In progress",
       "upcoming": "Upcoming"
     },
-    "timeline": {
-      "ariaLabel": "Boss battle history"
-    },
     "title": "Battle history",
     "upcoming": {
       "description": "The next opponent hasn't been drawn yet.",
@@ -198,7 +195,6 @@
   "campaign": {
     "error": "Could not load the campaign.",
     "heading": "The squad's campaign",
-    "historyToggle": "Timeline",
     "legend": {
       "current": "Threat under way",
       "defeated": "Repelled",
@@ -210,8 +206,7 @@
       "ariaLabel": "Map of the threats on the colony, one per week of the run"
     },
     "territory": "Threat map",
-    "title": "Campaign",
-    "viewLabel": "Campaign view"
+    "title": "Campaign"
   },
   "colony": {
     "boss": {

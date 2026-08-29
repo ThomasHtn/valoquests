@@ -101,9 +101,16 @@
       <button
         appButton="primary"
         [disabled]="busy() || !valid()"
-        class="flex min-h-10 items-center px-4 py-2 text-sm font-medium [--notch:0.5rem]"
+        class="flex min-h-10 w-28 items-center justify-center gap-2 px-4 py-2 text-sm font-medium [--notch:0.5rem]"
         type="submit"
       >
+        @if (busy()) {
+          <svg
+            aria-hidden="true"
+            class="h-4 w-4 shrink-0 motion-safe:animate-spin"
+            lucideLoaderCircle
+          ></svg>
+        }
         {{ 'admin.save' | translate }}
       </button>
     </div>

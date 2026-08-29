@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
+import { LucideLoaderCircle } from '@lucide/angular';
 
 import { AdminPlayer, AdminPlayerStatus } from '@core/admin/admin.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -45,7 +46,16 @@ export interface PlayerFormResult {
  */
 @Component({
   selector: 'app-player-form-panel',
-  imports: [TranslatePipe, Avatar, Button, Drawer, Select, TextField, TextFieldInput],
+  imports: [
+    TranslatePipe,
+    Avatar,
+    Button,
+    Drawer,
+    LucideLoaderCircle,
+    Select,
+    TextField,
+    TextFieldInput,
+  ],
   templateUrl: './player-form-panel.html',
 })
 export class PlayerFormPanel {

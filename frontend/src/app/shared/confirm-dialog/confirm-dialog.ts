@@ -8,6 +8,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { LucideLoaderCircle } from '@lucide/angular';
 
 import { Button } from '@shared/button/button';
 import { TextField, TextFieldInput } from '@shared/text-field/text-field';
@@ -26,7 +27,7 @@ import { TextField, TextFieldInput } from '@shared/text-field/text-field';
  */
 @Component({
   selector: 'app-confirm-dialog',
-  imports: [Button, TextField, TextFieldInput],
+  imports: [Button, LucideLoaderCircle, TextField, TextFieldInput],
   templateUrl: './confirm-dialog.html',
   host: {
     class: 'contents',

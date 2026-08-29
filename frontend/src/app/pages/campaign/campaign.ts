@@ -1,5 +1,5 @@
 import { NgOptimizedImage } from '@angular/common';
-import { Component, computed, effect, ElementRef, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import {
   LucideArrowDown,
   LucideCheck,
@@ -37,8 +37,6 @@ import { ChartBar, ChartSeries } from '@shared/chart/chart.model';
 import { LineChart } from '@shared/chart/line-chart';
 import { Drawer } from '@shared/drawer/drawer';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { Select } from '@shared/select/select';
-import { SelectOption } from '@shared/select/select.model';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { TOOLTIP_SURFACE_CLASS } from '@shared/tooltip/tooltip.constants';
 import { BossDetail } from './boss-detail/boss-detail';
@@ -120,9 +118,7 @@ interface CampaignMapRow {
  * sentence being written.
  *
  * The map is a honeycomb standing whole in its panel, one row per week between a row of untouched
- * terrain at each end. Picking any week's hexagon opens the detail panel, and the panel's own title
- * is a dropdown swapping the map for the same campaign told as a chronology — the one reading that
- * survives on a narrow screen, where the field is at its most cramped (see `view`).
+ * terrain at each end. Picking any week's hexagon opens the detail panel.
  */
 @Component({
   selector: 'app-campaign',
@@ -135,7 +131,6 @@ interface CampaignMapRow {
     Drawer,
     BarChart,
     LineChart,
-    Select,
     Tooltip,
     LucideArrowDown,
     LucideCheck,
@@ -169,11 +164,6 @@ export class Campaign {
    * The colony the campaign feeds, resolved into display-ready view models.
    */
   protected readonly colony = inject(ColonyView);
-
-  /**
-   * Host element, queried once to scroll the week being fought into view on load.
-   */
-  private readonly hostElement = inject(ElementRef<HTMLElement>);
 
   /**
    * Names the plotted line, the one label the page resolves itself rather than reading off a view
@@ -212,28 +202,6 @@ export class Campaign {
    * two are the run's standing, and the rest is how it got there.
    */
   protected readonly isDetailOpen = signal(false);
-
-  /**
-   * Whether the active week's timeline marker has already been scrolled into view, so switching
-   * into the history view auto-scrolls only the first time.
-   */
-  private hasScrolledToHistoryCurrentNode = false;
-
-  /**
-   * Which of the two tellings of the campaign is on screen: the battle map (territory) or the
-   * battle history (chronology). Swapped in place by the dropdown the panel's title carries,
-   * rather than by navigating to a separate route, since both read off the same `campaign`.
-   */
-  protected readonly view = signal<'map' | 'history'>('map');
-
-  /**
-   * The two tellings, as the dropdown's options. The panel is titled by whichever is on screen, so
-   * the title and the control that changes it are the same element.
-   */
-  protected readonly viewOptions = computed<readonly SelectOption<'map' | 'history'>[]>(() => [
-    { value: 'map', label: this.translation.translate('campaign.territory') },
-    { value: 'history', label: this.translation.translate('campaign.historyToggle') },
-  ]);
 
   /**
    * Whether either half of the page is still resolving, or has failed. The two are reported as one:
@@ -407,28 +375,10 @@ export class Campaign {
   });
 
   /**
-   * The weeks the history view tells: every fought week, oldest first, up to and including the
-   * active one — the campaign's locked placeholders for weeks ahead are left out, since a history
-   * has nothing to say about what hasn't happened yet.
-   */
-  protected readonly historyNodes = computed<readonly BossTimelineNode[]>(() =>
-    this.campaign.nodes().filter((node) => node.status !== 'upcoming'),
-  );
-
-  /**
-   * The node list the detail panel steps through, which depends on which view opened it: the full
-   * campaign (locked weeks included) from the map, or the fought-only {@link historyNodes} from
-   * the history view.
-   */
-  private readonly activeNodes = computed<readonly BossTimelineNode[]>(() =>
-    this.view() === 'history' ? this.historyNodes() : this.campaign.nodes(),
-  );
-
-  /**
    * The node whose detail panel is open, or `null` while the panel is closed.
    */
   protected readonly selectedNode = computed<BossTimelineNode | null>(
-    () => this.activeNodes().find((node) => node.id === this.selectedNodeId()) ?? null,
+    () => this.campaign.nodes().find((node) => node.id === this.selectedNodeId()) ?? null,
   );
 
   /**
@@ -446,11 +396,11 @@ export class Campaign {
   });
 
   /**
-   * Position of {@link selectedNode} within {@link activeNodes}, or `-1` while the panel is
+   * Position of {@link selectedNode} within the campaign's nodes, or `-1` while the panel is
    * closed.
    */
   private readonly selectedIndex = computed(() =>
-    this.activeNodes().findIndex((node) => node.id === this.selectedNodeId()),
+    this.campaign.nodes().findIndex((node) => node.id === this.selectedNodeId()),
   );
 
   /**
@@ -459,7 +409,7 @@ export class Campaign {
   protected readonly hasPreviousNode = computed(() => this.selectedIndex() > 0);
   protected readonly hasNextNode = computed(() => {
     const index = this.selectedIndex();
-    return index >= 0 && index < this.activeNodes().length - 1;
+    return index >= 0 && index < this.campaign.nodes().length - 1;
   });
 
   /**
@@ -504,59 +454,6 @@ export class Campaign {
   );
 
   /**
-   * Brings the active week's marker into view the first time the battle history comes on screen.
-   *
-   * The map needs no equivalent: it stands whole in its panel, so there is nothing to scroll to.
-   * The history does not — it is a column of panels as long as the run is. `requestAnimationFrame`
-   * is a browser-only API, safe to call unconditionally here since this only ever runs client-side,
-   * in response to the dropdown.
-   */
-  constructor() {
-    effect(() => {
-      if (this.view() !== 'history' || this.hasScrolledToHistoryCurrentNode) {
-        return;
-      }
-
-      this.hasScrolledToHistoryCurrentNode = true;
-      requestAnimationFrame(() => {
-        this.hostElement.nativeElement
-          .querySelector('[data-timeline-current]')
-          ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      });
-    });
-  }
-
-  /**
-   * Background for one row's segment of the history timeline's center line: ground already
-   * covered in brand amber, turning red exactly at the active week's marker, then flat and muted
-   * ahead — the same three colors the markers themselves use, in the same order.
-   *
-   * The line is drawn one segment per row rather than as a single gradient spanning the whole
-   * list because rows do not share a height, so no percentage along the list maps to a marker's
-   * center and the handover always landed short of the active hexagon. A marker is vertically
-   * centered in its row, which puts that handover at a hard 50% of the row's own segment.
-   *
-   * @param index - Position of the row in {@link historyNodes}.
-   * @returns The CSS `background` value for that row's segment.
-   */
-  protected timelineConnectorBackground(index: number): string {
-    const currentIndex = this.campaign.currentNodeIndex();
-
-    if (currentIndex < 0 || index > currentIndex) {
-      return 'var(--color-surface-700)';
-    }
-
-    if (index < currentIndex) {
-      return 'var(--color-brand-500)';
-    }
-
-    return (
-      `linear-gradient(to bottom, var(--color-brand-500) 0%, var(--color-accent-red) 50%, ` +
-      `var(--color-surface-700) 50%)`
-    );
-  }
-
-  /**
    * Opens the population curve over the page, and closes it again.
    */
   protected openCurve(): void {
@@ -589,7 +486,7 @@ export class Campaign {
    * @param offset - `-1` for the previous week, `1` for the next one.
    */
   protected step(offset: -1 | 1): void {
-    const target = this.activeNodes()[this.selectedIndex() + offset];
+    const target = this.campaign.nodes()[this.selectedIndex() + offset];
     if (target) {
       this.selectedNodeId.set(target.id);
     }
@@ -606,7 +503,6 @@ export class Campaign {
    * Reloads every backing resource after a failure, on both halves of the page.
    */
   protected reload(): void {
-    this.hasScrolledToHistoryCurrentNode = false;
     this.campaign.reload();
     this.colony.reload();
   }

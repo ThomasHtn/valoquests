@@ -272,7 +272,7 @@
         @for (row of rows(); track row.playerId) {
           <li
             [class.opacity-60]="row.position === null"
-            class="notch-tr relative flex flex-col gap-4 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 [--notch:0.875rem] has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
+            class="notch-tr relative flex flex-col gap-4 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 transition-colors [--notch:0.875rem] has-[a:hover]:bg-brand-500/15 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
           >
             <div class="flex items-center gap-3">
               @if (row.position === null) {
