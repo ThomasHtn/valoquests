@@ -1,14 +1,18 @@
 import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { LucideSkull, LucideSwords } from '@lucide/angular';
 
 import { BossApi } from '@core/boss/boss-api';
 import { resolveBossHpBarColorClass } from '@core/boss/boss-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { resolveChallengeVisual } from '@core/challenges/challenge-visual.utils';
+import { ChallengesApi } from '@core/challenges/challenges-api';
 import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { ResourceState } from '@shared/resource-state/resource-state';
+import { BossWeakPoint } from './boss-encounter.model';
 
 /**
  * "Weekly boss" card of the overview page.
@@ -17,10 +21,13 @@ import { ResourceState } from '@shared/resource-state/resource-state';
  * `Leaderboard` — as a single shared health bar: the boss the group is fighting this week, its
  * remaining hit points, and whether it has already fallen. The countdown to the week's end is
  * shown once, in the overview header, rather than repeated here.
+ *
+ * Closes with the five tier marks of the week's challenges, the only thing on this card that says
+ * *how* the bar goes down — see {@link weakPoints}.
  */
 @Component({
   selector: 'app-boss-encounter',
-  imports: [TranslatePipe, ResourceState, NgOptimizedImage, LucideSkull, LucideSwords],
+  imports: [TranslatePipe, RouterLink, ResourceState, NgOptimizedImage, LucideSkull, LucideSwords],
   templateUrl: './boss-encounter.html',
 })
 export class BossEncounter {
@@ -28,6 +35,12 @@ export class BossEncounter {
    * Data-access service backing the shared current-boss resource.
    */
   private readonly bossApi = inject(BossApi);
+
+  /**
+   * Data-access service backing the shared current-challenges resource, read for the tier marks
+   * closing the card.
+   */
+  private readonly challengesApi = inject(ChallengesApi);
 
   /**
    * i18n service read for the active language when grouping hit-point amounts.
@@ -104,6 +117,30 @@ export class BossEncounter {
   protected readonly hpBarColorClass = computed(() =>
     resolveBossHpBarColorClass(this.remainingPercentage()),
   );
+
+  /**
+   * The week's five challenges reduced to a tier mark and an amount, in the order they were drawn.
+   *
+   * Deliberately outside {@link isLoading} and {@link hasError}: the strip is a pointer to the quest
+   * board, not a state of the fight, so a challenges request that fails or lags must not blank a
+   * boss card that loaded fine. It renders empty and the card stands without it.
+   */
+  protected readonly weakPoints = computed<readonly BossWeakPoint[]>(() => {
+    const language = this.translation.language();
+
+    return (resourceValue(this.challengesApi.current, null)?.challenges ?? []).map((challenge) => {
+      const visual = resolveChallengeVisual(challenge.metric, challenge.difficulty);
+
+      return {
+        id: challenge.id,
+        tier: visual.tier,
+        iconClass: visual.iconClass,
+        barClass: visual.barClass,
+        difficulty: challenge.difficulty,
+        damageLabel: formatDamage(challenge.damage, language),
+      };
+    });
+  });
 
   /**
    * Reloads the backing resource after a failure.

@@ -67,4 +67,12 @@ export interface MatchDay {
    * Assists summed across the day's matches.
    */
   readonly totalAssists: number;
+
+  /**
+   * ValoQuests damage summed across the day's matches.
+   *
+   * Totalled at the day rather than at the week because the day is the scale the ruleset's
+   * diminishing returns work on: this is exactly what an evening of play was worth.
+   */
+  readonly totalValoquestsDamage: number;
 }

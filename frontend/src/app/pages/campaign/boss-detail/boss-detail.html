@@ -192,4 +192,17 @@
          week the ranking does not cover — a locked week ahead, or one finalized before the group
          started being tracked. -->
   <app-boss-contributions [contributions]="node().contributions" />
+
+  <!-- This list is the week's ranking seen through one fight. The board it comes from is at
+       `/leaderboard`, on the week this panel is showing, so the two are never a guess apart. -->
+  @if (node().contributions.length > 0 && node().weekStart; as weekStart) {
+    <a
+      [queryParams]="{ week: weekStart }"
+      [routerLink]="'/leaderboard'"
+      class="focus-ring flex items-center justify-end gap-1.5 border-t border-text-primary/10 pt-3 text-sm font-medium text-brand-500 transition-colors hover:text-brand-400"
+    >
+      {{ 'boss.panel.fullRanking' | translate }}
+      <svg aria-hidden="true" class="size-3.5 shrink-0" lucideChevronRight></svg>
+    </a>
+  }
 </app-drawer>

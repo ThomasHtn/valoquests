@@ -55,6 +55,16 @@ export interface BossTimelineNode {
    */
   readonly id: string;
 
+  /**
+   * Monday beginning this week, as `YYYY-MM-DD`, or `null` for an `'upcoming'` placeholder whose
+   * week isn't determined yet.
+   *
+   * Carried separately from {@link id} even though a real node's id holds the same string: this one
+   * is a week key meant to be handed to another screen — the ranking's `?week=` deep link — and a
+   * placeholder's synthetic id must never end up there.
+   */
+  readonly weekStart: string | null;
+
   readonly status: BossTimelineNodeStatus;
 
   /**

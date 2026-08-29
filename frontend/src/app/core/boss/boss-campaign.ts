@@ -424,6 +424,7 @@ export class BossCampaign {
 
     return {
       id: weekStart,
+      weekStart,
       status,
       runWeekIndex,
       weekNumber: isoWeekNumber(weekStart),
@@ -469,6 +470,7 @@ export class BossCampaign {
   private toUpcomingNode(runWeekIndex: number, weekStart: string | null): BossTimelineNode {
     return {
       id: `upcoming-${runWeekIndex}`,
+      weekStart,
       status: 'upcoming',
       runWeekIndex,
       weekNumber: weekStart === null ? null : isoWeekNumber(weekStart),

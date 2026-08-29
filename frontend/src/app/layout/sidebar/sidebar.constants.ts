@@ -6,12 +6,18 @@ import { NavItem } from './sidebar.model';
  * Kept as data rather than repeated markup so the shared layout and long
  * Tailwind class list are written once and iterated with `@for`. Entries
  * without a `routerLink` have no page yet and render as inert.
+ *
+ * The order carries the game's two loops rather than an alphabet: the week first — what to do
+ * (challenges) then who is winning it (leaderboard) — and the run after it, since the campaign is
+ * what those weeks add up to. Splitting them under section headers was considered and dropped: six
+ * entries do not need chapters, and the collapsed rail shows icons only, where a header has nothing
+ * to render.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'overview', icon: 'layout-dashboard', routerLink: '/overview', exactMatch: true },
   { labelKey: 'challenges', icon: 'target', routerLink: '/challenges' },
-  { labelKey: 'campaign', icon: 'map', routerLink: '/campaign' },
   { labelKey: 'leaderboard', icon: 'trophy', routerLink: '/leaderboard' },
+  { labelKey: 'campaign', icon: 'map', routerLink: '/campaign' },
   { labelKey: 'players', icon: 'users', routerLink: '/players' },
   { labelKey: 'rules', icon: 'book-open', routerLink: '/rules' },
 ];

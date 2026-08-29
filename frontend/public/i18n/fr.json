@@ -83,6 +83,13 @@
         "status": "Statut initial"
       },
       "frozenRoster": "La run {{run}} tourne sur un roster figé à {{roster}} joueurs. Activer ou désactiver quelqu'un ici ne prendra effet qu'à la run suivante.",
+      "gettingStarted": {
+        "addPlayers": "Ajoutez chaque joueur avec son Riot ID complet, au format pseudo#tag.",
+        "operationsLink": "Aller aux opérations",
+        "share": "Partagez l'adresse de l'application avec l'équipe. Le tour d'accueil se lance tout seul à la première visite : personne n'a besoin d'expliquer le fonctionnement.",
+        "synchronize": "Lancez une première synchronisation pour récupérer leur historique de matchs. Le classement et la colonie se remplissent ensuite tout seuls chaque semaine.",
+        "title": "Démarrage"
+      },
       "heading": "Escouade",
       "idle": "Aucun match depuis quatorze jours. Un joueur actif qui ne joue plus agrandit la ville sans la nourrir, et coûte environ 5 % du score final.",
       "loading": "Chargement de l'effectif…",
@@ -164,6 +171,7 @@
     "panel": {
       "close": "Fermer le détail de la semaine",
       "damage": "Dégâts",
+      "fullRanking": "Voir le classement complet de cette semaine",
       "next": "Semaine suivante",
       "portrait": "Portrait du boss",
       "previous": "Semaine précédente",
@@ -190,18 +198,18 @@
   "campaign": {
     "error": "Impossible de charger la campagne.",
     "heading": "La campagne de l'escouade",
-    "historyToggle": "Historique",
+    "historyToggle": "Chronologie",
     "legend": {
-      "current": "En combat",
-      "defeated": "Conquis",
-      "survived": "Perdu",
+      "current": "Menace en cours",
+      "defeated": "Repoussée",
+      "survived": "Colonie touchée",
       "upcoming": "À venir"
     },
     "loading": "Chargement de la campagne…",
     "map": {
-      "ariaLabel": "Carte de bataille de la campagne, un territoire par semaine"
+      "ariaLabel": "Carte des menaces sur la colonie, une par semaine de la run"
     },
-    "territory": "Territoire",
+    "territory": "Carte des menaces",
     "title": "Campagne",
     "viewLabel": "Vue de la campagne"
   },
@@ -231,6 +239,9 @@
       "milestone": "{{tier}} · J{{day}}"
     },
     "delta": "cette nuit",
+    "detail": {
+      "title": "Détail de la colonie"
+    },
     "eyebrow": "Campagne · Run {{run}} · Semaine {{week}} sur {{weeks}}",
     "hexagonAria": "Population : {{population}} habitants sur {{ceiling}} nourrissables, {{change}} cette nuit. Ouvrir la courbe de la run.",
     "history": {
@@ -345,7 +356,7 @@
     }
   },
   "landing": {
-    "body": "Une web app où chaque bataille se mène à travers le jeu vidéo Valorant. Semaine après semaine, l'escouade repousse l'adversaire qui occupe le territoire et le reconquiert partie après partie.",
+    "body": "Une web app où chaque partie de Valorant nourrit une colonie commune. Chaque semaine une menace surgit : toute l'escouade doit jouer pour la repousser et faire grandir la ville.",
     "compass": {
       "action": "Entrer",
       "caption": "Rejoindre l'escouade"
@@ -354,9 +365,9 @@
       "welcome": "Bienvenue dans"
     },
     "hint": "Oseriez-vous rejoindre l'aventure ?",
-    "title": "Expédition",
-    "weekLabel": "Expédition · Semaine {{week}}",
-    "weekLabelPending": "Expédition"
+    "title": "Colonie",
+    "weekLabel": "Colonie · Semaine {{week}}",
+    "weekLabelPending": "Colonie"
   },
   "notFound": {
     "backToOverview": "Retour à la vue d'ensemble",
@@ -376,7 +387,9 @@
       "hpUnit": "PV",
       "hpValue": "{{remaining}} / {{total}} PV",
       "loading": "Chargement du boss…",
-      "title": "Boss à vaincre cette semaine"
+      "title": "Boss à vaincre cette semaine",
+      "weakPoints": "Ses points faibles",
+      "weakPointsLink": "Voir les défis"
     },
     "header": {
       "subheading": "Avancement de l'escouade cette semaine",
@@ -395,7 +408,7 @@
     },
     "populationTile": {
       "link": "Voir la campagne",
-      "title": "Avancement de la campagne"
+      "title": "La colonie"
     },
     "teamProgress": {
       "completedLabel": "défis d'escouade terminés",
@@ -410,6 +423,7 @@
     },
     "title": "Vue d'ensemble",
     "weeklyChallenges": {
+      "damageDestination": "Boss et classement",
       "damageLabel": "Dégâts",
       "difficulty": {
         "EASY": "Facile",
@@ -440,6 +454,7 @@
         "ROUNDS_PLAYED": "Rounds",
         "SCORE": "Score"
       },
+      "materialsDestination": "Colonie",
       "nextDraw": {
         "date": "Lundi {{date}} · 00h00",
         "description": "Cinq nouveaux défis seront tirés du catalogue.",
@@ -453,7 +468,9 @@
     "weeklyRanking": {
       "champion": "Champion",
       "columns": {
+        "activeDays": "Jours joués",
         "bonusDamage": "Dégâts bonus",
+        "challengesCleared": "Défis validés",
         "damage": "Dégâts",
         "player": "Joueur"
       },
@@ -466,6 +483,12 @@
       "heading": "Classement",
       "subheading": "Le classement des dégâts de la semaine",
       "totalDamage": "Dégâts cumulés · {{damage}}",
+      "week": {
+        "closedNote": "Semaine close. Seuls les totaux sont conservés : le détail défi par défi n'existe que pour la semaine en cours.",
+        "live": "En cours",
+        "next": "Semaine suivante",
+        "previous": "Semaine précédente"
+      },
       "variation": {
         "down": {
           "one": "{{count}} place perdue",
@@ -500,9 +523,15 @@
     },
     "loading": "Chargement du profil du joueur…",
     "matches": {
+      "damage": {
+        "coefficient": "Dégâts infligés au boss de la semaine. Ce match a conservé {{percent}} % de sa valeur de base : les meilleures parties d'une journée comptent en entier, les suivantes de moins en moins.",
+        "share": "{{percent}} % de la valeur",
+        "unvalued": "Ce match ne compte pas pour ValoQuests : le barème ne valorise ni ce mode ni ce type de partie."
+      },
       "columns": {
         "acs": "ACS",
         "adr": "ADR",
+        "damage": "Dégâts",
         "headshotPercentage": "HS%",
         "kd": "K/D",
         "kda": "K/D/A",
@@ -853,17 +882,22 @@
     "skip": "Passer le tour",
     "steps": {
       "boss": {
-        "body": "Chaque semaine, un adversaire apparaît avec des points de vie partagés par tout le groupe. Chacune de vos parties et chacun des défis relevés lui inflige des dégâts. Il faut le vaincre avant dimanche 23h59 : passé ce délai, il survit et le territoire reste entre ses mains.",
+        "body": "Chaque semaine, une menace apparaît avec des points de vie partagés par tout le groupe. Chacune de vos parties et chacun des défis relevés lui inflige des dégâts. Il faut la vaincre avant dimanche 23h59 : passé ce délai, elle survit et la colonie encaisse le coup.",
         "eyebrow": "Le boss",
-        "title": "Un adversaire à vaincre"
+        "title": "Une menace à repousser chaque semaine"
       },
       "challenges": {
-        "body": "Chaque lundi, cinq défis sont tirés au sort, du plus facile au plus difficile. Plus un défi est difficile à réussir, plus il inflige de dégâts à l'adversaire.",
+        "body": "Chaque lundi, cinq défis sont tirés au sort, du plus facile au plus difficile. Plus un défi est difficile à réussir, plus il inflige de dégâts à la menace — et plus il rapporte de matériaux à la colonie.",
         "eyebrow": "Les défis",
         "title": "Cinq défis à relever chaque semaine"
       },
+      "colony": {
+        "body": "Chaque partie jouée nourrit la colonie, et chaque défi ou boss vaincu rapporte des matériaux qui font monter la ville d'un palier. Plus la nourriture est abondante et plus la ville est développée, plus sa population grandit.\n\nC'est l'objectif commun : au bout de dix semaines, la population atteinte est le score de toute l'escouade. Il faut donc que tout le monde joue.",
+        "eyebrow": "La colonie",
+        "title": "Une ville qui grandit à chaque partie"
+      },
       "intro": {
-        "body": "Vous rejoignez une escouade. Chaque semaine, les parties que vous jouez sur Valorant font avancer tout le groupe : elles valident des défis, infligent des dégâts et repoussent l'adversaire qui occupe le territoire.\n\nVoyons comment se déroule une semaine.",
+        "body": "Vous rejoignez une escouade qui fait grandir une colonie. Chaque semaine, les parties que vous jouez sur Valorant la nourrissent, valident des défis et repoussent la menace qui la vise.\n\nVoyons comment se déroule une semaine.",
         "eyebrow": "Le principe",
         "title": "Une aventure collective, semaine après semaine"
       },

@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { LucidePlay } from '@lucide/angular';
 
 import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
-import { formatSquadMultiplier } from '@core/challenges/challenge-format.utils';
+import { formatDamage, formatSquadMultiplier } from '@core/challenges/challenge-format.utils';
 import { formatGauge } from '@core/colony/colony-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -138,4 +138,18 @@ export class Rules {
    * Resolves a boss category's text color utility, exposed to the template.
    */
   protected readonly bossCategoryColorClass = resolveBossCategoryColorClass;
+
+  /**
+   * Groups one of the barème's amounts, in the reader's own notation.
+   *
+   * Same reason as {@link colonyTierShowcase}: bound raw, the ladder printed `1400` here while the
+   * quest board printed `1 400` for that exact challenge, and the two screens stopped looking like
+   * they were quoting one rulebook.
+   *
+   * @param value - The raw amount from the showcase constants.
+   * @returns The grouped amount.
+   */
+  protected amount(value: number): string {
+    return formatDamage(value, this.translation.language());
+  }
 }

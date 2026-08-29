@@ -250,7 +250,7 @@ export class BarChart {
           }
 
           ctx.fillStyle = bar.highlighted ? theme.highlight : theme.tick;
-          ctx.fillText(`${bar.value}${suffix()}`, element.x, element.y - 6);
+          ctx.fillText(`${bar.valueLabel ?? bar.value}${suffix()}`, element.x, element.y - 6);
         });
 
         ctx.restore();

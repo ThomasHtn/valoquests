@@ -24,8 +24,8 @@ import { SelectOption } from './select.model';
 let instanceCount = 0;
 
 /**
- * Custom-styled, single-select dropdown wearing the "Expédition" direction: flat, neutral surface
- * tones, cut at the top-right corner like every other notched surface.
+ * Custom-styled, single-select dropdown wearing the application's own direction: flat, neutral
+ * surface tones, cut at the top-right corner like every other notched surface.
  *
  * Shared by every filter needing a dropdown so they all render and behave the same way. Kept as a
  * plain button-and-panel pair (no native `<select>`, no Angular Material) since the panel always

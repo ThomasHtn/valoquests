@@ -1,4 +1,5 @@
 import { Component, computed, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import {
   LucideChevronLeft,
   LucideChevronRight,
@@ -27,6 +28,7 @@ import { resolveBossNumberLabel } from '../campaign-map.constants';
   selector: 'app-boss-detail',
   imports: [
     TranslatePipe,
+    RouterLink,
     BossContributions,
     Drawer,
     LucideChevronLeft,

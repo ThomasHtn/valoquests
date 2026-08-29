@@ -17,6 +17,7 @@ type MatchDayGroup = Omit<
   | 'totalAssists'
   | 'totalDeaths'
   | 'totalKills'
+  | 'totalValoquestsDamage'
 >;
 
 /**
@@ -82,5 +83,6 @@ function withDayAverages(day: MatchDayGroup): MatchDay {
     totalKills: sum((match) => match.kills),
     totalDeaths: sum((match) => match.deaths),
     totalAssists: sum((match) => match.assists),
+    totalValoquestsDamage: sum((match) => match.valoquestsDamage),
   };
 }

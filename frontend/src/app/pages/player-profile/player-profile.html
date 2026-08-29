@@ -70,7 +70,7 @@
             <h1
               [class.text-accent-gold]="isChampion()"
               [class.text-text-primary]="!isChampion()"
-              class="font-display flex min-w-0 flex-wrap items-center gap-2 text-2xl leading-none font-bold uppercase sm:text-3xl"
+              class="font-display flex min-w-0 flex-wrap items-center gap-2 text-2xl leading-tight font-bold uppercase sm:text-3xl"
             >
               <span class="min-w-0 break-words">{{ playerDetails.displayName }}</span>
               @if (isChampion()) {
@@ -459,6 +459,19 @@
                           {{ formatScore(day.avgAcs) }}
                         </span>
                       </p>
+                      <!-- Totalled, not averaged, unlike every column beside it: the day is the
+                           scale the ruleset's diminishing returns work on, so this is exactly what
+                           the evening was worth to the week's boss. -->
+                      <p class="px-2 text-center">
+                        <span class="label-caption block truncate text-text-muted">
+                          {{ 'playerProfile.matches.columns.damage' | translate }}
+                        </span>
+                        <span
+                          class="font-display mt-1.5 block text-sm leading-none font-semibold text-brand-500 tabular-nums"
+                        >
+                          {{ formatDamageAmount(day.totalValoquestsDamage) }}
+                        </span>
+                      </p>
                     </div>
 
                     @for (row of day.matches; track row.id) {
@@ -563,6 +576,32 @@
                             {{ formatScore(row.acs) }}
                           </span>
                         </p>
+
+                        <!-- What this one game was worth to the week's boss and to the ranking. The
+                             amount alone is misleading — two identical wins on one evening carry
+                             different amounts once the day's ladder starts reducing them — so the
+                             coefficient that explains it rides in the tooltip. -->
+                        <p
+                          [appTooltip]="damageExplanation(row)"
+                          appTooltipPosition="above"
+                          class="cursor-help px-2 text-center"
+                        >
+                          <span class="label-caption block text-text-muted">
+                            {{ 'playerProfile.matches.columns.damage' | translate }}
+                          </span>
+                          <span
+                            [class.text-brand-500]="row.valoquestsDamage > 0"
+                            [class.text-text-muted]="row.valoquestsDamage === 0"
+                            class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
+                          >
+                            {{ formatDamageAmount(row.valoquestsDamage) }}
+                          </span>
+                          @if (damageShareLabel(row); as share) {
+                            <span class="label-caption mt-1 block text-text-muted tabular-nums">
+                              {{ share }}
+                            </span>
+                          }
+                        </p>
                       </div>
                     }
                   </div>
@@ -589,6 +628,13 @@
                       </span>
                       <span class="label-caption text-text-secondary">
                         {{ day.dateLabel }}
+                      </span>
+                      <!-- What the evening was worth, beside how it went: the day is the scale the
+                           ruleset's diminishing returns work on, so this is the figure that reached
+                           the week's boss. -->
+                      <span class="label-caption text-brand-500 tabular-nums">
+                        {{ 'playerProfile.matches.columns.damage' | translate }}
+                        {{ formatDamageAmount(day.totalValoquestsDamage) }}
                       </span>
                       <span class="ml-auto text-sm font-semibold tabular-nums">
                         <span class="text-accent-green">
@@ -646,7 +692,7 @@
                           </div>
 
                           <dl
-                            class="grid grid-cols-3 gap-3 border-t border-text-primary/10 pt-4 sm:grid-cols-5"
+                            class="grid grid-cols-3 gap-3 border-t border-text-primary/10 pt-4 sm:grid-cols-6"
                           >
                             <div>
                               <dt class="label-caption text-text-muted">
@@ -697,6 +743,26 @@
                                 class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
                               >
                                 {{ formatScore(row.acs) }}
+                              </dd>
+                            </div>
+                            <!-- The reduced share is written out here rather than left to the
+                                 tooltip: this layout is the one a phone gets, and a tooltip opens
+                                 on hover or focus, neither of which a thumb does. -->
+                            <div>
+                              <dt class="label-caption text-text-muted">
+                                {{ 'playerProfile.matches.columns.damage' | translate }}
+                              </dt>
+                              <dd
+                                [class.text-brand-500]="row.valoquestsDamage > 0"
+                                [class.text-text-muted]="row.valoquestsDamage === 0"
+                                class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
+                              >
+                                {{ formatDamageAmount(row.valoquestsDamage) }}
+                                @if (damageShareLabel(row); as share) {
+                                  <span class="label-caption block text-text-muted tabular-nums">
+                                    {{ share }}
+                                  </span>
+                                }
                               </dd>
                             </div>
                           </dl>

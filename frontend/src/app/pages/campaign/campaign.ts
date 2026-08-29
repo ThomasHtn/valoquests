@@ -3,6 +3,7 @@ import { Component, computed, effect, ElementRef, inject, signal } from '@angula
 import {
   LucideArrowDown,
   LucideCheck,
+  LucideChevronDown,
   LucideGauge,
   LucideHammer,
   LucideLock,
@@ -27,13 +28,13 @@ import { ColonyBossView } from '@core/colony/colony-view.model';
 import { resolveColonyDeltaColorClass } from '@core/colony/colony-visual.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { Breakpoint } from '@core/viewport/breakpoint';
 import { ColonyCard, ColonyCardFormulaRow } from './colony-card/colony-card';
 import { PageHeader } from '@layout/page-header/page-header';
 import { BarChart } from '@shared/chart/bar-chart';
 import { resolveSeriesColor } from '@shared/chart/chart-theme';
 import { ChartBar, ChartSeries } from '@shared/chart/chart.model';
 import { LineChart } from '@shared/chart/line-chart';
-import { ProgressCircle } from '@shared/progress-circle/progress-circle';
 import { Drawer } from '@shared/drawer/drawer';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { Select } from '@shared/select/select';
@@ -134,11 +135,11 @@ interface CampaignMapRow {
     Drawer,
     BarChart,
     LineChart,
-    ProgressCircle,
     Select,
     Tooltip,
     LucideArrowDown,
     LucideCheck,
+    LucideChevronDown,
     LucideGauge,
     LucideHammer,
     LucideLock,
@@ -193,6 +194,24 @@ export class Campaign {
    * against, so it is opened from the figure it explains instead of holding a panel of its own.
    */
   protected readonly isCurveOpen = signal(false);
+
+  /**
+   * Whether the viewport is wide enough to lay the tiles out as a grid.
+   *
+   * Below `lg` they stack into a single column, and ten of them in a row put the map ten screens
+   * down — see {@link isDetailOpen}. From `lg` up the fold does not exist at all: the wrapper it
+   * hangs on is `display: contents` there, so every tile lands in the page grid unchanged.
+   */
+  protected readonly isLarge = inject(Breakpoint).isLarge;
+
+  /**
+   * Whether the colony's eight explanatory tiles are unfolded, on the narrow layout where they are
+   * folded away by default.
+   *
+   * Only the population and the materials still owed to the next tier stand outside the fold: those
+   * two are the run's standing, and the rest is how it got there.
+   */
+  protected readonly isDetailOpen = signal(false);
 
   /**
    * Whether the active week's timeline marker has already been scrolled into view, so switching
@@ -256,6 +275,9 @@ export class Campaign {
     this.colony.foodDays().map((day) => ({
       label: day.weekdayInitial,
       value: day.harvestValue ?? 0,
+      // The view model already spells the harvest in the reader's language; the raw number printed
+      // an English decimal point above bars sitting under tiles that use a comma.
+      valueLabel: day.harvestLabel,
       detail: day.ariaLabel,
       highlighted: day.isToday,
       muted: day.isPlaceholder,
@@ -543,6 +565,13 @@ export class Campaign {
 
   protected closeCurve(): void {
     this.isCurveOpen.set(false);
+  }
+
+  /**
+   * Unfolds the colony's explanatory tiles on the narrow layout, and folds them back.
+   */
+  protected toggleDetail(): void {
+    this.isDetailOpen.update((isOpen) => !isOpen);
   }
 
   /**

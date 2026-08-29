@@ -83,6 +83,13 @@
         "status": "Initial status"
       },
       "frozenRoster": "Run {{run}} is running on a roster frozen at {{roster}} players. Activating or deactivating somebody here only takes effect on the next run.",
+      "gettingStarted": {
+        "addPlayers": "Add each player with their full Riot ID, in the form name#tag.",
+        "operationsLink": "Go to operations",
+        "share": "Share the app's address with the team. The guided tour opens on its own the first time somebody visits, so nobody has to explain how it works.",
+        "synchronize": "Run a first synchronization to pull in their match history. The ranking and the colony fill themselves in every week after that.",
+        "title": "Getting started"
+      },
       "heading": "Roster",
       "idle": "No match in fourteen days. An active player who has stopped playing widens the town without feeding it, and costs around 5 % of the final score.",
       "loading": "Loading the roster…",
@@ -164,6 +171,7 @@
     "panel": {
       "close": "Close the week's detail",
       "damage": "Damage",
+      "fullRanking": "See this week's full ranking",
       "next": "Next week",
       "portrait": "Boss portrait",
       "previous": "Previous week",
@@ -190,18 +198,18 @@
   "campaign": {
     "error": "Could not load the campaign.",
     "heading": "The squad's campaign",
-    "historyToggle": "History",
+    "historyToggle": "Timeline",
     "legend": {
-      "current": "In battle",
-      "defeated": "Taken",
-      "survived": "Lost",
+      "current": "Threat under way",
+      "defeated": "Repelled",
+      "survived": "Colony hit",
       "upcoming": "Upcoming"
     },
     "loading": "Loading the campaign…",
     "map": {
-      "ariaLabel": "Campaign battle map, one territory per week"
+      "ariaLabel": "Map of the threats on the colony, one per week of the run"
     },
-    "territory": "Territory",
+    "territory": "Threat map",
     "title": "Campaign",
     "viewLabel": "Campaign view"
   },
@@ -231,6 +239,9 @@
       "milestone": "{{tier}} · D{{day}}"
     },
     "delta": "tonight",
+    "detail": {
+      "title": "Colony detail"
+    },
     "eyebrow": "Campaign · Run {{run}} · Week {{week}} of {{weeks}}",
     "hexagonAria": "Population: {{population}} inhabitants of {{ceiling}} feedable, {{change}} tonight. Open the run's curve.",
     "history": {
@@ -345,7 +356,7 @@
     }
   },
   "landing": {
-    "body": "A web app where every battle is fought through the video game Valorant. Week after week, the squad pushes back the enemy holding the territory and takes it back, match after match.",
+    "body": "A web app where every Valorant match feeds a shared colony. Each week a threat appears: the whole squad has to play to push it back and keep the town growing.",
     "compass": {
       "action": "Enter",
       "caption": "Join the squad"
@@ -354,9 +365,9 @@
       "welcome": "Welcome to"
     },
     "hint": "Do you dare join the adventure?",
-    "title": "Expedition",
-    "weekLabel": "Expedition · Week {{week}}",
-    "weekLabelPending": "Expedition"
+    "title": "Colony",
+    "weekLabel": "Colony · Week {{week}}",
+    "weekLabelPending": "Colony"
   },
   "notFound": {
     "backToOverview": "Back to overview",
@@ -376,7 +387,9 @@
       "hpUnit": "HP",
       "hpValue": "{{remaining}} / {{total}} HP",
       "loading": "Loading the boss…",
-      "title": "Boss to defeat this week"
+      "title": "Boss to defeat this week",
+      "weakPoints": "Its weak points",
+      "weakPointsLink": "See the challenges"
     },
     "header": {
       "subheading": "The squad's progress this week",
@@ -395,7 +408,7 @@
     },
     "populationTile": {
       "link": "See the campaign",
-      "title": "Campaign progress"
+      "title": "The colony"
     },
     "teamProgress": {
       "completedLabel": "squad challenges completed",
@@ -410,6 +423,7 @@
     },
     "title": "Overview",
     "weeklyChallenges": {
+      "damageDestination": "Boss and ranking",
       "damageLabel": "Damage",
       "difficulty": {
         "EASY": "Easy",
@@ -440,6 +454,7 @@
         "ROUNDS_PLAYED": "Rounds",
         "SCORE": "Score"
       },
+      "materialsDestination": "Colony",
       "nextDraw": {
         "date": "Monday {{date}} · 00:00",
         "description": "Five new challenges will be drawn from the catalogue.",
@@ -453,7 +468,9 @@
     "weeklyRanking": {
       "champion": "Champion",
       "columns": {
+        "activeDays": "Days played",
         "bonusDamage": "Bonus damage",
+        "challengesCleared": "Challenges cleared",
         "damage": "Damage",
         "player": "Player"
       },
@@ -466,6 +483,12 @@
       "heading": "Ranking",
       "subheading": "This week's damage ranking",
       "totalDamage": "Total damage · {{damage}}",
+      "week": {
+        "closedNote": "Closed week. Only the totals are kept: the challenge-by-challenge breakdown exists for the live week alone.",
+        "live": "Live",
+        "next": "Next week",
+        "previous": "Previous week"
+      },
       "variation": {
         "down": {
           "one": "{{count}} place lost",
@@ -500,9 +523,15 @@
     },
     "loading": "Loading player profile…",
     "matches": {
+      "damage": {
+        "coefficient": "Damage dealt to the week's boss. This match kept {{percent}}% of its base value: a day's best games count in full, and the ones after them count for less and less.",
+        "share": "{{percent}}% of value",
+        "unvalued": "This match does not count for ValoQuests: the ruleset values neither this mode nor this kind of game."
+      },
       "columns": {
         "acs": "ACS",
         "adr": "ADR",
+        "damage": "Damage",
         "headshotPercentage": "HS%",
         "kd": "K/D",
         "kda": "K/D/A",
@@ -853,17 +882,22 @@
     "skip": "Skip the tour",
     "steps": {
       "boss": {
-        "body": "Every week, an opponent appears with a pool of hit points shared by the whole group. Every match you play and every challenge you clear deals damage to it. It has to fall before Sunday 11:59 pm: miss that, and it survives and the territory stays in its hands.",
+        "body": "Every week, a threat appears with a pool of hit points shared by the whole group. Every match you play and every challenge you clear deals damage to it. It has to fall before Sunday 11:59 pm: miss that, and it survives and the colony takes the hit.",
         "eyebrow": "The boss",
-        "title": "An opponent to defeat"
+        "title": "A threat to push back every week"
       },
       "challenges": {
-        "body": "Every Monday, five challenges are drawn at random, from the easiest to the hardest. The harder a challenge is to clear, the more damage it deals to the opponent.",
+        "body": "Every Monday, five challenges are drawn at random, from the easiest to the hardest. The harder a challenge is to clear, the more damage it deals to the threat — and the more materials it banks for the colony.",
         "eyebrow": "The challenges",
         "title": "Five challenges to clear every week"
       },
+      "colony": {
+        "body": "Every match you play feeds the colony, and every challenge cleared or boss brought down banks materials that push the town up a tier. The more food it has and the further it is built up, the more its population grows.\n\nThat is the shared goal: after ten weeks, the population it reached is the whole squad's score. Which means everyone has to play.",
+        "eyebrow": "The colony",
+        "title": "A town that grows with every match"
+      },
       "intro": {
-        "body": "You are joining a squad. Every week, the matches you play on Valorant move the whole group forward: they clear challenges, deal damage and push back the enemy holding the territory.\n\nLet's walk through a week.",
+        "body": "You are joining a squad growing a colony. Every week, the matches you play on Valorant feed it, clear challenges and push back the threat aiming at it.\n\nLet's walk through a week.",
         "eyebrow": "The idea",
         "title": "A shared adventure, week after week"
       },

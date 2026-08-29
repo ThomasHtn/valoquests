@@ -2,7 +2,7 @@
      opens on two headers of one system rather than a titled tile beside a bare card. -->
 <div class="flex items-center gap-3">
   <h2
-    class="font-display text-sm leading-none font-semibold tracking-label text-text-secondary uppercase"
+    class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
   >
     {{ 'overview.bossEncounter.title' | translate }}
   </h2>
@@ -93,7 +93,7 @@
 
           <div class="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2
-              class="font-display max-w-prose text-3xl leading-none font-bold text-text-primary uppercase sm:text-4xl"
+              class="font-display max-w-prose text-3xl leading-tight font-bold text-text-primary uppercase sm:text-4xl"
             >
               {{ encounter.boss.name }}
             </h2>
@@ -136,6 +136,54 @@
           </div>
         </div>
       </div>
+
+      <!-- What actually brings the bar down. The card above states how much of the boss is left and
+           stops there; the five tier marks are the missing half of that sentence, in the same
+           colours the quest board uses for them. Compressed to a numeral and an amount rather than
+           the board's own cards: what each tier asks for lives on `/challenges`, and the whole strip
+           is the way there. -->
+      @if (weakPoints().length > 0) {
+        <a
+          [routerLink]="'/challenges'"
+          class="focus-ring group mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-text-primary/10 pt-5"
+        >
+          <span class="label-caption text-text-muted">
+            {{ 'overview.bossEncounter.weakPoints' | translate }}
+          </span>
+
+          <span class="flex flex-wrap items-center gap-x-3 gap-y-2">
+            @for (point of weakPoints(); track point.id) {
+              <span class="flex items-center gap-1.5">
+                <span
+                  [class]="point.barClass"
+                  aria-hidden="true"
+                  class="clip-hex relative h-6 w-5 shrink-0"
+                >
+                  <span
+                    [class]="point.iconClass"
+                    class="font-display clip-hex absolute inset-px flex items-center justify-center bg-surface-950 text-2xs leading-none font-bold"
+                  >
+                    {{ point.tier }}
+                  </span>
+                </span>
+                <span class="sr-only">
+                  {{ 'overview.weeklyChallenges.difficulty.' + point.difficulty | translate }}
+                </span>
+                <span class="font-mono text-2xs font-semibold text-text-secondary tabular-nums">
+                  {{ point.damageLabel }}
+                </span>
+              </span>
+            }
+          </span>
+
+          <span
+            class="label-caption ml-auto text-brand-500 transition-colors group-hover:text-brand-400"
+          >
+            {{ 'overview.bossEncounter.weakPointsLink' | translate }}
+            <span aria-hidden="true">→</span>
+          </span>
+        </a>
+      }
 
       @if (defeated()) {
         <p

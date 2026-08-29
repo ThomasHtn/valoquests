@@ -1,5 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import {
+  LucideChevronDown,
   LucidePlus,
   LucidePower,
   LucideRotateCcw,
@@ -42,16 +44,21 @@ import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-fo
  * it. Two lines carry that here — a warning on any active player who has not played in a fortnight,
  * and a notice saying that editing the roster only takes effect on the next run, since the current
  * one froze its size when it opened.
+ *
+ * It opens on the three steps that turn a fresh install into a live tracker, since this is the first
+ * backoffice screen a manager lands on and nothing else in the product ever said how to start.
  */
 @Component({
   selector: 'app-admin-players',
   imports: [
     TranslatePipe,
+    RouterLink,
     Button,
     ConfirmDialog,
     PlayerFormPanel,
     ResourceState,
     SectionLabel,
+    LucideChevronDown,
     LucidePlus,
     LucidePower,
     LucideRotateCcw,

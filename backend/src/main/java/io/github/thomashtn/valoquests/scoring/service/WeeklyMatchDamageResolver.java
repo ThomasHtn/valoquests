@@ -69,21 +69,46 @@ public class WeeklyMatchDamageResolver {
     /**
      * Prices every supplied match, after daily diminishing returns.
      *
-     * <p>An ineligible match is worth zero and never consumes a rank: a remake must not push a real
-     * game of the same day into a reduced tier.
-     *
      * @param playerMatches one player's matches for the week, in any order
      * @param ruleset       ruleset the owning week was resolved against
      * @return damage indexed by player-match identifier, one entry per supplied match
      */
     public Map<Long, Integer> resolve(List<PlayerMatch> playerMatches, ScoringRuleset ruleset) {
         Map<Long, Integer> damageByPlayerMatchId = new LinkedHashMap<>();
+
+        resolveDetailed(playerMatches, ruleset).forEach(
+            (playerMatchId, damage) -> damageByPlayerMatchId.put(playerMatchId, damage.damage())
+        );
+
+        return damageByPlayerMatchId;
+    }
+
+    /**
+     * Prices every supplied match, keeping the daily coefficient each one was reduced by.
+     *
+     * <p>An ineligible match is worth zero and never consumes a rank: a remake must not push a real
+     * game of the same day into a reduced tier. It carries a zero coefficient too, since it never
+     * entered the ladder at all.
+     *
+     * <p>Exists beside {@link #resolve} for the match-history API, which shows a player what one
+     * game was worth and has to name the coefficient to explain the amount. The scoring itself only
+     * ever needs the amount, and reads it through {@link #resolve}.
+     *
+     * @param playerMatches one player's matches for the week, in any order
+     * @param ruleset       ruleset the owning week was resolved against
+     * @return damage and coefficient indexed by player-match identifier, one entry per match
+     */
+    public Map<Long, MatchDamage> resolveDetailed(
+        List<PlayerMatch> playerMatches,
+        ScoringRuleset ruleset
+    ) {
+        Map<Long, MatchDamage> damageByPlayerMatchId = new LinkedHashMap<>();
         Map<LocalDate, List<PricedMatch>> eligibleByDay = new HashMap<>();
 
         for (PlayerMatch playerMatch : playerMatches) {
             int baseDamage = matchDamageCalculator.damageOf(playerMatch, ruleset);
 
-            damageByPlayerMatchId.put(playerMatch.getId(), 0);
+            damageByPlayerMatchId.put(playerMatch.getId(), MatchDamage.NONE);
 
             if (matchDamageCalculator.isEligible(playerMatch)) {
                 eligibleByDay
@@ -123,7 +148,7 @@ public class WeeklyMatchDamageResolver {
     private void applyDailyCoefficients(
         List<PricedMatch> dayMatches,
         ScoringRuleset ruleset,
-        Map<Long, Integer> damageByPlayerMatchId
+        Map<Long, MatchDamage> damageByPlayerMatchId
     ) {
         dayMatches.sort(MOST_VALUABLE_FIRST);
 
@@ -135,7 +160,10 @@ public class WeeklyMatchDamageResolver {
             int reducedDamage =
                 (int) Math.round(priced.baseDamage() * coefficientPercent / PERCENT_SCALE);
 
-            damageByPlayerMatchId.put(priced.playerMatch().getId(), reducedDamage);
+            damageByPlayerMatchId.put(
+                priced.playerMatch().getId(),
+                new MatchDamage(reducedDamage, coefficientPercent)
+            );
         }
     }
 
@@ -156,5 +184,20 @@ public class WeeklyMatchDamageResolver {
      * @param baseDamage  damage the ruleset prices this match at, before diminishing returns
      */
     private record PricedMatch(PlayerMatch playerMatch, int baseDamage) {
+    }
+
+    /**
+     * What one match ended up dealing, and the daily coefficient it was reduced by.
+     *
+     * @param damage            damage after the day's diminishing returns
+     * @param coefficientPercent percentage of its base damage the match kept, or {@code 0} for a
+     *     match that never entered the day's ladder
+     */
+    public record MatchDamage(int damage, int coefficientPercent) {
+
+        /**
+         * What an ineligible match is worth: nothing, on no rank.
+         */
+        public static final MatchDamage NONE = new MatchDamage(0, 0);
     }
 }

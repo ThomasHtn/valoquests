@@ -11,20 +11,27 @@
     </span>
 
     <div class="relative shrink-0">
-      <!-- Focus (which a click already gives the button) and hover are the peer's two triggers, so
-           this single native button already answers "click or hover" without extra state. -->
+      <!-- Focus (which a tap already gives the button) and hover are the peer's two triggers, so
+           this single native button answers "tap or hover" without extra state.
+
+           The `before` overlay is the touch target: the dot itself is 20px, which is right for the
+           tile's density and far too small for a thumb. It grows the hit area to 40px without
+           moving a pixel of what is drawn. -->
       <button
         [attr.aria-label]="'colony.cardInfo' | translate: { title: title() }"
-        class="peer/info focus-ring flex size-5 items-center justify-center rounded-full border border-text-primary/15 bg-text-primary/5 text-text-muted transition-colors hover:border-brand-500/50 hover:bg-brand-500/10 hover:text-brand-400"
+        class="peer/info focus-ring relative flex size-5 items-center justify-center rounded-full border border-text-primary/15 bg-text-primary/5 text-text-muted transition-colors before:absolute before:-inset-2.5 before:content-[''] hover:border-brand-500/50 hover:bg-brand-500/10 hover:text-brand-400"
         type="button"
       >
         <svg class="size-3" lucideInfo></svg>
       </button>
 
+      <!-- Shown at every width. It used to be `hidden sm:block`, which left the button on screen and
+           inert on a phone: ten tiles, ten dots that answered nothing. Width is clamped to the
+           viewport so the bubble never hangs off the side of a narrow card. -->
       <div
         [class]="tooltipSurfaceClass"
         aria-hidden="true"
-        class="pointer-events-none absolute top-full right-0 z-30 mt-2.5 hidden w-80 px-4 py-3.5 opacity-0 shadow-xl shadow-surface-950/40 transition-opacity duration-150 peer-hover/info:opacity-100 peer-focus/info:opacity-100 motion-reduce:transition-none sm:block"
+        class="pointer-events-none absolute top-full right-0 z-30 mt-2.5 w-[min(20rem,calc(100vw-3rem))] px-4 py-3.5 opacity-0 shadow-xl shadow-surface-950/40 transition-opacity duration-150 peer-hover/info:opacity-100 peer-focus/info:opacity-100 motion-reduce:transition-none"
       >
         <p
           class="flex items-center gap-1.5 font-display text-xs font-bold text-text-primary uppercase"

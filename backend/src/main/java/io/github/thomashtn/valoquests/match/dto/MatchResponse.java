@@ -9,6 +9,33 @@ import java.time.Instant;
 
 /**
  * Exposes one player match in the paginated match-history API.
+ *
+ * <p>Carries what the match was worth to the squad alongside its Valorant statistics: without it the
+ * history is a wall of numbers with no bearing on the ranking or the colony they actually fed. The
+ * amount is derived on read rather than stored — see
+ * {@link io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver}.
+ *
+ * @param id                      internal player-match identifier
+ * @param startedAt               instant the match started
+ * @param mapName                 name of the map played
+ * @param gameMode                queue the match was played in
+ * @param agentName               agent the player picked
+ * @param result                  outcome from the player's point of view
+ * @param allyScore               rounds won by the player's team
+ * @param enemyScore              rounds won by the opposing team
+ * @param kills                   kills scored
+ * @param deaths                  times the player died
+ * @param assists                 assists credited
+ * @param kda                     kills plus assists over deaths
+ * @param acs                     average combat score
+ * @param adr                     average damage per round
+ * @param headshotPercentage      share of shots that landed on the head
+ * @param competitiveTier         tier the player held for this match
+ * @param valoquestsDamage        damage this match dealt to its week's boss, after the day's
+ *     diminishing returns; {@code 0} for a match the ruleset does not value
+ * @param damageCoefficientPercent share of its base damage the match kept, {@code 100} for a day's
+ *     best games and lower once the day's ladder starts reducing them; {@code 0} for an unvalued
+ *     match, which never enters that ladder
  */
 @Schema(description = "Player-centric match history entry.")
 public record MatchResponse(
@@ -28,6 +55,8 @@ public record MatchResponse(
     BigDecimal acs,
     BigDecimal adr,
     BigDecimal headshotPercentage,
-    CompetitiveTier competitiveTier
+    CompetitiveTier competitiveTier,
+    int valoquestsDamage,
+    int damageCoefficientPercent
 ) {
 }

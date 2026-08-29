@@ -19,6 +19,9 @@ import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
+import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver;
+import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver.MatchDamage;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
 import io.github.thomashtn.valoquests.shared.exception.InvalidRequestException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
@@ -26,6 +29,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,6 +52,11 @@ class DefaultMatchQueryServiceTest {
      */
     private static final long PLAYER_ID = 1L;
 
+    /**
+     * Monday the fixture matches belong to.
+     */
+    private static final LocalDate FIXTURE_WEEK_START = LocalDate.of(2026, 7, 13);
+
     @Mock
     private PlayerRepository playerRepository;
 
@@ -57,21 +66,39 @@ class DefaultMatchQueryServiceTest {
     @Mock
     private WeekCalendar weekCalendar;
 
+    @Mock
+    private WeeklyMatchDamageResolver damageResolver;
+
+    @Mock
+    private ScoringRuleset ruleset;
+
     private DefaultMatchQueryService service;
 
     @BeforeEach
     void setUp() {
-        service = new DefaultMatchQueryService(playerRepository, playerMatchRepository, weekCalendar);
+        service = new DefaultMatchQueryService(
+            playerRepository, playerMatchRepository, weekCalendar, damageResolver, ruleset
+        );
     }
 
     /**
      * Makes the player exist and the repository return the supplied matches.
+     *
+     * <p>A non-empty page is also given a pricing pass that finds nothing, so the tests reading the
+     * Valorant statistics do not each have to describe a scoring run they are not about.
      */
     private void given(List<PlayerMatch> matches) {
         when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
         when(playerMatchRepository.findHistory(
             any(), any(), any(Pageable.class)
         )).thenReturn(new PageImpl<>(matches, PageRequest.of(0, 10), matches.size()));
+
+        if (!matches.isEmpty()) {
+            when(weekCalendar.weekStartOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
+            when(playerMatchRepository.findForChallengePeriod(any(), any(), any()))
+                .thenReturn(List.of());
+            when(damageResolver.resolveDetailed(any(), any())).thenReturn(Map.of());
+        }
     }
 
     @Test
@@ -185,6 +212,48 @@ class DefaultMatchQueryServiceTest {
         // The fixture stores red 13 and blue 7; a blue player must see 7 to 13.
         assertThat(response.allyScore()).isEqualTo(7);
         assertThat(response.enemyScore()).isEqualTo(13);
+    }
+
+    @Test
+    @DisplayName("prices a match against its whole week rather than against the page it landed on")
+    void shouldPriceAMatchAgainstItsWholeWeek() {
+        PlayerMatch pageMatch = match(20, 8, 4, 30, 60, 10, "Red");
+        Instant periodStart = Instant.parse("2026-07-13T00:00:00Z");
+        Instant periodEnd = Instant.parse("2026-07-20T00:00:00Z");
+
+        when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
+        // One match per page: whatever rank this one holds within its day, the page it shipped on
+        // cannot say, since the rest of the day is on other pages entirely.
+        when(playerMatchRepository.findHistory(any(), any(), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(pageMatch), PageRequest.of(0, 1), 11));
+        when(weekCalendar.weekStartOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
+        when(weekCalendar.startOf(FIXTURE_WEEK_START)).thenReturn(periodStart);
+        when(weekCalendar.endOf(FIXTURE_WEEK_START)).thenReturn(periodEnd);
+        when(playerMatchRepository.findForChallengePeriod(PLAYER_ID, periodStart, periodEnd))
+            .thenReturn(List.of(pageMatch));
+        when(damageResolver.resolveDetailed(List.of(pageMatch), ruleset))
+            .thenReturn(Map.of(100L, new MatchDamage(125, 25)));
+
+        MatchResponse response = service.findByPlayer(
+            PLAYER_ID, 0, 1, MatchHistoryFilter.NONE
+        ).content().getFirst();
+
+        assertThat(response.valoquestsDamage()).isEqualTo(125);
+        assertThat(response.damageCoefficientPercent()).isEqualTo(25);
+        verify(playerMatchRepository).findForChallengePeriod(PLAYER_ID, periodStart, periodEnd);
+    }
+
+    @Test
+    @DisplayName("reports no damage for a match the ruleset never priced")
+    void shouldReportNoDamageForAnUnpricedMatch() {
+        given(List.of(match(10, 10, 0, 0, 0, 0, "Red")));
+
+        MatchResponse response = service.findByPlayer(
+            PLAYER_ID, 0, 10, MatchHistoryFilter.NONE
+        ).content().getFirst();
+
+        assertThat(response.valoquestsDamage()).isZero();
+        assertThat(response.damageCoefficientPercent()).isZero();
     }
 
     @Test

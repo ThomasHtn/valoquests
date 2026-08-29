@@ -120,7 +120,25 @@ export interface RankingRow {
    * the rest of the squad.
    */
   readonly bonusLabel: string | null;
+
+  /**
+   * Per-challenge progress, one cell per challenge drawn that week — empty on a finalized week,
+   * where the backend only keeps the totals (see `RankingHistoryWeek`). An empty list is what tells
+   * both layouts to fall back on {@link completedLabel} and {@link activeDaysLabel}.
+   */
   readonly cells: readonly RankingCell[];
+
+  /**
+   * Number of challenges the player cleared that week, as text, or `null` on the live week — where
+   * {@link cells} shows the same thing challenge by challenge.
+   */
+  readonly completedLabel: string | null;
+
+  /**
+   * Distinct days the player was active that week, as text, and `null` on the live week for the
+   * same reason as {@link completedLabel}: it is a stand-in, not a second reading.
+   */
+  readonly activeDaysLabel: string | null;
 
   /**
    * Whether this player holds the reigning weekly "Champion" title, earned by finishing 1st in

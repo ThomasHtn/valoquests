@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { LucideLoaderCircle } from '@lucide/angular';
 
+import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalTime } from '@core/date/date-time.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
 import {
@@ -491,12 +492,12 @@ export class PlayerProfile {
    * margin to read as nested under the day-summary row above them, and `margin` has no effect on
    * `<tr>`.
    *
-   * The 7 stat columns are `fr`-based, not fixed widths: a fixed width keeps them pinned to their
+   * The 8 stat columns are `fr`-based, not fixed widths: a fixed width keeps them pinned to their
    * own narrow band regardless of how wide the row grows, bunching every stat together at the
    * row's trailing edge instead of spreading across it.
    */
   protected readonly rowGridClass =
-    'grid grid-cols-[minmax(0,2fr)_repeat(7,minmax(0,1fr))] items-center';
+    'grid grid-cols-[minmax(0,2fr)_repeat(8,minmax(0,1fr))] items-center';
 
   /**
    * Resolves the colour carrying a match's result on the player's own score, exposed to the
@@ -585,6 +586,55 @@ export class PlayerProfile {
       observer.observe(element);
       onCleanup(() => observer.disconnect());
     });
+  }
+
+  /**
+   * Formats a ValoQuests damage amount, grouped in the active language, exposed to the template.
+   *
+   * @param damage - Damage the match or the day was worth.
+   * @returns The grouped amount, e.g. `"1 250"`.
+   */
+  protected formatDamageAmount(damage: number): string {
+    return formatDamage(damage, this.translation.language());
+  }
+
+  /**
+   * Explains the amount a match was worth: which coefficient the day's ladder applied to it, or
+   * why it was worth nothing at all.
+   *
+   * Named rather than left to be guessed: two identical wins on the same evening routinely carry
+   * different amounts, and the ladder is the only thing that tells them apart.
+   *
+   * @param match - The match the amount belongs to.
+   * @returns The tooltip sentence.
+   */
+  protected damageExplanation(match: Match): string {
+    return this.translation.translate(
+      match.damageCoefficientPercent === 0
+        ? 'playerProfile.matches.damage.unvalued'
+        : 'playerProfile.matches.damage.coefficient',
+      { percent: match.damageCoefficientPercent },
+    );
+  }
+
+  /**
+   * The reduced share a match kept, as a short visible mark, or `null` when there is nothing to
+   * explain — a match paid in full, or one the ruleset never priced.
+   *
+   * Rendered beside the amount rather than left to {@link damageExplanation} alone: that sentence
+   * lives in a tooltip, and a tooltip opens on hover or on focus, neither of which a thumb does.
+   * Two identical wins on one evening carrying different amounts has to be readable without a
+   * pointer.
+   *
+   * @param match - The match the amount belongs to.
+   * @returns The share as text, or `null` when the amount needs no qualifier.
+   */
+  protected damageShareLabel(match: Match): string | null {
+    const percent = match.damageCoefficientPercent;
+
+    return percent <= 0 || percent >= 100
+      ? null
+      : this.translation.translate('playerProfile.matches.damage.share', { percent });
   }
 
   /**

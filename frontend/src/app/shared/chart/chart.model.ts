@@ -58,6 +58,15 @@ export interface ChartBar {
   readonly value: number;
 
   /**
+   * Already-formatted value written above the bar, when one is drawn.
+   *
+   * Optional, falling back to the raw {@link value}. Supplied wherever the figure is not a bare
+   * count: printing the number itself put an English decimal point on a French page, right beside
+   * tiles spelling the same quantity with a comma.
+   */
+  readonly valueLabel?: string;
+
+  /**
    * Already-translated secondary line for the tooltip, typically the sample the value rests on.
    */
   readonly detail: string;

@@ -78,7 +78,7 @@
                 </span>
               </div>
               <span class="font-display text-right text-lg font-bold text-brand-500 tabular-nums">
-                {{ tier.damage }}
+                {{ amount(tier.damage) }}
               </span>
             </li>
           }
@@ -124,13 +124,13 @@
                 {{ 'playerProfile.matches.gameMode.' + mode.mode | translate }}
               </span>
               <span class="font-display text-right font-bold text-brand-500 tabular-nums">
-                {{ mode.win }}
+                {{ amount(mode.win) }}
               </span>
               <span class="font-display text-right font-bold text-text-secondary tabular-nums">
-                {{ mode.draw ?? '—' }}
+                {{ mode.draw === null ? '—' : amount(mode.draw) }}
               </span>
               <span class="font-display text-right font-bold text-text-muted tabular-nums">
-                {{ mode.loss }}
+                {{ amount(mode.loss) }}
               </span>
             </li>
           }
@@ -178,7 +178,7 @@
           >
             +
           </span>
-          <h2 class="font-display text-lg leading-none font-semibold text-text-primary uppercase">
+          <h2 class="font-display text-lg leading-tight font-semibold text-text-primary uppercase">
             {{ 'rules.sections.bonuses.title' | translate }}
           </h2>
         </div>
@@ -203,7 +203,7 @@
                 <span
                   class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
                 >
-                  {{ tier.bonus }}
+                  {{ amount(tier.bonus) }}
                 </span>
               </li>
             }

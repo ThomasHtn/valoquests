@@ -18,6 +18,72 @@
 </app-page-header>
 
 <div class="page-body">
+  <!-- The only place the product tells a manager how to start. It used to live in the developer
+       README, which is the one document the person running the roster will never open. Open by
+       itself while the roster is empty and folded away once it is not: this is a first-day
+       instruction, not a permanent banner. -->
+  <details
+    [open]="players().length === 0"
+    class="notch-tr group border border-brand-500/25 bg-brand-500/6 [--notch:0.875rem]"
+  >
+    <summary
+      class="focus-ring flex cursor-pointer list-none items-center gap-2.5 px-4 py-3 [&::-webkit-details-marker]:hidden"
+    >
+      <span aria-hidden="true" class="size-2 shrink-0 rotate-45 border border-brand-500/70"></span>
+      <span class="font-display text-sm leading-none font-bold text-text-primary uppercase">
+        {{ 'admin.players.gettingStarted.title' | translate }}
+      </span>
+      <svg
+        aria-hidden="true"
+        class="ml-auto size-4 shrink-0 text-text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
+        lucideChevronDown
+      ></svg>
+    </summary>
+
+    <!-- Numbered because the order is the instruction: nothing can be synchronized before a player
+         exists, and nothing is worth sharing before a synchronization has run. -->
+    <ol class="flex flex-col gap-3.5 border-t border-brand-500/20 px-4 py-4">
+      <li class="flex gap-3">
+        <span
+          class="clip-hex font-display grid h-6 w-5 shrink-0 place-items-center bg-brand-500/15 text-2xs font-bold text-brand-500 tabular-nums"
+        >
+          1
+        </span>
+        <p class="text-sm leading-relaxed text-text-secondary">
+          {{ 'admin.players.gettingStarted.addPlayers' | translate }}
+        </p>
+      </li>
+
+      <li class="flex gap-3">
+        <span
+          class="clip-hex font-display grid h-6 w-5 shrink-0 place-items-center bg-brand-500/15 text-2xs font-bold text-brand-500 tabular-nums"
+        >
+          2
+        </span>
+        <p class="text-sm leading-relaxed text-text-secondary">
+          {{ 'admin.players.gettingStarted.synchronize' | translate }}
+          <a
+            [routerLink]="'/admin/operations'"
+            class="focus-ring font-medium text-brand-500 underline underline-offset-2 transition-colors hover:text-brand-400"
+          >
+            {{ 'admin.players.gettingStarted.operationsLink' | translate }}
+          </a>
+        </p>
+      </li>
+
+      <li class="flex gap-3">
+        <span
+          class="clip-hex font-display grid h-6 w-5 shrink-0 place-items-center bg-brand-500/15 text-2xs font-bold text-brand-500 tabular-nums"
+        >
+          3
+        </span>
+        <p class="text-sm leading-relaxed text-text-secondary">
+          {{ 'admin.players.gettingStarted.share' | translate }}
+        </p>
+      </li>
+    </ol>
+  </details>
+
   <app-section-label [label]="'admin.players.rosterSection' | translate" />
 
   <!-- What the roster is worth to the run in progress. Editing it here does not change that run:

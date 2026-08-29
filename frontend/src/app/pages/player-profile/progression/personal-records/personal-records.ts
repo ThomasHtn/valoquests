@@ -11,6 +11,7 @@ import {
   LucideZap,
 } from '@lucide/angular';
 
+import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalDayMonth } from '@core/date/date-time.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -116,9 +117,15 @@ export class PersonalRecords {
     const records = this.records();
     const tiles: RecordTile[] = [];
 
+    // Grouped, unlike the three-digit scores beside it: a best game runs into five figures, and
+    // `6254` sat under a tile that reads `6 254` on every other screen of the application.
+    const language = this.translation.language();
+    const groupedScore = (value: number | null): string =>
+      Number.isFinite(value) ? formatDamage(Math.round(value as number), language) : '—';
+
     this.pushMatchRecord(tiles, 'mostKills', records.mostKills, (value) => String(value));
     this.pushMatchRecord(tiles, 'bestAcs', records.bestAcs, formatScore);
-    this.pushMatchRecord(tiles, 'mostDamage', records.mostDamage, formatScore);
+    this.pushMatchRecord(tiles, 'mostDamage', records.mostDamage, groupedScore);
     this.pushMatchRecord(tiles, 'bestKda', records.bestKda, formatKda);
     this.pushMatchRecord(
       tiles,

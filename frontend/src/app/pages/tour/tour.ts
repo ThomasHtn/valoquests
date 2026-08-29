@@ -6,6 +6,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { TourVisit } from '@core/tour/tour-visit';
 import { BossEncounter } from '@pages/overview/boss-encounter/boss-encounter';
 import { Podium } from '@pages/overview/podium/podium';
+import { PopulationTile } from '@pages/overview/population-tile/population-tile';
 import { TeamProgress } from '@pages/overview/team-progress/team-progress';
 import { NavChip } from '@shared/nav-chip/nav-chip';
 
@@ -16,10 +17,11 @@ import { TourStepId } from './tour.model';
 /**
  * Guided tour.
  *
- * The briefing a first-time visitor gets between the landing page and the overview: five steps
- * covering what the week is about, each pairing a couple of sentences with the very component the
- * visitor is about to meet. It stays at the level of the broad strokes on purpose — `/rules` is the
- * reference for the numbers, and the closing step points there.
+ * The briefing a first-time visitor gets between the landing page and the overview: six steps
+ * covering what the week is about and what the colony behind it is for, each pairing a couple of
+ * sentences with the very component the visitor is about to meet. It stays at the level of the
+ * broad strokes on purpose — `/rules` is the reference for the numbers, and the closing step points
+ * there.
  *
  * Like `Landing`, and unlike every other page, it renders outside `Shell`: navigation chrome would
  * invite the visitor to wander off mid-briefing, which is exactly what the tour exists to postpone.
@@ -40,6 +42,7 @@ import { TourStepId } from './tour.model';
     LucideChevronRight,
     BossEncounter,
     TeamProgress,
+    PopulationTile,
     Podium,
     PlayerSpotlight,
     NavChip,
