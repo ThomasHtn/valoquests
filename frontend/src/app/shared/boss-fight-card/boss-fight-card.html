@@ -88,7 +88,7 @@
                  being *drained* rather than filled. -->
             <div
               aria-hidden="true"
-              class="notch-tr notch-tr-edge relative mt-3 h-6 border border-text-primary/15 bg-surface-sunken [--notch:0.5rem]"
+              class="notch-tr notch-tr-edge relative mt-3 h-6 border border-edge bg-surface-sunken [--notch:0.5rem]"
             >
               <div
                 [style.width.%]="remainingPercentage()"
@@ -106,9 +106,7 @@
 
         <!-- What actually brings the bar down. -->
         @if (weakPoints().length > 0) {
-          <div
-            class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-text-primary/10 pt-5"
-          >
+          <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-edge pt-5">
             <span class="label-caption text-text-muted">
               {{ 'overview.bossEncounter.weakPoints' | translate }}
             </span>
@@ -142,7 +140,7 @@
 
         @if (defeated()) {
           <p
-            class="mt-6 flex items-center gap-2 border-t border-text-primary/10 pt-5 text-sm font-bold text-accent-green"
+            class="mt-6 flex items-center gap-2 border-t border-edge pt-5 text-sm font-bold text-accent-green"
           >
             <svg class="h-4 w-4" lucideSwords></svg>
             {{ 'overview.bossEncounter.defeated' | translate }}

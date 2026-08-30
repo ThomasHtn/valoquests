@@ -28,13 +28,8 @@
           </span>
         </p>
 
-        @if (glyph(); as glyph) {
-          <app-town-silhouette
-            class="mt-6 block"
-            [glyph]="glyph"
-            [populationPercentage]="100"
-            [progressPercentage]="100"
-          />
+        @if (tier(); as tier) {
+          <app-town-silhouette class="mt-6 block" [moralePercentage]="100" [tier]="tier" />
         }
       </section>
 
@@ -42,7 +37,7 @@
            alone says nothing about whether the squad is improving. -->
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
         @for (figure of comparedFigures(); track figure.label) {
-          <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
+          <div class="border-t-2 border-brand-500/40 panel px-4 py-3.5">
             <p class="label-caption text-text-muted">{{ figure.label }}</p>
             <p class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
               {{ figure.value }}
@@ -64,7 +59,7 @@
       <!-- Bosses fought, the one figure the four above do not carry: the colony's own score says
            nothing about how the ten fights themselves went. -->
       <div
-        class="notch-tr flex items-center justify-between gap-4 border border-text-primary/15 bg-text-primary/4 p-4 [--notch:0.75rem]"
+        class="notch-tr flex items-center justify-between gap-4 border border-edge panel p-4 [--notch:0.75rem]"
       >
         <p class="text-sm text-text-secondary">
           {{ 'campaignSummary.bossesDefeated' | translate }}

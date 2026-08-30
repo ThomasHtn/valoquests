@@ -1,48 +1,38 @@
-<app-drawer
-  (closed)="closed.emit()"
-  [closeLabel]="'boss.panel.close' | translate"
-  labelledBy="boss-detail-title"
+<!-- The seam. The panel carries no frame of its own beyond this top border, which takes the colour
+     of the territory that was clicked — green for ground taken, red for a week the boss held, amber
+     for the fight running — so the panel visibly comes out of its own hexagon rather than merely
+     appearing under the card. It is rendered flush against the map above it by the page, and the
+     two share one surface. -->
+<section
+  #panel
+  (keydown.escape)="closed.emit()"
+  [class]="tier().seamClass"
+  aria-labelledby="boss-detail-title"
+  class="focus:outline-none border-t-2 panel motion-safe:animate-[boss-panel-unfold_240ms_var(--ease-out-quart)]"
+  tabindex="-1"
 >
-  <!-- Week stepper. Borderless and chromeless next to the drawer's close button, which is the one
-       framed control of the header: stepping is a secondary move, and two more outlined boxes
-       beside the close one read as a toolbar the drawer does not need. Square, uncut: at this size
-       the direction's corner cut only muddies the hover surface. -->
-  <div class="flex items-center gap-1" drawerLeading>
-    <button
-      (click)="previous.emit()"
-      [attr.aria-label]="'boss.panel.previous' | translate"
-      [disabled]="!hasPrevious()"
-      class="focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
-      type="button"
-    >
-      <svg class="size-4" lucideChevronLeft></svg>
-    </button>
-    <button
-      (click)="next.emit()"
-      [attr.aria-label]="'boss.panel.next' | translate"
-      [disabled]="!hasNext()"
-      class="focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
-      type="button"
-    >
-      <svg class="size-4" lucideChevronRight></svg>
-    </button>
-  </div>
-
-  <div class="flex items-center gap-2.5" id="boss-detail-title">
-    <!-- No boss name: the number is what ties this panel to its own hexagon on the map, the same
-         badge the always-visible current-boss panel carries. Sized to the two lines it now stands
-         beside — the number's own row and the status trailing under it — rather than to either one
-         alone. -->
+  <!-- Header: which threat this is, and the two ways out of it — stepping to the adjacent week, or
+       closing the panel back down to the bare map. -->
+  <header class="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-edge px-4 py-3">
     <span
       aria-hidden="true"
-      class="clip-hex grid h-10 w-8 shrink-0 place-items-center bg-brand-500/15 text-brand-500 [&>svg]:size-4"
+      class="clip-hex relative grid h-12 w-10 shrink-0 place-items-center bg-surface-950"
     >
-      <svg lucideSkull></svg>
+      @if (node().portraitUrl; as portraitUrl) {
+        <img
+          [ngSrc]="portraitUrl"
+          alt=""
+          class="clip-hex object-cover opacity-55"
+          fill
+          sizes="48px"
+        />
+      }
+      <svg [class]="tier().iconClass" class="relative size-4" lucideSkull></svg>
     </span>
 
-    <div class="flex flex-col gap-1">
-      <p class="flex items-center gap-2">
-        <span class="label-caption text-brand-500">
+    <div class="flex min-w-0 flex-1 flex-col gap-1" id="boss-detail-title">
+      <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span [class]="tier().iconClass" class="label-caption">
           {{ 'colony.boss.number' | translate: { number: bossNumberLabel(node().runWeekIndex) } }}
         </span>
         @if (node().categoryLabel; as categoryLabel) {
@@ -51,205 +41,214 @@
         }
       </p>
 
+      <p class="font-display truncate text-xl leading-tight font-bold text-text-primary uppercase">
+        {{ node().bossName }}
+      </p>
+
       <p class="label-caption">
-        <span [class]="tier().accentTextClass">{{ node().statusLabel }}</span>
+        <span [class]="tier().iconClass">{{ node().statusLabel }}</span>
         @if (node().dateRangeLabel; as dateRangeLabel) {
           <span class="text-text-muted"> · {{ dateRangeLabel }}</span>
         }
       </p>
     </div>
-  </div>
 
-  @if (node().hasDamage) {
-    <div>
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="label-caption text-text-muted">
-          {{ node().barLabel }}
-        </span>
-        <span
-          [class]="tier().accentTextClass"
-          class="font-mono text-2xs font-medium tabular-nums"
-          >{{ node().hpPercentageLabel }}</span
-        >
-      </div>
-
-      <!-- Health bar, draining as the group takes hit points off. The tally rides inside the
-             track rather than beside it, so the number and the fill it describes are read in one
-             glance; it stays exposed to assistive technology since nothing else on the panel
-             repeats it. -->
-      <!-- Same track as the timeline panel this drawer opens from — same height, same sunken
-             ground, same tally size — so the bar reads as the one the reader just clicked, seen
-             closer up rather than redrawn. -->
-      <div class="relative mt-2 h-6 border border-text-primary/15 bg-surface-sunken">
-        <!-- The travelling highlight is reserved for the week still being fought: on a settled week
-             it would promise a number that stopped moving when the week closed. -->
-        <div
-          [class]="
-            tier().barFillClass +
-            (node().status === 'current' ? ' gauge-sheen overflow-hidden' : '')
-          "
-          [style.width.%]="node().hpPercentage"
-          aria-hidden="true"
-          class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
-        ></div>
-        <span
-          class="relative flex h-full items-center justify-center font-mono text-2xs font-semibold text-text-primary tabular-nums [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
-          >{{ node().hpLabel }}</span
-        >
-      </div>
-    </div>
-  } @else {
-    <p
-      class="text-prose flex items-center gap-3 border border-dashed border-text-primary/15 bg-text-primary/3 p-3.5 text-text-secondary"
-    >
-      <span aria-hidden="true" class="font-mono text-sm font-bold text-text-muted">?</span>
-      {{ node().bossDescription }}
-    </p>
-  }
-
-  <!-- What actually brings this boss's bar down, the same reading the always-visible current-boss
-       panel gives the active week. Gated on the node's own status rather than on the list's length:
-       the backing resource only ever carries the active week's draw, so a past or upcoming week's
-       panel must never show a stale one. -->
-  @if (node().status === 'current' && weakPoints().length > 0) {
-    <a
-      [routerLink]="'/week'"
-      class="focus-ring group flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-text-primary/10 pt-3"
-    >
-      <span class="label-caption text-text-muted">
-        {{ 'boss.panel.weakPoints' | translate }}
-      </span>
-
-      <span class="flex flex-wrap items-center gap-x-3 gap-y-2">
-        @for (point of weakPoints(); track point.id) {
-          <span class="flex items-center gap-1.5">
-            <span
-              [class]="point.barClass"
-              aria-hidden="true"
-              class="clip-hex relative h-6 w-5 shrink-0"
-            >
-              <span
-                [class]="point.iconClass"
-                class="font-display clip-hex absolute inset-px flex items-center justify-center bg-surface-950 text-2xs leading-none font-bold"
-              >
-                {{ point.tier }}
-              </span>
-            </span>
-            <span class="sr-only">
-              {{ 'overview.weeklyChallenges.difficulty.' + point.difficulty | translate }}
-            </span>
-            <span class="font-mono text-2xs font-semibold text-accent-gold tabular-nums">
-              {{ point.damageLabel }}
-            </span>
-          </span>
-        }
-      </span>
-
-      <span
-        class="label-caption ml-auto text-brand-500 transition-colors group-hover:text-brand-400"
+    <!-- Stepper and close, one framed group: an inline panel has no backdrop to click away, so the
+         way out has to be as visible as the way across. -->
+    <div class="flex shrink-0 items-center gap-1">
+      <button
+        (click)="previous.emit()"
+        [attr.aria-label]="'boss.panel.previous' | translate"
+        [disabled]="!hasPrevious()"
+        class="focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
+        type="button"
       >
-        {{ 'boss.panel.weakPointsLink' | translate }}
-        <span aria-hidden="true">→</span>
-      </span>
-    </a>
-  }
+        <svg class="size-4" lucideChevronLeft></svg>
+      </button>
+      <button
+        (click)="next.emit()"
+        [attr.aria-label]="'boss.panel.next' | translate"
+        [disabled]="!hasNext()"
+        class="focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
+        type="button"
+      >
+        <svg class="size-4" lucideChevronRight></svg>
+      </button>
+      <button
+        (click)="closed.emit()"
+        [attr.aria-label]="'boss.panel.close' | translate"
+        class="focus-ring-inset ml-1 flex size-9 shrink-0 cursor-pointer items-center justify-center border border-edge text-text-secondary transition-colors hover:bg-text-primary/10 hover:text-text-primary"
+        type="button"
+      >
+        <svg aria-hidden="true" class="size-4" lucideX></svg>
+      </button>
+    </div>
+  </header>
 
-  <!-- What the week is worth the colony, read the same way the map's own hover card and the
-       always-visible current-boss panel already read it: rewards banked or still on the table, and
-       what letting the fight stand costs — as a hypothetical for the week under way, as a settled
-       loss for one the boss held. Absent on a week the colony has nothing to report on yet. -->
-  @if (colonyBoss(); as boss) {
-    @if (boss.materialsLabel) {
-      <div>
+  <!-- Three readings of one week, side by side rather than stacked in a scrolling column: what is
+       left of the boss, what putting it down is worth, and who is landing the hits. -->
+  <div class="grid gap-x-6 gap-y-5 p-4 lg:grid-cols-12">
+    <div class="flex flex-col gap-5 lg:col-span-7">
+      @if (node().hasDamage) {
+        <div>
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="label-caption text-text-muted">{{ node().barLabel }}</span>
+            <span
+              [class]="tier().iconClass"
+              class="font-display text-2xl leading-none font-bold tabular-nums"
+            >
+              {{ node().hpPercentageLabel }}
+            </span>
+          </div>
+
+          <!-- Health bar, draining as the group takes hit points off. The tally rides inside the
+               track rather than beside it, so the number and the fill it describes are read in one
+               glance; it stays exposed to assistive technology since nothing else here repeats it.
+               Same fill colour as the hexagon this panel hangs off. -->
+          <div class="relative mt-2 h-7 border border-edge bg-surface-sunken">
+            <!-- The travelling highlight is reserved for the week still being fought: on a settled
+                 week it would promise a number that stopped moving when the week closed. -->
+            <div
+              [class]="
+                tier().ringClass +
+                (node().status === 'current' ? ' gauge-sheen overflow-hidden' : '')
+              "
+              [style.width.%]="node().hpPercentage"
+              aria-hidden="true"
+              class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
+            ></div>
+            <span
+              class="relative flex h-full items-center justify-center font-mono text-2xs font-semibold text-text-primary tabular-nums [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
+            >
+              {{ node().hpLabel }}
+            </span>
+          </div>
+        </div>
+      } @else {
         <p
-          class="label-caption inline-block border border-accent-gold/35 bg-accent-gold/15 px-1.5 py-0.5 text-accent-gold"
+          class="text-prose flex items-center gap-3 border border-dashed border-edge bg-text-primary/3 p-3.5 text-text-secondary"
         >
-          {{ 'colony.boss.rewards' | translate }}
+          <span aria-hidden="true" class="font-mono text-sm font-bold text-text-muted">?</span>
+          {{ node().bossDescription }}
         </p>
-        <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-          <dt class="flex items-center gap-1 label-caption text-text-muted">
-            <svg class="size-3 text-accent-gold" lucideHammer></svg>
-            {{ 'colony.materials' | translate }}
-          </dt>
-          <dd class="text-right font-mono text-xs font-semibold text-accent-gold tabular-nums">
-            {{ boss.materialsLabel }}
-          </dd>
-          @if (boss.efficiencyLabel) {
-            <dt class="flex items-center gap-1 label-caption text-text-muted">
-              <svg class="size-3 text-accent-pink" lucideGauge></svg>
-              {{ 'colony.boss.efficiency' | translate }}
-            </dt>
-            <dd class="text-right font-mono text-xs font-semibold text-accent-pink tabular-nums">
-              {{ boss.efficiencyLabel }}
-            </dd>
-          }
-          <dt class="flex items-center gap-1 label-caption text-text-muted">
-            <svg class="size-3 text-accent-violet" lucideMagnet></svg>
-            {{ 'colony.track.morale.name' | translate }}
-          </dt>
-          <dd class="text-right font-mono text-xs font-semibold text-accent-violet tabular-nums">
-            {{ boss.moraleLabel }}
-          </dd>
-        </dl>
-      </div>
-    }
+      }
 
-    @if (boss.state === 'CURRENT') {
-      <div>
-        <p
-          class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
-        >
-          {{ 'colony.boss.ifDefeated' | translate }}
-        </p>
-        <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-          <dt class="flex items-center gap-1 label-caption text-text-muted">
-            <svg class="size-3 text-accent-violet" lucideMagnet></svg>
-            {{ 'colony.track.morale.name' | translate }}
-          </dt>
-          <dd class="text-right font-mono text-xs font-semibold text-accent-violet tabular-nums">
-            {{ defeatMoraleLabel() }}
-          </dd>
-        </dl>
-      </div>
-    } @else if (boss.state === 'SURVIVED') {
-      <div>
-        <!-- The same pill treatment as "Récompenses", in the danger colour: what a held boss costs
-             is read against what a defeated one pays, not merely noted underneath it. -->
-        <p
-          class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
-        >
-          {{ 'colony.boss.defeat' | translate }}
-        </p>
-        <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-          <dt class="flex items-center gap-1 label-caption text-text-muted">
-            <svg class="size-3" lucideMagnet></svg>
-            {{ 'colony.track.morale.name' | translate }}
-          </dt>
-          <dd class="text-right font-mono text-xs font-semibold text-danger tabular-nums">
-            {{ boss.moraleLabel }}
-          </dd>
-        </dl>
-      </div>
-    }
+      <!-- What the week is worth the colony: rewards banked or still on the table beside what
+           letting the fight stand costs — as a hypothetical for the week under way, as a settled
+           loss for one the boss held. Absent on a week the colony has nothing to report on yet. -->
+      @if (colonyBoss(); as boss) {
+        @if (hasColonyReport()) {
+          <div class="grid gap-4 border-t border-edge pt-4 sm:grid-cols-2">
+            @if (boss.materialsLabel) {
+              <div>
+                <p
+                  class="label-caption inline-block border border-accent-gold/35 bg-accent-gold/15 px-1.5 py-0.5 text-accent-gold"
+                >
+                  {{ 'colony.boss.rewards' | translate }}
+                </p>
+                <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                  <dt class="flex items-center gap-1 label-caption text-text-muted">
+                    <svg class="size-3 text-accent-gold" lucideHammer></svg>
+                    {{ 'colony.materials' | translate }}
+                  </dt>
+                  <dd
+                    class="text-right font-mono text-xs font-semibold text-accent-gold tabular-nums"
+                  >
+                    {{ boss.materialsLabel }}
+                  </dd>
+                  @if (boss.efficiencyLabel) {
+                    <dt class="flex items-center gap-1 label-caption text-text-muted">
+                      <svg class="size-3 text-accent-pink" lucideGauge></svg>
+                      {{ 'colony.boss.efficiency' | translate }}
+                    </dt>
+                    <dd
+                      class="text-right font-mono text-xs font-semibold text-accent-pink tabular-nums"
+                    >
+                      {{ boss.efficiencyLabel }}
+                    </dd>
+                  }
+                  <dt class="flex items-center gap-1 label-caption text-text-muted">
+                    <svg class="size-3 text-accent-violet" lucideMagnet></svg>
+                    {{ 'colony.track.morale.name' | translate }}
+                  </dt>
+                  <dd
+                    class="text-right font-mono text-xs font-semibold text-accent-violet tabular-nums"
+                  >
+                    {{ boss.moraleLabel }}
+                  </dd>
+                </dl>
+              </div>
+            }
 
-    <div aria-hidden="true" class="border-t border-text-primary/10"></div>
-  }
+            @if (boss.state === 'CURRENT') {
+              <div>
+                <p
+                  class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
+                >
+                  {{ 'colony.boss.ifDefeated' | translate }}
+                </p>
+                <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                  <dt class="flex items-center gap-1 label-caption text-text-muted">
+                    <svg class="size-3 text-accent-violet" lucideMagnet></svg>
+                    {{ 'colony.track.morale.name' | translate }}
+                  </dt>
+                  <dd
+                    class="text-right font-mono text-xs font-semibold text-accent-violet tabular-nums"
+                  >
+                    {{ defeatMoraleLabel() }}
+                  </dd>
+                </dl>
+              </div>
+            } @else if (boss.state === 'SURVIVED') {
+              <div>
+                <!-- The same pill treatment as "Récompenses", in the danger colour: what a held
+                     boss costs is read against what a defeated one pays, not merely noted under. -->
+                <p
+                  class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
+                >
+                  {{ 'colony.boss.defeat' | translate }}
+                </p>
+                <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                  <dt class="flex items-center gap-1 label-caption text-text-muted">
+                    <svg class="size-3" lucideMagnet></svg>
+                    {{ 'colony.track.morale.name' | translate }}
+                  </dt>
+                  <dd class="text-right font-mono text-xs font-semibold text-danger tabular-nums">
+                    {{ boss.moraleLabel }}
+                  </dd>
+                </dl>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
 
-  <!-- Who actually did the damage. Reconstructed from the week's ranking, so it is absent for a
-         week the ranking does not cover — a locked week ahead, or one finalized before the group
-         started being tracked. -->
-  <app-boss-contributions [contributions]="node().contributions" />
+    <!-- The podium of the week, and the board it is the head of. Three rows: the panel answers
+         "who carried this fight", not "where does everyone stand", which is `/leaderboard`'s job on
+         this very week — so the link below is never a guess apart from the list above it. -->
+    <div class="flex flex-col gap-3 lg:col-span-5 lg:border-l lg:border-edge lg:pl-6">
+      @if (node().contributions.length > 0) {
+        <app-boss-contributions
+          [contributions]="node().contributions"
+          headingKey="boss.panel.top3"
+          [limit]="3"
+        />
 
-  <!-- This list is the week's ranking seen through one fight. The board it comes from is at
-       `/leaderboard`, on the week this panel is showing, so the two are never a guess apart. -->
-  @if (node().contributions.length > 0 && node().weekStart; as weekStart) {
-    <a
-      [queryParams]="{ week: weekStart }"
-      [routerLink]="'/leaderboard'"
-      class="focus-ring flex items-center justify-end gap-1.5 border-t border-text-primary/10 pt-3 text-sm font-medium text-brand-500 transition-colors hover:text-brand-400"
-    >
-      {{ 'boss.panel.fullRanking' | translate }}
-      <svg aria-hidden="true" class="size-3.5 shrink-0" lucideChevronRight></svg>
-    </a>
-  }
-</app-drawer>
+        @if (node().weekStart; as weekStart) {
+          <a
+            [queryParams]="{ week: weekStart }"
+            [routerLink]="'/leaderboard'"
+            class="focus-ring flex items-center justify-end gap-1.5 text-sm font-medium text-brand-500 transition-colors hover:text-brand-400"
+          >
+            {{ 'boss.panel.fullRanking' | translate }}
+            <svg aria-hidden="true" class="size-3.5 shrink-0" lucideChevronRight></svg>
+          </a>
+        }
+      } @else {
+        <h3 class="label-caption text-text-muted">{{ 'boss.panel.top3' | translate }}</h3>
+        <p class="text-sm text-text-secondary">{{ 'boss.panel.noRanking' | translate }}</p>
+      }
+    </div>
+  </div>
+</section>

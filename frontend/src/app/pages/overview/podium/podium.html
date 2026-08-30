@@ -47,6 +47,7 @@
          No ground coming up under the pointer here, unlike them: every row of this block is
          already its own link to a player, so the block cannot be one link over them. The rows
          carry the affordance instead, each with its own hover.
+         Dropped on a page that already states it (see {@link Podium.showHint}).
          A fixed gap rather than `justify-between`: the roster is fixed at seven, so the rest-list
          is rarely tall enough to reach the block's own bottom edge, and spreading the leftover
          height into the single gap between the two put an oversized void right under the podium
@@ -54,90 +55,117 @@
     <div
       [appTooltip]="'overview.podium.hint' | translate"
       [appTooltipDelay]="tooltipDelayMs"
+      [appTooltipDisabled]="!showHint()"
       [style.--podium-base]="plinthBase()"
+      [style.--podium-width]="plinthSpan()"
       appTooltipPosition="left"
       class="mt-4 flex flex-1 flex-col gap-6"
     >
-      <!-- Podium spotlight: 1st place rendered larger and centered via `order`, so the DOM keeps its
-           natural reading order (1st, 2nd, 3rd) for assistive technology while the visual layout
-           reads as a podium. Each place stands on a plinth whose height, and not only its color,
-           encodes the rank. -->
-      <ol class="grid grid-cols-3 items-end gap-3">
-        @for (entry of top3(); track entry.player.id) {
-          <li
-            [class.order-1]="entry.position === 2"
-            [class.order-2]="entry.position === 1"
-            [class.order-3]="entry.position === 3"
-          >
-            <a
-              [routerLink]="['/players', entry.player.id]"
-              class="focus-ring group flex flex-col items-center text-center transition-transform duration-200 ease-out hover:-translate-y-1"
+      <!-- Plinths and the ground they stand on, in their own gapless column: the rule has to sit
+           flush against the plinth bottoms, and the parent's `gap-6` would have pushed it away. -->
+      <div class="flex flex-col">
+        <!-- Podium spotlight: 1st place rendered larger and centered via `order`, so the DOM keeps
+             its natural reading order (1st, 2nd, 3rd) for assistive technology while the visual
+             layout reads as a podium. Each place stands on a plinth whose height, and not only its
+             color, encodes the rank. Capped at {@link Podium.plinthSpan} and centered, so a page
+             can keep the podium narrower than the block it lives in. -->
+        <ol class="mx-auto grid w-full max-w-(--podium-width) grid-cols-3 items-end gap-3">
+          @for (entry of top3(); track entry.player.id) {
+            <li
+              [class.order-1]="entry.position === 2"
+              [class.order-2]="entry.position === 1"
+              [class.order-3]="entry.position === 3"
             >
-              <!-- The champion's gold glow is applied to this wrapper rather than to the avatar
+              <a
+                [routerLink]="['/players', entry.player.id]"
+                class="focus-ring group flex flex-col items-center text-center transition-transform duration-200 ease-out hover:-translate-y-1"
+              >
+                <!-- The champion's gold glow is applied to this wrapper rather than to the avatar
                  itself: `filter` composites before `clip-path`, so a `drop-shadow` declared on the
                  very element that also clips the portrait would be clipped away with everything
                  else outside that shape. Applied here instead, it paints around the avatar's
                  already-clipped silhouette. The same treatment lights up on hover/focus for every
                  entry, in brand color, as the affordance that the plinth is a link to the profile. -->
-              <span
-                [class]="
-                  entry.player.id === championPlayerId()
-                    ? 'drop-shadow-[0_0_6px_var(--color-accent-gold)]'
-                    : 'transition-[filter] duration-200 group-hover:drop-shadow-[0_0_6px_var(--color-brand-500)] group-focus-visible:drop-shadow-[0_0_6px_var(--color-brand-500)]'
-                "
-              >
-                <app-avatar
-                  [priority]="entry.position === 1"
-                  [size]="entry.position === 1 ? 'md' : 'sm'"
-                  [src]="resolveAvatarUrl(entry.player.portrait)"
-                />
-              </span>
-
-              <p
-                [class]="podiumTextAccent(entry.position)"
-                [class.text-2xl]="entry.position === 1"
-                class="font-display mt-3 flex items-center gap-1.5 text-xl leading-none font-semibold"
-              >
-                {{ entry.player.displayName }}
-                @if (entry.player.id === championPlayerId()) {
-                  <app-champion-badge />
-                }
-              </p>
-
-              <span
-                [class]="plinthClass(entry.position)"
-                class="mt-3 flex w-full flex-col items-center justify-start gap-2 border-t-3 px-2 py-3"
-              >
-                <!-- Zero-padded rank, the mockup's plate number. The translated ordinal it replaces
-                   stays available to screen readers, which have no use for the styling. -->
-                <span class="font-mono text-base tracking-widest text-text-muted tabular-nums">
-                  <span aria-hidden="true">{{ paddedRank(entry.position) }}</span>
-                  <span class="sr-only">
-                    {{ 'overview.podium.rank.' + entry.position | translate }}
-                  </span>
+                <span
+                  [class]="
+                    entry.player.id === championPlayerId()
+                      ? 'drop-shadow-[0_0_6px_var(--color-accent-gold)]'
+                      : 'transition-[filter] duration-200 group-hover:drop-shadow-[0_0_6px_var(--color-brand-500)] group-focus-visible:drop-shadow-[0_0_6px_var(--color-brand-500)]'
+                  "
+                >
+                  <app-avatar
+                    [priority]="entry.position === 1"
+                    [size]="entry.position === 1 ? 'md' : 'sm'"
+                    [src]="resolveAvatarUrl(entry.player.portrait)"
+                  />
                 </span>
-                <!-- `totalDamage`, not `challengeDamage`: the ranking is ordered on the total, so
+
+                <p
+                  [class]="podiumTextAccent(entry.position)"
+                  [class.text-2xl]="entry.position === 1"
+                  class="font-display mt-3 flex items-center gap-1.5 text-xl leading-none font-semibold"
+                >
+                  {{ entry.player.displayName }}
+                  @if (entry.player.id === championPlayerId()) {
+                    <app-champion-badge />
+                  }
+                </p>
+
+                <!-- Contents sit at the top of the plinth while the damage figure is printed under
+                     the rank plate, so the three caps stay the reference line. With the figure gone
+                     the plate is alone in the block, and hugging the cap left the rest of the
+                     plinth as dead space, so it centers instead. -->
+                <span
+                  [class]="plinthClass(entry.position)"
+                  [class.justify-center]="!showDamage()"
+                  [class.justify-start]="showDamage()"
+                  class="mt-3 flex w-full flex-col items-center gap-2 border-t-3 px-2 py-3"
+                >
+                  <!-- The plinth's plate number, in its own medal metal. The translated ordinal it
+                   replaces stays available to screen readers, which have no use for the styling.
+                   Sized up when it is the plinth's only content: with no damage figure beside it,
+                   the plate is what the podium prints, and it reads as the block's own number. -->
+                  <span
+                    [class]="plateClass(entry.position)"
+                    [class.leading-none]="!showDamage()"
+                    [class.text-4xl]="!showDamage()"
+                    [class.text-base]="showDamage()"
+                    class="font-mono tabular-nums"
+                  >
+                    <span aria-hidden="true">{{ rankPlate(entry.position) }}</span>
+                    <span class="sr-only">
+                      {{ 'overview.podium.rank.' + entry.position | translate }}
+                    </span>
+                  </span>
+                  <!-- `totalDamage`, not `challengeDamage`: the ranking is ordered on the total, so
                      the figure under a position has to be the one that earned it — challenge
                      damage alone reads as 0 for a player who only has match damage. Dropped
                      entirely when {@link Podium.showDamage} is `false`: the rank plate above is
                      then the only thing this block still says. -->
-                @if (showDamage()) {
-                  <span
-                    [class]="podiumTextAccent(entry.position)"
-                    [class.text-4xl]="entry.position === 1"
-                    class="font-display text-3xl leading-none font-bold tabular-nums"
-                  >
-                    {{ formatDamage(entry.totalDamage) }}
-                    <span class="sr-only">
-                      {{ 'overview.weeklyRanking.columns.damage' | translate }}
+                  @if (showDamage()) {
+                    <span
+                      [class]="podiumTextAccent(entry.position)"
+                      [class.text-4xl]="entry.position === 1"
+                      class="font-display text-3xl leading-none font-bold tabular-nums"
+                    >
+                      {{ formatDamage(entry.totalDamage) }}
+                      <span class="sr-only">
+                        {{ 'overview.weeklyRanking.columns.damage' | translate }}
+                      </span>
                     </span>
-                  </span>
-                }
-              </span>
-            </a>
-          </li>
-        }
-      </ol>
+                  }
+                </span>
+              </a>
+            </li>
+          }
+        </ol>
+
+        <!-- Ground rule: the floor the three plinths rest on. Spans the whole block rather than
+             just the plinths above it, so on `/leaderboard` it lands on the same edges as the
+             table underneath and reads as that board's top edge. Thicker than the hairlines
+             elsewhere on the page — it is a floor, not a separator. -->
+        <span aria-hidden="true" class="h-0.5 w-full bg-edge-strong"></span>
+      </div>
 
       <!-- Rest of the field: every player below the podium as a flat row, each led by the same
            hexagon position badge as the full ranking table, and wearing the registry's row
@@ -159,7 +187,7 @@
             <li>
               <a
                 [routerLink]="['/players', entry.player.id]"
-                class="notch-tr focus-ring-inset flex items-center gap-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:px-5"
+                class="notch-tr focus-ring-inset flex items-center gap-3 border-l-2 border-edge row px-4 py-5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:px-5"
               >
                 <app-position-badge [position]="entry.position" />
                 <app-avatar [src]="resolveAvatarUrl(entry.player.portrait)" size="sm" />

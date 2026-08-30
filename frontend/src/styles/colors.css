@@ -26,6 +26,18 @@
   --color-surface-600: #33495b;
 
   /*
+   * Edge of a panel, as one token instead of the two dozen hand-written opacities the templates had
+   * drifted into (`border-text-primary/10` on twenty-eight elements, `/15` on twenty, plus ten
+   * distinct amber steps). The value sits between the two greys it replaces.
+   *
+   * Deliberately translucent rather than the flat hex it briefly was: like the panel fills below,
+   * an opaque edge blocks the shell's `ambient-field` glow and the whole interface goes a shade
+   * colder and darker for it.
+   */
+  --color-edge: --alpha(var(--color-text-primary) / 12%);
+  --color-edge-strong: --alpha(var(--color-text-primary) / 20%);
+
+  /*
    * Text. The direction's cream, plus its 55% and 45% body opacities — but lifted rather than
    * flattened literally onto `surface-950`: a straight flatten lands `text-muted` near 3.9:1,
    * under the 4.5:1 AA floor for body copy. These values keep the direction's warm grey cast and
@@ -79,7 +91,12 @@
   --color-series-4: #ec4899;
   --color-series-5: #418ad1;
 
-  /* Podium (ranking positions) */
+  /*
+   * Podium (ranking positions). Gold is `accent-gold` above, already the 1st-place color everywhere
+   * else. Silver is neutral rather than cool: a blue-grey reads as foreign against this ground's
+   * warm cast, and it has to stay clearly apart from the cream `text-primary` beside it.
+   */
+  --color-podium-silver: #bdbcb6;
   --color-podium-bronze: #a07850;
 
   /* Semantic states */

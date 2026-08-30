@@ -4,7 +4,6 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   LucideArrowDown,
   LucideCheck,
-  LucideChevronDown,
   LucideGauge,
   LucideHammer,
   LucideLock,
@@ -37,7 +36,6 @@ import { BossCategory } from '@core/boss/boss.model';
 import { ColonyView } from '@core/colony/colony-view';
 import { ColonyBossView } from '@core/colony/colony-view.model';
 import { resolveColonyDeltaColorClass } from '@core/colony/colony-visual.utils';
-import { Breakpoint } from '@core/viewport/breakpoint';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { ColonyCard, ColonyCardFormulaRow } from './colony-card/colony-card';
@@ -70,13 +68,13 @@ const TRAIL_TERRAIN_TILES = 1;
 
 /**
  * Campaign page: the run told as one screen, at rest — the card of its ten weeks, the population
- * curve that card feeds, the economy behind it folded away, then every campaign before this one.
+ * curve that card feeds, the economy behind it, then every campaign before this one.
  *
  * The card's own territory tiles (ring, halo, damage fill, outcome icon) are the earlier
  * serpentine honeycomb map's, unchanged — only the path is gone, the ten weeks now standing in one
- * straight row rather than snaking down the page. The boss drawer opens on a tile click and stands
- * closed the rest of the time, never pre-rendered open under the row — showing both a resting page
- * and an open drawer at once only read as clutter, twice over.
+ * straight row rather than snaking down the page. A tile click unfolds that week's panel flush
+ * under the card, and clicking it again folds it back; the page stands with no panel at rest, and
+ * the panel never covers the row it was opened from, which is what a modal drawer did.
  */
 @Component({
   selector: 'app-campaign',
@@ -92,7 +90,6 @@ const TRAIL_TERRAIN_TILES = 1;
     RouterLink,
     LucideArrowDown,
     LucideCheck,
-    LucideChevronDown,
     LucideGauge,
     LucideHammer,
     LucideLock,
@@ -146,24 +143,6 @@ export class Campaign {
    * without a click or a close ever being undone by that same fallback.
    */
   private readonly selectedNodeId = signal<string | null | undefined>(undefined);
-
-  /**
-   * Whether the viewport is wide enough to lay the resource tiles out as a grid.
-   *
-   * Below `lg` they stack into a single column, and ten of them in a row put the map ten screens
-   * down — see {@link isDetailOpen}. From `lg` up the fold does not exist at all: the wrapper it
-   * hangs on is `display: contents` there, so every tile lands in the page grid unchanged.
-   */
-  protected readonly isLarge = inject(Breakpoint).isLarge;
-
-  /**
-   * Whether the colony's eight explanatory tiles are unfolded, on the narrow layout where they are
-   * folded away by default.
-   *
-   * Only the population and the materials still owed to the next tier stand outside the fold:
-   * those two are the run's standing, and the rest is how it got there.
-   */
-  protected readonly isDetailOpen = signal(false);
 
   /**
    * Whether either half of the page is still resolving, or has failed. The two are reported as one:
@@ -308,6 +287,12 @@ export class Campaign {
   });
 
   /**
+   * Id of the week whose panel is unfolded, or `null` while none is — read by the map to mark the
+   * hexagon the panel below it came out of.
+   */
+  protected readonly selectedId = computed(() => this.selectedNode()?.id ?? null);
+
+  /**
    * What {@link selectedNode}'s fight is worth the colony, joined on the run week — never on the
    * node's position in the list, which a week that closed without a fight would shift.
    */
@@ -394,12 +379,13 @@ export class Campaign {
   protected readonly deltaColorClass = resolveColonyDeltaColorClass;
 
   /**
-   * Opens the detail panel on one week.
+   * Unfolds the detail panel on one week, or folds it back when its own tile is clicked again —
+   * the panel sits under the map rather than over it, so the tile is a toggle, not just an opener.
    *
    * @param node - The week to detail.
    */
   protected select(node: BossTimelineNode): void {
-    this.selectedNodeId.set(node.id);
+    this.selectedNodeId.set(this.selectedId() === node.id ? null : node.id);
   }
 
   /**
@@ -427,13 +413,6 @@ export class Campaign {
   protected reload(): void {
     this.campaign.reload();
     this.colony.reload();
-  }
-
-  /**
-   * Unfolds the colony's explanatory tiles on the narrow layout, and folds them back.
-   */
-  protected toggleDetail(): void {
-    this.isDetailOpen.update((isOpen) => !isOpen);
   }
 
   /**

@@ -111,6 +111,6 @@ export class ColonyCard {
   protected readonly frameClass = computed(() =>
     this.isHero()
       ? 'border border-brand-500/30 bg-brand-500/8'
-      : `border-t-2 ${this.accentClass()} bg-text-primary/4`,
+      : `border-t-2 ${this.accentClass()} panel`,
   );
 }

@@ -68,6 +68,12 @@ export interface RankingCell {
   readonly currentValueLabel: string;
 
   /**
+   * The same value abbreviated, e.g. `"128 k"`. Read only where the exact figure would not fit —
+   * the challenge ring, whose 44px disc holds six characters of monospaced digits.
+   */
+  readonly compactValueLabel: string;
+
+  /**
    * Pre-formatted target value, e.g. `"100"`, or `null` for composite challenges with no stored
    * target, in which case only {@link currentValueLabel} is shown.
    */

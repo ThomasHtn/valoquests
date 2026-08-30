@@ -17,11 +17,15 @@ import { ResourceState } from '@shared/resource-state/resource-state';
 import { BLOCK_TOOLTIP_DELAY_MS, Tooltip } from '@shared/tooltip/tooltip';
 
 /**
- * Plinth treatment per podium position, 1st to 3rd: how tall the block stands, the color of the
- * cap it is topped with, and the tint washing down from it.
+ * Plinth treatment per podium position, 1st to 3rd: how tall the block stands and the color of the
+ * cap it is topped with.
  *
  * Height carries the rank as much as color does — a gold cap alone would leave the three places
  * reading as equals in a screenshot, or to anyone who cannot separate the three hues.
+ *
+ * The fill is flat, not the wash that used to fade to transparent partway down: a plinth that
+ * dissolves before its own base has no bottom edge, so it never lands on the ground rule closing
+ * the block in the template. One tone from cap to floor gives each place a solid shape to stand.
  *
  * Every height derives from the `--podium-base` custom property declared on the two-column
  * container in the template: the 3rd plinth *is* that base, and the other two are multiples of it.
@@ -30,9 +34,23 @@ import { BLOCK_TOOLTIP_DELAY_MS, Tooltip } from '@shared/tooltip/tooltip';
  * them takes its height from the grid row the plinths set, and needs no measure of its own.
  */
 const PODIUM_PLINTH_CLASSES: readonly string[] = [
-  'h-[calc(var(--podium-base)*1.4)] border-brand-500 bg-linear-to-b from-brand-500/18 to-transparent',
-  'h-[calc(var(--podium-base)*1.15)] border-text-primary/50 bg-linear-to-b from-text-primary/8 to-transparent',
-  'h-(--podium-base) border-podium-bronze/80 bg-linear-to-b from-text-primary/6 to-transparent',
+  'h-[calc(var(--podium-base)*1.4)] border-brand-500 bg-brand-500/18',
+  'h-[calc(var(--podium-base)*1.15)] border-text-primary/50 bg-text-primary/8',
+  'h-(--podium-base) border-podium-bronze/80 bg-text-primary/6',
+];
+
+/**
+ * Rank plate color per podium position, 1st to 3rd: the medal metals themselves.
+ *
+ * Not {@link resolvePositionBadgeClass}, which the tables share: there a row's position is one
+ * value among several and only 1st place is worth marking out, so 2nd and 3rd stay neutral. On the
+ * plinths the plate is the block's own number, and the three places read as gold, silver and
+ * bronze — the same ladder the plinth heights already encode.
+ */
+const PODIUM_PLATE_CLASSES: readonly string[] = [
+  'text-accent-gold',
+  'text-podium-silver',
+  'text-podium-bronze',
 ];
 
 /**
@@ -89,12 +107,32 @@ export class Podium {
   public readonly showTitle = input(true);
 
   /**
+   * Whether the block carries the tooltip explaining what the podium ranks on.
+   *
+   * Defaults to `true` for the overview, where the podium appears among other blocks and nothing
+   * around it says what the figures are measured on. `/leaderboard` sets this to `false`: the page
+   * is the ranking, its own header and column help already say it, so the delayed bubble only
+   * repeated what the visitor came here for.
+   */
+  public readonly showHint = input(true);
+
+  /**
    * Height the 3rd plinth stands, as a CSS length — the 1st and 2nd scale off it (see
    * {@link PODIUM_PLINTH_CLASSES}). Defaults to the overview's own hero size. `/leaderboard` passes
    * a shorter value: {@link showDamage} is `false` there, so the plinth carries only the rank plate
    * and the taller hero height would leave it looking mostly empty.
    */
   public readonly plinthBase = input('clamp(6rem, 9vh, 7.5rem)');
+
+  /**
+   * Widest the three plinths may spread, as a CSS length — they stay centered under it.
+   *
+   * Defaults to the whole block. `/leaderboard` caps it: the podium there is read alongside the
+   * full board below, and three plinths stretched to that board's width read as a banner rather
+   * than as a podium. The ground rule under them is deliberately *not* capped, so it keeps landing
+   * on the same edges as the table it tops.
+   */
+  public readonly plinthSpan = input('100%');
 
   /**
    * Data-access service backing the shared current-ranking resource.
@@ -190,13 +228,24 @@ export class Podium {
   }
 
   /**
-   * Formats a position as the mockup's zero-padded plate number ("01", "02", "03").
+   * Resolves the plate color for a podium position.
+   *
+   * @param position - The entry's 1-based position, always 1 to 3 here. `null` (an inactive
+   *   player) never reaches the podium, and gets no medal color.
+   * @returns The Tailwind text color utility to apply to the rank plate.
+   */
+  protected plateClass(position: number | null): string {
+    return (position === null ? undefined : PODIUM_PLATE_CLASSES[position - 1]) ?? '';
+  }
+
+  /**
+   * Formats a position as the plate number printed on its plinth ("1", "2", "3").
    *
    * @param position - The entry's 1-based position, or `null` for an inactive player.
-   * @returns The position as a two-digit string, or an em dash when there is none.
+   * @returns The position as a string, or an em dash when there is none.
    */
-  protected paddedRank(position: number | null): string {
-    return position === null ? '—' : String(position).padStart(2, '0');
+  protected rankPlate(position: number | null): string {
+    return position === null ? '—' : String(position);
   }
 
   /**

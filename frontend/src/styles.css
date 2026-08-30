@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import './styles/colors.css';
 @import './styles/typography.css';
+@import './styles/elevation.css';
 @import './styles/animations.css';
 
 @layer base {
@@ -62,19 +63,17 @@
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
-/* Ring-shaped progress track, filled clockwise from the top to `--progress` percent in the
-   element's own `currentColor`. A conic gradient masked into a ring, so the whole indicator is one
-   node instead of an SVG holding a track circle and a dashed arc — the ranking matrix draws
-   thirty-five of them at once. The mask's stop is the inner edge of the ring, as a share of the
-   radius: it matches the stroke the SVG form used to draw. */
-@utility progress-ring {
-  aspect-ratio: 1;
+/* The disc a completed `app-progress-circle` encloses: the ring itself is drawn by
+   `angular-svg-round-progressbar`, this is only the attenuated ground inside it, so a full-strength
+   arc and a tinted centre read as ring-then-core rather than one filled badge. Kept here rather
+   than handed to the library's own `innerCircleFill`, which takes a color string — the tint is a
+   Tailwind utility off the challenge palette, and the string would fork the palette in two.
+
+   The inset clears the ring's stroke (`RING.stroke` over its diameter, 4 in 44 ≈ 9%) plus two
+   points of clear ground. Both are shares of the box, so they hold at any size the caller picks. */
+@utility progress-ring-core {
   border-radius: 50%;
-  background: conic-gradient(
-    currentColor calc(var(--progress, 0) * 1%),
-    color-mix(in oklab, var(--color-text-primary) 12%, transparent) 0
-  );
-  mask: radial-gradient(farthest-side, transparent 72%, black 72.5% 100%, transparent 100%);
+  inset: 11%;
 }
 
 /* An outlined hexagon — the campaign map's terrain tile — drawn as one element rather than a
@@ -528,6 +527,23 @@
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+/*
+ * The campaign's week panel unfolding under the threat map it is attached to. It has an edge to
+ * come out of, unlike `dialog-enter`, so it drops out of that edge rather than scaling into place —
+ * scaling would pull the panel off the seam that ties it to the map.
+ */
+@keyframes boss-panel-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

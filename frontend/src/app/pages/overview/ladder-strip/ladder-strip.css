@@ -1,0 +1,125 @@
+/*
+ * Colors spelled out for the same reason as the rest of this page's component stylesheets — see
+ * `overview.css`. Keep in sync with `styles/colors.css`:
+ *   brand-500 #d9954a · brand-400 #e8ab6b · surface-sunken #0a151d · surface-700 #253645
+ *   text-primary #ece8e1 · text-muted #868b8d · accent-cyan #2dd4bf
+ */
+
+.ladder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  padding: 16px 18px;
+  background: rgb(236 232 225 / 4%);
+}
+
+.ladder-trail {
+  display: flex;
+  flex: 1 1 22rem;
+  align-items: flex-start;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * Each step draws the segment leading into it, as a pseudo-element on the step itself rather than as
+ * separate connector nodes: one element per step keeps the trail evenly spaced whatever the names
+ * under it are doing.
+ */
+.ladder-step {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 7px;
+  align-items: center;
+  min-width: 0;
+}
+
+.ladder-step:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  right: 50%;
+  left: -50%;
+  height: 1px;
+  background: #253645;
+}
+
+.ladder-step--reached::before,
+.ladder-step--current::before {
+  background: rgb(217 149 74 / 55%);
+}
+
+/* The step being climbed: the only segment still being paid for. */
+.ladder-step--next::before {
+  background: none;
+  border-top: 1px dashed #253645;
+  height: 0;
+}
+
+.ladder-mark {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 30px;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background: #253645;
+  font-weight: 700;
+  font-size: 0.75rem;
+  font-family: var(--font-display);
+  color: #868b8d;
+  font-variant-numeric: tabular-nums;
+}
+
+.ladder-step--reached .ladder-mark {
+  background: rgb(217 149 74 / 55%);
+  color: #0a151d;
+}
+
+/* The colony's own step, the one thing on the strip drawn at full strength. */
+.ladder-step--current .ladder-mark {
+  width: 32px;
+  height: 36px;
+  background: #d9954a;
+  font-size: 0.875rem;
+  color: #0a151d;
+  outline: 2px solid #2dd4bf;
+  outline-offset: 3px;
+}
+
+.ladder-name {
+  overflow: hidden;
+  max-width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #868b8d;
+}
+
+.ladder-step--current .ladder-name {
+  font-weight: 600;
+  color: #ece8e1;
+}
+
+.ladder-caption {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: #868b8d;
+  font-variant-numeric: tabular-nums;
+}
+
+.ladder-pct {
+  font-weight: 600;
+  color: #2dd4bf;
+}

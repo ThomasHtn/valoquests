@@ -1,4 +1,9 @@
-import { ColonyPresenceState, ColonyTierState, ColonyWeekOutcomeState } from './colony.model';
+import {
+  ColonyPresenceState,
+  ColonyTierName,
+  ColonyTierState,
+  ColonyWeekOutcomeState,
+} from './colony.model';
 
 /**
  * The silhouette one step of the ladder wears.
@@ -19,7 +24,13 @@ export type ColonyTierGlyph = 'CAMP' | 'HOUSES' | 'SKYLINE' | 'MONUMENT';
  */
 export interface ColonyTownView {
   /**
-   * Which of the four silhouettes to draw — the current step's own band.
+   * The step the colony currently stands on, which is what the scene builds itself from: every
+   * named step of the ladder adds something to the waterfront (see `town-scene.ts`).
+   */
+  readonly tier: ColonyTierName;
+
+  /**
+   * Which of the four silhouettes the ladder's own marker draws — the current step's band.
    */
   readonly glyph: ColonyTierGlyph;
 
@@ -158,6 +169,12 @@ export interface ColonyBatteryView {
    * already full — read as "no next step to reach", same as {@link nextStepPercentage}.
    */
   readonly nextMultiplierLabel: string | null;
+
+  /**
+   * Already-formatted factor a full roster is worth, `×2,00` — the ceiling {@link multiplierLabel}
+   * is read against, so a bare `×1,17` is not left to be judged against a scale nobody stated.
+   */
+  readonly maxMultiplierLabel: string;
 
   /**
    * Already-translated sentence the battery's hover card shows, and its own accessible name.

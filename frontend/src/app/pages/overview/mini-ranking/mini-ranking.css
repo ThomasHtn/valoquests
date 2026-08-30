@@ -7,4 +7,27 @@
 .mini-rank-row {
   background: rgb(236 232 225 / 4%);
   border-left: 2px solid rgb(236 232 225 / 15%);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+/*
+ * The hover lives here rather than as a `hover:bg-*` utility on the row: this rule and the utility
+ * have the same specificity, and a component stylesheet is injected after the utility layer, so the
+ * plain background above simply won the cascade and nothing happened on hover.
+ */
+.mini-rank-row:hover {
+  background: rgb(217 149 74 / 12%);
+  border-left-color: #d9954a;
+}
+
+/* Names the amount without competing with it: the unit is read once, the figure every time. */
+.mini-rank-unit {
+  margin-left: 6px;
+  font-weight: 500;
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #868b8d;
 }

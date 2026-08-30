@@ -73,6 +73,15 @@
   --text-2xs--line-height: 1;
 
   /*
+   * The bottom of the scale, and a fallback rather than a choice: what a numeric mark drops to when
+   * its digits would otherwise spill out of the shape holding them — a challenge ring counting a
+   * five- or six-figure damage total. Never for a label a reader has to hunt for, only for a number
+   * the surrounding row already states.
+   */
+  --text-3xs: 0.5625rem;
+  --text-3xs--line-height: 1;
+
+  /*
    * The two steps every run of prose uses: `text-lead` for a page's opening line of stakes (the
    * `<header>` subtitle), `text-prose` for the descriptions inside the page — a challenge's rule,
    * a boss's flavor line, a section of the rulebook.
@@ -91,6 +100,29 @@
   --text-prose--line-height: 1.65;
   --text-lead: 1.125rem;
   --text-lead--line-height: 1.6;
+
+  /*
+   * The page's one loud figure, and the step under it.
+   *
+   * Measured on `/campaign` before these existed, the whole page ran from 9px to 24px, with *nine*
+   * elements tied at that 24px maximum: a range of 2.7:1 across sixty-eight text nodes and no
+   * primary among them. A dashboard can be read that way; a screen meant to make a squad care
+   * about its colony cannot, because nothing on it is the answer.
+   *
+   * `text-figure` is deliberately scarce: one per page, on the single number that page exists to
+   * report (the colony's population on the campaign screen). `text-figure-sm` is its echo, for the
+   * two or three figures that qualify it. Anything below those belongs on the existing scale.
+   *
+   * Both are set in the display face at a tight leading and a slightly negative tracking: Oswald
+   * is condensed, and at this size its default spacing opens gaps between the digits that read as
+   * kerning errors rather than as air.
+   */
+  --text-figure: clamp(3.25rem, 2.1rem + 5.2vw, 5.5rem);
+  --text-figure--line-height: 0.86;
+  --text-figure--letter-spacing: -0.02em;
+  --text-figure-sm: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
+  --text-figure-sm--line-height: 0.95;
+  --text-figure-sm--letter-spacing: -0.01em;
 
   /*
    * Letter-spacing ladder for those same labels, which are set far wider than Tailwind's built-in

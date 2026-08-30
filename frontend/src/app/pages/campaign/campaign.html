@@ -47,305 +47,341 @@
     [loadingText]="'campaign.loading' | translate"
   >
     <div class="flex flex-col gap-4" skeleton>
-      <div class="h-64 border border-text-primary/15 bg-text-primary/4"></div>
-      <div class="h-40 border border-text-primary/15 bg-text-primary/4"></div>
-      <div class="h-10 border border-text-primary/15 bg-text-primary/4"></div>
+      <div class="h-64 border border-edge panel"></div>
+      <div class="h-40 border border-edge panel"></div>
+      <div class="h-10 border border-edge panel"></div>
     </div>
 
     <div class="flex flex-col gap-6">
-      <!-- The card: the campaign's territory, at rest — the earlier serpentine map's own tile
+      <!-- The map and the panel it opens, as one surface: no gap between them, so the detail reads
+           as the card unfolding rather than as a second card that happened to appear. -->
+      <div class="flex min-w-0 flex-col">
+        <!-- The card: the campaign's territory, at rest — the earlier serpentine map's own tile
            (ring, halo, damage fill, outcome icon), only the path is gone. The ten weeks stand in
            one straight row rather than snaking down the page; a tile's hover card previews its
-           fight, a click opens the full drawer, which stands closed otherwise, never pre-rendered
-           open under the row. -->
-      <section class="flex min-w-0 flex-col bg-text-primary/4">
-        <div
-          class="flex min-h-10 shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-text-primary/8 px-3 py-2 sm:flex-nowrap"
-        >
-          <span class="label-caption shrink-0 text-text-primary">
-            {{ 'campaign.territory' | translate }}
-          </span>
-
-          <span aria-hidden="true" class="h-3 w-px shrink-0 bg-text-primary/15"></span>
-
-          <!-- Legend of the map's territory states. The samples are the tiles in miniature: the
-               same hollow hexagon, the same outline colour, nothing inside. -->
-          <ul class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-            @for (status of legendStatuses; track status) {
-              @let legendTier = territoryTier(status);
-
-              <li class="flex items-center gap-1.5">
-                <span aria-hidden="true" class="relative h-[1.125rem] w-4 shrink-0">
-                  <span [class]="legendTier.ringClass" class="clip-hex absolute inset-0"></span>
-                  <span
-                    [class]="territoryFillClass"
-                    [style.scale]="legendInnerScale"
-                    class="clip-hex absolute inset-0"
-                  ></span>
-                </span>
-                <span class="label-caption text-[0.5625rem] text-text-muted">
-                  {{ 'campaign.legend.' + status | translate }}
-                </span>
-              </li>
-            }
-          </ul>
-        </div>
-
-        <div class="@container min-w-0 overflow-x-auto p-3">
-          <ol
-            [attr.aria-label]="'campaign.map.ariaLabel' | translate"
-            class="mx-auto flex w-fit gap-[var(--hex-gap)] [--hex-gap:0.25rem] [--hex-h:calc(var(--hex-w)*1.1547)] [--hex-w:3.25rem] @md:[--hex-w:3.5rem] @3xl:[--hex-w:4rem] @5xl:[--hex-w:4.5rem]"
-            role="list"
+           fight, a click unfolds the week's panel underneath, which stands closed otherwise. -->
+        <section class="flex min-w-0 flex-col panel">
+          <div
+            class="flex min-h-10 shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-text-primary/8 px-3 py-2 sm:flex-nowrap"
           >
-            @for (tile of leadTerrainTiles; track tile) {
-              <li
-                [class]="terrainRingClass"
-                aria-hidden="true"
-                class="hex-terrain h-[var(--hex-h)] w-[var(--hex-w)] shrink-0"
-              ></li>
-            }
+            <span class="label-caption shrink-0 text-text-primary">
+              {{ 'campaign.territory' | translate }}
+            </span>
 
-            @for (entry of nodesWithBoss(); track entry.node.id) {
-              @let node = entry.node;
-              @let tier = territoryTier(node.status);
+            <span aria-hidden="true" class="h-3 w-px shrink-0 bg-text-primary/15"></span>
 
-              <!-- The tile being fought is lifted out of the flow at rest, not only on hover: its
+            <!-- Legend of the map's territory states. The samples are the tiles in miniature: the
+               same hollow hexagon, the same outline colour, nothing inside. -->
+            <ul class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+              @for (status of legendStatuses; track status) {
+                @let legendTier = territoryTier(status);
+
+                <li class="flex items-center gap-1.5">
+                  <span aria-hidden="true" class="relative h-[1.125rem] w-4 shrink-0">
+                    <span [class]="legendTier.ringClass" class="clip-hex absolute inset-0"></span>
+                    <span
+                      [class]="territoryFillClass"
+                      [style.scale]="legendInnerScale"
+                      class="clip-hex absolute inset-0"
+                    ></span>
+                  </span>
+                  <span class="label-caption text-[0.5625rem] text-text-muted">
+                    {{ 'campaign.legend.' + status | translate }}
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <div class="@container min-w-0 overflow-x-auto p-3">
+            <ol
+              [attr.aria-label]="'campaign.map.ariaLabel' | translate"
+              class="mx-auto flex w-fit gap-[var(--hex-gap)] [--hex-gap:0.25rem] [--hex-h:calc(var(--hex-w)*1.1547)] [--hex-w:3.25rem] @md:[--hex-w:3.5rem] @3xl:[--hex-w:4rem] @5xl:[--hex-w:4.5rem]"
+              role="list"
+            >
+              @for (tile of leadTerrainTiles; track tile) {
+                <li
+                  [class]="terrainRingClass"
+                  aria-hidden="true"
+                  class="hex-terrain h-[var(--hex-h)] w-[var(--hex-w)] shrink-0"
+                ></li>
+              }
+
+              @for (entry of nodesWithBoss(); track entry.node.id) {
+                @let node = entry.node;
+                @let tier = territoryTier(node.status);
+
+                <!-- The tile being fought is lifted out of the flow at rest, not only on hover: its
                    shockwave expands past its own hexagon, and with every tile at `z-auto` the
                    rings slid *under* whichever neighbour follows it in the row. -->
-              <li
-                [class.z-10]="node.status === 'current'"
-                class="group relative h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 hover:z-20 focus-within:z-20"
-              >
-                @if (tier.haloClass) {
-                  <span
-                    [class]="tier.haloClass"
-                    aria-hidden="true"
-                    class="clip-hex absolute -inset-1"
-                  ></span>
-                }
+                <li
+                  [class.z-10]="node.status === 'current'"
+                  class="group relative h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 hover:z-20 focus-within:z-20"
+                >
+                  @if (tier.haloClass) {
+                    <span
+                      [class]="tier.haloClass"
+                      aria-hidden="true"
+                      class="clip-hex absolute -inset-1"
+                    ></span>
+                  }
 
-                @if (tier.liveAccentClass) {
-                  <span
-                    [class]="tier.liveAccentClass"
-                    aria-hidden="true"
-                    class="battle-ripple pointer-events-none absolute -inset-1"
-                  ></span>
-                }
+                  <!-- The week whose panel is unfolded below, marked in its own outcome colour —
+                     the same colour the panel's top seam carries, which is what says the two are
+                     the same thing seen twice. -->
+                  @if (node.id === selectedId()) {
+                    <span
+                      [class]="tier.ringClass"
+                      aria-hidden="true"
+                      class="clip-hex absolute -inset-1.5 opacity-30"
+                    ></span>
+                  }
 
-                <!-- The week's territory. The button itself stays unclipped so its focus ring is
+                  @if (tier.liveAccentClass) {
+                    <span
+                      [class]="tier.liveAccentClass"
+                      aria-hidden="true"
+                      class="battle-ripple pointer-events-none absolute -inset-1"
+                    ></span>
+                  }
+
+                  <!-- The week's territory. The button itself stays unclipped so its focus ring is
                      not cut away with the corners; the hexagon is the two layers inside it, an
                      outline showing through from behind a scaled-down surface. -->
-                <button
-                  (click)="select(node)"
-                  [attr.aria-label]="
-                    (node.weekLabel ? node.weekLabel + ' · ' : '') +
-                    node.bossName +
-                    ' · ' +
-                    node.statusLabel
-                  "
-                  class="focus-ring absolute inset-0 cursor-pointer transition-transform duration-200 hover:scale-[1.07] motion-reduce:transition-none"
-                  type="button"
-                >
-                  <span [class]="tier.ringClass" class="clip-hex absolute inset-0"></span>
-
-                  <span
-                    [class]="territoryFillClass"
-                    [style.scale]="tileInnerScale"
-                    class="clip-hex absolute inset-0 flex flex-col items-center justify-center gap-0.5"
+                  <button
+                    (click)="select(node)"
+                    [attr.aria-expanded]="node.id === selectedId()"
+                    [attr.aria-label]="
+                      (node.weekLabel ? node.weekLabel + ' · ' : '') +
+                      node.bossName +
+                      ' · ' +
+                      node.statusLabel
+                    "
+                    class="focus-ring absolute inset-0 cursor-pointer transition-transform duration-200 hover:scale-[1.07] motion-reduce:transition-none"
+                    type="button"
                   >
-                    <!-- The boss holding the territory, dimmed under a scrim so the outcome mark
+                    <span [class]="tier.ringClass" class="clip-hex absolute inset-0"></span>
+
+                    <span
+                      [class]="territoryFillClass"
+                      [style.scale]="tileInnerScale"
+                      class="clip-hex absolute inset-0 flex flex-col items-center justify-center gap-0.5"
+                    >
+                      <!-- The boss holding the territory, dimmed under a scrim so the outcome mark
                          stays the first thing read. Weeks whose boss has not been drawn have no
                          portrait to show. -->
-                    @if (node.portraitUrl; as portraitUrl) {
-                      <img
-                        [ngSrc]="portraitUrl"
-                        alt=""
-                        class="clip-hex object-cover opacity-45"
-                        fill
-                        sizes="80px"
-                      />
-                    }
+                      @if (node.portraitUrl; as portraitUrl) {
+                        <img
+                          [ngSrc]="portraitUrl"
+                          alt=""
+                          class="clip-hex object-cover opacity-45"
+                          fill
+                          sizes="80px"
+                        />
+                      }
 
-                    <!-- Ground gained: the surface fills from the bottom as the boss takes
+                      <!-- Ground gained: the surface fills from the bottom as the boss takes
                          damage, so a week reads as taken, contested or untouched at a glance. -->
-                    @if (node.damagePercentage > 0) {
-                      <span
-                        [class]="
-                          tier.damageFillClass +
-                          (tier.liveAccentClass ? ' liquid-wave ' + tier.liveAccentClass : '')
-                        "
-                        [style.height.%]="node.damagePercentage"
-                        aria-hidden="true"
-                        class="absolute inset-x-0 bottom-0 transition-[height] duration-500 motion-reduce:transition-none"
-                      ></span>
-                    }
+                      @if (node.damagePercentage > 0) {
+                        <span
+                          [class]="
+                            tier.damageFillClass +
+                            (tier.liveAccentClass ? ' liquid-wave ' + tier.liveAccentClass : '')
+                          "
+                          [style.height.%]="node.damagePercentage"
+                          aria-hidden="true"
+                          class="absolute inset-x-0 bottom-0 transition-[height] duration-500 motion-reduce:transition-none"
+                        ></span>
+                      }
 
-                    <!-- The week's verdict, carried by the shape of the mark rather than by its
+                      <!-- The week's verdict, carried by the shape of the mark rather than by its
                          color alone: taken, lost, still being fought, or not yet reached. -->
-                    <span
-                      [class]="tier.iconClass"
-                      aria-hidden="true"
-                      class="relative [&>svg]:size-[calc(var(--hex-w)*0.3)]"
-                    >
-                      @switch (node.status) {
-                        @case ('defeated') {
-                          <svg lucideCheck></svg>
-                        }
-                        @case ('survived') {
-                          <svg lucideX></svg>
-                        }
-                        @case ('current') {
-                          <!-- The ring already carries the week's outcome, so this glyph is free
+                      <span
+                        [class]="tier.iconClass"
+                        aria-hidden="true"
+                        class="relative [&>svg]:size-[calc(var(--hex-w)*0.3)]"
+                      >
+                        @switch (node.status) {
+                          @case ('defeated') {
+                            <svg lucideCheck></svg>
+                          }
+                          @case ('survived') {
+                            <svg lucideX></svg>
+                          }
+                          @case ('current') {
+                            <!-- The ring already carries the week's outcome, so this glyph is free
                                to say something else: which boss it is, colored by its difficulty
                                rather than by the tier's flat amber. -->
-                          <svg [class]="currentBossIconColorClass(node.category)" lucideSkull></svg>
+                            <svg
+                              [class]="currentBossIconColorClass(node.category)"
+                              lucideSkull
+                            ></svg>
+                          }
+                          @default {
+                            <svg lucideLock></svg>
+                          }
                         }
-                        @default {
-                          <svg lucideLock></svg>
-                        }
-                      }
+                      </span>
                     </span>
-                  </span>
-                </button>
+                  </button>
 
-                <!-- What the tile itself cannot hold: the week it covers, how much of the boss is
-                     left, and who is landing the hits. Purely a pointer/keyboard enhancement — a
-                     click a click away opens the same figures in the drawer, so a hover here
-                     would only repeat them; the week being fought carries none of it since the
-                     drawer already stands a click away for it too. -->
-                @if (node.hasDamage && node.status !== 'current') {
-                  <div
-                    [class]="tooltipSurfaceClass"
-                    aria-hidden="true"
-                    class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2.5 hidden w-72 -translate-x-1/2 px-4 py-3.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none sm:block"
-                  >
-                    <p class="flex items-baseline justify-between gap-3">
-                      <span class="label-caption text-text-muted">
-                        {{ bossNumberLabel(node.runWeekIndex) }}
-                      </span>
-                      @if (node.dateRangeLabel; as dateRangeLabel) {
-                        <span class="font-mono text-2xs text-text-secondary tabular-nums">
-                          {{ dateRangeLabel }}
-                        </span>
-                      }
-                    </p>
-
-                    <p class="font-display mt-3 text-base leading-tight font-bold uppercase">
-                      {{ node.bossName }}
-                    </p>
-
-                    <p
-                      class="mt-3 flex items-baseline justify-between gap-3 border-t border-text-primary/10 pt-3"
+                  <!-- What the tile itself cannot hold: the week it covers, how much of the boss is
+                     left, and what its fight is worth. Purely a pointer/keyboard enhancement — a
+                     click unfolds the same figures below the card, so a hover here would only
+                     repeat them; the week being fought carries none of it since its panel stands a
+                     click away for it too. -->
+                  @if (node.hasDamage && node.status !== 'current') {
+                    <div
+                      [class]="tooltipSurfaceClass"
+                      aria-hidden="true"
+                      class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2.5 hidden w-72 -translate-x-1/2 px-4 py-3.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none sm:block"
                     >
-                      <span class="font-mono text-xs text-text-secondary tabular-nums">
-                        {{ node.hpLabel }}
-                      </span>
-                      <span [class]="tier.iconClass" class="font-mono text-xs font-semibold">
-                        {{ node.hpPercentageLabel }}
-                      </span>
-                    </p>
+                      <p class="flex items-baseline justify-between gap-3">
+                        <span class="label-caption text-text-muted">
+                          {{ bossNumberLabel(node.runWeekIndex) }}
+                        </span>
+                        @if (node.dateRangeLabel; as dateRangeLabel) {
+                          <span class="font-mono text-2xs text-text-secondary tabular-nums">
+                            {{ dateRangeLabel }}
+                          </span>
+                        }
+                      </p>
 
-                    @if (entry.boss; as boss) {
-                      @if (boss.materialsLabel) {
-                        <div class="mt-3 border-t border-text-primary/10 pt-3">
-                          <p
-                            class="label-caption inline-block border border-accent-gold/35 bg-accent-gold/15 px-1.5 py-0.5 text-accent-gold"
-                          >
-                            {{ 'colony.boss.rewards' | translate }}
-                          </p>
-                          <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-                            <dt class="flex items-center gap-1 label-caption text-text-muted">
-                              <svg class="size-3 text-accent-gold" lucideHammer></svg>
-                              {{ 'colony.materials' | translate }}
-                            </dt>
-                            <dd
-                              class="text-right font-mono text-2xs font-semibold text-accent-gold tabular-nums"
+                      <p class="font-display mt-3 text-base leading-tight font-bold uppercase">
+                        {{ node.bossName }}
+                      </p>
+
+                      <p
+                        class="mt-3 flex items-baseline justify-between gap-3 border-t border-edge pt-3"
+                      >
+                        <span class="font-mono text-xs text-text-secondary tabular-nums">
+                          {{ node.hpLabel }}
+                        </span>
+                        <span [class]="tier.iconClass" class="font-mono text-xs font-semibold">
+                          {{ node.hpPercentageLabel }}
+                        </span>
+                      </p>
+
+                      @if (entry.boss; as boss) {
+                        @if (boss.materialsLabel) {
+                          <div class="mt-3 border-t border-edge pt-3">
+                            <p
+                              class="label-caption inline-block border border-accent-gold/35 bg-accent-gold/15 px-1.5 py-0.5 text-accent-gold"
                             >
-                              {{ boss.materialsLabel }}
-                            </dd>
-                            @if (boss.efficiencyLabel) {
+                              {{ 'colony.boss.rewards' | translate }}
+                            </p>
+                            <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
                               <dt class="flex items-center gap-1 label-caption text-text-muted">
-                                <svg class="size-3 text-accent-pink" lucideGauge></svg>
-                                {{ 'colony.boss.efficiency' | translate }}
+                                <svg class="size-3 text-accent-gold" lucideHammer></svg>
+                                {{ 'colony.materials' | translate }}
                               </dt>
                               <dd
-                                class="text-right font-mono text-2xs font-semibold text-accent-pink tabular-nums"
+                                class="text-right font-mono text-2xs font-semibold text-accent-gold tabular-nums"
                               >
-                                {{ boss.efficiencyLabel }}
+                                {{ boss.materialsLabel }}
                               </dd>
-                            }
-                            <dt class="flex items-center gap-1 label-caption text-text-muted">
-                              <svg class="size-3 text-accent-violet" lucideMagnet></svg>
-                              {{ 'colony.track.morale.name' | translate }}
-                            </dt>
-                            <dd
-                              class="text-right font-mono text-2xs font-semibold text-accent-violet tabular-nums"
+                              @if (boss.efficiencyLabel) {
+                                <dt class="flex items-center gap-1 label-caption text-text-muted">
+                                  <svg class="size-3 text-accent-pink" lucideGauge></svg>
+                                  {{ 'colony.boss.efficiency' | translate }}
+                                </dt>
+                                <dd
+                                  class="text-right font-mono text-2xs font-semibold text-accent-pink tabular-nums"
+                                >
+                                  {{ boss.efficiencyLabel }}
+                                </dd>
+                              }
+                              <dt class="flex items-center gap-1 label-caption text-text-muted">
+                                <svg class="size-3 text-accent-violet" lucideMagnet></svg>
+                                {{ 'colony.track.morale.name' | translate }}
+                              </dt>
+                              <dd
+                                class="text-right font-mono text-2xs font-semibold text-accent-violet tabular-nums"
+                              >
+                                {{ boss.moraleLabel }}
+                              </dd>
+                            </dl>
+                          </div>
+                        }
+
+                        @if (boss.state === 'CURRENT') {
+                          <div class="mt-3">
+                            <p
+                              class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
                             >
-                              {{ boss.moraleLabel }}
-                            </dd>
-                          </dl>
-                        </div>
+                              {{ 'colony.boss.ifDefeated' | translate }}
+                            </p>
+                            <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                              <dt class="flex items-center gap-1 label-caption text-text-muted">
+                                <svg class="size-3 text-accent-violet" lucideMagnet></svg>
+                                {{ 'colony.track.morale.name' | translate }}
+                              </dt>
+                              <dd
+                                class="text-right font-mono text-2xs font-semibold text-accent-violet tabular-nums"
+                              >
+                                {{ colony.defeatMoraleLabel() }}
+                              </dd>
+                            </dl>
+                          </div>
+                        } @else if (boss.state === 'SURVIVED') {
+                          <div class="mt-3 border-t border-edge pt-3">
+                            <p
+                              class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
+                            >
+                              {{ 'colony.boss.defeat' | translate }}
+                            </p>
+                            <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                              <dt class="flex items-center gap-1 label-caption text-text-muted">
+                                <svg class="size-3" lucideMagnet></svg>
+                                {{ 'colony.track.morale.name' | translate }}
+                              </dt>
+                              <dd
+                                class="text-right font-mono text-2xs font-semibold text-danger tabular-nums"
+                              >
+                                {{ boss.moraleLabel }}
+                              </dd>
+                            </dl>
+                          </div>
+                        }
                       }
+                    </div>
+                  }
+                </li>
+              }
 
-                      @if (boss.state === 'CURRENT') {
-                        <div class="mt-3">
-                          <p
-                            class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
-                          >
-                            {{ 'colony.boss.ifDefeated' | translate }}
-                          </p>
-                          <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-                            <dt class="flex items-center gap-1 label-caption text-text-muted">
-                              <svg class="size-3 text-accent-violet" lucideMagnet></svg>
-                              {{ 'colony.track.morale.name' | translate }}
-                            </dt>
-                            <dd
-                              class="text-right font-mono text-2xs font-semibold text-accent-violet tabular-nums"
-                            >
-                              {{ colony.defeatMoraleLabel() }}
-                            </dd>
-                          </dl>
-                        </div>
-                      } @else if (boss.state === 'SURVIVED') {
-                        <div class="mt-3 border-t border-text-primary/10 pt-3">
-                          <p
-                            class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
-                          >
-                            {{ 'colony.boss.defeat' | translate }}
-                          </p>
-                          <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-                            <dt class="flex items-center gap-1 label-caption text-text-muted">
-                              <svg class="size-3" lucideMagnet></svg>
-                              {{ 'colony.track.morale.name' | translate }}
-                            </dt>
-                            <dd
-                              class="text-right font-mono text-2xs font-semibold text-danger tabular-nums"
-                            >
-                              {{ boss.moraleLabel }}
-                            </dd>
-                          </dl>
-                        </div>
-                      }
-                    }
-                  </div>
-                }
-              </li>
+              @for (tile of trailTerrainTiles; track tile) {
+                <li
+                  [class]="terrainRingClass"
+                  aria-hidden="true"
+                  class="hex-terrain h-[var(--hex-h)] w-[var(--hex-w)] shrink-0"
+                ></li>
+              }
+            </ol>
+
+            <!-- The invitation stands only while nothing is unfolded: with a panel open under the
+                 card it would sit between the map and its own answer, asking for what already
+                 happened. -->
+            @if (selectedId() === null) {
+              <p class="mt-4 text-center font-mono text-xs text-text-muted">
+                {{ 'campaign.frieze.hint' | translate }}
+              </p>
             }
+          </div>
+        </section>
 
-            @for (tile of trailTerrainTiles; track tile) {
-              <li
-                [class]="terrainRingClass"
-                aria-hidden="true"
-                class="hex-terrain h-[var(--hex-h)] w-[var(--hex-w)] shrink-0"
-              ></li>
-            }
-          </ol>
-
-          <p class="mt-4 text-center font-mono text-xs text-text-muted">
-            {{ 'campaign.frieze.hint' | translate }}
-          </p>
-        </div>
-      </section>
+        @if (selectedNode(); as node) {
+          <app-boss-detail
+            (closed)="closePanel()"
+            (next)="step(1)"
+            (previous)="step(-1)"
+            [colonyBoss]="selectedColonyBoss()"
+            [defeatMoraleLabel]="colony.defeatMoraleLabel()"
+            [hasNext]="hasNextNode()"
+            [hasPrevious]="hasPreviousNode()"
+            [node]="node"
+          />
+        }
+      </div>
 
       @if (colony.colony(); as colonyValue) {
         <!-- The standing figures, as a grid of tiles rather than a band-plus-sidebar row: the
@@ -355,7 +391,7 @@
              tile shares `app-colony-card`'s own frame and info bubble, so the page reads as one
              instrument panel rather than a mismatched set of cards. -->
         <div
-          class="grid shrink-0 grid-cols-1 gap-3 lg:grid-cols-[repeat(20,minmax(0,1fr))] lg:grid-rows-[minmax(11.5rem,auto)_minmax(5.75rem,auto)_minmax(5.75rem,auto)]"
+          class="grid shrink-0 grid-cols-1 gap-3 lg:grid-cols-[repeat(20,minmax(0,1fr))] lg:grid-rows-[minmax(11.5rem,auto)_minmax(5.75rem,auto)]"
         >
           <!-- The population's own climb, in place of the bare figure a click used to have to open
                a drawer for: the hexagon read as "where it stands", the curve reads as "how it got
@@ -373,7 +409,12 @@
           >
             <svg class="text-brand-500" infoIcon lucideUsers></svg>
 
-            <div class="flex h-full flex-col gap-2">
+            <!-- `min-h-*` rather than `h-full` alone: from `lg` up the grid row hands this stack a
+                 definite height and the chart's own `h-full` resolves against it, but in the
+                 single-column layout below `lg` nothing in the chain has a height, so the
+                 percentage resolved to `auto`, Chart.js sized the canvas to its own fallback, and
+                 the plot escaped the card by 128px straight over the two tiles under it. -->
+            <div class="flex h-full min-h-52 flex-col gap-2">
               <p class="flex items-baseline justify-between gap-3 text-sm text-text-muted">
                 <span>{{ colony.curveCaption() }}</span>
                 @if (latestMilestoneLabel(); as milestone) {
@@ -395,252 +436,113 @@
             </div>
           </app-colony-card>
 
-          <!-- Ten tiles in one column put the map ten screens down on a phone. The two figures that
-               answer "where does the colony stand" — its climb above, and what it still owes the
-               next tier below — stay out here; everything explaining how it got there waits behind
-               this. From `lg` up the control is gone and the grid is untouched. -->
-          <button
-            (click)="toggleDetail()"
-            [attr.aria-expanded]="isDetailOpen()"
-            class="focus-ring notch-tr flex cursor-pointer items-center justify-between gap-3 border border-text-primary/15 bg-text-primary/4 px-4 py-3 transition-colors [--notch:0.875rem] hover:bg-text-primary/8 lg:hidden"
-            type="button"
+          <!-- Nourriture cette semaine, twelve columns wide beside the curve's eight. -->
+          <app-colony-card
+            accentClass="border-t-brand-500"
+            class="lg:col-span-12"
+            [infoDescription]="'colony.track.food.description' | translate"
+            [infoFormulaRows]="foodWeekFormulaRows()"
+            [infoPurpose]="'colony.track.food.note' | translate"
+            [title]="'colony.track.food.weekTitle' | translate"
           >
-            <span class="font-display text-sm leading-none font-bold text-text-secondary uppercase">
-              {{ 'colony.detail.title' | translate }}
-            </span>
-            <svg
-              [class.rotate-180]="isDetailOpen()"
-              aria-hidden="true"
-              class="size-4 shrink-0 text-text-muted transition-transform motion-reduce:transition-none"
-              lucideChevronDown
-            ></svg>
-          </button>
+            <svg class="text-brand-500" icon lucideWheat></svg>
+            <svg class="text-brand-500" infoIcon lucideWheat></svg>
 
-          <!-- `lg:contents` rather than a second grid: from `lg` up the wrapper stops being a box
-               and its eight tiles land in the page grid exactly where they were written, so the
-               desktop layout is byte-for-byte the one this fold was added to. -->
-          @if (isLarge() || isDetailOpen()) {
-            <div class="flex flex-col gap-3 lg:contents">
-              <!-- Nourriture cette semaine, twelve columns wide beside the hexagon's six. -->
-              <app-colony-card
-                accentClass="border-t-brand-500"
-                class="lg:col-span-12"
-                [infoDescription]="'colony.track.food.description' | translate"
-                [infoFormulaRows]="foodWeekFormulaRows()"
-                [infoPurpose]="'colony.track.food.note' | translate"
-                [title]="'colony.track.food.weekTitle' | translate"
-              >
-                <svg class="text-brand-500" icon lucideWheat></svg>
-                <svg class="text-brand-500" infoIcon lucideWheat></svg>
-
-                <div class="flex h-full min-h-[6.125rem] flex-col">
-                  <app-bar-chart
-                    [ariaLabel]="'colony.track.food.weekTitle' | translate"
-                    [bars]="foodWeekBars()"
-                    class="flex-1"
-                    heightClass="h-full w-full"
-                    [showAllValues]="true"
-                    [summary]="foodWeekSummary()"
-                  />
-                </div>
-              </app-colony-card>
-
-              <app-colony-card
-                accentClass="border-t-brand-400"
-                class="lg:col-span-4"
-                [infoDescription]="'colony.track.foodStock.description' | translate"
-                [infoPurpose]="'colony.track.foodStock.purpose' | translate"
-                [isCompact]="true"
-                [title]="'colony.track.foodStock.name' | translate"
-              >
-                <svg class="text-brand-400" icon lucidePackage></svg>
-                <svg class="text-brand-400" infoIcon lucidePackage></svg>
-
-                <div class="flex h-full flex-col justify-between gap-1.5">
-                  <div class="flex flex-1 items-center">
-                    <span
-                      class="font-display text-2xl leading-none font-bold text-brand-400 tabular-nums"
-                    >
-                      {{ colony.foodStockLabel() }}
-                    </span>
-                  </div>
-                  <span class="text-xs text-text-secondary">{{
-                    'colony.track.foodStock.caption' | translate
-                  }}</span>
-                </div>
-              </app-colony-card>
-
-              <app-colony-card
-                accentClass="border-t-brand-400"
-                class="lg:col-span-4"
-                [infoDescription]="'colony.track.consumption.description' | translate"
-                [infoPurpose]="'colony.track.consumption.purpose' | translate"
-                [isCompact]="true"
-                [title]="'colony.track.consumption.name' | translate"
-              >
-                <svg class="text-brand-400" icon lucideArrowDown></svg>
-                <svg class="text-brand-400" infoIcon lucideArrowDown></svg>
-
-                <div class="flex h-full flex-col justify-between gap-1.5">
-                  <div class="flex flex-1 items-center">
-                    <span
-                      class="font-display text-2xl leading-none font-bold text-brand-400 tabular-nums"
-                    >
-                      {{ colony.consumptionSignedLabel() }}
-                    </span>
-                  </div>
-                  <span class="text-xs text-text-secondary">{{
-                    'colony.track.consumption.caption' | translate
-                  }}</span>
-                </div>
-              </app-colony-card>
-
-              @if (colony.foodRing(); as ring) {
-                <app-colony-card
-                  accentClass="border-t-success"
-                  class="lg:col-span-4"
-                  [infoDescription]="'colony.track.surplus.description' | translate"
-                  [infoPurpose]="'colony.track.surplus.purpose' | translate"
-                  [isCompact]="true"
-                  [title]="'colony.track.surplus.name' | translate"
-                >
-                  <svg class="text-success" icon lucideTrendingUp></svg>
-                  <svg class="text-success" infoIcon lucideTrendingUp></svg>
-
-                  <div class="flex h-full flex-col justify-between gap-1.5">
-                    <div class="flex flex-1 items-center">
-                      <span
-                        class="font-display text-2xl leading-none font-bold text-success tabular-nums"
-                      >
-                        {{ ring.surplusLabel }}
-                      </span>
-                    </div>
-                    <span class="text-xs text-text-secondary">{{
-                      'colony.track.surplus.caption' | translate
-                    }}</span>
-                  </div>
-                </app-colony-card>
-              }
-
-              @if (colony.battery(); as battery) {
-                <app-colony-card
-                  accentClass="border-t-accent-cyan"
-                  class="lg:col-span-4"
-                  [infoDescription]="battery.description"
-                  [infoFormulaRows]="participationFormulaRows()"
-                  [infoPurpose]="battery.purpose"
-                  [isCompact]="true"
-                  [title]="'colony.track.presence.name' | translate"
-                >
-                  <svg class="text-accent-cyan" icon lucideUserCheck></svg>
-                  <svg class="text-accent-cyan" infoIcon lucideUserCheck></svg>
-
-                  <div class="flex h-full flex-col justify-between gap-1.5">
-                    <div class="flex flex-1 items-center">
-                      <span
-                        class="font-display text-2xl leading-none font-bold text-accent-cyan tabular-nums"
-                      >
-                        {{ battery.multiplierLabel }}
-                      </span>
-                    </div>
-                    <span class="text-xs text-text-secondary">{{
-                      'colony.track.presence.caption'
-                        | translate: { present: battery.presentCount, roster: battery.rosterSize }
-                    }}</span>
-                  </div>
-                </app-colony-card>
-              }
-
-              @if (colony.foodRing(); as ring) {
-                <app-colony-card
-                  accentClass="border-t-accent-pink"
-                  class="lg:col-span-4"
-                  [infoDescription]="'colony.track.efficiency.description' | translate"
-                  [infoPurpose]="'colony.track.efficiency.purpose' | translate"
-                  [isCompact]="true"
-                  [title]="'colony.track.efficiency.name' | translate"
-                >
-                  <svg class="text-accent-pink" icon lucideGauge></svg>
-                  <svg class="text-accent-pink" infoIcon lucideGauge></svg>
-
-                  <div class="flex h-full flex-col justify-between gap-1.5">
-                    <div class="flex flex-1 items-center">
-                      <span
-                        class="font-display text-2xl leading-none font-bold text-accent-pink tabular-nums"
-                      >
-                        {{ ring.efficiencyFactorLabel }}
-                      </span>
-                    </div>
-                    <span class="text-xs text-text-secondary">{{
-                      'colony.track.efficiency.caption' | translate
-                    }}</span>
-                  </div>
-                </app-colony-card>
-              }
-
-              @if (colony.attractivity(); as attractivity) {
-                <app-colony-card
-                  accentClass="border-t-accent-violet"
-                  class="lg:col-span-4"
-                  [infoDescription]="attractivity.description"
-                  [infoPurpose]="attractivity.purpose"
-                  [isCompact]="true"
-                  [title]="'colony.track.morale.name' | translate"
-                >
-                  <svg class="text-accent-violet" icon lucideMagnet></svg>
-                  <svg class="text-accent-violet" infoIcon lucideMagnet></svg>
-
-                  <div class="flex h-full flex-col justify-between gap-1.5">
-                    <div class="flex flex-1 items-center">
-                      <span
-                        class="font-display text-2xl leading-none font-bold text-accent-violet tabular-nums"
-                      >
-                        {{ attractivity.moraleLabel }}
-                      </span>
-                    </div>
-                    <span class="text-xs text-text-secondary">{{
-                      'colony.track.morale.caption' | translate
-                    }}</span>
-                  </div>
-                </app-colony-card>
-              }
-
-              @if (colony.delta(); as delta) {
-                <app-colony-card
-                  accentClass="border-t-success"
-                  class="lg:col-span-4"
-                  [infoDescription]="'colony.track.arrivals.description' | translate"
-                  [infoPurpose]="'colony.track.arrivals.purpose' | translate"
-                  [isCompact]="true"
-                  [title]="'colony.track.arrivals.name' | translate"
-                >
-                  <svg class="text-success" icon lucideUsers></svg>
-                  <svg [class]="deltaColorClass(delta)" infoIcon lucideUsers></svg>
-
-                  <div class="flex h-full flex-col justify-between gap-1.5">
-                    <div class="flex flex-1 items-center">
-                      <span
-                        [class]="deltaColorClass(delta)"
-                        class="font-display text-2xl leading-none font-bold tabular-nums"
-                      >
-                        {{ delta.label }}
-                      </span>
-                    </div>
-                    <span class="text-xs text-text-secondary">{{
-                      'colony.track.arrivals.caption' | translate
-                    }}</span>
-                  </div>
-                </app-colony-card>
-              }
+            <div class="flex h-full min-h-[6.125rem] flex-col">
+              <app-bar-chart
+                [ariaLabel]="'colony.track.food.weekTitle' | translate"
+                [bars]="foodWeekBars()"
+                class="flex-1"
+                heightClass="h-full w-full"
+                [showAllValues]="true"
+                [summary]="foodWeekSummary()"
+              />
             </div>
+          </app-colony-card>
+
+          <app-colony-card
+            accentClass="border-t-brand-400"
+            class="lg:col-span-3"
+            [infoDescription]="'colony.track.foodStock.description' | translate"
+            [infoPurpose]="'colony.track.foodStock.purpose' | translate"
+            [isCompact]="true"
+            [title]="'colony.track.foodStock.name' | translate"
+          >
+            <svg class="text-brand-400" icon lucidePackage></svg>
+            <svg class="text-brand-400" infoIcon lucidePackage></svg>
+
+            <div class="flex h-full flex-col justify-between gap-1.5">
+              <div class="flex flex-1 items-center">
+                <span
+                  class="font-display text-2xl leading-none font-bold text-brand-400 tabular-nums"
+                >
+                  {{ colony.foodStockLabel() }}
+                </span>
+              </div>
+              <span class="text-xs text-text-secondary">{{
+                'colony.track.foodStock.caption' | translate
+              }}</span>
+            </div>
+          </app-colony-card>
+
+          <app-colony-card
+            accentClass="border-t-brand-400"
+            class="lg:col-span-3"
+            [infoDescription]="'colony.track.consumption.description' | translate"
+            [infoPurpose]="'colony.track.consumption.purpose' | translate"
+            [isCompact]="true"
+            [title]="'colony.track.consumption.name' | translate"
+          >
+            <svg class="text-brand-400" icon lucideArrowDown></svg>
+            <svg class="text-brand-400" infoIcon lucideArrowDown></svg>
+
+            <div class="flex h-full flex-col justify-between gap-1.5">
+              <div class="flex flex-1 items-center">
+                <span
+                  class="font-display text-2xl leading-none font-bold text-brand-400 tabular-nums"
+                >
+                  {{ colony.consumptionSignedLabel() }}
+                </span>
+              </div>
+              <span class="text-xs text-text-secondary">{{
+                'colony.track.consumption.caption' | translate
+              }}</span>
+            </div>
+          </app-colony-card>
+
+          @if (colony.foodRing(); as ring) {
+            <app-colony-card
+              accentClass="border-t-success"
+              class="lg:col-span-3"
+              [infoDescription]="'colony.track.surplus.description' | translate"
+              [infoPurpose]="'colony.track.surplus.purpose' | translate"
+              [isCompact]="true"
+              [title]="'colony.track.surplus.name' | translate"
+            >
+              <svg class="text-success" icon lucideTrendingUp></svg>
+              <svg class="text-success" infoIcon lucideTrendingUp></svg>
+
+              <div class="flex h-full flex-col justify-between gap-1.5">
+                <div class="flex flex-1 items-center">
+                  <span
+                    class="font-display text-2xl leading-none font-bold text-success tabular-nums"
+                  >
+                    {{ ring.surplusLabel }}
+                  </span>
+                </div>
+                <span class="text-xs text-text-secondary">{{
+                  'colony.track.surplus.caption' | translate
+                }}</span>
+              </div>
+            </app-colony-card>
           }
 
-          <!-- Materials, the other figure the run's standing is read in: never behind the fold, so
-               the two answers to "where does the colony stand" (the climb above, this below) always
-               stand together. -->
+          <!-- Materials, the other half of the run's standing: what the colony has banked and
+                   what the next step still costs. Level two with the week's flow rather than behind
+                   the fold, because it is the only figure on this page a reader can act on. -->
           <app-colony-card
             accentClass="border-t-accent-gold"
-            class="lg:col-span-4"
+            class="lg:col-span-3"
             [infoDescription]="'colony.track.materials.description' | translate"
             [infoPurpose]="'colony.track.materials.purpose' | translate"
             [isCompact]="true"
@@ -668,6 +570,120 @@
               </span>
             </div>
           </app-colony-card>
+
+          <!-- Level three: the four modifiers. None of them is a state the colony is *in* — they
+               are rates the week is multiplied by, so they are sized and weighted below the figures
+               above rather than folded away behind a heading nobody opened. -->
+          @if (colony.battery(); as battery) {
+            <app-colony-card
+              accentClass="border-t-accent-cyan"
+              class="lg:col-span-5"
+              [infoDescription]="battery.description"
+              [infoFormulaRows]="participationFormulaRows()"
+              [infoPurpose]="battery.purpose"
+              [isCompact]="true"
+              [title]="'colony.track.presence.name' | translate"
+            >
+              <svg class="text-accent-cyan" icon lucideUserCheck></svg>
+              <svg class="text-accent-cyan" infoIcon lucideUserCheck></svg>
+
+              <div class="flex h-full flex-col justify-between gap-1.5">
+                <div class="flex flex-1 items-center">
+                  <span
+                    class="font-display text-2xl leading-none font-bold text-accent-cyan tabular-nums"
+                  >
+                    {{ battery.multiplierLabel }}
+                  </span>
+                </div>
+                <span class="text-xs text-text-secondary">{{
+                  'colony.track.presence.caption'
+                    | translate: { present: battery.presentCount, roster: battery.rosterSize }
+                }}</span>
+              </div>
+            </app-colony-card>
+          }
+
+          @if (colony.foodRing(); as ring) {
+            <app-colony-card
+              accentClass="border-t-accent-pink"
+              class="lg:col-span-5"
+              [infoDescription]="'colony.track.efficiency.description' | translate"
+              [infoPurpose]="'colony.track.efficiency.purpose' | translate"
+              [isCompact]="true"
+              [title]="'colony.track.efficiency.name' | translate"
+            >
+              <svg class="text-accent-pink" icon lucideGauge></svg>
+              <svg class="text-accent-pink" infoIcon lucideGauge></svg>
+
+              <div class="flex h-full flex-col justify-between gap-1.5">
+                <div class="flex flex-1 items-center">
+                  <span
+                    class="font-display text-2xl leading-none font-bold text-accent-pink tabular-nums"
+                  >
+                    {{ ring.efficiencyFactorLabel }}
+                  </span>
+                </div>
+                <span class="text-xs text-text-secondary">{{
+                  'colony.track.efficiency.caption' | translate
+                }}</span>
+              </div>
+            </app-colony-card>
+          }
+
+          @if (colony.attractivity(); as attractivity) {
+            <app-colony-card
+              accentClass="border-t-accent-violet"
+              class="lg:col-span-5"
+              [infoDescription]="attractivity.description"
+              [infoPurpose]="attractivity.purpose"
+              [isCompact]="true"
+              [title]="'colony.track.morale.name' | translate"
+            >
+              <svg class="text-accent-violet" icon lucideMagnet></svg>
+              <svg class="text-accent-violet" infoIcon lucideMagnet></svg>
+
+              <div class="flex h-full flex-col justify-between gap-1.5">
+                <div class="flex flex-1 items-center">
+                  <span
+                    class="font-display text-2xl leading-none font-bold text-accent-violet tabular-nums"
+                  >
+                    {{ attractivity.moraleLabel }}
+                  </span>
+                </div>
+                <span class="text-xs text-text-secondary">{{
+                  'colony.track.morale.caption' | translate
+                }}</span>
+              </div>
+            </app-colony-card>
+          }
+
+          @if (colony.delta(); as delta) {
+            <app-colony-card
+              accentClass="border-t-success"
+              class="lg:col-span-5"
+              [infoDescription]="'colony.track.arrivals.description' | translate"
+              [infoPurpose]="'colony.track.arrivals.purpose' | translate"
+              [isCompact]="true"
+              [title]="'colony.track.arrivals.name' | translate"
+            >
+              <svg class="text-success" icon lucideUsers></svg>
+              <svg [class]="deltaColorClass(delta)" infoIcon lucideUsers></svg>
+
+              <div class="flex h-full flex-col justify-between gap-1.5">
+                <div class="flex flex-1 items-center">
+                  <span
+                    [class]="deltaColorClass(delta)"
+                    class="font-display text-2xl leading-none font-bold tabular-nums"
+                  >
+                    {{ delta.label }}
+                  </span>
+                </div>
+                <span class="text-xs text-text-secondary">{{
+                  'colony.track.arrivals.caption' | translate
+                }}</span>
+              </div>
+            </app-colony-card>
+          }
         </div>
 
         <!-- Every campaign before this one, dates rather than a number — design-review.md lot 1's
@@ -705,7 +721,7 @@
                 } @else {
                   <a
                     [routerLink]="['/campaign/history', run.runNumber]"
-                    class="notch-tr focus-ring-inset grid grid-cols-[1fr_auto_auto] items-center gap-x-3.5 border-l-2 border-l-text-primary/15 bg-text-primary/4 px-4 py-3 transition-colors [--notch:0.625rem] hover:bg-text-primary/8 sm:grid-cols-[1fr_7rem_5.5rem]"
+                    class="notch-tr focus-ring-inset grid grid-cols-[1fr_auto_auto] items-center gap-x-3.5 border-l-2 border-l-edge row px-4 py-3 transition-colors [--notch:0.625rem] hover:bg-text-primary/8 sm:grid-cols-[1fr_7rem_5.5rem]"
                   >
                     <ng-container
                       [ngTemplateOutlet]="historyRow"
@@ -756,17 +772,4 @@
       }
     </div>
   </app-resource-state>
-
-  @if (selectedNode(); as node) {
-    <app-boss-detail
-      (closed)="closePanel()"
-      (next)="step(1)"
-      (previous)="step(-1)"
-      [colonyBoss]="selectedColonyBoss()"
-      [defeatMoraleLabel]="colony.defeatMoraleLabel()"
-      [hasNext]="hasNextNode()"
-      [hasPrevious]="hasPreviousNode()"
-      [node]="node"
-    />
-  }
 </div>

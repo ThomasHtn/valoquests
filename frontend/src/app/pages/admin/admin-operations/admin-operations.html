@@ -8,7 +8,7 @@
 
   <!-- State of the latest run. Sits above the commands because it answers the question that decides
      whether any of them should be triggered at all. -->
-  <div class="notch-tr notch-tr-edge bg-text-primary/4 p-5 [--notch:0.875rem]">
+  <div class="notch-tr notch-tr-edge panel p-5 [--notch:0.875rem]">
     <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
       <h2 class="tracking-label font-display text-base font-bold text-text-primary uppercase">
         {{ 'admin.operations.lastRun' | translate }}
@@ -132,7 +132,7 @@
   >
     <ul class="flex flex-col gap-2">
       @for (execution of historyRows(); track execution.id) {
-        <li class="notch-tr border border-text-primary/10 bg-text-primary/4 [--notch:0.625rem]">
+        <li class="notch-tr border border-edge panel [--notch:0.625rem]">
           <button
             (click)="toggleExecution(execution.id)"
             [attr.aria-expanded]="expandedExecutionId() === execution.id"
@@ -185,7 +185,7 @@
           </button>
 
           @if (expandedExecutionId() === execution.id) {
-            <div class="border-t border-text-primary/10 px-4 py-3">
+            <div class="border-t border-edge px-4 py-3">
               @if (execution.errorMessage) {
                 <app-inline-message class="mb-3" tone="danger">
                   {{ execution.errorMessage }}

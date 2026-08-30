@@ -70,6 +70,15 @@ const PRESENCE_FACE_CAP = 12;
 const MORALE_FOR_SURVIVING_BOSS = -7;
 
 /**
+ * What a full roster's turnout is worth, mirrored from `ColonyReplayEngine#presenceMultiplier`.
+ *
+ * A rule, not data: the engine returns `1 + min(1, present / rosterSize)`, so the ceiling is two
+ * whatever the roster size, and the API has no field to read it from. Named here rather than spelled
+ * into a template, the same way the morale a surviving boss costs is.
+ */
+const FULL_ROSTER_MULTIPLIER = 2;
+
+/**
  * Locales the weekday names of the food strip are resolved in.
  *
  * Only ever spoken, never drawn: the pills are too short to carry a letter, so the day each one
@@ -428,6 +437,7 @@ export class ColonyView {
     }
 
     return {
+      tier: current.name,
       glyph: tierGlyphFor(current),
       populationPercentage: this.populationPercentage(),
       progressPercentage: colony.tierProgressPercentage,
@@ -638,6 +648,7 @@ export class ColonyView {
       isFull,
       multiplierLabel: formatMultiplier(presence.multiplier, language),
       nextMultiplierLabel: isFull ? null : formatMultiplier(presence.nextMultiplier, language),
+      maxMultiplierLabel: formatMultiplier(FULL_ROSTER_MULTIPLIER, language),
       ariaLabel: this.translation.translate('colony.track.presence.aria', {
         present: presence.present,
         roster: presence.rosterSize,

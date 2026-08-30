@@ -1,87 +1,273 @@
 /*
  * Literal measurements and colors matching the validated mock-up's own CSS (design-review.md's
  * artifact, "La colonie") rather than the app's default Tailwind type scale, which does not carry
- * this page's specific sizes (a 56px population figure, 30px pips, hexagons sized 30×34 and
- * 26×30). Colors are spelled out rather than referenced through `var(--color-*)` — this file is a
- * component stylesheet, compiled outside the Tailwind theme context where those tokens resolve,
- * the same reason `landing.css` spells its own out. Keep in sync with `src/styles/colors.css`:
+ * this page's specific sizes. Colors are spelled out rather than referenced through `var(--color-*)`
+ * — this file is a component stylesheet, compiled outside the Tailwind theme context where those
+ * tokens resolve, the same reason `landing.css` spells its own out. Keep in sync with
+ * `src/styles/colors.css`:
  *   brand-500 #d9954a · brand-400 #e8ab6b · surface-sunken #0a151d · surface-700 #253645
  *   surface-600 #33495b · text-primary #ece8e1 · text-secondary #a4a7a6 · text-muted #868b8d
- *   accent-red #ff4655 · accent-cyan #2dd4bf · success #5fb88a · danger #d9534f
+ *   accent-red #ff4655 · accent-cyan #2dd4bf · accent-violet #8c6fdc
  */
 
-.colony-town {
-  background: linear-gradient(155deg, rgb(217 149 74 / 10%), #0a151d 60%);
-  border: 1px solid rgb(217 149 74 / 35%);
-  padding: 26px 28px 22px;
-}
-
-.town-tier-name {
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
-  color: #e8ab6b;
-}
-
-.town-pop {
-  font-size: 3.5rem;
-  line-height: 1;
-}
-
-.town-pop-unit {
-  font-size: 1.375rem;
-  color: #a4a7a6;
-}
-
-.town-delta {
-  font-size: 0.9375rem;
-  vertical-align: super;
-}
-
-.metric-block + .metric-block {
-  margin-top: 22px;
-  padding-top: 20px;
-  border-top: 1px solid #253645;
-}
-
-.metric-count {
-  font-size: 1.375rem;
-}
-
-.metric-count-unit {
-  color: #868b8d;
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.metric-mult {
-  font-size: 0.8125rem;
-  color: #e8ab6b;
-}
-
-.conclusion {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid #253645;
+/*
+ * The page breathes wider than `page-body`'s own rhythm: with the panels gone, the space between two
+ * blocks is the only thing left separating them, so it has to carry what a border used to.
+ */
+.overview-body {
+  gap: 2.5rem;
 }
 
 /*
- * Size and shape only — the fill comes from `face.fillClass` (`bg-accent-cyan`/`bg-accent-cyan/30`/
- * `bg-surface-700`), already the same values the mock-up's `.pip`/`.pip-partial`/`.pip-none` use.
- * Text color still has to follow which of the three that is: dark on the solid cyan fill, muted
- * everywhere else — the one thing `fillClass` does not also carry.
+ * The town block: a scene bleeding to all four edges. No inner padding around it — a sky with a 28px
+ * gutter around it is a picture of a sky, not a sky.
  */
-.pip {
-  width: 30px;
-  height: 30px;
+.colony-town {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(217 149 74 / 35%);
+  background: #0a151d;
+}
+
+.colony-town-scene {
+  display: block;
+}
+
+/*
+ * The population plate, laid on the quay. It used to sit under the scene, because a readout over the
+ * old dusk silhouette needed a scrim heavy enough to swallow the lower third of the buildings. The
+ * scene is daylight now, so a dark plate reads on it unaided and the frontage keeps its full height.
+ */
+.colony-town-plate {
+  --notch: 0.75rem;
+
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  z-index: 1;
+  padding: 11px 18px 13px;
+  background: rgb(15 28 38 / 90%);
+  border: 1px solid rgb(217 149 74 / 35%);
+  border-left: 2px solid #d9954a;
+}
+
+.colony-town-tier {
+  margin: 0 0 4px;
+  font-weight: 500;
+  font-size: 0.625rem;
+  font-family: var(--font-mono);
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #e8ab6b;
+}
+
+.colony-town-figure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 9px 16px;
+  margin: 0;
+}
+
+/*
+ * The run's own score, and the page's one loud number. Sized here rather than with the `text-figure`
+ * token: that one is scaled for a figure standing alone on a page, and at 88px it does not fit a
+ * plate laid on the scene.
+ */
+.colony-town-count {
+  font-weight: 700;
+  font-size: clamp(2.375rem, 5.4vw, 3.375rem);
+  line-height: 0.88;
+  letter-spacing: -0.02em;
+  color: #ece8e1;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Plain inline boxes, not flex ones: a flex container takes its baseline from its first item, and
+ * with the icon first that baseline was the icon's bottom edge, which sat the unit and the delta on
+ * two different lines beside the figure.
+ */
+.colony-town-unit {
+  font-weight: 500;
+  font-size: 0.9375rem;
   color: #a4a7a6;
 }
 
-.pip-lit {
-  color: #0f1c26;
+.colony-town-unit svg {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: -0.15em;
 }
 
-.pip-more {
-  background: transparent;
-  border: 1px dashed #33495b;
+.colony-town-delta {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.colony-town-delta small {
+  margin-left: 6px;
+  font-weight: 500;
+  font-size: 0.625rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   color: #868b8d;
+}
+
+/*
+ * On a phone the scene is short and the plate would cover the base of the buildings, so it moves up
+ * into the sky, which is the one part of the drawing that has nothing in it at any step.
+ */
+@media (width < 40rem) {
+  .colony-town-plate {
+    top: 10px;
+    right: 10px;
+    bottom: auto;
+    left: 10px;
+    padding: 10px 14px 11px;
+  }
+}
+
+/*
+ * The section rule: the page's one structural device. A title, a hairline fading to nothing, the way
+ * out, and a hollow diamond closing the run. It names a block without framing it, which is what
+ * replaced the stacked panels — and what keeps a block from reading as a card inside a card.
+ */
+.section-rule {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+/*
+ * Neutral, not amber: five gilded titles down a page spend the accent on naming things rather than
+ * on the one figure that matters. The rule's hairline and diamond keep the gold, which is enough to
+ * mark a section start.
+ */
+.section-rule-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  font-family: var(--font-display);
+  line-height: 1.2;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #a4a7a6;
+}
+
+.section-rule-line {
+  flex: 1 1 3rem;
+  height: 1px;
+  background: linear-gradient(to right, rgb(217 149 74 / 50%), transparent);
+}
+
+.section-rule-link {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #e8ab6b;
+  transition: color 0.15s ease;
+}
+
+/* Underlined on hover: the arrow says where it goes, the underline says it is a link. */
+.section-rule-link:hover {
+  color: #f0c493;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.section-rule-diamond {
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1px solid rgb(217 149 74 / 70%);
+  transform: rotate(45deg);
+}
+
+/*
+ * The economy: three flat cells, each carrying its resource's colour on the edge it stands on and
+ * nowhere else. No frame, no shadow, no radius — the same furniture as the profile's match rows.
+ */
+.eco {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.eco-cell {
+  min-width: 0;
+  padding: 12px 13px 11px;
+  background: rgb(236 232 225 / 4%);
+  border-bottom: 3px solid #33495b;
+}
+
+.eco-cell--food {
+  border-bottom-color: #e8ab6b;
+}
+
+.eco-cell--mat {
+  border-bottom-color: #2dd4bf;
+}
+
+.eco-cell--mor {
+  border-bottom-color: #8c6fdc;
+}
+
+.eco-l {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #868b8d;
+}
+
+.eco-l b {
+  overflow: hidden;
+  font-weight: inherit;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Three cells on a phone: the icon costs 18px, so the caption gives back its tracking rather than
+   truncating to "NOURRIT…". */
+@media (width < 35rem) {
+  .eco-l {
+    gap: 5px;
+    font-size: 0.5625rem;
+    letter-spacing: 0.08em;
+  }
+}
+
+.eco-v {
+  display: block;
+  margin-top: 8px;
+  font-weight: 700;
+  font-size: 1.4375rem;
+  font-family: var(--font-display);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.eco-s {
+  display: block;
+  margin-top: 7px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  color: #868b8d;
+  font-variant-numeric: tabular-nums;
+}
+
+.eco-chart {
+  padding: 14px 14px 6px;
+  background: rgb(236 232 225 / 4%);
 }

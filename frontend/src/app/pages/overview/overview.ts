@@ -1,7 +1,7 @@
-import { DecimalPipe } from '@angular/common';
 import { Component, computed, signal, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { LucideHammer, LucideMagnet, LucideUsers, LucideWheat } from '@lucide/angular';
 import { interval } from 'rxjs';
 
 import { ChallengesApi } from '@core/challenges/challenges-api';
@@ -9,40 +9,43 @@ import { ColonyView } from '@core/colony/colony-view';
 import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
 import { formatDateRange, isoWeekNumber, remainingWeekTime } from '@core/date/week-period.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
 import { PageHeader } from '@layout/page-header/page-header';
 import { BarChart } from '@shared/chart/bar-chart';
 import { ChartBar } from '@shared/chart/chart.model';
-import { BossFightCard } from '@shared/boss-fight-card/boss-fight-card';
-import { ProgressBar } from '@shared/progress-bar/progress-bar';
-import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { WeekSummary } from './overview.model';
+import { ConfrontationBand } from './confrontation-band/confrontation-band';
+import { LadderStrip } from './ladder-strip/ladder-strip';
 import { MiniRanking } from './mini-ranking/mini-ranking';
 import { TownSilhouette } from './town-silhouette/town-silhouette';
 
 /**
  * Accueil ("La colonie").
  *
- * Shown once inside the application shell (at `/overview`), it leads with the town — the objective
- * of the game, drawn as a growing silhouette (see `TownSilhouette`) rather than a number in a
- * hexagon — and answers the day's one question, "what does tonight's game bring the colony". The
- * week's own fight and the week's ranking each get a compact summary linking out to their full
- * page: the fight reuses `/week`'s own `BossFightCard`, minus its rewards aside, which only fits
- * the fight's full-width home. See design-review.md §3.1.
+ * Shown once inside the application shell (at `/overview`), it leads with the colony's waterfront —
+ * the objective of the game, drawn as a place that grows with the ladder (see `TownSilhouette`)
+ * rather than as a number in a hexagon. Under it the page stops being a stack of panels: the week is
+ * one confrontation band (squad, clock, threat), the colony's economy and the week's ranking sit
+ * side by side, and the ladder closes the page as the trail it is. Each block is named by a section
+ * rule rather than framed by a card, which is what ended the nested-panel stacking the page had
+ * grown. See design-review.md §3.1.
  */
 @Component({
   selector: 'app-overview',
   imports: [
     TranslatePipe,
     BarChart,
-    BossFightCard,
-    DecimalPipe,
+    ConfrontationBand,
+    LadderStrip,
+    LucideHammer,
+    LucideMagnet,
+    LucideUsers,
+    LucideWheat,
     MiniRanking,
     PageHeader,
-    ProgressBar,
     RouterLink,
     TownSilhouette,
-    WeekCountdown,
   ],
   templateUrl: './overview.html',
   styleUrl: './overview.css',
@@ -56,9 +59,11 @@ export class Overview {
 
   /**
    * Data-access service backing the shared current-challenges resource, which also carries the
-   * active week's boundaries used by the header's countdown.
+   * active week's boundaries used by the confrontation band's clock.
    */
   private readonly challengesApi = inject(ChallengesApi);
+
+  private readonly translation = inject(Translation);
 
   /**
    * Current time, refreshed periodically to keep the countdown display accurate.
@@ -66,8 +71,8 @@ export class Overview {
   private readonly now = signal(new Date());
 
   /**
-   * Active week's remaining time, or `null` while loading — the header countdown's only input now
-   * that the eyebrow reads the campaign's own week count instead (see {@link ColonyView.eyebrow}).
+   * Active week's number and remaining time. The page owns the ticker for both the section rule's
+   * week number and the band's clock, so one interval serves the whole screen.
    */
   protected readonly week = computed<WeekSummary | null>(() => {
     const currentChallenges = this.challengesApi.current;
@@ -85,20 +90,28 @@ export class Overview {
   });
 
   /**
-   * The town's own step, for the headline caption above the population figure.
+   * Where the week sits in the run, `1 / 10`.
+   *
+   * The section used to be titled with the ISO week number, which read as "la semaine 35" right
+   * under an eyebrow saying "semaine 1 sur 10" — two different numbers for the same week. The run's
+   * own count is the one the whole page is scored on.
+   */
+  protected readonly runWeek = computed<{ index: number; count: number } | null>(() => {
+    const colony = this.colony.colony();
+
+    return colony === null ? null : { index: colony.runWeekIndex, count: colony.runWeekCount };
+  });
+
+  /**
+   * The colony's own step, for the caption above the population figure.
    */
   protected readonly currentTier = computed(() =>
     this.colony.ladder().find((tier) => tier.state === 'CURRENT'),
   );
 
   /**
-   * The step the town is climbing towards, for the "prochain palier" row beside the silhouette.
-   */
-  protected readonly nextTier = computed(() => this.colony.ladder().find((tier) => tier.isNext));
-
-  /**
-   * The food window's `foodWindowDays` days, one bar each — today highlighted, days not yet lived
-   * drawn recessive. Mirrors `Campaign`'s own food-this-week histogram.
+   * The food window's days, one bar each — today highlighted, days not yet lived drawn recessive.
+   * Mirrors `Campaign`'s own food-this-week histogram.
    */
   protected readonly foodWeekBars = computed<readonly ChartBar[]>(() =>
     this.colony.foodDays().map((day) => ({
@@ -121,6 +134,22 @@ export class Overview {
       .map((day) => day.ariaLabel)
       .join(', '),
   );
+
+  /**
+   * How long the harvest keeps and what today has brought in — the food cell's own second line.
+   *
+   * The window's length is read from the days the colony actually returned rather than written into
+   * the sentence: `foodWindowDays` is the backend's rule, not this page's.
+   */
+  protected readonly foodWindowCaption = computed<string>(() => {
+    const days = this.colony.foodDays();
+    const today = days.find((day) => day.isToday);
+
+    return this.translation.translate('overview.economy.foodWindow', {
+      days: days.length,
+      today: today?.harvestLabel ?? '0',
+    });
+  });
 
   /**
    * Refreshes {@link now} every minute so the countdown stays accurate for the lifetime of the

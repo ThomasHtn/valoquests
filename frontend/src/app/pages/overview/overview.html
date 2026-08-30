@@ -1,178 +1,177 @@
-<!-- Context bar: the campaign's own week count on the caption line (see `ColonyView.eyebrow`), "La
-     colonie" as the title, and the countdown at the trailing edge. -->
-<app-page-header [eyebrow]="colony.eyebrow()" [heading]="'overview.header.title' | translate">
-  <app-week-countdown [remaining]="week()?.remaining ?? null" />
-</app-page-header>
+<!-- Context bar: the campaign's own week count on the caption line (see `ColonyView.eyebrow`) and
+     "La colonie" as the title. No countdown here — the confrontation band below carries the clock
+     as the thing the two camps meet over, and the same figure twice on one screen is one too many. -->
+<app-page-header [eyebrow]="colony.eyebrow()" [heading]="'overview.header.title' | translate" />
 
-<div class="page-body">
-  <!-- Bloc 1 — the town, the page's one signature element. Everything under it is read against
-       it: the day and the week are both what tonight adds to this. -->
+<div class="page-body overview-body">
+  <!-- Bloc 1 — the colony's waterfront, the page's one signature element. Everything under it is
+       read against it: the day and the week are both what tonight adds to this. -->
   @if (colony.town(); as town) {
-    <section class="colony-town">
-      <div class="flex flex-wrap items-end justify-between gap-x-7 gap-y-4">
-        <div>
-          <p class="town-tier-name font-mono uppercase">{{ currentTier()?.name ?? '' }}</p>
-          <p class="town-pop font-display font-bold text-text-primary">
-            {{ colony.populationLabel() }}
-            <span class="town-pop-unit ml-2 font-semibold">
+    <!-- The scene is the block, not an illustration under a row of figures: it bleeds to the
+         panel's four edges and the figures stand on the ground it ends on.
+
+         `shrink-0` because `page-body` is a flex column: without it the scene is the tallest child
+         and therefore the first one the column compresses, which cut the readout in half. -->
+    <!-- The frame lives on an inner element: `page-body` puts its gutter on each block it holds, so
+         a border on the block itself would sit outside that gutter with the scene inset inside it. -->
+    <section class="shrink-0">
+      <div class="colony-town">
+        <app-town-silhouette
+          class="colony-town-scene"
+          [moralePercentage]="colony.attractivity()?.percentage ?? 50"
+          [tier]="town.tier"
+        />
+
+        <!-- The readout sits on the scene rather than under it: a dark plate on a daylight sky
+             needs no scrim to be legible, so the frontage keeps its full height. -->
+        <div class="colony-town-plate notch-tr">
+          <p class="colony-town-tier">
+            {{ 'overview.town.tier' | translate: { name: currentTier()?.name ?? '' } }}
+          </p>
+          <p class="colony-town-figure">
+            <span class="colony-town-count font-display">{{ colony.populationLabel() }}</span>
+            <span class="colony-town-unit font-display">
+              <svg class="size-4 shrink-0" lucideUsers></svg>
               {{ 'colony.population' | translate }}
             </span>
             @if (colony.delta(); as delta) {
               <span
-                class="town-delta font-display ml-1.5 font-bold"
+                class="colony-town-delta font-display"
                 [class.text-success]="delta.isPositive"
                 [class.text-text-muted]="!delta.isPositive && !delta.isNegative"
                 [class.text-danger]="delta.isNegative"
               >
                 {{ delta.label }}
+                <small>{{ 'overview.town.today' | translate }}</small>
               </span>
             }
           </p>
         </div>
-
-        @if (nextTier(); as next) {
-          <div class="min-w-65 flex-1 sm:max-w-90">
-            <div class="mb-1.5 flex justify-between text-[0.8125rem] text-text-secondary">
-              <span>{{ 'colony.ladder.title' | translate }}</span>
-              <span class="font-semibold text-text-primary">{{ next.name }}</span>
-            </div>
-            <app-progress-bar
-              [colorClass]="'bg-brand-500'"
-              [percentage]="town.progressPercentage"
-              heightClass="h-[9px]"
-            />
-            <div class="mt-1.5 flex justify-between text-2xs text-text-muted">
-              <span>{{ next.missingMaterialsLabel }} {{ 'colony.ladder.unit' | translate }}</span>
-              <span>{{ town.progressPercentage | number: '1.0-0' }} %</span>
-            </div>
-          </div>
-        }
       </div>
-
-      <app-town-silhouette
-        class="mt-5 block"
-        [glyph]="town.glyph"
-        [populationPercentage]="town.populationPercentage"
-        [progressPercentage]="town.progressPercentage"
-      />
     </section>
   }
 
-  <div class="grid gap-6 lg:grid-cols-2 lg:gap-x-12">
-    <!-- Bloc 2 — the day, the page's one prescriptive block: what tonight's game is worth. -->
-    <section class="flex flex-col">
-      <div class="flex items-center gap-3">
-        <h2
-          class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
-        >
-          {{ 'overview.dayBlock.title' | translate }}
+  <!-- Bloc 2 — the week, read as the confrontation it is. -->
+  <section aria-labelledby="week-title" class="flex flex-col gap-3">
+    <div class="section-rule">
+      <h2 class="section-rule-title" id="week-title">
+        {{
+          'overview.weekSummary.title'
+            | translate: { week: runWeek()?.index ?? '—', weeks: runWeek()?.count ?? '—' }
+        }}
+      </h2>
+      <span aria-hidden="true" class="section-rule-line"></span>
+      <a [routerLink]="'/week'" class="section-rule-link focus-ring">
+        {{ 'overview.weekSummary.link' | translate }}
+        <span aria-hidden="true">→</span>
+      </a>
+      <span aria-hidden="true" class="section-rule-diamond"></span>
+    </div>
+
+    <app-confrontation-band [remaining]="week()?.remaining ?? null" />
+  </section>
+
+  <!-- Blocs 3 & 4 — what the colony runs on, and who is bringing it in. Side by side because they
+       are the two halves of the same evening: the harvest, and who harvested it. The two columns
+       stretch to the taller of them and the ranking's three rows share the height, so the row ends
+       level with the harvest chart instead of leaving a hole under it. -->
+  <div class="grid gap-4 lg:grid-cols-2 lg:gap-x-6">
+    <section aria-labelledby="economy-title" class="flex flex-col gap-3">
+      <div class="section-rule">
+        <h2 class="section-rule-title" id="economy-title">
+          {{ 'overview.economy.title' | translate }}
         </h2>
-        <span
-          aria-hidden="true"
-          class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
-        ></span>
-        <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
+        <span aria-hidden="true" class="section-rule-line"></span>
+        <a [routerLink]="'/campaign'" class="section-rule-link focus-ring">
+          {{ 'overview.populationTile.link' | translate }}
+          <span aria-hidden="true">→</span>
+        </a>
+        <span aria-hidden="true" class="section-rule-diamond"></span>
       </div>
 
-      @if (colony.battery(); as battery) {
-        <div class="metric-block">
-          <p class="label-caption mb-2 text-text-muted">
-            {{ 'colony.track.presence.name' | translate }}
-          </p>
-          <div class="mb-2 flex items-baseline justify-between">
-            <span class="metric-count font-display font-bold text-text-primary tabular-nums">
-              {{ battery.presentCount
-              }}<span class="metric-count-unit">/{{ battery.rosterSize }}</span>
-            </span>
-            <span class="metric-mult font-mono">{{ battery.multiplierLabel }}</span>
-          </div>
-          <app-progress-bar
-            [colorClass]="'bg-brand-500'"
-            [live]="true"
-            [percentage]="battery.presentPercentage"
-            [targetMarker]="battery.nextStepPercentage"
-            heightClass="h-[14px]"
-          />
-
-          @if (colony.presenceFaces(); as faces) {
-            <div class="mt-3.5 flex flex-wrap gap-2">
-              @for (face of faces.visible; track face.playerId) {
-                <span
-                  [class]="face.fillClass"
-                  [class.pip-lit]="face.state === 'FULL'"
-                  [title]="face.ariaLabel"
-                  class="pip font-mono flex items-center justify-center rounded-full text-2xs font-semibold"
-                >
-                  {{ face.initials.slice(0, 1) }}
-                </span>
-              }
-              @if (faces.overflowCount > 0) {
-                <span
-                  class="pip pip-more font-mono flex items-center justify-center rounded-full text-2xs font-semibold"
-                >
-                  +{{ faces.overflowCount }}
-                </span>
-              }
-            </div>
-          }
+      <!-- Three resources, each named by its own icon in its own colour — the same mapping
+           `/campaign` uses: wheat for food, hammer for materials, magnet for morale. -->
+      <div class="eco">
+        <div class="eco-cell eco-cell--food">
+          <span class="eco-l">
+            <svg class="size-3 shrink-0 text-brand-400" lucideWheat></svg>
+            <b>{{ 'colony.track.food.name' | translate }}</b>
+          </span>
+          <span class="eco-v text-brand-400">{{ colony.foodStockLabel() }}</span>
+          <span class="eco-s">{{ foodWindowCaption() }}</span>
         </div>
 
-        @if (colony.foodRing()) {
-          <div class="metric-block">
-            <p class="label-caption mb-2 text-text-muted">
-              {{ 'colony.track.food.weekTitle' | translate }}
-            </p>
-            <app-bar-chart
-              [ariaLabel]="'colony.track.food.weekTitle' | translate"
-              [bars]="foodWeekBars()"
-              [showAllValues]="true"
-              [summary]="foodWeekSummary()"
-              heightClass="h-28 w-full"
-            />
-          </div>
-        }
-
-        @if (!battery.isFull && battery.nextMultiplierLabel) {
-          <p class="conclusion text-[0.9375rem] text-text-secondary">
+        <div class="eco-cell eco-cell--mat">
+          <span class="eco-l">
+            <svg class="size-3 shrink-0 text-accent-cyan" lucideHammer></svg>
+            <b>{{ 'colony.track.materials.name' | translate }}</b>
+          </span>
+          <span class="eco-v text-accent-cyan">{{ colony.materialsLabel() }}</span>
+          <span class="eco-s">
             {{
-              'colony.track.presence.nextMultiplier'
-                | translate: { multiplier: battery.nextMultiplierLabel }
+              'overview.economy.beforeTier'
+                | translate
+                  : { materials: colony.nextTierMaterialsLabel(), tier: colony.nextTierNameLabel() }
             }}
-          </p>
-        }
+          </span>
+        </div>
+
+        <div class="eco-cell eco-cell--mor">
+          <span class="eco-l">
+            <svg class="size-3 shrink-0 text-accent-violet" lucideMagnet></svg>
+            <b>{{ 'colony.track.morale.name' | translate }}</b>
+          </span>
+          <span class="eco-v text-accent-violet">
+            {{ colony.attractivity()?.moraleValueLabel ?? '—' }}
+          </span>
+          <span class="eco-s">{{ 'colony.track.morale.caption' | translate }}</span>
+        </div>
+      </div>
+
+      @if (colony.foodRing()) {
+        <div class="eco-chart">
+          <app-bar-chart
+            [ariaLabel]="'colony.track.food.weekTitle' | translate"
+            [bars]="foodWeekBars()"
+            [showAllValues]="true"
+            [summary]="foodWeekSummary()"
+            heightClass="h-28 w-full"
+          />
+        </div>
       }
     </section>
 
-    <!-- Blocs 3 & 4 — the week's fight and the ranking, each a summary linking to its own page.
-         The fight reuses `/week`'s own hero card, sized to this half column: no rewards aside,
-         which only fits the fight's full-width home. -->
-    <div class="flex flex-col gap-6">
-      <section class="flex flex-col">
-        <div class="flex items-center gap-3">
-          <h2
-            class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
-          >
-            {{ 'overview.weekSummary.title' | translate: { week: week()?.number ?? '—' } }}
-          </h2>
-          <span
-            aria-hidden="true"
-            class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
-          ></span>
-          <a
-            [routerLink]="'/week'"
-            class="label-caption shrink-0 text-brand-400 transition-colors hover:text-brand-300"
-          >
-            {{ 'overview.weekSummary.link' | translate }}
-            <span aria-hidden="true">→</span>
-          </a>
-        </div>
-
-        <div class="mt-3">
-          <app-boss-fight-card [showRewards]="false" />
-        </div>
-      </section>
+    <section aria-labelledby="ranking-title" class="flex min-h-0 flex-col gap-3">
+      <div class="section-rule">
+        <h2 class="section-rule-title" id="ranking-title">
+          {{ 'overview.miniRanking.title' | translate }}
+        </h2>
+        <span aria-hidden="true" class="section-rule-line"></span>
+        <a [routerLink]="'/leaderboard'" class="section-rule-link focus-ring">
+          {{ 'overview.miniRanking.link' | translate }}
+          <span aria-hidden="true">→</span>
+        </a>
+        <span aria-hidden="true" class="section-rule-diamond"></span>
+      </div>
 
       <app-mini-ranking />
-    </div>
+    </section>
   </div>
+
+  <!-- Bloc 5 — where the colony stands on its own ladder, and what the next step still costs. -->
+  <section aria-labelledby="ladder-title" class="flex flex-col gap-3">
+    <div class="section-rule">
+      <h2 class="section-rule-title" id="ladder-title">
+        {{ 'colony.ladder.title' | translate }}
+      </h2>
+      <span aria-hidden="true" class="section-rule-line"></span>
+      <a [routerLink]="'/campaign'" class="section-rule-link focus-ring">
+        {{ 'overview.populationTile.link' | translate }}
+        <span aria-hidden="true">→</span>
+      </a>
+      <span aria-hidden="true" class="section-rule-diamond"></span>
+    </div>
+
+    <app-ladder-strip />
+  </section>
 </div>

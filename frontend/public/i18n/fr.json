@@ -236,10 +236,12 @@
       "damage": "Dégâts",
       "fullRanking": "Voir le classement complet de cette semaine",
       "next": "Semaine suivante",
+      "noRanking": "Aucun classement pour cette semaine.",
       "portrait": "Portrait du boss",
       "previous": "Semaine précédente",
       "quests": "Défis",
       "ranking": "Classement",
+      "top3": "Top 3 de la semaine",
       "weakPoints": "Ses points faibles",
       "weakPointsLink": "Voir les défis"
     },
@@ -260,7 +262,7 @@
   "campaign": {
     "error": "Impossible de charger la campagne.",
     "frieze": {
-      "hint": "Touchez un nœud pour voir le détail de sa semaine — issue, récompenses, classement"
+      "hint": "Touchez une menace pour déplier sa semaine ici — PV restants, récompenses, top 3"
     },
     "heading": "La campagne de l'escouade",
     "legend": {
@@ -312,9 +314,6 @@
       "milestone": "{{tier}} · J{{day}}"
     },
     "delta": "aujourd'hui",
-    "detail": {
-      "title": "Le détail de l'économie"
-    },
     "eyebrow": "Campagne · Semaine {{week}} sur {{weeks}}",
     "history": {
       "title": "Les campagnes",
@@ -465,13 +464,32 @@
       "weakPoints": "Ses points faibles",
       "weakPointsLink": "Voir les défis"
     },
-    "dayBlock": {
-      "title": "La journée"
+    "confrontation": {
+      "squad": "Escouade",
+      "threat": "Menace",
+      "online": "{{present}} / {{roster}} en ligne",
+      "cleared": "{{cleared}}/{{total}} défis validés · rendement {{multiplier}} / {{max}}"
+    },
+    "economy": {
+      "title": "Économie de la colonie",
+      "foodWindow": "{{days}} jours · +{{today}} aujourd'hui",
+      "beforeTier": "{{materials}} avant {{tier}}"
     },
     "header": {
       "timeLabel": "Temps restant",
       "timeRemaining": "{{days}}j {{hours}}h",
       "title": "La colonie"
+    },
+    "ladderStrip": {
+      "remaining": "· reste {{materials}} matériaux avant {{tier}}"
+    },
+    "miniRanking": {
+      "damageUnit": "dégâts",
+      "empty": "Personne n'a encore joué cette semaine.",
+      "error": "Impossible de charger le classement.",
+      "link": "Voir le classement",
+      "loading": "Chargement du classement…",
+      "title": "Classement"
     },
     "podium": {
       "hint": "Le podium de la semaine, classé sur les dégâts cumulés. Cliquer sur un joueur ouvre son profil.",
@@ -497,17 +515,14 @@
       "progressLabel": "Progression collective",
       "rowPlayers": "Joueurs"
     },
-    "miniRanking": {
-      "empty": "Personne n'a encore joué cette semaine.",
-      "error": "Impossible de charger le classement.",
-      "link": "Voir le classement",
-      "loading": "Chargement du classement…",
-      "title": "Classement"
-    },
     "title": "La colonie",
+    "town": {
+      "tier": "Palier · {{name}}",
+      "today": "aujourd'hui"
+    },
     "weekSummary": {
       "link": "Voir la semaine",
-      "title": "La semaine {{week}}"
+      "title": "Semaine {{week}} / {{weeks}}"
     },
     "weeklyChallenges": {
       "damageDestination": "Boss et classement",
@@ -555,11 +570,19 @@
       "champion": "Champion",
       "columns": {
         "activeDays": "Jours joués",
-        "bonusDamage": "Dégâts bonus",
+        "bonusDamage": "Bonus",
         "challengesCleared": "Défis validés",
         "damage": "Dégâts",
         "materials": "Matériaux",
         "player": "Joueur"
+      },
+      "columnHelp": {
+        "activeDays": "Nombre de jours distincts de la semaine où au moins une partie comptabilisée a été jouée. C'est cette valeur qui fixe le bonus de régularité.",
+        "bonusDamage": "Part du total venant des deux bonus, déjà comprise dans la colonne Dégâts. Régularité : jusqu'à 6 000 pour sept jours joués, à partir de deux. Escouade : +10 % des dégâts d'un défi par joueur supplémentaire l'ayant validé, plafonné à +50 %.",
+        "challengesCleared": "Nombre de défis de la semaine validés, sur les cinq tirés le lundi.",
+        "damage": "Total de la semaine, et la valeur sur laquelle le classement est trié : dégâts des matchs après le dégressif de la journée, plus les dégâts des défis validés, plus les bonus.",
+        "materials": "Matériaux versés à la colonie par les défis déjà validés cette semaine. Ils augmentent l'efficacité de la ville, définitivement.",
+        "player": "Chaque ligne mène au profil du joueur. Les joueurs hors campagne sont regroupés en bas : ils valident des défis mais n'occupent pas de place au classement."
       },
       "completed": "Défi terminé",
       "empty": "Aucun classement n'est disponible cette semaine.",

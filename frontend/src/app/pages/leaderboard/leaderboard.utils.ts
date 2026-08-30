@@ -63,6 +63,30 @@ export function buildCurrentValueLabel(
 }
 
 /**
+ * Builds the abbreviated form of the same value, e.g. `"128 k"` — what a challenge ring falls back
+ * to when the grouped figure is wider than the ring can hold.
+ *
+ * A second label rather than a replacement: the exact value still has to reach assistive
+ * technology, and every layout wider than a 44px ring keeps showing it in full.
+ *
+ * @param progress - The player's progress toward the challenge, or `undefined` if not started.
+ * @param language - The app language whose separators and unit suffix to use.
+ * @returns The abbreviated current value.
+ */
+export function buildCompactValueLabel(
+  progress: RankingChallengeProgress | undefined,
+  language: 'fr' | 'en',
+): string {
+  // Compact notation's own rounding, with no `maximumFractionDigits` of ours over it: it already
+  // spends a decimal only where one carries information (`1,3 M`, but `128 k`), and pinning the
+  // digits either forces one onto every value — `128,5 k`, wider than the figure it replaces — or
+  // strips the one place a single-digit magnitude has left.
+  return new Intl.NumberFormat(language === 'fr' ? 'fr-FR' : 'en-US', {
+    notation: 'compact',
+  }).format(progress?.currentValue ?? 0);
+}
+
+/**
  * Builds the target value label for a challenge progress cell, e.g. `"100"`.
  *
  * @param progress - The player's progress toward the challenge, or `undefined` if not started.
@@ -125,6 +149,7 @@ export function resolveRankingCells(
       name: column.name,
       categoryLabel: column.categoryLabel,
       currentValueLabel: buildCurrentValueLabel(match, language),
+      compactValueLabel: buildCompactValueLabel(match, language),
       targetValueLabel: buildTargetValueLabel(match, language),
       completionPercentage: computeCompletionPercentage(match),
       completed: match?.completed ?? false,

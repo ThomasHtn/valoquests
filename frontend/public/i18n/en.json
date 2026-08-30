@@ -236,10 +236,12 @@
       "damage": "Damage",
       "fullRanking": "See this week's full ranking",
       "next": "Next week",
+      "noRanking": "No ranking for this week.",
       "portrait": "Boss portrait",
       "previous": "Previous week",
       "quests": "Challenges",
       "ranking": "Ranking",
+      "top3": "Week's top 3",
       "weakPoints": "Its weak points",
       "weakPointsLink": "See the challenges"
     },
@@ -260,7 +262,7 @@
   "campaign": {
     "error": "Could not load the campaign.",
     "frieze": {
-      "hint": "Tap a node to see its week's detail — outcome, rewards, ranking"
+      "hint": "Tap a threat to unfold its week here — HP left, rewards, top 3"
     },
     "heading": "The squad's campaign",
     "legend": {
@@ -312,9 +314,6 @@
       "milestone": "{{tier}} · D{{day}}"
     },
     "delta": "today",
-    "detail": {
-      "title": "The economy detail"
-    },
     "eyebrow": "Campaign · Week {{week}} of {{weeks}}",
     "history": {
       "title": "The campaigns",
@@ -465,13 +464,32 @@
       "weakPoints": "Its weak points",
       "weakPointsLink": "See the challenges"
     },
-    "dayBlock": {
-      "title": "The day"
+    "confrontation": {
+      "squad": "Squad",
+      "threat": "Threat",
+      "online": "{{present}} / {{roster}} online",
+      "cleared": "{{cleared}}/{{total}} challenges cleared · yield {{multiplier}} / {{max}}"
+    },
+    "economy": {
+      "title": "Colony economy",
+      "foodWindow": "{{days}} days · +{{today}} today",
+      "beforeTier": "{{materials}} before {{tier}}"
     },
     "header": {
       "timeLabel": "Time remaining",
       "timeRemaining": "{{days}}d {{hours}}h",
       "title": "The colony"
+    },
+    "ladderStrip": {
+      "remaining": "· {{materials}} materials left before {{tier}}"
+    },
+    "miniRanking": {
+      "damageUnit": "damage",
+      "empty": "Nobody has played yet this week.",
+      "error": "Unable to load the ranking.",
+      "link": "See the ranking",
+      "loading": "Loading the ranking…",
+      "title": "Ranking"
     },
     "podium": {
       "hint": "The week's podium, ranked on total damage. Clicking a player opens their profile.",
@@ -497,17 +515,14 @@
       "progressLabel": "Collective progress",
       "rowPlayers": "Players"
     },
-    "miniRanking": {
-      "empty": "Nobody has played yet this week.",
-      "error": "Unable to load the ranking.",
-      "link": "See the ranking",
-      "loading": "Loading the ranking…",
-      "title": "Ranking"
-    },
     "title": "The colony",
+    "town": {
+      "tier": "Tier · {{name}}",
+      "today": "today"
+    },
     "weekSummary": {
       "link": "See the week",
-      "title": "Week {{week}}"
+      "title": "Week {{week}} / {{weeks}}"
     },
     "weeklyChallenges": {
       "damageDestination": "Boss and ranking",
@@ -555,11 +570,19 @@
       "champion": "Champion",
       "columns": {
         "activeDays": "Days played",
-        "bonusDamage": "Bonus damage",
+        "bonusDamage": "Bonus",
         "challengesCleared": "Challenges cleared",
         "damage": "Damage",
         "materials": "Materials",
         "player": "Player"
+      },
+      "columnHelp": {
+        "activeDays": "Distinct days of the week with at least one counted match. This is what sets the regularity bonus.",
+        "bonusDamage": "The share of the total that came from the two bonuses, already included in the Damage column. Regularity: up to 6,000 for seven days played, starting from two. Squad: +10% of a challenge's damage per extra player who cleared it, capped at +50%.",
+        "challengesCleared": "How many of the week's challenges were cleared, out of the five drawn on Monday.",
+        "damage": "The week's total, and the value the ranking is ordered on: match damage after the day's diminishing returns, plus cleared challenge damage, plus bonuses.",
+        "materials": "Materials banked for the colony by the challenges cleared so far this week. They raise the town's efficiency, for good.",
+        "player": "Every row links to the player's profile. Out-of-campaign players are grouped at the bottom: they still clear challenges but never take a ranking slot."
       },
       "completed": "Challenge completed",
       "empty": "No ranking is available this week.",

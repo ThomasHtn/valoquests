@@ -1,0 +1,91 @@
+<!-- Two camps meeting over a clock. The plate in the middle is cut on the slant so the band reads
+     as a confrontation rather than as three tiles in a row. -->
+<div class="versus">
+  <div class="vs-side vs-side--ally">
+    <span class="vs-tag">
+      <svg class="size-3.5 shrink-0" lucideUsers></svg>
+      {{ 'overview.confrontation.squad' | translate }}
+    </span>
+
+    @if (colony.battery(); as battery) {
+      <p class="vs-name">
+        {{
+          'overview.confrontation.online'
+            | translate: { present: battery.presentCount, roster: battery.rosterSize }
+        }}
+      </p>
+
+      <!-- One pip per challenge of the week, lit as the squad clears them: the same five slots the
+           weak points opposite are drawn from, read from our side. -->
+      <div class="pips">
+        @for (cleared of clearedFlags(); track $index) {
+          <span [class.pip-round--on]="cleared" class="pip-round"></span>
+        }
+      </div>
+
+      <span class="vs-sub">
+        {{
+          'overview.confrontation.cleared'
+            | translate
+              : {
+                  cleared: clearedCount(),
+                  total: challengeCount(),
+                  multiplier: battery.multiplierLabel,
+                  max: battery.maxMultiplierLabel,
+                }
+        }}
+      </span>
+    }
+  </div>
+
+  <div class="vs-core">
+    @if (remaining(); as remaining) {
+      <p class="vs-clock">
+        {{
+          'overview.header.timeRemaining'
+            | translate: { days: remaining.days, hours: remaining.hours }
+        }}
+      </p>
+    }
+    <span class="vs-clocklbl">{{ 'overview.header.timeLabel' | translate }}</span>
+  </div>
+
+  <div class="vs-side vs-side--foe">
+    <span class="vs-tag">
+      <svg class="size-3.5 shrink-0" lucideSkull></svg>
+      {{ 'overview.confrontation.threat' | translate }}
+      @if (categoryKey()) {
+        <span class="vs-cat">· {{ categoryKey() | translate }}</span>
+      }
+    </span>
+
+    @if (boss(); as boss) {
+      <p class="vs-name">{{ boss.boss.name }}</p>
+
+      <!-- The count reads first and the bar draws it underneath, the way a health bar sits under a
+           name in the game itself. Side by side, the two competed for the same line. -->
+      <div class="vs-hp">
+        <span class="vs-hpv">
+          {{ remainingHpLabel() }}
+          <small
+            >/ {{ effectiveHpLabel() }} {{ 'overview.bossEncounter.hpUnit' | translate }}</small
+          >
+        </span>
+        <span class="hp">
+          <span [style.width.%]="remainingPercentage()" class="hp-fill"></span>
+          <span class="hp-grad" aria-hidden="true">
+            @for (segment of [1, 2, 3, 4]; track segment) {
+              <span></span>
+            }
+          </span>
+        </span>
+      </div>
+
+      @if (defeated()) {
+        <span class="vs-sub text-success">
+          {{ 'overview.bossEncounter.defeated' | translate }}
+        </span>
+      }
+    }
+  </div>
+</div>

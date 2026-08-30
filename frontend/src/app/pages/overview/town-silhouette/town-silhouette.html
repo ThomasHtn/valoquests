@@ -1,19 +1,90 @@
-<div class="town-silhouette relative pt-2.5">
-  <div aria-hidden="true" class="town-skyline relative flex items-end gap-2.5 px-1">
-    @for (building of buildings(); track $index) {
-      <div
-        [class]="'town-building town-building--' + building.roof"
-        [style.height.px]="building.heightPx"
-      >
-        @if (building.hasScaffold) {
-          <div class="town-scaffold" [style.height.%]="scaffoldPercentage()"></div>
-        }
-        <div class="town-windows">
-          @for (slot of windowSlots; track slot) {
-            <span class="town-window" [class.town-window--lit]="slot < building.litWindows"></span>
+<!-- One scene, painted back to front: sky, the city held back by haze, the terraces, the frontage
+     and its street, then the water and whatever crosses it.
+
+     `xMidYMax meet` keeps the ground line pinned to the bottom of the panel at every width. Every
+     full-bleed band is drawn far past the viewBox, and SVG clips to the viewport rather than to the
+     viewBox, so the water and the bridge reach the panel's edges without a second drawing. -->
+<svg
+  [attr.viewBox]="scene().viewBox"
+  [style.--clarity]="clarity()"
+  aria-hidden="true"
+  class="town-scene"
+  preserveAspectRatio="xMidYMax meet"
+>
+  <defs>
+    <linearGradient id="townSky" x1="0" x2="0" y1="0" y2="1">
+      <stop class="town-sky-top" offset="0" />
+      <stop class="town-sky-mid" offset="0.55" />
+      <stop class="town-sky-low" offset="1" />
+    </linearGradient>
+  </defs>
+
+  <rect fill="url(#townSky)" height="740" width="5200" x="-2600" y="-400" />
+
+  <!-- The scene is emitted as primitives grouped into layers (see `town-scene.ts`), so one block
+       draws every family rather than the whole waterfront being written out shape by shape. -->
+  @for (layer of layers(); track $index) {
+    <g
+      [attr.transform]="layer.transform"
+      [class.town-building]="layer.rises"
+      [style.--rise-delay]="layer.delay"
+    >
+      @for (shape of layer.shapes; track $index) {
+        @switch (shape.kind) {
+          @case ('rect') {
+            <rect
+              [attr.fill]="shape.fill"
+              [attr.height]="shape.h"
+              [attr.opacity]="shape.opacity"
+              [attr.width]="shape.w"
+              [attr.x]="shape.x"
+              [attr.y]="shape.y"
+            />
           }
-        </div>
-      </div>
-    }
-  </div>
-</div>
+          @case ('poly') {
+            <polygon
+              [attr.fill]="shape.fill"
+              [attr.opacity]="shape.opacity"
+              [attr.points]="shape.points"
+            />
+          }
+          @case ('path') {
+            <path [attr.d]="shape.d" [attr.fill]="shape.fill" [attr.opacity]="shape.opacity" />
+          }
+          @case ('ellipse') {
+            <ellipse
+              [attr.cx]="shape.cx"
+              [attr.cy]="shape.cy"
+              [attr.fill]="shape.fill"
+              [attr.opacity]="shape.opacity"
+              [attr.rx]="shape.rx"
+              [attr.ry]="shape.ry"
+            />
+          }
+          @case ('line') {
+            <line
+              [attr.opacity]="shape.opacity"
+              [attr.stroke-width]="shape.width"
+              [attr.stroke]="shape.stroke"
+              [attr.x1]="shape.x1"
+              [attr.x2]="shape.x2"
+              [attr.y1]="shape.y1"
+              [attr.y2]="shape.y2"
+              stroke-linecap="round"
+            />
+          }
+          @case ('arc') {
+            <path
+              [attr.d]="shape.d"
+              [attr.opacity]="shape.opacity"
+              [attr.stroke-width]="shape.width"
+              [attr.stroke]="shape.stroke"
+              fill="none"
+              stroke-linecap="round"
+            />
+          }
+        }
+      }
+    </g>
+  }
+</svg>

@@ -1,0 +1,61 @@
+/*
+ * Surfaces and motion.
+ *
+ * No shadows, on purpose. An earlier pass gave every panel a cast shadow and a lit top edge to
+ * make it read as a solid; the result was rejected on sight — the tiles stacked into cards and the
+ * interface got heavier rather than deeper. Depth here is carried by the fill, the leading accent
+ * and the cut corner, which is what the profile's match history has always done. Do not put a
+ * `box-shadow` back on these utilities.
+ *
+ * The fill stays translucent rather than an opaque `surface-900`: the shell paints an
+ * `ambient-field` glow behind everything, and an opaque fill blocks it — every panel goes colder
+ * for it. The cost is that nested panels compound and drift lighter, and the answer is not to nest
+ * them: a panel inside a panel is a `row`, or nothing.
+ */
+
+@theme {
+  /*
+   * Motion. The templates had forty-nine `transition-colors` with no duration beside durations of
+   * 150, 200, 500 and 700, and no easing utility anywhere — so every transition ran on Tailwind's
+   * default linear-ish curve at whatever duration the file's author happened to type.
+   *
+   * Three durations, by what is moving: a colour or an opacity under the pointer (`fast`), an
+   * element changing state or position (`base`), and a value animating to a new figure (`data`,
+   * slow enough that the eye follows the bar rather than finding it already moved).
+   */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  --duration-fast: 140ms;
+  --duration-base: 240ms;
+  --duration-data: 620ms;
+
+  /* Applied to every `transition-*` utility that does not name its own. */
+  --default-transition-duration: var(--duration-fast);
+  --default-transition-timing-function: var(--ease-out-quart);
+}
+
+/*
+ * A panel: the default surface of anything that holds content.
+ *
+ * Fill only — deliberately not the 1px border either. Most panels in this interface carry a
+ * directional accent instead (`border-l-2` on a list row, `border-t-2` on a stat tile), and a
+ * shorthand `border` here would fight it. Call sites that want the plain edge add
+ * `border border-edge` themselves.
+ */
+@utility panel {
+  background-color: --alpha(var(--color-text-primary) / 4%);
+}
+
+/*
+ * A row of a list or table. Same paint as a panel — the two are kept apart by intent, not by
+ * appearance, so a call site says which one it means and neither drifts.
+ *
+ * A row must stay free of `box-shadow` for a structural reason on top of the visual one: rows here
+ * already carry their leading-edge accent as an inset shadow (a match's win or loss, see
+ * `match-visual.utils`), and `box-shadow` is a single property — anything else set on the same
+ * element silently replaces it.
+ */
+@utility row {
+  background-color: --alpha(var(--color-text-primary) / 4%);
+}

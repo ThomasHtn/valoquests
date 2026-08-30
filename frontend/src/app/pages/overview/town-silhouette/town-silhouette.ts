@@ -1,82 +1,34 @@
 import { Component, computed, input } from '@angular/core';
 
-import { ColonyTierGlyph } from '@core/colony/colony-view.model';
+import { ColonyTierName } from '@core/colony/colony.model';
+import {
+  TownScene,
+  TownShape,
+  buildTownScene,
+  hasWaterAt,
+  reflectionsFor,
+  townStageFor,
+} from './town-scene';
 
 /**
- * One building of a silhouette: its height, its roofline, and whether it carries the band's
- * scaffold — always its tallest building, the one still being built towards the next step.
- */
-interface BuildingConfig {
-  readonly heightPx: number;
-  readonly roof: 'pitched' | 'spire' | 'flat';
-}
-
-/**
- * One building resolved into everything the template draws: its shape and how many of its
- * windows are lit.
- */
-interface BuildingView extends BuildingConfig {
-  readonly litWindows: number;
-  readonly hasScaffold: boolean;
-}
-
-/**
- * Windows drawn per building, regardless of band — the grid the mock-up's `.windows` class lays
- * out (two columns, three rows).
- */
-const WINDOWS_PER_BUILDING = 6;
-
-/**
- * The four fixed silhouettes, one per {@link ColonyTierGlyph}. Heights climb within each band and
- * again from band to band, so the four read as one town growing rather than four unrelated
- * drawings. The CAMP band matches the direction's own validated mock-up pixel for pixel; the other
- * three carry its proportions forward — there is no illustration further up the ladder to match yet.
- */
-const BAND_BUILDINGS: Readonly<Record<ColonyTierGlyph, readonly BuildingConfig[]>> = {
-  CAMP: [
-    { heightPx: 34, roof: 'pitched' },
-    { heightPx: 42, roof: 'pitched' },
-    { heightPx: 28, roof: 'pitched' },
-    { heightPx: 38, roof: 'pitched' },
-    { heightPx: 34, roof: 'pitched' },
-    { heightPx: 46, roof: 'pitched' },
-  ],
-  HOUSES: [
-    { heightPx: 52, roof: 'flat' },
-    { heightPx: 72, roof: 'pitched' },
-    { heightPx: 58, roof: 'flat' },
-    { heightPx: 82, roof: 'pitched' },
-    { heightPx: 62, roof: 'flat' },
-    { heightPx: 92, roof: 'flat' },
-  ],
-  SKYLINE: [
-    { heightPx: 82, roof: 'flat' },
-    { heightPx: 114, roof: 'flat' },
-    { heightPx: 98, roof: 'flat' },
-    { heightPx: 130, roof: 'flat' },
-    { heightPx: 104, roof: 'flat' },
-    { heightPx: 144, roof: 'flat' },
-  ],
-  MONUMENT: [
-    { heightPx: 95, roof: 'flat' },
-    { heightPx: 124, roof: 'flat' },
-    { heightPx: 108, roof: 'flat' },
-    { heightPx: 140, roof: 'flat' },
-    { heightPx: 114, roof: 'flat' },
-    { heightPx: 180, roof: 'spire' },
-  ],
-};
-
-/**
- * The town, drawn as a growing silhouette rather than a number in a hexagon — see
- * design-review.md §3.1 and §1 (« l'objectif du jeu, rendu visible »). Deliberately plain CSS, no
- * drawing library: the shapes are six boxes and a handful of `clip-path`/gradient tricks, in the
- * same register as `clip-hex`/`notch-tr` elsewhere in the design system, and the band's identity
- * carries a fixed, hand-authored silhouette rather than one procedurally laid out per tier — twelve
- * tiers reduced to four bands is the whole point (see {@link ColonyTierGlyph}).
+ * The colony, drawn as a place rather than as a figure — see design-review.md §3.1 and §1
+ * (« l'objectif du jeu, rendu visible »).
  *
- * Every building lights its windows before the next one starts, left to right — the read is "the
- * town, mostly lit, thinning out towards its newest edge", not a scatter of sparse buildings.
+ * A waterfront elevation in full daylight: the rest of the city held back by haze, the colony's own
+ * frontage built on three terraces stepping down to the quay, and the water closing the frame. The
+ * previous version was a dusk silhouette whose only growth signal was a taller black shape; this one
+ * grows by *building different things*, and the step of the ladder decides which. Houses and sheds at
+ * the camp, low blocks at the hamlet, glass at the borough, the landmark once it is a great city.
+ *
+ * The rive grows with them: no water at the camp, then a silt bank, then a masonry quay. So does its
+ * crossing — a ford, then a plank walkway on driven piles, then a stone viaduct, then a cable-stayed
+ * span. It is the one element of the scene that is not a building, and it is what stops the
+ * foreground from reading as a flat band.
+ *
+ * Morale is the only thing besides the step that changes the drawing, and it changes the weather
+ * rather than the hour: a squad that is winning gets a clear sky, one that is losing an overcast
+ * one. Morale sets how fast the population climbs, so it belongs in the atmosphere rather than in a
+ * tile beside six other tiles.
  */
 @Component({
   selector: 'app-town-silhouette',
@@ -85,60 +37,71 @@ const BAND_BUILDINGS: Readonly<Record<ColonyTierGlyph, readonly BuildingConfig[]
 })
 export class TownSilhouette {
   /**
-   * Which of the four silhouettes to draw.
+   * Step of the ladder the colony currently stands on, which decides everything the scene builds.
    */
-  public readonly glyph = input.required<ColonyTierGlyph>();
+  public readonly tier = input.required<ColonyTierName>();
 
   /**
-   * Share of windows lit, `0`–`100`.
+   * Morale out of its ceiling, `0`–`100`, which sets how clear the sky is. Defaults to the middle of
+   * the range so a caller that has not resolved morale yet still gets a lit scene.
    */
-  public readonly populationPercentage = input.required<number>();
+  public readonly moralePercentage = input(50);
 
   /**
-   * Share of the way to the next step, `0`–`100` — the scaffold shrinks as this climbs.
+   * Everything the template draws, rebuilt only when the step changes.
    */
-  public readonly progressPercentage = input.required<number>();
+  protected readonly scene = computed<TownScene>(() => buildTownScene(townStageFor(this.tier())));
 
   /**
-   * The band's buildings, each resolved with how many of its windows are lit.
+   * The scene flattened into the groups the template paints, in order.
    *
-   * Lit left to right, one building filled before the next starts, rather than each building
-   * getting its own share of the percentage — a fractional light on every building would read as
-   * "half-built everywhere" instead of "built here, not yet there", which is the point of a
-   * skyline over a single gauge.
+   * Each building is its own group so it can rise into place on its own beat; everything else is one
+   * group per plane. Only the frontage, its street and its reflections carry the centring transform.
    */
-  protected readonly buildings = computed<readonly BuildingView[]>(() => {
-    const configs = BAND_BUILDINGS[this.glyph()];
-    const totalWindows = configs.length * WINDOWS_PER_BUILDING;
-    const litTotal = Math.round((this.populationPercentage() / 100) * totalWindows);
-    let remaining = litTotal;
+  protected readonly layers = computed<readonly TownLayer[]>(() => {
+    const scene = this.scene();
+    const transform = `translate(${scene.frontageOffset.toFixed(1)} 0)`;
+    const buildings = scene.buildings.map((building, index) => ({
+      shapes: building.shapes,
+      transform,
+      rises: true,
+      delay: `${(0.3 + index * 0.075).toFixed(2)}s`,
+    }));
 
-    return configs.map((config, index) => {
-      const lit = Math.max(0, Math.min(WINDOWS_PER_BUILDING, remaining));
-      remaining -= lit;
-
-      return {
-        ...config,
-        litWindows: lit,
-        hasScaffold: index === configs.length - 1,
-      };
-    });
+    return [
+      { shapes: scene.backdrop, transform: null, rises: false, delay: null },
+      { shapes: scene.terraces, transform, rises: false, delay: null },
+      ...buildings,
+      { shapes: scene.furniture, transform, rises: false, delay: null },
+      { shapes: scene.foreground, transform: null, rises: false, delay: null },
+      {
+        shapes: hasWaterAt(townStageFor(this.tier())) ? reflectionsFor(scene.buildings) : [],
+        transform,
+        rises: false,
+        delay: null,
+      },
+    ];
   });
 
   /**
-   * Share of the scaffolded building still left to build, `0`–`100` — the complement of
-   * {@link progressPercentage}: the scaffold covers what remains, and shrinks as the step is paid.
+   * Morale as the `0`–`1` the stylesheet interpolates the weather on, clamped so a morale outside
+   * its nominal range can never invert the two skies.
    */
-  protected readonly scaffoldPercentage = computed(() =>
-    Math.max(0, Math.min(100, 100 - this.progressPercentage())),
+  protected readonly clarity = computed(
+    () => Math.max(0, Math.min(100, this.moralePercentage())) / 100,
   );
+}
 
-  /**
-   * Fixed window indices to iterate in the template — a plain array has no identity `@for` can
-   * track by, so each building repeats this same six-item list.
-   */
-  protected readonly windowSlots: readonly number[] = Array.from(
-    { length: WINDOWS_PER_BUILDING },
-    (_, index) => index,
-  );
+/**
+ * One painted group of the scene.
+ */
+interface TownLayer {
+  readonly shapes: readonly TownShape[];
+
+  /** Set on the frontage, its street and its reflections, which are centred together. */
+  readonly transform: string | null;
+
+  /** Whether the group rises into place on load. */
+  readonly rises: boolean;
+  readonly delay: string | null;
 }

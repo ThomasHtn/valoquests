@@ -8,9 +8,7 @@ import {
   formatSignedGauge,
   formatSignedPopulation,
 } from '@core/colony/colony-format.utils';
-import { tierGlyphFor } from '@core/colony/colony-tier.utils';
-import { ColonyTierGlyph } from '@core/colony/colony-view.model';
-import { ColonyRunHistory } from '@core/colony/colony.model';
+import { ColonyRunHistory, ColonyTierName } from '@core/colony/colony.model';
 import { formatDateRange } from '@core/date/week-period.utils';
 import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -103,14 +101,10 @@ export class CampaignSummary {
   });
 
   /**
-   * The town silhouette this campaign finished on — fully lit, no scaffold: the run is over, so
-   * there is no further step to read progress towards.
+   * The step this campaign finished on, which is what the scene draws. Under a clear sky: the run is
+   * closed on its best state rather than on whatever morale it ended a fight with.
    */
-  protected readonly glyph = computed<ColonyTierGlyph | null>(() => {
-    const run = this.run();
-
-    return run ? tierGlyphFor(run.tier) : null;
-  });
+  protected readonly tier = computed<ColonyTierName | null>(() => this.run()?.tier.name ?? null);
 
   /**
    * Already-translated name of the tier this campaign finished on.

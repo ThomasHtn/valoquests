@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucidePlay } from '@lucide/angular';
 
+import { BossCategory } from '@core/boss/boss.model';
 import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
 import { formatDamage, formatSquadMultiplier } from '@core/challenges/challenge-format.utils';
 import { formatGauge } from '@core/colony/colony-format.utils';
@@ -12,6 +13,7 @@ import { PageHeader } from '@layout/page-header/page-header';
 import { RuleSection } from './rule-section/rule-section';
 import {
   BOSS_CATEGORY_SHOWCASE,
+  BOSS_CATEGORY_WEIGHT_SHARE,
   BOSS_LADDER_SHOWCASE,
   BOSS_MATERIALS_SHOWCASE,
   COLONY_FACTS,
@@ -138,6 +140,16 @@ export class Rules {
    * Resolves a boss category's text color utility, exposed to the template.
    */
   protected readonly bossCategoryColorClass = resolveBossCategoryColorClass;
+
+  /**
+   * Height a week's bar is drawn at in the ladder, as a share of the heaviest class.
+   *
+   * @param category - The week's weight class.
+   * @returns The bar's height, in percent of its track.
+   */
+  protected bossWeightShare(category: BossCategory): number {
+    return BOSS_CATEGORY_WEIGHT_SHARE[category];
+  }
 
   /**
    * Groups one of the barème's amounts, in the reader's own notation.

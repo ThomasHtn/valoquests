@@ -125,7 +125,7 @@
                week's boss and moves the player up the ranking, the materials build the colony.
                Side by side on a narrow card, stacked in the column on a wide one. -->
           <div
-            class="grid shrink-0 grid-cols-2 gap-x-4 border-t border-text-primary/10 pt-3.5 xl:w-40 xl:grid-cols-1 xl:gap-y-3 xl:border-t-0 xl:border-l xl:pt-0 xl:pl-4"
+            class="grid shrink-0 grid-cols-2 gap-x-4 border-t border-edge pt-3.5 xl:w-40 xl:grid-cols-1 xl:gap-y-3 xl:border-t-0 xl:border-l xl:pt-0 xl:pl-4"
           >
             <p class="min-w-0 xl:text-right">
               <span class="label-caption block text-text-muted">
@@ -151,7 +151,7 @@
                  the boss rewards both read in that colour. Icon stands in for the "Matériaux"
                  label, so the figure sits right beside it instead of below a caption. -->
             <p
-              class="flex min-w-0 items-center justify-end gap-1.5 xl:border-t xl:border-text-primary/10 xl:pt-3"
+              class="flex min-w-0 items-center justify-end gap-1.5 xl:border-t xl:border-edge xl:pt-3"
             >
               <svg aria-hidden="true" class="size-4 shrink-0 text-accent-cyan" lucideHammer></svg>
               <span
@@ -190,7 +190,7 @@
     <!-- The rest of the pool: every enabled challenge Monday's draw did not pick this week —
          folded away by default, since it lists dozens of entries against the five cards above. -->
     @if (catalogueRows().length > 0) {
-      <details class="group border border-text-primary/15 bg-text-primary/4">
+      <details class="group border border-edge panel">
         <summary
           class="focus-ring-inset flex cursor-pointer items-center gap-2.5 px-4 py-3 font-mono text-xs tracking-wide text-text-secondary uppercase [&::-webkit-details-marker]:hidden"
         >
@@ -202,7 +202,7 @@
           {{ 'week.catalogue.title' | translate }}
         </summary>
 
-        <div class="border-t border-text-primary/10 p-3">
+        <div class="border-t border-edge p-3">
           <p class="px-1 pb-3 text-sm text-text-muted">
             {{ 'week.catalogue.hint' | translate }}
           </p>
@@ -210,7 +210,7 @@
           <ul class="flex flex-col gap-2">
             @for (row of catalogueRows(); track row.id) {
               <li
-                class="notch-tr flex items-center gap-3 border border-text-primary/10 bg-text-primary/4 px-3 py-2.5 [--notch:0.5rem]"
+                class="notch-tr flex items-center gap-3 border border-edge panel px-3 py-2.5 [--notch:0.5rem]"
               >
                 <span
                   [class]="row.visual.barClass"

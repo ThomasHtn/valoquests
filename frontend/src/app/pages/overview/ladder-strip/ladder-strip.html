@@ -1,0 +1,35 @@
+<!-- The trail: steps behind are settled, the one the colony stands on carries its number, the ones
+     ahead are still dark. The dashed segment is the only one still being paid for. -->
+@if (steps().length > 0) {
+  <div class="ladder">
+    <ol class="ladder-trail">
+      @for (step of steps(); track step.position) {
+        <li
+          [class.ladder-step--current]="step.current"
+          [class.ladder-step--next]="step.next"
+          [class.ladder-step--reached]="step.reached"
+          class="ladder-step"
+        >
+          <span class="ladder-mark" aria-hidden="true">
+            @if (step.reached) {
+              <svg class="size-3.5" lucideCheck></svg>
+            } @else {
+              {{ step.position }}
+            }
+          </span>
+          <span class="ladder-name">{{ step.name }}</span>
+        </li>
+      }
+    </ol>
+
+    @if (next(); as next) {
+      <p class="ladder-caption">
+        <span class="ladder-pct">{{ progressPercentage() | number: '1.0-0' }} %</span>
+        {{
+          'overview.ladderStrip.remaining'
+            | translate: { materials: next.missingMaterialsLabel, tier: next.name }
+        }}
+      </p>
+    }
+  </div>
+}

@@ -157,9 +157,16 @@ export function resolveBossHpBarLabelKey(status: BossTimelineNodeStatus): string
 export interface BossTerritoryTier {
   /**
    * Background of the outer hexagon, read as the territory's outline — and, the tiles being
-   * hollow, the whole of what the state is told with.
+   * hollow, the whole of what the state is told with. Doubles as the state's own fill wherever a
+   * solid surface says the same thing, the detail panel's health bar being the one such place.
    */
   readonly ringClass: string;
+
+  /**
+   * Border colour of the seam joining the detail panel to the map above it, so the panel visibly
+   * comes out of the hexagon that was clicked rather than merely appearing under the card.
+   */
+  readonly seamClass: string;
 
   /**
    * Color of the outcome icon carved into the hexagon.
@@ -196,6 +203,7 @@ export interface BossTerritoryTier {
 const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritoryTier>> = {
   defeated: {
     ringClass: 'bg-success',
+    seamClass: 'border-t-success',
     iconClass: 'text-success',
     haloClass: '',
     damageFillClass: 'bg-brand-500/28',
@@ -203,6 +211,7 @@ const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritor
   },
   survived: {
     ringClass: 'bg-danger',
+    seamClass: 'border-t-danger',
     iconClass: 'text-danger',
     haloClass: '',
     damageFillClass: 'bg-text-primary/10',
@@ -210,6 +219,7 @@ const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritor
   },
   current: {
     ringClass: 'bg-brand-500',
+    seamClass: 'border-t-brand-500',
     iconClass: 'text-brand-500',
     haloClass: 'bg-brand-500/16',
     damageFillClass: 'bg-brand-500/28',
@@ -217,6 +227,7 @@ const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritor
   },
   upcoming: {
     ringClass: 'bg-surface-600',
+    seamClass: 'border-t-surface-600',
     iconClass: 'text-text-muted',
     haloClass: '',
     damageFillClass: '',

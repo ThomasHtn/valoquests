@@ -1,0 +1,214 @@
+/*
+ * Colors are spelled out rather than referenced through `var(--color-*)`: this is a component
+ * stylesheet, compiled outside the Tailwind theme context where those tokens resolve, the same
+ * reason `landing.css` and `overview.css` spell their own out. Keep in sync with `styles/colors.css`:
+ *   brand-400 #e8ab6b · surface-sunken #0a151d · surface-800 #1b2c3a · surface-700 #253645
+ *   text-primary #ece8e1 · text-muted #868b8d · accent-cyan #2dd4bf · accent-red #ff4655
+ */
+
+.versus {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  background: #16232e;
+}
+
+@media (width >= 47.5rem) {
+  .versus {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+}
+
+/*
+ * Each camp is washed in its own colour and carries its accent as an inset edge, never a border: a
+ * border would shift the contents of the side that has one, which is exactly the drift the match
+ * rows on the profile avoid the same way.
+ */
+.vs-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 16px 20px;
+}
+
+.vs-side--ally {
+  background: rgb(45 212 191 / 7%);
+  box-shadow: inset 4px 0 0 #2dd4bf;
+}
+
+.vs-side--foe {
+  background: rgb(255 70 85 / 8%);
+  box-shadow: inset -4px 0 0 #ff4655;
+}
+
+@media (width >= 47.5rem) {
+  .vs-side--foe {
+    align-items: flex-end;
+    text-align: right;
+  }
+}
+
+.vs-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.vs-side--ally .vs-tag {
+  color: #2dd4bf;
+}
+
+.vs-side--foe .vs-tag {
+  color: #ff4655;
+}
+
+/* The boss's weight class, read as a qualifier of the tag it follows rather than a second title. */
+.vs-cat {
+  color: #868b8d;
+}
+
+.vs-name {
+  margin: 0;
+  overflow: hidden;
+  font-weight: 700;
+  font-size: clamp(1.25rem, 2.4vw, 1.6875rem);
+  font-family: var(--font-display);
+  line-height: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #ece8e1;
+}
+
+.vs-sub {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: #868b8d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Round pips: one per challenge of the week, the shape a round counter takes. */
+.pips {
+  display: flex;
+  gap: 5px;
+}
+
+.pip-round {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 9px;
+  background: rgb(236 232 225 / 14%);
+  clip-path: polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%);
+}
+
+.pip-round--on {
+  background: #2dd4bf;
+}
+
+.vs-hp {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+@media (width >= 47.5rem) {
+  .vs-side--foe .vs-hp {
+    align-items: flex-end;
+  }
+}
+
+.hp {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  background: rgb(0 0 0 / 45%);
+}
+
+.hp-fill {
+  display: block;
+  height: 100%;
+  background: #ff4655;
+}
+
+.hp-grad {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  pointer-events: none;
+}
+
+.hp-grad span {
+  flex: 1 1 0;
+  border-right: 1px solid rgb(15 25 35 / 75%);
+}
+
+.hp-grad span:last-child {
+  border-right: 0;
+}
+
+.vs-hpv {
+  font-weight: 700;
+  font-size: 1.1875rem;
+  font-family: var(--font-display);
+  white-space: nowrap;
+  color: #ff4655;
+  font-variant-numeric: tabular-nums;
+}
+
+.vs-hpv small {
+  font-weight: 500;
+  font-size: 0.75rem;
+  color: #868b8d;
+}
+
+/*
+ * The clock plate: the two camps meet on it. It is the band's own surface, left bare — what makes it
+ * read as a plate is the wash on either side of it, not a tone of its own. Sinking it to
+ * `surface-sunken` pulled a black hole into the middle of the band.
+ *
+ * Square, not slanted: the bevel this carried at first was cut at a fixed 16px, which stays discreet
+ * on a short band and reads as crooked as soon as the band grows past its shortest state.
+ */
+.vs-core {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 30px;
+  background: #16232e;
+}
+
+@media (width >= 47.5rem) {
+  .vs-core {
+    padding: 14px 44px;
+  }
+}
+
+/* Gold, the colour the countdown already wears in the context bar on `/week` and `/leaderboard`. */
+.vs-clock {
+  margin: 0;
+  font-weight: 700;
+  font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+  font-family: var(--font-display);
+  line-height: 1;
+  color: #d9954a;
+  font-variant-numeric: tabular-nums;
+}
+
+.vs-clocklbl {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #868b8d;
+}

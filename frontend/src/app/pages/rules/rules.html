@@ -5,7 +5,7 @@
      The trailing edge carries the way back into the guided tour, this page's one action. -->
 <app-page-header [eyebrow]="'rules.heading' | translate" [heading]="'rules.subheading' | translate">
   <span
-    class="tracking-label hidden items-center gap-1.5 border border-text-primary/10 bg-surface-950/60 px-2.5 py-1 font-mono text-2xs font-medium text-text-muted uppercase sm:inline-flex"
+    class="tracking-label hidden items-center gap-1.5 border border-edge bg-surface-950/60 px-2.5 py-1 font-mono text-2xs font-medium text-text-muted uppercase sm:inline-flex"
     headingAside
   >
     {{ 'rules.readingTime.label' | translate }}
@@ -240,47 +240,61 @@
       [heading]="'rules.sections.boss.title' | translate"
       index="03"
     >
-      <ul class="grid gap-3 sm:grid-cols-3">
-        @for (category of bossCategoryShowcase; track category) {
-          <!-- The category's own color is set on the tile so its leading rule can inherit it,
-             matching how a boss is colored on the overview and boss pages. -->
-          <li
-            [class]="bossCategoryColorClass(category)"
-            class="border-l-2 border-current bg-text-primary/4 px-3.5 py-3"
-          >
-            <p class="tracking-label font-display text-sm font-semibold uppercase">
-              {{ 'boss.category.' + category | translate }}
-            </p>
-            <p class="mt-2 text-prose text-text-secondary">
-              {{ 'rules.sections.boss.categories.' + category | translate }}
-            </p>
-          </li>
-        }
-      </ul>
-
-      <!-- The class each week fights, scheduled rather than drawn. Shown as a strip because its
-         shape is the point: the run peaks halfway through and on its last week, and takes a
-         breather straight after each peak. -->
-      <div class="mt-5 border-t border-text-primary/10 pt-4">
-        <p class="label-caption text-text-muted">
-          {{ 'rules.sections.boss.ladderLabel' | translate }}
-        </p>
-        <ol class="mt-2.5 grid grid-cols-5 gap-1.5 sm:grid-cols-10">
-          @for (category of bossLadderShowcase; track $index) {
+      <!-- One projected child, not two: `app-rule-section` puts its slot in the wide column, so a
+         second top-level element would drop into the narrow narrative one instead. -->
+      <div>
+        <ul class="grid gap-3 sm:grid-cols-3">
+          @for (category of bossCategoryShowcase; track category) {
+            <!-- The category's own color is set on the tile so its leading rule can inherit it,
+               matching how a boss is colored on the overview and boss pages. -->
             <li
               [class]="bossCategoryColorClass(category)"
-              class="flex flex-col items-center gap-1 border-t-2 border-current bg-text-primary/4 px-1 py-2"
+              class="border-l-2 border-current panel px-3.5 py-3"
             >
-              <span class="font-mono text-2xs text-text-muted tabular-nums">{{ $index + 1 }}</span>
-              <span class="tracking-label font-display text-2xs font-semibold uppercase">
+              <p class="tracking-label font-display text-sm font-semibold uppercase">
                 {{ 'boss.category.' + category | translate }}
-              </span>
+              </p>
+              <p class="mt-2 text-prose text-text-secondary">
+                {{ 'rules.sections.boss.categories.' + category | translate }}
+              </p>
             </li>
           }
-        </ol>
-        <p class="mt-3 text-prose text-text-secondary">
-          {{ 'rules.sections.boss.ladderFootnote' | translate }}
-        </p>
+        </ul>
+
+        <!-- The class each week fights, scheduled rather than drawn. Drawn as a profile rather than
+           as ten equal chips because its shape is the point: each bar stands at the share of a
+           squad week its class costs, so the two peaks and the breather that follows each are read
+           before the words are. -->
+        <div class="mt-5 border-t border-edge pt-4">
+          <p class="label-caption text-text-muted">
+            {{ 'rules.sections.boss.ladderLabel' | translate }}
+          </p>
+          <ol class="mt-3 grid grid-cols-5 gap-x-1.5 gap-y-4 sm:grid-cols-10">
+            @for (category of bossLadderShowcase; track $index) {
+              <li
+                [class]="bossCategoryColorClass(category)"
+                class="flex flex-col items-center gap-1.5"
+              >
+                <!-- Decorative: the class the height stands for is written under it. -->
+                <span aria-hidden="true" class="flex h-14 w-full items-end">
+                  <span
+                    [style.height.%]="bossWeightShare(category)"
+                    class="w-full border-t-2 border-current bg-current/12"
+                  ></span>
+                </span>
+                <span class="font-mono text-2xs text-text-muted tabular-nums">{{
+                  $index + 1
+                }}</span>
+                <span class="font-display text-2xs font-semibold tracking-[0.06em] uppercase">
+                  {{ 'boss.category.' + category | translate }}
+                </span>
+              </li>
+            }
+          </ol>
+          <p class="mt-4 text-prose text-text-secondary">
+            {{ 'rules.sections.boss.ladderFootnote' | translate }}
+          </p>
+        </div>
       </div>
     </app-rule-section>
 
@@ -303,7 +317,7 @@
       [heading]="'rules.sections.eligibility.title' | translate"
       index="05"
     >
-      <div class="border-l-2 border-brand-500 bg-text-primary/4 px-3.5 py-3">
+      <div class="border-l-2 border-brand-500 panel px-3.5 py-3">
         <p class="tracking-label font-display text-sm font-semibold text-text-primary uppercase">
           {{ 'rules.sections.progression.title' | translate }}
         </p>
@@ -451,7 +465,7 @@
             @for (tier of bossMaterialsShowcase; track tier.category) {
               <li
                 [class]="bossCategoryColorClass(tier.category)"
-                class="flex flex-col items-center gap-1 border-t-2 border-current bg-text-primary/4 px-1 py-2.5"
+                class="flex flex-col items-center gap-1 border-t-2 border-current panel px-1 py-2.5"
               >
                 <span class="font-mono text-2xs font-semibold text-text-secondary">
                   {{ 'boss.category.' + tier.category | translate }}

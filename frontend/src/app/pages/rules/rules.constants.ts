@@ -57,6 +57,30 @@ export const BOSS_LADDER_SHOWCASE: readonly BossCategory[] = [
 ];
 
 /**
+ * Per-player weekly output each weight class is sized against, as a percentage.
+ *
+ * Mirrors the switch in `DefaultScoringRuleset#bossHitPoints`, and the figures the three class
+ * cards quote in prose.
+ */
+const BOSS_CATEGORY_WEIGHT_PERCENT: Readonly<Record<BossCategory, number>> = {
+  MINOR: 65,
+  STANDARD: 85,
+  ELITE: 105,
+};
+
+/**
+ * Same weights, normalized on the heaviest class, so the ladder can draw each week at the height it
+ * actually costs instead of as ten equal steps.
+ */
+export const BOSS_CATEGORY_WEIGHT_SHARE: Readonly<Record<BossCategory, number>> =
+  Object.fromEntries(
+    Object.entries(BOSS_CATEGORY_WEIGHT_PERCENT).map(([category, percent]) => [
+      category,
+      Math.round((percent / BOSS_CATEGORY_WEIGHT_PERCENT.ELITE) * 100),
+    ]),
+  ) as Record<BossCategory, number>;
+
+/**
  * Materials one player earns from a defeated boss, by weight class.
  *
  * Mirrors `DefaultColonyRuleset#materialsForDefeatedBoss`. The spread is wider than the morale

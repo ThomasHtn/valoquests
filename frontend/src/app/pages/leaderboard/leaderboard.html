@@ -48,10 +48,15 @@
        home, the one place a visitor is looking for "who's ahead". Narrower than the page's own
        width and stripped of its damage figures: the board right below already carries every
        player's damage, so up here the podium reads as a pure ranking. -->
-  <div class="mx-auto -mt-4 mb-4 w-full max-w-3xl">
+  <!-- Full page width, though the plinths themselves stay narrower (`plinthSpan`): the ground rule
+       closing the podium is what spans this width, so it lands on the same edges as the board below
+       and reads as that board's top edge instead of as a floating bar. -->
+  <div class="-mt-4 mb-4 w-full">
     <app-podium
       [plinthBase]="'clamp(4rem, 6vh, 5rem)'"
+      [plinthSpan]="'48rem'"
       [showDamage]="false"
+      [showHint]="false"
       [showRest]="false"
       [showTitle]="false"
     />
@@ -63,7 +68,7 @@
        links here with the same `?week=`, so the two screens close the loop on each other. -->
   @if (!isLiveWeek()) {
     <p
-      class="notch-tr flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 border-l-2 border-l-text-primary/25 bg-text-primary/4 px-4 py-2.5 text-sm text-text-secondary [--notch:0.625rem]"
+      class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 border-l-2 border-l-text-primary/25 row px-4 py-2.5 text-sm text-text-secondary"
     >
       <span>{{ 'overview.weeklyRanking.week.closedNote' | translate }}</span>
       @if (selectedWeekStart(); as weekStart) {
@@ -97,7 +102,7 @@
     <div class="flex flex-col gap-2" skeleton>
       @for (placeholder of skeletonRows; track $index) {
         <div
-          class="notch-tr flex items-center gap-3 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-3.5 [--notch:0.875rem] xl:px-5"
+          class="notch-tr flex items-center gap-3 border-l-2 border-surface-700 row px-4 py-5.5 [--notch:0.875rem] xl:px-5"
         >
           <span class="clip-hex size-7 shrink-0 bg-surface-700"></span>
           <span class="size-9 shrink-0 rounded-full bg-surface-700"></span>
@@ -122,18 +127,45 @@
         class="-mb-3.5 grid items-end gap-x-3 px-5"
       >
         <span></span>
-        <span class="label-caption text-text-muted">
-          {{ 'overview.weeklyRanking.columns.player' | translate }}
+        <!-- Every heading carries the rule behind its figure, on the same hover the challenge
+             columns beside them already answer to: what a number is worked out from is the one
+             thing the board itself cannot show. -->
+        <span>
+          <span
+            [appTooltip]="'overview.weeklyRanking.columnHelp.player' | translate"
+            appTooltipPosition="above"
+            class="label-caption cursor-help text-text-muted"
+          >
+            {{ 'overview.weeklyRanking.columns.player' | translate }}
+          </span>
         </span>
-        <span class="label-caption text-text-muted text-right">
-          {{ 'overview.weeklyRanking.columns.damage' | translate }}
+        <span class="text-right">
+          <span
+            [appTooltip]="'overview.weeklyRanking.columnHelp.damage' | translate"
+            appTooltipPosition="above"
+            class="label-caption cursor-help text-text-muted"
+          >
+            {{ 'overview.weeklyRanking.columns.damage' | translate }}
+          </span>
         </span>
-        <span class="label-caption text-text-muted ml-3 text-right">
-          {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
+        <span class="ml-3 text-right">
+          <span
+            [appTooltip]="'overview.weeklyRanking.columnHelp.bonusDamage' | translate"
+            appTooltipPosition="above"
+            class="label-caption cursor-help text-text-muted"
+          >
+            {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
+          </span>
         </span>
         @if (isLiveWeek()) {
-          <span class="label-caption text-text-muted text-right">
-            {{ 'overview.weeklyRanking.columns.materials' | translate }}
+          <span class="text-right">
+            <span
+              [appTooltip]="'overview.weeklyRanking.columnHelp.materials' | translate"
+              appTooltipPosition="above"
+              class="label-caption cursor-help text-text-muted"
+            >
+              {{ 'overview.weeklyRanking.columns.materials' | translate }}
+            </span>
           </span>
         } @else {
           <span></span>
@@ -169,16 +201,28 @@
 
         <!-- What a closed week has instead of the five columns above. -->
         @if (!isLiveWeek()) {
-          <span class="label-caption text-center text-text-muted">
-            {{ 'overview.weeklyRanking.columns.challengesCleared' | translate }}
+          <span class="text-center">
+            <span
+              [appTooltip]="'overview.weeklyRanking.columnHelp.challengesCleared' | translate"
+              appTooltipPosition="above"
+              class="label-caption cursor-help text-text-muted"
+            >
+              {{ 'overview.weeklyRanking.columns.challengesCleared' | translate }}
+            </span>
           </span>
-          <span class="label-caption text-center text-text-muted">
-            {{ 'overview.weeklyRanking.columns.activeDays' | translate }}
+          <span class="text-center">
+            <span
+              [appTooltip]="'overview.weeklyRanking.columnHelp.activeDays' | translate"
+              appTooltipPosition="above"
+              class="label-caption cursor-help text-text-muted"
+            >
+              {{ 'overview.weeklyRanking.columns.activeDays' | translate }}
+            </span>
           </span>
         }
       </div>
 
-      <!-- The matrix itself, from `xl` up: one notched row per player, entirely a link to their
+      <!-- The matrix itself, from `xl` up: one row per player, entirely a link to their
        profile, crossed with one cell per challenge of the week. Only one of the two layouts is
        rendered at a time — see `Breakpoint`. -->
       <ul class="flex flex-col gap-2">
@@ -191,10 +235,12 @@
       </ul>
 
       @if (outOfCampaignRows().length > 0) {
-        <p class="label-caption mt-2 text-text-muted">
+        <!-- Same tuck as the column header above, so the group's label sits on its rows at the
+             same distance the header sits on the board's. -->
+        <p class="label-caption mt-2 -mb-3.5 text-text-muted">
           {{ 'overview.weeklyRanking.outOfCampaign.title' | translate }}
         </p>
-        <ul class="mt-3 flex flex-col gap-2">
+        <ul class="flex flex-col gap-2">
           @for (row of outOfCampaignRows(); track row.playerId) {
             <ng-container
               [ngTemplateOutlet]="wideRow"
@@ -216,10 +262,10 @@
       </ul>
 
       @if (outOfCampaignRows().length > 0) {
-        <p class="label-caption mt-2 text-text-muted">
+        <p class="label-caption mt-2 -mb-3.5 text-text-muted">
           {{ 'overview.weeklyRanking.outOfCampaign.title' | translate }}
         </p>
-        <ul class="mt-3 flex flex-col gap-2">
+        <ul class="flex flex-col gap-2">
           @for (row of outOfCampaignRows(); track row.playerId) {
             <ng-container
               [ngTemplateOutlet]="narrowRow"
@@ -243,7 +289,7 @@
             : 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_2rem_repeat(2,minmax(5.5rem,0.5fr))]'
         "
         [routerLink]="['/players', row.playerId]"
-        class="notch-tr focus-ring-inset grid items-center gap-x-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-3.5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 xl:px-5"
+        class="notch-tr focus-ring-inset grid items-center gap-x-3 border-l-2 border-edge row px-4 py-4.5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 xl:px-5"
       >
         <span class="flex items-center gap-1">
           @if (row.position === null) {
@@ -273,11 +319,11 @@
         <span class="text-right">
           <span class="sr-only">{{ 'overview.weeklyRanking.columns.damage' | translate }}</span>
           @if (row.damageLabel) {
-            <span
-              [class.text-accent-gold]="row.isChampion"
-              [class.text-text-primary]="!row.isChampion"
-              class="font-display text-lg leading-none font-bold tabular-nums"
-            >
+            <!-- Amber, the currency color damage wears on every other screen — the podium strip,
+                 the mini-ranking and `/week`'s challenge prices. Unconditional: the champion is
+                 already marked by their name and badge, and a second color rule here only made
+                 the column's own meaning read as a status. -->
+            <span class="font-display text-lg leading-none font-bold text-accent-gold tabular-nums">
               {{ row.damageLabel }}
             </span>
           } @else {
@@ -304,8 +350,10 @@
               <span class="sr-only">
                 {{ 'overview.weeklyRanking.columns.materials' | translate }}
               </span>
+              <!-- Cyan, like the materials figure on every other screen: a colony resource, not
+                   damage, and the two must not share the amber. -->
               <span
-                class="font-display text-lg leading-none font-bold text-accent-gold tabular-nums"
+                class="font-display text-lg leading-none font-bold text-accent-cyan tabular-nums"
               >
                 {{ row.materialsLabel }}
               </span>
@@ -354,7 +402,7 @@
   <!-- One card of the narrow list, below `xl`. Same factoring as {@link wideRow}. -->
   <ng-template #narrowRow let-row>
     <li
-      class="notch-tr relative flex flex-col gap-4 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-3.5 transition-colors [--notch:0.875rem] has-[a:hover]:bg-brand-500/15 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
+      class="notch-tr relative flex flex-col gap-4 border-l-2 border-edge row px-4 py-4.5 transition-colors [--notch:0.875rem] has-[a:hover]:bg-brand-500/15 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
     >
       <div class="flex items-center gap-3">
         @if (row.position === null) {
@@ -385,10 +433,9 @@
         <span class="shrink-0 text-right">
           <span class="sr-only">{{ 'overview.weeklyRanking.columns.damage' | translate }}</span>
           @if (row.damageLabel) {
+            <!-- Same amber as the wide row above: one currency, one color, at every width. -->
             <span
-              [class.text-accent-gold]="row.isChampion"
-              [class.text-text-primary]="!row.isChampion"
-              class="font-display block text-lg leading-none font-bold tabular-nums"
+              class="font-display block text-lg leading-none font-bold text-accent-gold tabular-nums"
             >
               {{ row.damageLabel }}
             </span>
@@ -413,7 +460,7 @@
               <span class="sr-only">
                 {{ 'overview.weeklyRanking.columns.materials' | translate }}
               </span>
-              <span class="font-mono text-2xs font-bold text-accent-gold tabular-nums">
+              <span class="font-mono text-2xs font-bold text-accent-cyan tabular-nums">
                 {{ row.materialsLabel }}
               </span>
             }
@@ -424,9 +471,7 @@
       @if (row.completedLabel !== null) {
         <!-- A closed week's card: the two figures the backend froze, in place of the
              challenge list it did not. -->
-        <dl
-          class="grid grid-cols-2 gap-3 border-t border-text-primary/10 pt-4 text-center sm:max-w-xs"
-        >
+        <dl class="grid grid-cols-2 gap-3 border-t border-edge pt-4 text-center sm:max-w-xs">
           <div>
             <dt class="label-caption text-text-muted">
               {{ 'overview.weeklyRanking.columns.challengesCleared' | translate }}
@@ -449,7 +494,7 @@
           </div>
         </dl>
       } @else {
-        <dl class="flex flex-col gap-2.5 border-t border-text-primary/10 pt-4">
+        <dl class="flex flex-col gap-2.5 border-t border-edge pt-4">
           @for (cell of row.cells; track cell.challengeId) {
             <div class="flex items-center gap-3">
               <span
@@ -470,7 +515,7 @@
              full bar next to it would only repeat it. -->
                 @if (!cell.completed) {
                   <app-progress-bar
-                    class="w-14 border border-text-primary/10"
+                    class="w-14 border border-edge"
                     heightClass="h-1.5"
                     [colorClass]="cell.visual.barClass"
                     [percentage]="cell.completionPercentage"
