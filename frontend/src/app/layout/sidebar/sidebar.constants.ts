@@ -15,7 +15,7 @@ import { NavItem } from './sidebar.model';
  */
 export const NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'overview', icon: 'layout-dashboard', routerLink: '/overview', exactMatch: true },
-  { labelKey: 'challenges', icon: 'target', routerLink: '/challenges' },
+  { labelKey: 'challenges', icon: 'target', routerLink: '/week' },
   { labelKey: 'leaderboard', icon: 'trophy', routerLink: '/leaderboard' },
   { labelKey: 'campaign', icon: 'map', routerLink: '/campaign' },
   { labelKey: 'players', icon: 'users', routerLink: '/players' },
@@ -33,5 +33,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
 export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'adminOperations', icon: 'refresh-cw', routerLink: '/admin/operations' },
   { labelKey: 'adminPlayers', icon: 'user-cog', routerLink: '/admin/players' },
+  { labelKey: 'adminCampaigns', icon: 'flag', routerLink: '/admin/campaigns' },
   { labelKey: 'adminMaintenance', icon: 'database-backup', routerLink: '/admin/maintenance' },
 ];

@@ -1,0 +1,19 @@
+<div class="town-silhouette relative pt-2.5">
+  <div aria-hidden="true" class="town-skyline relative flex items-end gap-2.5 px-1">
+    @for (building of buildings(); track $index) {
+      <div
+        [class]="'town-building town-building--' + building.roof"
+        [style.height.px]="building.heightPx"
+      >
+        @if (building.hasScaffold) {
+          <div class="town-scaffold" [style.height.%]="scaffoldPercentage()"></div>
+        }
+        <div class="town-windows">
+          @for (slot of windowSlots; track slot) {
+            <span class="town-window" [class.town-window--lit]="slot < building.litWindows"></span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

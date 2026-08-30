@@ -23,30 +23,22 @@ export function resolveBossCategoryColorClass(category: BossCategory): string {
 }
 
 /**
- * Share of hit points remaining below which the health bar turns red.
- */
-const HP_BAR_LOW_THRESHOLD = 20;
-
-/**
- * Share of hit points remaining below which the health bar turns gold rather than green.
- */
-const HP_BAR_MEDIUM_THRESHOLD = 50;
-
-/**
- * Resolves the health bar's fill color from the boss's remaining hit points, so the bar itself
- * signals how close the group is to defeating it, on top of the percentage it already tracks.
+ * Resolves a week's position in its run as the two-digit boss number the interface leads with
+ * (`01`, `02`, … up to a run's ten weeks), never the catalogue name — see design-review.md §B2 ter:
+ * numbering makes the ten-week schedule (and its two elites) readable ahead of time, which a set of
+ * proper names cannot.
  *
- * @param remainingPercentage - Share of hit points the boss has left, from 0 to 100.
- * @returns The Tailwind background color utility to apply to the fill.
+ * @param runWeekIndex - Position of the week inside its run, from one.
+ * @returns The zero-padded boss number.
  */
-export function resolveBossHpBarColorClass(remainingPercentage: number): string {
-  if (remainingPercentage <= HP_BAR_LOW_THRESHOLD) {
-    return 'bg-accent-red';
-  }
-
-  if (remainingPercentage <= HP_BAR_MEDIUM_THRESHOLD) {
-    return 'bg-accent-gold';
-  }
-
-  return 'bg-accent-green';
+export function resolveBossNumberLabel(runWeekIndex: number): string {
+  return String(runWeekIndex).padStart(2, '0');
 }
+
+/*
+ * No boss HP bar color helper here on purpose: the health bar is always `bg-accent-red` and
+ * always drains, never a green/gold/red traffic light — red is the threat, and what remains of
+ * it is what remains to beat. A bar that turned green at full health said the opposite of what
+ * red means everywhere else in the app. Written as a plain Tailwind class at each call site, not
+ * a computed value, since it never varies.
+ */

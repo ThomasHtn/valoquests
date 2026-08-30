@@ -1,0 +1,87 @@
+/*
+ * Literal measurements and colors matching the validated mock-up's own CSS (design-review.md's
+ * artifact, "La colonie") rather than the app's default Tailwind type scale, which does not carry
+ * this page's specific sizes (a 56px population figure, 30px pips, hexagons sized 30×34 and
+ * 26×30). Colors are spelled out rather than referenced through `var(--color-*)` — this file is a
+ * component stylesheet, compiled outside the Tailwind theme context where those tokens resolve,
+ * the same reason `landing.css` spells its own out. Keep in sync with `src/styles/colors.css`:
+ *   brand-500 #d9954a · brand-400 #e8ab6b · surface-sunken #0a151d · surface-700 #253645
+ *   surface-600 #33495b · text-primary #ece8e1 · text-secondary #a4a7a6 · text-muted #868b8d
+ *   accent-red #ff4655 · accent-cyan #2dd4bf · success #5fb88a · danger #d9534f
+ */
+
+.colony-town {
+  background: linear-gradient(155deg, rgb(217 149 74 / 10%), #0a151d 60%);
+  border: 1px solid rgb(217 149 74 / 35%);
+  padding: 26px 28px 22px;
+}
+
+.town-tier-name {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: #e8ab6b;
+}
+
+.town-pop {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+.town-pop-unit {
+  font-size: 1.375rem;
+  color: #a4a7a6;
+}
+
+.town-delta {
+  font-size: 0.9375rem;
+  vertical-align: super;
+}
+
+.metric-block + .metric-block {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #253645;
+}
+
+.metric-count {
+  font-size: 1.375rem;
+}
+
+.metric-count-unit {
+  color: #868b8d;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.metric-mult {
+  font-size: 0.8125rem;
+  color: #e8ab6b;
+}
+
+.conclusion {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #253645;
+}
+
+/*
+ * Size and shape only — the fill comes from `face.fillClass` (`bg-accent-cyan`/`bg-accent-cyan/30`/
+ * `bg-surface-700`), already the same values the mock-up's `.pip`/`.pip-partial`/`.pip-none` use.
+ * Text color still has to follow which of the three that is: dark on the solid cyan fill, muted
+ * everywhere else — the one thing `fillClass` does not also carry.
+ */
+.pip {
+  width: 30px;
+  height: 30px;
+  color: #a4a7a6;
+}
+
+.pip-lit {
+  color: #0f1c26;
+}
+
+.pip-more {
+  background: transparent;
+  border: 1px dashed #33495b;
+  color: #868b8d;
+}

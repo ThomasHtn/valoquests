@@ -98,11 +98,13 @@ public class ColonyPresenceReader {
 
         // Held to the denominator, which is the ratio the multiplier itself is capped at.
         int counted = Math.clamp(presenceCount, 0, Math.max(0, rosterSize));
+        int nextCounted = Math.min(counted + 1, rosterSize);
 
         return new ColonyPresenceResponse(
             counted,
             rosterSize,
             engine.presenceMultiplier(counted, rosterSize),
+            engine.presenceMultiplier(nextCounted, rosterSize),
             ruleset.presenceDamageThreshold(),
             players
         );

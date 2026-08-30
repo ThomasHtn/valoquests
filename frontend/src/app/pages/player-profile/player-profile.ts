@@ -11,6 +11,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { LucideLoaderCircle } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
@@ -93,6 +94,7 @@ const MAX_PROGRESSION_SEASONS = 5;
   selector: 'app-player-profile',
   imports: [
     TranslatePipe,
+    RouterLink,
     Avatar,
     ChampionBadge,
     MediaThumbnail,

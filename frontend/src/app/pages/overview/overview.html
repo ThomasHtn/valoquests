@@ -1,33 +1,178 @@
-<!-- Context bar: the page and the active week on the caption line, what the week is about as the
-     title itself, and the countdown at the trailing edge — the one piece of the old scroll-snap
-     hero that belongs in the chrome rather than inside the boss card below, where it now stays on
-     screen for the whole page. -->
-<app-page-header
-  [eyebrow]="
-    'pageHeader.weekHeading'
-      | translate: { page: 'overview.header.title' | translate, number: week()?.number ?? '—' }
-  "
-  [heading]="'overview.header.subheading' | translate"
->
+<!-- Context bar: the campaign's own week count on the caption line (see `ColonyView.eyebrow`), "La
+     colonie" as the title, and the countdown at the trailing edge. -->
+<app-page-header [eyebrow]="colony.eyebrow()" [heading]="'overview.header.title' | translate">
   <app-week-countdown [remaining]="week()?.remaining ?? null" />
 </app-page-header>
 
 <div class="page-body">
-  <!-- The run's own standing beside the week's fight: the population tile is the run's whole
-       answer in one figure, so it stands narrow at the boss card's side rather than under its own
-       heading, and doubles as the link into `/campaign` the way the retired summary band did. -->
-  <div class="grid gap-4 lg:grid-cols-4">
-    <app-population-tile class="lg:col-span-1" />
-    <app-boss-encounter class="lg:col-span-3" />
-  </div>
+  <!-- Bloc 1 — the town, the page's one signature element. Everything under it is read against
+       it: the day and the week are both what tonight adds to this. -->
+  @if (colony.town(); as town) {
+    <section class="colony-town">
+      <div class="flex flex-wrap items-end justify-between gap-x-7 gap-y-4">
+        <div>
+          <p class="town-tier-name font-mono uppercase">{{ currentTier()?.name ?? '' }}</p>
+          <p class="town-pop font-display font-bold text-text-primary">
+            {{ colony.populationLabel() }}
+            <span class="town-pop-unit ml-2 font-semibold">
+              {{ 'colony.population' | translate }}
+            </span>
+            @if (colony.delta(); as delta) {
+              <span
+                class="town-delta font-display ml-1.5 font-bold"
+                [class.text-success]="delta.isPositive"
+                [class.text-text-muted]="!delta.isPositive && !delta.isNegative"
+                [class.text-danger]="delta.isNegative"
+              >
+                {{ delta.label }}
+              </span>
+            }
+          </p>
+        </div>
 
-  <!-- The week's ranking on the right, the week's collective progress on the left: both summarize
-     "how is the week going" and share the screen evenly rather than stacking as full-width strips.
+        @if (nextTier(); as next) {
+          <div class="min-w-65 flex-1 sm:max-w-90">
+            <div class="mb-1.5 flex justify-between text-[0.8125rem] text-text-secondary">
+              <span>{{ 'colony.ladder.title' | translate }}</span>
+              <span class="font-semibold text-text-primary">{{ next.name }}</span>
+            </div>
+            <app-progress-bar
+              [colorClass]="'bg-brand-500'"
+              [percentage]="town.progressPercentage"
+              heightClass="h-[9px]"
+            />
+            <div class="mt-1.5 flex justify-between text-2xs text-text-muted">
+              <span>{{ next.missingMaterialsLabel }} {{ 'colony.ladder.unit' | translate }}</span>
+              <span>{{ town.progressPercentage | number: '1.0-0' }} %</span>
+            </div>
+          </div>
+        }
+      </div>
 
-     Left to stretch rather than aligned to the start: both panels are a section rule opening on
-     the same line, and letting the row share its height makes them close on the same line too. -->
+      <app-town-silhouette
+        class="mt-5 block"
+        [glyph]="town.glyph"
+        [populationPercentage]="town.populationPercentage"
+        [progressPercentage]="town.progressPercentage"
+      />
+    </section>
+  }
+
   <div class="grid gap-6 lg:grid-cols-2 lg:gap-x-12">
-    <app-team-progress />
-    <app-podium />
+    <!-- Bloc 2 — the day, the page's one prescriptive block: what tonight's game is worth. -->
+    <section class="flex flex-col">
+      <div class="flex items-center gap-3">
+        <h2
+          class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
+        >
+          {{ 'overview.dayBlock.title' | translate }}
+        </h2>
+        <span
+          aria-hidden="true"
+          class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
+        ></span>
+        <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
+      </div>
+
+      @if (colony.battery(); as battery) {
+        <div class="metric-block">
+          <p class="label-caption mb-2 text-text-muted">
+            {{ 'colony.track.presence.name' | translate }}
+          </p>
+          <div class="mb-2 flex items-baseline justify-between">
+            <span class="metric-count font-display font-bold text-text-primary tabular-nums">
+              {{ battery.presentCount
+              }}<span class="metric-count-unit">/{{ battery.rosterSize }}</span>
+            </span>
+            <span class="metric-mult font-mono">{{ battery.multiplierLabel }}</span>
+          </div>
+          <app-progress-bar
+            [colorClass]="'bg-brand-500'"
+            [live]="true"
+            [percentage]="battery.presentPercentage"
+            [targetMarker]="battery.nextStepPercentage"
+            heightClass="h-[14px]"
+          />
+
+          @if (colony.presenceFaces(); as faces) {
+            <div class="mt-3.5 flex flex-wrap gap-2">
+              @for (face of faces.visible; track face.playerId) {
+                <span
+                  [class]="face.fillClass"
+                  [class.pip-lit]="face.state === 'FULL'"
+                  [title]="face.ariaLabel"
+                  class="pip font-mono flex items-center justify-center rounded-full text-2xs font-semibold"
+                >
+                  {{ face.initials.slice(0, 1) }}
+                </span>
+              }
+              @if (faces.overflowCount > 0) {
+                <span
+                  class="pip pip-more font-mono flex items-center justify-center rounded-full text-2xs font-semibold"
+                >
+                  +{{ faces.overflowCount }}
+                </span>
+              }
+            </div>
+          }
+        </div>
+
+        @if (colony.foodRing()) {
+          <div class="metric-block">
+            <p class="label-caption mb-2 text-text-muted">
+              {{ 'colony.track.food.weekTitle' | translate }}
+            </p>
+            <app-bar-chart
+              [ariaLabel]="'colony.track.food.weekTitle' | translate"
+              [bars]="foodWeekBars()"
+              [showAllValues]="true"
+              [summary]="foodWeekSummary()"
+              heightClass="h-28 w-full"
+            />
+          </div>
+        }
+
+        @if (!battery.isFull && battery.nextMultiplierLabel) {
+          <p class="conclusion text-[0.9375rem] text-text-secondary">
+            {{
+              'colony.track.presence.nextMultiplier'
+                | translate: { multiplier: battery.nextMultiplierLabel }
+            }}
+          </p>
+        }
+      }
+    </section>
+
+    <!-- Blocs 3 & 4 — the week's fight and the ranking, each a summary linking to its own page.
+         The fight reuses `/week`'s own hero card, sized to this half column: no rewards aside,
+         which only fits the fight's full-width home. -->
+    <div class="flex flex-col gap-6">
+      <section class="flex flex-col">
+        <div class="flex items-center gap-3">
+          <h2
+            class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
+          >
+            {{ 'overview.weekSummary.title' | translate: { week: week()?.number ?? '—' } }}
+          </h2>
+          <span
+            aria-hidden="true"
+            class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
+          ></span>
+          <a
+            [routerLink]="'/week'"
+            class="label-caption shrink-0 text-brand-400 transition-colors hover:text-brand-300"
+          >
+            {{ 'overview.weekSummary.link' | translate }}
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
+
+        <div class="mt-3">
+          <app-boss-fight-card [showRewards]="false" />
+        </div>
+      </section>
+
+      <app-mini-ranking />
+    </div>
   </div>
 </div>

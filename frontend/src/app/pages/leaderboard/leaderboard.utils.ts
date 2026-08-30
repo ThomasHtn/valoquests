@@ -1,5 +1,11 @@
 import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { ChallengeProgress } from '@core/challenges/challenge.model';
+import {
+  resolveChallengeMetricLabel,
+  resolveChallengeVisual,
+} from '@core/challenges/challenge-visual.utils';
 import { RankingChallengeProgress } from '@core/ranking/ranking.model';
+import { RankingCell, RankingColumn } from './leaderboard.model';
 
 /**
  * Computes how close a player's progress is to a challenge's target, as a percentage clamped
@@ -69,4 +75,60 @@ export function buildTargetValueLabel(
   language: 'fr' | 'en',
 ): string | null {
   return progress?.targetValue ? formatMetricValue(progress.targetValue, language) : null;
+}
+
+/**
+ * Resolves the active week's challenges into ranking table columns — the week's own draw, paired
+ * with the color treatment the weekly challenges card already uses for the same challenges.
+ *
+ * Shared by `Leaderboard` (the full matrix) and `PlayerProfile` (one player's own five rings),
+ * so a challenge reads the same tier badge and target everywhere it appears this week.
+ *
+ * @param challenges - The active week's drawn challenges, or an empty list on a closed week.
+ * @param translate - Resolves an i18n key, used for each challenge's metric category label.
+ * @param language - The app language whose separators format each target value with.
+ * @returns One column per challenge, in the order the backend drew them.
+ */
+export function resolveRankingColumns(
+  challenges: readonly ChallengeProgress[],
+  translate: (key: string) => string,
+  language: 'fr' | 'en',
+): readonly RankingColumn[] {
+  return challenges.map((challenge) => ({
+    challengeId: challenge.id,
+    name: challenge.name,
+    categoryLabel: resolveChallengeMetricLabel(challenge.metric, translate),
+    targetLabel: challenge.targetValue ? formatMetricValue(challenge.targetValue, language) : null,
+    tooltip: `${challenge.name} — ${challenge.description}`,
+    visual: resolveChallengeVisual(challenge.metric, challenge.difficulty),
+  }));
+}
+
+/**
+ * Aligns one player's per-challenge progress with the week's columns, one cell per column — the
+ * same pairing `Leaderboard` builds for every row of the matrix.
+ *
+ * @param columns - The active week's columns, as resolved by {@link resolveRankingColumns}.
+ * @param progress - The player's own progress entries, in no particular order.
+ * @param language - The app language whose separators format each cell's values with.
+ * @returns One cell per column, aligned by challenge id.
+ */
+export function resolveRankingCells(
+  columns: readonly RankingColumn[],
+  progress: readonly RankingChallengeProgress[],
+  language: 'fr' | 'en',
+): readonly RankingCell[] {
+  return columns.map((column) => {
+    const match = progress.find((candidate) => candidate.challengeId === column.challengeId);
+    return {
+      challengeId: column.challengeId,
+      name: column.name,
+      categoryLabel: column.categoryLabel,
+      currentValueLabel: buildCurrentValueLabel(match, language),
+      targetValueLabel: buildTargetValueLabel(match, language),
+      completionPercentage: computeCompletionPercentage(match),
+      completed: match?.completed ?? false,
+      visual: column.visual,
+    };
+  });
 }

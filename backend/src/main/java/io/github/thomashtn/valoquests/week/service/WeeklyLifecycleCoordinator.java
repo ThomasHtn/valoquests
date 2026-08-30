@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.week.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
 import io.github.thomashtn.valoquests.boss.service.BossChronologyResult;
@@ -72,6 +73,10 @@ public class WeeklyLifecycleCoordinator {
      * @param ruleset                         scoring ruleset
      * @param runService                      run lifecycle service
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public WeeklyLifecycleCoordinator(
         WeeklyChallengeSelectionService weeklyChallengeSelectionService,
         WeeklyBossSelectionService weeklyBossSelectionService,
@@ -99,10 +104,24 @@ public class WeeklyLifecycleCoordinator {
      * the rollover finalizes every week it missed in one pass and then opens the current one once, so a
      * rollover firing after a long outage can be several runs behind.
      *
+     * <p>Opens nothing at all when no campaign is running and an operator has turned automatic
+     * renewal off — the gap that setting exists to leave open. Only guards the case where none is
+     * open yet: a campaign already under way still runs its own ten weeks regardless of the setting,
+     * which only ever decides whether a *new* one follows.
+     *
      * @param weekStart Monday identifying the new week
      */
     @Transactional
     public void openWeek(LocalDate weekStart) {
+        if (runService.currentRun().isEmpty() && !runService.isAutoRenewEnabled()) {
+            LOGGER.info(
+                "No campaign is running and automatic renewal is off: week {} opens nothing.",
+                weekStart
+            );
+
+            return;
+        }
+
         runService.ensureRunFor(weekStart);
         weeklyChallengeSelectionService.selectWeekChallenges(weekStart);
         weeklyBossSelectionService.selectWeekBoss(weekStart);

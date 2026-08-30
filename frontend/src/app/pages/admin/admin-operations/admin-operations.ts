@@ -1,9 +1,13 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { LucideChevronDown, LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
 import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminCommandRunner } from '@core/admin/admin-command-runner';
-import { IN_FLIGHT_SYNCHRONIZATION_STATUSES } from '@core/admin/admin.model';
+import {
+  IN_FLIGHT_SYNCHRONIZATION_STATUSES,
+  SynchronizationExecution,
+} from '@core/admin/admin.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -12,10 +16,11 @@ import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
 import { InlineMessage } from '@shared/inline-message/inline-message';
 import { PageHeader } from '@layout/page-header/page-header';
+import { ResourceState } from '@shared/resource-state/resource-state';
 import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
 import { SectionLabel } from '@shared/section-label/section-label';
-import { StatusBadge } from '@shared/status-badge/status-badge';
+import { StatusBadge, StatusBadgeTone } from '@shared/status-badge/status-badge';
 import { AdminActionCard } from '../admin-action-card/admin-action-card';
 
 /**
@@ -44,7 +49,11 @@ const SYNCHRONIZATION_POLL_INTERVAL_MS = 3_000;
     TranslatePipe,
     AdminActionCard,
     InlineMessage,
+    LucideChevronDown,
+    LucideChevronLeft,
+    LucideChevronRight,
     PageHeader,
+    ResourceState,
     SectionLabel,
     Select,
     StatusBadge,
@@ -170,6 +179,57 @@ export class AdminOperations {
   });
 
   /**
+   * Zero-based page of the synchronization history on screen.
+   */
+  protected readonly historyPage = signal(0);
+
+  /**
+   * Reactive resource fetching the requested page of synchronization history.
+   */
+  protected readonly historyResource = this.adminApi.synchronizationHistory(this.historyPage);
+
+  /**
+   * The page's executions, most recent first, or `[]` while loading.
+   */
+  protected readonly historyRows = computed(
+    () => resourceValue(this.historyResource, undefined)?.content ?? [],
+  );
+
+  /**
+   * Whether a page past the one on screen exists.
+   */
+  protected readonly hasNextHistoryPage = computed(() => {
+    const page = resourceValue(this.historyResource, undefined);
+
+    return page !== undefined && this.historyPage() + 1 < page.totalPages;
+  });
+
+  /**
+   * Identifier of the execution whose per-player results are open, or `null` while none is.
+   */
+  protected readonly expandedExecutionId = signal<number | null>(null);
+
+  /**
+   * Reactive resource fetching {@link expandedExecutionId}'s per-player results, fetched only
+   * once a reader actually opens a row.
+   */
+  protected readonly executionDetailsResource = this.adminApi.synchronizationDetails(
+    this.expandedExecutionId,
+  );
+
+  /**
+   * {@link expandedExecutionId}'s per-player results, or `[]` while collapsed or loading.
+   */
+  protected readonly executionDetailsPlayers = computed(
+    () => resourceValue(this.executionDetailsResource, undefined)?.players ?? [],
+  );
+
+  /**
+   * Formats a synchronization's start timestamp, exposed to the template.
+   */
+  protected readonly formatTimestamp = formatSynchronizationTimestamp;
+
+  /**
    * Polls the running synchronization until it settles.
    *
    * The interval is created and torn down by the same effect, so it only exists while there is
@@ -189,6 +249,45 @@ export class AdminOperations {
 
       onCleanup(() => clearInterval(handle));
     });
+  }
+
+  /**
+   * Resolves a history row's status badge tone.
+   *
+   * @param status - The execution's own status.
+   * @returns The tone to render the badge in.
+   */
+  protected historyStatusTone(status: SynchronizationExecution['status']): StatusBadgeTone {
+    if (IN_FLIGHT_SYNCHRONIZATION_STATUSES.includes(status)) {
+      return 'brand';
+    }
+
+    return status === 'FAILED' || status === 'PARTIAL' ? 'danger' : 'neutral';
+  }
+
+  /**
+   * Opens one execution's per-player results, or closes it if it is already open.
+   *
+   * @param executionId - The execution's own identifier.
+   */
+  protected toggleExecution(executionId: number): void {
+    this.expandedExecutionId.update((current) => (current === executionId ? null : executionId));
+  }
+
+  /**
+   * Steps the history to the next, older page.
+   */
+  protected loadNextHistoryPage(): void {
+    if (this.hasNextHistoryPage()) {
+      this.historyPage.update((page) => page + 1);
+    }
+  }
+
+  /**
+   * Steps the history back to the previous, more recent page.
+   */
+  protected loadPreviousHistoryPage(): void {
+    this.historyPage.update((page) => Math.max(0, page - 1));
   }
 
   /**

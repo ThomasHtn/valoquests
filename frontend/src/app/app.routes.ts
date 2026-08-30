@@ -5,7 +5,6 @@ import { adminGuard } from '@core/admin/admin.guard';
 import { landingEntryGuard } from '@core/landing/landing-entry.guard';
 import { tourEntryGuard } from '@core/tour/tour-entry.guard';
 import { Campaign } from '@pages/campaign/campaign';
-import { Challenges } from '@pages/challenges/challenges';
 import { Landing } from '@pages/landing/landing';
 import { Leaderboard } from '@pages/leaderboard/leaderboard';
 import { NotFound } from '@pages/not-found/not-found';
@@ -13,18 +12,19 @@ import { Overview } from '@pages/overview/overview';
 import { Players } from '@pages/players/players';
 import { Rules } from '@pages/rules/rules';
 import { Tour } from '@pages/tour/tour';
+import { Week } from '@pages/week/week';
 
 /**
  * Application routes.
  *
- * The public pages are referenced eagerly, the backoffice and the player profile through
- * `loadComponent`. Route-level splitting used to be the rule here, but a bundler chunk is emitted
- * for every module two lazy pages share: the public site ended up pulling around twenty-five
- * sub-kilobyte chunks — one per shared primitive — on every screen. Request count is the second
- * heaviest term of the page's environmental footprint, so the public pages, which together weigh
- * less than the shared chunks they were dragging in, now ride in the initial bundle. The two
- * exceptions carry weight nothing else needs: the profile owns `chart.js`, and the backoffice is
- * reachable by URL only.
+ * The public pages are referenced eagerly, the backoffice and the two pages that read a player's
+ * progression through `loadComponent`. Route-level splitting used to be the rule here, but a
+ * bundler chunk is emitted for every module two lazy pages share: the public site ended up pulling
+ * around twenty-five sub-kilobyte chunks — one per shared primitive — on every screen. Request count
+ * is the second heaviest term of the page's environmental footprint, so the public pages, which
+ * together weigh less than the shared chunks they were dragging in, now ride in the initial bundle.
+ * The exceptions carry weight nothing else needs: the profile and the two-player comparison both
+ * own `chart.js` through `EvolutionChart`, and the backoffice is reachable by URL only.
  *
  * A route's `title` is a translation key rather than a literal; it is resolved against the active
  * dictionary by `TranslatedTitleStrategy`.
@@ -76,9 +76,16 @@ export const routes: Routes = [
         component: Overview,
       },
       {
-        path: 'challenges',
+        path: 'week',
         title: 'overview.weeklyChallenges.title',
-        component: Challenges,
+        component: Week,
+      },
+      {
+        // The boss card and the challenge board fused into one page (see design-review.md §3.2);
+        // the old address stays valid, on the same pattern as `colony` → `campaign` below.
+        path: 'challenges',
+        redirectTo: 'week',
+        pathMatch: 'full',
       },
       {
         path: 'leaderboard',
@@ -97,9 +104,23 @@ export const routes: Routes = [
           import('@pages/player-profile/player-profile').then((m) => m.PlayerProfile),
       },
       {
+        path: 'players/:id/matches/:matchId',
+        title: 'playerProfile.matches.detail.title',
+        loadComponent: () =>
+          import('@pages/player-profile/match-detail/match-detail').then((m) => m.MatchDetail),
+      },
+      {
         path: 'campaign',
         title: 'campaign.title',
         component: Campaign,
+      },
+      {
+        path: 'campaign/history/:runNumber',
+        title: 'campaignSummary.eyebrow',
+        loadComponent: () =>
+          import('@pages/campaign/campaign-summary/campaign-summary').then(
+            (m) => m.CampaignSummary,
+          ),
       },
       {
         // The colony and the campaign were two pages until they turned out to be one run; the old
@@ -126,6 +147,13 @@ export const routes: Routes = [
         canActivate: [adminGuard],
         loadComponent: () =>
           import('@pages/admin/admin-players/admin-players').then((m) => m.AdminPlayers),
+      },
+      {
+        path: 'admin/campaigns',
+        title: 'admin.campaigns.title',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('@pages/admin/admin-campaigns/admin-campaigns').then((m) => m.AdminCampaigns),
       },
       {
         path: 'admin/maintenance',

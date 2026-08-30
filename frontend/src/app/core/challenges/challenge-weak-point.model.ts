@@ -1,13 +1,14 @@
-import { ChallengeDifficulty } from '@core/challenges/challenge.model';
+import { ChallengeDifficulty } from './challenge.model';
 
 /**
- * One of the week's five challenges, compressed to what the boss card needs of it.
+ * One of the active week's challenges, compressed to what a boss card needs of it.
  *
- * The health bar states how much of the boss is left but nothing about how it is drained. This is a
+ * A boss's health bar states how much of it is left but nothing about how it is drained. This is a
  * challenge card reduced to its tier mark and its damage — enough to say "this is what hurts it",
- * with the quest board one click away for what each tier actually asks for.
+ * with the quest board one click away for what each tier actually asks for. Shared by every card
+ * that frames the active week's challenges as the boss's weak points (`BossEncounter`, `BossDetail`).
  */
-export interface BossWeakPoint {
+export interface ChallengeWeakPoint {
   /**
    * Challenge identifier, used as the list's tracking key.
    */

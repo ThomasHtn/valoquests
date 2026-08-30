@@ -1,0 +1,95 @@
+<app-page-header
+  [eyebrow]="'admin.eyebrow' | translate"
+  [heading]="'admin.campaigns.heading' | translate"
+/>
+
+<div class="page-body">
+  <app-section-label [label]="'admin.campaigns.runsLabel' | translate" />
+
+  <app-resource-state
+    (retry)="campaignsResource.reload()"
+    [emptyText]="'admin.campaigns.empty' | translate"
+    [errorText]="'admin.campaigns.error' | translate"
+    [isEmpty]="runs().length === 0"
+    [isError]="!!campaignsResource.error()"
+    [isLoading]="campaignsResource.isLoading()"
+    [loadingText]="'admin.campaigns.loading' | translate"
+  >
+    <ul class="flex flex-col gap-2">
+      @for (run of runs(); track run.id) {
+        <li
+          class="notch-tr flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-l-2 border-l-text-primary/15 bg-text-primary/4 px-4 py-3 [--notch:0.625rem]"
+        >
+          <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span class="font-display text-sm font-semibold text-text-primary tabular-nums">
+              {{ dateRangeLabel(run) }}
+            </span>
+            <app-status-badge
+              [label]="'admin.campaigns.status.' + run.status | translate"
+              [tone]="statusTone(run.status)"
+            />
+          </span>
+
+          <span class="flex items-center gap-4 text-right">
+            <span class="text-sm text-text-muted">
+              {{ 'admin.campaigns.roster' | translate: { count: run.rosterSize } }}
+            </span>
+            <span class="font-display text-lg font-bold text-text-primary tabular-nums">
+              {{ run.score }}
+            </span>
+          </span>
+        </li>
+      }
+    </ul>
+  </app-resource-state>
+
+  <div class="mt-6 grid gap-4 lg:grid-cols-2">
+    <app-admin-action-card
+      (triggered)="startCampaign()"
+      [actionLabel]="'admin.campaigns.start.action' | translate"
+      [description]="'admin.campaigns.start.description' | translate"
+      [disabled]="hasRunningCampaign()"
+      [heading]="'admin.campaigns.start.heading' | translate"
+      [state]="startState()"
+    />
+
+    <app-admin-action-card
+      (triggered)="askToStop()"
+      [actionLabel]="'admin.campaigns.stop.action' | translate"
+      [description]="'admin.campaigns.stop.description' | translate"
+      [destructive]="true"
+      [disabled]="!hasRunningCampaign()"
+      [heading]="'admin.campaigns.stop.heading' | translate"
+      [state]="stopState()"
+    />
+
+    <app-admin-action-card
+      (triggered)="toggleAutoRenew()"
+      [actionLabel]="
+        (autoRenewEnabled()
+          ? 'admin.campaigns.autoRenew.turnOff'
+          : 'admin.campaigns.autoRenew.turnOn'
+        ) | translate
+      "
+      [description]="'admin.campaigns.autoRenew.description' | translate"
+      [heading]="
+        (autoRenewEnabled()
+          ? 'admin.campaigns.autoRenew.headingOn'
+          : 'admin.campaigns.autoRenew.headingOff'
+        ) | translate
+      "
+      [state]="autoRenewState()"
+    />
+  </div>
+
+  <app-confirm-dialog
+    (confirmed)="confirmStop()"
+    (dismissed)="dismissStop()"
+    [body]="'admin.campaigns.stop.confirmBody' | translate"
+    [busy]="stopState().status === 'running'"
+    [cancelLabel]="'admin.cancel' | translate"
+    [confirmLabel]="'admin.campaigns.stop.confirm' | translate"
+    [heading]="'admin.campaigns.stop.heading' | translate"
+    [open]="stopDialogOpen()"
+  />
+</div>

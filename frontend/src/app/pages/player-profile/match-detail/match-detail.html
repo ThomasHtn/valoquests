@@ -1,0 +1,241 @@
+<app-page-header
+  [backLink]="backLink()"
+  [eyebrow]="'playerProfile.matches.detail.eyebrow' | translate"
+/>
+
+<div class="page-body">
+  <app-resource-state
+    [errorText]="'playerProfile.matches.detail.error' | translate"
+    [isError]="!!detailResource.error()"
+    [isLoading]="detailResource.isLoading()"
+    [loadingText]="'playerProfile.matches.detail.loading' | translate"
+    padding="py-6"
+    (retry)="detailResource.reload()"
+  >
+    @if (match(); as match) {
+      <!-- Same identity a history row shows — map, agent, result — opened up into the page's own
+           hero rather than a card: this page has nothing else competing for the top of the fold. -->
+      <section
+        [class]="resultTextClass(match.result)"
+        class="notch-tr flex flex-col gap-5 border-l-2 border-current bg-text-primary/4 p-5 [--notch:1.25rem] sm:flex-row sm:items-center sm:justify-between sm:p-6"
+      >
+        <div class="flex items-center gap-5">
+          <app-media-thumbnail
+            [monogram]="agentInitial(match.agentName)"
+            [src]="mapImageUrl(match.mapName)"
+          />
+
+          <div class="min-w-0">
+            <h1
+              class="font-display truncate text-2xl leading-tight font-bold text-text-primary uppercase sm:text-3xl"
+            >
+              {{ match.mapName }}
+              <span class="sr-only">
+                — {{ 'playerProfile.matches.result.' + match.result | translate }}
+              </span>
+            </h1>
+            <p class="mt-2.5 text-sm text-text-muted">
+              {{ matchDay() }} · {{ matchTime(match.startedAt) }} ·
+              {{ 'playerProfile.matches.gameMode.' + match.gameMode | translate }}
+              @if (durationLabel()) {
+                · {{ durationLabel() }}
+              }
+            </p>
+            @if (match.mvp) {
+              <p class="tracking-label mt-2.5 text-2xs font-bold text-accent-gold uppercase">
+                {{ 'playerProfile.matches.detail.mvp' | translate }}
+              </p>
+            }
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 sm:justify-end">
+          <app-media-thumbnail
+            [accessibleName]="match.agentName"
+            [monogram]="agentInitial(match.agentName)"
+            [src]="agentImageUrl(match.agentName)"
+          />
+
+          <p class="font-display text-3xl leading-none font-bold tabular-nums">
+            @if (matchScore(match.allyScore, match.enemyScore); as score) {
+              <span [class]="resultTextClass(match.result)">{{ score.ally }}</span>
+              <span class="text-text-muted"> : {{ score.enemy }}</span>
+            } @else {
+              <span class="text-text-muted">—</span>
+            }
+          </p>
+        </div>
+      </section>
+
+      <!-- The figures the history row already shows, spelled out at full width. -->
+      <dl class="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
+          <dt class="label-caption text-text-muted">
+            {{ 'playerProfile.matches.columns.kda' | translate }}
+          </dt>
+          <dd class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
+            {{ match.kills }}/{{ match.deaths }}/{{ match.assists }}
+          </dd>
+        </div>
+        <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
+          <dt class="label-caption text-text-muted">
+            {{ 'playerProfile.matches.columns.kd' | translate }}
+          </dt>
+          <dd
+            [class]="kdaVisual(match.kda).textClass"
+            class="font-display mt-1.5 text-xl font-bold tabular-nums"
+          >
+            {{ formatKda(match.kda) }}
+          </dd>
+        </div>
+        <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
+          <dt class="label-caption text-text-muted">
+            {{ 'playerProfile.matches.columns.acs' | translate }}
+          </dt>
+          <dd class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
+            {{ formatScore(match.acs) }}
+          </dd>
+        </div>
+        <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
+          <dt class="label-caption text-text-muted">
+            {{ 'playerProfile.matches.columns.adr' | translate }}
+          </dt>
+          <dd class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
+            {{ formatScore(match.adr) }}
+          </dd>
+        </div>
+        <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
+          <dt class="label-caption text-text-muted">
+            {{ 'playerProfile.matches.detail.damageDealt' | translate }}
+          </dt>
+          <dd class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
+            {{ formatDamageAmount(match.damageDealt) }}
+          </dd>
+        </div>
+        <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
+          <dt class="label-caption text-text-muted">
+            {{ 'playerProfile.matches.detail.roundsPlayed' | translate }}
+          </dt>
+          <dd class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
+            {{ match.roundsPlayed }}
+          </dd>
+        </div>
+      </dl>
+
+      <!-- The breakdown a single match is worth opening for: the shot-type split behind the
+           headshot rate a history row only summarizes, and this match's tier and boss damage. -->
+      <div class="mt-6 grid gap-4 lg:grid-cols-2">
+        <section class="bg-text-primary/4 p-5 sm:p-6">
+          <h2 class="tracking-label font-display text-sm font-bold text-text-primary uppercase">
+            {{ 'playerProfile.matches.detail.shotsHeading' | translate }}
+          </h2>
+          <dl class="mt-4 grid grid-cols-3 gap-3">
+            <div>
+              <dt class="label-caption text-text-muted">
+                {{ 'playerProfile.matches.detail.headshots' | translate }}
+              </dt>
+              <dd class="font-display mt-1.5 text-lg font-semibold text-text-primary tabular-nums">
+                {{ match.headshots }}
+              </dd>
+            </div>
+            <div>
+              <dt class="label-caption text-text-muted">
+                {{ 'playerProfile.matches.detail.bodyshots' | translate }}
+              </dt>
+              <dd class="font-display mt-1.5 text-lg font-semibold text-text-primary tabular-nums">
+                {{ match.bodyshots }}
+              </dd>
+            </div>
+            <div>
+              <dt class="label-caption text-text-muted">
+                {{ 'playerProfile.matches.detail.legshots' | translate }}
+              </dt>
+              <dd class="font-display mt-1.5 text-lg font-semibold text-text-primary tabular-nums">
+                {{ match.legshots }}
+              </dd>
+            </div>
+          </dl>
+          <p class="mt-4 text-sm text-text-muted">
+            {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
+            <span class="font-semibold text-text-primary tabular-nums">
+              {{ formatHeadshotPercentage(match.headshotPercentage) }}
+            </span>
+          </p>
+        </section>
+
+        <section class="bg-text-primary/4 p-5 sm:p-6">
+          <h2 class="tracking-label font-display text-sm font-bold text-text-primary uppercase">
+            {{ 'playerProfile.matches.detail.standingHeading' | translate }}
+          </h2>
+          <dl class="mt-4 grid grid-cols-2 gap-3">
+            <div>
+              <dt class="label-caption text-text-muted">
+                {{ 'playerProfile.matches.detail.tier' | translate }}
+              </dt>
+              <dd
+                [class]="tierLabel()?.colorClass"
+                class="font-display mt-1.5 text-lg font-semibold tabular-nums"
+              >
+                {{ tierLabel()?.label ?? '—' }}
+              </dd>
+            </div>
+            <div>
+              <dt class="label-caption text-text-muted">
+                {{ 'playerProfile.matches.columns.damage' | translate }}
+              </dt>
+              <dd
+                [class.text-brand-500]="match.valoquestsDamage > 0"
+                [class.text-text-muted]="match.valoquestsDamage === 0"
+                [appTooltip]="damageExplanation(match.damageCoefficientPercent)"
+                class="font-display mt-1.5 cursor-help text-lg font-semibold tabular-nums"
+              >
+                {{ formatDamageAmount(match.valoquestsDamage) }}
+              </dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      @if (match.teammates.length > 0) {
+        <!-- Every other tracked player found in the same lobby — the squad is small enough that
+             two of them routinely land in the same match, on either team. -->
+        <section class="mt-6 bg-text-primary/4 p-5 sm:p-6">
+          <h2 class="tracking-label font-display text-sm font-bold text-text-primary uppercase">
+            {{ 'playerProfile.matches.detail.teammatesHeading' | translate }}
+          </h2>
+          <ul class="mt-4 flex flex-col gap-2">
+            @for (teammate of match.teammates; track teammate.playerId) {
+              <li
+                [routerLink]="['/players', teammate.playerId]"
+                class="notch-tr focus-ring-inset flex cursor-pointer items-center gap-3.5 bg-text-primary/4 px-4 py-3 transition-colors [--notch:0.625rem] hover:bg-brand-500/15"
+                tabindex="0"
+              >
+                <app-avatar [src]="avatarUrl(teammate.portrait)" size="sm" />
+
+                <span class="flex min-w-0 flex-1 flex-col gap-1">
+                  <span class="truncate text-sm font-semibold text-text-primary">
+                    {{ teammate.displayName }}
+                  </span>
+                  <span class="truncate text-xs text-text-muted">
+                    {{ teammate.agentName }} ·
+                    {{
+                      'playerProfile.matches.detail.' +
+                        (teammate.sameTeam ? 'sameTeam' : 'otherTeam') | translate
+                    }}
+                  </span>
+                </span>
+
+                <span
+                  [class]="teammateResultClass(teammate)"
+                  class="font-display shrink-0 text-sm font-semibold tabular-nums"
+                >
+                  {{ teammate.kills }}/{{ teammate.deaths }}/{{ teammate.assists }}
+                </span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+  </app-resource-state>
+</div>

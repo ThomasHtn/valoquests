@@ -4,15 +4,15 @@ import { RouterLink } from '@angular/router';
 import { LucideSkull, LucideSwords } from '@lucide/angular';
 
 import { BossApi } from '@core/boss/boss-api';
-import { resolveBossHpBarColorClass } from '@core/boss/boss-visual.utils';
+import { resolveBossNumberLabel } from '@core/boss/boss-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
-import { resolveChallengeVisual } from '@core/challenges/challenge-visual.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
+import { ChallengeWeakPoint } from '@core/challenges/challenge-weak-point.model';
+import { resolveChallengeWeakPoints } from '@core/challenges/challenge-weak-point.utils';
 import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { BossWeakPoint } from './boss-encounter.model';
 
 /**
  * "Weekly boss" card of the overview page.
@@ -68,6 +68,15 @@ export class BossEncounter {
   protected readonly boss = computed(() => resourceValue(this.bossResource, null));
 
   /**
+   * Resolves a run week's position into its zero-padded `"01"`–`"10"` label.
+   *
+   * The boss is identified by number here, never by its catalogue name — see
+   * design-review.md §B2 ter: the name stays in the data, the interface leads with the number and
+   * the category, the same way the campaign map and its drawer already do.
+   */
+  protected readonly bossNumberLabel = resolveBossNumberLabel;
+
+  /**
    * Hit points the boss has left, floored at zero once damage dealt reaches its effective hit
    * points.
    */
@@ -112,35 +121,18 @@ export class BossEncounter {
   });
 
   /**
-   * Fill color utility for the health bar, reflecting how close the boss is to falling.
-   */
-  protected readonly hpBarColorClass = computed(() =>
-    resolveBossHpBarColorClass(this.remainingPercentage()),
-  );
-
-  /**
    * The week's five challenges reduced to a tier mark and an amount, in the order they were drawn.
    *
    * Deliberately outside {@link isLoading} and {@link hasError}: the strip is a pointer to the quest
    * board, not a state of the fight, so a challenges request that fails or lags must not blank a
    * boss card that loaded fine. It renders empty and the card stands without it.
    */
-  protected readonly weakPoints = computed<readonly BossWeakPoint[]>(() => {
-    const language = this.translation.language();
-
-    return (resourceValue(this.challengesApi.current, null)?.challenges ?? []).map((challenge) => {
-      const visual = resolveChallengeVisual(challenge.metric, challenge.difficulty);
-
-      return {
-        id: challenge.id,
-        tier: visual.tier,
-        iconClass: visual.iconClass,
-        barClass: visual.barClass,
-        difficulty: challenge.difficulty,
-        damageLabel: formatDamage(challenge.damage, language),
-      };
-    });
-  });
+  protected readonly weakPoints = computed<readonly ChallengeWeakPoint[]>(() =>
+    resolveChallengeWeakPoints(
+      resourceValue(this.challengesApi.current, null)?.challenges ?? [],
+      this.translation.language(),
+    ),
+  );
 
   /**
    * Reloads the backing resource after a failure.

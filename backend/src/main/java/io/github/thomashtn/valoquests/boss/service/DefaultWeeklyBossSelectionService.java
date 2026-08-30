@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.boss.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.boss.entity.BossCatalogEntry;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.exception.WeeklyBossSelectionException;
@@ -112,6 +113,10 @@ public class DefaultWeeklyBossSelectionService implements WeeklyBossSelectionSer
      * @param weekCalendar        calendar resolving the current week
      * @param runService          service resolving the run the campaign runs in
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public DefaultWeeklyBossSelectionService(
         BossCatalogEntryRepository catalogRepository,
         WeeklyBossEncounterRepository encounterRepository,

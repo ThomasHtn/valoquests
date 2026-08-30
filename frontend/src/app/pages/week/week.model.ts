@@ -37,3 +37,18 @@ export interface ChallengeRow {
   readonly squadMultiplier: string | null;
   readonly visual: ChallengeVisual;
 }
+
+/**
+ * One row of the catalogue band: a challenge the pool can still draw, outside of this week's
+ * five — what it is always worth, with none of the collective-progress fields a drawn challenge
+ * carries.
+ */
+export interface CatalogueRow {
+  readonly id: number;
+  readonly name: string;
+  readonly description: string;
+  readonly difficulty: ChallengeDifficulty;
+  readonly damage: string;
+  readonly materials: string;
+  readonly visual: ChallengeVisual;
+}

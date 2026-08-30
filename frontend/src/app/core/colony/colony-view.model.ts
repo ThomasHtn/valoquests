@@ -10,6 +10,34 @@ import { ColonyPresenceState, ColonyTierState, ColonyWeekOutcomeState } from './
 export type ColonyTierGlyph = 'CAMP' | 'HOUSES' | 'SKYLINE' | 'MONUMENT';
 
 /**
+ * The town, drawn as the one thing the game is actually about — see design-review.md §3.1.
+ *
+ * A single silhouette rather than the ladder's twelve rows: the band the town's current step
+ * belongs to picks *which* silhouette, and the two percentages are all that silhouette needs to
+ * read as alive — how many of its windows are lit, and how far the scaffold on its tallest
+ * building has climbed towards the next step.
+ */
+export interface ColonyTownView {
+  /**
+   * Which of the four silhouettes to draw — the current step's own band.
+   */
+  readonly glyph: ColonyTierGlyph;
+
+  /**
+   * Share of the silhouette's windows lit, `0`–`100` — population over what the town's food can
+   * feed, the same figure the hexagon elsewhere on the page fills on.
+   */
+  readonly populationPercentage: number;
+
+  /**
+   * Share of the way to the next step, `0`–`100`, drawn as scaffolding on the silhouette's tallest
+   * building. The ladder repeats past its named steps (see {@link ColonyTierGlyph}), so there is
+   * always a next step to climb towards.
+   */
+  readonly progressPercentage: number;
+}
+
+/**
  * One day of the food week ring: a harvest, drawn as a share of the best day of the window.
  *
  * The stock is a rolling seven-day window rather than a reserve, so these seven pods are the
@@ -84,8 +112,9 @@ export interface ColonyFoodDayView {
 }
 
 /**
- * The turnout rail, redrawn as a charge rather than a fraction: one cell of the battery per player
- * the roster is frozen on, lit bottom-up by how many turned up tonight.
+ * The turnout rail, redrawn as a continuous charge rather than one cell per roster member — a
+ * fixed-length array of cells reads as a list, and a list is exactly what stops being legible past
+ * a couple dozen players (see the root `CLAUDE.md` on the squad being a variable, not a constant).
  *
  * Read as a level rather than a count on purpose — the same reason a fuel gauge outsells a litre
  * counter: what a reader needs to decide whether tonight is worth playing is "how full", not the
@@ -93,17 +122,26 @@ export interface ColonyFoodDayView {
  */
 export interface ColonyBatteryView {
   /**
-   * Cells the battery is built from — the roster size frozen on the run.
+   * Roster size the run is frozen on — the charge's own denominator.
    */
-  readonly cellCount: number;
+  readonly rosterSize: number;
 
   /**
-   * One flag per cell, lit from index zero: `cells[i]` is lit when `i` is under tonight's turnout.
-   *
-   * Resolved here rather than left to the template, which has no clean way to build a fixed-length
-   * array from a count alone.
+   * Players who cleared the threshold today, out of {@link rosterSize}.
    */
-  readonly cells: readonly boolean[];
+  readonly presentCount: number;
+
+  /**
+   * `presentCount` over `rosterSize`, as a `0`–`100` fill — the bar's own width, independent of the
+   * roster size so it never grows a segment per player.
+   */
+  readonly presentPercentage: number;
+
+  /**
+   * Where one more player would land on the bar, `0`–`100`. `null` once the roster is already full:
+   * there is no next step left to mark.
+   */
+  readonly nextStepPercentage: number | null;
 
   /**
    * Whether every cell is lit, which is what earns the battery its glow.
@@ -111,15 +149,15 @@ export interface ColonyBatteryView {
   readonly isFull: boolean;
 
   /**
-   * Cells lit by tonight's turnout, out of {@link cellCount} — the Participation tile's own
-   * headline count, read beside the roster size rather than only as a level.
-   */
-  readonly presentCount: number;
-
-  /**
    * Already-formatted factor the charge is worth on tonight's harvest, `×1,43`.
    */
   readonly multiplierLabel: string;
+
+  /**
+   * Already-formatted factor one more player would be worth, `×1,60`. `null` once the roster is
+   * already full — read as "no next step to reach", same as {@link nextStepPercentage}.
+   */
+  readonly nextMultiplierLabel: string | null;
 
   /**
    * Already-translated sentence the battery's hover card shows, and its own accessible name.
@@ -209,6 +247,20 @@ export interface ColonyFoodRingView {
   readonly efficiencyFactorLabel: string;
 
   /**
+   * Share of the week's spoken-for stock (consumption + surplus) already eaten, `0`–`100` — the
+   * accueil's own bar reads the split as a threshold ("does the harvest cover what is eaten?")
+   * rather than three figures to add up, per design-review.md §3.1.
+   */
+  readonly consumptionPercentage: number;
+
+  /**
+   * Where the spoken-for stock ends, `0`–`100`. Always `100` once there is any stock at all: by
+   * definition, consumption plus surplus accounts for the whole of it — `0` only while the run has
+   * not banked any food yet.
+   */
+  readonly surplusPercentage: number;
+
+  /**
    * Already-translated sentence the ring's hover card shows, and its own accessible name.
    */
   readonly ariaLabel: string;
@@ -250,6 +302,26 @@ export interface ColonyPresencePipView {
 }
 
 /**
+ * {@link ColonyPresencePipView}, bounded to a fixed count regardless of roster size.
+ *
+ * The rule this exists for (root `CLAUDE.md`, § "the squad is a variable"): a measure never
+ * degrades, but a per-player list does — one row per player is fine at seven, unreadable at fifty.
+ * `visible` wraps onto two rows at the card's usual width and never grows past {@link overflowCount}
+ * kicking in, so the face band stays a detail under the presence bar rather than a second measure.
+ */
+export interface ColonyPresenceFacesView {
+  /**
+   * Pips shown as faces, capped regardless of roster size.
+   */
+  readonly visible: readonly ColonyPresencePipView[];
+
+  /**
+   * Roster members left out of {@link visible}, `0` when the whole roster fit.
+   */
+  readonly overflowCount: number;
+}
+
+/**
  * One step of the ladder, resolved into everything the panel lays out.
  */
 export interface ColonyTierStepView {
@@ -264,6 +336,13 @@ export interface ColonyTierStepView {
    * `0` rather than blank, so the town's own step is visibly settled instead of merely silent.
    */
   readonly missingMaterialsLabel: string;
+
+  /**
+   * {@link missingMaterialsLabel} as the bare number it is, for a caller comparing it against a
+   * projected total (e.g. "would this week's perfect haul reach the next tier?") rather than only
+   * printing it.
+   */
+  readonly missingMaterials: number;
 
   /**
    * Which silhouette the step's marker wears, so the ladder reads as a settlement growing rather than
@@ -324,6 +403,12 @@ export interface ColonyBossView {
   readonly materialsLabel: string;
 
   /**
+   * {@link materialsLabel} as the bare number it is, `0` wherever the label is empty — for a caller
+   * summing it with other figures (e.g. "the week, played perfectly") rather than only printing it.
+   */
+  readonly materialsValue: number;
+
+  /**
    * Already-formatted efficiency those materials add to the town's rate (`+0,27`), never a factor:
    * empty wherever `materialsLabel` is, since there is nothing to add on a week that settled nothing.
    *
@@ -347,17 +432,34 @@ export interface ColonyBossView {
  * One run of the history table, resolved into everything the page lays out.
  */
 export interface ColonyRunView {
-  readonly runNumber: number;
-
   /**
-   * Already-translated run name, `Run 4`.
+   * Stable identity for the `@for` track expression — never displayed (design-review.md's
+   * validated mock-up drops the run number from public view in favor of its dates, see
+   * {@link dateRangeLabel}).
    */
-  readonly label: string;
+  readonly runNumber: number;
 
   /**
    * Whether this is the run in progress, whose figures are still moving.
    */
   readonly isCurrent: boolean;
+
+  /**
+   * Already-formatted `firstDay - settlementDay` span, e.g. `"24/08 - 01/11"` — what a run is now
+   * identified by instead of its number.
+   */
+  readonly dateRangeLabel: string;
+
+  /**
+   * Already-translated week progress, `"Sem. 4 / 10"` for the run in progress, `"Sem. 10 / 10"`
+   * for a closed one (every closed run today ran its full ten weeks — there is no early stop yet).
+   */
+  readonly weekLabel: string;
+
+  /**
+   * Already-translated status, `"En cours"` / `"Terminée"`.
+   */
+  readonly statusLabel: string;
 
   /**
    * Already-formatted final population, the run's score.

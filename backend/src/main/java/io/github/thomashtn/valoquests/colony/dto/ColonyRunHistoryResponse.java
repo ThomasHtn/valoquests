@@ -6,9 +6,11 @@ import java.time.LocalDate;
 /**
  * Exposes one closed run and how it ended.
  *
- * <p>The score is the population of the settlement day, once the tenth week's materials and boss have
- * been credited. Settling that way makes the last fight a finale: its materials have only one night of
- * migration left to turn into inhabitants, but they are still the last lever on efficiency.
+ * <p>The score is the population of the run's final day — its seventy-first, settlement day once the
+ * tenth week's materials and boss have been credited, for a run that ran its full course; the day an
+ * operator stopped it, for one that did not. Settling on the natural finale makes the last fight count
+ * for something: its materials have only one night of migration left to turn into inhabitants, but they
+ * are still the last lever on efficiency. A stopped run has no such finale, only the score it stood at.
  *
  * <p>There is deliberately no share of a maximum here. Efficiency has no ceiling — every challenge
  * validated raises it, on the last Monday exactly as much as on the first — so any percentage would be
@@ -16,7 +18,8 @@ import java.time.LocalDate;
  *
  * @param runNumber         sequential number of the run
  * @param firstDay          first day of the run
- * @param settlementDay     the run's seventy-first day, which carries its score
+ * @param finalDay          the run's final day, which carries its score — its settlement day, or the
+ *                          day it was stopped early
  * @param finalPopulation   the run's score
  * @param peakPopulation    highest population the run reached
  * @param averagePopulation mean population over the run
@@ -30,7 +33,7 @@ import java.time.LocalDate;
 public record ColonyRunHistoryResponse(
     int runNumber,
     LocalDate firstDay,
-    LocalDate settlementDay,
+    LocalDate finalDay,
     int finalPopulation,
     int peakPopulation,
     int averagePopulation,

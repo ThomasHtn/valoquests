@@ -1,5 +1,6 @@
-import { NgOptimizedImage } from '@angular/common';
+import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   LucideArrowDown,
   LucideCheck,
@@ -19,106 +20,63 @@ import {
 } from '@lucide/angular';
 
 import { BossCampaign } from '@core/boss/boss-campaign';
-import { BossCategory } from '@core/boss/boss.model';
-import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
-import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
+import {
+  BossTimelineNodeStatus,
+  LEGEND_INNER_SCALE,
+  resolveBossTerritoryTier,
+  TERRAIN_RING_CLASS,
+  TERRITORY_FILL_CLASS,
+  TILE_INNER_SCALE,
+} from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
+import {
+  resolveBossCategoryColorClass,
+  resolveBossNumberLabel,
+} from '@core/boss/boss-visual.utils';
+import { BossCategory } from '@core/boss/boss.model';
 import { ColonyView } from '@core/colony/colony-view';
 import { ColonyBossView } from '@core/colony/colony-view.model';
 import { resolveColonyDeltaColorClass } from '@core/colony/colony-visual.utils';
+import { Breakpoint } from '@core/viewport/breakpoint';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { Breakpoint } from '@core/viewport/breakpoint';
 import { ColonyCard, ColonyCardFormulaRow } from './colony-card/colony-card';
 import { PageHeader } from '@layout/page-header/page-header';
 import { BarChart } from '@shared/chart/bar-chart';
 import { resolveSeriesColor } from '@shared/chart/chart-theme';
 import { ChartBar, ChartSeries } from '@shared/chart/chart.model';
 import { LineChart } from '@shared/chart/line-chart';
-import { Drawer } from '@shared/drawer/drawer';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { Tooltip } from '@shared/tooltip/tooltip';
 import { TOOLTIP_SURFACE_CLASS } from '@shared/tooltip/tooltip.constants';
 import { BossDetail } from './boss-detail/boss-detail';
-import {
-  LEAD_TERRAIN_ROWS,
-  LEGEND_INNER_SCALE,
-  MAP_COLUMNS,
-  MAP_LEGEND_STATUSES,
-  resolveBossColumn,
-  resolveBossNumberLabel,
-  resolveBossTerritoryTier,
-  resolveColumnVisibilityClass,
-  TERRAIN_RING_CLASS,
-  TERRITORY_FILL_CLASS,
-  TILE_INNER_SCALE,
-  TRAIL_TERRAIN_ROWS,
-} from './campaign-map.constants';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 
 /**
- * Number of hexagon rows the loading skeleton stands in for, enough to fill the fold without
- * pretending to know how long the campaign actually is.
+ * One week's territory tile, joined with what its fight is worth the colony — the row's job is to
+ * place a week beside its neighbours, not to restate the colony's own view model field by field.
  */
-const SKELETON_ROW_COUNT = 8;
-
-/**
- * Rows the run history stands at, real runs and empty berths together.
- *
- * The ledger grows one row per run and never shrinks, so it is drawn at a fixed height from the
- * first run on: a table that resizes under the reader every ten weeks reads as a different table
- * each time.
- */
-const HISTORY_ROW_COUNT = 6;
-
-/**
- * One row of the battle map.
- */
-interface CampaignMapRow {
-  /**
-   * Stable identity for the `@for` track expression.
-   */
-  readonly key: string;
-
-  /**
-   * The week this row renders, or `null` for one of the terrain-only rows framing the path (see
-   * `LEAD_TERRAIN_ROWS`), which carry no week and are hidden from assistive technology.
-   */
-  readonly node: BossTimelineNode | null;
-
-  /**
-   * Column of {@link MAP_COLUMNS} the week's hexagon occupies; every other column is terrain.
-   * Irrelevant, and set past the grid, on a terrain-only row.
-   */
-  readonly bossColumn: number;
-
-  /**
-   * The whole of what the week's fight is worth, or `null` on a terrain-only row.
-   *
-   * The tile writes the materials off it, the hover card writes materials and morale both. Held as
-   * one object rather than flattened into the row: the row's job is to place a week on the grid, not
-   * to restate the colony's own view model field by field.
-   */
+interface CampaignMapEntry {
+  readonly node: BossTimelineNode;
   readonly boss: ColonyBossView | null;
 }
 
 /**
- * Campaign page: the run told as one screen — the colony it feeds, and the ground it takes.
+ * Bare terrain tiles framing the row of territories at each end, echoing the earlier serpentine
+ * map's own field extending past both ends of its path — just horizontal now, and one tile deep
+ * rather than a whole row.
+ */
+const LEAD_TERRAIN_TILES = 1;
+const TRAIL_TERRAIN_TILES = 1;
+
+/**
+ * Campaign page: the run told as one screen, at rest — the card of its ten weeks, the population
+ * curve that card feeds, the economy behind it folded away, then every campaign before this one.
  *
- * The two used to be separate pages, which split one run in half: the town closes part of the gap
- * between what it holds and the lower of its two ceilings every night, and one of those ceilings is
- * bought with the materials the weekly bosses drop. So the page is laid out as the chain it is. The
- * resource band on top carries the population, the three rails that set it and every run before this
- * one; the map underneath is where the housing comes from, each taken week's gain written on its own
- * hexagon; the ladder beside it is what that housing bought. The population's own history is the one
- * reading held back — opened over the page from the hexagon carrying its current value.
- *
- * Nothing on the band says what to do tonight, on purpose. A short bar asks to be filled, and the
- * shape of the food rail against the mark on the hexagon already answers "play, or build" without a
- * sentence being written.
- *
- * The map is a honeycomb standing whole in its panel, one row per week between a row of untouched
- * terrain at each end. Picking any week's hexagon opens the detail panel.
+ * The card's own territory tiles (ring, halo, damage fill, outcome icon) are the earlier
+ * serpentine honeycomb map's, unchanged — only the path is gone, the ten weeks now standing in one
+ * straight row rather than snaking down the page. The boss drawer opens on a tile click and stands
+ * closed the rest of the time, never pre-rendered open under the row — showing both a resting page
+ * and an open drawer at once only read as clutter, twice over.
  */
 @Component({
   selector: 'app-campaign',
@@ -128,10 +86,10 @@ interface CampaignMapRow {
     ResourceState,
     NgOptimizedImage,
     ColonyCard,
-    Drawer,
     BarChart,
     LineChart,
-    Tooltip,
+    NgTemplateOutlet,
+    RouterLink,
     LucideArrowDown,
     LucideCheck,
     LucideChevronDown,
@@ -172,21 +130,25 @@ export class Campaign {
   private readonly translation = inject(Translation);
 
   /**
-   * Id of the node whose detail panel is open, or `null` while the panel is closed.
-   */
-  private readonly selectedNodeId = signal<string | null>(null);
-
-  /**
-   * Whether the population curve is open over the page.
+   * Week asked for in the URL as `?week=YYYY-MM-DD`, or `null` when the page was opened plain.
    *
-   * The curve answers a different question from the rest of the page — where the population has
-   * been, rather than where it stands — and it is the only block here that nothing else is read
-   * against, so it is opened from the figure it explains instead of holding a panel of its own.
+   * Read once from the snapshot rather than followed reactively, the same restraint
+   * `Leaderboard.requestedWeekStart` takes: this is a deep link from a closed week's own row on
+   * `/leaderboard`, and the reader's own clicks take over from the moment they touch a node.
    */
-  protected readonly isCurveOpen = signal(false);
+  private readonly requestedWeekStart = inject(ActivatedRoute).snapshot.queryParamMap.get('week');
 
   /**
-   * Whether the viewport is wide enough to lay the tiles out as a grid.
+   * Id of the node whose detail panel is open, `null` while explicitly closed, or `undefined`
+   * while the reader has not touched a node yet — the card's resting state, and the one a
+   * reviewer should judge as the page's normal look. Left `undefined` rather than defaulting to
+   * `null` outright so {@link selectedNode} can still fall back to {@link requestedWeekStart} once,
+   * without a click or a close ever being undone by that same fallback.
+   */
+  private readonly selectedNodeId = signal<string | null | undefined>(undefined);
+
+  /**
+   * Whether the viewport is wide enough to lay the resource tiles out as a grid.
    *
    * Below `lg` they stack into a single column, and ten of them in a row put the map ten screens
    * down — see {@link isDetailOpen}. From `lg` up the fold does not exist at all: the wrapper it
@@ -198,8 +160,8 @@ export class Campaign {
    * Whether the colony's eight explanatory tiles are unfolded, on the narrow layout where they are
    * folded away by default.
    *
-   * Only the population and the materials still owed to the next tier stand outside the fold: those
-   * two are the run's standing, and the rest is how it got there.
+   * Only the population and the materials still owed to the next tier stand outside the fold:
+   * those two are the run's standing, and the rest is how it got there.
    */
   protected readonly isDetailOpen = signal(false);
 
@@ -211,6 +173,20 @@ export class Campaign {
     () => this.campaign.isLoading() || this.colony.isLoading(),
   );
   protected readonly hasError = computed(() => this.campaign.hasError() || this.colony.hasError());
+
+  /**
+   * The ten weeks of the card's territory row, oldest first, each joined with what its fight is
+   * worth the colony. The two are the same ten weeks, joined on the run week each of them carries
+   * — never on their position in the list, which a week that closed without a fight would shift.
+   */
+  protected readonly nodesWithBoss = computed<readonly CampaignMapEntry[]>(() => {
+    const bossByRunWeek = new Map(this.colony.bosses().map((boss) => [boss.weekIndex, boss]));
+
+    return this.campaign.nodes().map((node) => ({
+      node,
+      boss: bossByRunWeek.get(node.runWeekIndex) ?? null,
+    }));
+  });
 
   /**
    * The run's population as one plotted line, day by day.
@@ -243,8 +219,6 @@ export class Campaign {
     this.colony.foodDays().map((day) => ({
       label: day.weekdayInitial,
       value: day.harvestValue ?? 0,
-      // The view model already spells the harvest in the reader's language; the raw number printed
-      // an English decimal point above bars sitting under tiles that use a comma.
       valueLabel: day.harvestLabel,
       detail: day.ariaLabel,
       highlighted: day.isToday,
@@ -262,6 +236,16 @@ export class Campaign {
       .map((day) => day.ariaLabel)
       .join(', '),
   );
+
+  /**
+   * The most recent tier the run has reached, the one line under the curve's own caption worth
+   * repeating permanently (design-review.md's mock-up keeps only the latest milestone in that
+   * caption; the full list stays available below it for every step the run took).
+   */
+  protected readonly latestMilestoneLabel = computed(() => {
+    const milestones = this.colony.milestoneLabels();
+    return milestones.length > 0 ? milestones[milestones.length - 1] : null;
+  });
 
   /**
    * The Food-this-week tile's own formula rows: consumption and efficiency, read a second time as
@@ -304,89 +288,30 @@ export class Campaign {
   });
 
   /**
-   * The map, row by row, oldest week at the top, framed above and below by terrain the campaign
-   * has not reached — the field extends past both ends of the path it carves through it.
-   *
-   * Every week's tile carries what its fight brought the colony in. The two lists are the same ten
-   * weeks, joined on the run week each of them carries — never on their position in the list. A
-   * single week that closed without a fight makes those two disagree, and joining by position then
-   * wrote every fight's reward onto its neighbour's hexagon.
-   *
-   * Empty while the campaign itself is, so an unresolved page shows no field at all rather than
-   * bare terrain rows with nothing to fight over.
-   */
-  protected readonly rows = computed<readonly CampaignMapRow[]>(() => {
-    const nodes = this.campaign.nodes();
-    if (nodes.length === 0) {
-      return [];
-    }
-
-    const bossByRunWeek = new Map(this.colony.bosses().map((boss) => [boss.weekIndex, boss]));
-
-    return [
-      ...Array.from({ length: LEAD_TERRAIN_ROWS }, (_, index) => ({
-        key: `lead-${index}`,
-        node: null,
-        bossColumn: -1,
-        boss: null,
-      })),
-      ...nodes.map((node, index) => {
-        const boss = bossByRunWeek.get(node.runWeekIndex) ?? null;
-
-        return {
-          key: node.id,
-          node,
-          bossColumn: resolveBossColumn(index),
-          boss,
-        };
-      }),
-      ...Array.from({ length: TRAIL_TERRAIN_ROWS }, (_, index) => ({
-        key: `trail-${index}`,
-        node: null,
-        bossColumn: -1,
-        boss: null,
-      })),
-    ];
-  });
-
-  /**
-   * The week currently being fought, or `null` while no week is active.
-   *
-   * What used to only surface on hover, over the map tile being fought, now stands permanently
-   * beside the map — see {@link currentColonyBoss} for the reward figures paired with it.
-   */
-  protected readonly currentBossNode = computed<BossTimelineNode | null>(() => {
-    const index = this.campaign.currentNodeIndex();
-    return index >= 0 ? this.campaign.nodes()[index] : null;
-  });
-
-  /**
-   * What the week being fought is worth the colony: materials on the table, and what surviving it
-   * would cost. `null` until {@link currentBossNode} resolves, joined on the run week exactly as the
-   * map's own tiles are (see `rows`).
-   */
-  protected readonly currentColonyBoss = computed<ColonyBossView | null>(() => {
-    const node = this.currentBossNode();
-    if (node === null) {
-      return null;
-    }
-
-    return this.colony.bosses().find((boss) => boss.weekIndex === node.runWeekIndex) ?? null;
-  });
-
-  /**
    * The node whose detail panel is open, or `null` while the panel is closed.
+   *
+   * Falls back to {@link requestedWeekStart} only while {@link selectedNodeId} is still
+   * `undefined` — a deep link opens the matching node once the campaign's nodes have loaded, but
+   * never fights back a reader's own click or close.
    */
-  protected readonly selectedNode = computed<BossTimelineNode | null>(
-    () => this.campaign.nodes().find((node) => node.id === this.selectedNodeId()) ?? null,
-  );
+  protected readonly selectedNode = computed<BossTimelineNode | null>(() => {
+    const nodes = this.campaign.nodes();
+    const selected = this.selectedNodeId();
+
+    if (selected !== undefined) {
+      return nodes.find((node) => node.id === selected) ?? null;
+    }
+
+    return this.requestedWeekStart === null
+      ? null
+      : (nodes.find((node) => node.weekStart === this.requestedWeekStart) ?? null);
+  });
 
   /**
-   * What {@link selectedNode}'s fight is worth the colony, joined on the run week exactly as
-   * {@link currentColonyBoss} is — the panel reads the same figures whichever week it was opened
-   * on, not only the one under way.
+   * What {@link selectedNode}'s fight is worth the colony, joined on the run week — never on the
+   * node's position in the list, which a week that closed without a fight would shift.
    */
-  protected readonly selectedColonyBoss = computed<ColonyBossView | null>(() => {
+  protected readonly selectedColonyBoss = computed(() => {
     const node = this.selectedNode();
     if (node === null) {
       return null;
@@ -399,9 +324,12 @@ export class Campaign {
    * Position of {@link selectedNode} within the campaign's nodes, or `-1` while the panel is
    * closed.
    */
-  private readonly selectedIndex = computed(() =>
-    this.campaign.nodes().findIndex((node) => node.id === this.selectedNodeId()),
-  );
+  private readonly selectedIndex = computed(() => {
+    const selectedId = this.selectedNode()?.id;
+    return selectedId === undefined
+      ? -1
+      : this.campaign.nodes().findIndex((node) => node.id === selectedId);
+  });
 
   /**
    * Whether the panel can step to an earlier / later week without leaving the campaign.
@@ -413,23 +341,23 @@ export class Campaign {
   });
 
   /**
-   * Grid geometry and treatments, exposed to the template.
+   * Boss numbering, exposed to the template.
    */
-  protected readonly columns = MAP_COLUMNS;
-  protected readonly legendStatuses = MAP_LEGEND_STATUSES;
-  protected readonly territoryTier = resolveBossTerritoryTier;
   protected readonly bossNumberLabel = resolveBossNumberLabel;
-  protected readonly timelineTier = resolveBossTimelineTier;
-  protected readonly columnVisibilityClass = resolveColumnVisibilityClass;
-  protected readonly terrainRingClass = TERRAIN_RING_CLASS;
+
+  /**
+   * Resolves a week's territory treatment, exposed to the template.
+   */
+  protected readonly territoryTier = resolveBossTerritoryTier;
+
+  /**
+   * Geometry and ground treatments the territory row shares with its legend, exposed to the
+   * template.
+   */
   protected readonly tileInnerScale = TILE_INNER_SCALE;
   protected readonly legendInnerScale = LEGEND_INNER_SCALE;
   protected readonly territoryFillClass = TERRITORY_FILL_CLASS;
-
-  /**
-   * Text color of the Arrivals tile's own figure, by the direction the night moved.
-   */
-  protected readonly deltaColorClass = resolveColonyDeltaColorClass;
+  protected readonly terrainRingClass = TERRAIN_RING_CLASS;
 
   /**
    * Silhouette the hover card borrows from the sidebar's tooltips, so a surface floating over the
@@ -438,38 +366,32 @@ export class Campaign {
   protected readonly tooltipSurfaceClass = TOOLTIP_SURFACE_CLASS;
 
   /**
-   * Rows the loading skeleton draws, as a list the template can iterate.
+   * The four statuses the legend spells out, the two settled outcomes first, then the fight in
+   * progress and the ground beyond it.
    */
-  protected readonly skeletonRows = Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => index);
+  protected readonly legendStatuses: readonly BossTimelineNodeStatus[] = [
+    'defeated',
+    'survived',
+    'current',
+    'upcoming',
+  ];
 
   /**
-   * Empty berths padding the run history out to {@link HISTORY_ROW_COUNT}, so a ledger holding one
-   * run still reads as a ledger. None once the runs themselves fill it.
+   * Bare terrain tiles framing the row at each end, as lists the template can iterate.
    */
-  protected readonly historyPlaceholders = computed<readonly number[]>(() =>
-    Array.from(
-      { length: Math.max(0, HISTORY_ROW_COUNT - this.colony.runs().length) },
-      (_, index) => index,
-    ),
+  protected readonly leadTerrainTiles: readonly number[] = Array.from(
+    { length: LEAD_TERRAIN_TILES },
+    (_, index) => index,
+  );
+  protected readonly trailTerrainTiles: readonly number[] = Array.from(
+    { length: TRAIL_TERRAIN_TILES },
+    (_, index) => index,
   );
 
   /**
-   * Opens the population curve over the page, and closes it again.
+   * Text color of the Arrivals tile's own figure, by the direction the night moved.
    */
-  protected openCurve(): void {
-    this.isCurveOpen.set(true);
-  }
-
-  protected closeCurve(): void {
-    this.isCurveOpen.set(false);
-  }
-
-  /**
-   * Unfolds the colony's explanatory tiles on the narrow layout, and folds them back.
-   */
-  protected toggleDetail(): void {
-    this.isDetailOpen.update((isOpen) => !isOpen);
-  }
+  protected readonly deltaColorClass = resolveColonyDeltaColorClass;
 
   /**
    * Opens the detail panel on one week.
@@ -505,6 +427,13 @@ export class Campaign {
   protected reload(): void {
     this.campaign.reload();
     this.colony.reload();
+  }
+
+  /**
+   * Unfolds the colony's explanatory tiles on the narrow layout, and folds them back.
+   */
+  protected toggleDetail(): void {
+    this.isDetailOpen.update((isOpen) => !isOpen);
   }
 
   /**

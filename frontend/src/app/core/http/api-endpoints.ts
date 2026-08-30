@@ -31,6 +31,16 @@ export const API_ENDPOINTS = {
     `${environment.apiBaseUrl}/players/${playerId}/matches`,
 
   /**
+   * `GET` full detail for one of a tracked player's matches.
+   *
+   * @param playerId - Internal player identifier.
+   * @param matchId - Internal player-match identifier.
+   * @returns The endpoint URL.
+   */
+  playerMatchDetail: (playerId: number, matchId: number): string =>
+    `${environment.apiBaseUrl}/players/${playerId}/matches/${matchId}`,
+
+  /**
    * `GET` the analytics behind one tracked player's progression view.
    *
    * @param playerId - Internal player identifier.
@@ -48,6 +58,11 @@ export const API_ENDPOINTS = {
    * `GET` the challenges selected for the active calendar week.
    */
   currentChallenges: `${environment.apiBaseUrl}/challenges/current`,
+
+  /**
+   * `GET` every challenge eligible for weekly selection, outside of any one week's draw.
+   */
+  challengeCatalogue: `${environment.apiBaseUrl}/challenges/catalogue`,
 
   /**
    * `GET` the current weekly ranking.
@@ -108,6 +123,20 @@ export const API_ENDPOINTS = {
     latestSynchronization: `${environment.apiBaseUrl}/admin/synchronizations/latest`,
 
     /**
+     * `GET` a page of past synchronization executions, most recent first.
+     */
+    synchronizationHistory: `${environment.apiBaseUrl}/admin/synchronizations`,
+
+    /**
+     * `GET` one synchronization execution with its per-player results.
+     *
+     * @param synchronizationId - Internal synchronization identifier.
+     * @returns The endpoint URL.
+     */
+    synchronization: (synchronizationId: number): string =>
+      `${environment.apiBaseUrl}/admin/synchronizations/${synchronizationId}`,
+
+    /**
      * `POST` a synchronization of one tracked player, run in the background.
      *
      * @param playerId - Internal player identifier.
@@ -163,5 +192,25 @@ export const API_ENDPOINTS = {
      * incrementally, so this rewrites exactly what a nightly tick would.
      */
     colonyRecompute: `${environment.apiBaseUrl}/admin/colony/recompute`,
+
+    /**
+     * `GET` the campaign's lifecycle: every run and the automatic-renewal setting.
+     */
+    campaigns: `${environment.apiBaseUrl}/admin/campaigns`,
+
+    /**
+     * `PATCH` the automatic-renewal setting.
+     */
+    campaignAutoRenew: `${environment.apiBaseUrl}/admin/campaigns/auto-renew`,
+
+    /**
+     * `POST` the start of a new campaign, for the gap automatic renewal being off leaves open.
+     */
+    campaignStart: `${environment.apiBaseUrl}/admin/campaigns/start`,
+
+    /**
+     * `POST` the stop of the campaign in progress, freezing its score at today.
+     */
+    campaignStop: `${environment.apiBaseUrl}/admin/campaigns/stop`,
   },
 } as const;

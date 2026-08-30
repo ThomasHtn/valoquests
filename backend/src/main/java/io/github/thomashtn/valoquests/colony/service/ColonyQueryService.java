@@ -546,7 +546,7 @@ public class ColonyQueryService {
         return new ColonyRunHistoryResponse(
             run.getNumber(),
             run.getFirstWeekStart(),
-            run.settlementDay(),
+            run.finalDay(),
             finalPopulation,
             peak,
             average,

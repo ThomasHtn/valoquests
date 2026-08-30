@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.match.service;
 
+import io.github.thomashtn.valoquests.match.dto.MatchDetailResponse;
 import io.github.thomashtn.valoquests.match.dto.MatchResponse;
 import io.github.thomashtn.valoquests.match.model.MatchHistoryFilter;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
@@ -24,4 +25,14 @@ public interface MatchQueryService {
         int size,
         MatchHistoryFilter filter
     );
+
+    /**
+     * Returns full detail for one of a tracked player's matches, including every other tracked
+     * player found in the same match.
+     *
+     * @param playerId      internal player identifier
+     * @param playerMatchId internal player-match identifier
+     * @return the requested match's full detail
+     */
+    MatchDetailResponse findDetail(long playerId, long playerMatchId);
 }

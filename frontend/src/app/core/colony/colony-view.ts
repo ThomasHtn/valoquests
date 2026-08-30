@@ -1,5 +1,6 @@
 import { computed, inject, Service, Signal } from '@angular/core';
 
+import { addDays, formatDateRange } from '@core/date/week-period.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Translation } from '@core/i18n/translation';
 import { ChartBar } from '@shared/chart/chart.model';
@@ -34,9 +35,11 @@ import {
   ColonyDeltaView,
   ColonyFoodDayView,
   ColonyFoodRingView,
+  ColonyPresenceFacesView,
   ColonyPresencePipView,
   ColonyRunView,
   ColonyTierStepView,
+  ColonyTownView,
   RunDayParts,
 } from './colony-view.model';
 
@@ -47,6 +50,17 @@ import {
  * the hover card without wrapping.
  */
 const INITIALS_LENGTH = 3;
+
+/**
+ * Faces shown before the turnout face band truncates into a `+N`.
+ *
+ * Two rows of the card's usual six-per-row width — enough that a squad of seven or so never
+ * truncates at all, while a squad of twenty still reads as "most of the roster, plus a remainder"
+ * instead of an unreadable single line. See root `CLAUDE.md`, "the squad is a variable, not a
+ * constant": the presence bar above the band is the invariant measure, this is the detail that is
+ * allowed to degrade.
+ */
+const PRESENCE_FACE_CAP = 12;
 
 /**
  * Morale a surviving boss costs, mirrored from `DefaultColonyRuleset#moraleForSurvivingBoss`.
@@ -133,7 +147,6 @@ export class ColonyView {
     }
 
     return this.translation.translate('colony.eyebrow', {
-      run: colony.runNumber,
       week: colony.runWeekIndex,
       weeks: colony.runWeekCount,
     });
@@ -261,30 +274,6 @@ export class ColonyView {
   });
 
   /**
-   * Accessible name of the population hexagon.
-   *
-   * Says exactly what the shape says: the figure, the ceiling it is filling towards — a full
-   * hexagon *is* the food ceiling reached, which is why there is no mark drawn on it — what the night
-   * moved, and what pressing it opens. All four are carried by the fill, the silhouette and the
-   * raised exponent, and none of them in text, so this is where a reader without the shapes gets
-   * them.
-   */
-  public readonly hexagonAriaLabel = computed<string>(() => {
-    const colony = this.colony();
-    if (colony === null) {
-      return this.translation.translate('colony.curve.open');
-    }
-
-    const language = this.translation.language();
-
-    return this.translation.translate('colony.hexagonAria', {
-      population: formatPopulation(colony.population, language),
-      change: formatSignedPopulation(colony.populationChange, language),
-      ceiling: formatPopulation(colony.feedablePopulation, language),
-    });
-  });
-
-  /**
    * Fights won over the ten a run holds.
    *
    * The denominator is the whole run, never the weeks elapsed: `2 / 3` on a Monday of week four
@@ -333,6 +322,19 @@ export class ColonyView {
     const players = this.colony()?.presence.players ?? [];
 
     return players.map((player) => this.toPip(player));
+  });
+
+  /**
+   * {@link presencePips}, bounded to {@link PRESENCE_FACE_CAP} regardless of roster size — the face
+   * band a page actually renders. See the type's own doc for why this exists.
+   */
+  public readonly presenceFaces = computed<ColonyPresenceFacesView>(() => {
+    const pips = this.presencePips();
+
+    return {
+      visible: pips.slice(0, PRESENCE_FACE_CAP),
+      overflowCount: Math.max(0, pips.length - PRESENCE_FACE_CAP),
+    };
   });
 
   /**
@@ -409,6 +411,27 @@ export class ColonyView {
     }));
 
     return [...lived, ...placeholders];
+  });
+
+  /**
+   * The town, as the single silhouette the accueil leads with. See {@link ColonyTownView}.
+   */
+  public readonly town = computed<ColonyTownView | null>(() => {
+    const colony = this.colony();
+    if (colony === null) {
+      return null;
+    }
+
+    const current = colony.ladder.find((tier) => tier.state === 'CURRENT');
+    if (current === undefined) {
+      return null;
+    }
+
+    return {
+      glyph: tierGlyphFor(current),
+      populationPercentage: this.populationPercentage(),
+      progressPercentage: colony.tierProgressPercentage,
+    };
   });
 
   /**
@@ -542,6 +565,11 @@ export class ColonyView {
       }),
       description: this.translation.translate('colony.track.food.description'),
       purpose: this.translation.translate('colony.track.food.note'),
+      consumptionPercentage: this.percentageOf(
+        colony.weeklyConsumption,
+        colony.weeklyConsumption + colony.weeklySurplus,
+      ),
+      surplusPercentage: colony.weeklyConsumption + colony.weeklySurplus > 0 ? 100 : 0,
     };
   }
 
@@ -598,17 +626,18 @@ export class ColonyView {
   private batteryView(colony: Colony): ColonyBatteryView {
     const presence = colony.presence;
     const language = this.translation.language();
-    const cells = Array.from(
-      { length: presence.rosterSize },
-      (_, index) => index < presence.present,
-    );
+    const isFull = presence.rosterSize > 0 && presence.present >= presence.rosterSize;
 
     return {
-      cellCount: presence.rosterSize,
-      cells,
-      isFull: presence.rosterSize > 0 && presence.present >= presence.rosterSize,
+      rosterSize: presence.rosterSize,
       presentCount: presence.present,
+      presentPercentage: this.percentageOf(presence.present, presence.rosterSize),
+      nextStepPercentage: isFull
+        ? null
+        : this.percentageOf(presence.present + 1, presence.rosterSize),
+      isFull,
       multiplierLabel: formatMultiplier(presence.multiplier, language),
+      nextMultiplierLabel: isFull ? null : formatMultiplier(presence.nextMultiplier, language),
       ariaLabel: this.translation.translate('colony.track.presence.aria', {
         present: presence.present,
         roster: presence.rosterSize,
@@ -703,6 +732,7 @@ export class ColonyView {
       // rather than nothing: the column is headed "left to gather", and a blank there left the town's
       // own step looking unsettled next to the figures below it.
       missingMaterialsLabel: formatPopulation(missing, language),
+      missingMaterials: missing,
       // The bar belongs to the step being climbed, not to the one the town stands in: it is that
       // step's own gauge, read against the cost written beside it on the same row.
       progressPercentage: isNext ? colony.tierProgressPercentage : null,
@@ -737,6 +767,7 @@ export class ColonyView {
         week.state === 'SURVIVED' || week.state === 'UPCOMING'
           ? ''
           : formatPopulation(week.materials, language),
+      materialsValue: week.state === 'SURVIVED' || week.state === 'UPCOMING' ? 0 : week.materials,
       efficiencyLabel:
         week.state === 'SURVIVED' || week.state === 'UPCOMING'
           ? ''
@@ -757,10 +788,18 @@ export class ColonyView {
       return null;
     }
 
+    const firstDay = addDays(colony.day, -(colony.runDay - 1));
+    const lastDay = addDays(firstDay, colony.runDayCount - 1);
+
     return {
       runNumber: colony.runNumber,
-      label: this.translation.translate('colony.history.run', { run: colony.runNumber }),
       isCurrent: true,
+      dateRangeLabel: formatDateRange(firstDay, lastDay),
+      weekLabel: this.translation.translate('colony.history.week', {
+        index: colony.runWeekIndex,
+        count: colony.runWeekCount,
+      }),
+      statusLabel: this.translation.translate('colony.history.status.current'),
       finalLabel: formatPopulation(colony.population, this.translation.language()),
     };
   }
@@ -774,8 +813,13 @@ export class ColonyView {
   private toClosedRunView(run: ColonyRunHistory): ColonyRunView {
     return {
       runNumber: run.runNumber,
-      label: this.translation.translate('colony.history.run', { run: run.runNumber }),
       isCurrent: false,
+      dateRangeLabel: formatDateRange(run.firstDay, run.finalDay),
+      weekLabel: this.translation.translate('colony.history.week', {
+        index: run.bossCount,
+        count: run.bossCount,
+      }),
+      statusLabel: this.translation.translate('colony.history.status.closed'),
       finalLabel: formatPopulation(run.finalPopulation, this.translation.language()),
     };
   }

@@ -148,3 +148,86 @@ export const IN_FLIGHT_SYNCHRONIZATION_STATUSES: readonly SynchronizationStatus[
   'PENDING',
   'RUNNING',
 ];
+
+/**
+ * One synchronization execution and its per-player outcomes, as exposed by
+ * `GET /api/admin/synchronizations/{id}`.
+ *
+ * Mirrors the backend `SynchronizationDetailsResponse`. A shorter reading of
+ * {@link SynchronizationExecution}, plus the one thing a summary row cannot show: which player
+ * failed and why.
+ */
+export interface SynchronizationDetails {
+  readonly id: number;
+  readonly type: string;
+  readonly trigger: 'SCHEDULED' | 'MANUAL';
+  readonly status: SynchronizationStatus;
+  readonly startedAt: string | null;
+  readonly finishedAt: string | null;
+  readonly playersProcessed: number;
+  readonly failureCount: number;
+  readonly matchesImported: number;
+  readonly errorMessage: string | null;
+  readonly players: readonly SynchronizationPlayerResult[];
+}
+
+/**
+ * One player's outcome within a synchronization execution.
+ *
+ * Mirrors the backend `SynchronizationDetailsResponse.PlayerResultResponse`.
+ */
+export interface SynchronizationPlayerResult {
+  readonly playerId: number;
+  readonly displayName: string;
+  readonly status: SynchronizationStatus;
+  readonly pagesFetched: number;
+  readonly matchesImported: number;
+  readonly errorMessage: string | null;
+
+  /**
+   * What ended the player's match-history walk, or `null` when they failed before completing
+   * one — the one thing that explains a suspiciously short import without reading the logs.
+   */
+  readonly stopReason: string | null;
+}
+
+/**
+ * A run's own place in the campaign's lifecycle.
+ *
+ * Mirrors the backend `CampaignRunStatus` enum.
+ */
+export type CampaignRunStatus = 'RUNNING' | 'COMPLETED' | 'STOPPED';
+
+/**
+ * One run of the campaign, current or closed, as exposed by `GET /api/admin/campaigns`.
+ *
+ * Mirrors the backend `CampaignAdminResponse.CampaignRunSummary`.
+ */
+export interface CampaignRun {
+  readonly id: number;
+  readonly firstDay: string;
+
+  /**
+   * The run's final day: its settlement day for one that ran (or is running) its full course, or
+   * the day an operator stopped it early.
+   */
+  readonly finalDay: string;
+  readonly rosterSize: number;
+  readonly status: CampaignRunStatus;
+
+  /**
+   * Population as of {@link finalDay} — the run's score once closed, its standing so far while
+   * still running.
+   */
+  readonly score: number;
+}
+
+/**
+ * The campaign's lifecycle, as exposed by `GET /api/admin/campaigns`.
+ *
+ * Mirrors the backend `CampaignAdminResponse`.
+ */
+export interface CampaignAdmin {
+  readonly autoRenewEnabled: boolean;
+  readonly runs: readonly CampaignRun[];
+}

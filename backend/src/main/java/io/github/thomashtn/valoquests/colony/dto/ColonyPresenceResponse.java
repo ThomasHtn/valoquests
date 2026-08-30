@@ -12,17 +12,21 @@ import java.util.List;
  * turnout a social lever rather than a second measure of time spent, and the reason the first game of
  * everybody's evening is the most valuable one of the week.
  *
- * @param present    players who cleared the threshold today
- * @param rosterSize roster size frozen on the run
- * @param multiplier what today's harvest is multiplied by, between one and two
- * @param threshold  raw damage a player's day must clear to count
- * @param players    the roster as it currently stands, each with how far into the day they got
+ * @param present        players who cleared the threshold today
+ * @param rosterSize     roster size frozen on the run
+ * @param multiplier     what today's harvest is multiplied by, between one and two
+ * @param nextMultiplier what the multiplier would be with one more player counted, capped at the
+ *                       roster size — equal to {@code multiplier} once the roster is full, so a
+ *                       client can read equality as "no next step to reach"
+ * @param threshold      raw damage a player's day must clear to count
+ * @param players        the roster as it currently stands, each with how far into the day they got
  */
 @Schema(description = "The day's turnout and the multiplier it is worth.")
 public record ColonyPresenceResponse(
     int present,
     int rosterSize,
     double multiplier,
+    double nextMultiplier,
     int threshold,
     List<ColonyPresencePlayerResponse> players
 ) {

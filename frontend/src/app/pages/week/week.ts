@@ -1,8 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { LucideHammer } from '@lucide/angular';
+import { LucideChevronRight, LucideHammer } from '@lucide/angular';
 import { interval } from 'rxjs';
 
+import { BossApi } from '@core/boss/boss-api';
 import { CurrentChallenges } from '@core/challenges/challenge.model';
 import { formatDamage, formatSquadMultiplier } from '@core/challenges/challenge-format.utils';
 import { resolveChallengeVisual } from '@core/challenges/challenge-visual.utils';
@@ -19,32 +20,46 @@ import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resou
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PageHeader } from '@layout/page-header/page-header';
+import { BossFightCard } from '@shared/boss-fight-card/boss-fight-card';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
-import { SectionLabel } from '@shared/section-label/section-label';
 import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
-import { ChallengeRow } from './challenges.model';
+import { CatalogueRow, ChallengeRow } from './week.model';
 
 /**
- * Weekly quest page.
+ * The week.
  *
- * Presents the five challenges drawn for the active week — one per difficulty tier — as a board of
- * cards stating what each one asks for and what it is worth against the week's boss. Who has
- * cleared what is deliberately *not* shown here: that is the squad matrix's job (`Leaderboard` at
- * `/leaderboard`), and repeating it turned every card into a second, weaker copy of that screen.
+ * Fusion of the old `/challenges` board and the boss card that used to lead the accueil (see
+ * design-review.md §3.2): the boss the squad is fighting this week, as the hero-sized
+ * `BossFightCard` shared with the accueil's own "La semaine" block, and the five challenges drawn
+ * for it — each now showing how many of the squad has already cleared it. Who exactly stays
+ * `Leaderboard`'s own matrix.
  */
 @Component({
-  selector: 'app-challenges',
-  imports: [TranslatePipe, LucideHammer, PageHeader, ResourceState, SectionLabel, WeekCountdown],
-  templateUrl: './challenges.html',
+  selector: 'app-week',
+  imports: [
+    TranslatePipe,
+    BossFightCard,
+    LucideChevronRight,
+    LucideHammer,
+    PageHeader,
+    ResourceState,
+    WeekCountdown,
+  ],
+  templateUrl: './week.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })
-export class Challenges {
+export class Week {
   /**
    * Data-access service backing the shared current-challenges resource.
    */
   private readonly challengesApi = inject(ChallengesApi);
+
+  /**
+   * Data-access service backing the shared current-boss resource.
+   */
+  private readonly bossApi = inject(BossApi);
 
   /**
    * i18n service, read for the active language rather than for a lookup: the damage amounts are
@@ -58,19 +73,24 @@ export class Challenges {
   private readonly now = signal(new Date());
 
   /**
-   * Reactive resource fetching the current week's challenges, shared with the overview header.
+   * Reactive resource fetching the current week's challenges, shared with the accueil header.
    */
   protected readonly challengesResource = this.challengesApi.current;
 
   /**
-   * Whether the backing resource is still loading.
+   * Reactive resource fetching the active week's boss confrontation.
    */
-  protected readonly isLoading = anyLoading(this.challengesResource);
+  protected readonly bossResource = this.bossApi.current;
 
   /**
-   * Whether the backing resource failed to load.
+   * Whether any backing resource is still loading.
    */
-  protected readonly hasError = anyError(this.challengesResource);
+  protected readonly isLoading = anyLoading(this.challengesResource, this.bossResource);
+
+  /**
+   * Whether any backing resource failed to load.
+   */
+  protected readonly hasError = anyError(this.challengesResource, this.bossResource);
 
   /**
    * Placeholder line widths driving the loading skeleton.
@@ -83,6 +103,12 @@ export class Challenges {
   private readonly currentWeek = computed<CurrentChallenges | null>(
     () => resourceValue(this.challengesResource, null) ?? null,
   );
+
+  /**
+   * The active week's boss confrontation, or `null` until it has loaded — read only to gate the
+   * boss section's header, the fight itself is `BossFightCard`'s own concern.
+   */
+  protected readonly boss = computed(() => resourceValue(this.bossResource, null));
 
   /**
    * Active week's ISO number, or `null` while loading.
@@ -127,18 +153,26 @@ export class Challenges {
   });
 
   /**
-   * Damage the squad would deal by clearing every challenge of the week.
-   *
-   * Summed here rather than read from the API: it is a total of amounts already on screen, stated
-   * so the board's stakes are legible without adding them up by eye — not a statistic the backend
-   * owns.
+   * The rest of the pool: every enabled challenge not among this week's five, outside of any
+   * week's draw — what the group could still find itself facing another Monday.
    */
-  protected readonly totalDamage = computed<string>(() => {
-    const total = (this.currentWeek()?.challenges ?? []).reduce(
-      (sum, challenge) => sum + challenge.damage,
-      0,
+  protected readonly catalogueRows = computed<readonly CatalogueRow[]>(() => {
+    const language = this.translation.language();
+    const drawnIds = new Set(
+      (this.currentWeek()?.challenges ?? []).map((challenge) => challenge.id),
     );
-    return formatDamage(total, this.translation.language());
+
+    return (resourceValue(this.challengesApi.catalogue, null)?.challenges ?? [])
+      .filter((entry) => !drawnIds.has(entry.id))
+      .map((entry) => ({
+        id: entry.id,
+        name: entry.name,
+        description: entry.description,
+        difficulty: entry.difficulty,
+        damage: formatDamage(entry.damage, language),
+        materials: formatDamage(entry.materials, language),
+        visual: resolveChallengeVisual(entry.metric, entry.difficulty),
+      }));
   });
 
   /**
@@ -152,9 +186,9 @@ export class Challenges {
   }
 
   /**
-   * Reloads the backing resource after a failure.
+   * Reloads every backing resource after a failure.
    */
   protected reload(): void {
-    reloadAll(this.challengesResource);
+    reloadAll(this.challengesResource, this.bossResource);
   }
 }

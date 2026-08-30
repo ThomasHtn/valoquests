@@ -85,6 +85,18 @@ public class Run extends AuditableEntity {
     private Instant closedAt;
 
     /**
+     * Calendar day an operator stopped this run early, or {@code null} for a run that ran (or is
+     * still running) its full course.
+     *
+     * <p>{@link #closedAt} alone cannot tell the two apart: it is set either way. This is only ever
+     * set alongside it, and gives the replay a day to stop the score at — a stopped run never reaches
+     * its own {@link #settlementDay()}, so replaying up to there would credit weeks that were never
+     * played.
+     */
+    @Column(name = "stopped_on")
+    private LocalDate stoppedOn;
+
+    /**
      * Returns the settlement day, the run's seventy-first and final day.
      *
      * <p>The Monday opening the eleventh week. It credits the tenth week's materials and boss, applies
@@ -95,6 +107,20 @@ public class Run extends AuditableEntity {
      */
     public LocalDate settlementDay() {
         return lastWeekStart.plusWeeks(1);
+    }
+
+    /**
+     * Returns the last day this run's score is ever computed on: {@link #stoppedOn} for a run an
+     * operator cut short, {@link #settlementDay()} otherwise.
+     *
+     * <p>What the replay and the history endpoint both read instead of {@link #settlementDay()}
+     * directly, so a stopped run is frozen at the day it actually stopped rather than credited for
+     * weeks it never played.
+     *
+     * @return the run's final day
+     */
+    public LocalDate finalDay() {
+        return stoppedOn != null ? stoppedOn : settlementDay();
     }
 
     /**

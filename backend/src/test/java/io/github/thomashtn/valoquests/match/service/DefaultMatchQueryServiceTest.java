@@ -8,9 +8,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import io.github.thomashtn.valoquests.match.dto.MatchDetailResponse;
 import io.github.thomashtn.valoquests.match.dto.MatchResponse;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
+import io.github.thomashtn.valoquests.match.exception.MatchNotFoundException;
 import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.MatchHistoryFilter;
 import io.github.thomashtn.valoquests.match.model.MatchResult;
@@ -30,6 +32,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -312,6 +315,113 @@ class DefaultMatchQueryServiceTest {
             .hasMessageContaining("size");
 
         verifyNoInteractions(playerMatchRepository);
+    }
+
+    @Test
+    @DisplayName("returns full detail for one of the player's own matches")
+    void shouldReturnFullDetailForOneOfThePlayersOwnMatches() {
+        PlayerMatch playerMatch = match(20, 8, 4, 30, 60, 10, "Red");
+        playerMatch.setDamageDealt(2500);
+        playerMatch.setRoundsPlayed(24);
+        playerMatch.setMvp(true);
+        playerMatch.getMatch().setDurationSeconds(2100);
+
+        when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
+        when(playerMatchRepository.findByIdAndPlayerId(100L, PLAYER_ID))
+            .thenReturn(Optional.of(playerMatch));
+        when(weekCalendar.weekStartOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
+        when(playerMatchRepository.findForChallengePeriod(any(), any(), any()))
+            .thenReturn(List.of(playerMatch));
+        when(damageResolver.resolveDetailed(List.of(playerMatch), ruleset))
+            .thenReturn(Map.of(100L, new MatchDamage(125, 25)));
+        when(playerMatchRepository.findByMatchIdAndPlayerIdNot(any(), eq(PLAYER_ID)))
+            .thenReturn(List.of());
+
+        MatchDetailResponse response = service.findDetail(PLAYER_ID, 100L);
+
+        assertThat(response.id()).isEqualTo(100L);
+        assertThat(response.durationSeconds()).isEqualTo(2100);
+        assertThat(response.headshots()).isEqualTo(30);
+        assertThat(response.bodyshots()).isEqualTo(60);
+        assertThat(response.legshots()).isEqualTo(10);
+        assertThat(response.damageDealt()).isEqualTo(2500);
+        assertThat(response.roundsPlayed()).isEqualTo(24);
+        assertThat(response.mvp()).isTrue();
+        assertThat(response.kda()).isEqualByComparingTo("3.00");
+        assertThat(response.headshotPercentage()).isEqualByComparingTo("30.00");
+        assertThat(response.valoquestsDamage()).isEqualTo(125);
+        assertThat(response.damageCoefficientPercent()).isEqualTo(25);
+        assertThat(response.teammates()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("lists other tracked players found in the same match, flagging shared teams")
+    void shouldListOtherTrackedPlayersFoundInTheSameMatch() {
+        PlayerMatch playerMatch = match(20, 8, 4, 30, 60, 10, "Red");
+
+        PlayerMatch ally = match(10, 5, 6, 10, 20, 5, "Red");
+        ally.setId(101L);
+        ally.setMatch(playerMatch.getMatch());
+        Player allyPlayer = new Player();
+        allyPlayer.setId(2L);
+        allyPlayer.setDisplayName("teammate");
+        allyPlayer.setPortrait("Jett");
+        ally.setPlayer(allyPlayer);
+
+        PlayerMatch opponent = match(8, 12, 2, 5, 15, 5, "Blue");
+        opponent.setId(102L);
+        opponent.setMatch(playerMatch.getMatch());
+        Player opponentPlayer = new Player();
+        opponentPlayer.setId(3L);
+        opponentPlayer.setDisplayName("rival");
+        opponent.setPlayer(opponentPlayer);
+
+        when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
+        when(playerMatchRepository.findByIdAndPlayerId(100L, PLAYER_ID))
+            .thenReturn(Optional.of(playerMatch));
+        when(weekCalendar.weekStartOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
+        when(playerMatchRepository.findForChallengePeriod(any(), any(), any()))
+            .thenReturn(List.of(playerMatch));
+        when(damageResolver.resolveDetailed(any(), any())).thenReturn(Map.of());
+        when(playerMatchRepository.findByMatchIdAndPlayerIdNot(any(), eq(PLAYER_ID)))
+            .thenReturn(List.of(ally, opponent));
+
+        MatchDetailResponse response = service.findDetail(PLAYER_ID, 100L);
+
+        assertThat(response.teammates()).hasSize(2);
+        assertThat(response.teammates())
+            .filteredOn(teammate -> teammate.playerId().equals(2L))
+            .singleElement()
+            .satisfies(teammate -> {
+                assertThat(teammate.displayName()).isEqualTo("teammate");
+                assertThat(teammate.sameTeam()).isTrue();
+            });
+        assertThat(response.teammates())
+            .filteredOn(teammate -> teammate.playerId().equals(3L))
+            .singleElement()
+            .satisfies(teammate -> assertThat(teammate.sameTeam()).isFalse());
+    }
+
+    @Test
+    @DisplayName("rejects an untracked player before querying any match")
+    void shouldRejectDetailForAnUntrackedPlayer() {
+        when(playerRepository.existsById(PLAYER_ID)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.findDetail(PLAYER_ID, 100L))
+            .isInstanceOf(PlayerNotFoundException.class);
+
+        verifyNoInteractions(playerMatchRepository);
+    }
+
+    @Test
+    @DisplayName("rejects a match that does not belong to the requesting player")
+    void shouldRejectAMatchThatDoesNotBelongToThePlayer() {
+        when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
+        when(playerMatchRepository.findByIdAndPlayerId(999L, PLAYER_ID))
+            .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.findDetail(PLAYER_ID, 999L))
+            .isInstanceOf(MatchNotFoundException.class);
     }
 
     private PlayerMatch match(

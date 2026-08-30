@@ -4,6 +4,46 @@
     "actionFailed": "The operation failed. Try again, or check the backend logs.",
     "cancel": "Cancel",
     "save": "Save",
+    "campaigns": {
+      "title": "Campaigns",
+      "heading": "Campaigns",
+      "runsLabel": "Campaigns",
+      "empty": "No campaign has been started yet.",
+      "error": "Could not load the campaigns.",
+      "loading": "Loading the campaigns…",
+      "roster": {
+        "one": "{{count}} player",
+        "other": "{{count}} players"
+      },
+      "status": {
+        "RUNNING": "Running",
+        "COMPLETED": "Completed",
+        "STOPPED": "Stopped"
+      },
+      "start": {
+        "heading": "Start a campaign",
+        "description": "Opens a campaign today, the active roster frozen. Only useful when automatic renewal is off and none is running.",
+        "action": "Start",
+        "done": "Campaign started."
+      },
+      "stop": {
+        "heading": "Stop the running campaign",
+        "description": "Closes the running campaign today, its score frozen at the day it was stopped rather than at its natural settlement day.",
+        "action": "Stop",
+        "confirm": "Stop",
+        "confirmBody": "This cannot be undone: the weeks left in this campaign will never be played.",
+        "done": "Campaign stopped."
+      },
+      "autoRenew": {
+        "description": "Lets Monday's rollover open the next campaign on its own once this one closes.",
+        "headingOn": "Automatic renewal on",
+        "headingOff": "Automatic renewal off",
+        "turnOn": "Turn on",
+        "turnOff": "Turn off",
+        "enabled": "Automatic renewal turned on.",
+        "disabled": "Automatic renewal turned off."
+      }
+    },
     "login": {
       "title": "Administration",
       "eyebrow": "Restricted access",
@@ -58,6 +98,29 @@
         "description": "Draws the current week's missing challenges and its boss, exactly as Monday's rollover does. Does nothing when the week is already set up.",
         "action": "Run the selection",
         "done": "The current week is fully set up."
+      },
+      "history": {
+        "title": "Synchronization history",
+        "empty": "No past synchronization.",
+        "error": "Could not load the history.",
+        "loading": "Loading the history…",
+        "loadingPlayers": "Loading players…",
+        "playersProcessed": {
+          "one": "{{count}} player processed",
+          "other": "{{count}} players processed"
+        },
+        "matchesImported": {
+          "one": "{{count}} match imported",
+          "other": "{{count}} matches imported"
+        },
+        "failureCount": {
+          "one": "{{count}} failure",
+          "other": "{{count}} failures"
+        },
+        "trigger": {
+          "scheduled": "scheduled",
+          "manual": "manual"
+        }
       }
     },
     "players": {
@@ -176,7 +239,9 @@
       "portrait": "Boss portrait",
       "previous": "Previous week",
       "quests": "Challenges",
-      "ranking": "Ranking"
+      "ranking": "Ranking",
+      "weakPoints": "Its weak points",
+      "weakPointsLink": "See the challenges"
     },
     "status": {
       "current": "In progress",
@@ -194,6 +259,9 @@
   },
   "campaign": {
     "error": "Could not load the campaign.",
+    "frieze": {
+      "hint": "Tap a node to see its week's detail — outcome, rewards, ranking"
+    },
     "heading": "The squad's campaign",
     "legend": {
       "current": "Threat under way",
@@ -207,6 +275,18 @@
     },
     "territory": "Threat map",
     "title": "Campaign"
+  },
+  "campaignSummary": {
+    "average": "Average",
+    "backToCampaign": "Back to the campaign",
+    "bossesDefeated": "Bosses defeated",
+    "error": "Could not load this campaign.",
+    "eyebrow": "Campaign over",
+    "firstCampaignNote": "First campaign — nothing to compare yet.",
+    "loading": "Loading the campaign…",
+    "notFound": "This campaign does not exist, or has not closed yet.",
+    "peak": "Peak",
+    "vsPrevious": "{{delta}} vs the previous one"
   },
   "colony": {
     "boss": {
@@ -224,28 +304,26 @@
     "bosses": "Bosses",
     "cardInfo": "Detail {{title}}",
     "curve": {
-      "title": "The run's population",
-      "open": "See the run's population",
-      "close": "Close the run's population",
-      "axis": "Day of the run",
+      "title": "Campaign population",
+      "axis": "Day of the campaign",
       "caption": "Peak {{peak}} · Average {{average}}",
       "day": "D{{day}}",
       "detail": "Feedable {{feedable}} · efficiency {{efficiency}}",
       "milestone": "{{tier}} · D{{day}}"
     },
-    "delta": "tonight",
+    "delta": "today",
     "detail": {
-      "title": "Colony detail"
+      "title": "The economy detail"
     },
-    "eyebrow": "Campaign · Run {{run}} · Week {{week}} of {{weeks}}",
-    "hexagonAria": "Population: {{population}} inhabitants of {{ceiling}} feedable, {{change}} tonight. Open the run's curve.",
+    "eyebrow": "Campaign · Week {{week}} of {{weeks}}",
     "history": {
-      "title": "Campaign history",
-      "run": "Campaign {{run}}",
-      "column": "Campaign",
-      "columnHint": "A ten-week campaign, the campaign in progress on top and the closed ones below.",
-      "final": "Score",
-      "finalHint": "The population of the settlement day, once the tenth week has been credited."
+      "title": "The campaigns",
+      "first": "First campaign — the score will register on day {{day}}.",
+      "status": {
+        "closed": "Closed",
+        "current": "In progress"
+      },
+      "week": "Wk. {{index}} / {{count}}"
     },
     "ladder": {
       "title": "The town's tiers",
@@ -280,7 +358,7 @@
     "tierProgress": "{{materials}} materials to go before {{name}}.",
     "track": {
       "population": {
-        "description": "The population climbs every night towards what the food can feed.",
+        "description": "The population climbs every day towards what the food can feed.",
         "purpose": "How fast it catches up depends on morale; its ceiling depends on the food in stock."
       },
       "food": {
@@ -288,7 +366,7 @@
         "weekTitle": "Food this week",
         "day": "{{day}}: {{food}} harvested",
         "dayUnplayed": "Day not yet lived",
-        "description": "Every night, damage dealt in matches turns into food; the more of the squad plays, the bigger the harvest. It keeps for 7 days before being lost.",
+        "description": "Every day, damage dealt in matches turns into food; the more of the squad plays, the bigger the harvest. It keeps for 7 days before being lost.",
         "efficiency": "1 food feeds",
         "efficiencyValue": "{{inhabitants}} inhabitants",
         "consumption": "Consumption / week",
@@ -299,32 +377,33 @@
       "presence": {
         "name": "Turnout",
         "description": "A player counts once they pass {{threshold}} raw damage in the day.",
-        "purpose": "The fuller the squad, the more tonight's food harvest is multiplied: from ×1 alone to ×2 at {{roster}}.",
-        "bonus": "Bonus on tonight's harvest",
+        "purpose": "The fuller the squad, the more today's food harvest is multiplied: from ×1 alone to ×2 at {{roster}}.",
+        "bonus": "Bonus on today's harvest",
         "caption": "{{present}}/{{roster}} players active today",
-        "aria": "Turnout: {{present}} of {{roster}} players played today. A day needs {{threshold}} raw damage to count."
+        "aria": "Turnout: {{present}} of {{roster}} players played today. A day needs {{threshold}} raw damage to count.",
+        "nextMultiplier": "One more player would push the multiplier to {{multiplier}}."
       },
       "morale": {
-        "name": "Attractivity",
+        "name": "Morale",
         "description": "A defeated boss raises morale (+3 minor, +5 standard, +7 elite); a surviving boss lowers it (−7).",
-        "purpose": "It sets how fast the population catches up to what the food can feed: at 100 morale, the gap closes 15% every night.",
+        "purpose": "It sets how fast the population catches up to what the food can feed: at 100 morale, the gap closes 15% every day.",
         "caption": "Speeds up new arrivals",
-        "aria": "Attractivity: morale {{value}} of {{ceiling}}, {{arrivals}} inhabitants tonight."
+        "aria": "Morale: {{value}} of {{ceiling}}, {{arrivals}} inhabitants today."
       },
       "arrivals": {
         "name": "Arrivals",
-        "description": "What morale and food add or take from the population, every night.",
-        "purpose": "The result of the Food and Attractivity gauges combined.",
+        "description": "What morale and food add or take from the population, every day.",
+        "purpose": "The result of the Food and Morale gauges combined.",
         "caption": "New inhabitants per day"
       },
       "foodStock": {
-        "name": "Stock",
+        "name": "Reserve",
         "description": "The week's harvest kept in store, expiring seven days after it was gathered.",
         "purpose": "What consumption draws from every week, and what raises the population's fed ceiling.",
         "caption": "Kept for 7 days"
       },
       "consumption": {
-        "name": "Consumption",
+        "name": "Mouths to feed",
         "description": "What the town eats every week, whatever the stock holds.",
         "purpose": "Paid first out of the harvest; what is left over becomes the surplus.",
         "caption": "Eaten every week, whatever happens"
@@ -351,7 +430,7 @@
     }
   },
   "landing": {
-    "body": "A web app where every Valorant match feeds a shared colony. Each week a threat appears: the whole squad has to play to push it back and keep the town growing.",
+    "body": "A web app where every Valorant match feeds a shared colony. Every week, a boss appears: the whole squad has to play to bring it down and keep the town growing, over a ten-week campaign.",
     "compass": {
       "action": "Enter",
       "caption": "Join the squad"
@@ -359,7 +438,7 @@
     "heading": {
       "welcome": "Welcome to"
     },
-    "hint": "Do you dare join the adventure?",
+    "hint": "Ready to grow the colony?",
     "title": "Colony",
     "weekLabel": "Colony · Week {{week}}",
     "weekLabelPending": "Colony"
@@ -386,11 +465,13 @@
       "weakPoints": "Its weak points",
       "weakPointsLink": "See the challenges"
     },
+    "dayBlock": {
+      "title": "The day"
+    },
     "header": {
-      "subheading": "The squad's progress this week",
       "timeLabel": "Time remaining",
       "timeRemaining": "{{days}}d {{hours}}h",
-      "title": "Overview"
+      "title": "The colony"
     },
     "podium": {
       "hint": "The week's podium, ranked on total damage. Clicking a player opens their profile.",
@@ -416,7 +497,18 @@
       "progressLabel": "Collective progress",
       "rowPlayers": "Players"
     },
-    "title": "Overview",
+    "miniRanking": {
+      "empty": "Nobody has played yet this week.",
+      "error": "Unable to load the ranking.",
+      "link": "See the ranking",
+      "loading": "Loading the ranking…",
+      "title": "Ranking"
+    },
+    "title": "The colony",
+    "weekSummary": {
+      "link": "See the week",
+      "title": "Week {{week}}"
+    },
     "weeklyChallenges": {
       "damageDestination": "Boss and ranking",
       "damageLabel": "Damage",
@@ -455,10 +547,9 @@
         "description": "Five new challenges will be drawn from the catalogue.",
         "label": "Next draw"
       },
-      "title": "Weekly challenges",
+      "title": "The week",
       "heading": "Challenges",
-      "subheading": "The five challenges to clear this week",
-      "totalPotential": "Total potential · {{damage}} damage"
+      "subheading": "The boss and the five challenges of the week"
     },
     "weeklyRanking": {
       "champion": "Champion",
@@ -467,12 +558,16 @@
         "bonusDamage": "Bonus damage",
         "challengesCleared": "Challenges cleared",
         "damage": "Damage",
+        "materials": "Materials",
         "player": "Player"
       },
       "completed": "Challenge completed",
       "empty": "No ranking is available this week.",
+      "emptyWeek": "The squad hasn't played yet this week.",
       "error": "Failed to load the weekly ranking.",
-      "inactive": "Inactive",
+      "outOfCampaign": {
+        "title": "Out of campaign"
+      },
       "loading": "Loading ranking…",
       "title": "Weekly ranking",
       "heading": "Ranking",
@@ -482,7 +577,8 @@
         "closedNote": "Closed week. Only the totals are kept: the challenge-by-challenge breakdown exists for the live week alone.",
         "live": "Live",
         "next": "Next week",
-        "previous": "Previous week"
+        "previous": "Previous week",
+        "seeOnCampaign": "See on the campaign"
       },
       "variation": {
         "down": {
@@ -533,6 +629,25 @@
         "map": "Map",
         "match": "Match",
         "score": "Score"
+      },
+      "detail": {
+        "title": "Match detail",
+        "eyebrow": "Back to profile",
+        "error": "Could not load this match.",
+        "loading": "Loading the match…",
+        "duration": "{{minutes}} min",
+        "mvp": "Match MVP",
+        "damageDealt": "Damage dealt",
+        "roundsPlayed": "Rounds played",
+        "shotsHeading": "Shot breakdown",
+        "headshots": "Head",
+        "bodyshots": "Body",
+        "legshots": "Legs",
+        "standingHeading": "Standing",
+        "tier": "Rank",
+        "teammatesHeading": "Other squad members in this match",
+        "sameTeam": "same team",
+        "otherTeam": "enemy team"
       },
       "empty": "No match found for these filters.",
       "error": "Failed to load match history.",
@@ -699,8 +814,18 @@
     "empty": "No player is tracked yet.",
     "error": "Failed to load players.",
     "heading": "Players",
+    "inCampaign": {
+      "title": "In the current campaign",
+      "count": {
+        "one": "{{count}} player",
+        "other": "{{count}} players"
+      }
+    },
     "loading": "Loading players…",
-    "subheading": "Rank, match history and stats for every player",
+    "outOfCampaign": {
+      "title": "Out of campaign"
+    },
+    "subheading": "Players",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -717,13 +842,30 @@
   },
   "retry": "Retry",
   "rules": {
+    "chain": {
+      "damage": "Damage",
+      "materials": "Materials",
+      "outcome": "Boss defeated or challenge cleared",
+      "play": "Play",
+      "town": "The town grows"
+    },
     "heading": "Rules",
+    "parts": {
+      "rates": {
+        "eyebrow": "Part 2",
+        "title": "The rates"
+      },
+      "week": {
+        "eyebrow": "Part 1",
+        "title": "One week, in 6 beats"
+      }
+    },
     "readingTime": {
       "label": "Reading",
       "value": "4 min"
     },
     "replayTour": "Replay the tour",
-    "subheading": "One week, in 6 beats",
+    "subheading": "How the squad works",
     "sections": {
       "bonuses": {
         "days": "{{days}} d",
@@ -757,12 +899,12 @@
       },
       "colony": {
         "title": "The colony",
-        "description": "You play, that produces food. The food says how many inhabitants the town can feed. Every night, the town moves a little closer to that number. There is no other population rule.",
+        "description": "You play, that produces food. The food says how many inhabitants the town can feed. Every day, the town moves a little closer to that number. There is no other population rule.",
         "facts": {
           "harvest": "85 damage makes 1 food. An average competitive game is therefore worth 5, and that is the barème's damage, already through the day's diminishing returns.",
           "feeds": "One food feeds 8 inhabitants to begin with, and more as the town develops. It is the only figure tying food to population.",
           "eats": "The town eats population / efficiency a week. The bigger it gets the more it eats, so what is left over melts on its own as it grows.",
-          "window": "Only the last seven days count. Every night today enters the tally and the day seven days back leaves it: it is an average, not a reserve."
+          "window": "Only the last seven days count. Each day, today enters the tally and the day seven days back leaves it: it is an average, not a reserve."
         },
         "presenceLabel": "Turnout",
         "presence": "Everything harvested in a day is multiplied by 1 + (players present / squad size). The whole squad present therefore makes the day count double. A player counts once they have dealt more than 300 raw damage that day, which is one competitive game or three deathmatches: without that threshold, a two-minute deathmatch would be enough to reach the maximum."
@@ -780,9 +922,9 @@
         "title": "What counts as a played match"
       },
       "night": {
-        "title": "The night",
-        "description": "Every night, the town closes 15 % of the gap between what it holds and what its food allows. There is one ceiling only, so nothing is ever wasted.",
-        "gap": "It moves fast at first and slower and slower after, and never quite arrives. That is deliberate: there is always something left to gain, and never an evening where playing is pointless. The other way round, if the food no longer stretches, it falls back at the same speed.",
+        "title": "The day",
+        "description": "Every day, the town closes 15 % of the gap between what it holds and what its food allows. There is one ceiling only, so nothing is ever wasted.",
+        "gap": "It moves fast at first and slower and slower after, and never quite arrives. That is deliberate: there is always something left to gain, and never a day where playing is pointless. The other way round, if the food no longer stretches, it falls back at the same speed.",
         "moraleLabel": "Morale, from 20 to 100",
         "morale": {
           "MINOR": "Minor defeated",
@@ -790,7 +932,7 @@
           "ELITE": "Elite defeated",
           "SURVIVED": "Boss held"
         },
-        "moraleFootnote": "Morale starts at 50 and depends on bosses alone. It multiplies the climbing speed: at 50 the town closes 7.5 % of the gap a night instead of 15 %. It never slows the fall. The ten fights of a run pay 50 morale between them, exactly the room up to the ceiling: a flawless run only reaches 100 on its tenth fight, so no boss is ever without effect. At the floor, 3 % a night is left, around 19 % a week: a badly started run crawls, but it is never stuck."
+        "moraleFootnote": "Morale starts at 50 and depends on bosses alone. It multiplies the climbing speed: at 50 the town closes 7.5 % of the gap a day instead of 15 %. It never slows the fall. The ten fights of a run pay 50 morale between them, exactly the room up to the ceiling: a flawless run only reaches 100 on its tenth fight, so no boss is ever without effect. At the floor, 3 % a day is left, around 19 % a week: a badly started run crawls, but it is never stuck."
       },
       "progression": {
         "description": "Some challenges ask not for an absolute threshold but for progress on yourself: beating your own K/D, ACS or headshot rate from the previous 4 weeks by a given percentage. Grinding matches at the same level does not complete them, since the measure is a rate. With no history over the last 4 weeks, the challenge stays out of reach.",
@@ -812,7 +954,7 @@
         "bossMaterialsLabel": "Materials per defeated boss, per player",
         "materialsLabel": "Materials per validated challenge, per player",
         "tiersLabel": "The tiers, one every 0.75 efficiency",
-        "tiersFootnote": "A defeated boss pays its materials to every squad player, never inhabitants: inhabitants would fade at 15 % a night, whereas efficiency never comes back down. Materials are divided by the squad size before being converted, which keeps the balance identical from 2 players to 20. A regular run runs from 8 to 16 efficiency, one tier a week."
+        "tiersFootnote": "A defeated boss pays its materials to every squad player, never inhabitants: inhabitants would fade at 15 % a day, whereas efficiency never comes back down. Materials are divided by the squad size before being converted, which keeps the balance identical from 2 players to 20. A regular run runs from 8 to 16 efficiency, one tier a week."
       }
     },
     "title": "Rules & how it works"
@@ -848,13 +990,14 @@
       "unknown": "Never synchronized"
     },
     "nav": {
+      "adminCampaigns": "Campaigns",
       "adminMaintenance": "Maintenance",
       "adminOperations": "Operations",
       "adminPlayers": "Players",
       "campaign": "Campaign",
-      "challenges": "Challenges",
+      "challenges": "The week",
       "leaderboard": "Ranking",
-      "overview": "Overview",
+      "overview": "The colony",
       "players": "Players",
       "rules": "Rules"
     },
@@ -877,36 +1020,51 @@
     "skip": "Skip the tour",
     "steps": {
       "boss": {
-        "body": "Every week, a threat appears with a pool of hit points shared by the whole group. Every match you play and every challenge you clear deals damage to it. It has to fall before Sunday 11:59 pm: miss that, and it survives and the colony takes the hit.",
+        "body": "Every Monday, a boss rises with hit points shared by the whole group — up to several tens of thousands. Your matches and cleared challenges chip away at it together.\n\nIt has to fall before Sunday 11:59 pm: miss that, and it survives while the colony takes the hit.",
         "eyebrow": "The boss",
-        "title": "A threat to push back every week"
+        "title": "A boss to bring down every week"
       },
       "challenges": {
-        "body": "Every Monday, five challenges are drawn at random, from the easiest to the hardest. The harder a challenge is to clear, the more damage it deals to the threat — and the more materials it banks for the colony.",
+        "body": "Five challenges are drawn every Monday from a pool of over sixty, one per difficulty tier. Clearing the hardest can deal up to 4,500 damage to the boss and bank 45 materials for the colony — far more than the easiest.\n\nThe harder a challenge is, the more it weighs on both scores at once.",
         "eyebrow": "The challenges",
-        "title": "Five challenges to clear every week"
+        "title": "Five challenges drawn every Monday"
       },
       "colony": {
-        "body": "Every match you play feeds the colony, and every challenge cleared or boss brought down banks materials that push the town up a tier. The more food it has and the further it is built up, the more its population grows.\n\nThat is the shared goal: after ten weeks, the population it reached is the whole squad's score. Which means everyone has to play.",
+        "body": "Every match feeds the colony; every challenge cleared or boss brought down banks materials that push the town up a tier, from campsite to city. The further built up it is, the more inhabitants the same food supports.\n\nThat is the shared goal: the population reached after ten weeks is the whole squad's final score.",
         "eyebrow": "The colony",
         "title": "A town that grows with every match"
       },
       "intro": {
-        "body": "You are joining a squad growing a colony. Every week, the matches you play on Valorant feed it, clear challenges and push back the threat aiming at it.\n\nLet's walk through a week.",
+        "body": "You are joining a squad of a few players growing a colony together, over a ten-week campaign. Every Valorant match feeds the town; every week, five challenges and a boss test the group.\n\nAfter ten weeks, the town's population is the whole squad's score — it, not any one player, is what counts.",
         "eyebrow": "The idea",
-        "title": "A shared adventure, week after week"
+        "title": "One colony, one squad, ten weeks"
       },
       "players": {
-        "body": "It is all yours to explore, starting now. And who knows: the next champion of this adventure might just be you.",
-        "eyebrow": "To discover",
-        "title": "Every adventurer has a story of their own"
+        "body": "Three things are enough: play your matches as usual, clear the challenges within reach, and come back on several days through the week rather than playing it all in one sitting.\n\nYour own profile, and the rest of the squad's, are yours to look at right now — the town only grows if everyone pitches in.",
+        "eyebrow": "What we expect from you",
+        "title": "Play, clear challenges, hold the week"
       },
       "ranking": {
-        "body": "Everyone's damage adds up into a weekly ranking. Showing up regularly and clearing challenges together earn bonuses on top. Whoever leads when the week closes takes the Champion title.",
+        "body": "Every player's damage — matches and challenges alike — adds up into a weekly ranking. Playing on several days through the week and clearing a challenge together both earn bonuses on top.\n\nWhoever leads a closed week becomes Champion, until the next week closes.",
         "eyebrow": "The ranking",
-        "title": "Who hits hardest"
+        "title": "Who carries the squad the most"
       }
     },
     "title": "Guided tour"
+  },
+  "week": {
+    "bossHero": {
+      "label": "Boss"
+    },
+    "bossSection": {
+      "title": "Boss to defeat this week"
+    },
+    "catalogue": {
+      "hint": "What Monday's draw can still hand out, beyond the five challenges above.",
+      "title": "The rest of the pool"
+    },
+    "challengesSection": {
+      "title": "The five challenges"
+    }
   }
 }

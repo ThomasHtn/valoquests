@@ -15,10 +15,6 @@ import { interval } from 'rxjs';
 
 import { ChallengeIconView } from '@shared/challenge-icon-view/challenge-icon-view';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
-import {
-  resolveChallengeMetricLabel,
-  resolveChallengeVisual,
-} from '@core/challenges/challenge-visual.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
 import {
@@ -36,22 +32,18 @@ import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { RankingHistoryWeek } from '@core/ranking/ranking.model';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Breakpoint } from '@core/viewport/breakpoint';
+import { Podium } from '@pages/overview/podium/podium';
 import { Avatar } from '@shared/avatar/avatar';
+import { ChallengeRing } from '@shared/challenge-ring/challenge-ring';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
-import { ProgressCircle } from '@shared/progress-circle/progress-circle';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
-import { RankingCell, RankingColumn, RankingRow } from './leaderboard.model';
-import {
-  buildCurrentValueLabel,
-  buildTargetValueLabel,
-  computeCompletionPercentage,
-  formatMetricValue,
-} from './leaderboard.utils';
+import { RankingColumn, RankingRow } from './leaderboard.model';
+import { resolveRankingCells, resolveRankingColumns } from './leaderboard.utils';
 
 /**
  * Weekly leaderboard page — the squad's tactical matrix.
@@ -78,10 +70,10 @@ import {
     ChallengeIconView,
     Tooltip,
     Avatar,
+    ChallengeRing,
     ChampionBadge,
     PositionBadge,
     ProgressBar,
-    ProgressCircle,
     ResourceState,
     WeekCountdown,
     LucideCheck,
@@ -90,6 +82,7 @@ import {
     LucideChevronRight,
     LucideChevronUp,
     PageHeader,
+    Podium,
   ],
   templateUrl: './leaderboard.html',
   host: { class: PAGE_LAYOUT_CLASS },
@@ -237,6 +230,15 @@ export class Leaderboard {
   });
 
   /**
+   * Monday of the week on screen, or `null` while it has not loaded — the same `?week=` value the
+   * campaign's own boss drawer already reads, so its "back to the campaign" link and this page's
+   * `?week=` entry point stay two directions of one deep link.
+   */
+  protected readonly selectedWeekStart = computed<string | null>(
+    () => this.selectedWeek()?.weekStart ?? null,
+  );
+
+  /**
    * Whether there is an older week to step back to.
    */
   protected readonly hasOlderWeek = computed(() => this.weekIndex() < this.historyWeeks().length);
@@ -263,19 +265,10 @@ export class Leaderboard {
    * March's rows under them would cross two different weeks in one table.
    */
   protected readonly columns = computed<readonly RankingColumn[]>(() =>
-    (this.isLiveWeek() ? (resourceValue(this.challengesResource, null)?.challenges ?? []) : []).map(
-      (challenge) => ({
-        challengeId: challenge.id,
-        name: challenge.name,
-        categoryLabel: resolveChallengeMetricLabel(challenge.metric, (key) =>
-          this.translation.translate(key),
-        ),
-        targetLabel: challenge.targetValue
-          ? formatMetricValue(challenge.targetValue, this.translation.language())
-          : null,
-        tooltip: `${challenge.name} — ${challenge.description}`,
-        visual: resolveChallengeVisual(challenge.metric, challenge.difficulty),
-      }),
+    resolveRankingColumns(
+      this.isLiveWeek() ? (resourceValue(this.challengesResource, null)?.challenges ?? []) : [],
+      (key) => this.translation.translate(key),
+      this.translation.language(),
     ),
   );
 
@@ -288,6 +281,16 @@ export class Leaderboard {
   );
 
   /**
+   * Materials one clear of each of the week's challenges is worth, keyed by challenge id — the
+   * live week's own catalogue, read once here rather than per row.
+   */
+  private readonly challengeMaterialsById = computed<ReadonlyMap<number, number>>(() => {
+    const challenges = resourceValue(this.challengesResource, null)?.challenges ?? [];
+
+    return new Map(challenges.map((challenge) => [challenge.id, challenge.materials]));
+  });
+
+  /**
    * The week on screen, as rows — the live board or a closed one, in the same shape either way so
    * both layouts render one kind of row rather than branching all the way down.
    */
@@ -296,30 +299,52 @@ export class Leaderboard {
   );
 
   /**
+   * Rows of players currently in the campaign — the table proper.
+   */
+  protected readonly activeRows = computed(() => this.rows().filter((row) => row.inCampaign));
+
+  /**
+   * Rows of players out of the campaign, as a group of their own rather than a fade on the same
+   * list (see root `CLAUDE.md`, `PlayerStatus`, and design-review.md §A8): they play and clear
+   * challenges individually, but never occupy a ranking slot or bank materials for the colony,
+   * which is a different *kind* of row, not a lesser one.
+   */
+  protected readonly outOfCampaignRows = computed(() =>
+    this.rows().filter((row) => !row.inCampaign),
+  );
+
+  /**
+   * Whether the live week has genuinely seen no play yet — every in-campaign player still sits at
+   * zero (design-review.md's G4: this reads as "nobody has played" rather than as six identical
+   * rows the visitor has to notice are all zero themselves).
+   *
+   * `false` on a closed week: a finalized week with nothing in it is the generic empty state
+   * instead, since a week that closed without a single point played is not the case this reads.
+   */
+  protected readonly weekHasNoActivity = computed(() => {
+    if (!this.isLiveWeek()) {
+      return false;
+    }
+
+    const entries = (this.currentWeek()?.ranking ?? []).filter((entry) => entry.position != null);
+    return entries.length > 0 && entries.every((entry) => entry.totalDamage === 0);
+  });
+
+  /**
    * Live ranking entries mapped to display-ready rows: one cell per column, aligned by challenge id.
    */
   private readonly liveRows = computed<readonly RankingRow[]>(() => {
     const columns = this.columns();
     const championPlayerId = this.championPlayerId();
     const language = this.translation.language();
+    const materialsById = this.challengeMaterialsById();
     return (this.currentWeek()?.ranking ?? []).map((entry) => {
-      const cells: RankingCell[] = columns.map((column) => {
-        const progress = entry.challengeProgress.find(
-          (candidate) => candidate.challengeId === column.challengeId,
-        );
-        return {
-          challengeId: column.challengeId,
-          name: column.name,
-          categoryLabel: column.categoryLabel,
-          currentValueLabel: buildCurrentValueLabel(progress, language),
-          targetValueLabel: buildTargetValueLabel(progress, language),
-          completionPercentage: computeCompletionPercentage(progress),
-          completed: progress?.completed ?? false,
-          visual: column.visual,
-        };
-      });
+      const cells = resolveRankingCells(columns, entry.challengeProgress, language);
 
       const bonus = entry.regularityBonus + entry.teamBonus;
+      const materials = entry.challengeProgress
+        .filter((progress) => progress.completed)
+        .reduce((sum, progress) => sum + (materialsById.get(progress.challengeId) ?? 0), 0);
 
       return {
         // The backend omits `position` entirely from the JSON payload when null (global
@@ -331,14 +356,22 @@ export class Leaderboard {
         displayName: entry.player.displayName,
         avatarUrl: resolvePlayerAvatarUrl(entry.player.portrait),
         // `totalDamage`, not `challengeDamage`: the ranking is ordered on the total, so showing
-        // anything else next to a position would not explain the order it is in.
-        damageLabel: formatDamage(entry.totalDamage, language),
-        bonusLabel: bonus === 0 ? null : `+${formatDamage(bonus, language)}`,
+        // anything else next to a position would not explain the order it is in. `null` for an
+        // out-of-campaign player: the figure does not exist for them, it is not merely zero — they
+        // never deal boss damage in the first place (root `CLAUDE.md`, `PlayerStatus`).
+        damageLabel: entry.position != null ? formatDamage(entry.totalDamage, language) : null,
+        bonusLabel:
+          entry.position != null && bonus !== 0 ? `+${formatDamage(bonus, language)}` : null,
         cells,
         isChampion: entry.player.id === championPlayerId,
         // The five cells above already say, challenge by challenge, what these two would summarize.
         completedLabel: null,
         activeDaysLabel: null,
+        materialsLabel:
+          entry.position != null && materials !== 0
+            ? `+${formatDamage(materials, language)}`
+            : null,
+        inCampaign: entry.position != null,
       };
     });
   });
@@ -373,14 +406,19 @@ export class Leaderboard {
         playerId: entry.playerId,
         displayName: entry.displayName,
         avatarUrl: resolvePlayerAvatarUrl(portraits.get(entry.playerId) ?? null),
-        damageLabel: formatDamage(entry.totalDamage, language),
-        bonusLabel: bonus === 0 ? null : `+${formatDamage(bonus, language)}`,
+        damageLabel: entry.position != null ? formatDamage(entry.totalDamage, language) : null,
+        bonusLabel:
+          entry.position != null && bonus !== 0 ? `+${formatDamage(bonus, language)}` : null,
         cells: [],
         // On a closed week the title goes to whoever actually won it: this is the week that handed
         // it out, not a week decorated by whoever holds it today.
         isChampion: entry.position === 1,
         completedLabel: `${entry.completedChallenges}`,
         activeDaysLabel: `${entry.activeDays}`,
+        // Nothing to sum: a finalized week's challenge catalogue (and each challenge's materials
+        // value) is not fetched, only its frozen totals — same reason `cells` is empty above.
+        materialsLabel: null,
+        inCampaign: entry.position != null,
       };
     });
   });

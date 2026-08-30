@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.match.controller;
 
+import io.github.thomashtn.valoquests.match.dto.MatchDetailResponse;
 import io.github.thomashtn.valoquests.match.dto.MatchResponse;
 import io.github.thomashtn.valoquests.match.model.MatchHistoryFilter;
 import io.github.thomashtn.valoquests.match.service.MatchQueryService;
@@ -69,5 +70,35 @@ public class MatchController {
         @ParameterObject MatchHistoryFilter filter
     ) {
         return service.findByPlayer(playerId, page, size, filter);
+    }
+
+    /**
+     * Returns full detail for one of the player's matches.
+     *
+     * @param playerId internal player identifier
+     * @param id       internal player-match identifier, matching {@link MatchResponse#id}
+     * @return the requested match's full detail
+     */
+    @GetMapping("/{id}")
+    @Operation(
+        summary = "Get full detail for one of a player's matches",
+        description = """
+            Returns everything stored about one match: the same figures as the history page, plus
+            the shot-type breakdown, raw damage, round count and every other tracked player found in
+            the same match.
+            """
+    )
+    @ApiResponse(responseCode = "200", description = "Match detail returned successfully.")
+    @ApiResponse(
+        responseCode = "404",
+        description = "The requested player, or the requested match for that player, does not exist."
+    )
+    public MatchDetailResponse getPlayerMatchDetail(
+        @Parameter(description = "Internal player identifier.", example = "3", required = true)
+        @PathVariable long playerId,
+        @Parameter(description = "Internal player-match identifier.", example = "42", required = true)
+        @PathVariable long id
+    ) {
+        return service.findDetail(playerId, id);
     }
 }

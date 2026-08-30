@@ -14,6 +14,7 @@ import { filter, map } from 'rxjs';
 import {
   LucideBookOpen,
   LucideDatabaseBackup,
+  LucideFlag,
   LucideLanguages,
   LucideLayoutDashboard,
   LucideLogOut,
@@ -65,6 +66,7 @@ import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './
     RouterLink,
     LucideBookOpen,
     LucideDatabaseBackup,
+    LucideFlag,
     LucideLanguages,
     LucideLayoutDashboard,
     LucideLogOut,

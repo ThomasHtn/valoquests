@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
@@ -60,6 +60,43 @@ const PODIUM_PLINTH_CLASSES: readonly string[] = [
 })
 export class Podium {
   /**
+   * Whether the field below the podium renders at all.
+   *
+   * Defaults to `true` for the overview, the only screen a visitor is guaranteed to open, where
+   * the podium is the sole ranking a squad member appears on. `/leaderboard` sets this to `false`:
+   * its own table already covers every rank below 3, so a second copy of the same rows here would
+   * only be duplication.
+   */
+  public readonly showRest = input(true);
+
+  /**
+   * Whether each entry's damage figure is printed under its rank.
+   *
+   * Defaults to `true`. `/leaderboard` sets this to `false`: the board right below the podium
+   * already carries every player's damage, so the podium there is read as a pure ranking —
+   * position only, nothing repeated from the table under it.
+   */
+  public readonly showDamage = input(true);
+
+  /**
+   * Whether the section header (title, hairline, diamond) is rendered above the podium.
+   *
+   * Defaults to `true`. `/leaderboard` sets this to `false`: the page's own header already
+   * announces the weekly ranking, so a second "Podium de la semaine" line right above it only
+   * repeated what the visitor had just read. The title stays in the DOM as `sr-only` so the
+   * section keeps a name for assistive technology.
+   */
+  public readonly showTitle = input(true);
+
+  /**
+   * Height the 3rd plinth stands, as a CSS length — the 1st and 2nd scale off it (see
+   * {@link PODIUM_PLINTH_CLASSES}). Defaults to the overview's own hero size. `/leaderboard` passes
+   * a shorter value: {@link showDamage} is `false` there, so the plinth carries only the rank plate
+   * and the taller hero height would leave it looking mostly empty.
+   */
+  public readonly plinthBase = input('clamp(6rem, 9vh, 7.5rem)');
+
+  /**
    * Data-access service backing the shared current-ranking resource.
    */
   private readonly rankingApi = inject(RankingApi);
@@ -109,13 +146,14 @@ export class Podium {
   protected readonly top3 = computed(() => this.entries().slice(0, 3));
 
   /**
-   * Every ranking entry below the podium, shown as a compact strip beside it.
+   * Every ranking entry below the podium, shown as a compact strip beside it — empty when
+   * {@link showRest} is `false`, since `/leaderboard`'s own table already covers those ranks.
    *
-   * Not capped: the overview is the only screen a visitor is guaranteed to open, and a squad
-   * member silently missing from it — with no "see the full ranking" affordance anywhere on the
-   * page — reads as a bug rather than as a summary.
+   * Not capped otherwise: the overview is the only screen a visitor is guaranteed to open, and a
+   * squad member silently missing from it — with no "see the full ranking" affordance anywhere on
+   * the page — reads as a bug rather than as a summary.
    */
-  protected readonly rest = computed(() => this.entries().slice(3));
+  protected readonly rest = computed(() => (this.showRest() ? this.entries().slice(3) : []));
 
   /**
    * Resolves a player's avatar asset from their portrait field, exposed to the template.

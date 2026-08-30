@@ -13,9 +13,12 @@ import static org.mockito.Mockito.when;
 import io.github.thomashtn.valoquests.colony.DefaultColonyRuleset;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.run.entity.CampaignSettings;
 import io.github.thomashtn.valoquests.run.entity.Run;
+import io.github.thomashtn.valoquests.run.repository.CampaignSettingsRepository;
 import io.github.thomashtn.valoquests.run.repository.RunRepository;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
+import io.github.thomashtn.valoquests.shared.exception.ConflictException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
@@ -49,6 +52,13 @@ class RunServiceTest {
     private PlayerRepository playerRepository;
 
     /**
+     * Campaign settings repository dependency, backed by a single fake row so
+     * {@link RunService#isAutoRenewEnabled()} reads back whatever
+     * {@link RunService#setAutoRenewEnabled(boolean)} last wrote.
+     */
+    private CampaignSettingsRepository campaignSettingsRepository;
+
+    /**
      * The run table, in memory, keyed by first week.
      *
      * <p>A fake rather than a bare mock: run creation now goes through an {@code ON CONFLICT DO
@@ -65,7 +75,16 @@ class RunServiceTest {
     void setUp() {
         runRepository = mock(RunRepository.class);
         playerRepository = mock(PlayerRepository.class);
+        campaignSettingsRepository = mock(CampaignSettingsRepository.class);
         runsByWeek = new LinkedHashMap<>();
+
+        CampaignSettings[] settings = { new CampaignSettings() };
+        lenient().when(campaignSettingsRepository.findById(CampaignSettings.SINGLETON_ID))
+            .thenAnswer(invocation -> Optional.of(settings[0]));
+        lenient().when(campaignSettingsRepository.save(any())).thenAnswer(invocation -> {
+            settings[0] = invocation.getArgument(0);
+            return settings[0];
+        });
 
         lenient().when(playerRepository.countByStatus(PlayerStatus.ACTIVE))
             .thenReturn((long) ROSTER_SIZE);
@@ -101,6 +120,7 @@ class RunServiceTest {
 
         service = new RunService(
             runRepository,
+            campaignSettingsRepository,
             playerRepository,
             new DefaultColonyRuleset(new DefaultScoringRuleset()),
             new WeekCalendar(clock, ZoneOffset.UTC),
@@ -290,6 +310,77 @@ class RunServiceTest {
     void shouldReportNoRunBeforeTheFirstRollover() {
         assertThat(service.currentRun()).isEmpty();
         assertThat(service.currentRunId()).isEmpty();
+    }
+
+    /**
+     * Verifies that automatic renewal reads back on, matching the setting's own default.
+     */
+    @Test
+    void shouldDefaultAutoRenewToEnabled() {
+        assertThat(service.isAutoRenewEnabled()).isTrue();
+    }
+
+    /**
+     * Verifies that switching automatic renewal off reads back off.
+     */
+    @Test
+    void shouldPersistAutoRenewOnceSwitched() {
+        service.setAutoRenewEnabled(false);
+
+        assertThat(service.isAutoRenewEnabled()).isFalse();
+    }
+
+    /**
+     * Verifies that stopping the run in progress closes it, marks the day it stopped on, and leaves
+     * its settlement day untouched — {@link Run#finalDay()} is what a stopped run's readers use
+     * instead.
+     */
+    @Test
+    void shouldStopTheRunInProgressOnToday() {
+        Run open = givenOpenRun(1, FIRST_WEEK);
+        LocalDate today = LocalDate.of(2026, 6, 1);
+
+        Run stopped = service.stopCurrentRun();
+
+        assertThat(stopped).isSameAs(open);
+        assertThat(stopped.getStoppedOn()).isEqualTo(today);
+        assertThat(stopped.getClosedAt()).isNotNull();
+        assertThat(stopped.finalDay()).isEqualTo(today);
+        assertThat(stopped.settlementDay()).isNotEqualTo(today);
+    }
+
+    /**
+     * Verifies that stopping a campaign with none running is refused rather than silently a no-op.
+     */
+    @Test
+    void shouldRefuseToStopWhenNoCampaignIsRunning() {
+        assertThatThrownBy(() -> service.stopCurrentRun())
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("No campaign is currently running.");
+    }
+
+    /**
+     * Verifies that starting a campaign opens a run on this week's Monday.
+     */
+    @Test
+    void shouldStartACampaignOnThisWeeksMonday() {
+        Run started = service.startRunNow();
+
+        assertThat(started.getNumber()).isEqualTo(1);
+        assertThat(started.getFirstWeekStart()).isEqualTo(FIRST_WEEK);
+        assertThat(started.getClosedAt()).isNull();
+    }
+
+    /**
+     * Verifies that starting a campaign while one is already running is refused.
+     */
+    @Test
+    void shouldRefuseToStartWhenACampaignIsAlreadyRunning() {
+        givenOpenRun(1, FIRST_WEEK);
+
+        assertThatThrownBy(() -> service.startRunNow())
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("A campaign is already running.");
     }
 
     /**

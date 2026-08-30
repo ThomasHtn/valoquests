@@ -143,6 +143,9 @@
               @case ('palette') {
                 <svg class="h-full w-full" lucidePalette></svg>
               }
+              @case ('flag') {
+                <svg class="h-full w-full" lucideFlag></svg>
+              }
             }
           </span>
           <span
@@ -195,23 +198,6 @@
     <!-- Sync status and language switcher share one row: a left/right pair everywhere, collapsing
          to a centered stack only on the icon-only rail, too narrow to hold both side by side. -->
     <div [class]="footerContentClass()" class="flex items-center justify-between gap-3">
-      @if (collapsed()) {
-        <!-- Collapsed rail only: below `lg` the sidebar is never collapsed, and the icon-only
-             timestamp needs a tooltip to be readable at all. -->
-        <div class="hidden w-full justify-center lg:flex">
-          <button
-            [attr.aria-label]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
-            [appTooltip]="'sidebar.lastSync.tooltip' | translate: { value: lastSyncLabel() }"
-            class="focus-ring flex h-10 w-10 cursor-default items-center justify-center text-text-muted"
-            appTooltipPosition="right"
-            appTooltipSize="md"
-            type="button"
-          >
-            <svg class="block h-5 w-5 shrink-0" lucideRefreshCw></svg>
-          </button>
-        </div>
-      }
-
       <div [class]="syncBlockClass()" class="min-w-0">
         <p class="tracking-label font-mono text-2xs text-text-muted uppercase">
           {{ 'sidebar.lastSync.label' | translate }}

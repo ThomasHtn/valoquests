@@ -1,18 +1,24 @@
 <section aria-labelledby="podium-title" class="flex flex-col">
   <!-- Section rule: title, hairline fading to nothing, hollow diamond closing the run — the
        direction's section header, used here rather than a card border so the podium reads as part
-       of the page rather than as another panel stacked under the boss. -->
-  <div class="flex items-center gap-3">
-    <h2
-      class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
-      id="podium-title"
-    >
-      {{ 'overview.podium.title' | translate }}
-    </h2>
-    <span aria-hidden="true" class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent">
-    </span>
-    <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
-  </div>
+       of the page rather than as another panel stacked under the boss. Dropped when
+       {@link Podium.showTitle} is `false`: the title stays as `sr-only` so the section keeps its
+       accessible name either way. -->
+  @if (showTitle()) {
+    <div class="flex items-center gap-3">
+      <h2
+        class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
+        id="podium-title"
+      >
+        {{ 'overview.podium.title' | translate }}
+      </h2>
+      <span aria-hidden="true" class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent">
+      </span>
+      <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
+    </div>
+  } @else {
+    <h2 class="sr-only" id="podium-title">{{ 'overview.podium.title' | translate }}</h2>
+  }
 
   <app-resource-state
     (retry)="reload()"
@@ -48,8 +54,9 @@
     <div
       [appTooltip]="'overview.podium.hint' | translate"
       [appTooltipDelay]="tooltipDelayMs"
+      [style.--podium-base]="plinthBase()"
       appTooltipPosition="left"
-      class="mt-4 flex flex-1 flex-col gap-6 [--podium-base:clamp(6rem,9vh,7.5rem)]"
+      class="mt-4 flex flex-1 flex-col gap-6"
     >
       <!-- Podium spotlight: 1st place rendered larger and centered via `order`, so the DOM keeps its
            natural reading order (1st, 2nd, 3rd) for assistive technology while the visual layout
@@ -111,17 +118,21 @@
                 </span>
                 <!-- `totalDamage`, not `challengeDamage`: the ranking is ordered on the total, so
                      the figure under a position has to be the one that earned it — challenge
-                     damage alone reads as 0 for a player who only has match damage. -->
-                <span
-                  [class]="podiumTextAccent(entry.position)"
-                  [class.text-4xl]="entry.position === 1"
-                  class="font-display text-3xl leading-none font-bold tabular-nums"
-                >
-                  {{ formatDamage(entry.totalDamage) }}
-                  <span class="sr-only">
-                    {{ 'overview.weeklyRanking.columns.damage' | translate }}
+                     damage alone reads as 0 for a player who only has match damage. Dropped
+                     entirely when {@link Podium.showDamage} is `false`: the rank plate above is
+                     then the only thing this block still says. -->
+                @if (showDamage()) {
+                  <span
+                    [class]="podiumTextAccent(entry.position)"
+                    [class.text-4xl]="entry.position === 1"
+                    class="font-display text-3xl leading-none font-bold tabular-nums"
+                  >
+                    {{ formatDamage(entry.totalDamage) }}
+                    <span class="sr-only">
+                      {{ 'overview.weeklyRanking.columns.damage' | translate }}
+                    </span>
                   </span>
-                </span>
+                }
               </span>
             </a>
           </li>

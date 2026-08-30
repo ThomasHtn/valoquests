@@ -64,7 +64,7 @@ public class ColonyRunInputAssembler {
     }
 
     /**
-     * Assembles one run's days, from its first to today, never past its settlement day.
+     * Assembles one run's days, from its first to today, never past its final day.
      *
      * <p>A closed run is assembled in full; the run in progress stops at today, so the curve does not
      * draw days that have not happened.
@@ -108,12 +108,12 @@ public class ColonyRunInputAssembler {
      * Returns the last day of the run the replay should reach.
      *
      * @param run run being replayed
-     * @return today, or the settlement day once the run is over
+     * @return today, or the run's final day once it is over
      */
     private LocalDate lastDayToReplay(Run run) {
         LocalDate today = LocalDate.now(clock.withZone(weekCalendar.zone()));
 
-        return today.isAfter(run.settlementDay()) ? run.settlementDay() : today;
+        return today.isAfter(run.finalDay()) ? run.finalDay() : today;
     }
 
     /**

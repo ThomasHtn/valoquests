@@ -14,7 +14,8 @@ export type NavIcon =
   | 'refresh-cw'
   | 'user-cog'
   | 'database-backup'
-  | 'palette';
+  | 'palette'
+  | 'flag';
 
 /**
  * Primary navigation entry.

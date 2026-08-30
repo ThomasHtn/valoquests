@@ -1,6 +1,8 @@
 package io.github.thomashtn.valoquests.challenge.controller;
 
+import io.github.thomashtn.valoquests.challenge.dto.ChallengeCatalogueResponse;
 import io.github.thomashtn.valoquests.challenge.dto.CurrentChallengesResponse;
+import io.github.thomashtn.valoquests.challenge.service.ChallengeCatalogueQueryService;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,12 +26,22 @@ public class ChallengeController {
     private final ChallengeQueryService service;
 
     /**
+     * Application service resolving the challenge catalogue.
+     */
+    private final ChallengeCatalogueQueryService catalogueService;
+
+    /**
      * Creates the challenge controller.
      *
-     * @param service challenge query service
+     * @param service          challenge query service
+     * @param catalogueService challenge catalogue query service
      */
-    public ChallengeController(ChallengeQueryService service) {
+    public ChallengeController(
+        ChallengeQueryService service,
+        ChallengeCatalogueQueryService catalogueService
+    ) {
         this.service = service;
+        this.catalogueService = catalogueService;
     }
 
     /**
@@ -49,5 +61,23 @@ public class ChallengeController {
     @ApiResponse(responseCode = "200", description = "Current challenges returned successfully.")
         public CurrentChallengesResponse getCurrentChallenges() {
         return service.findCurrent();
+    }
+
+    /**
+     * Returns the full challenge catalogue, independent of any one week's draw.
+     *
+     * @return every challenge eligible for weekly selection
+     */
+    @GetMapping("/catalogue")
+    @Operation(
+        summary = "Get the challenge catalogue",
+        description = """
+            Returns every challenge eligible for weekly selection, with what each is always worth in
+            damage and materials — outside of any one week's draw, unlike `/current`.
+            """
+    )
+    @ApiResponse(responseCode = "200", description = "Challenge catalogue returned successfully.")
+    public ChallengeCatalogueResponse getChallengeCatalogue() {
+        return catalogueService.findCatalogue();
     }
 }

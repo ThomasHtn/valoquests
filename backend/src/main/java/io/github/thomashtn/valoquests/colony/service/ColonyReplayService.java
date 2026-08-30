@@ -112,16 +112,18 @@ public class ColonyReplayService {
     }
 
     /**
-     * Replays every closed run that never reached its settlement day.
+     * Replays every closed run that never reached its final day.
      *
      * <p>A run is closed by the rollover on the very Monday that is its seventy-first day, and only the
      * open run is ever replayed — so without this the settlement day was never computed for anybody. It
      * is the day that credits the tenth week's challenges and boss and applies the last migration, so a
      * run was ending one week of materials and one boss short of what it had actually earned, on the
-     * snapshot its final score is read from.
+     * snapshot its final score is read from. A run an operator stopped early has no settlement day to
+     * reach at all — {@link Run#finalDay()} is {@link Run#getStoppedOn()} for it instead, the day its
+     * last real snapshot already stands on.
      *
-     * <p>Settles a run once and never again: a run whose last day already is its settlement day is
-     * skipped, which is what keeps a closed run frozen against a later rebalancing of the ruleset.
+     * <p>Settles a run once and never again: a run whose last day already is its final day is skipped,
+     * which is what keeps a closed run frozen against a later rebalancing of the ruleset.
      *
      * <p>Deliberately not named {@code settleClosedRuns}: SpotBugs reads any {@code void set*} method
      * as a mutator, which would make this service look mutable and flag every class holding it.
@@ -131,15 +133,15 @@ public class ColonyReplayService {
         for (Run run : runService.closedRuns()) {
             LocalDate lastDay = snapshotRepository.findLastDayByRunId(run.getId()).orElse(null);
 
-            if (lastDay != null && !lastDay.isBefore(run.settlementDay())) {
+            if (lastDay != null && !lastDay.isBefore(run.finalDay())) {
                 continue;
             }
 
             LOGGER.info(
-                "Run {} closed on {} without its settlement day {}: settling it now.",
+                "Run {} closed on {} without its final day {}: settling it now.",
                 run.getNumber(),
                 lastDay,
-                run.settlementDay()
+                run.finalDay()
             );
 
             replay(run);

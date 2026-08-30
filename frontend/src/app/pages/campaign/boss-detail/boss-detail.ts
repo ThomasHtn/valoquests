@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucideChevronLeft,
@@ -11,11 +11,16 @@ import {
 
 import { resolveBossTimelineTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
+import { resolveBossNumberLabel } from '@core/boss/boss-visual.utils';
+import { ChallengesApi } from '@core/challenges/challenges-api';
+import { ChallengeWeakPoint } from '@core/challenges/challenge-weak-point.model';
+import { resolveChallengeWeakPoints } from '@core/challenges/challenge-weak-point.utils';
 import { ColonyBossView } from '@core/colony/colony-view.model';
+import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
 import { BossContributions } from '@shared/boss-contributions/boss-contributions';
 import { Drawer } from '@shared/drawer/drawer';
-import { resolveBossNumberLabel } from '../campaign-map.constants';
 
 /**
  * Detail panel for one week of the campaign, opened from the battle map or the legacy timeline.
@@ -41,6 +46,17 @@ import { resolveBossNumberLabel } from '../campaign-map.constants';
   templateUrl: './boss-detail.html',
 })
 export class BossDetail {
+  /**
+   * Data-access service backing the shared current-challenges resource, read for the active week's
+   * weak points behind {@link weakPoints}.
+   */
+  private readonly challengesApi = inject(ChallengesApi);
+
+  /**
+   * i18n service read for the active language when grouping the weak points' damage amounts.
+   */
+  private readonly translation = inject(Translation);
+
   /**
    * The week being detailed.
    */
@@ -87,4 +103,19 @@ export class BossDetail {
    * the same number the map's own hexagons carry.
    */
   protected readonly bossNumberLabel = resolveBossNumberLabel;
+
+  /**
+   * The active week's five challenges, reduced to a tier mark and an amount — what actually brings
+   * this boss's bar down, the same weak points the always-visible current-boss panel shows.
+   *
+   * Only ever non-empty for the `'current'` node: the backing resource carries the active week's
+   * draw alone, so a past or upcoming week's panel gates on {@link BossTimelineNode.status} rather
+   * than on this list's length.
+   */
+  protected readonly weakPoints = computed<readonly ChallengeWeakPoint[]>(() =>
+    resolveChallengeWeakPoints(
+      resourceValue(this.challengesApi.current, null)?.challenges ?? [],
+      this.translation.language(),
+    ),
+  );
 }

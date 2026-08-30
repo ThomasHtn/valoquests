@@ -4,8 +4,11 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.colony.ColonyRuleset;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.run.entity.CampaignSettings;
 import io.github.thomashtn.valoquests.run.entity.Run;
+import io.github.thomashtn.valoquests.run.repository.CampaignSettingsRepository;
 import io.github.thomashtn.valoquests.run.repository.RunRepository;
+import io.github.thomashtn.valoquests.shared.exception.ConflictException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -55,6 +58,11 @@ public class RunService {
     private final RunRepository runRepository;
 
     /**
+     * Repository backing the campaign's own lifecycle settings.
+     */
+    private final CampaignSettingsRepository campaignSettingsRepository;
+
+    /**
      * Repository used to freeze the roster size a run opens on.
      */
     private final PlayerRepository playerRepository;
@@ -77,11 +85,12 @@ public class RunService {
     /**
      * Creates the run service.
      *
-     * @param runRepository    run repository
-     * @param playerRepository player repository
-     * @param ruleset          colony ruleset supplying the run length
-     * @param weekCalendar     calendar validating week identifiers
-     * @param clock            application clock
+     * @param runRepository              run repository
+     * @param campaignSettingsRepository campaign settings repository
+     * @param playerRepository           player repository
+     * @param ruleset                    colony ruleset supplying the run length
+     * @param weekCalendar               calendar validating week identifiers
+     * @param clock                      application clock
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -89,12 +98,14 @@ public class RunService {
     )
     public RunService(
         RunRepository runRepository,
+        CampaignSettingsRepository campaignSettingsRepository,
         PlayerRepository playerRepository,
         ColonyRuleset ruleset,
         WeekCalendar weekCalendar,
         Clock clock
     ) {
         this.runRepository = runRepository;
+        this.campaignSettingsRepository = campaignSettingsRepository;
         this.playerRepository = playerRepository;
         this.ruleset = ruleset;
         this.weekCalendar = weekCalendar;
@@ -129,6 +140,91 @@ public class RunService {
     @Transactional(readOnly = true)
     public List<Run> closedRuns() {
         return runRepository.findAllByClosedAtIsNotNullOrderByNumberDesc();
+    }
+
+    /**
+     * Returns whether the weekly rollover may open a new run once the current one closes.
+     *
+     * @return {@code true} unless an operator has turned automatic renewal off
+     */
+    @Transactional(readOnly = true)
+    public boolean isAutoRenewEnabled() {
+        return settings().isAutoRenewEnabled();
+    }
+
+    /**
+     * Turns automatic renewal on or off.
+     *
+     * @param enabled whether the weekly rollover may open a new run on its own
+     */
+    @Transactional
+    public void setAutoRenewEnabled(boolean enabled) {
+        CampaignSettings settings = settings();
+        settings.setAutoRenewEnabled(enabled);
+        campaignSettingsRepository.save(settings);
+    }
+
+    /**
+     * Stops the run in progress today, freezing its score at today rather than at its settlement day.
+     *
+     * <p>Closes the run exactly as the rollover would, and additionally marks it stopped so
+     * {@link Run#finalDay()} reads today instead of a settlement day it will now never reach. The
+     * colony still has to be replayed after this returns — {@code ColonyReplayService} is not called
+     * from here, the same separation {@link #ensureRunFor} already keeps from the colony it bounds.
+     *
+     * @return the stopped run
+     * @throws ConflictException when no run is currently open
+     */
+    @Transactional
+    public Run stopCurrentRun() {
+        Run run = currentRun().orElseThrow(
+            () -> new ConflictException("No campaign is currently running.")
+        );
+
+        LocalDate today = LocalDate.now(clock.withZone(weekCalendar.zone()));
+        run.setStoppedOn(today);
+        run.setClosedAt(clock.instant());
+        Run stopped = runRepository.save(run);
+
+        LOGGER.info(
+            "Run {} stopped on {} by an operator, short of its settlement day {}.",
+            stopped.getNumber(),
+            today,
+            stopped.settlementDay()
+        );
+
+        return stopped;
+    }
+
+    /**
+     * Starts a new run on this week's Monday, for an operator to use once automatic renewal is off
+     * and no run is open.
+     *
+     * <p>Not the path a live campaign takes: that one is opened lazily, from whichever page loads
+     * first once the calendar has moved past the previous run's own end. This one exists for the gap
+     * automatic renewal being off deliberately leaves open, which nothing would otherwise ever fill.
+     *
+     * @return the started run
+     * @throws ConflictException when a run is already open
+     */
+    @Transactional
+    public Run startRunNow() {
+        if (currentRun().isPresent()) {
+            throw new ConflictException("A campaign is already running.");
+        }
+
+        return ensureRunFor(weekCalendar.currentWeekStart());
+    }
+
+    /**
+     * Reads the campaign's single settings row, creating it if a deployment predates the table's
+     * seed row.
+     *
+     * @return the campaign settings
+     */
+    private CampaignSettings settings() {
+        return campaignSettingsRepository.findById(CampaignSettings.SINGLETON_ID)
+            .orElseGet(() -> campaignSettingsRepository.save(new CampaignSettings()));
     }
 
     /**

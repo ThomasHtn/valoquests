@@ -475,9 +475,10 @@
                     </div>
 
                     @for (row of day.matches; track row.id) {
-                      <div
+                      <a
                         [class]="rowGridClass + ' ' + resultAccentClass(row.result)"
-                        class="notch-tr bg-text-primary/4 transition-colors [--notch:0.625rem] hover:bg-brand-500/15"
+                        [routerLink]="['/players', playerId(), 'matches', row.id]"
+                        class="notch-tr focus-ring-inset bg-text-primary/4 transition-colors [--notch:0.625rem] hover:bg-brand-500/15"
                       >
                         <div class="flex items-center gap-3.5 px-4 py-3.5">
                           <app-media-thumbnail
@@ -602,7 +603,7 @@
                             </span>
                           }
                         </p>
-                      </div>
+                      </a>
                     }
                   </div>
                 }
@@ -649,123 +650,130 @@
 
                     <ul class="flex flex-col gap-2">
                       @for (row of day.matches; track row.id) {
-                        <li
-                          [class]="resultAccentClass(row.result)"
-                          class="notch-tr flex flex-col gap-4 bg-text-primary/4 px-4 py-4 [--notch:0.625rem]"
-                        >
-                          <div class="flex items-center gap-3.5">
-                            <app-media-thumbnail
-                              [monogram]="agentInitial(row.agentName)"
-                              [src]="mapImageUrl(row.mapName)"
-                            />
-                            <div class="flex min-w-0 flex-1 flex-col gap-1.5">
-                              <p
-                                class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
-                              >
-                                {{ row.mapName }}
-                                <!-- The result is shown as the card's leading accent and on the ally
-                                 score, neither of which conveys anything to a screen reader. -->
-                                <span class="sr-only">
-                                  — {{ 'playerProfile.matches.result.' + row.result | translate }}
-                                </span>
-                              </p>
-                              <p class="truncate text-sm text-text-muted">
-                                {{ matchTime(row.startedAt) }} ·
-                                {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }}
-                              </p>
-                            </div>
-                            <p
-                              class="font-display shrink-0 text-lg leading-none font-bold tabular-nums"
-                            >
-                              @if (matchScore(row.allyScore, row.enemyScore); as score) {
-                                <span [class]="resultTextClass(row.result)">{{ score.ally }}</span>
-                                <span class="text-text-muted"> : {{ score.enemy }}</span>
-                              } @else {
-                                <span class="text-text-muted">—</span>
-                              }
-                            </p>
-                            <app-media-thumbnail
-                              [accessibleName]="row.agentName"
-                              [monogram]="agentInitial(row.agentName)"
-                              [src]="agentImageUrl(row.agentName)"
-                            />
-                          </div>
-
-                          <dl
-                            class="grid grid-cols-3 gap-3 border-t border-text-primary/10 pt-4 sm:grid-cols-6"
+                        <li>
+                          <a
+                            [class]="resultAccentClass(row.result)"
+                            [routerLink]="['/players', playerId(), 'matches', row.id]"
+                            class="notch-tr focus-ring-inset flex flex-col gap-4 bg-text-primary/4 px-4 py-4 [--notch:0.625rem]"
                           >
-                            <div>
-                              <dt class="label-caption text-text-muted">
-                                {{ 'playerProfile.matches.columns.kda' | translate }}
-                              </dt>
-                              <dd
-                                class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                            <div class="flex items-center gap-3.5">
+                              <app-media-thumbnail
+                                [monogram]="agentInitial(row.agentName)"
+                                [src]="mapImageUrl(row.mapName)"
+                              />
+                              <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+                                <p
+                                  class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
+                                >
+                                  {{ row.mapName }}
+                                  <!-- The result is shown as the card's leading accent and on the ally
+                                 score, neither of which conveys anything to a screen reader. -->
+                                  <span class="sr-only">
+                                    — {{ 'playerProfile.matches.result.' + row.result | translate }}
+                                  </span>
+                                </p>
+                                <p class="truncate text-sm text-text-muted">
+                                  {{ matchTime(row.startedAt) }} ·
+                                  {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }}
+                                </p>
+                              </div>
+                              <p
+                                class="font-display shrink-0 text-lg leading-none font-bold tabular-nums"
                               >
-                                {{ row.kills }}/{{ row.deaths }}/{{ row.assists }}
-                              </dd>
+                                @if (matchScore(row.allyScore, row.enemyScore); as score) {
+                                  <span [class]="resultTextClass(row.result)">{{
+                                    score.ally
+                                  }}</span>
+                                  <span class="text-text-muted"> : {{ score.enemy }}</span>
+                                } @else {
+                                  <span class="text-text-muted">—</span>
+                                }
+                              </p>
+                              <app-media-thumbnail
+                                [accessibleName]="row.agentName"
+                                [monogram]="agentInitial(row.agentName)"
+                                [src]="agentImageUrl(row.agentName)"
+                              />
                             </div>
-                            <div>
-                              <dt class="label-caption text-text-muted">
-                                {{ 'playerProfile.matches.columns.kd' | translate }}
-                              </dt>
-                              <dd
-                                [class]="kdaVisual(row.kda).textClass"
-                                class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
-                              >
-                                {{ formatKda(row.kda) }}
-                              </dd>
-                            </div>
-                            <div>
-                              <dt class="label-caption text-text-muted">
-                                {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
-                              </dt>
-                              <dd
-                                class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
-                              >
-                                {{ formatHeadshotPercentage(row.headshotPercentage) }}
-                              </dd>
-                            </div>
-                            <div>
-                              <dt class="label-caption text-text-muted">
-                                {{ 'playerProfile.matches.columns.adr' | translate }}
-                              </dt>
-                              <dd
-                                class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
-                              >
-                                {{ formatScore(row.adr) }}
-                              </dd>
-                            </div>
-                            <div>
-                              <dt class="label-caption text-text-muted">
-                                {{ 'playerProfile.matches.columns.acs' | translate }}
-                              </dt>
-                              <dd
-                                class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
-                              >
-                                {{ formatScore(row.acs) }}
-                              </dd>
-                            </div>
-                            <!-- The reduced share is written out here rather than left to the
+
+                            <dl
+                              class="grid grid-cols-3 gap-3 border-t border-text-primary/10 pt-4 sm:grid-cols-6"
+                            >
+                              <div>
+                                <dt class="label-caption text-text-muted">
+                                  {{ 'playerProfile.matches.columns.kda' | translate }}
+                                </dt>
+                                <dd
+                                  class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                                >
+                                  {{ row.kills }}/{{ row.deaths }}/{{ row.assists }}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt class="label-caption text-text-muted">
+                                  {{ 'playerProfile.matches.columns.kd' | translate }}
+                                </dt>
+                                <dd
+                                  [class]="kdaVisual(row.kda).textClass"
+                                  class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
+                                >
+                                  {{ formatKda(row.kda) }}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt class="label-caption text-text-muted">
+                                  {{
+                                    'playerProfile.matches.columns.headshotPercentage' | translate
+                                  }}
+                                </dt>
+                                <dd
+                                  class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                                >
+                                  {{ formatHeadshotPercentage(row.headshotPercentage) }}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt class="label-caption text-text-muted">
+                                  {{ 'playerProfile.matches.columns.adr' | translate }}
+                                </dt>
+                                <dd
+                                  class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                                >
+                                  {{ formatScore(row.adr) }}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt class="label-caption text-text-muted">
+                                  {{ 'playerProfile.matches.columns.acs' | translate }}
+                                </dt>
+                                <dd
+                                  class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                                >
+                                  {{ formatScore(row.acs) }}
+                                </dd>
+                              </div>
+                              <!-- The reduced share is written out here rather than left to the
                                  tooltip: this layout is the one a phone gets, and a tooltip opens
                                  on hover or focus, neither of which a thumb does. -->
-                            <div>
-                              <dt class="label-caption text-text-muted">
-                                {{ 'playerProfile.matches.columns.damage' | translate }}
-                              </dt>
-                              <dd
-                                [class.text-brand-500]="row.valoquestsDamage > 0"
-                                [class.text-text-muted]="row.valoquestsDamage === 0"
-                                class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
-                              >
-                                {{ formatDamageAmount(row.valoquestsDamage) }}
-                                @if (damageShareLabel(row); as share) {
-                                  <span class="label-caption block text-text-muted tabular-nums">
-                                    {{ share }}
-                                  </span>
-                                }
-                              </dd>
-                            </div>
-                          </dl>
+                              <div>
+                                <dt class="label-caption text-text-muted">
+                                  {{ 'playerProfile.matches.columns.damage' | translate }}
+                                </dt>
+                                <dd
+                                  [class.text-brand-500]="row.valoquestsDamage > 0"
+                                  [class.text-text-muted]="row.valoquestsDamage === 0"
+                                  class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
+                                >
+                                  {{ formatDamageAmount(row.valoquestsDamage) }}
+                                  @if (damageShareLabel(row); as share) {
+                                    <span class="label-caption block text-text-muted tabular-nums">
+                                      {{ share }}
+                                    </span>
+                                  }
+                                </dd>
+                              </div>
+                            </dl>
+                          </a>
                         </li>
                       }
                     </ul>

@@ -1,7 +1,10 @@
 package io.github.thomashtn.valoquests.match.service;
 
+import io.github.thomashtn.valoquests.match.dto.MatchDetailResponse;
 import io.github.thomashtn.valoquests.match.dto.MatchResponse;
+import io.github.thomashtn.valoquests.match.dto.MatchTeammateResponse;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
+import io.github.thomashtn.valoquests.match.exception.MatchNotFoundException;
 import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.MatchHistoryFilter;
 import io.github.thomashtn.valoquests.match.model.MatchResult;
@@ -185,15 +188,8 @@ public class DefaultMatchQueryService implements MatchQueryService {
     ) {
         MatchDamage damage =
             damageByPlayerMatchId.getOrDefault(playerMatch.getId(), MatchDamage.NONE);
-        int shots = playerMatch.getHeadshots() + playerMatch.getBodyshots() + playerMatch.getLegshots();
-        BigDecimal kda = BigDecimal.valueOf(playerMatch.getKills() + playerMatch.getAssists())
-            .divide(BigDecimal.valueOf(Math.max(1, playerMatch.getDeaths())), 2, RoundingMode.HALF_UP);
-        BigDecimal headshotPercentage = shots == 0 ? BigDecimal.ZERO : BigDecimal.valueOf(playerMatch.getHeadshots())
-            .multiply(BigDecimal.valueOf(100))
-            .divide(BigDecimal.valueOf(shots), 2, RoundingMode.HALF_UP);
-        boolean redTeam = "Red".equalsIgnoreCase(playerMatch.getTeamId());
-        Integer allyScore = redTeam ? playerMatch.getMatch().getRedScore() : playerMatch.getMatch().getBlueScore();
-        Integer enemyScore = redTeam ? playerMatch.getMatch().getBlueScore() : playerMatch.getMatch().getRedScore();
+        Integer allyScore = allyScore(playerMatch);
+        Integer enemyScore = enemyScore(playerMatch);
         return new MatchResponse(
             playerMatch.getId(),
             playerMatch.getMatch().getStartedAt(),
@@ -206,14 +202,110 @@ public class DefaultMatchQueryService implements MatchQueryService {
             playerMatch.getKills(),
             playerMatch.getDeaths(),
             playerMatch.getAssists(),
-            kda,
+            kdaOf(playerMatch),
             playerMatch.getAcs(),
             playerMatch.getAdr(),
-            headshotPercentage,
+            headshotPercentageOf(playerMatch),
             playerMatch.getCompetitiveTier(),
             damage.damage(),
             damage.coefficientPercent()
         );
+    }
+
+    /**
+     * Loads full detail for one of a tracked player's matches, priced against the ruleset like every
+     * other history entry and joined with every other tracked player found in the same match.
+     *
+     * @param playerId      internal player identifier
+     * @param playerMatchId internal player-match identifier
+     * @return the requested match's full detail
+     */
+    @Override
+    public MatchDetailResponse findDetail(long playerId, long playerMatchId) {
+        if (!playerRepository.existsById(playerId)) {
+            throw new PlayerNotFoundException(playerId);
+        }
+        PlayerMatch playerMatch = playerMatchRepository
+            .findByIdAndPlayerId(playerMatchId, playerId)
+            .orElseThrow(() -> new MatchNotFoundException(playerMatchId));
+
+        Map<Long, MatchDamage> damageByPlayerMatchId = resolveDamage(playerId, List.of(playerMatch));
+        MatchDamage damage =
+            damageByPlayerMatchId.getOrDefault(playerMatch.getId(), MatchDamage.NONE);
+
+        List<MatchTeammateResponse> teammates = playerMatchRepository
+            .findByMatchIdAndPlayerIdNot(playerMatch.getMatch().getId(), playerId)
+            .stream()
+            .map(other -> toTeammateResponse(playerMatch, other))
+            .toList();
+
+        return new MatchDetailResponse(
+            playerMatch.getId(),
+            playerMatch.getMatch().getStartedAt(),
+            playerMatch.getMatch().getDurationSeconds(),
+            playerMatch.getMatch().getMapName(),
+            playerMatch.getMatch().getGameMode(),
+            playerMatch.getAgentName(),
+            playerMatch.getResult(),
+            allyScore(playerMatch),
+            enemyScore(playerMatch),
+            playerMatch.getKills(),
+            playerMatch.getDeaths(),
+            playerMatch.getAssists(),
+            kdaOf(playerMatch),
+            playerMatch.getAcs(),
+            playerMatch.getAdr(),
+            playerMatch.getHeadshots(),
+            playerMatch.getBodyshots(),
+            playerMatch.getLegshots(),
+            headshotPercentageOf(playerMatch),
+            playerMatch.getDamageDealt(),
+            playerMatch.getRoundsPlayed(),
+            playerMatch.isMvp(),
+            playerMatch.getCompetitiveTier(),
+            damage.damage(),
+            damage.coefficientPercent(),
+            teammates
+        );
+    }
+
+    private MatchTeammateResponse toTeammateResponse(PlayerMatch playerMatch, PlayerMatch other) {
+        boolean sameTeam = playerMatch.getTeamId() != null
+            && playerMatch.getTeamId().equalsIgnoreCase(other.getTeamId());
+        return new MatchTeammateResponse(
+            other.getPlayer().getId(),
+            other.getPlayer().getDisplayName(),
+            other.getPlayer().getPortrait(),
+            other.getAgentName(),
+            sameTeam,
+            other.getResult(),
+            other.getKills(),
+            other.getDeaths(),
+            other.getAssists(),
+            other.getAcs()
+        );
+    }
+
+    private BigDecimal kdaOf(PlayerMatch playerMatch) {
+        return BigDecimal.valueOf(playerMatch.getKills() + playerMatch.getAssists())
+            .divide(BigDecimal.valueOf(Math.max(1, playerMatch.getDeaths())), 2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal headshotPercentageOf(PlayerMatch playerMatch) {
+        int shots = playerMatch.getHeadshots() + playerMatch.getBodyshots() + playerMatch.getLegshots();
+        return shots == 0 ? BigDecimal.ZERO : BigDecimal.valueOf(playerMatch.getHeadshots())
+            .multiply(BigDecimal.valueOf(100))
+            .divide(BigDecimal.valueOf(shots), 2, RoundingMode.HALF_UP);
+    }
+
+    private Integer allyScore(PlayerMatch playerMatch) {
+        boolean redTeam = "Red".equalsIgnoreCase(playerMatch.getTeamId());
+        return redTeam ? playerMatch.getMatch().getRedScore() : playerMatch.getMatch().getBlueScore();
+    }
+
+    private Integer enemyScore(PlayerMatch playerMatch) {
+        boolean redTeam = "Red".equalsIgnoreCase(playerMatch.getTeamId());
+        return redTeam ? playerMatch.getMatch().getBlueScore() : playerMatch.getMatch().getRedScore();
     }
 
     private MatchResult parseResult(String value) {

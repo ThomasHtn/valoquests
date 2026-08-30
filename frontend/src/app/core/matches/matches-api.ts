@@ -5,7 +5,7 @@ import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
 import { PageResponse } from '@core/http/page-response.model';
 import { GameMode } from './game-mode.model';
-import { Match } from './match.model';
+import { Match, MatchDetail } from './match.model';
 
 /**
  * Number of matches requested per page of a player's match history.
@@ -47,6 +47,26 @@ export class MatchesApi {
           ...(selectedSeasonId !== null ? { seasonId: selectedSeasonId } : {}),
         },
       };
+    });
+  }
+
+  /**
+   * Full detail for one of a tracked player's matches.
+   *
+   * Created per caller, like {@link history}: parameterized by the requested player and match.
+   *
+   * @param playerId - Reactive internal player identifier.
+   * @param matchId - Reactive internal player-match identifier, or `null` while none is open.
+   * @returns The reactive resource fetching the requested match's full detail.
+   */
+  public detail(
+    playerId: Signal<number>,
+    matchId: Signal<number | null>,
+  ): HttpResourceRef<MatchDetail | undefined> {
+    return httpResource<MatchDetail>(() => {
+      const id = matchId();
+
+      return id === null ? undefined : API_ENDPOINTS.playerMatchDetail(playerId(), id);
     });
   }
 }

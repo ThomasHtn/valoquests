@@ -54,3 +54,79 @@ export interface Match {
    */
   readonly damageCoefficientPercent: number;
 }
+
+/**
+ * Another tracked player's line in a match both of them played, as exposed within
+ * `GET /api/players/{id}/matches/{matchId}`.
+ *
+ * The squad is small enough that two tracked players routinely land in the same lobby.
+ *
+ * Mirrors the backend `MatchTeammateResponse`.
+ */
+export interface MatchTeammate {
+  readonly playerId: number;
+  readonly displayName: string;
+
+  /**
+   * Agent name backing the other player's bundled avatar, or `null` when never synchronized.
+   */
+  readonly portrait: string | null;
+  readonly agentName: string;
+
+  /**
+   * Whether the other player shared the requesting player's team.
+   */
+  readonly sameTeam: boolean;
+  readonly result: MatchResult;
+  readonly kills: number;
+  readonly deaths: number;
+  readonly assists: number;
+  readonly acs: number;
+}
+
+/**
+ * Full detail of one tracked player's match, as exposed by
+ * `GET /api/players/{id}/matches/{matchId}`.
+ *
+ * A superset of {@link Match}: same identifier and figures the history list already shows, plus the
+ * shot-type breakdown behind the headshot rate, the raw damage and round count, the match's
+ * duration, and every other tracked player found in the same lobby.
+ *
+ * Mirrors the backend `MatchDetailResponse`.
+ */
+export interface MatchDetail {
+  readonly id: number;
+  readonly startedAt: string;
+
+  /**
+   * Match duration in seconds, or `null` when Henrik did not report it.
+   */
+  readonly durationSeconds: number | null;
+  readonly mapName: string;
+  readonly gameMode: GameMode;
+  readonly agentName: string;
+  readonly result: MatchResult;
+  readonly allyScore: number | null;
+  readonly enemyScore: number | null;
+  readonly kills: number;
+  readonly deaths: number;
+  readonly assists: number;
+  readonly kda: number;
+  readonly acs: number;
+  readonly adr: number;
+  readonly headshots: number;
+  readonly bodyshots: number;
+  readonly legshots: number;
+  readonly headshotPercentage: number;
+  readonly damageDealt: number;
+  readonly roundsPlayed: number;
+  readonly mvp: boolean;
+  readonly competitiveTier: CompetitiveTier;
+  readonly valoquestsDamage: number;
+  readonly damageCoefficientPercent: number;
+
+  /**
+   * Every other tracked player found in the same match, on either team.
+   */
+  readonly teammates: readonly MatchTeammate[];
+}

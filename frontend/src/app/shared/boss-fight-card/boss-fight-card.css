@@ -1,0 +1,69 @@
+/*
+ * Literal measurements and colors matching the rewards panel — sizes and a grid structure the
+ * app's default Tailwind scale/utilities do not carry as-is. Colors spelled out rather than
+ * referenced through `var(--color-*)` — see `town-silhouette.css` for why. Keep in sync with
+ * `src/styles/colors.css`: surface-sunken #0a151d · accent-gold #d9954a · danger #d9534f.
+ */
+
+/*
+ * The boss's payout, moved out of the fight card into its own panel on the 1/4 column beside it —
+ * too narrow for the old table's three columns, so the two outcomes stack instead: a label, then
+ * one line per resource. Tint carried by the `bg-brand-500/8` utility at the call site, not here —
+ * see boss-fight-card.html; border still amber-tinted so the two blocks of the split read as one
+ * family of panel despite standing for different things.
+ */
+.rewards-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid rgb(217 149 74 / 35%);
+  padding: 10px 12px;
+}
+
+/*
+ * The two outcomes as two distinct blocks, split by a horizontal line rather than a shared panel
+ * with an internal rule: each outcome gets its own border and background, so "win" and "lose" read
+ * as two separate cards stacked one above the other instead of one continuous list.
+ */
+.rewards-panel .rp-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rewards-panel .rp-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(10 21 29 / 40%);
+  padding: 8px 10px;
+}
+
+.rewards-panel .rp-group-label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+}
+
+.rewards-panel .rp-group-label-win {
+  color: #d9954a;
+}
+
+.rewards-panel .rp-group-label-lose {
+  color: #d9534f;
+}
+
+.rewards-panel .rp-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rewards-panel .rp-name {
+  font-size: 0.75rem;
+}
+
+.rewards-panel .rp-value {
+  font-size: 1rem;
+}

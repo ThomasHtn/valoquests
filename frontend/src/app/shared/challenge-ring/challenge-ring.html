@@ -1,0 +1,32 @@
+<span class="relative flex size-11 shrink-0 items-center justify-center">
+  @if (cell().completed) {
+    <span
+      [class]="[cell().visual.iconClass, cell().visual.badgeClass]"
+      class="flex size-9 items-center justify-center rounded-full font-mono text-2xs font-bold tabular-nums"
+    >
+      {{ cell().currentValueLabel }}
+    </span>
+  } @else {
+    <app-progress-circle
+      class="absolute inset-0 size-full"
+      [colorClass]="cell().visual.iconClass"
+      [percentage]="cell().completionPercentage"
+    />
+    <span
+      [class]="cell().visual.iconClass"
+      class="relative font-mono text-2xs font-bold tabular-nums"
+    >
+      {{ cell().currentValueLabel }}
+    </span>
+  }
+  <span class="sr-only">
+    {{ cell().categoryLabel }}:
+    {{ cell().currentValueLabel }}
+    @if (cell().targetValueLabel) {
+      / {{ cell().targetValueLabel }}
+    }
+    @if (cell().completed) {
+      — {{ 'overview.weeklyRanking.completed' | translate }}
+    }
+  </span>
+</span>

@@ -107,6 +107,53 @@
     </p>
   }
 
+  <!-- What actually brings this boss's bar down, the same reading the always-visible current-boss
+       panel gives the active week. Gated on the node's own status rather than on the list's length:
+       the backing resource only ever carries the active week's draw, so a past or upcoming week's
+       panel must never show a stale one. -->
+  @if (node().status === 'current' && weakPoints().length > 0) {
+    <a
+      [routerLink]="'/week'"
+      class="focus-ring group flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-text-primary/10 pt-3"
+    >
+      <span class="label-caption text-text-muted">
+        {{ 'boss.panel.weakPoints' | translate }}
+      </span>
+
+      <span class="flex flex-wrap items-center gap-x-3 gap-y-2">
+        @for (point of weakPoints(); track point.id) {
+          <span class="flex items-center gap-1.5">
+            <span
+              [class]="point.barClass"
+              aria-hidden="true"
+              class="clip-hex relative h-6 w-5 shrink-0"
+            >
+              <span
+                [class]="point.iconClass"
+                class="font-display clip-hex absolute inset-px flex items-center justify-center bg-surface-950 text-2xs leading-none font-bold"
+              >
+                {{ point.tier }}
+              </span>
+            </span>
+            <span class="sr-only">
+              {{ 'overview.weeklyChallenges.difficulty.' + point.difficulty | translate }}
+            </span>
+            <span class="font-mono text-2xs font-semibold text-accent-gold tabular-nums">
+              {{ point.damageLabel }}
+            </span>
+          </span>
+        }
+      </span>
+
+      <span
+        class="label-caption ml-auto text-brand-500 transition-colors group-hover:text-brand-400"
+      >
+        {{ 'boss.panel.weakPointsLink' | translate }}
+        <span aria-hidden="true">→</span>
+      </span>
+    </a>
+  }
+
   <!-- What the week is worth the colony, read the same way the map's own hover card and the
        always-visible current-boss panel already read it: rewards banked or still on the table, and
        what letting the fight stand costs — as a hypothetical for the week under way, as a settled

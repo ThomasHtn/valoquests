@@ -1,0 +1,91 @@
+<!-- Context bar: the way back to the ledger this page was reached from, and the campaign's own
+     dates as the heading — the same "no run number in public view" restraint the ledger itself
+     already keeps (design-review.md lot 1). -->
+<app-page-header
+  [backLink]="'/campaign'"
+  [eyebrow]="'campaignSummary.eyebrow' | translate"
+  [heading]="dateRangeLabel()"
+/>
+
+<div class="page-body">
+  <app-resource-state
+    [errorText]="'campaignSummary.error' | translate"
+    [isError]="hasError()"
+    [isLoading]="isLoading()"
+    [loadingText]="'campaignSummary.loading' | translate"
+  >
+    @if (run(); as run) {
+      <!-- The town this campaign finished on, and the score that was worth — the same two readings
+           the accueil leads on, at rest rather than still climbing. -->
+      <section
+        class="notch-tr border border-brand-500/25 bg-linear-[155deg] from-brand-500/8 to-surface-sunken p-6 [--notch:1rem] sm:p-8"
+      >
+        <p class="label-caption tracking-[0.2em] text-brand-400">{{ tierName() }}</p>
+        <p class="font-display mt-1 text-4xl leading-none font-bold text-text-primary sm:text-5xl">
+          {{ scoreLabel() }}
+          <span class="ml-2 text-xl font-semibold text-text-secondary sm:text-2xl">
+            {{ 'colony.population' | translate }}
+          </span>
+        </p>
+
+        @if (glyph(); as glyph) {
+          <app-town-silhouette
+            class="mt-6 block"
+            [glyph]="glyph"
+            [populationPercentage]="100"
+            [progressPercentage]="100"
+          />
+        }
+      </section>
+
+      <!-- The secondary figures, each read against the campaign right before this one — a score
+           alone says nothing about whether the squad is improving. -->
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        @for (figure of comparedFigures(); track figure.label) {
+          <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">
+            <p class="label-caption text-text-muted">{{ figure.label }}</p>
+            <p class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
+              {{ figure.value }}
+            </p>
+            @if (figure.deltaLabel; as delta) {
+              <p
+                [class.text-success]="figure.isPositive"
+                [class.text-danger]="figure.isNegative"
+                [class.text-text-muted]="!figure.isPositive && !figure.isNegative"
+                class="mt-1 text-xs tabular-nums"
+              >
+                {{ 'campaignSummary.vsPrevious' | translate: { delta: delta } }}
+              </p>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Bosses fought, the one figure the four above do not carry: the colony's own score says
+           nothing about how the ten fights themselves went. -->
+      <div
+        class="notch-tr flex items-center justify-between gap-4 border border-text-primary/15 bg-text-primary/4 p-4 [--notch:0.75rem]"
+      >
+        <p class="text-sm text-text-secondary">
+          {{ 'campaignSummary.bossesDefeated' | translate }}
+        </p>
+        <p class="font-display text-lg font-bold text-text-primary tabular-nums">
+          {{ bossesLabel() }}
+        </p>
+      </div>
+
+      @if (comparedFigures()[0]?.deltaLabel === null) {
+        <p class="text-sm text-text-muted">{{ 'campaignSummary.firstCampaignNote' | translate }}</p>
+      }
+    } @else {
+      <!-- Not loading, not errored, and still nothing to show: the run in the URL is either the
+           one still running (no summary to read yet) or a number that never existed. -->
+      <p class="text-sm text-text-muted">
+        {{ 'campaignSummary.notFound' | translate }}
+        <a [routerLink]="'/campaign'" class="text-brand-500 hover:text-brand-400">
+          {{ 'campaignSummary.backToCampaign' | translate }}
+        </a>
+      </p>
+    }
+  </app-resource-state>
+</div>

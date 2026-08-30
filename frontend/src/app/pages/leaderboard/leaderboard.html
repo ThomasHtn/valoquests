@@ -15,61 +15,77 @@
 </app-page-header>
 
 <div class="page-body">
-  <!-- The week the board is showing, and the way to step off it. In the page rather than in the
-       context bar: it scopes the board below it, and on a phone the bar already carries the burger,
-       the title and the countdown — a stepper in there left the title a single truncated letter. -->
-  <div
-    class="notch-tr flex items-center gap-2 border border-text-primary/12 bg-text-primary/4 p-1.5 [--notch:0.875rem]"
-  >
-    <button
-      (click)="stepWeek(1)"
-      [attr.aria-label]="'overview.weeklyRanking.week.previous' | translate"
-      [disabled]="!hasOlderWeek()"
-      class="focus-ring-inset flex size-11 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
-      type="button"
-    >
-      <svg class="size-4" lucideChevronLeft></svg>
-    </button>
+  <!-- The week the board is showing, and the way to step off it. Sized to its own content and
+       pinned to the leading edge, top-left of the page, rather than spanning the row: it is a
+       control that scopes the board below it, not a banner. -->
+  <div class="flex">
+    <div class="flex items-center gap-1">
+      <button
+        (click)="stepWeek(1)"
+        [attr.aria-label]="'overview.weeklyRanking.week.previous' | translate"
+        [disabled]="!hasOlderWeek()"
+        class="focus-ring-inset flex size-10 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
+        type="button"
+      >
+        <svg class="size-4" lucideChevronLeft></svg>
+      </button>
 
-    <p class="flex min-w-0 flex-1 flex-wrap items-baseline justify-center gap-x-2.5 gap-y-1">
-      <span class="font-display text-sm leading-none font-bold text-text-primary uppercase">
-        {{ 'boss.week.label' | translate: { number: weekNumber() ?? '—' } }}
-      </span>
-      <span class="label-caption text-text-muted tabular-nums">{{ weekRangeLabel() }}</span>
-      @if (isLiveWeek()) {
-        <span
-          class="label-caption border border-brand-500/40 bg-brand-500/12 px-1.5 py-0.5 text-brand-500"
-        >
-          {{ 'overview.weeklyRanking.week.live' | translate }}
-        </span>
-      }
-    </p>
+      <span class="label-caption px-2 text-text-primary tabular-nums">{{ weekRangeLabel() }}</span>
 
-    <button
-      (click)="stepWeek(-1)"
-      [attr.aria-label]="'overview.weeklyRanking.week.next' | translate"
-      [disabled]="!hasNewerWeek()"
-      class="focus-ring-inset flex size-11 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
-      type="button"
-    >
-      <svg class="size-4" lucideChevronRight></svg>
-    </button>
+      <button
+        (click)="stepWeek(-1)"
+        [attr.aria-label]="'overview.weeklyRanking.week.next' | translate"
+        [disabled]="!hasNewerWeek()"
+        class="focus-ring-inset flex size-10 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
+        type="button"
+      >
+        <svg class="size-4" lucideChevronRight></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- The podium, moved here from the accueil (see design-review.md §3.3): this page is its real
+       home, the one place a visitor is looking for "who's ahead". Narrower than the page's own
+       width and stripped of its damage figures: the board right below already carries every
+       player's damage, so up here the podium reads as a pure ranking. -->
+  <div class="mx-auto -mt-4 mb-4 w-full max-w-3xl">
+    <app-podium
+      [plinthBase]="'clamp(4rem, 6vh, 5rem)'"
+      [showDamage]="false"
+      [showRest]="false"
+      [showTitle]="false"
+    />
   </div>
 
   <!-- Said once, above the board, rather than left for the visitor to notice: a closed week is
        genuinely shorter than the live one, and without this the missing challenge columns read as
-       a bug. -->
+       a bug. Paired with the way back to that week's own node — the campaign's boss drawer already
+       links here with the same `?week=`, so the two screens close the loop on each other. -->
   @if (!isLiveWeek()) {
     <p
-      class="notch-tr border-l-2 border-l-text-primary/25 bg-text-primary/4 px-4 py-2.5 text-sm text-text-secondary [--notch:0.625rem]"
+      class="notch-tr flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 border-l-2 border-l-text-primary/25 bg-text-primary/4 px-4 py-2.5 text-sm text-text-secondary [--notch:0.625rem]"
     >
-      {{ 'overview.weeklyRanking.week.closedNote' | translate }}
+      <span>{{ 'overview.weeklyRanking.week.closedNote' | translate }}</span>
+      @if (selectedWeekStart(); as weekStart) {
+        <a
+          [queryParams]="{ week: weekStart }"
+          [routerLink]="'/campaign'"
+          class="focus-ring flex shrink-0 items-center gap-1 font-medium text-brand-500 transition-colors hover:text-brand-400"
+        >
+          {{ 'overview.weeklyRanking.week.seeOnCampaign' | translate }}
+          <svg aria-hidden="true" class="size-3.5 shrink-0" lucideChevronRight></svg>
+        </a>
+      }
     </p>
   }
   <app-resource-state
-    [emptyText]="'overview.weeklyRanking.empty' | translate"
+    [emptyText]="
+      weekHasNoActivity()
+        ? ('overview.weeklyRanking.emptyWeek' | translate)
+        : ('overview.weeklyRanking.empty' | translate)
+    "
     [errorText]="'overview.weeklyRanking.error' | translate"
-    [isEmpty]="rows().length === 0"
+    [isEmpty]="rows().length === 0 || weekHasNoActivity()"
     [isError]="hasError()"
     [isLoading]="isLoading()"
     [loadingText]="'overview.weeklyRanking.loading' | translate"
@@ -81,7 +97,7 @@
     <div class="flex flex-col gap-2" skeleton>
       @for (placeholder of skeletonRows; track $index) {
         <div
-          class="notch-tr flex items-center gap-3 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-5 [--notch:0.875rem] xl:px-5"
+          class="notch-tr flex items-center gap-3 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-3.5 [--notch:0.875rem] xl:px-5"
         >
           <span class="clip-hex size-7 shrink-0 bg-surface-700"></span>
           <span class="size-9 shrink-0 rounded-full bg-surface-700"></span>
@@ -100,10 +116,10 @@
         aria-hidden="true"
         [class]="
           isLiveWeek()
-            ? 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_2rem_repeat(5,minmax(3.25rem,0.45fr))]'
+            ? 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_6rem_repeat(5,minmax(3.25rem,0.45fr))]'
             : 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_2rem_repeat(2,minmax(5.5rem,0.5fr))]'
         "
-        class="-mb-5 grid items-end gap-x-3 px-5"
+        class="-mb-3.5 grid items-end gap-x-3 px-5"
       >
         <span></span>
         <span class="label-caption text-text-muted">
@@ -115,7 +131,13 @@
         <span class="label-caption text-text-muted ml-3 text-right">
           {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
         </span>
-        <span></span>
+        @if (isLiveWeek()) {
+          <span class="label-caption text-text-muted text-right">
+            {{ 'overview.weeklyRanking.columns.materials' | translate }}
+          </span>
+        } @else {
+          <span></span>
+        }
         <!-- A column is identified by its tier badge and its target, not by the challenge's name: at
          this width a name would either wrap to four lines or be truncated past recognition. The
          name and its description stay one hover away, and are restated in full on every cell for
@@ -160,313 +182,334 @@
        profile, crossed with one cell per challenge of the week. Only one of the two layouts is
        rendered at a time — see `Breakpoint`. -->
       <ul class="flex flex-col gap-2">
-        @for (row of rows(); track row.playerId) {
-          <li>
-            <a
-              [class.opacity-60]="row.position === null"
-              [class]="
-                isLiveWeek()
-                  ? 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_2rem_repeat(5,minmax(3.25rem,0.45fr))]'
-                  : 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_2rem_repeat(2,minmax(5.5rem,0.5fr))]'
-              "
-              [routerLink]="['/players', row.playerId]"
-              class="notch-tr focus-ring-inset grid items-center gap-x-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 xl:px-5"
-            >
-              <span class="flex items-center gap-1">
-                @if (row.position === null) {
-                  <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
-                }
-                <app-position-badge [position]="row.position" />
-                <ng-container
-                  [ngTemplateOutlet]="positionVariation"
-                  [ngTemplateOutletContext]="{ $implicit: row.positionVariation }"
-                />
-              </span>
-
-              <span class="flex min-w-0 items-center gap-3">
-                <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="sm" />
-                <span
-                  [class.text-accent-gold]="row.isChampion"
-                  [class.text-text-primary]="!row.isChampion"
-                  class="font-display truncate text-lg leading-none font-semibold"
-                >
-                  {{ row.displayName }}
-                </span>
-                <ng-container
-                  [ngTemplateOutlet]="statusTag"
-                  [ngTemplateOutletContext]="{ $implicit: row }"
-                />
-              </span>
-
-              <span class="text-right">
-                <span class="sr-only">{{
-                  'overview.weeklyRanking.columns.damage' | translate
-                }}</span>
-                <span
-                  [class.text-accent-gold]="row.isChampion"
-                  [class.text-text-primary]="!row.isChampion"
-                  class="font-display text-lg leading-none font-bold tabular-nums"
-                >
-                  {{ row.damageLabel }}
-                </span>
-              </span>
-
-              <span class="ml-3 text-right">
-                @if (row.bonusLabel) {
-                  <span class="sr-only">
-                    {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
-                  </span>
-                  <span
-                    class="font-display text-lg leading-none font-bold text-brand-500 tabular-nums"
-                  >
-                    {{ row.bonusLabel }}
-                  </span>
-                } @else {
-                  <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
-                }
-              </span>
-
-              <span></span>
-
-              @for (cell of row.cells; track cell.challengeId) {
-                <span class="flex justify-center">
-                  <ng-container
-                    [ngTemplateOutlet]="challengeRing"
-                    [ngTemplateOutletContext]="{ $implicit: cell }"
-                  />
-                </span>
-              }
-
-              <!-- The two figures a closed week keeps in place of the cells above. -->
-              @if (row.completedLabel !== null) {
-                <span class="text-center">
-                  <span class="sr-only">
-                    {{ 'overview.weeklyRanking.columns.challengesCleared' | translate }}
-                  </span>
-                  <span
-                    class="font-display text-lg leading-none font-bold text-text-primary tabular-nums"
-                  >
-                    {{ row.completedLabel }}
-                  </span>
-                </span>
-
-                <span class="text-center">
-                  <span class="sr-only">
-                    {{ 'overview.weeklyRanking.columns.activeDays' | translate }}
-                  </span>
-                  <span
-                    class="font-display text-lg leading-none font-bold text-text-secondary tabular-nums"
-                  >
-                    {{ row.activeDaysLabel }}
-                  </span>
-                </span>
-              }
-            </a>
-          </li>
+        @for (row of activeRows(); track row.playerId) {
+          <ng-container
+            [ngTemplateOutlet]="wideRow"
+            [ngTemplateOutletContext]="{ $implicit: row }"
+          />
         }
       </ul>
+
+      @if (outOfCampaignRows().length > 0) {
+        <p class="label-caption mt-2 text-text-muted">
+          {{ 'overview.weeklyRanking.outOfCampaign.title' | translate }}
+        </p>
+        <ul class="mt-3 flex flex-col gap-2">
+          @for (row of outOfCampaignRows(); track row.playerId) {
+            <ng-container
+              [ngTemplateOutlet]="wideRow"
+              [ngTemplateOutletContext]="{ $implicit: row }"
+            />
+          }
+        </ul>
+      }
     } @else {
       <!-- Card list, below `xl`. One card per player: the challenge columns become a labelled list,
        since a column per weekly challenge cannot fit on a narrow screen. -->
       <ul class="flex flex-col gap-2">
-        @for (row of rows(); track row.playerId) {
-          <li
-            [class.opacity-60]="row.position === null"
-            class="notch-tr relative flex flex-col gap-4 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-5 transition-colors [--notch:0.875rem] has-[a:hover]:bg-brand-500/15 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
-          >
-            <div class="flex items-center gap-3">
-              @if (row.position === null) {
-                <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
-              }
-              <app-position-badge [position]="row.position" />
-              <ng-container
-                [ngTemplateOutlet]="positionVariation"
-                [ngTemplateOutletContext]="{ $implicit: row.positionVariation }"
-              />
-              <a
-                [routerLink]="['/players', row.playerId]"
-                class="flex min-w-0 flex-1 items-center gap-3 after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
-              >
-                <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="sm" />
-                <span
-                  [class.text-accent-gold]="row.isChampion"
-                  [class.text-text-primary]="!row.isChampion"
-                  class="font-display min-w-0 truncate text-lg leading-none font-semibold"
-                >
-                  {{ row.displayName }}
-                </span>
-                <ng-container
-                  [ngTemplateOutlet]="statusTag"
-                  [ngTemplateOutletContext]="{ $implicit: row }"
-                />
-              </a>
-
-              <span class="shrink-0 text-right">
-                <span class="sr-only">{{
-                  'overview.weeklyRanking.columns.damage' | translate
-                }}</span>
-                <span
-                  [class.text-accent-gold]="row.isChampion"
-                  [class.text-text-primary]="!row.isChampion"
-                  class="font-display block text-lg leading-none font-bold tabular-nums"
-                >
-                  {{ row.damageLabel }}
-                </span>
-                @if (row.bonusLabel) {
-                  <span class="sr-only">
-                    {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
-                  </span>
-                  <span class="mt-1 block font-mono text-2xs font-bold text-brand-500 tabular-nums">
-                    {{ row.bonusLabel }}
-                  </span>
-                }
-              </span>
-            </div>
-
-            @if (row.completedLabel !== null) {
-              <!-- A closed week's card: the two figures the backend froze, in place of the
-                   challenge list it did not. -->
-              <dl
-                class="grid grid-cols-2 gap-3 border-t border-text-primary/10 pt-4 text-center sm:max-w-xs"
-              >
-                <div>
-                  <dt class="label-caption text-text-muted">
-                    {{ 'overview.weeklyRanking.columns.challengesCleared' | translate }}
-                  </dt>
-                  <dd
-                    class="font-display mt-1.5 text-lg leading-none font-bold text-text-primary tabular-nums"
-                  >
-                    {{ row.completedLabel }}
-                  </dd>
-                </div>
-                <div>
-                  <dt class="label-caption text-text-muted">
-                    {{ 'overview.weeklyRanking.columns.activeDays' | translate }}
-                  </dt>
-                  <dd
-                    class="font-display mt-1.5 text-lg leading-none font-bold text-text-secondary tabular-nums"
-                  >
-                    {{ row.activeDaysLabel }}
-                  </dd>
-                </div>
-              </dl>
-            } @else {
-              <dl class="flex flex-col gap-2.5 border-t border-text-primary/10 pt-4">
-                @for (cell of row.cells; track cell.challengeId) {
-                  <div class="flex items-center gap-3">
-                    <span
-                      [class]="[cell.visual.iconClass, cell.visual.badgeClass]"
-                      class="clip-hex flex h-7 w-6 shrink-0 items-center justify-center"
-                    >
-                      <app-challenge-icon-view [icon]="cell.visual.icon" class="h-3.5 w-3.5" />
-                    </span>
-                    <dt class="min-w-0 flex-1 truncate text-sm text-text-secondary">
-                      {{ cell.name }}
-                      <span class="sr-only">— {{ cell.categoryLabel }}</span>
-                    </dt>
-                    <!-- Fixed width, regardless of whether the bar is shown or of the badge's own
-                   content width: the bar's leading edge and the badge's trailing edge must both
-                   land at the same offset on every row, or the stacked bars read as misaligned. -->
-                    <dd class="flex w-40 shrink-0 items-center gap-2">
-                      <!-- Dropped once completed: the badge already carries the "done" signal, and a
-                     full bar next to it would only repeat it. -->
-                      @if (!cell.completed) {
-                        <app-progress-bar
-                          class="w-14 border border-text-primary/10"
-                          heightClass="h-1.5"
-                          [colorClass]="cell.visual.barClass"
-                          [percentage]="cell.completionPercentage"
-                        />
-                      }
-                      <!-- Completion is carried by the value itself, as a badge, rather than by a
-                     separate check beside the bar: the number is what a player scans for, so
-                     that is where the "done" signal belongs. `ms-auto` keeps it pinned to the
-                     trailing edge whether or not the bar beside it is present. -->
-                      <span
-                        [class]="
-                          cell.completed
-                            ? [cell.visual.iconClass, cell.visual.badgeClass]
-                            : cell.visual.iconClass
-                        "
-                        class="ms-auto flex items-center gap-1 px-1.5 py-0.5"
-                      >
-                        <span class="flex items-baseline gap-0.5 font-mono tabular-nums">
-                          <span class="text-xs font-bold">{{ cell.currentValueLabel }}</span>
-                          @if (cell.targetValueLabel) {
-                            <span class="text-xs font-normal opacity-50">/</span>
-                            <span class="text-xs font-semibold opacity-75">
-                              {{ cell.targetValueLabel }}
-                            </span>
-                          }
-                        </span>
-                        @if (cell.completed) {
-                          <svg aria-hidden="true" class="h-3 w-3" lucideCheck></svg>
-                          <span class="sr-only">
-                            {{ 'overview.weeklyRanking.completed' | translate }}
-                          </span>
-                        }
-                      </span>
-                    </dd>
-                  </div>
-                }
-              </dl>
-            }
-          </li>
+        @for (row of activeRows(); track row.playerId) {
+          <ng-container
+            [ngTemplateOutlet]="narrowRow"
+            [ngTemplateOutletContext]="{ $implicit: row }"
+          />
         }
       </ul>
+
+      @if (outOfCampaignRows().length > 0) {
+        <p class="label-caption mt-2 text-text-muted">
+          {{ 'overview.weeklyRanking.outOfCampaign.title' | translate }}
+        </p>
+        <ul class="mt-3 flex flex-col gap-2">
+          @for (row of outOfCampaignRows(); track row.playerId) {
+            <ng-container
+              [ngTemplateOutlet]="narrowRow"
+              [ngTemplateOutletContext]="{ $implicit: row }"
+            />
+          }
+        </ul>
+      }
     }
   </app-resource-state>
 
-  <!-- One cell of the matrix: how far a player is on one challenge of the week. The challenge it
-     belongs to is named here rather than only in the column header, since the rows are a list of
-     links and nothing ties a cell to a header for assistive technology. -->
-  <ng-template #challengeRing let-cell>
-    <span class="relative flex size-11 shrink-0 items-center justify-center">
-      @if (cell.completed) {
-        <span
-          [class]="[cell.visual.iconClass, cell.visual.badgeClass]"
-          class="flex size-9 items-center justify-center rounded-full font-mono text-2xs font-bold tabular-nums"
-        >
-          {{ cell.currentValueLabel }}
+  <!-- One row of the wide matrix, `xl` and up. Factored out of the two `@for` loops above (in
+     campaign, out of campaign) rather than duplicated, on the same `ng-template` pattern the file
+     already uses for `positionVariation` below. -->
+  <ng-template #wideRow let-row>
+    <li>
+      <a
+        [class]="
+          isLiveWeek()
+            ? 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_6rem_repeat(5,minmax(3.25rem,0.45fr))]'
+            : 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_2rem_repeat(2,minmax(5.5rem,0.5fr))]'
+        "
+        [routerLink]="['/players', row.playerId]"
+        class="notch-tr focus-ring-inset grid items-center gap-x-3 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-3.5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 xl:px-5"
+      >
+        <span class="flex items-center gap-1">
+          @if (row.position === null) {
+            <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
+          }
+          <app-position-badge [position]="row.position" />
+          <ng-container
+            [ngTemplateOutlet]="positionVariation"
+            [ngTemplateOutletContext]="{ $implicit: row.positionVariation }"
+          />
         </span>
-      } @else {
-        <app-progress-circle
-          class="absolute inset-0 size-full"
-          [colorClass]="cell.visual.iconClass"
-          [percentage]="cell.completionPercentage"
-        />
-        <span
-          [class]="cell.visual.iconClass"
-          class="relative font-mono text-2xs font-bold tabular-nums"
-        >
-          {{ cell.currentValueLabel }}
+
+        <span class="flex min-w-0 items-center gap-3">
+          <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="sm" />
+          <span
+            [class.text-accent-gold]="row.isChampion"
+            [class.text-text-primary]="!row.isChampion"
+            class="font-display truncate text-lg leading-none font-semibold"
+          >
+            {{ row.displayName }}
+          </span>
+          @if (row.isChampion) {
+            <app-champion-badge />
+          }
         </span>
-      }
-      <span class="sr-only">
-        {{ cell.categoryLabel }}:
-        {{ cell.currentValueLabel }}
-        @if (cell.targetValueLabel) {
-          / {{ cell.targetValueLabel }}
+
+        <span class="text-right">
+          <span class="sr-only">{{ 'overview.weeklyRanking.columns.damage' | translate }}</span>
+          @if (row.damageLabel) {
+            <span
+              [class.text-accent-gold]="row.isChampion"
+              [class.text-text-primary]="!row.isChampion"
+              class="font-display text-lg leading-none font-bold tabular-nums"
+            >
+              {{ row.damageLabel }}
+            </span>
+          } @else {
+            <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
+          }
+        </span>
+
+        <span class="ml-3 text-right">
+          @if (row.bonusLabel) {
+            <span class="sr-only">
+              {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
+            </span>
+            <span class="font-display text-lg leading-none font-bold text-brand-500 tabular-nums">
+              {{ row.bonusLabel }}
+            </span>
+          } @else {
+            <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
+          }
+        </span>
+
+        @if (isLiveWeek()) {
+          <span class="text-right">
+            @if (row.materialsLabel) {
+              <span class="sr-only">
+                {{ 'overview.weeklyRanking.columns.materials' | translate }}
+              </span>
+              <span
+                class="font-display text-lg leading-none font-bold text-accent-gold tabular-nums"
+              >
+                {{ row.materialsLabel }}
+              </span>
+            } @else {
+              <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
+            }
+          </span>
+        } @else {
+          <span></span>
         }
-        @if (cell.completed) {
-          — {{ 'overview.weeklyRanking.completed' | translate }}
+
+        @for (cell of row.cells; track cell.challengeId) {
+          <span class="flex justify-center">
+            <app-challenge-ring [cell]="cell" />
+          </span>
         }
-      </span>
-    </span>
+
+        <!-- The two figures a closed week keeps in place of the cells above. -->
+        @if (row.completedLabel !== null) {
+          <span class="text-center">
+            <span class="sr-only">
+              {{ 'overview.weeklyRanking.columns.challengesCleared' | translate }}
+            </span>
+            <span
+              class="font-display text-lg leading-none font-bold text-text-primary tabular-nums"
+            >
+              {{ row.completedLabel }}
+            </span>
+          </span>
+
+          <span class="text-center">
+            <span class="sr-only">
+              {{ 'overview.weeklyRanking.columns.activeDays' | translate }}
+            </span>
+            <span
+              class="font-display text-lg leading-none font-bold text-text-secondary tabular-nums"
+            >
+              {{ row.activeDaysLabel }}
+            </span>
+          </span>
+        }
+      </a>
+    </li>
   </ng-template>
 
-  <!-- Trailing tag on a player's name: the reigning champion's title, or the fact that a player has
-     not played this week and therefore holds no rank. Shared by both layouts. -->
-  <ng-template #statusTag let-row>
-    @if (row.isChampion) {
-      <app-champion-badge />
-    } @else if (row.position === null) {
-      <span
-        class="tracking-label shrink-0 bg-text-primary/8 px-1.5 py-1 font-mono text-2xs font-medium text-text-muted uppercase"
-      >
-        {{ 'overview.weeklyRanking.inactive' | translate }}
-      </span>
-    }
+  <!-- One card of the narrow list, below `xl`. Same factoring as {@link wideRow}. -->
+  <ng-template #narrowRow let-row>
+    <li
+      class="notch-tr relative flex flex-col gap-4 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-3.5 transition-colors [--notch:0.875rem] has-[a:hover]:bg-brand-500/15 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-brand-500"
+    >
+      <div class="flex items-center gap-3">
+        @if (row.position === null) {
+          <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
+        }
+        <app-position-badge [position]="row.position" />
+        <ng-container
+          [ngTemplateOutlet]="positionVariation"
+          [ngTemplateOutletContext]="{ $implicit: row.positionVariation }"
+        />
+        <a
+          [routerLink]="['/players', row.playerId]"
+          class="flex min-w-0 flex-1 items-center gap-3 after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+        >
+          <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="sm" />
+          <span
+            [class.text-accent-gold]="row.isChampion"
+            [class.text-text-primary]="!row.isChampion"
+            class="font-display min-w-0 truncate text-lg leading-none font-semibold"
+          >
+            {{ row.displayName }}
+          </span>
+          @if (row.isChampion) {
+            <app-champion-badge />
+          }
+        </a>
+
+        <span class="shrink-0 text-right">
+          <span class="sr-only">{{ 'overview.weeklyRanking.columns.damage' | translate }}</span>
+          @if (row.damageLabel) {
+            <span
+              [class.text-accent-gold]="row.isChampion"
+              [class.text-text-primary]="!row.isChampion"
+              class="font-display block text-lg leading-none font-bold tabular-nums"
+            >
+              {{ row.damageLabel }}
+            </span>
+          } @else {
+            <span
+              aria-hidden="true"
+              class="font-display block text-lg leading-none text-text-muted"
+            >
+              —
+            </span>
+          }
+          <span class="mt-1 flex items-center justify-end gap-2">
+            @if (row.bonusLabel) {
+              <span class="sr-only">
+                {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
+              </span>
+              <span class="font-mono text-2xs font-bold text-brand-500 tabular-nums">
+                {{ row.bonusLabel }}
+              </span>
+            }
+            @if (isLiveWeek() && row.materialsLabel) {
+              <span class="sr-only">
+                {{ 'overview.weeklyRanking.columns.materials' | translate }}
+              </span>
+              <span class="font-mono text-2xs font-bold text-accent-gold tabular-nums">
+                {{ row.materialsLabel }}
+              </span>
+            }
+          </span>
+        </span>
+      </div>
+
+      @if (row.completedLabel !== null) {
+        <!-- A closed week's card: the two figures the backend froze, in place of the
+             challenge list it did not. -->
+        <dl
+          class="grid grid-cols-2 gap-3 border-t border-text-primary/10 pt-4 text-center sm:max-w-xs"
+        >
+          <div>
+            <dt class="label-caption text-text-muted">
+              {{ 'overview.weeklyRanking.columns.challengesCleared' | translate }}
+            </dt>
+            <dd
+              class="font-display mt-1.5 text-lg leading-none font-bold text-text-primary tabular-nums"
+            >
+              {{ row.completedLabel }}
+            </dd>
+          </div>
+          <div>
+            <dt class="label-caption text-text-muted">
+              {{ 'overview.weeklyRanking.columns.activeDays' | translate }}
+            </dt>
+            <dd
+              class="font-display mt-1.5 text-lg leading-none font-bold text-text-secondary tabular-nums"
+            >
+              {{ row.activeDaysLabel }}
+            </dd>
+          </div>
+        </dl>
+      } @else {
+        <dl class="flex flex-col gap-2.5 border-t border-text-primary/10 pt-4">
+          @for (cell of row.cells; track cell.challengeId) {
+            <div class="flex items-center gap-3">
+              <span
+                [class]="[cell.visual.iconClass, cell.visual.badgeClass]"
+                class="clip-hex flex h-7 w-6 shrink-0 items-center justify-center"
+              >
+                <app-challenge-icon-view [icon]="cell.visual.icon" class="h-3.5 w-3.5" />
+              </span>
+              <dt class="min-w-0 flex-1 truncate text-sm text-text-secondary">
+                {{ cell.name }}
+                <span class="sr-only">— {{ cell.categoryLabel }}</span>
+              </dt>
+              <!-- Fixed width, regardless of whether the bar is shown or of the badge's own
+             content width: the bar's leading edge and the badge's trailing edge must both
+             land at the same offset on every row, or the stacked bars read as misaligned. -->
+              <dd class="flex w-40 shrink-0 items-center gap-2">
+                <!-- Dropped once completed: the badge already carries the "done" signal, and a
+             full bar next to it would only repeat it. -->
+                @if (!cell.completed) {
+                  <app-progress-bar
+                    class="w-14 border border-text-primary/10"
+                    heightClass="h-1.5"
+                    [colorClass]="cell.visual.barClass"
+                    [percentage]="cell.completionPercentage"
+                  />
+                }
+                <!-- Completion is carried by the value itself, as a badge, rather than by a
+             separate check beside the bar: the number is what a player scans for, so
+             that is where the "done" signal belongs. `ms-auto` keeps it pinned to the
+             trailing edge whether or not the bar beside it is present. -->
+                <span
+                  [class]="
+                    cell.completed
+                      ? [cell.visual.iconClass, cell.visual.badgeClass]
+                      : cell.visual.iconClass
+                  "
+                  class="ms-auto flex items-center gap-1 px-1.5 py-0.5"
+                >
+                  <span class="flex items-baseline gap-0.5 font-mono tabular-nums">
+                    <span class="text-xs font-bold">{{ cell.currentValueLabel }}</span>
+                    @if (cell.targetValueLabel) {
+                      <span class="text-xs font-normal opacity-50">/</span>
+                      <span class="text-xs font-semibold opacity-75">
+                        {{ cell.targetValueLabel }}
+                      </span>
+                    }
+                  </span>
+                  @if (cell.completed) {
+                    <svg aria-hidden="true" class="h-3 w-3" lucideCheck></svg>
+                    <span class="sr-only">
+                      {{ 'overview.weeklyRanking.completed' | translate }}
+                    </span>
+                  }
+                </span>
+              </dd>
+            </div>
+          }
+        </dl>
+      }
+    </li>
   </ng-template>
 
   <!-- Places gained or lost since last week, shared by both layouts so a row means the same thing at

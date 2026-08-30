@@ -75,3 +75,39 @@ export interface CurrentChallenges {
   readonly lastSuccessfulSynchronizationAt: string | null;
   readonly challenges: readonly ChallengeProgress[];
 }
+
+/**
+ * One challenge of the catalogue, outside of any one week's draw — what it is always worth,
+ * rather than how far the squad has got with it this week.
+ *
+ * Mirrors the backend `ChallengeCatalogueResponse.ChallengeCatalogueEntry` returned by
+ * `GET /api/challenges/catalogue`.
+ */
+export interface ChallengeCatalogueEntry {
+  readonly id: number;
+  readonly name: string;
+  readonly description: string;
+  readonly difficulty: ChallengeDifficulty;
+
+  /**
+   * Metric(s) evaluated by this challenge, joined with `" + "` for composite challenges.
+   */
+  readonly metric: string;
+
+  /**
+   * Target value for the challenge, or `null` for a composite challenge with no single stored
+   * target.
+   */
+  readonly targetValue: number | null;
+  readonly damage: number;
+  readonly materials: number;
+}
+
+/**
+ * The full catalogue of challenges eligible for weekly selection.
+ *
+ * Mirrors the backend `ChallengeCatalogueResponse` returned by `GET /api/challenges/catalogue`.
+ */
+export interface ChallengeCatalogue {
+  readonly challenges: readonly ChallengeCatalogueEntry[];
+}

@@ -5,6 +5,7 @@ import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -203,5 +204,33 @@ public interface PlayerMatchRepository
         @Param("playerId") Long playerId,
         @Param("criteria") PlayerMatchHistoryCriteria criteria
     );
+
+    /**
+     * Loads one tracked player's statistics for one match, scoped to that player.
+     *
+     * <p>Scoped by {@code playerId} rather than looked up by {@code id} alone, so a match detail
+     * request can never resolve to a row belonging to a different tracked player than the one named
+     * in the request path.
+     *
+     * @param id       internal player-match identifier
+     * @param playerId internal player identifier the match must belong to
+     * @return the matching player-match, when it exists and belongs to that player
+     */
+    @EntityGraph(attributePaths = {"player", "match", "match.season"})
+    Optional<PlayerMatch> findByIdAndPlayerId(Long id, Long playerId);
+
+    /**
+     * Loads every other tracked player's statistics for the same underlying match.
+     *
+     * <p>The squad is small enough that two tracked players routinely land in the same lobby; a
+     * match's detail surfaces every one of them found in the same match, on either team, rather than
+     * only the requesting player's own row.
+     *
+     * @param matchId  internal identifier of the shared underlying match
+     * @param playerId internal identifier of the player whose own row is excluded
+     * @return the other tracked players' statistics for that match
+     */
+    @EntityGraph(attributePaths = {"player"})
+    List<PlayerMatch> findByMatchIdAndPlayerIdNot(Long matchId, Long playerId);
 }
 

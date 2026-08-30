@@ -107,9 +107,11 @@ export interface RankingRow {
 
   /**
    * Pre-formatted damage dealt to the week's boss, grouped in the active language (`"12 400"`).
-   * This is the amount the ranking is ordered on, bonuses included.
+   * This is the amount the ranking is ordered on, bonuses included. `null` for an out-of-campaign
+   * player: they never deal boss damage in the first place, so the figure does not exist for them
+   * rather than merely reading zero.
    */
-  readonly damageLabel: string;
+  readonly damageLabel: string | null;
 
   /**
    * Pre-formatted share of {@link damageLabel} that came from the regularity and team bonuses,
@@ -145,4 +147,24 @@ export interface RankingRow {
    * the most recently finalized week.
    */
   readonly isChampion: boolean;
+
+  /**
+   * Pre-formatted materials banked for the colony by this player's cleared challenges so far this
+   * week, signed (`"+22"`), or `null` on a finalized week — the same week whose challenge catalogue
+   * (and therefore each challenge's materials value) is no longer fetched, so nothing to sum.
+   *
+   * The link between the two pillars (design-review.md §D — the colony was absent from every screen
+   * that shows what earns it materials): summed from the same {@link RankingCell.completed} flags
+   * and the week's own challenge definitions, not a figure the backend hands over pre-computed.
+   */
+  readonly materialsLabel: string | null;
+
+  /**
+   * Whether this player currently takes part in the campaign. `false` for an out-of-campaign
+   * player: they still play, sync and clear challenges individually, but never occupy a ranking
+   * slot or bank materials for the colony (root `CLAUDE.md`, `PlayerStatus`). Mirrors
+   * {@link position} `=== null`, kept as its own field so a template reads intent rather than
+   * re-deriving it from a coincidence of the ranking math.
+   */
+  readonly inCampaign: boolean;
 }

@@ -1,32 +1,10 @@
 <!-- Context bar: the run itself, since the page is now the whole of it — which run, which week, which
      day. -->
 <app-page-header [eyebrow]="colony.eyebrow()" [heading]="'campaign.heading' | translate">
-  <!-- The run's standing total and the fights won, then the day.
-
-       Efficiency is deliberately not among them: the ladder panel already carries it, both as the
-       name the town wears and as the progress towards the next one, so a raw figure here repeated
-       that two blocks apart and under another name.
-
-       Stocks first, day last: the counters are what the run *has*, the day is where it stands, and
-       the trailing edge of the bar is where a reader looks for the clock. The day also carries the
-       direction's gold, so ending on it closes the bar on its one moving figure.
-
-       Glyph and figure only, with the word behind a tooltip: this group never shrinks — a long
-       title truncates against it instead — so written labels here cost the page's own heading its
-       room. It is the arrangement the run history's column heads already use for the same reason.
-
-       Each glyph is seated in the direction's hexagon, the same socket the resource band's rails
-       and the map's tiles are drawn in, and in the direction's gold rather than in the muted grey
-       body colour: these are the run's stock counters, the thing a management screen reads first,
-       and grey-on-grey read as disabled chrome. -->
   @if (colony.colony()) {
     <!-- Fights won over the ten a run holds, never over the weeks elapsed: a denominator that moves
          every Monday reads as a total when it is not one. -->
-    <span
-      [appTooltip]="'colony.bosses' | translate"
-      appTooltipPosition="below"
-      class="hidden shrink-0 cursor-help items-center gap-2 lg:flex"
-    >
+    <span class="hidden shrink-0 items-center gap-2 lg:flex">
       <span
         aria-hidden="true"
         class="clip-hex grid h-7 w-6 shrink-0 place-items-center bg-brand-500/15 text-brand-500 [&>svg]:size-3.5"
@@ -40,9 +18,6 @@
     </span>
   }
 
-  <!-- The day is the one figure of the bar that moves every morning, so it carries the direction's
-       gold and closes the bar; the word and the run's length stay muted around it. Read end to end
-       it is still the one phrase, `Day 3 / 71`. -->
   @if (colony.runDayParts(); as runDay) {
     @if (colony.colony()) {
       <span
@@ -51,11 +26,7 @@
       ></span>
     }
 
-    <span
-      [appTooltip]="runDay.hint"
-      appTooltipPosition="below"
-      class="flex shrink-0 cursor-help items-baseline gap-1.5"
-    >
+    <span class="flex shrink-0 items-baseline gap-1.5">
       <span class="label-caption text-text-muted">{{ runDay.word }}</span>
       <span
         class="font-display text-base leading-none font-bold text-brand-500 tabular-nums sm:text-lg"
@@ -68,80 +39,329 @@
 </app-page-header>
 
 <div class="page-body">
-  <!-- The run as one screen: bands stacked, parted by a rule rather than by a gap. The page keeps
-       `page-body`'s gutter, width cap and top spacing so the run opens under the context bar like
-       every other screen; only the bottom spacing is opted out of, so the field still reaches the
-       edge of the column. The negative margin rides on this element because it, not the wrapper
-       inside it, is what `page-body` lays out. -->
   <app-resource-state
-    class="-mb-6 min-h-0"
     (retry)="reload()"
     [errorText]="'campaign.error' | translate"
     [isError]="hasError()"
     [isLoading]="isLoading()"
     [loadingText]="'campaign.loading' | translate"
   >
-    <div class="flex flex-col gap-3" skeleton>
-      <div class="grid gap-3 lg:grid-cols-[13rem_minmax(0,1fr)_21rem]">
-        <div class="h-40 border border-text-primary/15 bg-text-primary/4"></div>
-        <div class="h-40 border border-text-primary/15 bg-text-primary/4"></div>
-        <div class="h-40 border border-text-primary/15 bg-text-primary/4"></div>
-      </div>
-      <div class="@container">
-        <div
-          class="mx-auto w-fit [--hex-gap:0.25rem] [--hex-h:calc(var(--hex-w)*1.1547)] [--hex-w:3.25rem] @md:[--hex-w:3.5rem] @3xl:[--hex-w:4rem] @5xl:[--hex-w:4.5rem]"
-        >
-          @for (row of skeletonRows; track row; let isOdd = $odd) {
-            <div
-              [style.margin-inline-start]="isOdd ? 'calc((var(--hex-w) + var(--hex-gap)) / 2)' : ''"
-              class="mb-[calc(var(--hex-gap)*0.866-var(--hex-h)*0.25)] flex gap-[var(--hex-gap)]"
-            >
-              @for (column of columns; track column) {
-                <span
-                  [class]="columnVisibilityClass(column)"
-                  class="clip-hex h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 bg-text-primary/8"
-                ></span>
-              }
-            </div>
-          }
-        </div>
-      </div>
+    <div class="flex flex-col gap-4" skeleton>
+      <div class="h-64 border border-text-primary/15 bg-text-primary/4"></div>
+      <div class="h-40 border border-text-primary/15 bg-text-primary/4"></div>
+      <div class="h-10 border border-text-primary/15 bg-text-primary/4"></div>
     </div>
 
-    <!-- Two bands, set apart by a gap rather than run flush into one another: the standing figures
-         and the ground they pay for are one reading, but stacked edge to edge the population
-         hexagon sat straight on the first row of terrain and the two silhouettes fought. -->
-    <div class="flex min-h-full flex-col gap-4">
-      @if (colony.colony()) {
+    <div class="flex flex-col gap-6">
+      <!-- The card: the campaign's territory, at rest — the earlier serpentine map's own tile
+           (ring, halo, damage fill, outcome icon), only the path is gone. The ten weeks stand in
+           one straight row rather than snaking down the page; a tile's hover card previews its
+           fight, a click opens the full drawer, which stands closed otherwise, never pre-rendered
+           open under the row. -->
+      <section class="flex min-w-0 flex-col bg-text-primary/4">
+        <div
+          class="flex min-h-10 shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-text-primary/8 px-3 py-2 sm:flex-nowrap"
+        >
+          <span class="label-caption shrink-0 text-text-primary">
+            {{ 'campaign.territory' | translate }}
+          </span>
+
+          <span aria-hidden="true" class="h-3 w-px shrink-0 bg-text-primary/15"></span>
+
+          <!-- Legend of the map's territory states. The samples are the tiles in miniature: the
+               same hollow hexagon, the same outline colour, nothing inside. -->
+          <ul class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            @for (status of legendStatuses; track status) {
+              @let legendTier = territoryTier(status);
+
+              <li class="flex items-center gap-1.5">
+                <span aria-hidden="true" class="relative h-[1.125rem] w-4 shrink-0">
+                  <span [class]="legendTier.ringClass" class="clip-hex absolute inset-0"></span>
+                  <span
+                    [class]="territoryFillClass"
+                    [style.scale]="legendInnerScale"
+                    class="clip-hex absolute inset-0"
+                  ></span>
+                </span>
+                <span class="label-caption text-[0.5625rem] text-text-muted">
+                  {{ 'campaign.legend.' + status | translate }}
+                </span>
+              </li>
+            }
+          </ul>
+        </div>
+
+        <div class="@container min-w-0 overflow-x-auto p-3">
+          <ol
+            [attr.aria-label]="'campaign.map.ariaLabel' | translate"
+            class="mx-auto flex w-fit gap-[var(--hex-gap)] [--hex-gap:0.25rem] [--hex-h:calc(var(--hex-w)*1.1547)] [--hex-w:3.25rem] @md:[--hex-w:3.5rem] @3xl:[--hex-w:4rem] @5xl:[--hex-w:4.5rem]"
+            role="list"
+          >
+            @for (tile of leadTerrainTiles; track tile) {
+              <li
+                [class]="terrainRingClass"
+                aria-hidden="true"
+                class="hex-terrain h-[var(--hex-h)] w-[var(--hex-w)] shrink-0"
+              ></li>
+            }
+
+            @for (entry of nodesWithBoss(); track entry.node.id) {
+              @let node = entry.node;
+              @let tier = territoryTier(node.status);
+
+              <!-- The tile being fought is lifted out of the flow at rest, not only on hover: its
+                   shockwave expands past its own hexagon, and with every tile at `z-auto` the
+                   rings slid *under* whichever neighbour follows it in the row. -->
+              <li
+                [class.z-10]="node.status === 'current'"
+                class="group relative h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 hover:z-20 focus-within:z-20"
+              >
+                @if (tier.haloClass) {
+                  <span
+                    [class]="tier.haloClass"
+                    aria-hidden="true"
+                    class="clip-hex absolute -inset-1"
+                  ></span>
+                }
+
+                @if (tier.liveAccentClass) {
+                  <span
+                    [class]="tier.liveAccentClass"
+                    aria-hidden="true"
+                    class="battle-ripple pointer-events-none absolute -inset-1"
+                  ></span>
+                }
+
+                <!-- The week's territory. The button itself stays unclipped so its focus ring is
+                     not cut away with the corners; the hexagon is the two layers inside it, an
+                     outline showing through from behind a scaled-down surface. -->
+                <button
+                  (click)="select(node)"
+                  [attr.aria-label]="
+                    (node.weekLabel ? node.weekLabel + ' · ' : '') +
+                    node.bossName +
+                    ' · ' +
+                    node.statusLabel
+                  "
+                  class="focus-ring absolute inset-0 cursor-pointer transition-transform duration-200 hover:scale-[1.07] motion-reduce:transition-none"
+                  type="button"
+                >
+                  <span [class]="tier.ringClass" class="clip-hex absolute inset-0"></span>
+
+                  <span
+                    [class]="territoryFillClass"
+                    [style.scale]="tileInnerScale"
+                    class="clip-hex absolute inset-0 flex flex-col items-center justify-center gap-0.5"
+                  >
+                    <!-- The boss holding the territory, dimmed under a scrim so the outcome mark
+                         stays the first thing read. Weeks whose boss has not been drawn have no
+                         portrait to show. -->
+                    @if (node.portraitUrl; as portraitUrl) {
+                      <img
+                        [ngSrc]="portraitUrl"
+                        alt=""
+                        class="clip-hex object-cover opacity-45"
+                        fill
+                        sizes="80px"
+                      />
+                    }
+
+                    <!-- Ground gained: the surface fills from the bottom as the boss takes
+                         damage, so a week reads as taken, contested or untouched at a glance. -->
+                    @if (node.damagePercentage > 0) {
+                      <span
+                        [class]="
+                          tier.damageFillClass +
+                          (tier.liveAccentClass ? ' liquid-wave ' + tier.liveAccentClass : '')
+                        "
+                        [style.height.%]="node.damagePercentage"
+                        aria-hidden="true"
+                        class="absolute inset-x-0 bottom-0 transition-[height] duration-500 motion-reduce:transition-none"
+                      ></span>
+                    }
+
+                    <!-- The week's verdict, carried by the shape of the mark rather than by its
+                         color alone: taken, lost, still being fought, or not yet reached. -->
+                    <span
+                      [class]="tier.iconClass"
+                      aria-hidden="true"
+                      class="relative [&>svg]:size-[calc(var(--hex-w)*0.3)]"
+                    >
+                      @switch (node.status) {
+                        @case ('defeated') {
+                          <svg lucideCheck></svg>
+                        }
+                        @case ('survived') {
+                          <svg lucideX></svg>
+                        }
+                        @case ('current') {
+                          <!-- The ring already carries the week's outcome, so this glyph is free
+                               to say something else: which boss it is, colored by its difficulty
+                               rather than by the tier's flat amber. -->
+                          <svg [class]="currentBossIconColorClass(node.category)" lucideSkull></svg>
+                        }
+                        @default {
+                          <svg lucideLock></svg>
+                        }
+                      }
+                    </span>
+                  </span>
+                </button>
+
+                <!-- What the tile itself cannot hold: the week it covers, how much of the boss is
+                     left, and who is landing the hits. Purely a pointer/keyboard enhancement — a
+                     click a click away opens the same figures in the drawer, so a hover here
+                     would only repeat them; the week being fought carries none of it since the
+                     drawer already stands a click away for it too. -->
+                @if (node.hasDamage && node.status !== 'current') {
+                  <div
+                    [class]="tooltipSurfaceClass"
+                    aria-hidden="true"
+                    class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2.5 hidden w-72 -translate-x-1/2 px-4 py-3.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none sm:block"
+                  >
+                    <p class="flex items-baseline justify-between gap-3">
+                      <span class="label-caption text-text-muted">
+                        {{ bossNumberLabel(node.runWeekIndex) }}
+                      </span>
+                      @if (node.dateRangeLabel; as dateRangeLabel) {
+                        <span class="font-mono text-2xs text-text-secondary tabular-nums">
+                          {{ dateRangeLabel }}
+                        </span>
+                      }
+                    </p>
+
+                    <p class="font-display mt-3 text-base leading-tight font-bold uppercase">
+                      {{ node.bossName }}
+                    </p>
+
+                    <p
+                      class="mt-3 flex items-baseline justify-between gap-3 border-t border-text-primary/10 pt-3"
+                    >
+                      <span class="font-mono text-xs text-text-secondary tabular-nums">
+                        {{ node.hpLabel }}
+                      </span>
+                      <span [class]="tier.iconClass" class="font-mono text-xs font-semibold">
+                        {{ node.hpPercentageLabel }}
+                      </span>
+                    </p>
+
+                    @if (entry.boss; as boss) {
+                      @if (boss.materialsLabel) {
+                        <div class="mt-3 border-t border-text-primary/10 pt-3">
+                          <p
+                            class="label-caption inline-block border border-accent-gold/35 bg-accent-gold/15 px-1.5 py-0.5 text-accent-gold"
+                          >
+                            {{ 'colony.boss.rewards' | translate }}
+                          </p>
+                          <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                            <dt class="flex items-center gap-1 label-caption text-text-muted">
+                              <svg class="size-3 text-accent-gold" lucideHammer></svg>
+                              {{ 'colony.materials' | translate }}
+                            </dt>
+                            <dd
+                              class="text-right font-mono text-2xs font-semibold text-accent-gold tabular-nums"
+                            >
+                              {{ boss.materialsLabel }}
+                            </dd>
+                            @if (boss.efficiencyLabel) {
+                              <dt class="flex items-center gap-1 label-caption text-text-muted">
+                                <svg class="size-3 text-accent-pink" lucideGauge></svg>
+                                {{ 'colony.boss.efficiency' | translate }}
+                              </dt>
+                              <dd
+                                class="text-right font-mono text-2xs font-semibold text-accent-pink tabular-nums"
+                              >
+                                {{ boss.efficiencyLabel }}
+                              </dd>
+                            }
+                            <dt class="flex items-center gap-1 label-caption text-text-muted">
+                              <svg class="size-3 text-accent-violet" lucideMagnet></svg>
+                              {{ 'colony.track.morale.name' | translate }}
+                            </dt>
+                            <dd
+                              class="text-right font-mono text-2xs font-semibold text-accent-violet tabular-nums"
+                            >
+                              {{ boss.moraleLabel }}
+                            </dd>
+                          </dl>
+                        </div>
+                      }
+
+                      @if (boss.state === 'CURRENT') {
+                        <div class="mt-3">
+                          <p
+                            class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
+                          >
+                            {{ 'colony.boss.ifDefeated' | translate }}
+                          </p>
+                          <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                            <dt class="flex items-center gap-1 label-caption text-text-muted">
+                              <svg class="size-3 text-accent-violet" lucideMagnet></svg>
+                              {{ 'colony.track.morale.name' | translate }}
+                            </dt>
+                            <dd
+                              class="text-right font-mono text-2xs font-semibold text-accent-violet tabular-nums"
+                            >
+                              {{ colony.defeatMoraleLabel() }}
+                            </dd>
+                          </dl>
+                        </div>
+                      } @else if (boss.state === 'SURVIVED') {
+                        <div class="mt-3 border-t border-text-primary/10 pt-3">
+                          <p
+                            class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
+                          >
+                            {{ 'colony.boss.defeat' | translate }}
+                          </p>
+                          <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                            <dt class="flex items-center gap-1 label-caption text-text-muted">
+                              <svg class="size-3" lucideMagnet></svg>
+                              {{ 'colony.track.morale.name' | translate }}
+                            </dt>
+                            <dd
+                              class="text-right font-mono text-2xs font-semibold text-danger tabular-nums"
+                            >
+                              {{ boss.moraleLabel }}
+                            </dd>
+                          </dl>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+              </li>
+            }
+
+            @for (tile of trailTerrainTiles; track tile) {
+              <li
+                [class]="terrainRingClass"
+                aria-hidden="true"
+                class="hex-terrain h-[var(--hex-h)] w-[var(--hex-w)] shrink-0"
+              ></li>
+            }
+          </ol>
+
+          <p class="mt-4 text-center font-mono text-xs text-text-muted">
+            {{ 'campaign.frieze.hint' | translate }}
+          </p>
+        </div>
+      </section>
+
+      @if (colony.colony(); as colonyValue) {
         <!-- The standing figures, as a grid of tiles rather than a band-plus-sidebar row: the
-             population hexagon stands two rows tall beside the week's harvest, the week's own flow —
+             population tile stands two rows tall beside the week's harvest, the week's own flow —
              stock, consumption, surplus — fills the row under that harvest in the same width, and
-             the six short figures behind all of it split the same way one row further down:
-             presence and efficiency narrow under the hexagon, attractivity, arrivals and materials
-             wide under the flow. Every tile shares `app-colony-card`'s own frame and info bubble, so
-             the page reads as one instrument panel rather than a mismatched set of cards. Each row is
-             `items-stretch` (the grid default) so every tile in it fills the row's own height,
-             whichever tile sets it.
-
-             Nothing here is written as an instruction. A short bar asks to be filled; the shape of
-             the food figures read against the population mark already answers whether tonight is a
-             night to play or a night to build, without a sentence saying so. -->
-        <!-- Twenty columns, sized on the short tile rather than on the hexagon: every individual
-             tile below the harvest — the flow's three, the short figures' five — is four columns
-             wide, and the hexagon and the harvest are only ever a whole multiple of that same
-             four-wide unit (two tiles' worth and three tiles' worth) rather than a fraction of the
-             page picked on its own. One shared grid is what keeps the three rows' gutters lined up;
-             three independently-sized rows never actually coincide.
-
-             Three explicit row heights, not one repeated floor: the harvest keeps the tall floor the
-             hexagon's own two rows need, but the flow and the short figures under it are readouts,
-             not charts, and a floor sized for a chart line-height left them mostly empty air. -->
+             the six short figures behind all of it split the same way one row further down. Every
+             tile shares `app-colony-card`'s own frame and info bubble, so the page reads as one
+             instrument panel rather than a mismatched set of cards. -->
         <div
           class="grid shrink-0 grid-cols-1 gap-3 lg:grid-cols-[repeat(20,minmax(0,1fr))] lg:grid-rows-[minmax(11.5rem,auto)_minmax(5.75rem,auto)_minmax(5.75rem,auto)]"
         >
-          <!-- The population hexagon keeps its existing behaviour: pressing it still opens the run's
-               full curve in a drawer. Two rows tall, the same height the harvest tile and its own
-               flow row take up together. -->
+          <!-- The population's own climb, in place of the bare figure a click used to have to open
+               a drawer for: the hexagon read as "where it stands", the curve reads as "how it got
+               there", and the tile is exactly what a reader coming from the map above is already
+               asking. Two rows tall, the same height the harvest tile and its own flow row take up
+               together. -->
           <app-colony-card
             accentClass="border-t-brand-500"
             class="lg:col-span-8 lg:row-span-2"
@@ -153,58 +373,21 @@
           >
             <svg class="text-brand-500" infoIcon lucideUsers></svg>
 
-            <div class="flex h-full flex-col items-center justify-center gap-3">
-              <button
-                (click)="openCurve()"
-                [attr.aria-label]="colony.hexagonAriaLabel()"
-                class="focus-ring group flex cursor-pointer items-center gap-4 text-left"
-                type="button"
-              >
-                <span
-                  class="relative h-[10.39rem] w-36 shrink-0 transition-transform duration-200 group-hover:scale-[1.03] motion-reduce:transition-none"
-                >
-                  <!-- The same pulsing halo as the overview's own population glyph, so the two
-                       hexagons read as one system. -->
-                  <span
-                    aria-hidden="true"
-                    class="clip-hex absolute -inset-1.5 bg-brand-500/25 motion-safe:animate-pulse"
-                  ></span>
-                  <span aria-hidden="true" class="clip-hex absolute inset-0 bg-brand-500"></span>
-                  <span class="clip-hex absolute inset-0.5 overflow-hidden bg-surface-950">
-                    <span class="flex h-full w-full items-center justify-center">
-                      <svg class="size-16 text-brand-500" lucideUsers></svg>
-                    </span>
-                  </span>
-                </span>
+            <div class="flex h-full flex-col gap-2">
+              <p class="flex items-baseline justify-between gap-3 text-sm text-text-muted">
+                <span>{{ colony.curveCaption() }}</span>
+                @if (latestMilestoneLabel(); as milestone) {
+                  <span class="font-display font-semibold text-text-primary">{{ milestone }}</span>
+                }
+              </p>
 
-                <span class="flex flex-col gap-0.5">
-                  <span
-                    class="font-display text-5xl leading-none font-bold text-text-primary tabular-nums"
-                  >
-                    {{ colony.populationLabel() }}
-                    @if (colony.delta(); as delta) {
-                      <span
-                        [class]="deltaColorClass(delta)"
-                        class="align-super font-display text-sm font-bold tabular-nums"
-                      >
-                        {{ delta.label }}
-                      </span>
-                    }
-                  </span>
-                  <span class="font-display text-lg font-bold text-text-secondary">
-                    {{ 'colony.population' | translate }}
-                  </span>
-                </span>
-              </button>
-
-              <!-- The run's whole climb, under the figure it ends on. Pressing the hexagon still
-                   opens the full curve and its milestones; this only answers "is it still going
-                   up", which used to cost a click. -->
               @if (curveSeries().length > 0) {
                 <app-line-chart
                   [ariaLabel]="'colony.curve.title' | translate"
-                  class="w-full"
-                  heightClass="h-16 w-full"
+                  class="min-h-0 flex-1"
+                  [filled]="true"
+                  heightClass="h-full w-full"
+                  [pointLabel]="'colony.curve.axis' | translate"
                   [series]="curveSeries()"
                   [summary]="colony.curveCaption()"
                 />
@@ -213,7 +396,7 @@
           </app-colony-card>
 
           <!-- Ten tiles in one column put the map ten screens down on a phone. The two figures that
-               answer "where does the colony stand" — its headcount above, and what it still owes the
+               answer "where does the colony stand" — its climb above, and what it still owes the
                next tier below — stay out here; everything explaining how it got there waits behind
                this. From `lg` up the control is gone and the grid is untouched. -->
           <button
@@ -362,7 +545,7 @@
                     </div>
                     <span class="text-xs text-text-secondary">{{
                       'colony.track.presence.caption'
-                        | translate: { present: battery.presentCount, roster: battery.cellCount }
+                        | translate: { present: battery.presentCount, roster: battery.rosterSize }
                     }}</span>
                   </div>
                 </app-colony-card>
@@ -452,6 +635,9 @@
             </div>
           }
 
+          <!-- Materials, the other figure the run's standing is read in: never behind the fold, so
+               the two answers to "where does the colony stand" (the climb above, this below) always
+               stand together. -->
           <app-colony-card
             accentClass="border-t-accent-gold"
             class="lg:col-span-4"
@@ -483,644 +669,93 @@
             </div>
           </app-colony-card>
         </div>
-      }
 
-      <!-- The ground, and what taking it did to the population. Two unframed panels set apart by a
-             gap: the ladder is read against the map that pays for it, but run flush the two veils
-             merged into one surface and the field looked like it ran under the ladder's rows. -->
-      <!-- Grows into the space the scroller leaves, never shrinks below the field it holds: with
-             `flex-1` the band was squashed under its own map, which then drew straight over the
-             buildings below it. -->
-      <!-- 3:2 split, the tile unit the band above already sizes itself in: the map reads as ground
-           and needs the wider half, the ladder is a list and settles for the narrower one. -->
-      <div class="grid shrink-0 grow grid-cols-1 gap-4 xl:grid-cols-[3fr_2fr]">
-        <section class="flex min-w-0 flex-col bg-text-primary/4">
-          <!-- Both panels open on a head of the same height, so the two rules closing them sit
-               level across the band. Side by side the height is pinned rather than left to each
-               head's own content: this one grows when its legend wraps, the other never leaves its
-               floor, and the two rules came out a few pixels apart. Below `xl` the panels are
-               stacked, no rule has to meet another, and the head is free to wrap again. -->
-          <div
-            class="flex min-h-10 shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-text-primary/8 pr-3 xl:h-10 xl:flex-nowrap xl:overflow-hidden"
-          >
-            <span class="label-caption shrink-0 text-text-primary">
-              {{ 'campaign.territory' | translate }}
+        <!-- Every campaign before this one, dates rather than a number — design-review.md lot 1's
+             own correction, brought forward since the dates alone (unlike the closed/stopped
+             states a future campaign lifecycle will add) are already available today. -->
+        <section>
+          <div class="flex items-center gap-3">
+            <h2
+              class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
+            >
+              {{ 'colony.history.title' | translate }}
+            </h2>
+            <span
+              aria-hidden="true"
+              class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
+            ></span>
+          </div>
+
+          <!-- A closed run links to its own summary (design-review.md lot 9); the run in progress
+               does not, since there is nothing settled yet to read back. The two only differ in
+               the element carrying the link, so the row itself is factored into one template
+               rather than duplicated. -->
+          <ul class="mt-3 flex flex-col gap-2">
+            @for (run of colony.runs(); track run.runNumber) {
+              <li>
+                @if (run.isCurrent) {
+                  <div
+                    class="notch-tr grid grid-cols-[1fr_auto_auto] items-center gap-x-3.5 border-l-2 border-l-brand-500 bg-brand-500/10 px-4 py-3 [--notch:0.625rem] sm:grid-cols-[1fr_7rem_5.5rem]"
+                  >
+                    <ng-container
+                      [ngTemplateOutlet]="historyRow"
+                      [ngTemplateOutletContext]="{ $implicit: run }"
+                    />
+                  </div>
+                } @else {
+                  <a
+                    [routerLink]="['/campaign/history', run.runNumber]"
+                    class="notch-tr focus-ring-inset grid grid-cols-[1fr_auto_auto] items-center gap-x-3.5 border-l-2 border-l-text-primary/15 bg-text-primary/4 px-4 py-3 transition-colors [--notch:0.625rem] hover:bg-text-primary/8 sm:grid-cols-[1fr_7rem_5.5rem]"
+                  >
+                    <ng-container
+                      [ngTemplateOutlet]="historyRow"
+                      [ngTemplateOutletContext]="{ $implicit: run }"
+                    />
+                  </a>
+                }
+              </li>
+            }
+          </ul>
+
+          <ng-template #historyRow let-run>
+            <span class="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+              <span
+                [class]="run.isCurrent ? 'text-text-primary' : 'text-text-secondary'"
+                class="font-display text-base font-semibold tabular-nums"
+              >
+                {{ run.dateRangeLabel }}
+              </span>
+              @if (run.isCurrent) {
+                <span class="font-mono text-2xs font-semibold text-brand-400 uppercase">
+                  {{ run.statusLabel }}
+                </span>
+              }
             </span>
 
-            <span aria-hidden="true" class="h-3 w-px shrink-0 bg-text-primary/15"></span>
+            <span class="text-right font-mono text-sm text-text-muted tabular-nums">
+              {{ run.weekLabel }}
+            </span>
 
-            <!-- Legend of the map's territory states. The samples are the tiles in miniature: the
-                 same hollow hexagon, the same outline colour, nothing inside. No mark is needed now
-                 the four states are four colours — green taken, red held, amber live, grey unreached
-                 — and a 10 px glyph inside a 14 px hexagon was a smudge, not a shape. Sized
-                 `16 × 18`, the `1 : 1.1547` box `clip-hex` needs to come out a regular hexagon rather
-                 than a squat one. -->
-            <ul class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 xl:flex-nowrap">
-              @for (status of legendStatuses; track status) {
-                @let legendTier = territoryTier(status);
+            <span class="text-right">
+              <span class="sr-only">{{ 'colony.history.final' | translate }}</span>
+              <span
+                [class]="run.isCurrent ? 'text-brand-400' : 'text-text-primary'"
+                class="font-display text-lg leading-none font-bold tabular-nums"
+              >
+                {{ run.finalLabel }}
+              </span>
+            </span>
+          </ng-template>
 
-                <li class="flex items-center gap-1.5">
-                  <span aria-hidden="true" class="relative h-[1.125rem] w-4 shrink-0">
-                    <span [class]="legendTier.ringClass" class="clip-hex absolute inset-0"></span>
-                    <span
-                      [class]="territoryFillClass"
-                      [style.scale]="legendInnerScale"
-                      class="clip-hex absolute inset-0"
-                    ></span>
-                  </span>
-                  <span class="label-caption text-[0.5625rem] text-text-muted">
-                    {{ 'campaign.legend.' + status | translate }}
-                  </span>
-                </li>
-              }
-            </ul>
-          </div>
-
-          <!-- Battle map: a honeycomb scrolling top to bottom, one row per week, framed above and
-             below by terrain the front has not reached. Every other row is nudged half a horizontal
-             pitch to the right, which is what makes flat tiles read as a tiled field. Each week's row
-             hands one hexagon to its boss — placed along a serpentine path, see `resolveBossColumn` —
-             and leaves the rest as terrain; the outermost columns only appear once the panel can hold
-             them, so the field widens with it while the path stays put. Twelve rows for a ten-week
-             run, terrain included, which is what lets the whole field stand in its panel without a
-             scrollbar of its own.
-
-             Row pitch: a honeycomb with a gap `g` between neighbours is the perfect tiling of
-             hexagons `w + g` wide, each one shrunk back to `w`. Its row pitch is therefore
-             `0.75 × 1.1547 × (w + g)`, so a row sits `0.866g - 0.25h` from the bottom of the one
-             above it, not `-0.25h`: at a flat quarter-height overlap the tiles touched vertically
-             while keeping `g` on their sides, and the field came out squashed. `pb` on the list
-             cancels the last row's own negative margin. -->
-          <div class="@container min-w-0 flex-1 p-3">
-            <ol
-              [attr.aria-label]="'campaign.map.ariaLabel' | translate"
-              class="mx-auto w-fit pb-[calc(var(--hex-h)*0.25-var(--hex-gap)*0.866)] [--hex-gap:0.25rem] [--hex-h:calc(var(--hex-w)*1.1547)] [--hex-w:3.25rem] @md:[--hex-w:3.5rem] @3xl:[--hex-w:4rem] @5xl:[--hex-w:4.5rem]"
-              role="list"
-            >
-              @for (row of rows(); track row.key; let isOdd = $odd) {
-                <li
-                  [attr.aria-hidden]="row.node === null ? 'true' : null"
-                  [style.margin-inline-start]="
-                    isOdd ? 'calc((var(--hex-w) + var(--hex-gap)) / 2)' : ''
-                  "
-                  class="mb-[calc(var(--hex-gap)*0.866-var(--hex-h)*0.25)] flex gap-[var(--hex-gap)]"
-                >
-                  @for (column of columns; track column) {
-                    @if (column === row.bossColumn ? row.node : null; as node) {
-                      <!-- The tile being fought is lifted out of the flow at rest, not only on
-                         hover: its shockwave expands past its own hexagon, and with every tile at
-                         `z-auto` the rings slid *under* whichever neighbours follow it in the grid.
-                         Below the `z-20` the pointer still claims, so hovering keeps winning. -->
-                      <div
-                        [class]="columnVisibilityClass(column)"
-                        [class.z-10]="node.status === 'current'"
-                        class="group relative h-[var(--hex-h)] w-[var(--hex-w)] shrink-0 hover:z-20 focus-within:z-20"
-                      >
-                        @let tier = territoryTier(node.status);
-
-                        @if (tier.haloClass) {
-                          <span
-                            [class]="tier.haloClass"
-                            aria-hidden="true"
-                            class="clip-hex absolute -inset-1"
-                          ></span>
-                        }
-
-                        <!-- The shockwave the tile being fought sends out, layered under the tile
-                           and outside its clip so it can expand past the hexagon's own edge. Its
-                           two rings are pseudo-elements of this span, which is why the span itself
-                           is unclipped and only tinted. -->
-                        @if (tier.liveAccentClass) {
-                          <span
-                            [class]="tier.liveAccentClass"
-                            aria-hidden="true"
-                            class="battle-ripple pointer-events-none absolute -inset-1"
-                          ></span>
-                        }
-
-                        <!-- The week's territory. The button itself stays unclipped so its focus
-                           ring is not cut away with the corners; the hexagon is the two layers inside
-                           it, an outline showing through from behind a scaled-down surface. The cell
-                           above lifts the whole tile on hover, without which the tile grows *under*
-                           the neighbours that follow it in the grid and is half eaten by them. -->
-                        <button
-                          (click)="select(node)"
-                          [attr.aria-label]="
-                            (node.weekLabel ? node.weekLabel + ' · ' : '') +
-                            node.bossName +
-                            ' · ' +
-                            node.statusLabel
-                          "
-                          [attr.data-battlemap-current]="node.status === 'current' ? '' : null"
-                          class="focus-ring absolute inset-0 cursor-pointer transition-transform duration-200 hover:scale-[1.07] motion-reduce:transition-none"
-                          type="button"
-                        >
-                          <span [class]="tier.ringClass" class="clip-hex absolute inset-0"></span>
-
-                          <!-- Scaled down rather than inset, so the outline keeps a constant width
-                             all the way around the hexagon — see `TILE_INNER_SCALE`. -->
-                          <span
-                            [class]="territoryFillClass"
-                            [style.scale]="tileInnerScale"
-                            class="clip-hex absolute inset-0 flex flex-col items-center justify-center gap-0.5"
-                          >
-                            <!-- The boss holding the territory, dimmed under a scrim so the outcome
-                               mark stays the first thing read. Weeks whose boss has not been drawn
-                               have no portrait to show. -->
-                            @if (node.portraitUrl; as portraitUrl) {
-                              <img
-                                [ngSrc]="portraitUrl"
-                                alt=""
-                                class="clip-hex object-cover opacity-45"
-                                fill
-                                sizes="80px"
-                              />
-                            }
-
-                            <!-- Ground gained: the surface fills from the bottom as the boss takes
-                               damage, so a week reads as taken, contested or untouched at a
-                               glance. -->
-                            <!-- The tile of the fight running now carries a crest on that surface,
-                               so the ground being taken reads as a level still rising. Settled weeks
-                               get a flat fill: their number stopped moving when the week closed. -->
-                            @if (node.damagePercentage > 0) {
-                              <span
-                                [class]="
-                                  tier.damageFillClass +
-                                  (tier.liveAccentClass
-                                    ? ' liquid-wave ' + tier.liveAccentClass
-                                    : '')
-                                "
-                                [style.height.%]="node.damagePercentage"
-                                aria-hidden="true"
-                                class="absolute inset-x-0 bottom-0 transition-[height] duration-500 motion-reduce:transition-none"
-                              ></span>
-                            }
-
-                            <!-- The week's verdict, carried by the shape of the mark rather than by
-                               its color alone: taken, lost, still being fought, or not yet
-                               reached. -->
-                            <!-- Sized off the tile's own width rather than off a viewport
-                               breakpoint. The hexagon grows on the *panel*'s width (`@md` /
-                               `@3xl` / `@5xl`, see `--hex-w`), so a `sm:` step on the glyph
-                               changed it at a width the tile under it did not move at: on a
-                               narrow panel beside a wide window the mark was two thirds of its
-                               own hexagon and pushed the housing figure onto the slanted edge. -->
-                            <span
-                              [class]="tier.iconClass"
-                              aria-hidden="true"
-                              class="relative [&>svg]:size-[calc(var(--hex-w)*0.3)]"
-                            >
-                              @switch (node.status) {
-                                @case ('defeated') {
-                                  <svg lucideCheck></svg>
-                                }
-                                @case ('survived') {
-                                  <svg lucideX></svg>
-                                }
-                                @case ('current') {
-                                  <!-- The ring already carries the week's outcome, so this glyph is
-                                     free to say something else: which boss it is, colored by its
-                                     difficulty rather than by the tier's flat amber. -->
-                                  <svg
-                                    [class]="currentBossIconColorClass(node.category)"
-                                    lucideSkull
-                                  ></svg>
-                                }
-                                @default {
-                                  <svg lucideLock></svg>
-                                }
-                              }
-                            </span>
-                          </span>
-                        </button>
-
-                        <!-- What the tile itself cannot hold: the week it covers, how much of the
-                           boss is left, and who is landing the hits. Purely a pointer/keyboard
-                           enhancement — the same figures are all in the panel a click away, so the
-                           card is dropped below `sm` where there is no hover and no room to float it
-                           beside a tile. A week with no boss drawn yet has none of it to show, and
-                           the week being fought carries it permanently in the active-boss panel
-                           instead, so a hover here would only repeat it. -->
-                        @if (node.hasDamage && node.status !== 'current') {
-                          <div
-                            [class]="tooltipSurfaceClass"
-                            aria-hidden="true"
-                            class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2.5 hidden w-72 -translate-x-1/2 px-4 py-3.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none sm:block"
-                          >
-                            <p class="flex items-baseline justify-between gap-3">
-                              <span class="label-caption text-text-muted">
-                                {{ bossNumberLabel(node.runWeekIndex) }}
-                              </span>
-                              @if (node.dateRangeLabel; as dateRangeLabel) {
-                                <span class="font-mono text-2xs text-text-secondary tabular-nums">
-                                  {{ dateRangeLabel }}
-                                </span>
-                              }
-                            </p>
-
-                            <p
-                              class="font-display mt-3 text-base leading-tight font-bold uppercase"
-                            >
-                              {{ node.bossName }}
-                            </p>
-
-                            <!-- Hairline over the figures: the card holds a name and then a state
-                                   of the fight, and at this size the two ran together. -->
-                            <p
-                              class="mt-3 flex items-baseline justify-between gap-3 border-t border-text-primary/10 pt-3"
-                            >
-                              <span class="font-mono text-xs text-text-secondary tabular-nums">
-                                {{ node.hpLabel }}
-                              </span>
-                              <span
-                                [class]="tier.iconClass"
-                                class="font-mono text-xs font-semibold"
-                              >
-                                {{ node.hpPercentageLabel }}
-                              </span>
-                            </p>
-
-                            <!-- What the week pays the colony, in materials — the one currency the
-                                   map, the ladder and this card all read in — and morale. Split from
-                                   what a loss costs rather than folded into one list: a reader glancing
-                                   at a tile mid-fight is weighing whether to push for the win, and the
-                                   two outcomes read as a trade-off only kept apart. -->
-                            @if (row.boss; as boss) {
-                              @if (boss.materialsLabel) {
-                                <div class="mt-3 border-t border-text-primary/10 pt-3">
-                                  <!-- The word rather than the whole block: framed so the eye lands
-                                         here first on a card that is otherwise all neutral labels, the
-                                         same gold the materials figure below already carries. -->
-                                  <p
-                                    class="label-caption inline-block border border-accent-gold/35 bg-accent-gold/15 px-1.5 py-0.5 text-accent-gold"
-                                  >
-                                    {{ 'colony.boss.rewards' | translate }}
-                                  </p>
-                                  <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-                                    <dt
-                                      class="flex items-center gap-1 label-caption text-text-muted"
-                                    >
-                                      <svg class="size-3 text-accent-gold" lucideHammer></svg>
-                                      {{ 'colony.materials' | translate }}
-                                    </dt>
-                                    <dd
-                                      class="text-right font-mono text-2xs font-semibold text-accent-gold tabular-nums"
-                                    >
-                                      {{ boss.materialsLabel }}
-                                    </dd>
-                                    @if (boss.efficiencyLabel) {
-                                      <dt
-                                        class="flex items-center gap-1 label-caption text-text-muted"
-                                      >
-                                        <svg class="size-3 text-accent-pink" lucideGauge></svg>
-                                        {{ 'colony.boss.efficiency' | translate }}
-                                      </dt>
-                                      <dd
-                                        class="text-right font-mono text-2xs font-semibold text-accent-pink tabular-nums"
-                                      >
-                                        {{ boss.efficiencyLabel }}
-                                      </dd>
-                                    }
-                                    <dt
-                                      class="flex items-center gap-1 label-caption text-text-muted"
-                                    >
-                                      <svg class="size-3 text-accent-violet" lucideMagnet></svg>
-                                      {{ 'colony.track.morale.name' | translate }}
-                                    </dt>
-                                    <dd
-                                      class="text-right font-mono text-2xs font-semibold text-accent-violet tabular-nums"
-                                    >
-                                      {{ boss.moraleLabel }}
-                                    </dd>
-                                  </dl>
-                                </div>
-                              }
-
-                              @if (boss.state === 'CURRENT') {
-                                <div class="mt-3">
-                                  <!-- The same pill treatment as "Récompenses", in the danger
-                                         colour: a cost read the same way a gain is, not merely noted
-                                         underneath it. -->
-                                  <p
-                                    class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
-                                  >
-                                    {{ 'colony.boss.ifDefeated' | translate }}
-                                  </p>
-                                  <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-                                    <dt
-                                      class="flex items-center gap-1 label-caption text-text-muted"
-                                    >
-                                      <svg class="size-3 text-accent-violet" lucideMagnet></svg>
-                                      {{ 'colony.track.morale.name' | translate }}
-                                    </dt>
-                                    <dd
-                                      class="text-right font-mono text-2xs font-semibold text-accent-violet tabular-nums"
-                                    >
-                                      {{ colony.defeatMoraleLabel() }}
-                                    </dd>
-                                  </dl>
-                                </div>
-                              } @else if (boss.state === 'SURVIVED') {
-                                <div class="mt-3 border-t border-text-primary/10 pt-3">
-                                  <!-- The same badge treatment as "Récompenses", in the danger
-                                         colour: what a held boss costs is read against what a
-                                         defeated one pays, not merely noted underneath it. -->
-                                  <p
-                                    class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
-                                  >
-                                    {{ 'colony.boss.defeat' | translate }}
-                                  </p>
-                                  <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-                                    <dt
-                                      class="flex items-center gap-1 label-caption text-text-muted"
-                                    >
-                                      <svg class="size-3" lucideMagnet></svg>
-                                      {{ 'colony.track.morale.name' | translate }}
-                                    </dt>
-                                    <dd
-                                      class="text-right font-mono text-2xs font-semibold text-danger tabular-nums"
-                                    >
-                                      {{ boss.moraleLabel }}
-                                    </dd>
-                                  </dl>
-                                </div>
-                              }
-                            }
-                          </div>
-                        }
-                      </div>
-                    } @else {
-                      <!-- Bare terrain: a single element, outline and surface both drawn by
-                           `hex-terrain`, since the field is over a hundred and fifty of these. The
-                           two utilities are joined into one string rather than passed as an array: an
-                           array entry is a single class token, so the two-class visibility gate was
-                           dropped on the floor and every terrain column drew at every width. -->
-                      <div
-                        [class]="columnVisibilityClass(column) + ' ' + terrainRingClass"
-                        aria-hidden="true"
-                        class="hex-terrain h-[var(--hex-h)] w-[var(--hex-w)] shrink-0"
-                      ></div>
-                    }
-                  }
-                </li>
-              }
-            </ol>
-          </div>
+          @if (colony.runs().length === 1) {
+            <p class="mt-2 text-sm text-text-muted">
+              {{ 'colony.history.first' | translate: { day: colonyValue.runDayCount } }}
+            </p>
+          }
         </section>
-
-        <!-- The fight under way, beside the ground it is fought over: the boss the group is
-             chipping at and the ranking behind that damage, both read against the map rather than a
-             page apart. Two panels rather than one: the boss reads as a card and the ranking under
-             it is a list, so it keeps the map panel's own veiled-list treatment instead of living
-             inside the card. This also retires the map tile's hover card for the week being fought:
-             the same figures now stand here permanently rather than needing a pointer to surface. -->
-        @if (currentBossNode(); as node) {
-          <div class="flex min-w-0 flex-col gap-4">
-            <section class="flex min-w-0 flex-col bg-text-primary/4">
-              <div class="flex flex-1 flex-col gap-4 p-4">
-                <!-- The map ties this card to one hexagon by number and by color: the same
-                     brand-500 the "current" territory tier's ring and crest already carry, so the
-                     card reads as that tile's own story. No boss name here — the number is what
-                     ties it to the map, and it also stands in for the panel's own title, which a
-                     name would only have repeated. -->
-                <div>
-                  <p class="flex items-center gap-2">
-                    <span
-                      aria-hidden="true"
-                      class="clip-hex grid h-6 w-5 shrink-0 place-items-center bg-brand-500/15 text-brand-500 [&>svg]:size-3"
-                    >
-                      <svg lucideSkull></svg>
-                    </span>
-                    <span class="label-caption text-brand-500">
-                      {{
-                        'colony.boss.number'
-                          | translate: { number: bossNumberLabel(node.runWeekIndex) }
-                      }}
-                    </span>
-                    @if (node.categoryLabel; as categoryLabel) {
-                      <span aria-hidden="true" class="h-3 w-px shrink-0 bg-text-primary/15"></span>
-                      <span class="label-caption text-text-muted">{{ categoryLabel }}</span>
-                    }
-                  </p>
-                </div>
-
-                @if (node.hasDamage) {
-                  <div>
-                    <div class="flex items-baseline justify-between gap-3">
-                      <span class="label-caption text-text-muted">{{ node.barLabel }}</span>
-                      <span
-                        [class]="timelineTier(node.status).accentTextClass"
-                        class="font-mono text-2xs font-medium tabular-nums"
-                        >{{ node.hpPercentageLabel }}</span
-                      >
-                    </div>
-
-                    <div class="relative mt-2 h-6 border border-text-primary/15 bg-surface-sunken">
-                      <div
-                        [class]="
-                          timelineTier(node.status).barFillClass +
-                          (node.status === 'current' ? ' gauge-sheen overflow-hidden' : '')
-                        "
-                        [style.width.%]="node.hpPercentage"
-                        aria-hidden="true"
-                        class="absolute inset-y-0 left-0 transition-[width] duration-500 motion-reduce:transition-none"
-                      ></div>
-                      <span
-                        class="relative flex h-full items-center justify-center font-mono text-2xs font-semibold text-text-primary tabular-nums [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]"
-                        >{{ node.hpLabel }}</span
-                      >
-                    </div>
-                  </div>
-                }
-
-                @if (currentColonyBoss(); as boss) {
-                  <!-- Same two blocks the map tile's hover card used to carry: what the fight banks
-                       once won, split from what letting it stand costs — a reader weighing whether
-                       to push for the win read the two as a trade-off only when they were kept
-                       apart. -->
-                  @if (boss.materialsLabel) {
-                    <div>
-                      <p
-                        class="label-caption inline-block border border-accent-gold/35 bg-accent-gold/15 px-1.5 py-0.5 text-accent-gold"
-                      >
-                        {{ 'colony.boss.rewards' | translate }}
-                      </p>
-                      <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-                        <dt class="flex items-center gap-1 label-caption text-text-muted">
-                          <svg class="size-3 text-accent-gold" lucideHammer></svg>
-                          {{ 'colony.materials' | translate }}
-                        </dt>
-                        <dd
-                          class="text-right font-mono text-xs font-semibold text-accent-gold tabular-nums"
-                        >
-                          {{ boss.materialsLabel }}
-                        </dd>
-                        @if (boss.efficiencyLabel) {
-                          <dt class="flex items-center gap-1 label-caption text-text-muted">
-                            <svg class="size-3 text-accent-pink" lucideGauge></svg>
-                            {{ 'colony.boss.efficiency' | translate }}
-                          </dt>
-                          <dd
-                            class="text-right font-mono text-xs font-semibold text-accent-pink tabular-nums"
-                          >
-                            {{ boss.efficiencyLabel }}
-                          </dd>
-                        }
-                        <dt class="flex items-center gap-1 label-caption text-text-muted">
-                          <svg class="size-3 text-accent-violet" lucideMagnet></svg>
-                          {{ 'colony.track.morale.name' | translate }}
-                        </dt>
-                        <dd
-                          class="text-right font-mono text-xs font-semibold text-accent-violet tabular-nums"
-                        >
-                          {{ boss.moraleLabel }}
-                        </dd>
-                      </dl>
-                    </div>
-                  }
-
-                  <div>
-                    <p
-                      class="label-caption inline-block border border-danger/35 bg-danger/15 px-1.5 py-0.5 text-danger"
-                    >
-                      {{ 'colony.boss.ifDefeated' | translate }}
-                    </p>
-                    <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-                      <dt class="flex items-center gap-1 label-caption text-text-muted">
-                        <svg class="size-3 text-accent-violet" lucideMagnet></svg>
-                        {{ 'colony.track.morale.name' | translate }}
-                      </dt>
-                      <dd
-                        class="text-right font-mono text-xs font-semibold text-accent-violet tabular-nums"
-                      >
-                        {{ colony.defeatMoraleLabel() }}
-                      </dd>
-                    </dl>
-                  </div>
-                }
-              </div>
-            </section>
-          </div>
-        }
-      </div>
-
-      @if (colony.colony()) {
-        <!-- Every run before this one, as the scale the population figure is missing — a band of
-             its own below the ground it was won on, now that the tile grid above only carries the
-             run under way. -->
-        <app-colony-card
-          accentClass="border-t-transparent"
-          class="h-64"
-          [infoDescription]="'colony.history.columnHint' | translate"
-          [infoPurpose]="'colony.history.finalHint' | translate"
-          [title]="'colony.history.title' | translate"
-        >
-          <svg class="text-podium-bronze" icon lucideSwords></svg>
-          <svg class="text-podium-bronze" infoIcon lucideSwords></svg>
-
-          <div class="flex h-full flex-col">
-            <div aria-hidden="true" class="grid grid-cols-[minmax(0,1fr)_4rem] gap-x-2 px-1">
-              <span class="label-caption text-text-muted">{{
-                'colony.history.column' | translate
-              }}</span>
-              <span class="label-caption ml-auto text-right text-text-muted">{{
-                'colony.history.final' | translate
-              }}</span>
-            </div>
-
-            <!-- Grows to the band's own height and scrolls past it, so a ledger ten runs deep costs
-                 it the same height as one two runs deep. -->
-            <ul class="scroll-subtle mt-1.5 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
-              @for (run of colony.runs(); track run.runNumber) {
-                <li
-                  [class]="
-                    run.isCurrent
-                      ? 'border-l-brand-500 bg-brand-500/10'
-                      : 'border-l-text-primary/15 bg-text-primary/4'
-                  "
-                  class="notch-tr grid shrink-0 grid-cols-[minmax(0,1fr)_4rem] items-center gap-x-2 border-l-2 px-3 py-2 [--notch:0.625rem]"
-                >
-                  <span
-                    [class]="run.isCurrent ? 'text-brand-500' : 'text-text-primary'"
-                    class="truncate font-display text-xs font-bold uppercase"
-                  >
-                    {{ run.label }}
-                  </span>
-
-                  <span class="text-right">
-                    <span class="sr-only">{{ 'colony.history.final' | translate }}</span>
-                    <span
-                      [class]="run.isCurrent ? 'text-brand-500' : 'text-text-primary'"
-                      class="font-display text-sm leading-none font-bold tabular-nums"
-                    >
-                      {{ run.finalLabel }}
-                    </span>
-                  </span>
-                </li>
-              }
-
-              <!-- Berths for the runs still to come. A run history one row long reads as a ledger
-                   that only ever holds one; the empty rows say it keeps growing. -->
-              @for (slot of historyPlaceholders(); track slot) {
-                <li
-                  aria-hidden="true"
-                  class="notch-tr flex shrink-0 items-center border-l-2 border-l-text-primary/10 px-3 py-2 [--notch:0.625rem]"
-                >
-                  <span class="block h-px w-8 bg-text-primary/15"></span>
-                </li>
-              }
-            </ul>
-          </div>
-        </app-colony-card>
       }
     </div>
   </app-resource-state>
-
-  <!-- The run's population over time, opened from the hexagon carrying its current value. It is a
-       second reading of one figure rather than a permanent block: the page answers "where does the
-       colony stand" at a glance, and this answers "how did it get there" on demand. -->
-  @if (isCurveOpen()) {
-    <app-drawer
-      (closed)="closeCurve()"
-      [closeLabel]="'colony.curve.close' | translate"
-      anchor="center"
-      labelledBy="population-curve-title"
-    >
-      <div drawerLeading>
-        <h2
-          class="font-display text-lg leading-none font-bold uppercase"
-          id="population-curve-title"
-        >
-          {{ 'colony.curve.title' | translate }}
-        </h2>
-        <p class="label-caption mt-2 text-text-muted">{{ colony.curveCaption() }}</p>
-      </div>
-
-      <app-line-chart
-        [ariaLabel]="'colony.curve.title' | translate"
-        [pointLabel]="'colony.curve.axis' | translate"
-        [series]="curveSeries()"
-        [summary]="colony.curveCaption()"
-        [xAxisLabel]="'colony.curve.axis' | translate"
-        [yAxisLabel]="'colony.population' | translate"
-      />
-
-      <!-- The days the town changed name, so a step in the curve reads as a Monday's materials
-           rather than as a good week. -->
-      @if (colony.milestoneLabels().length > 0) {
-        <ul class="flex flex-col gap-2">
-          @for (milestone of colony.milestoneLabels(); track milestone) {
-            <li
-              class="label-caption border-l-2 border-l-brand-500/60 bg-text-primary/3 px-3 py-2 text-text-secondary"
-            >
-              {{ milestone }}
-            </li>
-          }
-        </ul>
-      }
-    </app-drawer>
-  }
 
   @if (selectedNode(); as node) {
     <app-boss-detail

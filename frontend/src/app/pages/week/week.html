@@ -12,10 +12,6 @@
 </app-page-header>
 
 <div class="page-body">
-  <app-section-label
-    [label]="'overview.weeklyChallenges.totalPotential' | translate: { damage: totalDamage() }"
-  />
-
   <app-resource-state
     (retry)="reload()"
     [emptyText]="'overview.weeklyChallenges.empty' | translate"
@@ -25,6 +21,44 @@
     [isLoading]="isLoading()"
     [loadingText]="'overview.weeklyChallenges.loading' | translate"
   >
+    <!-- Section rule: same header treatment as the challenges section below, so the page reads as
+         two named blocks (the fight, then the draw) rather than a boss card dropped in unlabeled
+         above a titled one. -->
+    @if (boss(); as boss) {
+      <div class="flex items-center gap-3">
+        <h2
+          class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
+        >
+          {{ 'week.bossSection.title' | translate }}
+        </h2>
+        <span
+          aria-hidden="true"
+          class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
+        ></span>
+        <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
+      </div>
+
+      <!-- The boss: the same hero-card treatment the accueil's own boss card carries — the fight
+           now lives in `BossFightCard`, shared with the accueil's "La semaine" block, rather than
+           written out twice. -->
+      <app-boss-fight-card />
+    }
+
+    <!-- Section rule: the same header treatment the accueil's boss card used to open on, carried
+         over to introduce the five challenges below the fight. -->
+    <div class="flex items-center gap-3">
+      <h2
+        class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
+      >
+        {{ 'week.challengesSection.title' | translate }}
+      </h2>
+      <span
+        aria-hidden="true"
+        class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
+      ></span>
+      <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
+    </div>
+
     <!-- Skeleton mirroring the loaded board, so data arriving does not shift the page. -->
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2" skeleton>
       @for (placeholder of skeletonRows; track $index) {
@@ -98,7 +132,7 @@
                 {{ 'overview.weeklyChallenges.damageLabel' | translate }}
               </span>
               <span
-                class="font-display mt-1.5 block text-2xl leading-none font-bold text-brand-500 tabular-nums sm:text-3xl"
+                class="font-display mt-1.5 block text-2xl leading-none font-bold text-accent-gold tabular-nums sm:text-3xl"
               >
                 {{ row.damage }}
               </span>
@@ -107,32 +141,23 @@
                  is already shown in the overview's team progress breakdown, so it is not repeated
                  here. -->
               @if (row.squadMultiplier; as multiplier) {
-                <span class="label-caption mt-1.5 block text-brand-500 tabular-nums">
+                <span class="label-caption mt-1.5 block text-accent-gold tabular-nums">
                   {{ multiplier }}
                 </span>
               }
-              <span class="label-caption mt-1.5 block text-text-muted">
-                <span aria-hidden="true">→</span>
-                {{ 'overview.weeklyChallenges.damageDestination' | translate }}
-              </span>
             </p>
 
-            <!-- Gold, like the materials figure on every other screen — the campaign's own tile and
-                 the boss rewards both read in that colour, and this card was the only place they
-                 wore the brand's. -->
-            <p class="min-w-0 text-right xl:border-t xl:border-text-primary/10 xl:pt-3">
-              <span class="label-caption flex items-center justify-end gap-1 text-text-muted">
-                <svg aria-hidden="true" class="size-3 shrink-0 text-accent-gold" lucideHammer></svg>
-                {{ 'colony.materials' | translate }}
-              </span>
+            <!-- Cyan, like the materials figure on every other screen — the campaign's own tile and
+                 the boss rewards both read in that colour. Icon stands in for the "Matériaux"
+                 label, so the figure sits right beside it instead of below a caption. -->
+            <p
+              class="flex min-w-0 items-center justify-end gap-1.5 xl:border-t xl:border-text-primary/10 xl:pt-3"
+            >
+              <svg aria-hidden="true" class="size-4 shrink-0 text-accent-cyan" lucideHammer></svg>
               <span
-                class="font-display mt-1.5 block text-lg leading-none font-bold text-accent-gold tabular-nums"
+                class="font-display text-lg leading-none font-bold text-accent-cyan tabular-nums"
               >
                 +{{ row.materials }}
-              </span>
-              <span class="label-caption mt-1.5 block text-text-muted">
-                <span aria-hidden="true">→</span>
-                {{ 'overview.weeklyChallenges.materialsDestination' | translate }}
               </span>
             </p>
           </div>
@@ -140,7 +165,9 @@
       }
 
       <!-- Sixth cell of the board: what happens when the countdown runs out. Dashed rather than
-         solid, since it is the one slot on the grid that is not a challenge to clear. -->
+         solid, since it is the one slot on the grid that is not a challenge to clear. Kept in the
+         grid rather than moved to a full-width band below it — the validated mock-up corrects
+         design-review.md's own prose here. -->
       @if (nextDrawDate(); as nextDrawDate) {
         <div
           class="notch-tr notch-tr-edge flex min-h-40 flex-col justify-center gap-3 border border-dashed border-brand-500/30 bg-surface-sunken/45 p-4 [--notch:1rem] sm:p-6"
@@ -159,5 +186,79 @@
         </div>
       }
     </div>
+
+    <!-- The rest of the pool: every enabled challenge Monday's draw did not pick this week —
+         folded away by default, since it lists dozens of entries against the five cards above. -->
+    @if (catalogueRows().length > 0) {
+      <details class="group border border-text-primary/15 bg-text-primary/4">
+        <summary
+          class="focus-ring-inset flex cursor-pointer items-center gap-2.5 px-4 py-3 font-mono text-xs tracking-wide text-text-secondary uppercase [&::-webkit-details-marker]:hidden"
+        >
+          <svg
+            aria-hidden="true"
+            class="size-3.5 shrink-0 text-brand-400 transition-transform group-open:rotate-90"
+            lucideChevronRight
+          ></svg>
+          {{ 'week.catalogue.title' | translate }}
+        </summary>
+
+        <div class="border-t border-text-primary/10 p-3">
+          <p class="px-1 pb-3 text-sm text-text-muted">
+            {{ 'week.catalogue.hint' | translate }}
+          </p>
+
+          <ul class="flex flex-col gap-2">
+            @for (row of catalogueRows(); track row.id) {
+              <li
+                class="notch-tr flex items-center gap-3 border border-text-primary/10 bg-text-primary/4 px-3 py-2.5 [--notch:0.5rem]"
+              >
+                <span
+                  [class]="row.visual.barClass"
+                  aria-hidden="true"
+                  class="clip-hex relative h-9 w-8 shrink-0"
+                >
+                  <span
+                    [class]="row.visual.iconClass"
+                    class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-sm leading-none font-bold"
+                  >
+                    {{ row.visual.tier }}
+                  </span>
+                </span>
+
+                <span class="min-w-0 flex-1">
+                  <span class="font-display block truncate text-sm font-semibold text-text-primary">
+                    {{ row.name }}
+                  </span>
+                  <span class="block truncate text-xs text-text-muted">{{ row.description }}</span>
+                </span>
+
+                <span class="flex shrink-0 items-center gap-4 text-right">
+                  <span>
+                    <span class="label-caption block text-text-muted">
+                      {{ 'overview.weeklyChallenges.damageLabel' | translate }}
+                    </span>
+                    <span
+                      class="font-display block text-sm font-bold text-accent-gold tabular-nums"
+                    >
+                      {{ row.damage }}
+                    </span>
+                  </span>
+                  <span>
+                    <span class="label-caption block text-text-muted">
+                      {{ 'colony.materials' | translate }}
+                    </span>
+                    <span
+                      class="font-display block text-sm font-bold text-accent-cyan tabular-nums"
+                    >
+                      +{{ row.materials }}
+                    </span>
+                  </span>
+                </span>
+              </li>
+            }
+          </ul>
+        </div>
+      </details>
+    }
   </app-resource-state>
 </div>

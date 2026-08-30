@@ -1,7 +1,8 @@
-import { HttpClient, httpResource } from '@angular/common/http';
-import { inject, Service } from '@angular/core';
+import { httpResource, HttpClient, HttpResourceRef } from '@angular/common/http';
+import { inject, Service, Signal } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
 
+import { PageResponse } from '@core/http/page-response.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
 import { ADMIN_KEY_HEADER } from './admin-session.constants';
@@ -12,8 +13,16 @@ import {
   AdminPlayerDeletionResult,
   AdminPlayerStatus,
   AdminPlayerUpdateRequest,
+  CampaignAdmin,
+  CampaignRun,
+  SynchronizationDetails,
   SynchronizationExecution,
 } from './admin.model';
+
+/**
+ * Executions requested per page of the synchronization history.
+ */
+const SYNCHRONIZATION_HISTORY_PAGE_SIZE = 10;
 
 /**
  * Data-access service for the administration API.
@@ -56,6 +65,58 @@ export class AdminApi {
   public readonly latestSynchronization = httpResource<SynchronizationExecution>(() =>
     this.session.isAuthenticated() ? API_ENDPOINTS.admin.latestSynchronization : undefined,
   );
+
+  /**
+   * The campaign's lifecycle: the run in progress if there is one, every closed run, and the
+   * automatic-renewal setting. Gated on the session like {@link players}.
+   */
+  public readonly campaigns = httpResource<CampaignAdmin>(() =>
+    this.session.isAuthenticated() ? API_ENDPOINTS.admin.campaigns : undefined,
+  );
+
+  /**
+   * A page of past synchronization executions, most recent first.
+   *
+   * Created per caller since it is parameterized by the requested page — the same arrangement
+   * `MatchesApi.history` uses for a player's own match history.
+   *
+   * @param page - Reactive zero-based page index.
+   * @returns The reactive resource fetching the requested page of synchronization history.
+   */
+  public synchronizationHistory(
+    page: Signal<number>,
+  ): HttpResourceRef<PageResponse<SynchronizationExecution> | undefined> {
+    return httpResource<PageResponse<SynchronizationExecution>>(() =>
+      this.session.isAuthenticated()
+        ? {
+            url: API_ENDPOINTS.admin.synchronizationHistory,
+            params: { page: page(), size: SYNCHRONIZATION_HISTORY_PAGE_SIZE },
+          }
+        : undefined,
+    );
+  }
+
+  /**
+   * One synchronization execution with its per-player outcomes.
+   *
+   * Created per caller, like {@link synchronizationHistory}: a history row expanded to read what
+   * happened to each player, fetched only once a reader actually opens it.
+   *
+   * @param synchronizationId - Reactive internal synchronization identifier, or `null` while
+   * nothing is open.
+   * @returns The reactive resource fetching the requested execution's details.
+   */
+  public synchronizationDetails(
+    synchronizationId: Signal<number | null>,
+  ): HttpResourceRef<SynchronizationDetails | undefined> {
+    return httpResource<SynchronizationDetails>(() => {
+      const id = synchronizationId();
+
+      return this.session.isAuthenticated() && id !== null
+        ? API_ENDPOINTS.admin.synchronization(id)
+        : undefined;
+    });
+  }
 
   /**
    * Verifies an administrator key against the backend.
@@ -185,6 +246,34 @@ export class AdminApi {
   }
 
   /**
+   * Switches automatic renewal on or off.
+   *
+   * @param enabled - Whether the weekly rollover may open a new run on its own.
+   * @returns A promise that resolves once the setting is applied.
+   */
+  public async setCampaignAutoRenew(enabled: boolean): Promise<void> {
+    await this.mutate(this.http.patch(API_ENDPOINTS.admin.campaignAutoRenew, { enabled }));
+  }
+
+  /**
+   * Starts a new campaign today.
+   *
+   * @returns A promise that resolves with the started run.
+   */
+  public async startCampaign(): Promise<CampaignRun> {
+    return this.mutate(this.http.post<CampaignRun>(API_ENDPOINTS.admin.campaignStart, null));
+  }
+
+  /**
+   * Stops the campaign in progress today, freezing its score at today.
+   *
+   * @returns A promise that resolves with the stopped run.
+   */
+  public async stopCampaign(): Promise<CampaignRun> {
+    return this.mutate(this.http.post<CampaignRun>(API_ENDPOINTS.admin.campaignStop, null));
+  }
+
+  /**
    * Refetches every administration resource.
    *
    * A command is a `POST`/`PUT`/`PATCH`/`DELETE` sent beside the resources, so nothing they depend
@@ -195,6 +284,7 @@ export class AdminApi {
   public refresh(): void {
     this.players.reload();
     this.latestSynchronization.reload();
+    this.campaigns.reload();
   }
 
   /**

@@ -114,6 +114,14 @@ export interface ColonyPresence {
   readonly present: number;
   readonly rosterSize: number;
   readonly multiplier: number;
+
+  /**
+   * What the multiplier would be with one more player counted, capped at the roster size. Equal to
+   * {@link multiplier} once the roster is full — a UI reading it should treat equality as "no next
+   * step to reach" rather than compute the next step itself.
+   */
+  readonly nextMultiplier: number;
+
   readonly threshold: number;
   readonly players: readonly ColonyPresencePlayer[];
 }
@@ -300,11 +308,15 @@ export interface ColonyTrajectory {
 export interface ColonyRunHistory {
   readonly runNumber: number;
   readonly firstDay: string;
-  readonly settlementDay: string;
 
   /**
-   * The run's score: the population of its settlement day, once the tenth week's materials and boss
-   * have been credited.
+   * The run's final day: its settlement day for a run that ran its full course, or the day an
+   * operator stopped it early.
+   */
+  readonly finalDay: string;
+
+  /**
+   * The run's score: the population of {@link finalDay}.
    */
   readonly finalPopulation: number;
   readonly peakPopulation: number;

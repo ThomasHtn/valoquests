@@ -69,6 +69,22 @@ export function formatMultiplier(value: number, language: 'fr' | 'en'): string {
 }
 
 /**
+ * Formats a gauge difference with its sign always shown (`+0,27`, `-1,04`).
+ *
+ * Distinct from {@link formatEfficiencyGain}: a gain from one boss is never negative, but a
+ * difference between two campaigns' own efficiency can go either way.
+ *
+ * @param value - The difference to format.
+ * @param language - The app language whose decimal separator to use.
+ * @returns The signed difference, at two decimals.
+ */
+export function formatSignedGauge(value: number, language: 'fr' | 'en'): string {
+  const sign = value > 0 ? '+' : '';
+
+  return `${sign}${formatGauge(value, language)}`;
+}
+
+/**
  * Formats an efficiency gain as the addition it is to the base rate (`+0,27`).
  *
  * A boss's materials raise `efficiency` by this amount permanently — they add to the rate rather

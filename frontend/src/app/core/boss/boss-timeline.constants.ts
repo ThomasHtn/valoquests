@@ -148,3 +148,112 @@ const BOSS_TIMELINE_BAR_LABEL_KEYS: Readonly<Record<BossTimelineNodeStatus, stri
 export function resolveBossHpBarLabelKey(status: BossTimelineNodeStatus): string {
   return BOSS_TIMELINE_BAR_LABEL_KEYS[status];
 }
+
+/**
+ * Visual treatment of one territory hexagon on the campaign card, split across the two layers it
+ * is drawn with — see `TILE_INNER_SCALE` for how the outline is drawn, and `TERRITORY_FILL_CLASS`
+ * for the ground they share.
+ */
+export interface BossTerritoryTier {
+  /**
+   * Background of the outer hexagon, read as the territory's outline — and, the tiles being
+   * hollow, the whole of what the state is told with.
+   */
+  readonly ringClass: string;
+
+  /**
+   * Color of the outcome icon carved into the hexagon.
+   */
+  readonly iconClass: string;
+
+  /**
+   * Utilities for the halo hexagon layered behind the tile, empty for every status but the week
+   * currently being fought.
+   */
+  readonly haloClass: string;
+
+  /**
+   * Background of the layer rising inside the hexagon in proportion to the damage dealt, so a
+   * territory visibly fills up as the group takes it.
+   */
+  readonly damageFillClass: string;
+
+  /**
+   * Text colour tinting the shockwave expanding out of the tile, and the crest riding on its fill
+   * — both take theirs from `currentColor`. Empty on every status but the week being fought, which
+   * is the only tile whose numbers are still moving.
+   */
+  readonly liveAccentClass: string;
+}
+
+/**
+ * Territory treatment indexed by week status.
+ *
+ * An outcome vocabulary, not a chronological one: green for ground taken, red for a week the boss
+ * held, the direction's amber for the fight running right now, bare surface for ground nobody has
+ * reached yet.
+ */
+const BOSS_TERRITORY_TIERS: Readonly<Record<BossTimelineNodeStatus, BossTerritoryTier>> = {
+  defeated: {
+    ringClass: 'bg-success',
+    iconClass: 'text-success',
+    haloClass: '',
+    damageFillClass: 'bg-brand-500/28',
+    liveAccentClass: '',
+  },
+  survived: {
+    ringClass: 'bg-danger',
+    iconClass: 'text-danger',
+    haloClass: '',
+    damageFillClass: 'bg-text-primary/10',
+    liveAccentClass: '',
+  },
+  current: {
+    ringClass: 'bg-brand-500',
+    iconClass: 'text-brand-500',
+    haloClass: 'bg-brand-500/16',
+    damageFillClass: 'bg-brand-500/28',
+    liveAccentClass: 'text-brand-500/40',
+  },
+  upcoming: {
+    ringClass: 'bg-surface-600',
+    iconClass: 'text-text-muted',
+    haloClass: '',
+    damageFillClass: '',
+    liveAccentClass: '',
+  },
+};
+
+/**
+ * Resolves the visual treatment of a week's territory.
+ *
+ * @param status - The week's outcome/state.
+ * @returns The tier to render the hexagon with.
+ */
+export function resolveBossTerritoryTier(status: BossTimelineNodeStatus): BossTerritoryTier {
+  return BOSS_TERRITORY_TIERS[status];
+}
+
+/**
+ * Fraction the inner hexagon is scaled down to, which is what draws a tile's outline — see
+ * {@link BossTerritoryTier.ringClass}. Scaling rather than insetting keeps a constant border width
+ * all the way around a `clip-hex` shape, whatever the tile's size.
+ */
+export const TILE_INNER_SCALE = 0.95;
+
+/**
+ * Same construction as {@link TILE_INNER_SCALE}, for the legend's much smaller sample hexagons.
+ */
+export const LEGEND_INNER_SCALE = 0.84;
+
+/**
+ * Ground inside every territory hexagon, tiles and legend samples alike — a territory is read by
+ * its outline, not by a tint of the state's colour.
+ */
+export const TERRITORY_FILL_CLASS = 'bg-surface-950';
+
+/**
+ * Treatment of the neutral ground framing the row of territories at each end — a veil over the
+ * page's own ground, drawn by the `hex-terrain` utility.
+ */
+export const TERRAIN_RING_CLASS = 'bg-text-primary/8';
