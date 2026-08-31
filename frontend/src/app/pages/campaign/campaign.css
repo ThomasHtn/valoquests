@@ -72,11 +72,13 @@
 }
 
 /* The plot runs under the figure and bleeds to the block's own edges: a chart with a gutter around
-   it is a picture of a chart. */
+   it is a picture of a chart.
+   Height is fixed rather than flexed: `.cv` has no bounded height of its own, so a flexed child
+   with a percentage-height SVG inside it falls back to the SVG's viewBox ratio (1000:260) stretched
+   to the card's full width — a ~360px box instead of the intended strip, mostly empty. */
 .cv-plot {
   position: relative;
-  flex: 1;
-  min-height: 9rem;
+  height: 9rem;
   margin: -2.25rem -20px 0;
 }
 
@@ -86,8 +88,10 @@
   height: 100%;
 }
 
+/* Darker than the card, not lighter: the days not yet lived recede like the priced shelves do
+   (`--sunk`), instead of glowing faintly brighter than the curve that is actually there. */
 .cv-todo-band {
-  fill: rgb(236 232 225 / 3%);
+  fill: var(--sunk);
 }
 
 .cv-grid line {
@@ -167,7 +171,7 @@
 /* On a phone the plot has no room to slide under the figure, and the two run into each other. */
 @media (width < 46rem) {
   .cv-plot {
-    min-height: 8.5rem;
+    height: 8.5rem;
     margin-top: 12px;
   }
 

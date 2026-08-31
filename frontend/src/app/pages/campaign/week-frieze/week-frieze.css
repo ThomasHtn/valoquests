@@ -248,9 +248,18 @@
   margin-top: 1.6rem;
 }
 
+/* The week being fought carries a bigger marker and a halo, so its stem is shorter and starts
+   further out — on whichever side of the rail its rank in the run puts it. */
 .fw--now .fw-stem {
-  height: 1.1rem;
-  margin-top: 2.3rem;
+  height: 1.5rem;
+}
+
+.fw--now.fw--up .fw-stem {
+  margin-bottom: 2.6rem;
+}
+
+.fw--now.fw--down .fw-stem {
+  margin-top: 2.6rem;
 }
 
 /* ── Milestone cards ───────────────────────────────────────────────────────────────────────── */
@@ -281,9 +290,20 @@
   top: calc(50% + 3.3rem);
 }
 
+/* The week being fought hangs its card on the side its rank gives it, like every other week — only
+   further from the rail, to clear the bigger marker and its halo. Anchoring it to `top` on a cell
+   the alternation put above the rail left `bottom` from `.fw--up` in place: two opposite offsets on
+   one absolute box resolve to a card of zero height, and drop it onto its neighbour. */
 .fw--now .fzc {
-  top: calc(50% + 4.1rem);
   width: 12rem;
+}
+
+.fw--now.fw--up .fzc {
+  bottom: calc(50% + 4.1rem);
+}
+
+.fw--now.fw--down .fzc {
+  top: calc(50% + 4.1rem);
 }
 
 .is-defeated .fzc {
@@ -434,6 +454,13 @@
   font-family: var(--font-display);
   font-style: normal;
   letter-spacing: 0;
+}
+
+/* The card has no bottom padding because the shelf is meant to close it. A week that priced nothing
+   yet has no shelf, so its last line needs the foot the shelf would have given it — otherwise it
+   sits straight on the outcome filet. */
+.fzc:not(.fzc--ghost) > :last-child:not(.fzc-pay) {
+  margin-bottom: 12px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
