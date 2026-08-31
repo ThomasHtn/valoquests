@@ -272,6 +272,43 @@
     }
   },
   "campaign": {
+    "board": {
+      "title": "Le palmarès",
+      "campaign": "Campagne",
+      "threats": "Menaces",
+      "tier": "Palier atteint",
+      "score": "Score"
+    },
+    "chain": {
+      "title": "Comment la ville grandit",
+      "link": "Les règles",
+      "lever": "Levier",
+      "foodUnit": "nourriture",
+      "ceilingUnit": "nourrissables",
+      "scoreUnit": "et c'est le score",
+      "harvest": {
+        "title": "Récolte du soir",
+        "body": "Vos dégâts de la journée deviennent de la nourriture, une fois par soir.",
+        "lever": "Jouer le même jour. À {{present}} joueurs sur {{roster}} la récolte est à {{multiplier}} ; au complet, à {{max}}."
+      },
+      "stock": {
+        "body": "Sept jours de récolte, pas un de plus. Ce qui a vieilli disparaît.",
+        "lever": "Ne pas décrocher. La ville mange {{consumption}} par semaine, même les semaines où personne ne joue."
+      },
+      "efficiency": {
+        "body": "Plus la ville est bâtie, plus une même nourriture fait vivre de monde.",
+        "lever": "Les matériaux, {{materials}} à ce jour, gagnés en validant les défis et en battant les boss. L'efficacité ne redescend jamais."
+      },
+      "ceiling": {
+        "title": "Plafond nourri",
+        "body": "Réserve fois efficacité : ce que la ville peut nourrir aujourd'hui.",
+        "lever": "Le surplus : {{surplus}} restent une fois la semaine nourrie, et c'est lui qui relève le plafond."
+      },
+      "population": {
+        "body": "La population monte vers le plafond un peu chaque jour, jamais d'un coup.",
+        "lever": "Le moral, à {{morale}} : l'écart se comble de {{speed}} par jour. Un boss repoussé le remonte."
+      }
+    },
     "error": "Impossible de charger la campagne.",
     "frieze": {
       "hint": "Touchez une menace pour déplier sa semaine ici — PV restants, récompenses, top 3"
@@ -287,8 +324,19 @@
     "map": {
       "ariaLabel": "Carte des menaces sur la colonie, une par semaine de la run"
     },
+    "stand": {
+      "title": "Où en est la run",
+      "scoreLabel": "Le score de la run",
+      "remainingDays": "Il reste {{days}} jours à jouer",
+      "firstDay": "Jour 1 de la campagne"
+    },
     "territory": "Carte des menaces",
-    "title": "Campagne"
+    "title": "Campagne",
+    "weeks": {
+      "title": "Les dix semaines",
+      "link": "La semaine en cours",
+      "draw": "{{date}}"
+    }
   },
   "campaignSummary": {
     "average": "Moyenne",

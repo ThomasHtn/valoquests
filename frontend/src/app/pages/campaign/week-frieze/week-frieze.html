@@ -1,0 +1,122 @@
+<!-- Ten cells in 350px is unreadable, so the frieze keeps a usable size and the block slides.
+     `week-frieze.css` fades the trailing edge to say there is more road off-screen. -->
+<div #scroller class="fz-scroll">
+  <div class="fz">
+    <!-- Night ground, drawn once as a static field rather than as markup per star. -->
+    <svg aria-hidden="true" class="fz-stars" preserveAspectRatio="none" viewBox="0 0 1000 400">
+      @for (star of stars; track $index) {
+        <circle [attr.cx]="star.x" [attr.cy]="star.y" [attr.r]="star.r" [attr.opacity]="star.o" />
+      }
+    </svg>
+
+    <!-- The rail: straight, and split at the week being fought — solid behind, dotted ahead.
+         Ten cells of equal width put marker i at (i + 0.5) × 10 %, which is where the two
+         halves meet. -->
+    <span [style.--rail-split.%]="railSplitPercentage()" aria-hidden="true" class="fz-rail"></span>
+
+    <ol [attr.aria-label]="'campaign.map.ariaLabel' | translate" class="fws">
+      @for (entry of entries(); track entry.node.id; let index = $index) {
+        @let node = entry.node;
+
+        <li
+          [class.fw--down]="index % 2 === 1"
+          [class.fw--now]="node.status === 'current'"
+          [class.fw--up]="index % 2 === 0"
+          [class]="'fw is-' + node.status"
+          [style.animation-delay]="landingDelay(index)"
+        >
+          @if (node.status === 'current') {
+            <span aria-hidden="true" class="fz-halo"></span>
+          }
+
+          <button
+            (click)="selected.emit(node)"
+            [attr.aria-expanded]="node.id === selectedId()"
+            [attr.aria-label]="
+              (node.weekLabel ? node.weekLabel + ' · ' : '') +
+              node.bossName +
+              ' · ' +
+              node.statusLabel
+            "
+            class="hex focus-ring"
+            type="button"
+          >
+            <span aria-hidden="true" class="hex-ring"></span>
+            <span aria-hidden="true" class="hex-in">
+              <!-- Ground gained: the surface fills from the bottom as the boss takes damage,
+                   so a week reads as taken, contested or untouched at a glance. -->
+              @if (node.damagePercentage > 0) {
+                <span [style.height.%]="node.damagePercentage" class="hex-fill"></span>
+              }
+
+              <span class="hex-mark">
+                @switch (node.status) {
+                  @case ('defeated') {
+                    <svg lucideCheck></svg>
+                  }
+                  @case ('survived') {
+                    <svg lucideX></svg>
+                  }
+                  @case ('current') {
+                    <svg lucideSkull></svg>
+                  }
+                  @default {
+                    <svg lucideLock></svg>
+                  }
+                }
+              </span>
+            </span>
+          </button>
+
+          <span aria-hidden="true" class="fw-stem"></span>
+
+          <!-- A milestone card, not a table row: fixed width, hung on its own marker, and
+               lined up with nothing two cells over. Alternating above and below the rail is
+               what keeps ten of them from reading as a table. -->
+          @if (node.status === 'upcoming') {
+            <span class="fzc fzc--ghost">
+              <span class="fzc-w">{{ node.weekLabel }}</span>
+              @if (node.dateRangeLabel; as dateRangeLabel) {
+                <b class="fzc-n">
+                  {{ 'campaign.weeks.draw' | translate: { date: dateRangeLabel } }}
+                </b>
+              }
+            </span>
+          } @else {
+            <span class="fzc">
+              <span class="fzc-w">
+                {{ node.weekLabel }}
+                @if (node.dateRangeLabel) {
+                  · {{ node.dateRangeLabel }}
+                }
+              </span>
+              <b class="fzc-n">{{ node.bossName }}</b>
+
+              @if (node.status === 'current') {
+                <span class="fzc-bar"><i [style.width.%]="node.hpPercentage"></i></span>
+                <span class="fzc-barl">{{ node.hpLabel }} · {{ node.hpPercentageLabel }}</span>
+              } @else {
+                <span class="fzc-o">{{ node.statusLabel }}</span>
+              }
+
+              @if (entry.boss; as boss) {
+                <span class="fzc-pay">
+                  @if (boss.materialsLabel) {
+                    <span>
+                      <i class="text-accent-cyan">+{{ boss.materialsLabel }}</i>
+                      {{ 'colony.materials' | translate }}
+                    </span>
+                  }
+                  <span>
+                    <i [class]="moraleColorClass(boss)">{{ boss.moraleLabel }}</i>
+                    {{ 'colony.track.morale.name' | translate }}
+                  </span>
+                </span>
+              }
+            </span>
+          }
+        </li>
+      }
+    </ol>
+  </div>
+</div>

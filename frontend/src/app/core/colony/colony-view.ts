@@ -12,6 +12,7 @@ import {
   formatPopulation,
   formatSignedPopulation,
   formatSignedShare,
+  formatShare,
 } from './colony-format.utils';
 import {
   FOOD_SEGMENT_EMPTY_COLOR,
@@ -22,6 +23,7 @@ import {
   PRESENCE_PIP_PARTIAL_CLASS,
 } from './colony-gauge.utils';
 import { tierGlyphFor, tierShareOfGain, tierStepFor } from './colony-tier.utils';
+import { buildRunCurve, RunCurveView } from './run-curve.utils';
 import {
   Colony,
   ColonyPresencePlayer,
@@ -553,6 +555,68 @@ export class ColonyView {
   });
 
   /**
+   * Tonight's harvest so far, already formatted — the first link of the chain the campaign page
+   * spells the economy out with.
+   */
+  public readonly todayHarvestLabel = computed<string>(
+    () => this.foodDays().find((day) => day.isToday)?.harvestLabel ?? '—',
+  );
+
+  /**
+   * How many inhabitants the reserve can feed at today's efficiency, already formatted.
+   */
+  public readonly feedableLabel = computed<string>(() =>
+    this.grouped((colony) => colony.feedablePopulation),
+  );
+
+  /**
+   * Share of the gap to the ceiling the population closes each day, set by morale — the lever
+   * under the chain's last link.
+   */
+  public readonly catchUpLabel = computed<string>(() => {
+    const colony = this.colony();
+    return colony === null
+      ? ''
+      : formatShare(colony.morale.growthPercentPerNight, this.translation.language());
+  });
+
+  /**
+   * The run's population curve, resolved into the paths, ticks and markers the campaign page draws.
+   *
+   * Its own view rather than the shared chart component's series: the plot has to show the days not
+   * lived yet under a veil, mark today, and pin each ladder step to the line at the day it was
+   * crossed — none of which a chart of values knows about, and all of which are what make the curve
+   * say how far into the run the squad is.
+   */
+  public readonly runCurve = computed<RunCurveView | null>(() => {
+    const trajectory = this.trajectory();
+    if (trajectory === null) {
+      return null;
+    }
+
+    return buildRunCurve(
+      trajectory.points,
+      trajectory.milestones,
+      trajectory.runDayCount,
+      (milestone) => this.tierName(milestone),
+    );
+  });
+
+  /**
+   * Days of the run still to play, or `null` before the trajectory resolves — the caption on the
+   * veiled half of the curve.
+   */
+  public readonly remainingDays = computed<number | null>(() => {
+    const trajectory = this.trajectory();
+    if (trajectory === null || trajectory.points.length === 0) {
+      return null;
+    }
+
+    const lastDay = trajectory.points[trajectory.points.length - 1].runDay;
+    return Math.max(0, trajectory.runDayCount - lastDay);
+  });
+
+  /**
    * Every run, the one in progress first, then the closed ones from the latest to the first.
    */
   public readonly runs = computed<readonly ColonyRunView[]>(() => {
@@ -875,6 +939,8 @@ export class ColonyView {
       }),
       statusLabel: this.translation.translate('colony.history.status.current'),
       finalLabel: formatPopulation(colony.population, this.translation.language()),
+      bossesLabel: this.bossesLabel(),
+      tierLabel: this.tierName(colony.tier),
     };
   }
 
@@ -895,6 +961,8 @@ export class ColonyView {
       }),
       statusLabel: this.translation.translate('colony.history.status.closed'),
       finalLabel: formatPopulation(run.finalPopulation, this.translation.language()),
+      bossesLabel: `${run.defeatedBosses} / ${run.bossCount}`,
+      tierLabel: this.tierName(run.tier),
     };
   }
 

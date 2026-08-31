@@ -1,80 +1,32 @@
-import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import {
-  LucideArrowDown,
-  LucideCheck,
-  LucideGauge,
-  LucideHammer,
-  LucideLock,
-  LucideMagnet,
-  LucidePackage,
-  LucideSkull,
-  LucideSwords,
-  LucideTrendingUp,
-  LucideUserCheck,
-  LucideUsers,
-  LucideWheat,
-  LucideX,
-} from '@lucide/angular';
+import { LucideGauge, LucidePackage, LucideUsers, LucideWheat } from '@lucide/angular';
 
 import { BossCampaign } from '@core/boss/boss-campaign';
-import {
-  BossTimelineNodeStatus,
-  LEGEND_INNER_SCALE,
-  resolveBossTerritoryTier,
-  TERRAIN_RING_CLASS,
-  TERRITORY_FILL_CLASS,
-  TILE_INNER_SCALE,
-} from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
-import {
-  resolveBossCategoryColorClass,
-  resolveBossNumberLabel,
-} from '@core/boss/boss-visual.utils';
-import { BossCategory } from '@core/boss/boss.model';
 import { ColonyView } from '@core/colony/colony-view';
-import { ColonyBossView } from '@core/colony/colony-view.model';
 import { resolveColonyDeltaColorClass } from '@core/colony/colony-visual.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { Translation } from '@core/i18n/translation';
-import { ColonyCard, ColonyCardFormulaRow } from './colony-card/colony-card';
 import { PageHeader } from '@layout/page-header/page-header';
-import { BarChart } from '@shared/chart/bar-chart';
-import { resolveSeriesColor } from '@shared/chart/chart-theme';
-import { ChartBar, ChartSeries } from '@shared/chart/chart.model';
-import { LineChart } from '@shared/chart/line-chart';
+import { LadderStrip } from '@shared/ladder-strip/ladder-strip';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { TOOLTIP_SURFACE_CLASS } from '@shared/tooltip/tooltip.constants';
 import { BossDetail } from './boss-detail/boss-detail';
+import { WeekFrieze, WeekFriezeEntry } from './week-frieze/week-frieze';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 
 /**
- * One week's territory tile, joined with what its fight is worth the colony — the row's job is to
- * place a week beside its neighbours, not to restate the colony's own view model field by field.
- */
-interface CampaignMapEntry {
-  readonly node: BossTimelineNode;
-  readonly boss: ColonyBossView | null;
-}
-
-/**
- * Bare terrain tiles framing the row of territories at each end, echoing the earlier serpentine
- * map's own field extending past both ends of its path — just horizontal now, and one tile deep
- * rather than a whole row.
- */
-const LEAD_TERRAIN_TILES = 1;
-const TRAIL_TERRAIN_TILES = 1;
-
-/**
- * Campaign page: the run told as one screen, at rest — the card of its ten weeks, the population
- * curve that card feeds, the economy behind it, then every campaign before this one.
+ * Campaign page: the run told as one screen, at rest.
  *
- * The card's own territory tiles (ring, halo, damage fill, outcome icon) are the earlier
- * serpentine honeycomb map's, unchanged — only the path is gone, the ten weeks now standing in one
- * straight row rather than snaking down the page. A tile click unfolds that week's panel flush
- * under the card, and clicking it again folds it back; the page stands with no panel at rest, and
- * the panel never covers the row it was opened from, which is what a modal drawer did.
+ * The ten weeks hang off a straight rail as milestones, alternating above and below it — solid
+ * behind the week being fought, dotted ahead of it, and that week's own marker larger than the
+ * nine others. A marker click unfolds its week's panel flush under the frieze and clicking it again
+ * folds it back; the page stands with no panel at rest.
+ *
+ * Under it, the run read two ways it cannot be read anywhere else: its population curve with the
+ * days still to play under a veil, and the ladder the whole economy climbs. Then the economy
+ * spelled out as the chain it is, and the scoreboard of every campaign. What the week's own fight
+ * is worth belongs to the drawer a marker opens, and is not restated beside it.
  */
 @Component({
   selector: 'app-campaign',
@@ -82,29 +34,18 @@ const TRAIL_TERRAIN_TILES = 1;
     TranslatePipe,
     BossDetail,
     ResourceState,
-    NgOptimizedImage,
-    ColonyCard,
-    BarChart,
-    LineChart,
+    LadderStrip,
+    WeekFrieze,
     NgTemplateOutlet,
     RouterLink,
-    LucideArrowDown,
-    LucideCheck,
     LucideGauge,
-    LucideHammer,
-    LucideLock,
-    LucideMagnet,
     LucidePackage,
-    LucideSkull,
-    LucideSwords,
-    LucideTrendingUp,
-    LucideUserCheck,
     LucideUsers,
     LucideWheat,
-    LucideX,
     PageHeader,
   ],
   templateUrl: './campaign.html',
+  styleUrl: './campaign.css',
   host: { class: PAGE_LAYOUT_CLASS },
   providers: [BossCampaign, ColonyView],
 })
@@ -121,26 +62,18 @@ export class Campaign {
   protected readonly colony = inject(ColonyView);
 
   /**
-   * Names the plotted line, the one label the page resolves itself rather than reading off a view
-   * model.
-   */
-  private readonly translation = inject(Translation);
-
-  /**
    * Week asked for in the URL as `?week=YYYY-MM-DD`, or `null` when the page was opened plain.
    *
    * Read once from the snapshot rather than followed reactively, the same restraint
    * `Leaderboard.requestedWeekStart` takes: this is a deep link from a closed week's own row on
-   * `/leaderboard`, and the reader's own clicks take over from the moment they touch a node.
+   * `/leaderboard`, and the reader's own clicks take over from the moment they touch a marker.
    */
   private readonly requestedWeekStart = inject(ActivatedRoute).snapshot.queryParamMap.get('week');
 
   /**
    * Id of the node whose detail panel is open, `null` while explicitly closed, or `undefined`
-   * while the reader has not touched a node yet — the card's resting state, and the one a
-   * reviewer should judge as the page's normal look. Left `undefined` rather than defaulting to
-   * `null` outright so {@link selectedNode} can still fall back to {@link requestedWeekStart} once,
-   * without a click or a close ever being undone by that same fallback.
+   * while the reader has not touched a marker yet — the frieze's resting state, and the one a
+   * reviewer should judge as the page's normal look.
    */
   private readonly selectedNodeId = signal<string | null | undefined>(undefined);
 
@@ -154,116 +87,17 @@ export class Campaign {
   protected readonly hasError = computed(() => this.campaign.hasError() || this.colony.hasError());
 
   /**
-   * The ten weeks of the card's territory row, oldest first, each joined with what its fight is
-   * worth the colony. The two are the same ten weeks, joined on the run week each of them carries
-   * — never on their position in the list, which a week that closed without a fight would shift.
+   * The ten weeks of the frieze, oldest first, each joined with what its fight is worth the colony.
+   * The two are the same ten weeks, joined on the run week each of them carries — never on their
+   * position in the list, which a week that closed without a fight would shift.
    */
-  protected readonly nodesWithBoss = computed<readonly CampaignMapEntry[]>(() => {
+  protected readonly nodesWithBoss = computed<readonly WeekFriezeEntry[]>(() => {
     const bossByRunWeek = new Map(this.colony.bosses().map((boss) => [boss.weekIndex, boss]));
 
     return this.campaign.nodes().map((node) => ({
       node,
       boss: bossByRunWeek.get(node.runWeekIndex) ?? null,
     }));
-  });
-
-  /**
-   * The run's population as one plotted line, day by day.
-   *
-   * A line rather than a column per day: the curve is read for its slope — a step up is a building
-   * going up, a sag is a quiet week — and a run is seventy-one days long, which is more bars than a
-   * panel this size can seat.
-   */
-  protected readonly curveSeries = computed<readonly ChartSeries[]>(() => {
-    const curve = this.colony.curve();
-    if (curve.length === 0) {
-      return [];
-    }
-
-    return [
-      {
-        label: this.translation.translate('colony.population'),
-        color: resolveSeriesColor(0),
-        points: curve.map((bar) => bar.value),
-      },
-    ];
-  });
-
-  /**
-   * The week's harvest as one bar per day of the food window: a placeholder slot (a day not lived
-   * yet) is drawn recessive at zero, and today's own bar is highlighted since it is still the one
-   * closing at tonight's rollover.
-   */
-  protected readonly foodWeekBars = computed<readonly ChartBar[]>(() =>
-    this.colony.foodDays().map((day) => ({
-      label: day.weekdayInitial,
-      value: day.harvestValue ?? 0,
-      valueLabel: day.harvestLabel,
-      detail: day.ariaLabel,
-      highlighted: day.isToday,
-      muted: day.isPlaceholder,
-    })),
-  );
-
-  /**
-   * Sr-only prose standing in for the food bars, each day's own accessible label read in sequence
-   * — the canvas is one opaque image to assistive technology.
-   */
-  protected readonly foodWeekSummary = computed<string>(() =>
-    this.colony
-      .foodDays()
-      .map((day) => day.ariaLabel)
-      .join(', '),
-  );
-
-  /**
-   * The most recent tier the run has reached, the one line under the curve's own caption worth
-   * repeating permanently (design-review.md's mock-up keeps only the latest milestone in that
-   * caption; the full list stays available below it for every step the run took).
-   */
-  protected readonly latestMilestoneLabel = computed(() => {
-    const milestones = this.colony.milestoneLabels();
-    return milestones.length > 0 ? milestones[milestones.length - 1] : null;
-  });
-
-  /**
-   * The Food-this-week tile's own formula rows: consumption and efficiency, read a second time as
-   * the tile's own bubble.
-   */
-  protected readonly foodWeekFormulaRows = computed<readonly ColonyCardFormulaRow[]>(() => {
-    const ring = this.colony.foodRing();
-    if (ring === null) {
-      return [];
-    }
-
-    return [
-      {
-        label: this.translation.translate('colony.track.food.consumption'),
-        value: ring.consumptionLabel,
-      },
-      {
-        label: this.translation.translate('colony.track.food.efficiency'),
-        value: ring.efficiencyLabel,
-      },
-    ];
-  });
-
-  /**
-   * The Participation tile's own formula row: tonight's turnout multiplier, the same bonus row
-   * the presence hover card already states.
-   */
-  protected readonly participationFormulaRows = computed<readonly ColonyCardFormulaRow[]>(() => {
-    const battery = this.colony.battery();
-    if (battery === null) {
-      return [];
-    }
-
-    return [
-      {
-        label: this.translation.translate('colony.track.presence.bonus'),
-        value: battery.multiplierLabel,
-      },
-    ];
   });
 
   /**
@@ -287,8 +121,7 @@ export class Campaign {
   });
 
   /**
-   * Id of the week whose panel is unfolded, or `null` while none is — read by the map to mark the
-   * hexagon the panel below it came out of.
+   * Id of the week whose panel is unfolded, or `null` while none is.
    */
   protected readonly selectedId = computed(() => this.selectedNode()?.id ?? null);
 
@@ -326,61 +159,14 @@ export class Campaign {
   });
 
   /**
-   * Boss numbering, exposed to the template.
-   */
-  protected readonly bossNumberLabel = resolveBossNumberLabel;
-
-  /**
-   * Resolves a week's territory treatment, exposed to the template.
-   */
-  protected readonly territoryTier = resolveBossTerritoryTier;
-
-  /**
-   * Geometry and ground treatments the territory row shares with its legend, exposed to the
-   * template.
-   */
-  protected readonly tileInnerScale = TILE_INNER_SCALE;
-  protected readonly legendInnerScale = LEGEND_INNER_SCALE;
-  protected readonly territoryFillClass = TERRITORY_FILL_CLASS;
-  protected readonly terrainRingClass = TERRAIN_RING_CLASS;
-
-  /**
-   * Silhouette the hover card borrows from the sidebar's tooltips, so a surface floating over the
-   * page reads the same wherever it comes from.
-   */
-  protected readonly tooltipSurfaceClass = TOOLTIP_SURFACE_CLASS;
-
-  /**
-   * The four statuses the legend spells out, the two settled outcomes first, then the fight in
-   * progress and the ground beyond it.
-   */
-  protected readonly legendStatuses: readonly BossTimelineNodeStatus[] = [
-    'defeated',
-    'survived',
-    'current',
-    'upcoming',
-  ];
-
-  /**
-   * Bare terrain tiles framing the row at each end, as lists the template can iterate.
-   */
-  protected readonly leadTerrainTiles: readonly number[] = Array.from(
-    { length: LEAD_TERRAIN_TILES },
-    (_, index) => index,
-  );
-  protected readonly trailTerrainTiles: readonly number[] = Array.from(
-    { length: TRAIL_TERRAIN_TILES },
-    (_, index) => index,
-  );
-
-  /**
-   * Text color of the Arrivals tile's own figure, by the direction the night moved.
+   * Text color of the population delta, by the direction the night moved.
    */
   protected readonly deltaColorClass = resolveColonyDeltaColorClass;
 
   /**
-   * Unfolds the detail panel on one week, or folds it back when its own tile is clicked again —
-   * the panel sits under the map rather than over it, so the tile is a toggle, not just an opener.
+   * Unfolds the detail panel on one week, or folds it back when its own marker is clicked again —
+   * the panel sits under the frieze rather than over it, so the marker is a toggle, not just an
+   * opener.
    *
    * @param node - The week to detail.
    */
@@ -413,20 +199,5 @@ export class Campaign {
   protected reload(): void {
     this.campaign.reload();
     this.colony.reload();
-  }
-
-  /**
-   * Icon color for the week currently being fought: the boss's own difficulty once it's drawn,
-   * rather than the tier's flat amber, so the one mark that isn't an outcome yet still says
-   * something about the fight. The hexagon's ring stays the outcome's alone (see
-   * {@link resolveBossTerritoryTier}) — this only ever touches the glyph riding on top of it.
-   *
-   * @param category - The active week's boss category, or `null` for the one tick before it's drawn.
-   * @returns The Tailwind text color utility to apply to the boss icon.
-   */
-  protected currentBossIconColorClass(category: BossCategory | null): string {
-    return category === null
-      ? this.territoryTier('current').iconClass
-      : resolveBossCategoryColorClass(category);
   }
 }

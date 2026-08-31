@@ -549,6 +549,17 @@ export interface ColonyRunView {
    * Already-formatted final population, the run's score.
    */
   readonly finalLabel: string;
+
+  /**
+   * Threats the run put down, over the ten it holds (`2 / 10`) — the column that says how a
+   * campaign was played rather than only where it landed.
+   */
+  readonly bossesLabel: string;
+
+  /**
+   * Already-translated name of the step the town reached, citadel number included.
+   */
+  readonly tierLabel: string;
 }
 
 /**

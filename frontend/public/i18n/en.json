@@ -272,6 +272,43 @@
     }
   },
   "campaign": {
+    "board": {
+      "title": "The scoreboard",
+      "campaign": "Campaign",
+      "threats": "Threats",
+      "tier": "Tier reached",
+      "score": "Score"
+    },
+    "chain": {
+      "title": "How the town grows",
+      "link": "The rules",
+      "lever": "Lever",
+      "foodUnit": "food",
+      "ceilingUnit": "feedable",
+      "scoreUnit": "and that is the score",
+      "harvest": {
+        "title": "Tonight's harvest",
+        "body": "The day's damage becomes food, once every evening.",
+        "lever": "Playing on the same day. At {{present}} of {{roster}} the harvest runs at {{multiplier}}; with everyone, at {{max}}."
+      },
+      "stock": {
+        "body": "Seven days of harvest, not one more. Anything older is gone.",
+        "lever": "Not dropping off. The town eats {{consumption}} a week, even the weeks nobody plays."
+      },
+      "efficiency": {
+        "body": "The more the town is built, the more people the same food keeps alive.",
+        "lever": "Materials, {{materials}} so far, earned by clearing challenges and beating bosses. Efficiency never goes back down."
+      },
+      "ceiling": {
+        "title": "Feedable ceiling",
+        "body": "Reserve times efficiency: what the town can feed today.",
+        "lever": "The surplus: {{surplus}} are left once the week is fed, and that is what raises the ceiling."
+      },
+      "population": {
+        "body": "The population climbs towards the ceiling a little each day, never all at once.",
+        "lever": "Morale, at {{morale}}: the gap closes by {{speed}} a day. A boss repelled pushes it back up."
+      }
+    },
     "error": "Could not load the campaign.",
     "frieze": {
       "hint": "Tap a threat to unfold its week here — HP left, rewards, top 3"
@@ -287,8 +324,19 @@
     "map": {
       "ariaLabel": "Map of the threats on the colony, one per week of the run"
     },
+    "stand": {
+      "title": "Where the run stands",
+      "scoreLabel": "The run's score",
+      "remainingDays": "{{days}} days left to play",
+      "firstDay": "Day 1 of the campaign"
+    },
     "territory": "Threat map",
-    "title": "Campaign"
+    "title": "Campaign",
+    "weeks": {
+      "title": "The ten weeks",
+      "link": "This week",
+      "draw": "{{date}}"
+    }
   },
   "campaignSummary": {
     "average": "Average",

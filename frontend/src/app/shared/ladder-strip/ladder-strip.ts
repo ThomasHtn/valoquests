@@ -58,9 +58,10 @@ export interface LadderStripStep {
 /**
  * The ladder, read as the trail it is rather than as twelve rows.
  *
- * `/campaign` owns the full ladder with its thresholds; here the question is only "where are we, and
- * what is the next stop", so the strip carries a window around the current step. Clicking through
- * goes to the campaign for the rest.
+ * Shared by the accueil and the campaign: on the accueil the question is only "where are we, and
+ * what is the next stop", on the campaign it is the road the whole run climbs. The strip answers
+ * both by carrying a window around the current step — every step the backend sent on a wide screen,
+ * three on a phone.
  *
  * Two things do the persuading. Each marker wears the silhouette of what that step actually builds,
  * the same four bands the scene at the top of the page grows through — a locked step is worth

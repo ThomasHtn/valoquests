@@ -16,7 +16,7 @@ import { ChartBar } from '@shared/chart/chart.model';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { WeekSummary } from './overview.model';
 import { ConfrontationBand } from './confrontation-band/confrontation-band';
-import { LadderStrip } from './ladder-strip/ladder-strip';
+import { LadderStrip } from '@shared/ladder-strip/ladder-strip';
 import { MiniRanking } from './mini-ranking/mini-ranking';
 import { TownSilhouette } from './town-silhouette/town-silhouette';
 

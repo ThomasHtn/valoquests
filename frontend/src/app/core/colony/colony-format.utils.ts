@@ -53,10 +53,24 @@ export function formatSignedPopulation(value: number, language: 'fr' | 'en'): st
  * @returns The share, rounded and prefixed with `+`.
  */
 export function formatSignedShare(value: number, language: 'fr' | 'en'): string {
-  return `+${new Intl.NumberFormat(COLONY_LOCALES[language], {
+  return `+${formatShare(value, language)}`;
+}
+
+/**
+ * Formats a share of something as a plain percentage (`71 %`, `71%`).
+ *
+ * Through `Intl` for the same reason {@link formatSignedShare} is: the space before the sign is
+ * part of the locale, not of the string.
+ *
+ * @param value - The share, in `[0, 100]`.
+ * @param language - The app language whose separator and spacing to use.
+ * @returns The rounded share.
+ */
+export function formatShare(value: number, language: 'fr' | 'en'): string {
+  return new Intl.NumberFormat(COLONY_LOCALES[language], {
     style: 'percent',
     maximumFractionDigits: 0,
-  }).format(value / 100)}`;
+  }).format(value / 100);
 }
 
 /**
