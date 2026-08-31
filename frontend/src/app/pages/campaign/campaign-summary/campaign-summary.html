@@ -5,7 +5,25 @@
   [backLink]="'/campaign'"
   [eyebrow]="'campaignSummary.eyebrow' | translate"
   [heading]="dateRangeLabel()"
-/>
+>
+  <!-- What makes this page worth being a page: a closed campaign is the squad's own record, and
+       the way it leaves the application is somebody pasting its address into a Discord. Copying is
+       the whole affordance — the page is already public, it needs no export. -->
+  @if (run()) {
+    <button
+      (click)="copyLink()"
+      class="focus-ring label-caption flex h-10 shrink-0 cursor-pointer items-center gap-2 px-2 text-text-secondary transition-colors hover:text-brand-500 motion-safe:active:scale-[0.96]"
+      type="button"
+    >
+      @if (linkCopied()) {
+        <svg aria-hidden="true" class="size-4 shrink-0 text-success" lucideCheck></svg>
+        <span class="text-success">{{ 'campaignSummary.linkCopied' | translate }}</span>
+      } @else {
+        <span>{{ 'campaignSummary.copyLink' | translate }}</span>
+      }
+    </button>
+  }
+</app-page-header>
 
 <div class="page-body">
   <app-resource-state

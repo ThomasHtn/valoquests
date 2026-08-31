@@ -19,6 +19,8 @@ import { ConfrontationBand } from './confrontation-band/confrontation-band';
 import { LadderStrip } from '@shared/ladder-strip/ladder-strip';
 import { MiniRanking } from './mini-ranking/mini-ranking';
 import { TownSilhouette } from './town-silhouette/town-silhouette';
+import { WeekRecap } from './week-recap/week-recap';
+import { CountUp } from '@shared/count-up/count-up';
 
 /**
  * Accueil ("La colonie").
@@ -45,7 +47,9 @@ import { TownSilhouette } from './town-silhouette/town-silhouette';
     MiniRanking,
     PageHeader,
     RouterLink,
+    CountUp,
     TownSilhouette,
+    WeekRecap,
   ],
   templateUrl: './overview.html',
   styleUrl: './overview.css',

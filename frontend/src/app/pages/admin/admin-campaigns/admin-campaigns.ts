@@ -4,7 +4,7 @@ import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminCommandRunner } from '@core/admin/admin-command-runner';
 import { CampaignRun } from '@core/admin/admin.model';
-import { formatDateRange } from '@core/date/week-period.utils';
+import { addDays, formatDateRange, formatDayMonth } from '@core/date/week-period.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -30,6 +30,62 @@ import { AdminActionCard } from '../admin-action-card/admin-action-card';
  * off is therefore a promise about tonight's tick, not a guarantee the site shows "no campaign"
  * indefinitely the moment someone loads a page.
  */
+/**
+ * Weeks a run spans. Mirrors the backend's own run length; the endpoint sends the run's two dates
+ * rather than its week count, so the ladder this divides by is stated once here.
+ */
+const RUN_WEEKS = 10;
+
+/**
+ * Whole days from one ISO date to another, ignoring clocks.
+ *
+ * Built on `Date.UTC` rather than on local dates: a run spanning a daylight-saving change is
+ * otherwise a day short or a day long, which on a seventy-one-day count is a visible error.
+ *
+ * @param from - Earlier ISO date, `YYYY-MM-DD`.
+ * @param to - Later ISO date, `YYYY-MM-DD`.
+ * @returns Whole days between the two.
+ */
+function daysBetween(from: string, to: string): number {
+  const asUtc = (iso: string): number => {
+    const [year, month, day] = iso.split('-').map(Number);
+    return Date.UTC(year, month - 1, day);
+  };
+
+  return Math.round((asUtc(to) - asUtc(from)) / 86_400_000);
+}
+
+/**
+ * The Monday the weekly rollover next lands on.
+ *
+ * Deliberately not `nextWeekStart`, which adds a day to a week's *end*: handed today it answers
+ * "tomorrow", which is the rollover date exactly one day in seven. Today counts as the next Monday
+ * only if the rollover has not already run, which it has by the time anyone reads this — so a Monday
+ * answers with the Monday after.
+ *
+ * @returns Next Monday's `YYYY-MM-DD`.
+ */
+function nextMondayIso(): string {
+  const today = todayIso();
+  const weekday = new Date(`${today}T00:00:00Z`).getUTCDay();
+  // `getUTCDay` counts from Sunday; Monday is 1, and a Monday waits a full week.
+  return addDays(today, (8 - weekday) % 7 || 7);
+}
+
+/**
+ * Today, as the ISO date the run's own dates are expressed in.
+ *
+ * @returns Today's `YYYY-MM-DD`.
+ */
+function todayIso(): string {
+  const now = new Date();
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
+}
+
 @Component({
   selector: 'app-admin-campaigns',
   imports: [
@@ -71,6 +127,51 @@ export class AdminCampaigns {
    */
   protected readonly runs = computed<readonly CampaignRun[]>(
     () => resourceValue(this.campaignsResource, undefined)?.runs ?? [],
+  );
+
+  /**
+   * The campaign in progress, resolved into the figures an operator needs before touching anything.
+   *
+   * The page reported the running campaign as one row of a table — dates, roster, score — which is
+   * enough to list it and not enough to decide anything about it. Where it stands in its own ten
+   * weeks, how much is left and when the next automatic rollover lands are what an operator is
+   * actually looking for, and all three are arithmetic on the two dates the endpoint already sends.
+   *
+   * `null` when nothing is running, which is when this card would have nothing to say.
+   */
+  protected readonly currentRun = computed(() => {
+    const run = this.runs().find((candidate) => candidate.status === 'RUNNING');
+    if (run === null || run === undefined) {
+      return null;
+    }
+
+    const totalDays = daysBetween(run.firstDay, run.finalDay) + 1;
+    // Clamped at both ends: a run opened today is on its first day, never its zeroth, and one whose
+    // settlement day has passed without a rollover is on its last, never past it.
+    const dayIndex = Math.min(totalDays, Math.max(1, daysBetween(run.firstDay, todayIso()) + 1));
+
+    return {
+      dayIndex,
+      totalDays,
+      weekIndex: Math.min(RUN_WEEKS, Math.floor((dayIndex - 1) / 7) + 1),
+      totalWeeks: RUN_WEEKS,
+      daysLeft: totalDays - dayIndex,
+      nextRollover: formatDayMonth(nextMondayIso()),
+      rangeLabel: this.dateRangeLabel(run),
+      rosterSize: run.rosterSize,
+      score: run.score,
+    };
+  });
+
+  /**
+   * Campaigns already closed, newest first — everything the card above does not already carry.
+   *
+   * The running one is filtered out rather than listed twice: it has a card of its own now, and a
+   * row restating its dates, its roster and its score directly above that card was the same
+   * campaign reported at two levels of detail on one screen.
+   */
+  protected readonly pastRuns = computed<readonly CampaignRun[]>(() =>
+    this.runs().filter((run) => run.status !== 'RUNNING'),
   );
 
   /**

@@ -4,6 +4,11 @@
 <app-page-header [eyebrow]="colony.eyebrow()" [heading]="'overview.header.title' | translate" />
 
 <div class="page-body overview-body">
+  <!-- Bloc 0 — how the week that just closed went, on the first visit of the week and never after
+       it is closed. Above the colony because it is news: everything below reports a state that has
+       been true since, this reports what changed. -->
+  <app-week-recap />
+
   <!-- Bloc 1 — the colony's waterfront, the page's one signature element. Everything under it is
        read against it: the day and the week are both what tonight adds to this. -->
   @if (colony.town(); as town) {
@@ -39,7 +44,14 @@
             {{ 'overview.town.tier' | translate: { name: currentTier()?.name ?? '' } }}
           </p>
           <p class="colony-town-figure">
-            <span class="colony-town-count font-display">{{ colony.populationLabel() }}</span>
+            <!-- Counted up rather than printed: this is the one figure the page exists to report, and a
+                 population that climbs reads as something that grew. -->
+            <!-- No interpolation on this element: the directive owns its text, and an `{{ }}` beside it
+                 would be rewritten by change detection on top of every frame the count-up wrote. -->
+            <span
+              [appCountUp]="colony.populationValue()"
+              class="colony-town-count font-display"
+            ></span>
             <span class="colony-town-unit font-display">
               <svg class="size-4 shrink-0" lucideUsers></svg>
               {{ 'colony.population' | translate }}

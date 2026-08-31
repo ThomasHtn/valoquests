@@ -11,9 +11,10 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideLoaderCircle } from '@lucide/angular';
 
+import { NgTemplateOutlet } from '@angular/common';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalTime } from '@core/date/date-time.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -47,6 +48,7 @@ import {
 } from '@core/players/player-format.utils';
 import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/player-stats.utils';
 import { PlayersApi } from '@core/players/players-api';
+import { RankingEntry } from '@core/ranking/ranking.model';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { Avatar } from '@shared/avatar/avatar';
@@ -99,6 +101,7 @@ const MAX_PROGRESSION_SEASONS = 5;
     Avatar,
     ChampionBadge,
     MediaThumbnail,
+    NgTemplateOutlet,
     ProgressBar,
     RankIconView,
     ResourceState,
@@ -145,6 +148,16 @@ export class PlayerProfile {
   private readonly rankingApi = inject(RankingApi);
 
   /**
+   * Router, used to mirror the open half of the profile into the URL.
+   */
+  private readonly router = inject(Router);
+
+  /**
+   * Route, read once for the half a link arrived pointing at.
+   */
+  private readonly route = inject(ActivatedRoute);
+
+  /**
    * i18n service used to resolve the player's translated rank label.
    */
   private readonly translation = inject(Translation);
@@ -177,6 +190,79 @@ export class PlayerProfile {
    * history's filters - are shown with the history alone.
    */
   protected readonly viewMode = signal<'MATCHES' | 'PROGRESS'>('MATCHES');
+
+  /**
+   * Which half of the profile is open: what this player brought to the colony, or their Valorant
+   * record.
+   *
+   * Opens on the colony. The Valorant statistics are available in any tracker; what a player
+   * contributed to the squad exists only here, and this is the only page in the application that
+   * reports it — which is exactly the gap the audit found. Mirrored into the URL by
+   * {@link onProfileTabChange} so a link can point at either half.
+   */
+  /**
+   * The two halves, in the order they are shown.
+   */
+  protected readonly profileTabs = ['COLONY', 'VALORANT'] as const;
+
+  protected readonly profileTab = signal<'COLONY' | 'VALORANT'>(
+    this.route.snapshot.queryParamMap.get('tab') === 'valorant' ? 'VALORANT' : 'COLONY',
+  );
+
+  /**
+   * This player's line in the week's ranking, or `null` while it loads or if they have none.
+   *
+   * The whole colony tab reads from here: the ranking already carries the damage split, the days
+   * played and the per-challenge progress, per player and per week. Nothing about the contribution
+   * needed a new endpoint.
+   */
+  protected readonly contribution = computed<RankingEntry | null>(() => {
+    const ranking = resourceValue(this.rankingApi.current, null);
+    return ranking?.ranking.find((entry) => entry.player.id === this.playerId()) ?? null;
+  });
+
+  /**
+   * What this player's week actually took off the boss: their total, less the regularity bonus.
+   *
+   * The bonus rewards turning up rather than producing, so it never touches the boss — the rule the
+   * rulebook states and `BossCampaign` already applies when it sums its contributions. Stated here
+   * because a player has no other way of seeing it.
+   */
+  protected readonly bossDamage = computed<number>(() => {
+    const entry = this.contribution();
+    return entry === null ? 0 : Math.max(0, entry.totalDamage - entry.regularityBonus);
+  });
+
+  /**
+   * The four sources of a week's damage, as rows for the split, widest share first in the bar.
+   */
+  protected readonly damageSplit = computed(() => {
+    const entry = this.contribution();
+    if (entry === null) {
+      return [];
+    }
+
+    const total = Math.max(1, entry.totalDamage);
+
+    return [
+      { key: 'matches', value: entry.matchDamage, colorClass: 'bg-brand-500' },
+      { key: 'challenges', value: entry.challengeDamage, colorClass: 'bg-accent-cyan' },
+      { key: 'regularity', value: entry.regularityBonus, colorClass: 'bg-accent-violet' },
+      { key: 'squad', value: entry.teamBonus, colorClass: 'bg-accent-blue' },
+    ].map((row) => ({ ...row, percentage: Math.round((row.value / total) * 100) }));
+  });
+
+  /**
+   * The week's seven days, each flagged with whether this player played it.
+   *
+   * The ranking reports how many days were played, not which ones, so the strip fills from the left
+   * rather than landing each mark on its own weekday: it is a count drawn as a row, and labelling
+   * the cells Monday to Sunday would claim a precision the figure does not carry.
+   */
+  protected readonly activeDayStrip = computed<readonly boolean[]>(() => {
+    const played = this.contribution()?.activeDays ?? 0;
+    return Array.from({ length: 7 }, (_unused, index) => index < played);
+  });
 
   /**
    * Every match fetched so far for the current filters, oldest fetch first.
@@ -742,5 +828,23 @@ export class PlayerProfile {
    */
   protected yieldToneClass(percent: number): string {
     return percent >= 100 ? 'text-brand-500' : 'text-text-secondary';
+  }
+  /**
+   * Switches half of the profile, and mirrors the choice into the URL.
+   *
+   * Replaces the current entry rather than pushing one: flipping between the two halves of a page
+   * is not a step a reader wants to walk back through, and pushing would make Back mean "the other
+   * tab" instead of "the page before this one".
+   *
+   * @param tab - The half to show.
+   */
+  protected onProfileTabChange(tab: 'COLONY' | 'VALORANT'): void {
+    this.profileTab.set(tab);
+    void this.router.navigate([], {
+      queryParams: { tab: tab === 'COLONY' ? null : tab.toLowerCase() },
+      queryParamsHandling: 'merge',
+      relativeTo: this.route,
+      replaceUrl: true,
+    });
   }
 }

@@ -42,9 +42,10 @@
             (click)="jump.emit(entry.id)"
             [attr.aria-current]="entry.id === activeId() ? 'true' : null"
             [class.border-l-brand-500]="entry.id === activeId()"
+            [class.border-l-transparent]="entry.id !== activeId()"
             [class.text-brand-500]="entry.id === activeId()"
             [class.text-text-secondary]="entry.id !== activeId()"
-            class="focus-ring-inset flex w-full cursor-pointer items-baseline gap-2.5 border-l-2 border-l-transparent py-2 pr-4 pl-4 text-left transition-colors hover:bg-brand-500/6 hover:text-text-primary"
+            class="focus-ring-inset flex w-full cursor-pointer items-baseline gap-2.5 border-l-2 py-2 pr-4 pl-4 text-left transition-colors hover:bg-brand-500/6 hover:text-text-primary"
             type="button"
           >
             <span aria-hidden="true" class="w-4 shrink-0 font-mono text-xs tabular-nums">

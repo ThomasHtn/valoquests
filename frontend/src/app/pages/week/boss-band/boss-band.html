@@ -11,7 +11,7 @@
          no second background — the threat is carried by an inset rule on the leading edge and the
          two halves are told apart by a hairline. -->
     <div class="boss">
-      <div class="boss-fight">
+      <div [class.boss-fight--struck]="celebrating()" class="boss-fight">
         <div class="boss-top">
           <span aria-hidden="true" class="clip-hex boss-mark">
             <span class="clip-hex">
@@ -126,7 +126,12 @@
            drawn as the climb it buys, the loss is one line under it. -->
       @if (payout(); as payout) {
         <aside class="pay">
-          <span class="label-caption text-brand-400">{{ 'week.payout.title' | translate }}</span>
+          <!-- Names what the panel holds, and the tense follows the fight: an imperative still
+               reading "vaincre ce boss" over the rewards it already paid is an instruction for
+               something done. -->
+          <span class="label-caption text-brand-400">
+            {{ (defeated() ? 'week.payout.titleDefeated' : 'week.payout.title') | translate }}
+          </span>
 
           @if (payout.step; as step) {
             <div class="step-ends">
@@ -169,25 +174,35 @@
           }
 
           <span class="pay-gains">
-            <span class="pay-gain text-accent-cyan">
+            <!-- On the visit that finds the boss down, the two gains rise one after the other
+                 rather than being there already: they are what the fight bought, and a reward that
+                 was simply always on screen is not a reward. -->
+            <span [class.pay-gain--won]="celebrating()" class="pay-gain text-accent-cyan">
               <svg aria-hidden="true" class="size-3.5 shrink-0" lucideHammer></svg>
               +{{ payout.materialsLabel }}
               <em>{{ 'colony.materials' | translate }}</em>
             </span>
-            <span class="pay-gain text-accent-violet">
+            <span [class.pay-gain--won]="celebrating()" class="pay-gain text-accent-violet">
               <svg aria-hidden="true" class="size-3.5 shrink-0" lucideFlame></svg>
               {{ payout.moraleLabel }}
               <em>{{ 'colony.track.morale.name' | translate }}</em>
             </span>
           </span>
 
-          <p class="pay-cost">
-            <span class="label-caption text-danger">{{
-              'week.payout.ifSurvives' | translate
-            }}</span>
-            <b>{{ 'week.payout.moraleCost' | translate: { morale: payout.defeatMoraleLabel } }}</b>
-            <span>{{ 'week.payout.noMaterials' | translate }}</span>
-          </p>
+          <!-- What the week costs if the boss holds — gone the moment it no longer can. On a boss
+               already down this line stated a risk that had been settled, right beside the rewards
+               it had just been proved wrong about. -->
+          @if (!defeated()) {
+            <p class="pay-cost">
+              <span class="label-caption text-danger">{{
+                'week.payout.ifSurvives' | translate
+              }}</span>
+              <b>{{
+                'week.payout.moraleCost' | translate: { morale: payout.defeatMoraleLabel }
+              }}</b>
+              <span>{{ 'week.payout.noMaterials' | translate }}</span>
+            </p>
+          }
         </aside>
       }
     </div>

@@ -1,8 +1,9 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideFlame, LucideHammer, LucideSkull } from '@lucide/angular';
 
 import { BossApi } from '@core/boss/boss-api';
+import { BossFall } from '@core/boss/boss-fall';
 import { resolveBossNumberLabel } from '@core/boss/boss-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { resolveChallengeWeakPoints } from '@core/challenges/challenge-weak-point.utils';
@@ -33,6 +34,13 @@ import { TierGlyph } from '@shared/tier-glyph/tier-glyph';
  * Self-fetches off the shared `BossApi`, `ChallengesApi` and `ColonyView` resources, so it costs no
  * request beyond what the page already asks for.
  */
+/**
+ * How long the fall sequence runs, in milliseconds — the strike, then the two rewards rising behind
+ * it. Matches the keyframes in `boss-band.css`; the two are one thing declared twice, so they move
+ * together or not at all.
+ */
+const CELEBRATION_MS = 1600;
+
 @Component({
   selector: 'app-boss-band',
   imports: [
@@ -52,6 +60,11 @@ export class BossBand {
   private readonly challengesApi = inject(ChallengesApi);
   private readonly colony = inject(ColonyView);
   private readonly translation = inject(Translation);
+
+  /**
+   * Remembers which weeks' falls have already been watched.
+   */
+  private readonly bossFall = inject(BossFall);
 
   /**
    * Named rulebook fragments, so the link beside the hit-point figure lands on the beat that
@@ -104,6 +117,15 @@ export class BossBand {
 
     return boss !== null && boss.totalDamageDealt >= boss.effectiveHp;
   });
+
+  /**
+   * Whether the fall is being played right now.
+   *
+   * Drives the one orchestrated moment in the application: the card takes the blow, then the two
+   * rewards it banked rise one after the other. Off again a beat later, leaving the settled state —
+   * the sequence is an event, not a mode.
+   */
+  protected readonly celebrating = signal(false);
 
   /**
    * The boss's weight class, as the key naming it.
@@ -169,6 +191,31 @@ export class BossBand {
 
     return boss === null ? '' : formatDamage(boss.totalDamageDealt, this.translation.language());
   });
+
+  /**
+   * Plays the fall once per week, on the first visit that finds the boss down.
+   *
+   * `prefers-reduced-motion` skips straight to marking it seen: the settled state carries the same
+   * information, and somebody who asked for no motion should not have to sit through a sequence to
+   * reach it.
+   */
+  constructor() {
+    effect(() => {
+      const boss = this.boss();
+      if (boss === null || !this.defeated() || !this.bossFall.isUnseen(boss.weekStart)) {
+        return;
+      }
+
+      this.bossFall.markSeen(boss.weekStart);
+
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+      }
+
+      this.celebrating.set(true);
+      setTimeout(() => this.celebrating.set(false), CELEBRATION_MS);
+    });
+  }
 
   /**
    * Reloads every backing resource after a failure.

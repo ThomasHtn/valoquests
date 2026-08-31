@@ -107,7 +107,7 @@
             <span class="label-caption text-text-muted">
               {{ 'campaign.stand.scoreLabel' | translate }}
             </span>
-            <span class="cv-n font-display">{{ colony.populationLabel() }}</span>
+            <span [appCountUp]="colony.populationValue()" class="cv-n font-display"></span>
             <span class="cv-u font-display">
               {{ 'colony.population' | translate }}
               @if (colony.delta(); as delta) {

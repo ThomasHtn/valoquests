@@ -4,7 +4,7 @@
 <div
   [class]="colorClass() + ' ' + (live() ? 'gauge-sheen relative overflow-hidden' : '')"
   [style.width.%]="percentage()"
-  class="h-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
+  class="gauge-rise h-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
 ></div>
 
 <!-- Second band, starting where the fill ends. Absolutely positioned rather than laid out beside

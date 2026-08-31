@@ -165,6 +165,27 @@
        padding. -->
   <div class="flex flex-col gap-6 px-6 pt-6 lg:pt-4">
     @if (adminMode()) {
+      <!-- The way back to the public site, without giving up the session. An operator spends their
+           time checking what their commands did on the pages players see, and the only exit used to
+           be the one that signs them out — so looking was indistinguishable from leaving. -->
+      <a
+        (click)="onNavItemActivated()"
+        [appTooltip]="'sidebar.admin.viewSite' | translate"
+        [appTooltipDisabled]="!collapsed()"
+        [class]="collapsed() ? 'lg:justify-center lg:px-0' : ''"
+        [routerLink]="'/overview'"
+        appTooltipPosition="right"
+        appTooltipSize="md"
+        class="focus-ring-inset -mx-6 flex min-h-11 cursor-pointer items-center gap-3.5 px-6 py-2 text-start text-sm font-medium text-text-secondary transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
+      >
+        <!-- The overview's own pictogram, already on the rail: the link goes exactly there, and
+             a glyph imported for this one row would have cost the initial bundle for nothing. -->
+        <svg aria-hidden="true" class="block h-5 w-5 shrink-0" lucideLayoutDashboard></svg>
+        <span [class]="navLabelClass()" class="tracking-label font-display uppercase">
+          {{ 'sidebar.admin.viewSite' | translate }}
+        </span>
+      </a>
+
       <!-- The only way out of the backoffice. Nothing in the application links into it, so nothing
            would link out of it either: without this control, leaving would mean typing a URL.
            Styled in danger tones like every other control that discards state, and sitting above

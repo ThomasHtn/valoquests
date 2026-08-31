@@ -191,6 +191,13 @@ export class ColonyView {
   );
 
   /**
+   * The same figure ungrouped, for the count-up directive — which formats as it climbs and needs the
+   * number rather than the string. `0` while the colony has not loaded, which is where a first climb
+   * starts from anyway.
+   */
+  public readonly populationValue = computed<number>(() => this.colony()?.population ?? 0);
+
+  /**
    * Title the population hexagon wears: the name of the step the town currently stands on, so the
    * card the run is read off evolves with the ladder instead of naming a camp forever.
    */

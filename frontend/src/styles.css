@@ -294,8 +294,47 @@
 @utility page-body {
   @apply scroll-subtle flex w-full flex-1 flex-col gap-6 overflow-y-auto pt-10 pb-6;
 
+  /* Named so a route change animates this column alone. Without it the whole document cross-fades,
+     sidebar and context bar included, and navigating reads as the page being replaced rather than
+     as its content changing. Only one `page-body` is ever mounted, so the name stays unique. */
+  view-transition-name: page-body;
+
   & > * {
     @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6;
+  }
+}
+
+/*
+ * Route transitions.
+ *
+ * The body of the page leaves on a plain fade and the next one arrives lifting eight pixels into
+ * place — short enough to read as continuity rather than as an effect, and asymmetric because the
+ * eye follows what arrives, not what goes. The chrome around it is excluded by `page-body` carrying
+ * its own `view-transition-name`, so the root's own pair has nothing left to animate.
+ *
+ * Gated on the media query rather than on a `motion-safe:` utility: these are pseudo-elements the
+ * browser generates, and no class can reach them.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(page-body) {
+    animation: page-body-out 110ms ease-in both;
+  }
+
+  ::view-transition-new(page-body) {
+    animation: page-body-in 220ms var(--ease-out-quart) both;
+  }
+}
+
+@keyframes page-body-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-body-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
 }
 
@@ -580,6 +619,27 @@
 
   /* No transition, so the starting value above is never animated to and the bar paints straight at
      its real width. */
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+/*
+ * A gauge arriving at its value instead of appearing at it.
+ *
+ * The counterpart of `hp-gauge-drain` for every bar that fills: the track renders empty and the fill
+ * runs out to what it holds. Same mechanism — `@starting-style` animates the *first* style change to
+ * an inline-bound width and then stays out of the way, so a value moving between two refreshes still
+ * uses the bar's own transition rather than replaying from zero.
+ *
+ * Reads as the squad's progress arriving rather than as a figure that was always there, which on a
+ * page of six gauges is the difference between a dashboard and a report.
+ */
+@utility gauge-rise {
+  @starting-style {
+    width: 0;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }

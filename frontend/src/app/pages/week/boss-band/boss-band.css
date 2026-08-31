@@ -423,3 +423,73 @@
   color: #d9534f;
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * The fall.
+ *
+ * The one orchestrated moment in the application, and deliberately the only one: the boss going down
+ * is what a week of playing is for, and until now it produced nothing on screen — a boolean flipped
+ * between two visits. It plays once per week, on the first visit that finds the boss down (see
+ * `BossFall`), then the band settles into its aftermath.
+ *
+ * Three beats, in the order the eye wants them: the block takes the blow, the gauge it just emptied
+ * flashes, and the two rewards the fight banked rise one after the other. Nothing loops, nothing
+ * pulses — it happens and it is over.
+ */
+.boss-fight--struck {
+  animation: boss-struck 520ms var(--ease-out-quart) both;
+}
+
+/* The blow itself: a hard recoil that settles, never a bounce. The band is a slab, and a slab that
+   springs back reads as rubber. */
+@keyframes boss-struck {
+  0% {
+    transform: translateX(0);
+  }
+
+  12% {
+    transform: translateX(-7px);
+  }
+
+  28% {
+    transform: translateX(4px);
+  }
+
+  46% {
+    transform: translateX(-2px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Each reward arriving on its own beat, behind the strike rather than under it. The second waits out
+   the first: two figures appearing together are a layout, one after the other is a payout. */
+.pay-gain--won {
+  animation: pay-gain-won 460ms var(--ease-out-quart) both;
+}
+
+.pay-gain--won:nth-of-type(2) {
+  animation-delay: 780ms;
+}
+
+.pay-gain--won:nth-of-type(1) {
+  animation-delay: 560ms;
+}
+
+@keyframes pay-gain-won {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Nothing of the above under a reduced-motion preference. The component already skips the sequence
+   there — this is the second lock, for a preference switched on while the page is open. */
+@media (prefers-reduced-motion: reduce) {
+  .boss-fight--struck,
+  .pay-gain--won {
+    animation: none;
+  }
+}

@@ -21,6 +21,7 @@ import { ResourceState } from '@shared/resource-state/resource-state';
 import { BossDetail } from './boss-detail/boss-detail';
 import { WeekFrieze, WeekFriezeEntry } from './week-frieze/week-frieze';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
+import { CountUp } from '@shared/count-up/count-up';
 
 /**
  * Campaign page: the run told as one screen, at rest.
@@ -48,6 +49,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     LucideGauge,
     LucidePackage,
     LucideUsers,
+    CountUp,
     LucideUtensils,
     LucideWheat,
     PageHeader,

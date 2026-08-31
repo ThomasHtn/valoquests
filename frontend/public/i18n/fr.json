@@ -5,26 +5,49 @@
     "cancel": "Annuler",
     "save": "Enregistrer",
     "campaigns": {
-      "title": "Campagnes",
-      "heading": "Campagnes",
-      "runsLabel": "Campagnes",
+      "autoRenew": {
+        "description": "Autorise le passage de semaine du lundi à ouvrir seul la campagne suivante une fois celle-ci close.",
+        "headingOn": "Renouvellement automatique activé",
+        "headingOff": "Renouvellement automatique désactivé",
+        "turnOn": "Activer",
+        "turnOff": "Désactiver",
+        "enabled": "Renouvellement automatique activé.",
+        "disabled": "Renouvellement automatique désactivé."
+      },
+      "commandsLabel": "Commandes",
+      "currentHeading": "Campagne du {{range}}",
+      "currentLabel": "Campagne en cours",
+      "day": "Jour",
+      "daysLeft": {
+        "one": "{{count}} jour restant",
+        "other": "{{count}} jours restants"
+      },
       "empty": "Aucune campagne n'a encore été lancée.",
       "error": "Impossible de charger les campagnes.",
+      "heading": "Campagnes",
       "loading": "Chargement des campagnes…",
+      "nextRollover": "Prochain passage de semaine le {{date}}",
+      "pastEmpty": "Aucune campagne close pour l’instant.",
+      "pastLabel": "Campagnes closes",
       "roster": {
         "one": "{{count}} joueur",
         "other": "{{count}} joueurs"
       },
-      "status": {
-        "RUNNING": "En cours",
-        "COMPLETED": "Terminée",
-        "STOPPED": "Arrêtée"
-      },
+      "rosterFrozen": "gelé à l’ouverture",
+      "rosterLabel": "Effectif",
+      "runsLabel": "Campagnes",
+      "score": "Score",
+      "scoreHint": "population à ce jour",
       "start": {
         "heading": "Démarrer une campagne",
         "description": "Ouvre une campagne aujourd'hui, effectif actif gelé. Seulement utile quand le renouvellement automatique est désactivé et qu'aucune campagne n'est en cours.",
         "action": "Démarrer",
         "done": "Campagne démarrée."
+      },
+      "status": {
+        "RUNNING": "En cours",
+        "COMPLETED": "Terminée",
+        "STOPPED": "Arrêtée"
       },
       "stop": {
         "heading": "Arrêter la campagne en cours",
@@ -34,15 +57,8 @@
         "confirmBody": "Cette action est irréversible : les semaines restantes de cette campagne ne seront jamais jouées.",
         "done": "Campagne arrêtée."
       },
-      "autoRenew": {
-        "description": "Autorise le passage de semaine du lundi à ouvrir seul la campagne suivante une fois celle-ci close.",
-        "headingOn": "Renouvellement automatique activé",
-        "headingOff": "Renouvellement automatique désactivé",
-        "turnOn": "Activer",
-        "turnOff": "Désactiver",
-        "enabled": "Renouvellement automatique activé.",
-        "disabled": "Renouvellement automatique désactivé."
-      }
+      "title": "Campagnes",
+      "week": "Semaine"
     },
     "login": {
       "backToSite": "Retour au site",
@@ -350,9 +366,12 @@
     "average": "Moyenne",
     "backToCampaign": "Retour à la campagne",
     "bossesDefeated": "Boss vaincus",
+    "copyFailed": "Le navigateur a refusé l’accès au presse-papier. Copie l’adresse depuis la barre d’URL.",
+    "copyLink": "Copier le lien",
     "error": "Impossible de charger cette campagne.",
     "eyebrow": "Campagne terminée",
     "firstCampaignNote": "Première campagne — rien à comparer encore.",
+    "linkCopied": "Lien copié",
     "loading": "Chargement de la campagne…",
     "notFound": "Cette campagne n'existe pas, ou n'est pas encore terminée.",
     "peak": "Pic",
@@ -594,6 +613,21 @@
       "tier": "Palier · {{name}}",
       "today": "aujourd'hui"
     },
+    "weekRecap": {
+      "bossDown": "{{boss}} est tombé — {{damage}} PV arrachés.",
+      "bossHeld": "{{boss}} a tenu : {{damage}} PV arrachés sur {{hp}}.",
+      "champion": "Champion de la semaine : {{player}}, {{damage}} dégâts.",
+      "defeated": "Boss vaincu",
+      "dismiss": "Fermer le bilan de la semaine",
+      "efficiency": "soit {{value}} d’efficacité.",
+      "finisher": "Achevé par {{player}}.",
+      "materials": "matériaux banqués,",
+      "morale": "de moral pour la colonie.",
+      "newChallenges": "Voir les cinq nouveaux défis",
+      "reviewWeek": "Revoir cette semaine",
+      "survived": "Boss survivant",
+      "title": "La semaine {{week}} est close"
+    },
     "weekSummary": {
       "link": "Voir la semaine",
       "title": "Semaine {{week}} / {{weeks}}"
@@ -692,6 +726,31 @@
   "playerProfile": {
     "breadcrumb": {
       "players": "Escouade"
+    },
+    "colony": {
+      "activeDays": "Jours joués",
+      "activeDaysValue": {
+        "one": "{{count}} jour cette semaine",
+        "other": "{{count}} jours cette semaine"
+      },
+      "challenges": "Défis validés",
+      "challengesHint": "Un défi compte pour le groupe quand toute l’escouade l’a validé.",
+      "empty": "Aucune contribution cette semaine — ce joueur n’a pas encore joué.",
+      "position": {
+        "one": "{{count}}re de l’escouade",
+        "other": "{{count}}e de l’escouade"
+      },
+      "source": {
+        "matches": "Matchs",
+        "challenges": "Défis",
+        "regularity": "Régularité",
+        "squad": "Bonus d’escouade"
+      },
+      "splitLink": "Les règles",
+      "splitTitle": "D’où viennent ces dégâts",
+      "toBoss": "Portés au boss",
+      "toBossHint": "Le total, moins la régularité : elle récompense la présence, pas la production.",
+      "weekDamage": "Dégâts de la semaine"
     },
     "dailyYield": {
       "drops": "À partir du {{rank}}ᵉ, {{percent}} %.",
@@ -907,6 +966,11 @@
       "winRate": "Winrate",
       "wins": "{{count}} V"
     },
+    "tabs": {
+      "COLONY": "Colonie",
+      "VALORANT": "Valorant",
+      "label": "Moitié du profil affichée"
+    },
     "title": "Profil du joueur"
   },
   "players": {
@@ -1088,7 +1152,8 @@
   },
   "sidebar": {
     "admin": {
-      "signOut": "Quitter l'administration"
+      "signOut": "Quitter l'administration",
+      "viewSite": "Voir le site"
     },
     "closeMenu": "Fermer le menu",
     "collapse": "Réduire la barre latérale",
@@ -1204,7 +1269,8 @@
       "nextTier": "Palier suivant",
       "noMaterials": "et aucun matériau banqué.",
       "ofTier": "du palier {{name}}, en une semaine.",
-      "title": "Vaincre ce boss"
+      "title": "Vaincre ce boss",
+      "titleDefeated": "Ce que ce boss a payé"
     },
     "squad": {
       "cleared": "{{done}} / {{total}} ont validé"

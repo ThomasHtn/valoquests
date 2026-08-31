@@ -1,5 +1,6 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { LucideCheck } from '@lucide/angular';
 
 import { ColonyApi } from '@core/colony/colony-api';
 import { tierStepFor } from '@core/colony/colony-tier.utils';
@@ -14,6 +15,7 @@ import { formatDateRange } from '@core/date/week-period.utils';
 import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { SnackbarService } from '@core/snackbar/snackbar';
 import { PageHeader } from '@layout/page-header/page-header';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { PAGE_LAYOUT_CLASS } from '../../page-layout.constants';
@@ -44,9 +46,14 @@ interface ComparedFigure {
  * a score), and this page needs the fuller record — peak, average, efficiency, materials, bosses —
  * the same response already carries.
  */
+/**
+ * How long the "copied" acknowledgement stands, in milliseconds.
+ */
+const COPY_FEEDBACK_MS = 2000;
+
 @Component({
   selector: 'app-campaign-summary',
-  imports: [TranslatePipe, PageHeader, ResourceState, RouterLink, TownSilhouette],
+  imports: [TranslatePipe, PageHeader, ResourceState, RouterLink, TownSilhouette, LucideCheck],
   templateUrl: './campaign-summary.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })
@@ -60,6 +67,11 @@ export class CampaignSummary {
    * i18n service, read for the active language and for the tier's translated name.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Used to report a clipboard the browser refused.
+   */
+  private readonly snackbar = inject(SnackbarService);
 
   /**
    * Run number asked for in the URL, read once: this page is reached from a fixed link on the
@@ -198,6 +210,14 @@ export class CampaignSummary {
   });
 
   /**
+   * Whether the address has just been copied, which the control says in place of its own label.
+   *
+   * A transient acknowledgement rather than a permanent state: it reverts after a beat, because the
+   * question it answers ("did that work?") stops being asked.
+   */
+  protected readonly linkCopied = signal(false);
+
+  /**
    * Compares a figure against its own value on the previous campaign.
    *
    * @param value    the current campaign's own figure
@@ -221,5 +241,25 @@ export class CampaignSummary {
       isPositive: difference > 0,
       isNegative: difference < 0,
     };
+  }
+
+  /**
+   * Puts this page's address on the clipboard.
+   *
+   * The absolute URL, not the route: what leaves here is pasted into a chat, and a relative path
+   * would arrive as text nobody can follow.
+   *
+   * Falls back to the snackbar's error line when the clipboard is refused — over plain HTTP, or in
+   * a browser that withholds permission — rather than failing silently and leaving somebody
+   * pasting nothing.
+   */
+  protected copyLink(): void {
+    navigator.clipboard.writeText(window.location.href).then(
+      () => {
+        this.linkCopied.set(true);
+        setTimeout(() => this.linkCopied.set(false), COPY_FEEDBACK_MS);
+      },
+      () => this.snackbar.error(this.translation.translate('campaignSummary.copyFailed')),
+    );
   }
 }

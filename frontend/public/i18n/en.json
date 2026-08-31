@@ -5,26 +5,49 @@
     "cancel": "Cancel",
     "save": "Save",
     "campaigns": {
-      "title": "Campaigns",
-      "heading": "Campaigns",
-      "runsLabel": "Campaigns",
+      "autoRenew": {
+        "description": "Lets Monday's rollover open the next campaign on its own once this one closes.",
+        "headingOn": "Automatic renewal on",
+        "headingOff": "Automatic renewal off",
+        "turnOn": "Turn on",
+        "turnOff": "Turn off",
+        "enabled": "Automatic renewal turned on.",
+        "disabled": "Automatic renewal turned off."
+      },
+      "commandsLabel": "Commands",
+      "currentHeading": "Campaign of {{range}}",
+      "currentLabel": "Campaign in progress",
+      "day": "Day",
+      "daysLeft": {
+        "one": "{{count}} day left",
+        "other": "{{count}} days left"
+      },
       "empty": "No campaign has been started yet.",
       "error": "Could not load the campaigns.",
+      "heading": "Campaigns",
       "loading": "Loading the campaigns…",
+      "nextRollover": "Next weekly rollover on {{date}}",
+      "pastEmpty": "No closed campaign yet.",
+      "pastLabel": "Closed campaigns",
       "roster": {
         "one": "{{count}} player",
         "other": "{{count}} players"
       },
-      "status": {
-        "RUNNING": "Running",
-        "COMPLETED": "Completed",
-        "STOPPED": "Stopped"
-      },
+      "rosterFrozen": "frozen at opening",
+      "rosterLabel": "Roster",
+      "runsLabel": "Campaigns",
+      "score": "Score",
+      "scoreHint": "population so far",
       "start": {
         "heading": "Start a campaign",
         "description": "Opens a campaign today, the active roster frozen. Only useful when automatic renewal is off and none is running.",
         "action": "Start",
         "done": "Campaign started."
+      },
+      "status": {
+        "RUNNING": "Running",
+        "COMPLETED": "Completed",
+        "STOPPED": "Stopped"
       },
       "stop": {
         "heading": "Stop the running campaign",
@@ -34,15 +57,8 @@
         "confirmBody": "This cannot be undone: the weeks left in this campaign will never be played.",
         "done": "Campaign stopped."
       },
-      "autoRenew": {
-        "description": "Lets Monday's rollover open the next campaign on its own once this one closes.",
-        "headingOn": "Automatic renewal on",
-        "headingOff": "Automatic renewal off",
-        "turnOn": "Turn on",
-        "turnOff": "Turn off",
-        "enabled": "Automatic renewal turned on.",
-        "disabled": "Automatic renewal turned off."
-      }
+      "title": "Campaigns",
+      "week": "Week"
     },
     "login": {
       "backToSite": "Back to the site",
@@ -350,9 +366,12 @@
     "average": "Average",
     "backToCampaign": "Back to the campaign",
     "bossesDefeated": "Bosses defeated",
+    "copyFailed": "The browser refused clipboard access. Copy the address from the URL bar.",
+    "copyLink": "Copy the link",
     "error": "Could not load this campaign.",
     "eyebrow": "Campaign over",
     "firstCampaignNote": "First campaign — nothing to compare yet.",
+    "linkCopied": "Link copied",
     "loading": "Loading the campaign…",
     "notFound": "This campaign does not exist, or has not closed yet.",
     "peak": "Peak",
@@ -594,6 +613,21 @@
       "tier": "Tier · {{name}}",
       "today": "today"
     },
+    "weekRecap": {
+      "bossDown": "{{boss}} went down — {{damage}} HP torn off.",
+      "bossHeld": "{{boss}} held: {{damage}} HP torn off out of {{hp}}.",
+      "champion": "Champion of the week: {{player}}, {{damage}} damage.",
+      "defeated": "Boss defeated",
+      "dismiss": "Close the week recap",
+      "efficiency": "worth {{value}} efficiency.",
+      "finisher": "Finished off by {{player}}.",
+      "materials": "materials banked,",
+      "morale": "morale for the colony.",
+      "newChallenges": "See the five new challenges",
+      "reviewWeek": "Review this week",
+      "survived": "Boss survived",
+      "title": "Week {{week}} is closed"
+    },
     "weekSummary": {
       "link": "See the week",
       "title": "Week {{week}} / {{weeks}}"
@@ -692,6 +726,31 @@
   "playerProfile": {
     "breadcrumb": {
       "players": "Players"
+    },
+    "colony": {
+      "activeDays": "Days played",
+      "activeDaysValue": {
+        "one": "{{count}} day this week",
+        "other": "{{count}} days this week"
+      },
+      "challenges": "Challenges cleared",
+      "challengesHint": "A challenge counts for the squad once every player has cleared it.",
+      "empty": "No contribution this week — this player has not played yet.",
+      "position": {
+        "one": "{{count}}st in the squad",
+        "other": "{{count}}th in the squad"
+      },
+      "source": {
+        "matches": "Matches",
+        "challenges": "Challenges",
+        "regularity": "Regularity",
+        "squad": "Squad bonus"
+      },
+      "splitLink": "The rules",
+      "splitTitle": "Where this damage came from",
+      "toBoss": "Dealt to the boss",
+      "toBossHint": "The total, less regularity: it rewards turning up, not producing.",
+      "weekDamage": "Damage this week"
     },
     "dailyYield": {
       "drops": "From the {{rank}}th on, {{percent}}%.",
@@ -907,6 +966,11 @@
       "winRate": "Win rate",
       "wins": "{{count}} W"
     },
+    "tabs": {
+      "COLONY": "Colony",
+      "VALORANT": "Valorant",
+      "label": "Profile half on show"
+    },
     "title": "Player profile"
   },
   "players": {
@@ -1088,7 +1152,8 @@
   },
   "sidebar": {
     "admin": {
-      "signOut": "Leave administration"
+      "signOut": "Leave administration",
+      "viewSite": "View the site"
     },
     "closeMenu": "Close menu",
     "collapse": "Collapse sidebar",
@@ -1204,7 +1269,8 @@
       "nextTier": "Next tier",
       "noMaterials": "and no materials banked.",
       "ofTier": "of the {{name}} tier, in one week.",
-      "title": "Defeat this boss"
+      "title": "Defeat this boss",
+      "titleDefeated": "What this boss paid"
     },
     "squad": {
       "cleared": "{{done}} / {{total}} cleared it"
