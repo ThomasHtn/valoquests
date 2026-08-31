@@ -165,7 +165,7 @@
         "portraitNone": "No avatar",
         "status": "Initial status"
       },
-      "frozenRoster": "Run {{run}} is running on a roster frozen at {{roster}} players. Activating or deactivating somebody here only takes effect on the next run.",
+      "frozenRoster": "Campaign {{run}} is running on a roster frozen at {{roster}} players. Activating or deactivating somebody here only takes effect on the next campaign.",
       "gettingStarted": {
         "addPlayers": "Add each player with their full Riot ID, in the form name#tag.",
         "operationsLink": "Go to operations",
@@ -283,7 +283,7 @@
     "board": {
       "title": "The scoreboard",
       "campaign": "Campaign",
-      "threats": "Threats",
+      "threats": "Bosses",
       "tier": "Tier reached",
       "score": "Score"
     },
@@ -319,26 +319,26 @@
     },
     "error": "Could not load the campaign.",
     "frieze": {
-      "hint": "Tap a threat to unfold its week here — HP left, rewards, top 3"
+      "hint": "Tap a boss to unfold its week here — HP left, rewards, top 3"
     },
     "heading": "The squad's campaign",
     "legend": {
-      "current": "Threat under way",
+      "current": "Boss under way",
       "defeated": "Repelled",
       "survived": "Colony hit",
       "upcoming": "Upcoming"
     },
     "loading": "Loading the campaign…",
     "map": {
-      "ariaLabel": "Map of the threats on the colony, one per week of the run"
+      "ariaLabel": "Map of the campaign bosses, one per week"
     },
     "stand": {
-      "title": "Where the run stands",
-      "scoreLabel": "The run's score",
+      "title": "Where the campaign stands",
+      "scoreLabel": "The campaign's score",
       "remainingDays": "{{days}} days left to play",
       "firstDay": "Day 1 of the campaign"
     },
-    "territory": "Threat map",
+    "territory": "Boss map",
     "title": "Campaign",
     "weeks": {
       "title": "The ten weeks",
@@ -406,7 +406,7 @@
       "NONE": "{{name}} did not play"
     },
     "runDay": "Day {{day}} / {{days}}",
-    "runDayHint": "A run lasts {{days}} days: ten weeks, plus a settlement day whose population is the score.",
+    "runDayHint": "A campaign lasts {{days}} days: ten weeks, plus a settlement day whose population is the score.",
     "runDayWord": "Day",
     "tier": {
       "CAMP": "Camp",
@@ -526,7 +526,7 @@
   "overview": {
     "bossEncounter": {
       "defeated": "The boss is down this week.",
-      "difficulty": "Difficulty",
+      "difficulty": "Class",
       "error": "Failed to load the weekly boss.",
       "eyebrow": "Weekly boss",
       "hpUnit": "HP",
@@ -538,10 +538,10 @@
     },
     "confrontation": {
       "squad": "Squad",
-      "threat": "Threat",
+      "threat": "Boss",
       "onlineUnit": "/ {{roster}} online",
       "quests": "challenges cleared",
-      "multiplier": "multiplier {{multiplier}} · cap {{max}}",
+      "multiplier": "multiplier {{multiplier}} · {{max}} at full house",
       "dealt": "{{damage}} HP torn off this week"
     },
     "economy": {
@@ -692,6 +692,16 @@
   "playerProfile": {
     "breadcrumb": {
       "players": "Players"
+    },
+    "dailyYield": {
+      "drops": "From the {{rank}}th on, {{percent}}%.",
+      "link": "How the daily yield works",
+      "next": "The next one keeps {{percent}}%.",
+      "played": {
+        "one": "match played today.",
+        "other": "matches played today."
+      },
+      "title": "Daily yield"
     },
     "display": {
       "label": "Display",
@@ -956,6 +966,12 @@
       "play": "Play",
       "town": "The town grows"
     },
+    "contents": {
+      "noMatch": "No section covers “{{query}}”.",
+      "searchLabel": "Search the rules",
+      "searchPlaceholder": "yield, morale…",
+      "title": "Contents"
+    },
     "heading": "Rules",
     "parts": {
       "rates": {
@@ -972,7 +988,6 @@
       "value": "4 min"
     },
     "replayTour": "Replay the tour",
-    "subheading": "How the squad works",
     "sections": {
       "bonuses": {
         "days": "{{days}} d",
@@ -988,14 +1003,14 @@
           "MINOR": "Around 65% of the squad's usual week. Usually folded by midweek.",
           "STANDARD": "Around 85% of the squad's usual week. One slow week is still recoverable."
         },
-        "description": "Every week a boss shows up with a health pool shared by the whole squad. That pool is not a fixed number: it is computed from what the squad actually produced over the recent closed weeks, multiplied by the number of active players. An active player who does not play therefore makes the boss heavier without draining it. Bring it down before Sunday night. The campaign itself only covers the run in progress, ten fights: it starts over on the next run, without erasing the fights already won.",
-        "ladderFootnote": "A boss's class does not come out of the draw: it is set by where the week falls in the run. Weeks 5 and 10 are the two peaks, each followed by a minor boss to catch a breath. The draw only decides which boss of that class shows up, and no boss ever comes back twice within one run.",
-        "ladderLabel": "Difficulty ladder, week by week",
+        "description": "Every week a boss shows up with a health pool shared by the whole squad. That pool is not a fixed number: it is computed from what the squad actually produced over the recent closed weeks, multiplied by the number of active players. An active player who does not play therefore makes the boss heavier without draining it. Bring it down before Sunday night. The campaign itself only covers the campaign in progress, ten fights: it starts over on the next campaign, without erasing the fights already won.",
+        "ladderFootnote": "A boss's class does not come out of the draw: it is set by where the week falls in the campaign. Weeks 5 and 10 are the two peaks, each followed by a minor boss to catch a breath. The draw only decides which boss of that class shows up, and no boss ever comes back twice within one campaign.",
+        "ladderLabel": "Boss class, week by week",
         "title": "One boss, one shared health bar"
       },
       "calibration": {
         "bounds": "The reference cannot run away: it stays bounded, so a full stop never makes the boss fall to a single match and a surge never makes it unreachable.",
-        "description": "The boss's bar is never set by hand: it tracks the median of what the squad actually produced over the last 4 closed weeks. Play more and the boss grows, ease off and it shrinks. A one-off marathon week does not count, the median ignores it. Calibration moves the size of the fight, never its class: that one is set by the run's calendar.",
+        "description": "The boss's bar is never set by hand: it tracks the median of what the squad actually produced over the last 4 closed weeks. Play more and the boss grows, ease off and it shrinks. A one-off marathon week does not count, the median ignores it. Calibration moves the size of the fight, never its class: that one is set by the campaign's calendar.",
         "title": "Difficulty that tunes itself"
       },
       "challenges": {
@@ -1039,7 +1054,7 @@
           "ELITE": "Elite defeated",
           "SURVIVED": "Boss held"
         },
-        "moraleFootnote": "Morale starts at 50 and depends on bosses alone. It multiplies the climbing speed: at 50 the town closes 7.5 % of the gap a day instead of 15 %. It never slows the fall. The ten fights of a run pay 50 morale between them, exactly the room up to the ceiling: a flawless run only reaches 100 on its tenth fight, so no boss is ever without effect. At the floor, 3 % a day is left, around 19 % a week: a badly started run crawls, but it is never stuck."
+        "moraleFootnote": "Morale starts at 50 and depends on bosses alone. It multiplies the climbing speed: at 50 the town closes 7.5 % of the gap a day instead of 15 %. It never slows the fall. The ten fights of a campaign pay 50 morale between them, exactly the room up to the ceiling: a flawless campaign only reaches 100 on its tenth fight, so no boss is ever without effect. At the floor, 3 % a day is left, around 19 % a week: a badly started campaign crawls, but it is never stuck."
       },
       "progression": {
         "description": "Some challenges ask not for an absolute threshold but for progress on yourself: beating your own K/D, ACS or headshot rate from the previous 4 weeks by a given percentage. Grinding matches at the same level does not complete them, since the measure is a rate. With no history over the last 4 weeks, the challenge stays out of reach.",
@@ -1061,9 +1076,10 @@
         "bossMaterialsLabel": "Materials per defeated boss, per player",
         "materialsLabel": "Materials per validated challenge, per player",
         "tiersLabel": "The tiers, one every 0.75 efficiency",
-        "tiersFootnote": "A defeated boss pays its materials to every squad player, never inhabitants: inhabitants would fade at 15 % a day, whereas efficiency never comes back down. Materials are divided by the squad size before being converted, which keeps the balance identical from 2 players to 20. A regular run runs from 8 to 16 efficiency, one tier a week."
+        "tiersFootnote": "A defeated boss pays its materials to every squad player, never inhabitants: inhabitants would fade at 15 % a day, whereas efficiency never comes back down. Materials are divided by the squad size before being converted, which keeps the balance identical from 2 players to 20. A regular campaign runs from 8 to 16 efficiency, one tier a week."
       }
     },
+    "subheading": "How the squad works",
     "title": "Rules & how it works"
   },
   "seasons": {
@@ -1109,7 +1125,8 @@
       "rules": "Rules"
     },
     "navLabel": "Main navigation",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "rulesSubmenu": "Unfold the rules sections"
   },
   "snackbar": {
     "dismiss": "Dismiss"
@@ -1161,6 +1178,7 @@
   },
   "week": {
     "boss": {
+      "calibrationLink": "How this figure is set",
       "remainingHp": "HP left"
     },
     "bossSection": {

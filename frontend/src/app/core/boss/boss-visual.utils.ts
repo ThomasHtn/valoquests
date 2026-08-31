@@ -10,6 +10,44 @@ const BOSS_CATEGORY_COLORS: Readonly<Record<BossCategory, string>> = {
 };
 
 /**
+ * The weight class each week of a run fights, first week to last.
+ *
+ * Mirrors `DefaultScoringRuleset#bossCategoryForRunWeek`. The class is *scheduled*, not drawn: weeks
+ * five and ten are the run's two peaks, each followed by a minor to breathe. That is the single most
+ * actionable fact the campaign holds — it is what lets a squad say "we save ourselves for the
+ * fifth" — and it used to live only in the rules page's own constants, so the timeline that draws
+ * those very ten weeks could not reach it.
+ *
+ * Lives here rather than in `pages/rules/`: two screens read it now, and it is a rule of the domain
+ * rather than a fixture of one page.
+ */
+export const BOSS_CATEGORY_LADDER: readonly BossCategory[] = [
+  'MINOR',
+  'STANDARD',
+  'STANDARD',
+  'STANDARD',
+  'ELITE',
+  'MINOR',
+  'STANDARD',
+  'STANDARD',
+  'STANDARD',
+  'ELITE',
+];
+
+/**
+ * The class a given week of a run fights, for a week whose boss has not been drawn yet.
+ *
+ * Returns `null` past the ladder's length rather than wrapping: a run is ten weeks, and a caller
+ * asking for an eleventh is asking about a week that does not exist.
+ *
+ * @param runWeekIndex - Position of the week inside its run, from one.
+ * @returns The scheduled weight class, or `null` outside the run.
+ */
+export function resolveScheduledBossCategory(runWeekIndex: number): BossCategory | null {
+  return BOSS_CATEGORY_LADDER[runWeekIndex - 1] ?? null;
+}
+
+/**
  * Resolves the text color utility for a boss's category.
  *
  * Only the rules page colors a category today: the overview card and the campaign timeline both

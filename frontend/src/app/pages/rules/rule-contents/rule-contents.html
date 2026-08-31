@@ -1,0 +1,61 @@
+<!-- `contents` on the host, so this <aside> is the flex child the page's row lays out rather than a
+     wrapper standing between the two. Its own scroller: the rulebook beside it is far taller, and a
+     rail that scrolled with it would be gone by the second section — which is the whole reason it
+     exists. Hidden below `lg`, where the reading column needs the full width; the search and the
+     sections are then reached by scrolling the page itself. -->
+<aside
+  [attr.aria-label]="'rules.contents.title' | translate"
+  class="scroll-subtle hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-edge lg:flex"
+>
+  <!-- Pinned to the rail's top while its list scrolls under it: on a ten-entry list the field would
+       barely leave the screen, but it is the rail's one control and it should never be somewhere
+       the reader has to go back up to find. -->
+  <div class="sticky top-0 z-10 bg-surface-950 px-4 pt-5 pb-3">
+    <label
+      class="flex items-center gap-2 border-b border-edge pb-1.5 transition-colors focus-within:border-brand-500"
+    >
+      <svg aria-hidden="true" class="size-4 shrink-0 text-text-muted" lucideSearch></svg>
+      <span class="sr-only">{{ 'rules.contents.searchLabel' | translate }}</span>
+      <input
+        (input)="onInput($event)"
+        [placeholder]="'rules.contents.searchPlaceholder' | translate"
+        [value]="query()"
+        autocapitalize="off"
+        class="min-w-0 flex-1 bg-transparent py-1 text-base text-text-primary placeholder:text-text-muted focus:outline-none"
+        spellcheck="false"
+        type="search"
+      />
+    </label>
+  </div>
+
+  @if (entries().length === 0) {
+    <p class="px-4 pb-5 text-prose text-text-secondary">
+      {{ 'rules.contents.noMatch' | translate: { query: query() } }}
+    </p>
+  } @else {
+    <ul class="flex flex-col pb-8">
+      @for (entry of entries(); track entry.id) {
+        <li>
+          <!-- A button rather than a fragment link: the fragment is the page's own concern, and the
+               router would push a history entry for every section a reader glances at. -->
+          <button
+            (click)="jump.emit(entry.id)"
+            [attr.aria-current]="entry.id === activeId() ? 'true' : null"
+            [class.border-l-brand-500]="entry.id === activeId()"
+            [class.text-brand-500]="entry.id === activeId()"
+            [class.text-text-secondary]="entry.id !== activeId()"
+            class="focus-ring-inset flex w-full cursor-pointer items-baseline gap-2.5 border-l-2 border-l-transparent py-2 pr-4 pl-4 text-left transition-colors hover:bg-brand-500/6 hover:text-text-primary"
+            type="button"
+          >
+            <span aria-hidden="true" class="w-4 shrink-0 font-mono text-xs tabular-nums">
+              {{ entry.index }}
+            </span>
+            <span class="text-base leading-snug">
+              {{ 'rules.sections.' + entry.key + '.title' | translate }}
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</aside>

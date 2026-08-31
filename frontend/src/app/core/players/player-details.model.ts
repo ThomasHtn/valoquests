@@ -46,4 +46,35 @@ export interface PlayerDetails {
    */
   readonly rankRating: number | null;
   readonly statistics: PlayerStatistics;
+  readonly dailyYield: DailyYield;
+}
+
+/**
+ * Where a player stands on today's diminishing-returns ladder, before their next match.
+ *
+ * Mirrors the backend `PlayerDetailsResponse.DailyYield`. The rule that turns "play more" into "play
+ * more often" was only ever stated after the fact — a match carried the share it had already kept —
+ * so a player learned it by losing value to it. This is the same rule read forwards.
+ */
+export interface DailyYield {
+  /**
+   * Valued matches already played today, in any mode.
+   */
+  readonly matchesToday: number;
+
+  /**
+   * Share of its base damage the next match would keep, from 0 to 100.
+   */
+  readonly nextMatchPercent: number;
+
+  /**
+   * Rank at which the share falls further, or `null` once the ladder has bottomed out and nothing
+   * falls again.
+   */
+  readonly dropsAtRank: number | null;
+
+  /**
+   * Share kept from {@link dropsAtRank} on, or `null` at the floor.
+   */
+  readonly dropsToPercent: number | null;
 }

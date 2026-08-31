@@ -13,6 +13,8 @@ import {
 import { LucideCheck, LucideLock, LucideSkull, LucideX } from '@lucide/angular';
 
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
+import { resolveBossCategoryColorClass } from '@core/boss/boss-visual.utils';
+import { BossCategory } from '@core/boss/boss.model';
 import { ColonyBossView } from '@core/colony/colony-view.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { buildFriezeStars, FriezeStar, railSplitPercentage } from '../campaign-frieze.utils';
@@ -143,5 +145,18 @@ export class WeekFrieze {
    */
   protected moraleColorClass(boss: ColonyBossView): string {
     return boss.state === 'SURVIVED' ? 'text-danger' : 'text-accent-violet';
+  }
+
+  /**
+   * Colour utility for a scheduled weight class, `''` outside the run's weeks.
+   *
+   * Wrapped rather than called straight from the template so the `null` a node outside the ladder
+   * carries resolves to no class at all instead of a lookup on `null`.
+   *
+   * @param category - The week's scheduled weight class, or `null`.
+   * @returns The Tailwind text colour utility, or an empty string.
+   */
+  protected categoryColorClass(category: BossCategory | null): string {
+    return category === null ? '' : resolveBossCategoryColorClass(category);
   }
 }

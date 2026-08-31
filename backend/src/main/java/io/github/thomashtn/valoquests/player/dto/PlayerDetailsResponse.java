@@ -20,9 +20,32 @@ public record PlayerDetailsResponse(
     Integer rankRating,
     Instant lastSuccessfulSynchronizationAt,
     PlayerStatistics statistics,
+    DailyYield dailyYield,
     List<AgentStatisticsResponse> agents,
     List<MapStatisticsResponse> maps
 ) {
+    /**
+     * Where this player stands on today's diminishing-returns ladder, before their next match.
+     *
+     * <p>The rule that turns "play more" into "play more often" was only ever stated after the fact:
+     * a match carried the share it had kept, so a player learned the ladder by losing value to it.
+     * This says what the next match is worth, which is the only form in which it can change what
+     * somebody does.
+     *
+     * @param matchesToday     valued matches already played today
+     * @param nextMatchPercent share of its base damage the next match would keep
+     * @param dropsAtRank      rank at which the share falls further, or {@code null} at the floor
+     * @param dropsToPercent   share kept from {@link #dropsAtRank} on, or {@code null} at the floor
+     */
+    @Schema(description = "Standing on today's diminishing-returns ladder.")
+    public record DailyYield(
+        int matchesToday,
+        int nextMatchPercent,
+        Integer dropsAtRank,
+        Integer dropsToPercent
+    ) {
+    }
+
     /**
      * Exposes one player's aggregated statistics over their whole stored history.
      *

@@ -31,6 +31,7 @@ import { formatSeasonName } from '@core/matches/season-name.utils';
 import { Season } from '@core/matches/season.model';
 import { SeasonsApi } from '@core/matches/seasons-api';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
 import { Translation } from '@core/i18n/translation';
 import {
   resolveCompetitiveTierIconUrl,
@@ -113,6 +114,11 @@ const MAX_PROGRESSION_SEASONS = 5;
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class PlayerProfile {
+  /**
+   * Named rulebook fragments, for the link out of the daily-yield band.
+   */
+  protected readonly ruleAnchor = RULE_ANCHOR;
+
   /**
    * Internal player identifier, bound from the `:id` route parameter.
    */
@@ -723,5 +729,18 @@ export class PlayerProfile {
    */
   private static resolveCurrentSeasonId(seasons: readonly Season[]): number | null {
     return (seasons.find((season) => season.active) ?? seasons[0])?.id ?? null;
+  }
+  /**
+   * Colour of the share the next match keeps.
+   *
+   * Amber at full value, muted once the ladder has started taking a cut: the band is a warning
+   * only from the moment there is something to warn about, and a red would overstate a rule that
+   * still pays half.
+   *
+   * @param percent - Share the next match would keep.
+   * @returns The Tailwind text colour utility.
+   */
+  protected yieldToneClass(percent: number): string {
+    return percent >= 100 ? 'text-brand-500' : 'text-text-secondary';
   }
 }

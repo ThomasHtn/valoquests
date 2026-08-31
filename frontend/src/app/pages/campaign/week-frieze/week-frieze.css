@@ -330,6 +330,19 @@
   color: #e8ab6b;
 }
 
+/* The scheduled weight class on a sealed week. Sits under the draw date, in the class's own colour
+   — the one thing a future week states, and the reason the ten markers are no longer alike. Set at
+   the caption size rather than the boss-name size: it qualifies the week, it is not its headline. */
+.fzc-cat {
+  display: block;
+  margin-top: 6px;
+  font-weight: 600;
+  font-size: 0.5625rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
 .fzc-n {
   display: block;
   margin-top: 7px;

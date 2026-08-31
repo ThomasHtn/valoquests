@@ -22,7 +22,11 @@
           <div class="boss-id">
             <span class="boss-tag">
               <svg aria-hidden="true" class="size-3.5 shrink-0" lucideSkull></svg>
-              {{ 'overview.confrontation.threat' | translate }}
+              <!-- Names the axis, not the opponent: the heading right below already opens on
+                   "Boss 02", so repeating the word here would say it twice in two lines. The
+                   confrontation band on `/overview` is the opposite case — there this eyebrow is
+                   the camp facing the squad, so it carries the opponent's own word. -->
+              {{ 'overview.bossEncounter.difficulty' | translate }}
               @if (categoryKey()) {
                 <em>· {{ categoryKey() | translate }}</em>
               }
@@ -83,6 +87,17 @@
           <!-- The count the bar is a picture of, on the bar's own line: read together they say the
                same thing twice over, once exactly and once at a glance. -->
           <span class="boss-hp">
+            <!-- "Why fifty-one thousand?" is the question this figure raises and the one the page
+                 cannot answer in place. Lands straight on the calibration beat rather than at the
+                 top of the rulebook. -->
+            <a
+              [fragment]="ruleAnchor.bossCalibration"
+              [routerLink]="'/rules'"
+              class="focus-ring label-caption text-text-muted transition-colors hover:text-brand-500"
+            >
+              {{ 'week.boss.calibrationLink' | translate }}
+              <span aria-hidden="true">→</span>
+            </a>
             <span class="label-caption text-text-muted">
               {{ 'week.boss.remainingHp' | translate }}
             </span>

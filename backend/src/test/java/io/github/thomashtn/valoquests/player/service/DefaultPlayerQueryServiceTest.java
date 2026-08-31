@@ -2,6 +2,8 @@ package io.github.thomashtn.valoquests.player.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
@@ -17,11 +19,14 @@ import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
+import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver;
 import io.github.thomashtn.valoquests.shared.exception.InvalidRequestException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,6 +66,18 @@ class DefaultPlayerQueryServiceTest {
     private SeasonQueryService seasonQueryService;
 
     /**
+     * Mocked resolver of the daily diminishing-returns ladder.
+     */
+    @Mock
+    private WeeklyMatchDamageResolver weeklyMatchDamageResolver;
+
+    /**
+     * Mocked ruleset supplying that ladder.
+     */
+    @Mock
+    private ScoringRuleset ruleset;
+
+    /**
      * Service under test.
      */
     private DefaultPlayerQueryService service;
@@ -71,8 +88,20 @@ class DefaultPlayerQueryServiceTest {
     @BeforeEach
     void setUp() {
         service = new DefaultPlayerQueryService(
-            playerRepository, playerMatchRepository, weekCalendar, seasonQueryService
+            playerRepository,
+            playerMatchRepository,
+            weekCalendar,
+            seasonQueryService,
+            weeklyMatchDamageResolver,
+            ruleset
         );
+
+        // The profile carries today's standing on the diminishing-returns ladder, which every
+        // `findById` therefore resolves. Lenient because the list-facing tests never reach it.
+        lenient().when(weekCalendar.today()).thenReturn(LocalDate.of(2026, 8, 31));
+        lenient().when(weekCalendar.zone()).thenReturn(ZoneOffset.UTC);
+        lenient().when(weeklyMatchDamageResolver.dailyYield(any(), any(), any()))
+            .thenReturn(new WeeklyMatchDamageResolver.DailyYield(0, 100, 6, 50));
     }
 
     /**

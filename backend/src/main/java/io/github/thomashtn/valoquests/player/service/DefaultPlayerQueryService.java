@@ -11,6 +11,8 @@ import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
+import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver;
 import io.github.thomashtn.valoquests.shared.exception.InvalidRequestException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Instant;
@@ -50,23 +52,39 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
     private final SeasonQueryService seasonQueryService;
 
     /**
+     * Applies the daily diminishing-returns ladder, and reports where today stands on it.
+     */
+    private final WeeklyMatchDamageResolver weeklyMatchDamageResolver;
+
+    /**
+     * Ruleset supplying that ladder.
+     */
+    private final ScoringRuleset ruleset;
+
+    /**
      * Creates the persisted player query service.
      *
      * @param playerRepository repository used to load tracked players
      * @param playerMatchRepository repository used to query persisted player matches
      * @param weekCalendar calendar resolving a week's instant bounds
      * @param seasonQueryService resolves the season currently in progress
+     * @param weeklyMatchDamageResolver applies the daily diminishing-returns ladder
+     * @param ruleset ruleset supplying that ladder
      */
     public DefaultPlayerQueryService(
         PlayerRepository playerRepository,
         PlayerMatchRepository playerMatchRepository,
         WeekCalendar weekCalendar,
-        SeasonQueryService seasonQueryService
+        SeasonQueryService seasonQueryService,
+        WeeklyMatchDamageResolver weeklyMatchDamageResolver,
+        ScoringRuleset ruleset
     ) {
         this.playerRepository = playerRepository;
         this.playerMatchRepository = playerMatchRepository;
         this.weekCalendar = weekCalendar;
         this.seasonQueryService = seasonQueryService;
+        this.weeklyMatchDamageResolver = weeklyMatchDamageResolver;
+        this.ruleset = ruleset;
     }
 
     /**
@@ -133,6 +151,7 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
             player.getRankRating(),
             player.getLastSuccessfulSynchronizationAt(),
             statistics.toResponse(),
+            dailyYieldOf(playerId),
             groupBy(matches, PlayerMatch::getAgentName).entrySet().stream()
                 .map(entry -> MatchStatistics.toAgentStatistics(entry.getKey(), entry.getValue()))
                 .sorted((left, right) -> Long.compare(right.matchesPlayed(), left.matchesPlayed()))
@@ -141,6 +160,42 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
                 .map(entry -> MatchStatistics.toMapStatistics(entry.getKey(), entry.getValue()))
                 .sorted((left, right) -> Long.compare(right.matchesPlayed(), left.matchesPlayed()))
                 .toList()
+        );
+    }
+
+    /**
+     * Reports where a player stands on today's diminishing-returns ladder.
+     *
+     * <p>Queried on its own rather than counted from the profile's own matches: those are filtered by
+     * the season, mode and week the reader is looking at, and the ladder counts every valued match of
+     * the day whatever mode it was played in. Scoped to today alone, so the query stays small.
+     *
+     * @param playerId internal player identifier
+     * @return the day's standing
+     */
+    private PlayerDetailsResponse.DailyYield dailyYieldOf(long playerId) {
+        LocalDate today = weekCalendar.today();
+        List<PlayerMatch> todaysMatches = playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+            playerId,
+            new PlayerMatchHistoryCriteria(
+                null,
+                null,
+                null,
+                null,
+                null,
+                today.atStartOfDay(weekCalendar.zone()).toInstant(),
+                today.plusDays(1).atStartOfDay(weekCalendar.zone()).toInstant()
+            )
+        );
+
+        WeeklyMatchDamageResolver.DailyYield yield =
+            weeklyMatchDamageResolver.dailyYield(todaysMatches, ruleset, today);
+
+        return new PlayerDetailsResponse.DailyYield(
+            yield.matchesToday(),
+            yield.nextMatchPercent(),
+            yield.dropsAtRank(),
+            yield.dropsToPercent()
         );
     }
 

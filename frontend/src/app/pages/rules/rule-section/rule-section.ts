@@ -13,7 +13,11 @@ import { Component, input } from '@angular/core';
   templateUrl: './rule-section.html',
   // A box rather than `display: contents`: the section is this component's only child, so the box
   // costs nothing, and without one the page stack's gutter would not reach it.
-  host: { class: 'block' },
+  //
+  // Hidden from the host rather than from the `<section>` inside it, so a filtered-out beat leaves
+  // no empty box behind in the page's stack — `page-body`'s own `gap` would otherwise still spend a
+  // gutter on it.
+  host: { class: 'block', '[hidden]': '!visible()' },
 })
 export class RuleSection {
   /**
@@ -36,4 +40,16 @@ export class RuleSection {
    * nothing above it to separate from.
    */
   public readonly bordered = input(true);
+
+  /**
+   * Fragment identifying this section, from `RULE_ANCHORS` — the `id` a contents entry and a deep
+   * link from another screen both target.
+   */
+  public readonly anchor = input.required<string>();
+
+  /**
+   * Whether the section is shown at all. Off while a search is running and this section does not
+   * match it.
+   */
+  public readonly visible = input(true);
 }

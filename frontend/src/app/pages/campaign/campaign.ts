@@ -12,6 +12,7 @@ import {
 import { BossCampaign } from '@core/boss/boss-campaign';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
 import { ColonyView } from '@core/colony/colony-view';
+import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
 import { resolveColonyDeltaColorClass } from '@core/colony/colony-visual.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { PageHeader } from '@layout/page-header/page-header';
@@ -67,6 +68,12 @@ export class Campaign {
    * The colony the campaign feeds, resolved into display-ready view models.
    */
   protected readonly colony = inject(ColonyView);
+
+  /**
+   * Named rulebook fragments, so a link into the rules lands on the beat it is about rather than at
+   * the top of a four-thousand-pixel page.
+   */
+  protected readonly ruleAnchor = RULE_ANCHOR;
 
   /**
    * Week asked for in the URL as `?week=YYYY-MM-DD`, or `null` when the page was opened plain.

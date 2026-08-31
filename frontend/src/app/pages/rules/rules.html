@@ -25,343 +25,334 @@
   </a>
 </app-page-header>
 
-<div class="page-body">
-  <!-- The four beats, as rows of a document rather than as boxed panels: narrative on the left,
+<!-- The contents rail and the rulebook, side by side under the context bar. A row rather than a
+     block inside `page-body`, so the rail stands the full height of the content area and scrolls
+     independently of the prose it indexes — the arrangement a long reference document wants, and
+     the one every documentation site settles on. `min-h-0` is what lets the two children scroll:
+     without it a flex child sized by its content refuses to shrink below it. -->
+<div class="flex min-h-0 flex-1">
+  <app-rule-contents (jump)="scrollTo($event)" [activeId]="activeAnchor()" />
+
+  <div class="page-body min-w-0 flex-1">
+    <!-- The four beats, as rows of a document rather than as boxed panels: narrative on the left,
      numbers on the right, separated by a single hairline. Stacking beats a two-column masonry here
      because the reading order is the whole point — the loop only makes sense read top to bottom.
 
      No width cap of its own: the beats sit in the same column as every other page's blocks, so the
      gutters match the rest of the application. The narrative column stays capped at `19rem`, which
      keeps the prose readable while the tables take the remaining width. -->
-  <div class="flex w-full flex-col">
-    <!-- 01 · Challenges. Unruled at the top, unlike the beats below it: the hairlines separate one
+    <div class="flex w-full flex-col">
+      <!-- 01 · Challenges. Unruled at the top, unlike the beats below it: the hairlines separate one
        beat from the next, and there is nothing above this one to separate it from. -->
-    <app-rule-section
-      [bordered]="false"
-      [description]="'rules.sections.challenges.description' | translate"
-      [heading]="'rules.sections.challenges.title' | translate"
-      index="01"
-    >
-      <div>
-        <div
-          class="grid grid-cols-[minmax(0,1fr)_5rem] items-center gap-x-4 border-b border-brand-500/30 pb-2"
-        >
-          <span class="label-caption text-text-muted">
-            {{ 'rules.sections.challenges.difficultyLabel' | translate }}
-          </span>
-          <span class="label-caption text-right text-text-muted">
-            {{ 'rules.sections.challenges.damageLabel' | translate }}
-          </span>
-        </div>
+      <app-rule-section
+        [bordered]="false"
+        [description]="'rules.sections.challenges.description' | translate"
+        [heading]="'rules.sections.challenges.title' | translate"
+        anchor="challenges"
+        index="01"
+      >
+        <div>
+          <div
+            class="grid grid-cols-[minmax(0,1fr)_5rem] items-center gap-x-4 border-b border-brand-500/30 pb-2"
+          >
+            <span class="label-caption text-text-muted">
+              {{ 'rules.sections.challenges.difficultyLabel' | translate }}
+            </span>
+            <span class="label-caption text-right text-text-muted">
+              {{ 'rules.sections.challenges.damageLabel' | translate }}
+            </span>
+          </div>
 
-        <ul>
-          @for (tier of difficultyShowcase; track tier.difficulty) {
-            <li
-              class="grid grid-cols-[minmax(0,1fr)_5rem] items-center gap-x-4 border-b border-text-primary/8 py-2.5 last:border-b-0"
-            >
-              <div class="flex min-w-0 items-center gap-3">
-                <!-- Decorative: the tier it stands for is written beside it. -->
-                <span
-                  [class]="tier.visual.barClass"
-                  aria-hidden="true"
-                  class="clip-hex relative h-7 w-6 shrink-0"
-                >
+          <ul>
+            @for (tier of difficultyShowcase; track tier.difficulty) {
+              <li
+                class="grid grid-cols-[minmax(0,1fr)_5rem] items-center gap-x-4 border-b border-text-primary/8 py-2.5 last:border-b-0"
+              >
+                <div class="flex min-w-0 items-center gap-3">
+                  <!-- Decorative: the tier it stands for is written beside it. -->
                   <span
-                    [class]="tier.visual.iconClass"
-                    class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-2xs font-bold"
+                    [class]="tier.visual.barClass"
+                    aria-hidden="true"
+                    class="clip-hex relative h-7 w-6 shrink-0"
                   >
-                    {{ tier.visual.tier }}
+                    <span
+                      [class]="tier.visual.iconClass"
+                      class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-2xs font-bold"
+                    >
+                      {{ tier.visual.tier }}
+                    </span>
                   </span>
+                  <span class="truncate text-sm font-semibold text-text-primary uppercase">
+                    {{ 'overview.weeklyChallenges.difficulty.' + tier.difficulty | translate }}
+                  </span>
+                </div>
+                <span class="font-display text-right text-lg font-bold text-brand-500 tabular-nums">
+                  {{ amount(tier.damage) }}
                 </span>
-                <span class="truncate text-sm font-semibold text-text-primary uppercase">
-                  {{ 'overview.weeklyChallenges.difficulty.' + tier.difficulty | translate }}
-                </span>
-              </div>
-              <span class="font-display text-right text-lg font-bold text-brand-500 tabular-nums">
-                {{ amount(tier.damage) }}
-              </span>
-            </li>
-          }
-        </ul>
-      </div>
-    </app-rule-section>
+              </li>
+            }
+          </ul>
+        </div>
+      </app-rule-section>
 
-    <!-- 02 · Match damage, by mode and outcome. -->
-    <app-rule-section
-      [description]="'rules.sections.damage.description' | translate"
-      [heading]="'rules.sections.damage.title' | translate"
-      index="02"
-    >
-      <div>
-        <!-- The outcome columns are sized by their *header*, not by their values: "Victoire" and
+      <!-- 02 · Match damage, by mode and outcome. -->
+      <app-rule-section
+        [description]="'rules.sections.damage.description' | translate"
+        [heading]="'rules.sections.damage.title' | translate"
+        anchor="damage"
+        index="02"
+      >
+        <div>
+          <!-- The outcome columns are sized by their *header*, not by their values: "Victoire" and
            "Défaite" are the widest things they hold, and at the narrower measure they used to run
            over their neighbour and off the right edge of a phone. -->
-        <div
-          class="grid grid-cols-[minmax(0,1fr)_repeat(3,5rem)] items-center gap-x-3 border-b border-brand-500/30 pb-2"
-        >
-          <span class="label-caption text-text-muted">
-            {{ 'rules.sections.damage.modeLabel' | translate }}
-          </span>
-          <span class="label-caption text-right text-brand-500">
-            {{ 'playerProfile.matches.result.WIN' | translate }}
-          </span>
-          <span class="label-caption text-right text-text-muted">
-            {{ 'playerProfile.matches.result.DRAW' | translate }}
-          </span>
-          <span class="label-caption text-right text-text-muted">
-            {{ 'playerProfile.matches.result.LOSS' | translate }}
-          </span>
-        </div>
-
-        <ul>
-          @for (mode of matchDamageShowcase; track mode.mode) {
-            <li
-              class="grid grid-cols-[minmax(0,1fr)_repeat(3,5rem)] items-center gap-x-3 border-b border-text-primary/8 py-2.5 last:border-b-0"
-            >
-              <!-- Wraps rather than truncates: on a phone the longest mode name no longer fits on
-                 one line, and a mode the reader cannot finish reading defeats the table. -->
-              <span class="text-sm font-semibold text-text-primary">
-                {{ 'playerProfile.matches.gameMode.' + mode.mode | translate }}
-              </span>
-              <span class="font-display text-right font-bold text-brand-500 tabular-nums">
-                {{ amount(mode.win) }}
-              </span>
-              <span class="font-display text-right font-bold text-text-secondary tabular-nums">
-                {{ mode.draw === null ? '—' : amount(mode.draw) }}
-              </span>
-              <span class="font-display text-right font-bold text-text-muted tabular-nums">
-                {{ amount(mode.loss) }}
-              </span>
-            </li>
-          }
-        </ul>
-
-        <!-- Daily diminishing returns. Sits under the per-mode table because it modifies it: the
-           amounts above are what a match is worth before this ladder is applied. -->
-        <div class="mt-5 border-t border-brand-500/30 pt-4">
-          <p class="label-caption text-text-muted">
-            {{ 'rules.sections.damage.decayLabel' | translate }}
-          </p>
-          <ul class="mt-2.5 grid grid-cols-3 gap-2">
-            @for (band of matchDecayShowcase; track band.label) {
-              <li
-                class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
-              >
-                <span class="font-mono text-2xs font-semibold text-text-secondary">
-                  {{ 'rules.sections.damage.decayRank' | translate: { rank: band.label } }}
-                </span>
-                <span
-                  class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
-                >
-                  {{ band.percent }} %
-                </span>
-              </li>
-            }
-          </ul>
-          <p class="mt-3 text-prose text-text-secondary">
-            {{ 'rules.sections.damage.decayFootnote' | translate }}
-          </p>
-        </div>
-      </div>
-    </app-rule-section>
-
-    <!-- Bonuses. Tinted brand and marked with a plus rather than a number: they are not a fifth beat
-       of the loop but a multiplier sitting on top of the two above. -->
-    <section
-      class="grid items-start gap-x-10 gap-y-5 border-t border-brand-500/30 bg-linear-[115deg] from-brand-500/8 to-transparent px-4 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:gap-x-40 lg:px-5 lg:py-9"
-    >
-      <div>
-        <div class="flex items-baseline gap-3">
-          <span
-            aria-hidden="true"
-            class="font-display text-2xl leading-none font-bold text-brand-500"
+          <div
+            class="grid grid-cols-[minmax(0,1fr)_repeat(3,5rem)] items-center gap-x-3 border-b border-brand-500/30 pb-2"
           >
-            +
-          </span>
-          <h2 class="font-display text-lg leading-tight font-semibold text-text-primary uppercase">
-            {{ 'rules.sections.bonuses.title' | translate }}
-          </h2>
-        </div>
-        <p class="mt-3 text-prose text-text-secondary">
-          {{ 'rules.sections.bonuses.footnote' | translate }}
-        </p>
-      </div>
+            <span class="label-caption text-text-muted">
+              {{ 'rules.sections.damage.modeLabel' | translate }}
+            </span>
+            <span class="label-caption text-right text-brand-500">
+              {{ 'playerProfile.matches.result.WIN' | translate }}
+            </span>
+            <span class="label-caption text-right text-text-muted">
+              {{ 'playerProfile.matches.result.DRAW' | translate }}
+            </span>
+            <span class="label-caption text-right text-text-muted">
+              {{ 'playerProfile.matches.result.LOSS' | translate }}
+            </span>
+          </div>
 
-      <div class="flex flex-col gap-5">
-        <div>
-          <p class="label-caption text-text-muted">
-            {{ 'rules.sections.bonuses.regularityLabel' | translate }}
-          </p>
-          <ul class="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-6">
-            @for (tier of regularityBonusShowcase; track tier.label) {
+          <ul>
+            @for (mode of matchDamageShowcase; track mode.mode) {
               <li
-                class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
+                class="grid grid-cols-[minmax(0,1fr)_repeat(3,5rem)] items-center gap-x-3 border-b border-text-primary/8 py-2.5 last:border-b-0"
               >
-                <span class="font-mono text-2xs font-semibold text-text-secondary">
-                  {{ 'rules.sections.bonuses.days' | translate: { days: tier.label } }}
+                <!-- Wraps rather than truncates: on a phone the longest mode name no longer fits on
+                 one line, and a mode the reader cannot finish reading defeats the table. -->
+                <span class="text-sm font-semibold text-text-primary">
+                  {{ 'playerProfile.matches.gameMode.' + mode.mode | translate }}
                 </span>
-                <span
-                  class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
-                >
-                  {{ amount(tier.bonus) }}
+                <span class="font-display text-right font-bold text-brand-500 tabular-nums">
+                  {{ amount(mode.win) }}
+                </span>
+                <span class="font-display text-right font-bold text-text-secondary tabular-nums">
+                  {{ mode.draw === null ? '—' : amount(mode.draw) }}
+                </span>
+                <span class="font-display text-right font-bold text-text-muted tabular-nums">
+                  {{ amount(mode.loss) }}
                 </span>
               </li>
             }
           </ul>
-        </div>
 
-        <div>
-          <p class="label-caption text-text-muted">
-            {{ 'rules.sections.bonuses.teamLabel' | translate }}
-          </p>
-          <ul class="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-5">
-            @for (tier of teamBonusShowcase(); track tier.label) {
-              <li
-                class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
-              >
-                <span class="font-mono text-2xs font-semibold text-text-secondary">
-                  {{ 'rules.sections.bonuses.players' | translate: { count: tier.label } }}
-                </span>
-                <span
-                  class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
+          <!-- Daily diminishing returns. Sits under the per-mode table because it modifies it: the
+           amounts above are what a match is worth before this ladder is applied. -->
+          <div class="mt-5 border-t border-brand-500/30 pt-4">
+            <p class="label-caption text-text-muted">
+              {{ 'rules.sections.damage.decayLabel' | translate }}
+            </p>
+            <ul class="mt-2.5 grid grid-cols-3 gap-2">
+              @for (band of matchDecayShowcase; track band.label) {
+                <li
+                  class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
                 >
-                  {{ tier.multiplier }}
-                </span>
-              </li>
-            }
-          </ul>
+                  <span class="font-mono text-2xs font-semibold text-text-secondary">
+                    {{ 'rules.sections.damage.decayRank' | translate: { rank: band.label } }}
+                  </span>
+                  <span
+                    class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
+                  >
+                    {{ band.percent }} %
+                  </span>
+                </li>
+              }
+            </ul>
+            <p class="mt-3 text-prose text-text-secondary">
+              {{ 'rules.sections.damage.decayFootnote' | translate }}
+            </p>
+          </div>
         </div>
-      </div>
-    </section>
+      </app-rule-section>
 
-    <!-- 03 · The shared boss, and how heavy it can get. -->
-    <app-rule-section
-      [description]="'rules.sections.boss.description' | translate"
-      [heading]="'rules.sections.boss.title' | translate"
-      index="03"
-    >
-      <!-- One projected child, not two: `app-rule-section` puts its slot in the wide column, so a
-         second top-level element would drop into the narrow narrative one instead. -->
-      <div>
-        <ul class="grid gap-3 sm:grid-cols-3">
-          @for (category of bossCategoryShowcase; track category) {
-            <!-- The category's own color is set on the tile so its leading rule can inherit it,
-               matching how a boss is colored on the overview and boss pages. -->
-            <li
-              [class]="bossCategoryColorClass(category)"
-              class="border-l-2 border-current panel px-3.5 py-3"
+      <!-- Bonuses. Tinted brand and marked with a plus rather than a number: they are not a fifth beat
+       of the loop but a multiplier sitting on top of the two above. -->
+      <section
+        class="grid scroll-mt-4 items-start gap-x-10 gap-y-5 border-t border-brand-500/30 bg-linear-[115deg] from-brand-500/8 to-transparent px-4 py-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:gap-x-40 lg:px-5 lg:py-9"
+        id="bonuses"
+      >
+        <div>
+          <div class="flex items-baseline gap-3">
+            <span
+              aria-hidden="true"
+              class="font-display text-2xl leading-none font-bold text-brand-500"
             >
-              <p class="tracking-label font-display text-sm font-semibold uppercase">
-                {{ 'boss.category.' + category | translate }}
-              </p>
-              <p class="mt-2 text-prose text-text-secondary">
-                {{ 'rules.sections.boss.categories.' + category | translate }}
-              </p>
-            </li>
-          }
-        </ul>
+              +
+            </span>
+            <h2
+              class="font-display text-lg leading-tight font-semibold text-text-primary uppercase"
+            >
+              {{ 'rules.sections.bonuses.title' | translate }}
+            </h2>
+          </div>
+          <p class="mt-3 text-prose text-text-secondary">
+            {{ 'rules.sections.bonuses.footnote' | translate }}
+          </p>
+        </div>
 
-        <!-- The class each week fights, scheduled rather than drawn. Drawn as a profile rather than
+        <div class="flex flex-col gap-5">
+          <div>
+            <p class="label-caption text-text-muted">
+              {{ 'rules.sections.bonuses.regularityLabel' | translate }}
+            </p>
+            <ul class="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-6">
+              @for (tier of regularityBonusShowcase; track tier.label) {
+                <li
+                  class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
+                >
+                  <span class="font-mono text-2xs font-semibold text-text-secondary">
+                    {{ 'rules.sections.bonuses.days' | translate: { days: tier.label } }}
+                  </span>
+                  <span
+                    class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
+                  >
+                    {{ amount(tier.bonus) }}
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <div>
+            <p class="label-caption text-text-muted">
+              {{ 'rules.sections.bonuses.teamLabel' | translate }}
+            </p>
+            <ul class="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-5">
+              @for (tier of teamBonusShowcase(); track tier.label) {
+                <li
+                  class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
+                >
+                  <span class="font-mono text-2xs font-semibold text-text-secondary">
+                    {{ 'rules.sections.bonuses.players' | translate: { count: tier.label } }}
+                  </span>
+                  <span
+                    class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
+                  >
+                    {{ tier.multiplier }}
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 03 · The shared boss, and how heavy it can get. -->
+      <app-rule-section
+        [description]="'rules.sections.boss.description' | translate"
+        [heading]="'rules.sections.boss.title' | translate"
+        anchor="boss"
+        index="03"
+      >
+        <!-- One projected child, not two: `app-rule-section` puts its slot in the wide column, so a
+         second top-level element would drop into the narrow narrative one instead. -->
+        <div>
+          <ul class="grid gap-3 sm:grid-cols-3">
+            @for (category of bossCategoryShowcase; track category) {
+              <!-- The category's own color is set on the tile so its leading rule can inherit it,
+               matching how a boss is colored on the overview and boss pages. -->
+              <li
+                [class]="bossCategoryColorClass(category)"
+                class="border-l-2 border-current panel px-3.5 py-3"
+              >
+                <p class="tracking-label font-display text-sm font-semibold uppercase">
+                  {{ 'boss.category.' + category | translate }}
+                </p>
+                <p class="mt-2 text-prose text-text-secondary">
+                  {{ 'rules.sections.boss.categories.' + category | translate }}
+                </p>
+              </li>
+            }
+          </ul>
+
+          <!-- The class each week fights, scheduled rather than drawn. Drawn as a profile rather than
            as ten equal chips because its shape is the point: each bar stands at the share of a
            squad week its class costs, so the two peaks and the breather that follows each are read
            before the words are. -->
-        <div class="mt-5 border-t border-edge pt-4">
-          <p class="label-caption text-text-muted">
-            {{ 'rules.sections.boss.ladderLabel' | translate }}
+          <div class="mt-5 border-t border-edge pt-4">
+            <p class="label-caption text-text-muted">
+              {{ 'rules.sections.boss.ladderLabel' | translate }}
+            </p>
+            <ol class="mt-3 grid grid-cols-5 gap-x-1.5 gap-y-4 sm:grid-cols-10">
+              @for (category of bossLadderShowcase; track $index) {
+                <li
+                  [class]="bossCategoryColorClass(category)"
+                  class="flex flex-col items-center gap-1.5"
+                >
+                  <!-- Decorative: the class the height stands for is written under it. -->
+                  <span aria-hidden="true" class="flex h-14 w-full items-end">
+                    <span
+                      [style.height.%]="bossWeightShare(category)"
+                      class="w-full border-t-2 border-current bg-current/12"
+                    ></span>
+                  </span>
+                  <span class="font-mono text-2xs text-text-muted tabular-nums">{{
+                    $index + 1
+                  }}</span>
+                  <span class="font-display text-2xs font-semibold tracking-[0.06em] uppercase">
+                    {{ 'boss.category.' + category | translate }}
+                  </span>
+                </li>
+              }
+            </ol>
+            <p class="mt-4 text-prose text-text-secondary">
+              {{ 'rules.sections.boss.ladderFootnote' | translate }}
+            </p>
+          </div>
+        </div>
+      </app-rule-section>
+
+      <!-- 04 · Why the fight stays winnable on its own. Sits right after the boss because it only
+       makes sense once the shared health bar has been introduced. -->
+      <app-rule-section
+        [description]="'rules.sections.calibration.description' | translate"
+        [heading]="'rules.sections.calibration.title' | translate"
+        anchor="calibration"
+        index="04"
+      >
+        <p class="text-prose text-text-secondary">
+          {{ 'rules.sections.calibration.bounds' | translate }}
+        </p>
+      </app-rule-section>
+
+      <!-- 05 · The two rules a reader is most likely to be surprised by: what a match has to be to
+       count at all, and the challenges measured against the player rather than a threshold. -->
+      <app-rule-section
+        [description]="'rules.sections.eligibility.description' | translate"
+        [heading]="'rules.sections.eligibility.title' | translate"
+        anchor="eligibility"
+        index="05"
+      >
+        <div class="border-l-2 border-brand-500 panel px-3.5 py-3">
+          <p class="tracking-label font-display text-sm font-semibold text-text-primary uppercase">
+            {{ 'rules.sections.progression.title' | translate }}
           </p>
-          <ol class="mt-3 grid grid-cols-5 gap-x-1.5 gap-y-4 sm:grid-cols-10">
-            @for (category of bossLadderShowcase; track $index) {
-              <li
-                [class]="bossCategoryColorClass(category)"
-                class="flex flex-col items-center gap-1.5"
-              >
-                <!-- Decorative: the class the height stands for is written under it. -->
-                <span aria-hidden="true" class="flex h-14 w-full items-end">
-                  <span
-                    [style.height.%]="bossWeightShare(category)"
-                    class="w-full border-t-2 border-current bg-current/12"
-                  ></span>
-                </span>
-                <span class="font-mono text-2xs text-text-muted tabular-nums">{{
-                  $index + 1
-                }}</span>
-                <span class="font-display text-2xs font-semibold tracking-[0.06em] uppercase">
-                  {{ 'boss.category.' + category | translate }}
-                </span>
-              </li>
-            }
-          </ol>
-          <p class="mt-4 text-prose text-text-secondary">
-            {{ 'rules.sections.boss.ladderFootnote' | translate }}
+          <p class="mt-2 text-prose text-text-secondary">
+            {{ 'rules.sections.progression.description' | translate }}
           </p>
         </div>
-      </div>
-    </app-rule-section>
+      </app-rule-section>
 
-    <!-- 04 · Why the fight stays winnable on its own. Sits right after the boss because it only
-       makes sense once the shared health bar has been introduced. -->
-    <app-rule-section
-      [description]="'rules.sections.calibration.description' | translate"
-      [heading]="'rules.sections.calibration.title' | translate"
-      index="04"
-    >
-      <p class="text-prose text-text-secondary">
-        {{ 'rules.sections.calibration.bounds' | translate }}
-      </p>
-    </app-rule-section>
-
-    <!-- 05 · The two rules a reader is most likely to be surprised by: what a match has to be to
-       count at all, and the challenges measured against the player rather than a threshold. -->
-    <app-rule-section
-      [description]="'rules.sections.eligibility.description' | translate"
-      [heading]="'rules.sections.eligibility.title' | translate"
-      index="05"
-    >
-      <div class="border-l-2 border-brand-500 panel px-3.5 py-3">
-        <p class="tracking-label font-display text-sm font-semibold text-text-primary uppercase">
-          {{ 'rules.sections.progression.title' | translate }}
-        </p>
-        <p class="mt-2 text-prose text-text-secondary">
-          {{ 'rules.sections.progression.description' | translate }}
-        </p>
-      </div>
-    </app-rule-section>
-
-    <!-- 06 · What all that damage is counted for. -->
-    <app-rule-section
-      [description]="'rules.sections.ranking.description' | translate"
-      [heading]="'rules.sections.ranking.title' | translate"
-      index="06"
-    >
-      <app-champion-badge descriptionTrailing />
-      <ol>
-        @for (fact of rankingFacts; track fact; let index = $index) {
-          <li
-            class="flex items-baseline gap-3.5 border-b border-text-primary/8 py-2.5 last:border-b-0"
-          >
-            <span aria-hidden="true" class="shrink-0 font-mono text-sm font-bold text-brand-500">
-              0{{ index + 1 }}
-            </span>
-            <span class="text-prose text-text-secondary">
-              {{ 'rules.sections.ranking.facts.' + fact | translate }}
-            </span>
-          </li>
-        }
-      </ol>
-    </app-rule-section>
-
-    <!-- 07 · The colony. Where the first six beats are read a second time: the same damage, the same
-       challenges and the same fights, priced in food and housing instead of in points. -->
-    <app-rule-section
-      [description]="'rules.sections.colony.description' | translate"
-      [heading]="'rules.sections.colony.title' | translate"
-      index="07"
-    >
-      <div>
-        <!-- The chain, stated as the four numbers it is made of. Everything else in this beat is a
-           consequence of these. -->
+      <!-- 06 · What all that damage is counted for. -->
+      <app-rule-section
+        [description]="'rules.sections.ranking.description' | translate"
+        [heading]="'rules.sections.ranking.title' | translate"
+        anchor="ranking"
+        index="06"
+      >
+        <app-champion-badge descriptionTrailing />
         <ol>
-          @for (fact of colonyFacts; track fact; let index = $index) {
+          @for (fact of rankingFacts; track fact; let index = $index) {
             <li
               class="flex items-baseline gap-3.5 border-b border-text-primary/8 py-2.5 last:border-b-0"
             >
@@ -369,140 +360,173 @@
                 0{{ index + 1 }}
               </span>
               <span class="text-prose text-text-secondary">
-                {{ 'rules.sections.colony.facts.' + fact | translate }}
+                {{ 'rules.sections.ranking.facts.' + fact | translate }}
               </span>
             </li>
           }
         </ol>
+      </app-rule-section>
 
-        <!-- Turnout. Sits under the chain because it multiplies it: everything harvested in a day is
+      <!-- 07 · The colony. Where the first six beats are read a second time: the same damage, the same
+       challenges and the same fights, priced in food and housing instead of in points. -->
+      <app-rule-section
+        [description]="'rules.sections.colony.description' | translate"
+        [heading]="'rules.sections.colony.title' | translate"
+        anchor="colony"
+        index="07"
+      >
+        <div>
+          <!-- The chain, stated as the four numbers it is made of. Everything else in this beat is a
+           consequence of these. -->
+          <ol>
+            @for (fact of colonyFacts; track fact; let index = $index) {
+              <li
+                class="flex items-baseline gap-3.5 border-b border-text-primary/8 py-2.5 last:border-b-0"
+              >
+                <span
+                  aria-hidden="true"
+                  class="shrink-0 font-mono text-sm font-bold text-brand-500"
+                >
+                  0{{ index + 1 }}
+                </span>
+                <span class="text-prose text-text-secondary">
+                  {{ 'rules.sections.colony.facts.' + fact | translate }}
+                </span>
+              </li>
+            }
+          </ol>
+
+          <!-- Turnout. Sits under the chain because it multiplies it: everything harvested in a day is
            multiplied by how many of the squad were there for it. -->
-        <div class="mt-5 border-t border-brand-500/30 pt-4">
-          <p class="label-caption text-text-muted">
-            {{ 'rules.sections.colony.presenceLabel' | translate }}
-          </p>
-          <p class="mt-2.5 text-prose text-text-secondary">
-            {{ 'rules.sections.colony.presence' | translate }}
-          </p>
+          <div class="mt-5 border-t border-brand-500/30 pt-4">
+            <p class="label-caption text-text-muted">
+              {{ 'rules.sections.colony.presenceLabel' | translate }}
+            </p>
+            <p class="mt-2.5 text-prose text-text-secondary">
+              {{ 'rules.sections.colony.presence' | translate }}
+            </p>
+          </div>
         </div>
-      </div>
-    </app-rule-section>
+      </app-rule-section>
 
-    <!-- 08 · The night, and the one lever that changes its speed. -->
-    <app-rule-section
-      [description]="'rules.sections.night.description' | translate"
-      [heading]="'rules.sections.night.title' | translate"
-      index="08"
-    >
-      <div>
-        <p class="text-prose text-text-secondary">
-          {{ 'rules.sections.night.gap' | translate }}
-        </p>
-
-        <div class="mt-5 border-t border-brand-500/30 pt-4">
-          <p class="label-caption text-text-muted">
-            {{ 'rules.sections.night.moraleLabel' | translate }}
+      <!-- 08 · The night, and the one lever that changes its speed. -->
+      <app-rule-section
+        [description]="'rules.sections.night.description' | translate"
+        [heading]="'rules.sections.night.title' | translate"
+        anchor="night"
+        index="08"
+      >
+        <div>
+          <p class="text-prose text-text-secondary">
+            {{ 'rules.sections.night.gap' | translate }}
           </p>
-          <ul class="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            @for (tier of colonyMoraleShowcase; track tier.label) {
+
+          <div class="mt-5 border-t border-brand-500/30 pt-4">
+            <p class="label-caption text-text-muted">
+              {{ 'rules.sections.night.moraleLabel' | translate }}
+            </p>
+            <ul class="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              @for (tier of colonyMoraleShowcase; track tier.label) {
+                <li
+                  class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
+                >
+                  <span class="font-mono text-2xs font-semibold text-text-secondary">
+                    {{ 'rules.sections.night.morale.' + tier.label | translate }}
+                  </span>
+                  <span
+                    [class]="tier.morale > 0 ? 'text-accent-violet' : 'text-danger'"
+                    class="font-display text-base leading-none font-bold tabular-nums"
+                  >
+                    {{ tier.morale > 0 ? '+' : '' }}{{ tier.morale }}
+                  </span>
+                </li>
+              }
+            </ul>
+            <p class="mt-3 text-prose text-text-secondary">
+              {{ 'rules.sections.night.moraleFootnote' | translate }}
+            </p>
+          </div>
+        </div>
+      </app-rule-section>
+
+      <!-- 09 · The town itself: what buys the housing, and the names it wears. Closes the document
+       without a rule under it, for the same reason 01 opens without one. -->
+      <app-rule-section
+        [description]="'rules.sections.town.description' | translate"
+        [heading]="'rules.sections.town.title' | translate"
+        anchor="town"
+        index="09"
+      >
+        <div>
+          <p class="label-caption text-text-muted">
+            {{ 'rules.sections.town.materialsLabel' | translate }}
+          </p>
+          <ul class="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-5">
+            @for (tier of colonyMaterialsShowcase; track tier.difficulty) {
               <li
                 class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
               >
                 <span class="font-mono text-2xs font-semibold text-text-secondary">
-                  {{ 'rules.sections.night.morale.' + tier.label | translate }}
+                  {{ 'overview.weeklyChallenges.difficulty.' + tier.difficulty | translate }}
                 </span>
                 <span
-                  [class]="tier.morale > 0 ? 'text-accent-violet' : 'text-danger'"
-                  class="font-display text-base leading-none font-bold tabular-nums"
+                  class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
                 >
-                  {{ tier.morale > 0 ? '+' : '' }}{{ tier.morale }}
-                </span>
-              </li>
-            }
-          </ul>
-          <p class="mt-3 text-prose text-text-secondary">
-            {{ 'rules.sections.night.moraleFootnote' | translate }}
-          </p>
-        </div>
-      </div>
-    </app-rule-section>
-
-    <!-- 09 · The town itself: what buys the housing, and the names it wears. Closes the document
-       without a rule under it, for the same reason 01 opens without one. -->
-    <app-rule-section
-      [description]="'rules.sections.town.description' | translate"
-      [heading]="'rules.sections.town.title' | translate"
-      index="09"
-    >
-      <div>
-        <p class="label-caption text-text-muted">
-          {{ 'rules.sections.town.materialsLabel' | translate }}
-        </p>
-        <ul class="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-5">
-          @for (tier of colonyMaterialsShowcase; track tier.difficulty) {
-            <li
-              class="flex flex-col items-center gap-1 border-t-2 border-brand-500/50 bg-brand-500/8 px-1 py-2.5"
-            >
-              <span class="font-mono text-2xs font-semibold text-text-secondary">
-                {{ 'overview.weeklyChallenges.difficulty.' + tier.difficulty | translate }}
-              </span>
-              <span
-                class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
-              >
-                {{ tier.materials }}
-              </span>
-            </li>
-          }
-        </ul>
-
-        <!-- The other half of the town's income, and the one the run's shape is built around: the
-           two elite weeks pay several ordinary ones on their own. -->
-        <div class="mt-5 border-t border-brand-500/30 pt-4">
-          <p class="label-caption text-text-muted">
-            {{ 'rules.sections.town.bossMaterialsLabel' | translate }}
-          </p>
-          <ul class="mt-2.5 grid grid-cols-3 gap-2">
-            @for (tier of bossMaterialsShowcase; track tier.category) {
-              <li
-                [class]="bossCategoryColorClass(tier.category)"
-                class="flex flex-col items-center gap-1 border-t-2 border-current panel px-1 py-2.5"
-              >
-                <span class="font-mono text-2xs font-semibold text-text-secondary">
-                  {{ 'boss.category.' + tier.category | translate }}
-                </span>
-                <span class="font-display text-base leading-none font-bold tabular-nums">
                   {{ tier.materials }}
                 </span>
               </li>
             }
           </ul>
-        </div>
 
-        <!-- The names, and the one rule behind them. The table shows the opening steps only; the
+          <!-- The other half of the town's income, and the one the run's shape is built around: the
+           two elite weeks pay several ordinary ones on their own. -->
+          <div class="mt-5 border-t border-brand-500/30 pt-4">
+            <p class="label-caption text-text-muted">
+              {{ 'rules.sections.town.bossMaterialsLabel' | translate }}
+            </p>
+            <ul class="mt-2.5 grid grid-cols-3 gap-2">
+              @for (tier of bossMaterialsShowcase; track tier.category) {
+                <li
+                  [class]="bossCategoryColorClass(tier.category)"
+                  class="flex flex-col items-center gap-1 border-t-2 border-current panel px-1 py-2.5"
+                >
+                  <span class="font-mono text-2xs font-semibold text-text-secondary">
+                    {{ 'boss.category.' + tier.category | translate }}
+                  </span>
+                  <span class="font-display text-base leading-none font-bold tabular-nums">
+                    {{ tier.materials }}
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <!-- The names, and the one rule behind them. The table shows the opening steps only; the
            ladder runs to eighteen names and then repeats, numbered. -->
-        <div class="mt-5 border-t border-brand-500/30 pt-4">
-          <p class="label-caption text-text-muted">
-            {{ 'rules.sections.town.tiersLabel' | translate }}
-          </p>
-          <ul class="mt-2.5 flex flex-col">
-            @for (tier of colonyTierShowcase(); track tier.name) {
-              <li
-                class="flex items-baseline justify-between gap-3 border-b border-text-primary/8 py-2 last:border-b-0"
-              >
-                <span class="text-prose text-text-secondary">
-                  {{ 'colony.tier.' + tier.name | translate: { level: 1 } }}
-                </span>
-                <span class="font-mono text-sm font-semibold text-brand-500 tabular-nums">
-                  {{ tier.threshold }}
-                </span>
-              </li>
-            }
-          </ul>
-          <p class="mt-3 text-prose text-text-secondary">
-            {{ 'rules.sections.town.tiersFootnote' | translate }}
-          </p>
+          <div class="mt-5 border-t border-brand-500/30 pt-4">
+            <p class="label-caption text-text-muted">
+              {{ 'rules.sections.town.tiersLabel' | translate }}
+            </p>
+            <ul class="mt-2.5 flex flex-col">
+              @for (tier of colonyTierShowcase(); track tier.name) {
+                <li
+                  class="flex items-baseline justify-between gap-3 border-b border-text-primary/8 py-2 last:border-b-0"
+                >
+                  <span class="text-prose text-text-secondary">
+                    {{ 'colony.tier.' + tier.name | translate: { level: 1 } }}
+                  </span>
+                  <span class="font-mono text-sm font-semibold text-brand-500 tabular-nums">
+                    {{ tier.threshold }}
+                  </span>
+                </li>
+              }
+            </ul>
+            <p class="mt-3 text-prose text-text-secondary">
+              {{ 'rules.sections.town.tiersFootnote' | translate }}
+            </p>
+          </div>
         </div>
-      </div>
-    </app-rule-section>
+      </app-rule-section>
+    </div>
   </div>
 </div>

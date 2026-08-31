@@ -37,26 +37,6 @@ export const DIFFICULTY_SHOWCASE: readonly DifficultyShowcase[] = (
 export const BOSS_CATEGORY_SHOWCASE: readonly BossCategory[] = ['MINOR', 'STANDARD', 'ELITE'];
 
 /**
- * The weight class each week of a run fights, first week to last.
- *
- * Mirrors `DefaultScoringRuleset#bossCategoryForRunWeek`. Worth showing rather than describing
- * because the class is scheduled, not drawn: a reader can look up which week the run peaks on
- * before it happens, which is the whole difference with the random draw this replaced.
- */
-export const BOSS_LADDER_SHOWCASE: readonly BossCategory[] = [
-  'MINOR',
-  'STANDARD',
-  'STANDARD',
-  'STANDARD',
-  'ELITE',
-  'MINOR',
-  'STANDARD',
-  'STANDARD',
-  'STANDARD',
-  'ELITE',
-];
-
-/**
  * Per-player weekly output each weight class is sized against, as a percentage.
  *
  * Mirrors the switch in `DefaultScoringRuleset#bossHitPoints`, and the figures the three class

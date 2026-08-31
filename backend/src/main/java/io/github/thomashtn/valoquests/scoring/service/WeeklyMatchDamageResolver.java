@@ -29,6 +29,15 @@ public class WeeklyMatchDamageResolver {
     private static final double PERCENT_SCALE = 100.0;
 
     /**
+     * How far past the next match {@link #dailyYield} looks for the ladder's next step down.
+     *
+     * <p>Generous next to a ladder whose last step is the tenth match of a day, and finite on
+     * purpose: past its floor the ladder never pays less again, so an unbounded scan would not
+     * terminate.
+     */
+    private static final int LADDER_LOOKAHEAD = 64;
+
+    /**
      * Orders the matches of one day from the most to the least valuable, so a player's best games
      * always land in the highest-paying ranks.
      *
@@ -199,5 +208,61 @@ public class WeeklyMatchDamageResolver {
          * What an ineligible match is worth: nothing, on no rank.
          */
         public static final MatchDamage NONE = new MatchDamage(0, 0);
+    }
+
+    /**
+     * Reports where a player stands on today's ladder, before they play their next match.
+     *
+     * <p>The ladder is applied retroactively everywhere else: a match is priced once it exists, and
+     * the interface could only ever say what a game had already been worth. This says what the next
+     * one <em>will</em> be worth, which is the only form in which a rule meant to discourage
+     * marathon sessions can actually discourage one.
+     *
+     * <p>Probes the ruleset rather than reading its thresholds: the ladder's shape belongs to
+     * {@link ScoringRuleset#matchDamageCoefficientPercent(int)} and a second copy of it here would
+     * be a second thing to keep in step.
+     *
+     * @param playerMatches one player's matches, in any order and over any period
+     * @param ruleset       ruleset supplying the coefficient ladder
+     * @param day           calendar day to report on
+     * @return the day's standing
+     */
+    public DailyYield dailyYield(List<PlayerMatch> playerMatches, ScoringRuleset ruleset, LocalDate day) {
+        int playedToday = (int) playerMatches.stream()
+            .filter(matchDamageCalculator::isEligible)
+            .filter(playerMatch -> dayOf(playerMatch).equals(day))
+            .count();
+
+        int nextRank = playedToday + 1;
+        int nextPercent = ruleset.matchDamageCoefficientPercent(nextRank);
+
+        // Scans forward for the first rank paying less than the next match would. Bounded rather
+        // than open: a ladder already at its floor never pays less again, and the bound is what says
+        // so without asking the ruleset to describe its own shape.
+        for (int rank = nextRank + 1; rank <= nextRank + LADDER_LOOKAHEAD; rank++) {
+            int percent = ruleset.matchDamageCoefficientPercent(rank);
+            if (percent < nextPercent) {
+                return new DailyYield(playedToday, nextPercent, rank, percent);
+            }
+        }
+
+        return new DailyYield(playedToday, nextPercent, null, null);
+    }
+
+    /**
+     * Where a player stands on one day's diminishing-returns ladder.
+     *
+     * @param matchesToday     valued matches already played that day
+     * @param nextMatchPercent share of its base damage the next match would keep
+     * @param dropsAtRank      rank at which the share falls below {@link #nextMatchPercent}, or
+     *     {@code null} once the ladder has reached its floor and nothing falls further
+     * @param dropsToPercent   share kept from {@link #dropsAtRank} on, or {@code null} at the floor
+     */
+    public record DailyYield(
+        int matchesToday,
+        int nextMatchPercent,
+        Integer dropsAtRank,
+        Integer dropsToPercent
+    ) {
     }
 }

@@ -165,7 +165,7 @@
         "portraitNone": "Aucun avatar",
         "status": "Statut initial"
       },
-      "frozenRoster": "La run {{run}} tourne sur un roster figé à {{roster}} joueurs. Activer ou désactiver quelqu'un ici ne prendra effet qu'à la run suivante.",
+      "frozenRoster": "La campagne {{run}} tourne sur un roster figé à {{roster}} joueurs. Activer ou désactiver quelqu'un ici ne prendra effet qu'à la campagne suivante.",
       "gettingStarted": {
         "addPlayers": "Ajoutez chaque joueur avec son Riot ID complet, au format pseudo#tag.",
         "operationsLink": "Aller aux opérations",
@@ -283,7 +283,7 @@
     "board": {
       "title": "Le palmarès",
       "campaign": "Campagne",
-      "threats": "Menaces",
+      "threats": "Boss",
       "tier": "Palier atteint",
       "score": "Score"
     },
@@ -319,26 +319,26 @@
     },
     "error": "Impossible de charger la campagne.",
     "frieze": {
-      "hint": "Touchez une menace pour déplier sa semaine ici — PV restants, récompenses, top 3"
+      "hint": "Touchez un boss pour déplier sa semaine ici — PV restants, récompenses, top 3"
     },
     "heading": "La campagne de l'escouade",
     "legend": {
-      "current": "Menace en cours",
+      "current": "Boss en cours",
       "defeated": "Repoussée",
       "survived": "Colonie touchée",
       "upcoming": "À venir"
     },
     "loading": "Chargement de la campagne…",
     "map": {
-      "ariaLabel": "Carte des menaces sur la colonie, une par semaine de la run"
+      "ariaLabel": "Carte des boss de la campagne, un par semaine"
     },
     "stand": {
-      "title": "Où en est la run",
-      "scoreLabel": "Le score de la run",
+      "title": "Où en est la campagne",
+      "scoreLabel": "Le score de la campagne",
       "remainingDays": "Il reste {{days}} jours à jouer",
       "firstDay": "Jour 1 de la campagne"
     },
-    "territory": "Carte des menaces",
+    "territory": "Carte des boss",
     "title": "Campagne",
     "weeks": {
       "title": "Les dix semaines",
@@ -406,7 +406,7 @@
       "NONE": "{{name}} n'a pas joué"
     },
     "runDay": "Jour {{day}} / {{days}}",
-    "runDayHint": "Une run dure {{days}} jours : dix semaines, plus un jour de solde dont la population est le score.",
+    "runDayHint": "Une campagne dure {{days}} jours : dix semaines, plus un jour de solde dont la population est le score.",
     "runDayWord": "Jour",
     "tier": {
       "CAMP": "Campement",
@@ -526,7 +526,7 @@
   "overview": {
     "bossEncounter": {
       "defeated": "Le boss est tombé cette semaine.",
-      "difficulty": "Difficulté",
+      "difficulty": "Classe",
       "error": "Impossible de charger le boss de la semaine.",
       "eyebrow": "Boss hebdomadaire",
       "hpUnit": "PV",
@@ -538,10 +538,10 @@
     },
     "confrontation": {
       "squad": "Escouade",
-      "threat": "Menace",
+      "threat": "Boss",
       "onlineUnit": "/ {{roster}} en ligne",
       "quests": "défis validés",
-      "multiplier": "multiplicateur {{multiplier}} · plafond {{max}}",
+      "multiplier": "multiplicateur {{multiplier}} · {{max}} au complet",
       "dealt": "{{damage}} PV arrachés cette semaine"
     },
     "economy": {
@@ -692,6 +692,16 @@
   "playerProfile": {
     "breadcrumb": {
       "players": "Escouade"
+    },
+    "dailyYield": {
+      "drops": "À partir du {{rank}}ᵉ, {{percent}} %.",
+      "link": "Le rendement du jour",
+      "next": "Le suivant en garde {{percent}} %.",
+      "played": {
+        "one": "match joué aujourd’hui.",
+        "other": "matchs joués aujourd’hui."
+      },
+      "title": "Rendement"
     },
     "display": {
       "label": "Affichage",
@@ -956,6 +966,12 @@
       "play": "Jouer",
       "town": "La ville grandit"
     },
+    "contents": {
+      "noMatch": "Aucune section ne parle de « {{query}} ».",
+      "searchLabel": "Chercher une règle",
+      "searchPlaceholder": "rendement, moral…",
+      "title": "Sommaire"
+    },
     "heading": "Règles",
     "parts": {
       "rates": {
@@ -972,7 +988,6 @@
       "value": "4 min"
     },
     "replayTour": "Revoir le tour d'horizon",
-    "subheading": "Comment marche l'escouade",
     "sections": {
       "bonuses": {
         "days": "{{days}} j",
@@ -988,14 +1003,14 @@
           "MINOR": "Environ 65 % d'une semaine type de l'escouade. Elle le plie souvent en milieu de semaine.",
           "STANDARD": "Environ 85 % d'une semaine type de l'escouade. Une semaine creuse reste rattrapable."
         },
-        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade. Sa barre n'est pas un chiffre figé : elle est calculée d'après ce que l'escouade a réellement produit lors des dernières semaines closes, multiplié par le nombre de joueurs actifs. Un joueur actif qui ne joue pas alourdit donc le boss sans l'entamer. Terrasse-le avant dimanche soir. La campagne, elle, ne court que sur la run en cours, soit dix combats : à la run suivante la carte repart à zéro, sans effacer les combats déjà livrés.",
-        "ladderFootnote": "La classe du boss ne sort pas du tirage : elle est fixée par la place de la semaine dans la run. Les semaines 5 et 10 sont les deux pics, chacune suivie d'un boss mineur pour souffler. Le tirage ne décide que de quel boss de cette classe se présente, et un boss ne revient jamais deux fois dans la même run.",
-        "ladderLabel": "Palier de difficulté, semaine par semaine",
+        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade. Sa barre n'est pas un chiffre figé : elle est calculée d'après ce que l'escouade a réellement produit lors des dernières semaines closes, multiplié par le nombre de joueurs actifs. Un joueur actif qui ne joue pas alourdit donc le boss sans l'entamer. Terrasse-le avant dimanche soir. La campagne, elle, ne court que sur celle en cours, soit dix combats : à la campagne suivante la carte repart à zéro, sans effacer les combats déjà livrés.",
+        "ladderFootnote": "La classe du boss ne sort pas du tirage : elle est fixée par la place de la semaine dans la campagne. Les semaines 5 et 10 sont les deux pics, chacune suivie d'un boss mineur pour souffler. Le tirage ne décide que de quel boss de cette classe se présente, et un boss ne revient jamais deux fois dans la même campagne.",
+        "ladderLabel": "Classe du boss, semaine par semaine",
         "title": "Un boss, une barre de vie commune"
       },
       "calibration": {
         "bounds": "La référence ne peut pas s'emballer : elle reste encadrée, pour qu'un arrêt total ne fasse pas tomber le boss en un match et qu'une envolée ne le rende pas inatteignable.",
-        "description": "La barre du boss ne se règle pas à la main : elle suit la médiane de ce que l'escouade a réellement produit lors des 4 dernières semaines closes. Si le groupe joue plus, le boss grossit ; s'il lève le pied, le boss maigrit. Une semaine marathon isolée ne compte pas, la médiane l'ignore. Le calibrage joue sur la taille du combat, jamais sur sa classe : celle-là est fixée par le calendrier de la run.",
+        "description": "La barre du boss ne se règle pas à la main : elle suit la médiane de ce que l'escouade a réellement produit lors des 4 dernières semaines closes. Si le groupe joue plus, le boss grossit ; s'il lève le pied, le boss maigrit. Une semaine marathon isolée ne compte pas, la médiane l'ignore. Le calibrage joue sur la taille du combat, jamais sur sa classe : celle-là est fixée par le calendrier de la campagne.",
         "title": "Une difficulté qui s'ajuste toute seule"
       },
       "challenges": {
@@ -1039,7 +1054,7 @@
           "ELITE": "Élite vaincu",
           "SURVIVED": "Boss survivant"
         },
-        "moraleFootnote": "Le moral démarre à 50 et ne dépend que des boss. Il multiplie la vitesse de montée : à 50, la ville comble 7,5 % de l'écart par journée au lieu de 15 %. Il ne ralentit jamais la descente. Les dix combats d'une run rapportent 50 de moral à eux tous, soit exactement la place jusqu'au plafond : une run sans faute n'atteint 100 qu'à son dixième combat, donc aucun boss n'est jamais sans effet. Au plancher, il reste 3 % par journée, soit environ 19 % par semaine : une run mal partie rampe, mais elle n'est jamais bloquée."
+        "moraleFootnote": "Le moral démarre à 50 et ne dépend que des boss. Il multiplie la vitesse de montée : à 50, la ville comble 7,5 % de l'écart par journée au lieu de 15 %. Il ne ralentit jamais la descente. Les dix combats d'une campagne rapportent 50 de moral à eux tous, soit exactement la place jusqu'au plafond : une campagne sans faute n'atteint 100 qu'à son dixième combat, donc aucun boss n'est jamais sans effet. Au plancher, il reste 3 % par journée, soit environ 19 % par semaine : une campagne mal partie rampe, mais elle n'est jamais bloquée."
       },
       "progression": {
         "description": "Certains défis ne demandent pas un seuil absolu mais un progrès sur toi-même : dépasser ton propre K/D, ton ACS ou ton taux de headshots des 4 semaines précédentes, d'un pourcentage donné. Enchaîner les parties au même niveau ne les valide pas, puisque la mesure est un taux. Sans historique sur les 4 dernières semaines, le défi reste hors de portée.",
@@ -1061,9 +1076,10 @@
         "bossMaterialsLabel": "Matériaux par boss vaincu, et par joueur",
         "materialsLabel": "Matériaux par défi validé, et par joueur",
         "tiersLabel": "Les paliers, tous les 0,75 d'efficacité",
-        "tiersFootnote": "Un boss vaincu rapporte ses matériaux à chaque joueur du groupe, jamais des habitants : des habitants s'effaceraient à 15 % par journée, alors que l'efficacité ne redescend jamais. Les matériaux sont divisés par la taille du groupe avant d'être convertis, ce qui rend l'équilibre identique de 2 à 20 joueurs. Une run régulière va de 8 à 16 d'efficacité, soit un palier par semaine."
+        "tiersFootnote": "Un boss vaincu rapporte ses matériaux à chaque joueur du groupe, jamais des habitants : des habitants s'effaceraient à 15 % par journée, alors que l'efficacité ne redescend jamais. Les matériaux sont divisés par la taille du groupe avant d'être convertis, ce qui rend l'équilibre identique de 2 à 20 joueurs. Une campagne régulière va de 8 à 16 d'efficacité, soit un palier par semaine."
       }
     },
+    "subheading": "Comment marche l'escouade",
     "title": "Règles et fonctionnement"
   },
   "seasons": {
@@ -1109,7 +1125,8 @@
       "rules": "Règles"
     },
     "navLabel": "Navigation principale",
-    "openMenu": "Ouvrir le menu"
+    "openMenu": "Ouvrir le menu",
+    "rulesSubmenu": "Déplier les sections des règles"
   },
   "snackbar": {
     "dismiss": "Fermer"
@@ -1161,6 +1178,7 @@
   },
   "week": {
     "boss": {
+      "calibrationLink": "Comment ce chiffre est calculé",
       "remainingHp": "PV restants"
     },
     "bossSection": {

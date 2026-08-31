@@ -337,6 +337,52 @@
           />
         </section>
 
+        <!-- Where today stands on the diminishing-returns ladder, above the matches it prices.
+             The rule was only ever legible after the fact, in a tooltip on a match already played;
+             said here it can still change what the next one is. Dropped once the day is untouched
+             and the ladder has nothing to warn about yet — an opening line of "the first match
+             counts in full" is noise on every quiet day. -->
+        @if (details()?.dailyYield; as yield) {
+          @if (yield.matchesToday > 0) {
+            <section
+              class="notch-tr flex flex-wrap items-center gap-x-5 gap-y-2 border-l-2 border-l-brand-500 panel px-4 py-3 [--notch:0.625rem]"
+            >
+              <p class="label-caption text-text-muted">
+                {{ 'playerProfile.dailyYield.title' | translate }}
+              </p>
+
+              <p class="text-prose text-text-secondary">
+                <span class="font-display font-bold text-text-primary tabular-nums">
+                  {{ yield.matchesToday }}
+                </span>
+                {{ 'playerProfile.dailyYield.played' | translate: { count: yield.matchesToday } }}
+                <span [class]="yieldToneClass(yield.nextMatchPercent)" class="font-semibold">
+                  {{
+                    'playerProfile.dailyYield.next' | translate: { percent: yield.nextMatchPercent }
+                  }}
+                </span>
+                @if (yield.dropsAtRank !== null && yield.dropsToPercent !== null) {
+                  <span class="text-text-muted">
+                    {{
+                      'playerProfile.dailyYield.drops'
+                        | translate: { rank: yield.dropsAtRank, percent: yield.dropsToPercent }
+                    }}
+                  </span>
+                }
+              </p>
+
+              <a
+                [fragment]="ruleAnchor.dailyYield"
+                [routerLink]="'/rules'"
+                class="focus-ring label-caption ml-auto text-text-muted transition-colors hover:text-brand-500"
+              >
+                {{ 'playerProfile.dailyYield.link' | translate }}
+                <span aria-hidden="true">→</span>
+              </a>
+            </section>
+          }
+        }
+
         <!-- Match history -->
         <section>
           <app-resource-state

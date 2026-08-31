@@ -110,6 +110,44 @@ export class Translation {
   }
 
   /**
+   * Every translated string under `key`, flattened and lower-cased into one searchable blob.
+   *
+   * The rules page searches its own content, which is entirely dictionary text: rather than
+   * duplicating that prose into a keyword list that would drift from it on the first edit, the
+   * search reads the same entries the page renders. Placeholders are left as they are — nobody
+   * searches for `{{count}}`, and stripping them would cost a pass for nothing.
+   *
+   * Returns `''` for an unknown key, so a caller can index a section that has no prose without
+   * branching.
+   *
+   * @param key - Dot-separated path of the subtree to flatten (e.g. `rules.sections.boss`).
+   * @returns The subtree's strings joined by a space, lower-cased.
+   */
+  public searchText(key: string): string {
+    const entry: unknown = key
+      .split('.')
+      .reduce<unknown>(
+        (node, segment) =>
+          typeof node === 'object' && node !== null
+            ? (node as TranslationDictionary)[segment]
+            : undefined,
+        this.dictionary(),
+      );
+
+    const collect = (node: unknown): readonly string[] => {
+      if (typeof node === 'string') {
+        return [node];
+      }
+
+      return typeof node === 'object' && node !== null
+        ? Object.values(node as TranslationDictionary).flatMap(collect)
+        : [];
+    };
+
+    return collect(entry).join(' ').toLowerCase();
+  }
+
+  /**
    * Narrows a dictionary entry to the single string to render.
    *
    * A pluralized entry carries `one` and `other` branches; which one applies depends on the active

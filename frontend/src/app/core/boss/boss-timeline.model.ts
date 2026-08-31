@@ -105,6 +105,22 @@ export interface BossTimelineNode {
    * map can color the active week's icon by difficulty without re-deriving it from the label.
    */
   readonly category: BossCategory | null;
+
+  /**
+   * The weight class this week is *scheduled* to fight, which is known for every week of the run
+   * including the ones whose boss has not been drawn — the class comes from the calendar, only the
+   * opponent comes from the draw.
+   *
+   * Distinct from {@link category}, which is the class of the boss actually standing there and stays
+   * `null` until it is drawn. This one is what lets the map mark the two elite peaks weeks ahead.
+   */
+  readonly scheduledCategory: BossCategory | null;
+
+  /**
+   * Translated name of {@link scheduledCategory}, `null` outside the run's ten weeks.
+   */
+  readonly scheduledCategoryLabel: string | null;
+
   readonly portraitUrl: string | null;
 
   /**

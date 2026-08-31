@@ -81,6 +81,15 @@
                   {{ 'campaign.weeks.draw' | translate: { date: dateRangeLabel } }}
                 </b>
               }
+              <!-- The class, on a week whose boss is still sealed. It is the one thing about a
+                   future week that is *not* sealed — the calendar fixes it, only the opponent is
+                   drawn — and it is what lets a squad see the two elite peaks coming. Without it
+                   the ten markers were interchangeable padlocks. -->
+              @if (node.scheduledCategoryLabel; as scheduledLabel) {
+                <span [class]="categoryColorClass(node.scheduledCategory)" class="fzc-cat">
+                  {{ scheduledLabel }}
+                </span>
+              }
             </span>
           } @else {
             <span class="fzc">

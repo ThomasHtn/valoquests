@@ -78,6 +78,19 @@ public final class WeekCalendar {
     }
 
     /**
+     * Returns the calendar day currently in progress, in the calendar's own zone.
+     *
+     * <p>The day the daily diminishing returns are counted over, which is not the caller's day: a
+     * player finishing a match at one in the morning is still on the previous day as far as the
+     * ladder is concerned, and only this calendar knows where that boundary sits.
+     *
+     * @return current day
+     */
+    public LocalDate today() {
+        return LocalDate.now(clock.withZone(zone));
+    }
+
+    /**
      * Returns the Monday beginning the week that contains a calendar day.
      *
      * @param day day to place, must not be {@code null}

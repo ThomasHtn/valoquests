@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { LucideFlame, LucideHammer, LucideSkull } from '@lucide/angular';
 
 import { BossApi } from '@core/boss/boss-api';
@@ -7,6 +8,7 @@ import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { resolveChallengeWeakPoints } from '@core/challenges/challenge-weak-point.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { ColonyView } from '@core/colony/colony-view';
+import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -33,7 +35,15 @@ import { TierGlyph } from '@shared/tier-glyph/tier-glyph';
  */
 @Component({
   selector: 'app-boss-band',
-  imports: [TranslatePipe, LucideFlame, LucideHammer, LucideSkull, ResourceState, TierGlyph],
+  imports: [
+    TranslatePipe,
+    RouterLink,
+    LucideFlame,
+    LucideHammer,
+    LucideSkull,
+    ResourceState,
+    TierGlyph,
+  ],
   templateUrl: './boss-band.html',
   styleUrl: './boss-band.css',
 })
@@ -42,6 +52,12 @@ export class BossBand {
   private readonly challengesApi = inject(ChallengesApi);
   private readonly colony = inject(ColonyView);
   private readonly translation = inject(Translation);
+
+  /**
+   * Named rulebook fragments, so the link beside the hit-point figure lands on the beat that
+   * explains where that figure comes from.
+   */
+  protected readonly ruleAnchor = RULE_ANCHOR;
 
   protected readonly bossResource = this.bossApi.current;
 

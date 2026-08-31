@@ -4,7 +4,8 @@ import { interval } from 'rxjs';
 
 import { BossApi } from '@core/boss/boss-api';
 import { BossTimelineNode, BossContribution } from '@core/boss/boss-timeline.model';
-import { BossHistoryWeek, CurrentBoss } from '@core/boss/boss.model';
+import { resolveScheduledBossCategory } from '@core/boss/boss-visual.utils';
+import { BossCategory, BossHistoryWeek, CurrentBoss } from '@core/boss/boss.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
 import {
@@ -408,6 +409,31 @@ export class BossCampaign {
    * @param contributions - That damage broken down per player.
    * @returns The display-ready node, with a `null` meta line.
    */
+  /**
+   * The class a week is scheduled to fight, resolved and translated together.
+   *
+   * Both node builders need the pair and neither should carry the lookup, since a fought week and a
+   * sealed one answer it identically: the class comes from the calendar, only the opponent comes
+   * from the draw.
+   *
+   * @param runWeekIndex - Position of the week inside its run, from one.
+   * @returns The scheduled class and its label, both `null` outside the run's weeks.
+   */
+  private scheduledCategoryOf(runWeekIndex: number): {
+    scheduledCategory: BossCategory | null;
+    scheduledCategoryLabel: string | null;
+  } {
+    const scheduledCategory = resolveScheduledBossCategory(runWeekIndex);
+
+    return {
+      scheduledCategory,
+      scheduledCategoryLabel:
+        scheduledCategory === null
+          ? null
+          : this.translation.translate(`boss.category.${scheduledCategory}`),
+    };
+  }
+
   private toFoughtNode(
     weekStart: string,
     weekEnd: string,
@@ -440,6 +466,7 @@ export class BossCampaign {
       bossDescription: boss.description,
       categoryLabel: this.translation.translate(`boss.category.${boss.category}`),
       category: boss.category,
+      ...this.scheduledCategoryOf(runWeekIndex),
       portraitUrl: boss.imageUrl,
       hasDamage: true,
       hpPercentage: percentage,
@@ -487,6 +514,7 @@ export class BossCampaign {
       bossDescription: this.translation.translate('boss.upcoming.description'),
       categoryLabel: null,
       category: null,
+      ...this.scheduledCategoryOf(runWeekIndex),
       portraitUrl: null,
       hasDamage: false,
       hpPercentage: 0,
