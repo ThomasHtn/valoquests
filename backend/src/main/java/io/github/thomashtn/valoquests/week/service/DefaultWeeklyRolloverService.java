@@ -164,6 +164,14 @@ public class DefaultWeeklyRolloverService
                 finalizeWeek(weekStart, rolloverTime)
         );
 
+        // Swept after the loop rather than inside it: every past fight is resolved, not only those of
+        // the weeks the pack query reported as open. Each one still lands after its own week's ranking
+        // was rebuilt above, which is what the chronology is replayed against.
+        weeklyLifecycleCoordinator.closePastBossEncounters(
+            currentWeekStart,
+            rolloverTime
+        );
+
         weeklyLifecycleCoordinator.openWeek(
             currentWeekStart
         );
@@ -225,8 +233,6 @@ public class DefaultWeeklyRolloverService
         rankingRecalculationService.recalculateWeek(
             weekStart
         );
-
-        weeklyLifecycleCoordinator.closeBossEncounterIfNeeded(weekStart, finalizedAt);
 
         List<WeeklyPlayerScore> weeklyScores =
             weeklyPlayerScoreRepository

@@ -41,6 +41,25 @@ export function formatSignedPopulation(value: number, language: 'fr' | 'en'): st
 }
 
 /**
+ * Formats a share of something as a signed percentage (`+71 %`, `+71%`).
+ *
+ * Through `Intl` rather than by appending a `%` to a number: French sets a narrow no-break space
+ * before the sign and English sets none, and a hand-written `${value} %` gets that wrong in one
+ * language whichever way it is written.
+ *
+ * @param value - The share, in `[0, 100]` rather than in `[0, 1]` — the shape every gauge in the
+ *   colony already carries.
+ * @param language - The app language whose separator and spacing to use.
+ * @returns The share, rounded and prefixed with `+`.
+ */
+export function formatSignedShare(value: number, language: 'fr' | 'en'): string {
+  return `+${new Intl.NumberFormat(COLONY_LOCALES[language], {
+    style: 'percent',
+    maximumFractionDigits: 0,
+  }).format(value / 100)}`;
+}
+
+/**
  * Formats a multiplier to two decimals (`1,71`).
  *
  * The turnout multiplier moves by sevenths, so one decimal would show five players out of seven and

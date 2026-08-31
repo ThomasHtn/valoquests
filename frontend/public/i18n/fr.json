@@ -99,6 +99,18 @@
         "action": "Démarrer",
         "done": "La semaine en cours est complète."
       },
+      "rollover": {
+        "heading": "Passer la semaine",
+        "description": "Rejoue tout le passage de semaine du lundi : clôture les semaines passées restées ouvertes, tranche les combats de boss non résolus et ouvre la semaine en cours. Ne synchronise pas : lance la synchronisation avant si les derniers matchs manquent.",
+        "action": "Lancer",
+        "done": "Passage de semaine terminé."
+      },
+      "colonyRecompute": {
+        "heading": "Recalculer la colonie",
+        "description": "Rejoue la campagne en cours depuis son premier jour, à partir des matchs, défis et boss déjà enregistrés. Sans risque : la colonie n'est jamais incrémentée, elle est toujours recalculée entièrement.",
+        "action": "Recalculer",
+        "done": "Colonie recalculée."
+      },
       "history": {
         "title": "Historique des synchronisations",
         "empty": "Aucune synchronisation passée.",
@@ -352,7 +364,13 @@
       "METROPOLIS": "Métropole",
       "MEGALOPOLIS": "Mégalopole",
       "CAPITAL": "Capitale",
-      "CITADEL": "Citadelle niveau {{level}}"
+      "CITADEL": "Citadelle",
+      "CONURBATION": "Conurbation",
+      "MEGAREGION": "Mégarégion",
+      "ARCOLOGY": "Arcologie",
+      "ECUMENOPOLIS": "Œcuménopole",
+      "CONTINUUM": "Continuum",
+      "STRATUM": "Strate {{level}}"
     },
     "tierProgress": "Encore {{materials}} matériaux pour atteindre {{name}}.",
     "track": {
@@ -467,8 +485,10 @@
     "confrontation": {
       "squad": "Escouade",
       "threat": "Menace",
-      "online": "{{present}} / {{roster}} en ligne",
-      "cleared": "{{cleared}}/{{total}} défis validés · rendement {{multiplier}} / {{max}}"
+      "onlineUnit": "/ {{roster}} en ligne",
+      "quests": "défis validés",
+      "multiplier": "multiplicateur {{multiplier}} · plafond {{max}}",
+      "dealt": "{{damage}} PV arrachés cette semaine"
     },
     "economy": {
       "title": "Économie de la colonie",
@@ -481,7 +501,7 @@
       "title": "La colonie"
     },
     "ladderStrip": {
-      "remaining": "· reste {{materials}} matériaux avant {{tier}}"
+      "cost": "{{materials}} restants"
     },
     "miniRanking": {
       "damageUnit": "dégâts",
@@ -1076,18 +1096,36 @@
     "title": "Tour d'horizon"
   },
   "week": {
-    "bossHero": {
-      "label": "Boss"
+    "boss": {
+      "remainingHp": "PV restants"
     },
     "bossSection": {
+      "link": "Voir la campagne",
       "title": "Boss à vaincre cette semaine"
     },
     "catalogue": {
+      "columns": {
+        "challenge": "Défi"
+      },
+      "groupCount": "{{count}} défis",
       "hint": "Ce que le tirage de lundi peut encore proposer, en plus des cinq défis ci-dessus.",
       "title": "Liste des défis disponibles"
     },
     "challengesSection": {
+      "link": "Qui a validé quoi",
       "title": "Les cinq défis"
+    },
+    "payout": {
+      "currentTier": "Palier actuel",
+      "ifSurvives": "S'il survit",
+      "moraleCost": "{{morale}} moral",
+      "nextTier": "Palier suivant",
+      "noMaterials": "et aucun matériau banqué.",
+      "ofTier": "du palier {{name}}, en une semaine.",
+      "title": "Vaincre ce boss"
+    },
+    "squad": {
+      "cleared": "{{done}} / {{total}} ont validé"
     }
   }
 }

@@ -40,7 +40,10 @@ const DEFAULT_CHALLENGE_ICON: ChallengeIcon = 'target';
  * Tier rank and color treatment applied per challenge difficulty, from easiest to hardest.
  *
  * The scale is a heat ramp — green, blue, amber, pink, red — so the five weekly slots read as an
- * escalating ladder rather than five unrelated categories. The hardest tier takes `accent-red`,
+ * escalating ladder rather than five unrelated categories. Each tier carries its accent twice: as
+ * the Tailwind classes most callers apply, and as the bare hex a component stylesheet lights a
+ * whole block from through one custom property. Both must move together — keep the hexes in sync
+ * with `styles/colors.css`. The hardest tier takes `accent-red`,
  * the same hue as damage and boss health: the reward is what a very hard challenge is *for*, and
  * nothing else on these screens is red enough to be confused with it.
  */
@@ -53,6 +56,7 @@ const CHALLENGE_DIFFICULTY_COLORS: Readonly<
     badgeClass: 'bg-accent-green/15',
     barClass: 'bg-accent-green',
     panelClass: 'border-accent-green/35 from-accent-green/12',
+    tierColor: '#5fb88a',
   },
   NORMAL: {
     tier: 'II',
@@ -60,6 +64,7 @@ const CHALLENGE_DIFFICULTY_COLORS: Readonly<
     badgeClass: 'bg-accent-blue/15',
     barClass: 'bg-accent-blue',
     panelClass: 'border-accent-blue/35 from-accent-blue/12',
+    tierColor: '#5a96be',
   },
   MEDIUM: {
     tier: 'III',
@@ -67,6 +72,7 @@ const CHALLENGE_DIFFICULTY_COLORS: Readonly<
     badgeClass: 'bg-accent-gold/15',
     barClass: 'bg-accent-gold',
     panelClass: 'border-accent-gold/35 from-accent-gold/12',
+    tierColor: '#d9954a',
   },
   HARD: {
     tier: 'IV',
@@ -74,6 +80,7 @@ const CHALLENGE_DIFFICULTY_COLORS: Readonly<
     badgeClass: 'bg-accent-pink/15',
     barClass: 'bg-accent-pink',
     panelClass: 'border-accent-pink/35 from-accent-pink/12',
+    tierColor: '#ec4899',
   },
   VERY_HARD: {
     tier: 'V',
@@ -81,6 +88,7 @@ const CHALLENGE_DIFFICULTY_COLORS: Readonly<
     badgeClass: 'bg-accent-red/15',
     barClass: 'bg-accent-red',
     panelClass: 'border-accent-red/35 from-accent-red/12',
+    tierColor: '#ff4655',
   },
 };
 

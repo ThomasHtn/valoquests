@@ -2,8 +2,12 @@
  * The names a town wears as it grows, from the smallest to the largest.
  *
  * Mirrors the backend `ColonyTierName`. Purely decorative: crossing a step changes no rule, it only
- * gives the run a milestone roughly once a week. `CITADEL` is the open end of the ladder — past it
- * every further step is a numbered citadel, which is what lets the names run on without a maximum.
+ * gives the run a milestone roughly once a week. `STRATUM` is the open end of the ladder — past it
+ * every further step is a numbered stratum, which is what lets the names run on without a maximum.
+ *
+ * The names run to the seventeenth step because that is where the barème says a squad can get: a run
+ * at its calibrated pace ends around `CITADEL`, one clearing nearly every challenge reaches step
+ * seventeen. Every step reachable has a name, and the numbering is the ceiling's ceiling.
  */
 export type ColonyTierName =
   | 'CAMP'
@@ -17,7 +21,13 @@ export type ColonyTierName =
   | 'METROPOLIS'
   | 'MEGALOPOLIS'
   | 'CAPITAL'
-  | 'CITADEL';
+  | 'CITADEL'
+  | 'CONURBATION'
+  | 'MEGAREGION'
+  | 'ARCOLOGY'
+  | 'ECUMENOPOLIS'
+  | 'CONTINUUM'
+  | 'STRATUM';
 
 /**
  * Where one step of the ladder stands relative to the town.

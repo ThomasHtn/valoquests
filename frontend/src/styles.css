@@ -145,6 +145,34 @@
   }
 }
 
+/*
+ * The same cut on the opposite corner, and its edge. The direction cuts every panel top-right; this
+ * pair exists for the one thing that is not a panel — the boss gauge in the colony's confrontation
+ * band, which is cut towards the seam so the two camps' gauges face each other across it.
+ */
+@utility notch-tl {
+  clip-path: polygon(var(--notch, 1.5rem) 0, 100% 0, 100% 100%, 0 100%, 0 var(--notch, 1.5rem));
+}
+
+@utility notch-tl-edge {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: calc(-1 * var(--notch-border-width, 1px));
+    left: calc(-1 * var(--notch-border-width, 1px));
+    width: calc(var(--notch, 1.5rem) * 1.4142);
+    border-top: var(--notch-border-width, 1px) solid;
+    border-color: inherit;
+    border-top-style: inherit;
+    transition: none;
+    /* Mirror of `notch-tr-edge`: same drop, pivoted on the left corner and laid back the other way. */
+    transform-origin: 0 0;
+    transform: translateY(var(--notch, 1.5rem)) rotate(-45deg);
+  }
+}
+
 /* Sheared segment, leaning right — the progress bar's discrete slots. */
 @utility clip-shear {
   clip-path: polygon(
@@ -269,6 +297,47 @@
   & > * {
     @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6;
   }
+}
+
+/*
+ * The section rule: a page's one structural device, and the thing that replaced the stacked
+ * panels. A title, a hairline fading to nothing, the way out, and a hollow diamond closing the run.
+ * It names a block without framing it, which is what keeps a block from reading as a card inside a
+ * card.
+ *
+ * Global rather than owned by `overview.css`, where it was written: `/week` is the second page laid
+ * out on it, and a hand-copied second version is exactly how the utilities in this file came to
+ * exist in the first place. Plain classes rather than a `@utility`, since this is a small group of
+ * elements and not one shorthand.
+ */
+.section-rule {
+  @apply flex flex-wrap items-center gap-x-3 gap-y-1.5;
+}
+
+/*
+ * Neutral, not amber: five gilded titles down a page spend the accent on naming things rather than
+ * on the one figure that matters. The rule's hairline and diamond keep the gold, which is enough to
+ * mark a section start.
+ */
+.section-rule-title {
+  @apply font-display text-sm leading-[1.2] font-semibold tracking-label text-text-secondary uppercase;
+}
+
+.section-rule-line {
+  @apply h-px grow basis-12 bg-linear-to-r from-brand-500/50 to-transparent;
+}
+
+.section-rule-link {
+  @apply font-mono text-xs font-medium tracking-label text-brand-400 uppercase transition-colors;
+}
+
+/* Underlined on hover: the arrow says where it goes, the underline says it is a link. */
+.section-rule-link:hover {
+  @apply text-[#f0c493] underline decoration-1 underline-offset-4;
+}
+
+.section-rule-diamond {
+  @apply size-2 rotate-45 border border-brand-500/70;
 }
 
 /*
@@ -466,6 +535,27 @@
   to {
     transform: translateX(100%);
   }
+}
+
+/*
+ * A boss's health, as a game draws it: a framed sunken rail, and a flat fill that sweeps while the
+ * fight is live. Three call sites read the same week this way — `/week`, and both camps of the
+ * colony's confrontation band — and they had drifted into three different gauges.
+ *
+ * The corner cut is not baked in: pair with `notch-tr` or `notch-tl` and its edge, whichever way the
+ * surface it sits on leans. Height and the lit head at the fill's edge stay at the call site too. So
+ * does the colour: set `--gauge-fill` to draw a gauge that is not a boss's health, and it falls back
+ * to the threat's own red when nothing does.
+ */
+@utility hp-gauge {
+  @apply relative block border border-edge bg-surface-sunken [--notch:0.5rem];
+}
+
+@utility hp-gauge-fill {
+  @apply gauge-sheen absolute inset-y-0 left-0 overflow-hidden;
+  @apply transition-[width] duration-500 motion-reduce:transition-none;
+
+  background: var(--gauge-fill, var(--color-accent-red));
 }
 
 /* Scrollbars, styled to match the dark surface palette instead of the OS default. */

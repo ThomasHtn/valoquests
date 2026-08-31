@@ -40,6 +40,15 @@ export interface ChallengeVisual {
   readonly barClass: string;
 
   /**
+   * The tier's accent as a bare color, for the component stylesheets that light a whole block from
+   * it through one custom property (`--tier` on the week board's cards) rather than through a class
+   * per element. A class run cannot do that: the mark's fill, the mark's own inner text, the
+   * caption and the squad slugs are four different properties on four elements, and Tailwind has no
+   * class for "this element's accent".
+   */
+  readonly tierColor: string;
+
+  /**
    * Border and gradient origin of the challenge card, tinting the whole panel with the tier's
    * accent. Paired with the card's own `bg-linear-*` direction and end color.
    */

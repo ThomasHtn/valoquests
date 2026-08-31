@@ -16,14 +16,24 @@
          a border on the block itself would sit outside that gutter with the scene inset inside it. -->
     <section class="shrink-0">
       <div class="colony-town">
-        <app-town-silhouette
-          class="colony-town-scene"
-          [moralePercentage]="colony.attractivity()?.percentage ?? 50"
-          [tier]="town.tier"
-        />
+        <!-- Deferred, and the only deferred block on the public site: the scene's geometry is
+             twelve kilobytes of pure illustration, and every page of the site rides in the initial
+             bundle (see `app.routes.ts`), so eagerly it was shipped to someone opening `/rules`. It
+             loads immediately rather than on viewport — it is the top of the page — and the
+             placeholder is the panel at its own height, so nothing below it moves when it lands. -->
+        @defer (on immediate) {
+          <app-town-silhouette
+            class="colony-town-scene"
+            [moralePercentage]="colony.attractivity()?.percentage ?? 50"
+            [populationPercentage]="colony.populationPercentage()"
+            [step]="town.step"
+          />
+        } @placeholder {
+          <div class="colony-town-wait"></div>
+        }
 
-        <!-- The readout sits on the scene rather than under it: a dark plate on a daylight sky
-             needs no scrim to be legible, so the frontage keeps its full height. -->
+        <!-- The readout sits on the scene rather than under it: a dark plate on the night sky needs
+             no scrim to be legible, so the frontage keeps its full height. -->
         <div class="colony-town-plate notch-tr">
           <p class="colony-town-tier">
             {{ 'overview.town.tier' | translate: { name: currentTier()?.name ?? '' } }}

@@ -24,6 +24,7 @@ export function resolveChallengeWeakPoints(
       tier: visual.tier,
       iconClass: visual.iconClass,
       barClass: visual.barClass,
+      tierColor: visual.tierColor,
       difficulty: challenge.difficulty,
       damageLabel: formatDamage(challenge.damage, language),
     };

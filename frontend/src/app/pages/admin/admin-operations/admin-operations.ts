@@ -36,7 +36,8 @@ const SYNCHRONIZATION_POLL_INTERVAL_MS = 3_000;
  * Backoffice operations screen.
  *
  * Gathers every command that repairs or refreshes the tracker: synchronizing the squad or one
- * player, rebuilding progress and ranking, and drawing a week the Monday rollover failed to open.
+ * player, rebuilding progress and ranking, drawing a week the Monday rollover failed to open,
+ * running that rollover in full when it never fired at all, and replaying the colony.
  *
  * A synchronization runs in the background and outlives the request that started it, so the page
  * opens on the state of the latest run and polls it while it is in flight. That poll is the only
@@ -154,6 +155,16 @@ export class AdminOperations {
    * State of the weekly selection command.
    */
   protected readonly weekSelectionState = signal<AdminActionState>(IDLE_ACTION);
+
+  /**
+   * State of the weekly rollover command.
+   */
+  protected readonly rolloverState = signal<AdminActionState>(IDLE_ACTION);
+
+  /**
+   * State of the colony replay command.
+   */
+  protected readonly colonyRecomputeState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
    * Translated label of the latest execution's status.
@@ -338,6 +349,26 @@ export class AdminOperations {
     await this.commandRunner.run(() => this.adminApi.selectCurrentWeek(), {
       state: this.weekSelectionState,
       successMessage: () => this.translation.translate('admin.operations.weekSelection.done'),
+    });
+  }
+
+  /**
+   * Runs the weekly rollover now, closing every past week the Monday job left open.
+   */
+  protected async runWeeklyRollover(): Promise<void> {
+    await this.commandRunner.run(() => this.adminApi.runWeeklyRollover(), {
+      state: this.rolloverState,
+      successMessage: () => this.translation.translate('admin.operations.rollover.done'),
+    });
+  }
+
+  /**
+   * Replays the colony over the run in progress.
+   */
+  protected async recomputeColony(): Promise<void> {
+    await this.commandRunner.run(() => this.adminApi.recomputeColony(), {
+      state: this.colonyRecomputeState,
+      successMessage: () => this.translation.translate('admin.operations.colonyRecompute.done'),
     });
   }
 }

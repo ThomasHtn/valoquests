@@ -208,6 +208,25 @@ class DefaultColonyRulesetTest {
         assertThat(ruleset.tierFor(14.00).name()).isEqualTo(ColonyTierName.METROPOLIS);
         assertThat(ruleset.tierFor(14.75).name()).isEqualTo(ColonyTierName.MEGALOPOLIS);
         assertThat(ruleset.tierFor(15.50).name()).isEqualTo(ColonyTierName.CAPITAL);
+        assertThat(ruleset.tierFor(16.25).name()).isEqualTo(ColonyTierName.CITADEL);
+        assertThat(ruleset.tierFor(17.00).name()).isEqualTo(ColonyTierName.CONURBATION);
+        assertThat(ruleset.tierFor(17.75).name()).isEqualTo(ColonyTierName.MEGAREGION);
+        assertThat(ruleset.tierFor(18.50).name()).isEqualTo(ColonyTierName.ARCOLOGY);
+        assertThat(ruleset.tierFor(19.25).name()).isEqualTo(ColonyTierName.ECUMENOPOLIS);
+        assertThat(ruleset.tierFor(20.00).name()).isEqualTo(ColonyTierName.CONTINUUM);
+    }
+
+    /**
+     * Verifies the ladder names every step a squad can actually reach.
+     *
+     * <p>A run clearing nearly every challenge lands on efficiency 21, and that used to be five steps
+     * past the last name: the whole end of a good run read as a counter climbing beside a name that had
+     * stopped moving. Every one of those steps now has its own.
+     */
+    @Test
+    void shouldNameEveryStepARunCanReach() {
+        assertThat(ruleset.tierFor(21.0).level()).isEqualTo(1);
+        assertThat(ruleset.tierFor(20.74).level()).isZero();
     }
 
     /**
@@ -227,13 +246,13 @@ class DefaultColonyRulesetTest {
      */
     @Test
     void shouldRepeatTheLastNameNumberedForever() {
-        assertThat(ruleset.tierFor(16.25)).isEqualTo(
-            new ColonyTier(11, 16.25, ColonyTierName.CITADEL, 1)
+        assertThat(ruleset.tierFor(20.75)).isEqualTo(
+            new ColonyTier(17, 20.75, ColonyTierName.STRATUM, 1)
         );
-        assertThat(ruleset.tierFor(17.00)).isEqualTo(
-            new ColonyTier(12, 17.00, ColonyTierName.CITADEL, 2)
+        assertThat(ruleset.tierFor(21.50)).isEqualTo(
+            new ColonyTier(18, 21.50, ColonyTierName.STRATUM, 2)
         );
-        assertThat(ruleset.tierFor(100.0).name()).isEqualTo(ColonyTierName.CITADEL);
+        assertThat(ruleset.tierFor(100.0).name()).isEqualTo(ColonyTierName.STRATUM);
     }
 
     /**

@@ -4,6 +4,20 @@
 export type ChallengeDifficulty = 'EASY' | 'NORMAL' | 'MEDIUM' | 'HARD' | 'VERY_HARD';
 
 /**
+ * The five tiers from easiest to hardest — the order any list of difficulties is ordered by.
+ *
+ * Declared here rather than relied on through the key order of a lookup record: the ladder is a
+ * domain fact, and object key order is not a contract.
+ */
+export const CHALLENGE_DIFFICULTIES: readonly ChallengeDifficulty[] = [
+  'EASY',
+  'NORMAL',
+  'MEDIUM',
+  'HARD',
+  'VERY_HARD',
+];
+
+/**
  * Collective progress of a single challenge selected for the current week.
  *
  * Mirrors `CurrentChallengesResponse.ChallengeProgressResponse` from the backend. Progress is

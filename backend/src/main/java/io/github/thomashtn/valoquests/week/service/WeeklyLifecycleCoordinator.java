@@ -11,7 +11,7 @@ import io.github.thomashtn.valoquests.run.service.RunService;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Optional;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -129,35 +129,46 @@ public class WeeklyLifecycleCoordinator {
     }
 
     /**
-     * Finalizes the closing week's boss encounter, when one exists and is not already finalized.
+     * Resolves every past week's fight that is still open, oldest week first.
      *
-     * <p>Resolves the chronology against the hit points frozen when the encounter was created, so the
-     * fight is judged on the target it opened with even if the roster has since changed. Absent entirely
-     * for a week that predates this feature, in which case there is nothing to close.
+     * <p>Driven by the encounters themselves rather than by the weeks the rollover happens to be
+     * finalizing. Closure used to ride on the challenge pack — only a week the pack query reported as
+     * still open ever had its fight resolved — so an encounter belonging to a week finalized without it
+     * was never looked at again. Nothing downstream then knew the week had been fought: the campaign map
+     * reads finalized encounters only and left the week locked as if it were still to come, and the
+     * colony credits materials and morale from the same rows, so a boss that held cost no morale at all.
      *
-     * @param weekStart   week being closed
-     * @param finalizedAt shared finalization timestamp
+     * <p>Called once the rollover has rebuilt and frozen every pending week, so each fight is resolved
+     * against a ranking that already counts the matches imported just before it.
+     *
+     * @param currentWeekStart Monday identifying the week in progress, whose fight is still running
+     * @param finalizedAt      shared finalization timestamp
      */
     @Transactional
-    public void closeBossEncounterIfNeeded(LocalDate weekStart, Instant finalizedAt) {
-        Optional<WeeklyBossEncounter> existingEncounter = bossEncounterRepository.findByWeekStart(weekStart);
+    public void closePastBossEncounters(LocalDate currentWeekStart, Instant finalizedAt) {
+        List<WeeklyBossEncounter> unresolved = bossEncounterRepository
+            .findAllByFinalizedAtIsNullAndWeekStartLessThanOrderByWeekStartAsc(currentWeekStart);
 
-        if (existingEncounter.isEmpty()) {
-            LOGGER.info(
-                "No boss encounter exists for previous week {}. Nothing needs to be finalized.",
-                weekStart
-            );
+        LOGGER.info(
+            "{} past boss encounter(s) awaiting resolution before week {}.",
+            unresolved.size(),
+            currentWeekStart
+        );
 
-            return;
-        }
+        unresolved.forEach(encounter -> closeBossEncounter(encounter, finalizedAt));
+    }
 
-        WeeklyBossEncounter encounter = existingEncounter.orElseThrow();
-
-        if (encounter.getFinalizedAt() != null) {
-            LOGGER.info("Boss encounter for previous week {} is already finalized.", weekStart);
-
-            return;
-        }
+    /**
+     * Resolves one open encounter's fight and freezes its outcome.
+     *
+     * <p>The chronology is replayed against the hit points frozen when the encounter was created, so the
+     * fight is judged on the target it opened with even if the roster has since changed.
+     *
+     * @param encounter   encounter to resolve, known to be open
+     * @param finalizedAt shared finalization timestamp
+     */
+    private void closeBossEncounter(WeeklyBossEncounter encounter, Instant finalizedAt) {
+        LocalDate weekStart = encounter.getWeekStart();
 
         BossChronologyResult chronologyResult = bossChronologyService.computeChronology(
             weekStart,

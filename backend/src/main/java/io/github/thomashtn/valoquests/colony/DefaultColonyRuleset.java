@@ -131,6 +131,12 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
 
     /**
      * Names of the ladder, one per step from the opening efficiency up. The last one repeats, numbered.
+     *
+     * <p>Long enough to cover what a squad can actually reach. A run climbing at the calibrated pace of
+     * one step a week ends around the twelfth; one clearing nearly every challenge reaches efficiency
+     * twenty-one, which is the eighteenth. Past that the numbering takes over, which no realistic run
+     * gets to — before these names existed it took over at the twelfth, so the last third of a good run
+     * was spent watching a counter go up beside a name that had stopped changing.
      */
     private static final ColonyTierName[] TIER_NAMES = {
         ColonyTierName.CAMP,
@@ -144,7 +150,13 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
         ColonyTierName.METROPOLIS,
         ColonyTierName.MEGALOPOLIS,
         ColonyTierName.CAPITAL,
-        ColonyTierName.CITADEL
+        ColonyTierName.CITADEL,
+        ColonyTierName.CONURBATION,
+        ColonyTierName.MEGAREGION,
+        ColonyTierName.ARCOLOGY,
+        ColonyTierName.ECUMENOPOLIS,
+        ColonyTierName.CONTINUUM,
+        ColonyTierName.STRATUM
     };
 
     /**
@@ -355,9 +367,9 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     /**
      * Names one step of the ladder.
      *
-     * <p>Past the last name the ladder repeats, numbered, so it runs on without a maximum: a squad
-     * validating nearly every challenge reaches efficiency 21 and enters the numbered citadels well
-     * before its run ends.
+     * <p>Past the last name the ladder repeats, numbered, so it runs on without a maximum. A squad
+     * validating nearly every challenge reaches efficiency 21, which is the eighteenth step and the
+     * first numbered one, so the numbering is the ceiling's ceiling rather than an ordinary sight.
      *
      * @param step ladder step, counted from the opening efficiency
      * @return the step, named
@@ -365,7 +377,9 @@ public final class DefaultColonyRuleset implements ColonyRuleset {
     private ColonyTier tierAt(int step) {
         int nameIndex = Math.clamp(step, 0, TIER_NAMES.length - 1);
         ColonyTierName name = TIER_NAMES[nameIndex];
-        int level = name == ColonyTierName.CITADEL ? step - TIER_NAMES.length + 2 : 0;
+        // the last name is the open end, whichever it is: numbering it by position rather than by
+        // identity is what stopped the ladder silently reverting to twelve names when it was extended
+        int level = nameIndex == TIER_NAMES.length - 1 ? step - TIER_NAMES.length + 2 : 0;
 
         return new ColonyTier(step, BASE_INHABITANTS_PER_FOOD + step * EFFICIENCY_TIER_STEP, name, level);
     }

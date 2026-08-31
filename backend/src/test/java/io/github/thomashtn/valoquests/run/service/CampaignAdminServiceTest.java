@@ -54,9 +54,10 @@ class CampaignAdminServiceTest {
         when(runService.currentRun()).thenReturn(Optional.of(running));
         when(runService.closedRuns()).thenReturn(List.of(completed, stopped));
         when(runService.isAutoRenewEnabled()).thenReturn(false);
-        when(snapshotRepository.findAllByRunIdOrderByDayAsc(100L)).thenReturn(snapshots(24));
-        when(snapshotRepository.findAllByRunIdOrderByDayAsc(101L)).thenReturn(snapshots(48));
-        when(snapshotRepository.findAllByRunIdOrderByDayAsc(102L)).thenReturn(snapshots(30));
+        // Keyed by the run's id, which is what the snapshots carry — not by its display number.
+        when(snapshotRepository.findAllByRunIdOrderByDayAsc(1L)).thenReturn(snapshots(24));
+        when(snapshotRepository.findAllByRunIdOrderByDayAsc(2L)).thenReturn(snapshots(48));
+        when(snapshotRepository.findAllByRunIdOrderByDayAsc(3L)).thenReturn(snapshots(30));
 
         CampaignAdminResponse response = service.findCampaigns();
 
@@ -75,7 +76,7 @@ class CampaignAdminServiceTest {
     void shouldStopTheRunningCampaignAndReplayItsColony() {
         Run stopped = run(1L, 100, LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 15));
         when(runService.stopCurrentRun()).thenReturn(stopped);
-        when(snapshotRepository.findAllByRunIdOrderByDayAsc(100L)).thenReturn(snapshots(19));
+        when(snapshotRepository.findAllByRunIdOrderByDayAsc(1L)).thenReturn(snapshots(19));
 
         CampaignRunSummary summary = service.stopCampaign();
 

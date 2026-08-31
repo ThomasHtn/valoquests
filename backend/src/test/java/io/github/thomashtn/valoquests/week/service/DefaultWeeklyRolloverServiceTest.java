@@ -205,8 +205,8 @@ class DefaultWeeklyRolloverServiceTest {
             );
 
         verify(weeklyLifecycleCoordinator)
-            .closeBossEncounterIfNeeded(
-                PREVIOUS_WEEK_START,
+            .closePastBossEncounters(
+                CURRENT_WEEK_START,
                 ROLLOVER_TIME
             );
 
@@ -270,17 +270,16 @@ class DefaultWeeklyRolloverServiceTest {
         catchUpOrder.verify(rankingRecalculationService)
             .recalculateWeek(PREVIOUS_WEEK_START);
 
+        // The fights are resolved once every caught-up week's ranking is rebuilt, and before the new
+        // week is opened: its boss is sized against what the fights just closed measured.
+        catchUpOrder.verify(weeklyLifecycleCoordinator)
+            .closePastBossEncounters(CURRENT_WEEK_START, ROLLOVER_TIME);
+
         catchUpOrder.verify(weeklyLifecycleCoordinator)
             .openWeek(CURRENT_WEEK_START);
 
         verify(challengeRecalculationService)
             .recalculateWeekProgress(MISSED_WEEK_START);
-
-        verify(weeklyLifecycleCoordinator)
-            .closeBossEncounterIfNeeded(
-                MISSED_WEEK_START,
-                ROLLOVER_TIME
-            );
 
         assertThat(missedWeekChallenge.getFinalizedAt())
             .isEqualTo(ROLLOVER_TIME);
@@ -290,13 +289,20 @@ class DefaultWeeklyRolloverServiceTest {
     }
 
     /**
-     * Verifies that nothing is finalized when no past week is still open.
+     * Verifies that no week is re-finalized when none is still open, while the past fights are still
+     * swept.
      *
      * <p>Covers both an already finalized previous week and the very first application week: in
      * either case the week is not pending.</p>
+     *
+     * <p>The sweep runs regardless, which is the whole point of driving it off the encounters. It used
+     * to ride on the pack query, so a week whose challenges were finalized without its fight — a
+     * rollover interrupted between the two, a boss drawn after the pack had closed — kept an unresolved
+     * encounter forever: the campaign map left it locked as an upcoming week, and the colony, which
+     * reads the same rows, never charged the morale a surviving boss costs.</p>
      */
     @Test
-    void shouldPrepareCurrentWeekWhenNoWeekIsPending() {
+    void shouldSweepPastFightsWhenNoWeekIsPending() {
         givenPendingWeeks();
 
         service.rolloverIfNeeded();
@@ -318,13 +324,11 @@ class DefaultWeeklyRolloverServiceTest {
                 CURRENT_WEEK_START
             );
 
-        verify(
-            weeklyLifecycleCoordinator,
-            never()
-        ).closeBossEncounterIfNeeded(
-            PREVIOUS_WEEK_START,
-            ROLLOVER_TIME
-        );
+        verify(weeklyLifecycleCoordinator)
+            .closePastBossEncounters(
+                CURRENT_WEEK_START,
+                ROLLOVER_TIME
+            );
     }
 
     /**

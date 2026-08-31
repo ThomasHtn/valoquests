@@ -1,5 +1,5 @@
-<!-- Two camps meeting over a clock. The plate in the middle is cut on the slant so the band reads
-     as a confrontation rather than as three tiles in a row. -->
+<!-- A fight card: two camps leaning on one slanted seam, each carrying the same five lines — who,
+     what it is worth, its gauge — so the eye compares them straight across. -->
 <div class="versus">
   <div class="vs-side vs-side--ally">
     <span class="vs-tag">
@@ -8,31 +8,42 @@
     </span>
 
     @if (colony.battery(); as battery) {
-      <p class="vs-name">
-        {{
-          'overview.confrontation.online'
-            | translate: { present: battery.presentCount, roster: battery.rosterSize }
-        }}
+      <!-- One slug per player of the squad, lit for whoever has played today. It is the camp's own
+           face: the side used to open on a sentence, and a sentence does not look like a team. It
+           reads at two players and at twenty, which is the only size rule this project has. -->
+      <span class="vs-who">
+        <span class="roster">
+          @for (present of rosterSlots(); track $index) {
+            <i [class.roster-on]="present"></i>
+          }
+        </span>
+        <span class="vs-name">
+          {{ battery.presentCount }}
+          <small>
+            {{ 'overview.confrontation.onlineUnit' | translate: { roster: battery.rosterSize } }}
+          </small>
+        </span>
+      </span>
+
+      <p class="vs-figure">
+        {{ clearedCount() }}<small>/{{ challengeCount() }}</small>
+        <em>{{ 'overview.confrontation.quests' | translate }}</em>
       </p>
 
-      <!-- One pip per challenge of the week, lit as the squad clears them: the same five slots the
-           weak points opposite are drawn from, read from our side. -->
-      <div class="pips">
-        @for (cleared of clearedFlags(); track $index) {
-          <span [class.pip-round--on]="cleared" class="pip-round"></span>
+      <!-- The week's challenges as one gauge rather than one segment each: the boss opposite is
+           read the same way, and two different drawings of the same week left the two camps with
+           nothing to compare. Which challenge is cleared is the board's question, one page down. -->
+      <span aria-hidden="true" class="gauge hp-gauge notch-tr notch-tr-edge">
+        <i [style.width.%]="clearedPercentage()" class="hp-gauge-fill"></i>
+        @if (isFilling()) {
+          <b [style.left.%]="clearedPercentage()"></b>
         }
-      </div>
+      </span>
 
       <span class="vs-sub">
         {{
-          'overview.confrontation.cleared'
-            | translate
-              : {
-                  cleared: clearedCount(),
-                  total: challengeCount(),
-                  multiplier: battery.multiplierLabel,
-                  max: battery.maxMultiplierLabel,
-                }
+          'overview.confrontation.multiplier'
+            | translate: { multiplier: battery.multiplierLabel, max: battery.maxMultiplierLabel }
         }}
       </span>
     }
@@ -60,30 +71,34 @@
     </span>
 
     @if (boss(); as boss) {
-      <p class="vs-name">{{ boss.boss.name }}</p>
+      <span class="vs-who">
+        <span class="vs-name">{{ boss.boss.name }}</span>
+      </span>
 
-      <!-- The count reads first and the bar draws it underneath, the way a health bar sits under a
-           name in the game itself. Side by side, the two competed for the same line. -->
-      <div class="vs-hp">
-        <span class="vs-hpv">
-          {{ remainingHpLabel() }}
-          <small
-            >/ {{ effectiveHpLabel() }} {{ 'overview.bossEncounter.hpUnit' | translate }}</small
-          >
-        </span>
-        <span class="hp">
-          <span [style.width.%]="remainingPercentage()" class="hp-fill"></span>
-          <span class="hp-grad" aria-hidden="true">
-            @for (segment of [1, 2, 3, 4]; track segment) {
-              <span></span>
-            }
-          </span>
-        </span>
-      </div>
+      <p class="vs-figure">
+        {{ remainingHpLabel()
+        }}<small
+          >/ {{ effectiveHpLabel() }} {{ 'overview.bossEncounter.hpUnit' | translate }}</small
+        >
+      </p>
+
+      <!-- Same gauge as the one `/week` closes its boss band with, and as the squad's opposite:
+           drawn from the leading edge in both camps, so the two are read the same way round. Cut on
+           its own inner corner, which puts the two camps' cuts either side of the seam. -->
+      <span aria-hidden="true" class="hp hp-gauge notch-tl notch-tl-edge">
+        <i [style.width.%]="remainingPercentage()" class="hp-gauge-fill"></i>
+        @if (isDraining()) {
+          <b [style.left.%]="remainingPercentage()"></b>
+        }
+      </span>
 
       @if (defeated()) {
         <span class="vs-sub text-success">
           {{ 'overview.bossEncounter.defeated' | translate }}
+        </span>
+      } @else {
+        <span class="vs-sub">
+          {{ 'overview.confrontation.dealt' | translate: { damage: damageDealtLabel() } }}
         </span>
       }
     }

@@ -7,8 +7,14 @@ package io.github.thomashtn.valoquests.colony.model;
  * roughly once a week. The names are absolute values rather than shares of anything, so a twenty-player
  * squad genuinely opens its run several tiers up — its town really is bigger on day one.
  *
- * <p>{@link #CITADEL} is the open end of the ladder: past it every further step is a numbered citadel,
+ * <p>{@link #STRATUM} is the open end of the ladder: past it every further step is a numbered stratum,
  * which is what lets the tiers run on without a maximum. Every other constant covers exactly one step.
+ *
+ * <p>The names run to the seventeenth step because that is where the barème says a squad can actually
+ * get: a run climbing at its calibrated pace of one step a week ends around {@link #CITADEL}, and one
+ * clearing nearly every challenge reaches efficiency twenty-one, which is step seventeen. Naming that
+ * far means every step a squad can reach is a milestone with a name on it, and the numbered open end
+ * is a safety valve rather than the last third of a good run.
  */
 public enum ColonyTierName {
 
@@ -68,7 +74,40 @@ public enum ColonyTierName {
     CAPITAL,
 
     /**
-     * Twelfth step and every one after it, numbered by {@link ColonyTier#level()}.
+     * Twelfth step.
      */
-    CITADEL
+    CITADEL,
+
+    /**
+     * Thirteenth step: the neighbouring cities have fused into one built-up mass.
+     */
+    CONURBATION,
+
+    /**
+     * Fourteenth step: the region itself is the city.
+     */
+    MEGAREGION,
+
+    /**
+     * Fifteenth step: the city is a single structure rather than a collection of them.
+     */
+    ARCOLOGY,
+
+    /**
+     * Sixteenth step: the built ground has no edge left.
+     */
+    ECUMENOPOLIS,
+
+    /**
+     * Seventeenth step: nothing outside remains to absorb, and the city closes on itself.
+     */
+    CONTINUUM,
+
+    /**
+     * Eighteenth step and every one after it, numbered by {@link ColonyTier#level()}.
+     *
+     * <p>The one name that takes a number without reading as a repetition: once there is no ground
+     * left to spread over, a city grows by stacking, and the stratum is which layer it is on.
+     */
+    STRATUM
 }

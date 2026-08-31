@@ -114,6 +114,22 @@
       [heading]="'admin.operations.weekSelection.heading' | translate"
       [state]="weekSelectionState()"
     />
+
+    <app-admin-action-card
+      (triggered)="runWeeklyRollover()"
+      [actionLabel]="'admin.operations.rollover.action' | translate"
+      [description]="'admin.operations.rollover.description' | translate"
+      [heading]="'admin.operations.rollover.heading' | translate"
+      [state]="rolloverState()"
+    />
+
+    <app-admin-action-card
+      (triggered)="recomputeColony()"
+      [actionLabel]="'admin.operations.colonyRecompute.action' | translate"
+      [description]="'admin.operations.colonyRecompute.description' | translate"
+      [heading]="'admin.operations.colonyRecompute.heading' | translate"
+      [state]="colonyRecomputeState()"
+    />
   </div>
 
   <!-- History: every past execution, most recent first, each expandable into its own per-player

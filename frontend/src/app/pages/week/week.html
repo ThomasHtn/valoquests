@@ -11,7 +11,7 @@
   <app-week-countdown [remaining]="remaining()" />
 </app-page-header>
 
-<div class="page-body">
+<div class="page-body week-body">
   <app-resource-state
     (retry)="reload()"
     [emptyText]="'overview.weeklyChallenges.empty' | translate"
@@ -21,178 +21,153 @@
     [isLoading]="isLoading()"
     [loadingText]="'overview.weeklyChallenges.loading' | translate"
   >
-    <!-- Section rule: same header treatment as the challenges section below, so the page reads as
-         two named blocks (the fight, then the draw) rather than a boss card dropped in unlabeled
-         above a titled one. -->
-    @if (boss(); as boss) {
-      <div class="flex items-center gap-3">
-        <h2
-          class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
-        >
-          {{ 'week.bossSection.title' | translate }}
-        </h2>
-        <span
-          aria-hidden="true"
-          class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
-        ></span>
-        <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
-      </div>
+    <!-- Skeleton mirroring the loaded board, so data arriving does not shift the page. -->
+    <div class="grid grid-cols-1 gap-2.5 lg:grid-cols-2" skeleton>
+      @for (placeholder of skeletonRows; track $index) {
+        <div class="flex min-h-36 flex-col justify-between gap-4 bg-text-primary/4 p-4">
+          <span class="flex items-center gap-4">
+            <span class="clip-hex h-13 w-11 shrink-0 bg-surface-700"></span>
+            <span class="flex min-w-0 flex-1 flex-col gap-3">
+              <span [style.width.%]="placeholder" class="h-2.5 bg-surface-700"></span>
+              <span class="h-4 w-2/3 bg-surface-700"></span>
+              <span class="h-2.5 w-full bg-surface-700"></span>
+            </span>
+          </span>
+          <span class="h-5 w-24 bg-surface-700"></span>
+        </div>
+      }
+    </div>
 
-      <!-- The boss: the same hero-card treatment the accueil's own boss card carries — the fight
-           now lives in `BossFightCard`, shared with the accueil's "La semaine" block, rather than
-           written out twice. -->
-      <app-boss-fight-card />
+    @if (boss()) {
+      <section aria-labelledby="week-boss-title" class="flex flex-col gap-3">
+        <div class="section-rule">
+          <h2 class="section-rule-title" id="week-boss-title">
+            {{ 'week.bossSection.title' | translate }}
+          </h2>
+          <span aria-hidden="true" class="section-rule-line"></span>
+          <a [routerLink]="'/campaign'" class="section-rule-link focus-ring">
+            {{ 'week.bossSection.link' | translate }}
+            <span aria-hidden="true">→</span>
+          </a>
+          <span aria-hidden="true" class="section-rule-diamond"></span>
+        </div>
+
+        <app-boss-band />
+      </section>
     }
 
-    <!-- Section rule: the same header treatment the accueil's boss card used to open on, carried
-         over to introduce the five challenges below the fight. -->
-    <div class="flex items-center gap-3">
-      <h2
-        class="font-display text-sm leading-tight font-semibold tracking-label text-text-secondary uppercase"
-      >
-        {{ 'week.challengesSection.title' | translate }}
-      </h2>
-      <span
-        aria-hidden="true"
-        class="h-px flex-1 bg-linear-to-r from-brand-500/50 to-transparent"
-      ></span>
-      <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
-    </div>
+    <section aria-labelledby="week-quests-title" class="flex flex-col gap-3">
+      <div class="section-rule">
+        <h2 class="section-rule-title" id="week-quests-title">
+          {{ 'week.challengesSection.title' | translate }}
+        </h2>
+        <span aria-hidden="true" class="section-rule-line"></span>
+        <!-- The way to who cleared what: this page counts the squad, the ranking names it. -->
+        <a [routerLink]="'/leaderboard'" class="section-rule-link focus-ring">
+          {{ 'week.challengesSection.link' | translate }}
+          <span aria-hidden="true">→</span>
+        </a>
+        <span aria-hidden="true" class="section-rule-diamond"></span>
+      </div>
 
-    <!-- Skeleton mirroring the loaded board, so data arriving does not shift the page. -->
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2" skeleton>
-      @for (placeholder of skeletonRows; track $index) {
-        <div
-          class="notch-tr notch-tr-edge flex min-h-40 items-center gap-4 border border-surface-700 bg-surface-sunken p-4 [--notch:1rem] sm:gap-6 sm:p-6"
-        >
-          <span class="clip-hex h-14 w-12 shrink-0 bg-surface-700 sm:h-16 sm:w-14"></span>
-          <span class="flex min-w-0 flex-1 flex-col gap-3">
-            <span [style.width.%]="placeholder" class="h-2.5 bg-surface-700"></span>
-            <span class="h-3.5 w-2/3 bg-surface-700"></span>
-            <span class="h-2.5 w-full bg-surface-700"></span>
-          </span>
-          <span class="h-8 w-14 shrink-0 bg-surface-700"></span>
-        </div>
-      }
-    </div>
-
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <!-- One card per challenge, tinted by its difficulty tier: the tier's accent lights the border
-         and bleeds into the panel from its leading corner, so the five cards read as a ladder from
-         green to red rather than as five identical rows. -->
-      @for (row of rows(); track row.id) {
-        <!-- Stacked until `xl`, side by side above it. The two rewards used to sit in a fixed
-             column beside the text at every width, and naming where each one goes made that column
-             wide enough to squeeze the challenge's own sentence down to one word per line from a
-             phone all the way up to a laptop. They only stand beside the text where there is room
-             for both. -->
-        <article
-          [class]="row.visual.panelClass"
-          class="notch-tr notch-tr-edge flex min-h-40 flex-col gap-4 border bg-linear-[115deg] to-surface-sunken/60 p-4 [--notch:1rem] sm:p-6 xl:flex-row xl:items-center xl:gap-6"
-        >
-          <div class="flex min-w-0 flex-1 items-center gap-4 sm:gap-6">
-            <!-- Tier badge. Decorative: the difficulty it stands for is written beside it. -->
-            <span
-              [class]="row.visual.barClass"
-              aria-hidden="true"
-              class="clip-hex relative h-14 w-12 shrink-0 sm:h-16 sm:w-14"
-            >
-              <span
-                [class]="row.visual.iconClass"
-                class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-lg leading-none font-bold sm:text-xl"
-              >
-                {{ row.visual.tier }}
-              </span>
-            </span>
-
-            <div class="min-w-0 flex-1">
-              <p [class]="row.visual.iconClass" class="label-caption">
-                {{ 'overview.weeklyChallenges.difficulty.' + row.difficulty | translate }}
-              </p>
-              <!-- `leading-tight`, not `leading-none`: these names wrap to two lines at most widths,
-                   and at a line height of exactly one the second line's capitals clipped the
-                   accents off the first — "MAÎTRE" and "AVANCÉE" both lost theirs. -->
-              <h2
-                class="font-display mt-2 text-xl leading-tight font-semibold text-text-primary uppercase sm:text-2xl"
-              >
-                {{ row.name }}
-              </h2>
-              <p class="mt-2 text-prose text-text-secondary">{{ row.description }}</p>
-            </div>
-          </div>
-
-          <!-- What clearing it is worth, and where each half of that goes: the damage drains the
-               week's boss and moves the player up the ranking, the materials build the colony.
-               Side by side on a narrow card, stacked in the column on a wide one. -->
-          <div
-            class="grid shrink-0 grid-cols-2 gap-x-4 border-t border-edge pt-3.5 xl:w-40 xl:grid-cols-1 xl:gap-y-3 xl:border-t-0 xl:border-l xl:pt-0 xl:pl-4"
-          >
-            <p class="min-w-0 xl:text-right">
-              <span class="label-caption block text-text-muted">
-                {{ 'overview.weeklyChallenges.damageLabel' | translate }}
-              </span>
-              <span
-                class="font-display mt-1.5 block text-2xl leading-none font-bold text-accent-gold tabular-nums sm:text-3xl"
-              >
-                {{ row.damage }}
-              </span>
-              <!-- The squad multiplier currently applied to the amount above. The base amount never
-                 moves, so the multiplier is what carries the collective gain. Who has cleared what
-                 is already shown in the overview's team progress breakdown, so it is not repeated
-                 here. -->
-              @if (row.squadMultiplier; as multiplier) {
-                <span class="label-caption mt-1.5 block text-accent-gold tabular-nums">
-                  {{ multiplier }}
+      <div class="quest-grid">
+        <!-- One card per challenge, keyed to its difficulty: the tier's accent lights the leading
+             edge and nothing else, so the five read as a ladder from green to red without five
+             tinted panels competing with the boss above them. -->
+        @for (row of rows(); track row.id) {
+          <!-- The cell, not the card, is the query container: an element cannot query its own size,
+               and what decides whether the figures stand beside the text is the card's width, never
+               the window's — these sit in a one- or two-column grid. -->
+          <div class="quest-cell">
+            <article [style.--tier]="row.visual.tierColor" class="quest">
+              <div class="quest-main">
+                <!-- Tier badge. Decorative: the difficulty it stands for is written beside it. -->
+                <span aria-hidden="true" class="clip-hex quest-mark">
+                  <span class="clip-hex font-display">{{ row.visual.tier }}</span>
                 </span>
-              }
-            </p>
 
-            <!-- Cyan, like the materials figure on every other screen — the campaign's own tile and
-                 the boss rewards both read in that colour. Icon stands in for the "Matériaux"
-                 label, so the figure sits right beside it instead of below a caption. -->
-            <p
-              class="flex min-w-0 items-center justify-end gap-1.5 xl:border-t xl:border-edge xl:pt-3"
-            >
-              <svg aria-hidden="true" class="size-4 shrink-0 text-accent-cyan" lucideHammer></svg>
-              <span
-                class="font-display text-lg leading-none font-bold text-accent-cyan tabular-nums"
-              >
-                +{{ row.materials }}
-              </span>
+                <div class="min-w-0">
+                  <span class="quest-diff">
+                    {{ 'overview.weeklyChallenges.difficulty.' + row.difficulty | translate }}
+                  </span>
+                  <h3 class="quest-name">{{ row.name }}</h3>
+                  <p class="quest-brief">{{ row.description }}</p>
+                </div>
+              </div>
+
+              <!-- What clearing it is worth, in its own column behind a hairline: the damage drains
+                   the week's boss and moves the player up the ranking, the materials build the
+                   colony. -->
+              <div class="quest-pay">
+                <p class="quest-dmg">
+                  <span class="label-caption text-text-muted">
+                    {{ 'overview.weeklyChallenges.damageLabel' | translate }}
+                  </span>
+                  <b>
+                    {{ row.damage }}
+                    <!-- The squad multiplier currently applied to the amount above. The base amount
+                         never moves, so the multiplier is what carries the collective gain. -->
+                    @if (row.squadMultiplier; as multiplier) {
+                      <small>{{ multiplier }}</small>
+                    }
+                  </b>
+                </p>
+
+                <!-- Cyan, like the materials figure on every other screen. The icon stands in for
+                     the "Matériaux" label, so the figure sits right beside it. -->
+                <p class="quest-mat">
+                  <svg aria-hidden="true" class="size-4 shrink-0" lucideHammer></svg>
+                  <span class="sr-only">{{ 'colony.materials' | translate }}</span>
+                  +{{ row.materials }}
+                </p>
+              </div>
+
+              <!-- How far the squad is with this one, on its own rule under the whole card: that is
+                   a state, not a price, so it does not belong in the column that prices it. One
+                   slug per roster member, lit for whoever has already cleared it. -->
+              <div class="quest-squad">
+                <span aria-hidden="true" class="quest-slugs">
+                  @for (cleared of row.slots; track $index) {
+                    <i [class.quest-slug-on]="cleared"></i>
+                  }
+                </span>
+                <span class="quest-cleared">
+                  {{
+                    'week.squad.cleared'
+                      | translate: { done: row.clearedCount, total: row.rosterSize }
+                  }}
+                </span>
+              </div>
+            </article>
+          </div>
+        }
+
+        <!-- Sixth cell of the board: what happens when the countdown runs out. Dashed rather than
+             solid, since it is the one slot on the grid that is not a challenge to clear. -->
+        @if (nextDrawDate(); as nextDrawDate) {
+          <div class="quest-draw">
+            <p class="label-caption text-text-muted">
+              {{ 'overview.weeklyChallenges.nextDraw.label' | translate }}
+            </p>
+            <p class="quest-draw-date font-display">
+              {{ 'overview.weeklyChallenges.nextDraw.date' | translate: { date: nextDrawDate } }}
+            </p>
+            <p class="text-prose text-text-secondary">
+              {{ 'overview.weeklyChallenges.nextDraw.description' | translate }}
             </p>
           </div>
-        </article>
-      }
-
-      <!-- Sixth cell of the board: what happens when the countdown runs out. Dashed rather than
-         solid, since it is the one slot on the grid that is not a challenge to clear. Kept in the
-         grid rather than moved to a full-width band below it — the validated mock-up corrects
-         design-review.md's own prose here. -->
-      @if (nextDrawDate(); as nextDrawDate) {
-        <div
-          class="notch-tr notch-tr-edge flex min-h-40 flex-col justify-center gap-3 border border-dashed border-brand-500/30 bg-surface-sunken/45 p-4 [--notch:1rem] sm:p-6"
-        >
-          <p class="label-caption text-text-muted">
-            {{ 'overview.weeklyChallenges.nextDraw.label' | translate }}
-          </p>
-          <p
-            class="font-display text-xl leading-none font-bold text-text-primary uppercase sm:text-2xl"
-          >
-            {{ 'overview.weeklyChallenges.nextDraw.date' | translate: { date: nextDrawDate } }}
-          </p>
-          <p class="text-prose text-text-secondary">
-            {{ 'overview.weeklyChallenges.nextDraw.description' | translate }}
-          </p>
-        </div>
-      }
-    </div>
+        }
+      </div>
+    </section>
 
     <!-- The rest of the pool: every enabled challenge Monday's draw did not pick this week —
          folded away by default, since it lists dozens of entries against the five cards above. -->
-    @if (catalogueRows().length > 0) {
-      <details class="group border border-edge panel">
+    @if (catalogueGroups().length > 0) {
+      <!-- Only the summary carries a fill: the rows below it are the same flat lines the roster is
+           listed with, and laying them on a second surface would nest a list inside a panel. -->
+      <details class="group">
         <summary
-          class="focus-ring-inset flex cursor-pointer items-center gap-2.5 px-4 py-3 font-mono text-xs tracking-wide text-text-secondary uppercase [&::-webkit-details-marker]:hidden"
+          class="focus-ring-inset flex cursor-pointer items-center gap-2.5 bg-text-primary/4 px-4 py-3 font-mono text-xs tracking-wide text-text-secondary uppercase transition-colors hover:bg-brand-500/15 [&::-webkit-details-marker]:hidden"
         >
           <svg
             aria-hidden="true"
@@ -202,61 +177,92 @@
           {{ 'week.catalogue.title' | translate }}
         </summary>
 
-        <div class="border-t border-edge p-3">
-          <p class="px-1 pb-3 text-sm text-text-muted">
-            {{ 'week.catalogue.hint' | translate }}
-          </p>
+        <!-- `gap-6` between the tier blocks against `gap-2` inside one: the space is the only thing
+             grouping them, now that no rule or fill does. -->
+        <div class="flex flex-col gap-6 pt-4">
+          <p class="text-sm text-text-muted">{{ 'week.catalogue.hint' | translate }}</p>
 
-          <ul class="flex flex-col gap-2">
-            @for (row of catalogueRows(); track row.id) {
-              <li
-                class="notch-tr flex items-center gap-3 border border-edge panel px-3 py-2.5 [--notch:0.5rem]"
-              >
-                <span
-                  [class]="row.visual.barClass"
-                  aria-hidden="true"
-                  class="clip-hex relative h-9 w-8 shrink-0"
-                >
-                  <span
-                    [class]="row.visual.iconClass"
-                    class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-sm leading-none font-bold"
+          <!-- Column header from `lg` up, where the rows are wide enough to align into columns —
+               the same tuck onto its rows the roster's header uses. Below it each figure carries
+               its own label instead. -->
+          <div
+            class="hidden px-5 lg:-mb-3 lg:grid lg:grid-cols-[minmax(0,1fr)_7rem_7rem] lg:items-end lg:gap-x-4"
+          >
+            <span class="label-caption text-text-muted">
+              {{ 'week.catalogue.columns.challenge' | translate }}
+            </span>
+            <span class="label-caption text-right text-text-muted">
+              {{ 'overview.weeklyChallenges.damageLabel' | translate }}
+            </span>
+            <span class="label-caption text-right text-text-muted">
+              {{ 'colony.materials' | translate }}
+            </span>
+          </div>
+
+          @for (group of catalogueGroups(); track group.difficulty) {
+            <div class="flex flex-col gap-2">
+              <!-- The tier names itself once, over its own block, rather than on every row: it is
+                   what orders the list and what sets what its rows pay. -->
+              <div class="flex items-baseline gap-3">
+                <p [style.color]="group.tierColor" class="label-caption">
+                  {{ group.tier }} ·
+                  {{ 'overview.weeklyChallenges.difficulty.' + group.difficulty | translate }}
+                </p>
+                <p class="label-caption text-text-muted">
+                  {{ 'week.catalogue.groupCount' | translate: { count: group.rows.length } }}
+                </p>
+              </div>
+
+              <ul class="flex flex-col gap-2">
+                @for (row of group.rows; track row.id) {
+                  <!-- Below `lg` the row stacks into its name and a strip of figures under a
+                     hairline; from `lg` that strip dissolves into the parent grid (`lg:contents`)
+                     so its cells land in the header's columns. -->
+                  <li
+                    [style.borderLeftColor]="group.tierColor"
+                    class="notch-tr grid grid-cols-1 items-center gap-y-3.5 border-l-2 bg-text-primary/4 px-4 py-3.5 [--notch:0.875rem] lg:grid-cols-[minmax(0,1fr)_7rem_7rem] lg:gap-x-4 lg:gap-y-0 lg:px-5"
                   >
-                    {{ row.visual.tier }}
-                  </span>
-                </span>
+                    <span class="min-w-0">
+                      <span
+                        class="font-display block truncate text-base leading-tight font-semibold text-text-primary"
+                      >
+                        {{ row.name }}
+                      </span>
+                      <span class="mt-1.5 block truncate text-xs text-text-muted">
+                        {{ row.description }}
+                      </span>
+                    </span>
 
-                <span class="min-w-0 flex-1">
-                  <span class="font-display block truncate text-sm font-semibold text-text-primary">
-                    {{ row.name }}
-                  </span>
-                  <span class="block truncate text-xs text-text-muted">{{ row.description }}</span>
-                </span>
+                    <span
+                      class="grid grid-cols-2 gap-4 border-t border-text-primary/10 pt-3.5 lg:contents"
+                    >
+                      <span class="flex flex-col gap-2 lg:items-end">
+                        <span class="label-caption text-text-muted lg:sr-only">
+                          {{ 'overview.weeklyChallenges.damageLabel' | translate }}
+                        </span>
+                        <span
+                          class="font-display text-lg leading-none font-bold text-accent-gold tabular-nums"
+                        >
+                          {{ row.damage }}
+                        </span>
+                      </span>
 
-                <span class="flex shrink-0 items-center gap-4 text-right">
-                  <span>
-                    <span class="label-caption block text-text-muted">
-                      {{ 'overview.weeklyChallenges.damageLabel' | translate }}
+                      <span class="flex flex-col gap-2 lg:items-end">
+                        <span class="label-caption text-text-muted lg:sr-only">
+                          {{ 'colony.materials' | translate }}
+                        </span>
+                        <span
+                          class="font-display text-lg leading-none font-bold text-accent-cyan tabular-nums"
+                        >
+                          +{{ row.materials }}
+                        </span>
+                      </span>
                     </span>
-                    <span
-                      class="font-display block text-sm font-bold text-accent-gold tabular-nums"
-                    >
-                      {{ row.damage }}
-                    </span>
-                  </span>
-                  <span>
-                    <span class="label-caption block text-text-muted">
-                      {{ 'colony.materials' | translate }}
-                    </span>
-                    <span
-                      class="font-display block text-sm font-bold text-accent-cyan tabular-nums"
-                    >
-                      +{{ row.materials }}
-                    </span>
-                  </span>
-                </span>
-              </li>
-            }
-          </ul>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
         </div>
       </details>
     }

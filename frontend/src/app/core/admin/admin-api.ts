@@ -184,6 +184,25 @@ export class AdminApi {
   }
 
   /**
+   * Runs the whole weekly rollover now: finalizes every past week left open, settles the boss
+   * fights they never resolved, and opens the week in progress.
+   *
+   * @returns A promise that resolves once the rollover has completed.
+   */
+  public async runWeeklyRollover(): Promise<void> {
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.weeklyRollover, null));
+  }
+
+  /**
+   * Replays the colony over the run in progress, from its first day.
+   *
+   * @returns A promise that resolves once the replay has completed.
+   */
+  public async recomputeColony(): Promise<void> {
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.colonyRecompute, null));
+  }
+
+  /**
    * Adds a player to the tracked roster.
    *
    * @param request - The player's identity.

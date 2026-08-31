@@ -30,6 +30,12 @@ export interface ChallengeWeakPoint {
   readonly barClass: string;
 
   /**
+   * The tier's accent as a bare color, for a caller lighting the whole mark — fill, inner ground and
+   * numeral — from one custom property rather than from a class per element.
+   */
+  readonly tierColor: string;
+
+  /**
    * Difficulty the numeral stands for, read by assistive technology in its place.
    */
   readonly difficulty: ChallengeDifficulty;

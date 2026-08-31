@@ -1,5 +1,5 @@
-<!-- One scene, painted back to front: sky, the city held back by haze, the terraces, the frontage
-     and its street, then the water and whatever crosses it.
+<!-- One scene, painted back to front: sky, the moon and its stars, the city held back by haze, the
+     terraces, the frontage and its street, then the water and whatever crosses it.
 
      `xMidYMax meet` keeps the ground line pinned to the bottom of the panel at every width. Every
      full-bleed band is drawn far past the viewBox, and SVG clips to the viewport rather than to the
@@ -26,7 +26,7 @@
   @for (layer of layers(); track $index) {
     <g
       [attr.transform]="layer.transform"
-      [class.town-building]="layer.rises"
+      [class]="layer.className"
       [style.--rise-delay]="layer.delay"
     >
       @for (shape of layer.shapes; track $index) {

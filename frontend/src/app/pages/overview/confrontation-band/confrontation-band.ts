@@ -20,9 +20,14 @@ import { Translation } from '@core/i18n/translation';
  * right the band answers it in one line — this is us, this is the time we have, this is what we are
  * shooting at.
  *
- * The week's challenges appear here only as the ally side's round pips. Their breakdown as the
- * boss's weak points stays on `/week` and `/campaign`, where there is room to say what each one
- * actually asks for.
+ * Laid out as a fight card: both camps carry the same five rows, so they are compared straight
+ * across rather than read one after the other, and their two gauges close on each other — the
+ * squad's challenges fill from its own edge towards the seam, the boss's health retreats from the
+ * seam towards its own corner.
+ *
+ * The week's challenges appear here only as the ally side's gauge. Their breakdown as the boss's
+ * weak points stays on `/week` and `/campaign`, where there is room to say what each one actually
+ * asks for.
  *
  * Self-fetches off the shared resources, exactly like `BossFightCard`, so it costs no request the
  * page does not already make.
@@ -62,7 +67,7 @@ export class ConfrontationBand {
    * Which weak points have already landed, by position — a challenge counts as cleared only once the
    * whole squad has validated it, the same rule `TeamProgress` applies.
    */
-  protected readonly clearedFlags = computed<readonly boolean[]>(() =>
+  private readonly clearedFlags = computed<readonly boolean[]>(() =>
     this.challenges().map(
       (challenge) =>
         challenge.totalPlayers > 0 && challenge.completedPlayers === challenge.totalPlayers,
@@ -74,6 +79,39 @@ export class ConfrontationBand {
   );
 
   protected readonly challengeCount = computed(() => this.challenges().length);
+
+  /**
+   * Share of the week's challenges the squad has cleared, `0`–`100`, which is what its gauge draws.
+   */
+  protected readonly clearedPercentage = computed(() => {
+    const total = this.challengeCount();
+
+    return total === 0 ? 0 : (this.clearedCount() / total) * 100;
+  });
+
+  /**
+   * Whether the squad's gauge has a head to light: started, and not yet a full week.
+   */
+  protected readonly isFilling = computed(() => {
+    const cleared = this.clearedPercentage();
+
+    return cleared > 0 && cleared < 100;
+  });
+
+  /**
+   * One slot per roster member, lit for whoever has played today.
+   *
+   * Built from the head count rather than from the roster itself: which players turned up is the
+   * squad page's question, and the band only needs to show how much of the squad is here — a
+   * distinction that also keeps this side rendering before the players resource has resolved.
+   */
+  protected readonly rosterSlots = computed<readonly boolean[]>(() => {
+    const battery = this.colony.battery();
+
+    return battery === null
+      ? []
+      : Array.from({ length: battery.rosterSize }, (_, index) => index < battery.presentCount);
+  });
 
   /**
    * Share of hit points left, `0`–`100`, which is what the bar draws.
@@ -88,6 +126,15 @@ export class ConfrontationBand {
       0,
       Math.min(100, ((boss.effectiveHp - boss.totalDamageDealt) / boss.effectiveHp) * 100),
     );
+  });
+
+  /**
+   * Whether the bar has an edge to draw: a fight already started and not yet finished.
+   */
+  protected readonly isDraining = computed(() => {
+    const remaining = this.remainingPercentage();
+
+    return remaining > 0 && remaining < 100;
   });
 
   /**
@@ -108,6 +155,18 @@ export class ConfrontationBand {
     const boss = this.boss();
 
     return boss ? formatDamage(boss.effectiveHp, this.translation.language()) : '';
+  });
+
+  /**
+   * What the squad has already torn off, for the threat's own caption.
+   *
+   * The same total the bar draws as the gap it has opened, said in figures on the side that took it:
+   * the health bar answers "how much is left", and a fight card owes the reader the other half.
+   */
+  protected readonly damageDealtLabel = computed(() => {
+    const boss = this.boss();
+
+    return boss ? formatDamage(boss.totalDamageDealt, this.translation.language()) : '';
   });
 
   /**

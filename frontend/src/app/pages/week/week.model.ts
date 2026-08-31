@@ -35,6 +35,24 @@ export interface ChallengeRow {
    * earned yet — a lone completer multiplies by one, and showing that reads as a penalty.
    */
   readonly squadMultiplier: string | null;
+
+  /**
+   * How many of the roster have already cleared it, and out of how many.
+   *
+   * Collective, never individual: who exactly stays `Leaderboard`'s own matrix, and the accueil's
+   * confrontation band counts cleared *challenges* rather than cleared *players*. Neither of them
+   * answers "how close is this one to being everyone's", which is what a squad bonus grows on.
+   */
+  readonly clearedCount: number;
+  readonly rosterSize: number;
+
+  /**
+   * One slot per roster member, `true` for each one already cleared — the same slug device the
+   * confrontation band draws turnout with, so the two read as one measure. Precomputed here rather
+   * than in the template: a repeat count is not something a template should be deriving.
+   */
+  readonly slots: readonly boolean[];
+
   readonly visual: ChallengeVisual;
 }
 
@@ -42,13 +60,35 @@ export interface ChallengeRow {
  * One row of the catalogue band: a challenge the pool can still draw, outside of this week's
  * five — what it is always worth, with none of the collective-progress fields a drawn challenge
  * carries.
+ *
+ * Carries no visual of its own: the row lives under a tier heading that names its difficulty and
+ * holds the tier's colour, so repeating the badge on every one of some fifty rows would state the
+ * same thing twice.
  */
 export interface CatalogueRow {
   readonly id: number;
   readonly name: string;
   readonly description: string;
-  readonly difficulty: ChallengeDifficulty;
   readonly damage: string;
   readonly materials: string;
-  readonly visual: ChallengeVisual;
+}
+
+/**
+ * The catalogue's rows for one difficulty, in the ladder's own order.
+ *
+ * The pool is dozens of entries long and its only structure is the tier, which is also what decides
+ * what an entry pays — so it is what the list is grouped and ordered by, rather than a column the
+ * eye has to re-sort.
+ */
+export interface CatalogueGroup {
+  readonly difficulty: ChallengeDifficulty;
+
+  /**
+   * Roman rank (`I` to `V`) and bare hex accent of the tier, from `resolveDifficultyVisual` — the
+   * colour the group's heading and the leading edge of each of its rows are lit from.
+   */
+  readonly tier: string;
+  readonly tierColor: string;
+
+  readonly rows: readonly CatalogueRow[];
 }

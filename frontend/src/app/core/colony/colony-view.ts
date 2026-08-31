@@ -11,6 +11,7 @@ import {
   formatMultiplier,
   formatPopulation,
   formatSignedPopulation,
+  formatSignedShare,
 } from './colony-format.utils';
 import {
   FOOD_SEGMENT_EMPTY_COLOR,
@@ -20,7 +21,7 @@ import {
   PRESENCE_PIP_FULL_CLASS,
   PRESENCE_PIP_PARTIAL_CLASS,
 } from './colony-gauge.utils';
-import { tierGlyphFor } from './colony-tier.utils';
+import { tierGlyphFor, tierShareOfGain, tierStepFor } from './colony-tier.utils';
 import {
   Colony,
   ColonyPresencePlayer,
@@ -31,6 +32,8 @@ import {
 import {
   ColonyAttractivityView,
   ColonyBatteryView,
+  ColonyBossPayoutStepView,
+  ColonyBossPayoutView,
   ColonyBossView,
   ColonyDeltaView,
   ColonyFoodDayView,
@@ -438,6 +441,7 @@ export class ColonyView {
 
     return {
       tier: current.name,
+      step: tierStepFor(current),
       glyph: tierGlyphFor(current),
       populationPercentage: this.populationPercentage(),
       progressPercentage: colony.tierProgressPercentage,
@@ -461,6 +465,27 @@ export class ColonyView {
     return colony.ladder.map((tier, index) =>
       this.toTierStep(tier, colony, currentIndex >= 0 && index === currentIndex + 1),
     );
+  });
+
+  /**
+   * What the fight under way pays, read as the step of the ladder it buys. See
+   * {@link ColonyBossPayoutView}.
+   */
+  public readonly bossPayout = computed<ColonyBossPayoutView | null>(() => {
+    const colony = this.colony();
+    if (colony === null) {
+      return null;
+    }
+
+    const language = this.translation.language();
+    const week = colony.weeks.find((entry) => entry.state === 'CURRENT') ?? null;
+
+    return {
+      materialsLabel: formatPopulation(week?.materials ?? 0, language),
+      moraleLabel: formatSignedPopulation(week?.moraleDelta ?? 0, language),
+      defeatMoraleLabel: this.defeatMoraleLabel(),
+      step: week === null ? null : this.toPayoutStep(week, colony),
+    };
   });
 
   /**
@@ -753,6 +778,44 @@ export class ColonyView {
             materials: formatPopulation(missing, language),
           })
         : '',
+    };
+  }
+
+  /**
+   * Resolves the fight under way into the step of the ladder its materials buy.
+   *
+   * The share is taken in efficiency, not in materials: the ladder's steps are efficiency
+   * thresholds, and `tierProgressPercentage` — the position this gain is drawn next to — is
+   * measured on that same scale. Pricing the gain in materials instead would draw two lengths on
+   * one rail that were measured against two different totals.
+   *
+   * @param week - The week being fought, and what its fight is worth.
+   * @param colony - The colony climbing.
+   * @returns The step, or `null` when there is no climb to draw.
+   */
+  private toPayoutStep(week: ColonyWeek, colony: Colony): ColonyBossPayoutStepView | null {
+    const gain = tierShareOfGain(
+      week.efficiencyGain,
+      colony.tier.threshold,
+      colony.nextTier.threshold,
+    );
+    if (gain === null) {
+      return null;
+    }
+
+    const language = this.translation.language();
+    const have = this.percentageOf(colony.tierProgressPercentage, 100);
+
+    return {
+      fromName: this.tierName(colony.tier),
+      toName: this.tierName(colony.nextTier),
+      fromGlyph: tierGlyphFor(colony.tier),
+      toGlyph: tierGlyphFor(colony.nextTier),
+      havePercentage: have,
+      gainPercentage: Math.min(100 - have, Math.max(0, gain)),
+      // Stated whole where the band is clamped: a boss worth more than the step still to climb is
+      // worth saying so, and a band running past the end of its rail is not.
+      gainLabel: formatSignedShare(gain, language),
     };
   }
 

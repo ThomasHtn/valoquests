@@ -28,9 +28,7 @@
           </span>
         </p>
 
-        @if (tier(); as tier) {
-          <app-town-silhouette class="mt-6 block" [moralePercentage]="100" [tier]="tier" />
-        }
+        <app-town-silhouette class="mt-6 block" [moralePercentage]="100" [step]="step()" />
       </section>
 
       <!-- The secondary figures, each read against the campaign right before this one — a score

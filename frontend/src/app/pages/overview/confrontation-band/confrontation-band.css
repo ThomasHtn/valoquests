@@ -2,51 +2,56 @@
  * Colors are spelled out rather than referenced through `var(--color-*)`: this is a component
  * stylesheet, compiled outside the Tailwind theme context where those tokens resolve, the same
  * reason `landing.css` and `overview.css` spell their own out. Keep in sync with `styles/colors.css`:
- *   brand-400 #e8ab6b · surface-sunken #0a151d · surface-800 #1b2c3a · surface-700 #253645
- *   text-primary #ece8e1 · text-muted #868b8d · accent-cyan #2dd4bf · accent-red #ff4655
+ *   brand-500 #d9954a · surface-sunken #0a151d · surface-700 #253645
+ *   text-primary #ece8e1 · text-secondary #a4a7a6 · text-muted #868b8d
+ *   accent-cyan #2dd4bf · accent-red #ff4655
  */
 
+/*
+ * A fight card, not three tiles in a row. Both camps carry the same five rows — tag, who, figure,
+ * gauge, caption — so the two are compared straight across rather than read one after the other.
+ */
 .versus {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  background: #16232e;
+  overflow: hidden;
+  background: #0d1821;
 }
 
-@media (width >= 47.5rem) {
+@media (width >= 52rem) {
   .versus {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   }
 }
 
 /*
- * Each camp is washed in its own colour and carries its accent as an inset edge, never a border: a
- * border would shift the contents of the side that has one, which is exactly the drift the match
- * rows on the profile avoid the same way.
+ * Each camp carries its accent as an inset edge rather than a border, which would shift the contents
+ * of the side that has one — the drift the profile's match rows avoid the same way. Its wash is
+ * strongest at its own edge; the flat 7% it used to be is barely a tint on this ground.
  */
 .vs-side {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  display: grid;
+  grid-template-rows: auto minmax(2rem, auto) auto auto auto;
   gap: 9px;
+  align-content: center;
   min-width: 0;
-  padding: 16px 20px;
+  padding: 18px 20px;
 }
 
+/* Each camp names its own colour once; everything inside it reads that rather than repeating it. */
 .vs-side--ally {
-  background: rgb(45 212 191 / 7%);
-  box-shadow: inset 4px 0 0 #2dd4bf;
+  --camp: #2dd4bf;
+
+  background: linear-gradient(96deg, rgb(45 212 191 / 22%), rgb(45 212 191 / 5%) 62%, transparent);
+  box-shadow: inset 5px 0 0 var(--camp);
 }
 
 .vs-side--foe {
-  background: rgb(255 70 85 / 8%);
-  box-shadow: inset -4px 0 0 #ff4655;
-}
+  --camp: #ff4655;
 
-@media (width >= 47.5rem) {
-  .vs-side--foe {
-    align-items: flex-end;
-    text-align: right;
-  }
+  background: linear-gradient(-96deg, rgb(255 70 85 / 24%), rgb(255 70 85 / 6%) 62%, transparent);
+  box-shadow: inset -5px 0 0 var(--camp);
 }
 
 .vs-tag {
@@ -57,14 +62,7 @@
   font-size: 0.625rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-}
-
-.vs-side--ally .vs-tag {
-  color: #2dd4bf;
-}
-
-.vs-side--foe .vs-tag {
-  color: #ff4655;
+  color: var(--camp);
 }
 
 /* The boss's weight class, read as a qualifier of the tag it follows rather than a second title. */
@@ -72,11 +70,18 @@
   color: #868b8d;
 }
 
+.vs-who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 .vs-name {
-  margin: 0;
   overflow: hidden;
   font-weight: 700;
-  font-size: clamp(1.25rem, 2.4vw, 1.6875rem);
+  font-size: clamp(1.375rem, 2.6vw, 1.875rem);
   font-family: var(--font-display);
   line-height: 1;
   white-space: nowrap;
@@ -84,6 +89,74 @@
   text-transform: uppercase;
   letter-spacing: 0.02em;
   color: #ece8e1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Name weight, not figure weight: the one big number here stays what the week is scored on. */
+.vs-side--ally .vs-name {
+  font-size: 1.5rem;
+}
+
+.vs-name small {
+  margin-left: 3px;
+  font-weight: 500;
+  font-size: 0.6875rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #868b8d;
+}
+
+/* One slug per roster member. Wraps rather than shrinks: a twenty-player squad gets a second row. */
+.roster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.roster i {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 30px;
+  background: rgb(4 10 15 / 55%);
+  box-shadow: inset 0 -2px 0 rgb(236 232 225 / 14%);
+  clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+}
+
+.roster-on {
+  background: rgb(45 212 191 / 34%);
+  box-shadow:
+    inset 0 -2px 0 #2dd4bf,
+    inset 0 2px 0 rgb(45 212 191 / 70%);
+}
+
+.vs-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.75rem;
+  font-family: var(--font-display);
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--camp);
+  font-variant-numeric: tabular-nums;
+}
+
+.vs-figure small {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  color: #a4a7a6;
+}
+
+.vs-figure em {
+  font-style: normal;
+  font-size: 0.625rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #868b8d;
 }
 
 .vs-sub {
@@ -93,104 +166,82 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Round pips: one per challenge of the week, the shape a round counter takes. */
-.pips {
-  display: flex;
-  gap: 5px;
-}
-
-.pip-round {
-  flex: 0 0 auto;
-  width: 16px;
-  height: 9px;
-  background: rgb(236 232 225 / 14%);
-  clip-path: polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%);
-}
-
-.pip-round--on {
-  background: #2dd4bf;
-}
-
-.vs-hp {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-@media (width >= 47.5rem) {
-  .vs-side--foe .vs-hp {
-    align-items: flex-end;
-  }
-}
-
+/*
+ * One gauge drawn twice, on the same row of both camps: frame, fill and sweep come from the
+ * `hp-gauge` utilities shared with the boss band on `/week`, each camp colouring its own through
+ * `--gauge-fill`. Both run from the leading edge — the squad's fills, the boss's drains, and that
+ * difference is the whole reading.
+ *
+ * Local: the 18px row, and a notch cut smaller than `/week`'s because it is measured against that
+ * height. The `::after` belongs to `notch-tr-edge`, so nothing here may claim it — the quarter marks
+ * that used to sit on it are gone with it.
+ */
+.gauge,
 .hp {
-  position: relative;
-  display: block;
+  --notch: 0.375rem;
+  --gauge-fill: var(--camp);
+
   width: 100%;
-  height: 8px;
-  overflow: hidden;
-  background: rgb(0 0 0 / 45%);
+  height: 18px;
 }
 
-.hp-fill {
-  display: block;
-  height: 100%;
-  background: #ff4655;
-}
-
-.hp-grad {
+/* The head of the fill: the edge the health is being pushed back from, the edge the squad has
+   reached. Drawn only while there is one — at nothing and at everything it is the bar's own cap. */
+.gauge b,
+.hp b {
   position: absolute;
-  inset: 0;
-  display: flex;
-  pointer-events: none;
-}
-
-.hp-grad span {
-  flex: 1 1 0;
-  border-right: 1px solid rgb(15 25 35 / 75%);
-}
-
-.hp-grad span:last-child {
-  border-right: 0;
-}
-
-.vs-hpv {
-  font-weight: 700;
-  font-size: 1.1875rem;
-  font-family: var(--font-display);
-  white-space: nowrap;
-  color: #ff4655;
-  font-variant-numeric: tabular-nums;
-}
-
-.vs-hpv small {
-  font-weight: 500;
-  font-size: 0.75rem;
-  color: #868b8d;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: #ece8e1;
 }
 
 /*
- * The clock plate: the two camps meet on it. It is the band's own surface, left bare — what makes it
- * read as a plate is the wash on either side of it, not a tone of its own. Sinking it to
- * `surface-sunken` pulled a black hole into the middle of the band.
- *
- * Square, not slanted: the bevel this carried at first was cut at a fixed 16px, which stays discreet
- * on a short band and reads as crooked as soon as the band grows past its shortest state.
+ * The plate the two camps meet on, and the seam itself. Sheared rather than clipped: a bevel cut at
+ * a fixed 16px reads as crooked as soon as the band grows, where a shear holds its angle at every
+ * height. The content is sheared back so the clock stays upright. The camps take their extra inner
+ * padding at the same width, so neither leans into the seam before there is one.
  */
 .vs-core {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   justify-content: center;
-  padding: 14px 30px;
-  background: #16232e;
+  padding: 16px 32px;
+  background: #060f16;
+  border-right: 1px solid rgb(217 149 74 / 45%);
+  border-left: 1px solid rgb(217 149 74 / 45%);
 }
 
-@media (width >= 47.5rem) {
+@media (width >= 52rem) {
   .vs-core {
-    padding: 14px 44px;
+    margin: 0 -26px;
+    padding: 16px 46px;
+    transform: skewX(-9deg);
+  }
+
+  .vs-core > * {
+    transform: skewX(9deg);
+  }
+
+  /*
+   * Inner padding set on the gauges, the only rows running a camp's full width, rather than on the
+   * text: the seam leans, so at the height they sit it has already crossed where 40px held. The two
+   * values differ by the lean itself — the plate has moved off the squad and onto the boss by then,
+   * and matching numbers would leave the two gauges visibly unequal distances from it.
+   */
+  .vs-side--ally {
+    padding-right: 72px;
+  }
+
+  .vs-side--foe {
+    justify-items: end;
+    padding-left: 56px;
+    text-align: right;
   }
 }
 
@@ -198,9 +249,10 @@
 .vs-clock {
   margin: 0;
   font-weight: 700;
-  font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+  font-size: clamp(1.75rem, 3.4vw, 2.375rem);
   font-family: var(--font-display);
   line-height: 1;
+  white-space: nowrap;
   color: #d9954a;
   font-variant-numeric: tabular-nums;
 }
@@ -210,5 +262,6 @@
   font-size: 0.625rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
+  white-space: nowrap;
   color: #868b8d;
 }

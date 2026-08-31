@@ -1,10 +1,12 @@
 /*
  * The town scene. Everything is drawn in one `<svg>` from the primitives in `town-scene.ts`, which
- * carries its own colours: those are the scene's materials (render, slate, glass, silt, water), not
- * application chrome. This file owns the frame, the sky and the entrance.
+ * carries its own colours: those are the scene's materials (render, slate, glass, silt, water) and
+ * its lights (amber for life, cyan for infrastructure, red for warning), not application chrome.
+ * This file owns the frame, the sky and the two animations.
  *
- * `--clarity` is set by the component, `0`–`1`, and is morale: it is the only thing besides the step
- * of the ladder that changes the drawing, and it changes the weather rather than the hour.
+ * `--clarity` is set by the component, `0`–`1`, and is morale. It is the only thing besides the step
+ * of the ladder and the population that changes the drawing, and it changes the weather rather than
+ * the hour: the hour is now fixed.
  */
 
 .town-scene {
@@ -19,20 +21,21 @@
 }
 
 /*
- * The sky, interpolated between overcast and clear. Even the low-morale sky is daylight: a losing
- * week makes the weather grey, never nightfall. Kept muted so the panel does not glare next to the
- * dark application chrome — the haze in `town-scene.ts` is toned with it to stay the darker mass.
+ * The sky, interpolated between smog and a clear night. A losing week does not get an earlier hour,
+ * it gets a low brown ceiling the neon bleeds into; a winning one gets depth. The star count is the
+ * other half of the same sentence and lives in `starsFor`, because putting stars out one at a time
+ * is a count, not an opacity — faded stars read as a rendering fault, missing ones as a bad night.
  */
 .town-sky-top {
-  stop-color: color-mix(in srgb, #4d6b7b calc(var(--clarity, 0.5) * 100%), #556068);
+  stop-color: color-mix(in srgb, #040a11 calc(var(--clarity, 0.5) * 100%), #12100f);
 }
 
 .town-sky-mid {
-  stop-color: color-mix(in srgb, #73858c calc(var(--clarity, 0.5) * 100%), #71797c);
+  stop-color: color-mix(in srgb, #08151f calc(var(--clarity, 0.5) * 100%), #1b1715);
 }
 
 .town-sky-low {
-  stop-color: color-mix(in srgb, #8c9088 calc(var(--clarity, 0.5) * 100%), #818481);
+  stop-color: color-mix(in srgb, #123543 calc(var(--clarity, 0.5) * 100%), #35271f);
 }
 
 /*
@@ -53,8 +56,51 @@
   }
 }
 
+/*
+ * One sign in the scene is on a failing ballast, and only one: a skyline that all flickers is a film
+ * set. Long gaps between the stutters, so it is caught out of the corner of the eye rather than
+ * watched — the block it belongs to is named in `town-scene.ts`'s frontage table.
+ */
+.town-flicker {
+  animation: town-neon 9s steps(1, end) infinite;
+}
+
+@keyframes town-neon {
+  0%,
+  88%,
+  100% {
+    opacity: 1;
+  }
+
+  89%,
+  91% {
+    opacity: 0.25;
+  }
+
+  90%,
+  93% {
+    opacity: 1;
+  }
+
+  94% {
+    opacity: 0.4;
+  }
+}
+
+/*
+ * On a phone the population plate moves up into the sky — the one part of the drawing that has
+ * nothing in it at any step — and lands exactly where the moon is. The moon goes rather than sitting
+ * as a smudge behind the figure; the stars are what keep the night starry at that width.
+ */
+@media (width < 40rem) {
+  .town-moon {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .town-building {
+  .town-building,
+  .town-flicker {
     animation: none;
   }
 }

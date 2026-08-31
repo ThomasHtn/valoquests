@@ -12,7 +12,7 @@ import {
  * as a different kind of thing, where the point is that they are one thing growing. The bands are the
  * ladder's own arc — a camp, then houses, then a skyline, then a monument.
  */
-export type ColonyTierGlyph = 'CAMP' | 'HOUSES' | 'SKYLINE' | 'MONUMENT';
+export type ColonyTierGlyph = 'CAMP' | 'HOUSES' | 'SKYLINE' | 'MONUMENT' | 'SPRAWL';
 
 /**
  * The town, drawn as the one thing the game is actually about — see design-review.md §3.1.
@@ -28,6 +28,13 @@ export interface ColonyTownView {
    * named step of the ladder adds something to the waterfront (see `town-scene.ts`).
    */
   readonly tier: ColonyTierName;
+
+  /**
+   * The same step as a position on the ladder, from zero and open-ended — `tierStepFor` folds the
+   * citadel number back in. The scene reads this rather than {@link tier}: the twelfth name repeats,
+   * so a drawing keyed on the name stops moving for the last third of a strong run.
+   */
+  readonly step: number;
 
   /**
    * Which of the four silhouettes the ladder's own marker draws — the current step's band.
@@ -396,6 +403,66 @@ export interface ColonyTierStepView {
    * the position, and only says it in figures when asked.
    */
   readonly progressLabel: string;
+}
+
+/**
+ * The step of the ladder this week's fight buys, resolved for the week page's payout block.
+ *
+ * A bare `+480 matériaux` states an amount and no scale: nothing on the page says whether that is a
+ * good week or a wasted one. Read against the step it is paying for, the same amount says how much
+ * of the climb one Sunday covers, which is the only form of it a reader can act on.
+ */
+export interface ColonyBossPayoutStepView {
+  /**
+   * Already-translated names of the step the colony stands on and the one it is climbing to.
+   */
+  readonly fromName: string;
+  readonly toName: string;
+
+  /**
+   * The silhouettes those two steps wear, so the trail here is drawn with the same marks the
+   * ladder strip uses on the accueil.
+   */
+  readonly fromGlyph: ColonyTierGlyph;
+  readonly toGlyph: ColonyTierGlyph;
+
+  /**
+   * Share of the step already climbed, in `[0, 100]` — the colony's own `tierProgressPercentage`.
+   */
+  readonly havePercentage: number;
+
+  /**
+   * Share this fight would add, clamped to what is left of the track so the band never runs past
+   * its own rail. {@link gainLabel} states the true figure, which can exceed what is left.
+   */
+  readonly gainPercentage: number;
+
+  /**
+   * That same share, already formatted and signed (`+71 %`).
+   */
+  readonly gainLabel: string;
+}
+
+/**
+ * What the week's fight pays the colony, resolved for the week page.
+ */
+export interface ColonyBossPayoutView {
+  /**
+   * Already-formatted materials a defeated boss banks, and the morale it adds.
+   */
+  readonly materialsLabel: string;
+  readonly moraleLabel: string;
+
+  /**
+   * Already-formatted morale a boss left standing costs, signed negative.
+   */
+  readonly defeatMoraleLabel: string;
+
+  /**
+   * The step those materials buy, or `null` on a run with no fight under way or a boss worth no
+   * efficiency at all — there is then no climb to draw, only the two figures above.
+   */
+  readonly step: ColonyBossPayoutStepView | null;
 }
 
 /**

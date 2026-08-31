@@ -1,9 +1,10 @@
 import { DestroyRef, Injectable, inject, signal, Signal } from '@angular/core';
 
 /**
- * Tailwind's default `lg` and `xl` breakpoints, in pixels — the widths at which the screens
+ * Tailwind's default `md`, `lg` and `xl` breakpoints, in pixels — the widths at which the screens
  * holding two distinct layouts switch from the narrow one to the wide one.
  */
+const MD_BREAKPOINT_PX = 768;
 const LG_BREAKPOINT_PX = 1024;
 const XL_BREAKPOINT_PX = 1280;
 
@@ -20,6 +21,12 @@ const XL_BREAKPOINT_PX = 1280;
 @Injectable({ providedIn: 'root' })
 export class Breakpoint {
   private readonly destroyRef = inject(DestroyRef);
+
+  /**
+   * Whether the viewport is at least Tailwind's `md` breakpoint (768px) — the width below which a
+   * row of small labelled markers has to drop some of them rather than truncate all of them.
+   */
+  public readonly isMedium: Signal<boolean> = this.track(MD_BREAKPOINT_PX);
 
   /**
    * Whether the viewport is at least Tailwind's `lg` breakpoint (1024px).

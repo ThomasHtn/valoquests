@@ -99,6 +99,18 @@
         "action": "Run the selection",
         "done": "The current week is fully set up."
       },
+      "rollover": {
+        "heading": "Run the rollover",
+        "description": "Replays Monday's whole rollover: finalizes every past week left open, settles the boss fights they never resolved, and opens the current week. It does not synchronize — run a synchronization first if the last matches are still missing.",
+        "action": "Run the rollover",
+        "done": "Rollover completed."
+      },
+      "colonyRecompute": {
+        "heading": "Replay the colony",
+        "description": "Rebuilds the campaign in progress from its first day, out of the matches, challenges and boss outcomes already stored. Risk-free: the colony is never incremented, always fully recomputed.",
+        "action": "Replay",
+        "done": "Colony replayed."
+      },
       "history": {
         "title": "Synchronization history",
         "empty": "No past synchronization.",
@@ -352,7 +364,13 @@
       "METROPOLIS": "Metropolis",
       "MEGALOPOLIS": "Megalopolis",
       "CAPITAL": "Capital",
-      "CITADEL": "Citadel level {{level}}"
+      "CITADEL": "Citadel",
+      "CONURBATION": "Conurbation",
+      "MEGAREGION": "Megaregion",
+      "ARCOLOGY": "Arcology",
+      "ECUMENOPOLIS": "Ecumenopolis",
+      "CONTINUUM": "Continuum",
+      "STRATUM": "Stratum {{level}}"
     },
     "tierProgress": "{{materials}} materials to go before {{name}}.",
     "track": {
@@ -467,8 +485,10 @@
     "confrontation": {
       "squad": "Squad",
       "threat": "Threat",
-      "online": "{{present}} / {{roster}} online",
-      "cleared": "{{cleared}}/{{total}} challenges cleared · yield {{multiplier}} / {{max}}"
+      "onlineUnit": "/ {{roster}} online",
+      "quests": "challenges cleared",
+      "multiplier": "multiplier {{multiplier}} · cap {{max}}",
+      "dealt": "{{damage}} HP torn off this week"
     },
     "economy": {
       "title": "Colony economy",
@@ -481,7 +501,7 @@
       "title": "The colony"
     },
     "ladderStrip": {
-      "remaining": "· {{materials}} materials left before {{tier}}"
+      "cost": "{{materials}} to go"
     },
     "miniRanking": {
       "damageUnit": "damage",
@@ -1076,18 +1096,36 @@
     "title": "Guided tour"
   },
   "week": {
-    "bossHero": {
-      "label": "Boss"
+    "boss": {
+      "remainingHp": "HP left"
     },
     "bossSection": {
+      "link": "See the campaign",
       "title": "Boss to defeat this week"
     },
     "catalogue": {
+      "columns": {
+        "challenge": "Challenge"
+      },
+      "groupCount": "{{count}} challenges",
       "hint": "What Monday's draw can still hand out, beyond the five challenges above.",
       "title": "The rest of the pool"
     },
     "challengesSection": {
+      "link": "Who cleared what",
       "title": "The five challenges"
+    },
+    "payout": {
+      "currentTier": "Current tier",
+      "ifSurvives": "If it survives",
+      "moraleCost": "{{morale}} morale",
+      "nextTier": "Next tier",
+      "noMaterials": "and no materials banked.",
+      "ofTier": "of the {{name}} tier, in one week.",
+      "title": "Defeat this boss"
+    },
+    "squad": {
+      "cleared": "{{done}} / {{total}} cleared it"
     }
   }
 }

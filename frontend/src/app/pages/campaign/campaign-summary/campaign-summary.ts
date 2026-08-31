@@ -2,13 +2,14 @@ import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { ColonyApi } from '@core/colony/colony-api';
+import { tierStepFor } from '@core/colony/colony-tier.utils';
 import {
   formatMultiplier,
   formatPopulation,
   formatSignedGauge,
   formatSignedPopulation,
 } from '@core/colony/colony-format.utils';
-import { ColonyRunHistory, ColonyTierName } from '@core/colony/colony.model';
+import { ColonyRunHistory } from '@core/colony/colony.model';
 import { formatDateRange } from '@core/date/week-period.utils';
 import { anyError, anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -103,8 +104,15 @@ export class CampaignSummary {
   /**
    * The step this campaign finished on, which is what the scene draws. Under a clear sky: the run is
    * closed on its best state rather than on whatever morale it ended a fight with.
+   *
+   * The open-ended step rather than the tier's name, so a run that ended on its fourth citadel is
+   * drawn as the city it was and not as the first one (see `tierStepFor`).
    */
-  protected readonly tier = computed<ColonyTierName | null>(() => this.run()?.tier.name ?? null);
+  protected readonly step = computed<number>(() => {
+    const tier = this.run()?.tier;
+
+    return tier ? tierStepFor(tier) : 0;
+  });
 
   /**
    * Already-translated name of the tier this campaign finished on.

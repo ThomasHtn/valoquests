@@ -49,6 +49,23 @@ public interface WeeklyBossEncounterRepository
     List<WeeklyBossEncounter> findAllByRunIdAndFinalizedAtIsNotNullOrderByWeekStartAsc(Long runId);
 
     /**
+     * Retrieves every past encounter whose fight was never resolved, oldest week first.
+     *
+     * <p>Drives the rollover's boss closure. Reading the encounters themselves rather than the weeks
+     * whose challenge pack is still open is what makes the closure catch up on its own: an encounter
+     * belonging to a week that was finalized without it — a rollover interrupted after the pack was
+     * frozen, a week whose boss was drawn by a page view after its pack had closed — is otherwise
+     * never looked at again, and its fight stays unresolved forever.
+     *
+     * @param currentWeekStart Monday identifying the week in progress, excluded
+     * @return unresolved encounters of past weeks, ordered by week
+     */
+    @EntityGraph(attributePaths = "bossCatalogEntry")
+    List<WeeklyBossEncounter> findAllByFinalizedAtIsNullAndWeekStartLessThanOrderByWeekStartAsc(
+        LocalDate currentWeekStart
+    );
+
+    /**
      * Retrieves one run's finalized encounters using week-based pagination, most recent week first.
      *
      * @param runId    run the campaign currently runs in

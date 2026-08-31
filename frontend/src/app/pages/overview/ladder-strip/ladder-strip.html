@@ -1,35 +1,42 @@
-<!-- The trail: steps behind are settled, the one the colony stands on carries its number, the ones
-     ahead are still dark. The dashed segment is the only one still being paid for. -->
+<!-- The trail: steps behind are settled, the one the colony stands on carries the light, the ones
+     ahead are empty sockets holding the shape of what they build. The segment into the next step is
+     the gauge — the distance still to walk, drawn where the walking happens. -->
 @if (steps().length > 0) {
   <div class="ladder">
     <ol class="ladder-trail">
-      @for (step of steps(); track step.position) {
+      @for (step of steps(); track step.name) {
         <li
           [class.ladder-step--current]="step.current"
           [class.ladder-step--next]="step.next"
           [class.ladder-step--reached]="step.reached"
           class="ladder-step"
         >
-          <span class="ladder-mark" aria-hidden="true">
-            @if (step.reached) {
-              <svg class="size-3.5" lucideCheck></svg>
-            } @else {
-              {{ step.position }}
-            }
+          @if (!$first) {
+            <span class="ladder-seg" aria-hidden="true">
+              @if (step.next) {
+                <i [style.width.%]="progressPercentage()"></i>
+                <b>{{ progressPercentage() | number: '1.0-0' }} %</b>
+              }
+            </span>
+          }
+
+          @if (step.current) {
+            <span class="ladder-halo" aria-hidden="true"></span>
+          }
+
+          <span class="ladder-mark">
+            <app-tier-glyph [glyph]="step.glyph" class="ladder-glyph" />
           </span>
           <span class="ladder-name">{{ step.name }}</span>
+
+          @if (step.costLabel) {
+            <span class="ladder-cost">
+              <svg class="size-3 shrink-0" lucideHammer></svg>
+              {{ 'overview.ladderStrip.cost' | translate: { materials: step.costLabel } }}
+            </span>
+          }
         </li>
       }
     </ol>
-
-    @if (next(); as next) {
-      <p class="ladder-caption">
-        <span class="ladder-pct">{{ progressPercentage() | number: '1.0-0' }} %</span>
-        {{
-          'overview.ladderStrip.remaining'
-            | translate: { materials: next.missingMaterialsLabel, tier: next.name }
-        }}
-      </p>
-    }
   </div>
 }

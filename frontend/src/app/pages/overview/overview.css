@@ -25,18 +25,57 @@
 .colony-town {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgb(217 149 74 / 35%);
-  background: #0a151d;
+  background: #050b12;
 }
 
 .colony-town-scene {
   display: block;
 }
 
+/* The scene's own box, held open while its chunk arrives. Same clamp as `.town-scene`. */
+.colony-town-wait {
+  height: clamp(14rem, 24vw, 19rem);
+}
+
 /*
- * The population plate, laid on the quay. It used to sit under the scene, because a readout over the
- * old dusk silhouette needed a scrim heavy enough to swallow the lower third of the buildings. The
- * scene is daylight now, so a dark plate reads on it unaided and the frontage keeps its full height.
+ * The night falls off at the edges. The frontage is centred on what the colony has actually built,
+ * so on a wide panel it sits in the middle with the rest of the city running out either side; in
+ * daylight that read as distance, at night it read as two dead corners. This puts them back into the
+ * dark, which is where a night scene is allowed to end. Sits under the plate, which carries `z-1`.
+ */
+.colony-town::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgb(3 10 16 / 88%) 0%,
+    rgb(3 10 16 / 34%) 11%,
+    transparent 30%,
+    transparent 70%,
+    rgb(3 10 16 / 34%) 89%,
+    rgb(3 10 16 / 88%) 100%
+  );
+  pointer-events: none;
+}
+
+/* No dead space to hide on a phone: the panel is already cropped to the frontage. */
+@media (width < 40rem) {
+  .colony-town::after {
+    display: none;
+  }
+}
+
+/*
+ * The population plate, laid on the quay. It sits *on* the scene rather than under it: the readout
+ * needs a plate dark enough to detach from whatever is behind it, not a scrim heavy enough to
+ * swallow the lower third of the frontage, which is what a full-width band under the drawing was.
+ *
+ * Held apart by its own darkness, with the amber edge it opens on. It carried a full gold outline
+ * too, and the scene carried one as well — two frames stacked a few pixels apart, on a drawing whose
+ * whole point is that it has no edge. Against a night sky the value difference is enough to read a
+ * plate; the left edge is not a frame, it is the mark that opens a block everywhere in this
+ * interface.
  */
 .colony-town-plate {
   --notch: 0.75rem;
@@ -46,8 +85,7 @@
   left: 18px;
   z-index: 1;
   padding: 11px 18px 13px;
-  background: rgb(15 28 38 / 90%);
-  border: 1px solid rgb(217 149 74 / 35%);
+  background: rgb(6 14 20 / 82%);
   border-left: 2px solid #d9954a;
 }
 
@@ -131,63 +169,8 @@
   }
 }
 
-/*
- * The section rule: the page's one structural device. A title, a hairline fading to nothing, the way
- * out, and a hollow diamond closing the run. It names a block without framing it, which is what
- * replaced the stacked panels — and what keeps a block from reading as a card inside a card.
- */
-.section-rule {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 12px;
-}
-
-/*
- * Neutral, not amber: five gilded titles down a page spend the accent on naming things rather than
- * on the one figure that matters. The rule's hairline and diamond keep the gold, which is enough to
- * mark a section start.
- */
-.section-rule-title {
-  font-weight: 600;
-  font-size: 0.875rem;
-  font-family: var(--font-display);
-  line-height: 1.2;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #a4a7a6;
-}
-
-.section-rule-line {
-  flex: 1 1 3rem;
-  height: 1px;
-  background: linear-gradient(to right, rgb(217 149 74 / 50%), transparent);
-}
-
-.section-rule-link {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #e8ab6b;
-  transition: color 0.15s ease;
-}
-
-/* Underlined on hover: the arrow says where it goes, the underline says it is a link. */
-.section-rule-link:hover {
-  color: #f0c493;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
-}
-
-.section-rule-diamond {
-  width: 0.5rem;
-  height: 0.5rem;
-  border: 1px solid rgb(217 149 74 / 70%);
-  transform: rotate(45deg);
-}
+/* The section rule now lives in `styles.css`: `/week` is laid out on it too, and one page's
+   component stylesheet is the wrong owner for the device every page names its blocks with. */
 
 /*
  * The economy: three flat cells, each carrying its resource's colour on the edge it stands on and

@@ -161,6 +161,11 @@ export const API_ENDPOINTS = {
     currentWeekSelection: `${environment.apiBaseUrl}/admin/weeks/current/selection`,
 
     /**
+     * `POST` the whole weekly rollover, run now instead of on the next Monday.
+     */
+    weeklyRollover: `${environment.apiBaseUrl}/admin/weeks/rollover`,
+
+    /**
      * `GET` every player including archived ones, or `POST` one to add to the roster.
      */
     players: `${environment.apiBaseUrl}/admin/players`,

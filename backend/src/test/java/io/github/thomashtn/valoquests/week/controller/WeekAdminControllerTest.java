@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import io.github.thomashtn.valoquests.shared.config.AdminApiKeyFilter;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import io.github.thomashtn.valoquests.week.service.WeeklyLifecycleCoordinator;
+import io.github.thomashtn.valoquests.week.service.WeeklyRolloverService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,6 +36,9 @@ class WeekAdminControllerTest {
     @MockitoBean
     private WeeklyLifecycleCoordinator weeklyLifecycleCoordinator;
 
+    @MockitoBean
+    private WeeklyRolloverService weeklyRolloverService;
+
     /**
      * Verifies that the route opens the week currently in progress.
      *
@@ -50,5 +54,23 @@ class WeekAdminControllerTest {
             .andExpect(status().isNoContent());
 
         verify(weeklyLifecycleCoordinator).openWeek(weekCalendar.currentWeekStart());
+    }
+
+    /**
+     * Verifies that the route runs the same catch-up rollover the Monday schedule runs.
+     *
+     * <p>The repair path for a rollover that never fired: without it a past week's fight stays
+     * unresolved until the next Monday, and both the campaign map and the colony's morale keep
+     * reading it as a week that was never fought.
+     */
+    @Test
+    void shouldRunTheRolloverNow() throws Exception {
+        mockMvc.perform(
+                post("/api/admin/weeks/rollover")
+                    .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)
+            )
+            .andExpect(status().isNoContent());
+
+        verify(weeklyRolloverService).rolloverIfNeeded();
     }
 }

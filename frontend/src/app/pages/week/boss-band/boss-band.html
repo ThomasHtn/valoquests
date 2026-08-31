@@ -1,0 +1,180 @@
+<app-resource-state
+  (retry)="reload()"
+  [errorText]="'overview.bossEncounter.error' | translate"
+  [isError]="hasError()"
+  [isLoading]="isLoading()"
+  [loadingText]="'overview.bossEncounter.loading' | translate"
+  padding="py-10"
+>
+  @if (boss(); as boss) {
+    <!-- One band, two blocks: the fight, then what beating it pays. No border, no corner cut and
+         no second background — the threat is carried by an inset rule on the leading edge and the
+         two halves are told apart by a hairline. -->
+    <div class="boss">
+      <div class="boss-fight">
+        <div class="boss-top">
+          <span aria-hidden="true" class="clip-hex boss-mark">
+            <span class="clip-hex">
+              <svg lucideSkull></svg>
+            </span>
+          </span>
+
+          <div class="boss-id">
+            <span class="boss-tag">
+              <svg aria-hidden="true" class="size-3.5 shrink-0" lucideSkull></svg>
+              {{ 'overview.confrontation.threat' | translate }}
+              @if (categoryKey()) {
+                <em>· {{ categoryKey() | translate }}</em>
+              }
+            </span>
+
+            <!-- The number identifies the fight in the run, the name identifies the boss. The card
+                 this replaces carried only the first, so the one thing on the page with a name of
+                 its own went unnamed. -->
+            <h2 class="boss-name">
+              <b>
+                {{
+                  'colony.boss.number' | translate: { number: bossNumberLabel(boss.runWeekIndex) }
+                }}
+              </b>
+              {{ boss.boss.name }}
+            </h2>
+          </div>
+        </div>
+
+        <!-- What brings the bar down, as five marks and nothing else: the amount each one is worth
+             is on its own card thirty pixels below, and writing it twice made the band restate a
+             section of its own page. -->
+        @if (weakPoints().length > 0) {
+          <div class="boss-weak">
+            <span class="label-caption text-text-muted">
+              {{ 'overview.bossEncounter.weakPoints' | translate }}
+            </span>
+
+            <span class="boss-weak-marks">
+              @for (point of weakPoints(); track point.id) {
+                <span class="boss-weak-item">
+                  <span
+                    [style.--tier]="point.tierColor"
+                    aria-hidden="true"
+                    class="clip-hex boss-weak-mark"
+                  >
+                    <span class="clip-hex font-display">{{ point.tier }}</span>
+                  </span>
+                  <span class="sr-only">
+                    {{ 'overview.weeklyChallenges.difficulty.' + point.difficulty | translate }}
+                  </span>
+                </span>
+              }
+            </span>
+          </div>
+        }
+
+        <span class="hp-legend">
+          @if (defeated()) {
+            <span class="label-caption text-success">
+              {{ 'overview.bossEncounter.defeated' | translate }}
+            </span>
+          } @else {
+            <span class="label-caption text-text-muted">
+              {{ 'overview.confrontation.dealt' | translate: { damage: damageDealtLabel() } }}
+            </span>
+          }
+          <!-- The count the bar is a picture of, on the bar's own line: read together they say the
+               same thing twice over, once exactly and once at a glance. -->
+          <span class="boss-hp">
+            <span class="label-caption text-text-muted">
+              {{ 'week.boss.remainingHp' | translate }}
+            </span>
+            <b>
+              {{ remainingHpLabel()
+              }}<small>
+                / {{ effectiveHpLabel() }} {{ 'overview.bossEncounter.hpUnit' | translate }}
+              </small>
+            </b>
+          </span>
+        </span>
+
+        <!-- The bar closes the block: it is the one thing here that moves every day. Same gauge as
+             the colony's confrontation band, drained left to right, with a lit marker at the fill's
+             head — that marker is what says the bar is emptying rather than filling. -->
+        <span aria-hidden="true" class="hp hp-gauge notch-tr notch-tr-edge">
+          <i [style.width.%]="remainingPercentage()" class="hp-gauge-fill"></i>
+          @if (isDraining()) {
+            <b [style.left.%]="remainingPercentage()"></b>
+          }
+        </span>
+      </div>
+
+      <!-- What Sunday pays. Not a table of two outcomes: a reader does not choose between them,
+           they want one and fear the other, and two equal columns said the opposite. The win is
+           drawn as the climb it buys, the loss is one line under it. -->
+      @if (payout(); as payout) {
+        <aside class="pay">
+          <span class="label-caption text-brand-400">{{ 'week.payout.title' | translate }}</span>
+
+          @if (payout.step; as step) {
+            <div class="step-ends">
+              <span class="step-end">
+                <span class="step-mark">
+                  <app-tier-glyph [glyph]="step.fromGlyph" class="step-glyph" />
+                </span>
+                <span class="step-name">
+                  {{ step.fromName }}
+                  <small>{{ 'week.payout.currentTier' | translate }}</small>
+                </span>
+              </span>
+
+              <span class="step-end step-end--to">
+                <span class="step-mark step-mark--locked">
+                  <app-tier-glyph [glyph]="step.toGlyph" class="step-glyph" />
+                </span>
+                <span class="step-name">
+                  {{ step.toName }}
+                  <small>{{ 'week.payout.nextTier' | translate }}</small>
+                </span>
+              </span>
+            </div>
+
+            <!-- The ladder strip's own conduit, with one addition: what this fight would add,
+                 hatched because it is promised and not yet banked. -->
+            <span aria-hidden="true" class="conduit">
+              <i [style.width.%]="step.havePercentage" class="conduit-have"></i>
+              <i
+                [style.left.%]="step.havePercentage"
+                [style.width.%]="step.gainPercentage"
+                class="conduit-gain"
+              ></i>
+            </span>
+
+            <p class="step-read">
+              <b>{{ step.gainLabel }}</b>
+              <span>{{ 'week.payout.ofTier' | translate: { name: step.toName } }}</span>
+            </p>
+          }
+
+          <span class="pay-gains">
+            <span class="pay-gain text-accent-cyan">
+              <svg aria-hidden="true" class="size-3.5 shrink-0" lucideHammer></svg>
+              +{{ payout.materialsLabel }}
+              <em>{{ 'colony.materials' | translate }}</em>
+            </span>
+            <span class="pay-gain text-accent-violet">
+              <svg aria-hidden="true" class="size-3.5 shrink-0" lucideFlame></svg>
+              {{ payout.moraleLabel }}
+              <em>{{ 'colony.track.morale.name' | translate }}</em>
+            </span>
+          </span>
+
+          <p class="pay-cost">
+            <span class="label-caption text-danger">{{
+              'week.payout.ifSurvives' | translate
+            }}</span>
+            <b>{{ 'week.payout.moraleCost' | translate: { morale: payout.defeatMoraleLabel } }}</b>
+            <span>{{ 'week.payout.noMaterials' | translate }}</span>
+          </p>
+        </aside>
+      }
+    </div>
+  }
+</app-resource-state>
