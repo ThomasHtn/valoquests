@@ -65,7 +65,7 @@ export class ConfrontationBand {
 
   /**
    * Which weak points have already landed, by position — a challenge counts as cleared only once the
-   * whole squad has validated it, the same rule `TeamProgress` applies.
+   * whole squad has validated it, the same rule `/week`'s own board applies.
    */
   private readonly clearedFlags = computed<readonly boolean[]>(() =>
     this.challenges().map(

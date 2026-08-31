@@ -1,0 +1,190 @@
+/*
+ * The tour is otherwise pure utility classes; this file holds the three things they cannot express
+ * — the opening step's masked horizon, step two's score readout, and the spec strip's dividers.
+ *
+ * Colors spelled out rather than referenced through `var(--color-*)`: a component stylesheet is
+ * compiled outside the Tailwind theme context where those tokens resolve, the same reason
+ * `overview.css` and `boss-band.css` spell theirs out. Keep in sync with `styles/colors.css`:
+ *   brand-500 #d9954a · text-primary #ece8e1 · edge rgb(236 232 225 / 14%)
+ */
+
+/*
+ * Step two: the run's score, read as a figure rather than drawn again. Flat fill and a rule on the
+ * leading edge — the mark that opens a block everywhere in this interface — rather than a bordered
+ * card: the population plate this echoes on `/overview` is built the same way, and the redesign
+ * these screens came out of was about ending the stack of framed panels.
+ *
+ * Capped well under the column it sits in: a readout this sparse spread across forty rems reads as
+ * an empty banner.
+ */
+.tour-score {
+  /*
+   * Centered in its column, unlike every other illustration here — those fill the width they are
+   * given, and this one is the only block narrow enough to leave the column half empty beside it.
+   */
+  max-width: 24rem;
+  margin-inline: auto;
+  padding: 24px 28px 26px;
+  background: rgb(236 232 225 / 4%);
+  border-left: 2px solid #d9954a;
+}
+
+.tour-score-tier {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 16px;
+  font-weight: 500;
+  font-size: 0.6875rem;
+  font-family: var(--font-mono);
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #e8ab6b;
+}
+
+/*
+ * Plain inline boxes beside the figure, not flex ones: a flex container takes its baseline from its
+ * first item, and with the icon first that baseline was the icon's bottom edge, which sat the unit
+ * on a different line from the number it names. Same trap as `.colony-town-unit`.
+ */
+.tour-score-figure {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: baseline;
+  margin: 0;
+}
+
+.tour-score-count {
+  color: #ece8e1;
+  font-variant-numeric: tabular-nums;
+}
+
+.tour-score-unit {
+  font-weight: 500;
+  font-size: 1.0625rem;
+  color: #a4a7a6;
+}
+
+.tour-score-unit svg {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: -0.15em;
+}
+
+/* What today added, on its own line: it qualifies the figure, it is not part of it. */
+.tour-score-delta {
+  margin: 16px 0 0;
+  font-weight: 700;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tour-score-delta small {
+  margin-left: 6px;
+  font-weight: 500;
+  font-size: 0.625rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #868b8d;
+}
+
+/*
+ * Step one: the same scene as a horizon. No frame, no background of its own and no edge falloff —
+ * it is masked into the page instead, top and sides, so it reads as the ground the headline stands
+ * on rather than as a picture placed under it. The mask is what makes the difference between the
+ * two steps legible: one is a view, the other is a specimen.
+ */
+.tour-hero {
+  width: 100%;
+  max-width: 64rem;
+  mask-image:
+    linear-gradient(to bottom, transparent, #000 46%),
+    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  mask-composite: intersect;
+  pointer-events: none;
+}
+
+.tour-hero-scene {
+  display: block;
+}
+
+/*
+ * The side falloff is a proportion, and on a phone twelve percent of the width is a third of the
+ * frontage. Narrow viewports keep the top fade — which is what ties the scene to the page — and
+ * drop the sides, exactly as the framed version drops its own edge falloff there.
+ */
+@media (width < 40rem) {
+  .tour-hero {
+    mask-image: linear-gradient(to bottom, transparent, #000 46%);
+  }
+}
+
+/*
+ * The words a claim turns on. Weight and value only, no colour: the eyebrow above already spends
+ * the accent, and the figures below spend it again — a third brand-coloured thing in a block of
+ * four would leave the sentence competing with its own spec sheet.
+ */
+.tour-em {
+  font-weight: 600;
+  color: #ece8e1;
+}
+
+/*
+ * The spec strip. Three columns whatever the viewport, down to the narrowest phone: the figures are
+ * short and the labels are two words, and reflowing them to one column turned a strip that reads at
+ * a glance into a list that has to be read.
+ */
+.tour-specs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgb(236 232 225 / 14%);
+  /*
+   * Centered in its own cell rather than ranged left, and the one place on the step where the
+   * alignment does not follow the copy: the copy swings from centered to left at `lg`, and a strip
+   * of three gridded cells that swung with it read as three columns on one screen and a broken
+   * table on the next.
+   */
+  text-align: center;
+}
+
+.tour-spec {
+  padding-inline: 12px;
+  border-left: 1px solid rgb(236 232 225 / 14%);
+}
+
+/*
+ * Not `label-caption`, which every other caption in the application uses: its `0.2em` tracking is
+ * built for a single line sitting over a value, and these run to two. At that width the shared
+ * tracking pushed a third of the labels onto a third line, which left the three cells at three
+ * different heights. Everything else about the mark — face, size, case, weight — is that utility's.
+ */
+.tour-spec-label {
+  margin-top: 6px;
+  font-weight: 500;
+  font-size: 0.625rem;
+  font-family: var(--font-mono);
+  line-height: 1.45;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #868b8d;
+}
+
+.tour-spec:first-child {
+  border-left: 0;
+}
+
+@media (width < 40rem) {
+  .tour-specs {
+    margin-top: 24px;
+    padding-top: 16px;
+  }
+
+  .tour-spec {
+    padding-inline: 10px;
+  }
+}

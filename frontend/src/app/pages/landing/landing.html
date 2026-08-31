@@ -2,61 +2,93 @@
      sized ancestor to inherit a height from. `dvh` tracks the mobile browser's dynamic toolbar
      instead of the larger static viewport, so the bottom of the page isn't hidden behind it.
      `overflow-y-auto` is the safety valve for viewports too short to hold the composition, which
-     `body { overflow: hidden }` would otherwise trap. That valve only works with *safe* centering:
-     plain `justify-center` overflows in both directions, pushing the heading past the top edge
-     where no amount of scrolling reaches it. `safe center` falls back to `flex-start` as soon as
-     the content stops fitting, which is exactly when the scrollbar appears. -->
+     `body { overflow: hidden }` would otherwise trap.
+
+     `scrollbar-gutter: stable` is what keeps that valve from fighting the compass. The composition
+     is sized to fill the viewport exactly, so on a window whose height lands on the boundary the
+     compass's hover growth was enough to summon the scrollbar; the scrollbar then narrowed the
+     page, the row re-centred, the pointer fell off the compass, the growth was undone and the
+     scrollbar left again — a loop, several times a second. Reserving the gutter unconditionally
+     means its arrival costs no reflow and the loop has nothing to feed on. -->
 <main
-  class="justify-center-safe relative flex h-dvh flex-col items-center overflow-y-auto bg-surface-950 px-6 py-7 text-text-primary sm:px-20 sm:py-15"
+  class="relative flex h-dvh flex-col overflow-y-auto bg-surface-950 px-6 py-7 text-text-primary [scrollbar-gutter:stable] sm:px-20 sm:py-15"
 >
-  <div
-    aria-hidden="true"
-    class="landing-backdrop pointer-events-none absolute inset-0 opacity-50"
-  ></div>
+  <div aria-hidden="true" class="landing-sky pointer-events-none absolute inset-0"></div>
 
-  <div class="relative flex max-w-[720px] flex-col items-center text-center">
-    <p
-      class="tracking-label bg-brand-500 px-2.5 py-1 font-mono text-2xs font-bold text-surface-950 uppercase"
-    >
-      <!-- The product's own word, and nothing else. The badge used to append the calendar's ISO week
-           — "Colonie · Semaine 36" — to a visitor who has never seen the application and for whom
-           that number resolves to nothing: it is neither the campaign's week 2 of 10 nor anything a
-           first arrival can place. -->
-      {{ 'landing.title' | translate }}
-    </p>
-
-    <!-- The name is not translated and not a key: it is the wordmark, carrying the badge's own amber
-         gradient (`brand-400` → `brand-500`, the two stops of the logo) through `bg-clip-text`. -->
-    <h1 class="font-display mt-4 font-bold uppercase">
-      <span class="block text-2xl/snug sm:text-4xl/snug">{{
-        'landing.heading.welcome' | translate
-      }}</span>
-      <span
-        class="mt-1 block bg-linear-to-br from-brand-400 to-brand-500 bg-clip-text text-4xl/snug text-transparent sm:mt-1.5 sm:text-6xl/snug"
-        >ValoQuests</span
+  <!-- Read as a poster: what the visitor is promised at the top, the door below it, and a horizon
+       line drawn between them. The block's own height is set in the stylesheet, where it can be
+       stated as a share of the viewport — see `landing-poster` there. -->
+  <div class="landing-poster relative flex flex-col justify-between gap-12 sm:gap-16">
+    <div class="flex flex-col items-start gap-3.5 sm:gap-5">
+      <!-- The wordmark, not a heading and not translated: it carries the logo's own two amber stops
+           through `bg-clip-text`. -->
+      <p
+        class="font-display tracking-label-wide bg-linear-to-br from-brand-400 to-brand-500 bg-clip-text text-xs font-bold text-transparent uppercase"
       >
-    </h1>
+        ValoQuests
+      </p>
 
-    <!-- Keeps its own leading rather than the `text-prose` token: this is a centered hero line, set
-         tighter than a paragraph of body copy, and it grows a step at `sm` where the composition
-         has the room. -->
-    <p class="mt-3.5 max-w-[540px] text-base/normal text-text-secondary sm:mt-5 sm:text-xl/normal">
-      {{ 'landing.body' | translate }}
-    </p>
+      <!-- Leading spelled out, and well above the tight setting a condensed uppercase display face
+           invites: Oswald's capital accents reach about 0.95em over the baseline, so anything under
+           1 makes the É of "écran" collide with the line above it, and 1.04 only just clears it. -->
+      <h1
+        class="landing-title font-display max-w-[15ch] text-4xl/[1.12] font-bold uppercase sm:text-6xl/[1.12] lg:text-7xl/[1.12]"
+      >
+        {{ 'landing.accroche.lead' | translate }}
+        <span class="text-brand-500">{{ 'landing.accroche.highlight' | translate }}</span>
+      </h1>
 
-    <!-- The chevron points down at the compass, hence the hint sitting above it. Its rotation is
-         carried by an inner element so the nudge animation's own `transform` cannot overwrite it. -->
-    <p class="mt-6 flex items-center justify-center gap-2 text-text-muted sm:mt-8">
-      <span class="tracking-label font-mono text-2xs font-medium uppercase sm:text-xs/none">
-        {{ 'landing.hint' | translate }}
-      </span>
-      <span aria-hidden="true" class="inline-block motion-safe:animate-hint-nudge">
-        <span
-          class="block h-2 w-2 rotate-45 border-r-2 border-b-2 border-current sm:h-2.5 sm:w-2.5"
-        ></span>
-      </span>
-    </p>
+      <!-- Measure in `rem`, not in `ch`: Barlow Condensed is a condensed face, so a `ch`-based
+           column comes out a third narrower than the same count gives in any other body face — this
+           line broke after five words under a headline five times its size. -->
+      <!-- `text-balance` so the two lines come out even: left to itself the break landed between
+           "match" and "après match", splitting the emphasised clause across the two. -->
+      <p class="text-lead max-w-[32rem] text-balance text-text-secondary">
+        {{ 'landing.body.lead' | translate }}
+        <span class="text-text-primary">{{ 'landing.body.emphasis' | translate }}</span>
+      </p>
+    </div>
+
+    <!-- The horizon. Below `lg` the row folds into a column — the marks keep their line, the second
+         rule drops out and the first one becomes the full-width bar the compass sits under. -->
+    <div class="flex flex-col items-center gap-7 lg:flex-row lg:gap-10">
+      <!-- Written out rather than looped over a list of keys: three entries is not a collection, and
+           a key assembled by concatenation is a key `grep` no longer finds in the dictionaries. -->
+      <ul class="flex shrink-0 flex-wrap justify-center gap-x-7 gap-y-3 sm:gap-x-9">
+        <li class="flex flex-col gap-1.5">
+          <span class="font-display text-2xl/none font-bold text-brand-500">
+            {{ 'landing.marks.weeks.value' | translate }}
+          </span>
+          <span class="label-caption text-text-muted">
+            {{ 'landing.marks.weeks.label' | translate }}
+          </span>
+        </li>
+        <li class="flex flex-col gap-1.5">
+          <span class="font-display text-2xl/none font-bold text-brand-500">
+            {{ 'landing.marks.challenges.value' | translate }}
+          </span>
+          <span class="label-caption text-text-muted">
+            {{ 'landing.marks.challenges.label' | translate }}
+          </span>
+        </li>
+        <li class="flex flex-col gap-1.5">
+          <span class="font-display text-2xl/none font-bold text-brand-500">
+            {{ 'landing.marks.town.value' | translate }}
+          </span>
+          <span class="label-caption text-text-muted">
+            {{ 'landing.marks.town.label' | translate }}
+          </span>
+        </li>
+      </ul>
+
+      <span aria-hidden="true" class="landing-rule h-px w-full lg:flex-1"></span>
+
+      <app-compass class="shrink-0" (entered)="enter()" />
+
+      <span
+        aria-hidden="true"
+        class="landing-rule landing-rule-end hidden h-px lg:block lg:flex-1"
+      ></span>
+    </div>
   </div>
-
-  <app-compass class="relative mt-6 sm:mt-8" (entered)="enter()" />
 </main>

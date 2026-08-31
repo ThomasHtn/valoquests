@@ -6,7 +6,7 @@ import { ChallengeDifficulty } from './challenge.model';
  * A boss's health bar states how much of it is left but nothing about how it is drained. This is a
  * challenge card reduced to its tier mark and its damage — enough to say "this is what hurts it",
  * with the quest board one click away for what each tier actually asks for. Shared by every card
- * that frames the active week's challenges as the boss's weak points (`BossEncounter`, `BossDetail`).
+ * that frames the active week's challenges as the boss's weak points (`BossBand`, `BossDetail`).
  */
 export interface ChallengeWeakPoint {
   /**

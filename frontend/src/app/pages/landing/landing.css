@@ -1,34 +1,155 @@
 /*
- * Concentric contour rings suggesting a map, drawn behind the whole page.
+ * Night sky behind the whole page, matching the lit-city direction the overview now opens on: a
+ * glow rising off the horizon and a fixed star field above it.
  *
- * Kept in CSS rather than a Tailwind arbitrary value: escaping two comma-separated
- * `repeating-radial-gradient()` calls into a single utility class would be unreadable, and this is
- * the one place in the application that needs it. The ring color is `--color-text-primary` spelled
- * out, since this file is a component stylesheet and so is compiled outside the Tailwind theme
- * context where that token resolves.
+ * Kept in CSS rather than in Tailwind arbitrary values for the reason the contour rings it replaces
+ * were: a two-stop radial pair and a twenty-two-point `box-shadow` escaped into a utility class are
+ * unreadable, and this is the one page that needs them. The colors are spelled out — this is a
+ * component stylesheet, compiled outside the theme context where `--color-*` resolves.
+ *
+ * The stars are a `box-shadow` list on a single 1px pseudo-element rather than that many nodes in
+ * the template: they are decoration, and the template already says so with `aria-hidden`.
  */
-.landing-backdrop {
+.landing-sky {
   background:
-    repeating-radial-gradient(
-      circle at 30% 40%,
-      transparent 0 90px,
-      rgb(231 236 242 / 3.5%) 90px 91px
-    ),
-    repeating-radial-gradient(
-      circle at 30% 40%,
-      transparent 0 150px,
-      rgb(231 236 242 / 3%) 150px 151px
-    );
+    radial-gradient(115% 58% at 50% 108%, rgb(217 149 74 / 18%) 0%, transparent 64%),
+    radial-gradient(80% 44% at 84% 104%, rgb(45 212 191 / 9%) 0%, transparent 62%);
 }
 
-/* Tighter rings on small screens, so the pattern still reads as contours rather than as a single
-   stray arc across the viewport. */
+.landing-sky::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 14px;
+  width: 1px;
+  height: 1px;
+  border-radius: 50%;
+  background: rgb(236 232 225 / 55%);
+  box-shadow:
+    40px 30px rgb(236 232 225 / 55%),
+    180px 78px rgb(236 232 225 / 30%),
+    320px 22px rgb(236 232 225 / 45%),
+    470px 96px rgb(236 232 225 / 25%),
+    610px 44px rgb(236 232 225 / 50%),
+    760px 130px rgb(236 232 225 / 28%),
+    905px 60px rgb(236 232 225 / 42%),
+    1050px 18px rgb(236 232 225 / 33%),
+    1180px 104px rgb(236 232 225 / 46%),
+    96px 158px rgb(236 232 225 / 26%),
+    250px 190px rgb(236 232 225 / 38%),
+    402px 146px rgb(236 232 225 / 22%),
+    548px 208px rgb(236 232 225 / 34%),
+    690px 172px rgb(236 232 225 / 44%),
+    830px 226px rgb(236 232 225 / 24%),
+    980px 154px rgb(236 232 225 / 36%),
+    1120px 196px rgb(236 232 225 / 29%),
+    14px 244px rgb(236 232 225 / 40%),
+    336px 272px rgb(236 232 225 / 21%),
+    636px 296px rgb(236 232 225 / 27%),
+    892px 264px rgb(236 232 225 / 32%),
+    1164px 312px rgb(236 232 225 / 23%),
+    /* Lower band, thinning out as the sky approaches the horizon glow: without it the middle of a
+       tall viewport is flat black between the headline and the compass, which reads as an empty
+       page rather than as sky. */
+    168px 356px rgb(236 232 225 / 18%),
+    470px 402px rgb(236 232 225 / 22%),
+    742px 372px rgb(236 232 225 / 15%),
+    1046px 424px rgb(236 232 225 / 20%),
+    296px 468px rgb(236 232 225 / 14%),
+    880px 496px rgb(236 232 225 / 17%);
+}
+
+/*
+ * The composition's own height, and with it where the horizon sits.
+ *
+ * `100%` of the page would push the compass onto the very bottom edge, which read as too low: the
+ * sky above it grew with the viewport while the ground under it never did. Taking a slice off the
+ * block's height leaves that slice below it — `main` stacks from the top — so the whole horizon
+ * rises by it while the two halves keep spreading apart normally inside what is left.
+ *
+ * A share of the viewport rather than a fixed figure: it is the room under the compass that has to
+ * look right against the sky over the headline, and both grow together.
+ *
+ * `min-height`, never `height`: a viewport too short for the composition must let it grow past this
+ * and hand it to the scrollbar, not squeeze the two halves into each other.
+ */
+div.landing-poster {
+  min-height: calc(100% - 8vh);
+}
+
+/*
+ * The horizon the compass sits on. A gradient rather than `border-edge-strong`: a rule of even
+ * weight running the width of the page reads as a divider between two sections, which is the one
+ * thing this line must not be — it fades in toward the compass so it reads as ground meeting it.
+ */
+.landing-rule {
+  background: linear-gradient(90deg, transparent, rgb(236 232 225 / 22%));
+}
+
+.landing-rule-end {
+  background: linear-gradient(90deg, rgb(236 232 225 / 22%), transparent);
+}
+
+/* Below `lg` the second rule drops out and this one runs the full width above the compass, so it
+   has to fade at both ends instead of pointing off the right edge of the screen. Its middle is
+   opened up: spread over a phone's width, a gradient peaking at the desktop value never gets bright
+   enough anywhere to be seen at all. */
+@media (width < 64rem) {
+  .landing-rule {
+    background: linear-gradient(90deg, transparent, rgb(236 232 225 / 34%) 50%, transparent);
+  }
+}
+
+/*
+ * A poster only works if both of its halves are above the fold, and at full size this one needs
+ * about 890px of viewport. A 1366x768 laptop leaves roughly 700 once the browser's own chrome is
+ * out, which pushed the compass — the page's only control — under the edge and handed the visitor a
+ * scrollbar to reach it.
+ *
+ * The compass keeps its size at every height: it is the thing the page exists to offer, so the
+ * difference is taken out of the headline and the air around it instead.
+ *
+ * Keyed on height and guarded on width: below `sm` the composition is already at its small sizes,
+ * and a phone held upright is short enough to match this query, which would make the headline
+ * *larger* there. The type selector is what wins over the Tailwind size utilities, which sit at the
+ * same specificity.
+ */
+@media (width >= 40rem) and (height < 56rem) {
+  h1.landing-title {
+    font-size: 2.75rem;
+  }
+
+  div.landing-poster {
+    gap: 2rem;
+    /* Every pixel is spoken for at this height, so the room reserved under the compass goes back
+       into the composition rather than into the scrollbar. */
+    min-height: 100%;
+  }
+}
+
+/* Star coordinates spread across a desktop width; on a narrow viewport all but the leftmost few
+   fall outside the page and the sky empties out. Same fix the contour rings used before it. */
 @media (width < 40rem) {
-  .landing-backdrop {
-    background: repeating-radial-gradient(
-      circle at 30% 30%,
-      transparent 0 60px,
-      rgb(231 236 242 / 3.5%) 60px 61px
-    );
+  .landing-sky::before {
+    box-shadow:
+      28px 24px rgb(236 232 225 / 55%),
+      96px 66px rgb(236 232 225 / 30%),
+      164px 18px rgb(236 232 225 / 45%),
+      232px 88px rgb(236 232 225 / 25%),
+      300px 40px rgb(236 232 225 / 50%),
+      52px 122px rgb(236 232 225 / 28%),
+      130px 158px rgb(236 232 225 / 42%),
+      206px 132px rgb(236 232 225 / 33%),
+      284px 176px rgb(236 232 225 / 46%),
+      18px 196px rgb(236 232 225 / 26%),
+      160px 226px rgb(236 232 225 / 38%),
+      262px 248px rgb(236 232 225 / 22%),
+      74px 274px rgb(236 232 225 / 34%),
+      318px 300px rgb(236 232 225 / 24%),
+      36px 344px rgb(236 232 225 / 18%),
+      212px 380px rgb(236 232 225 / 22%),
+      308px 424px rgb(236 232 225 / 15%),
+      118px 462px rgb(236 232 225 / 20%),
+      268px 512px rgb(236 232 225 / 14%);
   }
 }

@@ -1,6 +1,14 @@
 import { NavItem } from './sidebar.model';
 
 /**
+ * Version of the application, shown at the very bottom of the sidebar.
+ *
+ * Written here rather than read from `package.json`: the manifest's version is never bumped for a
+ * deployment of this personal project, so the displayed one would always lie.
+ */
+export const APP_VERSION = '1.0-beta';
+
+/**
  * Primary navigation entries, in display order.
  *
  * Kept as data rather than repeated markup so the shared layout and long

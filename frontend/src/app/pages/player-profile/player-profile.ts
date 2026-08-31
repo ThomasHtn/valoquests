@@ -192,21 +192,19 @@ export class PlayerProfile {
   protected readonly viewMode = signal<'MATCHES' | 'PROGRESS'>('MATCHES');
 
   /**
-   * Which half of the profile is open: what this player brought to the colony, or their Valorant
-   * record.
+   * Which half of the profile is open: this player's Valorant record, or what they brought to the
+   * colony.
    *
-   * Opens on the colony. The Valorant statistics are available in any tracker; what a player
-   * contributed to the squad exists only here, and this is the only page in the application that
-   * reports it — which is exactly the gap the audit found. Mirrored into the URL by
-   * {@link onProfileTabChange} so a link can point at either half.
+   * Opens on the Valorant record — it is what a reader comes to a player's page for. Mirrored into
+   * the URL by {@link onProfileTabChange} so a link can point at either half.
    */
   /**
    * The two halves, in the order they are shown.
    */
-  protected readonly profileTabs = ['COLONY', 'VALORANT'] as const;
+  protected readonly profileTabs = ['VALORANT', 'COLONY'] as const;
 
   protected readonly profileTab = signal<'COLONY' | 'VALORANT'>(
-    this.route.snapshot.queryParamMap.get('tab') === 'valorant' ? 'VALORANT' : 'COLONY',
+    this.route.snapshot.queryParamMap.get('tab') === 'colony' ? 'COLONY' : 'VALORANT',
   );
 
   /**
@@ -841,7 +839,7 @@ export class PlayerProfile {
   protected onProfileTabChange(tab: 'COLONY' | 'VALORANT'): void {
     this.profileTab.set(tab);
     void this.router.navigate([], {
-      queryParams: { tab: tab === 'COLONY' ? null : tab.toLowerCase() },
+      queryParams: { tab: tab === 'VALORANT' ? null : tab.toLowerCase() },
       queryParamsHandling: 'merge',
       relativeTo: this.route,
       replaceUrl: true,

@@ -17,7 +17,10 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
   selector: 'app-compass',
   imports: [TranslatePipe],
   templateUrl: './compass.html',
-  host: { class: 'block' },
+  // Every ring is a fraction of `--compass-size`, so the two sizes this instrument has are two
+  // values rather than the six pairs of `h-[…] w-[…] sm:h-[…] sm:w-[…]` they used to be, and the
+  // ratios between the bezels can no longer drift apart when one of them is edited.
+  host: { class: 'block [--compass-size:210px] sm:[--compass-size:300px]' },
 })
 export class Compass {
   /**

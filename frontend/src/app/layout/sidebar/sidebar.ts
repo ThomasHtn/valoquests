@@ -35,7 +35,7 @@ import { Translation } from '@core/i18n/translation';
 import { Language } from '@core/i18n/translation.model';
 import { PlayersApi } from '@core/players/players-api';
 import { NavigationPanel } from '@layout/navigation-panel';
-import { ADMIN_NAV_ITEMS, NAV_ITEMS } from './sidebar.constants';
+import { ADMIN_NAV_ITEMS, APP_VERSION, NAV_ITEMS } from './sidebar.constants';
 import { NavItem } from './sidebar.model';
 import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './sidebar.utils';
 
@@ -149,6 +149,11 @@ export class Sidebar {
   protected readonly navItems = computed(() => (this.adminMode() ? ADMIN_NAV_ITEMS : NAV_ITEMS));
 
   /**
+   * Version shown at the very bottom of the sidebar.
+   */
+  protected readonly appVersion = APP_VERSION;
+
+  /**
    * Languages the switcher offers, in display order.
    */
   protected readonly supportedLanguages = this.translation.supportedLanguages;
@@ -220,6 +225,13 @@ export class Sidebar {
    * of its icon-only counterpart. Rail-only for the same reason as {@link brandBlockClass}.
    */
   protected readonly syncBlockClass = computed(() => (this.collapsed() ? 'lg:hidden' : 'lg:block'));
+
+  /**
+   * Display utility applied to the version line, hidden on a collapsed rail: at `lg:w-20` there is
+   * no room for the string, and it is the least essential thing in the footer. Rail-only for the
+   * same reason as {@link brandBlockClass}.
+   */
+  protected readonly versionClass = computed(() => (this.collapsed() ? 'lg:hidden' : 'lg:block'));
 
   /**
    * Alignment utility applied to each navigation entry on the rail: centered once collapsed, so

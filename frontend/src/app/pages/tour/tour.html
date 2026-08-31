@@ -52,7 +52,8 @@
        the header and footer stay put. -->
   <div
     #content
-    class="scroll-subtle flex flex-1 flex-col overflow-y-auto px-4 py-10 sm:px-8 sm:py-16"
+    [class]="contentClass()"
+    class="scroll-subtle flex flex-1 flex-col overflow-y-auto px-4 sm:px-8"
   >
     <!-- Announced on every step change: the controls stay in place and only this region swaps, so
          nothing else would tell a screen reader that the content moved on.
@@ -66,81 +67,142 @@
         <!-- Copy and illustration side by side from `lg` up, stacked below it. Side by side is what
              keeps the tallest step — the podium — inside one screen rather than pushing its own
              explanation past the fold; it also gives the copy a column narrow enough to read at
-             this type size. The opening step has no illustration and takes the full width as a
-             single centered block. -->
-        <div
-          [class]="
-            hasIllustration()
-              ? 'grid items-center gap-10 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-20'
-              : 'flex justify-center'
-          "
-        >
-          <!-- Ranged left beside its illustration on wide viewports, centered when it stands alone
-               or is stacked above it. -->
-          <div
-            [class]="
-              hasIllustration()
-                ? 'items-center text-center lg:items-start lg:text-left'
-                : 'max-w-4xl items-center text-center'
-            "
-            class="flex flex-col motion-safe:animate-step-in"
-          >
-            <p
-              class="tracking-label-wide font-mono text-sm font-semibold text-brand-500 uppercase sm:text-base"
-            >
+             this type size. Two steps opt out: the opening one has no illustration, and the week's
+             boss band needs the whole width (see `Tour.isWideIllustration`). -->
+        <div [class]="frameClass()">
+          <div [class]="copyClass()" class="flex flex-col motion-safe:animate-step-in">
+            <!-- Deliberately small against the heading under it. The eyebrow used to be set at
+                 `text-base`, a step off the title, which left the top of every step reading as two
+                 headings of similar weight; the contrast is what makes the title arrive. -->
+            <p class="tracking-label-wide font-mono text-2xs text-brand-500 uppercase sm:text-xs">
               {{ 'tour.steps.' + step + '.eyebrow' | translate }}
             </p>
 
-            <!-- One size larger on the step that stands alone: with no illustration beside it, the
-                 heading is the only thing holding the top of a full-width column. -->
-            <h1
-              [class]="
-                hasIllustration()
-                  ? 'text-3xl/tight sm:text-4xl/tight'
-                  : 'text-3xl/tight sm:text-4xl/tight lg:text-5xl/tight'
-              "
-              class="font-display mt-4 text-balance font-bold uppercase"
-            >
+            <h1 [class]="titleClass()" class="font-display mt-3 text-balance font-bold uppercase">
               {{ 'tour.steps.' + step + '.title' | translate }}
             </h1>
 
-            <!-- Split on a blank line rather than one long paragraph: most steps only have one
-                 sentence and render a single `<p>`, but the opening step spells out three separate
-                 ideas — reading them as one block was exactly what made it hard to follow. -->
-            <!-- 46ch is the measure of a column sharing its row with an illustration. The step that
-                 stands alone has the whole width to itself, and holding it to that same measure
-                 left a narrow ribbon stranded in the middle of the viewport. -->
-            <div
-              [class]="hasIllustration() ? 'max-w-[46ch]' : 'max-w-[64ch]'"
-              class="mt-6 flex flex-col gap-3"
+            <!-- One sentence, not a paragraph. Each step used to run two blocks of prose split on a
+                 blank line that stood for nothing — the break fell mid-idea and the reader had to
+                 work out why. What survived the cut is the single claim the step is making, with
+                 the two or three words that carry it set in relief. -->
+            <p
+              [class]="bodyClass()"
+              class="mt-5 text-pretty text-lead text-text-secondary sm:text-xl/relaxed"
             >
-              @for (
-                paragraph of paragraphs('tour.steps.' + step + '.body' | translate);
-                track paragraph
-              ) {
-                <p class="text-pretty text-lead text-text-secondary sm:text-xl/relaxed">
-                  {{ paragraph }}
-                </p>
+              @for (run of claimRuns('tour.steps.' + step + '.claim' | translate); track $index) {
+                <span [class.tour-em]="run.strong">{{ run.text }}</span>
               }
-            </div>
+            </p>
+
+            <!-- The spec sheet. Three figures a reader can take in without reading a sentence, and
+                 the reason the prose above could be cut to one line: what the paragraphs were
+                 really carrying was numbers, and a number belongs in a column, not in the middle of
+                 a clause. Values are fixed rules of the game rather than live readings — the
+                 illustration beside them is already the live half. -->
+            <!-- Not held to the claim's measure: three columns inside a 34ch ribbon leave each
+                 figure about eighty pixels, which is narrower than the labels under them. -->
+            <dl class="tour-specs w-full max-w-[30rem]">
+              @for (spec of specKeys; track spec) {
+                <div class="tour-spec">
+                  <!-- `text-figure-sm` is the scale's echo step, the one reserved for the two or
+                       three figures qualifying a page's headline — which is exactly what these are.
+                       The loud `text-figure` above it stays where it belongs, on the colony's own
+                       population. -->
+                  <dt class="font-display text-figure-sm font-bold text-brand-500 tabular-nums">
+                    {{ 'tour.steps.' + step + '.' + spec + '.value' | translate }}
+                  </dt>
+                  <dd class="tour-spec-label">
+                    {{ 'tour.steps.' + step + '.' + spec + '.label' | translate }}
+                  </dd>
+                </div>
+              }
+            </dl>
           </div>
 
+          <!-- The opening step's horizon: the squad's real colony, run the full width under the
+               headline and faded out at the top so it rises out of the page's own dark rather than
+               sitting in a frame. Decorative here — step two frames the same scene as the subject
+               and explains it — so it is hidden from assistive technology. -->
+          @if (isHero()) {
+            @if (colony.town(); as town) {
+              <div aria-hidden="true" class="tour-hero motion-safe:animate-step-in-late">
+                <app-town-silhouette
+                  class="tour-hero-scene"
+                  [moralePercentage]="colony.attractivity()?.percentage ?? 50"
+                  [populationPercentage]="colony.populationPercentage()"
+                  [step]="town.step"
+                />
+              </div>
+            }
+          }
+
           <!-- The step's illustration: the very component the visitor is about to meet, entering a
-               beat after the copy so the heading is readable before the panel beside it settles. -->
+               beat after the copy so the heading is readable before the panel beside it settles.
+               Every case below is a component a real page renders — `/overview` for the town,
+               `/week` for the fight, `/overview` and `/campaign` for the trail, `/leaderboard` for
+               the podium — so nothing here can outlive the screen it stands for. -->
           @if (hasIllustration()) {
-            <div class="flex min-w-0 flex-col motion-safe:animate-step-in-late">
+            <div
+              [class.w-full]="isWideIllustration()"
+              class="flex min-w-0 flex-col motion-safe:animate-step-in-late"
+            >
               @switch (step) {
-                @case ('boss') {
-                  <app-boss-encounter />
-                }
-                @case ('challenges') {
-                  <app-team-progress />
-                }
                 @case ('colony') {
-                  <app-population-tile />
+                  <!-- The score itself, not another drawing of the town: the step claims the city
+                       *is* the score, and the scene alone never said what that score was. The
+                       opening step already carries the picture, so this one carries the number —
+                       the same tier, headcount and daily delta `/overview` reads off the colony,
+                       from the same signals. -->
+                  @if (currentTier(); as tier) {
+                    <div class="tour-score">
+                      <p class="tour-score-tier">
+                        <app-tier-glyph [glyph]="tier.glyph" class="size-4 shrink-0" />
+                        {{ 'overview.town.tier' | translate: { name: tier.name } }}
+                      </p>
+
+                      <p class="tour-score-figure">
+                        <!-- `text-figure` is the scale's loud step, spent once per page on the one
+                             number that page exists to report. `/overview` cannot use it — its
+                             readout is a plate laid on the scene — but this step has nothing else
+                             on it, which is exactly the case the token was cut for.
+                             No interpolation on this element: the directive owns its text, and an
+                             `{{ }}` beside it would be rewritten on top of every frame it counts. -->
+                        <span
+                          [appCountUp]="colony.populationValue()"
+                          class="tour-score-count font-display text-figure"
+                        ></span>
+
+                        <span class="tour-score-unit">
+                          <svg aria-hidden="true" class="size-4 shrink-0" lucideUsers></svg>
+                          {{ 'colony.population' | translate }}
+                        </span>
+                      </p>
+
+                      @if (colony.delta(); as delta) {
+                        <p
+                          [class.text-success]="delta.isPositive"
+                          [class.text-danger]="delta.isNegative"
+                          [class.text-text-muted]="!delta.isPositive && !delta.isNegative"
+                          class="tour-score-delta"
+                        >
+                          {{ delta.label }}
+                          <small>{{ 'overview.town.today' | translate }}</small>
+                        </p>
+                      }
+                    </div>
+                  }
+                }
+                @case ('week') {
+                  <app-boss-band />
+                }
+                @case ('ladder') {
+                  <app-ladder-strip />
                 }
                 @case ('ranking') {
-                  <app-podium />
+                  <!-- Untitled and without its hover hint: the step's own heading names the block,
+                       and a tooltip explaining a click is noise on a screen with nowhere to go. -->
+                  <app-podium [showHint]="false" [showTitle]="false" />
                 }
                 @case ('players') {
                   <app-player-spotlight />

@@ -522,15 +522,32 @@
     }
   },
   "landing": {
-    "body": "A web app where every Valorant match feeds a shared colony. Every week, a boss appears: the whole squad has to play to bring it down and keep the town growing, over a ten-week campaign.",
+    "accroche": {
+      "lead": "Your matches no longer end",
+      "highlight": "at the scoreboard."
+    },
+    "body": {
+      "lead": "They feed a town your squad grows over ten weeks,",
+      "emphasis": "one match at a time."
+    },
     "compass": {
       "action": "Enter",
       "caption": "Join the squad"
     },
-    "heading": {
-      "welcome": "Welcome to"
+    "marks": {
+      "challenges": {
+        "label": "challenges / week",
+        "value": "5"
+      },
+      "town": {
+        "label": "town",
+        "value": "1"
+      },
+      "weeks": {
+        "label": "weeks",
+        "value": "10"
+      }
     },
-    "hint": "Ready to grow the colony?",
     "title": "Colony"
   },
   "notFound": {
@@ -547,13 +564,9 @@
       "defeated": "The boss is down this week.",
       "difficulty": "Class",
       "error": "Failed to load the weekly boss.",
-      "eyebrow": "Weekly boss",
       "hpUnit": "HP",
-      "hpValue": "{{remaining}} / {{total}} HP",
       "loading": "Loading the boss…",
-      "title": "Boss to defeat this week",
-      "weakPoints": "Its weak points",
-      "weakPointsLink": "See the challenges"
+      "weakPoints": "Its weak points"
     },
     "confrontation": {
       "squad": "Squad",
@@ -594,19 +607,7 @@
       "title": "This week's podium"
     },
     "populationTile": {
-      "link": "See the campaign",
-      "title": "The colony"
-    },
-    "teamProgress": {
-      "completedLabel": "squad challenges completed",
-      "deadline": {
-        "one": "{{count}} challenge left to clear before Sunday, 11:59 PM",
-        "other": "{{count}} challenges left to clear before Sunday, 11:59 PM"
-      },
-      "hint": "The five challenges drawn this week. One counts as completed only once the whole squad has cleared it.",
-      "link": "See the week's challenges",
-      "progressLabel": "Collective progress",
-      "rowPlayers": "Players"
+      "link": "See the campaign"
     },
     "title": "The colony",
     "town": {
@@ -1208,35 +1209,107 @@
     },
     "skip": "Skip the tour",
     "steps": {
-      "boss": {
-        "body": "Every Monday, a boss rises with hit points shared by the whole group — up to several tens of thousands. Your matches and cleared challenges chip away at it together.\n\nIt has to fall before Sunday 11:59 pm: miss that, and it survives while the colony takes the hit.",
-        "eyebrow": "The boss",
-        "title": "A boss to bring down every week"
-      },
-      "challenges": {
-        "body": "Five challenges are drawn every Monday from a pool of over sixty, one per difficulty tier. Clearing the hardest can deal up to 4,500 damage to the boss and bank 45 materials for the colony — far more than the easiest.\n\nThe harder a challenge is, the more it weighs on both scores at once.",
-        "eyebrow": "The challenges",
-        "title": "Five challenges drawn every Monday"
-      },
       "colony": {
-        "body": "Every match feeds the colony; every challenge cleared or boss brought down banks materials that push the town up a tier, from campsite to city. The further built up it is, the more inhabitants the same food supports.\n\nThat is the shared goal: the population reached after ten weeks is the whole squad's final score.",
-        "eyebrow": "The colony",
-        "title": "A town that grows with every match"
+        "claim": "A campsite at the start, a city if the campaign holds. *All of it comes from real matches.*",
+        "eyebrow": "The goal",
+        "spec1": {
+          "label": "tiers to climb",
+          "value": "12+"
+        },
+        "spec2": {
+          "label": "damage = 1 food",
+          "value": "85"
+        },
+        "spec3": {
+          "label": "the full group plays",
+          "value": "×2"
+        },
+        "title": "The town is the score"
       },
       "intro": {
-        "body": "You are joining a squad of a few players growing a colony together, over a ten-week campaign. Every Valorant match feeds the town; every week, five challenges and a boss test the group.\n\nAfter ten weeks, the town's population is the whole squad's score — it, not any one player, is what counts.",
-        "eyebrow": "The idea",
-        "title": "One colony, one squad, ten weeks"
+        "claim": "Every match is read automatically, and grows a colony *the whole squad* shares.",
+        "eyebrow": "ValoQuests",
+        "spec1": {
+          "label": "weeks per campaign",
+          "value": "10"
+        },
+        "spec2": {
+          "label": "shared score",
+          "value": "1"
+        },
+        "spec3": {
+          "label": "manual entry",
+          "value": "0"
+        },
+        "title": "Your matches build a town"
+      },
+      "ladder": {
+        "claim": "Food spoils in seven days. Materials, *never*: they carry every harvest further.",
+        "eyebrow": "Progression",
+        "spec1": {
+          "label": "the harvest window",
+          "value": "7 d"
+        },
+        "spec2": {
+          "label": "materials = +1 fed",
+          "value": "150"
+        },
+        "spec3": {
+          "label": "materials, elite boss",
+          "value": "140"
+        },
+        "title": "From a match to an inhabitant"
       },
       "players": {
-        "body": "Three things are enough: play your matches as usual, clear the challenges within reach, and come back on several days through the week rather than playing it all in one sitting.\n\nYour own profile, and the rest of the squad's, are yours to look at right now — the town only grows if everyone pitches in.",
-        "eyebrow": "What we expect from you",
-        "title": "Play, clear challenges, hold the week"
+        "claim": "Rank, history, K/D, headshots, personal bests. *Match by match*, from day one.",
+        "eyebrow": "The players",
+        "spec1": {
+          "label": "game modes tracked",
+          "value": "7"
+        },
+        "spec2": {
+          "label": "damage, competitive win",
+          "value": "500"
+        },
+        "spec3": {
+          "label": "of context on your form",
+          "value": "4 wks"
+        },
+        "title": "Every player has a profile"
       },
       "ranking": {
-        "body": "Every player's damage — matches and challenges alike — adds up into a weekly ranking. Playing on several days through the week and clearing a challenge together both earn bonuses on top.\n\nWhoever leads a closed week becomes Champion, until the next week closes.",
+        "claim": "Everything resets on Monday. Whoever leads a closed week keeps the *Champion* crown.",
         "eyebrow": "The ranking",
-        "title": "Who carries the squad the most"
+        "spec1": {
+          "label": "for seven days played",
+          "value": "+6,000"
+        },
+        "spec2": {
+          "label": "challenge cleared by six",
+          "value": "+50%"
+        },
+        "spec3": {
+          "label": "champion per week",
+          "value": "1"
+        },
+        "title": "Who carried the week"
+      },
+      "week": {
+        "claim": "Its health bar is *sized against your real weeks*. The group plays more, the boss grows.",
+        "eyebrow": "The week",
+        "spec1": {
+          "label": "challenges drawn Monday",
+          "value": "5"
+        },
+        "spec2": {
+          "label": "challenges in the pool",
+          "value": "60+"
+        },
+        "spec3": {
+          "label": "boss weight classes",
+          "value": "3"
+        },
+        "title": "One boss, five challenges, seven days"
       }
     },
     "title": "Guided tour"

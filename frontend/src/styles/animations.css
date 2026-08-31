@@ -17,7 +17,6 @@
   --animate-compass-spin-reverse: compass-spin-reverse 40s linear infinite;
   --animate-compass-core: compass-core 2.4s ease-in-out infinite;
   --animate-compass-ripple: compass-ripple 3s ease-out infinite;
-  --animate-hint-nudge: hint-nudge 1.6s ease-in-out infinite;
 
   /* Guided tour: a step's blocks rising into place as it opens. The copy leads and the illustration
      follows a beat later, so the eye is given the heading to read before the panel beside it
@@ -99,18 +98,6 @@
 
     to {
       opacity: 1;
-    }
-  }
-
-  /* Chevron nudging downward, pointing at the compass. */
-  @keyframes hint-nudge {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(5px);
     }
   }
 }

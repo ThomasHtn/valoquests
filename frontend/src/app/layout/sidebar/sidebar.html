@@ -291,5 +291,11 @@
         </div>
       </div>
     </div>
+
+    <!-- Version of the deployed application, last line of the panel. Deliberately faint: it is
+         there to be found when something looks wrong, not to be read on every visit. -->
+    <p [class]="versionClass()" class="-mt-4 font-mono text-2xs text-text-muted/70">
+      v{{ appVersion }}
+    </p>
   </div>
 </aside>

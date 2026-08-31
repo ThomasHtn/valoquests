@@ -522,15 +522,32 @@
     }
   },
   "landing": {
-    "body": "Une web app où chaque partie de Valorant nourrit une colonie commune. Chaque semaine, un boss apparaît : toute l'escouade doit jouer pour le repousser et faire grandir la ville, sur une campagne de dix semaines.",
+    "accroche": {
+      "lead": "Vos parties ne s'arrêtent plus",
+      "highlight": "à l'écran de fin."
+    },
+    "body": {
+      "lead": "Elles nourrissent une ville que votre escouade fait grandir sur dix semaines,",
+      "emphasis": "match après match."
+    },
     "compass": {
       "action": "Entrer",
       "caption": "Rejoindre l'escouade"
     },
-    "heading": {
-      "welcome": "Bienvenue dans"
+    "marks": {
+      "challenges": {
+        "label": "défis / semaine",
+        "value": "5"
+      },
+      "town": {
+        "label": "ville",
+        "value": "1"
+      },
+      "weeks": {
+        "label": "semaines",
+        "value": "10"
+      }
     },
-    "hint": "Prêt à faire grandir la colonie ?",
     "title": "Colonie"
   },
   "notFound": {
@@ -547,13 +564,9 @@
       "defeated": "Le boss est tombé cette semaine.",
       "difficulty": "Classe",
       "error": "Impossible de charger le boss de la semaine.",
-      "eyebrow": "Boss hebdomadaire",
       "hpUnit": "PV",
-      "hpValue": "{{remaining}} / {{total}} PV",
       "loading": "Chargement du boss…",
-      "title": "Boss à vaincre cette semaine",
-      "weakPoints": "Ses points faibles",
-      "weakPointsLink": "Voir les défis"
+      "weakPoints": "Ses points faibles"
     },
     "confrontation": {
       "squad": "Escouade",
@@ -594,19 +607,7 @@
       "title": "Podium de la semaine"
     },
     "populationTile": {
-      "link": "Voir la campagne",
-      "title": "La colonie"
-    },
-    "teamProgress": {
-      "completedLabel": "défis d'escouade terminés",
-      "deadline": {
-        "one": "Il reste {{count}} défi à valider avant dimanche 23h59",
-        "other": "Il reste {{count}} défis à valider avant dimanche 23h59"
-      },
-      "hint": "Les cinq défis tirés cette semaine. Un défi ne compte comme terminé que lorsque toute l'escouade l'a validé.",
-      "link": "Voir les défis de la semaine",
-      "progressLabel": "Progression collective",
-      "rowPlayers": "Joueurs"
+      "link": "Voir la campagne"
     },
     "title": "La colonie",
     "town": {
@@ -1208,35 +1209,107 @@
     },
     "skip": "Passer le tour",
     "steps": {
-      "boss": {
-        "body": "Chaque lundi, un boss se dresse avec des points de vie partagés par tout le groupe — jusqu'à plusieurs dizaines de milliers. Vos parties et vos défis validés l'entament ensemble.\n\nIl doit tomber avant dimanche 23h59 : passé ce délai, il survit et la colonie encaisse le coup.",
-        "eyebrow": "Le boss",
-        "title": "Un boss à terrasser chaque semaine"
-      },
-      "challenges": {
-        "body": "Cinq défis sont tirés au sort chaque lundi parmi plus de soixante, un par niveau de difficulté. Réussir le plus dur peut infliger jusqu'à 4 500 dégâts au boss et rapporter 45 matériaux à la colonie — bien plus que le plus facile.\n\nPlus un défi est dur, plus il pèse sur les deux tableaux à la fois.",
-        "eyebrow": "Les défis",
-        "title": "Cinq défis tirés chaque lundi"
-      },
       "colony": {
-        "body": "Chaque partie nourrit la colonie ; chaque défi ou boss vaincu rapporte des matériaux qui font monter la ville d'un palier, du campement à la cité. Plus la ville est développée, plus une même nourriture y fait vivre d'habitants.\n\nC'est l'objectif commun : la population atteinte au bout des dix semaines est le score final de toute l'escouade.",
-        "eyebrow": "La colonie",
-        "title": "Une ville qui grandit à chaque partie"
+        "claim": "Un campement au départ, une cité si la campagne tient. *Tout sort des parties réelles.*",
+        "eyebrow": "L'objectif",
+        "spec1": {
+          "label": "paliers à gravir",
+          "value": "12+"
+        },
+        "spec2": {
+          "label": "dégâts = 1 nourriture",
+          "value": "85"
+        },
+        "spec3": {
+          "label": "le groupe au complet",
+          "value": "×2"
+        },
+        "title": "La ville est le score"
       },
       "intro": {
-        "body": "Vous rejoignez une escouade de quelques joueurs qui font grandir ensemble une colonie, sur une campagne de dix semaines. Chaque partie de Valorant nourrit la ville ; chaque semaine, cinq défis et un boss testent le groupe.\n\nAu bout des dix semaines, la population de la ville est le score de toute l'escouade — c'est elle qui compte, pas un seul joueur.",
-        "eyebrow": "Le principe",
-        "title": "Une colonie, une escouade, dix semaines"
+        "claim": "Chaque match est lu automatiquement, et fait grandir une colonie que *toute l'escouade* partage.",
+        "eyebrow": "ValoQuests",
+        "spec1": {
+          "label": "semaines par campagne",
+          "value": "10"
+        },
+        "spec2": {
+          "label": "score commun",
+          "value": "1"
+        },
+        "spec3": {
+          "label": "saisie manuelle",
+          "value": "0"
+        },
+        "title": "Vos parties construisent une ville"
+      },
+      "ladder": {
+        "claim": "La nourriture se périme en sept jours. Les matériaux, *jamais* : ils portent chaque récolte plus loin.",
+        "eyebrow": "La progression",
+        "spec1": {
+          "label": "la fenêtre de récolte",
+          "value": "7 j"
+        },
+        "spec2": {
+          "label": "matériaux = +1 nourri",
+          "value": "150"
+        },
+        "spec3": {
+          "label": "matériaux, boss élite",
+          "value": "140"
+        },
+        "title": "De la partie à l'habitant"
       },
       "players": {
-        "body": "Trois choses suffisent : jouer vos parties normalement, valider les défis à votre portée, et revenir plusieurs jours dans la semaine plutôt que tout jouer d'un coup.\n\nÀ vous de voir votre profil et celui du reste de l'escouade dès maintenant — la ville ne grandit que si tout le monde s'y met.",
-        "eyebrow": "Ce qu'on attend de vous",
-        "title": "Jouer, valider, tenir la semaine"
+        "claim": "Rang, historique, K/D, headshots, records. *Match par match*, depuis le premier jour.",
+        "eyebrow": "Les joueurs",
+        "spec1": {
+          "label": "modes de jeu suivis",
+          "value": "7"
+        },
+        "spec2": {
+          "label": "dégâts, compét. gagnée",
+          "value": "500"
+        },
+        "spec3": {
+          "label": "de recul sur vos progrès",
+          "value": "4 sem."
+        },
+        "title": "Chaque joueur a sa fiche"
       },
       "ranking": {
-        "body": "Les dégâts de chaque joueur — parties et défis confondus — s'additionnent en un classement hebdomadaire. Jouer plusieurs jours dans la semaine et réussir un défi à plusieurs rapportent des bonus en plus.\n\nLe premier d'une semaine close devient Champion, jusqu'à la semaine suivante.",
+        "claim": "Tout repart à zéro le lundi. Le premier d'une semaine close garde la couronne de *Champion*.",
         "eyebrow": "Le classement",
-        "title": "Qui porte le plus l'escouade"
+        "spec1": {
+          "label": "pour sept jours joués",
+          "value": "+6 000"
+        },
+        "spec2": {
+          "label": "défi validé à six",
+          "value": "+50 %"
+        },
+        "spec3": {
+          "label": "champion par semaine",
+          "value": "1"
+        },
+        "title": "Qui a porté la semaine"
+      },
+      "week": {
+        "claim": "Sa barre de vie est *calibrée sur vos vraies semaines*. Le groupe joue plus, le boss grossit.",
+        "eyebrow": "La semaine",
+        "spec1": {
+          "label": "défis tirés le lundi",
+          "value": "5"
+        },
+        "spec2": {
+          "label": "défis au catalogue",
+          "value": "60+"
+        },
+        "spec3": {
+          "label": "classes de boss",
+          "value": "3"
+        },
+        "title": "Un boss, cinq défis, sept jours"
       }
     },
     "title": "Tour d'horizon"
