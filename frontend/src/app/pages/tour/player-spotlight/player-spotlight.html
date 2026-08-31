@@ -2,6 +2,7 @@
      portrait and a rank, with that profile's own records section underneath. -->
 <app-resource-state
   (retry)="reload()"
+  emptyKind="waiting"
   [emptyText]="'players.empty' | translate"
   [errorText]="'players.error' | translate"
   [isEmpty]="identity() === null"

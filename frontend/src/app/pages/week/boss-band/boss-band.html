@@ -99,9 +99,9 @@
              the colony's confrontation band, drained left to right, with a lit marker at the fill's
              head — that marker is what says the bar is emptying rather than filling. -->
         <span aria-hidden="true" class="hp hp-gauge notch-tr notch-tr-edge">
-          <i [style.width.%]="remainingPercentage()" class="hp-gauge-fill"></i>
+          <i [style.width.%]="remainingPercentage()" class="hp-gauge-fill hp-gauge-drain"></i>
           @if (isDraining()) {
-            <b [style.left.%]="remainingPercentage()"></b>
+            <b [style.left.%]="remainingPercentage()" class="hp-gauge-drain-edge"></b>
           }
         </span>
       </div>

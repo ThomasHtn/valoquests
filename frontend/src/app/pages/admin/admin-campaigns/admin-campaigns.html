@@ -8,6 +8,7 @@
 
   <app-resource-state
     (retry)="campaignsResource.reload()"
+    emptyKind="creation"
     [emptyText]="'admin.campaigns.empty' | translate"
     [errorText]="'admin.campaigns.error' | translate"
     [isEmpty]="runs().length === 0"

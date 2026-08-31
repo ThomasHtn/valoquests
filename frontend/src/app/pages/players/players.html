@@ -1,12 +1,11 @@
-<!-- Context bar: the section's plain name on the caption line, what it holds as the title. -->
+<!-- Context bar: how the roster splits on the caption line, the section's name as the title. The
+     caption used to repeat that name word for word, under a navigation entry already carrying it. -->
 
-<app-page-header
-  [eyebrow]="'players.heading' | translate"
-  [heading]="'players.subheading' | translate"
-/>
+<app-page-header [eyebrow]="rosterEyebrow()" [heading]="'players.subheading' | translate" />
 
 <div class="page-body">
   <app-resource-state
+    emptyKind="waiting"
     [emptyText]="'players.empty' | translate"
     [errorText]="'players.error' | translate"
     [isEmpty]="rows().length === 0"

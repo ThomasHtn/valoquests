@@ -428,9 +428,12 @@ export class BossCampaign {
       status,
       runWeekIndex,
       weekNumber: isoWeekNumber(weekStart),
-      weekLabel: this.translation.translate('boss.week.label', {
-        number: isoWeekNumber(weekStart),
-      }),
+      // Numbered inside the run, not by the calendar. The timeline of a ten-week campaign used to
+      // read "Semaine 35" through "Semaine 44" under a context bar announcing "Semaine 2 sur 10",
+      // so the same week carried two numbers on the same screen and neither matched the ladder of
+      // difficulty in the rules, which is indexed 1 to 10. `weekNumber` above keeps the ISO figure
+      // for anything that genuinely needs the calendar; the dates below say which days these are.
+      weekLabel: this.translation.translate('boss.week.label', { number: runWeekIndex }),
       dateRangeLabel: formatDateRange(weekStart, weekEnd),
       statusLabel: this.translation.translate(resolveBossStatusLabelKey(status)),
       bossName: boss.name,
@@ -474,10 +477,10 @@ export class BossCampaign {
       status: 'upcoming',
       runWeekIndex,
       weekNumber: weekStart === null ? null : isoWeekNumber(weekStart),
-      weekLabel:
-        weekStart === null
-          ? null
-          : this.translation.translate('boss.week.label', { number: isoWeekNumber(weekStart) }),
+      // Numbered inside the run, like the fought nodes above. Unlike them it holds even without a
+      // resolved `weekStart`: the run index is the node's own position, known before its calendar
+      // week is.
+      weekLabel: this.translation.translate('boss.week.label', { number: runWeekIndex }),
       dateRangeLabel: weekStart === null ? null : formatDateRange(weekStart, addDays(weekStart, 6)),
       statusLabel: this.translation.translate(resolveBossStatusLabelKey('upcoming')),
       bossName: this.translation.translate('boss.upcoming.name'),

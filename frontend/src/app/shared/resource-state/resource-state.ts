@@ -1,5 +1,11 @@
 import { Component, computed, inject, input, output } from '@angular/core';
-import { LucideInbox, LucideRefreshCw, LucideTriangleAlert } from '@lucide/angular';
+import {
+  LucideFilter,
+  LucideHourglass,
+  LucidePlus,
+  LucideRefreshCw,
+  LucideTriangleAlert,
+} from '@lucide/angular';
 
 import { Translation } from '@core/i18n/translation';
 import { Button } from '@shared/button/button';
@@ -17,17 +23,22 @@ import { Button } from '@shared/button/button';
  */
 @Component({
   selector: 'app-resource-state',
-  imports: [Button, LucideInbox, LucideRefreshCw, LucideTriangleAlert],
+  imports: [
+    Button,
+    LucideFilter,
+    LucideHourglass,
+    LucidePlus,
+    LucideRefreshCw,
+    LucideTriangleAlert,
+  ],
   templateUrl: './resource-state.html',
   // A column rather than `display: contents`. The host used to generate no box at all so that a
   // screen projecting several blocks through it kept them as items of the page's own stack; it
   // then also escaped the gutter that stack gives its blocks, and the content came out flush
   // against the column's edges. `gap: inherit` keeps the original behaviour where it mattered — it
   // resolves to the page stack's own gap, so those blocks stay spaced exactly as if they were
-  // still its direct children. `grow` keeps this box from clipping its parent flex column's
-  // stretched height short — without it, a projected block's own `flex-1` (e.g. team-progress's
-  // challenge list, meant to reach the podium's height beside it) has nothing to grow into.
-  host: { class: 'flex grow flex-col [gap:inherit]' },
+  // still its direct children.
+  host: { class: 'flex flex-col [gap:inherit]', '[class.grow]': 'grow()' },
 })
 export class ResourceState {
   /**
@@ -76,6 +87,36 @@ export class ResourceState {
   public readonly padding = input('px-5 py-6');
 
   /**
+   * Which kind of nothing this is, which decides the glyph and the tone of the empty state.
+   *
+   * Every empty screen in the application used to render the same neutral inbox, so "the week has
+   * just opened", "your filter matches nothing", "no campaign exists yet" and "the Monday draw did
+   * not run" all read as the same shrug. They are four different situations and only one of them is
+   * a problem:
+   *
+   * - `waiting` — the data will arrive on its own, nothing is wrong and nothing is asked.
+   * - `filter` — the reader narrowed the view themselves; reversible, so name the filter to clear.
+   * - `creation` — nothing exists yet and someone has to make it. Project the action.
+   * - `anomaly` — something that should have happened did not. Announced as an alert.
+   *
+   * Defaults to `filter`, the commonest of the four and the only one that is always harmless.
+   */
+  public readonly emptyKind = input<'waiting' | 'filter' | 'creation' | 'anomaly'>('filter');
+
+  /**
+   * Whether this box stretches to the height its parent flex container offers.
+   *
+   * Off by default: a state switch is as tall as whatever it currently renders. It used to stretch
+   * unconditionally, which on a page whose stack is shorter than the viewport pushed everything
+   * below it to the bottom edge — the backoffice's campaign list, one row tall, left a screen of
+   * void before its action cards.
+   *
+   * Turn it on only where a *projected* block carries its own `flex-1` and needs a stretched box to
+   * grow into — a list meant to reach the height of the panel beside it.
+   */
+  public readonly grow = input(false);
+
+  /**
    * Emitted when the user asks to load the resource again from the error state.
    *
    * Call sites are expected to wire this to their resource's `reload()`.
@@ -89,4 +130,22 @@ export class ResourceState {
    * the dictionary is swapped on a language switch.
    */
   protected readonly retryLabel = computed(() => this.translation.translate('retry'));
+
+  /**
+   * Tint of the empty state's hexagon, by {@link emptyKind}.
+   *
+   * Only `anomaly` leaves the neutral surface: it is the one kind that reports something wrong, and
+   * it borrows the error state's danger tint so the two read as the same register. `waiting` takes
+   * the brand amber — the week is about to start, which is the invitation, not a fault.
+   */
+  protected readonly emptyGlyphClass = computed(() => {
+    switch (this.emptyKind()) {
+      case 'anomaly':
+        return 'bg-danger/15 text-danger';
+      case 'waiting':
+        return 'bg-brand-500/15 text-brand-500';
+      default:
+        return 'bg-surface-800 text-text-secondary';
+    }
+  });
 }

@@ -52,9 +52,13 @@
              shows. Both pages therefore frame the boss identically, only sized up here so the
              portrait reads as the card's focal point. -->
         <div class="relative mx-auto h-28 w-24 shrink-0 sm:mx-0 sm:h-36 sm:w-32">
+          <!-- The halo pulses while the fight is still running and settles once the boss is down:
+               it is the timeline's mark for "this is the week being fought", and a beaten boss is
+               not being fought. Left running it was motion that reported nothing. -->
           <span
+            [class.motion-safe:animate-pulse]="!defeated()"
             aria-hidden="true"
-            class="clip-hex absolute -inset-1.5 bg-accent-red/25 motion-safe:animate-pulse"
+            class="clip-hex absolute -inset-1.5 bg-accent-red/25"
           ></span>
 
           <span class="clip-hex absolute inset-0 bg-accent-red">
@@ -125,14 +129,14 @@
                  the overview whose value moves between two page loads. -->
             <div
               [style.width.%]="remainingPercentage()"
-              class="gauge-sheen bg-accent-red absolute inset-y-0 left-0 overflow-hidden transition-[width] duration-500 motion-reduce:transition-none"
+              class="gauge-sheen hp-gauge-fill hp-gauge-drain absolute inset-y-0 left-0 overflow-hidden"
             ></div>
             <!-- Skipped on an untouched boss: at 100 % the marker lands on the cut corner and is
                  sliced into a stray wedge, and there is no drained edge for it to mark yet. -->
             @if (remainingPercentage() > 0 && remainingPercentage() < 100) {
               <span
                 [style.left.%]="remainingPercentage()"
-                class="absolute inset-y-0 -ml-0.5 w-0.5 bg-text-primary"
+                class="hp-gauge-drain-edge absolute inset-y-0 -ml-0.5 w-0.5 bg-text-primary"
               ></span>
             }
           </div>

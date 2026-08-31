@@ -15,7 +15,6 @@ import { ChallengesApi } from '@core/challenges/challenges-api';
 import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
 import {
   formatDayMonth,
-  isoWeekNumber,
   nextWeekStart,
   RemainingTime,
   remainingWeekTime,
@@ -121,11 +120,16 @@ export class Week {
   protected readonly boss = computed(() => resourceValue(this.bossResource, null));
 
   /**
-   * Active week's ISO number, or `null` while loading.
+   * The week's position inside the run and the run's length, or `null` while loading.
+   *
+   * The calendar's own ISO number used to sit here, which put "Semaine 36" on this page while the
+   * colony and the campaign announced "Semaine 2 sur 10" for the very same days, and the rules
+   * indexed the difficulty ladder 1 to 10 again. Read off the boss, which the page already loads —
+   * the colony carries the same pair, but reaching for it would cost a request for two integers.
    */
-  protected readonly weekNumber = computed<number | null>(() => {
-    const currentWeek = this.currentWeek();
-    return currentWeek === null ? null : isoWeekNumber(currentWeek.weekStart);
+  protected readonly runWeek = computed<{ index: number; count: number } | null>(() => {
+    const boss = this.boss();
+    return boss ? { index: boss.runWeekIndex, count: boss.runWeekCount } : null;
   });
 
   /**

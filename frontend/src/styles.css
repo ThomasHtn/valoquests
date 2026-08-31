@@ -558,6 +558,47 @@
   background: var(--gauge-fill, var(--color-accent-red));
 }
 
+/*
+ * The two modifiers that make a draining gauge arrive rather than appear. A boss bar goes down, like
+ * in any game, and none of this touches that reading — the drained stretch stays bare well, which is
+ * how every game states it.
+ *
+ * Declared after `hp-gauge-fill` on purpose: `hp-gauge-drain` overrides the transition that utility
+ * sets, and two single-class utilities of equal specificity are settled by source order.
+ */
+
+/* The gauge draining on arrival: the bar renders full, then falls to the value it actually holds.
+   `@starting-style` rather than a keyframe animation because the width is bound inline — this
+   animates the *first* style change to that bound value and stays out of the way of every later
+   one, so the existing refresh transition still handles a value moving between two loads. */
+@utility hp-gauge-drain {
+  transition: width 900ms var(--ease-out-quart);
+
+  @starting-style {
+    width: 100%;
+  }
+
+  /* No transition, so the starting value above is never animated to and the bar paints straight at
+     its real width. */
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+/* The leading-edge marker travelling with the fill it caps, on the same curve and duration.
+   Same mechanism as `hp-gauge-drain`, on `left` instead of `width`. */
+@utility hp-gauge-drain-edge {
+  transition: left 900ms var(--ease-out-quart);
+
+  @starting-style {
+    left: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
 /* Scrollbars, styled to match the dark surface palette instead of the OS default. */
 @layer base {
   * {

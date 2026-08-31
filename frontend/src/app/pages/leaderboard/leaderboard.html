@@ -1,11 +1,12 @@
 <!-- Context bar: the same beat as the quest and registry pages, with the countdown on the trailing
      edge, since this screen is the one that answers "how far is the squad, and how long is left". -->
+
+<!-- The eyebrow is the section's name alone. It used to carry the calendar's ISO week number, which
+     was a third numbering beside the campaign's "semaine 2 sur 10" and the timeline's own — and a
+     pointless one here, since this page can be walked back through past weeks and already names the
+     one on screen by its dates, right under this bar. -->
 <app-page-header
-  [eyebrow]="
-    'pageHeader.weekHeading'
-      | translate
-        : { page: 'overview.weeklyRanking.heading' | translate, number: weekNumber() ?? '—' }
-  "
+  [eyebrow]="'overview.weeklyRanking.heading' | translate"
   [heading]="'overview.weeklyRanking.subheading' | translate"
 >
   <!-- Only the week still running has a deadline left to count down to. -->
@@ -51,16 +52,23 @@
   <!-- Full page width, though the plinths themselves stay narrower (`plinthSpan`): the ground rule
        closing the podium is what spans this width, so it lands on the same edges as the board below
        and reads as that board's top edge instead of as a floating bar. -->
-  <div class="-mt-4 mb-4 w-full">
-    <app-podium
-      [plinthBase]="'clamp(4rem, 6vh, 5rem)'"
-      [plinthSpan]="'48rem'"
-      [showDamage]="false"
-      [showHint]="false"
-      [showRest]="false"
-      [showTitle]="false"
-    />
-  </div>
+  <!-- Dropped entirely on a week nobody has played yet. The ranking still carries a full field then
+       — every active player, ordered, all on zero — so the podium had three names crowned on no
+       damage at all, sitting right above the board's own "the squad hasn't played yet". The first
+       Monday of every week is also the moment a newcomer meets this page, and it was the moment it
+       stated something untrue. The board below says the true thing on its own. -->
+  @if (!weekHasNoActivity()) {
+    <div class="-mt-4 mb-4 w-full">
+      <app-podium
+        [plinthBase]="'clamp(4rem, 6vh, 5rem)'"
+        [plinthSpan]="'48rem'"
+        [showDamage]="false"
+        [showHint]="false"
+        [showRest]="false"
+        [showTitle]="false"
+      />
+    </div>
+  }
 
   <!-- Said once, above the board, rather than left for the visitor to notice: a closed week is
        genuinely shorter than the live one, and without this the missing challenge columns read as
@@ -84,6 +92,7 @@
     </p>
   }
   <app-resource-state
+    emptyKind="waiting"
     [emptyText]="
       weekHasNoActivity()
         ? ('overview.weeklyRanking.emptyWeek' | translate)

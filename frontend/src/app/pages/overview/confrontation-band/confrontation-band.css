@@ -48,10 +48,21 @@
 }
 
 .vs-side--foe {
-  --camp: #ff4655;
+  --camp: var(--color-accent-red);
 
   background: linear-gradient(-96deg, rgb(255 70 85 / 24%), rgb(255 70 85 / 6%) 62%, transparent);
   box-shadow: inset -5px 0 0 var(--camp);
+}
+
+/* The camp's colour marks its name, its badge and its edge, and stays at full strength for them.
+   Its gauge does not: a band of `accent-red` the width of this side is the loudest object on the
+   page exactly when it has the least to report, so the fill drops to the two `boss-hp` steps and
+   brightens only towards its leading edge.
+
+   Declared on the gauge rather than on the camp because `.hp` below sets `--gauge-fill` on itself,
+   and a value inherited from an ancestor would lose to it. */
+.vs-side--foe .hp {
+  --gauge-fill: linear-gradient(90deg, var(--color-boss-hp) 0%, var(--color-boss-hp-edge) 100%);
 }
 
 .vs-tag {

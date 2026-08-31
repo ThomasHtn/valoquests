@@ -18,11 +18,11 @@
     <p
       class="tracking-label bg-brand-500 px-2.5 py-1 font-mono text-2xs font-bold text-surface-950 uppercase"
     >
-      @if (weekNumber(); as week) {
-        {{ 'landing.weekLabel' | translate: { week: week } }}
-      } @else {
-        {{ 'landing.weekLabelPending' | translate }}
-      }
+      <!-- The product's own word, and nothing else. The badge used to append the calendar's ISO week
+           — "Colonie · Semaine 36" — to a visitor who has never seen the application and for whom
+           that number resolves to nothing: it is neither the campaign's week 2 of 10 nor anything a
+           first arrival can place. -->
+      {{ 'landing.title' | translate }}
     </p>
 
     <!-- The name is not translated and not a key: it is the wordmark, carrying the badge's own amber

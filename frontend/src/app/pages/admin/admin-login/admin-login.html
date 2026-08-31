@@ -1,3 +1,12 @@
+<!-- The wordmark, in the same two amber stops as the landing page's. This screen used to open on
+     nothing but a padlock: the one person who signs in here is the coach deciding whether the tool
+     is worth their club, and the door had no name on it. -->
+<p class="font-display mb-6 text-3xl leading-none font-bold uppercase">
+  <span class="bg-linear-to-br from-brand-400 to-brand-500 bg-clip-text text-transparent"
+    >ValoQuests</span
+  >
+</p>
+
 <!-- Outer panel notched at 1.25rem; the field and buttons inside step down to 0.5rem so the nested
      corners read as concentric rather than pinched. -->
 <div
@@ -19,6 +28,10 @@
   >
     {{ 'admin.login.heading' | translate }}
   </h1>
+
+  <!-- What the key actually opens. The eyebrow above names the area and the heading names the room;
+       neither told the reader what signing in lets them do. -->
+  <p class="mt-3 text-prose text-text-secondary">{{ 'admin.login.keyHint' | translate }}</p>
 
   <form (submit)="submit($event)" class="mt-6">
     <app-text-field [label]="'admin.login.keyLabel' | translate">
@@ -65,3 +78,14 @@
     </button>
   </form>
 </div>
+
+<!-- The way out. Reached by URL only, this screen was also a dead end: someone who landed here by
+     mistake, or who wanted to check the public side before signing in, had nothing but the back
+     button. Square-edged and quiet, the "way back" family rather than an action. -->
+<a
+  [routerLink]="'/overview'"
+  class="focus-ring mt-6 flex items-center gap-1.5 font-mono text-xs text-text-muted transition-colors hover:text-text-primary"
+>
+  <svg aria-hidden="true" class="size-3.5 shrink-0" lucideChevronLeft></svg>
+  {{ 'admin.login.backToSite' | translate }}
+</a>

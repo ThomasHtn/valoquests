@@ -86,9 +86,9 @@
            drawn from the leading edge in both camps, so the two are read the same way round. Cut on
            its own inner corner, which puts the two camps' cuts either side of the seam. -->
       <span aria-hidden="true" class="hp hp-gauge notch-tl notch-tl-edge">
-        <i [style.width.%]="remainingPercentage()" class="hp-gauge-fill"></i>
+        <i [style.width.%]="remainingPercentage()" class="hp-gauge-fill hp-gauge-drain"></i>
         @if (isDraining()) {
-          <b [style.left.%]="remainingPercentage()"></b>
+          <b [style.left.%]="remainingPercentage()" class="hp-gauge-drain-edge"></b>
         }
       </span>
 

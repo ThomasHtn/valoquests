@@ -1,6 +1,8 @@
 <app-resource-state
+  emptyKind="waiting"
   [emptyText]="'overview.miniRanking.empty' | translate"
   [errorText]="'overview.miniRanking.error' | translate"
+  [grow]="true"
   [isEmpty]="top3().length === 0"
   [isError]="hasError()"
   [isLoading]="isLoading()"

@@ -8,8 +8,10 @@
 <section class="flex flex-1 flex-col">
   <app-resource-state
     (retry)="reload()"
+    emptyKind="anomaly"
     [emptyText]="'overview.weeklyChallenges.empty' | translate"
     [errorText]="'overview.weeklyChallenges.error' | translate"
+    [grow]="true"
     [isEmpty]="totalCount() === 0"
     [isError]="hasError()"
     [isLoading]="isLoading()"

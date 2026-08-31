@@ -1,6 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { LucideEye, LucideEyeOff, LucideLoaderCircle, LucideLockKeyhole } from '@lucide/angular';
+import { Router, RouterLink } from '@angular/router';
+import {
+  LucideChevronLeft,
+  LucideEye,
+  LucideEyeOff,
+  LucideLoaderCircle,
+  LucideLockKeyhole,
+} from '@lucide/angular';
 
 import { AdminApi } from '@core/admin/admin-api';
 import { resolveAdminErrorMessage } from '@core/admin/admin-error.utils';
@@ -27,9 +33,11 @@ import { TextField, TextFieldInput } from '@shared/text-field/text-field';
   selector: 'app-admin-login',
   imports: [
     TranslatePipe,
+    RouterLink,
     Button,
     TextField,
     TextFieldInput,
+    LucideChevronLeft,
     LucideEye,
     LucideEyeOff,
     LucideLoaderCircle,
@@ -38,7 +46,14 @@ import { TextField, TextFieldInput } from '@shared/text-field/text-field';
   templateUrl: './admin-login.html',
   // Diverges from `PAGE_LAYOUT_CLASS`: this is a single centred composition filling the viewport,
   // not a stack of blocks inside the application shell.
-  host: { class: 'flex min-h-dvh items-center justify-center bg-surface-sunken px-4 py-10' },
+  //
+  // On the application's own ground and ambient field rather than the flat sunken slab it used to
+  // sit on. This is the first screen a club's coach ever sees, and it carried no mark of the
+  // product at all — no wordmark, no atmosphere, a panel floating on an empty rectangle.
+  host: {
+    class:
+      'ambient-field flex min-h-dvh flex-col items-center justify-center bg-surface-950 px-4 py-10',
+  },
 })
 export class AdminLogin {
   /**

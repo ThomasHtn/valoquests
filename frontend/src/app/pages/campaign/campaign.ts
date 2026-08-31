@@ -1,7 +1,13 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { LucideGauge, LucidePackage, LucideUsers, LucideWheat } from '@lucide/angular';
+import {
+  LucideGauge,
+  LucidePackage,
+  LucideUsers,
+  LucideUtensils,
+  LucideWheat,
+} from '@lucide/angular';
 
 import { BossCampaign } from '@core/boss/boss-campaign';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
@@ -41,6 +47,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     LucideGauge,
     LucidePackage,
     LucideUsers,
+    LucideUtensils,
     LucideWheat,
     PageHeader,
   ],

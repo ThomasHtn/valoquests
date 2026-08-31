@@ -36,8 +36,13 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
 @Directive({
   selector: '[appButton]',
   host: {
+    // Disabled buttons go inert rather than half-transparent. `opacity-50` over a dark ground turned
+    // the amber fill into a muddy brown that read as a *different* button rather than as the same
+    // one switched off — two "Synchroniser" buttons side by side in the backoffice came out in two
+    // colours. Neutralising the fill and the label instead keeps one shape and one meaning, and the
+    // `disabled:` pseudo-class outranks the variant's own colour without needing `!important`.
     class:
-      'notch-tr cursor-pointer focus-ring-inset transition-colors motion-safe:active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50',
+      'notch-tr cursor-pointer focus-ring-inset transition-colors motion-safe:active:scale-[0.96] disabled:cursor-not-allowed disabled:border-edge disabled:bg-surface-700 disabled:text-text-muted disabled:opacity-100 disabled:hover:border-edge disabled:hover:bg-surface-700 disabled:hover:text-text-muted',
     '[class]': 'variantClass()',
   },
 })

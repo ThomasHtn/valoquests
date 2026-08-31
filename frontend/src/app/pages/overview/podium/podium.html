@@ -22,8 +22,10 @@
 
   <app-resource-state
     (retry)="reload()"
+    emptyKind="waiting"
     [emptyText]="'overview.weeklyRanking.empty' | translate"
     [errorText]="'overview.weeklyRanking.error' | translate"
+    [grow]="true"
     [isEmpty]="entries().length === 0"
     [isError]="!!rankingResource.error()"
     [isLoading]="rankingResource.isLoading()"

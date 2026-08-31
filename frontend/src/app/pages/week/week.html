@@ -2,9 +2,15 @@
      page, so the screens open alike. -->
 <app-page-header
   [eyebrow]="
-    'pageHeader.weekHeading'
-      | translate
-        : { page: 'overview.weeklyChallenges.heading' | translate, number: weekNumber() ?? '—' }
+    runWeek()
+      ? ('pageHeader.weekHeading'
+        | translate
+          : {
+              page: 'overview.weeklyChallenges.heading' | translate,
+              number: runWeek()!.index,
+              weeks: runWeek()!.count,
+            })
+      : ('overview.weeklyChallenges.heading' | translate)
   "
   [heading]="'overview.weeklyChallenges.subheading' | translate"
 >
@@ -14,6 +20,7 @@
 <div class="page-body week-body">
   <app-resource-state
     (retry)="reload()"
+    emptyKind="anomaly"
     [emptyText]="'overview.weeklyChallenges.empty' | translate"
     [errorText]="'overview.weeklyChallenges.error' | translate"
     [isEmpty]="rows().length === 0"

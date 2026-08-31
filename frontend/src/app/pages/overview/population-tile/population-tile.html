@@ -24,12 +24,11 @@
       class="focus-ring mt-3 flex flex-1 items-center justify-center gap-4 border border-brand-500/30 bg-brand-500/8 px-6 py-5 transition-colors hover:bg-brand-500/14"
     >
       <span class="relative h-28 w-24 shrink-0 sm:h-36 sm:w-32">
-        <!-- The same pulsing halo as the boss card's own hexagon beside it, so the two glyphs
-             opening the row read as one system. -->
-        <span
-          aria-hidden="true"
-          class="clip-hex absolute -inset-1.5 bg-brand-500/25 motion-safe:animate-pulse"
-        ></span>
+        <!-- The same halo as the boss card's hexagon beside it, so the two glyphs opening the row
+             read as one system — but still, not pulsing. A pulse is this interface's mark for "being
+             fought right now"; a population climbs once a day, and two halos breathing side by side
+             turned the row into a light show that reported nothing. -->
+        <span aria-hidden="true" class="clip-hex absolute -inset-1.5 bg-brand-500/25"></span>
 
         <span aria-hidden="true" class="clip-hex absolute inset-0 bg-brand-500"></span>
         <span class="clip-hex absolute inset-0.5 overflow-hidden bg-surface-950">

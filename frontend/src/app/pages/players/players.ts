@@ -142,6 +142,30 @@ export class Players {
   protected readonly rows = computed<readonly PlayerRow[]>(() => this.allRows());
 
   /**
+   * The context bar's caption line: how the roster splits between the campaign and outside it.
+   *
+   * The eyebrow used to repeat the heading word for word — "Escouade" over "Escouade", under a
+   * navigation entry already reading "Escouade" — which spent the one line above the title saying
+   * nothing. The split is the fact this page exists to report and the one the campaign's every
+   * denominator counts on, so it belongs there. Empty while the roster is still loading rather than
+   * announcing a count of zero it is about to contradict.
+   */
+  protected readonly rosterEyebrow = computed(() => {
+    const active = this.inCampaignRows().length;
+    const out = this.outOfCampaignRows().length;
+
+    if (active + out === 0) {
+      return '';
+    }
+
+    const activeLabel = this.translation.translate('players.eyebrow.inCampaign', { count: active });
+
+    return out === 0
+      ? activeLabel
+      : `${activeLabel} · ${this.translation.translate('players.eyebrow.outOfCampaign', { count: out })}`;
+  });
+
+  /**
    * Resolves the text and bar colors for a row's win rate, exposed to the template.
    */
   protected readonly winRateVisual = resolveWinRateVisual;

@@ -45,72 +45,32 @@
       }
     },
     "login": {
-      "title": "Administration",
-      "eyebrow": "Accès réservé",
+      "backToSite": "Retour au site",
+      "eyebrow": "Administration de l'escouade",
       "heading": "Poste de commandement",
-      "keyLabel": "Clé d'administration",
-      "showKey": "Afficher la clé",
       "hideKey": "Masquer la clé",
+      "keyHint": "La clé ouvre la synchronisation, la gestion des joueurs et le pilotage de la campagne.",
+      "keyLabel": "Clé d'administration",
+      "rejected": "Clé refusée par le serveur.",
+      "showKey": "Afficher la clé",
       "submit": "Entrer",
-      "rejected": "Clé refusée par le serveur."
+      "title": "Administration"
     },
     "operations": {
-      "title": "Opérations",
-      "heading": "Opérations",
-      "lastRun": "Dernière synchronisation",
-      "statusLabel": "État",
-      "startedAt": "Démarrée le",
-      "playersProcessed": "Joueurs traités",
-      "matchesImported": "Matchs importés",
-      "failures": "Échecs",
-      "status": {
-        "none": "Aucune synchronisation enregistrée.",
-        "PENDING": "En attente",
-        "RUNNING": "En cours",
-        "PARTIAL": "Partielle",
-        "COMPLETED": "Terminée",
-        "FAILED": "Échouée",
-        "CANCELLED": "Annulée"
-      },
-      "syncAll": {
-        "heading": "Synchroniser l'escouade",
-        "description": "Importe les matchs de la saison en cours pour tous les joueurs suivis, puis recalcule progression et classement. Plusieurs minutes selon le quota Riot.",
-        "action": "Synchroniser",
-        "accepted": "Synchronisation lancée. Suis son avancement dans l'encart ci-dessus."
-      },
-      "syncPlayer": {
-        "heading": "Synchroniser un joueur",
-        "description": "Rattrape un seul joueur, sans rejouer les autres. Utile après un échec isolé lors d'une exécution planifiée.",
-        "action": "Synchroniser",
-        "accepted": "Synchronisation du joueur lancée.",
-        "pickerLabel": "Joueur à synchroniser",
-        "placeholder": "Choisir un joueur",
-        "noneSelected": "Choisis d'abord un joueur."
-      },
-      "recalculate": {
-        "heading": "Recalculer la progression",
-        "description": "Reconstruit la progression des défis de la semaine et le classement à partir des matchs déjà stockés. N'appelle pas l'API Riot.",
-        "action": "Recalculer",
-        "done": "Progression et classement recalculés."
-      },
-      "weekSelection": {
-        "heading": "Ouvrir la semaine",
-        "description": "Tire les défis manquants de la semaine en cours et son boss, comme le fait le passage de semaine du lundi. Sans effet si tout est déjà en place.",
-        "action": "Démarrer",
-        "done": "La semaine en cours est complète."
-      },
-      "rollover": {
-        "heading": "Passer la semaine",
-        "description": "Rejoue tout le passage de semaine du lundi : clôture les semaines passées restées ouvertes, tranche les combats de boss non résolus et ouvre la semaine en cours. Ne synchronise pas : lance la synchronisation avant si les derniers matchs manquent.",
-        "action": "Lancer",
-        "done": "Passage de semaine terminé."
-      },
       "colonyRecompute": {
         "heading": "Recalculer la colonie",
         "description": "Rejoue la campagne en cours depuis son premier jour, à partir des matchs, défis et boss déjà enregistrés. Sans risque : la colonie n'est jamais incrémentée, elle est toujours recalculée entièrement.",
         "action": "Recalculer",
         "done": "Colonie recalculée."
       },
+      "failures": "Échecs",
+      "groups": {
+        "repair": "Réparation",
+        "repairHint": "Ces trois opérations rejouent un historique déjà écrit. À lancer quand une donnée est fausse, pas dans le cours normal d'une semaine.",
+        "routine": "Routine",
+        "routineHint": "Les gestes ordinaires d'une semaine, sans effet rétroactif."
+      },
+      "heading": "Opérations",
       "history": {
         "title": "Historique des synchronisations",
         "empty": "Aucune synchronisation passée.",
@@ -133,6 +93,54 @@
           "scheduled": "planifiée",
           "manual": "manuelle"
         }
+      },
+      "lastRun": "Dernière synchronisation",
+      "matchesImported": "Matchs importés",
+      "playersProcessed": "Joueurs traités",
+      "recalculate": {
+        "heading": "Recalculer la progression",
+        "description": "Reconstruit la progression des défis de la semaine et le classement à partir des matchs déjà stockés. N'appelle pas l'API Riot.",
+        "action": "Recalculer",
+        "done": "Progression et classement recalculés."
+      },
+      "rollover": {
+        "heading": "Passer la semaine",
+        "description": "Rejoue tout le passage de semaine du lundi : clôture les semaines passées restées ouvertes, tranche les combats de boss non résolus et ouvre la semaine en cours. Ne synchronise pas : lance la synchronisation avant si les derniers matchs manquent.",
+        "action": "Lancer",
+        "done": "Passage de semaine terminé."
+      },
+      "startedAt": "Démarrée le",
+      "status": {
+        "none": "Aucune synchronisation enregistrée.",
+        "PENDING": "En attente",
+        "RUNNING": "En cours",
+        "PARTIAL": "Partielle",
+        "COMPLETED": "Terminée",
+        "FAILED": "Échouée",
+        "CANCELLED": "Annulée"
+      },
+      "statusLabel": "État",
+      "syncAll": {
+        "heading": "Synchroniser l'escouade",
+        "description": "Importe les matchs de la saison en cours pour tous les joueurs suivis, puis recalcule progression et classement. Plusieurs minutes selon le quota Riot.",
+        "action": "Synchroniser",
+        "accepted": "Synchronisation lancée. Suis son avancement dans l'encart ci-dessus."
+      },
+      "syncPlayer": {
+        "heading": "Synchroniser un joueur",
+        "description": "Rattrape un seul joueur, sans rejouer les autres. Utile après un échec isolé lors d'une exécution planifiée.",
+        "action": "Synchroniser",
+        "accepted": "Synchronisation du joueur lancée.",
+        "pickerLabel": "Joueur à synchroniser",
+        "placeholder": "Choisir un joueur",
+        "noneSelected": "Choisis d'abord un joueur."
+      },
+      "title": "Opérations",
+      "weekSelection": {
+        "heading": "Ouvrir la semaine",
+        "description": "Tire les défis manquants de la semaine en cours et son boss, comme le fait le passage de semaine du lundi. Sans effet si tout est déjà en place.",
+        "action": "Démarrer",
+        "done": "La semaine en cours est complète."
       }
     },
     "players": {
@@ -504,9 +512,7 @@
       "welcome": "Bienvenue dans"
     },
     "hint": "Prêt à faire grandir la colonie ?",
-    "title": "Colonie",
-    "weekLabel": "Colonie · Semaine {{week}}",
-    "weekLabelPending": "Colonie"
+    "title": "Colonie"
   },
   "notFound": {
     "backToOverview": "Retour à la vue d'ensemble",
@@ -515,7 +521,7 @@
   },
   "pageHeader": {
     "back": "Retour à {{name}}",
-    "weekHeading": "{{page}} · Semaine {{number}}"
+    "weekHeading": "{{page}} · Semaine {{number}} sur {{weeks}}"
   },
   "overview": {
     "bossEncounter": {
@@ -904,6 +910,16 @@
     },
     "empty": "Aucun joueur suivi pour le moment.",
     "error": "Impossible de charger les joueurs.",
+    "eyebrow": {
+      "inCampaign": {
+        "one": "{{count}} en campagne",
+        "other": "{{count}} en campagne"
+      },
+      "outOfCampaign": {
+        "one": "{{count}} hors campagne",
+        "other": "{{count}} hors campagne"
+      }
+    },
     "heading": "Escouade",
     "inCampaign": {
       "title": "Dans la campagne en cours",

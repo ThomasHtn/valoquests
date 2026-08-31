@@ -17,12 +17,7 @@ import { ChallengeIconView } from '@shared/challenge-icon-view/challenge-icon-vi
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
-import {
-  formatDateRange,
-  isoWeekNumber,
-  RemainingTime,
-  remainingWeekTime,
-} from '@core/date/week-period.utils';
+import { formatDateRange, RemainingTime, remainingWeekTime } from '@core/date/week-period.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
@@ -212,14 +207,6 @@ export class Leaderboard {
   private readonly selectedWeek = computed<{ weekStart: string; weekEnd: string } | null>(
     () => this.selectedHistoryWeek() ?? this.currentWeek(),
   );
-
-  /**
-   * ISO number of the week on screen, or `null` while it has not loaded.
-   */
-  protected readonly weekNumber = computed<number | null>(() => {
-    const week = this.selectedWeek();
-    return week === null ? null : isoWeekNumber(week.weekStart);
-  });
 
   /**
    * Dates the week on screen spans, e.g. `"18/08 – 24/08"`, so a week number resolves to real days.

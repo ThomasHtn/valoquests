@@ -45,72 +45,32 @@
       }
     },
     "login": {
-      "title": "Administration",
-      "eyebrow": "Restricted access",
+      "backToSite": "Back to the site",
+      "eyebrow": "Squad administration",
       "heading": "Command post",
-      "keyLabel": "Administration key",
-      "showKey": "Show key",
       "hideKey": "Hide key",
+      "keyHint": "The key opens synchronisation, roster management and campaign controls.",
+      "keyLabel": "Administration key",
+      "rejected": "Key rejected by the server.",
+      "showKey": "Show key",
       "submit": "Enter",
-      "rejected": "Key rejected by the server."
+      "title": "Administration"
     },
     "operations": {
-      "title": "Operations",
-      "heading": "Operations",
-      "lastRun": "Latest synchronization",
-      "statusLabel": "Status",
-      "startedAt": "Started on",
-      "playersProcessed": "Players processed",
-      "matchesImported": "Matches imported",
-      "failures": "Failures",
-      "status": {
-        "none": "No synchronization recorded yet.",
-        "PENDING": "Pending",
-        "RUNNING": "Running",
-        "PARTIAL": "Partial",
-        "COMPLETED": "Completed",
-        "FAILED": "Failed",
-        "CANCELLED": "Cancelled"
-      },
-      "syncAll": {
-        "heading": "Synchronize the squad",
-        "description": "Imports the current season's matches for every tracked player, then rebuilds progress and ranking. Several minutes, depending on the Riot rate limit.",
-        "action": "Start synchronization",
-        "accepted": "Synchronization started. Follow its progress in the panel above."
-      },
-      "syncPlayer": {
-        "heading": "Synchronize one player",
-        "description": "Catches up a single player without replaying the others. Useful after an isolated failure during a scheduled run.",
-        "action": "Start for this player",
-        "accepted": "Player synchronization started.",
-        "pickerLabel": "Player to synchronize",
-        "placeholder": "Pick a player",
-        "noneSelected": "Pick a player first."
-      },
-      "recalculate": {
-        "heading": "Recalculate progress",
-        "description": "Rebuilds this week's challenge progress and the ranking from the matches already stored. Never calls the Riot API.",
-        "action": "Recalculate",
-        "done": "Progress and ranking recalculated."
-      },
-      "weekSelection": {
-        "heading": "Open the week",
-        "description": "Draws the current week's missing challenges and its boss, exactly as Monday's rollover does. Does nothing when the week is already set up.",
-        "action": "Run the selection",
-        "done": "The current week is fully set up."
-      },
-      "rollover": {
-        "heading": "Run the rollover",
-        "description": "Replays Monday's whole rollover: finalizes every past week left open, settles the boss fights they never resolved, and opens the current week. It does not synchronize — run a synchronization first if the last matches are still missing.",
-        "action": "Run the rollover",
-        "done": "Rollover completed."
-      },
       "colonyRecompute": {
         "heading": "Replay the colony",
         "description": "Rebuilds the campaign in progress from its first day, out of the matches, challenges and boss outcomes already stored. Risk-free: the colony is never incremented, always fully recomputed.",
         "action": "Replay",
         "done": "Colony replayed."
       },
+      "failures": "Failures",
+      "groups": {
+        "repair": "Repair",
+        "repairHint": "These three replay history that is already written. Run them when a figure is wrong, not as part of an ordinary week.",
+        "routine": "Routine",
+        "routineHint": "The ordinary gestures of a week, with no retroactive effect."
+      },
+      "heading": "Operations",
       "history": {
         "title": "Synchronization history",
         "empty": "No past synchronization.",
@@ -133,6 +93,54 @@
           "scheduled": "scheduled",
           "manual": "manual"
         }
+      },
+      "lastRun": "Latest synchronization",
+      "matchesImported": "Matches imported",
+      "playersProcessed": "Players processed",
+      "recalculate": {
+        "heading": "Recalculate progress",
+        "description": "Rebuilds this week's challenge progress and the ranking from the matches already stored. Never calls the Riot API.",
+        "action": "Recalculate",
+        "done": "Progress and ranking recalculated."
+      },
+      "rollover": {
+        "heading": "Run the rollover",
+        "description": "Replays Monday's whole rollover: finalizes every past week left open, settles the boss fights they never resolved, and opens the current week. It does not synchronize — run a synchronization first if the last matches are still missing.",
+        "action": "Run the rollover",
+        "done": "Rollover completed."
+      },
+      "startedAt": "Started on",
+      "status": {
+        "none": "No synchronization recorded yet.",
+        "PENDING": "Pending",
+        "RUNNING": "Running",
+        "PARTIAL": "Partial",
+        "COMPLETED": "Completed",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled"
+      },
+      "statusLabel": "Status",
+      "syncAll": {
+        "heading": "Synchronize the squad",
+        "description": "Imports the current season's matches for every tracked player, then rebuilds progress and ranking. Several minutes, depending on the Riot rate limit.",
+        "action": "Start synchronization",
+        "accepted": "Synchronization started. Follow its progress in the panel above."
+      },
+      "syncPlayer": {
+        "heading": "Synchronize one player",
+        "description": "Catches up a single player without replaying the others. Useful after an isolated failure during a scheduled run.",
+        "action": "Start for this player",
+        "accepted": "Player synchronization started.",
+        "pickerLabel": "Player to synchronize",
+        "placeholder": "Pick a player",
+        "noneSelected": "Pick a player first."
+      },
+      "title": "Operations",
+      "weekSelection": {
+        "heading": "Open the week",
+        "description": "Draws the current week's missing challenges and its boss, exactly as Monday's rollover does. Does nothing when the week is already set up.",
+        "action": "Run the selection",
+        "done": "The current week is fully set up."
       }
     },
     "players": {
@@ -504,9 +512,7 @@
       "welcome": "Welcome to"
     },
     "hint": "Ready to grow the colony?",
-    "title": "Colony",
-    "weekLabel": "Colony · Week {{week}}",
-    "weekLabelPending": "Colony"
+    "title": "Colony"
   },
   "notFound": {
     "backToOverview": "Back to overview",
@@ -515,7 +521,7 @@
   },
   "pageHeader": {
     "back": "Back to {{name}}",
-    "weekHeading": "{{page}} · Week {{number}}"
+    "weekHeading": "{{page}} · Week {{number}} of {{weeks}}"
   },
   "overview": {
     "bossEncounter": {
@@ -904,6 +910,16 @@
     },
     "empty": "No player is tracked yet.",
     "error": "Failed to load players.",
+    "eyebrow": {
+      "inCampaign": {
+        "one": "{{count}} in the campaign",
+        "other": "{{count}} in the campaign"
+      },
+      "outOfCampaign": {
+        "one": "{{count}} outside it",
+        "other": "{{count}} outside it"
+      }
+    },
     "heading": "Players",
     "inCampaign": {
       "title": "In the current campaign",

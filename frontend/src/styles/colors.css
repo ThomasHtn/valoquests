@@ -53,6 +53,22 @@
    * now that the latter is no longer red itself.
    */
   --color-accent-red: #ff4655;
+
+  /*
+   * The boss health bar's own two steps, deliberately not `accent-red` itself.
+   *
+   * A boss gauge drains, like in any game — that reading is never inverted. But `accent-red` at full
+   * strength across a bar the width of the content column is the single loudest object on three
+   * screens, and it is loudest precisely on Monday, when the squad has done nothing yet and the
+   * block has the least to say. These two steps drop it out of that register without taking it out
+   * of red: `boss-hp` fills the body, `boss-hp-edge` lifts the leading edge, so the eye lands where
+   * the value is moving rather than spreading over the whole band.
+   *
+   * `accent-red` keeps the marks that must stay at full strength beside them — the remaining-hit-
+   * point figure, the threat badge, the skull.
+   */
+  --color-boss-hp: #c9333f;
+  --color-boss-hp-edge: #e0404e;
   --color-accent-purple: #a78bfa;
   --color-accent-gold: #d9954a;
   --color-accent-blue: #5a96be;
