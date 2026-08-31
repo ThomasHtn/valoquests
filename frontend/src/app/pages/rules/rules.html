@@ -105,20 +105,26 @@
         <div>
           <!-- The outcome columns are sized by their *header*, not by their values: "Victoire" and
            "Défaite" are the widest things they hold, and at the narrower measure they used to run
-           over their neighbour and off the right edge of a phone. -->
+           over their neighbour and off the right edge of a phone.
+
+           Which is why the header steps down a size on a phone rather than the column staying at
+           the 5rem that header needs: three columns held at their desktop width left 57px for the
+           mode names beside them, so "Mode de jeu" broke over three lines and every name below it
+           wrapped. One size down on the header buys the column back to 4rem, and the tighter gutter
+           puts the label column at 117px — enough for the longest mode name on one line. -->
           <div
-            class="grid grid-cols-[minmax(0,1fr)_repeat(3,5rem)] items-center gap-x-3 border-b border-brand-500/30 pb-2"
+            class="grid grid-cols-[minmax(0,1fr)_repeat(3,4rem)] items-center gap-x-2 border-b border-brand-500/30 pb-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,5rem)] sm:gap-x-3"
           >
-            <span class="label-caption text-text-muted">
+            <span class="label-caption text-2xs text-text-muted sm:text-xs">
               {{ 'rules.sections.damage.modeLabel' | translate }}
             </span>
-            <span class="label-caption text-right text-brand-500">
+            <span class="label-caption text-2xs text-right text-brand-500 sm:text-xs">
               {{ 'playerProfile.matches.result.WIN' | translate }}
             </span>
-            <span class="label-caption text-right text-text-muted">
+            <span class="label-caption text-2xs text-right text-text-muted sm:text-xs">
               {{ 'playerProfile.matches.result.DRAW' | translate }}
             </span>
-            <span class="label-caption text-right text-text-muted">
+            <span class="label-caption text-2xs text-right text-text-muted sm:text-xs">
               {{ 'playerProfile.matches.result.LOSS' | translate }}
             </span>
           </div>
@@ -126,7 +132,7 @@
           <ul>
             @for (mode of matchDamageShowcase; track mode.mode) {
               <li
-                class="grid grid-cols-[minmax(0,1fr)_repeat(3,5rem)] items-center gap-x-3 border-b border-text-primary/8 py-2.5 last:border-b-0"
+                class="grid grid-cols-[minmax(0,1fr)_repeat(3,4rem)] items-center gap-x-2 border-b border-text-primary/8 py-2.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_repeat(3,5rem)] sm:gap-x-3"
               >
                 <!-- Wraps rather than truncates: on a phone the longest mode name no longer fits on
                  one line, and a mode the reader cannot finish reading defeats the table. -->

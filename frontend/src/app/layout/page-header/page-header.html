@@ -62,9 +62,16 @@
         <div class="-mt-1 flex min-w-0 items-center gap-2.5">
           <!-- Set a full step below the old scrolling header's `text-2xl`: this is a bar the reader
                passes under all day, not a cover. `truncate` rather than wrapping — the bar's height
-               is part of what makes the chrome read as one band across every page. -->
+               is part of what makes the chrome read as one band across every page.
+
+               That holds from `sm` up, where the title has the room. On a phone it did not: the
+               burger, the page's own trailing control and the gutters leave the title about 187px,
+               and two of the six pages named themselves "Le classement des dégâts de l…" and "Le
+               boss et les cinq défis de l…" — a band of even height stating nothing. Below `sm` the
+               title takes a second line instead, and no more: the clamp keeps a long name from
+               growing the band without limit, which is what the single-line rule was protecting. -->
           <h1
-            class="font-display truncate text-base leading-tight font-bold text-text-primary uppercase sm:text-lg"
+            class="font-display text-base leading-tight font-bold text-text-primary uppercase max-sm:line-clamp-2 sm:truncate sm:text-lg"
           >
             {{ heading() }}
           </h1>

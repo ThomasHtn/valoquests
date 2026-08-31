@@ -73,14 +73,18 @@
              can keep the podium narrower than the block it lives in. -->
         <ol class="mx-auto grid w-full max-w-(--podium-width) grid-cols-3 items-end gap-3">
           @for (entry of top3(); track entry.player.id) {
+            <!-- `min-w-0`: a `grid-cols-3` track floors at its content's own minimum, so without
+                 this a name wider than a third of the block would widen its column and push the
+                 podium past the page instead of being truncated inside it. -->
             <li
               [class.order-1]="entry.position === 2"
               [class.order-2]="entry.position === 1"
               [class.order-3]="entry.position === 3"
+              class="min-w-0"
             >
               <a
                 [routerLink]="['/players', entry.player.id]"
-                class="focus-ring group flex flex-col items-center text-center transition-transform duration-200 ease-out hover:-translate-y-1"
+                class="focus-ring group flex w-full min-w-0 flex-col items-center text-center transition-transform duration-200 ease-out hover:-translate-y-1"
               >
                 <!-- The champion's gold glow is applied to this wrapper rather than to the avatar
                  itself: `filter` composites before `clip-path`, so a `drop-shadow` declared on the
@@ -102,12 +106,21 @@
                   />
                 </span>
 
+                <!-- A podium column is a third of the block, which on a phone is about a hundred
+                     pixels: the name alone already outgrows it, and the champion's badge beside it
+                     pushed the whole line off the screen edge — off to the left on 2nd place, and
+                     off to the right on 3rd, where it dragged a horizontal scrollbar onto the page.
+                     So the line is contained on three fronts: the name truncates within the column,
+                     the badge wraps under it rather than widening the line, and the type steps down
+                     a size at the width where the column is at its narrowest. -->
                 <p
-                  [class]="podiumTextAccent(entry.position)"
-                  [class.text-2xl]="entry.position === 1"
-                  class="font-display mt-3 flex items-center gap-1.5 text-xl leading-none font-semibold"
+                  [class]="[
+                    podiumTextAccent(entry.position),
+                    entry.position === 1 ? 'text-lg sm:text-2xl' : 'text-base sm:text-xl',
+                  ]"
+                  class="font-display mt-3 flex w-full min-w-0 flex-wrap items-center justify-center gap-1.5 leading-none font-semibold"
                 >
-                  {{ entry.player.displayName }}
+                  <span class="min-w-0 max-w-full truncate">{{ entry.player.displayName }}</span>
                   @if (entry.player.id === championPlayerId()) {
                     <app-champion-badge />
                   }

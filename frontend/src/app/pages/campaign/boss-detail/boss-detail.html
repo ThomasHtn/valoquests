@@ -30,7 +30,15 @@
       <svg [class]="tier().iconClass" class="relative size-4" lucideSkull></svg>
     </span>
 
-    <div class="flex min-w-0 flex-1 flex-col gap-1" id="boss-detail-title">
+    <!-- Its own row on a phone (`basis-full`, with the stepper pulled to the end of the row above by
+         its `ml-auto`), rather than the third of the header it is left with once the icon and the
+         three controls have taken their fixed widths: at 151px the boss's name truncated after eight
+         characters and its date range broke over three lines, on a panel that had 343px to give it.
+         From `sm` up there is room for all three on one line, and the header keeps its single row. -->
+    <div
+      class="order-last flex min-w-0 basis-full flex-col gap-1 sm:order-none sm:flex-1 sm:basis-0"
+      id="boss-detail-title"
+    >
       <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span [class]="tier().iconClass" class="label-caption">
           {{ 'colony.boss.number' | translate: { number: bossNumberLabel(node().runWeekIndex) } }}
@@ -41,7 +49,10 @@
         }
       </p>
 
-      <p class="font-display truncate text-xl leading-tight font-bold text-text-primary uppercase">
+      <!-- Wraps rather than truncates: this is a panel's own title with the width of the panel to
+           work with, not the application band, and a boss the reader cannot finish reading is the
+           one thing the panel exists to name. -->
+      <p class="font-display text-xl leading-tight font-bold text-text-primary uppercase">
         {{ node().bossName }}
       </p>
 
@@ -55,7 +66,7 @@
 
     <!-- Stepper and close, one framed group: an inline panel has no backdrop to click away, so the
          way out has to be as visible as the way across. -->
-    <div class="flex shrink-0 items-center gap-1">
+    <div class="ml-auto flex shrink-0 items-center gap-1 sm:ml-0">
       <button
         (click)="previous.emit()"
         [attr.aria-label]="'boss.panel.previous' | translate"

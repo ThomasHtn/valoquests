@@ -366,8 +366,22 @@
   @apply h-px grow basis-12 bg-linear-to-r from-brand-500/50 to-transparent;
 }
 
+/*
+ * `ml-auto` is a no-op on a rule that fits its one line — the hairline beside it already `grow`s
+ * through the leftover space — and is what saves the rule when it does not. On a phone the title and
+ * the hairline take the first line on their own, and the way out and the diamond that closes the run
+ * dropped to the second flush against its left edge, leaving the closing mark stranded mid-row. The
+ * auto margin sends the pair back to the trailing edge, where the diamond still closes the block.
+ *
+ * The vertical padding is a touch target, not spacing: the link is a 16px line of small caps, and it
+ * is the one control on the public pages that a thumb could not reliably land on. The matching
+ * negative margin takes the padding back out of the layout, so the rule keeps the height it had.
+ */
 .section-rule-link {
-  @apply font-mono text-xs font-medium tracking-label text-brand-400 uppercase transition-colors;
+  /* `gap` restores what the flex context takes away: the link is a label followed by its arrow, and
+     the whitespace between the two in the template is a text node that a flex container discards. */
+  @apply -my-3.5 inline-flex items-center gap-1.5 py-3.5;
+  @apply ml-auto font-mono text-xs font-medium tracking-label text-brand-400 uppercase transition-colors;
 }
 
 /* Underlined on hover: the arrow says where it goes, the underline says it is a link. */
@@ -375,8 +389,11 @@
   @apply text-[#f0c493] underline decoration-1 underline-offset-4;
 }
 
+/* The right margin is the rotation's own overhang, not spacing: a 45°-turned square draws over a box
+   √2 times its side, so the mark painted 1.66px past the row it closes. Harmless where it sits today,
+   but it is the last item on the row and the trailing edge is where a scroll container would find it. */
 .section-rule-diamond {
-  @apply size-2 rotate-45 border border-brand-500/70;
+  @apply mr-0.5 size-2 rotate-45 border border-brand-500/70;
 }
 
 /*

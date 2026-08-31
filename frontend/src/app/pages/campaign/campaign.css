@@ -497,10 +497,17 @@ a.hs-row:hover {
   color: #e8ab6b;
 }
 
+/* Contained rather than free to grow: the tier column carries a word, not a figure, and a long one
+   ran straight over the score printed beside it. A grid track floors at its content's minimum, so
+   the guard has to be on the cell itself. */
 .hs-cell {
+  min-width: 0;
+  overflow: hidden;
   font-weight: 600;
   font-size: 1.25rem;
   text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: #a4a7a6;
   font-variant-numeric: tabular-nums;
 }
@@ -511,11 +518,13 @@ a.hs-row:hover {
 }
 
 .hs-score {
+  min-width: 0;
   font-weight: 700;
   font-size: 2.5rem;
   line-height: 0.9;
   letter-spacing: -0.02em;
   text-align: right;
+  white-space: nowrap;
   color: #ece8e1;
   font-variant-numeric: tabular-nums;
 }
@@ -525,14 +534,19 @@ a.hs-row:hover {
 }
 
 /* Narrow: the headings go, the dates take the full width, and the three figures share the row under
-   them. */
+   them.
+
+   The score is sized to its own content rather than to a third of the row: it is the row's largest
+   type, and on a phone a four-figure population in an equal third had nowhere to go but over the
+   column beside it. The two labels split what is left, one size down each so they still fit that
+   share at 320px rather than being ellipsized down to nothing. */
 @media (width < 58rem) {
   .hs-head {
     display: none;
   }
 
   .hs-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
     gap: 14px 12px;
   }
 
@@ -543,5 +557,17 @@ a.hs-row:hover {
   .hs-cell,
   .hs-cell--tier {
     text-align: left;
+  }
+
+  .hs-cell {
+    font-size: 1.125rem;
+  }
+
+  .hs-cell--tier {
+    font-size: 0.8125rem;
+  }
+
+  .hs-score {
+    font-size: 2rem;
   }
 }
