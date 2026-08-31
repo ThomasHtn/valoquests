@@ -217,5 +217,13 @@ export const API_ENDPOINTS = {
      * `POST` the stop of the campaign in progress, freezing its score at today.
      */
     campaignStop: `${environment.apiBaseUrl}/admin/campaigns/stop`,
+
+    /**
+     * `DELETE` one campaign, running or closed, with the colony it grew and the fights it drew.
+     *
+     * @param runId - Internal campaign identifier.
+     * @returns The campaign's endpoint.
+     */
+    campaign: (runId: number): string => `${environment.apiBaseUrl}/admin/campaigns/${runId}`,
   },
 } as const;

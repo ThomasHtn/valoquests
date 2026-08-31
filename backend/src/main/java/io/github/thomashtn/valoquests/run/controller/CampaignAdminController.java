@@ -12,12 +12,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -121,5 +125,30 @@ public class CampaignAdminController {
     @ApiResponse(responseCode = "409", description = "No campaign is currently running.")
     public CampaignRunSummary stopCampaign() {
         return service.stopCampaign();
+    }
+
+    /**
+     * Deletes one campaign, running or closed.
+     *
+     * @param id identifier of the run to delete
+     */
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+        summary = "Delete a campaign",
+        description = """
+            Irreversibly deletes one campaign: the run itself, the colony it grew and the boss
+            fights it drew. The campaign in progress can be deleted like any other, which leaves no
+            campaign running at all until one is started again.
+
+            Matches, weekly challenges and weekly rankings are kept — they belong to the weekly
+            ranking, which is read whether a campaign is running or not. Clearing those is what the
+            maintenance reset is for.
+            """
+    )
+    @ApiResponse(responseCode = "204", description = "Campaign deleted successfully.")
+    @ApiResponse(responseCode = "404", description = "No campaign holds that identifier.")
+    public void deleteCampaign(@PathVariable long id) {
+        service.deleteCampaign(id);
     }
 }

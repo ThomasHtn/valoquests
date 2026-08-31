@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { LucideTrash2 } from '@lucide/angular';
 
 import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
@@ -10,6 +11,7 @@ import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { PageHeader } from '@layout/page-header/page-header';
+import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionLabel } from '@shared/section-label/section-label';
@@ -91,7 +93,9 @@ function todayIso(): string {
   imports: [
     TranslatePipe,
     AdminActionCard,
+    Button,
     ConfirmDialog,
+    LucideTrash2,
     PageHeader,
     ResourceState,
     SectionLabel,
@@ -130,6 +134,16 @@ export class AdminCampaigns {
   );
 
   /**
+   * The campaign in progress as the endpoint sends it, or `null` when nothing is running.
+   *
+   * Kept beside {@link currentRun} rather than folded into it: deleting a campaign needs the run's
+   * own identifier, which the display figures below deliberately do not carry.
+   */
+  protected readonly runningRun = computed<CampaignRun | null>(
+    () => this.runs().find((candidate) => candidate.status === 'RUNNING') ?? null,
+  );
+
+  /**
    * The campaign in progress, resolved into the figures an operator needs before touching anything.
    *
    * The page reported the running campaign as one row of a table — dates, roster, score — which is
@@ -140,8 +154,8 @@ export class AdminCampaigns {
    * `null` when nothing is running, which is when this card would have nothing to say.
    */
   protected readonly currentRun = computed(() => {
-    const run = this.runs().find((candidate) => candidate.status === 'RUNNING');
-    if (run === null || run === undefined) {
+    const run = this.runningRun();
+    if (run === null) {
       return null;
     }
 
@@ -204,9 +218,46 @@ export class AdminCampaigns {
   protected readonly autoRenewState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
+   * State of the delete-campaign command.
+   */
+  protected readonly deleteState = signal<AdminActionState>(IDLE_ACTION);
+
+  /**
    * Whether the stop confirmation dialog is open.
    */
   protected readonly stopDialogOpen = signal(false);
+
+  /**
+   * The campaign the delete dialog is asking about, or `null` while it is closed.
+   */
+  protected readonly runPendingDeletion = signal<CampaignRun | null>(null);
+
+  /**
+   * Whether a deletion is in flight, which disables every delete button while it lands.
+   */
+  protected readonly deleting = signal(false);
+
+  /**
+   * What the delete dialog says, naming the campaign and what goes with it.
+   *
+   * Spelled out rather than left to a generic warning: deleting a campaign takes its colony and its
+   * boss fights, and keeps the matches, the weekly challenges and the rankings — an operator who
+   * assumed otherwise would hesitate over an action that leaves the weekly ranking untouched.
+   */
+  protected readonly deletionBody = computed(() => {
+    const run = this.runPendingDeletion();
+
+    if (run === null) {
+      return '';
+    }
+
+    return this.translation.translate(
+      run.status === 'RUNNING'
+        ? 'admin.campaigns.delete.confirmBodyRunning'
+        : 'admin.campaigns.delete.confirmBody',
+      { range: this.dateRangeLabel(run) },
+    );
+  });
 
   /**
    * Resolves the status badge tone for a run, exposed to the template.
@@ -260,6 +311,40 @@ export class AdminCampaigns {
     await this.commandRunner.run(() => this.adminApi.startCampaign(), {
       state: this.startState,
       successMessage: () => this.translation.translate('admin.campaigns.start.done'),
+    });
+  }
+
+  /**
+   * Opens the delete dialog for one campaign.
+   *
+   * @param run - The campaign to delete.
+   */
+  protected askForDeletion(run: CampaignRun): void {
+    this.runPendingDeletion.set(run);
+  }
+
+  /**
+   * Closes the delete dialog without deleting anything.
+   */
+  protected dismissDeletion(): void {
+    this.runPendingDeletion.set(null);
+  }
+
+  /**
+   * Deletes the campaign the dialog is asking about.
+   */
+  protected async confirmDeletion(): Promise<void> {
+    const run = this.runPendingDeletion();
+
+    if (run === null || this.deleting()) {
+      return;
+    }
+
+    await this.commandRunner.run(() => this.adminApi.deleteCampaign(run.id), {
+      state: this.deleteState,
+      busy: this.deleting,
+      successMessage: () => this.translation.translate('admin.campaigns.delete.done'),
+      onSuccess: () => this.runPendingDeletion.set(null),
     });
   }
 

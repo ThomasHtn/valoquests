@@ -22,6 +22,14 @@
         "one": "{{count}} jour restant",
         "other": "{{count}} jours restants"
       },
+      "delete": {
+        "action": "Supprimer",
+        "heading": "Supprimer la campagne",
+        "confirm": "Supprimer",
+        "confirmBody": "La campagne du {{range}} sera supprimée définitivement, avec sa colonie et ses combats de boss. Les matchs, les défis hebdomadaires et les classements sont conservés.",
+        "confirmBodyRunning": "La campagne en cours du {{range}} sera supprimée définitivement, avec sa colonie et ses combats de boss. Plus aucune campagne ne tournera tant que tu n'en démarres pas une autre. Les matchs, les défis hebdomadaires et les classements sont conservés.",
+        "done": "Campagne supprimée."
+      },
       "empty": "Aucune campagne n'a encore été lancée.",
       "error": "Impossible de charger les campagnes.",
       "heading": "Campagnes",

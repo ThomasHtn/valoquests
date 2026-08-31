@@ -61,6 +61,22 @@
           </dd>
         </div>
       </dl>
+
+      <!-- Deleting the campaign in progress, as opposed to stopping it: what an operator reaches for
+           after opening one by mistake, where stopping would leave behind exactly the one-day
+           campaign they are trying to be rid of. -->
+      @if (runningRun(); as running) {
+        <button
+          appButton="danger-outline"
+          (click)="askForDeletion(running)"
+          [disabled]="deleting()"
+          class="mt-5 flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
+          type="button"
+        >
+          <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucideTrash2></svg>
+          {{ 'admin.campaigns.delete.action' | translate }}
+        </button>
+      }
     </div>
   }
 
@@ -141,6 +157,16 @@
             <span class="font-display text-lg font-bold text-text-primary tabular-nums">
               {{ run.score }}
             </span>
+            <button
+              appButton="danger-outline"
+              (click)="askForDeletion(run)"
+              [attr.aria-label]="'admin.campaigns.delete.action' | translate"
+              [disabled]="deleting()"
+              class="flex min-h-10 items-center px-2.5 [--notch:0.375rem]"
+              type="button"
+            >
+              <svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" lucideTrash2></svg>
+            </button>
           </span>
         </li>
       }
@@ -156,5 +182,16 @@
     [confirmLabel]="'admin.campaigns.stop.confirm' | translate"
     [heading]="'admin.campaigns.stop.heading' | translate"
     [open]="stopDialogOpen()"
+  />
+
+  <app-confirm-dialog
+    (confirmed)="confirmDeletion()"
+    (dismissed)="dismissDeletion()"
+    [body]="deletionBody()"
+    [busy]="deleting()"
+    [cancelLabel]="'admin.cancel' | translate"
+    [confirmLabel]="'admin.campaigns.delete.confirm' | translate"
+    [heading]="'admin.campaigns.delete.heading' | translate"
+    [open]="runPendingDeletion() !== null"
   />
 </div>

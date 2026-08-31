@@ -33,8 +33,7 @@ import lombok.Setter;
 @Table(
     name = "run",
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_run_number", columnNames = {"number"}),
-        @UniqueConstraint(name = "uk_run_first_week_start", columnNames = {"first_week_start"})
+        @UniqueConstraint(name = "uk_run_number", columnNames = {"number"})
     }
 )
 public class Run extends AuditableEntity {
@@ -54,6 +53,9 @@ public class Run extends AuditableEntity {
 
     /**
      * Monday identifying the run's first week.
+     *
+     * <p>Not unique: a run an operator stopped and the clean one they opened in its place share the
+     * Monday the stop happened on. Only {@link #closedAt} being null is unique — see {@code V37}.
      */
     @Column(name = "first_week_start", nullable = false)
     private LocalDate firstWeekStart;

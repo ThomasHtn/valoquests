@@ -49,6 +49,30 @@ public interface WeeklyBossEncounterRepository
     List<WeeklyBossEncounter> findAllByRunIdAndFinalizedAtIsNotNullOrderByWeekStartAsc(Long runId);
 
     /**
+     * Retrieves one run's fights that were never settled, from a week on.
+     *
+     * <p>What an operator stopping a campaign leaves behind. A fight is settled by the rollover that
+     * follows it, so a run stopped mid-week never settles the week it stopped in: the encounter stays
+     * open, pays nobody, and — encounters being unique per week — would keep the run opened in its
+     * place from ever drawing a boss of its own for that week.
+     *
+     * @param runId     run being stopped
+     * @param weekStart Monday from which the fights are released, included
+     * @return that run's unsettled encounters from that week on
+     */
+    List<WeeklyBossEncounter> findAllByRunIdAndFinalizedAtIsNullAndWeekStartGreaterThanEqual(
+        Long runId,
+        LocalDate weekStart
+    );
+
+    /**
+     * Deletes one run's encounters, so the run itself can be deleted after them.
+     *
+     * @param runId run being deleted
+     */
+    void deleteAllByRunId(Long runId);
+
+    /**
      * Retrieves every past encounter whose fight was never resolved, oldest week first.
      *
      * <p>Drives the rollover's boss closure. Reading the encounters themselves rather than the weeks

@@ -19,6 +19,7 @@ import io.github.thomashtn.valoquests.run.repository.CampaignSettingsRepository;
 import io.github.thomashtn.valoquests.run.repository.RunRepository;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import io.github.thomashtn.valoquests.shared.exception.ConflictException;
+import io.github.thomashtn.valoquests.shared.exception.ResourceNotFoundException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
@@ -45,7 +46,7 @@ class RunServiceTest {
     /** Weeks a run spans, as the ruleset defines it. */
     private static final int RUN_LENGTH_WEEKS = 10;
 
-    /** Run repository dependency, backed by {@link #runsByWeek}. */
+    /** Run repository dependency, backed by {@link #runsByNumber}. */
     private RunRepository runRepository;
 
     /** Player repository dependency, supplying the roster size a run is frozen with. */
@@ -59,13 +60,16 @@ class RunServiceTest {
     private CampaignSettingsRepository campaignSettingsRepository;
 
     /**
-     * The run table, in memory, keyed by first week.
+     * The run table, in memory, keyed by run number.
      *
      * <p>A fake rather than a bare mock: run creation now goes through an {@code ON CONFLICT DO
      * NOTHING} insert followed by a read, so stubbing the two calls independently would let a test
      * pass against a repository that never actually stored anything.
+     *
+     * <p>Keyed by number rather than by first week, as the table itself is since {@code V37}: a run
+     * an operator stopped and the one opened in its place share the Monday of the stop.
      */
-    private Map<LocalDate, Run> runsByWeek;
+    private Map<Integer, Run> runsByNumber;
 
     /** Service under test. */
     private RunService service;
@@ -76,7 +80,7 @@ class RunServiceTest {
         runRepository = mock(RunRepository.class);
         playerRepository = mock(PlayerRepository.class);
         campaignSettingsRepository = mock(CampaignSettingsRepository.class);
-        runsByWeek = new LinkedHashMap<>();
+        runsByNumber = new LinkedHashMap<>();
 
         CampaignSettings[] settings = { new CampaignSettings() };
         lenient().when(campaignSettingsRepository.findById(CampaignSettings.SINGLETON_ID))
@@ -89,25 +93,27 @@ class RunServiceTest {
         lenient().when(playerRepository.countByStatus(PlayerStatus.ACTIVE))
             .thenReturn((long) ROSTER_SIZE);
 
-        lenient().when(runRepository.findByClosedAtIsNull()).thenAnswer(invocation ->
-            runsByWeek.values().stream().filter(run -> run.getClosedAt() == null).findFirst());
+        lenient().when(runRepository.findByClosedAtIsNull()).thenAnswer(invocation -> openRun());
         lenient().when(runRepository.findTopByOrderByNumberDesc()).thenAnswer(invocation ->
-            runsByWeek.values().stream().max(Comparator.comparingInt(Run::getNumber)));
-        lenient().when(runRepository.findByFirstWeekStart(any())).thenAnswer(invocation ->
-            Optional.ofNullable(runsByWeek.get(invocation.getArgument(0, LocalDate.class))));
+            runsByNumber.values().stream().max(Comparator.comparingInt(Run::getNumber)));
+        lenient().when(runRepository.findById(any())).thenAnswer(invocation ->
+            runsByNumber.values().stream()
+                .filter(run -> invocation.getArgument(0).equals(run.getId()))
+                .findFirst());
         lenient().when(runRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().doAnswer(invocation -> runsByNumber.values()
+            .remove(invocation.getArgument(0, Run.class)))
+            .when(runRepository).delete(any());
 
+        // The two unique constraints the insert can conflict on: the run number, and at most one run
+        // left open. Both make the insert a no-op rather than a failure.
         lenient().doAnswer(invocation -> {
             int number = invocation.getArgument(0);
-            LocalDate firstWeekStart = invocation.getArgument(1);
 
-            boolean taken = runsByWeek.containsKey(firstWeekStart)
-                || runsByWeek.values().stream().anyMatch(run -> run.getNumber() == number);
-
-            if (!taken) {
-                runsByWeek.put(firstWeekStart, storedRun(
+            if (!runsByNumber.containsKey(number) && openRun().isEmpty()) {
+                runsByNumber.put(number, storedRun(
                     number,
-                    firstWeekStart,
+                    invocation.getArgument(1),
                     invocation.getArgument(2),
                     invocation.getArgument(3)
                 ));
@@ -241,7 +247,7 @@ class RunServiceTest {
         assertThat(resolved.getNumber()).isEqualTo(3);
         assertThat(resolved.getFirstWeekStart()).isEqualTo(FIRST_WEEK.plusWeeks(20));
         assertThat(resolved.covers(FIRST_WEEK.plusWeeks(25))).isTrue();
-        assertThat(runsByWeek.values()).extracting(Run::getNumber).containsExactly(1, 2, 3);
+        assertThat(runsByNumber.values()).extracting(Run::getNumber).containsExactly(1, 2, 3);
     }
 
     /**
@@ -271,15 +277,99 @@ class RunServiceTest {
      */
     @Test
     void shouldReturnTheExistingRunWhenAConcurrentRequestOpenedItFirst() {
-        // The winner's row, already committed, with the reader still holding a snapshot without it.
-        runsByWeek.put(FIRST_WEEK, storedRun(1, FIRST_WEEK, FIRST_WEEK.plusWeeks(9), ROSTER_SIZE));
-        when(runRepository.findByClosedAtIsNull()).thenReturn(Optional.empty());
+        // The winner's row, already committed. The loser still holds the snapshot it read "no run"
+        // from, so only its first read misses it — the read back after the insert sees it.
+        runsByNumber.put(1, storedRun(1, FIRST_WEEK, FIRST_WEEK.plusWeeks(9), ROSTER_SIZE));
+        boolean[] stale = { true };
+        when(runRepository.findByClosedAtIsNull()).thenAnswer(invocation -> {
+            if (stale[0]) {
+                stale[0] = false;
+                return Optional.empty();
+            }
+
+            return openRun();
+        });
 
         Run resolved = service.ensureRunFor(FIRST_WEEK);
 
         assertThat(resolved.getNumber()).isEqualTo(1);
         assertThat(resolved.getFirstWeekStart()).isEqualTo(FIRST_WEEK);
-        assertThat(runsByWeek).hasSize(1);
+        assertThat(runsByNumber).hasSize(1);
+    }
+
+    /**
+     * Verifies that a campaign stopped today can be replaced by a clean one on the same Monday.
+     *
+     * <p>The whole point of stopping one early. The run's first week used to be unique, so the
+     * insert opening the replacement conflicted, did nothing — it is written {@code ON CONFLICT DO
+     * NOTHING} — and the read that followed handed back the run that had just been stopped: the
+     * campaign reported itself as started while nothing was open at all.
+     */
+    @Test
+    void shouldStartACleanCampaignOnTheWeekTheStoppedOneWasCutOn() {
+        givenOpenRun(1, FIRST_WEEK);
+        Run stopped = service.stopCurrentRun();
+
+        Run started = service.startRunNow();
+
+        assertThat(started.getNumber()).isEqualTo(2);
+        assertThat(started.getId()).isNotEqualTo(stopped.getId());
+        assertThat(started.getFirstWeekStart()).isEqualTo(stopped.getFirstWeekStart());
+        assertThat(started.getStoppedOn()).isNull();
+        assertThat(started.getClosedAt()).isNull();
+        assertThat(service.currentRun()).contains(started);
+    }
+
+    /**
+     * Verifies that the lazy path, too, opens a clean run rather than resurrecting the stopped one.
+     *
+     * <p>Every colony and boss read goes through {@code ensureRunFor}, so this is the path that runs
+     * first in practice — before an operator has had the chance to press anything.
+     */
+    @Test
+    void shouldOpenACleanRunLazilyAfterACampaignWasStopped() {
+        givenOpenRun(1, FIRST_WEEK);
+        service.stopCurrentRun();
+
+        Run resolved = service.ensureRunFor(FIRST_WEEK);
+
+        assertThat(resolved.getNumber()).isEqualTo(2);
+        assertThat(resolved.getClosedAt()).isNull();
+        assertThat(runsByNumber).hasSize(2);
+    }
+
+    /**
+     * Verifies that a run is deleted outright, and that its number is free again afterwards.
+     */
+    @Test
+    void shouldDeleteARunAndFreeItsNumber() {
+        Run open = givenOpenRun(1, FIRST_WEEK);
+
+        service.deleteRun(open);
+
+        assertThat(runsByNumber).isEmpty();
+        assertThat(service.currentRun()).isEmpty();
+        assertThat(service.startRunNow().getNumber()).isEqualTo(1);
+    }
+
+    /**
+     * Verifies that deleting a campaign that does not exist is refused rather than silently a no-op.
+     */
+    @Test
+    void shouldRefuseToReadARunThatDoesNotExist() {
+        assertThatThrownBy(() -> service.findRun(404L))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("Campaign 404 does not exist.");
+    }
+
+    /**
+     * Verifies that a run is read back by its own identifier.
+     */
+    @Test
+    void shouldReadARunByItsIdentifier() {
+        Run open = givenOpenRun(1, FIRST_WEEK);
+
+        assertThat(service.findRun(open.getId())).isSameAs(open);
     }
 
     /**
@@ -384,6 +474,16 @@ class RunServiceTest {
     }
 
     /**
+     * Reads the in-memory table's open run, as the unique partial index guarantees there is at most
+     * one of.
+     *
+     * @return the run left open, or empty when every run is closed
+     */
+    private Optional<Run> openRun() {
+        return runsByNumber.values().stream().filter(run -> run.getClosedAt() == null).findFirst();
+    }
+
+    /**
      * Seeds the run table with one open run.
      *
      * @param number    sequential run number
@@ -397,7 +497,7 @@ class RunServiceTest {
             weekStart.plusWeeks(RUN_LENGTH_WEEKS - 1L),
             ROSTER_SIZE
         );
-        runsByWeek.put(weekStart, run);
+        runsByNumber.put(number, run);
 
         return run;
     }

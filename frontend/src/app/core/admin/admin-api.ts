@@ -293,6 +293,16 @@ export class AdminApi {
   }
 
   /**
+   * Deletes one campaign, along with the colony it grew and the boss fights it drew.
+   *
+   * @param runId - Internal campaign identifier.
+   * @returns A promise that resolves once the campaign is gone.
+   */
+  public async deleteCampaign(runId: number): Promise<void> {
+    await this.mutate(this.http.delete<void>(API_ENDPOINTS.admin.campaign(runId)));
+  }
+
+  /**
    * Refetches every administration resource.
    *
    * A command is a `POST`/`PUT`/`PATCH`/`DELETE` sent beside the resources, so nothing they depend

@@ -9,6 +9,7 @@ import io.github.thomashtn.valoquests.run.entity.Run;
 import io.github.thomashtn.valoquests.run.repository.CampaignSettingsRepository;
 import io.github.thomashtn.valoquests.run.repository.RunRepository;
 import io.github.thomashtn.valoquests.shared.exception.ConflictException;
+import io.github.thomashtn.valoquests.shared.exception.ResourceNotFoundException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -204,6 +205,10 @@ public class RunService {
      * first once the calendar has moved past the previous run's own end. This one exists for the gap
      * automatic renewal being off deliberately leaves open, which nothing would otherwise ever fill.
      *
+     * <p>This week's Monday even when the run just stopped opened on it too. The alternative — the
+     * Monday after — would hand back a run whose first day is in the future, which every colony
+     * reader would then have to make sense of, for a campaign nobody can play until the week turns.
+     *
      * @return the started run
      * @throws ConflictException when a run is already open
      */
@@ -214,6 +219,41 @@ public class RunService {
         }
 
         return ensureRunFor(weekCalendar.currentWeekStart());
+    }
+
+    /**
+     * Returns one run by its identifier.
+     *
+     * @param id run identifier
+     * @return the run
+     * @throws ResourceNotFoundException when no run holds that identifier
+     */
+    @Transactional(readOnly = true)
+    public Run findRun(long id) {
+        return runRepository.findById(id).orElseThrow(
+            () -> new ResourceNotFoundException("Campaign " + id + " does not exist.")
+        );
+    }
+
+    /**
+     * Deletes one run, once whatever hangs off it has been deleted too.
+     *
+     * <p>Deliberately takes the run rather than its identifier: the caller has to have loaded it,
+     * which is also when it clears the run's snapshots and its boss encounters — this method would
+     * otherwise fail on their foreign keys. {@code CampaignAdminService} is that caller.
+     *
+     * @param run run to delete, must not be {@code null}
+     */
+    @Transactional
+    public void deleteRun(Run run) {
+        Objects.requireNonNull(run, "run must not be null");
+
+        runRepository.delete(run);
+
+        LOGGER.warn(
+            "Run {} was deleted by an operator, along with its colony and its fights.",
+            run.getNumber()
+        );
     }
 
     /**
@@ -299,6 +339,11 @@ public class RunService {
      * turns that race into a no-op for the loser instead of a constraint violation that fails a
      * perfectly ordinary page load.
      *
+     * <p>Read back by <b>the run left open</b>, never by the week inserted. A week can carry two runs
+     * — one an operator stopped on it, and the clean one opened in its place — and reading the week
+     * back handed out whichever of them the unique index happened to hold, which after a stop was the
+     * closed one. A caller then went on with a run that {@link #currentRun()} does not even report.
+     *
      * @param number    sequential run number
      * @param weekStart Monday the run's first week starts on
      * @return the run covering that week, whether this call created it or lost the race
@@ -315,10 +360,10 @@ public class RunService {
         // The insert is native, so it bypasses the persistence context: the entity has to be read
         // back for the caller to get a managed instance, and that read is also what returns the
         // winner's row when this call lost the race.
-        Run run = runRepository.findByFirstWeekStart(weekStart)
+        Run run = runRepository.findByClosedAtIsNull()
             .orElseThrow(() -> new IllegalStateException(
                 "Run " + number + " could not be opened on week " + weekStart
-                    + ": a run already holds that number on another week."
+                    + ": a run already holds that number."
             ));
 
         LOGGER.info(

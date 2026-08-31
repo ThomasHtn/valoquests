@@ -36,20 +36,15 @@ public interface RunRepository extends JpaRepository<Run, Long> {
     Optional<Run> findTopByOrderByNumberDesc();
 
     /**
-     * Retrieves the run opening on a week.
-     *
-     * @param firstWeekStart Monday the run's first week starts on
-     * @return the run opening on that Monday, when one does
-     */
-    Optional<Run> findByFirstWeekStart(LocalDate firstWeekStart);
-
-    /**
-     * Opens a run unless one already holds that number or that first week.
+     * Opens a run unless one is already open or already holds that number.
      *
      * <p>Native, and deliberately so. Several endpoints open a run lazily and a page fires them in
      * parallel, so on a database with no run yet two requests read "none" from the same snapshot and
      * both go on to insert. {@code ON CONFLICT DO NOTHING} lets Postgres arbitrate: the loser writes
      * nothing instead of raising a constraint violation that would fail an ordinary page load.
+     *
+     * <p>Both constraints it can conflict on are unique — {@code uk_run_number} and the partial
+     * {@code uk_run_single_open} — so the loser of either race reads back the winner's open run.
      *
      * @param number         sequential run number
      * @param firstWeekStart Monday the run's first week starts on

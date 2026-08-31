@@ -22,6 +22,14 @@
         "one": "{{count}} day left",
         "other": "{{count}} days left"
       },
+      "delete": {
+        "action": "Delete",
+        "heading": "Delete the campaign",
+        "confirm": "Delete",
+        "confirmBody": "The campaign of {{range}} will be deleted for good, along with its colony and its boss fights. Matches, weekly challenges and rankings are kept.",
+        "confirmBodyRunning": "The running campaign of {{range}} will be deleted for good, along with its colony and its boss fights. No campaign will be running until you start another one. Matches, weekly challenges and rankings are kept.",
+        "done": "Campaign deleted."
+      },
       "empty": "No campaign has been started yet.",
       "error": "Could not load the campaigns.",
       "heading": "Campaigns",
