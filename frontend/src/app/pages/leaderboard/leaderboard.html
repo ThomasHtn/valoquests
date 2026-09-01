@@ -16,33 +16,85 @@
 </app-page-header>
 
 <div class="page-body">
-  <!-- The week the board is showing, and the way to step off it. Sized to its own content and
-       pinned to the leading edge, top-left of the page, rather than spanning the row: it is a
-       control that scopes the board below it, not a banner. -->
-  <div class="flex">
-    <div class="flex items-center gap-1">
-      <button
-        (click)="stepWeek(1)"
-        [attr.aria-label]="'overview.weeklyRanking.week.previous' | translate"
-        [disabled]="!hasOlderWeek()"
-        class="focus-ring-inset flex size-10 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
-        type="button"
-      >
-        <svg class="size-4" lucideChevronLeft></svg>
-      </button>
-
-      <span class="label-caption px-2 text-text-primary tabular-nums">{{ weekRangeLabel() }}</span>
-
-      <button
-        (click)="stepWeek(-1)"
-        [attr.aria-label]="'overview.weeklyRanking.week.next' | translate"
-        [disabled]="!hasNewerWeek()"
-        class="focus-ring-inset flex size-10 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
-        type="button"
-      >
-        <svg class="size-4" lucideChevronRight></svg>
-      </button>
+  <!-- The scale the board is ranking, and what that scale is currently pointing at. Both sized to
+       their own content and pinned to the leading edge rather than spanning the row: they are
+       controls that scope the board below them, not a banner.
+       The same segmented control the profile's mode filter uses — one shape for "narrow what is
+       below", at every screen it appears on. -->
+  <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
+    <div
+      [attr.aria-label]="'overview.weeklyRanking.scope.label' | translate"
+      class="flex shrink-0 items-center bg-text-primary/4 px-3 py-1.5"
+      role="group"
+    >
+      @for (option of scopes; track option) {
+        <button
+          (click)="selectScope(option)"
+          [attr.aria-pressed]="scope() === option"
+          [class]="
+            scope() === option
+              ? 'bg-brand-500/15 text-brand-500'
+              : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
+          "
+          class="focus-ring-inset min-h-10 cursor-pointer self-stretch px-3 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
+          type="button"
+        >
+          {{ 'overview.weeklyRanking.scope.' + option | translate }}
+        </button>
+      }
     </div>
+
+    <!-- What the scope is pointing at. Only the week can be stepped through: the day board is
+         tonight, and the run is the one in progress. -->
+    @if (isWeekScope()) {
+      <div class="flex items-center gap-1">
+        <button
+          (click)="stepWeek(1)"
+          [attr.aria-label]="'overview.weeklyRanking.week.previous' | translate"
+          [disabled]="!hasOlderWeek()"
+          class="focus-ring-inset flex size-10 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
+          type="button"
+        >
+          <svg class="size-4" lucideChevronLeft></svg>
+        </button>
+
+        <span class="label-caption px-2 text-text-primary tabular-nums">
+          {{ weekRangeLabel() }}
+        </span>
+
+        <button
+          (click)="stepWeek(-1)"
+          [attr.aria-label]="'overview.weeklyRanking.week.next' | translate"
+          [disabled]="!hasNewerWeek()"
+          class="focus-ring-inset flex size-10 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-text-primary/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-25"
+          type="button"
+        >
+          <svg class="size-4" lucideChevronRight></svg>
+        </button>
+      </div>
+    } @else if (isDayScope()) {
+      <p class="label-caption text-text-muted">
+        <span class="text-text-primary tabular-nums">{{ dayLabel() }}</span>
+        @if (dayTurnout(); as turnout) {
+          <span class="px-2">·</span>
+          <span class="tabular-nums">
+            {{
+              'overview.weeklyRanking.scope.dayTurnout'
+                | translate: { played: turnout.played, roster: turnout.roster }
+            }}
+          </span>
+        }
+      </p>
+    } @else if (campaignProgress(); as progress) {
+      <p class="label-caption text-text-muted">
+        <span class="text-text-primary tabular-nums">
+          {{
+            'overview.weeklyRanking.scope.campaignProgress'
+              | translate: { index: progress.index, count: progress.count }
+          }}
+        </span>
+      </p>
+    }
   </div>
 
   <!-- The podium, moved here from the accueil (see design-review.md §3.3): this page is its real
@@ -57,7 +109,9 @@
        damage at all, sitting right above the board's own "the squad hasn't played yet". The first
        Monday of every week is also the moment a newcomer meets this page, and it was the moment it
        stated something untrue. The board below says the true thing on its own. -->
-  @if (!weekHasNoActivity()) {
+  <!-- Week scope only. A day is too short a stretch to crown anybody on, and a run is crowned when
+       it ends, not while it is being played. -->
+  @if (isWeekScope() && !weekHasNoActivity()) {
     <div class="-mt-4 mb-4 w-full">
       <app-podium
         [plinthBase]="'clamp(4rem, 6vh, 5rem)'"
@@ -74,7 +128,7 @@
        genuinely shorter than the live one, and without this the missing challenge columns read as
        a bug. Paired with the way back to that week's own node — the campaign's boss drawer already
        links here with the same `?week=`, so the two screens close the loop on each other. -->
-  @if (!isLiveWeek()) {
+  @if (isWeekScope() && !isLiveWeek()) {
     <p
       class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 border-l-2 border-l-text-primary/25 row px-4 py-2.5 text-sm text-text-secondary"
     >
@@ -126,15 +180,7 @@
        labels nothing: the rows are a list of links, not table cells, so each value carries its own
        `sr-only` caption instead. -->
     @if (isWide()) {
-      <div
-        aria-hidden="true"
-        [class]="
-          isLiveWeek()
-            ? 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_6rem_repeat(5,minmax(3.25rem,0.45fr))]'
-            : 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_2rem_repeat(2,minmax(5.5rem,0.5fr))]'
-        "
-        class="-mb-3.5 grid items-end gap-x-3 px-5"
-      >
+      <div aria-hidden="true" [class]="gridClass()" class="-mb-3.5 grid items-end gap-x-3 px-5">
         <span></span>
         <!-- Every heading carries the rule behind its figure, on the same hover the challenge
              columns beside them already answer to: what a number is worked out from is the one
@@ -148,36 +194,53 @@
             {{ 'overview.weeklyRanking.columns.player' | translate }}
           </span>
         </span>
+        <!-- The damage column is named for the stretch it covers: on the day board the figure is
+             tonight's alone, and calling it plain "dégâts" beside a gap with yesterday would read
+             as a running total. -->
         <span class="text-right">
           <span
-            [appTooltip]="'overview.weeklyRanking.columnHelp.damage' | translate"
+            [appTooltip]="
+              (isDayScope()
+                ? 'overview.weeklyRanking.columnHelp.dailyDamage'
+                : 'overview.weeklyRanking.columnHelp.damage'
+              ) | translate
+            "
             appTooltipPosition="above"
             class="label-caption cursor-help text-text-muted"
           >
-            {{ 'overview.weeklyRanking.columns.damage' | translate }}
+            {{
+              (isDayScope()
+                ? 'overview.weeklyRanking.columns.dailyDamage'
+                : 'overview.weeklyRanking.columns.damage'
+              ) | translate
+            }}
           </span>
         </span>
-        <span class="ml-3 text-right">
-          <span
-            [appTooltip]="'overview.weeklyRanking.columnHelp.bonusDamage' | translate"
-            appTooltipPosition="above"
-            class="label-caption cursor-help text-text-muted"
-          >
-            {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
-          </span>
-        </span>
-        @if (isLiveWeek()) {
-          <span class="text-right">
+        @if (showBonusColumn()) {
+          <span class="ml-3 text-right">
             <span
-              [appTooltip]="'overview.weeklyRanking.columnHelp.materials' | translate"
+              [appTooltip]="'overview.weeklyRanking.columnHelp.bonusDamage' | translate"
               appTooltipPosition="above"
               class="label-caption cursor-help text-text-muted"
             >
-              {{ 'overview.weeklyRanking.columns.materials' | translate }}
+              {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
             </span>
           </span>
-        } @else {
-          <span></span>
+        }
+        @if (showMaterialsSlot()) {
+          @if (isLiveWeek()) {
+            <span class="text-right">
+              <span
+                [appTooltip]="'overview.weeklyRanking.columnHelp.materials' | translate"
+                appTooltipPosition="above"
+                class="label-caption cursor-help text-text-muted"
+              >
+                {{ 'overview.weeklyRanking.columns.materials' | translate }}
+              </span>
+            </span>
+          } @else {
+            <span></span>
+          }
         }
         <!-- A column is identified by its tier badge and its target, not by the challenge's name: at
          this width a name would either wrap to four lines or be truncated past recognition. The
@@ -208,8 +271,8 @@
           </span>
         }
 
-        <!-- What a closed week has instead of the five columns above. -->
-        @if (!isLiveWeek()) {
+        <!-- What a closed week and a whole run have instead of the five columns above. -->
+        @if (showTotalsColumns()) {
           <span class="text-center">
             <span
               [appTooltip]="'overview.weeklyRanking.columnHelp.challengesCleared' | translate"
@@ -226,6 +289,31 @@
               class="label-caption cursor-help text-text-muted"
             >
               {{ 'overview.weeklyRanking.columns.activeDays' | translate }}
+            </span>
+          </span>
+        }
+
+        <!-- The one column each of the two outer scopes adds: the day's gap with yesterday, and the
+             run's count of fights joined. -->
+        @if (isDayScope()) {
+          <span class="text-right">
+            <span
+              [appTooltip]="'overview.weeklyRanking.columnHelp.damageVariation' | translate"
+              appTooltipPosition="above"
+              class="label-caption cursor-help text-text-muted"
+            >
+              {{ 'overview.weeklyRanking.columns.damageVariation' | translate }}
+            </span>
+          </span>
+        }
+        @if (isCampaignScope()) {
+          <span class="text-center">
+            <span
+              [appTooltip]="'overview.weeklyRanking.columnHelp.bossesJoined' | translate"
+              appTooltipPosition="above"
+              class="label-caption cursor-help text-text-muted"
+            >
+              {{ 'overview.weeklyRanking.columns.bossesJoined' | translate }}
             </span>
           </span>
         }
@@ -292,11 +380,7 @@
   <ng-template #wideRow let-row>
     <li>
       <a
-        [class]="
-          isLiveWeek()
-            ? 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_6rem_repeat(5,minmax(3.25rem,0.45fr))]'
-            : 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_2rem_repeat(2,minmax(5.5rem,0.5fr))]'
-        "
+        [class]="gridClass()"
         [routerLink]="['/players', row.playerId]"
         class="notch-tr focus-ring-inset grid items-center gap-x-3 border-l-2 border-edge row px-4 py-4.5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 xl:px-5"
       >
@@ -326,7 +410,14 @@
         </span>
 
         <span class="text-right">
-          <span class="sr-only">{{ 'overview.weeklyRanking.columns.damage' | translate }}</span>
+          <span class="sr-only">
+            {{
+              (isDayScope()
+                ? 'overview.weeklyRanking.columns.dailyDamage'
+                : 'overview.weeklyRanking.columns.damage'
+              ) | translate
+            }}
+          </span>
           @if (row.damageLabel) {
             <!-- Amber, the currency color damage wears on every other screen — the podium strip,
                  the mini-ranking and `/week`'s challenge prices. Unconditional: the champion is
@@ -340,38 +431,42 @@
           }
         </span>
 
-        <span class="ml-3 text-right">
-          @if (row.bonusLabel) {
-            <span class="sr-only">
-              {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
-            </span>
-            <span class="font-display text-lg leading-none font-bold text-brand-500 tabular-nums">
-              {{ row.bonusLabel }}
-            </span>
-          } @else {
-            <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
-          }
-        </span>
-
-        @if (isLiveWeek()) {
-          <span class="text-right">
-            @if (row.materialsLabel) {
+        @if (showBonusColumn()) {
+          <span class="ml-3 text-right">
+            @if (row.bonusLabel) {
               <span class="sr-only">
-                {{ 'overview.weeklyRanking.columns.materials' | translate }}
+                {{ 'overview.weeklyRanking.columns.bonusDamage' | translate }}
               </span>
-              <!-- Cyan, like the materials figure on every other screen: a colony resource, not
-                   damage, and the two must not share the amber. -->
-              <span
-                class="font-display text-lg leading-none font-bold text-accent-cyan tabular-nums"
-              >
-                {{ row.materialsLabel }}
+              <span class="font-display text-lg leading-none font-bold text-brand-500 tabular-nums">
+                {{ row.bonusLabel }}
               </span>
             } @else {
               <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
             }
           </span>
-        } @else {
-          <span></span>
+        }
+
+        @if (showMaterialsSlot()) {
+          @if (isLiveWeek()) {
+            <span class="text-right">
+              @if (row.materialsLabel) {
+                <span class="sr-only">
+                  {{ 'overview.weeklyRanking.columns.materials' | translate }}
+                </span>
+                <!-- Cyan, like the materials figure on every other screen: a colony resource, not
+                     damage, and the two must not share the amber. -->
+                <span
+                  class="font-display text-lg leading-none font-bold text-accent-cyan tabular-nums"
+                >
+                  {{ row.materialsLabel }}
+                </span>
+              } @else {
+                <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
+              }
+            </span>
+          } @else {
+            <span></span>
+          }
         }
 
         @for (cell of row.cells; track cell.challengeId) {
@@ -401,6 +496,26 @@
               class="font-display text-lg leading-none font-bold text-text-secondary tabular-nums"
             >
               {{ row.activeDaysLabel }}
+            </span>
+          </span>
+        }
+
+        @if (isDayScope()) {
+          <span class="text-right">
+            <ng-container
+              [ngTemplateOutlet]="damageVariation"
+              [ngTemplateOutletContext]="{ $implicit: row.damageVariation }"
+            />
+          </span>
+        }
+
+        @if (isCampaignScope()) {
+          <span class="text-center">
+            <span class="sr-only">
+              {{ 'overview.weeklyRanking.columns.bossesJoined' | translate }}
+            </span>
+            <span class="font-display text-lg leading-none font-bold text-accent-red tabular-nums">
+              {{ row.bossCountLabel }}
             </span>
           </span>
         }
@@ -465,7 +580,7 @@
                 {{ row.bonusLabel }}
               </span>
             }
-            @if (isLiveWeek() && row.materialsLabel) {
+            @if (isWeekScope() && isLiveWeek() && row.materialsLabel) {
               <span class="sr-only">
                 {{ 'overview.weeklyRanking.columns.materials' | translate }}
               </span>
@@ -473,14 +588,25 @@
                 {{ row.materialsLabel }}
               </span>
             }
+            <!-- The card's own place for the day's gap: right under the figure it is a gap in,
+                 rather than as a column the card does not have. -->
+            @if (isDayScope()) {
+              <ng-container
+                [ngTemplateOutlet]="damageVariation"
+                [ngTemplateOutletContext]="{ $implicit: row.damageVariation }"
+              />
+            }
           </span>
         </span>
       </div>
 
       @if (row.completedLabel !== null) {
-        <!-- A closed week's card: the two figures the backend froze, in place of the
-             challenge list it did not. -->
-        <dl class="grid grid-cols-2 gap-3 border-t border-edge pt-4 text-center sm:max-w-xs">
+        <!-- A closed week's card, and a run's: the figures that survive the scale, in place of the
+             challenge list neither can show. -->
+        <dl
+          [class]="row.bossCountLabel === null ? 'grid-cols-2' : 'grid-cols-3'"
+          class="grid gap-3 border-t border-edge pt-4 text-center sm:max-w-xs"
+        >
           <div>
             <dt class="label-caption text-text-muted">
               {{ 'overview.weeklyRanking.columns.challengesCleared' | translate }}
@@ -501,8 +627,20 @@
               {{ row.activeDaysLabel }}
             </dd>
           </div>
+          @if (row.bossCountLabel !== null) {
+            <div>
+              <dt class="label-caption text-text-muted">
+                {{ 'overview.weeklyRanking.columns.bossesJoined' | translate }}
+              </dt>
+              <dd
+                class="font-display mt-1.5 text-lg leading-none font-bold text-accent-red tabular-nums"
+              >
+                {{ row.bossCountLabel }}
+              </dd>
+            </div>
+          }
         </dl>
-      } @else {
+      } @else if (row.cells.length > 0) {
         <dl class="flex flex-col gap-2.5 border-t border-edge pt-4">
           @for (cell of row.cells; track cell.challengeId) {
             <div class="flex items-center gap-3">
@@ -570,6 +708,38 @@
      every width. The glyph and the count are hidden from assistive technology and restated as a
      sentence; an unchanged position renders nothing at all, visually or for assistive technology,
      since the position itself is announced right beside it. -->
+  <!-- The day's gap with yesterday, shared by both layouts on the same pattern as the position
+       arrows below. Two figures the sign is the whole point of, so they wear the same green and red
+       the position arrows do — but with a signed number rather than a chevron, because this one
+       measures damage rather than places and the two must not be mistaken for each other.
+       Zero renders a dash, not "+0": an identical evening twice over is a real answer, and printing
+       a signed zero would read as a rounding artefact. `null` renders nothing at all — that is a
+       player with no day rather than a day at zero. -->
+  <ng-template #damageVariation let-variation>
+    @if (variation === null) {
+      <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
+    } @else if (variation > 0) {
+      <span class="font-display text-lg leading-none font-bold text-accent-green tabular-nums">
+        <span aria-hidden="true">+{{ variation }}</span>
+        <span class="sr-only">
+          {{ 'overview.weeklyRanking.damageVariation.up' | translate: { count: variation } }}
+        </span>
+      </span>
+    } @else if (variation < 0) {
+      <span class="font-display text-lg leading-none font-bold text-accent-red tabular-nums">
+        <span aria-hidden="true">−{{ -variation }}</span>
+        <span class="sr-only">
+          {{ 'overview.weeklyRanking.damageVariation.down' | translate: { count: -variation } }}
+        </span>
+      </span>
+    } @else {
+      <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
+      <span class="sr-only">
+        {{ 'overview.weeklyRanking.damageVariation.flat' | translate }}
+      </span>
+    }
+  </ng-template>
+
   <ng-template #positionVariation let-variation>
     @if (variation > 0) {
       <span class="flex shrink-0 items-center font-mono text-2xs font-bold text-accent-green">

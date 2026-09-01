@@ -17,6 +17,7 @@ import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
+import io.github.thomashtn.valoquests.scoring.service.DailyMatchDamageReader;
 import io.github.thomashtn.valoquests.scoring.service.MatchDamageCalculator;
 import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
@@ -25,6 +26,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -82,12 +84,12 @@ class ColonyActivityReaderTest {
         // the reader asking for one is the whole of how a deactivated player leaves the colony.
         lenient().when(playerMatchRepository.findAllForPeriod(any(), any(), any()))
             .thenAnswer(invocation -> {
-                PlayerStatus status = invocation.getArgument(0);
+                Collection<PlayerStatus> statuses = invocation.getArgument(0);
                 Instant from = invocation.getArgument(1);
                 Instant to = invocation.getArgument(2);
 
                 return storedMatches.stream()
-                    .filter(match -> match.getPlayer().getStatus() == status)
+                    .filter(match -> statuses.contains(match.getPlayer().getStatus()))
                     .filter(match -> !match.getMatch().getStartedAt().isBefore(from)
                         && match.getMatch().getStartedAt().isBefore(to))
                     .sorted(Comparator
@@ -97,12 +99,14 @@ class ColonyActivityReaderTest {
             });
 
         reader = new ColonyActivityReader(
-            playerMatchRepository,
-            damageResolver,
-            damageCalculator,
-            new DefaultScoringRuleset(),
-            new DefaultColonyRuleset(new DefaultScoringRuleset()),
-            weekCalendar
+            new DailyMatchDamageReader(
+                playerMatchRepository,
+                damageResolver,
+                damageCalculator,
+                new DefaultScoringRuleset(),
+                weekCalendar
+            ),
+            new DefaultColonyRuleset(new DefaultScoringRuleset())
         );
     }
 

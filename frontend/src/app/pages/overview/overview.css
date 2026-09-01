@@ -11,91 +11,246 @@
  */
 
 /*
- * The page breathes wider than `page-body`'s own rhythm: with the panels gone, the space between two
- * blocks is the only thing left separating them, so it has to carry what a border used to.
+ * The page is two boxes, not a column of blocks: the scene holding the top of the scroll container,
+ * and one opaque sheet travelling over it. `page-body`'s own rhythm is therefore switched off here —
+ * its gap would open a strip of sky between the scene and the sheet, its top padding would hold the
+ * scene off the context bar it is supposed to start against, and its bottom padding is a strip of
+ * page background under the sheet, which shows as a band of the wrong colour at the end of the
+ * scroll. The sheet carries that closing space itself instead, inside its own surface.
  */
 .overview-body {
-  gap: 2.5rem;
+  gap: 0;
+  padding-block: 0;
+}
+
+/*
+ * `page-body` puts the gutter and the width cap on each block it holds. Here it holds two full-bleed
+ * boxes instead, so the rule is cancelled and re-applied inside the sheet, on the blocks that
+ * actually want it.
+ */
+.overview-body > * {
+  max-width: none;
+  padding-inline: 0;
+}
+
+/*
+ * The scene, holding the top of the scroll container.
+ *
+ * 72% of the page-body rather than all of it: what is left is the top of the first section, which is
+ * what says the page does not stop here. A full-height opening would be a doorway, and this page
+ * already has one at `/`.
+ *
+ * `flex: none` because `page-body` is a flex column — without it the scene is the tallest child and
+ * therefore the first one the column compresses.
+ */
+.overview-scene {
+  position: sticky;
+  top: 0;
+  flex: none;
+  height: 72%;
+  min-height: 15rem;
+}
+
+/*
+ * The sheet: everything that is read *against* the colony, on one surface so the sky never shows
+ * between two sections. Opaque and above the scene, which is what lets it cover it on the way up.
+ *
+ * The bottom padding is `page-body`'s own closing space, taken over so it falls inside the surface
+ * rather than under it. `min-height: 100%` is the other half of the same job: on a short page the
+ * sheet would end mid-screen and the scene, pinned behind it, would show under its last section.
+ * A full container height guarantees the sheet reaches the bottom of the scroll whatever it holds.
+ */
+.overview-sheet {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+  min-height: 100%;
+  padding-block: 3.5rem;
+  background: #0f1c26;
+}
+
+/* The gutter and the cap `page-body` normally puts on a page's blocks, given back to the ones that
+   are blocks rather than surfaces. */
+.overview-sheet > * {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (width >= 40rem) {
+  .overview-sheet > * {
+    padding-inline: 1.5rem;
+  }
+}
+
+/*
+ * A phone gives the scene a little less. The share is the same idea — open on the colony, leave the
+ * top of the next section showing — but a portrait screen is tall enough that 72% of it is mostly
+ * the sky over a camp, and the first section has further to climb before it is read.
+ */
+@media (width < 40rem) {
+  .overview-scene {
+    height: 62%;
+  }
+
+  .overview-sheet {
+    gap: 2.75rem;
+    padding-block: 2.5rem;
+  }
+}
+
+/*
+ * The one thing that opens each section, sized for a page whose sections are now a screen apart. At
+ * `text-sm` a title was smaller than the prose under it, which is what made the page read as a heap
+ * of blocks rather than as a sequence of sections. Scoped to this page: `/week` is laid out on the
+ * same rule and is a denser page that does not want the same voice.
+ *
+ * The label tracking goes with the size. Two hundredths of an em is a device for small caps at 14px;
+ * at 32 it opens the word up until it stops being one.
+ */
+.overview-sheet .section-rule-title {
+  font-size: clamp(1.5rem, 1.05rem + 1.9vw, 2.125rem);
+  letter-spacing: 0.01em;
+  color: #ece8e1;
+}
+
+/*
+ * The two sections that share a row get a step down. A title is sized against the width it opens,
+ * and at 34px "Classement de la semaine" takes the whole half-column, sending the hairline and the
+ * way out onto a second line — a rule that wraps stops reading as a rule.
+ */
+.overview-pair .section-rule-title {
+  font-size: clamp(1.125rem, 0.95rem + 0.75vw, 1.375rem);
+}
+
+/*
+ * And the hairline gives way before the way out does. It is laid out `grow basis-12`, so it claims
+ * 3rem before anything else may have them — at half a column that reservation is exactly what sends
+ * the link onto a second line. At `basis: 0` it takes what is left over and nothing more, which is
+ * all a rule between a title and a link is for.
+ */
+.overview-pair .section-rule-line {
+  flex-basis: 0;
 }
 
 /*
  * The town block: a scene bleeding to all four edges. No inner padding around it — a sky with a 28px
  * gutter around it is a picture of a sky, not a sky.
  */
+/* The scene's own sky reaches every corner now (see `town-silhouette.html`), so this is only what
+   shows for the moment the deferred chunk is still on its way. */
 .colony-town {
+  /* The scene's own gutter, shared by the two things laid on it. */
+  --gutter: clamp(1rem, 3.4vw, 2.75rem);
+
   position: relative;
+  height: 100%;
   overflow: hidden;
-  background: #050b12;
+  background: #040a11;
 }
 
-.colony-town-scene {
-  display: block;
-}
+/* The scene's own stylesheet sizes it off this class (`:host(.colony-town-scene)`), which is the
+   only place that can reach inside the component. */
 
-/* The scene's own box, held open while its chunk arrives. Same clamp as `.town-scene`. */
+/* The grain over the sky belongs to the scene and lives on its own host — see
+   `town-silhouette.css`. */
+
+/* The scene's own box, held open while its chunk arrives. */
 .colony-town-wait {
-  height: clamp(14rem, 24vw, 19rem);
+  height: 100%;
 }
 
 /*
- * The night falls off at the edges. The frontage is centred on what the colony has actually built,
- * so on a wide panel it sits in the middle with the rest of the city running out either side; in
- * daylight that read as distance, at night it read as two dead corners. This puts them back into the
- * dark, which is where a night scene is allowed to end. Sits under the plate, which carries `z-1`.
+ * The line to the next step, on the ground the scene ends on.
+ *
+ * A distance is read as a length, not as a figure, which is the whole reason it is a rail and not a
+ * fourth number in the readout. It closes the scene the way the ladder closes the page: what is left
+ * of the sky above says how much the town has yet to build, this says how far off the next name is.
  */
-.colony-town::after {
+.colony-town-route {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 13px var(--gutter);
+  border-top: 1px solid rgb(236 232 225 / 12%);
+  background: rgb(4 10 17 / 62%);
+}
+
+.colony-town-route-track {
+  flex: 1;
+  min-width: 60px;
+  height: 4px;
+  background: rgb(236 232 225 / 12%);
+}
+
+.colony-town-route-track > span {
+  display: block;
+  height: 100%;
+  background: #d9954a;
+}
+
+/* The cost and its hammer are laid out with utilities in the template — one flex row, nothing this
+   file has to own. */
+
+/*
+ * The scene used to carry a heavy wash down both edges. It was there to bury two dead corners on a
+ * panel the frontage did not fill, and on a panel holding a screen it did the opposite of its job:
+ * two shadows with no source in the drawing, darkening a sky and a ground that now run the whole
+ * width. The sky's own gradient and the dark the frame closes on are what end the scene.
+ */
+
+/*
+ * The readout, standing on the scene.
+ *
+ * It used to sit on a dark plate, which was the right answer while the scene was a 19rem band with
+ * an empty sky over it. At full height the frontage grows into where the plate stood, and a
+ * hard-edged box laid over a drawing whose whole point is that it has no edge is the one thing this
+ * scene cannot carry. What replaces it is a wash: soft enough that the skyline still reads through
+ * it, dark enough to hold a 116px figure over lit windows at the last steps of the ladder.
+ *
+ * Off the bottom rather than on it: the frontage's own ground line is the busiest part of the
+ * drawing, and the figure sits above it in the sky the ladder has not closed yet.
+ */
+.colony-town-plate {
+  position: absolute;
+  bottom: 20%;
+  left: 0;
+  z-index: 2;
+  padding: 0 var(--gutter);
+}
+
+.colony-town-plate::before {
+  --wash: 62% 120% at 26%;
+
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgb(3 10 16 / 88%) 0%,
-    rgb(3 10 16 / 34%) 11%,
-    transparent 30%,
-    transparent 70%,
-    rgb(3 10 16 / 34%) 89%,
-    rgb(3 10 16 / 88%) 100%
+  inset: -1.75rem -14% -2rem -4%;
+  z-index: -1;
+  background: radial-gradient(
+    var(--wash) 50%,
+    rgb(5 11 18 / 76%),
+    rgb(5 11 18 / 34%) 56%,
+    transparent 78%
   );
   pointer-events: none;
 }
 
-/* No dead space to hide on a phone: the panel is already cropped to the frontage. */
-@media (width < 40rem) {
-  .colony-town::after {
-    display: none;
-  }
-}
-
-/*
- * The population plate, laid on the quay. It sits *on* the scene rather than under it: the readout
- * needs a plate dark enough to detach from whatever is behind it, not a scrim heavy enough to
- * swallow the lower third of the frontage, which is what a full-width band under the drawing was.
- *
- * Held apart by its own darkness, with the amber edge it opens on. It carried a full gold outline
- * too, and the scene carried one as well — two frames stacked a few pixels apart, on a drawing whose
- * whole point is that it has no edge. Against a night sky the value difference is enough to read a
- * plate; the left edge is not a frame, it is the mark that opens a block everywhere in this
- * interface.
- */
-.colony-town-plate {
-  --notch: 0.75rem;
-
-  position: absolute;
-  bottom: 18px;
-  left: 18px;
-  z-index: 1;
-  padding: 11px 18px 13px;
-  background: rgb(6 14 20 / 82%);
-  border-left: 2px solid #d9954a;
-}
-
 .colony-town-tier {
-  margin: 0 0 4px;
+  margin: 0 0 12px;
   font-weight: 500;
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   font-family: var(--font-mono);
   line-height: 1;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: #e8ab6b;
 }
@@ -110,12 +265,14 @@
 
 /*
  * The run's own score, and the page's one loud number. Sized here rather than with the `text-figure`
- * token: that one is scaled for a figure standing alone on a page, and at 88px it does not fit a
- * plate laid on the scene.
+ * token: that one is scaled for a figure standing alone on a page, and this one stands on a drawing.
+ *
+ * It grew with the scene. On a 19rem band it shared the frame with a sky and a skyline and had to
+ * stay a caption on them; holding the top of the page on its own, it is the thing being read.
  */
 .colony-town-count {
   font-weight: 700;
-  font-size: clamp(2.375rem, 5.4vw, 3.375rem);
+  font-size: clamp(3.25rem, 1.9rem + 5.6vw, 7.25rem);
   line-height: 0.88;
   letter-spacing: -0.02em;
   color: #ece8e1;
@@ -129,7 +286,9 @@
  */
 .colony-town-unit {
   font-weight: 500;
-  font-size: 0.9375rem;
+  font-size: clamp(1rem, 0.85rem + 0.6vw, 1.4375rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: #a4a7a6;
 }
 
@@ -156,101 +315,22 @@
 }
 
 /*
- * On a phone the scene is short and the plate would cover the base of the buildings, so it moves up
- * into the sky, which is the one part of the drawing that has nothing in it at any step.
+ * On a phone the frontage fills more of a narrower frame, so the readout climbs into the sky — the
+ * one part of the drawing that has nothing in it at any step — and the wash follows it up.
  */
 @media (width < 40rem) {
   .colony-town-plate {
-    top: 10px;
-    right: 10px;
+    top: 8%;
+    right: 0;
     bottom: auto;
-    left: 10px;
-    padding: 10px 14px 11px;
+  }
+
+  .colony-town-plate::before {
+    --wash: 92% 130% at 42%;
+
+    inset: -1.25rem -6% -1.5rem;
   }
 }
 
 /* The section rule now lives in `styles.css`: `/week` is laid out on it too, and one page's
    component stylesheet is the wrong owner for the device every page names its blocks with. */
-
-/*
- * The economy: three flat cells, each carrying its resource's colour on the edge it stands on and
- * nowhere else. No frame, no shadow, no radius — the same furniture as the profile's match rows.
- */
-.eco {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 5px;
-}
-
-.eco-cell {
-  min-width: 0;
-  padding: 12px 13px 11px;
-  background: rgb(236 232 225 / 4%);
-  border-bottom: 3px solid #33495b;
-}
-
-.eco-cell--food {
-  border-bottom-color: #e8ab6b;
-}
-
-.eco-cell--mat {
-  border-bottom-color: #2dd4bf;
-}
-
-.eco-cell--mor {
-  border-bottom-color: #8c6fdc;
-}
-
-.eco-l {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #868b8d;
-}
-
-.eco-l b {
-  overflow: hidden;
-  font-weight: inherit;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* Three cells on a phone: the icon costs 18px, so the caption gives back its tracking rather than
-   truncating to "NOURRIT…". */
-@media (width < 35rem) {
-  .eco-l {
-    gap: 5px;
-    font-size: 0.5625rem;
-    letter-spacing: 0.08em;
-  }
-}
-
-.eco-v {
-  display: block;
-  margin-top: 8px;
-  font-weight: 700;
-  font-size: 1.4375rem;
-  font-family: var(--font-display);
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.eco-s {
-  display: block;
-  margin-top: 7px;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  line-height: 1.35;
-  color: #868b8d;
-  font-variant-numeric: tabular-nums;
-}
-
-.eco-chart {
-  padding: 14px 14px 6px;
-  background: rgb(236 232 225 / 4%);
-}

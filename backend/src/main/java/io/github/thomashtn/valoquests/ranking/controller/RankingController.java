@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.ranking.controller;
 
 import io.github.thomashtn.valoquests.ranking.dto.CurrentRankingResponse;
+import io.github.thomashtn.valoquests.ranking.dto.DailyRankingResponse;
 import io.github.thomashtn.valoquests.ranking.dto.RankingHistoryWeekResponse;
 import io.github.thomashtn.valoquests.ranking.service.RankingQueryService;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
@@ -8,6 +9,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +51,29 @@ public class RankingController {
     @ApiResponse(responseCode = "200", description = "Current ranking returned successfully.")
     public CurrentRankingResponse getCurrentRanking() {
         return rankingQueryService.findCurrent();
+    }
+
+    /**
+     * @return one day's ranking, and how it compares to the day before
+     *
+     * @param day day to rank, or absent for today
+     */
+    @GetMapping("/daily")
+    @Operation(
+        summary = "Get one day's ranking",
+        description = """
+            Returns every rostered player's match damage for one day, the same figure for the day
+            before, and the variation between the two. Only match damage exists at this scale: the
+            challenge damage and the bonuses are settled on the week, not on the day.
+            """
+    )
+    @ApiResponse(responseCode = "200", description = "Daily ranking returned successfully.")
+    public DailyRankingResponse getDailyRanking(
+        @Parameter(description = "Day to rank, as YYYY-MM-DD. Defaults to today.", example = "2026-09-01")
+        @RequestParam(required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate day
+    ) {
+        return rankingQueryService.findDaily(day);
     }
 
     /**

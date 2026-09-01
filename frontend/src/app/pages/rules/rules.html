@@ -29,8 +29,11 @@
      block inside `page-body`, so the rail stands the full height of the content area and scrolls
      independently of the prose it indexes — the arrangement a long reference document wants, and
      the one every documentation site settles on. `min-h-0` is what lets the two children scroll:
-     without it a flex child sized by its content refuses to shrink below it. -->
-<div class="flex min-h-0 flex-1">
+     without it a flex child sized by its content refuses to shrink below it.
+
+     Below `lg` the same two children stack instead: the rail renders as a band across the top of
+     the column (see `rule-contents`), and the rulebook keeps the full width underneath it. -->
+<div class="flex min-h-0 flex-1 flex-col lg:flex-row">
   <app-rule-contents (jump)="scrollTo($event)" [activeId]="activeAnchor()" />
 
   <div class="page-body min-w-0 flex-1">

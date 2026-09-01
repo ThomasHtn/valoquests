@@ -57,10 +57,31 @@ class FlywayMigrationIntegrationTest extends PostgreSqlIntegrationTest {
         );
 
         assertThat(failedMigrations).isZero();
-        // 62 seeded by V3 once V14 removed the unreachable modes, plus the 7 progression challenges
-        // V28 added. Six of the 62 are disabled by V28 rather than deleted, so they still count here.
-        assertThat(challenges).isEqualTo(69);
+        // 62 seeded by V3 once V14 removed the unreachable modes, plus the 14 weekly skill challenges
+        // V39 added. V28's 7 progression challenges are gone again, deleted by V38. Six of the 62 are
+        // disabled by V28 rather than deleted, so they still count here.
+        assertThat(challenges).isEqualTo(76);
         assertThat(players).isGreaterThanOrEqualTo(6);
+    }
+
+    /**
+     * Verifies that no challenge survives measuring a week against the weeks before it.
+     *
+     * <p>Such a challenge is decided partly before its own week opens, and rewards the absence that
+     * makes a player's baseline easy to beat. V38 deleted every one of them.
+     */
+    @Test
+    void shouldRemoveChallengesSpanningSeveralWeeks() {
+        Integer multiWeekChallenges = jdbcTemplate.queryForObject(
+            """
+                SELECT COUNT(*)
+                FROM challenge
+                WHERE progress_mode = 'BASELINE'
+                """,
+            Integer.class
+        );
+
+        assertThat(multiWeekChallenges).isZero();
     }
 
     /**

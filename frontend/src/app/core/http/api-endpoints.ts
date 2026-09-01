@@ -75,6 +75,11 @@ export const API_ENDPOINTS = {
   rankingHistory: `${environment.apiBaseUrl}/rankings/history`,
 
   /**
+   * `GET` one day's ranking, and how it compares to the day before. Defaults to today.
+   */
+  dailyRanking: `${environment.apiBaseUrl}/rankings/daily`,
+
+  /**
    * `GET` the active week's boss confrontation.
    */
   currentBoss: `${environment.apiBaseUrl}/boss/current`,

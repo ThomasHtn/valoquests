@@ -4,7 +4,7 @@ import { Service } from '@angular/core';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
 import { PageResponse } from '@core/http/page-response.model';
-import { CurrentRanking, RankingHistoryWeek } from './ranking.model';
+import { CurrentRanking, DailyRanking, RankingHistoryWeek } from './ranking.model';
 
 /**
  * Upper bound of finalized weeks fetched in one call to {@link RankingApi.history} — the backend's
@@ -52,4 +52,13 @@ export class RankingApi {
     url: API_ENDPOINTS.rankingHistory,
     params: { page: 0, size: RANKING_HISTORY_MAX_WEEKS },
   }));
+
+  /**
+   * Today's ranking, and how it compares to yesterday.
+   *
+   * Asked for without a `day` parameter on purpose: the day the board means is the backend's own,
+   * resolved against the rollover timezone `WeekCalendar` holds. Sending a date computed from the
+   * visitor's clock would put a reader an hour ahead of that zone on tomorrow's empty board.
+   */
+  public readonly daily = httpResource<DailyRanking>(() => API_ENDPOINTS.dailyRanking);
 }

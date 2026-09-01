@@ -37,46 +37,53 @@
     [isLoading]="isLoading()"
     [loadingText]="'campaign.loading' | translate"
   >
-    <!-- Skeleton mirroring the loaded page, so data arriving does not shift it. -->
+    <!-- Skeleton mirroring the loaded page, so data arriving does not shift it — the frieze's own
+         placeholder bleeds to the edges like the frieze does. -->
     <div class="flex flex-col gap-10" skeleton>
       <div class="h-[34rem] bg-text-primary/4"></div>
-      <div class="grid gap-1.5 lg:grid-cols-[1.85fr_1fr]">
+      <div class="campaign-block grid gap-1.5 lg:grid-cols-[1.85fr_1fr]">
         <div class="h-64 bg-text-primary/4"></div>
         <div class="h-64 bg-text-primary/4"></div>
       </div>
-      <div class="h-28 bg-text-primary/4"></div>
+      <div class="campaign-block h-28 bg-text-primary/4"></div>
     </div>
 
     <!-- ── The ten weeks ─────────────────────────────────────────────────────────────────────── -->
-    <section aria-labelledby="campaign-weeks-title" class="flex flex-col gap-3">
-      <div class="section-rule">
-        <h2 class="section-rule-title" id="campaign-weeks-title">
-          {{ 'campaign.weeks.title' | translate }}
-        </h2>
-        <span aria-hidden="true" class="section-rule-line"></span>
-        <a [routerLink]="'/week'" class="section-rule-link focus-ring">
-          {{ 'campaign.weeks.link' | translate }}
-          <span aria-hidden="true">→</span>
-        </a>
-        <span aria-hidden="true" class="section-rule-diamond"></span>
-      </div>
-
+    <!-- The one section laid out as a horizon rather than as a block: the frieze runs edge to edge
+         and everything that reads *about* it keeps the page's own alignment (`.campaign-block`, see
+         `campaign.css`). -->
+    <!-- No rule over it: the frieze names itself, and a title bar between the context bar and a
+         horizon is the one thing standing in front of it. The name is kept for anyone who cannot see
+         the map. -->
+    <section [attr.aria-label]="'campaign.weeks.title' | translate" class="flex flex-col gap-3">
       <app-week-frieze
         (selected)="select($event)"
         [entries]="nodesWithBoss()"
         [selectedId]="selectedId()"
       />
 
-      <!-- The invitation stands only while nothing is unfolded: with a panel open under the frieze
-           it would sit between the map and its own answer, asking for what already happened. -->
-      @if (selectedId() === null) {
-        <p class="text-center font-mono text-xs text-text-muted">
-          {{ 'campaign.frieze.hint' | translate }}
-        </p>
-      }
+      <!-- The map's caption, and the one way out of this page to the week being fought. The way out
+           used to ride on the section's rule; with the rule gone it lands where the reader already
+           is, once they have read the map.
+
+           The invitation beside it stands only while nothing is unfolded: with a panel open under
+           the frieze it would sit between the map and its own answer, asking for what already
+           happened. The link stays either way. -->
+      <p
+        class="campaign-block flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-center font-mono text-xs text-text-muted"
+      >
+        @if (selectedId() === null) {
+          <span>{{ 'campaign.frieze.hint' | translate }}</span>
+        }
+        <a [routerLink]="'/week'" class="section-rule-link fz-out focus-ring">
+          {{ 'campaign.weeks.link' | translate }}
+          <span aria-hidden="true">→</span>
+        </a>
+      </p>
 
       @if (selectedNode(); as node) {
         <app-boss-detail
+          class="campaign-block"
           (closed)="closePanel()"
           (next)="step(1)"
           (previous)="step(-1)"
@@ -91,7 +98,7 @@
 
     <!-- ── Where the run stands ──────────────────────────────────────────────────────────────── -->
     @if (colony.colony()) {
-      <section aria-labelledby="campaign-stand-title" class="flex flex-col gap-3">
+      <section aria-labelledby="campaign-stand-title" class="campaign-block flex flex-col gap-3">
         <div class="section-rule">
           <h2 class="section-rule-title" id="campaign-stand-title">
             {{ 'campaign.stand.title' | translate }}
@@ -192,13 +199,14 @@
           }
         </div>
 
-        <!-- The ladder the whole economy climbs. Same strip as the accueil's, which answers "where
-             are we"; here it is read as the run's own road, with the thresholds still to pay. -->
+        <!-- The ladder the whole economy climbs, read as the run's own road with the thresholds
+             still to pay. This page is its only home: the accueil says which step the town is on,
+             in one line under the scene, and leaves the road itself here. -->
         <app-ladder-strip class="ladder-block" />
       </section>
 
       <!-- ── How the town grows ─────────────────────────────────────────────────────────────── -->
-      <section aria-labelledby="campaign-chain-title" class="flex flex-col gap-3">
+      <section aria-labelledby="campaign-chain-title" class="campaign-block flex flex-col gap-3">
         <div class="section-rule">
           <h2 class="section-rule-title" id="campaign-chain-title">
             {{ 'campaign.chain.title' | translate }}
@@ -339,7 +347,7 @@
       </section>
 
       <!-- ── The scoreboard ─────────────────────────────────────────────────────────────────── -->
-      <section aria-labelledby="campaign-board-title" class="flex flex-col gap-3">
+      <section aria-labelledby="campaign-board-title" class="campaign-block flex flex-col gap-3">
         <div class="section-rule">
           <h2 class="section-rule-title" id="campaign-board-title">
             {{ 'campaign.board.title' | translate }}

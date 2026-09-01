@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.player.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
@@ -48,6 +49,10 @@ public class PlayerCampaignContributionResolver {
      * @param playerMatchRepository   player match repository
      * @param weekCalendar            week calendar
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public PlayerCampaignContributionResolver(
         WeeklyBossEncounterRepository bossEncounterRepository,
         PlayerMatchRepository playerMatchRepository,

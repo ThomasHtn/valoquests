@@ -32,7 +32,7 @@
  */
 .vs-side {
   display: grid;
-  grid-template-rows: auto minmax(2rem, auto) auto auto auto;
+  grid-template-rows: auto minmax(2rem, auto) auto auto;
   gap: 9px;
   align-content: center;
   min-width: 0;
@@ -57,12 +57,12 @@
 /* The camp's colour marks its name, its badge and its edge, and stays at full strength for them.
    Its gauge does not: a band of `accent-red` the width of this side is the loudest object on the
    page exactly when it has the least to report, so the fill drops to the two `boss-hp` steps and
-   brightens only towards its leading edge.
+   brightens only towards its leading edge — which is now the left one, where the squad is pushing.
 
    Declared on the gauge rather than on the camp because `.hp` below sets `--gauge-fill` on itself,
    and a value inherited from an ancestor would lose to it. */
 .vs-side--foe .hp {
-  --gauge-fill: linear-gradient(90deg, var(--color-boss-hp) 0%, var(--color-boss-hp-edge) 100%);
+  --gauge-fill: linear-gradient(90deg, var(--color-boss-hp-edge) 0%, var(--color-boss-hp) 100%);
 }
 
 .vs-tag {
@@ -103,49 +103,64 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Name weight, not figure weight: the one big number here stays what the week is scored on. */
-.vs-side--ally .vs-name {
-  font-size: 1.5rem;
-}
-
-.vs-name small {
-  margin-left: 3px;
-  font-weight: 500;
-  font-size: 0.6875rem;
-  font-family: var(--font-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #868b8d;
-}
-
-/* One slug per roster member. Wraps rather than shrinks: a twenty-player squad gets a second row. */
+/* One hexagon per roster member, cut by `clip-hex` on the element itself. Wraps rather than shrinks:
+   a twenty-player squad gets a second row and nothing else moves. */
 .roster {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
 
+/* Unlit: a faint token holding the slot, not a hole punched in the panel — the row has to read as a
+   gauge with a filled end and an empty tail, and a darker-than-ground shape reads as damage. */
 .roster i {
   flex: 0 0 auto;
-  width: 13px;
-  height: 30px;
-  background: rgb(4 10 15 / 55%);
-  box-shadow: inset 0 -2px 0 rgb(236 232 225 / 14%);
-  clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+  width: 22px;
+  height: 25px;
+  cursor: help;
+  background: rgb(236 232 225 / 12%);
+  transition:
+    background-color 240ms var(--ease-out-quart),
+    filter 240ms var(--ease-out-quart);
 }
 
+/* Lit. The glow is a `drop-shadow` rather than a `box-shadow`: `clip-path` cuts the box shadow away
+   with the corners it removes, where a filter follows the silhouette it is given. */
 .roster i.roster-on {
-  background: rgb(45 212 191 / 34%);
-  box-shadow:
-    inset 0 -2px 0 #2dd4bf,
-    inset 0 2px 0 rgb(45 212 191 / 70%);
+  background: #2dd4bf;
+  filter: drop-shadow(0 0 4px rgb(45 212 191 / 45%));
 }
 
+/* Answers the pointer before the bubble does, and each state answers in its own terms: the unlit
+   token comes up out of the ground, the lit one burns harder. Declared after both, and the lit rule
+   restates the fill it already holds — an outline would be the obvious hover here, but `clip-path`
+   cuts one off with the corners, the same reason the glow is a filter. */
+.roster i:hover,
+.roster i:focus-visible {
+  background: rgb(236 232 225 / 26%);
+}
+
+.roster i.roster-on:hover,
+.roster i.roster-on:focus-visible {
+  background: #2dd4bf;
+  filter: drop-shadow(0 0 7px rgb(45 212 191 / 75%));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roster i {
+    transition: none;
+  }
+}
+
+/* Taken as a margin rather than by widening the grid's own `gap`, which is uniform and would push the
+   tag and the caption apart too: what needs air is the break between who the camp is and what it is
+   worth, and only there. Both camps carry it, so their figures — and the gauges under them — stay on
+   one line. */
 .vs-figure {
   display: flex;
   align-items: baseline;
   gap: 7px;
-  margin: 0;
+  margin: 16px 0 0;
   font-weight: 700;
   font-size: 1.75rem;
   font-family: var(--font-display);
@@ -178,27 +193,105 @@
 }
 
 /*
- * One gauge drawn twice, on the same row of both camps: frame, fill and sweep come from the
- * `hp-gauge` utilities shared with the boss band on `/week`, each camp colouring its own through
- * `--gauge-fill`. Both run from the leading edge — the squad's fills, the boss's drains, and that
- * difference is the whole reading.
+ * One measurement drawn twice, on the same row of both camps, against one scale: the boss's own hit
+ * points. Frame and sweep come from the `hp-gauge` utilities shared with the boss band on `/week`.
  *
- * Local: the 18px row, and a notch cut smaller than `/week`'s because it is measured against that
- * height. The `::after` belongs to `notch-tr-edge`, so nothing here may claim it — the quarter marks
- * that used to sit on it are gone with it.
+ * The squad's bar is that scale filled in from its outer edge, a stretch per player; the boss's is
+ * the same scale emptied from the seam. So the blue on the left is exactly as long as the bare track
+ * on the right, and the two bars read as one front line rather than two gauges.
+ *
+ * Both are sheared on the edge they present to the seam, at the seam's own angle, so the three
+ * shapes of the band lean together instead of two square bars flanking a slanted plate. Not the
+ * `notch-*` corner cut they used to wear: a corner is a detail on a shape, and what these two owe
+ * the plate between them is the shape itself.
+ *
+ * Local: the row's height, and the horizontal travel 9° buys at it — a shear holds its angle where a
+ * fixed offset would read as crooked the moment the row changed height, which is why the two are tied
+ * through one variable rather than set side by side.
+ *
+ * No frame either, against the utility's own hairline: `clip-path` cuts the border box, so a bordered
+ * bar loses its rule along the sheared edge and gains a line the cut has to fight on the other three.
+ * The sunken track is dark enough to hold the shape on its own.
  */
-.gauge,
+.assault,
 .hp {
-  --notch: 0.375rem;
-  --gauge-fill: var(--camp);
+  --gauge-height: 22px;
+  --lean: calc(var(--gauge-height) * 0.1584);
 
   width: 100%;
-  height: 18px;
+  height: var(--gauge-height);
+  border: 0;
 }
 
-/* The head of the fill: the edge the health is being pushed back from, the edge the squad has
-   reached. Drawn only while there is one — at nothing and at everything it is the bar's own cap. */
-.gauge b,
+/* Sheared on its right edge, the one facing the seam: the bottom stops short of the top, exactly as
+   the plate's own leading edge does. `clip-path` takes the border with it, so that one edge is left
+   bare — at this angle the fill's own end is what draws it.
+
+   Flex rather than the absolute fill `hp-gauge-fill` gives a single-value gauge: these stretches are
+   laid end to end, each holding its own width, and the row is read as a queue of shares. */
+.assault {
+  display: flex;
+  align-items: stretch;
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--lean)) 100%, 0 100%);
+}
+
+/* The mirror, on the left edge the boss presents to the seam: the bottom reaches further in than the
+   top, taking back the width the squad's bar gave up. The two cuts are parallel, not symmetrical —
+   they are the same line continued through the plate. */
+.hp {
+  clip-path: polygon(var(--lean) 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/*
+ * One player's share. Alternating strengths of the camp's cyan rather than a colour per player: a
+ * squad is two people or twenty (see the root CLAUDE.md), and a palette that has to stretch that far
+ * stops meaning anything. The two steps are what separate the stretches — no rule between them, so
+ * the row stays one blue block rather than a fence — and the name is one hover away.
+ */
+.assault-seg {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 2px;
+  cursor: help;
+  background: rgb(45 212 191 / 92%);
+  transition: width 900ms var(--ease-out-quart);
+}
+
+.assault-seg:nth-child(even) {
+  background: rgb(45 212 191 / 58%);
+}
+
+.assault-seg:hover,
+.assault-seg:focus-visible {
+  filter: brightness(1.35);
+}
+
+/* The stretches arrive at their widths instead of appearing at them, on the same curve and duration
+   as the health bar opposite — the two sides of the front line move together. */
+@starting-style {
+  .assault-seg {
+    width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assault-seg {
+    transition: none;
+  }
+}
+
+/*
+ * The boss's health, wiped from the seam outwards: the fill is pinned to its own outer corner and
+ * gives ground to the right, rather than being cut off at its far end where nothing is happening.
+ * `hp-gauge-fill` pins itself left, so both edges are restated here.
+ */
+.vs-side--foe .hp-gauge-fill {
+  right: 0;
+  left: auto;
+}
+
+/* The head of the fill: the front line itself, where the bare track meets what the boss still holds.
+   Drawn only while there is one — at nothing and at everything it is the bar's own cap. */
 .hp b {
   position: absolute;
   top: 0;
@@ -206,6 +299,19 @@
   width: 2px;
   margin-left: -1px;
   background: #ece8e1;
+  transition: left 900ms var(--ease-out-quart);
+}
+
+@starting-style {
+  .hp b {
+    left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hp b {
+    transition: none;
+  }
 }
 
 /*

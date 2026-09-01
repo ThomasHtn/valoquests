@@ -29,6 +29,11 @@
      content between them changes — so they must not replay on every step. */
   --animate-chrome-in: chrome-in 0.6s ease-out both;
 
+  /* A panel dropping from the band that summoned it (the rulebook's contents, below `lg`). Short
+     and small: the travel only has to say the list came *from* the trigger rather than appeared on
+     top of the page, and anything longer sits between a tap and the answer to it. */
+  --animate-panel-drop: panel-drop 0.18s var(--ease-out-quart) both;
+
   /* Outer bezel, drifting clockwise. */
   @keyframes compass-spin {
     from {
@@ -81,6 +86,19 @@
     from {
       opacity: 0;
       transform: translateY(14px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* A panel unrolling under its trigger. */
+  @keyframes panel-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
     }
 
     to {

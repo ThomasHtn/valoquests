@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.boss.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
@@ -59,6 +60,10 @@ public class BossCalibrationService {
      * @param encounterRepository weekly boss encounter repository
      * @param ruleset             scoring ruleset
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public BossCalibrationService(
         WeeklyBossEncounterRepository encounterRepository,
         ScoringRuleset ruleset

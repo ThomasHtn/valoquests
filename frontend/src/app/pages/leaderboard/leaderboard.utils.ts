@@ -5,7 +5,29 @@ import {
   resolveChallengeVisual,
 } from '@core/challenges/challenge-visual.utils';
 import { RankingChallengeProgress } from '@core/ranking/ranking.model';
-import { RankingCell, RankingColumn } from './leaderboard.model';
+import { RankingCell, RankingColumn, RankingScope } from './leaderboard.model';
+
+/**
+ * The scopes a link may ask the board to open on, keyed by the lower-case name written in the URL.
+ */
+const REQUESTABLE_SCOPES: Readonly<Record<string, RankingScope>> = {
+  day: 'DAY',
+  week: 'WEEK',
+  campaign: 'CAMPAIGN',
+};
+
+/**
+ * Resolves the scope asked for in `?scope=`, falling back to the week.
+ *
+ * The week is the fallback rather than an error: a stale or hand-edited link still opens the board
+ * the page is about, which is what a visitor following it expects to find.
+ *
+ * @param requested - The raw `scope` query parameter, or `null` when the page was opened plain.
+ * @returns The scope to open the board on.
+ */
+export function resolveRequestedScope(requested: string | null): RankingScope {
+  return (requested && REQUESTABLE_SCOPES[requested.toLowerCase()]) || 'WEEK';
+}
 
 /**
  * Computes how close a player's progress is to a challenge's target, as a percentage clamped

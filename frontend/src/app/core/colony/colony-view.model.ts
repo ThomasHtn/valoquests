@@ -48,11 +48,21 @@ export interface ColonyTownView {
   readonly populationPercentage: number;
 
   /**
-   * Share of the way to the next step, `0`–`100`, drawn as scaffolding on the silhouette's tallest
-   * building. The ladder repeats past its named steps (see {@link ColonyTierGlyph}), so there is
-   * always a next step to climb towards.
+   * Share of the way to the next step, `0`–`100`, drawn as how much of the quarter under scaffolding
+   * has been built. The ladder repeats past its named steps (see {@link ColonyTierGlyph}), so there
+   * is always a next step to climb towards, and therefore always a site standing in the scene.
    */
   readonly progressPercentage: number;
+
+  /**
+   * Share of the roster that played today, `0`–`100`, which lights the street and fills the
+   * crossing.
+   *
+   * The scene's only genuinely *daily* figure. The step moves about once a week and the lit windows
+   * move by a percent a day, so without this the drawing is the same drawing from one Monday to the
+   * next, which is the whole of what it was reproached for.
+   */
+  readonly turnoutPercentage: number;
 }
 
 /**

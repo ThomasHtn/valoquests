@@ -13,6 +13,16 @@
 
   /* The sunken shelf a milestone card prices its week on, same value the page's own blocks use. */
   --sunk: rgb(4 10 15 / 34%);
+
+  /* The inset the two end cards stand on, matching the gutter `.campaign-block` gives the page's
+     other blocks — the frieze runs edge to edge, so its own edge is the column's. */
+  --edge: 1rem;
+}
+
+@media (width >= 40rem) {
+  :host {
+    --edge: 1.5rem;
+  }
 }
 
 /* ── The frieze ────────────────────────────────────────────────────────────────────────────── */
@@ -324,14 +334,18 @@
 }
 
 /* The end cards align to the block's own edge: centred on a marker sitting 5 % in, half of the
-   first card hung outside the frieze. */
+   first card hung outside the frieze.
+
+   On the page's own gutter rather than a token 12px: the frieze bleeds to the edges of the column
+   now (see `campaign.css`), so that edge *is* the screen's, and a card 12px off it reads as jammed
+   into the corner rather than laid on the sky. `--edge` is declared on the host, beside `--sunk`. */
 .fw:first-child .fzc {
-  left: 12px;
+  left: var(--edge);
   translate: 0;
 }
 
 .fw:last-child .fzc {
-  right: 12px;
+  right: var(--edge);
   left: auto;
   translate: 0;
 }

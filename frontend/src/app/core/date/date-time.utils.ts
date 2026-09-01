@@ -46,6 +46,28 @@ export function formatLocalDayMonth(instant: string, language: 'fr' | 'en'): str
 }
 
 /**
+ * Formats a calendar day as `"<Weekday> DD/MM"` (e.g. `"Mardi 01/09"`), in `language`.
+ *
+ * Takes a calendar day rather than an instant, and reads it at noon UTC: the day the backend names is
+ * already resolved against the rollover timezone, so re-projecting it through the reader's clock
+ * would let a browser a few hours off print the wrong weekday for the very day it is showing.
+ *
+ * @param isoDate - The day to format, as `YYYY-MM-DD`.
+ * @param language - The app language whose weekday names to use.
+ * @returns The formatted day.
+ */
+export function formatWeekdayDayMonth(isoDate: string, language: 'fr' | 'en'): string {
+  const date = new Date(`${isoDate}T12:00:00Z`);
+  const weekday = new Intl.DateTimeFormat(MONTH_NAME_LOCALES[language], {
+    weekday: 'long',
+    timeZone: 'UTC',
+  }).format(date);
+  const [, month, day] = isoDate.split('-');
+
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${day}/${month}`;
+}
+
+/**
  * Formats the time of day of an ISO-8601 instant as `HH:MM` in the reader's timezone.
  *
  * @param instant - The instant to format, as an ISO-8601 instant.

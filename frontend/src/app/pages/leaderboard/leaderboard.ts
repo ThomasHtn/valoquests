@@ -17,11 +17,13 @@ import { ChallengeIconView } from '@shared/challenge-icon-view/challenge-icon-vi
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
+import { formatWeekdayDayMonth } from '@core/date/date-time.utils';
 import { formatDateRange, RemainingTime, remainingWeekTime } from '@core/date/week-period.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { PlayersApi } from '@core/players/players-api';
+import { CampaignRanking } from '@core/ranking/campaign-ranking';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { RankingHistoryWeek } from '@core/ranking/ranking.model';
@@ -37,8 +39,12 @@ import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
-import { RankingColumn, RankingRow } from './leaderboard.model';
-import { resolveRankingCells, resolveRankingColumns } from './leaderboard.utils';
+import { RankingColumn, RankingRow, RankingScope } from './leaderboard.model';
+import {
+  resolveRankingCells,
+  resolveRankingColumns,
+  resolveRequestedScope,
+} from './leaderboard.utils';
 
 /**
  * Weekly leaderboard page — the squad's tactical matrix.
@@ -55,6 +61,17 @@ import { resolveRankingCells, resolveRankingColumns } from './leaderboard.utils'
  * A closed week is a shorter row than the live one, and deliberately so: the backend freezes the
  * totals of a finalized week but not the per-challenge breakdown behind them, so those five columns
  * give way to the two figures it does keep — challenges cleared and days played.
+ *
+ * The same rows are read at three scales, picked with the scope switch above the board. They are one
+ * competition, not three boards, and the scope only decides which figures a row can honestly carry:
+ *
+ * - **Day** ranks tonight on match damage alone, and adds the gap with yesterday — the answer to "did
+ *   we have a good evening?". The bonuses and the materials are settled on the week and simply do not
+ *   exist at this scale, so their columns are dropped rather than filled with dashes.
+ * - **Week** is the board above, podium and week arrows included, and the only scale where the whole
+ *   row has a value.
+ * - **Campaign** sums the run in progress and replaces the day's gap with the number of the run's
+ *   fights the player put damage into. No podium: a run is crowned when it ends.
  */
 @Component({
   selector: 'app-leaderboard',
@@ -81,6 +98,7 @@ import { resolveRankingCells, resolveRankingColumns } from './leaderboard.utils'
   ],
   templateUrl: './leaderboard.html',
   host: { class: PAGE_LAYOUT_CLASS },
+  providers: [CampaignRanking],
 })
 export class Leaderboard {
   /**
@@ -101,10 +119,21 @@ export class Leaderboard {
   private readonly playersApi = inject(PlayersApi);
 
   /**
+   * Read model folding the run in progress into one line per player — the campaign scope's board.
+   */
+  private readonly campaignRanking = inject(CampaignRanking);
+
+  /**
    * i18n service used to resolve each challenge's translated category label, and read for the
    * active language when grouping damage amounts.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * The activated route, read for the two things a link may ask this page to open on: a closed week
+   * and a scope.
+   */
+  private readonly route = inject(ActivatedRoute);
 
   /**
    * Week asked for in the URL as `?week=YYYY-MM-DD`, or `null` when the page was opened plain.
@@ -113,7 +142,7 @@ export class Leaderboard {
    * week — the campaign's boss drawer is the one place that writes it — and the arrows take over
    * from the moment the visitor uses them.
    */
-  private readonly requestedWeekStart = inject(ActivatedRoute).snapshot.queryParamMap.get('week');
+  private readonly requestedWeekStart = this.route.snapshot.queryParamMap.get('week');
 
   /**
    * Whether the viewport can hold the matrix layout: below it, the same rows are rendered as
@@ -138,14 +167,72 @@ export class Leaderboard {
   private readonly challengesResource = this.challengesApi.current;
 
   /**
-   * Whether either backing resource is still loading.
+   * Reactive resource fetching today's board, and yesterday's figures to hold it against.
    */
-  protected readonly isLoading = anyLoading(this.rankingResource, this.challengesResource);
+  private readonly dailyResource = this.rankingApi.daily;
 
   /**
-   * Whether either backing resource failed to load.
+   * Stretch of time the board is ranking. The week is the default: it is the competition proper,
+   * the one the rollover and the champion title are settled on.
+   *
+   * A caller may ask for another one as `?scope=day`, the way the accueil's own day preview links
+   * here — a link naming a board must open on that board. Read once from the snapshot, like
+   * {@link requestedWeekStart}: the switch takes over from the first press.
    */
-  protected readonly hasError = anyError(this.rankingResource, this.challengesResource);
+  protected readonly scope = signal<RankingScope>(
+    resolveRequestedScope(this.route.snapshot.queryParamMap.get('scope')),
+  );
+
+  /**
+   * The three scopes, in the order the switch offers them — shortest first, so the control reads as
+   * a zoom level rather than as an unordered set of filters.
+   */
+  protected readonly scopes: readonly RankingScope[] = ['DAY', 'WEEK', 'CAMPAIGN'];
+
+  /**
+   * State of the resources the week scope reads — the board's own, and the week's challenges the
+   * five columns are drawn from.
+   */
+  private readonly weekLoading = anyLoading(this.rankingResource, this.challengesResource);
+  private readonly weekError = anyError(this.rankingResource, this.challengesResource);
+
+  /**
+   * State of the day scope's single resource.
+   */
+  private readonly dayLoading = anyLoading(this.dailyResource);
+  private readonly dayError = anyError(this.dailyResource);
+
+  /**
+   * Whether a backing resource of the *active scope* is still loading.
+   *
+   * Scoped rather than combined: the day board must not wait on the ten weeks of history the
+   * campaign board sums, and the campaign board must not wait on the week's challenge catalogue it
+   * has no column for.
+   */
+  protected readonly isLoading = computed(() => {
+    switch (this.scope()) {
+      case 'DAY':
+        return this.dayLoading();
+      case 'CAMPAIGN':
+        return this.campaignRanking.isLoading();
+      default:
+        return this.weekLoading();
+    }
+  });
+
+  /**
+   * Whether a backing resource of the active scope failed to load.
+   */
+  protected readonly hasError = computed(() => {
+    switch (this.scope()) {
+      case 'DAY':
+        return this.dayError();
+      case 'CAMPAIGN':
+        return this.campaignRanking.hasError();
+      default:
+        return this.weekError();
+    }
+  });
 
   /**
    * The active week as the ranking describes it, or `null` until it has loaded.
@@ -193,6 +280,22 @@ export class Leaderboard {
    * Whether the week on screen is the one still being played.
    */
   protected readonly isLiveWeek = computed(() => this.weekIndex() === 0);
+
+  /**
+   * Whether the board is on the week scope — the only one the arrows, the podium and the five
+   * challenge columns belong to.
+   */
+  protected readonly isWeekScope = computed(() => this.scope() === 'WEEK');
+
+  /**
+   * Whether the board is on the day scope, which is the one scope carrying the gap with yesterday.
+   */
+  protected readonly isDayScope = computed(() => this.scope() === 'DAY');
+
+  /**
+   * Whether the board is on the campaign scope, which trades that gap for the fights joined.
+   */
+  protected readonly isCampaignScope = computed(() => this.scope() === 'CAMPAIGN');
 
   /**
    * The finalized week on screen, or `null` while the live one is.
@@ -253,7 +356,9 @@ export class Leaderboard {
    */
   protected readonly columns = computed<readonly RankingColumn[]>(() =>
     resolveRankingColumns(
-      this.isLiveWeek() ? (resourceValue(this.challengesResource, null)?.challenges ?? []) : [],
+      this.isWeekScope() && this.isLiveWeek()
+        ? (resourceValue(this.challengesResource, null)?.challenges ?? [])
+        : [],
       (key) => this.translation.translate(key),
       this.translation.language(),
     ),
@@ -281,9 +386,16 @@ export class Leaderboard {
    * The week on screen, as rows — the live board or a closed one, in the same shape either way so
    * both layouts render one kind of row rather than branching all the way down.
    */
-  protected readonly rows = computed<readonly RankingRow[]>(() =>
-    this.isLiveWeek() ? this.liveRows() : this.finalizedRows(),
-  );
+  protected readonly rows = computed<readonly RankingRow[]>(() => {
+    switch (this.scope()) {
+      case 'DAY':
+        return this.dailyRows();
+      case 'CAMPAIGN':
+        return this.campaignRows();
+      default:
+        return this.isLiveWeek() ? this.liveRows() : this.finalizedRows();
+    }
+  });
 
   /**
    * Rows of players currently in the campaign — the table proper.
@@ -309,7 +421,7 @@ export class Leaderboard {
    * instead, since a week that closed without a single point played is not the case this reads.
    */
   protected readonly weekHasNoActivity = computed(() => {
-    if (!this.isLiveWeek()) {
+    if (!this.isWeekScope() || !this.isLiveWeek()) {
       return false;
     }
 
@@ -359,8 +471,89 @@ export class Leaderboard {
             ? `+${formatDamage(materials, language)}`
             : null,
         inCampaign: entry.position != null,
+        damageVariation: null,
+        bossCountLabel: null,
       };
     });
+  });
+
+  /**
+   * Today's rows: what each player brought in tonight, and the gap with last night.
+   *
+   * The shortest row of the three, because a day is the scale at which almost nothing is settled.
+   * Only match damage exists — the challenge damage, the two bonuses and the materials are all
+   * awarded on the week — so the bonus and materials figures are left `null` rather than printed as
+   * a column of zeros claiming a value that has not been decided yet.
+   *
+   * The five challenge cells are dropped for the same reason: they measure progress toward a
+   * *weekly* target, and hanging them off a day's row would read as a day's worth of progress.
+   */
+  private readonly dailyRows = computed<readonly RankingRow[]>(() => {
+    const championPlayerId = this.championPlayerId();
+    const language = this.translation.language();
+    const portraits = new Map(
+      this.playersApi.players.value().map((player) => [player.id, player.portrait]),
+    );
+
+    return (resourceValue(this.dailyResource, null)?.ranking ?? []).map((entry) => ({
+      position: entry.position ?? null,
+      // Nothing to compare against: the arrows beside a position mean "since last week", and a day
+      // has no such movement stored. The gap this scope does answer is on the damage, not the rank.
+      positionVariation: 0,
+      playerId: entry.playerId,
+      displayName: entry.displayName,
+      avatarUrl: resolvePlayerAvatarUrl(entry.portrait ?? portraits.get(entry.playerId) ?? null),
+      // Zero is a real answer at this scale — the evening somebody sat out — so it is printed rather
+      // than dashed. Out-of-campaign players keep the dash, as on every other scope.
+      damageLabel: entry.position != null ? formatDamage(entry.matchDamage, language) : null,
+      bonusLabel: null,
+      cells: [],
+      completedLabel: null,
+      activeDaysLabel: null,
+      isChampion: entry.playerId === championPlayerId,
+      materialsLabel: null,
+      inCampaign: entry.position != null,
+      damageVariation: entry.position != null ? entry.damageVariation : null,
+      bossCountLabel: null,
+    }));
+  });
+
+  /**
+   * The run in progress, one row per player.
+   *
+   * Every figure is a sum over the weeks played so far, so all four are real numbers rather than the
+   * live week's mix of live and frozen ones. What replaces the day's gap is the count of the run's
+   * fights the player put damage into — the campaign's own version of "did you turn up?".
+   */
+  private readonly campaignRows = computed<readonly RankingRow[]>(() => {
+    const championPlayerId = this.championPlayerId();
+    const language = this.translation.language();
+    const portraits = new Map(
+      this.playersApi.players.value().map((player) => [player.id, player.portrait]),
+    );
+
+    return this.campaignRanking.entries().map((entry) => ({
+      position: entry.position,
+      positionVariation: 0,
+      playerId: entry.playerId,
+      displayName: entry.displayName,
+      avatarUrl: resolvePlayerAvatarUrl(portraits.get(entry.playerId) ?? null),
+      damageLabel: entry.position != null ? formatDamage(entry.totalDamage, language) : null,
+      bonusLabel:
+        entry.position != null && entry.bonus !== 0
+          ? `+${formatDamage(entry.bonus, language)}`
+          : null,
+      cells: [],
+      completedLabel: `${entry.completedChallenges}`,
+      activeDaysLabel: `${entry.activeDays}`,
+      isChampion: entry.playerId === championPlayerId,
+      // Same reason as a closed week: a run's past weeks no longer carry the catalogue their
+      // materials value would have to be read off.
+      materialsLabel: null,
+      inCampaign: entry.position != null,
+      damageVariation: null,
+      bossCountLabel: `${entry.bossCount}`,
+    }));
   });
 
   /**
@@ -406,8 +599,85 @@ export class Leaderboard {
         // value) is not fetched, only its frozen totals — same reason `cells` is empty above.
         materialsLabel: null,
         inCampaign: entry.position != null,
+        damageVariation: null,
+        bossCountLabel: null,
       };
     });
+  });
+
+  /**
+   * The day on the board, spelled out (`"Mardi 01/09"`), or `""` while it has not loaded.
+   *
+   * The backend's own day, not one computed here: it is resolved against the rollover timezone, and
+   * a reader whose clock has already crossed midnight must still be told which evening they are
+   * looking at.
+   */
+  protected readonly dayLabel = computed<string>(() => {
+    const daily = resourceValue(this.dailyResource, null) ?? null;
+    return daily === null ? '' : formatWeekdayDayMonth(daily.day, this.translation.language());
+  });
+
+  /**
+   * How much of the squad played on the day shown, as `{ played, roster }`, or `null` while the day
+   * has not loaded.
+   */
+  protected readonly dayTurnout = computed<{ played: number; roster: number } | null>(() => {
+    const daily = resourceValue(this.dailyResource, null) ?? null;
+    return daily === null
+      ? null
+      : { played: daily.playedPlayerCount, roster: daily.rosterPlayerCount };
+  });
+
+  /**
+   * Which week of the run the campaign board stops at, as `{ index, count }`, or `null` while the
+   * run's bounds are unknown — the campaign scope's answer to the week arrows' date range.
+   */
+  protected readonly campaignProgress = computed<{ index: number; count: number } | null>(() => {
+    const index = this.campaignRanking.runWeekIndex();
+    const count = this.campaignRanking.runWeekCount();
+    return index === null || count === null ? null : { index, count };
+  });
+
+  /**
+   * Whether the board carries a bonus column. Every scope but the day: the regularity and team
+   * bonuses are awarded on the week, so a day has none rather than none yet.
+   */
+  protected readonly showBonusColumn = computed(() => !this.isDayScope());
+
+  /**
+   * Whether the board carries the slot the materials figure sits in — filled on the live week, held
+   * open as a blank on a closed one so the two weekly boards keep the same column rhythm.
+   */
+  protected readonly showMaterialsSlot = computed(() => this.isWeekScope());
+
+  /**
+   * Whether the board carries the two summary figures — challenges cleared and days played.
+   *
+   * A closed week and a run both have them, and for the same reason: neither can show the five
+   * per-challenge cells, one because the breakdown was never frozen, the other because ten weeks of
+   * draws do not fit five columns.
+   */
+  protected readonly showTotalsColumns = computed(
+    () => this.isCampaignScope() || (this.isWeekScope() && !this.isLiveWeek()),
+  );
+
+  /**
+   * Grid template the header and every row share, so a column heading always lands on its figures.
+   *
+   * Held here rather than inlined twice in the template: the two used to drift apart on every column
+   * added, and a header off by one column is a board that lies without looking broken.
+   */
+  protected readonly gridClass = computed<string>(() => {
+    switch (this.scope()) {
+      case 'DAY':
+        return 'grid-cols-[4rem_minmax(12rem,2fr)_minmax(7rem,0.6fr)_minmax(7rem,0.6fr)]';
+      case 'CAMPAIGN':
+        return 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_repeat(3,minmax(5.5rem,0.5fr))]';
+      default:
+        return this.isLiveWeek()
+          ? 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_6rem_repeat(5,minmax(3.25rem,0.45fr))]'
+          : 'grid-cols-[4rem_minmax(12rem,1.6fr)_6rem_7.5rem_2rem_repeat(2,minmax(5.5rem,0.5fr))]';
+    }
   });
 
   /**
@@ -441,12 +711,27 @@ export class Leaderboard {
   }
 
   /**
-   * Reloads both backing resources after a failure.
+   * Switches the board to another scale.
    *
-   * Both are retried because {@link hasError} reports their combined state and cannot tell which
-   * one failed.
+   * The week the arrows stepped to is deliberately kept rather than reset: stepping back three
+   * weeks, glancing at the run, then coming back to find the arrows had rewound to today would undo
+   * work the visitor did on purpose.
+   *
+   * @param scope - The scale to rank on.
+   */
+  protected selectScope(scope: RankingScope): void {
+    this.scope.set(scope);
+  }
+
+  /**
+   * Reloads the backing resources after a failure.
+   *
+   * Every scope's resources are retried, not only the active one's: {@link hasError} reports one
+   * scope's combined state and cannot tell which request inside it failed, and the switch above the
+   * board is one click away from asking for any of the others.
    */
   protected reload(): void {
-    reloadAll(this.rankingResource, this.challengesResource);
+    reloadAll(this.rankingResource, this.challengesResource, this.dailyResource);
+    this.campaignRanking.reload();
   }
 }

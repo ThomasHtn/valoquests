@@ -1,8 +1,23 @@
 /*
  * Literal measurement matching the validated mock-up (design-review.md's artifact, "La colonie").
  * Colors spelled out rather than referenced through `var(--color-*)` — see `town-silhouette.css`
- * for why. Keep in sync with `src/styles/colors.css`: text-primary #ece8e1.
+ * for why. Keep in sync with `src/styles/colors.css`: text-primary #ece8e1 · text-muted #868b8d.
  */
+
+/*
+ * The line that says what the three figures under it are — the day's date and turnout, or what the
+ * week's total already includes. It holds one line's worth of height whatever it carries, so the
+ * two boards' rows stay level while one of them is still loading.
+ */
+.mini-rank-caption {
+  min-height: 1lh;
+  margin: 0 0 2px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  color: #868b8d;
+  font-variant-numeric: tabular-nums;
+}
 
 .mini-rank-row {
   background: rgb(236 232 225 / 4%);
@@ -24,10 +39,39 @@
 
 /* Names the amount without competing with it: the unit is read once, the figure every time. */
 .mini-rank-unit {
-  margin-left: 6px;
+  margin-top: 3px;
   font-weight: 500;
   font-size: 0.625rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: #868b8d;
+}
+
+/*
+ * The day's second line, standing where the week's unit stands: same size, same place, so the two
+ * boards keep the same silhouette and differ only in what the line says. Its colour is the answer —
+ * it is the one thing on this page that says whether tonight beat last night.
+ */
+.mini-rank-delta {
+  margin-top: 3px;
+  font-weight: 500;
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  color: #868b8d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The two directions, coloured here rather than with `text-accent-*` utilities: this stylesheet is
+   injected after the utility layer, so the neutral colour above would simply win — the same trap
+   the hover rule above was written around. accent-green #5fb88a · accent-red #ff4655. */
+.mini-rank-delta--up {
+  color: #5fb88a;
+}
+
+.mini-rank-delta--down {
+  color: #ff4655;
+}
+
+.mini-rank-delta-since {
   color: #868b8d;
 }

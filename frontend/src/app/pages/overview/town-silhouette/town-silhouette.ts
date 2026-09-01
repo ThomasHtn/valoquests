@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 
 import {
   TownScene,
@@ -65,9 +65,43 @@ export class TownSilhouette {
   public readonly populationPercentage = input(50);
 
   /**
-   * Everything the template draws, rebuilt when the step or the population changes.
+   * Share of the roster that has played today, `0`–`100`, which decides how much of the street is
+   * lit and how busy the crossing is.
+   *
+   * The scene's one *daily* reading. The step of the ladder moves about once a week and the windows
+   * move by a percent a day, so between two Mondays the drawing used to be the same drawing. Turnout
+   * is the figure that is genuinely different from yesterday, and lighting the street with it is
+   * also the truthful picture: the evening's harvest is what those people brought in.
    */
-  protected readonly scene = computed<TownScene>(() => buildTownScene(this.step(), this.life()));
+  public readonly turnoutPercentage = input(100);
+
+  /**
+   * Share of the way to the next step, `0`–`100`, which is how far the quarter under scaffolding has
+   * been built.
+   *
+   * This is what makes the town grow *a little every day* rather than a street at a time. Materials
+   * come in whenever a challenge is validated, so this figure moves on most evenings, and the site
+   * gains a course of masonry each time. The step landing is then the scaffold coming down and the
+   * windows going on, not a building appearing out of nowhere.
+   */
+  public readonly progressPercentage = input(0);
+
+  /**
+   * Everything the template draws, rebuilt when the step, the population or the turnout changes.
+   *
+   * Deliberately not rebuilt on {@link progressPercentage}: the site is drawn whole and revealed by
+   * a clip, so a day's progress costs one custom property and not three thousand shapes.
+   */
+  protected readonly scene = computed<TownScene>(() =>
+    buildTownScene(this.step(), this.life(), this.turnout()),
+  );
+
+  /**
+   * How much of the site is standing, as the `inset` the template clips it from the top with.
+   */
+  protected readonly built = computed(
+    () => `${(100 - Math.max(0, Math.min(100, this.progressPercentage()))).toFixed(1)}%`,
+  );
 
   /**
    * The stars, kept out of {@link scene} so a change of morale does not rebuild three thousand
@@ -89,23 +123,33 @@ export class TownSilhouette {
       transform,
       className: 'town-building',
       delay: `${(0.3 + index * 0.075).toFixed(2)}s`,
+      clip: null,
     }));
 
     return [
-      { shapes: scene.moon, transform: null, className: 'town-moon', delay: null },
-      { shapes: scene.dome, transform: null, className: null, delay: null },
-      { shapes: this.stars(), transform: null, className: null, delay: null },
-      { shapes: scene.backdrop, transform: null, className: null, delay: null },
-      { shapes: scene.terraces, transform, className: null, delay: null },
+      { shapes: scene.moon, transform: null, className: 'town-moon', delay: null, clip: null },
+      { shapes: scene.dome, transform: null, className: null, delay: null, clip: null },
+      { shapes: this.stars(), transform: null, className: 'town-stars', delay: null, clip: null },
+      { shapes: scene.backdrop, transform: null, className: null, delay: null, clip: null },
+      { shapes: scene.terraces, transform, className: null, delay: null, clip: null },
       ...buildings,
-      { shapes: scene.flicker, transform, className: 'town-flicker', delay: null },
-      { shapes: scene.furniture, transform, className: null, delay: null },
-      { shapes: scene.foreground, transform: null, className: null, delay: null },
+      // Revealed from the ground up by the materials banked so far — see `built`.
+      {
+        shapes: scene.construction,
+        transform,
+        className: 'town-site',
+        delay: null,
+        clip: `inset(${this.built()} 0 0 0) fill-box`,
+      },
+      { shapes: scene.flicker, transform, className: 'town-flicker', delay: null, clip: null },
+      { shapes: scene.furniture, transform, className: null, delay: null, clip: null },
+      { shapes: scene.foreground, transform: null, className: null, delay: null, clip: null },
       {
         shapes: hasWaterAt(this.step()) ? reflectionsFor(scene.buildings) : [],
         transform,
         className: null,
         delay: null,
+        clip: null,
       },
     ];
   });
@@ -119,11 +163,55 @@ export class TownSilhouette {
   );
 
   /**
+   * Which of the four skies the horizon wears, read off the visitor's own clock.
+   *
+   * Only the horizon: the sky's own gradient already carries morale (see {@link clarity}), and
+   * putting the hour on it would have overwritten the one thing it says about how the week went. The
+   * hour gets the glow at the bottom and the moon instead, which are free.
+   *
+   * Resolved once, at construction. A page that repainted at midnight would be correcting a detail
+   * nobody is watching, at the cost of a timer running for as long as the tab is open.
+   */
+  protected readonly hour = signal(phaseAt(new Date().getHours()));
+
+  /**
    * Population as the `0`–`1` the windows are lit on.
    */
   private readonly life = computed(
     () => Math.max(0, Math.min(100, this.populationPercentage())) / 100,
   );
+
+  /**
+   * Turnout as the `0`–`1` the street is lit on.
+   */
+  private readonly turnout = computed(
+    () => Math.max(0, Math.min(100, this.turnoutPercentage())) / 100,
+  );
+}
+
+/**
+ * The four skies, in the order the day goes through them.
+ */
+type TownHour = 'dawn' | 'day' | 'dusk' | 'night';
+
+/**
+ * Resolves which sky an hour of the day falls under.
+ *
+ * Exported for its own test rather than inlined: the boundaries are the whole of this decision, and
+ * an off-by-one at 7 or at 21 is invisible in a screenshot taken at any other time.
+ *
+ * @param hour - Hour of the day, `0`–`23`.
+ * @returns The sky that hour wears.
+ */
+export function phaseAt(hour: number): TownHour {
+  if (hour < 7 || hour >= 21) {
+    return 'night';
+  }
+  if (hour < 10) {
+    return 'dawn';
+  }
+
+  return hour < 18 ? 'day' : 'dusk';
 }
 
 /**
@@ -138,4 +226,7 @@ interface TownLayer {
   /** Class carrying the group's own animation, if it has one. */
   readonly className: string | null;
   readonly delay: string | null;
+
+  /** Set on the site alone, which is revealed from the ground up as it is paid for. */
+  readonly clip: string | null;
 }

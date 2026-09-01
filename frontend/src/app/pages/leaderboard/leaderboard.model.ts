@@ -1,6 +1,16 @@
 import { ChallengeVisual } from '@core/challenges/challenge-visual.model';
 
 /**
+ * Stretch of time the board is ranking.
+ *
+ * Three scales of the same competition rather than three boards: a day answers "did we have a good
+ * evening?", a week is the competition proper and the only scale where the bonuses and the materials
+ * are settled, and a run is the whole campaign. Which columns a row carries follows from the scope,
+ * because most figures only exist at one of the three.
+ */
+export type RankingScope = 'DAY' | 'WEEK' | 'CAMPAIGN';
+
+/**
  * Column header of the ranking table: a challenge paired with the visual treatment shared with the
  * weekly challenges card, so the two widgets read as one coherent color language.
  */
@@ -173,4 +183,21 @@ export interface RankingRow {
    * re-deriving it from a coincidence of the ranking math.
    */
   readonly inCampaign: boolean;
+
+  /**
+   * Signed gap between this player's damage today and yesterday's (`"+350"`), or `null` outside the
+   * day scope, where there is no previous day to hold the figure against.
+   *
+   * Kept as the number rather than as a label so the sign can drive the color and the glyph without
+   * either layout parsing text back into an intent. Zero is a real answer — the same evening twice —
+   * and reads as a dash rather than as "+0".
+   */
+  readonly damageVariation: number | null;
+
+  /**
+   * Weeks of the run this player put damage into the boss, as text, or `null` outside the campaign
+   * scope. What the day scope's gap is at the run's scale: not how hard one evening went, but how
+   * many of the run's fights somebody turned up for.
+   */
+  readonly bossCountLabel: string | null;
 }

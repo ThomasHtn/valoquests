@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.colony.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
 import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
@@ -51,6 +52,10 @@ public class ColonyMaterialsReader {
      * @param encounterRepository weekly boss encounter repository
      * @param ruleset             colony ruleset
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
     public ColonyMaterialsReader(
         PlayerChallengeProgressRepository progressRepository,
         WeeklyBossEncounterRepository encounterRepository,

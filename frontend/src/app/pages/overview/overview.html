@@ -3,23 +3,16 @@
      as the thing the two camps meet over, and the same figure twice on one screen is one too many. -->
 <app-page-header [eyebrow]="colony.eyebrow()" [heading]="'overview.header.title' | translate" />
 
+<!-- The page opens on the colony and everything else slides over it. The scene is not the first block
+     of a stack any more: it holds the top of the scroll container, the sheet below covers it as the
+     reader pulls it up, and what is left uncovered is the one question the page exists to answer.
+
+     Two boxes rather than one flat column, because that is what the effect costs: the scene has to be
+     `sticky` inside `page-body`, and the sheet has to be one opaque surface travelling over it. A
+     block-by-block column would let the sky through the gaps between sections. -->
 <div class="page-body overview-body">
-  <!-- Bloc 0 — how the week that just closed went, on the first visit of the week and never after
-       it is closed. Above the colony because it is news: everything below reports a state that has
-       been true since, this reports what changed. -->
-  <app-week-recap />
-
-  <!-- Bloc 1 — the colony's waterfront, the page's one signature element. Everything under it is
-       read against it: the day and the week are both what tonight adds to this. -->
   @if (colony.town(); as town) {
-    <!-- The scene is the block, not an illustration under a row of figures: it bleeds to the
-         panel's four edges and the figures stand on the ground it ends on.
-
-         `shrink-0` because `page-body` is a flex column: without it the scene is the tallest child
-         and therefore the first one the column compresses, which cut the readout in half. -->
-    <!-- The frame lives on an inner element: `page-body` puts its gutter on each block it holds, so
-         a border on the block itself would sit outside that gutter with the scene inset inside it. -->
-    <section class="shrink-0">
+    <section class="overview-scene">
       <div class="colony-town">
         <!-- Deferred, and the only deferred block on the public site: the scene's geometry is
              twelve kilobytes of pure illustration, and every page of the site rides in the initial
@@ -30,16 +23,21 @@
           <app-town-silhouette
             class="colony-town-scene"
             [moralePercentage]="colony.attractivity()?.percentage ?? 50"
-            [populationPercentage]="colony.populationPercentage()"
+            [populationPercentage]="town.populationPercentage"
+            [progressPercentage]="town.progressPercentage"
             [step]="town.step"
+            [turnoutPercentage]="town.turnoutPercentage"
           />
         } @placeholder {
           <div class="colony-town-wait"></div>
         }
 
-        <!-- The readout sits on the scene rather than under it: a dark plate on the night sky needs
-             no scrim to be legible, so the frontage keeps its full height. -->
-        <div class="colony-town-plate notch-tr">
+        <!-- The readout stands on the scene with nothing but a wash of dark behind it. It used to sit
+             on a plate, which was right when the scene was a 19rem band: at full height the frontage
+             grows into where the plate was, and a hard-edged box laid over a drawing that has no edge
+             is the one thing the scene cannot afford. The wash is soft enough to leave the skyline
+             legible through it and dark enough to hold a 116px figure over lit windows. -->
+        <div class="colony-town-plate">
           <p class="colony-town-tier">
             {{ 'overview.town.tier' | translate: { name: currentTier()?.name ?? '' } }}
           </p>
@@ -69,131 +67,115 @@
             }
           </p>
         </div>
-      </div>
-    </section>
-  }
 
-  <!-- Bloc 2 — the week, read as the confrontation it is. -->
-  <section aria-labelledby="week-title" class="flex flex-col gap-3">
-    <div class="section-rule">
-      <h2 class="section-rule-title" id="week-title">
-        {{
-          'overview.weekSummary.title'
-            | translate: { week: runWeek()?.index ?? '—', weeks: runWeek()?.count ?? '—' }
-        }}
-      </h2>
-      <span aria-hidden="true" class="section-rule-line"></span>
-      <a [routerLink]="'/week'" class="section-rule-link focus-ring">
-        {{ 'overview.weekSummary.link' | translate }}
-        <span aria-hidden="true">→</span>
-      </a>
-      <span aria-hidden="true" class="section-rule-diamond"></span>
-    </div>
+        <!-- The line to the next step, laid on the ground the scene ends on: how far along, drawn as
+             a length, then what is still owed and the name it buys.
 
-    <app-confrontation-band [remaining]="week()?.remaining ?? null" />
-  </section>
-
-  <!-- Blocs 3 & 4 — what the colony runs on, and who is bringing it in. Side by side because they
-       are the two halves of the same evening: the harvest, and who harvested it. The two columns
-       stretch to the taller of them and the ranking's three rows share the height, so the row ends
-       level with the harvest chart instead of leaving a hole under it. -->
-  <div class="grid gap-4 lg:grid-cols-2 lg:gap-x-6">
-    <section aria-labelledby="economy-title" class="flex flex-col gap-3">
-      <div class="section-rule">
-        <h2 class="section-rule-title" id="economy-title">
-          {{ 'overview.economy.title' | translate }}
-        </h2>
-        <span aria-hidden="true" class="section-rule-line"></span>
-        <a [routerLink]="'/campaign'" class="section-rule-link focus-ring">
-          {{ 'overview.populationTile.link' | translate }}
-          <span aria-hidden="true">→</span>
-        </a>
-        <span aria-hidden="true" class="section-rule-diamond"></span>
-      </div>
-
-      <!-- Three resources, each named by its own icon in its own colour — the same mapping
-           `/campaign` uses: wheat for food, hammer for materials, magnet for morale. -->
-      <div class="eco">
-        <div class="eco-cell eco-cell--food">
-          <span class="eco-l">
-            <svg class="size-3 shrink-0 text-brand-400" lucideWheat></svg>
-            <b>{{ 'colony.track.food.name' | translate }}</b>
+             Its own strip rather than a figure in the readout, because this is a distance and a
+             distance is read as a length. It is also the caption of the scaffolding standing in the
+             scene above it: the site rises as this fills. -->
+        <p
+          [attr.aria-label]="
+            'colony.tierProgress'
+              | translate
+                : { materials: colony.nextTierMaterialsLabel(), name: colony.nextTierNameLabel() }
+          "
+          class="colony-town-route"
+        >
+          <span
+            aria-hidden="true"
+            class="font-display text-sm font-bold text-brand-400 tabular-nums"
+          >
+            {{ town.progressPercentage | number: '1.0-0' }} %
           </span>
-          <span class="eco-v text-brand-400">{{ colony.foodStockLabel() }}</span>
-          <span class="eco-s">{{ foodWindowCaption() }}</span>
-        </div>
-
-        <div class="eco-cell eco-cell--mat">
-          <span class="eco-l">
+          <span aria-hidden="true" class="colony-town-route-track">
+            <span [style.width.%]="town.progressPercentage"></span>
+          </span>
+          <span
+            aria-hidden="true"
+            class="label-caption inline-flex items-center gap-1.5 whitespace-nowrap text-text-secondary"
+          >
             <svg class="size-3 shrink-0 text-accent-cyan" lucideHammer></svg>
-            <b>{{ 'colony.track.materials.name' | translate }}</b>
-          </span>
-          <span class="eco-v text-accent-cyan">{{ colony.materialsLabel() }}</span>
-          <span class="eco-s">
             {{
               'overview.economy.beforeTier'
                 | translate
                   : { materials: colony.nextTierMaterialsLabel(), tier: colony.nextTierNameLabel() }
             }}
           </span>
-        </div>
-
-        <div class="eco-cell eco-cell--mor">
-          <span class="eco-l">
-            <svg class="size-3 shrink-0 text-accent-violet" lucideMagnet></svg>
-            <b>{{ 'colony.track.morale.name' | translate }}</b>
-          </span>
-          <span class="eco-v text-accent-violet">
-            {{ colony.attractivity()?.moraleValueLabel ?? '—' }}
-          </span>
-          <span class="eco-s">{{ 'colony.track.morale.caption' | translate }}</span>
-        </div>
+        </p>
       </div>
-
-      @if (colony.foodRing()) {
-        <div class="eco-chart">
-          <app-bar-chart
-            [ariaLabel]="'colony.track.food.weekTitle' | translate"
-            [bars]="foodWeekBars()"
-            [showAllValues]="true"
-            [summary]="foodWeekSummary()"
-            heightClass="h-28 w-full"
-          />
-        </div>
-      }
     </section>
+  }
 
-    <section aria-labelledby="ranking-title" class="flex min-h-0 flex-col gap-3">
+  <div class="overview-sheet">
+    <!-- Bloc 0 — how the week that just closed went, on the first visit of the week and never after
+         it is closed. First under the scene because it is news: everything below reports a state that
+         has been true since, this reports what changed. -->
+    <app-week-recap />
+
+    <!-- Bloc 2 — the week, read as the confrontation it is. -->
+    <section aria-labelledby="week-title" class="flex flex-col gap-3">
       <div class="section-rule">
-        <h2 class="section-rule-title" id="ranking-title">
-          {{ 'overview.miniRanking.title' | translate }}
+        <h2 class="section-rule-title" id="week-title">
+          {{
+            'overview.weekSummary.title'
+              | translate: { week: runWeek()?.index ?? '—', weeks: runWeek()?.count ?? '—' }
+          }}
         </h2>
         <span aria-hidden="true" class="section-rule-line"></span>
-        <a [routerLink]="'/leaderboard'" class="section-rule-link focus-ring">
-          {{ 'overview.miniRanking.link' | translate }}
+        <a [routerLink]="'/week'" class="section-rule-link focus-ring">
+          {{ 'overview.weekSummary.link' | translate }}
           <span aria-hidden="true">→</span>
         </a>
         <span aria-hidden="true" class="section-rule-diamond"></span>
       </div>
 
-      <app-mini-ranking />
+      <app-confrontation-band [remaining]="week()?.remaining ?? null" />
     </section>
-  </div>
 
-  <!-- Bloc 5 — where the colony stands on its own ladder, and what the next step still costs. -->
-  <section aria-labelledby="ladder-title" class="flex flex-col gap-3">
-    <div class="section-rule">
-      <h2 class="section-rule-title" id="ladder-title">
-        {{ 'colony.ladder.title' | translate }}
-      </h2>
-      <span aria-hidden="true" class="section-rule-line"></span>
-      <a [routerLink]="'/campaign'" class="section-rule-link focus-ring">
-        {{ 'overview.populationTile.link' | translate }}
-        <span aria-hidden="true">→</span>
-      </a>
-      <span aria-hidden="true" class="section-rule-diamond"></span>
+    <!-- Blocs 3 & 4 — who is carrying the squad, at the two scales it can be asked at. Side by side
+       and in that order, shortest stretch first, so the pair reads as a zoom rather than as two
+       unrelated lists: tonight on the left, the week the competition is settled on beside it. The
+       two columns stretch to the taller of them and each board's three rows share that height, so
+       the rows stay level across the gutter. -->
+    <div class="overview-pair grid gap-4 lg:grid-cols-2 lg:gap-x-6">
+      <section aria-labelledby="day-ranking-title" class="flex min-h-0 flex-col gap-3">
+        <div class="section-rule">
+          <h2 class="section-rule-title" id="day-ranking-title">
+            {{ 'overview.miniRanking.day.title' | translate }}
+          </h2>
+          <span aria-hidden="true" class="section-rule-line"></span>
+          <!-- Lands on the board it previews rather than on the week's: the leaderboard opens on
+               whichever scope the link asks for. -->
+          <a
+            [queryParams]="{ scope: 'day' }"
+            [routerLink]="'/leaderboard'"
+            class="section-rule-link focus-ring"
+          >
+            {{ 'overview.miniRanking.link' | translate }}
+            <span aria-hidden="true">→</span>
+          </a>
+          <span aria-hidden="true" class="section-rule-diamond"></span>
+        </div>
+
+        <app-mini-ranking scope="DAY" />
+      </section>
+
+      <section aria-labelledby="week-ranking-title" class="flex min-h-0 flex-col gap-3">
+        <div class="section-rule">
+          <h2 class="section-rule-title" id="week-ranking-title">
+            {{ 'overview.miniRanking.week.title' | translate }}
+          </h2>
+          <span aria-hidden="true" class="section-rule-line"></span>
+          <a [routerLink]="'/leaderboard'" class="section-rule-link focus-ring">
+            {{ 'overview.miniRanking.link' | translate }}
+            <span aria-hidden="true">→</span>
+          </a>
+          <span aria-hidden="true" class="section-rule-diamond"></span>
+        </div>
+
+        <app-mini-ranking scope="WEEK" />
+      </section>
     </div>
-
-    <app-ladder-strip />
-  </section>
+  </div>
 </div>

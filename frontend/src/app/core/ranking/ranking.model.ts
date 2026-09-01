@@ -106,6 +106,77 @@ export interface CurrentRanking {
 }
 
 /**
+ * Single player's day: what they brought in, and how that compares to the day before.
+ *
+ * Mirrors `DailyRankingResponse.DailyRankingEntryResponse` from the backend.
+ */
+export interface DailyRankingEntry {
+  /**
+   * 1-based rank on the day, or `null` when the player is inactive and therefore never consumes a
+   * ranking slot — same rule as {@link RankingEntry.position}.
+   */
+  readonly position: number | null;
+  readonly playerId: number;
+  readonly displayName: string;
+
+  /**
+   * Relative path or URL of the player portrait, or `null` when not yet synchronized.
+   */
+  readonly portrait: string | null;
+
+  /**
+   * Damage dealt by that day's valued matches, after the daily diminishing returns.
+   *
+   * The only figure a day carries: challenge damage and both bonuses are settled on the week, so
+   * they have no value at this scale rather than a value of zero.
+   */
+  readonly matchDamage: number;
+  readonly previousMatchDamage: number;
+
+  /**
+   * {@link matchDamage} minus {@link previousMatchDamage} — what the day's board is really for.
+   */
+  readonly damageVariation: number;
+}
+
+/**
+ * One day's ranking, priced on demand from the matches that day holds.
+ *
+ * Mirrors the backend `DailyRankingResponse` returned by `GET /api/rankings/daily`.
+ */
+export interface DailyRanking {
+  /**
+   * The day on the board, as an ISO-8601 date (`YYYY-MM-DD`).
+   */
+  readonly day: string;
+
+  /**
+   * The day the variation is measured against, as an ISO-8601 date (`YYYY-MM-DD`).
+   */
+  readonly previousDay: string;
+
+  /**
+   * Competing players who played at all that day.
+   *
+   * The turnout is measured on the squad the board actually ranks: a deactivated player is listed
+   * and scored but never takes a slot, so counting them would report a presence over rows that have
+   * nowhere to show it.
+   */
+  readonly playedPlayerCount: number;
+
+  /**
+   * Competing players, the denominator {@link playedPlayerCount} is read against.
+   */
+  readonly rosterPlayerCount: number;
+
+  /**
+   * One entry per player of the roster, archived ones aside — deactivated players included, at a
+   * `null` position.
+   */
+  readonly ranking: readonly DailyRankingEntry[];
+}
+
+/**
  * Single player's finalized result within one historical week.
  *
  * Mirrors `RankingHistoryWeekResponse.FinalRankingEntryResponse` from the backend.

@@ -1,54 +1,76 @@
-<!-- `contents` on the host, so this <aside> is the flex child the page's row lays out rather than a
-     wrapper standing between the two. Its own scroller: the rulebook beside it is far taller, and a
-     rail that scrolled with it would be gone by the second section — which is the whole reason it
-     exists. Hidden below `lg`, where the reading column needs the full width; the search and the
-     sections are then reached by scrolling the page itself. -->
-<aside
-  [attr.aria-label]="'rules.contents.title' | translate"
-  class="scroll-subtle hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-edge lg:flex"
->
-  <!-- Pinned to the rail's top while its list scrolls under it: on a ten-entry list the field would
-       barely leave the screen, but it is the rail's one control and it should never be somewhere
-       the reader has to go back up to find. -->
-  <div class="sticky top-0 z-10 bg-surface-950 px-4 pt-5 pb-3">
+<!-- The rail's two pieces, written once and placed twice: the rulebook offers the same search and
+     the same ten sections whether it is read on a desk or on a phone, and only the shape they are
+     put in changes. -->
+
+<!-- The one control the rulebook has. A carved well on the rail's ground rather than the bare
+     underline it was: an unframed field on a page this dense reads as a caption someone forgot to
+     style, and nothing says where to click. The frame is the shared field chrome (see
+     `app-text-field`) — two nested cuts, the outer one showing through as the border and turning
+     brand while the field holds focus.
+
+     Sized as a flex child here rather than through a wrapper: `ng-container` renders no box, so this
+     is the band's own grid item on a phone, and an ordinary block in the rail. -->
+<ng-template #field>
+  <div
+    class="notch-tr h-10 min-w-0 flex-1 bg-edge-strong p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500"
+  >
     <label
-      class="flex items-center gap-2 border-b border-edge pb-1.5 transition-colors focus-within:border-brand-500"
+      class="notch-tr flex h-full items-center gap-2 bg-surface-950 pr-1 pl-2.5 [--notch:0.5rem]"
     >
       <svg aria-hidden="true" class="size-4 shrink-0 text-text-muted" lucideSearch></svg>
-      <span class="sr-only">{{ 'rules.contents.searchLabel' | translate }}</span>
       <input
+        #control
+        (focus)="reveal()"
         (input)="onInput($event)"
+        [attr.aria-label]="'rules.contents.searchLabel' | translate"
         [placeholder]="'rules.contents.searchPlaceholder' | translate"
         [value]="query()"
         autocapitalize="off"
-        class="min-w-0 flex-1 bg-transparent py-1 text-base text-text-primary placeholder:text-text-muted focus:outline-none"
+        class="h-full min-w-0 flex-1 bg-transparent text-base text-text-primary placeholder:text-text-muted focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
         spellcheck="false"
         type="search"
       />
+      <!-- The way back to the full list, offered only once there is something to clear. WebKit's own
+           cancel button is suppressed above: it paints a grey disc that ignores the palette. -->
+      @if (query() !== '') {
+        <button
+          (click)="clear(control)"
+          [attr.aria-label]="'rules.contents.clear' | translate"
+          class="focus-ring-inset flex size-7 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:text-text-primary"
+          type="button"
+        >
+          <svg aria-hidden="true" class="size-3.5" lucideX></svg>
+        </button>
+      }
     </label>
   </div>
+</ng-template>
 
+<ng-template #list>
   @if (entries().length === 0) {
-    <p class="px-4 pb-5 text-prose text-text-secondary">
+    <p class="px-4 py-4 text-prose text-text-secondary">
       {{ 'rules.contents.noMatch' | translate: { query: query() } }}
     </p>
   } @else {
-    <ul class="flex flex-col pb-8">
+    <ul>
       @for (entry of entries(); track entry.id) {
         <li>
           <!-- A button rather than a fragment link: the fragment is the page's own concern, and the
-               router would push a history entry for every section a reader glances at. -->
+               router would push a history entry for every section a reader glances at.
+
+               Painted exactly like an entry of the application's own rail, which stands right beside
+               this one: the same 4px brand bar drawn as a `::before` so the mark costs no element
+               and never shifts the row, the same tint under the pointer, the same gradient washing
+               off to the right once the entry is the one being read. Two navigation columns side by
+               side answering a hover differently reads as one of them being broken. -->
           <button
-            (click)="jump.emit(entry.id)"
+            (click)="choose(entry.id)"
             [attr.aria-current]="entry.id === activeId() ? 'true' : null"
-            [class.border-l-brand-500]="entry.id === activeId()"
-            [class.border-l-transparent]="entry.id !== activeId()"
-            [class.text-brand-500]="entry.id === activeId()"
-            [class.text-text-secondary]="entry.id !== activeId()"
-            class="focus-ring-inset flex w-full cursor-pointer items-baseline gap-2.5 border-l-2 py-2 pr-4 pl-4 text-left transition-colors hover:bg-brand-500/6 hover:text-text-primary"
+            [class]="entry.id === activeId() ? activeEntryClass : idleEntryClass"
+            class="focus-ring-inset relative flex min-h-11 w-full cursor-pointer items-center gap-3.5 px-4 py-3 text-left transition-colors before:absolute before:inset-y-0 before:left-0 before:w-1 before:content-['']"
             type="button"
           >
-            <span aria-hidden="true" class="w-4 shrink-0 font-mono text-xs tabular-nums">
+            <span aria-hidden="true" class="w-4 shrink-0 font-mono text-2xs tabular-nums">
               {{ entry.index }}
             </span>
             <span class="text-base leading-snug">
@@ -59,4 +81,76 @@
       }
     </ul>
   }
+</ng-template>
+
+<!-- Phone and tablet. The rail is the reader's only way to look a rule up rather than read the whole
+     document, and below `lg` it simply was not rendered — the search existed on a desk and nowhere
+     else. It comes back as a band under the page's context bar, outside the scrolling column, so the
+     field stays on screen for the whole four thousand pixels instead of being a header the reader
+     scrolls away from. The sections drop from it on demand: ten entries permanently open would push
+     the rulebook off the screen it is meant to be read on.
+
+     Dismissed by a tap on the page behind it — on the scrim, and on the document for what the scrim
+     does not reach: the panel is capped at 60% of the screen, and the band itself stays uncovered. -->
+@if (open()) {
+  <div
+    (click)="close()"
+    aria-hidden="true"
+    class="fixed inset-0 z-10 bg-surface-950/70 lg:hidden"
+  ></div>
+}
+
+<div class="relative z-20 border-b border-edge bg-surface-sunken lg:hidden">
+  <div class="mx-auto flex w-full max-w-[1440px] items-center gap-2 px-4 py-2.5 sm:px-6">
+    <ng-container [ngTemplateOutlet]="field" />
+
+    <button
+      (click)="toggle()"
+      [attr.aria-controls]="panelId"
+      [attr.aria-expanded]="open()"
+      class="focus-ring notch-tr flex h-10 shrink-0 cursor-pointer items-center gap-2 border border-edge px-3 text-text-secondary transition-colors [--notch:0.5rem] hover:border-edge-strong hover:text-text-primary motion-safe:active:scale-[0.96]"
+      type="button"
+    >
+      <span class="label-caption">{{ 'rules.contents.title' | translate }}</span>
+      <svg
+        [class.rotate-180]="open()"
+        aria-hidden="true"
+        class="size-4 shrink-0 text-text-muted transition-transform duration-200 motion-reduce:transition-none"
+        lucideChevronDown
+      ></svg>
+    </button>
+  </div>
+
+  @if (open()) {
+    <div
+      [id]="panelId"
+      class="absolute inset-x-0 top-full z-10 max-h-[60vh] overflow-y-auto border-b border-brand-500/40 bg-surface-sunken pb-2 motion-safe:animate-panel-drop"
+    >
+      <ng-container [ngTemplateOutlet]="list" />
+    </div>
+  }
+</div>
+
+<!-- Desktop. `contents` on the host, so this <aside> is the flex child the page's row lays out rather
+     than a wrapper standing between the two. Its own scroller: the rulebook beside it is far taller,
+     and a rail that scrolled with it would be gone by the second section — which is the whole reason
+     it exists. Carved below the page ground like the application's own rail, so the column reads as
+     chrome the reader looks *up* things in rather than as a first paragraph of the document.
+
+     Plain `overflow-y-auto` rather than `scroll-subtle`, same reason as the shared select's options
+     panel: `scrollbar-gutter: stable` reserves the thumb's column whether or not there is anything
+     to scroll, and a ten-entry list in a full-height column never has — so every entry's hover
+     stopped fifteen pixels short of the rail's own edge. -->
+<aside
+  [attr.aria-label]="'rules.contents.title' | translate"
+  class="hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-edge bg-surface-sunken pb-8 lg:flex"
+>
+  <!-- Pinned to the rail's top while its list scrolls under it: on a ten-entry list the field would
+       barely leave the screen, but it is the rail's one control and it should never be somewhere the
+       reader has to go back up to find. -->
+  <div class="sticky top-0 z-10 bg-surface-sunken px-4 pt-5 pb-4">
+    <ng-container [ngTemplateOutlet]="field" />
+  </div>
+
+  <ng-container [ngTemplateOutlet]="list" />
 </aside>

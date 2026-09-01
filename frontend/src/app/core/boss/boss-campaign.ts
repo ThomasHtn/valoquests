@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval } from 'rxjs';
 
 import { BossApi } from '@core/boss/boss-api';
+import { bossDamageOf } from '@core/boss/boss-damage.utils';
 import { BossTimelineNode, BossContribution } from '@core/boss/boss-timeline.model';
 import { resolveScheduledBossCategory } from '@core/boss/boss-visual.utils';
 import { BossCategory, BossHistoryWeek, CurrentBoss } from '@core/boss/boss.model';
@@ -31,24 +32,6 @@ import { resolveBossHpBarLabelKey, resolveBossStatusLabelKey } from './boss-time
  * from the moment it opens — the property the Valorant act it replaces never had.
  */
 const FALLBACK_PLACEHOLDER_COUNT = 3;
-
-/**
- * Damage one player dealt to a week's boss, from their ranking entry.
- *
- * Their weekly total minus the regularity bonus, which is the one component that stays out of the
- * fight — it rewards showing up rather than output. This is the same subtraction
- * `DefaultBossQueryService#totalDamageDealt` makes to fill the health bar, so a week's rows add up
- * to the bar they sit under.
- *
- * @param entry - The player's ranking entry, live or finalized.
- * @returns The damage that week's boss took from them.
- */
-function bossDamageOf(entry: {
-  readonly totalDamage: number;
-  readonly regularityBonus: number;
-}): number {
-  return entry.totalDamage - entry.regularityBonus;
-}
 
 /**
  * The group's whole run of weekly boss confrontations, resolved once into display-ready nodes.

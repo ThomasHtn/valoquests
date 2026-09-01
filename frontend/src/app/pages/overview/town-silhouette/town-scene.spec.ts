@@ -11,6 +11,10 @@ const litCells = (scene: ReturnType<typeof buildTownScene>): number =>
     .flatMap((building) => building.shapes)
     .filter((shape) => shape.kind === 'rect' && shape.fill === '#ffc477').length;
 
+/** Lamps actually burning on the street, counted by the halo each one throws. */
+const litGlow = (scene: ReturnType<typeof buildTownScene>): number =>
+  scene.furniture.filter((shape) => shape.kind === 'ellipse' && shape.fill === '#ffc477').length;
+
 describe('buildTownScene', () => {
   it('builds something at every step, named or numbered', () => {
     for (const step of [...NAMED_STEPS, ...CITADEL_STEPS]) {
@@ -88,6 +92,62 @@ describe('buildTownScene', () => {
 
   it('stops raising it once the horizon is closed, rather than off the top of the frame', () => {
     expect(buildTownScene(40).backdrop).toEqual(buildTownScene(17).backdrop);
+  });
+
+  /*
+   * Turnout is the scene's only daily reading: the step moves about once a week and the lit windows
+   * move by a percent a day, so without this the drawing is the same drawing from one Monday to the
+   * next. It has to change the picture, and it has to leave the street standing when nobody came.
+   */
+  it('lights more of the street the more of the squad played today', () => {
+    expect(litGlow(buildTownScene(8, 0.6, 1))).toBeGreaterThan(litGlow(buildTownScene(8, 0.6, 0)));
+  });
+
+  it('keeps the street itself on an evening nobody played', () => {
+    const dead = buildTownScene(8, 0.6, 0);
+
+    expect(litGlow(dead)).toBe(0);
+    expect(dead.furniture.length).toBeGreaterThan(0);
+  });
+
+  it('clamps a turnout outside its nominal range instead of emptying the street', () => {
+    expect(buildTownScene(8, 0.6, 4).furniture).toEqual(buildTownScene(8, 0.6, 1).furniture);
+    expect(buildTownScene(8, 0.6, -1).furniture).toEqual(buildTownScene(8, 0.6, 0).furniture);
+  });
+
+  /*
+   * The site is what makes the town grow a little every day rather than a street at a time: it is
+   * the quarter the colony is currently paying for, standing under scaffolding, and the page reveals
+   * it in proportion to the materials banked.
+   */
+  it('puts the next quarter on site', () => {
+    expect(buildTownScene(6).construction.length).toBeGreaterThan(0);
+  });
+
+  it('leaves the site unlit, so a half-built quarter is not a finished one', () => {
+    const windows = buildTownScene(6).construction.filter(
+      (shape) => shape.kind === 'rect' && shape.fill === '#ffc477',
+    );
+
+    expect(windows).toHaveLength(0);
+  });
+
+  /* The quay is full at the last placed step, so there is nothing left to put on site. */
+  it('closes the site once the waterfront is finished', () => {
+    expect(buildTownScene(11).construction).toHaveLength(0);
+    expect(buildTownScene(17).construction).toHaveLength(0);
+  });
+
+  /*
+   * The camp is four huts and one plot being built on. Centring on the huts alone left the site
+   * hanging off the right-hand side of the frame, which is the one thing it must not do — it is what
+   * the reader is being asked to watch.
+   */
+  it('centres the frontage on the site as well as on what is built', () => {
+    const camp = buildTownScene(0);
+    const rightmost = 176 + 56;
+
+    expect(camp.frontageOffset).toBeCloseTo(360 - (22 + rightmost) / 2, 5);
   });
 });
 

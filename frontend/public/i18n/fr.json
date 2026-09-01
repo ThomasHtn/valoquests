@@ -420,7 +420,6 @@
       "week": "Sem. {{index}} / {{count}}"
     },
     "ladder": {
-      "title": "Paliers de la ville",
       "unit": "Reste à réunir",
       "hint": "Chaque palier s'achète en matériaux. Vous en gagnez en validant les défis de la semaine et en battant le boss du lundi."
     },
@@ -579,14 +578,13 @@
     "confrontation": {
       "squad": "Escouade",
       "threat": "Boss",
-      "onlineUnit": "/ {{roster}} en ligne",
-      "quests": "défis validés",
-      "multiplier": "multiplicateur {{multiplier}} · {{max}} au complet",
-      "dealt": "{{damage}} PV arrachés cette semaine"
+      "active": "{{present}}/{{roster}} actifs",
+      "dealtUnit": "PV infligés",
+      "dealt": "{{damage}} PV arrachés cette semaine",
+      "segment": "{{player}} · {{damage}} PV",
+      "breakdown": "Dégâts par joueur : {{breakdown}}"
     },
     "economy": {
-      "title": "Économie de la colonie",
-      "foodWindow": "{{days}} jours · +{{today}} aujourd'hui",
       "beforeTier": "{{materials}} avant {{tier}}"
     },
     "header": {
@@ -599,11 +597,25 @@
     },
     "miniRanking": {
       "damageUnit": "dégâts",
-      "empty": "Personne n'a encore joué cette semaine.",
       "error": "Impossible de charger le classement.",
       "link": "Voir le classement",
       "loading": "Chargement du classement…",
-      "title": "Classement"
+      "day": {
+        "title": "Classement du jour",
+        "caption": "{{day}} · dégâts de match, hors bonus",
+        "empty": "Personne n'a encore joué aujourd'hui.",
+        "sinceYesterday": "vs hier",
+        "variation": {
+          "up": "{{count}} dégâts de plus qu'hier",
+          "down": "{{count}} dégâts de moins qu'hier",
+          "flat": "Autant qu'hier"
+        }
+      },
+      "week": {
+        "title": "Classement de la semaine",
+        "caption": "Cumul depuis lundi, bonus compris",
+        "empty": "Personne n'a encore joué cette semaine."
+      }
     },
     "podium": {
       "hint": "Le podium de la semaine, classé sur les dégâts cumulés. Cliquer sur un joueur ouvre son profil.",
@@ -688,18 +700,32 @@
       "columns": {
         "activeDays": "Jours joués",
         "bonusDamage": "Bonus",
+        "bossesJoined": "Boss",
         "challengesCleared": "Défis validés",
+        "dailyDamage": "Dégâts du jour",
         "damage": "Dégâts",
+        "damageVariation": "Écart / hier",
         "materials": "Matériaux",
         "player": "Joueur"
       },
       "columnHelp": {
         "activeDays": "Nombre de jours distincts de la semaine où au moins une partie comptabilisée a été jouée. C'est cette valeur qui fixe le bonus de régularité.",
         "bonusDamage": "Part du total venant des deux bonus, déjà comprise dans la colonne Dégâts. Régularité : jusqu'à 6 000 pour sept jours joués, à partir de deux. Escouade : +10 % des dégâts d'un défi par joueur supplémentaire l'ayant validé, plafonné à +50 %.",
+        "bossesJoined": "Nombre de semaines du run où le joueur a infligé des dégâts au boss. Le bonus de régularité ne compte pas : il n'atteint jamais la barre de vie partagée.",
         "challengesCleared": "Nombre de défis de la semaine validés, sur les cinq tirés le lundi.",
+        "dailyDamage": "Dégâts des matchs de la journée, après le dégressif quotidien. Les dégâts des défis et les bonus se règlent à la semaine : ils n'existent pas à cette échelle.",
         "damage": "Total de la semaine, et la valeur sur laquelle le classement est trié : dégâts des matchs après le dégressif de la journée, plus les dégâts des défis validés, plus les bonus.",
+        "damageVariation": "Différence entre les dégâts d'aujourd'hui et ceux d'hier. La réponse à « est-ce qu'on a fait une bonne soirée ? ».",
         "materials": "Matériaux versés à la colonie par les défis déjà validés cette semaine. Ils augmentent l'efficacité de la ville, définitivement.",
         "player": "Chaque ligne mène au profil du joueur. Les joueurs hors campagne sont regroupés en bas : ils valident des défis mais n'occupent pas de place au classement."
+      },
+      "scope": {
+        "CAMPAIGN": "Campagne",
+        "DAY": "Jour",
+        "WEEK": "Semaine",
+        "campaignProgress": "Run en cours · semaine {{index}} sur {{count}}",
+        "dayTurnout": "{{played}} joueurs sur {{roster}} ont joué",
+        "label": "Portée du classement"
       },
       "completed": "Défi terminé",
       "empty": "Aucun classement n'est disponible cette semaine.",
@@ -719,6 +745,11 @@
         "next": "Semaine suivante",
         "previous": "Semaine précédente",
         "seeOnCampaign": "Voir sur la campagne"
+      },
+      "damageVariation": {
+        "down": "{{count}} dégâts de moins qu'hier",
+        "flat": "Autant qu'hier",
+        "up": "{{count}} dégâts de plus qu'hier"
       },
       "variation": {
         "down": {
@@ -1040,6 +1071,7 @@
       "town": "La ville grandit"
     },
     "contents": {
+      "clear": "Effacer la recherche",
       "noMatch": "Aucune section ne parle de « {{query}} ».",
       "searchLabel": "Chercher une règle",
       "searchPlaceholder": "rendement, moral…",

@@ -1,9 +1,30 @@
+<!-- What the three figures under it are, in one line — the only thing telling the two boards apart
+     when they sit side by side. It holds its own height while the board loads rather than pushing the
+     rows down when it lands.
+
+     The day names its date as well: the day on the board is the backend's, resolved against the
+     rollover timezone, and a reader whose own clock has crossed midnight has to be told which evening
+     they are looking at. It used to carry the turnout too — "1 joueur sur 7 a joué" — and that count
+     included players who hold no ranking slot, so it could read 1 over a board showing nobody. A
+     caption cannot contradict the rows under it. -->
+<p class="mini-rank-caption">
+  @if (scope() === 'DAY') {
+    <!-- Nothing at all until the day has loaded: the caption opens on its date, and a separator with
+         no date in front of it is not a shorter sentence, it is a broken one. -->
+    @if (dayLabel(); as day) {
+      {{ 'overview.miniRanking.day.caption' | translate: { day } }}
+    }
+  } @else {
+    {{ 'overview.miniRanking.week.caption' | translate }}
+  }
+</p>
+
 <app-resource-state
   emptyKind="waiting"
-  [emptyText]="'overview.miniRanking.empty' | translate"
+  [emptyText]="'overview.miniRanking.' + scopeKey() + '.empty' | translate"
   [errorText]="'overview.miniRanking.error' | translate"
   [grow]="true"
-  [isEmpty]="top3().length === 0"
+  [isEmpty]="isEmpty()"
   [isError]="hasError()"
   [isLoading]="isLoading()"
   [loadingText]="'overview.miniRanking.loading' | translate"
@@ -13,26 +34,57 @@
        page like the profile's match history. They share whatever height the column has, so the
        third one ends level with the block beside it. -->
   <ul class="flex min-h-0 flex-1 flex-col gap-2">
-    @for (entry of top3(); track entry.player.id) {
+    @for (row of top3(); track row.playerId) {
       <li class="flex min-h-0 flex-1">
         <a
-          [routerLink]="['/players', entry.player.id]"
+          [routerLink]="['/players', row.playerId]"
           class="mini-rank-row focus-ring-inset row flex min-h-12 w-full items-center gap-3 py-2 pr-3 pl-3"
         >
-          <app-position-badge [position]="entry.position" />
-          <app-avatar [src]="resolveAvatarUrl(entry.player.portrait)" size="sm" />
+          <app-position-badge [position]="row.position" />
+          <app-avatar [src]="row.avatarUrl" size="sm" />
           <span class="font-display min-w-0 flex-1 truncate font-semibold text-text-primary">
-            {{ entry.player.displayName }}
+            {{ row.displayName }}
           </span>
           <!-- Damage in `accent-gold`, the same amber `/week` prices a challenge in: it is one
-               currency across the app, and the ranking is that currency totalled. -->
-          <span
-            class="font-display shrink-0 text-[1.0625rem] font-bold text-accent-gold tabular-nums"
-          >
-            {{ formatDamage(entry.totalDamage) }}
-            <span class="mini-rank-unit font-mono">
-              {{ 'overview.miniRanking.damageUnit' | translate }}
+               currency across the app, and the ranking is that currency totalled. Under it, what
+               the figure is: the unit on the week, the gap with last night on the day. -->
+          <span class="flex shrink-0 flex-col items-end">
+            <span class="font-display text-[1.0625rem] font-bold text-accent-gold tabular-nums">
+              {{ row.damageLabel }}
             </span>
+            @if (row.variation === null) {
+              <span class="mini-rank-unit font-mono">
+                {{ 'overview.miniRanking.damageUnit' | translate }}
+              </span>
+            } @else if (row.variation === 0) {
+              <!-- An evening that matched the one before is a sentence, not a zero: a signed "0"
+                   beside two coloured gaps would read as a third amount. -->
+              <span class="mini-rank-delta mini-rank-delta-since font-mono">
+                {{ 'overview.miniRanking.day.variation.flat' | translate }}
+              </span>
+            } @else {
+              <!-- Same sign convention and same two colours as the leaderboard's own day column, so
+                   a gap reads identically wherever it is shown. -->
+              <span
+                class="mini-rank-delta font-mono"
+                [class.mini-rank-delta--up]="row.variation > 0"
+                [class.mini-rank-delta--down]="row.variation < 0"
+              >
+                <span aria-hidden="true">
+                  @if (row.variation > 0) {
+                    +{{ row.damageVariationLabel }}
+                  } @else {
+                    −{{ row.damageVariationLabel }}
+                  }
+                  <!-- What the gap is against, kept off the colour: the sign and the hue are the
+                       answer, the reference is only the question. -->
+                  <span class="mini-rank-delta-since">
+                    {{ 'overview.miniRanking.day.sinceYesterday' | translate }}
+                  </span>
+                </span>
+                <span class="sr-only">{{ row.variationLabel }}</span>
+              </span>
+            }
           </span>
         </a>
       </li>

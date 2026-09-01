@@ -2,35 +2,23 @@ package io.github.thomashtn.valoquests.colony.service;
 
 import io.github.thomashtn.valoquests.colony.ColonyRuleset;
 import io.github.thomashtn.valoquests.colony.model.ColonyDayActivity;
-import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
-import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
-import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import io.github.thomashtn.valoquests.scoring.service.MatchDamageCalculator;
-import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.scoring.model.DailyMatchDamage;
+import io.github.thomashtn.valoquests.scoring.service.DailyMatchDamageReader;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Reads what the squad did, day by day, over a stretch of the calendar.
  *
- * <p>Two readings of the same matches, and they are deliberately not the same number.
- *
- * <ul>
- *   <li><b>What was brought home</b> goes through {@link WeeklyMatchDamageResolver}, which is the whole
- *       point: the colony and the weekly ranking then price a given match to the unit, daily diminishing
- *       returns included, and the feature inherits its anti-farming from a barème it does not own.</li>
- *   <li><b>Who turned up</b> is read on raw damage instead, before those diminishing returns. They exist
- *       to stop farming, not to decide whether somebody logged in tonight — without that distinction a
- *       player stringing fifteen games together could watch their own turnout drop by playing more.</li>
- * </ul>
+ * <p>Both readings come from {@link DailyMatchDamageReader}, which prices a day once for everything
+ * that reads one: the colony turns a day into food, the leaderboard's day scope ranks the same day, and
+ * the two must not publish different figures for one evening. What this class adds on top is the
+ * colony's own reading of it — the turnout threshold, and the day shape the replay consumes.
  *
  * <p>Only players holding {@link Player#COMPETITIVE_STATUS} count. This used to read every match
  * whatever the player's status, on the argument that a numerator ignoring the roster is stable across
@@ -49,24 +37,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class ColonyActivityReader {
 
     /**
-     * Repository loading every tracked player's matches over a period.
+     * Reader pricing the roster's matches day by day, shared with everything else that reads a day.
      */
-    private final PlayerMatchRepository playerMatchRepository;
-
-    /**
-     * Resolver pricing every match after the daily diminishing returns.
-     */
-    private final WeeklyMatchDamageResolver damageResolver;
-
-    /**
-     * Calculator deciding whether a match counts at all, and what it is worth before those returns.
-     */
-    private final MatchDamageCalculator damageCalculator;
-
-    /**
-     * Barèmes the damage is resolved against.
-     */
-    private final ScoringRuleset scoringRuleset;
+    private final DailyMatchDamageReader damageReader;
 
     /**
      * Ruleset supplying the raw damage a day must clear to count towards turnout.
@@ -74,34 +47,17 @@ public class ColonyActivityReader {
     private final ColonyRuleset colonyRuleset;
 
     /**
-     * Calendar resolving week bounds and the day a match falls on.
-     */
-    private final WeekCalendar weekCalendar;
-
-    /**
      * Creates the activity reader.
      *
-     * @param playerMatchRepository player match repository
-     * @param damageResolver        weekly match damage resolver
-     * @param damageCalculator      match damage calculator
-     * @param scoringRuleset        scoring ruleset
-     * @param colonyRuleset         colony ruleset
-     * @param weekCalendar          week calendar
+     * @param damageReader  daily match damage reader
+     * @param colonyRuleset colony ruleset
      */
     public ColonyActivityReader(
-        PlayerMatchRepository playerMatchRepository,
-        WeeklyMatchDamageResolver damageResolver,
-        MatchDamageCalculator damageCalculator,
-        ScoringRuleset scoringRuleset,
-        ColonyRuleset colonyRuleset,
-        WeekCalendar weekCalendar
+        DailyMatchDamageReader damageReader,
+        ColonyRuleset colonyRuleset
     ) {
-        this.playerMatchRepository = playerMatchRepository;
-        this.damageResolver = damageResolver;
-        this.damageCalculator = damageCalculator;
-        this.scoringRuleset = scoringRuleset;
+        this.damageReader = damageReader;
         this.colonyRuleset = colonyRuleset;
-        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -115,7 +71,7 @@ public class ColonyActivityReader {
      * @return activity indexed by day, days without a match omitted
      */
     public Map<LocalDate, ColonyDayActivity> readActivity(LocalDate firstDay, LocalDate lastDay) {
-        Reading reading = read(firstDay, lastDay);
+        DailyMatchDamage reading = read(firstDay, lastDay);
         Map<LocalDate, ColonyDayActivity> activityByDay = new HashMap<>();
 
         reading.weightedDamageByDay().forEach((day, weightedDamage) -> {
@@ -123,10 +79,10 @@ public class ColonyActivityReader {
                 return;
             }
 
-            Map<Long, Integer> rawByPlayer = reading.rawDamageByDayAndPlayer()
-                .getOrDefault(day, Map.of());
-
-            activityByDay.put(day, new ColonyDayActivity(weightedDamage, presenceCount(rawByPlayer)));
+            activityByDay.put(
+                day,
+                new ColonyDayActivity(weightedDamage, presenceCount(reading.rawDamageOn(day)))
+            );
         });
 
         return activityByDay;
@@ -143,7 +99,7 @@ public class ColonyActivityReader {
      * @return raw damage indexed by player identifier, players who did not play omitted
      */
     public Map<Long, Integer> readRawDamageByPlayer(LocalDate day) {
-        return read(day, day).rawDamageByDayAndPlayer().getOrDefault(day, Map.of());
+        return read(day, day).rawDamageOn(day);
     }
 
     /**
@@ -159,97 +115,13 @@ public class ColonyActivityReader {
     }
 
     /**
-     * Reads every player's matches over a range in one query and folds both readings into one pass.
-     *
-     * <p>Whole weeks are loaded because the daily diminishing returns are ranked inside a player's
-     * week: a range cut mid-week would rank a Monday's games against a partial week and price them
-     * above what the weekly ranking pays.
-     *
-     * <p>One query for the whole roster and the whole range, then grouped in memory. Asking per player
-     * and per week instead cost {@code players x weeks} round trips on a call the replay makes after
-     * every synchronization — eleven weeks against a roster that is free to grow.
+     * Reads a range through the shared daily reader, on the roster the colony accounts for.
      *
      * @param firstDay first day of the range, inclusive
      * @param lastDay  last day of the range, inclusive
      * @return both readings, keyed by day
      */
-    private Reading read(LocalDate firstDay, LocalDate lastDay) {
-        Reading reading = new Reading(new HashMap<>(), new HashMap<>());
-
-        List<PlayerMatch> matches = playerMatchRepository.findAllForPeriod(
-            Player.COMPETITIVE_STATUS,
-            weekCalendar.startOf(weekCalendar.weekStartOf(firstDay)),
-            weekCalendar.endOf(weekCalendar.weekStartOf(lastDay))
-        );
-
-        groupByPlayerAndWeek(matches).values().forEach(week -> accumulateWeek(week, reading));
-
-        return reading;
-    }
-
-    /**
-     * Splits a flat list of matches into the player-weeks the resolver prices one at a time.
-     *
-     * @param matches every match of the range, whoever played them
-     * @return matches grouped by the player and the week they belong to
-     */
-    private Map<PlayerWeek, List<PlayerMatch>> groupByPlayerAndWeek(List<PlayerMatch> matches) {
-        Map<PlayerWeek, List<PlayerMatch>> grouped = new LinkedHashMap<>();
-
-        for (PlayerMatch match : matches) {
-            PlayerWeek key = new PlayerWeek(
-                match.getPlayer().getId(),
-                weekCalendar.weekStartOf(match.getMatch().getStartedAt())
-            );
-
-            grouped.computeIfAbsent(key, ignored -> new ArrayList<>()).add(match);
-        }
-
-        return grouped;
-    }
-
-    /**
-     * Prices one player's week and folds it into both accumulators.
-     *
-     * @param matches that player-week's matches, chronologically ordered
-     * @param reading accumulators to fold into
-     */
-    private void accumulateWeek(List<PlayerMatch> matches, Reading reading) {
-        Map<Long, Integer> damageByMatchId = damageResolver.resolve(matches, scoringRuleset);
-
-        for (PlayerMatch match : matches) {
-            LocalDate day = weekCalendar.dayOf(match.getMatch().getStartedAt());
-            int rawDamage = damageCalculator.damageOf(match, scoringRuleset);
-
-            reading.weightedDamageByDay()
-                .merge(day, damageByMatchId.getOrDefault(match.getId(), 0), Integer::sum);
-
-            if (rawDamage > 0) {
-                reading.rawDamageByDayAndPlayer()
-                    .computeIfAbsent(day, ignored -> new HashMap<>())
-                    .merge(match.getPlayer().getId(), rawDamage, Integer::sum);
-            }
-        }
-    }
-
-    /**
-     * One player's slice of one week, the unit the daily diminishing returns are ranked inside.
-     *
-     * @param playerId  internal player identifier
-     * @param weekStart Monday identifying the week
-     */
-    private record PlayerWeek(Long playerId, LocalDate weekStart) {
-    }
-
-    /**
-     * Both readings of a stretch of the calendar, accumulated in one pass.
-     *
-     * @param weightedDamageByDay      damage per day, after the daily diminishing returns
-     * @param rawDamageByDayAndPlayer  raw damage per day and per player, before them
-     */
-    private record Reading(
-        Map<LocalDate, Integer> weightedDamageByDay,
-        Map<LocalDate, Map<Long, Integer>> rawDamageByDayAndPlayer
-    ) {
+    private DailyMatchDamage read(LocalDate firstDay, LocalDate lastDay) {
+        return damageReader.read(Set.of(Player.COMPETITIVE_STATUS), firstDay, lastDay);
     }
 }

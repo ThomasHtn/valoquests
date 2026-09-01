@@ -98,6 +98,16 @@ export interface TownScene {
   /** Street furniture, drawn with the frontage so it follows the same terraces. */
   readonly furniture: readonly TownShape[];
 
+  /**
+   * The quarter the colony is paying for right now, drawn whole and unlit.
+   *
+   * The template reveals it from the ground up in proportion to the materials banked towards the
+   * next step, so the town gains a course of masonry on any day the squad brought some in rather
+   * than a whole street once a week. Kept apart from {@link buildings} for exactly that reason: it
+   * is the one group that is clipped.
+   */
+  readonly construction: readonly TownShape[];
+
   /** Quay, water, reflections and the crossing. */
   readonly foreground: readonly TownShape[];
 
@@ -120,9 +130,19 @@ const C = {
   hazeNear: '#132430',
   hazeVeil: '#0b1620',
 
-  groundFace: ['#101a20', '#0e171d', '#0c151a'],
-  groundCap: ['#1a2830', '#17242b', '#142027'],
-  retaining: '#0a1217',
+  /** The dark the scene opens and closes on, at the very top of the sky and at the frame's foot. */
+  night: '#040a11',
+
+  /*
+   * The ground, and one colour for all of it.
+   *
+   * It used to be three values falling away from the horizon, plus a lighter cap along each top
+   * edge. On a panel four hundred pixels high that read as depth; on one holding a screen it read as
+   * three different blacks meeting on two straight lines, with a bright lip drawn along every one of
+   * them. The relief is still there — the terraces still step down — but it is carried by the
+   * silhouette against the sky, which is the only place a night landscape shows it anyway.
+   */
+  ground: '#111c23',
 
   wall: '#1e2733',
   wallLit: '#26313e',
@@ -171,11 +191,6 @@ const C = {
   trunk: '#12181a',
   foliage: '#101a18',
   foliageLit: '#16241f',
-  fencePost: '#1a1712',
-  track: '#171a16',
-  trackCap: '#20241d',
-  rut: '#2a2c22',
-  stoneLoose: '#2e3128',
   ford: '#1b2126',
   fordWet: '#4a6470',
 
@@ -311,15 +326,50 @@ const ellipse = (
 ): TownShape => ({ kind: 'ellipse', fill, cx, cy, rx, ry, opacity });
 
 /**
+ * A soft edge, stacked out of full-bleed bands.
+ *
+ * The scene is emitted as flat primitives on purpose, which means every surface meets the next one
+ * on a hard line. That was invisible on a 19rem band and is not on a panel holding a screen: the
+ * ground, the track and the water read as three black stripes laid over one another. Four or five
+ * bands of falling opacity turn each of those lines into a transition, at a cost of five rects.
+ *
+ * @param colour - Colour to fade in.
+ * @param y - Where the fade starts.
+ * @param height - How far it runs before the surface itself takes over.
+ * @param steps - How many bands to spend on it.
+ * @param alpha - Opacity the last band reaches.
+ * @returns The bands, top first.
+ */
+function feather(colour: string, y: number, height: number, steps: number, alpha = 1): TownShape[] {
+  const slice = height / steps;
+
+  // Squared rather than linear: a straight ramp opens on a step of its full strength divided by the
+  // count, and against a flat ground that first step is the edge the fade exists to remove.
+  return Array.from({ length: steps }, (_, index) =>
+    band(
+      colour,
+      y + index * slice,
+      slice + 0.5,
+      Number((((index + 1) / steps) ** 2 * alpha).toFixed(3)),
+    ),
+  );
+}
+
+/**
  * A light source, drawn as three stacked ellipses rather than with a blur filter: the scene is
  * emitted as flat primitives and has to stay that way, and a hand-stacked halo is also the only
  * version that keeps its weight when the panel is scaled to a different height.
+ *
+ * Tight on purpose. The outer ring used to reach two and a half times the source and the core sat at
+ * thirty per cent, which on a small panel was a lamp and on a large one was a coloured cloud with a
+ * dot in it. A light at night has a bright centre and falls off fast; what is left over is the sky's
+ * job, not the lamp's.
  */
 function glow(colour: string, cx: number, cy: number, r: number, strength = 1): TownShape[] {
   return [
-    ellipse(colour, cx, cy, r * 2.6, r * 2.6, 0.07 * strength),
-    ellipse(colour, cx, cy, r * 1.5, r * 1.5, 0.14 * strength),
-    ellipse(colour, cx, cy, r * 0.75, r * 0.75, 0.3 * strength),
+    ellipse(colour, cx, cy, r * 1.6, r * 1.6, 0.05 * strength),
+    ellipse(colour, cx, cy, r * 1, r * 1, 0.1 * strength),
+    ellipse(colour, cx, cy, r * 0.55, r * 0.55, 0.26 * strength),
   ];
 }
 
@@ -811,28 +861,35 @@ function hazeRow(
   return shapes;
 }
 
-/** The terraces themselves, and the retaining walls holding each one above the next. */
+/**
+ * The ground: one silhouette, stepping down from the back of the scene to the quay.
+ *
+ * Drawn as a single filled outline rather than as three surfaces meeting on two lines. Each terrace
+ * used to carry its own value and a lighter cap along its top edge, and both of those were read as
+ * faults rather than as terrain: three blacks with two seams between them, and a bright lip running
+ * along every slope with nothing above it to justify a lit edge. One colour and one outline leave
+ * the relief to the only thing that can carry it at night, which is where the ground cuts the sky.
+ *
+ * @returns The ground, as one shape.
+ */
 function terraces(): TownShape[] {
-  const shapes: TownShape[] = [];
-  let from = -FAR;
+  const run = 46;
+  const last = TERRACES[TERRACES.length - 1];
+  const points: string[] = [`${-FAR},${SCENE_H}`, `${-FAR},${QUAY_Y - TERRACES[0].lift}`];
 
+  // Walked left to right: the flat of each terrace, then the bank down to the next one.
   TERRACES.forEach((step, index) => {
-    const to = Math.min(step.until, FAR);
-    const top = QUAY_Y - step.lift;
-
-    shapes.push(rect(C.groundFace[index], from, top, to - from, SCENE_H - top));
-    shapes.push(rect(C.groundCap[index], from, top, to - from, 4));
-
-    if (index > 0) {
-      const drop = TERRACES[index - 1].lift - step.lift;
-      shapes.push(rect(C.retaining, from - 8, top - drop, 8, drop));
-      shapes.push(rect(C.groundCap[index], from - 8, top - drop, 8, 3));
+    const next = TERRACES[index + 1];
+    if (next === undefined) {
+      return;
     }
 
-    from = to;
+    points.push(`${step.until - run},${QUAY_Y - step.lift}`, `${step.until},${QUAY_Y - next.lift}`);
   });
 
-  return shapes;
+  points.push(`${FAR},${QUAY_Y - last.lift}`, `${FAR},${SCENE_H}`);
+
+  return [poly(C.ground, points.join(' '))];
 }
 
 /**
@@ -846,11 +903,13 @@ function campfire(x: number): TownShape[] {
   const base = QUAY_Y - liftAt(x);
 
   return [
-    ellipse(C.warm, x, base, 46, 12, 0.07),
-    ellipse(C.warm, x, base, 26, 7, 0.1),
+    // The pool it puts on the ground, kept to what a fire actually lights: it reached forty-six
+    // units before, which on a full-height panel was a wash of amber the size of the camp.
+    ellipse(C.warm, x, base, 24, 6, 0.06),
+    ellipse(C.warm, x, base, 13, 3.5, 0.09),
     line(C.woodDark, 2.6, x - 7, base, x + 4, base - 8),
     line(C.woodDark, 2.6, x + 7, base, x - 4, base - 8),
-    ...glow(C.warmDeep, x, base - 6, 7, 1.35),
+    ...glow(C.warmDeep, x, base - 6, 7, 1.1),
     poly(C.warm, `${x},${base - 15} ${x + 4},${base - 2} ${x - 4},${base - 2}`, 0.8),
     poly(C.warmCore, `${x},${base - 9} ${x + 2},${base - 2} ${x - 2},${base - 2}`, 0.9),
   ];
@@ -859,12 +918,32 @@ function campfire(x: number): TownShape[] {
 /**
  * Street lamps and the pool each one puts on the ground — the scene's floor lighting, and what
  * arrives with the first streets rather than with the first houses.
+ *
+ * How many of them are actually burning is tonight's turnout. The post is always there, so the
+ * street keeps its shape on a dead evening; only the light is missing, which is the difference
+ * between a town that has stopped growing and a town where nobody came home. This is the one thing
+ * in the scene that is different from yesterday on a day the ladder did not move, and the ladder
+ * moves about once a week.
+ *
+ * @param stage - Frontage stage, which decides what furniture exists at all.
+ * @param turnout - Share of the roster that played today, `0`–`1`.
+ * @param from - Left edge of what the colony has built, which is where its own fence starts.
+ * @param to - Right edge of the same.
+ * @returns The furniture, in the frontage's own coordinates.
  */
-function furnitureFor(stage: number): TownShape[] {
+function furnitureFor(stage: number, turnout: number, from: number, to: number): TownShape[] {
   const shapes: TownShape[] = [];
+  // Deterministic per lamp, so the same evening always lights the same lamps: a street that
+  // reshuffles which half of it is on at every change detection pass is not a street.
+  const random = seeded(4211);
 
   if (stage < LAMP_STAGE) {
-    shapes.push(...campfire(88), ...campfire(150));
+    shapes.push(...campfire(88));
+
+    // A second fire is worth lighting only when there is a second shift to sit at it.
+    if (turnout > 0.5) {
+      shapes.push(...campfire(150));
+    }
   }
 
   if (stage >= LAMP_STAGE) {
@@ -874,6 +953,13 @@ function furnitureFor(stage: number): TownShape[] {
         rect(C.lamp, x, base - 42, 3, 44),
         { kind: 'arc', stroke: C.lamp, width: 3, d: `M${x + 1.5},${base - 42} q0,-9 12,-9` },
         rect(C.lampHead, x + 9, base - 52, 11, 3.5),
+      );
+
+      if (random() >= turnout) {
+        continue;
+      }
+
+      shapes.push(
         ...glow(C.warm, x + 14.5, base - 49, 4.4, 0.9),
         // the cone it throws, and the pool it lands in
         poly(
@@ -885,22 +971,27 @@ function furnitureFor(stage: number): TownShape[] {
       );
     }
   } else {
-    // what a settlement has instead: a post-and-rail fence along the ridge, and the odd lantern
-    for (let x = VIS_L; x < VIS_R; x += 22) {
+    /*
+     * What a settlement has before it has streets: a lantern on a post, and nothing else.
+     *
+     * It used to carry a post-and-rail fence too. A fence is a repeating motif and the eye counts
+     * it, which at this size made the whole width read as one hatched band across the camp; it also
+     * enclosed the plot the colony is in the middle of building on, which is the opposite of what
+     * the first steps of the ladder are about.
+     */
+    for (let x = from - 20; x < to + 20; x += 120) {
       const base = QUAY_Y - liftAt(x);
-      shapes.push(
-        rect(C.fencePost, x, base - 15, 2.4, 15),
-        rect(C.wood, x, base - 12, 22, 2),
-        rect(C.wood, x, base - 6, 22, 2),
-      );
-    }
 
-    for (let x = VIS_L + 40; x < VIS_R; x += 210) {
-      const base = QUAY_Y - liftAt(x);
+      // The head as well as the post: unlit, a bare upright is read as a stick left in the ground,
+      // and on an evening nobody played every one of them is unlit.
       shapes.push(
         rect(C.woodDark, x, base - 26, 2.2, 26),
-        ...glow(C.warmDeep, x + 1, base - 25, 3.4, 0.85),
+        rect(C.lampHead, x - 2, base - 29, 6.2, 3),
       );
+
+      if (random() < turnout) {
+        shapes.push(...glow(C.warmDeep, x + 1, base - 27, 3.4, 0.85));
+      }
     }
   }
 
@@ -996,20 +1087,28 @@ function stoneCrossing(): TownShape[] {
 /**
  * Traffic on the deck: headlights going one way, tail lights the other. Two rows of dots, and the
  * scene stops being an elevation and becomes an evening.
+ *
+ * @param y - Deck level to lay the two rows on.
+ * @param turnout - Share of the roster that played today, `0`–`1`, which scales how busy the
+ *   crossing is. A full evening jams it, a dead one leaves it to two cars.
+ * @returns The traffic.
  */
-function traffic(y: number): TownShape[] {
+function traffic(y: number, turnout: number): TownShape[] {
   const shapes: TownShape[] = [];
   const random = seeded(7717);
+  // Never quite empty: a bridge with nothing at all on it reads as a rendering fault rather than as
+  // a quiet night, and the colony has inhabitants even on a day the squad did not play.
+  const density = 0.12 + turnout * 0.33;
 
   for (let x = VIS_L; x < VIS_R; x += 11) {
-    if (random() > 0.45) {
+    if (random() > density) {
       continue;
     }
     shapes.push(rect(C.warm, x - 1, y - 1, 5.4, 3.4, 0.12), rect(C.warm, x, y, 3.4, 1.4, 0.9));
   }
 
   for (let x = VIS_L + 5; x < VIS_R; x += 13) {
-    if (random() > 0.42) {
+    if (random() > density - 0.03) {
       continue;
     }
     shapes.push(
@@ -1022,13 +1121,13 @@ function traffic(y: number): TownShape[] {
 }
 
 /** Cable-stayed: the one thing in the scene that is not a building. */
-function cableCrossing(): TownShape[] {
+function cableCrossing(turnout: number): TownShape[] {
   const shapes: TownShape[] = [
     band(C.steel, DECK_Y, 7),
     band(C.quayEdge, DECK_Y - 3, 3),
     band(C.neonCyan, DECK_Y - 3.5, 1.2, 0.32),
     band(C.neonCyan, DECK_Y - 6, 6, 0.05),
-    ...traffic(DECK_Y - 9),
+    ...traffic(DECK_Y - 9, turnout),
   ];
 
   for (let x = VIS_L + 150; x < VIS_R; x += 470) {
@@ -1129,18 +1228,24 @@ export function starsFor(clarity: number): readonly TownShape[] {
  * @param life - Population against its ceiling, `0`–`1`: how many windows are lit.
  * @returns Everything the template draws, in painting order.
  */
-export function buildTownScene(step: number, life = 0.6): TownScene {
+export function buildTownScene(step: number, life = 0.6, turnout = 1): TownScene {
   const stage = Math.max(0, Math.min(LAST_FRONTAGE_STAGE, step));
   const beyond = Math.max(0, Math.min(BEYOND_STAGES, step - LAST_FRONTAGE_STAGE));
   const lit = Math.max(0, Math.min(1, life));
+  const busy = Math.max(0, Math.min(1, turnout));
   const visible = FRONTAGE.filter(
     (entry) => entry.stage <= stage && (entry.until === undefined || stage <= entry.until),
   );
+  const rising = FRONTAGE.filter(
+    (entry) => entry.stage === stage + 1 && (entry.until === undefined || stage + 1 <= entry.until),
+  );
 
   // The frontage is centred on what it actually contains, so a hamlet is not left in the corner of
-  // an avenue it has not built yet.
-  const minX = Math.min(...visible.map((entry) => entry.x));
-  const maxX = Math.max(...visible.map((entry) => entry.x + entry.w));
+  // an avenue it has not built yet. The plot being built counts as part of it: centring on the
+  // finished half alone would push what is going up off to one side of the frame.
+  const placedAndRising = [...visible, ...rising];
+  const minX = Math.min(...placedAndRising.map((entry) => entry.x));
+  const maxX = Math.max(...placedAndRising.map((entry) => entry.x + entry.w));
   const frontageOffset = SCENE_W / 2 - (minX + maxX) / 2;
 
   /*
@@ -1194,6 +1299,8 @@ export function buildTownScene(step: number, life = 0.6): TownScene {
       foreground.push(
         band(C.quayEdge, QUAY_Y, 6),
         band(C.quayFace, QUAY_Y + 6, WATER_Y - QUAY_Y - 6),
+        // The waterline is the hardest edge in the drawing and the one closest to the reader.
+        ...feather(C.water, WATER_Y - 5, 5, 4, 0.7),
       );
     } else {
       // not built yet: silt and reeds down to the water
@@ -1212,19 +1319,29 @@ export function buildTownScene(step: number, life = 0.6): TownScene {
         band(C.ripple, WATER_Y + 5 + i * 8, 1.6, Number((0.14 - i * 0.015).toFixed(3))),
       );
     }
-  } else {
-    // no water yet: a beaten track where the crossing will one day be, textured enough to read
-    foreground.push(band(C.track, DECK_Y - 8, 30), band(C.trackCap, DECK_Y - 8, 2));
-
-    for (let x = VIS_L; x < VIS_R; x += 26) {
-      foreground.push(
-        rect(C.rut, x, DECK_Y + 2, 14, 1.6, 0.75),
-        rect(C.rut, x + 6, DECK_Y + 12, 14, 1.6, 0.75),
-        ellipse(C.stoneLoose, x + 18, DECK_Y + 7, 2.2, 1.1, 0.6),
-        ellipse(C.trackCap, x + 3, DECK_Y + 18, 3, 1.4, 0.7),
-      );
-    }
   }
+
+  /*
+   * Before the water is dug there is nothing here at all: the ground the terraces already drew runs
+   * on to the bottom of the frame.
+   *
+   * There used to be a track across it — a slab of its own colour, forty units deep, edge to edge.
+   * Whatever was stamped on it, a full-width band in a second colour under a single-colour ground is
+   * read as a line, and the first step of the ladder does not need a road it has not built.
+   */
+
+  const placed: TownBuilding[] = visible.map((entry) => ({
+    x: entry.x,
+    w: entry.w,
+    shapes: entry.draw(lit),
+  }));
+
+  /*
+   * The site. Drawn unlit: a building with its windows on before it has walls is a building that is
+   * finished, and the whole point of the site is that it is not. It lights up when it is paid for,
+   * which is the step landing.
+   */
+  const construction = rising.flatMap((entry) => entry.draw(0));
 
   const crossing = crossingAt(stage);
   if (crossing === 'ford') {
@@ -1239,8 +1356,15 @@ export function buildTownScene(step: number, life = 0.6): TownScene {
   } else if (crossing === 'stone') {
     foreground.push(...stoneCrossing());
   } else if (crossing === 'cable') {
-    foreground.push(...cableCrossing());
+    foreground.push(...cableCrossing(busy));
   }
+
+  /*
+   * The frame closes on the dark it opened on. Without it the last surface the scene draws — the
+   * water, or the track — runs flat off the bottom edge and meets the strip under it on a line, and
+   * a picture that ends on a line reads as a picture that was cut rather than as one that ends.
+   */
+  foreground.push(...feather(C.night, SCENE_H - 54, 54, 14, 0.62));
 
   return {
     viewBox: `0 0 ${SCENE_W} ${SCENE_H}`,
@@ -1248,9 +1372,10 @@ export function buildTownScene(step: number, life = 0.6): TownScene {
     dome: domeFor(stage),
     backdrop,
     terraces: terraces(),
-    buildings: visible.map((entry) => ({ x: entry.x, w: entry.w, shapes: entry.draw(lit) })),
+    buildings: placed,
     flicker: visible.flatMap((entry) => entry.flicker?.() ?? []),
-    furniture: furnitureFor(stage),
+    furniture: furnitureFor(stage, busy, minX, maxX),
+    construction,
     foreground,
     frontageOffset,
   };

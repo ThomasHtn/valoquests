@@ -54,22 +54,84 @@ import tools.jackson.databind.json.JsonMapper;
 class ChallengeCatalogueCompatibilityTest {
 
     /**
-     * Production migrations seeding the challenge catalogue, in the order they are applied.
+     * Pattern extracting one challenge row seeded before the per-challenge damage column was dropped.
      */
-    private static final List<String> CATALOGUE_RESOURCES = List.of(
-        "db/migration/V3__insert_challenges.sql",
-        "db/migration/V28__add_progression_challenges.sql"
+    private static final Pattern ROW_WITH_DAMAGE_AND_RULE_TYPE = Pattern.compile(
+        "\\('([^']*)','([^']*)','([^']*)','([^']*)',(\\d+),"
+            + "'([^']*)','([^']*)','([^']*)','(\\[.*?])'::jsonb,"
+            + "(NULL|'[^']*'),(TRUE|FALSE),(\\d+)\\)",
+        Pattern.DOTALL
+    );
+
+    /**
+     * Pattern extracting one challenge row written between the damage column being dropped and
+     * {@code rule_type} being dropped by V30.
+     */
+    private static final Pattern ROW_WITH_RULE_TYPE = Pattern.compile(
+        "\\('([^']*)','([^']*)','([^']*)','([^']*)',"
+            + "'([^']*)','([^']*)','([^']*)','(\\[.*?])'::jsonb,"
+            + "(NULL|'[^']*'),(TRUE|FALSE),(\\d+)\\)",
+        Pattern.DOTALL
+    );
+
+    /**
+     * Pattern extracting one challenge row in the shape the table has today, after V30 dropped
+     * {@code rule_type} for duplicating {@code progress_mode}.
+     */
+    private static final Pattern CURRENT_ROW = Pattern.compile(
+        "\\('([^']*)','([^']*)','([^']*)','([^']*)',"
+            + "'([^']*)','([^']*)','(\\[.*?])'::jsonb,"
+            + "(NULL|'[^']*'),(TRUE|FALSE),(\\d+)\\)",
+        Pattern.DOTALL
+    );
+
+    /**
+     * Production migrations seeding the challenge catalogue, in the order they are applied.
+     *
+     * <p>Each carries the row shape the table had when it was written, since the columns between
+     * the difficulty and the conditions moved twice.
+     */
+    private static final List<CatalogueMigration> CATALOGUE_MIGRATIONS = List.of(
+        new CatalogueMigration(
+            "db/migration/V3__insert_challenges.sql",
+            ROW_WITH_DAMAGE_AND_RULE_TYPE,
+            6
+        ),
+        new CatalogueMigration(
+            "db/migration/V28__add_progression_challenges.sql",
+            ROW_WITH_RULE_TYPE,
+            5
+        ),
+        new CatalogueMigration(
+            "db/migration/V39__add_weekly_skill_challenges.sql",
+            CURRENT_ROW,
+            5
+        )
     );
 
     /**
      * Expected number of catalogue entries.
      *
      * <p>V3 seeds 78 rows, of which V14 deletes the 16 filtered on a game mode synchronization no
-     * longer imports, leaving 62. V28 adds 7 progression challenges. The 6 volume challenges V28
-     * disables are still counted here: it disables them with an UPDATE rather than removing the rows,
-     * and their definitions must keep parsing and calculating for the finalized weeks that drew them.
+     * longer imports, leaving 62. V28 adds 7 progression challenges and V38 deletes them again,
+     * back to 62. V39 adds 14 weekly skill challenges. The 6 volume challenges V28 disables are
+     * still counted here: it disables them with an UPDATE rather than removing the rows, and their
+     * definitions must keep parsing and calculating for the finalized weeks that drew them.
      */
-    private static final int EXPECTED_CHALLENGE_COUNT = 69;
+    private static final int EXPECTED_CHALLENGE_COUNT = 76;
+
+    /**
+     * Progress modes the catalogue still declares.
+     *
+     * <p>{@link ProgressMode#BASELINE} is deliberately absent: V38 deleted every challenge using it,
+     * because measuring a week against the four before it decided half the outcome before the week
+     * opened. The mode and its calculator stay registered — {@link
+     * #shouldRegisterCalculatorForEveryProgressMode()} still covers them — so a single-week
+     * progression challenge can be written later without reinstating anything.
+     */
+    private static final Set<ProgressMode> EXPECTED_CATALOGUE_MODES = EnumSet.complementOf(
+        EnumSet.of(ProgressMode.BASELINE)
+    );
 
     /**
      * Game-mode filters removed from the catalogue by V14.
@@ -80,27 +142,6 @@ class ChallengeCatalogueCompatibilityTest {
      */
     private static final Pattern REMOVED_GAME_MODE_PATTERN = Pattern.compile(
         "\"gameMode\"\\s*:\\s*\"(SWIFTPLAY|ESCALATION)\""
-    );
-
-    /**
-     * Pattern extracting one challenge row from the production migration.
-     */
-    private static final Pattern CHALLENGE_ROW_PATTERN = Pattern.compile(
-        "\\('([^']*)','([^']*)','([^']*)','([^']*)',(\\d+),"
-            + "'([^']*)','([^']*)','([^']*)','(\\[.*?])'::jsonb,"
-            + "(NULL|'[^']*'),(TRUE|FALSE),(\\d+)\\)",
-        Pattern.DOTALL
-    );
-
-    /**
-     * Pattern extracting one challenge row from a migration written after the per-challenge damage
-     * column was dropped, which is the same shape minus that column.
-     */
-    private static final Pattern MODERN_CHALLENGE_ROW_PATTERN = Pattern.compile(
-        "\\('([^']*)','([^']*)','([^']*)','([^']*)',"
-            + "'([^']*)','([^']*)','([^']*)','(\\[.*?])'::jsonb,"
-            + "(NULL|'[^']*'),(TRUE|FALSE),(\\d+)\\)",
-        Pattern.DOTALL
     );
 
     /**
@@ -214,12 +255,12 @@ class ChallengeCatalogueCompatibilityTest {
     }
 
     /**
-     * Verifies unique codes and complete progress-mode coverage.
+     * Verifies unique codes and the progress modes the catalogue is expected to declare.
      *
      * @throws IOException when the production migration cannot be read
      */
     @Test
-    void shouldContainUniqueCodesAndEveryProgressMode()
+    void shouldContainUniqueCodesAndTheExpectedProgressModes()
         throws IOException {
         List<Challenge> challenges = loadChallenges();
         Set<String> uniqueCodes = new HashSet<>();
@@ -235,9 +276,7 @@ class ChallengeCatalogueCompatibilityTest {
         }
 
         assertThat(catalogueModes)
-            .containsExactlyInAnyOrderElementsOf(
-                EnumSet.allOf(ProgressMode.class)
-            );
+            .containsExactlyInAnyOrderElementsOf(EXPECTED_CATALOGUE_MODES);
     }
 
     /**
@@ -280,22 +319,18 @@ class ChallengeCatalogueCompatibilityTest {
     private List<Challenge> loadChallenges() throws IOException {
         List<Challenge> challenges = new ArrayList<>();
 
-        for (String resource : CATALOGUE_RESOURCES) {
-            String migration = readCatalogueMigration(resource);
-            boolean legacyShape = CHALLENGE_ROW_PATTERN.matcher(migration).find();
-            Matcher matcher = legacyShape
-                ? CHALLENGE_ROW_PATTERN.matcher(migration)
-                : MODERN_CHALLENGE_ROW_PATTERN.matcher(migration);
-
-            // The legacy shape carries a per-challenge damage column between difficulty and category;
-            // every group after it therefore shifts by one.
-            int offset = legacyShape ? 1 : 0;
+        for (CatalogueMigration migration : CATALOGUE_MIGRATIONS) {
+            Matcher matcher = migration.rowPattern()
+                .matcher(readCatalogueMigration(migration.resource()));
 
             while (matcher.find()) {
-                if (REMOVED_GAME_MODE_PATTERN.matcher(matcher.group(8 + offset)).find()) {
+                Challenge challenge = toChallenge(matcher, migration.categoryGroup());
+
+                if (isDeletedByLaterMigration(challenge)) {
                     continue;
                 }
-                challenges.add(toChallenge(matcher, offset));
+
+                challenges.add(challenge);
             }
         }
 
@@ -303,13 +338,33 @@ class ChallengeCatalogueCompatibilityTest {
     }
 
     /**
+     * Determines whether a seeded row was removed again by a later migration.
+     *
+     * <p>Mirrors the predicates V14 and V38 delete on — a retired game-mode filter, and the baseline
+     * progress mode — rather than listing challenge codes, so a challenge added later with either
+     * shape is caught by the same rule instead of surviving unnoticed.
+     *
+     * @param challenge challenge reconstructed from a seeding migration
+     * @return {@code true} when the row is not in the catalogue any more
+     */
+    private boolean isDeletedByLaterMigration(Challenge challenge) {
+        return REMOVED_GAME_MODE_PATTERN.matcher(challenge.getConditionsJson()).find()
+            || challenge.getProgressMode() == ProgressMode.BASELINE;
+    }
+
+    /**
      * Converts one matched SQL row into a challenge entity.
      *
-     * @param matcher matcher positioned on one challenge row
-     * @param offset  one when the row carries the dropped per-challenge damage column, zero otherwise
+     * <p>The columns between the difficulty and the category moved as the table lost its damage and
+     * {@code rule_type} columns, so the category is the one group each migration has to declare. The
+     * five trailing columns are counted back from the end, where every shape agrees.
+     *
+     * @param matcher       matcher positioned on one challenge row
+     * @param categoryGroup capture group holding the category in this row shape
      * @return reconstructed challenge entity
      */
-    private Challenge toChallenge(Matcher matcher, int offset) {
+    private Challenge toChallenge(Matcher matcher, int categoryGroup) {
+        int lastGroup = matcher.groupCount();
         Challenge challenge = new Challenge();
 
         challenge.setCode(matcher.group(1));
@@ -319,23 +374,37 @@ class ChallengeCatalogueCompatibilityTest {
             ChallengeDifficulty.valueOf(matcher.group(4))
         );
         challenge.setCategory(
-            ChallengeCategory.valueOf(matcher.group(5 + offset))
+            ChallengeCategory.valueOf(matcher.group(categoryGroup))
         );
         challenge.setProgressMode(
-            ProgressMode.valueOf(matcher.group(7 + offset))
+            ProgressMode.valueOf(matcher.group(lastGroup - 4))
         );
-        challenge.setConditionsJson(matcher.group(8 + offset));
+        challenge.setConditionsJson(matcher.group(lastGroup - 3));
         challenge.setExclusionGroup(
-            parseNullableSqlString(matcher.group(9 + offset))
+            parseNullableSqlString(matcher.group(lastGroup - 2))
         );
         challenge.setEnabled(
-            Boolean.parseBoolean(matcher.group(10 + offset))
+            Boolean.parseBoolean(matcher.group(lastGroup - 1))
         );
         challenge.setSchemaVersion(
-            Integer.parseInt(matcher.group(11 + offset))
+            Integer.parseInt(matcher.group(lastGroup))
         );
 
         return challenge;
+    }
+
+    /**
+     * One production migration seeding the catalogue, with the row shape it was written against.
+     *
+     * @param resource      classpath location of the migration
+     * @param rowPattern    pattern extracting one challenge row from it
+     * @param categoryGroup capture group holding the category in that shape
+     */
+    private record CatalogueMigration(
+        String resource,
+        Pattern rowPattern,
+        int categoryGroup
+    ) {
     }
 
     /**

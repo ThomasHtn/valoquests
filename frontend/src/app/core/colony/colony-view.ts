@@ -454,6 +454,7 @@ export class ColonyView {
       glyph: tierGlyphFor(current),
       populationPercentage: this.populationPercentage(),
       progressPercentage: colony.tierProgressPercentage,
+      turnoutPercentage: this.percentageOf(colony.presence.present, colony.presence.rosterSize),
     };
   });
 

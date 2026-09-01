@@ -21,6 +21,45 @@
 }
 
 /*
+ * The accueil gives the scene the height of its own box instead, and that box is a share of the
+ * viewport (see `overview.css`). The clamp above is still the right default for any caller that
+ * places the scene in the flow of a page.
+ */
+:host(.colony-town-scene) {
+  display: block;
+  height: 100%;
+}
+
+:host(.colony-town-scene) .town-scene {
+  height: 100%;
+}
+
+/*
+ * Film grain over the whole sky.
+ *
+ * A dark gradient across a surface this large bands: eight-bit colour has too few values between two
+ * neighbouring dark teals, and the steps show as horizontal ribbons. A fine noise at 4% breaks them
+ * up. Nobody will ever see the grain; everybody would have seen the bands — and only at this size,
+ * since the 19rem band the scene fits into elsewhere is too short to show them.
+ *
+ * On the host rather than in the drawing: it has to cover every primitive, and the scene's root is
+ * an `<svg>`, which has no pseudo-element to hang it on.
+ */
+:host {
+  position: relative;
+}
+
+:host::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/*
  * The sky, interpolated between smog and a clear night. A losing week does not get an earlier hour,
  * it gets a low brown ceiling the neon bleeds into; a winning one gets depth. The star count is the
  * other half of the same sentence and lives in `starsFor`, because putting stars out one at a time
@@ -36,6 +75,85 @@
 
 .town-sky-low {
   stop-color: color-mix(in srgb, #123543 calc(var(--clarity, 0.5) * 100%), #35271f);
+}
+
+/*
+ * The hour of the visitor's own day, on the horizon and on the moon — and nowhere else. The sky's
+ * gradient above is already spoken for: it is morale, and morale is the more useful of the two
+ * things a sky can say here. So the hour takes the glow behind the frontage instead, which was
+ * always the part of a dusk that reads first, and it takes the moon, which has no business being out
+ * at two in the afternoon.
+ *
+ * Amber at dawn and at dusk, a cold blue wash at midday, almost nothing at night: the colony's own
+ * dome of light is what lights the night, and a second source behind it would flatten the frontage.
+ */
+.town-scene {
+  --horizon: #d9954a;
+  --horizon-alpha: 0.16;
+  --moon-alpha: 1;
+  --star-alpha: 1;
+}
+
+.town-scene[data-hour='dawn'] {
+  --horizon: #c98a6f;
+  --horizon-alpha: 0.2;
+  --moon-alpha: 0.25;
+  --star-alpha: 0.25;
+}
+
+.town-scene[data-hour='day'] {
+  --horizon: #5a96be;
+  --horizon-alpha: 0.15;
+  --moon-alpha: 0;
+  --star-alpha: 0;
+}
+
+.town-scene[data-hour='dusk'] {
+  --horizon: #d9954a;
+  --horizon-alpha: 0.26;
+  --moon-alpha: 0.55;
+  --star-alpha: 0.5;
+}
+
+.town-scene[data-hour='night'] {
+  --horizon: #2dd4bf;
+  --horizon-alpha: 0.07;
+  --moon-alpha: 1;
+  --star-alpha: 1;
+}
+
+.town-horizon-in {
+  stop-color: var(--horizon);
+  stop-opacity: var(--horizon-alpha);
+}
+
+.town-horizon-out {
+  stop-color: var(--horizon);
+  stop-opacity: 0;
+}
+
+.town-moon {
+  opacity: var(--moon-alpha);
+}
+
+/*
+ * The stars go out with the moon. How many there are is morale and stays a count — see `starsFor`,
+ * where the argument for a count rather than an opacity is made. This is the other question: whether
+ * any of them are out at all at two in the afternoon, and that is not a bad night, it is daylight.
+ */
+.town-stars {
+  opacity: var(--star-alpha);
+}
+
+/*
+ * The site: the quarter the colony is paying for, clipped to what it has actually paid.
+ *
+ * The inset itself is set by the component (see `built`), with `fill-box` spelled out in the value:
+ * the percentage has to be read against the height of the thing being built, not against the scene,
+ * or every site would be clipped to the same line whatever it is raising.
+ */
+.town-site {
+  transition: clip-path 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 /*
@@ -102,5 +220,9 @@
   .town-building,
   .town-flicker {
     animation: none;
+  }
+
+  .town-site {
+    transition: none;
   }
 }

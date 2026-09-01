@@ -420,7 +420,6 @@
       "week": "Wk. {{index}} / {{count}}"
     },
     "ladder": {
-      "title": "The town's tiers",
       "unit": "Left to gather",
       "hint": "Every tier is bought with materials. You earn them by clearing the week's challenges and by putting down Monday's boss."
     },
@@ -579,14 +578,13 @@
     "confrontation": {
       "squad": "Squad",
       "threat": "Boss",
-      "onlineUnit": "/ {{roster}} online",
-      "quests": "challenges cleared",
-      "multiplier": "multiplier {{multiplier}} · {{max}} at full house",
-      "dealt": "{{damage}} HP torn off this week"
+      "active": "{{present}}/{{roster}} active",
+      "dealtUnit": "HP dealt",
+      "dealt": "{{damage}} HP torn off this week",
+      "segment": "{{player}} · {{damage}} HP",
+      "breakdown": "Damage per player: {{breakdown}}"
     },
     "economy": {
-      "title": "Colony economy",
-      "foodWindow": "{{days}} days · +{{today}} today",
       "beforeTier": "{{materials}} before {{tier}}"
     },
     "header": {
@@ -599,11 +597,25 @@
     },
     "miniRanking": {
       "damageUnit": "damage",
-      "empty": "Nobody has played yet this week.",
       "error": "Unable to load the ranking.",
       "link": "See the ranking",
       "loading": "Loading the ranking…",
-      "title": "Ranking"
+      "day": {
+        "title": "Today's ranking",
+        "caption": "{{day}} · match damage, bonuses excluded",
+        "empty": "Nobody has played yet today.",
+        "sinceYesterday": "vs yesterday",
+        "variation": {
+          "up": "{{count}} more damage than yesterday",
+          "down": "{{count}} less damage than yesterday",
+          "flat": "Same as yesterday"
+        }
+      },
+      "week": {
+        "title": "This week's ranking",
+        "caption": "Running total since Monday, bonuses included",
+        "empty": "Nobody has played yet this week."
+      }
     },
     "podium": {
       "hint": "The week's podium, ranked on total damage. Clicking a player opens their profile.",
@@ -688,18 +700,32 @@
       "columns": {
         "activeDays": "Days played",
         "bonusDamage": "Bonus",
+        "bossesJoined": "Bosses",
         "challengesCleared": "Challenges cleared",
+        "dailyDamage": "Today's damage",
         "damage": "Damage",
+        "damageVariation": "Gap / yesterday",
         "materials": "Materials",
         "player": "Player"
       },
       "columnHelp": {
         "activeDays": "Distinct days of the week with at least one counted match. This is what sets the regularity bonus.",
         "bonusDamage": "The share of the total that came from the two bonuses, already included in the Damage column. Regularity: up to 6,000 for seven days played, starting from two. Squad: +10% of a challenge's damage per extra player who cleared it, capped at +50%.",
+        "bossesJoined": "Weeks of the run this player dealt the boss damage. The regularity bonus does not count: it never reaches the shared health bar.",
         "challengesCleared": "How many of the week's challenges were cleared, out of the five drawn on Monday.",
+        "dailyDamage": "Damage from the day's matches, after the daily diminishing returns. Challenge damage and the bonuses are settled on the week: they do not exist at this scale.",
         "damage": "The week's total, and the value the ranking is ordered on: match damage after the day's diminishing returns, plus cleared challenge damage, plus bonuses.",
+        "damageVariation": "The difference between today's damage and yesterday's. The answer to “did we have a good evening?”.",
         "materials": "Materials banked for the colony by the challenges cleared so far this week. They raise the town's efficiency, for good.",
         "player": "Every row links to the player's profile. Out-of-campaign players are grouped at the bottom: they still clear challenges but never take a ranking slot."
+      },
+      "scope": {
+        "CAMPAIGN": "Campaign",
+        "DAY": "Day",
+        "WEEK": "Week",
+        "campaignProgress": "Run in progress · week {{index}} of {{count}}",
+        "dayTurnout": "{{played}} of {{roster}} players played",
+        "label": "Ranking scope"
       },
       "completed": "Challenge completed",
       "empty": "No ranking is available this week.",
@@ -719,6 +745,11 @@
         "next": "Next week",
         "previous": "Previous week",
         "seeOnCampaign": "See on the campaign"
+      },
+      "damageVariation": {
+        "down": "{{count}} less damage than yesterday",
+        "flat": "Same as yesterday",
+        "up": "{{count}} more damage than yesterday"
       },
       "variation": {
         "down": {
@@ -1040,6 +1071,7 @@
       "town": "The town grows"
     },
     "contents": {
+      "clear": "Clear search",
       "noMatch": "No section covers “{{query}}”.",
       "searchLabel": "Search the rules",
       "searchPlaceholder": "yield, morale…",
