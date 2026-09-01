@@ -67,55 +67,59 @@
             }
           </p>
         </div>
-
-        <!-- The line to the next step, laid on the ground the scene ends on: how far along, drawn as
-             a length, then what is still owed and the name it buys.
-
-             Its own strip rather than a figure in the readout, because this is a distance and a
-             distance is read as a length. It is also the caption of the scaffolding standing in the
-             scene above it: the site rises as this fills. -->
-        <p
-          [attr.aria-label]="
-            'colony.tierProgress'
-              | translate
-                : { materials: colony.nextTierMaterialsLabel(), name: colony.nextTierNameLabel() }
-          "
-          class="colony-town-route"
-        >
-          <span
-            aria-hidden="true"
-            class="font-display text-sm font-bold text-brand-400 tabular-nums"
-          >
-            {{ town.progressPercentage | number: '1.0-0' }} %
-          </span>
-          <span aria-hidden="true" class="colony-town-route-track">
-            <span [style.width.%]="town.progressPercentage"></span>
-          </span>
-          <span
-            aria-hidden="true"
-            class="label-caption inline-flex items-center gap-1.5 whitespace-nowrap text-text-secondary"
-          >
-            <svg class="size-3 shrink-0 text-accent-cyan" lucideHammer></svg>
-            {{
-              'overview.economy.beforeTier'
-                | translate
-                  : { materials: colony.nextTierMaterialsLabel(), tier: colony.nextTierNameLabel() }
-            }}
-          </span>
-        </p>
       </div>
     </section>
   }
 
   <div class="overview-sheet">
+    <!-- The line to the next step: how far along, drawn as a length, then what is still owed and the
+         name it buys.
+
+         Its own strip rather than a figure in the readout, because this is a distance and a distance
+         is read as a length. It is also the caption of the scaffolding standing in the scene above
+         it: the site rises as this fills.
+
+         It is the sheet's own leading edge rather than a band pinned to the bottom of the scene,
+         which is where it used to sit. Two horizontal edges twenty pixels apart — the rail's own
+         top border, then the sheet's colour change — read as a seam that had come apart. One edge,
+         carried by the thing that actually starts here. -->
+    @if (colony.town(); as town) {
+      <p
+        [attr.aria-label]="
+          'colony.tierProgress'
+            | translate
+              : { materials: colony.nextTierMaterialsLabel(), name: colony.nextTierNameLabel() }
+        "
+        class="colony-town-route"
+      >
+        <span aria-hidden="true" class="font-display text-sm font-bold text-brand-400 tabular-nums">
+          {{ town.progressPercentage | number: '1.0-0' }} %
+        </span>
+        <span aria-hidden="true" class="colony-town-route-track">
+          <span [style.width.%]="town.progressPercentage"></span>
+        </span>
+        <span
+          aria-hidden="true"
+          class="label-caption inline-flex items-center gap-1.5 whitespace-nowrap text-text-secondary"
+        >
+          <svg class="size-3 shrink-0 text-accent-cyan" lucideHammer></svg>
+          {{
+            'overview.economy.beforeTier'
+              | translate
+                : { materials: colony.nextTierMaterialsLabel(), tier: colony.nextTierNameLabel() }
+          }}
+        </span>
+      </p>
+    }
+
     <!-- Bloc 0 — how the week that just closed went, on the first visit of the week and never after
          it is closed. First under the scene because it is news: everything below reports a state that
          has been true since, this reports what changed. -->
     <app-week-recap />
 
-    <!-- Bloc 2 — the week, read as the confrontation it is. -->
+    <!-- Bloc 1 — the week, read as the confrontation it is. -->
     <section aria-labelledby="week-title" class="flex flex-col gap-3">
-      <div class="section-rule">
+      <div class="section-rule section-rule--large">
         <h2 class="section-rule-title" id="week-title">
           {{
             'overview.weekSummary.title'
@@ -133,49 +137,141 @@
       <app-confrontation-band [remaining]="week()?.remaining ?? null" />
     </section>
 
-    <!-- Blocs 3 & 4 — who is carrying the squad, at the two scales it can be asked at. Side by side
-       and in that order, shortest stretch first, so the pair reads as a zoom rather than as two
-       unrelated lists: tonight on the left, the week the competition is settled on beside it. The
-       two columns stretch to the taller of them and each board's three rows share that height, so
-       the rows stay level across the gutter. -->
-    <div class="overview-pair grid gap-4 lg:grid-cols-2 lg:gap-x-6">
-      <section aria-labelledby="day-ranking-title" class="flex min-h-0 flex-col gap-3">
-        <div class="section-rule">
-          <h2 class="section-rule-title" id="day-ranking-title">
-            {{ 'overview.miniRanking.day.title' | translate }}
-          </h2>
-          <span aria-hidden="true" class="section-rule-line"></span>
-          <!-- Lands on the board it previews rather than on the week's: the leaderboard opens on
-               whichever scope the link asks for. -->
-          <a
-            [queryParams]="{ scope: 'day' }"
-            [routerLink]="'/leaderboard'"
-            class="section-rule-link focus-ring"
-          >
-            {{ 'overview.miniRanking.link' | translate }}
-            <span aria-hidden="true">→</span>
-          </a>
-          <span aria-hidden="true" class="section-rule-diamond"></span>
-        </div>
+    <!-- Bloc 2 — who is carrying the week, on the week the competition is actually settled on.
 
+         Directly under the fight it settles, rather than below the day as it was: the page now runs
+         one scale at a time, everything about the week and then everything about today, instead of
+         crossing from the week to the day and back to the week. Same three cards as the day's board
+         further down — who is carrying the squad is one question, and asking it at two scales in two
+         different shapes would make it read as two. -->
+    <section aria-labelledby="week-ranking-title" class="flex flex-col gap-3">
+      <div class="section-rule section-rule--large">
+        <h2 class="section-rule-title" id="week-ranking-title">
+          {{ 'overview.miniRanking.week.title' | translate }}
+        </h2>
+        <span aria-hidden="true" class="section-rule-line"></span>
+        <a [routerLink]="'/leaderboard'" class="section-rule-link focus-ring">
+          {{ 'overview.miniRanking.link' | translate }}
+          <span aria-hidden="true">→</span>
+        </a>
+        <span aria-hidden="true" class="section-rule-diamond"></span>
+      </div>
+
+      <app-mini-ranking scope="WEEK" />
+    </section>
+
+    <!-- Bloc 3 — the day, drawn as the conversion it is, and the page's last word because it is the
+         only block on it still moving.
+
+         The colony's own formula is `harvest = damage / divisor × turnout multiplier`
+         (`ColonyReplayEngine.harvest`). A day is not a set of statistics about the squad, it is one
+         exchange: what the squad dealt goes in on the left, the turnout sets the rate, and what the
+         colony stored comes out on the right. Drawing it as that exchange is what stops the block
+         being three tiles in a box, which is all it has been so far.
+
+         So the rail is the block. It carries the rate on it, and it runs from the squad's cyan to
+         the colony's amber, because that is literally what crosses it. The hexagons sit under the
+         rate as its cause: they are what moves it, and they are the one thing on this page a reader
+         can change tonight.
+
+         The divisor is not drawn. It is a calibration constant, it never moves, and printing it
+         would turn a sentence anybody can read into an equation nobody would check.
+
+         A conversion has a meaningful zero, so a day nobody has played needs no empty state: nothing
+         in, rate at one, nothing out, and the caption says what starts it. -->
+    <section aria-labelledby="today-title" class="flex flex-col gap-3">
+      <div class="section-rule section-rule--large">
+        <h2 class="section-rule-title" id="today-title">
+          {{ 'overview.today.title' | translate }}
+        </h2>
+        <span aria-hidden="true" class="section-rule-line"></span>
+        <!-- Lands on the campaign: this section reads the day as food for the colony, and the run is
+             where that conversion ends up. -->
+        <a [routerLink]="'/campaign'" class="section-rule-link focus-ring">
+          {{ 'overview.today.link' | translate }}
+          <span aria-hidden="true">→</span>
+        </a>
+        <span aria-hidden="true" class="section-rule-diamond"></span>
+      </div>
+
+      @if (colony.battery(); as battery) {
+        <div class="day">
+          <p class="day-amount day-amount--dealt">{{ dayDamageLabel() }}</p>
+          <p class="day-amount-label day-amount-label--dealt">
+            <svg class="size-3 shrink-0" lucideSwords></svg>
+            {{ 'overview.today.damage' | translate }}
+          </p>
+
+          <!-- The rail, and the rate standing on it. The plate behind the figure is the sheet's own
+               ground, which is what breaks the line rather than laying a box over it. -->
+          <div class="day-rail">
+            <p class="day-rate">
+              {{ battery.multiplierLabel }}
+              <span class="sr-only">{{ battery.ariaLabel }}</span>
+            </p>
+          </div>
+
+          <!-- One token per player of the roster, under the rate because they are what moves it.
+               This row was on the band above until the day had a section of its own, and it was in
+               the wrong one: turnout multiplies the colony's food and deals the boss nothing.
+
+               Three states, not two. Lit is counted; half-lit is a player who played and fell short
+               of the bar; faint is a player who has not played. The middle state is the whole point
+               of the line under it — without it, "ont atteint 300 dégâts" is a rule with nothing on
+               screen it applies to.
+
+               The name is one hover away, and each token carries that same sentence as its own
+               label, so a reader without a pointer gets the roll rather than six blank spans. -->
+          <span class="day-roster">
+            @for (slot of presenceSlots(); track slot.key) {
+              <i
+                [appTooltip]="slot.tooltip"
+                [attr.aria-label]="slot.tooltip"
+                [class.day-pip--counted]="slot.state === 'FULL'"
+                [class.day-pip--short]="slot.state === 'PARTIAL'"
+                class="clip-hex day-pip"
+                role="img"
+              ></i>
+            }
+          </span>
+
+          <p class="day-amount day-amount--food">{{ colony.todayHarvestLabel() }}</p>
+          <p class="day-amount-label day-amount-label--food">
+            <svg class="size-3 shrink-0" lucideWheat></svg>
+            {{ 'overview.today.harvest' | translate }}
+          </p>
+
+          <p class="day-note">
+            <span>
+              {{
+                'overview.today.counted'
+                  | translate
+                    : {
+                        present: battery.presentCount,
+                        roster: battery.rosterSize,
+                        threshold: battery.thresholdLabel,
+                      }
+              }}
+            </span>
+            <!-- What one more player is worth, or what the roster is already worth once there is no
+                 next step left to reach. -->
+            <span class="day-next">
+              @if (battery.nextMultiplierLabel; as next) {
+                {{ 'overview.today.nextStep' | translate: { multiplier: next } }}
+              } @else {
+                {{ 'overview.today.atFull' | translate }}
+              }
+            </span>
+          </p>
+        </div>
+      }
+
+      <!-- Who brought the day in, under the band that converts it. Dropped whole on a day nobody has
+           played: the band already says so in figures, and a board announcing it a second time in
+           words is furniture. -->
+      @if (!dayIsEmpty()) {
         <app-mini-ranking scope="DAY" />
-      </section>
-
-      <section aria-labelledby="week-ranking-title" class="flex min-h-0 flex-col gap-3">
-        <div class="section-rule">
-          <h2 class="section-rule-title" id="week-ranking-title">
-            {{ 'overview.miniRanking.week.title' | translate }}
-          </h2>
-          <span aria-hidden="true" class="section-rule-line"></span>
-          <a [routerLink]="'/leaderboard'" class="section-rule-link focus-ring">
-            {{ 'overview.miniRanking.link' | translate }}
-            <span aria-hidden="true">→</span>
-          </a>
-          <span aria-hidden="true" class="section-rule-diamond"></span>
-        </div>
-
-        <app-mini-ranking scope="WEEK" />
-      </section>
-    </div>
+      }
+    </section>
   </div>
 </div>

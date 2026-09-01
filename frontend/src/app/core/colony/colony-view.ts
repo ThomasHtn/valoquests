@@ -1,6 +1,7 @@
 import { computed, inject, Service, Signal } from '@angular/core';
 
-import { addDays, formatDateRange } from '@core/date/week-period.utils';
+import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { addDays, formatDateRange, formatDayMonth } from '@core/date/week-period.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Translation } from '@core/i18n/translation';
 import { ChartBar } from '@shared/chart/chart.model';
@@ -26,16 +27,20 @@ import { tierGlyphFor, tierShareOfGain, tierStepFor } from './colony-tier.utils'
 import { buildRunCurve, RunCurveView } from './run-curve.utils';
 import {
   Colony,
+  ColonyMilestone,
   ColonyPresencePlayer,
   ColonyRunHistory,
   ColonyTier,
+  ColonyTrajectoryPoint,
   ColonyWeek,
 } from './colony.model';
 import {
   ColonyAttractivityView,
   ColonyBatteryView,
+  ColonyBossMoveView,
   ColonyBossPayoutStepView,
   ColonyBossPayoutView,
+  ColonyBossReportView,
   ColonyBossView,
   ColonyDeltaView,
   ColonyFoodDayView,
@@ -90,6 +95,52 @@ const FULL_ROSTER_MULTIPLIER = 2;
  * stands for reaches a reader through its accessible name alone.
  */
 const WEEKDAY_LOCALES: Record<'fr' | 'en', string> = { fr: 'fr-FR', en: 'en-US' };
+
+/**
+ * Days one week of a run spans, mirrored from `ColonyRunReader#runDayOf`, which counts from the
+ * run's first Monday.
+ *
+ * Week `n` of a run therefore covers run days `(n - 1) * 7 + 1` through `n * 7`, which is how the
+ * curve's daily points are cut into the weeks the boss panel reports on.
+ */
+const RUN_WEEK_DAYS = 7;
+
+/**
+ * Returns the last entry satisfying a predicate, scanning from the end.
+ *
+ * Hand-rolled rather than `Array#findLast`, which is ES2023 and outside the ES2022 target.
+ *
+ * @param entries   - Entries to scan, in their natural order.
+ * @param predicate - What makes an entry a match.
+ * @returns The last match, or `null` when nothing matches.
+ */
+function lastMatch<T>(entries: readonly T[], predicate: (entry: T) => boolean): T | null {
+  for (let index = entries.length - 1; index >= 0; index--) {
+    const entry = entries[index];
+    if (predicate(entry)) {
+      return entry;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Returns the run's last curve point on or before a given run day.
+ *
+ * The day itself may be missing — the curve stops at the last day played — so the nearest earlier
+ * point stands in for it, which is what makes the report readable on a week still being lived.
+ *
+ * @param points - The run's daily curve, oldest day first.
+ * @param runDay - Latest run day to accept.
+ * @returns The point, or `null` when the curve has no day that early.
+ */
+function lastPointUpTo(
+  points: readonly ColonyTrajectoryPoint[],
+  runDay: number,
+): ColonyTrajectoryPoint | null {
+  return lastMatch(points, (point) => point.runDay <= runDay);
+}
 
 /**
  * The squad's colony, resolved once into everything the page lays out.
@@ -508,6 +559,36 @@ export class ColonyView {
   });
 
   /**
+   * What each settled week of the run changed in the colony, keyed by run week.
+   *
+   * Only the weeks that settled something are in the map: a week still being fought has not moved
+   * anything yet, and one still ahead has nothing to move. A caller reads `null` back for those and
+   * says so in its own words.
+   */
+  public readonly bossReports = computed<ReadonlyMap<number, ColonyBossReportView>>(() => {
+    const colony = this.colony();
+    const trajectory = this.trajectory();
+    if (colony === null || trajectory === null) {
+      return new Map();
+    }
+
+    const reports = new Map<number, ColonyBossReportView>();
+
+    for (const week of colony.weeks) {
+      if (week.state !== 'DEFEATED' && week.state !== 'SURVIVED') {
+        continue;
+      }
+
+      const report = this.toBossReport(week, trajectory.points, trajectory.milestones);
+      if (report !== null) {
+        reports.set(week.weekIndex, report);
+      }
+    }
+
+    return reports;
+  });
+
+  /**
    * The population curve, one bar per day played.
    */
   public readonly curve = computed<readonly ChartBar[]>(() => {
@@ -746,6 +827,7 @@ export class ColonyView {
       multiplierLabel: formatMultiplier(presence.multiplier, language),
       nextMultiplierLabel: isFull ? null : formatMultiplier(presence.nextMultiplier, language),
       maxMultiplierLabel: formatMultiplier(FULL_ROSTER_MULTIPLIER, language),
+      thresholdLabel: formatDamage(presence.threshold, language),
       ariaLabel: this.translation.translate('colony.track.presence.aria', {
         present: presence.present,
         roster: presence.rosterSize,
@@ -921,6 +1003,92 @@ export class ColonyView {
       earned: week.state === 'DEFEATED',
       moraleLabel: formatSignedPopulation(week.moraleDelta, language),
     };
+  }
+
+  /**
+   * Resolves one settled week into the three gauges it moved, plus the tier it crossed if it did.
+   *
+   * The pairs are read off the run's own daily curve rather than summed from the weeks: materials
+   * and efficiency also move on days no boss is settled — every cleared challenge banks some — and a
+   * running total rebuilt from the fights alone would quietly disagree with the header's figures.
+   *
+   * @param week      - Settled week to report on.
+   * @param points    - The run's daily curve, oldest day first.
+   * @param milestones - The days the town changed name.
+   * @returns The week's report, or `null` while the curve has not reached that week yet.
+   */
+  private toBossReport(
+    week: ColonyWeek,
+    points: readonly ColonyTrajectoryPoint[],
+    milestones: readonly ColonyMilestone[],
+  ): ColonyBossReportView | null {
+    const lastRunDay = week.weekIndex * RUN_WEEK_DAYS;
+    const firstRunDay = lastRunDay - RUN_WEEK_DAYS + 1;
+
+    const after = lastPointUpTo(points, lastRunDay);
+    if (after === null) {
+      return null;
+    }
+
+    // `null` on the run's first week, which has no eve to compare against. The cell then states the
+    // settled figure alone rather than inventing a starting point the API does not expose.
+    const before = lastPointUpTo(points, firstRunDay - 1);
+    const language = this.translation.language();
+    const defeated = week.state === 'DEFEATED';
+
+    const moves: ColonyBossMoveView[] = [
+      {
+        nameLabel: this.translation.translate('colony.materials'),
+        beforeLabel: before === null ? null : formatPopulation(before.materials, language),
+        afterLabel: formatPopulation(after.materials, language),
+        captionLabel: defeated
+          ? this.translation.translate('colony.boss.report.materials.banked', {
+              materials: formatPopulation(week.materials, language),
+            })
+          : this.translation.translate('colony.boss.report.materials.none'),
+        toneClass: 'text-accent-gold',
+      },
+      {
+        nameLabel: this.translation.translate('colony.track.efficiency.name'),
+        beforeLabel: before === null ? null : formatMultiplier(before.efficiency, language),
+        afterLabel: formatMultiplier(after.efficiency, language),
+        captionLabel: this.translation.translate('colony.boss.report.efficiency'),
+        toneClass: 'text-accent-pink',
+      },
+      {
+        nameLabel: this.translation.translate('colony.track.morale.name'),
+        beforeLabel: before === null ? null : formatPopulation(before.morale, language),
+        afterLabel: formatPopulation(after.morale, language),
+        // The boss's weight class is not repeated here: it is already on the header's meta line, and
+        // the figure it produced is the sentence's subject.
+        captionLabel: this.translation.translate(
+          defeated ? 'colony.boss.report.morale.defeated' : 'colony.boss.report.morale.survived',
+          { morale: formatSignedPopulation(week.moraleDelta, language) },
+        ),
+        toneClass: defeated ? 'text-accent-violet' : 'text-danger',
+      },
+    ];
+
+    // The step is the one thing here the squad plays ten weeks for, so it earns its own cell — but
+    // only on the weeks that actually crossed one, rather than restating the standing tier every time.
+    const milestone = lastMatch(
+      milestones,
+      (entry) => entry.runDay >= firstRunDay && entry.runDay <= lastRunDay,
+    );
+
+    if (milestone !== null) {
+      moves.push({
+        nameLabel: this.translation.translate('colony.boss.report.tierName'),
+        beforeLabel: null,
+        afterLabel: this.tierName(milestone),
+        captionLabel: this.translation.translate('colony.boss.report.tier', {
+          day: formatDayMonth(milestone.day),
+        }),
+        toneClass: 'text-brand-500',
+      });
+    }
+
+    return { moves };
   }
 
   /**

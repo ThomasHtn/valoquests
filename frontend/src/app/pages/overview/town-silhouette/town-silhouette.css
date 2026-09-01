@@ -92,6 +92,7 @@
   --horizon-alpha: 0.16;
   --moon-alpha: 1;
   --star-alpha: 1;
+  --cloud-alpha: 0.18;
 }
 
 .town-scene[data-hour='dawn'] {
@@ -99,13 +100,17 @@
   --horizon-alpha: 0.2;
   --moon-alpha: 0.25;
   --star-alpha: 0.25;
+  --cloud-alpha: 0.55;
 }
 
+/* The cover carries the whole daytime sky: the moon is down and the stars with it, so a bare
+   gradient is all that is left of the largest surface on the page. */
 .town-scene[data-hour='day'] {
   --horizon: #5a96be;
   --horizon-alpha: 0.15;
   --moon-alpha: 0;
   --star-alpha: 0;
+  --cloud-alpha: 1;
 }
 
 .town-scene[data-hour='dusk'] {
@@ -113,6 +118,7 @@
   --horizon-alpha: 0.26;
   --moon-alpha: 0.55;
   --star-alpha: 0.5;
+  --cloud-alpha: 0.4;
 }
 
 .town-scene[data-hour='night'] {
@@ -120,6 +126,7 @@
   --horizon-alpha: 0.07;
   --moon-alpha: 1;
   --star-alpha: 1;
+  --cloud-alpha: 0.18;
 }
 
 .town-horizon-in {
@@ -143,6 +150,56 @@
  */
 .town-stars {
   opacity: var(--star-alpha);
+}
+
+/*
+ * The cloud cover.
+ *
+ * Two things set it, and they are the two the sky already speaks in. The hour decides whether there
+ * is any (`--cloud-alpha` above): the cover is what the day gets instead of the moon and the stars.
+ * Morale decides how heavy it is, on the same reading as the sky behind it — a losing week gets a
+ * low brown ceiling, a winning one gets it thinned and cooled until the sky is nearly clear. So the
+ * factor is inverted: the clearer the morale, the less cover.
+ */
+.town-clouds {
+  opacity: calc(var(--cloud-alpha, 0) * (1 - 0.5 * var(--clarity, 0.5)));
+  animation: town-drift 170s ease-in-out infinite alternate;
+}
+
+.town-cloud-in {
+  stop-color: color-mix(in srgb, #2f5568 calc(var(--clarity, 0.5) * 100%), #55402c);
+  stop-opacity: 0.6;
+}
+
+.town-cloud-mid {
+  stop-color: color-mix(in srgb, #22404f calc(var(--clarity, 0.5) * 100%), #3d2e20);
+  stop-opacity: 0.2;
+}
+
+.town-cloud-out {
+  stop-color: color-mix(in srgb, #22404f calc(var(--clarity, 0.5) * 100%), #3d2e20);
+  stop-opacity: 0;
+}
+
+/*
+ * The cover crosses the sky and comes back, over the best part of three minutes and by thirty-two
+ * units of a seven-hundred-unit scene. Nobody watches it move; the point is that a sky which is
+ * never the same twice in a session reads as weather rather than as a stain on the panel.
+ */
+@keyframes town-drift {
+  from {
+    transform: translateX(-14px);
+  }
+
+  to {
+    transform: translateX(18px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .town-clouds {
+    animation: none;
+  }
 }
 
 /*

@@ -2,44 +2,39 @@
      what it is worth, its gauge — so the eye compares them straight across. -->
 <div class="versus">
   <div class="vs-side vs-side--ally">
-    <!-- The head count rides on the tag, as the qualifier of the camp's own name — the same shape the
+    <!-- The count rides on the tag, as the qualifier of the camp's own name — the same shape the
          threat's weight class takes opposite. It is the row of hexagons' caption, so it belongs above
          them rather than trailing off their end. -->
     <span class="vs-tag">
-      <svg class="size-3.5 shrink-0" lucideUsers></svg>
+      <svg class="size-3.5 shrink-0" lucideSwords></svg>
       {{ 'overview.confrontation.squad' | translate }}
-      @if (colony.battery(); as battery) {
-        <span class="vs-cat">
-          ·
-          {{
-            'overview.confrontation.active'
-              | translate: { present: battery.presentCount, roster: battery.rosterSize }
-          }}
-        </span>
+      @if (challengesLabel(); as label) {
+        <span class="vs-cat">· {{ label }}</span>
       }
     </span>
 
-    @if (colony.battery()) {
-      <!-- One hexagon per player of the squad, lit for whoever cleared today's threshold. It is the
-           camp's own face: the side used to open on a sentence, and a sentence does not look like a
-           team. The hexagon is the shape of the system — the difficulty badges and the campaign map's
-           tiles wear it — and here it carries nothing on it: a presence token has no figure and no
-           avatar, so the row stays a gauge rather than a legend. It reads at two players and at
-           twenty, which is the only size rule this project has.
+    @if (challengeSlots().length > 0) {
+      <!-- One badge per challenge of the week, in the ladder's order, coloured once anyone has
+           cleared it. It is the camp's own face: the side used to open on a sentence, and a sentence
+           does not look like a team.
 
-           The name is one hover away instead. Each token is its own `img` carrying that same sentence
-           as its label, so a reader without a pointer gets the roll too rather than six blank
-           spans — the tag above still answers "how many" on its own. -->
+           The badge itself is `/week`'s, down to the 1.5px inset that turns the hexagon into a ring:
+           a numeral from `I` to `V` in its difficulty's colour. Which challenge each one is, is one
+           hover away, and each badge carries that sentence as its own label so a reader without a
+           pointer gets the week's draw rather than five bare numerals. -->
       <span class="vs-who">
         <span class="roster">
-          @for (slot of rosterSlots(); track slot.key) {
-            <i
+          @for (slot of challengeSlots(); track slot.key) {
+            <span
               [appTooltip]="slot.tooltip"
               [attr.aria-label]="slot.tooltip"
-              [class.roster-on]="slot.present"
-              class="clip-hex"
+              [class.roster-on]="slot.cleared"
+              [style.--tier]="slot.tierColor"
+              class="clip-hex roster-mark"
               role="img"
-            ></i>
+            >
+              <span aria-hidden="true" class="clip-hex font-display">{{ slot.tier }}</span>
+            </span>
           }
         </span>
       </span>
@@ -66,6 +61,13 @@
           ></i>
         }
       </span>
+    }
+
+    <!-- Grown only when the camp opposite grows one, and empty when it does: it is the row the
+         boss's own state stands on, and a side with one row fewer would sit its gauge higher than
+         the one it is meant to be read against. -->
+    @if (defeated()) {
+      <span class="vs-sub"></span>
     }
   </div>
 

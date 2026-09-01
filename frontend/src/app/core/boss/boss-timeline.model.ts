@@ -25,6 +25,13 @@ export interface BossContribution {
   readonly isChampion: boolean;
 
   /**
+   * Damage dealt to that week's boss, as the raw figure. Kept alongside {@link damageLabel} because
+   * one reader plots it rather than printing it: the profile's run frieze scales ten weeks against
+   * the tallest of them, which a formatted string cannot be measured on.
+   */
+  readonly damage: number;
+
+  /**
    * Damage dealt, grouped for reading (`21 400`).
    */
   readonly damageLabel: string;
@@ -35,6 +42,19 @@ export interface BossContribution {
    * that week had.
    */
   readonly questsLabel: string;
+}
+
+/**
+ * The player who landed a boss's last hit point.
+ */
+export interface BossFinishingBlow {
+  readonly displayName: string;
+
+  /**
+   * Their portrait, read off the week's own ranking rows — the boss history carries the name and the
+   * identifier, not the picture.
+   */
+  readonly avatarUrl: string | null;
 }
 
 /**
@@ -161,11 +181,12 @@ export interface BossTimelineNode {
   readonly metaLabel: string | null;
 
   /**
-   * Same line as `metaLabel`, minus what the panel already spells out below it: the panel lists the
-   * full per-player ranking, so the top-damage wording would only repeat its first row. `null` when
-   * the panel has nothing left to add.
+   * Who put the boss down, `null` on every week that did not settle with a kill.
+   *
+   * The one individual statistic of a week that the ranking cannot give: it names a moment, not a
+   * total, which is why the campaign panel is where it belongs.
    */
-  readonly panelMetaLabel: string | null;
+  readonly finishingBlow: BossFinishingBlow | null;
 
   /**
    * The week's damage broken down per player, ordered best first. Empty for an `'upcoming'`

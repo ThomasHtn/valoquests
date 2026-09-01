@@ -156,6 +156,11 @@ export const API_ENDPOINTS = {
     challengeRecalculation: `${environment.apiBaseUrl}/admin/challenges/progress/recalculation`,
 
     /**
+     * `POST` a fresh draw of the current week's challenges, discarding the pack it holds.
+     */
+    challengeRedraw: `${environment.apiBaseUrl}/admin/challenges/current/redraw`,
+
+    /**
      * `POST` a rebuild of the current weekly ranking alone.
      */
     rankingRecalculation: `${environment.apiBaseUrl}/admin/rankings/recalculation`,

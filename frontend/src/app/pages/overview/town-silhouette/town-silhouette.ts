@@ -30,9 +30,9 @@ import {
  *
  * Two things besides the step change the drawing, and neither of them changes the hour:
  * {@link populationPercentage} lights the windows, so the squad can see the colony fill up from the
- * inside; {@link moralePercentage} is the weather, which at night is the smog and how many stars get
- * through. A losing week gets a low brown ceiling and sixteen stars, a winning one a deep sky and
- * seventy-eight.
+ * inside; {@link moralePercentage} is the weather — the smog, how many stars get through, and how
+ * heavy the cloud cover sits. A losing week gets a low brown ceiling and sixteen stars, a winning
+ * one a deep sky, seventy-eight, and a cover thinned to almost nothing.
  */
 @Component({
   selector: 'app-town-silhouette',

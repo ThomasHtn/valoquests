@@ -29,7 +29,7 @@ import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { RankingHistoryWeek } from '@core/ranking/ranking.model';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { Breakpoint } from '@core/viewport/breakpoint';
-import { Podium } from '@pages/overview/podium/podium';
+import { Podium } from '@pages/leaderboard/podium/podium';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChallengeRing } from '@shared/challenge-ring/challenge-ring';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';

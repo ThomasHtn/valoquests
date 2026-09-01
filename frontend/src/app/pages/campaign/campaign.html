@@ -87,11 +87,10 @@
           (closed)="closePanel()"
           (next)="step(1)"
           (previous)="step(-1)"
-          [colonyBoss]="selectedColonyBoss()"
-          [defeatMoraleLabel]="colony.defeatMoraleLabel()"
           [hasNext]="hasNextNode()"
           [hasPrevious]="hasPreviousNode()"
           [node]="node"
+          [report]="selectedBossReport()"
         />
       }
     </section>
@@ -99,7 +98,7 @@
     <!-- ── Where the run stands ──────────────────────────────────────────────────────────────── -->
     @if (colony.colony()) {
       <section aria-labelledby="campaign-stand-title" class="campaign-block flex flex-col gap-3">
-        <div class="section-rule">
+        <div class="section-rule section-rule--large">
           <h2 class="section-rule-title" id="campaign-stand-title">
             {{ 'campaign.stand.title' | translate }}
           </h2>
@@ -207,7 +206,7 @@
 
       <!-- ── How the town grows ─────────────────────────────────────────────────────────────── -->
       <section aria-labelledby="campaign-chain-title" class="campaign-block flex flex-col gap-3">
-        <div class="section-rule">
+        <div class="section-rule section-rule--large">
           <h2 class="section-rule-title" id="campaign-chain-title">
             {{ 'campaign.chain.title' | translate }}
           </h2>
@@ -348,7 +347,7 @@
 
       <!-- ── The scoreboard ─────────────────────────────────────────────────────────────────── -->
       <section aria-labelledby="campaign-board-title" class="campaign-block flex flex-col gap-3">
-        <div class="section-rule">
+        <div class="section-rule section-rule--large">
           <h2 class="section-rule-title" id="campaign-board-title">
             {{ 'campaign.board.title' | translate }}
           </h2>

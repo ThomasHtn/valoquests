@@ -52,7 +52,12 @@ export interface MiniRankingRow {
 }
 
 /**
- * Three-row preview of a ranking, for the accueil's own two "Classement" blocks.
+ * Three-card preview of a ranking, shown twice on the accueil: under the day's band, and under the
+ * week's own section.
+ *
+ * Both are the same component at two scales, and that is the point — who is carrying the squad is
+ * one question, and asking it of today and of the week in two different shapes would make it read as
+ * two. The scope decides only what a figure means; the caption line says which scale is being read.
  *
  * A link to `/leaderboard`, not a second podium: the full podium already moved there (see
  * design-review.md §3.1/§3.3 — a page-header treatment belongs on one page, and the accueil's
@@ -71,9 +76,9 @@ export interface MiniRankingRow {
   imports: [TranslatePipe, RouterLink, Avatar, PositionBadge, ResourceState],
   templateUrl: './mini-ranking.html',
   styleUrl: './mini-ranking.css',
-  // Fills whatever height the page gives it, so the three rows can share the column's spare space
-  // and end level with the block beside them.
-  host: { class: 'flex min-h-0 flex-1 flex-col' },
+  // Runs the full width of what it is given and takes its own height: it is a row of three cards,
+  // not a column to be stretched.
+  host: { class: 'flex min-w-0 flex-col' },
 })
 export class MiniRanking {
   private readonly rankingApi = inject(RankingApi);

@@ -59,17 +59,63 @@
  * rather than under it. `min-height: 100%` is the other half of the same job: on a short page the
  * sheet would end mid-screen and the scene, pinned behind it, would show under its last section.
  * A full container height guarantees the sheet reaches the bottom of the scroll whatever it holds.
+ *
+ * No top padding: the sheet opens on the tier rail, which is its own leading edge (see
+ * `colony-town-route`), and a strip meant to draw an edge cannot start 56px inside the surface. The
+ * column's `gap` is what holds the first block off it.
  */
 .overview-sheet {
   position: relative;
   z-index: 1;
   display: flex;
+  /*
+   * `page-body` is a flex column of a fixed height, so the sheet is a flex item that may be
+   * shrunk — and it was, the moment its content grew past what the scene left of the container.
+   * A shrunk sheet keeps laying its blocks out at their own height and stops painting its
+   * background at the box it was given, which showed as the pinned scene coming through the bottom
+   * of the page. `flex: none` is the same declaration, and the same reason, as the scene's own.
+   */
+  flex: none;
   flex-direction: column;
   gap: 3.5rem;
   min-height: 100%;
-  padding-block: 3.5rem;
-  background: #0f1c26;
+  padding-block: 0 3.5rem;
+
+  /*
+   * The shell's `ambient-field` (see `styles.css`) paints its glow and its rings on two *fixed*
+   * layers behind the page's content — which an opaque sheet travelling above them simply covers,
+   * leaving this page's ground flat where every other page's is lit. The field is reproduced here
+   * as the sheet's own background instead: same two radial glows, same rings (their layer's 0.45
+   * opacity folded into the colour), in the same paint order, and `fixed` attachment so they are
+   * anchored to the viewport exactly as the shell's are rather than sliding with the scroll. The
+   * base colour stays opaque underneath, which is what keeps the pinned scene covered.
+   *
+   * Held in a variable because it is not only the sheet's: anything that has to *be* the ground
+   * rather than sit on it — the rate's plate breaking the day's rail — has to paint the same thing.
+   * Viewport-anchored layers make that exact: the same declaration on a smaller box lands on the
+   * same pixels, so the plate is indistinguishable from the surface around it.
+   */
+  --sheet-ground:
+    repeating-radial-gradient(
+      circle at 58% 46%,
+      transparent 0 80px,
+      rgb(236 232 225 / 1.8%) 80px 81px
+    ),
+    radial-gradient(circle at 58% 46%, rgb(217 149 74 / 14%), transparent 45%),
+    radial-gradient(circle at 58% 46%, rgb(90 150 190 / 10%), transparent 65%), #0f1c26;
+
+  background: var(--sheet-ground);
+  background-attachment: fixed;
 }
+
+/*
+ * The last block used to be pushed to the bottom of the sheet whenever there was room to spare, back
+ * when it was a one-line strip closing a short page. It is a section of three cards now, and the
+ * blocks above it have grounds of their own: an auto margin under a surfaced block reads as that
+ * block being orphaned over a void, where the same space between two blocks of the same rhythm reads
+ * as nothing at all. `min-height` above already guarantees the sheet's own surface reaches the
+ * bottom of the scroll, which was the only thing the scene showing through ever needed.
+ */
 
 /* The gutter and the cap `page-body` normally puts on a page's blocks, given back to the ones that
    are blocks rather than surfaces. */
@@ -86,6 +132,9 @@
   }
 }
 
+/* The section rules on this page carry `.section-rule--large` (see `styles.css`): the title's own
+   size, and the phone rule that drops the hairline so the way out stays on the title's line. */
+
 /*
  * A phone gives the scene a little less. The share is the same idea — open on the colony, leave the
  * top of the next section showing — but a portrait screen is tall enough that 72% of it is mostly
@@ -98,42 +147,8 @@
 
   .overview-sheet {
     gap: 2.75rem;
-    padding-block: 2.5rem;
+    padding-block: 0 2.5rem;
   }
-}
-
-/*
- * The one thing that opens each section, sized for a page whose sections are now a screen apart. At
- * `text-sm` a title was smaller than the prose under it, which is what made the page read as a heap
- * of blocks rather than as a sequence of sections. Scoped to this page: `/week` is laid out on the
- * same rule and is a denser page that does not want the same voice.
- *
- * The label tracking goes with the size. Two hundredths of an em is a device for small caps at 14px;
- * at 32 it opens the word up until it stops being one.
- */
-.overview-sheet .section-rule-title {
-  font-size: clamp(1.5rem, 1.05rem + 1.9vw, 2.125rem);
-  letter-spacing: 0.01em;
-  color: #ece8e1;
-}
-
-/*
- * The two sections that share a row get a step down. A title is sized against the width it opens,
- * and at 34px "Classement de la semaine" takes the whole half-column, sending the hairline and the
- * way out onto a second line — a rule that wraps stops reading as a rule.
- */
-.overview-pair .section-rule-title {
-  font-size: clamp(1.125rem, 0.95rem + 0.75vw, 1.375rem);
-}
-
-/*
- * And the hairline gives way before the way out does. It is laid out `grow basis-12`, so it claims
- * 3rem before anything else may have them — at half a column that reservation is exactly what sends
- * the link onto a second line. At `basis: 0` it takes what is left over and nothing more, which is
- * all a rule between a title and a link is for.
- */
-.overview-pair .section-rule-line {
-  flex-basis: 0;
 }
 
 /*
@@ -143,7 +158,7 @@
 /* The scene's own sky reaches every corner now (see `town-silhouette.html`), so this is only what
    shows for the moment the deferred chunk is still on its way. */
 .colony-town {
-  /* The scene's own gutter, shared by the two things laid on it. */
+  /* The scene's own gutter, held by the readout laid on it and matched by the tier rail below. */
   --gutter: clamp(1rem, 3.4vw, 2.75rem);
 
   position: relative;
@@ -164,25 +179,33 @@
 }
 
 /*
- * The line to the next step, on the ground the scene ends on.
+ * The line to the next step, and the sheet's own leading edge.
  *
  * A distance is read as a length, not as a figure, which is the whole reason it is a rail and not a
- * fourth number in the readout. It closes the scene the way the ladder closes the page: what is left
- * of the sky above says how much the town has yet to build, this says how far off the next name is.
+ * fourth number in the readout.
+ *
+ * It used to be pinned to the bottom of the scene, on a wash of its own, and that put two horizontal
+ * edges twenty pixels apart at the one place the page changes surface: the rail's top border, then
+ * the sheet's colour change under it. Read as a seam that had come apart. Here it is the first row
+ * of the sheet, which is the thing that actually starts at that line, and there is one edge.
+ *
+ * Full-bleed, and deliberately not on the sheet's own column: it is an edge, and it reads as one only
+ * if it runs the whole width the way the scene above it does. Its inset is the few pixels that keep
+ * a figure off the frame, not a gutter — the two ends of this strip are a percentage and a cost, and
+ * they belong at the two ends.
  */
+.overview-sheet > .colony-town-route {
+  max-width: none;
+  padding-inline: 0.75rem;
+}
+
 .colony-town-route {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 2;
   display: flex;
   align-items: center;
   gap: 14px;
   margin: 0;
-  padding: 13px var(--gutter);
-  border-top: 1px solid rgb(236 232 225 / 12%);
-  background: rgb(4 10 17 / 62%);
+  padding-block: 13px;
+  border-bottom: 1px solid rgb(236 232 225 / 10%);
 }
 
 .colony-town-route-track {
@@ -192,10 +215,29 @@
   background: rgb(236 232 225 / 12%);
 }
 
+/*
+ * Runs out to its width on load instead of appearing at it, on the curve and the duration every
+ * other gauge in the interface arrives on (`hp-gauge-drain`, `gauge-rise`). It was the one bar on
+ * the page that was simply drawn, and next to a health bar that drains and a frontage that rises it
+ * read as a static caption rather than as the climb it reports.
+ */
 .colony-town-route-track > span {
   display: block;
   height: 100%;
   background: #d9954a;
+  transition: width 900ms var(--ease-out-quart);
+}
+
+@starting-style {
+  .colony-town-route-track > span {
+    width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .colony-town-route-track > span {
+    transition: none;
+  }
 }
 
 /* The cost and its hammer are laid out with utilities in the template — one flex row, nothing this
@@ -330,6 +372,246 @@
 
     inset: -1.25rem -6% -1.5rem;
   }
+}
+
+/*
+ * The day, drawn as the conversion the colony's own formula makes it: what the squad dealt goes in
+ * on the left, the turnout sets the rate, the colony's food comes out on the right.
+ *
+ * Laid out on one explicit grid rather than as boxes side by side, and that is the whole difference:
+ * the two amounts and the rail share a row, so the rail runs *between* the figures at their own
+ * height instead of a bordered panel sitting next to another bordered panel. Their labels share the
+ * next row, the hexagons sit with them under the rate they move, and the rule closes underneath.
+ */
+/*
+ * No ground under it, and no inner gutter either. The block is three terms and a rail on the sheet's
+ * own surface, so its two amounts start and end exactly where the section rule above and the cards
+ * below do — an inset of its own would sit them 28px inside a column everything else is flush with,
+ * which is the misalignment a surface was hiding rather than solving.
+ */
+.day {
+  display: grid;
+  grid-template-columns: auto minmax(6rem, 1fr) auto;
+  grid-template-areas:
+    'dealt rail food'
+    'dealtlabel roster foodlabel'
+    '. note .';
+  align-items: center;
+  gap: 12px 24px;
+  padding-block: 10px 4px;
+}
+
+/*
+ * On a phone the three terms stack, and the rail goes with them: the reading order is already top to
+ * bottom, so a horizontal line and an arrowhead pointing right would be a direction contradicting
+ * the one the eye is travelling in. The rate keeps its place between the two amounts, which is all
+ * the rail was there to say.
+ */
+@media (width < 48rem) {
+  .day {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'dealt' 'dealtlabel' 'rail' 'roster' 'food' 'foodlabel' 'note';
+    justify-items: center;
+    gap: 6px;
+    padding-block: 6px;
+    text-align: center;
+  }
+
+  .day-rail::before,
+  .day-rail::after {
+    display: none;
+  }
+
+  .day-amount-label {
+    margin-bottom: 14px;
+  }
+}
+
+/*
+ * The two amounts. Cyan on the way in and amber on the way out, which is not decoration: those are
+ * the squad's colour and the colony's everywhere else on this page, and the point of the band is
+ * that one becomes the other.
+ */
+.day-amount {
+  margin: 0;
+  font-weight: 700;
+  font-size: clamp(1.75rem, 1.5rem + 1vw, 2.25rem);
+  font-family: var(--font-display);
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-amount--dealt {
+  grid-area: dealt;
+  color: #2dd4bf;
+}
+
+.day-amount--food {
+  grid-area: food;
+  color: #e8ab6b;
+}
+
+.day-amount-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-weight: 500;
+  font-size: 0.625rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #868b8d;
+}
+
+.day-amount-label--dealt {
+  grid-area: dealtlabel;
+}
+
+.day-amount-label--food {
+  grid-area: foodlabel;
+}
+
+/*
+ * The rail, and the arrowhead that makes it a direction rather than a divider. It carries the squad's
+ * cyan at one end and the colony's amber at the other, so the material visibly changes as it crosses
+ * — the one flourish this band is allowed, and it is the band's whole subject.
+ */
+.day-rail {
+  position: relative;
+  display: flex;
+  grid-area: rail;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+}
+
+.day-rail::before {
+  content: '';
+  position: absolute;
+  right: 8px;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgb(45 212 191 / 55%), rgb(232 171 107 / 55%));
+}
+
+.day-rail::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 8px solid rgb(232 171 107 / 70%);
+}
+
+/*
+ * The rate, standing on the rail. Its plate is the sheet's own ground rather than a box: what breaks
+ * the line is the surface behind it, so the figure sits *in* the rail instead of on top of it.
+ *
+ * No label. A multiplier on an arrow between two amounts, with the roster that moves it drawn
+ * directly underneath, does not need to be told it is a multiplier.
+ */
+.day-rate {
+  position: relative;
+  margin: 0;
+  padding: 0 14px;
+  font-weight: 700;
+  font-size: 1.375rem;
+  font-family: var(--font-display);
+  line-height: 1;
+  /* The sheet's own surface, lit field included: what breaks the rail has to be the ground behind
+     it, and a flat swatch of the base colour would read as a box laid over a lit ground. */
+  background: var(--sheet-ground);
+  background-attachment: fixed;
+  color: #ece8e1;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * The roster, one hexagon per player, directly under the rate they move.
+ *
+ * Cyan, the squad's own colour on the band above: what fills these is players. Its strength is how
+ * far into the day they got. The row wraps rather than shrinks, so a roster of twenty takes a second
+ * line and nothing else moves.
+ */
+.day-roster {
+  display: flex;
+  flex-wrap: wrap;
+  grid-area: roster;
+  gap: 4px;
+  justify-content: center;
+}
+
+/* Absent: a faint token holding the slot, not a hole punched in the panel — the row has to read as a
+   gauge with a filled end and an empty tail, and a darker-than-ground shape reads as damage. */
+.day-pip {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 23px;
+  cursor: help;
+  background: rgb(236 232 225 / 12%);
+  transition:
+    background-color 240ms var(--ease-out-quart),
+    filter 240ms var(--ease-out-quart);
+}
+
+/* Played, and short of the bar. The hue says they turned up, the strength says it did not count —
+   which is the distinction the line under the row exists to explain. */
+.day-pip--short {
+  background: rgb(45 212 191 / 34%);
+}
+
+/* Counted. The glow is a `drop-shadow` rather than a `box-shadow`: `clip-path` cuts the box shadow
+   away with the corners it removes, where a filter follows the silhouette it is given. */
+.day-pip--counted {
+  background: #2dd4bf;
+  filter: drop-shadow(0 0 4px rgb(45 212 191 / 45%));
+}
+
+/* Answers the pointer before the bubble does. An outline would be the obvious hover, but `clip-path`
+   cuts one off with the corners, the same reason the glow is a filter. */
+.day-pip:hover,
+.day-pip:focus-visible {
+  background: rgb(236 232 225 / 26%);
+}
+
+.day-pip--short:hover,
+.day-pip--short:focus-visible {
+  background: rgb(45 212 191 / 52%);
+}
+
+.day-pip--counted:hover,
+.day-pip--counted:focus-visible {
+  background: #2dd4bf;
+  filter: drop-shadow(0 0 7px rgb(45 212 191 / 75%));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-pip {
+    transition: none;
+  }
+}
+
+/* The rule the hexagons are lit by, and what one more of them is worth. Under the roster because it
+   is the roster's own caption, and centred with it. */
+.day-note {
+  display: flex;
+  flex-wrap: wrap;
+  grid-area: note;
+  gap: 4px 10px;
+  justify-content: center;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: #868b8d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The half that is an invitation rather than a rule, lifted out of the muted grey the rest sits in. */
+.day-next {
+  color: #ece8e1;
 }
 
 /* The section rule now lives in `styles.css`: `/week` is laid out on it too, and one page's

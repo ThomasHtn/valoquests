@@ -46,58 +46,11 @@
           </div>
         </div>
 
-        <!-- What brings the bar down, as five marks and nothing else: the amount each one is worth
-             is on its own card thirty pixels below, and writing it twice made the band restate a
-             section of its own page. -->
-        @if (weakPoints().length > 0) {
-          <div class="boss-weak">
-            <span class="label-caption text-text-muted">
-              {{ 'overview.bossEncounter.weakPoints' | translate }}
-            </span>
-
-            <span class="boss-weak-marks">
-              @for (point of weakPoints(); track point.id) {
-                <span class="boss-weak-item">
-                  <span
-                    [style.--tier]="point.tierColor"
-                    aria-hidden="true"
-                    class="clip-hex boss-weak-mark"
-                  >
-                    <span class="clip-hex font-display">{{ point.tier }}</span>
-                  </span>
-                  <span class="sr-only">
-                    {{ 'overview.weeklyChallenges.difficulty.' + point.difficulty | translate }}
-                  </span>
-                </span>
-              }
-            </span>
-          </div>
-        }
-
         <span class="hp-legend">
-          @if (defeated()) {
-            <span class="label-caption text-success">
-              {{ 'overview.bossEncounter.defeated' | translate }}
-            </span>
-          } @else {
-            <span class="label-caption text-text-muted">
-              {{ 'overview.confrontation.dealt' | translate: { damage: damageDealtLabel() } }}
-            </span>
-          }
           <!-- The count the bar is a picture of, on the bar's own line: read together they say the
-               same thing twice over, once exactly and once at a glance. -->
+               same thing twice over, once exactly and once at a glance. Anchored to the block's
+               left edge, where the bar under it starts. -->
           <span class="boss-hp">
-            <!-- "Why fifty-one thousand?" is the question this figure raises and the one the page
-                 cannot answer in place. Lands straight on the calibration beat rather than at the
-                 top of the rulebook. -->
-            <a
-              [fragment]="ruleAnchor.bossCalibration"
-              [routerLink]="'/rules'"
-              class="focus-ring label-caption text-text-muted transition-colors hover:text-brand-500"
-            >
-              {{ 'week.boss.calibrationLink' | translate }}
-              <span aria-hidden="true">→</span>
-            </a>
             <span class="label-caption text-text-muted">
               {{ 'week.boss.remainingHp' | translate }}
             </span>
@@ -108,6 +61,12 @@
               </small>
             </b>
           </span>
+
+          @if (defeated()) {
+            <span class="label-caption text-success">
+              {{ 'overview.bossEncounter.defeated' | translate }}
+            </span>
+          }
         </span>
 
         <!-- The bar closes the block: it is the one thing here that moves every day. Same gauge as
@@ -187,22 +146,23 @@
               {{ payout.moraleLabel }}
               <em>{{ 'colony.track.morale.name' | translate }}</em>
             </span>
-          </span>
 
-          <!-- What the week costs if the boss holds — gone the moment it no longer can. On a boss
-               already down this line stated a risk that had been settled, right beside the rewards
-               it had just been proved wrong about. -->
-          @if (!defeated()) {
-            <p class="pay-cost">
-              <span class="label-caption text-danger">{{
-                'week.payout.ifSurvives' | translate
-              }}</span>
-              <b>{{
-                'week.payout.moraleCost' | translate: { morale: payout.defeatMoraleLabel }
-              }}</b>
-              <span>{{ 'week.payout.noMaterials' | translate }}</span>
-            </p>
-          }
+            <!-- What the week costs if the boss holds, on the gains' own line and cut off from them
+                 by a rule: the two morale figures are the same quantity read two ways, and a reader
+                 comparing them should not have to travel between two rows to do it. Gone the moment
+                 the boss can no longer survive — on a boss already down this stated a risk that had
+                 been settled, right beside the rewards it had just been proved wrong about. -->
+            @if (!defeated()) {
+              <span class="pay-cost">
+                <span class="label-caption text-danger">{{
+                  'week.payout.ifSurvives' | translate
+                }}</span>
+                <b>{{
+                  'week.payout.moraleCost' | translate: { morale: payout.defeatMoraleLabel }
+                }}</b>
+              </span>
+            }
+          </span>
         </aside>
       }
     </div>

@@ -73,17 +73,17 @@
     }
   </div>
 
-  <!-- The six operations, split in two rather than laid out as one undifferentiated grid.
-       Three of them are the ordinary gestures of a week; the other three replay history that is
-       already written, and an operator scanning a flat grid of six had nothing telling them which
+  <!-- The operations, split in two rather than laid out as one undifferentiated grid.
+       Three of them are the ordinary gestures of a week; the others rewrite history that is
+       already written, and an operator scanning a flat grid had nothing telling them which
        was which — the two groups sat interleaved, "recalculer la progression" between "synchroniser
        un joueur" and "ouvrir la semaine". -->
-  <app-section-label [label]="'admin.operations.groups.routine' | translate" class="mt-8" />
-  <p class="-mt-3 text-prose text-text-secondary">
+  <app-section-label [label]="'admin.operations.groups.routine' | translate" class="mt-12" />
+  <p class="-mt-1 text-prose text-text-secondary">
     {{ 'admin.operations.groups.routineHint' | translate }}
   </p>
 
-  <div class="grid gap-4 lg:grid-cols-2">
+  <div class="mt-2 grid gap-6 lg:grid-cols-2">
     <app-admin-action-card
       (triggered)="synchronizeAll()"
       [actionLabel]="'admin.operations.syncAll.action' | translate"
@@ -118,12 +118,12 @@
     />
   </div>
 
-  <app-section-label [label]="'admin.operations.groups.repair' | translate" class="mt-8" />
-  <p class="-mt-3 text-prose text-text-secondary">
+  <app-section-label [label]="'admin.operations.groups.repair' | translate" class="mt-12" />
+  <p class="-mt-1 text-prose text-text-secondary">
     {{ 'admin.operations.groups.repairHint' | translate }}
   </p>
 
-  <div class="grid gap-4 lg:grid-cols-2">
+  <div class="mt-2 grid gap-6 lg:grid-cols-2">
     <app-admin-action-card
       (triggered)="recalculateProgress()"
       [actionLabel]="'admin.operations.recalculate.action' | translate"
@@ -147,12 +147,34 @@
       [heading]="'admin.operations.colonyRecompute.heading' | translate"
       [state]="colonyRecomputeState()"
     />
+
+    <!-- The only command here that destroys rather than rebuilds, hence the danger tones and the
+       confirmation: every other one can be triggered twice with no consequence. -->
+    <app-admin-action-card
+      (triggered)="askForRedraw()"
+      [actionLabel]="'admin.operations.redraw.action' | translate"
+      [description]="'admin.operations.redraw.description' | translate"
+      [destructive]="true"
+      [heading]="'admin.operations.redraw.heading' | translate"
+      [state]="redrawState()"
+    />
   </div>
+
+  <app-confirm-dialog
+    (confirmed)="confirmRedraw()"
+    (dismissed)="dismissRedraw()"
+    [body]="'admin.operations.redraw.confirmBody' | translate"
+    [busy]="redrawing()"
+    [cancelLabel]="'admin.cancel' | translate"
+    [confirmLabel]="'admin.operations.redraw.confirm' | translate"
+    [heading]="'admin.operations.redraw.heading' | translate"
+    [open]="redrawDialogOpen()"
+  />
 
   <!-- History: every past execution, most recent first, each expandable into its own per-player
        breakdown — fetched only once a reader actually opens it, so browsing the list costs
        nothing past the one page request. -->
-  <app-section-label [label]="'admin.operations.history.title' | translate" class="mt-8" />
+  <app-section-label [label]="'admin.operations.history.title' | translate" class="mt-12" />
 
   <app-resource-state
     emptyKind="waiting"

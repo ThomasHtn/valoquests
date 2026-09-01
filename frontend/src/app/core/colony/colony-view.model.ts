@@ -194,6 +194,16 @@ export interface ColonyBatteryView {
   readonly maxMultiplierLabel: string;
 
   /**
+   * Already-formatted raw damage one player must reach in a day to be counted, `300`.
+   *
+   * The part of the turnout rule nobody guesses, and the only one a player can act on: the charge
+   * is not "who launched the game", it is "who got to the bar". Carried on the view rather than
+   * written into a sentence, because it is the ruleset's own figure and the ruleset is calibrated
+   * per run.
+   */
+  readonly thresholdLabel: string;
+
+  /**
    * Already-translated sentence the battery's hover card shows, and its own accessible name.
    */
   readonly ariaLabel: string;
@@ -520,6 +530,52 @@ export interface ColonyBossView {
    * Already-formatted morale the fight moved, signed.
    */
   readonly moraleLabel: string;
+}
+
+/**
+ * One gauge a settled week moved, read as the step it took rather than as the delta it paid.
+ *
+ * The delta alone (`+240`) is already on the map's own hexagon and on the week page; what only the
+ * campaign panel can say is where that delta left the colony standing, which is why the pair is
+ * carried rather than the difference.
+ */
+export interface ColonyBossMoveView {
+  /**
+   * Already-translated name of the gauge (`Matériaux`).
+   */
+  readonly nameLabel: string;
+
+  /**
+   * Already-formatted value on the eve of the week, or `null` when the run has no day before it —
+   * the first week, and the tier cell, which names a step rather than moving a figure.
+   */
+  readonly beforeLabel: string | null;
+
+  /**
+   * Already-formatted value once the week settled.
+   */
+  readonly afterLabel: string;
+
+  /**
+   * One sentence on what moved the gauge, already translated.
+   */
+  readonly captionLabel: string;
+
+  /**
+   * Text colour for the arrow and the settled value — the gauge's own accent, except morale on a
+   * week the boss held, which is read as the loss it is.
+   */
+  readonly toneClass: string;
+}
+
+/**
+ * What one settled week of the run changed in the colony, as the panel lays it out.
+ */
+export interface ColonyBossReportView {
+  /**
+   * Materials, efficiency and morale, in that order, plus the tier step when the week crossed one.
+   */
+  readonly moves: readonly ColonyBossMoveView[];
 }
 
 /**

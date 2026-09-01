@@ -47,7 +47,7 @@
 
     @if (boss()) {
       <section aria-labelledby="week-boss-title" class="flex flex-col gap-3">
-        <div class="section-rule">
+        <div class="section-rule section-rule--large">
           <h2 class="section-rule-title" id="week-boss-title">
             {{ 'week.bossSection.title' | translate }}
           </h2>
@@ -64,7 +64,7 @@
     }
 
     <section aria-labelledby="week-quests-title" class="flex flex-col gap-3">
-      <div class="section-rule">
+      <div class="section-rule section-rule--large">
         <h2 class="section-rule-title" id="week-quests-title">
           {{ 'week.challengesSection.title' | translate }}
         </h2>
@@ -131,11 +131,12 @@
 
               <!-- How far the squad is with this one, on its own rule under the whole card: that is
                    a state, not a price, so it does not belong in the column that prices it. One
-                   slug per roster member, lit for whoever has already cleared it. -->
+                   hexagon per roster member, lit for whoever has already cleared it — the same mark
+                   the accueil's confrontation band counts turnout with. -->
               <div class="quest-squad">
                 <span aria-hidden="true" class="quest-slugs">
                   @for (cleared of row.slots; track $index) {
-                    <i [class.quest-slug-on]="cleared"></i>
+                    <i [class.quest-slug-on]="cleared" class="clip-hex"></i>
                   }
                 </span>
                 <span class="quest-cleared">

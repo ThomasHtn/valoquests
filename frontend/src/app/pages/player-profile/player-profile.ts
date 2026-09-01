@@ -11,10 +11,10 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { LucideLoaderCircle } from '@lucide/angular';
 
-import { NgTemplateOutlet } from '@angular/common';
+import { BossCampaign } from '@core/boss/boss-campaign';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalTime } from '@core/date/date-time.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -101,7 +101,6 @@ const MAX_PROGRESSION_SEASONS = 5;
     Avatar,
     ChampionBadge,
     MediaThumbnail,
-    NgTemplateOutlet,
     ProgressBar,
     RankIconView,
     ResourceState,
@@ -115,6 +114,7 @@ const MAX_PROGRESSION_SEASONS = 5;
   ],
   templateUrl: './player-profile.html',
   host: { class: PAGE_LAYOUT_CLASS },
+  providers: [BossCampaign],
 })
 export class PlayerProfile {
   /**
@@ -148,14 +148,13 @@ export class PlayerProfile {
   private readonly rankingApi = inject(RankingApi);
 
   /**
-   * Router, used to mirror the open half of the profile into the URL.
+   * The whole run, already resolved week by week — what the profile's run band is drawn from.
+   *
+   * Provided at component level rather than injected from the root, so its countdown ticker is cut
+   * when the reader leaves the page; the underlying resources are shared with the campaign either
+   * way.
    */
-  private readonly router = inject(Router);
-
-  /**
-   * Route, read once for the half a link arrived pointing at.
-   */
-  private readonly route = inject(ActivatedRoute);
+  private readonly campaign = inject(BossCampaign);
 
   /**
    * i18n service used to resolve the player's translated rank label.
@@ -192,27 +191,10 @@ export class PlayerProfile {
   protected readonly viewMode = signal<'MATCHES' | 'PROGRESS'>('MATCHES');
 
   /**
-   * Which half of the profile is open: this player's Valorant record, or what they brought to the
-   * colony.
-   *
-   * Opens on the Valorant record — it is what a reader comes to a player's page for. Mirrored into
-   * the URL by {@link onProfileTabChange} so a link can point at either half.
-   */
-  /**
-   * The two halves, in the order they are shown.
-   */
-  protected readonly profileTabs = ['VALORANT', 'COLONY'] as const;
-
-  protected readonly profileTab = signal<'COLONY' | 'VALORANT'>(
-    this.route.snapshot.queryParamMap.get('tab') === 'colony' ? 'COLONY' : 'VALORANT',
-  );
-
-  /**
    * This player's line in the week's ranking, or `null` while it loads or if they have none.
    *
-   * The whole colony tab reads from here: the ranking already carries the damage split, the days
-   * played and the per-challenge progress, per player and per week. Nothing about the contribution
-   * needed a new endpoint.
+   * The run band reads from here: the ranking already carries the week's total, the days played and
+   * the per-challenge progress, per player and per week. Nothing in the band needed a new endpoint.
    */
   protected readonly contribution = computed<RankingEntry | null>(() => {
     const ranking = resourceValue(this.rankingApi.current, null);
@@ -220,46 +202,64 @@ export class PlayerProfile {
   });
 
   /**
-   * What this player's week actually took off the boss: their total, less the regularity bonus.
+   * How many of the run's bosses went down on a week this player took part in, over how many have
+   * been fought so far.
    *
-   * The bonus rewards turning up rather than producing, so it never touches the boss — the rule the
-   * rulebook states and `BossCampaign` already applies when it sums its contributions. Stated here
-   * because a player has no other way of seeing it.
+   * Scoped to the player on purpose: the run's own tally already stands on `/campaign`, and
+   * repeating it under a portrait would say nothing about the portrait. What this counts is the
+   * kills the reader was there for.
    */
-  protected readonly bossDamage = computed<number>(() => {
-    const entry = this.contribution();
-    return entry === null ? 0 : Math.max(0, entry.totalDamage - entry.regularityBonus);
+  protected readonly bossesFelled = computed(() => {
+    const fought = this.campaign.nodes().filter((node) => node.hasDamage);
+    const playerId = this.playerId();
+
+    return {
+      taken: fought.filter(
+        (node) =>
+          node.status === 'defeated' &&
+          node.contributions.some(
+            (contribution) => contribution.playerId === playerId && contribution.damage > 0,
+          ),
+      ).length,
+      fought: fought.length,
+    };
   });
 
   /**
-   * The four sources of a week's damage, as rows for the split, widest share first in the bar.
-   */
-  protected readonly damageSplit = computed(() => {
-    const entry = this.contribution();
-    if (entry === null) {
-      return [];
-    }
-
-    const total = Math.max(1, entry.totalDamage);
-
-    return [
-      { key: 'matches', value: entry.matchDamage, colorClass: 'bg-brand-500' },
-      { key: 'challenges', value: entry.challengeDamage, colorClass: 'bg-accent-cyan' },
-      { key: 'regularity', value: entry.regularityBonus, colorClass: 'bg-accent-violet' },
-      { key: 'squad', value: entry.teamBonus, colorClass: 'bg-accent-blue' },
-    ].map((row) => ({ ...row, percentage: Math.round((row.value / total) * 100) }));
-  });
-
-  /**
-   * The week's seven days, each flagged with whether this player played it.
+   * The run's ten weeks, each carrying this player's share of that week's boss, as a bar height.
    *
-   * The ranking reports how many days were played, not which ones, so the strip fills from the left
-   * rather than landing each mark on its own weekday: it is a count drawn as a row, and labelling
-   * the cells Monday to Sunday would claim a precision the figure does not carry.
+   * The one fact about a player that neither the leaderboard nor the campaign states: the
+   * leaderboard shows one week at a time and the campaign sums the squad, so a player's constancy
+   * over the whole run has nowhere else to be read.
+   *
+   * Heights are relative to this player's own best week rather than to the squad's: the frieze is
+   * read as a shape — steady, climbing, or one spike and nothing since — and measuring a player
+   * against the week's top scorer would flatten every profile but that one's.
    */
-  protected readonly activeDayStrip = computed<readonly boolean[]>(() => {
-    const played = this.contribution()?.activeDays ?? 0;
-    return Array.from({ length: 7 }, (_unused, index) => index < played);
+  protected readonly runFrieze = computed(() => {
+    const playerId = this.playerId();
+
+    const weeks = this.campaign.nodes().map((node) => ({
+      weekStart: node.weekStart,
+      // A node always words its own week; the run index is the fallback for the one shape that
+      // cannot, a placeholder whose calendar week is not resolved yet.
+      weekLabel:
+        node.weekLabel ??
+        this.translation.translate('boss.week.label', { number: node.runWeekIndex }),
+      isCurrent: node.status === 'current',
+      damage:
+        node.contributions.find((contribution) => contribution.playerId === playerId)?.damage ?? 0,
+    }));
+
+    const best = Math.max(...weeks.map((week) => week.damage), 0);
+
+    return weeks.map((week) => ({
+      ...week,
+      damageLabel: this.formatDamageAmount(week.damage),
+      // Floored so a week that was played but barely scored still reads as played rather than as
+      // one of the empty slots ahead of the run.
+      heightPercentage: best === 0 ? 0 : Math.max(12, Math.round((week.damage / best) * 100)),
+    }));
   });
 
   /**
@@ -826,23 +826,5 @@ export class PlayerProfile {
    */
   protected yieldToneClass(percent: number): string {
     return percent >= 100 ? 'text-brand-500' : 'text-text-secondary';
-  }
-  /**
-   * Switches half of the profile, and mirrors the choice into the URL.
-   *
-   * Replaces the current entry rather than pushing one: flipping between the two halves of a page
-   * is not a step a reader wants to walk back through, and pushing would make Back mean "the other
-   * tab" instead of "the page before this one".
-   *
-   * @param tab - The half to show.
-   */
-  protected onProfileTabChange(tab: 'COLONY' | 'VALORANT'): void {
-    this.profileTab.set(tab);
-    void this.router.navigate([], {
-      queryParams: { tab: tab === 'VALORANT' ? null : tab.toLowerCase() },
-      queryParamsHandling: 'merge',
-      relativeTo: this.route,
-      replaceUrl: true,
-    });
   }
 }

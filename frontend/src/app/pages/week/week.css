@@ -214,29 +214,31 @@
 }
 
 /*
- * One slug per roster member, the same mark the accueil's confrontation band counts turnout with.
- * Wraps rather than shrinks: a squad of twenty gets a second row, a squad of two gets two slugs.
+ * One hexagon per roster member, the same mark the accueil's confrontation band counts turnout with
+ * and the same silhouette as the tier badge above — the shape comes from the `clip-hex` utility, so
+ * it stays declared once. Wraps rather than shrinks: a squad of twenty gets a second row, a squad of
+ * two gets two hexagons.
  */
 .quest-slugs {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
+  gap: 4px;
 }
 
+/* Ratio held at the utility's own 1:1.155, or the polygon shears into a lozenge. */
 .quest-slugs i {
   flex: 0 0 auto;
-  width: 10px;
-  height: 20px;
-  background: rgb(4 10 15 / 55%);
-  box-shadow: inset 0 -2px 0 rgb(236 232 225 / 14%);
-  clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+  width: 13px;
+  height: 15px;
+  background: rgb(236 232 225 / 13%);
 }
 
+/* Taken. Solid rather than ringed at this size, and the glow is a `drop-shadow` because `clip-path`
+   cuts a box shadow away with the corners it removes — the confrontation band's badges for the same
+   reason. */
 .quest-slug-on {
-  background: color-mix(in srgb, var(--tier) 32%, transparent);
-  box-shadow:
-    inset 0 -2px 0 var(--tier),
-    inset 0 2px 0 color-mix(in srgb, var(--tier) 70%, transparent);
+  background: var(--tier);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--tier) 45%, transparent));
 }
 
 .quest-cleared {

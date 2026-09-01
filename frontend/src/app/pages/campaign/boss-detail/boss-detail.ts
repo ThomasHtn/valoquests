@@ -9,22 +9,14 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  LucideChevronLeft,
-  LucideChevronRight,
-  LucideGauge,
-  LucideHammer,
-  LucideMagnet,
-  LucideSkull,
-  LucideX,
-} from '@lucide/angular';
+import { LucideChevronLeft, LucideChevronRight, LucideSkull, LucideX } from '@lucide/angular';
 
 import { resolveBossTerritoryTier } from '@core/boss/boss-timeline.constants';
 import { BossTimelineNode } from '@core/boss/boss-timeline.model';
 import { resolveBossNumberLabel } from '@core/boss/boss-visual.utils';
-import { ColonyBossView } from '@core/colony/colony-view.model';
+import { ColonyBossReportView } from '@core/colony/colony-view.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { BossContributions } from '@shared/boss-contributions/boss-contributions';
+import { Avatar } from '@shared/avatar/avatar';
 
 /**
  * Detail panel for one week of the campaign, unfolding under the threat map it is opened from.
@@ -33,6 +25,11 @@ import { BossContributions } from '@shared/boss-contributions/boss-contributions
  * row the reader was stepping through. The panel owns its own header and dismissal instead, and is
  * mounted flush against the card above it — the seam's colour is the clicked hexagon's own, which
  * is what ties the two together in place of an overlay's animation.
+ *
+ * It answers one question the rest of the site cannot: what this week's fight changed in the colony.
+ * The health bar, the rewards on the table and the week's top three used to be here as well, and all
+ * three read better where they already live — on the week page and on the ranking filtered to this
+ * same week — so the panel states the step the colony took and links out for the rest.
  *
  * It stays mounted while the reader steps between weeks — only {@link node} changes — and is
  * destroyed by the page once closed.
@@ -43,12 +40,9 @@ import { BossContributions } from '@shared/boss-contributions/boss-contributions
     TranslatePipe,
     RouterLink,
     NgOptimizedImage,
-    BossContributions,
+    Avatar,
     LucideChevronLeft,
     LucideChevronRight,
-    LucideGauge,
-    LucideHammer,
-    LucideMagnet,
     LucideSkull,
     LucideX,
   ],
@@ -62,17 +56,13 @@ export class BossDetail {
   public readonly node = input.required<BossTimelineNode>();
 
   /**
-   * What the week's fight is worth the colony — the same figures the map's own hover card reads,
-   * joined on the node by its caller. `null` for a week the colony has nothing to report on yet (a
-   * locked week ahead).
+   * What the week moved in the colony, joined on the run week by its caller.
+   *
+   * `null` on every week that settled nothing — the fight under way, a week still ahead — and while
+   * the run's curve has not loaded. The panel says so in its own words rather than showing an empty
+   * grid.
    */
-  public readonly colonyBoss = input<ColonyBossView | null>(null);
-
-  /**
-   * What a boss still standing costs the colony, a fixed penalty read here only for the week
-   * currently being fought, since it is not yet a settled cost.
-   */
-  public readonly defeatMoraleLabel = input('');
+  public readonly report = input<ColonyBossReportView | null>(null);
 
   /**
    * Whether the timeline holds an earlier / later week to step to.
@@ -103,21 +93,6 @@ export class BossDetail {
    * colour a week is.
    */
   protected readonly tier = computed(() => resolveBossTerritoryTier(this.node().status));
-
-  /**
-   * Whether the colony has anything to report on this week at all — rewards banked, a defeat still
-   * on the table, or a settled loss. Gates the block's own separator, which would otherwise rule
-   * off an empty grid.
-   */
-  protected readonly hasColonyReport = computed(() => {
-    const boss = this.colonyBoss();
-
-    if (boss === null) {
-      return false;
-    }
-
-    return Boolean(boss.materialsLabel) || boss.state === 'CURRENT' || boss.state === 'SURVIVED';
-  });
 
   /**
    * Position of the week inside its run, as the two-digit boss number the header badge leads with —

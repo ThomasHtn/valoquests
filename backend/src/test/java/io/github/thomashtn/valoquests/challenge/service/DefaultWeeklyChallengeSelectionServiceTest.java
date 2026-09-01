@@ -17,7 +17,9 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
+import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
+import io.github.thomashtn.valoquests.shared.exception.ConflictException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
@@ -68,6 +70,11 @@ class DefaultWeeklyChallengeSelectionServiceTest {
     private WeeklyChallengeRepository weeklyChallengeRepository;
 
     /**
+     * Challenge progress repository dependency, cleared by the redraw.
+     */
+    private PlayerChallengeProgressRepository progressRepository;
+
+    /**
      * Calculator registry dependency.
      */
     private ChallengeProgressCalculatorRegistry calculatorRegistry;
@@ -84,6 +91,7 @@ class DefaultWeeklyChallengeSelectionServiceTest {
     void setUp() {
         challengeRepository = mock(ChallengeRepository.class);
         weeklyChallengeRepository = mock(WeeklyChallengeRepository.class);
+        progressRepository = mock(PlayerChallengeProgressRepository.class);
         calculatorRegistry = mock(ChallengeProgressCalculatorRegistry.class);
 
         when(calculatorRegistry.supports(ProgressMode.SUM)).thenReturn(true);
@@ -93,6 +101,7 @@ class DefaultWeeklyChallengeSelectionServiceTest {
         service = new DefaultWeeklyChallengeSelectionService(
             challengeRepository,
             weeklyChallengeRepository,
+            progressRepository,
             calculatorRegistry,
             Clock.fixed(SELECTION_TIME, ZoneOffset.UTC),
             new WeekCalendar(Clock.fixed(SELECTION_TIME, ZoneOffset.UTC), ZoneOffset.UTC)
@@ -294,6 +303,68 @@ class DefaultWeeklyChallengeSelectionServiceTest {
         givenPastSelections(candidates);
 
         assertThat(selectCodes(WEEK_START)).hasSize(ChallengeDifficulty.values().length);
+    }
+
+    /**
+     * Verifies that a redraw clears the week's progress and its pack, then draws a different one.
+     *
+     * <p>The whole point of the operation: the draw is deterministic per week, so discarding the
+     * pack and re-selecting would otherwise hand back the exact same five challenges.
+     */
+    @Test
+    void shouldRedrawAPackDifferentFromTheOneItDiscards() {
+        List<Challenge> candidates = createCatalogue(CATALOGUE_CHALLENGES_PER_DIFFICULTY);
+
+        givenNoExistingPack();
+        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+
+        List<WeeklyChallenge> discarded = service.selectWeekChallenges(WEEK_START);
+        List<String> discardedCodes = codesOf(discarded);
+
+        // The redraw reads the week twice: the pack it throws away, then the empty week it fills.
+        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(any(LocalDate.class)))
+            .thenReturn(discarded, List.of());
+
+        List<String> redrawnCodes = codesOf(service.redrawCurrentWeekChallenges());
+
+        verify(progressRepository).deleteAll(anyList());
+        verify(weeklyChallengeRepository).deleteAll(discarded);
+
+        assertThat(redrawnCodes).hasSize(ChallengeDifficulty.values().length);
+        assertThat(redrawnCodes).isNotEqualTo(discardedCodes);
+    }
+
+    /**
+     * Verifies that a finalized pack is refused rather than rewritten.
+     */
+    @Test
+    void shouldRefuseToRedrawAFinalizedPack() {
+        WeeklyChallenge finalized = createWeeklyChallenge(
+            createChallenge(ChallengeDifficulty.EASY, ChallengeCategory.AIM)
+        );
+        finalized.setFinalizedAt(SELECTION_TIME);
+
+        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(WEEK_START))
+            .thenReturn(List.of(finalized));
+
+        assertThatThrownBy(() -> service.redrawCurrentWeekChallenges())
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("finalized challenge pack");
+
+        verify(progressRepository, never()).deleteAll(anyList());
+        verify(weeklyChallengeRepository, never()).deleteAll(anyList());
+    }
+
+    /**
+     * Extracts one pack's challenge codes, ordered by difficulty.
+     *
+     * @param selections weekly selections
+     * @return challenge codes
+     */
+    private List<String> codesOf(List<WeeklyChallenge> selections) {
+        return selections.stream()
+            .map(selection -> selection.getChallenge().getCode())
+            .toList();
     }
 
     /**

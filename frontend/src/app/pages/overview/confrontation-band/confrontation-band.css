@@ -30,6 +30,10 @@
  * of the side that has one — the drift the profile's match rows avoid the same way. Its wash is
  * strongest at its own edge; the flat 7% it used to be is barely a tint on this ground.
  */
+/* Four rows, and a fifth that both camps grow together on the one state that needs it — the boss
+   going down. Held open on both sides or on neither: two sides of unequal row counts would put their
+   gauges at two different heights, which is the one thing a band drawn as a single front line cannot
+   afford, and a row kept open for a state that has not happened is a footer of nothing. */
 .vs-side {
   display: grid;
   grid-template-rows: auto minmax(2rem, auto) auto auto;
@@ -103,51 +107,71 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* One hexagon per roster member, cut by `clip-hex` on the element itself. Wraps rather than shrinks:
-   a twenty-player squad gets a second row and nothing else moves. */
+/* One badge per challenge of the week. Wraps rather than shrinks, which is what keeps the row honest
+   if a week ever draws more than five. */
 .roster {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 7px;
 }
 
-/* Unlit: a faint token holding the slot, not a hole punched in the panel — the row has to read as a
-   gauge with a filled end and an empty tail, and a darker-than-ground shape reads as damage. */
-.roster i {
+/*
+ * The badge `/week` draws its five cards and the leaderboard its five columns with: a hexagon filled
+ * with the difficulty's colour, and a second hexagon inset inside it carrying the numeral, which is
+ * what turns the shape into a ring. Same construction, same size, so the mark means the same thing
+ * on every screen that shows it.
+ *
+ * `--tier` is set by the template on a challenge somebody has cleared, and left alone on one nobody
+ * has: the default below is the muted grey the interface holds an unearned slot in, so the state is
+ * carried by the colour rather than by a second shape.
+ */
+.roster-mark {
+  --tier: rgb(236 232 225 / 22%);
+
+  position: relative;
+  display: grid;
   flex: 0 0 auto;
-  width: 22px;
-  height: 25px;
+  place-items: center;
+  width: 28px;
+  height: 32px;
   cursor: help;
-  background: rgb(236 232 225 / 12%);
-  transition:
-    background-color 240ms var(--ease-out-quart),
-    filter 240ms var(--ease-out-quart);
+  background: var(--tier);
+  transition: filter 240ms var(--ease-out-quart);
 }
 
-/* Lit. The glow is a `drop-shadow` rather than a `box-shadow`: `clip-path` cuts the box shadow away
-   with the corners it removes, where a filter follows the silhouette it is given. */
-.roster i.roster-on {
-  background: #2dd4bf;
-  filter: drop-shadow(0 0 4px rgb(45 212 191 / 45%));
+/* The inner hexagon. Its fill is the band's own ground rather than the page's: the badge sits on the
+   camp's wash, and `surface-950` here would print a lighter patch inside every ring. */
+.roster-mark > span {
+  position: absolute;
+  inset: 1.5px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+  line-height: 1;
+  background: #0c1720;
+  color: #868b8d;
 }
 
-/* Answers the pointer before the bubble does, and each state answers in its own terms: the unlit
-   token comes up out of the ground, the lit one burns harder. Declared after both, and the lit rule
-   restates the fill it already holds — an outline would be the obvious hover here, but `clip-path`
-   cuts one off with the corners, the same reason the glow is a filter. */
-.roster i:hover,
-.roster i:focus-visible {
-  background: rgb(236 232 225 / 26%);
+/* Taken. The glow is a `drop-shadow` rather than a `box-shadow`: `clip-path` cuts the box shadow
+   away with the corners it removes, where a filter follows the silhouette it is given. */
+.roster-mark.roster-on > span {
+  color: var(--tier);
 }
 
-.roster i.roster-on:hover,
-.roster i.roster-on:focus-visible {
-  background: #2dd4bf;
-  filter: drop-shadow(0 0 7px rgb(45 212 191 / 75%));
+.roster-mark.roster-on {
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--tier) 45%, transparent));
+}
+
+/* Answers the pointer before the bubble does. An outline would be the obvious hover on a badge, but
+   `clip-path` cuts one off with the corners, the same reason the glow is a filter. */
+.roster-mark:hover,
+.roster-mark:focus-visible {
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--tier) 65%, transparent));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .roster i {
+  .roster-mark {
     transition: none;
   }
 }
@@ -185,7 +209,9 @@
   color: #868b8d;
 }
 
+/* Holds one line's worth of height whatever it carries — see the row count above. */
 .vs-sub {
+  min-height: 1lh;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   color: #868b8d;

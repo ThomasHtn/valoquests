@@ -90,7 +90,7 @@
       "failures": "Failures",
       "groups": {
         "repair": "Repair",
-        "repairHint": "These three replay history that is already written. Run them when a figure is wrong, not as part of an ordinary week.",
+        "repairHint": "These replay history that is already written. Run them when a figure is wrong, not as part of an ordinary week.",
         "routine": "Routine",
         "routineHint": "The ordinary gestures of a week, with no retroactive effect."
       },
@@ -126,6 +126,14 @@
         "description": "Rebuilds this week's challenge progress and the ranking from the matches already stored. Never calls the Riot API.",
         "action": "Recalculate",
         "done": "Progress and ranking recalculated."
+      },
+      "redraw": {
+        "heading": "Redraw the challenges",
+        "description": "Throws away the current week's five challenges, draws five new ones from the catalogue as it now stands, then rebuilds progress and ranking. Use it when the draw itself became wrong: a challenge disabled or removed from the catalogue after the week opened.",
+        "action": "Redraw",
+        "confirm": "Redraw the challenges",
+        "confirmBody": "The progress recorded against the discarded challenges is deleted with them: a player who had completed one loses that completion, and the damage it dealt to the week's boss with it. Only the week in progress is touched. Remember to recompute the colony afterwards.",
+        "done": "New challenges drawn, progress rebuilt."
       },
       "rollover": {
         "heading": "Run the rollover",
@@ -277,17 +285,8 @@
     },
     "panel": {
       "close": "Close the week's detail",
-      "damage": "Damage",
-      "fullRanking": "See this week's full ranking",
       "next": "Next week",
-      "noRanking": "No ranking for this week.",
-      "portrait": "Boss portrait",
-      "previous": "Previous week",
-      "quests": "Challenges",
-      "ranking": "Ranking",
-      "top3": "Week's top 3",
-      "weakPoints": "Its weak points",
-      "weakPointsLink": "See the challenges"
+      "previous": "Previous week"
     },
     "status": {
       "current": "In progress",
@@ -392,11 +391,28 @@
         "STANDARD": "standard",
         "ELITE": "elite"
       },
-      "rewards": "Rewards",
-      "efficiency": "Efficiency",
-      "defeat": "Defeat",
-      "ifDefeated": "Failure",
-      "number": "Boss {{number}}"
+      "number": "Boss {{number}}",
+      "report": {
+        "question": "What this week changed for the city",
+        "materials": {
+          "banked": "+{{materials}} paid into the workshop.",
+          "none": "This boss banked no materials."
+        },
+        "efficiency": "Gained, never lost again.",
+        "morale": {
+          "defeated": "{{morale}} for a boss put down.",
+          "survived": "{{morale}} for a boss left standing."
+        },
+        "tierName": "Tier",
+        "tier": "Reached on {{day}}.",
+        "finishingBlow": "Finishing blow",
+        "finishingBlowCaption": "Took the boss's last hit point.",
+        "current": "The fight is under way. The health bar, the rewards on the table and this week's ranking all read on the Week page.",
+        "currentLink": "Go to this week",
+        "upcoming": "This week's boss has not been drawn yet.",
+        "upcomingScheduled": "{{category}} class. The opponent is drawn when the week opens.",
+        "unavailable": "No colony record for this week."
+      }
     },
     "bosses": "Bosses",
     "cardInfo": "Detail {{title}}",
@@ -572,17 +588,16 @@
       "difficulty": "Class",
       "error": "Failed to load the weekly boss.",
       "hpUnit": "HP",
-      "loading": "Loading the boss…",
-      "weakPoints": "Its weak points"
+      "loading": "Loading the boss…"
     },
     "confrontation": {
       "squad": "Squad",
       "threat": "Boss",
-      "active": "{{present}}/{{roster}} active",
       "dealtUnit": "HP dealt",
-      "dealt": "{{damage}} HP torn off this week",
       "segment": "{{player}} · {{damage}} HP",
-      "breakdown": "Damage per player: {{breakdown}}"
+      "breakdown": "Damage per player: {{breakdown}}",
+      "challenges": "{{done}} / {{total}} challenges",
+      "challengeSlot": "{{name}} · {{done}} / {{players}} cleared it"
     },
     "economy": {
       "beforeTier": "{{materials}} before {{tier}}"
@@ -613,7 +628,6 @@
       },
       "week": {
         "title": "This week's ranking",
-        "caption": "Running total since Monday, bonuses included",
         "empty": "Nobody has played yet this week."
       }
     },
@@ -630,6 +644,15 @@
       "link": "See the campaign"
     },
     "title": "The colony",
+    "today": {
+      "title": "Today",
+      "link": "See the campaign",
+      "damage": "damage today",
+      "harvest": "food harvested",
+      "counted": "{{present}} / {{roster}} reached {{threshold}} damage",
+      "nextStep": "+1 player = {{multiplier}}",
+      "atFull": "full squad"
+    },
     "town": {
       "tier": "Tier · {{name}}",
       "today": "today"
@@ -766,31 +789,6 @@
   "playerProfile": {
     "breadcrumb": {
       "players": "Players"
-    },
-    "colony": {
-      "activeDays": "Days played",
-      "activeDaysValue": {
-        "one": "{{count}} day this week",
-        "other": "{{count}} days this week"
-      },
-      "challenges": "Challenges cleared",
-      "challengesHint": "A challenge counts for the squad once every player has cleared it.",
-      "empty": "No contribution this week — this player has not played yet.",
-      "position": {
-        "one": "{{count}}st in the squad",
-        "other": "{{count}}th in the squad"
-      },
-      "source": {
-        "matches": "Matches",
-        "challenges": "Challenges",
-        "regularity": "Regularity",
-        "squad": "Squad bonus"
-      },
-      "splitLink": "The rules",
-      "splitTitle": "Where this damage came from",
-      "toBoss": "Dealt to the boss",
-      "toBossHint": "The total, less regularity: it rewards turning up, not producing.",
-      "weekDamage": "Damage this week"
     },
     "dailyYield": {
       "drops": "From the {{rank}}th on, {{percent}}%.",
@@ -987,6 +985,19 @@
         "winRate": "Win rate"
       }
     },
+    "run": {
+      "activeDays": "Days played",
+      "bosses": "Bosses felled",
+      "challenges": "Challenges",
+      "damage": "{{damage}} HP",
+      "frieze": "Their run, week by week",
+      "friezeWeek": "{{week}}: {{damage}} HP dealt to the boss. Open that week's leaderboard.",
+      "position": {
+        "one": "{{count}}st",
+        "other": "{{count}}th"
+      },
+      "week": "This week"
+    },
     "stats": {
       "acs": "ACS",
       "adr": "ADR",
@@ -1005,11 +1016,6 @@
       },
       "winRate": "Win rate",
       "wins": "{{count}} W"
-    },
-    "tabs": {
-      "COLONY": "Colony",
-      "VALORANT": "Valorant",
-      "label": "Profile half on show"
     },
     "title": "Player profile"
   },
@@ -1356,7 +1362,6 @@
   },
   "week": {
     "boss": {
-      "calibrationLink": "How this figure is set",
       "remainingHp": "HP left"
     },
     "bossSection": {
@@ -1380,7 +1385,6 @@
       "ifSurvives": "If it survives",
       "moraleCost": "{{morale}} morale",
       "nextTier": "Next tier",
-      "noMaterials": "and no materials banked.",
       "ofTier": "of the {{name}} tier, in one week.",
       "title": "Defeat this boss",
       "titleDefeated": "What this boss paid"

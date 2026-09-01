@@ -9,8 +9,19 @@
  */
 
 /*
- * The fight and its payout, side by side above `62rem` and stacked below it. One background for
- * both, so the band reads as one object split by a hairline rather than as two cards on a row.
+ * The band answers to its own width, not the viewport's: the shell's sidebar takes 16rem out of the
+ * page above `lg`, so a viewport query hands the two columns a break point they cannot honour and
+ * squeezes the fight to a third of what its name needs.
+ */
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+/*
+ * The fight and its payout, side by side once the band is wide enough, stacked below that. One
+ * background for both, so the band reads as one object split by a hairline rather than as two cards
+ * on a row.
  */
 .boss {
   display: grid;
@@ -18,9 +29,17 @@
   background: #0d1821;
 }
 
-@media (width >= 62rem) {
+@container (width >= 44rem) {
   .boss {
     grid-template-columns: minmax(0, 1fr) 24rem;
+  }
+}
+
+/* Wider still, the payout takes the width its longest line needs — the two gains and the survival
+   cost, side by side — which is what keeps that line from folding in two. */
+@container (width >= 56rem) {
+  .boss {
+    grid-template-columns: minmax(0, 1fr) 32rem;
   }
 }
 
@@ -139,44 +158,8 @@
   color: #a4a7a6;
 }
 
-/* What brings the bar down, as five tier marks — the amounts are on the cards below. */
-.boss-weak {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 14px;
-  margin-top: 18px;
-}
-
-.boss-weak-marks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.boss-weak-mark {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 32px;
-  background: var(--tier);
-}
-
-.boss-weak-mark > span {
-  position: absolute;
-  inset: 1.5px;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  font-size: 0.75rem;
-  line-height: 1;
-  background: #0f1c26;
-  color: var(--tier);
-}
-
-/* Pushed to the bottom, and the bar right under it. What was dealt on the left, what is left on the
-   right, both sitting on the same baseline despite the size gap between them. */
+/* Pushed to the bottom, and the bar right under it. The count sits at the block's left edge, over
+   the end of the bar it labels; the outcome, once there is one, closes the line on the right. */
 .hp-legend {
   display: flex;
   flex-wrap: wrap;
@@ -227,7 +210,7 @@
   border-top: 1px solid var(--color-edge);
 }
 
-@media (width >= 62rem) {
+@container (width >= 44rem) {
   .pay {
     border-top: 0;
     border-left: 1px solid var(--color-edge);
@@ -400,17 +383,19 @@
 
 /*
  * What a boss left standing costs, stated once and quietly: it is a consequence, not an outcome on
- * offer beside the other one.
+ * offer beside the other one. It closes the gains' line behind a rule instead of taking a tinted
+ * box of its own — the rule is enough to keep it from reading as a third reward, and the row it
+ * saves is a row the band no longer has to be tall enough for.
  */
 .pay-cost {
   display: flex;
   flex-wrap: wrap;
+  align-self: stretch;
   align-items: center;
   gap: 5px 9px;
   margin: 0;
-  padding: 9px 12px;
-  background: rgb(217 83 79 / 10%);
-  box-shadow: inset 3px 0 0 #d9534f;
+  padding-left: 15px;
+  border-left: 1px solid rgb(217 83 79 / 38%);
   font-size: 0.9375rem;
   line-height: 1.4;
   color: #a4a7a6;

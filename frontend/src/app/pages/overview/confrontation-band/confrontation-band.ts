@@ -1,11 +1,12 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { LucideSkull, LucideUsers } from '@lucide/angular';
+import { LucideSkull, LucideSwords } from '@lucide/angular';
 
 import { BossApi } from '@core/boss/boss-api';
 import { bossDamageOf } from '@core/boss/boss-damage.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
-import { ColonyView } from '@core/colony/colony-view';
-import { ColonyPresenceState } from '@core/colony/colony.model';
+import { resolveDifficultyVisual } from '@core/challenges/challenge-visual.utils';
+import { CHALLENGE_DIFFICULTIES } from '@core/challenges/challenge.model';
+import { ChallengesApi } from '@core/challenges/challenges-api';
 import { RemainingTime } from '@core/date/week-period.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -14,27 +15,33 @@ import { RankingApi } from '@core/ranking/ranking-api';
 import { Tooltip } from '@shared/tooltip/tooltip';
 
 /**
- * Order the roster's presence tokens are grouped in, so the row reads as a gauge rather than as a
- * pattern with holes: counted first, then those who played short of the threshold, then the rest.
+ * One token of the squad's challenge row: which of the five it is, and whether it is taken.
  */
-const PRESENCE_ORDER: Record<ColonyPresenceState, number> = { FULL: 0, PARTIAL: 1, NONE: 2 };
-
-/**
- * One presence token of the squad's roster row: whether it is lit, and who it stands for.
- */
-interface RosterSlot {
+interface ChallengeSlot {
   /**
-   * Stable identity for the `@for` track expression — the player's own id.
+   * Stable identity for the `@for` track expression — the challenge's own id.
    */
   readonly key: string;
 
   /**
-   * Whether the player cleared today's threshold, which is what lights the hexagon.
+   * Whether anyone has cleared it, which is what lights the badge.
    */
-  readonly present: boolean;
+  readonly cleared: boolean;
 
   /**
-   * Already-translated bubble naming the player and saying how their day went.
+   * The difficulty's own numeral, `I` to `V` — the same mark `/week` and the leaderboard's column
+   * headers give it, so a reader who has seen either knows which challenge this is.
+   */
+  readonly tier: string;
+
+  /**
+   * The difficulty's own colour, or `null` while nobody has cleared it — which is what leaves the
+   * badge in the muted grey its stylesheet holds as a default.
+   */
+  readonly tierColor: string | null;
+
+  /**
+   * Already-translated bubble naming the challenge and saying how far the squad got on it.
    */
   readonly tooltip: string;
 }
@@ -89,7 +96,7 @@ interface AssaultSegment {
  */
 @Component({
   selector: 'app-confrontation-band',
-  imports: [TranslatePipe, LucideSkull, LucideUsers, Tooltip],
+  imports: [TranslatePipe, LucideSkull, LucideSwords, Tooltip],
   templateUrl: './confrontation-band.html',
   styleUrl: './confrontation-band.css',
 })
@@ -101,10 +108,9 @@ export class ConfrontationBand {
   public readonly remaining = input<RemainingTime | null>(null);
 
   private readonly bossApi = inject(BossApi);
+  private readonly challengesApi = inject(ChallengesApi);
   private readonly rankingApi = inject(RankingApi);
   private readonly translation = inject(Translation);
-
-  protected readonly colony = inject(ColonyView);
 
   /**
    * The active week's fight, or `null` until it has loaded.
@@ -166,29 +172,70 @@ export class ConfrontationBand {
   );
 
   /**
-   * One token per roster member, lit for whoever cleared today's threshold, each naming its player.
+   * One token per challenge of the week, lit once anyone has cleared it.
    *
-   * Read off `ColonyView.presencePips`, which already resolves the colony's own presence roll into a
-   * player and a translated sentence per entry — the row used to be built from the head count alone,
-   * which drew the right number of tokens but had nothing to say about any of them.
+   * This row used to be the roster's turnout, one hexagon per player lit for whoever had cleared
+   * today's damage threshold. It was in the wrong band: turnout multiplies the colony's *food*, it
+   * deals the boss nothing at all, and reading it on the side of a fight said the squad was six
+   * players short of hurting the thing opposite. It is now on the day's band, where it belongs, and
+   * this side shows what actually reaches the health bar beside it.
    *
-   * Sorted rather than left in roster order, and that is the whole reason the row reads: grouped, it
-   * is a gauge with a lit run and an empty tail; scattered, it is a pattern with holes the reader has
-   * to count. Within the unlit tail the near-misses come first, so the squad's own order runs from
-   * "counted" through "played, short of the bar" to "has not played".
+   * In the ladder's own order, easiest to hardest, and never sorted by state. The roster row this
+   * replaced grouped its lit tokens together, which was right for it: a presence token stands for
+   * nobody in particular, so the row was a gauge and a gauge fills from one end. These carry a
+   * numeral, and a numeral is an identity — reordering them would shuffle `I` to `V` every time
+   * somebody cleared something, and the row would read as broken rather than as progress.
    *
-   * Only `FULL` lights a token, which is exactly what the tag above counts. A `PARTIAL` player sits
-   * unlit and their bubble says why — the nuance the two-state row cannot draw.
+   * They wear the difficulty ramp rather than the camp's cyan. `/week` draws its five cards on it
+   * and the leaderboard heads its five columns with the same badges, so the mark is already the
+   * app's word for "which challenge"; inventing a second one here to protect the camp's colour
+   * would cost more than it saves.
    */
-  protected readonly rosterSlots = computed<readonly RosterSlot[]>(() =>
-    [...this.colony.presencePips()]
-      .sort((left, right) => PRESENCE_ORDER[left.state] - PRESENCE_ORDER[right.state])
-      .map((pip) => ({
-        key: `${pip.playerId}`,
-        present: pip.state === 'FULL',
-        tooltip: pip.ariaLabel,
-      })),
+  protected readonly challengeSlots = computed<readonly ChallengeSlot[]>(() =>
+    [...(resourceValue(this.challengesApi.current, null)?.challenges ?? [])]
+      .sort(
+        (left, right) =>
+          CHALLENGE_DIFFICULTIES.indexOf(left.difficulty) -
+          CHALLENGE_DIFFICULTIES.indexOf(right.difficulty),
+      )
+      .map((challenge) => {
+        const cleared = challenge.completedPlayers > 0;
+        const visual = resolveDifficultyVisual(challenge.difficulty);
+
+        return {
+          key: `${challenge.id}`,
+          cleared,
+          tier: visual.tier,
+          tierColor: cleared ? visual.tierColor : null,
+          tooltip: this.translation.translate('overview.confrontation.challengeSlot', {
+            name: challenge.name,
+            done: challenge.completedPlayers,
+            players: challenge.totalPlayers,
+          }),
+        };
+      }),
   );
+
+  /**
+   * The challenge row's own caption, riding on the camp's tag as the qualifier it is: how many of
+   * the week's draw at least one player has cleared.
+   *
+   * "At least once" is what makes it a squad figure — a challenge nobody has taken is the only one
+   * that reads as untouched, whatever the roster did with the other four.
+   *
+   * Empty until the week's draw has loaded: a `0 / 0` would read as a week with nothing in it.
+   */
+  protected readonly challengesLabel = computed<string>(() => {
+    const slots = this.challengeSlots();
+    if (slots.length === 0) {
+      return '';
+    }
+
+    return this.translation.translate('overview.confrontation.challenges', {
+      done: slots.filter((slot) => slot.cleared).length,
+      total: slots.length,
+    });
+  });
 
   /**
    * Share of hit points left, `0`–`100`, which is what the bar draws.

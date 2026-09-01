@@ -5,7 +5,7 @@ import { LucideChevronLeft, LucideChevronRight, LucideUsers } from '@lucide/angu
 import { ColonyView } from '@core/colony/colony-view';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { TourVisit } from '@core/tour/tour-visit';
-import { Podium } from '@pages/overview/podium/podium';
+import { Podium } from '@pages/leaderboard/podium/podium';
 import { TownSilhouette } from '@pages/overview/town-silhouette/town-silhouette';
 import { BossBand } from '@pages/week/boss-band/boss-band';
 import { CountUp } from '@shared/count-up/count-up';

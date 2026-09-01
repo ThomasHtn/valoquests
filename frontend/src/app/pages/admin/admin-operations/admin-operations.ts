@@ -14,6 +14,7 @@ import { resourceValue } from '@core/http/resource-state.utils';
 import { SnackbarService } from '@core/snackbar/snackbar';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
+import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { InlineMessage } from '@shared/inline-message/inline-message';
 import { PageHeader } from '@layout/page-header/page-header';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -37,7 +38,8 @@ const SYNCHRONIZATION_POLL_INTERVAL_MS = 3_000;
  *
  * Gathers every command that repairs or refreshes the tracker: synchronizing the squad or one
  * player, rebuilding progress and ranking, drawing a week the Monday rollover failed to open,
- * running that rollover in full when it never fired at all, and replaying the colony.
+ * running that rollover in full when it never fired at all, replaying the colony, and throwing the
+ * week's challenge pack away for a new one.
  *
  * A synchronization runs in the background and outlives the request that started it, so the page
  * opens on the state of the latest run and polls it while it is in flight. That poll is the only
@@ -49,6 +51,7 @@ const SYNCHRONIZATION_POLL_INTERVAL_MS = 3_000;
   imports: [
     TranslatePipe,
     AdminActionCard,
+    ConfirmDialog,
     InlineMessage,
     LucideChevronDown,
     LucideChevronLeft,
@@ -150,6 +153,21 @@ export class AdminOperations {
    * State of the progress recalculation command.
    */
   protected readonly recalculateState = signal<AdminActionState>(IDLE_ACTION);
+
+  /**
+   * State of the challenge redraw command.
+   */
+  protected readonly redrawState = signal<AdminActionState>(IDLE_ACTION);
+
+  /**
+   * Whether the redraw confirmation dialog is on screen.
+   */
+  protected readonly redrawDialogOpen = signal(false);
+
+  /**
+   * Whether the redraw is currently running, which locks the dialog's buttons.
+   */
+  protected readonly redrawing = signal(false);
 
   /**
    * State of the weekly selection command.
@@ -339,6 +357,39 @@ export class AdminOperations {
     await this.commandRunner.run(() => this.adminApi.recalculateProgress(), {
       state: this.recalculateState,
       successMessage: () => this.translation.translate('admin.operations.recalculate.done'),
+    });
+  }
+
+  /**
+   * Opens the redraw confirmation dialog.
+   *
+   * The one command on this page that destroys data rather than rebuilding it, so it is the one
+   * asked for twice: the progress recorded against the discarded challenges goes with them.
+   */
+  protected askForRedraw(): void {
+    this.redrawDialogOpen.set(true);
+  }
+
+  /**
+   * Closes the redraw confirmation dialog without drawing anything.
+   */
+  protected dismissRedraw(): void {
+    this.redrawDialogOpen.set(false);
+  }
+
+  /**
+   * Discards the current week's challenge pack and draws a new one in its place.
+   */
+  protected async confirmRedraw(): Promise<void> {
+    if (this.redrawing()) {
+      return;
+    }
+
+    await this.commandRunner.run(() => this.adminApi.redrawCurrentChallenges(), {
+      state: this.redrawState,
+      busy: this.redrawing,
+      successMessage: () => this.translation.translate('admin.operations.redraw.done'),
+      onSuccess: () => this.redrawDialogOpen.set(false),
     });
   }
 

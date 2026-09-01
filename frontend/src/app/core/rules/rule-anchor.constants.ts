@@ -53,7 +53,6 @@ export const RULE_ANCHORS: readonly RuleAnchor[] = [
  */
 export const RULE_ANCHOR = {
   dailyYield: 'damage',
-  bossCalibration: 'calibration',
   colony: 'colony',
   ranking: 'ranking',
   town: 'town',

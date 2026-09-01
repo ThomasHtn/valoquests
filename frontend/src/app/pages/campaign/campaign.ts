@@ -142,16 +142,16 @@ export class Campaign {
   protected readonly selectedId = computed(() => this.selectedNode()?.id ?? null);
 
   /**
-   * What {@link selectedNode}'s fight is worth the colony, joined on the run week — never on the
+   * What {@link selectedNode}'s fight changed in the colony, joined on the run week — never on the
    * node's position in the list, which a week that closed without a fight would shift.
    */
-  protected readonly selectedColonyBoss = computed(() => {
+  protected readonly selectedBossReport = computed(() => {
     const node = this.selectedNode();
     if (node === null) {
       return null;
     }
 
-    return this.colony.bosses().find((boss) => boss.weekIndex === node.runWeekIndex) ?? null;
+    return this.colony.bossReports().get(node.runWeekIndex) ?? null;
   });
 
   /**

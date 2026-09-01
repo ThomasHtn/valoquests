@@ -1,16 +1,12 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { LucideFlame, LucideHammer, LucideSkull } from '@lucide/angular';
 
 import { BossApi } from '@core/boss/boss-api';
 import { BossFall } from '@core/boss/boss-fall';
 import { resolveBossNumberLabel } from '@core/boss/boss-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
-import { resolveChallengeWeakPoints } from '@core/challenges/challenge-weak-point.utils';
-import { ChallengesApi } from '@core/challenges/challenges-api';
 import { ColonyView } from '@core/colony/colony-view';
-import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
-import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
+import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -27,12 +23,14 @@ import { TierGlyph } from '@shared/tier-glyph/tier-glyph';
  * flavour line were both in the response and written nowhere on this page, which identified the
  * fight by its week number alone. And the payout is read as **the step of the ladder it buys**
  * (see `ColonyView.bossPayout`) rather than as a bare `+480 matériaux`, an amount with no scale
- * next to it. The row of weak points it always carried is now marks alone, no amounts: the five
- * cards immediately below hold every figure, and repeating them here made the band restate a
- * section of its own page.
+ * next to it.
  *
- * Self-fetches off the shared `BossApi`, `ChallengesApi` and `ColonyView` resources, so it costs no
- * request beyond what the page already asks for.
+ * The band reads the fight, not its arithmetic: the week's challenges are the five cards right
+ * below, so listing them here as weak points made the block restate a section of its own page, and
+ * the bar already says how far the squad has got without a second figure spelling it out.
+ *
+ * Self-fetches off the shared `BossApi` and `ColonyView` resources, so it costs no request beyond
+ * what the page already asks for.
  */
 /**
  * How long the fall sequence runs, in milliseconds — the strike, then the two rewards rising behind
@@ -43,21 +41,12 @@ const CELEBRATION_MS = 1600;
 
 @Component({
   selector: 'app-boss-band',
-  imports: [
-    TranslatePipe,
-    RouterLink,
-    LucideFlame,
-    LucideHammer,
-    LucideSkull,
-    ResourceState,
-    TierGlyph,
-  ],
+  imports: [TranslatePipe, LucideFlame, LucideHammer, LucideSkull, ResourceState, TierGlyph],
   templateUrl: './boss-band.html',
   styleUrl: './boss-band.css',
 })
 export class BossBand {
   private readonly bossApi = inject(BossApi);
-  private readonly challengesApi = inject(ChallengesApi);
   private readonly colony = inject(ColonyView);
   private readonly translation = inject(Translation);
 
@@ -66,16 +55,10 @@ export class BossBand {
    */
   private readonly bossFall = inject(BossFall);
 
-  /**
-   * Named rulebook fragments, so the link beside the hit-point figure lands on the beat that
-   * explains where that figure comes from.
-   */
-  protected readonly ruleAnchor = RULE_ANCHOR;
-
   protected readonly bossResource = this.bossApi.current;
 
-  protected readonly isLoading = anyLoading(this.bossResource, this.challengesApi.current);
-  protected readonly hasError = anyError(this.bossResource, this.challengesApi.current);
+  protected readonly isLoading = computed(() => this.bossResource.isLoading());
+  protected readonly hasError = computed(() => this.bossResource.error() !== undefined);
 
   /**
    * The active week's boss confrontation, or `null` until it has loaded.
@@ -88,20 +71,6 @@ export class BossBand {
    * What the fight pays the colony, and what a boss left standing costs it.
    */
   protected readonly payout = this.colony.bossPayout;
-
-  /**
-   * The week's five challenges, reduced to their tier marks — what actually brings the bar down.
-   *
-   * Marks only, no amounts: the five cards right below carry every figure, and repeating them here
-   * made the band restate a section of its own page. What the row is for is the shape of the fight
-   * — five weak points, from the easiest to the one that hurts most.
-   */
-  protected readonly weakPoints = computed(() =>
-    resolveChallengeWeakPoints(
-      resourceValue(this.challengesApi.current, null)?.challenges ?? [],
-      this.translation.language(),
-    ),
-  );
 
   /**
    * Resolves a run week's position into its zero-padded `"01"`–`"10"` label, the same way the
@@ -184,15 +153,6 @@ export class BossBand {
   });
 
   /**
-   * Damage the squad has already taken off the bar this week, grouped the same way.
-   */
-  protected readonly damageDealtLabel = computed(() => {
-    const boss = this.boss();
-
-    return boss === null ? '' : formatDamage(boss.totalDamageDealt, this.translation.language());
-  });
-
-  /**
    * Plays the fall once per week, on the first visit that finds the boss down.
    *
    * `prefers-reduced-motion` skips straight to marking it seen: the settled state carries the same
@@ -221,6 +181,6 @@ export class BossBand {
    * Reloads every backing resource after a failure.
    */
   protected reload(): void {
-    reloadAll(this.bossResource, this.challengesApi.current);
+    this.bossResource.reload();
   }
 }

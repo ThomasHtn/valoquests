@@ -90,7 +90,7 @@
       "failures": "Échecs",
       "groups": {
         "repair": "Réparation",
-        "repairHint": "Ces trois opérations rejouent un historique déjà écrit. À lancer quand une donnée est fausse, pas dans le cours normal d'une semaine.",
+        "repairHint": "Ces opérations rejouent un historique déjà écrit. À lancer quand une donnée est fausse, pas dans le cours normal d'une semaine.",
         "routine": "Routine",
         "routineHint": "Les gestes ordinaires d'une semaine, sans effet rétroactif."
       },
@@ -126,6 +126,14 @@
         "description": "Reconstruit la progression des défis de la semaine et le classement à partir des matchs déjà stockés. N'appelle pas l'API Riot.",
         "action": "Recalculer",
         "done": "Progression et classement recalculés."
+      },
+      "redraw": {
+        "heading": "Retirer les défis",
+        "description": "Jette les cinq défis de la semaine en cours et en tire cinq nouveaux dans le catalogue actuel, puis recalcule la progression et le classement. À utiliser quand le tirage lui-même est devenu faux : un défi désactivé ou supprimé du catalogue après l'ouverture de la semaine.",
+        "action": "Retirer",
+        "confirm": "Retirer les défis",
+        "confirmBody": "La progression enregistrée sur les défis jetés est supprimée avec eux : un joueur qui en avait validé un perd cette validation et les dégâts qu'elle avait infligés au boss de la semaine. Seule la semaine en cours est touchée. Pensez à recalculer la colonie ensuite.",
+        "done": "Nouveaux défis tirés, progression recalculée."
       },
       "rollover": {
         "heading": "Passer la semaine",
@@ -277,17 +285,8 @@
     },
     "panel": {
       "close": "Fermer le détail de la semaine",
-      "damage": "Dégâts",
-      "fullRanking": "Voir le classement complet de cette semaine",
       "next": "Semaine suivante",
-      "noRanking": "Aucun classement pour cette semaine.",
-      "portrait": "Portrait du boss",
-      "previous": "Semaine précédente",
-      "quests": "Défis",
-      "ranking": "Classement",
-      "top3": "Top 3 de la semaine",
-      "weakPoints": "Ses points faibles",
-      "weakPointsLink": "Voir les défis"
+      "previous": "Semaine précédente"
     },
     "status": {
       "current": "En cours",
@@ -392,11 +391,28 @@
         "STANDARD": "standard",
         "ELITE": "élite"
       },
-      "rewards": "Récompenses",
-      "efficiency": "Efficacité",
-      "defeat": "Défaite",
-      "ifDefeated": "Échec",
-      "number": "Boss {{number}}"
+      "number": "Boss {{number}}",
+      "report": {
+        "question": "Ce que cette semaine a changé pour la Cité",
+        "materials": {
+          "banked": "+{{materials}} versés à l'atelier.",
+          "none": "Ce boss n'a versé aucun matériau."
+        },
+        "efficiency": "Acquise, jamais reperdue.",
+        "morale": {
+          "defeated": "{{morale}} pour un boss abattu.",
+          "survived": "{{morale}} pour un boss laissé debout."
+        },
+        "tierName": "Palier",
+        "tier": "Franchi le {{day}}.",
+        "finishingBlow": "Coup fatal",
+        "finishingBlowCaption": "Dernier point de vie retiré au boss.",
+        "current": "Le combat est en cours. La barre de vie, les récompenses en jeu et le classement de la semaine se lisent sur la page Semaine.",
+        "currentLink": "Voir la semaine en cours",
+        "upcoming": "Le boss de cette semaine n'est pas encore tiré.",
+        "upcomingScheduled": "Classe {{category}}. L'adversaire sera tiré à l'ouverture de la semaine.",
+        "unavailable": "Aucun relevé de la Cité pour cette semaine."
+      }
     },
     "bosses": "Boss",
     "cardInfo": "Détail {{title}}",
@@ -572,17 +588,16 @@
       "difficulty": "Classe",
       "error": "Impossible de charger le boss de la semaine.",
       "hpUnit": "PV",
-      "loading": "Chargement du boss…",
-      "weakPoints": "Ses points faibles"
+      "loading": "Chargement du boss…"
     },
     "confrontation": {
       "squad": "Escouade",
       "threat": "Boss",
-      "active": "{{present}}/{{roster}} actifs",
       "dealtUnit": "PV infligés",
-      "dealt": "{{damage}} PV arrachés cette semaine",
       "segment": "{{player}} · {{damage}} PV",
-      "breakdown": "Dégâts par joueur : {{breakdown}}"
+      "breakdown": "Dégâts par joueur : {{breakdown}}",
+      "challenges": "{{done}} / {{total}} défis",
+      "challengeSlot": "{{name}} · {{done}} / {{players}} ont validé"
     },
     "economy": {
       "beforeTier": "{{materials}} avant {{tier}}"
@@ -613,7 +628,6 @@
       },
       "week": {
         "title": "Classement de la semaine",
-        "caption": "Cumul depuis lundi, bonus compris",
         "empty": "Personne n'a encore joué cette semaine."
       }
     },
@@ -630,6 +644,15 @@
       "link": "Voir la campagne"
     },
     "title": "La colonie",
+    "today": {
+      "title": "Aujourd'hui",
+      "link": "Voir la campagne",
+      "damage": "dégâts du jour",
+      "harvest": "nourriture récoltée",
+      "counted": "{{present}} / {{roster}} ont atteint {{threshold}} dégâts",
+      "nextStep": "+1 joueur = {{multiplier}}",
+      "atFull": "escouade au complet"
+    },
     "town": {
       "tier": "Palier · {{name}}",
       "today": "aujourd'hui"
@@ -766,31 +789,6 @@
   "playerProfile": {
     "breadcrumb": {
       "players": "Escouade"
-    },
-    "colony": {
-      "activeDays": "Jours joués",
-      "activeDaysValue": {
-        "one": "{{count}} jour cette semaine",
-        "other": "{{count}} jours cette semaine"
-      },
-      "challenges": "Défis validés",
-      "challengesHint": "Un défi compte pour le groupe quand toute l’escouade l’a validé.",
-      "empty": "Aucune contribution cette semaine — ce joueur n’a pas encore joué.",
-      "position": {
-        "one": "{{count}}re de l’escouade",
-        "other": "{{count}}e de l’escouade"
-      },
-      "source": {
-        "matches": "Matchs",
-        "challenges": "Défis",
-        "regularity": "Régularité",
-        "squad": "Bonus d’escouade"
-      },
-      "splitLink": "Les règles",
-      "splitTitle": "D’où viennent ces dégâts",
-      "toBoss": "Portés au boss",
-      "toBossHint": "Le total, moins la régularité : elle récompense la présence, pas la production.",
-      "weekDamage": "Dégâts de la semaine"
     },
     "dailyYield": {
       "drops": "À partir du {{rank}}ᵉ, {{percent}} %.",
@@ -987,6 +985,19 @@
         "winRate": "Winrate"
       }
     },
+    "run": {
+      "activeDays": "Jours joués",
+      "bosses": "Boss abattus",
+      "challenges": "Défis",
+      "damage": "{{damage}} PV",
+      "frieze": "Sa campagne, semaine par semaine",
+      "friezeWeek": "{{week}} : {{damage}} PV portés au boss. Ouvrir le classement de cette semaine.",
+      "position": {
+        "one": "{{count}}ᵉʳ",
+        "other": "{{count}}ᵉ"
+      },
+      "week": "Cette semaine"
+    },
     "stats": {
       "acs": "ACS",
       "adr": "ADR",
@@ -1005,11 +1016,6 @@
       },
       "winRate": "Winrate",
       "wins": "{{count}} V"
-    },
-    "tabs": {
-      "COLONY": "Colonie",
-      "VALORANT": "Valorant",
-      "label": "Moitié du profil affichée"
     },
     "title": "Profil du joueur"
   },
@@ -1356,7 +1362,6 @@
   },
   "week": {
     "boss": {
-      "calibrationLink": "Comment ce chiffre est calculé",
       "remainingHp": "PV restants"
     },
     "bossSection": {
@@ -1380,7 +1385,6 @@
       "ifSurvives": "S'il survit",
       "moraleCost": "{{morale}} moral",
       "nextTier": "Palier suivant",
-      "noMaterials": "et aucun matériau banqué.",
       "ofTier": "du palier {{name}}, en une semaine.",
       "title": "Vaincre ce boss",
       "titleDefeated": "Ce que ce boss a payé"

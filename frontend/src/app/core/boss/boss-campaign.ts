@@ -172,6 +172,7 @@ export class BossCampaign {
           displayName: entry.displayName,
           avatarUrl: avatarUrlByPlayerId.get(entry.playerId) ?? null,
           isChampion: entry.playerId === championPlayerId,
+          damage: bossDamageOf(entry),
           damageLabel: formatDamage(bossDamageOf(entry), language),
           questsLabel: `${entry.completedChallenges}`,
         })),
@@ -199,6 +200,7 @@ export class BossCampaign {
               displayName: entry.player.displayName,
               avatarUrl: avatarUrlByPlayerId.get(entry.player.id) ?? null,
               isChampion: entry.player.id === championPlayerId,
+              damage: bossDamageOf(entry),
               damageLabel: formatDamage(bossDamageOf(entry), language),
               questsLabel: `${entry.completedChallenges}/${entry.totalChallenges}`,
             },
@@ -339,9 +341,18 @@ export class BossCampaign {
               damage: topContributor.damageLabel,
             })
           : null,
-      // The top-damage wording is dropped in the panel: it repeats the first row of the ranking the
-      // panel already prints underneath. The finishing blow isn't in that ranking, so it stays.
-      panelMetaLabel: week.defeated ? finishingBlowLabel : null,
+      // The portrait comes from the week's own ranking rows: the boss history carries who landed the
+      // kill, not what they look like.
+      finishingBlow:
+        week.defeated && week.defeatedByPlayerDisplayName !== null
+          ? {
+              displayName: week.defeatedByPlayerDisplayName,
+              avatarUrl:
+                contributions.find(
+                  (contribution) => contribution.playerId === week.defeatedByPlayerId,
+                )?.avatarUrl ?? null,
+            }
+          : null,
     };
   }
 
@@ -374,7 +385,6 @@ export class BossCampaign {
         contributions,
       ),
       metaLabel: remainingLabel,
-      panelMetaLabel: remainingLabel,
     };
   }
 
@@ -463,7 +473,7 @@ export class BossCampaign {
       }),
       barLabel: this.translation.translate(resolveBossHpBarLabelKey(status)),
       metaLabel: null,
-      panelMetaLabel: null,
+      finishingBlow: null,
       contributions,
     };
   }
@@ -506,7 +516,7 @@ export class BossCampaign {
       hpLabel: '',
       barLabel: '',
       metaLabel: null,
-      panelMetaLabel: null,
+      finishingBlow: null,
       contributions: [],
     };
   }

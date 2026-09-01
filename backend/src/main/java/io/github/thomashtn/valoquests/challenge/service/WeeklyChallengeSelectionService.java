@@ -44,4 +44,21 @@ public interface WeeklyChallengeSelectionService {
     List<WeeklyChallenge> findExistingWeekChallenges(
         LocalDate weekStart
     );
+
+    /**
+     * Discards the current week's challenge pack and draws a brand new one.
+     *
+     * <p>The counterpart of {@link #selectWeekChallenges(LocalDate)}, which never replaces what a
+     * week already holds. This is the operator's override, for the week whose pack no longer
+     * matches the catalogue it was drawn from — a challenge disabled or removed after the draw.
+     *
+     * <p>Restricted to the week in progress: a past week's pack is what its frozen ranking was
+     * earned against, and redrawing it would rewrite history.
+     *
+     * <p>Destructive. The progress recorded against the discarded pack goes with it, and cannot be
+     * recovered: the challenges it was measured against no longer exist.
+     *
+     * @return the newly drawn pack
+     */
+    List<WeeklyChallenge> redrawCurrentWeekChallenges();
 }

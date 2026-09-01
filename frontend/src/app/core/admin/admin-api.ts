@@ -166,6 +166,18 @@ export class AdminApi {
   }
 
   /**
+   * Throws away the current week's challenge pack, draws a new one, and rebuilds progress against
+   * it.
+   *
+   * Destructive: the progress recorded against the discarded challenges is deleted with them.
+   *
+   * @returns A promise that resolves once the new pack has been drawn.
+   */
+  public async redrawCurrentChallenges(): Promise<void> {
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.challengeRedraw, null));
+  }
+
+  /**
    * Rebuilds the current weekly ranking alone, without touching challenge progress.
    *
    * @returns A promise that resolves once the rebuild has completed.

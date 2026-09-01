@@ -7,7 +7,9 @@ import io.github.thomashtn.valoquests.challenge.exception.WeeklyChallengeSelecti
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
+import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
+import io.github.thomashtn.valoquests.shared.exception.ConflictException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
@@ -46,6 +48,11 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
      * Number of challenges expected in one complete weekly pack.
      */
     private static final int WEEKLY_CHALLENGE_COUNT = ChallengeDifficulty.values().length;
+
+    /**
+     * Salt used by the scheduled draw, which must stay reproducible across restarts.
+     */
+    private static final long UNSALTED_DRAW = 0L;
 
     /**
      * Orders persisted selections from the easiest to the hardest challenge.
@@ -100,6 +107,11 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     private final WeeklyChallengeRepository weeklyChallengeRepository;
 
     /**
+     * Progress repository, used by the redraw to clear the discarded pack's progress first.
+     */
+    private final PlayerChallengeProgressRepository progressRepository;
+
+    /**
      * Registry used to exclude challenges that cannot currently be calculated.
      */
     private final ChallengeProgressCalculatorRegistry calculatorRegistry;
@@ -119,6 +131,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
      *
      * @param challengeRepository       challenge catalogue repository
      * @param weeklyChallengeRepository weekly challenge repository
+     * @param progressRepository        player challenge progress repository
      * @param calculatorRegistry        challenge calculator registry
      * @param clock                     application clock
      * @param weekCalendar              calendar resolving the current week
@@ -126,12 +139,14 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     public DefaultWeeklyChallengeSelectionService(
         ChallengeRepository challengeRepository,
         WeeklyChallengeRepository weeklyChallengeRepository,
+        PlayerChallengeProgressRepository progressRepository,
         ChallengeProgressCalculatorRegistry calculatorRegistry,
         Clock clock,
         WeekCalendar weekCalendar
     ) {
         this.challengeRepository = challengeRepository;
         this.weeklyChallengeRepository = weeklyChallengeRepository;
+        this.progressRepository = progressRepository;
         this.calculatorRegistry = calculatorRegistry;
         this.clock = clock;
         this.weekCalendar = weekCalendar;
@@ -157,6 +172,17 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     @Override
     @Transactional
     public List<WeeklyChallenge> selectWeekChallenges(LocalDate weekStart) {
+        return selectWeekChallenges(weekStart, UNSALTED_DRAW);
+    }
+
+    /**
+     * Retrieves or creates the challenge pack assigned to one week, under one draw salt.
+     *
+     * @param weekStart Monday identifying the week
+     * @param drawSalt  salt mixed into the candidate order
+     * @return complete weekly challenge pack
+     */
+    private List<WeeklyChallenge> selectWeekChallenges(LocalDate weekStart, long drawSalt) {
         validateWeekStart(weekStart);
 
         List<WeeklyChallenge> existingSelections =
@@ -169,7 +195,8 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
             return sortSelections(existingSelections);
         }
 
-        List<Challenge> missingChallenges = selectMissingChallenges(weekStart, existingSelections);
+        List<Challenge> missingChallenges =
+            selectMissingChallenges(weekStart, existingSelections, drawSalt);
         List<WeeklyChallenge> newSelections = createWeeklyChallenges(
             weekStart,
             missingChallenges,
@@ -202,6 +229,67 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     }
 
     /**
+     * Discards the current week's pack, with its progress, and draws a new one.
+     *
+     * <p>Salted with the current instant, so the new pack differs from the one being discarded.
+     * The scheduled draw stays unsalted and reproducible: it is what makes a week survive a
+     * restart, whereas a redraw is by definition an operator overriding what that draw produced,
+     * and one that gave the same five challenges back would be no redraw at all.
+     *
+     * <p>The no-repeat cycle is unaffected: it replays weeks strictly before this one, so the
+     * discarded pack never counted towards it and the new one is not penalized by it.
+     *
+     * @return the newly drawn pack
+     */
+    @Override
+    @Transactional
+    public List<WeeklyChallenge> redrawCurrentWeekChallenges() {
+        LocalDate weekStart = weekCalendar.currentWeekStart();
+        List<WeeklyChallenge> discarded =
+            weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(weekStart);
+
+        validateRedrawable(weekStart, discarded);
+
+        // Progress first: it references the pack. Loaded then deleted rather than through a derived
+        // `deleteAllBy…`, which would make SpotBugs read the repository as mutable state everywhere.
+        progressRepository.deleteAll(
+            progressRepository
+                .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(weekStart)
+        );
+        weeklyChallengeRepository.deleteAll(discarded);
+        weeklyChallengeRepository.flush();
+
+        LOGGER.info(
+            "Discarded {} challenge(s) of week {} for a manual redraw.",
+            discarded.size(),
+            weekStart
+        );
+
+        return selectWeekChallenges(weekStart, clock.instant().toEpochMilli());
+    }
+
+    /**
+     * Refuses to redraw a pack that is already frozen.
+     *
+     * <p>The current week's pack is never finalized in a healthy state — the rollover only freezes
+     * weeks strictly before the one in progress. Reaching this means a rollover closed the running
+     * week, and rewriting its pack on top of that would compound the damage rather than repair it.
+     *
+     * @param weekStart Monday identifying the week being redrawn
+     * @param selections the pack about to be discarded
+     */
+    private void validateRedrawable(LocalDate weekStart, List<WeeklyChallenge> selections) {
+        boolean finalized = selections.stream()
+            .anyMatch(selection -> selection.getFinalizedAt() != null);
+
+        if (finalized) {
+            throw new ConflictException(
+                "Week " + weekStart + " holds a finalized challenge pack and cannot be redrawn."
+            );
+        }
+    }
+
+    /**
      * Selects challenges for all difficulty tiers missing from an existing weekly pack.
      *
      * @param weekStart          selected week
@@ -210,7 +298,8 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
      */
     private List<Challenge> selectMissingChallenges(
         LocalDate weekStart,
-        List<WeeklyChallenge> existingSelections
+        List<WeeklyChallenge> existingSelections,
+        long drawSalt
     ) {
         SelectionState initialState = SelectionState.from(existingSelections);
         List<ChallengeDifficulty> missingDifficulties = findMissingDifficulties(initialState);
@@ -220,7 +309,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         }
 
         Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty =
-            loadCandidatesByDifficulty(weekStart);
+            loadCandidatesByDifficulty(weekStart, drawSalt);
 
         // Challenges left in the current cycle first, the whole tier only as a fallback. The second
         // attempt is exactly the selection this service used to make on its own, so a week that
@@ -341,9 +430,13 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
      * the same selection candidate order across application restarts.</p>
      *
      * @param weekStart selected week
+     * @param drawSalt  salt mixed into the candidate order
      * @return eligible candidates grouped by difficulty
      */
-    private Map<ChallengeDifficulty, List<Challenge>> loadCandidatesByDifficulty(LocalDate weekStart) {
+    private Map<ChallengeDifficulty, List<Challenge>> loadCandidatesByDifficulty(
+        LocalDate weekStart,
+        long drawSalt
+    ) {
         Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty =
             new EnumMap<>(ChallengeDifficulty.class);
 
@@ -354,7 +447,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         challengeRepository.findAllByEnabledTrueOrderByIdAsc()
             .stream()
             .filter(challenge -> calculatorRegistry.supports(challenge.getProgressMode()))
-            .sorted(Comparator.comparingLong(challenge -> selectionOrder(weekStart, challenge)))
+            .sorted(Comparator.comparingLong(challenge -> selectionOrder(weekStart, challenge, drawSalt)))
             .forEach(challenge -> candidatesByDifficulty.get(challenge.getDifficulty()).add(challenge));
 
         return candidatesByDifficulty;
@@ -537,14 +630,19 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
      * only adds a shared week term to each candidate, which shifts them all equally and leaves the
      * sorted order untouched: every week then drew the exact same pack.
      *
+     * <p>The salt goes into the same seed rather than beside it, for the same reason: it is shared
+     * by every candidate, so only the avalanche below turns it into a different order. A redraw
+     * that added it after diffusion would shift the whole tier equally and draw the same pack.
+     *
      * @param weekStart selected week
      * @param challenge challenge candidate
+     * @param drawSalt  salt separating a manual redraw from the week's scheduled draw
      * @return deterministic ordering value
      */
-    private long selectionOrder(LocalDate weekStart, Challenge challenge) {
+    private long selectionOrder(LocalDate weekStart, Challenge challenge, long drawSalt) {
         long challengeSeed = Objects.hash(challenge.getId(), challenge.getCode());
 
-        return avalanche(weekStart.toEpochDay() * WEEK_SEED_MULTIPLIER + challengeSeed);
+        return avalanche(weekStart.toEpochDay() * WEEK_SEED_MULTIPLIER + challengeSeed + drawSalt);
     }
 
     /**

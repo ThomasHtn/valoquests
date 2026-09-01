@@ -397,6 +397,45 @@
 }
 
 /*
+ * The rule's loud voice, for a page whose sections stand a screen apart. At `text-sm` the title is
+ * smaller than the prose under it, which is what makes such a page read as a heap of blocks rather
+ * than as a sequence of sections.
+ *
+ * Written here rather than in `overview.css`, where it started, now that `/campaign` and `/week`
+ * open the same way — a section title has one voice across the public pages, and a hand-copied
+ * second version is exactly how the utilities in this file came to exist. Still opt-in on the rule
+ * itself, for a block that names itself inside another section rather than starting one.
+ *
+ * The label tracking goes with the size: two hundredths of an em is a device for small caps at 14px;
+ * at 32 it opens the word up until it stops being one.
+ */
+.section-rule--large .section-rule-title {
+  font-size: clamp(1.5rem, 1.05rem + 1.9vw, 2.125rem);
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+}
+
+/*
+ * On a phone the way out comes back onto the title's own line.
+ *
+ * It used to drop under it, pinned to the right edge by the `ml-auto` written for exactly that fall,
+ * which left the link floating on a line of its own with nothing to its left. What was actually
+ * taking the room is the hairline: it is laid out `grow basis-12`, so it claims 3rem before the link
+ * may have any. Dropped at this width, and the pair fits — the title names the block, the link
+ * leaves it, and the diamond still closes the row.
+ */
+@media (width < 40rem) {
+  .section-rule--large .section-rule-line {
+    display: none;
+  }
+
+  .section-rule--large .section-rule-link {
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+  }
+}
+
+/*
  * Visible keyboard focus indicator.
  *
  * The user-agent default outline is nearly invisible against the `surface-950` ground, so every

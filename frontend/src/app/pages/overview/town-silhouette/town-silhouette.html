@@ -1,5 +1,5 @@
-<!-- One scene, painted back to front: sky, the moon and its stars, the city held back by haze, the
-     terraces, the frontage and its street, then the water and whatever crosses it.
+<!-- One scene, painted back to front: sky, its cloud cover, the moon and its stars, the city held
+     back by haze, the terraces, the frontage and its street, then the water and whatever crosses it.
 
      `xMidYMax meet` keeps the ground line pinned to the bottom of the panel at every width. Every
      full-bleed band is drawn far past the viewBox, and SVG clips to the viewport rather than to the
@@ -29,6 +29,15 @@
       <stop class="town-horizon-in" offset="0" />
       <stop class="town-horizon-out" offset="1" />
     </radialGradient>
+
+    <!-- A cloud, as a soft-edged bank rather than a drawn shape: the fill fades to nothing well
+         inside the ellipse holding it, which is what a blur filter would cost across a surface this
+         large for the same result. On bounding-box units, so one gradient serves every bank. -->
+    <radialGradient id="townCloud">
+      <stop class="town-cloud-in" offset="0" />
+      <stop class="town-cloud-mid" offset="0.5" />
+      <stop class="town-cloud-out" offset="1" />
+    </radialGradient>
   </defs>
 
   <!-- Drawn far past the viewBox on every side, and SVG clips to the viewport rather than to the
@@ -41,6 +50,24 @@
        exactly the black band this scene was reproached for. The radial fades out on its own well
        before it reaches this rect's edges. -->
   <rect fill="url(#townHorizon)" height="2340" width="5200" x="-2600" y="-2000" />
+
+  <!-- The cloud cover, in the same band of sky the stars occupy.
+
+       It exists because that band is empty for two thirds of the day: the moon and the stars are
+       what the sky had in it, and both are out between dawn and dusk (see `--moon-alpha`), which
+       leaves the largest surface of the accueil saying nothing from breakfast to supper. Weather is
+       the honest thing to put there, and it is already the sky's own language here — the gradient
+       behind it is morale, so the cover thins as morale rises rather than moving with the hour.
+
+       Five banks, placed rather than generated: at this size and this opacity a sixth is not
+       visible, and a procedural sky would be a second scene builder for a haze. -->
+  <g class="town-clouds">
+    <ellipse cx="140" cy="46" fill="url(#townCloud)" rx="170" ry="30" />
+    <ellipse cx="410" cy="24" fill="url(#townCloud)" rx="210" ry="26" />
+    <ellipse cx="270" cy="98" fill="url(#townCloud)" rx="190" ry="22" />
+    <ellipse cx="612" cy="70" fill="url(#townCloud)" rx="150" ry="24" />
+    <ellipse cx="700" cy="18" fill="url(#townCloud)" rx="120" ry="20" />
+  </g>
 
   <!-- The scene is emitted as primitives grouped into layers (see `town-scene.ts`), so one block
        draws every family rather than the whole waterfront being written out shape by shape. -->
