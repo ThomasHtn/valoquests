@@ -7,10 +7,10 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
-import { filter, map } from 'rxjs';
+import { filter, interval, map } from 'rxjs';
 import {
   LucideBookOpen,
   LucideDatabaseBackup,
@@ -30,6 +30,7 @@ import {
 } from '@lucide/angular';
 
 import { AdminSession } from '@core/admin/admin-session';
+import { COUNTDOWN_REFRESH_INTERVAL_MS } from '@core/date/countdown.constants';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Language } from '@core/i18n/translation.model';
@@ -374,6 +375,14 @@ export class Sidebar {
         this.closeMenuButton()?.nativeElement.focus();
       }
     });
+
+    // The players resource is fetched once and never re-requested on its own, so `lastSyncLabel`
+    // would otherwise freeze at whatever it read on load even as the backend keeps synchronizing
+    // every 30 minutes. The sidebar is mounted for the app's whole lifetime, so it is a fitting
+    // place to keep this shared resource current.
+    interval(COUNTDOWN_REFRESH_INTERVAL_MS)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.playersResource.reload());
   }
 
   /**
