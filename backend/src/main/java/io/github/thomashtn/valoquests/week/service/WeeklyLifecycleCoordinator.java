@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.campaign.service.CampaignLifecycleService;
 import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
 import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
+import java.time.Clock;
 import java.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,11 +47,17 @@ public class WeeklyLifecycleCoordinator {
     private final CampaignReplayService campaignReplayService;
 
     /**
+     * Clock stamping a campaign's closing instant.
+     */
+    private final Clock clock;
+
+    /**
      * Creates the weekly lifecycle coordinator.
      *
      * @param weeklyChallengeSelectionService challenge selection service
      * @param campaignLifecycleService        campaign lifecycle service
      * @param campaignReplayService           campaign replay service
+     * @param clock                           application clock
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -59,11 +66,13 @@ public class WeeklyLifecycleCoordinator {
     public WeeklyLifecycleCoordinator(
         WeeklyChallengeSelectionService weeklyChallengeSelectionService,
         CampaignLifecycleService campaignLifecycleService,
-        CampaignReplayService campaignReplayService
+        CampaignReplayService campaignReplayService,
+        Clock clock
     ) {
         this.weeklyChallengeSelectionService = weeklyChallengeSelectionService;
         this.campaignLifecycleService = campaignLifecycleService;
         this.campaignReplayService = campaignReplayService;
+        this.clock = clock;
     }
 
     /**
@@ -72,6 +81,10 @@ public class WeeklyLifecycleCoordinator {
      * <p>The replay comes first: the Monday being opened is the day after a Sunday that has to be
      * settled, and drawing the new pack before settling it would credit the new week's challenges
      * to the old week's ship.
+     *
+     * <p>The close comes right after: a campaign whose tenth Sunday has just been settled is over,
+     * and closing it here rather than at the nightly tick means the Monday after it never shows a
+     * running campaign with nothing left to run.
      *
      * <p>Idempotent throughout, and it catches up on its own: a rollover firing after a long outage
      * replays every week it missed in the one pass, because the replay never reads a stored total.
@@ -82,6 +95,7 @@ public class WeeklyLifecycleCoordinator {
     public void openWeek(LocalDate weekStart) {
         campaignLifecycleService.startIfDue();
         campaignReplayService.replayRunningCampaign();
+        campaignLifecycleService.closeIfComplete(clock);
         weeklyChallengeSelectionService.selectWeekChallenges(weekStart);
         weeklyChallengeSelectionService.selectDailyChallenge(weekStart);
 

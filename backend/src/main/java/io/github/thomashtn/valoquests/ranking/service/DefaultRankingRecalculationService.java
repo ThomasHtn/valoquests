@@ -1,23 +1,22 @@
 package io.github.thomashtn.valoquests.ranking.service;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
-import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageAggregator;
+import io.github.thomashtn.valoquests.ranking.service.ChallengePointsReader.ChallengeTally;
+import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
+import io.github.thomashtn.valoquests.scoring.model.PlayerDayOutput;
+import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,46 +28,63 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Rebuilds weekly rankings from persisted challenge progress.
+ * Rebuilds a week's ranking from the stored matches and challenge progress.
+ *
+ * <p>Two things are added: the guardian damage of the week, priced by {@link DailyOutputReader}
+ * exactly as the campaign prices it, and the points of the challenges validated that week. Nothing
+ * else: a challenge damages nothing, regularity is already paid inside every match by the streak,
+ * and there is no team bonus.
+ *
+ * <p>Who counts is decided here and nowhere else. An inactive player is still given a row, so their
+ * progress stays visible, but the row carries no damage, no points and no position: they measure
+ * themselves against the squad without adding to it or taking a slot from it.
  */
 @Service
-public class DefaultRankingRecalculationService
-    implements RankingRecalculationService {
+public class DefaultRankingRecalculationService implements RankingRecalculationService {
 
     /**
      * Application logger.
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-        DefaultRankingRecalculationService.class
-    );
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRankingRecalculationService.class);
 
     /**
-     * Repository used to retrieve active players.
+     * Days in one ranking week.
+     */
+    private static final int DAYS_PER_WEEK = 7;
+
+    /**
+     * Orders a week: most points first, then whoever hit the guardian hardest, then whoever validated
+     * the most, then the earliest player so two identical weeks always read in the same order.
+     */
+    private static final Comparator<WeeklyPlayerScore> RANKING_ORDER = Comparator
+        .comparingInt(WeeklyPlayerScore::getTotalPoints).reversed()
+        .thenComparing(Comparator.comparingInt(WeeklyPlayerScore::getGuardianDamage).reversed())
+        .thenComparing(Comparator.comparingInt(WeeklyPlayerScore::completedAllChallenges).reversed())
+        .thenComparing(Comparator.comparingInt(WeeklyPlayerScore::getActiveDays).reversed())
+        .thenComparing(score -> score.getPlayer().getId());
+
+    /**
+     * Repository listing the players a row is built for.
      */
     private final PlayerRepository playerRepository;
 
     /**
-     * Repository used to retrieve calculated challenge progress.
-     */
-    private final PlayerChallengeProgressRepository progressRepository;
-
-    /**
-     * Repository used to persist weekly score snapshots.
+     * Repository persisting the weekly rows.
      */
     private final WeeklyPlayerScoreRepository scoreRepository;
 
     /**
-     * Barèmes every weekly amount is priced with.
+     * Reader pricing the week's matches, shared with the campaign.
      */
-    private final ScoringRuleset ruleset;
+    private final DailyOutputReader dailyOutputReader;
 
     /**
-     * Aggregates one player's match damage and active-day count for a week.
+     * Reader pricing the week's validated challenges.
      */
-    private final WeeklyMatchDamageAggregator matchDamageAggregator;
+    private final ChallengePointsReader challengePointsReader;
 
     /**
-     * Application clock used for deterministic week and timestamp handling.
+     * Application clock stamping the calculation.
      */
     private final Clock clock;
 
@@ -81,12 +97,11 @@ public class DefaultRankingRecalculationService
      * Creates the ranking recalculation service.
      *
      * @param playerRepository      player repository
-     * @param progressRepository    challenge progress repository
      * @param scoreRepository       weekly score repository
-     * @param ruleset               scoring ruleset
-     * @param matchDamageAggregator weekly match damage aggregator
+     * @param dailyOutputReader     daily output reader
+     * @param challengePointsReader challenge points reader
      * @param clock                 application clock
-     * @param weekCalendar          calendar resolving the current week
+     * @param weekCalendar          week calendar
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -94,302 +109,146 @@ public class DefaultRankingRecalculationService
     )
     public DefaultRankingRecalculationService(
         PlayerRepository playerRepository,
-        PlayerChallengeProgressRepository progressRepository,
         WeeklyPlayerScoreRepository scoreRepository,
-        ScoringRuleset ruleset,
-        WeeklyMatchDamageAggregator matchDamageAggregator,
+        DailyOutputReader dailyOutputReader,
+        ChallengePointsReader challengePointsReader,
         Clock clock,
         WeekCalendar weekCalendar
     ) {
         this.playerRepository = playerRepository;
-        this.progressRepository = progressRepository;
         this.scoreRepository = scoreRepository;
-        this.ruleset = ruleset;
-        this.matchDamageAggregator = matchDamageAggregator;
+        this.dailyOutputReader = dailyOutputReader;
+        this.challengePointsReader = challengePointsReader;
         this.clock = clock;
         this.weekCalendar = weekCalendar;
     }
 
-    /**
-     * Recalculates scores and positions for the current week.
-     */
     @Override
     @Transactional
     public void recalculateCurrentRanking() {
         recalculateWeek(weekCalendar.currentWeekStart());
     }
 
-    /**
-     * Recalculates scores and deterministic positions for one week.
-     *
-     * @param weekStart Monday identifying the week to recalculate
-     */
     @Override
     @Transactional
     public void recalculateWeek(LocalDate weekStart) {
         validateWeekStart(weekStart);
 
         Instant calculatedAt = clock.instant();
-
-        List<Player> players =
-            playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED);
+        List<Player> players = playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED);
 
         if (players.isEmpty()) {
             scoreRepository.deleteAllByWeekStart(weekStart);
-
-            LOGGER.info(
-                "Ranking cleared for week {} because no player is tracked.",
-                weekStart
-            );
+            LOGGER.info("Ranking cleared for week {} because no player is tracked.", weekStart);
 
             return;
         }
 
-        List<Long> playerIds = players.stream()
-            .map(Player::getId)
-            .toList();
-
         scoreRepository.deleteAllByWeekStartAndPlayerIdNotIn(
             weekStart,
-            playerIds
+            players.stream().map(Player::getId).toList()
         );
 
         Map<Long, WeeklyPlayerScore> existingByPlayerId = scoreRepository
             .findAllByWeekStartOrderByPositionAsc(weekStart)
             .stream()
-            .collect(Collectors.toMap(
-                score -> score.getPlayer().getId(),
-                Function.identity()
-            ));
+            .collect(Collectors.toMap(score -> score.getPlayer().getId(), Function.identity()));
 
-        Map<Long, Integer> completedCountByWeeklyChallengeId =
-            countCompletionsByWeeklyChallenge(weekStart);
-        Map<Long, RankingAggregate> aggregates =
-            aggregateProgress(weekStart, players, completedCountByWeeklyChallengeId);
+        // Only the competing squad's matches are priced: an inactive player's evening is worth
+        // nothing to the ranking, so there is no point loading it.
+        DailyOutput output = dailyOutputReader.read(
+            EnumSet.of(Player.COMPETITIVE_STATUS),
+            weekStart,
+            weekStart.plusDays(DAYS_PER_WEEK - 1L)
+        );
+        Map<Long, ChallengeTally> tallies = challengePointsReader.read(weekStart);
 
-        List<WeeklyPlayerScore> scores = players.stream()
-            .map(player -> buildScore(
-                player,
-                weekStart,
-                calculatedAt,
-                aggregates.getOrDefault(
-                    player.getId(),
-                    RankingAggregate.EMPTY
-                ),
-                existingByPlayerId.get(player.getId())
-            ))
-            .sorted(rankingComparator())
-            .collect(Collectors.toCollection(ArrayList::new));
+        List<WeeklyPlayerScore> scores = new ArrayList<>(players.size());
+        for (Player player : players) {
+            WeeklyPlayerScore score = existingByPlayerId.getOrDefault(player.getId(), new WeeklyPlayerScore());
+            fill(score, player, weekStart, output, tallies.getOrDefault(player.getId(), ChallengeTally.NONE));
+            score.setPreviousPosition(score.getId() == null ? null : score.getPosition());
+            score.setCalculatedAt(calculatedAt);
+            scores.add(score);
+        }
+
+        scores.sort(RANKING_ORDER);
 
         int position = 1;
         for (WeeklyPlayerScore score : scores) {
-            // A non-competitive player (e.g. a showcased pro player) still gets a score built and
-            // sorted for display, but never consumes a ranking slot.
             score.setPosition(score.getPlayer().isCompetitive() ? position++ : null);
         }
 
         scoreRepository.saveAll(scores);
 
-        LOGGER.info(
-            "Ranking recalculated for week {} with {} player(s).",
-            weekStart,
-            scores.size()
-        );
+        LOGGER.info("Ranking recalculated for week {} with {} player(s).", weekStart, scores.size());
     }
 
     /**
-     * Counts, for every weekly challenge, how many competitive players have completed it so far.
+     * Writes one player's week into their row.
      *
-     * <p>An inactive player's completion is deliberately excluded: it must not inflate the team
-     * bonus earned by the players who actually compete.
+     * <p>An inactive player keeps their validation counts and nothing else: the counts are what
+     * lets them see how fast they would go, the rest is what they are not taking part in.
      *
-     * @param weekStart week being recalculated
-     * @return completed-player count indexed by weekly challenge identifier
+     * @param score     row to fill
+     * @param player    player the row belongs to
+     * @param weekStart Monday identifying the week
+     * @param output    the competing squad's priced week
+     * @param tally     the player's validated challenges
      */
-    private Map<Long, Integer> countCompletionsByWeeklyChallenge(LocalDate weekStart) {
-        Map<Long, Integer> completedCounts = new HashMap<>();
-
-        for (PlayerChallengeProgress progress : progressRepository
-            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(weekStart)) {
-
-            if (progress.isCompleted() && progress.getPlayer().isCompetitive()) {
-                completedCounts.merge(progress.getWeeklyChallenge().getId(), 1, Integer::sum);
-            }
-        }
-
-        return completedCounts;
-    }
-
-    /**
-     * Aggregates match damage, challenge damage, regularity bonus and team bonus by player.
-     *
-     * <p>An inactive player only ever accumulates {@link RankingAggregate#completedChallenges()},
-     * so their individual progress stays visible while never contributing damage of any kind.
-     *
-     * @param weekStart                        week being recalculated
-     * @param players                          players to aggregate
-     * @param completedCountByWeeklyChallengeId final completed-player count per weekly challenge
-     * @return player aggregations indexed by player identifier
-     */
-    private Map<Long, RankingAggregate> aggregateProgress(
-        LocalDate weekStart,
-        List<Player> players,
-        Map<Long, Integer> completedCountByWeeklyChallengeId
-    ) {
-        Map<Long, RankingAggregate> aggregates = new HashMap<>();
-
-        for (Player player : players) {
-            aggregates.put(
-                player.getId(),
-                player.isCompetitive()
-                    ? aggregateMatchDamage(player, weekStart)
-                    : RankingAggregate.EMPTY
-            );
-        }
-
-        List<PlayerChallengeProgress> progressRows =
-            progressRepository
-                .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
-                    weekStart
-                );
-
-        for (PlayerChallengeProgress progress : progressRows) {
-            if (!progress.isCompleted()) {
-                continue;
-            }
-
-            long playerId = progress.getPlayer().getId();
-
-            if (!progress.getPlayer().isCompetitive()) {
-                aggregates.merge(
-                    playerId,
-                    new RankingAggregate(0, 0, 1, 0, 0, 0),
-                    RankingAggregate::add
-                );
-                continue;
-            }
-
-            ChallengeDifficulty difficulty =
-                progress.getWeeklyChallenge().getChallenge().getDifficulty();
-
-            // Legacy v1 barème: daily draws carry no difficulty and are priced by the v2 ranking.
-            if (difficulty == null) {
-                continue;
-            }
-
-            int challengeDamage = ruleset.challengeDamage(difficulty);
-
-            int teamBonus = ruleset.challengeTeamBonus(
-                difficulty,
-                completedCountByWeeklyChallengeId.getOrDefault(
-                    progress.getWeeklyChallenge().getId(),
-                    1
-                )
-            );
-
-            aggregates.merge(
-                playerId,
-                new RankingAggregate(0, challengeDamage, 1, teamBonus, 0, 0),
-                RankingAggregate::add
-            );
-        }
-
-        return aggregates;
-    }
-
-    /**
-     * Aggregates one player's match damage and active-day count for the week.
-     *
-     * @param player    aggregated player
-     * @param weekStart week being recalculated
-     * @return match-damage-only aggregate for that player
-     */
-    private RankingAggregate aggregateMatchDamage(
-        Player player,
-        LocalDate weekStart
-    ) {
-        WeeklyMatchDamageAggregator.Aggregate aggregate =
-            matchDamageAggregator.aggregate(player, weekStart, ruleset);
-
-        return new RankingAggregate(
-            aggregate.matchDamage(),
-            0,
-            0,
-            0,
-            ruleset.regularityBonus(aggregate.activeDays()),
-            aggregate.activeDays()
-        );
-    }
-
-    /**
-     * Creates or refreshes one score while preserving its former position.
-     *
-     * @param player       ranked player
-     * @param weekStart    ranking week
-     * @param calculatedAt calculation timestamp
-     * @param aggregate    calculated player aggregation
-     * @param existing     existing score, when available
-     * @return score ready to persist
-     */
-    private WeeklyPlayerScore buildScore(
+    private void fill(
+        WeeklyPlayerScore score,
         Player player,
         LocalDate weekStart,
-        Instant calculatedAt,
-        RankingAggregate aggregate,
-        WeeklyPlayerScore existing
+        DailyOutput output,
+        ChallengeTally tally
     ) {
-        WeeklyPlayerScore score = existing == null
-            ? new WeeklyPlayerScore()
-            : existing;
+        boolean competitive = player.isCompetitive();
+        WeekOutput week = competitive ? weekOf(player.getId(), weekStart, output) : WeekOutput.NONE;
 
         score.setPlayer(player);
         score.setWeekStart(weekStart);
-        score.setChallengeDamage(aggregate.challengeDamage());
-        score.setCompletedChallenges(
-            aggregate.completedChallenges()
-        );
-        score.setMatchDamage(aggregate.matchDamage());
-        score.setRegularityBonus(aggregate.regularityBonus());
-        score.setTeamBonus(aggregate.teamBonus());
-        score.setActiveDays(aggregate.activeDays());
-        score.setTotalDamage(
-            aggregate.matchDamage()
-                + aggregate.challengeDamage()
-                + aggregate.regularityBonus()
-                + aggregate.teamBonus()
-        );
-        score.setPreviousPosition(
-            existing == null
-                ? null
-                : existing.getPosition()
-        );
-        score.setCalculatedAt(calculatedAt);
-
-        return score;
+        score.setGuardianDamage(week.damage());
+        score.setFood(week.food());
+        score.setComponents(week.components());
+        score.setMatchCount(week.matchCount());
+        score.setActiveDays(week.activeDays());
+        score.setStreakDays(week.streakDays());
+        score.setChallengePoints(competitive ? tally.points() : 0);
+        score.setCompletedChallenges(tally.completedWeekly());
+        score.setCompletedDailyChallenges(tally.completedDaily());
+        score.setTotalPoints(score.getGuardianDamage() + score.getChallengePoints());
     }
 
     /**
-     * Defines stable ranking order and deterministic tie breaking.
+     * Sums one player's seven days.
      *
-     * @return ranking comparator
+     * @param playerId  internal player identifier
+     * @param weekStart Monday identifying the week
+     * @param output    priced week
+     * @return the player's week
      */
-    private Comparator<WeeklyPlayerScore> rankingComparator() {
-        return Comparator
-            .comparingInt(WeeklyPlayerScore::getTotalDamage)
-            .reversed()
-            .thenComparing(
-                Comparator.comparingInt(
-                    WeeklyPlayerScore::getCompletedChallenges
-                ).reversed()
-            )
-            .thenComparing(
-                Comparator.comparingInt(
-                    WeeklyPlayerScore::getActiveDays
-                ).reversed()
-            )
-            .thenComparing(
-                score -> score.getPlayer().getId()
-            );
+    private WeekOutput weekOf(long playerId, LocalDate weekStart, DailyOutput output) {
+        int damage = 0;
+        int food = 0;
+        int components = 0;
+        int matchCount = 0;
+        int activeDays = 0;
+        int streakDays = 0;
+
+        for (int offset = 0; offset < DAYS_PER_WEEK; offset++) {
+            LocalDate day = weekStart.plusDays(offset);
+            PlayerDayOutput dayOutput = output.of(playerId, day);
+
+            damage += dayOutput.damage();
+            food += dayOutput.food();
+            components += dayOutput.components();
+            matchCount += dayOutput.matchCount();
+            activeDays += dayOutput.matchCount() > 0 ? 1 : 0;
+            streakDays = Math.max(streakDays, output.streakEndingOn(playerId, day));
+        }
+
+        return new WeekOutput(damage, food, components, matchCount, activeDays, streakDays);
     }
 
     /**
@@ -398,60 +257,28 @@ public class DefaultRankingRecalculationService
      * @param weekStart week identifier to validate
      */
     private void validateWeekStart(LocalDate weekStart) {
-        Objects.requireNonNull(
-            weekStart,
-            "weekStart must not be null"
-        );
+        Objects.requireNonNull(weekStart, "weekStart must not be null");
 
         if (!weekCalendar.isWeekStart(weekStart)) {
-            throw new IllegalArgumentException(
-                "weekStart must be a Monday"
-            );
+            throw new IllegalArgumentException("weekStart must be a Monday");
         }
     }
 
     /**
-     * Immutable score aggregation for one player.
+     * What one player's matches produced over a week.
      *
-     * @param matchDamage         damage dealt by valued matches
-     * @param challengeDamage     damage dealt by completed challenges
-     * @param completedChallenges number of completed challenges
-     * @param teamBonus           sum of per-challenge team bonuses
-     * @param regularityBonus     bonus for the number of active days
-     * @param activeDays          number of distinct active days
+     * @param damage     guardian damage, both multipliers applied
+     * @param food       food share
+     * @param components components share
+     * @param matchCount valued matches played
+     * @param activeDays days with at least one valued match
+     * @param streakDays longest streak reached during the week
      */
-    private record RankingAggregate(
-        int matchDamage,
-        int challengeDamage,
-        int completedChallenges,
-        int teamBonus,
-        int regularityBonus,
-        int activeDays
-    ) {
+    private record WeekOutput(int damage, int food, int components, int matchCount, int activeDays, int streakDays) {
 
         /**
-         * Empty aggregation used when no challenge is completed.
+         * The week of a player whose matches do not count.
          */
-        private static final RankingAggregate EMPTY =
-            new RankingAggregate(0, 0, 0, 0, 0, 0);
-
-        /**
-         * Combines two player aggregations.
-         *
-         * @param other aggregation to add
-         * @return combined aggregation
-         */
-        private RankingAggregate add(
-            RankingAggregate other
-        ) {
-            return new RankingAggregate(
-                matchDamage + other.matchDamage,
-                challengeDamage + other.challengeDamage,
-                completedChallenges + other.completedChallenges,
-                teamBonus + other.teamBonus,
-                regularityBonus + other.regularityBonus,
-                activeDays + other.activeDays
-            );
-        }
+        private static final WeekOutput NONE = new WeekOutput(0, 0, 0, 0, 0, 0);
     }
 }

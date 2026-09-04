@@ -3,6 +3,7 @@ package io.github.thomashtn.valoquests.campaign.scheduler;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.campaign.service.CampaignLifecycleService;
 import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
+import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
@@ -47,6 +48,11 @@ public class CampaignDailyTickScheduler {
     private final WeeklyChallengeSelectionService selectionService;
 
     /**
+     * Service giving the day's challenge its progress rows, and the ranking its points.
+     */
+    private final ChallengeRecalculationService recalculationService;
+
+    /**
      * Service starting and closing campaigns.
      */
     private final CampaignLifecycleService lifecycleService;
@@ -69,11 +75,12 @@ public class CampaignDailyTickScheduler {
     /**
      * Creates the campaign daily tick scheduler.
      *
-     * @param selectionService challenge selection service
-     * @param lifecycleService campaign lifecycle service
-     * @param replayService    campaign replay service
-     * @param weekCalendar     week calendar
-     * @param clock            clock
+     * @param selectionService     challenge selection service
+     * @param recalculationService challenge recalculation service
+     * @param lifecycleService     campaign lifecycle service
+     * @param replayService        campaign replay service
+     * @param weekCalendar         week calendar
+     * @param clock                clock
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -81,12 +88,14 @@ public class CampaignDailyTickScheduler {
     )
     public CampaignDailyTickScheduler(
         WeeklyChallengeSelectionService selectionService,
+        ChallengeRecalculationService recalculationService,
         CampaignLifecycleService lifecycleService,
         CampaignReplayService replayService,
         WeekCalendar weekCalendar,
         Clock clock
     ) {
         this.selectionService = selectionService;
+        this.recalculationService = recalculationService;
         this.lifecycleService = lifecycleService;
         this.replayService = replayService;
         this.weekCalendar = weekCalendar;
@@ -94,7 +103,10 @@ public class CampaignDailyTickScheduler {
     }
 
     /**
-     * Draws the day's challenge, advances the campaign's lifecycle and replays it.
+     * Draws the day's challenge, evaluates it, advances the campaign's lifecycle and replays it.
+     *
+     * <p>The recalculation sits between the draw and the replay: the challenge drawn a second ago
+     * has no progress row until it runs, and the replay reads those rows for the week's rescues.
      */
     @Scheduled(
         cron = "${app.scheduling.campaign-tick-cron}",
@@ -105,6 +117,7 @@ public class CampaignDailyTickScheduler {
 
         try {
             selectionService.selectDailyChallenge(weekCalendar.today());
+            recalculationService.recalculateCurrentWeekProgress();
             lifecycleService.startIfDue();
             replayService.replayRunningCampaign();
             lifecycleService.closeIfComplete(clock);

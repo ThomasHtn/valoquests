@@ -94,22 +94,6 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
      */
     private static final double PERCENT_SCALE = 100.0;
 
-    /**
-     * Legacy regularity bonus by number of active days, index 0 unused, index 7 is the max.
-     */
-    private static final int[] REGULARITY_BONUS_BY_DAYS = {0, 0, 600, 1400, 2400, 3600, 4800, 6000};
-
-    /**
-     * Legacy team bonus granted per player joining a challenge beyond the first.
-     */
-    private static final int TEAM_BONUS_PERCENT_PER_EXTRA_PLAYER = 10;
-
-    /**
-     * Legacy number of joining players past which the team bonus stops growing.
-     */
-    private static final int TEAM_BONUS_EXTRA_PLAYER_CAP = 5;
-
-
     @Override
     public int matchDamage(GameMode gameMode, MatchOutcome outcome) {
         if (gameMode == null || outcome == null) {
@@ -233,34 +217,5 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
     @Override
     public int referenceFloor() {
         return REFERENCE_FLOOR;
-    }
-
-    @Override
-    public int challengeDamage(ChallengeDifficulty difficulty) {
-        if (difficulty == null) {
-            return 0;
-        }
-
-        return switch (difficulty) {
-            case EASY -> 800;
-            case NORMAL -> 1_400;
-            case MEDIUM -> 2_200;
-            case HARD -> 3_200;
-            case VERY_HARD -> 4_500;
-        };
-    }
-
-    @Override
-    public int regularityBonus(int activeDays) {
-        int clampedDays = Math.clamp(activeDays, 0, REGULARITY_BONUS_BY_DAYS.length - 1);
-        return REGULARITY_BONUS_BY_DAYS[clampedDays];
-    }
-
-    @Override
-    public int challengeTeamBonus(ChallengeDifficulty difficulty, int playersWhoCompleted) {
-        int extraPlayers = Math.clamp(playersWhoCompleted - 1L, 0, TEAM_BONUS_EXTRA_PLAYER_CAP);
-        int bonusPercent = extraPlayers * TEAM_BONUS_PERCENT_PER_EXTRA_PLAYER;
-
-        return (int) Math.round(challengeDamage(difficulty) * bonusPercent / PERCENT_SCALE);
     }
 }

@@ -10,6 +10,8 @@ import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayerDay;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignDailySnapshotRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerDayRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
+import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.ranking.service.WeeklyTitleResolver;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -45,6 +47,11 @@ public class CampaignDayReader {
     private final CampaignDailySnapshotRepository snapshotRepository;
 
     /**
+     * Repository holding the week's ranking rows, the honours are read from.
+     */
+    private final WeeklyPlayerScoreRepository scoreRepository;
+
+    /**
      * Resolver awarding the week's honours.
      */
     private final WeeklyTitleResolver titleResolver;
@@ -54,6 +61,7 @@ public class CampaignDayReader {
      *
      * @param playerDayRepository campaign player day repository
      * @param snapshotRepository  campaign daily snapshot repository
+     * @param scoreRepository     weekly score repository
      * @param titleResolver       weekly title resolver
      */
     @SuppressFBWarnings(
@@ -63,10 +71,12 @@ public class CampaignDayReader {
     public CampaignDayReader(
         CampaignPlayerDayRepository playerDayRepository,
         CampaignDailySnapshotRepository snapshotRepository,
+        WeeklyPlayerScoreRepository scoreRepository,
         WeeklyTitleResolver titleResolver
     ) {
         this.playerDayRepository = playerDayRepository;
         this.snapshotRepository = snapshotRepository;
+        this.scoreRepository = scoreRepository;
         this.titleResolver = titleResolver;
     }
 
@@ -101,7 +111,7 @@ public class CampaignDayReader {
             campaign.getRosterSize(),
             upkeep,
             playerDays.stream().map(this::toResponse).toList(),
-            titleResolver.resolve(campaign, weekStart)
+            titleResolver.resolve(scoreRepository.findAllByWeekStartOrderByPositionAsc(weekStart))
         );
     }
 

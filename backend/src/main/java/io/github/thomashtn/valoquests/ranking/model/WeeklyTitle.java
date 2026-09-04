@@ -1,4 +1,4 @@
-package io.github.thomashtn.valoquests.campaign.model;
+package io.github.thomashtn.valoquests.ranking.model;
 
 /**
  * One of the four weekly honours, so recognition never concentrates on a single operator.

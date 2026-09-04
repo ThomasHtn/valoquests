@@ -251,22 +251,20 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies the live ranking created by challenge recalculation.
      *
-     * <p>Challenge damage is resolved from {@code DefaultScoringRuleset} by difficulty tier. Alpha
-     * completes all five (EASY 800 + NORMAL 1400 + MEDIUM 2200 + HARD 3200 + VERY_HARD 4500 = 12100);
-     * bravo only completes the EASY kills challenge (800). That kills challenge is shared, and both
-     * players complete it, so both receive the 2-player team bonus, 10% of the challenge's own damage (80).
-     * Match damage sums each player's four COMPETITIVE matches (alpha: WIN+LOSS+WIN+LOSS =
-     * 500+350+500+350 = 1700; bravo: LOSS+LOSS+WIN+LOSS = 350+350+500+350 = 1550), none of which reaches
-     * the sixth match of its day, so no daily coefficient applies. The regularity bonus follows each
-     * player's own distinct match days (alpha spans 4 days = 2400; bravo spans 2 days = 600, matching
-     * their own PLAY_DAY progress values).
+     * <p>Guardian damage is priced by the v2 barème with both multipliers. Alpha plays one
+     * competitive match a day over four consecutive days, so the streak bonus climbs by 2 % a day:
+     * WIN 500 + LOSS 350 × 1.02 + WIN 500 × 1.04 + LOSS 350 × 1.06 = 500 + 357 + 520 + 371 = 1748.
+     * Bravo plays two matches a day over two days: LOSS 350 + LOSS 350, then WIN 500 × 1.02 + LOSS
+     * 350 × 1.02 = 700 + 510 + 357 = 1567. Alpha completes all five weekly challenges (20 + 34 + 54
+     * + 78 + 108 = 294 points at the 2 000 floor), bravo only the EASY kills challenge (20); each may
+     * also have validated the day's challenge, which is read back rather than assumed.
      */
     private void assertCurrentRanking(Player alpha, Player bravo) {
         List<WeeklyPlayerScore> scores = loadScores(COMPETITION_WEEK_START);
 
         assertThat(scores).hasSize(2);
-        assertScore(scores.get(0), alpha, 12_100, 16_280, 5, 1, null, null);
-        assertScore(scores.get(1), bravo, 800, 3_030, 1, 2, null, null);
+        assertScore(scores.get(0), alpha, 1_748, 294 + dailyPoints(alpha), 5, 1, null, null);
+        assertScore(scores.get(1), bravo, 1_567, 20 + dailyPoints(bravo), 1, 2, null, null);
     }
 
     /**
@@ -283,8 +281,8 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
 
         List<WeeklyPlayerScore> scores = loadScores(COMPETITION_WEEK_START);
         assertThat(scores).hasSize(2);
-        assertScore(scores.get(0), alpha, 12_100, 16_280, 5, 1, 1, ROLLOVER_TIME);
-        assertScore(scores.get(1), bravo, 800, 3_030, 1, 2, 2, ROLLOVER_TIME);
+        assertScore(scores.get(0), alpha, 1_748, 294 + dailyPoints(alpha), 5, 1, 1, ROLLOVER_TIME);
+        assertScore(scores.get(1), bravo, 1_567, 20 + dailyPoints(bravo), 1, 2, 2, ROLLOVER_TIME);
     }
 
     /**
@@ -341,9 +339,9 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     private void assertOpeningScore(WeeklyPlayerScore score, Player player, int position) {
         assertThat(score.getPlayer().getId()).isEqualTo(player.getId());
         assertThat(score.getPosition()).isEqualTo(position);
-        assertThat(score.getTotalDamage()).isZero();
-        assertThat(score.getChallengeDamage()).isZero();
-        assertThat(score.getMatchDamage()).isZero();
+        assertThat(score.getTotalPoints()).isZero();
+        assertThat(score.getChallengePoints()).isZero();
+        assertThat(score.getGuardianDamage()).isZero();
         assertThat(score.getCompletedChallenges()).isZero();
         assertThat(score.getCalculatedAt()).isEqualTo(ROLLOVER_TIME);
         assertThat(score.getFinalizedAt()).isNull();
@@ -377,23 +375,55 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     private void assertScore(
         WeeklyPlayerScore score,
         Player player,
-        int challengeDamage,
-        int totalDamage,
+        int guardianDamage,
+        int challengePoints,
         int completedChallenges,
         int position,
         Integer previousPosition,
         Instant finalizedAt
     ) {
         assertThat(score.getPlayer().getId()).isEqualTo(player.getId());
-        assertThat(score.getChallengeDamage()).isEqualTo(challengeDamage);
-        assertThat(score.getTotalDamage()).isEqualTo(totalDamage);
+        assertThat(score.getGuardianDamage()).isEqualTo(guardianDamage);
+        assertThat(score.getChallengePoints()).isEqualTo(challengePoints);
+        assertThat(score.getTotalPoints()).isEqualTo(guardianDamage + challengePoints);
         assertThat(score.getCompletedChallenges()).isEqualTo(completedChallenges);
+        assertThat(score.getCompletedDailyChallenges()).isEqualTo(completedDailies(player));
         assertThat(score.getPosition()).isEqualTo(position);
         assertThat(score.getPreviousPosition()).isEqualTo(previousPosition);
         assertThat(score.getCalculatedAt()).isEqualTo(
             finalizedAt == null ? CALCULATION_TIME : ROLLOVER_TIME
         );
         assertThat(score.getFinalizedAt()).isEqualTo(finalizedAt);
+    }
+
+    /**
+     * Prices the daily challenges this player validated this week.
+     *
+     * <p>The day's challenge is drawn from the pool, so whether this player validated it is read
+     * back rather than assumed. Outside any campaign a validated daily pays 24 points: weight 1.2
+     * at the 2 000 floor.
+     *
+     * @param player player whose dailies are priced
+     * @return the points those dailies add
+     */
+    private int dailyPoints(Player player) {
+        return completedDailies(player) * 24;
+    }
+
+    /**
+     * Counts the daily challenges this player validated this week.
+     *
+     * @param player player whose dailies are counted
+     * @return validated daily challenges
+     */
+    private int completedDailies(Player player) {
+        return (int) progressRepository
+            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(COMPETITION_WEEK_START)
+            .stream()
+            .filter(progress -> progress.getPlayer().getId().equals(player.getId()))
+            .filter(progress -> progress.getWeeklyChallenge().getCadence() == ChallengeCadence.DAILY)
+            .filter(PlayerChallengeProgress::isCompleted)
+            .count();
     }
 
     /**

@@ -19,10 +19,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Stores one player's calculated score and position for a calendar week.
+ * Stores one player's week: what their matches and challenges were worth, and where that put them.
  *
- * <p>Current rows are recalculated from challenge progress. Finalized rows act as immutable
- * snapshots used by ranking history.</p>
+ * <p>Current rows are rebuilt from the stored matches and challenge progress after every import.
+ * Finalized rows are immutable snapshots the ranking history and the weekly titles read.</p>
  */
 @Getter
 @Setter
@@ -58,48 +58,64 @@ public class WeeklyPlayerScore extends AuditableEntity {
     private LocalDate weekStart;
 
     /**
-     * Total damage dealt by completed weekly challenges, resolved through the week's own scoring
-     * ruleset version.
+     * Damage the player's valued matches dealt to the guardian this week, both multipliers applied.
      */
-    @Column(name = "challenge_damage", nullable = false)
-    private int challengeDamage;
+    @Column(name = "guardian_damage", nullable = false)
+    private int guardianDamage;
 
     /**
-     * Number of weekly challenges completed by the player.
+     * Food share of that damage.
+     */
+    @Column(nullable = false)
+    private int food;
+
+    /**
+     * Components share of that damage.
+     */
+    @Column(nullable = false)
+    private int components;
+
+    /**
+     * Valued matches played this week.
+     */
+    @Column(name = "match_count", nullable = false)
+    private int matchCount;
+
+    /**
+     * Number of distinct days with at least one valued match this week.
+     */
+    @Column(name = "active_days", nullable = false)
+    private int activeDays;
+
+    /**
+     * Longest run of consecutive played days reached during the week, days before it included.
+     */
+    @Column(name = "streak_days", nullable = false)
+    private int streakDays;
+
+    /**
+     * Points the player's validated challenges added, priced at the reference in force.
+     */
+    @Column(name = "challenge_points", nullable = false)
+    private int challengePoints;
+
+    /**
+     * Number of weekly challenges validated by the player.
      */
     @Column(name = "completed_challenges", nullable = false)
     private int completedChallenges;
 
     /**
-     * Total damage dealt by the player's valued matches this week.
+     * Number of daily challenges validated by the player this week.
      */
-    @Column(name = "match_damage", nullable = false)
-    private int matchDamage;
+    @Column(name = "completed_daily_challenges", nullable = false)
+    private int completedDailyChallenges;
 
     /**
-     * Regularity bonus for the number of distinct active days this week.
+     * {@link #guardianDamage} + {@link #challengePoints}: the individual ranking key.
      */
-    @Column(name = "regularity_bonus", nullable = false)
-    private int regularityBonus;
-
-    /**
-     * Sum of the per-challenge team bonuses earned this week.
-     */
-    @Column(name = "team_bonus", nullable = false)
-    private int teamBonus;
-
-    /**
-     * Total damage dealt to the boss this week: {@link #challengeDamage} + {@link #matchDamage} +
-     * {@link #regularityBonus} + {@link #teamBonus}. This is the individual ranking key.
-     */
-    @Column(name = "total_damage", nullable = false)
-    private int totalDamage;
-
-    /**
-     * Number of distinct days with at least one valid match this week.
-     */
-    @Column(name = "active_days", nullable = false)
-    private int activeDays;
+    @Column(name = "total_points", nullable = false)
+    private int totalPoints;
 
     /**
      * Current or final one-based ranking position, {@code null} when the player is not
@@ -125,4 +141,13 @@ public class WeeklyPlayerScore extends AuditableEntity {
      */
     @Column(name = "finalized_at")
     private Instant finalizedAt;
+
+    /**
+     * Returns every challenge the player validated this week, daily and weekly together.
+     *
+     * @return validated challenge count
+     */
+    public int completedAllChallenges() {
+        return completedChallenges + completedDailyChallenges;
+    }
 }

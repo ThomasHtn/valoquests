@@ -1,6 +1,6 @@
 package io.github.thomashtn.valoquests.campaign.dto;
 
-import io.github.thomashtn.valoquests.campaign.model.WeeklyTitle;
+import io.github.thomashtn.valoquests.ranking.model.WeeklyTitle;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;

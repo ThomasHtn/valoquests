@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import io.github.thomashtn.valoquests.campaign.service.CampaignLifecycleService;
 import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
+import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
@@ -41,6 +42,9 @@ class CampaignDailyTickSchedulerTest {
     private WeeklyChallengeSelectionService selectionService;
 
     @Mock
+    private ChallengeRecalculationService recalculationService;
+
+    @Mock
     private CampaignLifecycleService lifecycleService;
 
     @Mock
@@ -55,6 +59,7 @@ class CampaignDailyTickSchedulerTest {
         clock = Clock.fixed(TICK_TIME, ZoneOffset.UTC);
         scheduler = new CampaignDailyTickScheduler(
             selectionService,
+            recalculationService,
             lifecycleService,
             replayService,
             new WeekCalendar(clock, ZoneOffset.UTC),
@@ -67,8 +72,9 @@ class CampaignDailyTickSchedulerTest {
     void shouldReplayBeforeClosing() {
         scheduler.tick();
 
-        InOrder order = inOrder(selectionService, lifecycleService, replayService);
+        InOrder order = inOrder(selectionService, recalculationService, lifecycleService, replayService);
         order.verify(selectionService).selectDailyChallenge(TICK_DAY);
+        order.verify(recalculationService).recalculateCurrentWeekProgress();
         order.verify(lifecycleService).startIfDue();
         order.verify(replayService).replayRunningCampaign();
         order.verify(lifecycleService).closeIfComplete(clock);
@@ -83,6 +89,6 @@ class CampaignDailyTickSchedulerTest {
         scheduler.tick();
 
         verify(selectionService).selectDailyChallenge(TICK_DAY);
-        verifyNoInteractions(lifecycleService, replayService);
+        verifyNoInteractions(recalculationService, lifecycleService, replayService);
     }
 }

@@ -1,8 +1,10 @@
 package io.github.thomashtn.valoquests.player.controller;
 
+import io.github.thomashtn.valoquests.player.dto.PlayerContributionResponse;
 import io.github.thomashtn.valoquests.player.dto.PlayerDetailsResponse;
 import io.github.thomashtn.valoquests.player.dto.PlayerProgressionResponse;
 import io.github.thomashtn.valoquests.player.dto.PlayerSummaryResponse;
+import io.github.thomashtn.valoquests.player.service.PlayerContributionQueryService;
 import io.github.thomashtn.valoquests.player.service.PlayerProgressionQueryService;
 import io.github.thomashtn.valoquests.player.service.PlayerQueryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,14 +39,25 @@ public class PlayerController {
     private final PlayerProgressionQueryService progressionService;
 
     /**
+     * Application service resolving what a player brings to the week and the campaign.
+     */
+    private final PlayerContributionQueryService contributionService;
+
+    /**
      * Creates the player controller.
      *
-     * @param service            player query service
-     * @param progressionService progression analytics query service
+     * @param service             player query service
+     * @param progressionService  progression analytics query service
+     * @param contributionService contribution query service
      */
-    public PlayerController(PlayerQueryService service, PlayerProgressionQueryService progressionService) {
+    public PlayerController(
+        PlayerQueryService service,
+        PlayerProgressionQueryService progressionService,
+        PlayerContributionQueryService contributionService
+    ) {
         this.service = service;
         this.progressionService = progressionService;
+        this.contributionService = contributionService;
     }
 
     /**
@@ -123,5 +136,27 @@ public class PlayerController {
         @RequestParam(required = false) List<Long> seasonIds
     ) {
         return progressionService.findByPlayerId(playerId, seasonIds);
+    }
+
+    /**
+     * @param playerId internal database identifier of the requested player
+     * @return the player's contribution to the current week and to the campaign in progress
+     */
+    @GetMapping("/{playerId}/contribution")
+    @Operation(
+        summary = "Get a player's contribution",
+        description = """
+            Returns what the player brings to the squad: their current week as the ranking holds it
+            (guardian damage, resources, streak, validated challenges, honours) and, when a campaign
+            is live and they are on its roster, their whole campaign so far.
+            """
+    )
+    @ApiResponse(responseCode = "200", description = "Player contribution returned successfully.")
+    @ApiResponse(responseCode = "404", description = "No tracked player exists for the supplied identifier.")
+    public PlayerContributionResponse getPlayerContribution(
+        @Parameter(description = "Internal player identifier.", example = "3", required = true)
+        @PathVariable long playerId
+    ) {
+        return contributionService.findByPlayerId(playerId);
     }
 }

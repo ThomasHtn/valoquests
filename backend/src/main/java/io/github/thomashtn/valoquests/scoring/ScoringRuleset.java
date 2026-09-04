@@ -117,36 +117,4 @@ public interface ScoringRuleset {
      * @return reference floor
      */
     int referenceFloor();
-
-    /**
-     * Returns the damage dealt by completing one challenge of the given difficulty.
-     *
-     * <p>Legacy v1 barème: challenges no longer damage anything. Kept only until the boss and colony
-     * packages are replaced by the campaign package.
-     *
-     * @param difficulty completed challenge's difficulty tier
-     * @return damage inflicted
-     */
-    int challengeDamage(ChallengeDifficulty difficulty);
-
-    /**
-     * Returns the regularity bonus for a number of distinct active days in the week.
-     *
-     * <p>Legacy v1 barème, superseded by {@link #streakBonusPercent(int)}.
-     *
-     * @param activeDays number of distinct days with at least one valid match, from 0 to 7
-     * @return total regularity bonus, not cumulative across tiers
-     */
-    int regularityBonus(int activeDays);
-
-    /**
-     * Returns the per-player team bonus once a number of players completed the same challenge.
-     *
-     * <p>Legacy v1 barème: there is no team bonus in v2.
-     *
-     * @param difficulty          completed challenge's difficulty tier
-     * @param playersWhoCompleted number of players who completed the challenge so far
-     * @return per-player bonus, not cumulative across tiers
-     */
-    int challengeTeamBonus(ChallengeDifficulty difficulty, int playersWhoCompleted);
 }

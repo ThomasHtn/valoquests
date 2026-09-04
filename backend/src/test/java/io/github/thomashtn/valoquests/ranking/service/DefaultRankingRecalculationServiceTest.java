@@ -1,230 +1,256 @@
 package io.github.thomashtn.valoquests.ranking.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.ranking.RankingFixtures;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
-import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
-import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageAggregator;
+import io.github.thomashtn.valoquests.ranking.service.ChallengePointsReader.ChallengeTally;
+import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
+import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * Tests weekly ranking aggregation, ordering and previous-position handling.
+ * Verifies how a week is added up and ordered, and who takes a slot in it.
  */
+@ExtendWith(MockitoExtension.class)
 class DefaultRankingRecalculationServiceTest {
 
-    /** Current week resolved from the fixed application clock. */
-    private static final LocalDate WEEK_START = LocalDate.of(2026, 7, 20);
+    /**
+     * Monday of the week being rebuilt.
+     */
+    private static final LocalDate WEEK_START = RankingFixtures.WEEK_START;
 
-    /** Player repository dependency. */
+    /**
+     * Active player with the lowest identifier.
+     */
+    private static final Player ALPHA = RankingFixtures.player(1, "Alpha", PlayerStatus.ACTIVE);
+
+    /**
+     * Second active player.
+     */
+    private static final Player BRAVO = RankingFixtures.player(2, "Bravo", PlayerStatus.ACTIVE);
+
+    /**
+     * Player who measures themselves against the squad without taking part.
+     */
+    private static final Player CHARLIE = RankingFixtures.player(3, "Charlie", PlayerStatus.INACTIVE);
+
+    @Mock
     private PlayerRepository playerRepository;
 
-    /** Progress repository dependency. */
-    private PlayerChallengeProgressRepository progressRepository;
-
-    /** Score repository dependency. */
+    @Mock
     private WeeklyPlayerScoreRepository scoreRepository;
 
-    /** Service under test. */
+    @Mock
+    private DailyOutputReader dailyOutputReader;
+
+    @Mock
+    private ChallengePointsReader challengePointsReader;
+
     private DefaultRankingRecalculationService service;
 
-    /** Creates mocked dependencies before each test. */
     @BeforeEach
     void setUp() {
-        playerRepository = mock(PlayerRepository.class);
-        progressRepository = mock(PlayerChallengeProgressRepository.class);
-        scoreRepository = mock(WeeklyPlayerScoreRepository.class);
-        WeeklyMatchDamageAggregator matchDamageAggregator = mock(WeeklyMatchDamageAggregator.class);
-        Clock clock = Clock.fixed(
-            Instant.parse("2026-07-21T10:00:00Z"),
-            ZoneOffset.UTC
-        );
-
-        when(matchDamageAggregator.aggregate(any(), any(), any()))
-            .thenReturn(new WeeklyMatchDamageAggregator.Aggregate(0, 0));
-
+        Clock clock = Clock.fixed(RankingFixtures.MIDWEEK, ZoneOffset.UTC);
         service = new DefaultRankingRecalculationService(
             playerRepository,
-            progressRepository,
             scoreRepository,
-            new DefaultScoringRuleset(),
-            matchDamageAggregator,
+            dailyOutputReader,
+            challengePointsReader,
             clock,
             new WeekCalendar(clock, ZoneOffset.UTC)
         );
     }
 
-    /**
-     * Verifies completed challenge aggregation and deterministic ranking order.
-     */
     @Test
-    void shouldAggregateCompletedChallengesAndOrderPlayers() {
-        Player firstPlayer = createPlayer(1L, "First");
-        Player secondPlayer = createPlayer(2L, "Second");
-        WeeklyChallenge easyWeeklyChallenge = createWeeklyChallenge(10L, ChallengeDifficulty.EASY);
-        WeeklyChallenge normalWeeklyChallenge = createWeeklyChallenge(20L, ChallengeDifficulty.NORMAL);
-
-        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
-            .thenReturn(List.of(firstPlayer, secondPlayer));
-        when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START))
-            .thenReturn(List.of());
-        when(
-            progressRepository
-                .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
-                    WEEK_START
-                )
-        ).thenReturn(List.of(
-            createProgress(firstPlayer, easyWeeklyChallenge, true),
-            createProgress(secondPlayer, normalWeeklyChallenge, true),
-            createProgress(secondPlayer, easyWeeklyChallenge, false)
+    @DisplayName("Adds the week's damage to its challenge points and orders on the sum")
+    void shouldSumTheWeekAndOrderOnTotalPoints() {
+        givenRoster(ALPHA, BRAVO);
+        givenOutput(RankingFixtures.output(Map.of(
+            ALPHA.getId(), Map.of(
+                WEEK_START, RankingFixtures.dayOutput(500, 1, 1),
+                WEEK_START.plusDays(1), RankingFixtures.dayOutput(700, 2, 2)
+            ),
+            BRAVO.getId(), Map.of(
+                WEEK_START.plusDays(3), RankingFixtures.dayOutput(1_500, 3, 4)
+            )
+        )));
+        when(challengePointsReader.read(WEEK_START)).thenReturn(Map.of(
+            ALPHA.getId(), new ChallengeTally(300, 2, 1)
         ));
 
-        service.recalculateCurrentRanking();
+        List<WeeklyPlayerScore> scores = recalculate();
 
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<List<WeeklyPlayerScore>> captor =
-            ArgumentCaptor.forClass(List.class);
-        verify(scoreRepository).saveAll(captor.capture());
-        List<WeeklyPlayerScore> scores = captor.getValue();
-
-        // NORMAL (1400) outranks EASY (800) under the ruleset's challenge damage barème. Each
-        // challenge is completed by exactly one player here, so the team bonus stays at zero and does
-        // not interfere with this ordering assertion.
         assertThat(scores).hasSize(2);
-        assertThat(scores.get(0).getPlayer()).isSameAs(secondPlayer);
-        assertThat(scores.get(0).getChallengeDamage()).isEqualTo(1400);
-        assertThat(scores.get(0).getTotalDamage()).isEqualTo(1400);
-        assertThat(scores.get(0).getCompletedChallenges()).isEqualTo(1);
-        assertThat(scores.get(0).getPosition()).isEqualTo(1);
-        assertThat(scores.get(1).getPlayer()).isSameAs(firstPlayer);
-        assertThat(scores.get(1).getChallengeDamage()).isEqualTo(800);
-        assertThat(scores.get(1).getTotalDamage()).isEqualTo(800);
-        assertThat(scores.get(1).getPosition()).isEqualTo(2);
+
+        WeeklyPlayerScore bravo = scores.get(0);
+        assertThat(bravo.getPlayer()).isSameAs(BRAVO);
+        assertThat(bravo.getPosition()).isEqualTo(1);
+        assertThat(bravo.getGuardianDamage()).isEqualTo(1_500);
+        assertThat(bravo.getFood()).isEqualTo(450);
+        assertThat(bravo.getComponents()).isEqualTo(1_050);
+        assertThat(bravo.getMatchCount()).isEqualTo(3);
+        assertThat(bravo.getActiveDays()).isEqualTo(1);
+        assertThat(bravo.getStreakDays()).isEqualTo(4);
+        assertThat(bravo.getChallengePoints()).isZero();
+        assertThat(bravo.getTotalPoints()).isEqualTo(1_500);
+
+        WeeklyPlayerScore alpha = scores.get(1);
+        assertThat(alpha.getPosition()).isEqualTo(2);
+        assertThat(alpha.getGuardianDamage()).isEqualTo(1_200);
+        assertThat(alpha.getActiveDays()).isEqualTo(2);
+        assertThat(alpha.getStreakDays()).isEqualTo(2);
+        assertThat(alpha.getChallengePoints()).isEqualTo(300);
+        assertThat(alpha.getCompletedChallenges()).isEqualTo(2);
+        assertThat(alpha.getCompletedDailyChallenges()).isEqualTo(1);
+        assertThat(alpha.getTotalPoints()).isEqualTo(1_500);
+        assertThat(alpha.getCalculatedAt()).isEqualTo(RankingFixtures.MIDWEEK);
+        assertThat(alpha.getPreviousPosition()).isNull();
     }
 
-    /**
-     * Verifies that a player's former position is retained for variation.
-     */
     @Test
-    void shouldPreservePreviousPositionDuringRecalculation() {
-        Player player = createPlayer(1L, "Player");
-        WeeklyPlayerScore existing = new WeeklyPlayerScore();
-        existing.setPlayer(player);
-        existing.setWeekStart(WEEK_START);
-        existing.setPosition(3);
-
-        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
-            .thenReturn(List.of(player));
-        when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START))
-            .thenReturn(List.of(existing));
-        when(
-            progressRepository
-                .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
-                    WEEK_START
-                )
-        ).thenReturn(List.of());
-
-        service.recalculateCurrentRanking();
-
-        verify(scoreRepository).saveAll(anyList());
-        assertThat(existing.getPreviousPosition()).isEqualTo(3);
-        assertThat(existing.getPosition()).isEqualTo(1);
-    }
-
-    /**
-     * Verifies that an inactive player still gets a score built with their real completed-challenge
-     * count, but with zero damage and no ranking slot, and does not shift an active player down.
-     */
-    @Test
-    void shouldSkipRankingSlotForInactivePlayer() {
-        Player proPlayer = createPlayer(1L, "Pro");
-        proPlayer.setStatus(PlayerStatus.INACTIVE);
-        Player competitivePlayer = createPlayer(2L, "Regular");
-
-        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
-            .thenReturn(List.of(proPlayer, competitivePlayer));
-        when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START))
-            .thenReturn(List.of());
-        when(
-            progressRepository
-                .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
-                    WEEK_START
-                )
-        ).thenReturn(List.of(
-            createProgress(proPlayer, createWeeklyChallenge(10L, ChallengeDifficulty.NORMAL), true)
+    @DisplayName("Breaks a tie on guardian damage, then on validated challenges, then on identifier")
+    void shouldBreakTiesInDocumentedOrder() {
+        givenRoster(ALPHA, BRAVO);
+        givenOutput(RankingFixtures.output(Map.of(
+            ALPHA.getId(), Map.of(WEEK_START, RankingFixtures.dayOutput(1_000, 1, 1)),
+            BRAVO.getId(), Map.of(WEEK_START, RankingFixtures.dayOutput(1_000, 1, 1))
+        )));
+        when(challengePointsReader.read(WEEK_START)).thenReturn(Map.of(
+            ALPHA.getId(), new ChallengeTally(100, 1, 0),
+            BRAVO.getId(), new ChallengeTally(100, 0, 2)
         ));
 
+        List<WeeklyPlayerScore> scores = recalculate();
+
+        // Same total, same damage: Bravo validated more challenges, so Bravo is first.
+        assertThat(scores).extracting(score -> score.getPlayer().getId()).containsExactly(2L, 1L);
+        assertThat(scores).extracting(WeeklyPlayerScore::getPosition).containsExactly(1, 2);
+    }
+
+    @Test
+    @DisplayName("Lists an inactive player with their counts only: no damage, no points, no slot")
+    void shouldKeepAnInactivePlayerOutOfTheCompetition() {
+        givenRoster(ALPHA, CHARLIE);
+        givenOutput(RankingFixtures.output(Map.of(
+            ALPHA.getId(), Map.of(WEEK_START, RankingFixtures.dayOutput(400, 1, 1))
+        )));
+        when(challengePointsReader.read(WEEK_START)).thenReturn(Map.of(
+            CHARLIE.getId(), new ChallengeTally(500, 3, 2)
+        ));
+
+        List<WeeklyPlayerScore> scores = recalculate();
+
+        // Only the competing squad's matches are priced: the reader is never asked for Charlie's.
+        verify(dailyOutputReader).read(eq(EnumSet.of(PlayerStatus.ACTIVE)), any(), any());
+
+        WeeklyPlayerScore charlie = scores.stream()
+            .filter(score -> score.getPlayer() == CHARLIE)
+            .findFirst()
+            .orElseThrow();
+        assertThat(charlie.getPosition()).isNull();
+        assertThat(charlie.getGuardianDamage()).isZero();
+        assertThat(charlie.getChallengePoints()).isZero();
+        assertThat(charlie.getTotalPoints()).isZero();
+        assertThat(charlie.getCompletedChallenges()).isEqualTo(3);
+        assertThat(charlie.getCompletedDailyChallenges()).isEqualTo(2);
+
+        WeeklyPlayerScore alpha = scores.stream()
+            .filter(score -> score.getPlayer() == ALPHA)
+            .findFirst()
+            .orElseThrow();
+        assertThat(alpha.getPosition()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Keeps the former position of an existing row and reuses the row")
+    void shouldPreserveThePreviousPositionOfAnExistingRow() {
+        givenRoster(ALPHA, BRAVO);
+        WeeklyPlayerScore existing = RankingFixtures.score(ALPHA, 2, 0, 0);
+        when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START)).thenReturn(List.of(existing));
+        givenOutput(RankingFixtures.output(Map.of(
+            ALPHA.getId(), Map.of(WEEK_START, RankingFixtures.dayOutput(900, 1, 1))
+        )));
+        when(challengePointsReader.read(WEEK_START)).thenReturn(Map.of());
+
+        List<WeeklyPlayerScore> scores = recalculate();
+
+        WeeklyPlayerScore alpha = scores.get(0);
+        assertThat(alpha).isSameAs(existing);
+        assertThat(alpha.getPosition()).isEqualTo(1);
+        assertThat(alpha.getPreviousPosition()).isEqualTo(2);
+        assertThat(scores.get(1).getPreviousPosition()).isNull();
+    }
+
+    @Test
+    @DisplayName("Clears the week when nobody is tracked any more")
+    void shouldClearTheWeekWithoutPlayers() {
+        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED)).thenReturn(List.of());
+
+        service.recalculateWeek(WEEK_START);
+
+        verify(scoreRepository).deleteAllByWeekStart(WEEK_START);
+        verify(scoreRepository, never()).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("Refuses a week that does not start on a Monday")
+    void shouldRejectANonMonday() {
+        assertThatThrownBy(() -> service.recalculateWeek(WEEK_START.plusDays(1)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("Rebuilds the current week when asked for the current ranking")
+    void shouldResolveTheCurrentWeek() {
+        givenRoster(ALPHA);
+        givenOutput(RankingFixtures.output(Map.of()));
+        when(challengePointsReader.read(WEEK_START)).thenReturn(Map.of());
+
         service.recalculateCurrentRanking();
 
-        @SuppressWarnings("unchecked")
+        verify(scoreRepository).deleteAllByWeekStartAndPlayerIdNotIn(WEEK_START, List.of(ALPHA.getId()));
+    }
+
+    private void givenRoster(Player... players) {
+        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED)).thenReturn(List.of(players));
+    }
+
+    private void givenOutput(DailyOutput output) {
+        when(dailyOutputReader.read(any(), eq(WEEK_START), eq(WEEK_START.plusDays(6)))).thenReturn(output);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<WeeklyPlayerScore> recalculate() {
+        service.recalculateWeek(WEEK_START);
+
         ArgumentCaptor<List<WeeklyPlayerScore>> captor = ArgumentCaptor.forClass(List.class);
         verify(scoreRepository).saveAll(captor.capture());
-        List<WeeklyPlayerScore> scores = captor.getValue();
 
-        WeeklyPlayerScore proScore = scores.stream()
-            .filter(score -> score.getPlayer() == proPlayer)
-            .findFirst()
-            .orElseThrow();
-        WeeklyPlayerScore competitiveScore = scores.stream()
-            .filter(score -> score.getPlayer() == competitivePlayer)
-            .findFirst()
-            .orElseThrow();
-
-        assertThat(proScore.getTotalDamage()).isZero();
-        assertThat(proScore.getCompletedChallenges()).isEqualTo(1);
-        assertThat(proScore.getPosition()).isNull();
-        assertThat(competitiveScore.getPosition()).isEqualTo(1);
-    }
-
-    /** Creates a player fixture. */
-    private Player createPlayer(Long id, String displayName) {
-        Player player = new Player();
-        player.setId(id);
-        player.setDisplayName(displayName);
-        return player;
-    }
-
-    /** Creates a weekly challenge fixture with a distinct identifier and difficulty. */
-    private WeeklyChallenge createWeeklyChallenge(long id, ChallengeDifficulty difficulty) {
-        Challenge challenge = new Challenge();
-        challenge.setDifficulty(difficulty);
-        WeeklyChallenge weeklyChallenge = new WeeklyChallenge();
-        weeklyChallenge.setId(id);
-        weeklyChallenge.setChallenge(challenge);
-        return weeklyChallenge;
-    }
-
-    /** Creates one persisted progress fixture. */
-    private PlayerChallengeProgress createProgress(
-        Player player,
-        WeeklyChallenge weeklyChallenge,
-        boolean completed
-    ) {
-        PlayerChallengeProgress progress = new PlayerChallengeProgress();
-        progress.setPlayer(player);
-        progress.setWeeklyChallenge(weeklyChallenge);
-        progress.setCompleted(completed);
-        return progress;
+        return captor.getValue();
     }
 }

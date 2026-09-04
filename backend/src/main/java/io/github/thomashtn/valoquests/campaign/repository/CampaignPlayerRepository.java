@@ -24,4 +24,13 @@ public interface CampaignPlayerRepository extends JpaRepository<CampaignPlayer, 
      * @return {@code true} when a campaign froze the player into its roster
      */
     boolean existsByPlayerId(Long playerId);
+
+    /**
+     * Determines whether one campaign froze a player into its roster.
+     *
+     * @param campaignId campaign identifier
+     * @param playerId   internal player identifier
+     * @return {@code true} when the player is on that campaign's roster
+     */
+    boolean existsByCampaignIdAndPlayerId(Long campaignId, Long playerId);
 }

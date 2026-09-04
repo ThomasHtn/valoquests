@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
@@ -523,34 +524,38 @@ class SynchronizationPipelineIntegrationTest
     }
 
     /**
-     * Verifies the single-player ranking produced from calculated progress.
+     * Verifies the single-player ranking produced from the imported matches and calculated progress.
      *
-     * <p>Challenge damage is resolved from {@code DefaultScoringRuleset} by difficulty tier: completing
-     * all five (EASY+NORMAL+MEDIUM+HARD+VERY_HARD) totals 12100. The two imported matches (WIN=500,
-     * LOSS=350) add 850 in match damage, and span two distinct days, adding the 2-day regularity bonus
-     * (600). A single active player means no challenge here is shared, so the team bonus stays at zero:
-     * 12100 + 850 + 600 = 13550 total damage.
+     * <p>The two imported matches fall on two consecutive days, so the second carries the 2 % streak
+     * bonus: WIN 500 + LOSS 350 × 1.02 = 357, for 857 of guardian damage. The five weekly challenges
+     * pay 20 + 34 + 54 + 78 + 108 = 294 points at the 2 000 floor, plus the day's challenge when the
+     * player validated it.
      */
     private void assertCalculatedRanking(
         Player player,
         Integer previousPosition
     ) {
         WeeklyPlayerScore score = loadScore(player);
+        int dailyPoints = dailyPoints(player);
 
         assertThat(score.getWeekStart())
             .isEqualTo(WEEK_START);
-        assertThat(score.getChallengeDamage())
-            .isEqualTo(12_100);
-        assertThat(score.getMatchDamage())
-            .isEqualTo(850);
-        assertThat(score.getRegularityBonus())
-            .isEqualTo(600);
-        assertThat(score.getTeamBonus())
-            .isEqualTo(0);
-        assertThat(score.getTotalDamage())
-            .isEqualTo(13_550);
+        assertThat(score.getGuardianDamage())
+            .isEqualTo(857);
+        assertThat(score.getMatchCount())
+            .isEqualTo(2);
+        assertThat(score.getActiveDays())
+            .isEqualTo(2);
+        assertThat(score.getStreakDays())
+            .isEqualTo(2);
+        assertThat(score.getChallengePoints())
+            .isEqualTo(294 + dailyPoints);
+        assertThat(score.getTotalPoints())
+            .isEqualTo(857 + 294 + dailyPoints);
         assertThat(score.getCompletedChallenges())
             .isEqualTo(5);
+        assertThat(score.getCompletedDailyChallenges())
+            .isEqualTo(completedDailies(player));
         assertThat(score.getPosition())
             .isEqualTo(1);
         assertThat(score.getPreviousPosition())
@@ -558,6 +563,36 @@ class SynchronizationPipelineIntegrationTest
         assertThat(score.getCalculatedAt())
             .isEqualTo(SYNCHRONIZATION_TIME);
         assertThat(score.getFinalizedAt()).isNull();
+    }
+
+    /**
+     * Prices the daily challenges this player validated this week.
+     *
+     * <p>The day's challenge is drawn from the pool, so whether this player validated it is read
+     * back rather than assumed. Outside any campaign a validated daily pays 24 points: weight 1.2
+     * at the 2 000 floor.
+     *
+     * @param player player whose dailies are priced
+     * @return the points those dailies add
+     */
+    private int dailyPoints(Player player) {
+        return completedDailies(player) * 24;
+    }
+
+    /**
+     * Counts the daily challenges this player validated this week.
+     *
+     * @param player player whose dailies are counted
+     * @return validated daily challenges
+     */
+    private int completedDailies(Player player) {
+        return (int) progressRepository
+            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(WEEK_START)
+            .stream()
+            .filter(progress -> progress.getPlayer().getId().equals(player.getId()))
+            .filter(progress -> progress.getWeeklyChallenge().getCadence() == ChallengeCadence.DAILY)
+            .filter(PlayerChallengeProgress::isCompleted)
+            .count();
     }
 
     /**

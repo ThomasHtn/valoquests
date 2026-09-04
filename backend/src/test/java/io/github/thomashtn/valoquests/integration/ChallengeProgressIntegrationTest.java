@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
@@ -283,16 +284,16 @@ class ChallengeProgressIntegrationTest
     }
 
     /**
-     * Verifies the ranking generated from completed challenge progress.
+     * Verifies the ranking generated from the stored matches and the completed challenge progress.
      *
-     * <p>Challenge damage is resolved from {@code DefaultScoringRuleset} by difficulty tier: completing
-     * all five (EASY 800 + NORMAL 1400 + MEDIUM 2200 + HARD 3200 + VERY_HARD 4500) totals 12100. Match
-     * damage sums the five valued matches this player played this week — four COMPETITIVE (WIN 500 +
-     * LOSS 350 + WIN 500 + LOSS 350) plus the Deathmatch match, which reaches the 40-kill victory
-     * threshold (WIN 150) — for 1850, none of them reaching the sixth match of its day. Those five
-     * matches also span five distinct calendar days (the Deathmatch match falls on its own day), so the
-     * regularity bonus is the 5-day tier, 3600. A single active player means no challenge here is
-     * shared, so the team bonus stays at zero.
+     * <p>Guardian damage sums the five valued matches this player played this week, priced by the v2
+     * barème with both multipliers. The competitive match of the day before the week starts a
+     * streak that the week extends day after day, so the daily bonus climbs from 2 % on Monday to
+     * 10 % on Friday: WIN 500 × 1.02 = 510, LOSS 350 × 1.04 = 364, WIN 500 × 1.06 = 530, LOSS
+     * 350 × 1.08 = 378, then the 40-kill Deathmatch victory, WIN 150 × 1.10 = 165, for 1947. None of
+     * these reaches the sixth match of its day. The five weekly challenges pay 20 + 34 + 54 + 78 +
+     * 108 = 294 points at the 2 000 floor no campaign has raised, plus the day's challenge when this
+     * player validated it.
      *
      * @param player expected ranked player
      */
@@ -302,6 +303,8 @@ class ChallengeProgressIntegrationTest
                 .findAllByWeekStartOrderByPositionAsc(
                     WEEK_START
                 );
+
+        int dailyPoints = dailyPoints(player);
 
         assertThat(scores)
             .singleElement()
@@ -315,30 +318,63 @@ class ChallengeProgressIntegrationTest
                 assertThat(score.getPreviousPosition())
                     .isNull();
 
-                assertThat(score.getChallengeDamage())
-                    .isEqualTo(12_100);
+                assertThat(score.getGuardianDamage())
+                    .isEqualTo(1_947);
 
-                assertThat(score.getCompletedChallenges())
+                assertThat(score.getMatchCount())
                     .isEqualTo(5);
-
-                assertThat(score.getMatchDamage())
-                    .isEqualTo(1_850);
 
                 assertThat(score.getActiveDays())
                     .isEqualTo(5);
 
-                assertThat(score.getRegularityBonus())
-                    .isEqualTo(3_600);
+                assertThat(score.getStreakDays())
+                    .isEqualTo(6);
 
-                assertThat(score.getTeamBonus())
-                    .isEqualTo(0);
+                assertThat(score.getChallengePoints())
+                    .isEqualTo(294 + dailyPoints);
 
-                assertThat(score.getTotalDamage())
-                    .isEqualTo(17_550);
+                assertThat(score.getCompletedChallenges())
+                    .isEqualTo(5);
+
+                assertThat(score.getCompletedDailyChallenges())
+                    .isEqualTo(completedDailies(player));
+
+                assertThat(score.getTotalPoints())
+                    .isEqualTo(1_947 + 294 + dailyPoints);
 
                 assertThat(score.getCalculatedAt())
                     .isEqualTo(CALCULATION_TIME);
             });
+    }
+
+    /**
+     * Prices the daily challenges this player validated this week.
+     *
+     * <p>The day's challenge is drawn from the pool, so whether this player validated it is read
+     * back rather than assumed. Outside any campaign a validated daily pays 24 points: weight 1.2
+     * at the 2 000 floor.
+     *
+     * @param player player whose dailies are priced
+     * @return the points those dailies add
+     */
+    private int dailyPoints(Player player) {
+        return completedDailies(player) * 24;
+    }
+
+    /**
+     * Counts the daily challenges this player validated this week.
+     *
+     * @param player player whose dailies are counted
+     * @return validated daily challenges
+     */
+    private int completedDailies(Player player) {
+        return (int) progressRepository
+            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(WEEK_START)
+            .stream()
+            .filter(progress -> progress.getPlayer().getId().equals(player.getId()))
+            .filter(progress -> progress.getWeeklyChallenge().getCadence() == ChallengeCadence.DAILY)
+            .filter(PlayerChallengeProgress::isCompleted)
+            .count();
     }
 
     /**

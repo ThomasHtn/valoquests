@@ -251,12 +251,10 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
         WeeklyPlayerScore score = new WeeklyPlayerScore();
         score.setPlayer(player);
         score.setWeekStart(WEEK_START);
-        score.setChallengeDamage(100);
+        score.setChallengePoints(100);
         score.setCompletedChallenges(0);
-        score.setMatchDamage(50);
-        score.setRegularityBonus(0);
-        score.setTeamBonus(0);
-        score.setTotalDamage(150);
+        score.setGuardianDamage(50);
+        score.setTotalPoints(150);
         score.setActiveDays(1);
         score.setPosition(1);
         score.setCalculatedAt(MATCH_TIME);
