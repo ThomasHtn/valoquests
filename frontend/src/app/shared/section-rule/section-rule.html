@@ -1,0 +1,25 @@
+<div class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+  <h2
+    [id]="headingId()"
+    class="font-display text-[clamp(1.5rem,1.1rem+1.1vw,2rem)] leading-tight font-semibold tracking-[0.01em] text-brand-400 uppercase"
+  >
+    {{ heading() }}
+  </h2>
+  <span
+    aria-hidden="true"
+    class="h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent"
+  ></span>
+  <!-- Link and diamond travel together: on a phone the line wraps, and a diamond alone on a third
+       line would read as a stray mark. -->
+  <span class="ml-auto inline-flex items-center gap-4">
+    @if (link(); as route) {
+      <a
+        [routerLink]="route"
+        class="focus-ring tracking-label inline-flex items-center gap-2 font-mono text-xs font-medium text-brand-400 uppercase transition-colors hover:text-[#f0c493] hover:underline hover:underline-offset-4"
+      >
+        {{ linkLabel() }} <span aria-hidden="true">→</span>
+      </a>
+    }
+    <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
+  </span>
+</div>

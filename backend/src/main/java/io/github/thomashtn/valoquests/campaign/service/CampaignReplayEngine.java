@@ -6,7 +6,7 @@ import io.github.thomashtn.valoquests.campaign.model.CampaignDayState;
 import io.github.thomashtn.valoquests.campaign.model.CampaignReplayResult;
 import io.github.thomashtn.valoquests.campaign.model.CampaignWeekInput;
 import io.github.thomashtn.valoquests.campaign.model.CampaignWeekSettlement;
-import io.github.thomashtn.valoquests.campaign.model.ExtractionLimiter;
+import io.github.thomashtn.valoquests.campaign.model.ExtractionEstimate;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,63 +82,32 @@ public class CampaignReplayEngine {
      * @return what the rescue cost and brought back
      */
     private CampaignWeekSettlement settle(CampaignWeekInput week, Base base) {
-        int challengeRescued = Math.min(week.challengeRescued(), week.woundedCount());
-        int remainingGroup = week.woundedCount() - challengeRescued;
-
-        // The seven evenings ahead are never on the table: without this a squad that plays at the
-        // weekend paid Sunday's rescue with the food it needed to survive to Friday.
-        double reserve = CampaignRuleset.PROTECTED_FOOD_DAYS * base.population
-            * CampaignRuleset.FOOD_PER_INHABITANT_PER_DAY;
-        int byComponents = (int) Math.floor(base.components / CampaignRuleset.COMPONENTS_PER_RESCUE);
-        int byFood = (int) Math.floor(Math.max(0, base.food - reserve) / CampaignRuleset.FOOD_PER_RESCUE);
-        int reachable = Math.min(remainingGroup, Math.min(byComponents, byFood));
-
         double progress = week.progress();
-        int extracted = (int) Math.floor(reachable * progress);
-        int foodSpent = extracted * CampaignRuleset.FOOD_PER_RESCUE;
-        int componentsSpent = extracted * CampaignRuleset.COMPONENTS_PER_RESCUE;
+        ExtractionEstimate estimate = ExtractionEstimate.of(
+            week.woundedCount(),
+            week.challengeRescued(),
+            base.food,
+            base.components,
+            base.population,
+            progress
+        );
+
+        int foodSpent = estimate.extracted() * CampaignRuleset.FOOD_PER_RESCUE;
+        int componentsSpent = estimate.extracted() * CampaignRuleset.COMPONENTS_PER_RESCUE;
         base.spend(foodSpent, componentsSpent);
 
         double baseLoss = base.strike(progress);
-        base.settle(challengeRescued + extracted);
+        base.settle(estimate.rescued());
 
         return new CampaignWeekSettlement(
             week.weekIndex(),
-            challengeRescued,
-            extracted,
+            estimate.challengeRescued(),
+            estimate.extracted(),
             foodSpent,
             componentsSpent,
-            limiterOf(week.woundedCount(), challengeRescued + extracted, remainingGroup, byComponents, byFood),
+            estimate.limiter(),
             baseLoss
         );
-    }
-
-    /**
-     * Names what capped the extraction, so the week can be explained in one sentence.
-     *
-     * @param woundedCount   wounded stranded that week
-     * @param rescued        wounded actually brought home
-     * @param remainingGroup wounded the ship had to reach itself
-     * @param byComponents   wounded the components could reach
-     * @param byFood         wounded the spendable food could settle
-     * @return the binding constraint, {@link ExtractionLimiter#NONE} when nobody was left behind
-     */
-    private ExtractionLimiter limiterOf(
-        int woundedCount,
-        int rescued,
-        int remainingGroup,
-        int byComponents,
-        int byFood
-    ) {
-        if (rescued >= woundedCount) {
-            return ExtractionLimiter.NONE;
-        }
-
-        if (remainingGroup <= byComponents && remainingGroup <= byFood) {
-            return ExtractionLimiter.GROUP;
-        }
-
-        return byComponents <= byFood ? ExtractionLimiter.COMPONENTS : ExtractionLimiter.FOOD;
     }
 
     /**

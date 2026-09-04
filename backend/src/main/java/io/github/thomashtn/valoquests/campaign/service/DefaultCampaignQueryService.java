@@ -3,6 +3,7 @@ package io.github.thomashtn.valoquests.campaign.service;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.campaign.CampaignRuleset;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignBaseResponse;
+import io.github.thomashtn.valoquests.campaign.dto.CampaignForecastResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignHistoryResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignTodayResponse;
@@ -13,6 +14,7 @@ import io.github.thomashtn.valoquests.campaign.entity.CampaignDailySnapshot;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
 import io.github.thomashtn.valoquests.campaign.model.CampaignSchedule;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
+import io.github.thomashtn.valoquests.campaign.model.ExtractionEstimate;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignDailySnapshotRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
@@ -119,6 +121,7 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
             today,
             currentWeekIndex(campaign, today),
             base(days),
+            forecast(campaign, weeks, days, today),
             weeks.stream().map(this::toWeekResponse).toList(),
             totals(weeks, days)
         );
@@ -189,10 +192,13 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
      */
     private CampaignBaseResponse base(List<CampaignDailySnapshot> days) {
         if (days.isEmpty()) {
-            return new CampaignBaseResponse(0, 0, 0, 0, 0, 0, 0);
+            return new CampaignBaseResponse(
+                0, 0, 0, 0, 0, 0, 0, 0, CampaignRuleset.COMPONENTS_PER_RESCUE, CampaignRuleset.FOOD_PER_RESCUE
+            );
         }
 
         CampaignDailySnapshot last = days.getLast();
+        double previous = days.size() > 1 ? days.get(days.size() - 2).getPopulation().doubleValue() : 0;
         double population = last.getPopulation().doubleValue();
         double food = last.getFoodStock().doubleValue();
         double components = last.getComponentsStock().doubleValue();
@@ -206,7 +212,65 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
             (int) Math.round(upkeep),
             (int) Math.round(protectedFood),
             (int) Math.floor(components / CampaignRuleset.COMPONENTS_PER_RESCUE),
-            (int) Math.floor(Math.max(0, food - protectedFood) / CampaignRuleset.FOOD_PER_RESCUE)
+            (int) Math.floor(Math.max(0, food - protectedFood) / CampaignRuleset.FOOD_PER_RESCUE),
+            (int) Math.round(population - previous),
+            CampaignRuleset.COMPONENTS_PER_RESCUE,
+            CampaignRuleset.FOOD_PER_RESCUE
+        );
+    }
+
+    /**
+     * Forecasts the Sunday of the week in progress from the base as it stands.
+     *
+     * <p>Only while a running campaign is inside one of its weeks and that week is not settled yet:
+     * before the first Monday there is nothing to extract from, and once Sunday is settled the week
+     * itself carries the real figures.
+     *
+     * @param campaign campaign shown
+     * @param weeks    its ten weeks
+     * @param days     its replayed days, oldest first
+     * @param today    calendar day
+     * @return the forecast, {@code null} outside a week in progress
+     */
+    private CampaignForecastResponse forecast(
+        Campaign campaign,
+        List<CampaignWeek> weeks,
+        List<CampaignDailySnapshot> days,
+        LocalDate today
+    ) {
+        if (campaign.getStatus() != CampaignStatus.RUNNING || days.isEmpty()) {
+            return null;
+        }
+
+        LocalDate weekStart = weekCalendar.weekStartOf(today);
+        Optional<CampaignWeek> current = weeks.stream()
+            .filter(week -> week.getWeekStart().equals(weekStart))
+            .filter(week -> !week.isSettled())
+            .findFirst();
+
+        if (current.isEmpty()) {
+            return null;
+        }
+
+        CampaignWeek week = current.orElseThrow();
+        CampaignDailySnapshot last = days.getLast();
+        ExtractionEstimate estimate = ExtractionEstimate.of(
+            week.getWoundedCount(),
+            week.getChallengeRescued(),
+            last.getFoodStock().doubleValue(),
+            last.getComponentsStock().doubleValue(),
+            last.getPopulation().doubleValue(),
+            progressPercent(week) / (double) PERCENT
+        );
+
+        return new CampaignForecastResponse(
+            week.getWeekIndex(),
+            week.getWoundedCount(),
+            estimate.challengeRescued(),
+            estimate.extracted(),
+            estimate.rescued(),
+            week.getWoundedCount() - estimate.rescued(),
+            estimate.limiter()
         );
     }
 
@@ -225,8 +289,8 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
         return new CampaignTotalsResponse(
             (int) weeks.stream().filter(CampaignWeek::isDefeated).count(),
             (int) weeks.stream().filter(CampaignWeek::isSettled).count(),
-            weeks.stream().mapToInt(CampaignWeek::rescued).sum(),
-            weeks.stream().mapToInt(CampaignWeek::getChallengeRescued).sum(),
+            weeks.stream().filter(CampaignWeek::isSettled).mapToInt(CampaignWeek::rescued).sum(),
+            weeks.stream().filter(CampaignWeek::isSettled).mapToInt(CampaignWeek::getChallengeRescued).sum(),
             days.stream().mapToLong(CampaignDailySnapshot::getDamage).sum(),
             days.stream().mapToLong(CampaignDailySnapshot::getFoodGained).sum(),
             days.stream().mapToLong(CampaignDailySnapshot::getComponentsGained).sum(),
@@ -299,7 +363,7 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
             campaign.getStoppedOn(),
             (int) weeks.stream().filter(CampaignWeek::isDefeated).count(),
             days.isEmpty() ? 0 : (int) Math.round(days.getLast().getPopulation().doubleValue()),
-            weeks.stream().mapToInt(CampaignWeek::rescued).sum(),
+            weeks.stream().filter(CampaignWeek::isSettled).mapToInt(CampaignWeek::rescued).sum(),
             weeklyPopulation(weeks, days)
         );
     }

@@ -102,14 +102,19 @@ public class CampaignDayReader {
             ))
             .orElse(0);
 
+        int food = playerDays.stream().mapToInt(CampaignPlayerDay::getFood).sum();
+        int components = playerDays.stream().mapToInt(CampaignPlayerDay::getComponents).sum();
+
         return new CampaignTodayResponse(
             day,
             playerDays.stream().mapToInt(CampaignPlayerDay::getDamage).sum(),
-            playerDays.stream().mapToInt(CampaignPlayerDay::getFood).sum(),
-            playerDays.stream().mapToInt(CampaignPlayerDay::getComponents).sum(),
+            food,
+            components,
             playerDays.size(),
             campaign.getRosterSize(),
             upkeep,
+            components / CampaignRuleset.COMPONENTS_PER_RESCUE,
+            food / CampaignRuleset.FOOD_PER_RESCUE,
             playerDays.stream().map(this::toResponse).toList(),
             titleResolver.resolve(scoreRepository.findAllByWeekStartOrderByPositionAsc(weekStart))
         );

@@ -289,6 +289,17 @@
     "operator": {
       "one": "{{count}} operator",
       "other": "{{count}} operators"
+    },
+    "gameMode": {
+      "COMPETITIVE": "Competitive",
+      "PREMIER": "Premier",
+      "UNRATED": "Unrated",
+      "DEATHMATCH": "Deathmatch",
+      "SPIKE_RUSH": "Spike Rush",
+      "TEAM_DEATHMATCH": "Team Deathmatch",
+      "SKIRMISH": "Skirmish",
+      "SWIFTPLAY": "Swiftplay",
+      "ESCALATION": "Escalation"
     }
   },
   "landing": {
@@ -329,7 +340,116 @@
     "title": "Page not found"
   },
   "overview": {
-    "title": "Overview"
+    "title": "Overview",
+    "header": {
+      "eyebrow": "Campaign {{number}} · {{tier}} tier",
+      "noCampaign": "No campaign",
+      "heading": "Bring the wounded home from ten planets",
+      "day": "{{weekday}} · week {{week}} of {{weeks}}"
+    },
+    "scene": {
+      "section": "The city at night and the rocket under construction",
+      "aria": "The city at night, {{population}} inhabitants. In the middle, the rocket built to {{stages}} stages out of {{weeks}}, and the dotted outline of the full launcher above.",
+      "base": "The base",
+      "unit": "inhabitants",
+      "delta": "last night"
+    },
+    "frieze": {
+      "title": "The campaign",
+      "week": "Week {{week}} of {{weeks}}",
+      "aria": "The ten weeks of the campaign",
+      "link": "The campaign",
+      "won": "Guardian defeated",
+      "lost": "Guardian pushed back to {{percent}}%",
+      "now": "Breakthrough at {{percent}}%",
+      "ahead": "Ahead"
+    },
+    "mission": {
+      "title": "This week's mission",
+      "link": "The campaign",
+      "planet": "Planet {{index}} of {{weeks}} · {{category}}",
+      "planetAria": "{{planet}}, the planet of week {{week}}. Amber marks on its surface stand for the {{wounded}} wounded, and the breakthrough in its lines reaches {{percent}}%."
+    },
+    "report": {
+      "title": "Situation report",
+      "side": "{{planet}} · day {{day}} of 7",
+      "target": "Target",
+      "guardian": "Guardian · {{category}}",
+      "hp": "HP",
+      "hpSide": "of {{total}} · breakthrough at {{percent}}%",
+      "targetNote": "Fight on the battlefield, every mode counts, to bring the guardian down. Challenges deal it no damage: they bring the wounded home.",
+      "ground": "On the ground",
+      "spotted": "spotted this week",
+      "groundNote": "Build a ship large enough and grow the base to save as many as possible.",
+      "extraction": "Extraction",
+      "before": "Before the extraction",
+      "crew": "Crew · {{count}} operators",
+      "countdownAria": "Time left before Sunday's extraction"
+    },
+    "capacity": {
+      "title": "Extraction capacity",
+      "carry": "Carrying capacity",
+      "carryAria": "Components can carry {{count}} wounded out of the {{wounded}} spotted, {{percent}}%.",
+      "shelter": "Shelter capacity",
+      "shelterAria": "Food can shelter {{count}} wounded out of the {{wounded}} spotted, {{percent}}%.",
+      "breach": "The breakthrough",
+      "breachAria": "The breakthrough in {{guardian}}'s lines reaches {{percent}}%: only that share of what is ready to board gets away.",
+      "aboard": "Aboard on Sunday",
+      "aboardAria": "{{count}} wounded would be aboard on Sunday out of the {{wounded}} spotted, {{percent}}%: {{extraction}} by the extraction and {{challenges}} already secured by the challenges.",
+      "of": "of {{count}} spotted",
+      "lever": "Lever",
+      "allModes": "Every mode",
+      "hpStanding": "HP still standing",
+      "carryRate": "components = 1 wounded",
+      "shelterRate": "food = 1 wounded",
+      "breachRate": "HP = 1% of breakthrough",
+      "fromGuardian": "wrested from {{guardian}}",
+      "fromChallenges": "secured by the challenges",
+      "leftBehind": "would stay on the ground"
+    },
+    "orders": {
+      "title": "Orders of the day",
+      "link": "The challenges",
+      "daily": "Daily challenge",
+      "beforeMidnight": "before midnight",
+      "countdownAria": "Time left before midnight",
+      "validated": "{{done}} of {{total}} validated",
+      "validatedAria": "{{done}} operators out of {{total}} validated the daily challenge.",
+      "perOperator": "per operator",
+      "noDaily": "No challenge drawn for today.",
+      "tally": "What the day gave",
+      "carryGain": "+{{count}} carried",
+      "shelterGain": "+{{count}} sheltered",
+      "ate": "The base ate",
+      "inhabitants": "{{count}} inhabitants",
+      "squad": "Squad",
+      "presenceAria": "{{present}} operators out of {{roster}} played today.",
+      "of": "of {{count}}"
+    },
+    "squad": {
+      "title": "The squad today",
+      "link": "Full leaderboard",
+      "operator": "Operator",
+      "streak": "Streak",
+      "damage": "Guardian damage",
+      "days": "{{count}} d",
+      "toPlay": "play today to keep it",
+      "matches": {
+        "one": "{{count}} match",
+        "other": "{{count}} matches"
+      },
+      "reduced": "{{count}} at 50%",
+      "notPlayed": "not played yet today",
+      "footer": "Diminishing returns: from the 6th match of the day a match is worth 50%; from the 10th, 25%."
+    },
+    "state": {
+      "loading": "Reading the campaign…",
+      "error": "The campaign could not be read.",
+      "none": "No campaign has been opened yet. The weekly ranking runs; the mission starts with the first campaign.",
+      "opened": "The campaign is open: the mission starts on Monday.",
+      "closed": "The campaign is closed. The next mission waits for a new campaign to open.",
+      "settling": "The week is settled, the mission resumes on Monday."
+    }
   },
   "pageHeader": {
     "back": "Back to {{name}}",

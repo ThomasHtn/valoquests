@@ -12,6 +12,7 @@ import io.github.thomashtn.valoquests.campaign.model.CampaignReplayResult;
 import io.github.thomashtn.valoquests.campaign.model.CampaignWeekSettlement;
 import io.github.thomashtn.valoquests.campaign.model.ExtractionLimiter;
 import io.github.thomashtn.valoquests.campaign.model.GuardianFight;
+import io.github.thomashtn.valoquests.campaign.model.WeekChallengeYield;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignDailySnapshotRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerDayRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
@@ -134,7 +135,11 @@ public class CampaignReplayWriter {
 
         for (CampaignWeek week : weeks) {
             applyFight(week, inputs.fights().getOrDefault(week.getWeekIndex(), GuardianFight.UNTOUCHED));
-            applySettlement(week, settlements.get(week.getWeekIndex()));
+            applySettlement(
+                week,
+                settlements.get(week.getWeekIndex()),
+                inputs.yields().getOrDefault(week.getWeekIndex(), WeekChallengeYield.NONE)
+            );
         }
 
         return weeks;
@@ -157,12 +162,17 @@ public class CampaignReplayWriter {
     /**
      * Writes one week's Sunday, clearing it when that Sunday has not been reached.
      *
+     * <p>A week still ahead of its Sunday keeps what its challenges have already brought home: those
+     * wounded are acquired whatever the guardian does, and the forecast of the week in progress
+     * reads them from here.
+     *
      * @param week       week to write
      * @param settlement settlement of that week, {@code null} while its Sunday is still ahead
+     * @param yield      what the week's challenges have brought home so far
      */
-    private void applySettlement(CampaignWeek week, CampaignWeekSettlement settlement) {
+    private void applySettlement(CampaignWeek week, CampaignWeekSettlement settlement, WeekChallengeYield yield) {
         if (settlement == null) {
-            week.setChallengeRescued(0);
+            week.setChallengeRescued(Math.min(yield.survivors(), week.getWoundedCount()));
             week.setExtractionRescued(0);
             week.setFoodSpent(0);
             week.setComponentsSpent(0);

@@ -81,6 +81,44 @@ export interface CampaignBase {
    * How many survivors the spendable food could bring home on its own.
    */
   readonly rescuesByFood: number;
+
+  /**
+   * Inhabitants gained or lost over the last replayed day.
+   */
+  readonly populationChange: number;
+
+  /**
+   * Components one rescue costs the ship.
+   */
+  readonly componentsPerRescue: number;
+
+  /**
+   * Food one rescue costs the base.
+   */
+  readonly foodPerRescue: number;
+}
+
+/**
+ * What Sunday would bring home if the week in progress ended on the base as it stands.
+ *
+ * Mirrors the backend `CampaignForecastResponse`.
+ */
+export interface CampaignForecast {
+  readonly weekIndex: number;
+  readonly woundedCount: number;
+
+  /**
+   * Wounded the challenges have already brought home, acquired whatever the guardian does.
+   */
+  readonly challengeRescued: number;
+
+  /**
+   * Wounded the ship would bring home at the current breakthrough.
+   */
+  readonly extractionRescued: number;
+  readonly rescued: number;
+  readonly leftBehind: number;
+  readonly limiter: ExtractionLimiter;
 }
 
 /**
@@ -181,6 +219,11 @@ export interface Campaign {
    */
   readonly currentWeekIndex: number | null;
   readonly base: CampaignBase | null;
+
+  /**
+   * Forecast of the week in progress, `null` outside one.
+   */
+  readonly forecast: CampaignForecast | null;
   readonly weeks: readonly CampaignWeek[];
   readonly totals: CampaignTotals | null;
 }
@@ -227,6 +270,16 @@ export interface CampaignToday {
   readonly presenceCount: number;
   readonly rosterSize: number;
   readonly dailyUpkeep: number;
+
+  /**
+   * Wounded today's components add to what the ship can carry.
+   */
+  readonly carryGained: number;
+
+  /**
+   * Wounded today's food adds to what the base can settle.
+   */
+  readonly shelterGained: number;
   readonly players: readonly CampaignPlayerDay[];
 
   /**

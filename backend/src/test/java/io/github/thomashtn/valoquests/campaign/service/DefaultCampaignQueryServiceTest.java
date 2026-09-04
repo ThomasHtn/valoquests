@@ -92,6 +92,47 @@ class DefaultCampaignQueryServiceTest {
         assertThat(response.base().protectedFood()).isEqualTo(56);
         assertThat(response.base().rescuesByComponents()).isEqualTo(100);
         assertThat(response.base().rescuesByFood()).isEqualTo(162);
+        assertThat(response.base().populationChange()).isEqualTo(500);
+        assertThat(response.base().componentsPerRescue()).isEqualTo(14);
+        assertThat(response.base().foodPerRescue()).isEqualTo(12);
+        assertThat(response.forecast()).isNull();
+    }
+
+    @Test
+    @DisplayName("Forecasts the Sunday of the week in progress from the base as it stands")
+    void shouldForecastTheWeekInProgress() {
+        live();
+        CampaignWeek current = CampaignFixtures.week(campaign, 2, 1_000, 50);
+        current.setDamageDealt(500);
+        current.setChallengeRescued(10);
+        when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L)).thenReturn(List.of(current));
+        when(snapshotRepository.findAllByCampaignIdOrderByDayAsc(1L))
+            .thenReturn(List.of(snapshot(TODAY, 1_000, 2_000, 1_400)));
+
+        CampaignResponse response = service.currentCampaign();
+
+        assertThat(response.forecast().weekIndex()).isEqualTo(2);
+        assertThat(response.forecast().woundedCount()).isEqualTo(50);
+        assertThat(response.forecast().challengeRescued()).isEqualTo(10);
+        assertThat(response.forecast().extractionRescued()).isEqualTo(20);
+        assertThat(response.forecast().rescued()).isEqualTo(30);
+        assertThat(response.forecast().leftBehind()).isEqualTo(20);
+        assertThat(response.forecast().limiter()).isEqualTo(ExtractionLimiter.GROUP);
+        // A week still ahead of its Sunday has brought nobody home yet, whatever its challenges hold.
+        assertThat(response.totals().rescued()).isZero();
+    }
+
+    @Test
+    @DisplayName("Forecasts nothing once the week in progress is settled")
+    void shouldNotForecastASettledWeek() {
+        live();
+        CampaignWeek current = CampaignFixtures.week(campaign, 2, 1_000, 50);
+        current.setSettled(true);
+        when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L)).thenReturn(List.of(current));
+        when(snapshotRepository.findAllByCampaignIdOrderByDayAsc(1L))
+            .thenReturn(List.of(snapshot(TODAY, 1_000, 2_000, 1_400)));
+
+        assertThat(service.currentCampaign().forecast()).isNull();
     }
 
     @Test

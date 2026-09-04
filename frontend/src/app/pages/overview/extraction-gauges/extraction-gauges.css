@@ -1,0 +1,250 @@
+/* ---------- The extraction capacity ---------- */
+
+.sheet-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--color-edge-strong);
+  color: var(--color-text-muted);
+}
+
+.sheet-head b {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.gauges {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+@media (width >= 62rem) {
+  .gauges {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+/* Three rows shared by the four dials: the ring, the name, the base. The fourth dial is larger and
+   has no mode badges; without a shared grid its title dropped by thirty pixels and the four names
+   no longer lined up. */
+.gauge-cell {
+  --tone: var(--color-text-muted);
+  --pad: 1.25rem;
+
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  row-gap: 0.9rem;
+  justify-items: center;
+  padding: 1.35rem var(--pad) 0;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
+  text-align: center;
+}
+
+@media (width < 40rem) {
+  .gauge-cell {
+    --pad: 0.75rem;
+  }
+}
+
+.gauge-cell--out {
+  background: rgb(217 149 74 / 9%);
+}
+
+.gauge-cell--out .split {
+  flex: 1;
+}
+
+.gauge {
+  position: relative;
+  display: block;
+  align-self: center;
+  width: var(--size, 8.75rem);
+  height: var(--size, 8.75rem);
+  max-width: 100%;
+}
+
+@media (width < 40rem) {
+  .gauge {
+    --size: 7rem !important;
+    --fig: 1.75rem !important;
+  }
+}
+
+/* The sweep starts at noon and not at three: a dial is read from the top. */
+.gauge > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  rotate: -90deg;
+}
+
+.g-track {
+  fill: none;
+  stroke: rgb(4 10 15 / 70%);
+  stroke-width: var(--ring, 7);
+}
+
+.g-arc {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: var(--ring, 7);
+  stroke-dasharray: 270.18; /* 2 pi r, r = 43 */
+  stroke-dashoffset: calc(270.18 * (1 - var(--pct)));
+  animation: overview-sweep 1s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+@keyframes overview-sweep {
+  from {
+    stroke-dashoffset: 270.18;
+  }
+}
+
+.gauge-mid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.3rem;
+}
+
+.gauge-mid svg {
+  color: var(--tone);
+  opacity: 0.9;
+}
+
+.gauge-mid b {
+  font-family: var(--font-display);
+  font-size: var(--fig, 2rem);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tone);
+}
+
+.gauge-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.gauge-name {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gauge-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-text-muted);
+}
+
+.gauge-stock svg {
+  color: var(--tone);
+}
+
+.gauge-stock b {
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+/* The base overflows its block to touch both edges: that is what makes it read as a base and not
+   as one more card laid inside. */
+.gauge-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  width: calc(100% + var(--pad) * 2);
+  margin: 0 calc(var(--pad) * -1);
+  padding: 0.9rem var(--pad) 1rem;
+  background: rgb(4 10 15 / 45%);
+}
+
+/* Two rows reserved by default: "Team Deathmatch" takes two where "Compétitif, Premier, Non
+   classé" takes one, and without that reserve the four bases did not start at the same height. */
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 3.95rem;
+}
+
+.mode-tag {
+  padding: 0.3rem 0.45rem;
+  letter-spacing: 0.12em;
+  background: color-mix(in srgb, var(--tone) 16%, transparent);
+  color: var(--tone);
+}
+
+.gauge-rate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.gauge-rate svg {
+  color: var(--tone);
+}
+
+.gauge-rate b {
+  font-weight: 700;
+  color: var(--tone);
+  white-space: nowrap;
+}
+
+.split {
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 3.95rem;
+}
+
+.split-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.split-row b {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tone);
+}
+
+.split-row .label-caption {
+  color: var(--color-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-arc {
+    animation: none;
+  }
+}

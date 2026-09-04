@@ -14,6 +14,9 @@ package io.github.thomashtn.valoquests.campaign.dto;
  * @param protectedFood        food the ship may never spend, seven evenings of upkeep
  * @param rescuesByComponents  wounded the components in reserve could reach
  * @param rescuesByFood        wounded the spendable food could settle
+ * @param populationChange     inhabitants gained or lost over the last replayed day
+ * @param componentsPerRescue  components one rescue costs the ship
+ * @param foodPerRescue        food one rescue costs the base
  */
 public record CampaignBaseResponse(
     int population,
@@ -22,6 +25,9 @@ public record CampaignBaseResponse(
     int dailyUpkeep,
     int protectedFood,
     int rescuesByComponents,
-    int rescuesByFood
+    int rescuesByFood,
+    int populationChange,
+    int componentsPerRescue,
+    int foodPerRescue
 ) {
 }

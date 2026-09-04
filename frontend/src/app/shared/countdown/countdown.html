@@ -1,0 +1,21 @@
+<span [attr.aria-label]="label() || null" class="countdown" role="timer">
+  <span aria-hidden="true" class="cd-dot"></span>
+  @if (withDays()) {
+    <span class="cd-unit"
+      ><b class="tabular-nums">{{ parts().days }}</b
+      ><small>j</small></span
+    >
+  }
+  <span class="cd-unit"
+    ><b class="tabular-nums">{{ parts().hours }}</b
+    ><small>h</small></span
+  >
+  <span class="cd-unit"
+    ><b class="tabular-nums">{{ parts().minutes }}</b
+    ><small>m</small></span
+  >
+  <span class="cd-unit cd-unit--s"
+    ><b class="tabular-nums">{{ parts().seconds }}</b
+    ><small>s</small></span
+  >
+</span>

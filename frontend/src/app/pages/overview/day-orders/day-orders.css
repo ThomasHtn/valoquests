@@ -1,0 +1,258 @@
+/* ---------- The orders of the day ---------- */
+
+.day {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+}
+
+@media (width >= 60rem) {
+  .day {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 3.5rem;
+  }
+
+  .day-col + .day-col {
+    padding-left: 3.5rem;
+    border-left: 1px solid var(--color-edge);
+  }
+}
+
+.day-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.day-cap {
+  color: var(--color-text-muted);
+}
+
+.q-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.75rem;
+}
+
+/* The difficulty edge only frames the challenge: it is what, with the mark, makes the identity
+   the challenges page takes up. */
+.day-col--quest {
+  justify-content: space-between;
+  padding: 1.35rem 1.5rem 1.35rem 1.15rem;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--tier);
+}
+
+.day-col--quest .day-cap {
+  color: var(--tier);
+}
+
+.q {
+  display: flex;
+  align-items: center;
+  gap: 1.35rem;
+}
+
+/* The plate of the daily challenge: a full hexagon in its colour, the ground's hexagon inside, the
+   bolt in the middle. Same mark as on the challenges page, where the bolt means the daily draw and
+   roman numerals are kept for the week's five difficulties. */
+.q-mark {
+  width: 5rem;
+  height: 5.7rem;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--tier) 55%, transparent);
+}
+
+.q-mark > span {
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.3rem;
+  background: var(--color-surface-950);
+  color: var(--tier);
+}
+
+.q-name {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.q-task {
+  margin-top: 0.4rem;
+  font-size: 1.125rem;
+  color: var(--color-text-secondary);
+}
+
+.q-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--color-edge);
+  color: var(--color-text-muted);
+}
+
+.q-pay {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.q-pay svg {
+  align-self: center;
+  color: var(--color-brand-400);
+}
+
+.q-pay b {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-brand-400);
+}
+
+.q-pay small {
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+
+/* One hexagon per operator, lit when validated, the name on hover: the squad gauge of the
+   challenges page, taken as is. */
+.slugs {
+  display: inline-flex;
+  gap: 3px;
+  vertical-align: middle;
+}
+
+.slugs i {
+  position: relative;
+  display: block;
+  width: 0.9rem;
+  height: 1rem;
+}
+
+.slugs i::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(236 232 225 / 12%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  transition: filter 0.15s;
+}
+
+.slugs i.on::before {
+  background: var(--k, var(--color-text-primary));
+}
+
+.slugs i:hover::before {
+  filter: brightness(1.35);
+}
+
+.slugs i::after {
+  content: attr(data-name);
+  position: absolute;
+  bottom: calc(100% + 0.4rem);
+  left: 50%;
+  z-index: 5;
+  translate: -50% 0;
+  padding: 0.25rem 0.55rem;
+  background: #040a11;
+  border: 1px solid var(--color-edge-strong);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.slugs i:hover::after {
+  opacity: 1;
+}
+
+/* The tally: one line per destination, the icon and colour of the resource, its name, what it
+   gained. */
+.dl {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding-block: 0.6rem;
+  border-top: 1px solid var(--color-edge);
+}
+
+.dl:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.dl > svg {
+  align-self: center;
+  color: var(--tone);
+}
+
+.dl-key {
+  font-size: 1.0625rem;
+  color: var(--color-text-secondary);
+}
+
+.dl-fig {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tone);
+}
+
+.dl small {
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+
+/* A cost keeps the colour of its resource — it is food — but not its glow: a "−96" in full green
+   would read as a gain. The sign does the rest. */
+.dl--cost .dl-fig {
+  color: var(--color-text-secondary);
+}
+
+.dl--cost > svg {
+  opacity: 0.55;
+}
+
+.pips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-left: auto;
+  align-self: center;
+}
+
+.pips + .dl-fig {
+  margin-left: 0.5rem;
+}
+
+.pips i {
+  width: 1.25rem;
+  height: 1.45rem;
+  background: rgb(236 232 225 / 9%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.pips i.on {
+  background: var(--color-brand-500);
+}

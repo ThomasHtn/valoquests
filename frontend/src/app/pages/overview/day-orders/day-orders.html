@@ -1,0 +1,137 @@
+<!-- The orders of the day, in two equal columns: on the left what there is to do, on the
+     right what the day has already given. -->
+<section aria-labelledby="orders-title">
+  <app-section-rule
+    [heading]="'overview.orders.title' | translate"
+    [linkLabel]="'overview.orders.link' | translate"
+    headingId="orders-title"
+    link="/challenges"
+  />
+
+  <div class="day">
+    <div class="day-col day-col--quest" style="--tier: var(--color-accent-cyan)">
+      @if (order(); as order) {
+        <p class="q-head">
+          <span class="day-cap label-caption text-2xs">{{
+            'overview.orders.daily' | translate
+          }}</span>
+          <span class="label-caption ml-auto text-2xs text-text-muted">{{
+            'overview.orders.beforeMidnight' | translate
+          }}</span>
+          <app-countdown
+            [deadline]="order.deadline"
+            [label]="'overview.orders.countdownAria' | translate"
+            [withDays]="false"
+            size="sm"
+          />
+        </p>
+
+        <div class="q">
+          <span aria-hidden="true" class="q-mark clip-hex">
+            <span class="clip-hex">
+              <svg class="size-8" lucideZap></svg>
+            </span>
+          </span>
+          <div>
+            <p class="q-name">{{ order.name }}</p>
+            <p class="q-task">{{ order.description }}</p>
+          </div>
+        </div>
+
+        <p class="q-foot">
+          <span
+            [attr.aria-label]="
+              'overview.orders.validatedAria'
+                | translate: { done: order.doneCount, total: order.validated.length }
+            "
+            class="slugs"
+            role="img"
+            style="--k: var(--color-accent-cyan)"
+          >
+            @for (operator of order.validated; track operator.name) {
+              <i [attr.data-name]="operator.name" [class.on]="operator.done"></i>
+            }
+          </span>
+          <span class="label-caption text-2xs">{{
+            'overview.orders.validated'
+              | translate: { done: order.doneCount, total: order.validated.length }
+          }}</span>
+          <span class="q-pay">
+            <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+            <b class="tabular-nums">+{{ order.survivors }}</b>
+            <small>{{ 'overview.orders.perOperator' | translate }}</small>
+          </span>
+        </p>
+      } @else {
+        <p class="day-cap label-caption text-2xs">
+          {{ 'overview.orders.daily' | translate }}
+        </p>
+        <p class="text-lead text-text-secondary">
+          {{ 'overview.orders.noDaily' | translate }}
+        </p>
+      }
+    </div>
+
+    <!-- The tally, one line per destination, in the icons and colours of the resources. The
+         last line is the one the page lacked: a base eats every day, and it is the only thing
+         in the game that punishes stopping. -->
+    @if (tally(); as tally) {
+      <div class="day-col">
+        <p class="day-cap label-caption text-2xs">
+          {{ 'overview.orders.tally' | translate }}
+        </p>
+
+        <p class="dl" style="--tone: var(--color-boss-hp-edge)">
+          <svg aria-hidden="true" class="size-4" lucideSkull></svg>
+          <span class="dl-key">{{ tally.guardianName }}</span>
+          <b class="dl-fig tabular-nums">{{ signed(-tally.damage) }}</b>
+          <small>{{ 'overview.report.hp' | translate }}</small>
+        </p>
+
+        <p class="dl" style="--tone: var(--color-accent-cyan)">
+          <svg aria-hidden="true" class="size-4" lucideWrench></svg>
+          <span class="dl-key">{{ 'common.resource.components' | translate }}</span>
+          <b class="dl-fig tabular-nums">{{ signed(tally.components) }}</b>
+          <small>{{ 'overview.orders.carryGain' | translate: { count: tally.carryGained } }}</small>
+        </p>
+
+        <p class="dl" style="--tone: var(--color-accent-green)">
+          <svg aria-hidden="true" class="size-4" lucideWheat></svg>
+          <span class="dl-key">{{ 'common.resource.food' | translate }}</span>
+          <b class="dl-fig tabular-nums">{{ signed(tally.food) }}</b>
+          <small>{{
+            'overview.orders.shelterGain' | translate: { count: tally.shelterGained }
+          }}</small>
+        </p>
+
+        <p class="dl dl--cost" style="--tone: var(--color-accent-green)">
+          <svg aria-hidden="true" class="size-4" lucideBuilding2></svg>
+          <span class="dl-key">{{ 'overview.orders.ate' | translate }}</span>
+          <b class="dl-fig tabular-nums">{{ signed(-tally.upkeep) }}</b>
+          <small>{{
+            'overview.orders.inhabitants' | translate: { count: format(tally.population) }
+          }}</small>
+        </p>
+
+        <p class="dl" style="--tone: var(--color-brand-400)">
+          <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+          <span class="dl-key">{{ 'overview.orders.squad' | translate }}</span>
+          <span
+            [attr.aria-label]="
+              'overview.orders.presenceAria'
+                | translate: { present: tally.presence, roster: tally.roster }
+            "
+            class="pips"
+            role="img"
+          >
+            @for (present of tally.pips; track $index) {
+              <i [class.on]="present"></i>
+            }
+          </span>
+          <b class="dl-fig tabular-nums">{{ tally.presence }}</b>
+          <small>{{ 'overview.orders.of' | translate: { count: tally.roster } }}</small>
+        </p>
+      </div>
+    }
+  </div>
+</section>

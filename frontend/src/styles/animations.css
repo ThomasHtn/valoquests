@@ -119,3 +119,22 @@
     }
   }
 }
+
+/*
+ * Keyframes the overview's drawings reach through inline styles set from a script: a component
+ * stylesheet would scope their names away from those styles, so they live here.
+ */
+@keyframes town-window-on {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.92;
+  }
+}
+
+@keyframes scan-wire {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

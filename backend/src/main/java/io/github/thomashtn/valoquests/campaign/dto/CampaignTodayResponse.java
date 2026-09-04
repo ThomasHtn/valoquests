@@ -19,6 +19,8 @@ import java.util.Map;
  * @param presenceCount   operators who have played today
  * @param rosterSize      operators the campaign froze
  * @param dailyUpkeep     food the base will eat this evening
+ * @param carryGained     wounded today's components add to what the ship can carry
+ * @param shelterGained   wounded today's food adds to what the base can settle
  * @param players         each operator's day, most damage first
  * @param titles          the week's honours as they stand, ties omitted
  */
@@ -30,6 +32,8 @@ public record CampaignTodayResponse(
     int presenceCount,
     int rosterSize,
     int dailyUpkeep,
+    int carryGained,
+    int shelterGained,
     List<CampaignPlayerDayResponse> players,
     Map<WeeklyTitle, Long> titles
 ) {
@@ -49,6 +53,6 @@ public record CampaignTodayResponse(
      * @return a day with nothing on it
      */
     public static CampaignTodayResponse none(LocalDate day) {
-        return new CampaignTodayResponse(day, 0, 0, 0, 0, 0, 0, List.of(), Map.of());
+        return new CampaignTodayResponse(day, 0, 0, 0, 0, 0, 0, 0, 0, List.of(), Map.of());
     }
 }

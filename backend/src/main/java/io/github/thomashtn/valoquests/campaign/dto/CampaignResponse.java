@@ -22,6 +22,8 @@ import java.util.List;
  * @param today            calendar day the answer was computed on
  * @param currentWeekIndex one-based week in progress, {@code null} before the campaign starts
  * @param base             the base as it stands
+ * @param forecast         what Sunday would bring home from the base as it stands, {@code null}
+ *                         outside a week in progress
  * @param weeks            the ten weeks, week one first
  * @param totals           what the campaign has amounted to so far
  */
@@ -36,6 +38,7 @@ public record CampaignResponse(
     LocalDate today,
     Integer currentWeekIndex,
     CampaignBaseResponse base,
+    CampaignForecastResponse forecast,
     List<CampaignWeekResponse> weeks,
     CampaignTotalsResponse totals
 ) {
@@ -55,7 +58,7 @@ public record CampaignResponse(
      */
     public static CampaignResponse none(LocalDate today) {
         return new CampaignResponse(
-            null, null, null, null, null, null, null, today, null, null, List.of(), null
+            null, null, null, null, null, null, null, today, null, null, null, List.of(), null
         );
     }
 }

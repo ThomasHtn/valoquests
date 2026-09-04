@@ -289,6 +289,17 @@
     "operator": {
       "one": "{{count}} opérateur",
       "other": "{{count}} opérateurs"
+    },
+    "gameMode": {
+      "COMPETITIVE": "Compétitif",
+      "PREMIER": "Premier",
+      "UNRATED": "Non classé",
+      "DEATHMATCH": "Deathmatch",
+      "SPIKE_RUSH": "Spike Rush",
+      "TEAM_DEATHMATCH": "Team Deathmatch",
+      "SKIRMISH": "Skirmish",
+      "SWIFTPLAY": "Swiftplay",
+      "ESCALATION": "Escalade"
     }
   },
   "landing": {
@@ -329,7 +340,116 @@
     "title": "Page introuvable"
   },
   "overview": {
-    "title": "Vue d'ensemble"
+    "title": "Vue d'ensemble",
+    "header": {
+      "eyebrow": "Campagne {{number}} · Palier {{tier}}",
+      "noCampaign": "Aucune campagne",
+      "heading": "Ramener les blessés de dix planètes",
+      "day": "{{weekday}} · semaine {{week}} sur {{weeks}}"
+    },
+    "scene": {
+      "section": "La ville de nuit et la fusée en construction",
+      "aria": "La ville de nuit, {{population}} habitants. Au centre, la fusée montée à {{stages}} étages sur {{weeks}}, et le profil du lanceur complet en pointillé au-dessus.",
+      "base": "La base",
+      "unit": "habitants",
+      "delta": "hier soir"
+    },
+    "frieze": {
+      "title": "La campagne",
+      "week": "Semaine {{week}} sur {{weeks}}",
+      "aria": "Les dix semaines de la campagne",
+      "link": "La campagne",
+      "won": "Gardien vaincu",
+      "lost": "Gardien repoussé à {{percent}} %",
+      "now": "Percée à {{percent}} %",
+      "ahead": "À venir"
+    },
+    "mission": {
+      "title": "La mission de la semaine",
+      "link": "La campagne",
+      "planet": "Planète {{index}} sur {{weeks}} · {{category}}",
+      "planetAria": "{{planet}}, la planète de la semaine {{week}}. Des marques ambre à sa surface tiennent lieu des {{wounded}} blessés, et la percée dans ses lignes atteint {{percent}} %."
+    },
+    "report": {
+      "title": "Relevé de situation",
+      "side": "{{planet}} · jour {{day}} sur 7",
+      "target": "Cible",
+      "guardian": "Gardien · {{category}}",
+      "hp": "PV",
+      "hpSide": "sur {{total}} · percée à {{percent}} %",
+      "targetNote": "Battez-vous sur le champ de bataille, tous modes confondus, pour faire tomber le gardien. Les défis ne lui font aucun dégât : ils ramènent des blessés.",
+      "ground": "Au sol",
+      "spotted": "repérés cette semaine",
+      "groundNote": "Construisez un vaisseau assez grand et agrandissez la base pour en sauver le maximum.",
+      "extraction": "Extraction",
+      "before": "Avant l'extraction",
+      "crew": "Équipage · {{count}} opérateurs",
+      "countdownAria": "Temps restant avant l'extraction de dimanche"
+    },
+    "capacity": {
+      "title": "Capacité d'extraction",
+      "carry": "Capacité d'emport",
+      "carryAria": "Les composants permettent d'emporter {{count}} blessés sur les {{wounded}} repérés, soit {{percent}} %.",
+      "shelter": "Capacité d'accueil",
+      "shelterAria": "La nourriture permet d'accueillir {{count}} blessés sur les {{wounded}} repérés, soit {{percent}} %.",
+      "breach": "La percée",
+      "breachAria": "La percée dans les lignes de {{guardian}} atteint {{percent}} % : il ne laisse partir que cette part de ce qui est prêt à embarquer.",
+      "aboard": "À bord dimanche",
+      "aboardAria": "{{count}} blessés seraient à bord dimanche sur les {{wounded}} repérés, soit {{percent}} % : {{extraction}} par l'extraction et {{challenges}} déjà acquis par les défis.",
+      "of": "sur {{count}} repérés",
+      "lever": "Levier",
+      "allModes": "Tous les modes",
+      "hpStanding": "PV encore debout",
+      "carryRate": "composants = 1 blessé",
+      "shelterRate": "nourriture = 1 blessé",
+      "breachRate": "PV = 1 % de percée",
+      "fromGuardian": "arrachés à {{guardian}}",
+      "fromChallenges": "acquis par les défis",
+      "leftBehind": "resteraient au sol"
+    },
+    "orders": {
+      "title": "Ordre du jour",
+      "link": "Les défis",
+      "daily": "Défi du jour",
+      "beforeMidnight": "avant minuit",
+      "countdownAria": "Temps restant avant minuit",
+      "validated": "{{done}} sur {{total}} ont validé",
+      "validatedAria": "{{done}} opérateurs sur {{total}} ont validé le défi du jour.",
+      "perOperator": "par opérateur",
+      "noDaily": "Aucun défi tiré pour aujourd'hui.",
+      "tally": "Ce que la journée a donné",
+      "carryGain": "+{{count}} d'emport",
+      "shelterGain": "+{{count}} d'accueil",
+      "ate": "La base a mangé",
+      "inhabitants": "{{count}} habitants",
+      "squad": "Escouade",
+      "presenceAria": "{{present}} opérateurs sur {{roster}} ont joué aujourd'hui.",
+      "of": "sur {{count}}"
+    },
+    "squad": {
+      "title": "L'escouade aujourd'hui",
+      "link": "Tout le classement",
+      "operator": "Opérateur",
+      "streak": "Série",
+      "damage": "Dégâts au gardien",
+      "days": "{{count}} j",
+      "toPlay": "à jouer aujourd'hui",
+      "matches": {
+        "one": "{{count}} partie",
+        "other": "{{count}} parties"
+      },
+      "reduced": "{{count}} à 50 %",
+      "notPlayed": "pas encore joué aujourd'hui",
+      "footer": "Rendements décroissants : à partir de la 6e partie du jour, une partie vaut 50 % ; à partir de la 10e, 25 %."
+    },
+    "state": {
+      "loading": "Lecture de la campagne…",
+      "error": "Impossible de lire la campagne.",
+      "none": "Aucune campagne n'a encore été ouverte. Le classement de la semaine tourne, la mission commence avec la première campagne.",
+      "opened": "La campagne est ouverte : la mission démarre lundi.",
+      "closed": "La campagne est close. La prochaine mission attend l'ouverture d'une nouvelle campagne.",
+      "settling": "La semaine est réglée, la mission reprend lundi."
+    }
   },
   "pageHeader": {
     "back": "Retour à {{name}}",

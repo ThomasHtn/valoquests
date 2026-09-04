@@ -1,0 +1,291 @@
+/*
+ * Everything under the frieze is one object: a report sheet. No card, no panel, no gauge laid on
+ * a background — lines separated by a rule, each opened by its key in the same gutter. What tells
+ * one line from another is its key and the colour of its figure, never a frame around it.
+ */
+
+.scene-wash {
+  pointer-events: none;
+  background:
+    linear-gradient(to top, rgb(4 10 17 / 92%) 0%, rgb(4 10 17 / 42%) 24%, transparent 48%),
+    linear-gradient(to right, rgb(4 10 17 / 70%) 0%, transparent 36%);
+}
+
+.pop-figure {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 1.5rem + 4.4vw, 5.75rem);
+  font-weight: 600;
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+  color: var(--color-brand-400);
+  text-shadow: 0 0 48px rgb(217 149 74 / 35%);
+}
+
+/* ---------- The ten-week frieze ---------- */
+
+.frieze {
+  flex: 1 1 26rem;
+}
+
+.week {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.2rem;
+  background: rgb(4 10 15 / 45%);
+  border-top: 2px solid rgb(236 232 225 / 14%);
+}
+
+/* The top rule carries the advance on the guardian, not only the issue: losses are quadratic and
+   without threshold, so a week pushed back to 84 % cost almost nothing and a week abandoned at
+   20 % costs a fifth of the base. A bare cross confuses the two. */
+.week::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: calc(var(--adv, 0) * 100%);
+  height: 2px;
+  background: var(--adv-tone, var(--color-text-muted));
+}
+
+.week-no {
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-text-muted);
+}
+
+.week-mark {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-text-muted);
+}
+
+.week--won {
+  --adv-tone: var(--color-brand-500);
+
+  background: rgb(217 149 74 / 10%);
+}
+
+.week--won .week-no,
+.week--won .week-mark {
+  color: var(--color-brand-400);
+}
+
+/* Muted rather than bright red: on this teal ground, eight percent of bright red turns pink and
+   the lost week became the loudest cell of the frieze. */
+.week--lost {
+  --adv-tone: var(--color-boss-hp-edge);
+
+  background: rgb(4 10 15 / 55%);
+}
+
+.week--lost .week-no,
+.week--lost .week-mark {
+  color: var(--color-boss-hp-edge);
+}
+
+.week--now {
+  --adv-tone: var(--color-accent-cyan);
+
+  background: rgb(45 212 191 / 12%);
+  outline: 1px solid rgb(45 212 191 / 40%);
+}
+
+.week--now .week-no,
+.week--now .week-mark {
+  color: var(--color-accent-cyan);
+}
+
+@media (width < 40rem) {
+  .week {
+    gap: 0.2rem;
+    padding-inline: 0;
+  }
+
+  .week-mark {
+    display: none;
+  }
+}
+
+/* ---------- The mission: the scan ---------- */
+
+.scan {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (width >= 64rem) {
+  .scan {
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    gap: 5.5rem;
+  }
+
+  .scan > div:first-of-type {
+    align-self: center;
+  }
+}
+
+.wires {
+  position: absolute;
+  inset: 0;
+  display: none;
+  pointer-events: none;
+}
+
+@media (width >= 64rem) {
+  .wires {
+    display: block;
+  }
+}
+
+/* ---------- The situation report ---------- */
+
+.rep-row {
+  --tone: var(--color-text-muted);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem 1.25rem;
+  padding: 1.35rem 1.5rem 1.45rem;
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
+.rep-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.rep-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 1rem;
+}
+
+.rep-measure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.rep-measure .rep-side {
+  align-self: center;
+}
+
+.rep-row + .rep-row {
+  border-top: 1px solid var(--color-edge);
+}
+
+.rep-row--foe {
+  --tone: var(--color-boss-hp-edge);
+}
+
+.rep-row--hurt {
+  --tone: var(--color-brand-500);
+}
+
+.rep-row--crew {
+  --tone: var(--color-accent-cyan);
+
+  background: rgb(4 10 15 / 52%);
+}
+
+.rep-key {
+  display: flex;
+  align-self: start;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--tone);
+}
+
+@media (width >= 40rem) {
+  .rep-row {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+  }
+
+  .rep-key {
+    padding-top: 0.35rem;
+  }
+}
+
+.rep-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.rep-fig {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tone);
+}
+
+.rep-fig small {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.rep-side {
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
+.rep-note {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* The health bar fills from the left and recedes: anchored right, it reads backwards from every
+   game. */
+.hpbar {
+  position: relative;
+  display: block;
+  height: 12px;
+  background: rgb(4 10 15 / 60%);
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 45%);
+}
+
+.hpbar > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--lvl);
+  background: var(--color-boss-hp);
+  border-right: 3px solid var(--color-boss-hp-edge);
+  animation: overview-drain 900ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+@keyframes overview-drain {
+  from {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hpbar > i {
+    animation: none;
+  }
+}

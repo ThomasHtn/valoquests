@@ -1,0 +1,220 @@
+<!-- What would come home, and the three things that bound it. Four dials on the same
+     scale, the wounded spotted: the three limits, then what gets through. -->
+@if (capacity(); as capacity) {
+  <div class="cap mt-[clamp(2.5rem,4vw,3.25rem)]">
+    <p class="sheet-head">
+      <b>{{ 'overview.capacity.title' | translate }}</b>
+    </p>
+
+    <div class="gauges">
+      <div class="gauge-cell" style="--tone: var(--color-accent-cyan)">
+        <span
+          [attr.aria-label]="
+            'overview.capacity.carryAria'
+              | translate
+                : {
+                    count: format(capacity.carry.value),
+                    wounded: format(capacity.wounded),
+                    percent: percent(capacity.carry.fraction),
+                  }
+          "
+          [style.--pct]="capacity.carry.fraction"
+          class="gauge"
+          role="img"
+        >
+          <svg aria-hidden="true" viewBox="0 0 100 100">
+            <circle class="g-track" cx="50" cy="50" r="43" />
+            <circle class="g-arc" cx="50" cy="50" r="43" />
+          </svg>
+          <span class="gauge-mid">
+            <svg aria-hidden="true" class="size-5" lucideRocket></svg>
+            <b class="tabular-nums">{{ format(capacity.carry.value) }}</b>
+          </span>
+        </span>
+        <p class="gauge-head">
+          <span class="gauge-name">{{ 'overview.capacity.carry' | translate }}</span>
+          <span class="gauge-stock label-caption text-2xs"
+            ><svg aria-hidden="true" class="size-3.5" lucideWrench></svg
+            ><b class="tabular-nums">{{ format(capacity.carry.stock) }}</b>
+            {{ 'common.resource.components' | translate | lowercase }}</span
+          >
+        </p>
+        <div class="gauge-foot">
+          <span class="label-caption text-2xs text-brand-400">{{
+            'overview.capacity.lever' | translate
+          }}</span>
+          <p class="modes">
+            @for (mode of carryModes; track mode) {
+              <span class="mode-tag label-caption text-2xs">{{
+                'common.gameMode.' + mode | translate
+              }}</span>
+            }
+          </p>
+          <p class="gauge-rate label-caption text-2xs">
+            <svg aria-hidden="true" class="size-4" lucideWrench></svg>
+            <b class="tabular-nums">{{ capacity.componentsPerRescue }}</b>
+            {{ 'overview.capacity.carryRate' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <div class="gauge-cell" style="--tone: var(--color-accent-green)">
+        <span
+          [attr.aria-label]="
+            'overview.capacity.shelterAria'
+              | translate
+                : {
+                    count: format(capacity.shelter.value),
+                    wounded: format(capacity.wounded),
+                    percent: percent(capacity.shelter.fraction),
+                  }
+          "
+          [style.--pct]="capacity.shelter.fraction"
+          class="gauge"
+          role="img"
+        >
+          <svg aria-hidden="true" viewBox="0 0 100 100">
+            <circle class="g-track" cx="50" cy="50" r="43" />
+            <circle class="g-arc" cx="50" cy="50" r="43" />
+          </svg>
+          <span class="gauge-mid">
+            <svg aria-hidden="true" class="size-5" lucideBuilding2></svg>
+            <b class="tabular-nums">{{ format(capacity.shelter.value) }}</b>
+          </span>
+        </span>
+        <p class="gauge-head">
+          <span class="gauge-name">{{ 'overview.capacity.shelter' | translate }}</span>
+          <span class="gauge-stock label-caption text-2xs"
+            ><svg aria-hidden="true" class="size-3.5" lucideWheat></svg
+            ><b class="tabular-nums">{{ format(capacity.shelter.stock) }}</b>
+            {{ 'common.resource.food' | translate | lowercase }}</span
+          >
+        </p>
+        <div class="gauge-foot">
+          <span class="label-caption text-2xs text-brand-400">{{
+            'overview.capacity.lever' | translate
+          }}</span>
+          <p class="modes">
+            @for (mode of shelterModes; track mode) {
+              <span class="mode-tag label-caption text-2xs">{{
+                'common.gameMode.' + mode | translate
+              }}</span>
+            }
+          </p>
+          <p class="gauge-rate label-caption text-2xs">
+            <svg aria-hidden="true" class="size-4" lucideWheat></svg>
+            <b class="tabular-nums">{{ capacity.foodPerRescue }}</b>
+            {{ 'overview.capacity.shelterRate' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <div class="gauge-cell" style="--tone: #ff8a94">
+        <span
+          [attr.aria-label]="
+            'overview.capacity.breachAria'
+              | translate: { guardian: guardianName(), percent: capacity.breach.value }
+          "
+          [style.--pct]="capacity.breach.fraction"
+          class="gauge"
+          role="img"
+        >
+          <svg aria-hidden="true" viewBox="0 0 100 100">
+            <circle class="g-track" cx="50" cy="50" r="43" />
+            <circle class="g-arc" cx="50" cy="50" r="43" />
+          </svg>
+          <span class="gauge-mid">
+            <svg aria-hidden="true" class="size-5" lucideSwords></svg>
+            <b class="tabular-nums">{{ capacity.breach.value }} %</b>
+          </span>
+        </span>
+        <p class="gauge-head">
+          <span class="gauge-name">{{ 'overview.capacity.breach' | translate }}</span>
+          <span class="gauge-stock label-caption text-2xs"
+            ><svg aria-hidden="true" class="size-3.5" lucideSkull></svg
+            ><b class="tabular-nums">{{ format(capacity.breach.stock) }}</b>
+            {{ 'overview.capacity.hpStanding' | translate }}</span
+          >
+        </p>
+        <div class="gauge-foot">
+          <span class="label-caption text-2xs text-brand-400">{{
+            'overview.capacity.lever' | translate
+          }}</span>
+          <p class="modes">
+            <span class="mode-tag label-caption text-2xs">{{
+              'overview.capacity.allModes' | translate
+            }}</span>
+          </p>
+          <p class="gauge-rate label-caption text-2xs">
+            <svg aria-hidden="true" class="size-4" lucideSkull></svg>
+            <b class="tabular-nums">{{ format(capacity.hitPointsPerPercent) }}</b>
+            {{ 'overview.capacity.breachRate' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <!-- The result, adding two contributions nothing else brings together: what the
+           extraction wrests from the guardian, and what the challenges already put
+           aboard, acquired whatever happens. -->
+      <div
+        class="gauge-cell gauge-cell--out"
+        style="--tone: var(--color-brand-400); --size: 10.5rem; --ring: 9; --fig: 2.75rem"
+      >
+        <span
+          [attr.aria-label]="
+            'overview.capacity.aboardAria'
+              | translate
+                : {
+                    count: format(capacity.aboard),
+                    wounded: format(capacity.wounded),
+                    percent: percent(capacity.aboardFraction),
+                    extraction: format(capacity.fromGuardian),
+                    challenges: format(capacity.fromChallenges),
+                  }
+          "
+          [style.--pct]="capacity.aboardFraction"
+          class="gauge"
+          role="img"
+        >
+          <svg aria-hidden="true" viewBox="0 0 100 100">
+            <circle class="g-track" cx="50" cy="50" r="43" />
+            <circle class="g-arc" cx="50" cy="50" r="43" />
+          </svg>
+          <span class="gauge-mid">
+            <svg aria-hidden="true" class="size-5" lucideUsers></svg>
+            <b class="tabular-nums">{{ format(capacity.aboard) }}</b>
+          </span>
+        </span>
+        <p class="gauge-head">
+          <span class="gauge-name text-brand-400">{{
+            'overview.capacity.aboard' | translate
+          }}</span>
+          <span class="gauge-stock label-caption text-2xs">{{
+            'overview.capacity.of' | translate: { count: format(capacity.wounded) }
+          }}</span>
+        </p>
+        <div class="gauge-foot">
+          <p class="split">
+            <span class="split-row" style="--tone: var(--color-brand-400)">
+              <b class="tabular-nums">{{ format(capacity.fromGuardian) }}</b>
+              <span class="label-caption text-2xs">{{
+                'overview.capacity.fromGuardian' | translate: { guardian: guardianShortName() }
+              }}</span>
+            </span>
+            <span class="split-row" style="--tone: #7fb6d8">
+              <b class="tabular-nums">{{ format(capacity.fromChallenges) }}</b>
+              <span class="label-caption text-2xs">{{
+                'overview.capacity.fromChallenges' | translate
+              }}</span>
+            </span>
+          </p>
+          <p class="gauge-rate label-caption text-2xs">
+            <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+            <b class="tabular-nums">{{ format(capacity.leftBehind) }}</b>
+            {{ 'overview.capacity.leftBehind' | translate }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+}

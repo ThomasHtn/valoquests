@@ -1,0 +1,146 @@
+<!-- The squad, by the day: the operator-by-operator detail of the tally above. What an
+     operator takes from the guardian splits into components and food, and that split is what
+     explains their title of the week. -->
+<section aria-labelledby="squad-title">
+  <app-section-rule
+    [heading]="'overview.squad.title' | translate"
+    [linkLabel]="'overview.squad.link' | translate"
+    headingId="squad-title"
+    link="/leaderboard"
+  />
+
+  <div class="roster">
+    <p class="bar-head bar-head--cols">
+      <span aria-hidden="true" class="bar-count clip-hex"
+        ><span class="clip-hex">{{ rosterCount() }}</span></span
+      >
+      <span class="bar-col label-caption text-2xs">{{
+        'overview.squad.operator' | translate
+      }}</span>
+      <span class="bar-col label-caption text-2xs">{{ 'overview.squad.streak' | translate }}</span>
+      <span class="bar-col label-caption text-2xs">{{ 'overview.squad.damage' | translate }}</span>
+      <span class="bar-col label-caption text-2xs">{{
+        'common.resource.components' | translate
+      }}</span>
+      <span class="bar-col label-caption text-2xs">{{ 'common.resource.food' | translate }}</span>
+    </p>
+
+    @for (row of rows(); track row.playerId) {
+      <a
+        [class.ros--1]="row.position === 1"
+        [class.ros--2]="row.position === 2"
+        [class.ros--3]="row.position === 3"
+        [class.ros--idle]="!row.played"
+        [routerLink]="['/players', row.playerId]"
+        class="ros focus-ring"
+      >
+        <span class="ros-pos tabular-nums">{{ row.position ?? '·' }}</span>
+
+        <span class="ros-who">
+          <app-avatar [src]="row.portrait" size="sm" />
+          <span class="min-w-0">
+            <span class="ros-name">{{ row.name }}</span>
+            @if (row.title; as title) {
+              <span [class]="'ros-title ' + title.colorClass">
+                @switch (title.icon) {
+                  @case ('wrench') {
+                    <svg aria-hidden="true" class="size-3.5" lucideWrench></svg>
+                  }
+                  @case ('wheat') {
+                    <svg aria-hidden="true" class="size-3.5" lucideWheat></svg>
+                  }
+                  @case ('flame') {
+                    <svg aria-hidden="true" class="size-3.5" lucideFlame></svg>
+                  }
+                  @case ('target') {
+                    <svg aria-hidden="true" class="size-3.5" lucideTarget></svg>
+                  }
+                }
+                {{ 'common.title.' + title.key | translate }}
+              </span>
+            }
+          </span>
+        </span>
+
+        <span class="ros-cells">
+          <span class="ros-cell">
+            <span class="ros-cap label-caption text-2xs">{{
+              'overview.squad.streak' | translate
+            }}</span>
+            <span
+              [class.ros-nil]="!row.played"
+              class="ros-val tabular-nums"
+              style="--cell: var(--color-brand-400)"
+              >{{ row.streakMultiplier
+              }}<small
+                >{{ 'overview.squad.days' | translate: { count: row.streakDays } }}
+                @if (!row.played && row.streakAtStake > 0) {
+                  · {{ 'overview.squad.toPlay' | translate }}
+                }
+              </small></span
+            >
+          </span>
+          <span class="ros-cell">
+            <span class="ros-cap label-caption text-2xs">{{
+              'overview.squad.damage' | translate
+            }}</span>
+            @if (row.played) {
+              <span class="ros-val tabular-nums" style="--cell: var(--color-boss-hp-edge)"
+                >{{ format(row.damage)
+                }}<small
+                  >{{ 'overview.squad.matches' | translate: { count: row.matchCount } }}
+                  @if (row.reducedMatchCount > 0) {
+                    ·
+                    {{ 'overview.squad.reduced' | translate: { count: row.reducedMatchCount } }}
+                  }
+                </small></span
+              >
+            } @else {
+              <span
+                [attr.aria-label]="'overview.squad.notPlayed' | translate"
+                class="ros-val ros-nil"
+                >—</span
+              >
+            }
+          </span>
+          <span class="ros-cell">
+            <span class="ros-cap label-caption text-2xs">{{
+              'common.resource.components' | translate
+            }}</span>
+            @if (row.played) {
+              <span class="ros-val tabular-nums" style="--cell: var(--color-accent-cyan)">{{
+                format(row.components)
+              }}</span>
+            } @else {
+              <span
+                [attr.aria-label]="'overview.squad.notPlayed' | translate"
+                class="ros-val ros-nil"
+                >—</span
+              >
+            }
+          </span>
+          <span class="ros-cell">
+            <span class="ros-cap label-caption text-2xs">{{
+              'common.resource.food' | translate
+            }}</span>
+            @if (row.played) {
+              <span class="ros-val tabular-nums" style="--cell: var(--color-accent-green)">{{
+                format(row.food)
+              }}</span>
+            } @else {
+              <span
+                [attr.aria-label]="'overview.squad.notPlayed' | translate"
+                class="ros-val ros-nil"
+                >—</span
+              >
+            }
+          </span>
+        </span>
+      </a>
+    }
+
+    <p class="label-caption mt-3.5 text-2xs leading-relaxed text-text-muted">
+      {{ 'overview.squad.footer' | translate }}
+    </p>
+  </div>
+</section>

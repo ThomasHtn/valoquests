@@ -1,0 +1,272 @@
+<app-page-header [eyebrow]="headerEyebrow()" [heading]="'overview.header.heading' | translate">
+  @if (dayLabel(); as day) {
+    <p
+      class="label-caption hidden shrink-0 items-center gap-2 text-brand-400 md:inline-flex"
+      headingAside
+    >
+      <svg aria-hidden="true" class="size-4" lucideCalendar></svg>
+      {{ day }}
+    </p>
+  }
+</app-page-header>
+
+<div class="page-body !gap-0 !pt-0">
+  <!-- The state of the campaign, drawn. The city is the score; the rocket in its middle gains a
+       stage per guardian defeated, and what remains to be built is there, dotted. -->
+  <section
+    [attr.aria-label]="'overview.scene.section' | translate"
+    class="scene relative !max-w-none shrink-0 overflow-hidden bg-[#040a11] !px-0"
+  >
+    @defer (on viewport) {
+      <app-base-scene
+        [fullCampaignPopulation]="fullCampaignPopulation"
+        [label]="sceneLabel()"
+        [population]="population()"
+        [stagesDone]="stagesDone()"
+      />
+    } @placeholder {
+      <div class="aspect-[1200/430] min-h-80 w-full max-h-[40rem]"></div>
+    }
+    <div aria-hidden="true" class="scene-wash absolute inset-0"></div>
+
+    <div class="absolute inset-x-0 bottom-0 pb-[clamp(1.25rem,2vw,2rem)]">
+      <div
+        class="mx-auto flex w-full max-w-[1440px] flex-wrap items-end gap-x-14 gap-y-6 px-4 sm:px-6"
+      >
+        <div>
+          <p class="label-caption mb-2 flex items-center gap-2 text-text-muted">
+            <svg aria-hidden="true" class="size-3.5" lucideUsers></svg>
+            {{ 'overview.scene.base' | translate }}
+          </p>
+          <p class="pop-figure flex items-baseline gap-3">
+            <span [appCountUp]="population()" class="tabular-nums"></span>
+            <span
+              class="font-display text-lg font-medium tracking-[0.16em] text-text-secondary uppercase"
+              >{{ 'overview.scene.unit' | translate }}</span
+            >
+          </p>
+          @if (populationChange() !== 0) {
+            <p
+              class="pop-delta mt-3.5 inline-flex items-center gap-1.5 border px-2.5 py-1.5 font-display text-[1.0625rem] font-semibold tracking-[0.04em]"
+              [class.border-accent-green/45]="populationChange() > 0"
+              [class.text-accent-green]="populationChange() > 0"
+              [class.border-boss-hp-edge/45]="populationChange() < 0"
+              [class.text-boss-hp-edge]="populationChange() < 0"
+            >
+              {{ signed(populationChange()) }}
+              <small class="font-sans font-medium text-text-secondary">{{
+                'overview.scene.delta' | translate
+              }}</small>
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- The frieze: ten weeks in order, what is won, what is lost, where the two peaks are. The only
+       object on the page whose order carries meaning. -->
+  @if (frieze().length > 0) {
+    <div class="frieze-bar !max-w-none shrink-0 border-b border-edge bg-surface-sunken/55 !px-0">
+      <div
+        class="mx-auto flex w-full max-w-[1440px] flex-wrap items-center gap-x-8 gap-y-4 px-4 py-3.5 sm:px-6"
+      >
+        <div class="flex flex-col gap-1">
+          <b class="font-display text-lg font-semibold tracking-[0.06em] uppercase">{{
+            'overview.frieze.title' | translate
+          }}</b>
+          @if (campaign()?.currentWeekIndex; as week) {
+            <span class="label-caption text-2xs text-text-muted">{{
+              'overview.frieze.week' | translate: { week: week, weeks: weekCount }
+            }}</span>
+          }
+        </div>
+
+        <ul
+          [attr.aria-label]="'overview.frieze.aria' | translate"
+          class="frieze flex min-w-0 gap-[3px]"
+        >
+          @for (week of frieze(); track week.index) {
+            <li
+              [attr.title]="week.title"
+              [class]="'week week--' + week.state"
+              [style.--adv]="week.advance"
+            >
+              <span class="week-no">{{ week.label }}</span>
+              <span class="week-mark">{{ week.mark }}</span>
+              <span class="sr-only">{{ week.title }}</span>
+            </li>
+          }
+        </ul>
+
+        <a
+          class="focus-ring tracking-label ml-auto inline-flex items-center gap-2 font-mono text-xs font-medium text-brand-400 uppercase transition-colors hover:text-[#f0c493] hover:underline hover:underline-offset-4"
+          routerLink="/campaign"
+        >
+          {{ 'overview.frieze.link' | translate }} <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
+  }
+
+  <app-resource-state
+    (retry)="retry()"
+    [emptyKind]="stateKey() === 'none' ? 'creation' : 'waiting'"
+    [emptyText]="'overview.state.' + stateKey() | translate"
+    [errorText]="'overview.state.error' | translate"
+    [isEmpty]="!isRunning()"
+    [isError]="isError()"
+    [isLoading]="isLoading()"
+    [loadingText]="'overview.state.loading' | translate"
+    padding="px-4 py-10 sm:px-6"
+  >
+    <main class="body flex flex-col gap-[clamp(3rem,5vw,5rem)] pt-[clamp(2.5rem,4vw,3.5rem)] pb-24">
+      <!-- The mission: the planet of the week on the left, the situation report on the right.
+           The three markers of the scan each point at one entry of the report. -->
+      @if (mission(); as mission) {
+        <section aria-labelledby="mission-title">
+          <app-section-rule
+            [heading]="'overview.mission.title' | translate"
+            [linkLabel]="'overview.mission.link' | translate"
+            headingId="mission-title"
+            link="/campaign"
+          />
+
+          <div appScanWires class="scan">
+            <svg aria-hidden="true" class="wires" data-wires></svg>
+
+            <div>
+              <app-planet-figure
+                [guardianLeft]="mission.guardianLeft"
+                [label]="
+                  'overview.mission.planetAria'
+                    | translate
+                      : {
+                          planet: mission.planetName,
+                          week: mission.weekIndex,
+                          wounded: format(mission.wounded),
+                          percent: mission.breachPercent,
+                        }
+                "
+                data-planet
+              />
+              <p class="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-2">
+                <b
+                  class="font-display text-2xl leading-none font-semibold tracking-[0.04em] uppercase"
+                  >{{ mission.planetName }}</b
+                >
+                <span class="label-caption text-2xs text-text-muted">{{
+                  'overview.mission.planet'
+                    | translate
+                      : {
+                          index: mission.weekIndex,
+                          weeks: weekCount,
+                          category: 'common.guardianCategory.' + mission.category | translate,
+                        }
+                }}</span>
+              </p>
+            </div>
+
+            <!-- A report sheet, not three cards: a header, three entries, a rule between them. Each
+                 entry carries the coloured edge its callout wire lands on. -->
+            <div class="report bg-text-primary/4">
+              <p class="bar-head">
+                <span aria-hidden="true" class="bar-count clip-hex"
+                  ><span class="clip-hex">{{ mission.weekIndex }}</span></span
+                >
+                <span class="bar-title">{{ 'overview.report.title' | translate }}</span>
+                <span class="label-caption ml-auto text-2xs text-text-muted">{{
+                  'overview.report.side'
+                    | translate: { planet: mission.planetName, day: mission.dayOfWeek }
+                }}</span>
+              </p>
+
+              <div class="rep-row rep-row--foe" data-card="target">
+                <p class="rep-key label-caption text-2xs">
+                  <svg aria-hidden="true" class="size-3.5" lucideSkull></svg>
+                  {{ 'overview.report.target' | translate }}
+                </p>
+                <div class="rep-body">
+                  <p class="rep-line">
+                    <span class="rep-title">{{ mission.guardianName }}</span>
+                    <span class="rep-side label-caption text-2xs">{{
+                      'overview.report.guardian'
+                        | translate
+                          : { category: 'common.guardianCategory.' + mission.category | translate }
+                    }}</span>
+                  </p>
+                  <div class="rep-measure">
+                    <p class="rep-line">
+                      <span class="rep-fig tabular-nums"
+                        >{{ format(mission.hitPointsLeft) }}
+                        <small>{{ 'overview.report.hp' | translate }}</small></span
+                      >
+                      <span class="rep-side label-caption text-2xs">{{
+                        'overview.report.hpSide'
+                          | translate
+                            : { total: format(mission.hitPoints), percent: mission.breachPercent }
+                      }}</span>
+                    </p>
+                    <span
+                      [style.--lvl]="percent(mission.guardianLeft) + '%'"
+                      aria-hidden="true"
+                      class="hpbar"
+                      ><i></i
+                    ></span>
+                  </div>
+                  <p class="rep-note">{{ 'overview.report.targetNote' | translate }}</p>
+                </div>
+              </div>
+
+              <div class="rep-row rep-row--hurt" data-card="ground">
+                <p class="rep-key label-caption text-2xs">
+                  <svg aria-hidden="true" class="size-3.5" lucideUsers></svg>
+                  {{ 'overview.report.ground' | translate }}
+                </p>
+                <div class="rep-body">
+                  <p class="rep-line">
+                    <span class="rep-fig tabular-nums"
+                      >{{ format(mission.wounded) }}
+                      <small>{{ 'common.resource.wounded' | translate | lowercase }}</small></span
+                    >
+                    <span class="rep-side label-caption text-2xs">{{
+                      'overview.report.spotted' | translate
+                    }}</span>
+                  </p>
+                  <p class="rep-note">{{ 'overview.report.groundNote' | translate }}</p>
+                </div>
+              </div>
+
+              <div class="rep-row rep-row--crew" data-card="extraction">
+                <p class="rep-key label-caption text-2xs">
+                  <svg aria-hidden="true" class="size-3.5" lucideRocket></svg>
+                  {{ 'overview.report.extraction' | translate }}
+                </p>
+                <div class="rep-body">
+                  <p class="rep-line">
+                    <span class="label-caption text-2xs text-brand-400">{{
+                      'overview.report.before' | translate
+                    }}</span>
+                    <span class="rep-side label-caption text-2xs">{{
+                      'overview.report.crew' | translate: { count: mission.crew }
+                    }}</span>
+                  </p>
+                  <app-countdown
+                    [deadline]="mission.extractionDeadline"
+                    [label]="'overview.report.countdownAria' | translate"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <app-extraction-gauges [capacity]="capacity()" [guardianName]="mission.guardianName" />
+        </section>
+      }
+
+      <app-day-orders [order]="dailyOrder()" [tally]="tally()" />
+
+      <app-squad-sheet [rosterCount]="rosterCount()" [rows]="squad()" />
+    </main>
+  </app-resource-state>
+</div>

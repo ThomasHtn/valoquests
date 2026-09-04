@@ -20,6 +20,7 @@ import io.github.thomashtn.valoquests.campaign.model.CampaignReplayResult;
 import io.github.thomashtn.valoquests.campaign.model.CampaignWeekSettlement;
 import io.github.thomashtn.valoquests.campaign.model.ExtractionLimiter;
 import io.github.thomashtn.valoquests.campaign.model.GuardianFight;
+import io.github.thomashtn.valoquests.campaign.model.WeekChallengeYield;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignDailySnapshotRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerDayRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
@@ -136,6 +137,24 @@ class CampaignReplayWriterTest {
         assertThat(week.isSettled()).isFalse();
         assertThat(week.getDefeatedByPlayer()).isNull();
         assertThat(week.getFinishingPlayerMatch()).isNull();
+    }
+
+    @Test
+    @DisplayName("Keeps what the challenges of a week still ahead of its Sunday already brought home")
+    void shouldKeepTheChallengeSurvivorsOfAWeekStillAhead() {
+        CampaignReplayInputs inputs = new CampaignReplayInputs(
+            List.of(),
+            List.of(),
+            Map.of(1, GuardianFight.UNTOUCHED),
+            Map.of(1, new WeekChallengeYield(9, Map.of(), Map.of())),
+            List.of()
+        );
+
+        writer.write(campaign, List.of(week), inputs, result(List.of()));
+
+        assertThat(week.getChallengeRescued()).isEqualTo(9);
+        assertThat(week.getExtractionRescued()).isZero();
+        assertThat(week.isSettled()).isFalse();
     }
 
     @Test

@@ -1,0 +1,167 @@
+/* ---------- The squad today ---------- */
+
+.roster {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ros {
+  --tone: var(--color-text-muted);
+
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+  padding: 0.85rem 1rem 0.9rem 0.75rem;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
+  transition: background 0.15s;
+}
+
+.ros:hover {
+  background: rgb(217 149 74 / 12%);
+}
+
+.ros-who,
+.ros-cells {
+  grid-column: 2;
+}
+
+.ros-cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+/* Column names live in the header bar, on the rows' grid. They only exist from the point where
+   that grid really holds columns; below it, the cells each take back their own. */
+@media (width >= 72rem) {
+  .ros,
+  .bar-head--cols {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(11rem, 2.4fr) minmax(4.5rem, 0.8fr) repeat(
+        3,
+        minmax(6rem, 1fr)
+      );
+    gap: 1.25rem;
+    align-items: center;
+  }
+
+  .bar-head--cols {
+    padding: 0.55rem 1rem 0.55rem 0.625rem;
+  }
+
+  .bar-col {
+    display: block;
+    color: var(--color-text-muted);
+  }
+
+  .ros-cells {
+    display: contents;
+  }
+
+  .ros-cap {
+    display: none;
+  }
+}
+
+.ros-pos {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  color: var(--tone);
+}
+
+.ros-who {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.ros-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+}
+
+.ros-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.ros-cell {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.ros-cap {
+  color: var(--color-text-muted);
+}
+
+.ros-val {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--cell, var(--color-text-primary));
+}
+
+.ros-val small {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: var(--font-mono);
+  white-space: normal;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--color-text-muted);
+}
+
+.ros--1 {
+  --tone: var(--color-brand-400);
+}
+
+.ros--2 {
+  --tone: var(--color-podium-silver);
+}
+
+.ros--3 {
+  --tone: var(--color-podium-bronze);
+}
+
+/* By the day a row can be empty: whoever has not played yet is not last, they have no rank. The
+   row keeps its place and loses its figures — a dash per column, never a zero, which would read
+   as a result. Only the streak stays: it runs until midnight. */
+.ros--idle {
+  background: rgb(236 232 225 / 2%);
+}
+
+.ros--idle .ros-name {
+  color: var(--color-text-secondary);
+}
+
+.ros--idle .ros-pos {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+}
+
+.ros-val.ros-nil {
+  color: var(--color-text-muted);
+}
