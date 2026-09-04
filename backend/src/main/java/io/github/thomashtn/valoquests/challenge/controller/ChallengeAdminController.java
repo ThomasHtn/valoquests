@@ -4,6 +4,7 @@ import static io.github.thomashtn.valoquests.shared.config.OpenApiConfig.ADMIN_K
 
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
+import io.github.thomashtn.valoquests.week.WeekCalendar;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -29,20 +30,28 @@ public class ChallengeAdminController {
     private final ChallengeRecalculationService recalculationService;
 
     /**
-     * Service drawing the weekly challenge packs.
+     * Service drawing the weekly packs and the daily challenges.
      */
     private final WeeklyChallengeSelectionService selectionService;
 
     /**
+     * Calendar resolving the current day.
+     */
+    private final WeekCalendar weekCalendar;
+
+    /**
      * @param recalculationService challenge progress recalculation service
-     * @param selectionService     weekly challenge selection service
+     * @param selectionService     challenge selection service
+     * @param weekCalendar         calendar resolving the current day
      */
     public ChallengeAdminController(
         ChallengeRecalculationService recalculationService,
-        WeeklyChallengeSelectionService selectionService
+        WeeklyChallengeSelectionService selectionService,
+        WeekCalendar weekCalendar
     ) {
         this.recalculationService = recalculationService;
         this.selectionService = selectionService;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -90,9 +99,7 @@ public class ChallengeAdminController {
             it. Only the week in progress is ever touched; past weeks keep the packs their frozen
             rankings were earned against.
 
-            The colony is not replayed here. Challenge materials are read from the progress this
-            deletes, so run the colony recompute afterwards if the run's population matters before
-            the next synchronization.
+            The week's daily challenges are not part of the pack and keep their progress.
             """
     )
     @ApiResponse(responseCode = "204", description = "A new pack was drawn and progress rebuilt.")
@@ -104,6 +111,30 @@ public class ChallengeAdminController {
     )
     public void redrawCurrentWeekChallenges() {
         selectionService.redrawCurrentWeekChallenges();
+        recalculationService.recalculateCurrentWeekProgress();
+    }
+
+    /**
+     * Draws today's daily challenge if the day has none yet, then rebuilds progress against it.
+     */
+    @PostMapping("/daily/selection")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+        summary = "Draw today's daily challenge",
+        description = """
+            Draws the daily challenge of the current day from the daily pool when the day has none
+            yet, then rebuilds the week's progress and ranking. Idempotent: a day keeps the
+            challenge it was given.
+
+            The scheduled synchronization draws it on its own within half an hour of midnight; this
+            route is for the operator who does not want to wait, or whose scheduler did not run.
+            """
+    )
+    @ApiResponse(responseCode = "204", description = "Today's challenge is drawn and progress rebuilt.")
+    @ApiResponse(responseCode = "401", description = "X-Admin-Key header is missing.")
+    @ApiResponse(responseCode = "403", description = "X-Admin-Key value is invalid.")
+    public void drawDailyChallenge() {
+        selectionService.selectDailyChallenge(weekCalendar.today());
         recalculationService.recalculateCurrentWeekProgress();
     }
 }

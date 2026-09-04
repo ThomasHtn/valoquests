@@ -57,10 +57,8 @@ class FlywayMigrationIntegrationTest extends PostgreSqlIntegrationTest {
         );
 
         assertThat(failedMigrations).isZero();
-        // 62 seeded by V3 once V14 removed the unreachable modes, plus the 14 weekly skill challenges
-        // V39 added. V28's 7 progression challenges are gone again, deleted by V38. Six of the 62 are
-        // disabled by V28 rather than deleted, so they still count here.
-        assertThat(challenges).isEqualTo(76);
+        // V41 replaces the whole catalogue: 20 weekly challenges per tier and a pool of 21 dailies.
+        assertThat(challenges).isEqualTo(121);
         assertThat(players).isGreaterThanOrEqualTo(6);
     }
 
@@ -122,6 +120,25 @@ class FlywayMigrationIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(countRows("weekly_player_score")).isZero();
         assertThat(countRows("synchronization")).isZero();
         assertThat(countRows("synchronization_player_result")).isZero();
+        assertThat(countRows("campaign")).isZero();
+        assertThat(countRows("campaign_player")).isZero();
+        assertThat(countRows("campaign_week")).isZero();
+        assertThat(countRows("campaign_daily_snapshot")).isZero();
+        assertThat(countRows("campaign_player_day")).isZero();
+    }
+
+    /**
+     * Verifies that the guardian catalogue carries the twenty-two entries a campaign draws from.
+     *
+     * <p>A campaign spends two minor weeks, six standard ones and two elite ones, so each class has
+     * to hold at least that many entries or the draw would have to repeat a guardian.
+     */
+    @Test
+    void shouldSeedTheGuardianCatalogue() {
+        assertThat(countRows("guardian")).isEqualTo(22);
+        assertThat(countGuardians("MINOR")).isEqualTo(6);
+        assertThat(countGuardians("STANDARD")).isEqualTo(10);
+        assertThat(countGuardians("ELITE")).isEqualTo(6);
     }
 
     /**
@@ -180,6 +197,20 @@ class FlywayMigrationIntegrationTest extends PostgreSqlIntegrationTest {
         return jdbcTemplate.queryForObject(
             "SELECT COUNT(*) FROM " + table,
             Integer.class
+        );
+    }
+
+    /**
+     * Counts the enabled guardians of one weight class.
+     *
+     * @param category weight class to count
+     * @return the number of entries
+     */
+    private Integer countGuardians(String category) {
+        return jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM guardian WHERE enabled = TRUE AND category = ?",
+            Integer.class,
+            category
         );
     }
 }

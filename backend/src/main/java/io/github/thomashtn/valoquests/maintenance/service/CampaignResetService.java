@@ -19,12 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
  * matches were deleted would report results nothing in the database can justify, so rebuilding from
  * an empty state is the only option that keeps the campaign traceable to stored matches.
  *
- * <p>Runs and colony snapshots go with them. A run is the ten-week window the campaign is bounded by
- * and a snapshot is a pure function of the matches, challenges and boss outcomes inside it, so both
- * describe history that this reset is deleting. The next rollover opens run 1 on the empty base.
+ * <p>Campaigns go with them. A campaign is a pure function of the matches and challenges inside its
+ * ten weeks, so it describes exactly the history this reset is deleting; an operator opens the next
+ * one on the empty base, and its calibration measures a squad that now has no history at all.
  *
- * <p>Deliberately kept: the player roster, the challenge catalogue and the boss catalogue. None of
- * them is derived from anything.
+ * <p>Deliberately kept: the player roster, the challenge catalogue and the guardian catalogue. None
+ * of them is derived from anything.
  */
 @Service
 public class CampaignResetService {
@@ -47,9 +47,11 @@ public class CampaignResetService {
             player_challenge_progress,
             weekly_player_score,
             weekly_challenge,
-            colony_daily_snapshot,
-            weekly_boss_encounter,
-            run,
+            campaign_player_day,
+            campaign_daily_snapshot,
+            campaign_week,
+            campaign_player,
+            campaign,
             player_season_synchronization,
             synchronization_player_result,
             synchronization,
@@ -125,6 +127,6 @@ public class CampaignResetService {
         // handed back unchanged — including the watermark this method just cleared.
         entityManager.clear();
 
-        LOGGER.warn("Campaign reset: every match, challenge, ranking and boss record was cleared");
+        LOGGER.warn("Campaign reset: every match, challenge, ranking and campaign record was cleared");
     }
 }

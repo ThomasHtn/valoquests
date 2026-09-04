@@ -492,7 +492,8 @@ class SynchronizationPipelineIntegrationTest
                     )
                 );
 
-        assertThat(progressByCode).hasSize(5);
+        // The five weekly challenges, plus the daily one the recalculation drew for today.
+        assertThat(progressByCode).hasSize(6);
 
         assertProgress(
             progressByCode.get("PIPELINE_KILLS"),
@@ -746,6 +747,7 @@ class SynchronizationPipelineIntegrationTest
         WeeklyChallenge weeklyChallenge = new WeeklyChallenge();
         weeklyChallenge.setWeekStart(WEEK_START);
         weeklyChallenge.setChallenge(challenge);
+        weeklyChallenge.setResolvedConditionsJson(challenge.getConditionsJson());
         weeklyChallenge.setSelectedAt(
             SYNCHRONIZATION_TIME.minusSeconds(3_600)
         );

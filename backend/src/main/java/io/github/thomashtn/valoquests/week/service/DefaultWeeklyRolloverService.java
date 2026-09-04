@@ -89,7 +89,7 @@ public class DefaultWeeklyRolloverService
      * @param weeklyChallengeRepository     weekly challenge repository
      * @param weeklyPlayerScoreRepository   weekly score repository
      * @param rankingRecalculationService   ranking recalculation service
-     * @param weeklyLifecycleCoordinator    coordinator opening a new week and closing a boss encounter
+     * @param weeklyLifecycleCoordinator    coordinator settling the past week and opening the new one
      * @param challengeRecalculationService challenge progress recalculation service
      * @param clock                         application clock
      * @param weekCalendar                  calendar resolving the current week
@@ -162,14 +162,6 @@ public class DefaultWeeklyRolloverService
         pendingWeekStarts.forEach(
             weekStart ->
                 finalizeWeek(weekStart, rolloverTime)
-        );
-
-        // Swept after the loop rather than inside it: every past fight is resolved, not only those of
-        // the weeks the pack query reported as open. Each one still lands after its own week's ranking
-        // was rebuilt above, which is what the chronology is replayed against.
-        weeklyLifecycleCoordinator.closePastBossEncounters(
-            currentWeekStart,
-            rolloverTime
         );
 
         weeklyLifecycleCoordinator.openWeek(

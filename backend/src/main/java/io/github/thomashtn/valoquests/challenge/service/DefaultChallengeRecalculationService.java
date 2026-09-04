@@ -4,12 +4,14 @@ import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressResu
 import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContext;
 import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContextFactory;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.ranking.service.RankingRecalculationService;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Recalculates the current weekly challenge progress from persisted matches.
+ * Recalculates challenge progress, weekly pack and daily draws alike, from persisted matches.
+ *
+ * <p>Every daily draw of the week is recalculated, not just today's: a match played late in the
+ * evening reaches the database after midnight, and the day it belongs to must still take it.
  */
 @Service
 public class DefaultChallengeRecalculationService
@@ -105,14 +110,17 @@ public class DefaultChallengeRecalculationService
     @Transactional
     public void recalculateCurrentWeekProgress() {
         LocalDate weekStart = weekCalendar.currentWeekStart();
+        LocalDate today = weekCalendar.today();
 
-        // Selected rather than loaded: the current pack is created when it does not exist yet.
-        List<WeeklyChallenge> weeklyChallenges =
-            weeklyChallengeSelectionService.selectWeekChallenges(
-                weekStart
-            );
+        // Selected rather than loaded: the current pack and today's challenge are created when they
+        // do not exist yet. Earlier days of the week are only loaded, never drawn after the fact.
+        List<WeeklyChallenge> selections = new ArrayList<>(
+            weeklyChallengeSelectionService.selectWeekChallenges(weekStart)
+        );
+        weeklyChallengeSelectionService.selectDailyChallenge(today);
+        selections.addAll(weeklyChallengeSelectionService.findDailyChallenges(weekStart, today));
 
-        recalculateWeek(weekStart, weeklyChallenges);
+        recalculateWeek(weekStart, selections);
 
         rankingRecalculationService.recalculateCurrentRanking();
     }
@@ -137,7 +145,7 @@ public class DefaultChallengeRecalculationService
      * Rebuilds every tracked player's progress against one week's challenge pack.
      *
      * @param weekStart        Monday identifying the recalculated week
-     * @param weeklyChallenges challenge pack assigned to that week
+     * @param weeklyChallenges every selection of that week, weekly pack and daily draws
      */
     private void recalculateWeek(
         LocalDate weekStart,
@@ -227,10 +235,12 @@ public class DefaultChallengeRecalculationService
     }
 
     /**
-     * Calculates and logs one weekly challenge result for a player.
+     * Calculates and logs one selection's result for a player.
+     *
+     * <p>A daily selection is evaluated over its own day, carved out of the week's context.
      *
      * @param player          player being recalculated
-     * @param weeklyChallenge evaluated weekly challenge
+     * @param weeklyChallenge evaluated selection
      * @param context         weekly player context
      * @return calculated progress result
      */
@@ -239,9 +249,19 @@ public class DefaultChallengeRecalculationService
         WeeklyChallenge weeklyChallenge,
         PlayerChallengeContext context
     ) {
+        PlayerChallengeContext periodContext = context;
+
+        if (weeklyChallenge.getCadence() == ChallengeCadence.DAILY) {
+            LocalDate day = weeklyChallenge.getDay();
+            periodContext = context.restrictedTo(
+                weekCalendar.startOfDay(day),
+                weekCalendar.endOfDay(day)
+            );
+        }
+
         ChallengeProgressResult result = calculationService.calculate(
-            weeklyChallenge.getChallenge(),
-            context
+            weeklyChallenge,
+            periodContext
         );
 
         LOGGER.debug(

@@ -4,14 +4,16 @@ import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressCalc
 import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressCalculatorRegistry;
 import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressResult;
 import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContext;
-import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
 
 /**
- * Coordinates the parsing and calculation of one challenge for one player.
+ * Coordinates the parsing and calculation of one selected challenge for one player.
+ *
+ * <p>Always evaluates the definition resolved at draw time, never the catalogue's base one.
  */
 @Service
 public class ChallengeProgressCalculationService {
@@ -41,19 +43,19 @@ public class ChallengeProgressCalculationService {
     }
 
     /**
-     * Calculates the progress of one player for one challenge.
+     * Calculates the progress of one player for one selected challenge.
      *
-     * @param challenge persisted challenge
-     * @param context   player challenge calculation context
+     * @param selection weekly or daily selection, with its resolved conditions
+     * @param context   player challenge calculation context over the selection's period
      * @return calculated challenge progress
      */
     public ChallengeProgressResult calculate(
-        Challenge challenge,
+        WeeklyChallenge selection,
         PlayerChallengeContext context
     ) {
         Objects.requireNonNull(
-            challenge,
-            "Challenge must not be null."
+            selection,
+            "Selection must not be null."
         );
 
         Objects.requireNonNull(
@@ -62,7 +64,7 @@ public class ChallengeProgressCalculationService {
         );
 
         ChallengeDefinition definition =
-            definitionParser.parse(challenge);
+            definitionParser.parse(selection);
 
         ChallengeProgressCalculator calculator =
             calculatorRegistry.getCalculator(

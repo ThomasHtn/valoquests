@@ -53,13 +53,13 @@ public class ChallengeController {
     @Operation(
         summary = "Get current weekly challenges",
         description = """
-            Returns the challenges selected for the active calendar week with collective completion
-            values. Individual player progress is deliberately excluded and is available from the
-            current ranking endpoint.
+            Returns the weekly pack of the active calendar week and the daily challenges drawn so
+            far this week, with collective completion values. Individual player progress is
+            deliberately excluded and is available from the current ranking endpoint.
             """
     )
     @ApiResponse(responseCode = "200", description = "Current challenges returned successfully.")
-        public CurrentChallengesResponse getCurrentChallenges() {
+    public CurrentChallengesResponse getCurrentChallenges() {
         return service.findCurrent();
     }
 
@@ -72,8 +72,9 @@ public class ChallengeController {
     @Operation(
         summary = "Get the challenge catalogue",
         description = """
-            Returns every challenge eligible for weekly selection, with what each is always worth in
-            damage and materials — outside of any one week's draw, unlike `/current`.
+            Returns every enabled challenge, weekly tiers and daily pool, with its target resolved
+            against the calibration in force and what completing it is worth this week — outside of
+            any one draw, unlike `/current`.
             """
     )
     @ApiResponse(responseCode = "200", description = "Challenge catalogue returned successfully.")

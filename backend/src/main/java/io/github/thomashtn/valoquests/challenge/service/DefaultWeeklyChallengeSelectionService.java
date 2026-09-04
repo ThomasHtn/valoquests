@@ -4,6 +4,7 @@ import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressCalc
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.exception.WeeklyChallengeSelectionException;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
@@ -18,12 +19,14 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.ToLongFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -40,6 +43,9 @@ import org.springframework.transaction.annotation.Transactional;
  * its own no-repeat cycle, reset once every one of its enabled challenges has been drawn. It is a
  * preference, not a constraint — a week that can only be filled by reusing a challenge is filled
  * that way rather than left incomplete.</p>
+ *
+ * <p>Days are drawn the same way from their own pool: one challenge per day, never one drawn in the
+ * twenty days before while the pool allows it, the least recently drawn otherwise.</p>
  */
 @Service
 public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSelectionService {
@@ -53,6 +59,14 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
      * Salt used by the scheduled draw, which must stay reproducible across restarts.
      */
     private static final long UNSALTED_DRAW = 0L;
+
+    /**
+     * Days before a draw during which a daily challenge is not drawn again.
+     *
+     * <p>Twenty, so that a challenge comes back at the earliest twenty-one days after its last
+     * draw: exactly the size of the daily pool, three weeks without a repeat.
+     */
+    private static final int DAILY_NO_REPEAT_WINDOW_DAYS = 20;
 
     /**
      * Orders persisted selections from the easiest to the hardest challenge.
@@ -117,6 +131,11 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     private final ChallengeProgressCalculatorRegistry calculatorRegistry;
 
     /**
+     * Factory resolving a drawn challenge's targets into a selection row.
+     */
+    private final ChallengeSelectionFactory selectionFactory;
+
+    /**
      * Application clock used for week resolution and selection timestamps.
      */
     private final Clock clock;
@@ -133,6 +152,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
      * @param weeklyChallengeRepository weekly challenge repository
      * @param progressRepository        player challenge progress repository
      * @param calculatorRegistry        challenge calculator registry
+     * @param selectionFactory          factory resolving drawn challenges into selections
      * @param clock                     application clock
      * @param weekCalendar              calendar resolving the current week
      */
@@ -141,6 +161,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         WeeklyChallengeRepository weeklyChallengeRepository,
         PlayerChallengeProgressRepository progressRepository,
         ChallengeProgressCalculatorRegistry calculatorRegistry,
+        ChallengeSelectionFactory selectionFactory,
         Clock clock,
         WeekCalendar weekCalendar
     ) {
@@ -148,6 +169,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         this.weeklyChallengeRepository = weeklyChallengeRepository;
         this.progressRepository = progressRepository;
         this.calculatorRegistry = calculatorRegistry;
+        this.selectionFactory = selectionFactory;
         this.clock = clock;
         this.weekCalendar = weekCalendar;
     }
@@ -185,8 +207,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     private List<WeeklyChallenge> selectWeekChallenges(LocalDate weekStart, long drawSalt) {
         validateWeekStart(weekStart);
 
-        List<WeeklyChallenge> existingSelections =
-            weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(weekStart);
+        List<WeeklyChallenge> existingSelections = findWeeklyPack(weekStart);
 
         validateExistingSelections(weekStart, existingSelections);
 
@@ -215,10 +236,10 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     }
 
     /**
-     * Retrieves the challenge pack a week already owns, creating nothing.
+     * Retrieves every selection a week already owns, creating nothing.
      *
      * @param weekStart Monday identifying the week
-     * @return the week's challenges, empty when it never had a pack
+     * @return the week's selections, empty when it never had any
      */
     @Override
     @Transactional(readOnly = true)
@@ -226,6 +247,129 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         validateWeekStart(weekStart);
 
         return weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(weekStart);
+    }
+
+    /**
+     * Retrieves the weekly pack of one week, without its daily draws.
+     *
+     * @param weekStart Monday identifying the week
+     * @return weekly selections ordered by identifier
+     */
+    private List<WeeklyChallenge> findWeeklyPack(LocalDate weekStart) {
+        return weeklyChallengeRepository.findAllByWeekStartAndCadenceOrderByIdAsc(
+            weekStart,
+            ChallengeCadence.WEEKLY
+        );
+    }
+
+    /**
+     * Returns the daily challenge of one day, drawing it when needed.
+     *
+     * <p>Deterministic like the weekly draw: the same day always orders the pool the same way, so a
+     * restart between the draw and its commit cannot hand the day two different challenges.
+     *
+     * @param day day to draw for
+     * @return the day's challenge
+     */
+    @Override
+    @Transactional
+    public WeeklyChallenge selectDailyChallenge(LocalDate day) {
+        Objects.requireNonNull(day, "Day must not be null.");
+
+        Optional<WeeklyChallenge> existing =
+            weeklyChallengeRepository.findByCadenceAndDay(ChallengeCadence.DAILY, day);
+
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
+        Challenge drawn = drawDailyChallenge(day);
+        WeeklyChallenge selection = weeklyChallengeRepository.save(
+            selectionFactory.daily(weekCalendar.weekStartOf(day), day, drawn, clock.instant())
+        );
+
+        LOGGER.info("Daily challenge {} drawn for {}.", drawn.getCode(), day);
+
+        return selection;
+    }
+
+    /**
+     * Retrieves the daily challenge of one day, drawing nothing.
+     *
+     * @param day day to look up
+     * @return the day's challenge when it was drawn
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<WeeklyChallenge> findDailyChallenge(LocalDate day) {
+        Objects.requireNonNull(day, "Day must not be null.");
+
+        return weeklyChallengeRepository.findByCadenceAndDay(ChallengeCadence.DAILY, day);
+    }
+
+    /**
+     * Retrieves the daily challenges of a range of days, drawing nothing.
+     *
+     * @param firstDay first day, inclusive
+     * @param lastDay  last day, inclusive
+     * @return drawn daily challenges, oldest first
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<WeeklyChallenge> findDailyChallenges(LocalDate firstDay, LocalDate lastDay) {
+        Objects.requireNonNull(firstDay, "First day must not be null.");
+        Objects.requireNonNull(lastDay, "Last day must not be null.");
+
+        return weeklyChallengeRepository.findAllByCadenceAndDayBetweenOrderByDayAsc(
+            ChallengeCadence.DAILY,
+            firstDay,
+            lastDay
+        );
+    }
+
+    /**
+     * Picks the challenge of one day from the daily pool.
+     *
+     * <p>Challenges drawn inside the no-repeat window are set aside first. When the whole pool sits
+     * inside it, because the pool shrank below the window, the least recently drawn one comes back:
+     * a day without a challenge would be a worse outcome than an early repeat.
+     *
+     * @param day day being drawn
+     * @return drawn challenge
+     */
+    private Challenge drawDailyChallenge(LocalDate day) {
+        List<Challenge> pool = challengeRepository
+            .findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.DAILY)
+            .stream()
+            .filter(challenge -> calculatorRegistry.supports(challenge.getProgressMode()))
+            .toList();
+
+        if (pool.isEmpty()) {
+            throw new WeeklyChallengeSelectionException(
+                "No daily challenge can be drawn for " + day + ": the daily pool is empty."
+            );
+        }
+
+        Map<Long, LocalDate> lastDrawnByChallengeId = new HashMap<>();
+
+        for (WeeklyChallenge recent : weeklyChallengeRepository.findAllByCadenceAndDayBetweenOrderByDayAsc(
+            ChallengeCadence.DAILY,
+            day.minusDays(DAILY_NO_REPEAT_WINDOW_DAYS),
+            day.minusDays(1)
+        )) {
+            lastDrawnByChallengeId.put(recent.getChallenge().getId(), recent.getDay());
+        }
+
+        ToLongFunction<Challenge> dayOrder = challenge -> selectionOrder(day, challenge, UNSALTED_DRAW);
+
+        return pool.stream()
+            .filter(challenge -> !lastDrawnByChallengeId.containsKey(challenge.getId()))
+            .min(Comparator.comparingLong(dayOrder))
+            .orElseGet(() -> pool.stream()
+                .min(Comparator
+                    .comparing((Challenge challenge) -> lastDrawnByChallengeId.get(challenge.getId()))
+                    .thenComparingLong(dayOrder))
+                .orElseThrow());
     }
 
     /**
@@ -245,16 +389,20 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     @Transactional
     public List<WeeklyChallenge> redrawCurrentWeekChallenges() {
         LocalDate weekStart = weekCalendar.currentWeekStart();
-        List<WeeklyChallenge> discarded =
-            weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(weekStart);
+        List<WeeklyChallenge> discarded = findWeeklyPack(weekStart);
 
         validateRedrawable(weekStart, discarded);
 
         // Progress first: it references the pack. Loaded then deleted rather than through a derived
         // `deleteAllBy…`, which would make SpotBugs read the repository as mutable state everywhere.
+        // The week's daily draws and their progress are not part of the pack and stay.
         progressRepository.deleteAll(
             progressRepository
                 .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(weekStart)
+                .stream()
+                .filter(progress ->
+                    progress.getWeeklyChallenge().getCadence() == ChallengeCadence.WEEKLY)
+                .toList()
         );
         weeklyChallengeRepository.deleteAll(discarded);
         weeklyChallengeRepository.flush();
@@ -401,7 +549,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
             new EnumMap<>(ChallengeDifficulty.class);
 
         for (WeeklyChallenge selection : weeklyChallengeRepository
-            .findAllByWeekStartLessThanOrderByWeekStartAsc(weekStart)) {
+            .findAllByCadenceAndWeekStartLessThanOrderByWeekStartAsc(ChallengeCadence.WEEKLY, weekStart)) {
 
             Challenge challenge = selection.getChallenge();
             ChallengeDifficulty difficulty = challenge.getDifficulty();
@@ -444,7 +592,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
             candidatesByDifficulty.put(difficulty, new ArrayList<>());
         }
 
-        challengeRepository.findAllByEnabledTrueOrderByIdAsc()
+        challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY)
             .stream()
             .filter(challenge -> calculatorRegistry.supports(challenge.getProgressMode()))
             .sorted(Comparator.comparingLong(challenge -> selectionOrder(weekStart, challenge, drawSalt)))
@@ -559,28 +707,8 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         Instant selectionTime
     ) {
         return challenges.stream()
-            .map(challenge -> createWeeklyChallenge(weekStart, challenge, selectionTime))
+            .map(challenge -> selectionFactory.weekly(weekStart, challenge, selectionTime))
             .toList();
-    }
-
-    /**
-     * Creates one weekly challenge association.
-     *
-     * @param weekStart     selected week
-     * @param challenge     selected catalogue challenge
-     * @param selectionTime selection timestamp
-     * @return new weekly challenge
-     */
-    private WeeklyChallenge createWeeklyChallenge(
-        LocalDate weekStart,
-        Challenge challenge,
-        Instant selectionTime
-    ) {
-        WeeklyChallenge weeklyChallenge = new WeeklyChallenge();
-        weeklyChallenge.setWeekStart(weekStart);
-        weeklyChallenge.setChallenge(challenge);
-        weeklyChallenge.setSelectedAt(selectionTime);
-        return weeklyChallenge;
     }
 
     /**
@@ -624,9 +752,9 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     }
 
     /**
-     * Produces a stable weekly order for one challenge.
+     * Produces a stable order for one challenge on one draw day, a Monday for the weekly pack.
      *
-     * <p>The week has to be mixed into every candidate's value non-additively. {@code Objects.hash}
+     * <p>The day has to be mixed into every candidate's value non-additively. {@code Objects.hash}
      * only adds a shared week term to each candidate, which shifts them all equally and leaves the
      * sorted order untouched: every week then drew the exact same pack.
      *
@@ -634,15 +762,15 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
      * by every candidate, so only the avalanche below turns it into a different order. A redraw
      * that added it after diffusion would shift the whole tier equally and draw the same pack.
      *
-     * @param weekStart selected week
+     * @param drawDay   day identifying the draw
      * @param challenge challenge candidate
      * @param drawSalt  salt separating a manual redraw from the week's scheduled draw
      * @return deterministic ordering value
      */
-    private long selectionOrder(LocalDate weekStart, Challenge challenge, long drawSalt) {
+    private long selectionOrder(LocalDate drawDay, Challenge challenge, long drawSalt) {
         long challengeSeed = Objects.hash(challenge.getId(), challenge.getCode());
 
-        return avalanche(weekStart.toEpochDay() * WEEK_SEED_MULTIPLIER + challengeSeed + drawSalt);
+        return avalanche(drawDay.toEpochDay() * WEEK_SEED_MULTIPLIER + challengeSeed + drawSalt);
     }
 
     /**

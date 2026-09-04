@@ -64,4 +64,19 @@ public interface PlayerChallengeProgressRepository
         LocalDate weekStart
     );
 
+
+    /**
+     * Returns every completed progress row whose week falls inside a range.
+     *
+     * <p>The campaign replay's only reading of the challenges: what each operator validated, over
+     * the whole campaign, in one query. Incomplete rows are left out because they pay nothing.
+     *
+     * @param firstWeekStart first Monday of the range, inclusive
+     * @param lastWeekStart  last Monday of the range, inclusive
+     * @return the completed rows, oldest identifier first
+     */
+    List<PlayerChallengeProgress> findAllByCompletedTrueAndWeeklyChallengeWeekStartBetweenOrderByIdAsc(
+        LocalDate firstWeekStart,
+        LocalDate lastWeekStart
+    );
 }

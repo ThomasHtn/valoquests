@@ -39,11 +39,14 @@ import java.util.List;
  * @param roundsPlayed             rounds used to normalize per-round statistics
  * @param mvp                      whether the player earned the match MVP designation
  * @param competitiveTier          tier the player held for this match
- * @param valoquestsDamage         damage this match dealt to its week's boss, after the day's
- *     diminishing returns; {@code 0} for a match the ruleset does not value
+ * @param valoquestsDamage         damage this match dealt to the guardian, after both multipliers;
+ *     {@code 0} for a match the ruleset does not value
  * @param damageCoefficientPercent share of its base damage the match kept, {@code 100} for a day's
  *     best games and lower once the day's ladder starts reducing them; {@code 0} for an unvalued
  *     match, which never enters that ladder
+ * @param streakBonusPercent       bonus the player's run of consecutive days added to this match
+ * @param food                     food share of the damage
+ * @param components               components share of the damage
  * @param teammates                every other tracked player found in the same match, on either team
  */
 @Schema(description = "Full detail of one player-centric match.")
@@ -74,6 +77,9 @@ public record MatchDetailResponse(
     CompetitiveTier competitiveTier,
     int valoquestsDamage,
     int damageCoefficientPercent,
+    int streakBonusPercent,
+    int food,
+    int components,
     List<MatchTeammateResponse> teammates
 ) {
 

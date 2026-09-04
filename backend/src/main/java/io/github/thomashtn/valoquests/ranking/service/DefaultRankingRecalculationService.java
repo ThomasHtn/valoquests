@@ -272,6 +272,11 @@ public class DefaultRankingRecalculationService
             ChallengeDifficulty difficulty =
                 progress.getWeeklyChallenge().getChallenge().getDifficulty();
 
+            // Legacy v1 barème: daily draws carry no difficulty and are priced by the v2 ranking.
+            if (difficulty == null) {
+                continue;
+            }
+
             int challengeDamage = ruleset.challengeDamage(difficulty);
 
             int teamBonus = ruleset.challengeTeamBonus(

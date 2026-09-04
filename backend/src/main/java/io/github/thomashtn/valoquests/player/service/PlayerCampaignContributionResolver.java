@@ -1,86 +1,46 @@
 package io.github.thomashtn.valoquests.player.service;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
-import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
-import java.time.LocalDate;
-import java.util.Optional;
+import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Decides whether a player took part in the campaign, and therefore whether removing it would
+ * Decides whether a player took part in a campaign, and therefore whether deleting them would
  * rewrite history.
  *
- * <p>Boss damage is not stored: it is replayed from the matches of a week by
- * {@code BossChronologyService}. Asking the exact question — "did this player's matches move a boss
- * health bar" — would mean replaying every finalized week to answer a delete request, so the
- * question asked here is the cheap superset: does the player have a match from the moment the
- * campaign started.
+ * <p>One question, and it is exact: is this player on a campaign's frozen roster. A roster is
+ * copied at opening and never changes, so membership is the whole of what a campaign owes a player
+ * — its guardians were sized on their presence, and its base was fed by their matches.
  *
- * <p>The imprecision is one-directional and deliberate. A match falling in a week that has no boss
- * encounter counts as a contribution although it dealt no damage, so a player may be archived where
- * a deletion would have been safe. That is the error worth making: archiving is reversible, and a
- * deletion that removes a player a finalized week still names is not.
+ * <p>Deliberately not "did they play a match during a campaign". A roster member who never played a
+ * single game still counted: they were a denominator. Archiving is reversible; deleting a player a
+ * settled week was sized on is not.
  */
 @Service
 public class PlayerCampaignContributionResolver {
 
     /**
-     * Repository used to locate the campaign's first week and boss finishers.
+     * Repository holding every campaign's frozen roster.
      */
-    private final WeeklyBossEncounterRepository bossEncounterRepository;
-
-    /**
-     * Repository used to look for matches played since the campaign started.
-     */
-    private final PlayerMatchRepository playerMatchRepository;
-
-    /**
-     * Calendar resolving a week's instant bounds.
-     */
-    private final WeekCalendar weekCalendar;
+    private final CampaignPlayerRepository campaignPlayerRepository;
 
     /**
      * Creates the campaign contribution resolver.
      *
-     * @param bossEncounterRepository weekly boss encounter repository
-     * @param playerMatchRepository   player match repository
-     * @param weekCalendar            week calendar
+     * @param campaignPlayerRepository campaign roster repository
      */
-    @SuppressFBWarnings(
-        value = "EI_EXPOSE_REP2",
-        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
-    )
-    public PlayerCampaignContributionResolver(
-        WeeklyBossEncounterRepository bossEncounterRepository,
-        PlayerMatchRepository playerMatchRepository,
-        WeekCalendar weekCalendar
-    ) {
-        this.bossEncounterRepository = bossEncounterRepository;
-        this.playerMatchRepository = playerMatchRepository;
-        this.weekCalendar = weekCalendar;
+    public PlayerCampaignContributionResolver(CampaignPlayerRepository campaignPlayerRepository) {
+        this.campaignPlayerRepository = campaignPlayerRepository;
     }
 
     /**
-     * Determines whether a player contributed to the campaign.
+     * Determines whether a player contributed to a campaign.
      *
      * @param playerId tracked player identifier
-     * @return {@code true} when finalized campaign data may depend on the player
+     * @return {@code true} when a campaign froze the player into its roster
      */
     @Transactional(readOnly = true)
     public boolean hasContributed(long playerId) {
-        if (bossEncounterRepository.existsByDefeatedByPlayerId(playerId)) {
-            return true;
-        }
-
-        Optional<LocalDate> campaignStart = bossEncounterRepository.findEarliestWeekStart();
-
-        return campaignStart
-            .map(weekCalendar::startOf)
-            .map(start -> playerMatchRepository
-                .existsByPlayerIdAndMatchStartedAtGreaterThanEqual(playerId, start))
-            .orElse(false);
+        return campaignPlayerRepository.existsByPlayerId(playerId);
     }
 }

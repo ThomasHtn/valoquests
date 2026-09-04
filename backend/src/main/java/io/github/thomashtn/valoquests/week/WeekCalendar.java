@@ -155,6 +155,30 @@ public final class WeekCalendar {
     }
 
     /**
+     * Returns the inclusive instant a calendar day begins at.
+     *
+     * @param day day of the project's zone, must not be {@code null}
+     * @return first instant belonging to the day
+     */
+    public Instant startOfDay(LocalDate day) {
+        Objects.requireNonNull(day, "day must not be null");
+
+        return day.atStartOfDay(zone).toInstant();
+    }
+
+    /**
+     * Returns the exclusive instant a calendar day ends at, the following day's start.
+     *
+     * @param day day of the project's zone, must not be {@code null}
+     * @return first instant no longer belonging to the day
+     */
+    public Instant endOfDay(LocalDate day) {
+        Objects.requireNonNull(day, "day must not be null");
+
+        return day.plusDays(1).atStartOfDay(zone).toInstant();
+    }
+
+    /**
      * Determines whether a date identifies a week, meaning it is a Monday.
      *
      * @param weekStart date to check, must not be {@code null}

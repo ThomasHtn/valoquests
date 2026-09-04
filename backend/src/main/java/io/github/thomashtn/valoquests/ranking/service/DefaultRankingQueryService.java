@@ -323,7 +323,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
         PlayerChallengeProgress progress
     ) {
         ChallengeDefinition definition = definitionParser.parse(
-            progress.getWeeklyChallenge().getChallenge()
+            progress.getWeeklyChallenge()
         );
         String metric = definition.conditions().stream()
             .map(condition -> condition.metric().name())

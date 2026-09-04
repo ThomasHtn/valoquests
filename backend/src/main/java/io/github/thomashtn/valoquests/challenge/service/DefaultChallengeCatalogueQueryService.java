@@ -2,16 +2,13 @@ package io.github.thomashtn.valoquests.challenge.service;
 
 import io.github.thomashtn.valoquests.challenge.dto.ChallengeCatalogueResponse;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
-import io.github.thomashtn.valoquests.colony.ColonyRuleset;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import java.math.BigDecimal;
+import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,117 +25,109 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
     private final ChallengeRepository challengeRepository;
 
     /**
-     * Parser used to expose typed challenge-definition values.
+     * Parser used to read base definitions.
      */
     private final ChallengeDefinitionParser definitionParser;
 
     /**
-     * Barèmes saying what a challenge of each difficulty is worth.
+     * Resolver scaling base targets to the calibration in force.
+     */
+    private final ChallengeTargetResolver targetResolver;
+
+    /**
+     * Barème saying what a challenge of each weight is worth.
      */
     private final ScoringRuleset ruleset;
 
     /**
-     * Calibration saying what a challenge of each difficulty hands the colony.
-     *
-     * <p>Read here rather than derived by the client, for the same reason
-     * {@link DefaultChallengeQueryService} reads it: the colony prices a challenge from the very
-     * damage this class already advertises, and a client doing that division itself would carry a
-     * second copy of the rule.
+     * Source of the calibration in force this week.
      */
-    private final ColonyRuleset colonyRuleset;
+    private final ChallengeCalibrationSource calibrationSource;
+
+    /**
+     * Calendar resolving the current week.
+     */
+    private final WeekCalendar weekCalendar;
 
     /**
      * Creates the challenge-catalogue query service.
      *
      * @param challengeRepository challenge catalogue repository
      * @param definitionParser    challenge-definition parser
-     * @param ruleset              scoring ruleset
-     * @param colonyRuleset        colony ruleset pricing a challenge in materials
+     * @param targetResolver      target resolver
+     * @param ruleset             scoring ruleset
+     * @param calibrationSource   calibration source
+     * @param weekCalendar        calendar resolving the current week
      */
     public DefaultChallengeCatalogueQueryService(
         ChallengeRepository challengeRepository,
         ChallengeDefinitionParser definitionParser,
+        ChallengeTargetResolver targetResolver,
         ScoringRuleset ruleset,
-        ColonyRuleset colonyRuleset
+        ChallengeCalibrationSource calibrationSource,
+        WeekCalendar weekCalendar
     ) {
         this.challengeRepository = challengeRepository;
         this.definitionParser = definitionParser;
+        this.targetResolver = targetResolver;
         this.ruleset = ruleset;
-        this.colonyRuleset = colonyRuleset;
+        this.calibrationSource = calibrationSource;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
-     * Returns every challenge eligible for weekly selection, independent of any one week's draw.
+     * Returns every enabled challenge, as it would be drawn this week.
      *
-     * <p>Damage and materials are resolved the same way {@link DefaultChallengeQueryService}
-     * resolves them for a drawn week — from the difficulty alone through the rulesets, never
-     * stored on the challenge itself — so a catalogue entry and that same challenge once drawn
-     * always agree.
+     * <p>Targets are resolved against the calibration in force the same way a draw resolves them,
+     * so a catalogue entry and that same challenge once drawn this week agree. A challenge drawn
+     * in a past campaign keeps the targets it was drawn with; only the catalogue moves.
      *
      * @return the enabled challenge catalogue, ordered by identifier
      */
     @Override
     public ChallengeCatalogueResponse findCatalogue() {
+        ChallengeCalibration calibration = calibrationSource.forWeek(weekCalendar.currentWeekStart());
+
         List<ChallengeCatalogueResponse.ChallengeCatalogueEntry> entries = challengeRepository
             .findAllByEnabledTrueOrderByIdAsc()
             .stream()
-            .map(this::toCatalogueEntry)
+            .map(challenge -> toCatalogueEntry(challenge, calibration))
             .toList();
 
-        return new ChallengeCatalogueResponse(entries);
+        return new ChallengeCatalogueResponse(calibration.reference(), entries);
     }
 
     /**
      * Converts one catalogue challenge into an API response.
      *
-     * @param challenge catalogue challenge to convert
+     * @param challenge   catalogue challenge to convert
+     * @param calibration calibration in force
      * @return catalogue entry
      */
-    private ChallengeCatalogueResponse.ChallengeCatalogueEntry toCatalogueEntry(Challenge challenge) {
-        ChallengeDefinition definition = definitionParser.parse(challenge);
-        ChallengeDifficulty difficulty = challenge.getDifficulty();
+    private ChallengeCatalogueResponse.ChallengeCatalogueEntry toCatalogueEntry(
+        Challenge challenge,
+        ChallengeCalibration calibration
+    ) {
+        ChallengeDefinition definition = targetResolver.resolve(
+            definitionParser.parse(challenge),
+            challenge.getCadence(),
+            challenge.getDifficulty(),
+            calibration.scaling()
+        );
+        double weight = ruleset.challengeWeight(challenge.getCadence(), challenge.getDifficulty());
 
         return new ChallengeCatalogueResponse.ChallengeCatalogueEntry(
             challenge.getId(),
+            challenge.getCode(),
             challenge.getName(),
             challenge.getDescription(),
-            difficulty,
-            resolveMetricLabel(definition),
-            resolveTargetValue(definition),
-            ruleset.challengeDamage(difficulty),
-            colonyRuleset.materialsForChallenge(difficulty)
+            challenge.getCadence(),
+            challenge.getDifficulty(),
+            definition.isCompetitiveOnly(),
+            ChallengeMetricLabels.of(definition),
+            definition.progressTarget(),
+            ruleset.challengeSurvivors(calibration.reference(), weight, calibration.weekIndex()),
+            ruleset.challengeRankingPoints(calibration.reference(), weight)
         );
-    }
-
-    /**
-     * Builds the metric label exposed by the endpoint.
-     *
-     * @param definition parsed challenge definition
-     * @return distinct metric names joined in definition order
-     */
-    private String resolveMetricLabel(ChallengeDefinition definition) {
-        // Mirrors DefaultChallengeQueryService#resolveMetricLabel: a progression challenge and an
-        // absolute one can share a metric while asking opposite things, and the suffix is what
-        // lets the client tell those two chips apart.
-        String suffix = definition.progressMode() == ProgressMode.BASELINE ? "_PROGRESS" : "";
-
-        return definition.conditions().stream()
-            .map(condition -> condition.metric().name() + suffix)
-            .distinct()
-            .collect(Collectors.joining(" + "));
-    }
-
-    /**
-     * Resolves the target displayed for a catalogue entry.
-     *
-     * @param definition parsed challenge definition
-     * @return target value for a simple challenge, or {@code null} for a composite one — the
-     * catalogue has no week's progress rows to fall back on the way the current-week endpoint does
-     * for a drawn challenge
-     */
-    private BigDecimal resolveTargetValue(ChallengeDefinition definition) {
-        return definition.conditions().size() == 1
-            ? definition.singleCondition().target()
-            : null;
     }
 }

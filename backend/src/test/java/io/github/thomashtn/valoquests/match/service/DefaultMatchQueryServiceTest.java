@@ -21,9 +21,9 @@ import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
-import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver;
-import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver.MatchDamage;
+import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
+import io.github.thomashtn.valoquests.scoring.model.ValuedMatch;
+import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
 import io.github.thomashtn.valoquests.shared.exception.InvalidRequestException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
@@ -70,17 +70,14 @@ class DefaultMatchQueryServiceTest {
     private WeekCalendar weekCalendar;
 
     @Mock
-    private WeeklyMatchDamageResolver damageResolver;
-
-    @Mock
-    private ScoringRuleset ruleset;
+    private DailyOutputReader dailyOutputReader;
 
     private DefaultMatchQueryService service;
 
     @BeforeEach
     void setUp() {
         service = new DefaultMatchQueryService(
-            playerRepository, playerMatchRepository, weekCalendar, damageResolver, ruleset
+            playerRepository, playerMatchRepository, weekCalendar, dailyOutputReader
         );
     }
 
@@ -97,10 +94,8 @@ class DefaultMatchQueryServiceTest {
         )).thenReturn(new PageImpl<>(matches, PageRequest.of(0, 10), matches.size()));
 
         if (!matches.isEmpty()) {
-            when(weekCalendar.weekStartOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
-            when(playerMatchRepository.findForChallengePeriod(any(), any(), any()))
-                .thenReturn(List.of());
-            when(damageResolver.resolveDetailed(any(), any())).thenReturn(Map.of());
+            when(weekCalendar.dayOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
+            when(dailyOutputReader.readPlayer(eq(PLAYER_ID), any(), any())).thenReturn(noOutput());
         }
     }
 
@@ -219,23 +214,18 @@ class DefaultMatchQueryServiceTest {
 
     @Test
     @DisplayName("prices a match against its whole week rather than against the page it landed on")
-    void shouldPriceAMatchAgainstItsWholeWeek() {
+    void shouldPriceAMatchAgainstItsWholeDay() {
         PlayerMatch pageMatch = match(20, 8, 4, 30, 60, 10, "Red");
-        Instant periodStart = Instant.parse("2026-07-13T00:00:00Z");
-        Instant periodEnd = Instant.parse("2026-07-20T00:00:00Z");
+        LocalDate day = FIXTURE_WEEK_START.plusDays(2);
 
         when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
         // One match per page: whatever rank this one holds within its day, the page it shipped on
         // cannot say, since the rest of the day is on other pages entirely.
         when(playerMatchRepository.findHistory(any(), any(), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(pageMatch), PageRequest.of(0, 1), 11));
-        when(weekCalendar.weekStartOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
-        when(weekCalendar.startOf(FIXTURE_WEEK_START)).thenReturn(periodStart);
-        when(weekCalendar.endOf(FIXTURE_WEEK_START)).thenReturn(periodEnd);
-        when(playerMatchRepository.findForChallengePeriod(PLAYER_ID, periodStart, periodEnd))
-            .thenReturn(List.of(pageMatch));
-        when(damageResolver.resolveDetailed(List.of(pageMatch), ruleset))
-            .thenReturn(Map.of(100L, new MatchDamage(125, 25)));
+        when(weekCalendar.dayOf(any(Instant.class))).thenReturn(day);
+        when(dailyOutputReader.readPlayer(PLAYER_ID, day, day))
+            .thenReturn(outputOf(valued(100L, day, 125, 25, 4, 38, 87)));
 
         MatchResponse response = service.findByPlayer(
             PLAYER_ID, 0, 1, MatchHistoryFilter.NONE
@@ -243,11 +233,36 @@ class DefaultMatchQueryServiceTest {
 
         assertThat(response.valoquestsDamage()).isEqualTo(125);
         assertThat(response.damageCoefficientPercent()).isEqualTo(25);
-        verify(playerMatchRepository).findForChallengePeriod(PLAYER_ID, periodStart, periodEnd);
+        assertThat(response.streakBonusPercent()).isEqualTo(4);
+        assertThat(response.food()).isEqualTo(38);
+        assertThat(response.components()).isEqualTo(87);
+        verify(dailyOutputReader).readPlayer(PLAYER_ID, day, day);
     }
 
     @Test
-    @DisplayName("reports no damage for a match the ruleset never priced")
+    @DisplayName("reads the whole span of days a page touches in one go")
+    void shouldReadTheWholeSpanOfDaysAPageTouches() {
+        PlayerMatch newer = match(20, 8, 4, 30, 60, 10, "Red");
+        PlayerMatch older = match(10, 10, 0, 0, 0, 0, "Red");
+        older.setId(101L);
+        older.getMatch().setStartedAt(Instant.parse("2026-07-14T20:00:00Z"));
+        LocalDate olderDay = FIXTURE_WEEK_START.plusDays(1);
+        LocalDate newerDay = FIXTURE_WEEK_START.plusDays(3);
+
+        when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
+        when(playerMatchRepository.findHistory(any(), any(), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(newer, older), PageRequest.of(0, 2), 2));
+        when(weekCalendar.dayOf(newer.getMatch().getStartedAt())).thenReturn(newerDay);
+        when(weekCalendar.dayOf(older.getMatch().getStartedAt())).thenReturn(olderDay);
+        when(dailyOutputReader.readPlayer(PLAYER_ID, olderDay, newerDay)).thenReturn(noOutput());
+
+        service.findByPlayer(PLAYER_ID, 0, 2, MatchHistoryFilter.NONE);
+
+        verify(dailyOutputReader).readPlayer(PLAYER_ID, olderDay, newerDay);
+    }
+
+    @Test
+    @DisplayName("reports no damage for a match the reader never valued")
     void shouldReportNoDamageForAnUnpricedMatch() {
         given(List.of(match(10, 10, 0, 0, 0, 0, "Red")));
 
@@ -329,11 +344,9 @@ class DefaultMatchQueryServiceTest {
         when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
         when(playerMatchRepository.findByIdAndPlayerId(100L, PLAYER_ID))
             .thenReturn(Optional.of(playerMatch));
-        when(weekCalendar.weekStartOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
-        when(playerMatchRepository.findForChallengePeriod(any(), any(), any()))
-            .thenReturn(List.of(playerMatch));
-        when(damageResolver.resolveDetailed(List.of(playerMatch), ruleset))
-            .thenReturn(Map.of(100L, new MatchDamage(125, 25)));
+        when(weekCalendar.dayOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
+        when(dailyOutputReader.readPlayer(PLAYER_ID, FIXTURE_WEEK_START, FIXTURE_WEEK_START))
+            .thenReturn(outputOf(valued(100L, FIXTURE_WEEK_START, 125, 25, 4, 38, 87)));
         when(playerMatchRepository.findByMatchIdAndPlayerIdNot(any(), eq(PLAYER_ID)))
             .thenReturn(List.of());
 
@@ -351,6 +364,9 @@ class DefaultMatchQueryServiceTest {
         assertThat(response.headshotPercentage()).isEqualByComparingTo("30.00");
         assertThat(response.valoquestsDamage()).isEqualTo(125);
         assertThat(response.damageCoefficientPercent()).isEqualTo(25);
+        assertThat(response.streakBonusPercent()).isEqualTo(4);
+        assertThat(response.food()).isEqualTo(38);
+        assertThat(response.components()).isEqualTo(87);
         assertThat(response.teammates()).isEmpty();
     }
 
@@ -379,10 +395,8 @@ class DefaultMatchQueryServiceTest {
         when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
         when(playerMatchRepository.findByIdAndPlayerId(100L, PLAYER_ID))
             .thenReturn(Optional.of(playerMatch));
-        when(weekCalendar.weekStartOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
-        when(playerMatchRepository.findForChallengePeriod(any(), any(), any()))
-            .thenReturn(List.of(playerMatch));
-        when(damageResolver.resolveDetailed(any(), any())).thenReturn(Map.of());
+        when(weekCalendar.dayOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
+        when(dailyOutputReader.readPlayer(eq(PLAYER_ID), any(), any())).thenReturn(noOutput());
         when(playerMatchRepository.findByMatchIdAndPlayerIdNot(any(), eq(PLAYER_ID)))
             .thenReturn(List.of(ally, opponent));
 
@@ -463,5 +477,51 @@ class DefaultMatchQueryServiceTest {
         player.setId(PLAYER_ID);
         player.setDisplayName("natank");
         return player;
+    }
+
+    /**
+     * A reading in which nothing was valued.
+     *
+     * @return empty output
+     */
+    private static DailyOutput noOutput() {
+        return new DailyOutput(Map.of(), Map.of(), List.of());
+    }
+
+    /**
+     * A reading holding the given valued matches and nothing else.
+     *
+     * @param matches valued matches
+     * @return output carrying them
+     */
+    private static DailyOutput outputOf(ValuedMatch... matches) {
+        return new DailyOutput(Map.of(), Map.of(), List.of(matches));
+    }
+
+    /**
+     * One valued match as the reader would report it.
+     *
+     * @param playerMatchId      player-match identifier
+     * @param day                day the match falls on
+     * @param damage             value after both multipliers
+     * @param coefficientPercent daily coefficient
+     * @param streakBonusPercent streak bonus
+     * @param food               food share
+     * @param components         components share
+     * @return valued match
+     */
+    private static ValuedMatch valued(
+        long playerMatchId,
+        LocalDate day,
+        int damage,
+        int coefficientPercent,
+        int streakBonusPercent,
+        int food,
+        int components
+    ) {
+        return new ValuedMatch(
+            playerMatchId, PLAYER_ID, Instant.parse("2026-07-15T20:00:00Z"), day, 500,
+            coefficientPercent, 3, streakBonusPercent, damage, food, components
+        );
     }
 }

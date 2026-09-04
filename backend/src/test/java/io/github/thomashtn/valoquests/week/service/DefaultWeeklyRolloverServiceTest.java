@@ -204,11 +204,6 @@ class DefaultWeeklyRolloverServiceTest {
                 CURRENT_WEEK_START
             );
 
-        verify(weeklyLifecycleCoordinator)
-            .closePastBossEncounters(
-                CURRENT_WEEK_START,
-                ROLLOVER_TIME
-            );
 
         assertThat(firstChallenge.getFinalizedAt())
             .isEqualTo(ROLLOVER_TIME);
@@ -270,11 +265,8 @@ class DefaultWeeklyRolloverServiceTest {
         catchUpOrder.verify(rankingRecalculationService)
             .recalculateWeek(PREVIOUS_WEEK_START);
 
-        // The fights are resolved once every caught-up week's ranking is rebuilt, and before the new
-        // week is opened: its boss is sized against what the fights just closed measured.
-        catchUpOrder.verify(weeklyLifecycleCoordinator)
-            .closePastBossEncounters(CURRENT_WEEK_START, ROLLOVER_TIME);
-
+        // The new week is opened once every caught-up week's ranking has been rebuilt: opening it
+        // settles the campaign week that just ended, against the rankings those passes just froze.
         catchUpOrder.verify(weeklyLifecycleCoordinator)
             .openWeek(CURRENT_WEEK_START);
 
@@ -324,11 +316,6 @@ class DefaultWeeklyRolloverServiceTest {
                 CURRENT_WEEK_START
             );
 
-        verify(weeklyLifecycleCoordinator)
-            .closePastBossEncounters(
-                CURRENT_WEEK_START,
-                ROLLOVER_TIME
-            );
     }
 
     /**

@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.exception.InvalidChallengeDefinitionException;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
@@ -155,6 +157,72 @@ class JacksonChallengeDefinitionParserTest {
         assertThatThrownBy(() -> parser.parse(challenge))
             .isInstanceOf(InvalidChallengeDefinitionException.class)
             .hasMessageContaining("positive occurrences value");
+    }
+
+    /**
+     * Verifies that a selection is parsed from its resolved conditions, not the catalogue's.
+     */
+    @Test
+    void shouldParseTheResolvedConditionsOfASelection() {
+        Challenge challenge = createChallenge(
+            ProgressMode.SUM,
+            "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":60,\"gameMode\":\"COMPETITIVE\"}]"
+        );
+        WeeklyChallenge selection = new WeeklyChallenge();
+        selection.setChallenge(challenge);
+        selection.setResolvedConditionsJson(
+            "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":135,\"gameMode\":\"COMPETITIVE\"}]"
+        );
+
+        var definition = parser.parse(selection);
+
+        assertThat(definition.progressMode()).isEqualTo(ProgressMode.SUM);
+        assertThat(definition.singleCondition().target()).isEqualByComparingTo(BigDecimal.valueOf(135));
+    }
+
+    /**
+     * Verifies that a selection without resolved conditions is rejected like a blank rule.
+     */
+    @Test
+    void shouldRejectASelectionWithoutResolvedConditions() {
+        WeeklyChallenge selection = new WeeklyChallenge();
+        selection.setChallenge(createChallenge(ProgressMode.SUM, "[]"));
+
+        assertThatThrownBy(() -> parser.parse(selection))
+            .isInstanceOf(InvalidChallengeDefinitionException.class)
+            .hasMessageContaining("must not be blank");
+    }
+
+    /**
+     * Verifies that written conditions read back identical, without null fields.
+     */
+    @Test
+    void shouldWriteConditionsThatReadBackIdentical() {
+        Challenge challenge = createChallenge(
+            ProgressMode.COUNT_MATCHES,
+            """
+                [
+                  {
+                    "metric": "KD",
+                    "operator": "GTE",
+                    "target": 1.2,
+                    "gameMode": "COMPETITIVE_OR_UNRATED",
+                    "occurrences": 6,
+                    "scope": "PER_MATCH"
+                  }
+                ]
+                """
+        );
+        List<?> conditions = parser.parse(challenge).conditions();
+
+        String json = parser.toJson(parser.parse(challenge).conditions());
+
+        assertThat(json).doesNotContain("null");
+        assertThat(json).contains("\"target\":1.2", "\"occurrences\":6", "\"scope\":\"PER_MATCH\"");
+
+        challenge.setConditionsJson(json);
+
+        assertThat(parser.parse(challenge).conditions()).isEqualTo(conditions);
     }
 
     /**

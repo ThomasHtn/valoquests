@@ -1,42 +1,52 @@
 package io.github.thomashtn.valoquests.challenge.dto;
 
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Exposes the full catalogue of enabled challenges, independent of any single week's draw.
+ * Exposes the full catalogue of enabled challenges, independent of any single draw.
+ *
+ * @param reference reference the targets and rewards below were resolved against
+ * @param challenges every enabled challenge, weekly tiers and daily pool alike
  */
-@Schema(description = "Every challenge eligible for weekly selection, outside of any one week's draw.")
+@Schema(description = "Every enabled challenge, weekly tiers and daily pool, outside of any one draw.")
 public record ChallengeCatalogueResponse(
 
+    int reference,
     List<ChallengeCatalogueEntry> challenges
 ) {
     /**
-     * Exposes one catalogue entry: what a challenge of this shape is always worth, regardless of
-     * whether or how many players have cleared it this week.
+     * Exposes one catalogue entry, as it would be drawn this week.
      *
-     * @param id          internal challenge identifier
-     * @param name        challenge name shown to players
-     * @param description challenge description shown to players
-     * @param difficulty  difficulty tier controlling the reward
-     * @param metric      metric the challenge measures
-     * @param targetValue value a player must reach to complete it, or {@code null} for a
-     *                    composite challenge with no single stored target
-     * @param damage      base damage awarded on completion, before the squad bonus
-     * @param materials   materials one player banks for the colony by validating it
+     * @param id              internal challenge identifier
+     * @param code            stable catalogue code
+     * @param name            challenge name shown to players
+     * @param description     challenge description shown to players
+     * @param cadence         whether the challenge covers a week or a day
+     * @param difficulty      difficulty tier, {@code null} for a daily challenge
+     * @param competitiveOnly whether only ranked matches count
+     * @param metric          metric the challenge measures
+     * @param targetValue     progress target resolved against the calibration in force, the base
+     *                        target outside any campaign
+     * @param survivors       survivors one player brings back by completing it this week
+     * @param rankingPoints   points one player earns in the weekly ranking by completing it
      */
     public record ChallengeCatalogueEntry(
 
         Long id,
+        String code,
         String name,
         String description,
+        ChallengeCadence cadence,
         ChallengeDifficulty difficulty,
+        boolean competitiveOnly,
         String metric,
         BigDecimal targetValue,
-        int damage,
-        int materials
+        int survivors,
+        int rankingPoints
     ) {
     }
 

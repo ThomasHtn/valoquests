@@ -183,9 +183,9 @@ class DefaultRankingQueryServiceTest {
             ));
         when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(WEEK_START))
             .thenReturn(List.of(days, kills));
-        when(definitionParser.parse(kills.getChallenge()))
+        when(definitionParser.parse(kills))
             .thenReturn(definition(ChallengeMetric.KILLS));
-        when(definitionParser.parse(days.getChallenge()))
+        when(definitionParser.parse(days))
             .thenReturn(definition(ChallengeMetric.PLAY_DAY));
 
         List<CurrentRankingResponse.ChallengeProgressResponse> progress =
@@ -219,7 +219,7 @@ class DefaultRankingQueryServiceTest {
             ));
         when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(WEEK_START))
             .thenReturn(List.of(composite));
-        when(definitionParser.parse(composite.getChallenge()))
+        when(definitionParser.parse(composite))
             .thenReturn(new ChallengeDefinition(
                 3,
                 ProgressMode.ALL,

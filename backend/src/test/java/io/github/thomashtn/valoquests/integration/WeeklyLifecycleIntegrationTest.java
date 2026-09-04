@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
@@ -230,7 +231,8 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(progressByPlayer).containsOnlyKeys(alpha.getId(), bravo.getId());
 
         Map<String, PlayerChallengeProgress> alphaProgress = progressByPlayer.get(alpha.getId());
-        assertThat(alphaProgress).hasSize(5);
+        // The five weekly challenges, plus the daily one the recalculation drew for today.
+        assertThat(alphaProgress).hasSize(6);
         assertCompleted(alphaProgress.get("LIFECYCLE_KILLS"), "50.0000");
         assertCompleted(alphaProgress.get("LIFECYCLE_DAMAGE"), "6000.0000");
         assertCompleted(alphaProgress.get("LIFECYCLE_WINS"), "2.0000");
@@ -238,7 +240,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         assertCompleted(alphaProgress.get("LIFECYCLE_PLAY_DAYS"), "4.0000");
 
         Map<String, PlayerChallengeProgress> bravoProgress = progressByPlayer.get(bravo.getId());
-        assertThat(bravoProgress).hasSize(5);
+        assertThat(bravoProgress).hasSize(6);
         assertCompleted(bravoProgress.get("LIFECYCLE_KILLS"), "50.0000");
         assertIncomplete(bravoProgress.get("LIFECYCLE_DAMAGE"), "3800.0000");
         assertIncomplete(bravoProgress.get("LIFECYCLE_WINS"), "1.0000");
@@ -272,8 +274,9 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
      */
     private void assertPreviousWeekFinalized(Player alpha, Player bravo) {
         List<WeeklyChallenge> challenges = loadChallenges(COMPETITION_WEEK_START);
+        // The weekly pack and the day's challenge are frozen together.
         assertThat(challenges)
-            .hasSize(5)
+            .hasSize(6)
             .allSatisfy(challenge ->
                 assertThat(challenge.getFinalizedAt()).isEqualTo(ROLLOVER_TIME)
             );
@@ -292,16 +295,20 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
      * @param bravo second tracked player
      */
     private void assertNextWeekCreated(Player alpha, Player bravo) {
+        // Six rows, not five: opening a week draws its five-difficulty pack and the Monday's own
+        // daily challenge, so the squad wakes up with something to do rather than with a page that
+        // only fills in at the first synchronization.
         List<WeeklyChallenge> challenges = loadChallenges(NEXT_WEEK_START);
 
         assertThat(challenges)
-            .hasSize(5)
+            .hasSize(6)
             .allSatisfy(challenge -> {
                 assertThat(challenge.getSelectedAt()).isEqualTo(ROLLOVER_TIME);
                 assertThat(challenge.getFinalizedAt()).isNull();
             });
 
         assertThat(challenges)
+            .filteredOn(challenge -> challenge.getCadence() == ChallengeCadence.WEEKLY)
             .extracting(challenge -> challenge.getChallenge().getDifficulty())
             .containsExactlyInAnyOrder(
                 ChallengeDifficulty.EASY,
@@ -310,6 +317,11 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
                 ChallengeDifficulty.HARD,
                 ChallengeDifficulty.VERY_HARD
             );
+
+        assertThat(challenges)
+            .filteredOn(challenge -> challenge.getCadence() == ChallengeCadence.DAILY)
+            .singleElement()
+            .satisfies(daily -> assertThat(daily.getDay()).isEqualTo(NEXT_WEEK_START));
 
         // The new week opens at zero rather than at nothing: without these rows every screen
         // reading the current ranking would show its empty state until the next synchronization.
@@ -544,6 +556,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         WeeklyChallenge weeklyChallenge = new WeeklyChallenge();
         weeklyChallenge.setWeekStart(COMPETITION_WEEK_START);
         weeklyChallenge.setChallenge(challenge);
+        weeklyChallenge.setResolvedConditionsJson(challenge.getConditionsJson());
         weeklyChallenge.setSelectedAt(CALCULATION_TIME.minusSeconds(3_600));
         return weeklyChallenge;
     }

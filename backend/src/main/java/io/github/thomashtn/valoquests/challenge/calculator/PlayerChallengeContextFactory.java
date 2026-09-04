@@ -14,19 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Builds challenge-calculation contexts from matches already persisted in the
  * application database.
+ *
+ * <p>Loads the week only. A day's context is carved out of the week's with
+ * {@link PlayerChallengeContext#restrictedTo(Instant, Instant)}, and no baseline window is loaded
+ * any more: the catalogue declares no baseline challenge, and four extra weeks of matches per
+ * player per recalculation bought nothing.
  */
 @Component
 public class PlayerChallengeContextFactory {
-
-    /**
-     * Number of weeks preceding the evaluated one that form a player's baseline.
-     *
-     * <p>Four weeks: short enough that improving on it means improving on current form rather than on
-     * a distant memory, long enough that one unusually good or bad week does not set the bar. Fixed
-     * rather than declared per challenge, so every progression challenge compares against the same
-     * window and two of them can never disagree on what a player's form was.
-     */
-    private static final int BASELINE_WEEKS = 4;
 
     /**
      * Repository used to read the player's persisted weekly matches.
@@ -90,22 +85,12 @@ public class PlayerChallengeContextFactory {
                 periodEnd
             );
 
-        // The baseline window stops where the evaluated week begins, so a player is never compared
-        // against matches they are still playing.
-        List<PlayerMatch> baselineMatches =
-            playerMatchRepository.findForChallengePeriod(
-                player.getId(),
-                weekCalendar.startOf(weekStart.minusWeeks(BASELINE_WEEKS)),
-                periodStart
-            );
-
         return new PlayerChallengeContext(
             player.getId(),
             weekStart,
             periodStart,
             periodEnd,
-            playerMatches,
-            baselineMatches
+            playerMatches
         );
     }
 }

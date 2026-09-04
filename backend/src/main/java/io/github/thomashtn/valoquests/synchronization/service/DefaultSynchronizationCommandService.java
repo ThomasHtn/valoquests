@@ -1,8 +1,8 @@
 package io.github.thomashtn.valoquests.synchronization.service;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
-import io.github.thomashtn.valoquests.colony.service.ColonyReplayService;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
@@ -84,9 +84,9 @@ public class DefaultSynchronizationCommandService
     private final ChallengeRecalculationService challengeRecalculationService;
 
     /**
-     * Service used to replay the colony after an import, so a day's gains show up the same day.
+     * Service used to replay the campaign after an import, so a day's gains show up the same day.
      */
-    private final ColonyReplayService colonyReplayService;
+    private final CampaignReplayService campaignReplayService;
 
     /**
      * Clock used to generate deterministic execution timestamps.
@@ -101,7 +101,7 @@ public class DefaultSynchronizationCommandService
      * @param synchronizationRepository        global execution repository
      * @param playerResultRepository           per-player result repository
      * @param challengeRecalculationService    challenge progress recalculation service
-     * @param colonyReplayService              colony replay service
+     * @param campaignReplayService            campaign replay service
      * @param clock                            application clock
      */
     public DefaultSynchronizationCommandService(
@@ -110,7 +110,7 @@ public class DefaultSynchronizationCommandService
         SynchronizationRepository synchronizationRepository,
         SynchronizationPlayerResultRepository playerResultRepository,
         ChallengeRecalculationService challengeRecalculationService,
-        ColonyReplayService colonyReplayService,
+        CampaignReplayService campaignReplayService,
         Clock clock
     ) {
         this.playerSynchronizationService = playerSynchronizationService;
@@ -118,7 +118,7 @@ public class DefaultSynchronizationCommandService
         this.synchronizationRepository = synchronizationRepository;
         this.playerResultRepository = playerResultRepository;
         this.challengeRecalculationService = challengeRecalculationService;
-        this.colonyReplayService = colonyReplayService;
+        this.campaignReplayService = campaignReplayService;
         this.clock = clock;
     }
 
@@ -299,26 +299,27 @@ public class DefaultSynchronizationCommandService
             );
         }
 
-        replayColony(matchesImported);
+        replayCampaign(matchesImported);
     }
 
     /**
-     * Replays the colony over the matches that were just imported.
+     * Replays the campaign over the matches that were just imported.
      *
-     * <p>Runs after the challenge recalculation because the colony reads the same week's rows, and this
-     * is what makes a day's gains show up on the day itself rather than at the next nightly tick.
+     * <p>Runs after the challenge recalculation because the campaign credits the wounded those
+     * challenges rescued, and this is what makes a day's gains show up on the day itself rather
+     * than at the next nightly tick.
      *
-     * <p>Caught and logged like the recalculation above: the replay is idempotent and the scheduled tick
-     * will redo it, so a stale colony must never fail a synchronization that did import matches.
+     * <p>Caught and logged like the recalculation above: the replay is idempotent and the scheduled
+     * tick will redo it, so a stale base must never fail a synchronization that did import matches.
      *
      * @param matchesImported number of matches imported by the execution
      */
-    private void replayColony(int matchesImported) {
+    private void replayCampaign(int matchesImported) {
         try {
-            colonyReplayService.replayCurrentRun();
+            campaignReplayService.replayRunningCampaign();
         } catch (RuntimeException exception) {
             LOGGER.error(
-                "Colony replay failed after importing {} match(es). The colony stays stale until the "
+                "Campaign replay failed after importing {} match(es). The base stays stale until the "
                     + "next synchronization or daily tick.",
                 matchesImported,
                 exception

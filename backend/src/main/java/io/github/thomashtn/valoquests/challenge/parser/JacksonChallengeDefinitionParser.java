@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.challenge.parser;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.exception.InvalidChallengeDefinitionException;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
@@ -64,9 +65,46 @@ public class JacksonChallengeDefinitionParser
             "Challenge must not be null."
         );
 
-        validateChallengeMetadata(challenge);
+        return parse(challenge, challenge.getConditionsJson());
+    }
 
-        List<ChallengeCondition> conditions = parseConditions(challenge);
+    /**
+     * Parses and validates the resolved definition stored on one selection.
+     *
+     * @param selection selection to parse
+     * @return typed resolved definition
+     */
+    @Override
+    public ChallengeDefinition parse(WeeklyChallenge selection) {
+        Objects.requireNonNull(selection, "Selection must not be null.");
+
+        return parse(selection.getChallenge(), selection.getResolvedConditionsJson());
+    }
+
+    /**
+     * Serializes resolved conditions.
+     *
+     * @param conditions resolved conditions
+     * @return JSON array
+     */
+    @Override
+    public String toJson(List<ChallengeCondition> conditions) {
+        Objects.requireNonNull(conditions, "Conditions must not be null.");
+
+        return objectMapper.writeValueAsString(conditions);
+    }
+
+    /**
+     * Parses one JSON rule against the challenge that owns it.
+     *
+     * @param challenge      challenge providing the schema version and progress mode
+     * @param conditionsJson JSON array to parse, base or resolved
+     * @return typed challenge definition
+     */
+    private ChallengeDefinition parse(Challenge challenge, String conditionsJson) {
+        validateChallengeMetadata(challenge, conditionsJson);
+
+        List<ChallengeCondition> conditions = parseConditions(challenge, conditionsJson);
 
         ChallengeDefinition definition = new ChallengeDefinition(
             challenge.getSchemaVersion(),
@@ -80,15 +118,16 @@ public class JacksonChallengeDefinitionParser
     }
 
     /**
-     * Deserializes the JSON array stored in the challenge entity.
+     * Deserializes one JSON condition array.
      *
-     * @param challenge challenge containing the JSON rule
+     * @param challenge      challenge owning the rule, for error messages
+     * @param conditionsJson JSON array to parse
      * @return parsed conditions
      */
-    private List<ChallengeCondition> parseConditions(Challenge challenge) {
+    private List<ChallengeCondition> parseConditions(Challenge challenge, String conditionsJson) {
         try {
             return objectMapper.readValue(
-                challenge.getConditionsJson(),
+                conditionsJson,
                 CONDITION_LIST_TYPE
             );
         } catch (JacksonException exception) {
@@ -103,9 +142,10 @@ public class JacksonChallengeDefinitionParser
     /**
      * Validates fields stored outside the JSON condition document.
      *
-     * @param challenge challenge being validated
+     * @param challenge      challenge being validated
+     * @param conditionsJson JSON array about to be parsed
      */
-    private void validateChallengeMetadata(Challenge challenge) {
+    private void validateChallengeMetadata(Challenge challenge, String conditionsJson) {
         if (challenge.getCode() == null || challenge.getCode().isBlank()) {
             throw invalidDefinition(
                 challenge,
@@ -131,8 +171,7 @@ public class JacksonChallengeDefinitionParser
             );
         }
 
-        if (challenge.getConditionsJson() == null
-            || challenge.getConditionsJson().isBlank()) {
+        if (conditionsJson == null || conditionsJson.isBlank()) {
             throw invalidDefinition(
                 challenge,
                 "The conditions JSON must not be blank."

@@ -224,7 +224,8 @@ class ChallengeProgressIntegrationTest
         Map<String, PlayerChallengeProgress> progressByCode =
             loadProgressByChallengeCode();
 
-        assertThat(progressByCode).hasSize(5);
+        // The five weekly challenges, plus the daily one the recalculation drew for today.
+        assertThat(progressByCode).hasSize(6);
 
         assertProgress(
             progressByCode.get("INTEGRATION_KILLS"),
@@ -780,6 +781,7 @@ class ChallengeProgressIntegrationTest
 
         weeklyChallenge.setWeekStart(WEEK_START);
         weeklyChallenge.setChallenge(challenge);
+        weeklyChallenge.setResolvedConditionsJson(challenge.getConditionsJson());
         weeklyChallenge.setSelectedAt(
             CALCULATION_TIME.minusSeconds(3_600)
         );

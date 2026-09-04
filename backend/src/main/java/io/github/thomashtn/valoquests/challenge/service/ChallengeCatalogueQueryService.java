@@ -13,7 +13,7 @@ import io.github.thomashtn.valoquests.challenge.dto.ChallengeCatalogueResponse;
 public interface ChallengeCatalogueQueryService {
 
     /**
-     * Returns every challenge eligible for weekly selection, independent of any one week's draw.
+     * Returns every enabled challenge, weekly tiers and daily pool, as it would be drawn this week.
      *
      * @return the enabled challenge catalogue
      */

@@ -7,16 +7,16 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Contains the persisted player data required to evaluate challenges during
- * one weekly period.
+ * Contains the persisted player data required to evaluate challenges over one period: a week for
+ * the weekly pack, a single day for the daily challenge.
  *
  * @param playerId        internal player identifier
- * @param weekStart       first calendar day of the evaluated week
- * @param periodStart     inclusive UTC beginning of the evaluated period
- * @param periodEnd       exclusive UTC end of the evaluated period
+ * @param weekStart       Monday of the week the period belongs to
+ * @param periodStart     inclusive beginning of the evaluated period
+ * @param periodEnd       exclusive end of the evaluated period
  * @param playerMatches   immutable chronological list of eligible matches
  * @param baselineMatches immutable chronological list of the matches preceding the evaluated week,
- *     used by challenges that ask a player to improve on their own recent form
+ *     read only by the dormant baseline progress mode and empty everywhere else
  */
 public record PlayerChallengeContext(
 
@@ -70,13 +70,10 @@ public record PlayerChallengeContext(
     /**
      * Creates a context carrying no baseline window.
      *
-     * <p>Every challenge but the ones comparing a player to their own past ignores the baseline, so
-     * this keeps their call sites — and their tests — free of a window they never read.
-     *
      * @param playerId      internal player identifier
-     * @param weekStart     first calendar day of the evaluated week
-     * @param periodStart   inclusive UTC beginning of the evaluated period
-     * @param periodEnd     exclusive UTC end of the evaluated period
+     * @param weekStart     Monday of the week the period belongs to
+     * @param periodStart   inclusive beginning of the evaluated period
+     * @param periodEnd     exclusive end of the evaluated period
      * @param playerMatches immutable chronological list of eligible matches
      */
     public PlayerChallengeContext(
@@ -95,9 +92,6 @@ public record PlayerChallengeContext(
      * <p>Used to replay a calculator match by match, to find the exact match at which a challenge
      * became completed, without changing the calculator implementations themselves.
      *
-     * <p>The baseline window is carried over untouched: it describes weeks that are already over, so
-     * truncating it would make a challenge's target move as the replay advances.
-     *
      * @param matchCount number of leading matches to keep, must be between 1 and {@link #playerMatches()}'s size
      * @return truncated context sharing every other field
      */
@@ -108,6 +102,35 @@ public record PlayerChallengeContext(
             periodStart,
             periodEnd,
             playerMatches.subList(0, matchCount),
+            baselineMatches
+        );
+    }
+
+    /**
+     * Creates a copy of this context narrowed to a sub-period.
+     *
+     * <p>How a day's challenge is evaluated from the week's matches without a second query: the
+     * daily window always lies inside the weekly one, so filtering in memory is exact.
+     *
+     * @param subPeriodStart inclusive beginning of the sub-period
+     * @param subPeriodEnd   exclusive end of the sub-period
+     * @return narrowed context sharing the player and week
+     */
+    public PlayerChallengeContext restrictedTo(Instant subPeriodStart, Instant subPeriodEnd) {
+        List<PlayerMatch> matches = playerMatches.stream()
+            .filter(playerMatch -> {
+                Instant startedAt = playerMatch.getMatch().getStartedAt();
+
+                return !startedAt.isBefore(subPeriodStart) && startedAt.isBefore(subPeriodEnd);
+            })
+            .toList();
+
+        return new PlayerChallengeContext(
+            playerId,
+            weekStart,
+            subPeriodStart,
+            subPeriodEnd,
+            matches,
             baselineMatches
         );
     }

@@ -38,6 +38,26 @@ public interface PlayerMatchRepository
     boolean existsByPlayerIdAndMatchStartedAtGreaterThanEqual(Long playerId, Instant startedAt);
 
     /**
+     * Returns the start instant of a player's oldest known match.
+     *
+     * <p>What a campaign's calibration measures its window against: a player whose history does not
+     * reach back to the window's first day would be averaged over weeks nobody could have played,
+     * so the window shrinks a month at a time until everyone is covered.
+     *
+     * @param playerId internal player identifier
+     * @return the oldest known start instant, empty for a player without a single match
+     */
+    @Query(
+        """
+            SELECT MIN(valorantMatch.startedAt)
+            FROM PlayerMatch playerMatch
+            JOIN playerMatch.match valorantMatch
+            WHERE playerMatch.player.id = :playerId
+            """
+    )
+    Optional<Instant> findEarliestMatchStartedAt(@Param("playerId") Long playerId);
+
+    /**
      * Retrieves the matches played by a player during a half-open period.
      *
      * <p>The beginning is inclusive and the end is exclusive. The associated

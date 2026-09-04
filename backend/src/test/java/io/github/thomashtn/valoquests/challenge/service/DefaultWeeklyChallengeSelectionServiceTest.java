@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -13,20 +14,32 @@ import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressCalc
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.exception.WeeklyChallengeSelectionException;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeScaling;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
+import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
+import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import io.github.thomashtn.valoquests.shared.exception.ConflictException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -58,6 +71,16 @@ class DefaultWeeklyChallengeSelectionServiceTest {
      * Number of consecutive weeks observed by the rotation test.
      */
     private static final int OBSERVED_WEEKS = 8;
+
+    /**
+     * Size of the production daily pool: three weeks without a repeat.
+     */
+    private static final int DAILY_POOL_SIZE = 21;
+
+    /**
+     * JSON the mocked parser writes for every resolved definition.
+     */
+    private static final String RESOLVED_JSON = "[{\"resolved\":true}]";
 
     /**
      * Challenge catalogue repository dependency.
@@ -97,14 +120,217 @@ class DefaultWeeklyChallengeSelectionServiceTest {
         when(calculatorRegistry.supports(ProgressMode.SUM)).thenReturn(true);
         when(weeklyChallengeRepository.saveAll(anyList()))
             .thenAnswer(invocation -> invocation.getArgument(0));
+        when(weeklyChallengeRepository.save(any(WeeklyChallenge.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ChallengeDefinitionParser definitionParser = mock(ChallengeDefinitionParser.class);
+        when(definitionParser.parse(any(Challenge.class))).thenReturn(sumDefinition());
+        when(definitionParser.toJson(anyList())).thenReturn(RESOLVED_JSON);
+
+        Clock clock = Clock.fixed(SELECTION_TIME, ZoneOffset.UTC);
 
         service = new DefaultWeeklyChallengeSelectionService(
             challengeRepository,
             weeklyChallengeRepository,
             progressRepository,
             calculatorRegistry,
-            Clock.fixed(SELECTION_TIME, ZoneOffset.UTC),
-            new WeekCalendar(Clock.fixed(SELECTION_TIME, ZoneOffset.UTC), ZoneOffset.UTC)
+            new ChallengeSelectionFactory(
+                definitionParser,
+                new ChallengeTargetResolver(),
+                weekStart -> new ChallengeCalibration(
+                    new DefaultScoringRuleset().referenceFloor(),
+                    1,
+                    ChallengeScaling.NONE
+                )
+            ),
+            clock,
+            new WeekCalendar(clock, ZoneOffset.UTC)
+        );
+    }
+
+    /**
+     * Verifies that every drawn selection stores the definition it was resolved to.
+     */
+    @Test
+    void shouldStoreResolvedConditionsOnEverySelection() {
+        givenNoExistingPack();
+        when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY))
+            .thenReturn(createCatalogue(1));
+
+        assertThat(service.selectWeekChallenges(WEEK_START))
+            .allSatisfy(selection -> {
+                assertThat(selection.getCadence()).isEqualTo(ChallengeCadence.WEEKLY);
+                assertThat(selection.getDay()).isNull();
+                assertThat(selection.getResolvedConditionsJson()).isEqualTo(RESOLVED_JSON);
+            });
+    }
+
+    /**
+     * Verifies that a day keeps the challenge it was given.
+     */
+    @Test
+    void shouldReturnTheExistingDailyChallenge() {
+        WeeklyChallenge existing = createDailyChallenge(createDailyCandidate(0), WEEK_START);
+
+        when(weeklyChallengeRepository.findByCadenceAndDay(ChallengeCadence.DAILY, WEEK_START))
+            .thenReturn(Optional.of(existing));
+
+        assertThat(service.selectDailyChallenge(WEEK_START)).isSameAs(existing);
+
+        verify(challengeRepository, never()).findAllByEnabledTrueAndCadenceOrderByIdAsc(any());
+        verify(weeklyChallengeRepository, never()).save(any(WeeklyChallenge.class));
+    }
+
+    /**
+     * Verifies that twenty-one consecutive days draw twenty-one different challenges from a pool of
+     * that size, and that the twenty-second day brings the first one back.
+     */
+    @Test
+    void shouldNotRepeatADailyChallengeWithinTwentyOneDays() {
+        List<WeeklyChallenge> history = givenDailyHistory(DAILY_POOL_SIZE);
+
+        List<String> codes = IntStream.range(0, DAILY_POOL_SIZE)
+            .mapToObj(offset -> service.selectDailyChallenge(WEEK_START.plusDays(offset)))
+            .map(selection -> selection.getChallenge().getCode())
+            .toList();
+
+        assertThat(codes).doesNotHaveDuplicates();
+        assertThat(history).hasSize(DAILY_POOL_SIZE);
+        assertThat(history)
+            .allSatisfy(selection -> {
+                assertThat(selection.getCadence()).isEqualTo(ChallengeCadence.DAILY);
+                assertThat(selection.getDay()).isNotNull();
+                assertThat(selection.getWeekStart()).isEqualTo(
+                    selection.getDay().minusDays(selection.getDay().getDayOfWeek().getValue() - 1)
+                );
+                assertThat(selection.getResolvedConditionsJson()).isEqualTo(RESOLVED_JSON);
+            });
+
+        WeeklyChallenge dayTwentyTwo = service.selectDailyChallenge(WEEK_START.plusDays(DAILY_POOL_SIZE));
+
+        assertThat(dayTwentyTwo.getChallenge().getCode()).isEqualTo(codes.getFirst());
+    }
+
+    /**
+     * Verifies that a pool smaller than the window brings back its least recently drawn challenge
+     * rather than leaving a day without one.
+     */
+    @Test
+    void shouldFallBackToTheLeastRecentlyDrawnDailyChallenge() {
+        givenDailyHistory(3);
+
+        List<String> codes = IntStream.range(0, 5)
+            .mapToObj(offset -> service.selectDailyChallenge(WEEK_START.plusDays(offset)))
+            .map(selection -> selection.getChallenge().getCode())
+            .toList();
+
+        assertThat(codes.subList(0, 3)).doesNotHaveDuplicates();
+        assertThat(codes.get(3)).isEqualTo(codes.get(0));
+        assertThat(codes.get(4)).isEqualTo(codes.get(1));
+    }
+
+    /**
+     * Verifies that an empty daily pool is reported rather than silently skipped.
+     */
+    @Test
+    void shouldRejectAnEmptyDailyPool() {
+        givenDailyHistory(0);
+
+        assertThatThrownBy(() -> service.selectDailyChallenge(WEEK_START))
+            .isInstanceOf(WeeklyChallengeSelectionException.class)
+            .hasMessageContaining("daily pool is empty");
+    }
+
+    /**
+     * Declares a daily pool and wires the repository mocks to an in-memory draw history.
+     *
+     * @param poolSize number of enabled daily challenges
+     * @return the mutable history every draw is appended to
+     */
+    private List<WeeklyChallenge> givenDailyHistory(int poolSize) {
+        List<WeeklyChallenge> history = new ArrayList<>();
+
+        when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.DAILY))
+            .thenReturn(IntStream.range(0, poolSize).mapToObj(this::createDailyCandidate).toList());
+        when(weeklyChallengeRepository.findByCadenceAndDay(eq(ChallengeCadence.DAILY), any()))
+            .thenAnswer(invocation -> history.stream()
+                .filter(selection -> selection.getDay().equals(invocation.getArgument(1)))
+                .findFirst());
+        when(weeklyChallengeRepository.findAllByCadenceAndDayBetweenOrderByDayAsc(
+            eq(ChallengeCadence.DAILY),
+            any(),
+            any()
+        ))
+            .thenAnswer(invocation -> {
+                LocalDate first = invocation.getArgument(1);
+                LocalDate last = invocation.getArgument(2);
+
+                return history.stream()
+                    .filter(selection -> !selection.getDay().isBefore(first)
+                        && !selection.getDay().isAfter(last))
+                    .toList();
+            });
+        when(weeklyChallengeRepository.save(any(WeeklyChallenge.class)))
+            .thenAnswer(invocation -> {
+                WeeklyChallenge saved = invocation.getArgument(0);
+                history.add(saved);
+                return saved;
+            });
+
+        return history;
+    }
+
+    /**
+     * Creates one enabled daily challenge.
+     *
+     * @param index candidate index within the pool
+     * @return challenge fixture
+     */
+    private Challenge createDailyCandidate(int index) {
+        Challenge challenge = new Challenge();
+        challenge.setId(1_000L + index);
+        challenge.setCode("DAILY_" + index);
+        challenge.setCadence(ChallengeCadence.DAILY);
+        challenge.setCategory(ChallengeCategory.TRAINING);
+        challenge.setProgressMode(ProgressMode.SUM);
+        challenge.setEnabled(true);
+        return challenge;
+    }
+
+    /**
+     * Creates a persisted daily selection fixture.
+     *
+     * @param challenge daily catalogue challenge
+     * @param day       covered day
+     * @return daily selection fixture
+     */
+    private WeeklyChallenge createDailyChallenge(Challenge challenge, LocalDate day) {
+        WeeklyChallenge selection = createWeeklyChallenge(challenge);
+        selection.setCadence(ChallengeCadence.DAILY);
+        selection.setDay(day);
+        return selection;
+    }
+
+    /**
+     * Creates the one-condition definition the mocked parser hands to the factory.
+     *
+     * @return summed definition
+     */
+    private ChallengeDefinition sumDefinition() {
+        return new ChallengeDefinition(
+            3,
+            ProgressMode.SUM,
+            List.of(new ChallengeCondition(
+                ChallengeMetric.KILLS,
+                ChallengeOperator.GTE,
+                BigDecimal.TEN,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            ))
         );
     }
 
@@ -117,7 +343,8 @@ class DefaultWeeklyChallengeSelectionServiceTest {
             .map(difficulty -> createWeeklyChallenge(createChallenge(difficulty, categoryFor(difficulty))))
             .toList();
 
-        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(WEEK_START))
+        when(weeklyChallengeRepository
+            .findAllByWeekStartAndCadenceOrderByIdAsc(WEEK_START, ChallengeCadence.WEEKLY))
             .thenReturn(existingSelections.reversed());
 
         List<WeeklyChallenge> result = service.selectWeekChallenges(WEEK_START);
@@ -126,7 +353,7 @@ class DefaultWeeklyChallengeSelectionServiceTest {
             .extracting(selection -> selection.getChallenge().getDifficulty())
             .containsExactly(ChallengeDifficulty.values());
 
-        verify(challengeRepository, never()).findAllByEnabledTrueOrderByIdAsc();
+        verify(challengeRepository, never()).findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY);
         verify(weeklyChallengeRepository, never()).saveAll(anyList());
     }
 
@@ -139,9 +366,11 @@ class DefaultWeeklyChallengeSelectionServiceTest {
             .map(difficulty -> createChallenge(difficulty, categoryFor(difficulty)))
             .toList();
 
-        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(WEEK_START))
+        when(weeklyChallengeRepository
+            .findAllByWeekStartAndCadenceOrderByIdAsc(WEEK_START, ChallengeCadence.WEEKLY))
             .thenReturn(List.of());
-        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+        when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY))
+            .thenReturn(candidates);
 
         List<WeeklyChallenge> result = service.selectWeekChallenges(WEEK_START);
 
@@ -174,9 +403,11 @@ class DefaultWeeklyChallengeSelectionServiceTest {
             .map(difficulty -> createChallenge(difficulty, ChallengeCategory.PERFORMANCE))
             .toList();
 
-        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(WEEK_START))
+        when(weeklyChallengeRepository
+            .findAllByWeekStartAndCadenceOrderByIdAsc(WEEK_START, ChallengeCadence.WEEKLY))
             .thenReturn(List.of());
-        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+        when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY))
+            .thenReturn(candidates);
 
         List<WeeklyChallenge> result = service.selectWeekChallenges(WEEK_START);
 
@@ -199,9 +430,11 @@ class DefaultWeeklyChallengeSelectionServiceTest {
             })
             .toList();
 
-        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(WEEK_START))
+        when(weeklyChallengeRepository
+            .findAllByWeekStartAndCadenceOrderByIdAsc(WEEK_START, ChallengeCadence.WEEKLY))
             .thenReturn(List.of());
-        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+        when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY))
+            .thenReturn(candidates);
 
         assertThatThrownBy(() -> service.selectWeekChallenges(WEEK_START))
             .isInstanceOf(WeeklyChallengeSelectionException.class)
@@ -218,9 +451,11 @@ class DefaultWeeklyChallengeSelectionServiceTest {
     void shouldDrawDifferentPacksOnConsecutiveWeeks() {
         List<Challenge> candidates = createCatalogue(CATALOGUE_CHALLENGES_PER_DIFFICULTY);
 
-        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(any(LocalDate.class)))
+        when(weeklyChallengeRepository
+            .findAllByWeekStartAndCadenceOrderByIdAsc(any(LocalDate.class), eq(ChallengeCadence.WEEKLY)))
             .thenReturn(List.of());
-        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+        when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY))
+            .thenReturn(candidates);
 
         Set<List<String>> distinctPacks = IntStream.range(0, OBSERVED_WEEKS)
             .mapToObj(weekIndex -> selectCodes(WEEK_START.plusWeeks(weekIndex)))
@@ -236,9 +471,11 @@ class DefaultWeeklyChallengeSelectionServiceTest {
     void shouldDrawTheSamePackForTheSameWeek() {
         List<Challenge> candidates = createCatalogue(CATALOGUE_CHALLENGES_PER_DIFFICULTY);
 
-        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(any(LocalDate.class)))
+        when(weeklyChallengeRepository
+            .findAllByWeekStartAndCadenceOrderByIdAsc(any(LocalDate.class), eq(ChallengeCadence.WEEKLY)))
             .thenReturn(List.of());
-        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+        when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY))
+            .thenReturn(candidates);
 
         assertThat(selectCodes(WEEK_START)).isEqualTo(selectCodes(WEEK_START));
     }
@@ -252,7 +489,8 @@ class DefaultWeeklyChallengeSelectionServiceTest {
         List<Challenge> candidates = createCatalogue(2);
 
         givenNoExistingPack();
-        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+        when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY))
+            .thenReturn(candidates);
 
         // Every tier's first candidate was drawn last week, so only the second remains in the cycle.
         List<Challenge> alreadyDrawn = candidates.stream()
@@ -273,7 +511,8 @@ class DefaultWeeklyChallengeSelectionServiceTest {
         List<Challenge> candidates = createCatalogue(2);
 
         givenNoExistingPack();
-        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+        when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY))
+            .thenReturn(candidates);
 
         // Both candidates of every tier were drawn: the cycle is complete, so the next draw picks
         // from the full catalogue again and lands on whatever the weekly ordering ranks first.
@@ -299,7 +538,8 @@ class DefaultWeeklyChallengeSelectionServiceTest {
         List<Challenge> candidates = createCatalogue(1);
 
         givenNoExistingPack();
-        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+        when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY))
+            .thenReturn(candidates);
         givenPastSelections(candidates);
 
         assertThat(selectCodes(WEEK_START)).hasSize(ChallengeDifficulty.values().length);
@@ -316,13 +556,15 @@ class DefaultWeeklyChallengeSelectionServiceTest {
         List<Challenge> candidates = createCatalogue(CATALOGUE_CHALLENGES_PER_DIFFICULTY);
 
         givenNoExistingPack();
-        when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(candidates);
+        when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY))
+            .thenReturn(candidates);
 
         List<WeeklyChallenge> discarded = service.selectWeekChallenges(WEEK_START);
         List<String> discardedCodes = codesOf(discarded);
 
         // The redraw reads the week twice: the pack it throws away, then the empty week it fills.
-        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(any(LocalDate.class)))
+        when(weeklyChallengeRepository
+            .findAllByWeekStartAndCadenceOrderByIdAsc(any(LocalDate.class), eq(ChallengeCadence.WEEKLY)))
             .thenReturn(discarded, List.of());
 
         List<String> redrawnCodes = codesOf(service.redrawCurrentWeekChallenges());
@@ -344,7 +586,8 @@ class DefaultWeeklyChallengeSelectionServiceTest {
         );
         finalized.setFinalizedAt(SELECTION_TIME);
 
-        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(WEEK_START))
+        when(weeklyChallengeRepository
+            .findAllByWeekStartAndCadenceOrderByIdAsc(WEEK_START, ChallengeCadence.WEEKLY))
             .thenReturn(List.of(finalized));
 
         assertThatThrownBy(() -> service.redrawCurrentWeekChallenges())
@@ -371,7 +614,8 @@ class DefaultWeeklyChallengeSelectionServiceTest {
      * Declares that the week being drawn owns no selection yet.
      */
     private void givenNoExistingPack() {
-        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(any(LocalDate.class)))
+        when(weeklyChallengeRepository
+            .findAllByWeekStartAndCadenceOrderByIdAsc(any(LocalDate.class), eq(ChallengeCadence.WEEKLY)))
             .thenReturn(List.of());
     }
 
@@ -382,7 +626,10 @@ class DefaultWeeklyChallengeSelectionServiceTest {
      */
     private void givenPastSelections(List<Challenge> challenges) {
         when(weeklyChallengeRepository
-            .findAllByWeekStartLessThanOrderByWeekStartAsc(any(LocalDate.class)))
+            .findAllByCadenceAndWeekStartLessThanOrderByWeekStartAsc(
+                eq(ChallengeCadence.WEEKLY),
+                any(LocalDate.class)
+            ))
             .thenReturn(challenges.stream().map(this::createWeeklyChallenge).toList());
     }
 
@@ -398,14 +645,15 @@ class DefaultWeeklyChallengeSelectionServiceTest {
             createChallenge(ChallengeDifficulty.EASY, ChallengeCategory.SUPPORT)
         );
 
-        when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(WEEK_START))
+        when(weeklyChallengeRepository
+            .findAllByWeekStartAndCadenceOrderByIdAsc(WEEK_START, ChallengeCadence.WEEKLY))
             .thenReturn(List.of(first, second));
 
         assertThatThrownBy(() -> service.selectWeekChallenges(WEEK_START))
             .isInstanceOf(WeeklyChallengeSelectionException.class)
             .hasMessageContaining("multiple challenges for difficulty EASY");
 
-        verify(challengeRepository, never()).findAllByEnabledTrueOrderByIdAsc();
+        verify(challengeRepository, never()).findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY);
     }
 
     /**

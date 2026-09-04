@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.challenge.repository;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -16,4 +17,12 @@ public interface ChallengeRepository
      * @return enabled challenges ordered by identifier
      */
     List<Challenge> findAllByEnabledTrueOrderByIdAsc();
+
+    /**
+     * Retrieves every enabled challenge of one cadence.
+     *
+     * @param cadence cadence of the pool wanted
+     * @return enabled challenges ordered by identifier
+     */
+    List<Challenge> findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence cadence);
 }

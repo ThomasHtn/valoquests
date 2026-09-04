@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.challenge.model;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
@@ -61,5 +62,36 @@ public record ChallengeDefinition(
         }
 
         return conditions.getFirst();
+    }
+
+    /**
+     * Returns the value calculators compare a player's progress against.
+     *
+     * <p>Not always the condition's target: a challenge counting matches that cleared a bar
+     * progresses towards its number of occurrences, a streak towards its length, and a composite
+     * one towards the sum of its targets. This is the figure the interface must draw a progress
+     * bar against, and it has to agree with every calculator.
+     *
+     * @return progress target
+     */
+    public BigDecimal progressTarget() {
+        return switch (progressMode) {
+            case ALL -> conditions.stream()
+                .map(ChallengeCondition::target)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            case COUNT_MATCHES -> BigDecimal.valueOf(singleCondition().occurrences());
+            case MAX_STREAK -> BigDecimal.valueOf(singleCondition().streak());
+            case SUM, DISTINCT_COUNT, MAX_GROUP, RATIO, BASELINE -> singleCondition().target();
+        };
+    }
+
+    /**
+     * Tells whether completing this challenge requires ranked matches.
+     *
+     * @return {@code true} when any condition filters on competitive only
+     */
+    public boolean isCompetitiveOnly() {
+        return conditions.stream()
+            .anyMatch(condition -> condition.effectiveGameMode().isCompetitiveOnly());
     }
 }

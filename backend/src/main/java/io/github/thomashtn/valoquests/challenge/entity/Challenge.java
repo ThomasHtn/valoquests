@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.challenge.entity;
 
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
@@ -54,10 +55,19 @@ public class Challenge extends AuditableEntity {
     private String description;
 
     /**
-     * Difficulty tier controlling weekly selection and reward size.
+     * Whether the challenge is drawn for a week or for a single day.
      */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 10)
+    private ChallengeCadence cadence = ChallengeCadence.WEEKLY;
+
+    /**
+     * Difficulty tier controlling weekly selection and reward size.
+     *
+     * <p>{@code null} for a daily challenge: the daily pool is its own tier, priced by its cadence.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private ChallengeDifficulty difficulty;
 
     /**
@@ -76,6 +86,10 @@ public class Challenge extends AuditableEntity {
 
     /**
      * Versioned JSON rule definition interpreted by challenge calculators.
+     *
+     * <p>Every number in it is a base target, written for the squad the catalogue was calibrated
+     * on. A draw resolves it against the campaign in force and stores the result on the selection;
+     * calculators only ever read the resolved copy.
      */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(

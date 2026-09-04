@@ -12,9 +12,9 @@ import io.github.thomashtn.valoquests.match.repository.PlayerMatchHistoryCriteri
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
-import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver;
-import io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver.MatchDamage;
+import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
+import io.github.thomashtn.valoquests.scoring.model.ValuedMatch;
+import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
 import io.github.thomashtn.valoquests.shared.exception.InvalidRequestException;
 import io.github.thomashtn.valoquests.shared.util.PaginationGuard;
@@ -24,12 +24,11 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -59,15 +58,10 @@ public class DefaultMatchQueryService implements MatchQueryService {
     private final WeekCalendar weekCalendar;
 
     /**
-     * Prices each match after the ruleset's daily diminishing returns, so the history can say what
-     * a game was worth to the squad and not only how it went.
+     * Prices each match with both multipliers, so the history can say what a game was worth to the
+     * squad and not only how it went.
      */
-    private final WeeklyMatchDamageResolver damageResolver;
-
-    /**
-     * The barème both pillars read, passed to the resolver.
-     */
-    private final ScoringRuleset ruleset;
+    private final DailyOutputReader dailyOutputReader;
 
     /**
      * Creates the persisted match query service.
@@ -75,21 +69,18 @@ public class DefaultMatchQueryService implements MatchQueryService {
      * @param playerRepository      repository used to validate tracked players
      * @param playerMatchRepository repository used to query persisted player matches
      * @param weekCalendar          calendar resolving a week's instant bounds
-     * @param damageResolver        resolver pricing each match after daily diminishing returns
-     * @param ruleset               ruleset the damage is priced against
+     * @param dailyOutputReader     reader pricing each match with both multipliers
      */
     public DefaultMatchQueryService(
         PlayerRepository playerRepository,
         PlayerMatchRepository playerMatchRepository,
         WeekCalendar weekCalendar,
-        WeeklyMatchDamageResolver damageResolver,
-        ScoringRuleset ruleset
+        DailyOutputReader dailyOutputReader
     ) {
         this.playerRepository = playerRepository;
         this.playerMatchRepository = playerMatchRepository;
         this.weekCalendar = weekCalendar;
-        this.damageResolver = damageResolver;
-        this.ruleset = ruleset;
+        this.dailyOutputReader = dailyOutputReader;
     }
 
     /**
@@ -133,10 +124,10 @@ public class DefaultMatchQueryService implements MatchQueryService {
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "match.startedAt", "id"))
         );
         List<PlayerMatch> pageMatches = matches.getContent();
-        Map<Long, MatchDamage> damageByPlayerMatchId = resolveDamage(playerId, pageMatches);
+        Map<Long, ValuedMatch> valuedByPlayerMatchId = value(playerId, pageMatches);
         return new PageResponse<>(
             pageMatches.stream()
-                .map(playerMatch -> toResponse(playerMatch, damageByPlayerMatchId))
+                .map(playerMatch -> toResponse(playerMatch, valuedByPlayerMatchId))
                 .toList(),
             matches.getNumber(),
             matches.getSize(),
@@ -146,48 +137,41 @@ public class DefaultMatchQueryService implements MatchQueryService {
     }
 
     /**
-     * Prices every match on the page, week by week.
+     * Prices every match on the page.
      *
-     * <p>A match's amount depends on how the rest of *that day* went — the ruleset pays a day's best
-     * games in full and reduces the ones after them — so the page alone cannot price itself: a page
-     * boundary routinely cuts a day in half, and the tail would then be ranked as if it were the
-     * day's opening games. Each week the page touches is therefore reloaded whole and priced by the
-     * same resolver the ranking and the boss read, which is what keeps the three from disagreeing.
-     *
-     * <p>Costs one extra query per week the page spans — one or two for a default page, and bounded
-     * by the page size in the worst case.
+     * <p>A match's amount depends on how the rest of <em>that day</em> went and on the days played
+     * before it, so the page alone cannot price itself: a page boundary routinely cuts a day in half.
+     * The whole span of days the page touches is therefore read through the same reader the ranking
+     * and the campaign use, which is what keeps them from disagreeing. One extra query per page.
      *
      * @param playerId    internal player identifier
      * @param pageMatches the matches the page is about to return
-     * @return damage and coefficient indexed by player-match identifier
+     * @return valued matches indexed by player-match identifier, unvalued matches absent
      */
-    private Map<Long, MatchDamage> resolveDamage(long playerId, List<PlayerMatch> pageMatches) {
-        Set<LocalDate> weekStarts = new LinkedHashSet<>();
+    private Map<Long, ValuedMatch> value(long playerId, List<PlayerMatch> pageMatches) {
+        if (pageMatches.isEmpty()) {
+            return Map.of();
+        }
+
+        LocalDate firstDay = null;
+        LocalDate lastDay = null;
         for (PlayerMatch playerMatch : pageMatches) {
-            weekStarts.add(weekCalendar.weekStartOf(playerMatch.getMatch().getStartedAt()));
+            LocalDate day = weekCalendar.dayOf(playerMatch.getMatch().getStartedAt());
+            firstDay = firstDay == null || day.isBefore(firstDay) ? day : firstDay;
+            lastDay = lastDay == null || day.isAfter(lastDay) ? day : lastDay;
         }
 
-        Map<Long, MatchDamage> damageByPlayerMatchId = new HashMap<>();
-        for (LocalDate weekStart : weekStarts) {
-            damageByPlayerMatchId.putAll(damageResolver.resolveDetailed(
-                playerMatchRepository.findForChallengePeriod(
-                    playerId,
-                    weekCalendar.startOf(weekStart),
-                    weekCalendar.endOf(weekStart)
-                ),
-                ruleset
-            ));
-        }
+        DailyOutput output = dailyOutputReader.readPlayer(playerId, firstDay, lastDay);
 
-        return damageByPlayerMatchId;
+        return output.valuedMatches().stream()
+            .collect(Collectors.toMap(ValuedMatch::playerMatchId, Function.identity()));
     }
 
     private MatchResponse toResponse(
         PlayerMatch playerMatch,
-        Map<Long, MatchDamage> damageByPlayerMatchId
+        Map<Long, ValuedMatch> valuedByPlayerMatchId
     ) {
-        MatchDamage damage =
-            damageByPlayerMatchId.getOrDefault(playerMatch.getId(), MatchDamage.NONE);
+        ValuedMatch valued = valuedByPlayerMatchId.get(playerMatch.getId());
         Integer allyScore = allyScore(playerMatch);
         Integer enemyScore = enemyScore(playerMatch);
         return new MatchResponse(
@@ -207,13 +191,16 @@ public class DefaultMatchQueryService implements MatchQueryService {
             playerMatch.getAdr(),
             headshotPercentageOf(playerMatch),
             playerMatch.getCompetitiveTier(),
-            damage.damage(),
-            damage.coefficientPercent()
+            valued == null ? 0 : valued.damage(),
+            valued == null ? 0 : valued.coefficientPercent(),
+            valued == null ? 0 : valued.streakBonusPercent(),
+            valued == null ? 0 : valued.food(),
+            valued == null ? 0 : valued.components()
         );
     }
 
     /**
-     * Loads full detail for one of a tracked player's matches, priced against the ruleset like every
+     * Loads full detail for one of a tracked player's matches, priced like every
      * other history entry and joined with every other tracked player found in the same match.
      *
      * @param playerId      internal player identifier
@@ -229,9 +216,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
             .findByIdAndPlayerId(playerMatchId, playerId)
             .orElseThrow(() -> new MatchNotFoundException(playerMatchId));
 
-        Map<Long, MatchDamage> damageByPlayerMatchId = resolveDamage(playerId, List.of(playerMatch));
-        MatchDamage damage =
-            damageByPlayerMatchId.getOrDefault(playerMatch.getId(), MatchDamage.NONE);
+        ValuedMatch valued = value(playerId, List.of(playerMatch)).get(playerMatch.getId());
 
         List<MatchTeammateResponse> teammates = playerMatchRepository
             .findByMatchIdAndPlayerIdNot(playerMatch.getMatch().getId(), playerId)
@@ -263,8 +248,11 @@ public class DefaultMatchQueryService implements MatchQueryService {
             playerMatch.getRoundsPlayed(),
             playerMatch.isMvp(),
             playerMatch.getCompetitiveTier(),
-            damage.damage(),
-            damage.coefficientPercent(),
+            valued == null ? 0 : valued.damage(),
+            valued == null ? 0 : valued.coefficientPercent(),
+            valued == null ? 0 : valued.streakBonusPercent(),
+            valued == null ? 0 : valued.food(),
+            valued == null ? 0 : valued.components(),
             teammates
         );
     }

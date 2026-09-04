@@ -14,12 +14,21 @@ import org.junit.jupiter.params.provider.EnumSource;
 class ChallengeGameModeTest {
 
     /**
-     * Verifies that every challenge filter still designates an existing game mode.
+     * Verifies that every filter lets at least one game mode through.
      *
-     * <p>{@link ChallengeGameMode#matches(GameMode)} pairs the two enums by name, which the compiler
-     * cannot check. Renaming or removing a {@link GameMode} constant would silently turn the
-     * corresponding filter into one that never matches, quietly freezing the affected challenges at
-     * zero progress.
+     * <p>A filter matching nothing would define challenges that can never progress, quietly
+     * freezing them at zero for every player.
+     *
+     * @param filter challenge filter under test
+     */
+    @ParameterizedTest
+    @EnumSource(ChallengeGameMode.class)
+    void shouldDesignateAtLeastOneGameMode(ChallengeGameMode filter) {
+        assertThat(Arrays.stream(GameMode.values()).anyMatch(filter::matches)).isTrue();
+    }
+
+    /**
+     * Verifies that no filter lets a mode through that synchronization does not import.
      *
      * @param filter challenge filter under test
      */
@@ -29,9 +38,9 @@ class ChallengeGameModeTest {
         names = "ANY",
         mode = EnumSource.Mode.EXCLUDE
     )
-    void shouldDesignateAnExistingGameMode(ChallengeGameMode filter) {
-        assertThat(Arrays.stream(GameMode.values()).map(Enum::name))
-            .contains(filter.name());
+    void shouldOnlyDesignateImportedGameModes(ChallengeGameMode filter) {
+        assertThat(Arrays.stream(GameMode.values()).filter(filter::matches))
+            .allMatch(GameMode::isImportEligible);
     }
 
     /**
@@ -44,34 +53,37 @@ class ChallengeGameModeTest {
     }
 
     /**
-     * Verifies that a filtered value rejects the other game modes.
+     * Verifies that a single-mode filter rejects the other game modes.
      */
     @Test
     void shouldRejectOtherGameModesWhenFiltered() {
-        assertThat(
-            ChallengeGameMode.DEATHMATCH.matches(GameMode.TEAM_DEATHMATCH)
-        ).isFalse();
-        assertThat(
-            ChallengeGameMode.DEATHMATCH.matches(GameMode.DEATHMATCH)
-        ).isTrue();
+        assertThat(ChallengeGameMode.DEATHMATCH.matches(GameMode.TEAM_DEATHMATCH)).isFalse();
+        assertThat(ChallengeGameMode.DEATHMATCH.matches(GameMode.DEATHMATCH)).isTrue();
+        assertThat(ChallengeGameMode.UNRATED.matches(GameMode.COMPETITIVE)).isFalse();
+        assertThat(ChallengeGameMode.UNRATED.matches(GameMode.UNRATED)).isTrue();
     }
 
     /**
-     * Verifies that no filter designates a mode synchronization does not import.
-     *
-     * <p>A challenge filtered on an unimported mode can never progress: it would occupy one of the
-     * four weekly difficulty slots and stay at zero for every player.
-     *
-     * @param filter challenge filter under test
+     * Verifies that the long-format filter is an explicit list: competitive and unrated, and not
+     * the other round-based modes, Premier included.
      */
-    @ParameterizedTest
-    @EnumSource(
-        value = ChallengeGameMode.class,
-        names = "ANY",
-        mode = EnumSource.Mode.EXCLUDE
-    )
-    void shouldOnlyDesignateImportedGameModes(ChallengeGameMode filter) {
-        assertThat(GameMode.valueOf(filter.name()).isImportEligible()).isTrue();
+    @Test
+    void shouldLetUnratedThroughTheLongFormatFilterOnly() {
+        assertThat(ChallengeGameMode.COMPETITIVE_OR_UNRATED.matches(GameMode.UNRATED)).isTrue();
+        assertThat(ChallengeGameMode.COMPETITIVE_OR_UNRATED.matches(GameMode.COMPETITIVE)).isTrue();
+        assertThat(ChallengeGameMode.COMPETITIVE.matches(GameMode.UNRATED)).isFalse();
+
+        assertThat(Arrays.stream(GameMode.values()).filter(ChallengeGameMode.COMPETITIVE_OR_UNRATED::matches))
+            .containsExactlyInAnyOrder(GameMode.COMPETITIVE, GameMode.UNRATED);
+    }
+
+    /**
+     * Verifies that only the competitive filter is reported as ranked-only.
+     */
+    @Test
+    void shouldFlagTheCompetitiveFilterOnlyAsCompetitiveOnly() {
+        assertThat(Arrays.stream(ChallengeGameMode.values()).filter(ChallengeGameMode::isCompetitiveOnly))
+            .containsExactly(ChallengeGameMode.COMPETITIVE);
     }
 
     /**
@@ -79,7 +91,7 @@ class ChallengeGameModeTest {
      */
     @Test
     void shouldRejectNullGameModeWhenFiltered() {
-        assertThat(ChallengeGameMode.COMPETITIVE.matches(null))
-            .isFalse();
+        assertThat(ChallengeGameMode.COMPETITIVE.matches(null)).isFalse();
+        assertThat(ChallengeGameMode.ANY.matches(null)).isTrue();
     }
 }

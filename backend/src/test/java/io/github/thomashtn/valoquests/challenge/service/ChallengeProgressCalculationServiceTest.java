@@ -9,7 +9,7 @@ import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressCalc
 import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressCalculatorRegistry;
 import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressResult;
 import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContext;
-import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
@@ -59,12 +59,12 @@ class ChallengeProgressCalculationServiceTest {
     }
 
     /**
-     * Verifies that the service parses the challenge, selects the calculator
+     * Verifies that the service parses the selection's resolved definition, selects the calculator
      * and returns its calculation result.
      */
     @Test
     void shouldCalculateChallengeProgress() {
-        Challenge challenge = mock(Challenge.class);
+        WeeklyChallenge challenge = mock(WeeklyChallenge.class);
         PlayerChallengeContext context =
             mock(PlayerChallengeContext.class);
         ChallengeDefinition definition =

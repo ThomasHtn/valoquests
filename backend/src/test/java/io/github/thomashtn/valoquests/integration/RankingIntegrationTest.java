@@ -825,6 +825,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
 
         weeklyChallenge.setWeekStart(WEEK_START);
         weeklyChallenge.setChallenge(challenge);
+        weeklyChallenge.setResolvedConditionsJson(challenge.getConditionsJson());
         weeklyChallenge.setSelectedAt(
             CALCULATION_TIME.minusSeconds(3_600)
         );

@@ -11,9 +11,9 @@ import java.time.Instant;
  * Exposes one player match in the paginated match-history API.
  *
  * <p>Carries what the match was worth to the squad alongside its Valorant statistics: without it the
- * history is a wall of numbers with no bearing on the ranking or the colony they actually fed. The
- * amount is derived on read rather than stored — see
- * {@link io.github.thomashtn.valoquests.scoring.service.WeeklyMatchDamageResolver}.
+ * history is a wall of numbers with no bearing on the ranking or the campaign they actually fed. The
+ * amount is derived on read rather than stored, see
+ * {@link io.github.thomashtn.valoquests.scoring.service.DailyOutputReader}.
  *
  * @param id                      internal player-match identifier
  * @param startedAt               instant the match started
@@ -31,11 +31,14 @@ import java.time.Instant;
  * @param adr                     average damage per round
  * @param headshotPercentage      share of shots that landed on the head
  * @param competitiveTier         tier the player held for this match
- * @param valoquestsDamage        damage this match dealt to its week's boss, after the day's
- *     diminishing returns; {@code 0} for a match the ruleset does not value
+ * @param valoquestsDamage        damage this match dealt to the guardian, after both multipliers;
+ *     {@code 0} for a match the ruleset does not value
  * @param damageCoefficientPercent share of its base damage the match kept, {@code 100} for a day's
  *     best games and lower once the day's ladder starts reducing them; {@code 0} for an unvalued
  *     match, which never enters that ladder
+ * @param streakBonusPercent      bonus the player's run of consecutive days added to this match
+ * @param food                    food share of the damage
+ * @param components              components share of the damage
  */
 @Schema(description = "Player-centric match history entry.")
 public record MatchResponse(
@@ -57,6 +60,9 @@ public record MatchResponse(
     BigDecimal headshotPercentage,
     CompetitiveTier competitiveTier,
     int valoquestsDamage,
-    int damageCoefficientPercent
+    int damageCoefficientPercent,
+    int streakBonusPercent,
+    int food,
+    int components
 ) {
 }

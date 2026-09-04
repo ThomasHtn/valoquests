@@ -2,10 +2,17 @@ package io.github.thomashtn.valoquests.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.thomashtn.valoquests.boss.entity.BossCatalogEntry;
-import io.github.thomashtn.valoquests.boss.entity.WeeklyBossEncounter;
-import io.github.thomashtn.valoquests.boss.repository.BossCatalogEntryRepository;
-import io.github.thomashtn.valoquests.boss.repository.WeeklyBossEncounterRepository;
+import io.github.thomashtn.valoquests.campaign.entity.Campaign;
+import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayer;
+import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
+import io.github.thomashtn.valoquests.campaign.entity.Guardian;
+import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
+import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
+import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
+import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerRepository;
+import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
+import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
+import io.github.thomashtn.valoquests.campaign.repository.GuardianRepository;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
@@ -29,8 +36,6 @@ import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.player.service.PlayerQueryService;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
-import io.github.thomashtn.valoquests.run.entity.Run;
-import io.github.thomashtn.valoquests.run.repository.RunRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -98,13 +103,16 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
     private WeeklyPlayerScoreRepository scoreRepository;
 
     @Autowired
-    private BossCatalogEntryRepository bossCatalogEntryRepository;
+    private GuardianRepository guardianRepository;
 
     @Autowired
-    private WeeklyBossEncounterRepository bossEncounterRepository;
+    private CampaignWeekRepository campaignWeekRepository;
 
     @Autowired
-    private RunRepository runRepository;
+    private CampaignRepository campaignRepository;
+
+    @Autowired
+    private CampaignPlayerRepository campaignPlayerRepository;
 
     /**
      * Verifies that the reset empties every derived table while keeping the roster and catalogues.
@@ -123,7 +131,7 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
         seedCampaignData(player);
 
         long challengeCatalogueSize = challengeRepository.count();
-        long bossCatalogueSize = bossCatalogEntryRepository.count();
+        long guardianCatalogueSize = guardianRepository.count();
         long rosterSize = playerRepository.count();
 
         campaignResetService.resetCampaign();
@@ -134,12 +142,13 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(weeklyChallengeRepository.count()).isZero();
         assertThat(progressRepository.count()).isZero();
         assertThat(scoreRepository.count()).isZero();
-        assertThat(bossEncounterRepository.count()).isZero();
-        assertThat(runRepository.count()).isZero();
+        assertThat(campaignWeekRepository.count()).isZero();
+        assertThat(campaignPlayerRepository.count()).isZero();
+        assertThat(campaignRepository.count()).isZero();
 
         assertThat(playerRepository.count()).isEqualTo(rosterSize);
         assertThat(challengeRepository.count()).isEqualTo(challengeCatalogueSize);
-        assertThat(bossCatalogEntryRepository.count()).isEqualTo(bossCatalogueSize);
+        assertThat(guardianRepository.count()).isEqualTo(guardianCatalogueSize);
 
         assertThat(playerRepository.findAllByOrderByIdAsc())
             .allSatisfy(kept ->
@@ -226,6 +235,7 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
         WeeklyChallenge weeklyChallenge = new WeeklyChallenge();
         weeklyChallenge.setWeekStart(WEEK_START);
         weeklyChallenge.setChallenge(challenge);
+        weeklyChallenge.setResolvedConditionsJson(challenge.getConditionsJson());
         weeklyChallenge.setSelectedAt(MATCH_TIME);
         weeklyChallenge = weeklyChallengeRepository.save(weeklyChallenge);
 
@@ -252,23 +262,44 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
         score.setCalculatedAt(MATCH_TIME);
         scoreRepository.save(score);
 
-        BossCatalogEntry bossEntry = bossCatalogEntryRepository.findAll().getFirst();
+        Guardian guardian = guardianRepository
+            .findAllByEnabledTrueAndCategoryOrderByIdAsc(GuardianCategory.MINOR)
+            .getFirst();
 
-        Run run = new Run();
-        run.setNumber(1);
-        run.setFirstWeekStart(WEEK_START);
-        run.setLastWeekStart(WEEK_START.plusWeeks(9));
-        run.setRosterSize(7);
-        runRepository.save(run);
+        Campaign campaign = new Campaign();
+        campaign.setNumber(1);
+        campaign.setStatus(CampaignStatus.RUNNING);
+        campaign.setOpenedAt(MATCH_TIME);
+        campaign.setFirstWeekStart(WEEK_START);
+        campaign.setLastWeekStart(WEEK_START.plusWeeks(9));
+        campaign.setRosterSize(7);
+        campaign.setReference(5_300);
+        campaign.setTier(CampaignTier.NORMAL);
+        campaign.setVolumeFactor(BigDecimal.ONE);
+        campaign.setSkillAnchorsJson("{}");
+        campaign.setCalibrationWindowMonths(9);
+        campaign.setCalibrationFirstDay(WEEK_START.minusMonths(9));
+        campaignRepository.save(campaign);
 
-        WeeklyBossEncounter encounter = new WeeklyBossEncounter();
-        encounter.setWeekStart(WEEK_START);
-        encounter.setRun(run);
-        encounter.setBossCatalogEntry(bossEntry);
-        encounter.setEffectiveHp(10_000);
-        encounter.setDefeated(true);
-        encounter.setDefeatedByPlayer(player);
-        encounter.setFinishingPlayerMatch(playerMatch);
-        bossEncounterRepository.save(encounter);
+        CampaignPlayer member = new CampaignPlayer();
+        member.setCampaign(campaign);
+        member.setPlayer(player);
+        campaignPlayerRepository.save(member);
+
+        CampaignWeek week = new CampaignWeek();
+        week.setCampaign(campaign);
+        week.setWeekIndex(1);
+        week.setWeekStart(WEEK_START);
+        week.setPlanetName("Orune");
+        week.setCategory(GuardianCategory.MINOR);
+        week.setGuardianWeight(new BigDecimal("0.60"));
+        week.setGroupWeight(BigDecimal.ONE);
+        week.setGuardian(guardian);
+        week.setGuardianHitPoints(10_000);
+        week.setWoundedCount(1_855);
+        week.setDefeated(true);
+        week.setDefeatedByPlayer(player);
+        week.setFinishingPlayerMatch(playerMatch);
+        campaignWeekRepository.save(week);
     }
 }

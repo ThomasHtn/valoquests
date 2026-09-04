@@ -2,47 +2,51 @@ package io.github.thomashtn.valoquests.scoring;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.MatchOutcome;
-import io.github.thomashtn.valoquests.scoring.model.BossCategory;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Pins the barèmes in force, and the balance properties they exist to produce.
+ * Pins the barème in force, and the balance properties it exists to produce.
  */
+@DisplayName("Scoring ruleset")
 class DefaultScoringRulesetTest {
+
+    /** Reference the gameplay document works its examples on. */
+    private static final int DOCUMENT_REFERENCE = 5_300;
 
     /** Ruleset under test. */
     private final DefaultScoringRuleset ruleset = new DefaultScoringRuleset();
 
-    /** Average value of a competitive match over an even win/loss split. */
-    private static final int AVERAGE_COMPETITIVE_DAMAGE = 425;
-
-    /** Weeks a run spans, the span the difficulty ladder is written over. */
-    private static final int RUN_LENGTH_WEEKS = 10;
-
     @Test
     void shouldPriceEveryValuedModeAndLeaveTheRestAtZero() {
-        assertThat(ruleset.matchDamage(GameMode.COMPETITIVE, MatchOutcome.WIN)).isEqualTo(500);
-        assertThat(ruleset.matchDamage(GameMode.COMPETITIVE, MatchOutcome.DRAW)).isEqualTo(425);
         assertThat(ruleset.matchDamage(GameMode.COMPETITIVE, MatchOutcome.LOSS)).isEqualTo(350);
-        assertThat(ruleset.matchDamage(GameMode.UNRATED, MatchOutcome.WIN)).isEqualTo(400);
-        assertThat(ruleset.matchDamage(GameMode.SPIKE_RUSH, MatchOutcome.WIN)).isEqualTo(180);
-        assertThat(ruleset.matchDamage(GameMode.SKIRMISH, MatchOutcome.WIN)).isEqualTo(170);
+        assertThat(ruleset.matchDamage(GameMode.COMPETITIVE, MatchOutcome.DRAW)).isEqualTo(425);
+        assertThat(ruleset.matchDamage(GameMode.COMPETITIVE, MatchOutcome.WIN)).isEqualTo(500);
+        assertThat(ruleset.matchDamage(GameMode.UNRATED, MatchOutcome.LOSS)).isEqualTo(320);
+        assertThat(ruleset.matchDamage(GameMode.UNRATED, MatchOutcome.DRAW)).isEqualTo(390);
+        assertThat(ruleset.matchDamage(GameMode.UNRATED, MatchOutcome.WIN)).isEqualTo(460);
+        assertThat(ruleset.matchDamage(GameMode.TEAM_DEATHMATCH, MatchOutcome.LOSS)).isEqualTo(110);
+        assertThat(ruleset.matchDamage(GameMode.TEAM_DEATHMATCH, MatchOutcome.DRAW)).isEqualTo(135);
         assertThat(ruleset.matchDamage(GameMode.TEAM_DEATHMATCH, MatchOutcome.WIN)).isEqualTo(160);
+        assertThat(ruleset.matchDamage(GameMode.SPIKE_RUSH, MatchOutcome.LOSS)).isEqualTo(110);
+        assertThat(ruleset.matchDamage(GameMode.SPIKE_RUSH, MatchOutcome.WIN)).isEqualTo(150);
+        assertThat(ruleset.matchDamage(GameMode.DEATHMATCH, MatchOutcome.LOSS)).isEqualTo(100);
         assertThat(ruleset.matchDamage(GameMode.DEATHMATCH, MatchOutcome.WIN)).isEqualTo(150);
+        assertThat(ruleset.matchDamage(GameMode.SKIRMISH, MatchOutcome.LOSS)).isEqualTo(90);
+        assertThat(ruleset.matchDamage(GameMode.SKIRMISH, MatchOutcome.DRAW)).isEqualTo(110);
+        assertThat(ruleset.matchDamage(GameMode.SKIRMISH, MatchOutcome.WIN)).isEqualTo(130);
 
         // Imported but not part of the competition, so worth nothing.
+        assertThat(ruleset.matchDamage(GameMode.SWIFTPLAY, MatchOutcome.WIN)).isZero();
         assertThat(ruleset.matchDamage(GameMode.OTHER, MatchOutcome.WIN)).isZero();
         assertThat(ruleset.matchDamage(null, MatchOutcome.WIN)).isZero();
         assertThat(ruleset.matchDamage(GameMode.COMPETITIVE, null)).isZero();
     }
 
-    /**
-     * Premier is a five-stack competitive queue synchronization imports, so leaving it out of the
-     * barème made it count as an active day while dealing nothing.
-     */
     @Test
     void shouldPricePremierLikeCompetitive() {
         for (MatchOutcome outcome : MatchOutcome.values()) {
@@ -59,7 +63,7 @@ class DefaultScoringRulesetTest {
     @Test
     void shouldFoldDrawsIntoDefeatsForModesThatCannotDraw() {
         assertThat(ruleset.matchDamage(GameMode.DEATHMATCH, MatchOutcome.DRAW)).isEqualTo(100);
-        assertThat(ruleset.matchDamage(GameMode.SPIKE_RUSH, MatchOutcome.DRAW)).isEqualTo(130);
+        assertThat(ruleset.matchDamage(GameMode.SPIKE_RUSH, MatchOutcome.DRAW)).isEqualTo(110);
     }
 
     @Test
@@ -73,199 +77,108 @@ class DefaultScoringRulesetTest {
     }
 
     @Test
-    void shouldPriceChallengesByDifficulty() {
-        assertThat(ruleset.challengeDamage(ChallengeDifficulty.EASY)).isEqualTo(800);
-        assertThat(ruleset.challengeDamage(ChallengeDifficulty.NORMAL)).isEqualTo(1_400);
-        assertThat(ruleset.challengeDamage(ChallengeDifficulty.MEDIUM)).isEqualTo(2_200);
-        assertThat(ruleset.challengeDamage(ChallengeDifficulty.HARD)).isEqualTo(3_200);
-        assertThat(ruleset.challengeDamage(ChallengeDifficulty.VERY_HARD)).isEqualTo(4_500);
+    void shouldGiveNothingOnTheFirstDayThenTwoPercentPerDayUpToTen() {
+        assertThat(ruleset.streakBonusPercent(0)).isZero();
+        assertThat(ruleset.streakBonusPercent(1)).isZero();
+        assertThat(ruleset.streakBonusPercent(2)).isEqualTo(2);
+        assertThat(ruleset.streakBonusPercent(3)).isEqualTo(4);
+        assertThat(ruleset.streakBonusPercent(4)).isEqualTo(6);
+        assertThat(ruleset.streakBonusPercent(5)).isEqualTo(8);
+        assertThat(ruleset.streakBonusPercent(6)).isEqualTo(10);
+        assertThat(ruleset.streakBonusPercent(12)).isEqualTo(10);
     }
 
     @Test
-    void shouldPayNothingBelowTwoActiveDaysThenClimb() {
-        assertThat(ruleset.regularityBonus(0)).isZero();
-        assertThat(ruleset.regularityBonus(1)).isZero();
-        assertThat(ruleset.regularityBonus(2)).isEqualTo(600);
-        assertThat(ruleset.regularityBonus(3)).isEqualTo(1_400);
-        assertThat(ruleset.regularityBonus(4)).isEqualTo(2_400);
-        assertThat(ruleset.regularityBonus(5)).isEqualTo(3_600);
-        assertThat(ruleset.regularityBonus(6)).isEqualTo(4_800);
+    void shouldLeanLongModesTowardsComponentsAndQuickModesTowardsFood() {
+        assertThat(ruleset.foodSharePercent(GameMode.COMPETITIVE)).isEqualTo(30);
+        assertThat(ruleset.foodSharePercent(GameMode.PREMIER)).isEqualTo(30);
+        assertThat(ruleset.foodSharePercent(GameMode.UNRATED)).isEqualTo(30);
+        assertThat(ruleset.foodSharePercent(GameMode.DEATHMATCH)).isEqualTo(70);
+        assertThat(ruleset.foodSharePercent(GameMode.TEAM_DEATHMATCH)).isEqualTo(70);
+        assertThat(ruleset.foodSharePercent(GameMode.SPIKE_RUSH)).isEqualTo(70);
+        assertThat(ruleset.foodSharePercent(GameMode.SKIRMISH)).isEqualTo(70);
+        assertThat(ruleset.foodSharePercent(GameMode.SWIFTPLAY)).isZero();
+        assertThat(ruleset.foodSharePercent(null)).isZero();
     }
 
     @Test
-    void shouldClampRegularityBonusBeyondSevenDays() {
-        assertThat(ruleset.regularityBonus(7)).isEqualTo(6_000);
-        assertThat(ruleset.regularityBonus(9)).isEqualTo(ruleset.regularityBonus(7));
+    void shouldWeighTheDailyChallengeBetweenEasyAndNormal() {
+        assertThat(ruleset.challengeWeight(ChallengeCadence.DAILY, null)).isEqualTo(1.2);
+        assertThat(ruleset.challengeWeight(ChallengeCadence.DAILY, ChallengeDifficulty.HARD)).isEqualTo(1.2);
+        assertThat(ruleset.challengeWeight(ChallengeCadence.WEEKLY, ChallengeDifficulty.EASY)).isEqualTo(1.0);
+        assertThat(ruleset.challengeWeight(ChallengeCadence.WEEKLY, ChallengeDifficulty.NORMAL)).isEqualTo(1.7);
+        assertThat(ruleset.challengeWeight(ChallengeCadence.WEEKLY, ChallengeDifficulty.MEDIUM)).isEqualTo(2.7);
+        assertThat(ruleset.challengeWeight(ChallengeCadence.WEEKLY, ChallengeDifficulty.HARD)).isEqualTo(3.9);
+        assertThat(ruleset.challengeWeight(ChallengeCadence.WEEKLY, ChallengeDifficulty.VERY_HARD))
+            .isEqualTo(5.4);
+        assertThat(ruleset.challengeWeight(ChallengeCadence.WEEKLY, null)).isZero();
     }
 
     @Test
-    void shouldPriceTeamBonusAsTenPercentPerJoiningPlayer() {
-        ChallengeDifficulty difficulty = ChallengeDifficulty.MEDIUM;
-
-        assertThat(ruleset.challengeTeamBonus(difficulty, 0)).isZero();
-        assertThat(ruleset.challengeTeamBonus(difficulty, 1)).isZero();
-        assertThat(ruleset.challengeTeamBonus(difficulty, 2)).isEqualTo(220);
-        assertThat(ruleset.challengeTeamBonus(difficulty, 3)).isEqualTo(440);
-        assertThat(ruleset.challengeTeamBonus(difficulty, 4)).isEqualTo(660);
-        assertThat(ruleset.challengeTeamBonus(difficulty, 5)).isEqualTo(880);
-        assertThat(ruleset.challengeTeamBonus(difficulty, 6)).isEqualTo(1_100);
-    }
-
-    @Test
-    void shouldCapTeamBonusAtHalfTheChallengeDamage() {
-        assertThat(ruleset.challengeTeamBonus(ChallengeDifficulty.VERY_HARD, 7))
-            .isEqualTo(2_250)
-            .isEqualTo(ruleset.challengeTeamBonus(ChallengeDifficulty.VERY_HARD, 6));
-    }
-
-    @Test
-    void shouldScaleTeamBonusWithTheChallengeStake() {
-        assertThat(ruleset.challengeTeamBonus(ChallengeDifficulty.EASY, 6)).isEqualTo(400);
-        assertThat(ruleset.challengeTeamBonus(ChallengeDifficulty.VERY_HARD, 6)).isEqualTo(2_250);
-    }
-
-    @Test
-    void shouldSizeBossHitPointsOnTheActiveRosterAndTheMeasuredReference() {
-        int reference = 10_000;
-
-        assertThat(ruleset.bossHitPoints(BossCategory.MINOR, 7, reference)).isEqualTo(45_500);
-        assertThat(ruleset.bossHitPoints(BossCategory.STANDARD, 7, reference)).isEqualTo(59_500);
-        assertThat(ruleset.bossHitPoints(BossCategory.ELITE, 7, reference)).isEqualTo(73_500);
-        assertThat(ruleset.bossHitPoints(BossCategory.STANDARD, 4, reference)).isEqualTo(34_000);
+    void shouldGrowRewardsByFourPercentAWeekLinearly() {
+        assertThat(ruleset.rewardProgressionPercent(1)).isEqualTo(100);
+        assertThat(ruleset.rewardProgressionPercent(2)).isEqualTo(104);
+        assertThat(ruleset.rewardProgressionPercent(10)).isEqualTo(136);
+        assertThat(ruleset.rewardProgressionPercent(0)).isEqualTo(100);
     }
 
     /**
-     * Encodes why every weight sits at or below the measured reference.
-     *
-     * <p>The reference is the squad's own recent median, so asking for exactly it is a win by zero
-     * margin that week-to-week noise decides rather than effort — and an elite boss well above it is
-     * unwinnable by construction for a squad that is merely regular. A standard boss must therefore
-     * leave room for one slow week, and an elite one must ask for a push rather than a miracle.
+     * The survivors table of the gameplay document, at its reference of 5 300 on the first week.
      */
     @Test
-    void shouldLeaveAStandardBossRoomForOneSlowWeek() {
-        int reference = 12_345;
+    void shouldRescueTheDocumentsSurvivorsPerChallenge() {
+        assertThat(survivorsOf(ChallengeCadence.DAILY, null)).isEqualTo(6);
+        assertThat(survivorsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.EASY)).isEqualTo(5);
+        assertThat(survivorsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.NORMAL)).isEqualTo(9);
+        assertThat(survivorsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.MEDIUM)).isEqualTo(14);
+        assertThat(survivorsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.HARD)).isEqualTo(21);
+        assertThat(survivorsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.VERY_HARD)).isEqualTo(29);
+    }
 
-        int minor = ruleset.bossHitPoints(BossCategory.MINOR, 1, reference);
-        int standard = ruleset.bossHitPoints(BossCategory.STANDARD, 1, reference);
-        int elite = ruleset.bossHitPoints(BossCategory.ELITE, 1, reference);
+    @Test
+    void shouldGrowSurvivorsWithTheCampaignWeek() {
+        double weight = ruleset.challengeWeight(ChallengeCadence.WEEKLY, ChallengeDifficulty.VERY_HARD);
 
-        assertThat(standard).isLessThan(reference);
-        assertThat(minor).isLessThan(standard);
-        assertThat(elite).isGreaterThan(reference);
-
-        // An elite boss asks for a push, not a miracle: a fifth above the median would be out of a
-        // regular squad's reach whatever it did, which is what made the category a guaranteed loss.
-        assertThat(elite).isLessThan((int) (reference * 1.1));
+        assertThat(ruleset.challengeSurvivors(DOCUMENT_REFERENCE, weight, 10)).isEqualTo(39);
     }
 
     /**
-     * A fight must follow the roster's measured output, not a constant written months earlier.
+     * The ranking points table of the gameplay document, at its reference of 5 300.
      */
     @Test
-    void shouldFollowTheReferenceItIsGiven() {
-        int quiet = ruleset.bossHitPoints(BossCategory.STANDARD, 6, 4_000);
-        int busy = ruleset.bossHitPoints(BossCategory.STANDARD, 6, 16_000);
-
-        assertThat(busy).isEqualTo(quiet * 4);
-    }
-
-    @Test
-    void shouldNeverSizeABossBelowASinglePlayer() {
-        assertThat(ruleset.bossHitPoints(BossCategory.MINOR, 0, 10_000))
-            .isEqualTo(ruleset.bossHitPoints(BossCategory.MINOR, 1, 10_000));
-    }
-
-    @Test
-    void shouldWalkTheRunThroughItsDifficultyLadder() {
-        assertThat(ruleset.bossCategoryForRunWeek(1)).isEqualTo(BossCategory.MINOR);
-        assertThat(ruleset.bossCategoryForRunWeek(2)).isEqualTo(BossCategory.STANDARD);
-        assertThat(ruleset.bossCategoryForRunWeek(3)).isEqualTo(BossCategory.STANDARD);
-        assertThat(ruleset.bossCategoryForRunWeek(4)).isEqualTo(BossCategory.STANDARD);
-        assertThat(ruleset.bossCategoryForRunWeek(5)).isEqualTo(BossCategory.ELITE);
-        assertThat(ruleset.bossCategoryForRunWeek(6)).isEqualTo(BossCategory.MINOR);
-        assertThat(ruleset.bossCategoryForRunWeek(7)).isEqualTo(BossCategory.STANDARD);
-        assertThat(ruleset.bossCategoryForRunWeek(8)).isEqualTo(BossCategory.STANDARD);
-        assertThat(ruleset.bossCategoryForRunWeek(9)).isEqualTo(BossCategory.STANDARD);
-        assertThat(ruleset.bossCategoryForRunWeek(10)).isEqualTo(BossCategory.ELITE);
+    void shouldPriceTheDocumentsRankingPointsPerChallenge() {
+        assertThat(pointsOf(ChallengeCadence.DAILY, null)).isEqualTo(64);
+        assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.EASY)).isEqualTo(53);
+        assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.NORMAL)).isEqualTo(90);
+        assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.MEDIUM)).isEqualTo(143);
+        assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.HARD)).isEqualTo(207);
+        assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.VERY_HARD)).isEqualTo(286);
     }
 
     /**
-     * The shape of the ladder, stated as the rules state it: a peak is always followed by a breather,
-     * and a run always opens on one. Week one counts as following the previous run's closing elite,
-     * which is why the ladder wraps rather than starting mid-slope.
+     * A perfect week of challenges must weigh about a fifth of a median week of guardian damage, so
+     * they stay a substantial bonus without ever becoming the way the ranking is won.
      */
     @Test
-    void shouldFollowEveryEliteWithAMinor() {
-        assertThat(ruleset.bossCategoryForRunWeek(1)).isEqualTo(BossCategory.MINOR);
-
-        for (int week = 1; week < RUN_LENGTH_WEEKS; week++) {
-            if (ruleset.bossCategoryForRunWeek(week) == BossCategory.ELITE) {
-                assertThat(ruleset.bossCategoryForRunWeek(week + 1)).isEqualTo(BossCategory.MINOR);
-            }
-        }
-    }
-
-    /**
-     * The ladder is read by whoever holds a week index, and nothing guarantees that index stays inside
-     * the run: a week drawn before its run was opened, or a run length shortened under a campaign in
-     * progress, would both land outside. Clamping keeps that a duller boss rather than a crash.
-     */
-    @Test
-    void shouldClampWeekIndexesOutsideTheRun() {
-        assertThat(ruleset.bossCategoryForRunWeek(0)).isEqualTo(ruleset.bossCategoryForRunWeek(1));
-        assertThat(ruleset.bossCategoryForRunWeek(-3)).isEqualTo(ruleset.bossCategoryForRunWeek(1));
-        assertThat(ruleset.bossCategoryForRunWeek(99))
-            .isEqualTo(ruleset.bossCategoryForRunWeek(RUN_LENGTH_WEEKS));
-    }
-
-    @Test
-    void shouldExposeACalibrationBandAroundItsSeed() {
-        assertThat(ruleset.seedReferenceDamagePerPlayer()).isEqualTo(10_000);
-        assertThat(ruleset.calibrationWindowWeeks()).isEqualTo(4);
-        assertThat(ruleset.calibrationFloorPercent()).isLessThan(100);
-        assertThat(ruleset.calibrationCeilingPercent()).isGreaterThan(100);
-    }
-
-    /**
-     * The property the whole rebalance exists for: a player spread over seven days must outscore one
-     * who plays far more matches over three, once regularity is counted.
-     */
-    @Test
-    void shouldRankTheRegularPlayerAboveTheGrinder() {
-        int regular = weeklyMatchDamage(7, 2) + ruleset.regularityBonus(7);
-        int grinder = weeklyMatchDamage(3, 12) + ruleset.regularityBonus(3);
-
-        assertThat(regular).isGreaterThan(grinder);
-    }
-
-    /**
-     * At equal volume, spreading matches over more days must pay more.
-     */
-    @Test
-    void shouldRewardSpreadingTheSameVolumeOverMoreDays() {
-        int spread = weeklyMatchDamage(7, 2) + ruleset.regularityBonus(7);
-        int binged = weeklyMatchDamage(2, 7) + ruleset.regularityBonus(2);
-
-        assertThat(spread).isGreaterThan(binged);
-    }
-
-    /**
-     * Sums a week of competitive matches, applying the daily coefficient ladder.
-     *
-     * @param days           days played
-     * @param matchesPerDay  matches played each of those days
-     * @return total match damage for the week
-     */
-    private int weeklyMatchDamage(int days, int matchesPerDay) {
-        int dailyDamage = 0;
-
-        for (int rank = 1; rank <= matchesPerDay; rank++) {
-            dailyDamage += Math.round(
-                AVERAGE_COMPETITIVE_DAMAGE * ruleset.matchDamageCoefficientPercent(rank) / 100.0f
-            );
+    void shouldKeepAPerfectWeekOfChallengesAroundAFifthOfTheRanking() {
+        int perfectWeek = 7 * pointsOf(ChallengeCadence.DAILY, null);
+        for (ChallengeDifficulty difficulty : ChallengeDifficulty.values()) {
+            perfectWeek += pointsOf(ChallengeCadence.WEEKLY, difficulty);
         }
 
-        return dailyDamage * days;
+        assertThat(perfectWeek).isBetween(DOCUMENT_REFERENCE / 6, DOCUMENT_REFERENCE / 4);
+    }
+
+    @Test
+    void shouldFloorTheReferenceAtTwoThousand() {
+        assertThat(ruleset.referenceFloor()).isEqualTo(2_000);
+    }
+
+    private int survivorsOf(ChallengeCadence cadence, ChallengeDifficulty difficulty) {
+        return ruleset.challengeSurvivors(DOCUMENT_REFERENCE, ruleset.challengeWeight(cadence, difficulty), 1);
+    }
+
+    private int pointsOf(ChallengeCadence cadence, ChallengeDifficulty difficulty) {
+        return ruleset.challengeRankingPoints(DOCUMENT_REFERENCE, ruleset.challengeWeight(cadence, difficulty));
     }
 }
