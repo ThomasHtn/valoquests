@@ -17,6 +17,5 @@ import { RankingHistoryWeek } from './ranking.model';
 export function resolveChampionPlayerId(
   latestFinalizedWeek: PageResponse<RankingHistoryWeek> | null | undefined,
 ): number | null {
-  const week = latestFinalizedWeek?.content[0];
-  return week?.ranking.find((entry) => entry.position === 1)?.playerId ?? null;
+  return latestFinalizedWeek?.content[0]?.winnerPlayerId ?? null;
 }

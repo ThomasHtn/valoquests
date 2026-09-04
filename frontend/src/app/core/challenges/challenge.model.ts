@@ -1,5 +1,6 @@
 /**
- * Difficulty tier of a challenge, controlling its damage reward.
+ * Difficulty tier of a weekly challenge, controlling its weight. Mirrors the backend
+ * `ChallengeDifficulty`. A daily challenge has none.
  */
 export type ChallengeDifficulty = 'EASY' | 'NORMAL' | 'MEDIUM' | 'HARD' | 'VERY_HARD';
 
@@ -18,56 +19,81 @@ export const CHALLENGE_DIFFICULTIES: readonly ChallengeDifficulty[] = [
 ];
 
 /**
- * Collective progress of a single challenge selected for the current week.
+ * How often a challenge is drawn. Mirrors the backend `ChallengeCadence`.
  *
- * Mirrors `CurrentChallengesResponse.ChallengeProgressResponse` from the backend. Progress is
- * collective (across all tracked players) rather than per-player: individual progress is only
- * available from the ranking endpoint.
+ * `WEEKLY` is one of the five drawn on Monday, decided over the week; `DAILY` is the one drawn
+ * every morning, decided inside its own day.
  */
-export interface ChallengeProgress {
+export type ChallengeCadence = 'WEEKLY' | 'DAILY';
+
+/**
+ * What every challenge carries, whether drawn or read from the catalogue.
+ *
+ * Targets come already resolved: the backend scales them at the draw from the campaign's own
+ * measure of the squad, so the figure shown is the figure that counts. A description names the
+ * catalogue's base figure, which is why a screen prints {@link targetValue} rather than trusting
+ * the description alone.
+ */
+export interface ChallengeIdentity {
   readonly id: number;
-  readonly name: string;
-  readonly description: string;
-  readonly difficulty: ChallengeDifficulty;
 
   /**
-   * Metric(s) evaluated by this challenge, joined with `" + "` for composite challenges
-   * (e.g. `"HEADSHOTS"` or `"KILLS + MATCHES_PLAYED"`).
+   * Stable catalogue code (`EASY_DM_HEADSHOTS`), the key to any per-challenge visual.
+   */
+  readonly code: string;
+  readonly name: string;
+  readonly description: string;
+  readonly cadence: ChallengeCadence;
+
+  /**
+   * Difficulty of a weekly challenge, `null` for a daily one.
+   */
+  readonly difficulty: ChallengeDifficulty | null;
+
+  /**
+   * Whether only competitive matches count toward it.
+   */
+  readonly competitiveOnly: boolean;
+
+  /**
+   * Metric(s) evaluated, joined with `" + "` for composite challenges (`"KILLS + MATCHES_PLAYED"`).
    */
   readonly metric: string;
 
   /**
-   * Target value for the challenge, or `null` for a composite challenge with no stored progress.
+   * Resolved target, or `null` for a composite challenge with no single stored target.
    */
   readonly targetValue: number | null;
 
   /**
-   * Base damage the challenge deals once completed, before the squad bonus.
+   * Survivors one operator rescues by validating it, at the week it was drawn for.
    */
-  readonly damage: number;
+  readonly survivors: number;
 
   /**
-   * Materials one player banks for the colony by validating it.
-   *
-   * The other half of what a challenge is worth: the damage moves the weekly ranking and the boss
-   * fight, the materials move the town. Derived by the backend from that same damage, so the two can
-   * never disagree.
+   * Points it adds to the weekly ranking once validated.
    */
-  readonly materials: number;
+  readonly rankingPoints: number;
+}
 
+/**
+ * Collective progress of a challenge drawn for the current week or day.
+ *
+ * Mirrors `CurrentChallengesResponse.ChallengeProgressResponse` from the backend. Progress is
+ * collective (across the squad): individual progress is only available from the ranking.
+ */
+export interface ChallengeProgress extends ChallengeIdentity {
   /**
-   * Squad bonus currently earned, as a percentage of {@link damage}, resolved by the backend from
-   * the week's own scoring ruleset. Grows as teammates complete the same challenge, and applies
-   * retroactively to everyone who already had.
+   * Day a daily challenge is decided on, as an ISO-8601 date (`YYYY-MM-DD`); `null` for a weekly.
    */
-  readonly teamBonusPercent: number;
+  readonly day: string | null;
   readonly completedPlayers: number;
   readonly totalPlayers: number;
   readonly completionPercentage: number;
 }
 
 /**
- * Challenges selected for the active calendar week, with their collective completion progress.
+ * Challenges drawn for the active calendar week, with their collective completion progress.
  *
  * Mirrors the backend `CurrentChallengesResponse` returned by `GET /api/challenges/current`.
  */
@@ -83,45 +109,46 @@ export interface CurrentChallenges {
   readonly weekEnd: string;
 
   /**
+   * The day in progress, as an ISO-8601 date (`YYYY-MM-DD`).
+   */
+  readonly today: string;
+
+  /**
    * Most recent successful player synchronization, as an ISO-8601 instant, or `null` when none
    * completed yet.
    */
   readonly lastSuccessfulSynchronizationAt: string | null;
+
+  /**
+   * The week's five, one per difficulty, easiest first.
+   */
   readonly challenges: readonly ChallengeProgress[];
+
+  /**
+   * The week's daily challenges drawn so far, oldest first. Today's is the last one.
+   */
+  readonly dailies: readonly ChallengeProgress[];
 }
 
 /**
- * One challenge of the catalogue, outside of any one week's draw — what it is always worth,
- * rather than how far the squad has got with it this week.
+ * One challenge of the catalogue, outside of any one week's draw — what it is worth rather than
+ * how far the squad has got with it.
  *
  * Mirrors the backend `ChallengeCatalogueResponse.ChallengeCatalogueEntry` returned by
  * `GET /api/challenges/catalogue`.
  */
-export interface ChallengeCatalogueEntry {
-  readonly id: number;
-  readonly name: string;
-  readonly description: string;
-  readonly difficulty: ChallengeDifficulty;
-
-  /**
-   * Metric(s) evaluated by this challenge, joined with `" + "` for composite challenges.
-   */
-  readonly metric: string;
-
-  /**
-   * Target value for the challenge, or `null` for a composite challenge with no single stored
-   * target.
-   */
-  readonly targetValue: number | null;
-  readonly damage: number;
-  readonly materials: number;
-}
+export type ChallengeCatalogueEntry = ChallengeIdentity;
 
 /**
- * The full catalogue of challenges eligible for weekly selection.
+ * The full catalogue of challenges the draws pick from, priced at the reference in force.
  *
  * Mirrors the backend `ChallengeCatalogueResponse` returned by `GET /api/challenges/catalogue`.
  */
 export interface ChallengeCatalogue {
+  /**
+   * Weekly reference the targets and rewards are resolved at: the live campaign's, else the last
+   * closed one's, else the floor.
+   */
+  readonly reference: number;
   readonly challenges: readonly ChallengeCatalogueEntry[];
 }

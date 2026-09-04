@@ -23,7 +23,7 @@ export const APP_VERSION = '1.0-beta';
  */
 export const NAV_ITEMS: readonly NavItem[] = [
   { labelKey: 'overview', icon: 'layout-dashboard', routerLink: '/overview', exactMatch: true },
-  { labelKey: 'challenges', icon: 'target', routerLink: '/week' },
+  { labelKey: 'challenges', icon: 'target', routerLink: '/challenges' },
   { labelKey: 'leaderboard', icon: 'trophy', routerLink: '/leaderboard' },
   { labelKey: 'campaign', icon: 'map', routerLink: '/campaign' },
   { labelKey: 'players', icon: 'users', routerLink: '/players' },

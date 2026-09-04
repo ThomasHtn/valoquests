@@ -17,9 +17,10 @@ export type ChallengeIcon =
 
 /**
  * Rank of a challenge's difficulty tier, written as a roman numeral from easiest (`I`) to hardest
- * (`V`), the way the design labels the five weekly slots.
+ * (`V`), the way the design labels the five weekly slots — or `D` for the daily challenge, which
+ * sits outside the ladder.
  */
-export type ChallengeTier = 'I' | 'II' | 'III' | 'IV' | 'V';
+export type ChallengeTier = 'I' | 'II' | 'III' | 'IV' | 'V' | 'D';
 
 /**
  * Visual treatment applied to a challenge, shared by the weekly challenges card and the weekly

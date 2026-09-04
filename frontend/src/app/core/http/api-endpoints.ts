@@ -80,29 +80,28 @@ export const API_ENDPOINTS = {
   dailyRanking: `${environment.apiBaseUrl}/rankings/daily`,
 
   /**
-   * `GET` the active week's boss confrontation.
+   * `GET` the rescue campaign the site shows: the live one, else the last closed one.
    */
-  currentBoss: `${environment.apiBaseUrl}/boss/current`,
+  campaign: `${environment.apiBaseUrl}/campaign`,
 
   /**
-   * `GET` the paginated history of finalized weekly boss confrontations.
+   * `GET` what the squad brought in today, operator by operator.
    */
-  bossHistory: `${environment.apiBaseUrl}/boss/history`,
+  campaignToday: `${environment.apiBaseUrl}/campaign/today`,
 
   /**
-   * `GET` the squad's shared colony as it stands today.
+   * `GET` every closed campaign and how it ended.
    */
-  colony: `${environment.apiBaseUrl}/colony`,
+  campaignHistory: `${environment.apiBaseUrl}/campaign/history`,
 
   /**
-   * `GET` the population curve of the run in progress.
+   * `GET` one tracked player's contribution to the week and to the live campaign.
+   *
+   * @param playerId - Internal player identifier.
+   * @returns The endpoint URL.
    */
-  colonyTrajectory: `${environment.apiBaseUrl}/colony/trajectory`,
-
-  /**
-   * `GET` every closed run and how it ended.
-   */
-  colonyHistory: `${environment.apiBaseUrl}/colony/history`,
+  playerContribution: (playerId: number): string =>
+    `${environment.apiBaseUrl}/players/${playerId}/contribution`,
 
   /**
    * Administration routes, every one of them guarded by the `X-Admin-Key` header that
@@ -166,7 +165,7 @@ export const API_ENDPOINTS = {
     rankingRecalculation: `${environment.apiBaseUrl}/admin/rankings/recalculation`,
 
     /**
-     * `POST` the selection of the current week's challenges and boss.
+     * `POST` the selection of the current week's five challenges.
      */
     currentWeekSelection: `${environment.apiBaseUrl}/admin/weeks/current/selection`,
 
@@ -203,37 +202,44 @@ export const API_ENDPOINTS = {
     campaignReset: `${environment.apiBaseUrl}/admin/maintenance/campaign-reset`,
 
     /**
-     * `POST` a replay of the run in progress. Idempotent: the colony is never advanced
-     * incrementally, so this rewrites exactly what a nightly tick would.
+     * `POST` the draw of today's daily challenge, when the nightly tick missed it.
      */
-    colonyRecompute: `${environment.apiBaseUrl}/admin/colony/recompute`,
+    dailyChallengeSelection: `${environment.apiBaseUrl}/admin/challenges/daily/selection`,
 
     /**
-     * `GET` the campaign's lifecycle: every run and the automatic-renewal setting.
+     * `GET` the calibration a campaign opened today would be given, or `POST` the opening itself.
      */
     campaigns: `${environment.apiBaseUrl}/admin/campaigns`,
 
     /**
-     * `PATCH` the automatic-renewal setting.
+     * `GET` the squad's measure without opening anything: reference, tier, per-operator coverage.
      */
-    campaignAutoRenew: `${environment.apiBaseUrl}/admin/campaigns/auto-renew`,
+    campaignCalibration: `${environment.apiBaseUrl}/admin/campaigns/calibration`,
 
     /**
-     * `POST` the start of a new campaign, for the gap automatic renewal being off leaves open.
+     * `POST` a background import of every active operator's match history over the calibration
+     * window, so the measure above stands on real weeks rather than on the last two acts.
      */
-    campaignStart: `${environment.apiBaseUrl}/admin/campaigns/start`,
+    campaignBackfill: `${environment.apiBaseUrl}/admin/campaigns/backfill`,
 
     /**
-     * `POST` the stop of the campaign in progress, freezing its score at today.
+     * `POST` the stop of the live campaign, frozen at yesterday's base.
      */
     campaignStop: `${environment.apiBaseUrl}/admin/campaigns/stop`,
 
     /**
-     * `DELETE` one campaign, running or closed, with the colony it grew and the fights it drew.
+     * `POST` a replay of the running campaign from its first day. Idempotent: the base is never
+     * advanced incrementally, so this rewrites exactly what a nightly tick would.
+     */
+    campaignReplay: `${environment.apiBaseUrl}/admin/campaigns/replay`,
+
+    /**
+     * `DELETE` one campaign with its weeks, roster and snapshots.
      *
-     * @param runId - Internal campaign identifier.
+     * @param campaignId - Internal campaign identifier.
      * @returns The campaign's endpoint.
      */
-    campaign: (runId: number): string => `${environment.apiBaseUrl}/admin/campaigns/${runId}`,
+    campaign: (campaignId: number): string =>
+      `${environment.apiBaseUrl}/admin/campaigns/${campaignId}`,
   },
 } as const;

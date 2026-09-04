@@ -14,7 +14,7 @@ import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminCommandRunner } from '@core/admin/admin-command-runner';
 import { AdminPlayer, AdminPlayerStatus } from '@core/admin/admin.model';
-import { ColonyApi } from '@core/colony/colony-api';
+import { CampaignApi } from '@core/campaign/campaign-api';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -38,7 +38,7 @@ import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-fo
  * table says which fate awaits each player before the operator asks, and the confirmation says
  * which one actually happened.
  *
- * It is also where the colony's roster is kept honest, which is a real part of playing rather than
+ * It is also where the campaign's roster is kept honest, which is a real part of playing rather than
  * housekeeping: the roster size drives the turnout denominator, the opening housing and both sides
  * of the weekly fight at once, so an account left active and away widens the town without feeding
  * it. Two lines carry that here — a warning on any active player who has not played in a fortnight,
@@ -73,9 +73,9 @@ import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-fo
 })
 export class AdminPlayers {
   /**
-   * Data-access service backing the colony, read for the size the run in progress froze on.
+   * Data-access service backing the campaign, read for the size the live one froze its roster at.
    */
-  private readonly colonyApi = inject(ColonyApi);
+  private readonly campaignApi = inject(CampaignApi);
 
   /**
    * Data-access service backing the roster resource and every command.
@@ -111,18 +111,19 @@ export class AdminPlayers {
    * What the run in progress froze its roster at, and the reminder that editing it here lands on the
    * next run rather than on this one.
    *
-   * Empty while the colony has not resolved: this screen must keep working when the colony endpoint
-   * does not, since the roster is what an operator comes here to repair.
+   * Empty while the campaign has not resolved, or between two campaigns: this screen must keep
+   * working when the campaign endpoint does not, since the roster is what an operator comes here to
+   * repair.
    */
   protected readonly frozenRosterLabel = computed<string>(() => {
-    const colony = resourceValue(this.colonyApi.colony, null) ?? null;
-    if (colony === null) {
+    const campaign = resourceValue(this.campaignApi.campaign, null) ?? null;
+    if (campaign === null || campaign.status === null || campaign.status === 'CLOSED') {
       return '';
     }
 
     return this.translation.translate('admin.players.frozenRoster', {
-      roster: colony.presence.rosterSize,
-      run: colony.runNumber,
+      roster: campaign.rosterSize ?? 0,
+      run: campaign.number ?? 0,
     });
   });
 

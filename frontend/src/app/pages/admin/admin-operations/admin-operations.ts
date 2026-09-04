@@ -38,7 +38,7 @@ const SYNCHRONIZATION_POLL_INTERVAL_MS = 3_000;
  *
  * Gathers every command that repairs or refreshes the tracker: synchronizing the squad or one
  * player, rebuilding progress and ranking, drawing a week the Monday rollover failed to open,
- * running that rollover in full when it never fired at all, replaying the colony, and throwing the
+ * running that rollover in full when it never fired at all, replaying the campaign, and throwing the
  * week's challenge pack away for a new one.
  *
  * A synchronization runs in the background and outlives the request that started it, so the page
@@ -180,9 +180,9 @@ export class AdminOperations {
   protected readonly rolloverState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
-   * State of the colony replay command.
+   * State of the campaign replay command.
    */
-  protected readonly colonyRecomputeState = signal<AdminActionState>(IDLE_ACTION);
+  protected readonly campaignReplayState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
    * Translated label of the latest execution's status.
@@ -414,12 +414,12 @@ export class AdminOperations {
   }
 
   /**
-   * Replays the colony over the run in progress.
+   * Replays the running campaign from its first day.
    */
-  protected async recomputeColony(): Promise<void> {
-    await this.commandRunner.run(() => this.adminApi.recomputeColony(), {
-      state: this.colonyRecomputeState,
-      successMessage: () => this.translation.translate('admin.operations.colonyRecompute.done'),
+  protected async replayCampaign(): Promise<void> {
+    await this.commandRunner.run(() => this.adminApi.replayCampaign(), {
+      state: this.campaignReplayState,
+      successMessage: () => this.translation.translate('admin.operations.campaignReplay.done'),
     });
   }
 }

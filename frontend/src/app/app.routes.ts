@@ -5,6 +5,7 @@ import { adminGuard } from '@core/admin/admin.guard';
 import { landingEntryGuard } from '@core/landing/landing-entry.guard';
 import { tourEntryGuard } from '@core/tour/tour-entry.guard';
 import { Campaign } from '@pages/campaign/campaign';
+import { Challenges } from '@pages/challenges/challenges';
 import { Landing } from '@pages/landing/landing';
 import { Leaderboard } from '@pages/leaderboard/leaderboard';
 import { NotFound } from '@pages/not-found/not-found';
@@ -12,7 +13,6 @@ import { Overview } from '@pages/overview/overview';
 import { Players } from '@pages/players/players';
 import { Rules } from '@pages/rules/rules';
 import { Tour } from '@pages/tour/tour';
-import { Week } from '@pages/week/week';
 
 /**
  * Application routes.
@@ -76,20 +76,20 @@ export const routes: Routes = [
         component: Overview,
       },
       {
-        path: 'week',
-        title: 'overview.weeklyChallenges.title',
-        component: Week,
+        path: 'challenges',
+        title: 'challenges.title',
+        component: Challenges,
       },
       {
-        // The boss card and the challenge board fused into one page (see design-review.md §3.2);
-        // the old address stays valid, on the same pattern as `colony` → `campaign` below.
-        path: 'challenges',
-        redirectTo: 'week',
+        // The challenge board lived at `/week` while it shared the page with the boss; the old
+        // address stays valid rather than breaking every link that already points at it.
+        path: 'week',
+        redirectTo: 'challenges',
         pathMatch: 'full',
       },
       {
         path: 'leaderboard',
-        title: 'overview.weeklyRanking.title',
+        title: 'leaderboard.title',
         component: Leaderboard,
       },
       {
@@ -113,14 +113,6 @@ export const routes: Routes = [
         path: 'campaign',
         title: 'campaign.title',
         component: Campaign,
-      },
-      {
-        path: 'campaign/history/:runNumber',
-        title: 'campaignSummary.eyebrow',
-        loadComponent: () =>
-          import('@pages/campaign/campaign-summary/campaign-summary').then(
-            (m) => m.CampaignSummary,
-          ),
       },
       {
         // The colony and the campaign were two pages until they turned out to be one run; the old

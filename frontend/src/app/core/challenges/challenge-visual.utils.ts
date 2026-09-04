@@ -6,10 +6,6 @@ import { ChallengeIcon, ChallengeVisual } from './challenge-visual.model';
  *
  * Keyed by the backend's `ChallengeMetric` enum names. Composite challenges expose a
  * `" + "`-joined metric string; {@link resolveChallengeVisual} matches on the first metric only.
- *
- * The `*_PROGRESS` keys are the same metrics asked as an improvement on the player's own recent form
- * rather than as an absolute threshold. The backend suffixes them so the two can be told apart: their
- * target is a percentage gain, not a value to reach. They all share the rising-trend icon.
  */
 const CHALLENGE_METRIC_ICONS: Readonly<Record<string, ChallengeIcon>> = {
   HEADSHOTS: 'skull',
@@ -25,10 +21,6 @@ const CHALLENGE_METRIC_ICONS: Readonly<Record<string, ChallengeIcon>> = {
   ACS: 'star',
   ADR: 'swords',
   HEADSHOT_RATE: 'skull',
-  KD_PROGRESS: 'trending-up',
-  ACS_PROGRESS: 'trending-up',
-  ADR_PROGRESS: 'trending-up',
-  HEADSHOT_RATE_PROGRESS: 'trending-up',
 };
 
 /**
@@ -43,9 +35,8 @@ const DEFAULT_CHALLENGE_ICON: ChallengeIcon = 'target';
  * escalating ladder rather than five unrelated categories. Each tier carries its accent twice: as
  * the Tailwind classes most callers apply, and as the bare hex a component stylesheet lights a
  * whole block from through one custom property. Both must move together — keep the hexes in sync
- * with `styles/colors.css`. The hardest tier takes `accent-red`,
- * the same hue as damage and boss health: the reward is what a very hard challenge is *for*, and
- * nothing else on these screens is red enough to be confused with it.
+ * with `styles/colors.css`. The hardest tier takes `accent-red`, the same hue as damage and
+ * guardian health: the reward is what a very hard challenge is *for*.
  */
 const CHALLENGE_DIFFICULTY_COLORS: Readonly<
   Record<ChallengeDifficulty, Omit<ChallengeVisual, 'icon'>>
@@ -93,18 +84,31 @@ const CHALLENGE_DIFFICULTY_COLORS: Readonly<
 };
 
 /**
+ * Treatment of the daily challenge, which has no difficulty: cyan, the one accent the ladder
+ * above does not use, so a day's challenge is never mistaken for a weekly slot.
+ */
+const DAILY_CHALLENGE_VISUAL: Omit<ChallengeVisual, 'icon'> = {
+  tier: 'D',
+  iconClass: 'text-accent-cyan',
+  badgeClass: 'bg-accent-cyan/15',
+  barClass: 'bg-accent-cyan',
+  panelClass: 'border-accent-cyan/35 from-accent-cyan/12',
+  tierColor: '#4ec9d6',
+};
+
+/**
  * Resolves the tier rank and color treatment of a difficulty, without an icon.
  *
  * Used where a difficulty is shown on its own rather than through a challenge — the rules page's
- * damage ladder — so the tier reads with the same color there as on the weekly board.
+ * reward ladder — so the tier reads with the same color there as on the weekly board.
  *
- * @param difficulty - The difficulty tier.
+ * @param difficulty - The difficulty tier, or `null` for the daily challenge.
  * @returns The visual treatment to apply for the tier.
  */
 export function resolveDifficultyVisual(
-  difficulty: ChallengeDifficulty,
+  difficulty: ChallengeDifficulty | null,
 ): Omit<ChallengeVisual, 'icon'> {
-  return CHALLENGE_DIFFICULTY_COLORS[difficulty];
+  return difficulty === null ? DAILY_CHALLENGE_VISUAL : CHALLENGE_DIFFICULTY_COLORS[difficulty];
 }
 
 /**
@@ -112,16 +116,15 @@ export function resolveDifficultyVisual(
  *
  * The icon reflects the challenge's metric (e.g. `"HEADSHOTS"` or `"KILLS + MATCHES_PLAYED"`,
  * matched on the first metric only), while the color reflects its difficulty tier so harder
- * challenges stand out. Shared by the weekly challenges card and the weekly ranking table so both
- * widgets read as one system.
+ * challenges stand out. Shared by every screen drawing a challenge so they read as one system.
  *
  * @param metric - The challenge's metric string.
- * @param difficulty - The challenge's difficulty tier.
+ * @param difficulty - The challenge's difficulty tier, or `null` for the daily challenge.
  * @returns The visual treatment to apply for the challenge.
  */
 export function resolveChallengeVisual(
   metric: string,
-  difficulty: ChallengeDifficulty,
+  difficulty: ChallengeDifficulty | null,
 ): ChallengeVisual {
   const [primaryMetric] = metric.split(' + ');
   return {
@@ -132,14 +135,13 @@ export function resolveChallengeVisual(
 
 /**
  * Resolves the short category label shown for a challenge in place of its full name (e.g.
- * `"Kills"` rather than `"Élimination express"`), so the weekly challenges card and the weekly
- * ranking table both stay scannable at a glance.
+ * `"Kills"` rather than `"Élimination express"`), so a board stays scannable at a glance.
  *
  * Composite challenges (e.g. `"KILLS + MATCHES_PLAYED"`) get every one of their metrics
  * translated and joined the same way the backend joins the raw metric string.
  *
  * @param metric - The challenge's metric string.
- * @param translate - Translation function resolving an `overview.weeklyChallenges.metric.*` key.
+ * @param translate - Translation function resolving a `common.metric.*` key.
  * @returns The translated category label.
  */
 export function resolveChallengeMetricLabel(
@@ -148,6 +150,6 @@ export function resolveChallengeMetricLabel(
 ): string {
   return metric
     .split(' + ')
-    .map((part) => translate(`overview.weeklyChallenges.metric.${part}`))
+    .map((part) => translate(`common.metric.${part}`))
     .join(' + ');
 }

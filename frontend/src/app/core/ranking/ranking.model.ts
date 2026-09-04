@@ -1,3 +1,5 @@
+import { WeeklyTitle } from '@core/campaign/campaign.model';
+import { ChallengeCadence, ChallengeDifficulty } from '@core/challenges/challenge.model';
 import { CompetitiveTier } from '@core/players/competitive-tier.model';
 
 /**
@@ -18,23 +20,41 @@ export interface PlayerRanking {
 }
 
 /**
- * A player's exact progress toward a single challenge selected for the active week.
+ * A player's exact progress toward one challenge on the week's board: one of the five weekly
+ * ones, or today's daily.
  *
  * Mirrors `CurrentRankingResponse.ChallengeProgressResponse` from the backend.
  */
 export interface RankingChallengeProgress {
-  readonly challengeId: number;
-  readonly challengeName: string;
+  readonly id: number;
+  readonly code: string;
+  readonly name: string;
+  readonly cadence: ChallengeCadence;
+
+  /**
+   * Difficulty of a weekly challenge, `null` for the daily.
+   */
+  readonly difficulty: ChallengeDifficulty | null;
+
+  /**
+   * Day the daily is decided on, as an ISO-8601 date (`YYYY-MM-DD`); `null` for a weekly.
+   */
+  readonly day: string | null;
   readonly metric: string;
   readonly currentValue: number;
   readonly targetValue: number | null;
   readonly unit: string;
   readonly completed: boolean;
+
+  /**
+   * Points the challenge adds to the ranking once validated.
+   */
+  readonly rankingPoints: number;
 }
 
 /**
- * Single row of the current weekly ranking: a player's position, score and exact progress toward
- * every challenge selected for the active week.
+ * Single row of the current weekly ranking: a player's position, what they produced this week,
+ * and their exact progress toward every challenge on the board.
  *
  * Mirrors `CurrentRankingResponse.RankingEntryResponse` from the backend.
  */
@@ -47,38 +67,46 @@ export interface RankingEntry {
   readonly previousPosition: number | null;
   readonly positionVariation: number;
   readonly player: PlayerRanking;
-  readonly challengeDamage: number;
-  readonly completedChallenges: number;
-  readonly totalChallenges: number;
 
   /**
-   * Damage dealt by the matches that counted this week, outside of any challenge.
+   * Damage dealt to the week's guardian by the matches that counted, streak bonus included.
    */
-  readonly matchDamage: number;
-
-  /**
-   * Bonus earned for the number of distinct days the player was active this week.
-   */
-  readonly regularityBonus: number;
-
-  /**
-   * Sum of the per-challenge bonuses earned because enough of the squad cleared the same
-   * challenge.
-   */
-  readonly teamBonus: number;
+  readonly guardianDamage: number;
+  readonly food: number;
+  readonly components: number;
+  readonly matchCount: number;
   readonly activeDays: number;
 
   /**
-   * The player's weekly total: {@link challengeDamage} + {@link matchDamage} +
-   * {@link regularityBonus} + {@link teamBonus}. This is what the ranking is ordered on, so it is
-   * the amount shown next to a position.
-   *
-   * Not the damage the boss took, which is this minus {@link regularityBonus} — the regularity
-   * bonus rewards showing up rather than output and deliberately never reaches the shared health
-   * bar (see `DefaultBossQueryService#totalDamageDealt` and the rules page). Anything printed
-   * against the boss has to subtract it, or the rows will not add up to the bar above them.
+   * Consecutive days played, counted up to the last day of the week played so far.
    */
-  readonly totalDamage: number;
+  readonly streakDays: number;
+
+  /**
+   * Points banked by the challenges validated this week, weekly and daily alike.
+   */
+  readonly challengePoints: number;
+
+  /**
+   * Weekly challenges validated, over {@link totalChallenges}.
+   */
+  readonly completedChallenges: number;
+  readonly totalChallenges: number;
+  readonly completedDailyChallenges: number;
+
+  /**
+   * {@link guardianDamage} + {@link challengePoints}: what the ranking is ordered on.
+   */
+  readonly totalPoints: number;
+
+  /**
+   * Titles the player holds on the week so far.
+   */
+  readonly titles: readonly WeeklyTitle[];
+
+  /**
+   * One line per challenge on the board: the five weekly ones and today's daily.
+   */
   readonly challengeProgress: readonly RankingChallengeProgress[];
 }
 
@@ -99,9 +127,15 @@ export interface CurrentRanking {
   readonly weekEnd: string;
 
   /**
-   * Instant at which this ranking was last calculated, as an ISO-8601 instant.
+   * The day in progress, as an ISO-8601 date (`YYYY-MM-DD`).
    */
-  readonly calculatedAt: string;
+  readonly today: string;
+
+  /**
+   * Instant at which this ranking was last calculated, as an ISO-8601 instant, or `null` before
+   * the week's first calculation.
+   */
+  readonly calculatedAt: string | null;
   readonly ranking: readonly RankingEntry[];
 }
 
@@ -125,16 +159,29 @@ export interface DailyRankingEntry {
   readonly portrait: string | null;
 
   /**
-   * Damage dealt by that day's valued matches, after the daily diminishing returns.
-   *
-   * The only figure a day carries: challenge damage and both bonuses are settled on the week, so
-   * they have no value at this scale rather than a value of zero.
+   * Damage dealt by the day's valued matches, diminishing returns and streak bonus applied.
    */
-  readonly matchDamage: number;
-  readonly previousMatchDamage: number;
+  readonly damage: number;
+  readonly food: number;
+  readonly components: number;
+  readonly matchCount: number;
 
   /**
-   * {@link matchDamage} minus {@link previousMatchDamage} — what the day's board is really for.
+   * Matches priced below their full value by the day's diminishing returns.
+   */
+  readonly reducedMatchCount: number;
+  readonly streakDays: number;
+  readonly streakBonusPercent: number;
+
+  /**
+   * Streak the player loses by not playing today: the one ending yesterday. Zero once they
+   * played, or when there was nothing to lose.
+   */
+  readonly streakAtStake: number;
+  readonly previousDamage: number;
+
+  /**
+   * {@link damage} minus {@link previousDamage} — what the day's board is really for.
    */
   readonly damageVariation: number;
 }
@@ -157,10 +204,6 @@ export interface DailyRanking {
 
   /**
    * Competing players who played at all that day.
-   *
-   * The turnout is measured on the squad the board actually ranks: a deactivated player is listed
-   * and scored but never takes a slot, so counting them would report a presence over rows that have
-   * nowhere to show it.
    */
   readonly playedPlayerCount: number;
 
@@ -185,23 +228,18 @@ export interface RankingHistoryEntry {
   readonly position: number;
   readonly playerId: number;
   readonly displayName: string;
-  readonly challengeDamage: number;
+  readonly guardianDamage: number;
+  readonly challengePoints: number;
+
+  /**
+   * The player's frozen weekly total, what the finalized position was ordered on.
+   */
+  readonly totalPoints: number;
   readonly completedChallenges: number;
-  readonly matchDamage: number;
-
-  /**
-   * Regularity bonus awarded that week. Part of {@link totalDamage}, but never part of the damage
-   * the boss took — see {@link RankingEntry.totalDamage}.
-   */
-  readonly regularityBonus: number;
-  readonly teamBonus: number;
+  readonly completedDailyChallenges: number;
   readonly activeDays: number;
-
-  /**
-   * The player's frozen weekly total, and what the finalized position was ordered on. Same
-   * composition — and same distinction from boss damage — as {@link RankingEntry.totalDamage}.
-   */
-  readonly totalDamage: number;
+  readonly streakDays: number;
+  readonly titles: readonly WeeklyTitle[];
 }
 
 /**
@@ -219,5 +257,15 @@ export interface RankingHistoryWeek {
    * Sunday identifying the week, as an ISO-8601 date (`YYYY-MM-DD`).
    */
   readonly weekEnd: string;
+
+  /**
+   * Instant the week was frozen at, as an ISO-8601 instant.
+   */
+  readonly finalizedAt: string;
+
+  /**
+   * Who finished first, or `null` on a week nobody was ranked.
+   */
+  readonly winnerPlayerId: number | null;
   readonly ranking: readonly RankingHistoryEntry[];
 }

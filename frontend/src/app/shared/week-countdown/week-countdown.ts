@@ -49,8 +49,8 @@ export class WeekCountdown {
       return '';
     }
 
-    const label = this.translation.translate('overview.header.timeLabel');
-    const value = this.translation.translate('overview.header.timeRemaining', {
+    const label = this.translation.translate('common.week.timeLabel');
+    const value = this.translation.translate('common.week.timeRemaining', {
       days: remaining.days,
       hours: remaining.hours,
     });

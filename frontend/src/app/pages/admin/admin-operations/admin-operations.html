@@ -141,11 +141,11 @@
     />
 
     <app-admin-action-card
-      (triggered)="recomputeColony()"
-      [actionLabel]="'admin.operations.colonyRecompute.action' | translate"
-      [description]="'admin.operations.colonyRecompute.description' | translate"
-      [heading]="'admin.operations.colonyRecompute.heading' | translate"
-      [state]="colonyRecomputeState()"
+      (triggered)="replayCampaign()"
+      [actionLabel]="'admin.operations.campaignReplay.action' | translate"
+      [description]="'admin.operations.campaignReplay.description' | translate"
+      [heading]="'admin.operations.campaignReplay.heading' | translate"
+      [state]="campaignReplayState()"
     />
 
     <!-- The only command here that destroys rather than rebuilds, hence the danger tones and the

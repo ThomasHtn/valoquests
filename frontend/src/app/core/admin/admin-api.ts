@@ -14,7 +14,7 @@ import {
   AdminPlayerStatus,
   AdminPlayerUpdateRequest,
   CampaignAdmin,
-  CampaignRun,
+  SquadCalibration,
   SynchronizationDetails,
   SynchronizationExecution,
 } from './admin.model';
@@ -67,11 +67,12 @@ export class AdminApi {
   );
 
   /**
-   * The campaign's lifecycle: the run in progress if there is one, every closed run, and the
-   * automatic-renewal setting. Gated on the session like {@link players}.
+   * The measure a campaign opened today would be given. Gated on the session like
+   * {@link players}, and read again after every command since the roster or the imported history
+   * may have moved.
    */
-  public readonly campaigns = httpResource<CampaignAdmin>(() =>
-    this.session.isAuthenticated() ? API_ENDPOINTS.admin.campaigns : undefined,
+  public readonly calibration = httpResource<SquadCalibration>(() =>
+    this.session.isAuthenticated() ? API_ENDPOINTS.admin.campaignCalibration : undefined,
   );
 
   /**
@@ -206,12 +207,21 @@ export class AdminApi {
   }
 
   /**
-   * Replays the colony over the run in progress, from its first day.
+   * Draws today's daily challenge, for a morning the nightly tick missed.
+   *
+   * @returns A promise that resolves once the draw is stored.
+   */
+  public async selectDailyChallenge(): Promise<void> {
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.dailyChallengeSelection, null));
+  }
+
+  /**
+   * Replays the running campaign from its first day.
    *
    * @returns A promise that resolves once the replay has completed.
    */
-  public async recomputeColony(): Promise<void> {
-    await this.mutate(this.http.post(API_ENDPOINTS.admin.colonyRecompute, null));
+  public async replayCampaign(): Promise<void> {
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.campaignReplay, null));
   }
 
   /**
@@ -277,41 +287,40 @@ export class AdminApi {
   }
 
   /**
-   * Switches automatic renewal on or off.
+   * Imports every active operator's match history over the calibration window, in the background.
    *
-   * @param enabled - Whether the weekly rollover may open a new run on its own.
-   * @returns A promise that resolves once the setting is applied.
+   * @returns A promise that resolves once the import is accepted, not once it is done.
    */
-  public async setCampaignAutoRenew(enabled: boolean): Promise<void> {
-    await this.mutate(this.http.patch(API_ENDPOINTS.admin.campaignAutoRenew, { enabled }));
+  public async backfillHistory(): Promise<void> {
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.campaignBackfill, null));
   }
 
   /**
-   * Starts a new campaign today.
+   * Opens a campaign starting the Monday after today, on the active roster.
    *
-   * @returns A promise that resolves with the started run.
+   * @returns A promise that resolves with the opened campaign.
    */
-  public async startCampaign(): Promise<CampaignRun> {
-    return this.mutate(this.http.post<CampaignRun>(API_ENDPOINTS.admin.campaignStart, null));
+  public async openCampaign(): Promise<CampaignAdmin> {
+    return this.mutate(this.http.post<CampaignAdmin>(API_ENDPOINTS.admin.campaigns, null));
   }
 
   /**
-   * Stops the campaign in progress today, freezing its score at today.
+   * Stops the live campaign now, frozen at yesterday's base.
    *
-   * @returns A promise that resolves with the stopped run.
+   * @returns A promise that resolves with the stopped campaign.
    */
-  public async stopCampaign(): Promise<CampaignRun> {
-    return this.mutate(this.http.post<CampaignRun>(API_ENDPOINTS.admin.campaignStop, null));
+  public async stopCampaign(): Promise<CampaignAdmin> {
+    return this.mutate(this.http.post<CampaignAdmin>(API_ENDPOINTS.admin.campaignStop, null));
   }
 
   /**
-   * Deletes one campaign, along with the colony it grew and the boss fights it drew.
+   * Deletes one campaign with its weeks, roster and snapshots.
    *
-   * @param runId - Internal campaign identifier.
+   * @param campaignId - Internal campaign identifier.
    * @returns A promise that resolves once the campaign is gone.
    */
-  public async deleteCampaign(runId: number): Promise<void> {
-    await this.mutate(this.http.delete<void>(API_ENDPOINTS.admin.campaign(runId)));
+  public async deleteCampaign(campaignId: number): Promise<void> {
+    await this.mutate(this.http.delete<void>(API_ENDPOINTS.admin.campaign(campaignId)));
   }
 
   /**
@@ -325,7 +334,7 @@ export class AdminApi {
   public refresh(): void {
     this.players.reload();
     this.latestSynchronization.reload();
-    this.campaigns.reload();
+    this.calibration.reload();
   }
 
   /**

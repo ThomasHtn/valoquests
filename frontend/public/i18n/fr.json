@@ -5,68 +5,7 @@
     "cancel": "Annuler",
     "save": "Enregistrer",
     "campaigns": {
-      "autoRenew": {
-        "description": "Autorise le passage de semaine du lundi à ouvrir seul la campagne suivante une fois celle-ci close.",
-        "headingOn": "Renouvellement automatique activé",
-        "headingOff": "Renouvellement automatique désactivé",
-        "turnOn": "Activer",
-        "turnOff": "Désactiver",
-        "enabled": "Renouvellement automatique activé.",
-        "disabled": "Renouvellement automatique désactivé."
-      },
-      "commandsLabel": "Commandes",
-      "currentHeading": "Campagne du {{range}}",
-      "currentLabel": "Campagne en cours",
-      "day": "Jour",
-      "daysLeft": {
-        "one": "{{count}} jour restant",
-        "other": "{{count}} jours restants"
-      },
-      "delete": {
-        "action": "Supprimer",
-        "heading": "Supprimer la campagne",
-        "confirm": "Supprimer",
-        "confirmBody": "La campagne du {{range}} sera supprimée définitivement, avec sa colonie et ses combats de boss. Les matchs, les défis hebdomadaires et les classements sont conservés.",
-        "confirmBodyRunning": "La campagne en cours du {{range}} sera supprimée définitivement, avec sa colonie et ses combats de boss. Plus aucune campagne ne tournera tant que tu n'en démarres pas une autre. Les matchs, les défis hebdomadaires et les classements sont conservés.",
-        "done": "Campagne supprimée."
-      },
-      "empty": "Aucune campagne n'a encore été lancée.",
-      "error": "Impossible de charger les campagnes.",
-      "heading": "Campagnes",
-      "loading": "Chargement des campagnes…",
-      "nextRollover": "Prochain passage de semaine le {{date}}",
-      "pastEmpty": "Aucune campagne close pour l’instant.",
-      "pastLabel": "Campagnes closes",
-      "roster": {
-        "one": "{{count}} joueur",
-        "other": "{{count}} joueurs"
-      },
-      "rosterFrozen": "gelé à l’ouverture",
-      "rosterLabel": "Effectif",
-      "runsLabel": "Campagnes",
-      "score": "Score",
-      "scoreHint": "population à ce jour",
-      "start": {
-        "heading": "Démarrer une campagne",
-        "description": "Ouvre une campagne aujourd'hui, effectif actif gelé. Seulement utile quand le renouvellement automatique est désactivé et qu'aucune campagne n'est en cours.",
-        "action": "Démarrer",
-        "done": "Campagne démarrée."
-      },
-      "status": {
-        "RUNNING": "En cours",
-        "COMPLETED": "Terminée",
-        "STOPPED": "Arrêtée"
-      },
-      "stop": {
-        "heading": "Arrêter la campagne en cours",
-        "description": "Clôt la campagne en cours aujourd'hui, score gelé au jour de l'arrêt plutôt qu'à son jour de solde naturel.",
-        "action": "Arrêter",
-        "confirm": "Arrêter",
-        "confirmBody": "Cette action est irréversible : les semaines restantes de cette campagne ne seront jamais jouées.",
-        "done": "Campagne arrêtée."
-      },
-      "title": "Campagnes",
-      "week": "Semaine"
+      "title": "Campagnes"
     },
     "login": {
       "backToSite": "Retour au site",
@@ -81,12 +20,6 @@
       "title": "Administration"
     },
     "operations": {
-      "colonyRecompute": {
-        "heading": "Recalculer la colonie",
-        "description": "Rejoue la campagne en cours depuis son premier jour, à partir des matchs, défis et boss déjà enregistrés. Sans risque : la colonie n'est jamais incrémentée, elle est toujours recalculée entièrement.",
-        "action": "Recalculer",
-        "done": "Colonie recalculée."
-      },
       "failures": "Échecs",
       "groups": {
         "repair": "Réparation",
@@ -173,6 +106,12 @@
         "description": "Tire les défis manquants de la semaine en cours et son boss, comme le fait le passage de semaine du lundi. Sans effet si tout est déjà en place.",
         "action": "Démarrer",
         "done": "La semaine en cours est complète."
+      },
+      "campaignReplay": {
+        "heading": "Rejouer la campagne",
+        "description": "Rejoue la campagne en cours depuis son premier jour, à partir des parties et des défis déjà enregistrés. Sans risque : la base n'est jamais incrémentée, elle est toujours recalculée entièrement.",
+        "action": "Rejouer",
+        "done": "Campagne rejouée."
       }
     },
     "players": {
@@ -197,7 +136,7 @@
         "portraitNone": "Aucun avatar",
         "status": "Statut initial"
       },
-      "frozenRoster": "La campagne {{run}} tourne sur un roster figé à {{roster}} joueurs. Activer ou désactiver quelqu'un ici ne prendra effet qu'à la campagne suivante.",
+      "frozenRoster": "La campagne {{run}} tourne sur un roster figé à {{roster}} opérateurs. Activer ou désactiver quelqu'un ici ne prendra effet qu'à la campagne suivante.",
       "gettingStarted": {
         "addPlayers": "Ajoutez chaque joueur avec son Riot ID complet, au format pseudo#tag.",
         "operationsLink": "Aller aux opérations",
@@ -258,290 +197,98 @@
       }
     }
   },
-  "boss": {
-    "category": {
-      "ELITE": "Élite",
-      "MINOR": "Mineur",
-      "STANDARD": "Standard"
-    },
-    "difficulty": "Difficulté",
-    "error": "Impossible de charger l'historique des combats.",
-    "hpBar": {
-      "current": "PV restants",
-      "defeated": "Boss éliminé",
-      "survived": "PV restants"
-    },
-    "hpPercentage": "{{value}} %",
-    "hpValue": "{{remaining}} / {{total}} PV",
-    "loading": "Chargement de l'historique des combats…",
-    "meta": {
-      "finishingBlow": "Coup de grâce · {{player}}",
-      "remaining": "{{days}}j {{hours}}h restantes",
-      "topDamage": "Meilleurs dégâts · {{player}} · {{damage}}"
-    },
-    "outcome": {
-      "defeated": "Vaincu",
-      "survived": "Survécu"
-    },
-    "panel": {
-      "close": "Fermer le détail de la semaine",
-      "next": "Semaine suivante",
-      "previous": "Semaine précédente"
-    },
-    "status": {
-      "current": "En cours",
-      "upcoming": "À venir"
-    },
-    "title": "Historique des combats",
-    "upcoming": {
-      "description": "Le prochain adversaire n'est pas encore déterminé.",
-      "name": "Boss inconnu"
-    },
-    "week": {
-      "label": "Semaine {{number}}",
-      "short": "Sem"
-    }
-  },
   "campaign": {
-    "board": {
-      "title": "Le palmarès",
-      "campaign": "Campagne",
-      "threats": "Boss",
-      "tier": "Palier atteint",
-      "score": "Score"
-    },
-    "chain": {
-      "title": "Comment la ville grandit",
-      "link": "Les règles",
-      "lever": "Levier",
-      "foodUnit": "nourriture",
-      "ceilingUnit": "nourrissables",
-      "scoreUnit": "et c'est le score",
-      "harvest": {
-        "title": "Récolte du soir",
-        "body": "Vos dégâts de la journée deviennent de la nourriture, une fois par soir.",
-        "lever": "Jouer le même jour. À {{present}} joueurs sur {{roster}} la récolte est à {{multiplier}} ; au complet, à {{max}}."
-      },
-      "stock": {
-        "body": "Sept jours de récolte, pas un de plus. Ce qui a vieilli disparaît.",
-        "lever": "Ne pas décrocher. La ville mange {{consumption}} par semaine, même les semaines où personne ne joue."
-      },
-      "efficiency": {
-        "body": "Plus la ville est bâtie, plus une même nourriture fait vivre de monde.",
-        "lever": "Les matériaux, {{materials}} à ce jour, gagnés en validant les défis et en battant les boss. L'efficacité ne redescend jamais."
-      },
-      "ceiling": {
-        "title": "Plafond nourri",
-        "body": "Réserve fois efficacité : ce que la ville peut nourrir aujourd'hui.",
-        "lever": "Le surplus : {{surplus}} restent une fois la semaine nourrie, et c'est lui qui relève le plafond."
-      },
-      "population": {
-        "body": "La population monte vers le plafond un peu chaque jour, jamais d'un coup.",
-        "lever": "Le moral, à {{morale}} : l'écart se comble de {{speed}} par jour. Un boss repoussé le remonte."
-      }
-    },
-    "error": "Impossible de charger la campagne.",
-    "frieze": {
-      "hint": "Touchez un boss pour déplier sa semaine ici — PV restants, récompenses, top 3"
-    },
-    "heading": "La campagne de l'escouade",
-    "legend": {
-      "current": "Boss en cours",
-      "defeated": "Repoussée",
-      "survived": "Colonie touchée",
-      "upcoming": "À venir"
-    },
-    "loading": "Chargement de la campagne…",
-    "map": {
-      "ariaLabel": "Carte des boss de la campagne, un par semaine"
-    },
-    "stand": {
-      "title": "Où en est la campagne",
-      "scoreLabel": "Le score de la campagne",
-      "remainingDays": "Il reste {{days}} jours à jouer",
-      "firstDay": "Jour 1 de la campagne"
-    },
-    "territory": "Carte des boss",
-    "title": "Campagne",
-    "weeks": {
-      "title": "Les dix semaines",
-      "link": "La semaine en cours",
-      "draw": "{{date}}"
-    }
+    "title": "Campagne"
   },
-  "campaignSummary": {
-    "average": "Moyenne",
-    "backToCampaign": "Retour à la campagne",
-    "bossesDefeated": "Boss vaincus",
-    "copyFailed": "Le navigateur a refusé l’accès au presse-papier. Copie l’adresse depuis la barre d’URL.",
-    "copyLink": "Copier le lien",
-    "error": "Impossible de charger cette campagne.",
-    "eyebrow": "Campagne terminée",
-    "firstCampaignNote": "Première campagne — rien à comparer encore.",
-    "linkCopied": "Lien copié",
-    "loading": "Chargement de la campagne…",
-    "notFound": "Cette campagne n'existe pas, ou n'est pas encore terminée.",
-    "peak": "Pic",
-    "vsPrevious": "{{delta}} vs la précédente"
+  "challenges": {
+    "title": "Défis"
   },
-  "colony": {
-    "boss": {
-      "category": {
-        "MINOR": "mineur",
-        "STANDARD": "standard",
-        "ELITE": "élite"
-      },
-      "number": "Boss {{number}}",
-      "report": {
-        "question": "Ce que cette semaine a changé pour la Cité",
-        "materials": {
-          "banked": "+{{materials}} versés à l'atelier.",
-          "none": "Ce boss n'a versé aucun matériau."
-        },
-        "efficiency": "Acquise, jamais reperdue.",
-        "morale": {
-          "defeated": "{{morale}} pour un boss abattu.",
-          "survived": "{{morale}} pour un boss laissé debout."
-        },
-        "tierName": "Palier",
-        "tier": "Franchi le {{day}}.",
-        "finishingBlow": "Coup fatal",
-        "finishingBlowCaption": "Dernier point de vie retiré au boss.",
-        "current": "Le combat est en cours. La barre de vie, les récompenses en jeu et le classement de la semaine se lisent sur la page Semaine.",
-        "currentLink": "Voir la semaine en cours",
-        "upcoming": "Le boss de cette semaine n'est pas encore tiré.",
-        "upcomingScheduled": "Classe {{category}}. L'adversaire sera tiré à l'ouverture de la semaine.",
-        "unavailable": "Aucun relevé de la Cité pour cette semaine."
-      }
+  "common": {
+    "week": {
+      "timeLabel": "Temps restant",
+      "timeRemaining": "{{days}}j {{hours}}h"
     },
-    "bosses": "Boss",
-    "cardInfo": "Détail {{title}}",
-    "curve": {
-      "title": "Population de la campagne",
-      "axis": "Jour de la campagne",
-      "caption": "Pic {{peak}} · Moyenne {{average}}",
-      "day": "J{{day}}",
-      "detail": "Nourrissables {{feedable}} · efficacité {{efficiency}}",
-      "milestone": "{{tier}} · J{{day}}"
+    "challenge": {
+      "completed": "Défi validé"
     },
-    "delta": "aujourd'hui",
-    "eyebrow": "Campagne · Semaine {{week}} sur {{weeks}}",
-    "history": {
-      "title": "Les campagnes",
-      "first": "Première campagne — le score s'inscrira au jour {{day}}.",
-      "status": {
-        "closed": "Terminée",
-        "current": "En cours"
-      },
-      "week": "Sem. {{index}} / {{count}}"
+    "title": {
+      "CHAMPION": "Champion",
+      "MECHANIC": "Mécano",
+      "QUARTERMASTER": "Intendant",
+      "REGULAR": "Assidu",
+      "SCOUT": "Éclaireur"
     },
-    "ladder": {
-      "unit": "Reste à réunir",
-      "hint": "Chaque palier s'achète en matériaux. Vous en gagnez en validant les défis de la semaine et en battant le boss du lundi."
+    "titleHint": {
+      "MECHANIC": "Le plus de composants sur la semaine",
+      "QUARTERMASTER": "Le plus de nourriture sur la semaine",
+      "REGULAR": "La plus longue série de jours joués",
+      "SCOUT": "Le plus de défis validés"
     },
-    "campTitle": "Campement",
-    "materials": "Matériaux",
-    "population": "Habitants",
-    "presence": {
-      "FULL": "{{name}} a joué aujourd'hui",
-      "PARTIAL": "{{name}} a joué, sous le seuil",
-      "NONE": "{{name}} n'a pas joué"
+    "metric": {
+      "MATCHES_PLAYED": "Parties",
+      "MATCHES_WON": "Victoires",
+      "KILLS": "Éliminations",
+      "ASSISTS": "Assistances",
+      "HEADSHOTS": "Tirs à la tête",
+      "DAMAGE_DEALT": "Dégâts",
+      "SCORE": "Score",
+      "ROUNDS_PLAYED": "Manches",
+      "KD": "Éliminations par mort (K/D)",
+      "ACS": "Score de combat par manche (ACS)",
+      "ADR": "Dégâts par manche (ADR)",
+      "HEADSHOT_RATE": "Taux de tirs à la tête",
+      "PLAY_DAY": "Jours joués"
     },
-    "runDay": "Jour {{day}} / {{days}}",
-    "runDayHint": "Une campagne dure {{days}} jours : dix semaines, plus un jour de solde dont la population est le score.",
-    "runDayWord": "Jour",
+    "difficulty": {
+      "EASY": "Facile",
+      "NORMAL": "Normal",
+      "MEDIUM": "Moyen",
+      "HARD": "Difficile",
+      "VERY_HARD": "Très difficile"
+    },
+    "cadence": {
+      "WEEKLY": "Hebdomadaire",
+      "DAILY": "Du jour"
+    },
     "tier": {
-      "CAMP": "Campement",
-      "HAMLET": "Hameau",
-      "VILLAGE": "Village",
-      "BOROUGH": "Bourg",
-      "TOWN": "Ville",
-      "CITY": "Cité",
-      "RESIDENTIAL_QUARTER": "Quartier résidentiel",
-      "GREAT_CITY": "Grande cité",
-      "METROPOLIS": "Métropole",
-      "MEGALOPOLIS": "Mégalopole",
-      "CAPITAL": "Capitale",
-      "CITADEL": "Citadelle",
-      "CONURBATION": "Conurbation",
-      "MEGAREGION": "Mégarégion",
-      "ARCOLOGY": "Arcologie",
-      "ECUMENOPOLIS": "Œcuménopole",
-      "CONTINUUM": "Continuum",
-      "STRATUM": "Strate {{level}}"
+      "AMATEUR": "Amateur",
+      "NORMAL": "Normal",
+      "CONFIRMED": "Confirmé",
+      "ELITE": "Élite"
     },
-    "tierProgress": "Encore {{materials}} matériaux pour atteindre {{name}}.",
-    "track": {
-      "population": {
-        "description": "La population grimpe chaque journée vers ce que la nourriture peut nourrir.",
-        "purpose": "Sa vitesse de rattrapage dépend du moral ; son plafond, de la nourriture en stock."
-      },
-      "food": {
-        "name": "Nourriture",
-        "weekTitle": "Nourriture cette semaine",
-        "day": "{{day}} : {{food}} de récolte",
-        "dayUnplayed": "Jour à venir",
-        "description": "Chaque journée, les dégâts encaissés en match rapportent de la nourriture ; plus l'escouade est nombreuse à jouer, plus la récolte est multipliée. Elle se garde 7 jours avant d'être perdue.",
-        "efficiency": "1 nourriture nourrit",
-        "efficiencyValue": "{{inhabitants}} habitants",
-        "consumption": "Consommation / semaine",
-        "surplus": "Surplus",
-        "note": "Chaque nourriture porte d'autant plus loin que le groupe a amassé de matériaux, en validant les défis et en battant les boss. La ville tient sur sa consommation et grandit sur son surplus.",
-        "aria": "Nourriture : {{stock}} en stock, apportés par les {{days}} derniers jours. Chaque nourriture nourrit {{efficiency}} habitants, soit {{feedable}} nourrissables."
-      },
-      "presence": {
-        "name": "Escouade du jour",
-        "description": "Un·e joueur·se compte dès qu'il ou elle dépasse {{threshold}} dégâts bruts dans la journée.",
-        "purpose": "Plus l'escouade est au complet, plus la récolte de nourriture du jour est multipliée : de ×1 seul à ×2 à {{roster}}.",
-        "bonus": "Bonus sur la récolte du jour",
-        "caption": "{{present}}/{{roster}} joueurs actifs aujourd'hui",
-        "aria": "Escouade du jour : {{present}} joueurs sur {{roster}} ont joué aujourd'hui. Il faut {{threshold}} dégâts bruts dans la journée pour compter.",
-        "nextMultiplier": "Il manque 1 joueur pour passer le multiplicateur à {{multiplier}}."
-      },
-      "morale": {
-        "name": "Moral",
-        "description": "Un boss vaincu fait monter le moral (+3 mineur, +5 standard, +7 élite) ; un boss qui survit le fait descendre (−7).",
-        "purpose": "Il fixe la vitesse à laquelle la population rejoint ce que la nourriture peut nourrir : à 100 de moral, l'écart se comble de 15 % chaque journée.",
-        "caption": "Accélère l'arrivée des habitants",
-        "aria": "Moral : {{value}} sur {{ceiling}}, {{arrivals}} habitants aujourd'hui."
-      },
-      "arrivals": {
-        "name": "Arrivées",
-        "description": "Ce que le moral et la nourriture ajoutent ou retirent à la population, chaque journée.",
-        "purpose": "Le résultat des jauges Nourriture et Moral combinées.",
-        "caption": "Nouveaux habitants par jour"
-      },
-      "foodStock": {
-        "name": "Réserve",
-        "description": "La récolte de la semaine gardée en réserve, qui expire sept jours après avoir été récoltée.",
-        "purpose": "Ce que la consommation puise chaque semaine, et ce qui relève le plafond nourri de la population.",
-        "caption": "Conservé 7 jours"
-      },
-      "consumption": {
-        "name": "Bouches à nourrir",
-        "description": "Ce que la ville mange chaque semaine, quel que soit le stock disponible.",
-        "purpose": "Payée en priorité sur la récolte ; ce qu'il en reste devient le surplus.",
-        "caption": "Mangé chaque semaine, quoi qu'il arrive"
-      },
-      "surplus": {
-        "name": "Surplus",
-        "description": "La récolte de la semaine, une fois la consommation payée. Jamais négatif.",
-        "purpose": "C'est lui qui fait grandir la ville : plus il est élevé, plus le plafond nourri s'élève.",
-        "caption": "Attire de nouveaux habitants"
-      },
-      "efficiency": {
-        "name": "Efficacité",
-        "description": "Chaque matériau gagné en battant un boss ou en validant un défi relève ce facteur, sans plafond.",
-        "purpose": "Il multiplie chaque nourriture en habitants nourrissables : plus il est haut, plus le même stock nourrit de monde.",
-        "caption": "Habitants nourris par nourriture"
-      },
-      "materials": {
-        "name": "Matériaux",
-        "description": "Chaque défi validé et chaque boss vaincu rapportent des matériaux, amassés sans jamais expirer ni se dépenser.",
-        "purpose": "Ils relèvent l'efficacité et font grimper la ville d'un palier une fois le seuil du suivant atteint.",
-        "caption": "Prochain palier de ville",
-        "captionAt": "à"
-      }
+    "guardianCategory": {
+      "MINOR": "Mineur",
+      "STANDARD": "Standard",
+      "ELITE": "Élite"
+    },
+    "campaignStatus": {
+      "OPENED": "Départ lundi",
+      "RUNNING": "En cours",
+      "CLOSED": "Close",
+      "NONE": "Aucune campagne"
+    },
+    "limiter": {
+      "NONE": "Tout le groupe ramené",
+      "GROUP": "Plus personne à sauver",
+      "FOOD": "Nourriture épuisée",
+      "COMPONENTS": "Composants épuisés"
+    },
+    "resource": {
+      "damage": "Dégâts",
+      "food": "Nourriture",
+      "components": "Composants",
+      "wounded": "Blessés",
+      "population": "Habitants",
+      "matches": "Parties",
+      "days": "Jours",
+      "streak": "Série",
+      "points": "Points",
+      "guardian": "Gardien",
+      "base": "Base"
+    },
+    "operator": {
+      "one": "{{count}} opérateur",
+      "other": "{{count}} opérateurs"
     }
   },
   "landing": {
@@ -573,218 +320,20 @@
     },
     "title": "Colonie"
   },
+  "leaderboard": {
+    "title": "Classement"
+  },
   "notFound": {
     "backToOverview": "Retour à la vue d'ensemble",
     "description": "Cette page n'existe pas.",
     "title": "Page introuvable"
   },
+  "overview": {
+    "title": "Vue d'ensemble"
+  },
   "pageHeader": {
     "back": "Retour à {{name}}",
     "weekHeading": "{{page}} · Semaine {{number}} sur {{weeks}}"
-  },
-  "overview": {
-    "bossEncounter": {
-      "defeated": "Le boss est tombé cette semaine.",
-      "difficulty": "Classe",
-      "error": "Impossible de charger le boss de la semaine.",
-      "hpUnit": "PV",
-      "loading": "Chargement du boss…"
-    },
-    "confrontation": {
-      "squad": "Escouade",
-      "threat": "Boss",
-      "dealtUnit": "PV infligés",
-      "segment": "{{player}} · {{damage}} PV",
-      "breakdown": "Dégâts par joueur : {{breakdown}}",
-      "challenges": "{{done}} / {{total}} défis",
-      "challengeSlot": "{{name}} · {{done}} / {{players}} ont validé"
-    },
-    "economy": {
-      "beforeTier": "{{materials}} avant {{tier}}"
-    },
-    "header": {
-      "timeLabel": "Temps restant",
-      "timeRemaining": "{{days}}j {{hours}}h",
-      "title": "La colonie"
-    },
-    "ladderStrip": {
-      "cost": "{{materials}} restants"
-    },
-    "miniRanking": {
-      "damageUnit": "dégâts",
-      "error": "Impossible de charger le classement.",
-      "link": "Voir le classement",
-      "loading": "Chargement du classement…",
-      "day": {
-        "title": "Classement du jour",
-        "caption": "{{day}} · dégâts de match, hors bonus",
-        "empty": "Personne n'a encore joué aujourd'hui.",
-        "sinceYesterday": "vs hier",
-        "variation": {
-          "up": "{{count}} dégâts de plus qu'hier",
-          "down": "{{count}} dégâts de moins qu'hier",
-          "flat": "Autant qu'hier"
-        }
-      },
-      "week": {
-        "title": "Classement de la semaine",
-        "empty": "Personne n'a encore joué cette semaine."
-      }
-    },
-    "podium": {
-      "hint": "Le podium de la semaine, classé sur les dégâts cumulés. Cliquer sur un joueur ouvre son profil.",
-      "rank": {
-        "1": "1re place",
-        "2": "2e place",
-        "3": "3e place"
-      },
-      "title": "Podium de la semaine"
-    },
-    "populationTile": {
-      "link": "Voir la campagne"
-    },
-    "title": "La colonie",
-    "today": {
-      "title": "Aujourd'hui",
-      "link": "Voir la campagne",
-      "damage": "dégâts du jour",
-      "harvest": "nourriture récoltée",
-      "counted": "{{present}} / {{roster}} ont atteint {{threshold}} dégâts",
-      "nextStep": "+1 joueur = {{multiplier}}",
-      "atFull": "escouade au complet"
-    },
-    "town": {
-      "tier": "Palier · {{name}}",
-      "today": "aujourd'hui"
-    },
-    "weekRecap": {
-      "bossDown": "{{boss}} est tombé — {{damage}} PV arrachés.",
-      "bossHeld": "{{boss}} a tenu : {{damage}} PV arrachés sur {{hp}}.",
-      "champion": "Champion de la semaine : {{player}}, {{damage}} dégâts.",
-      "defeated": "Boss vaincu",
-      "dismiss": "Fermer le bilan de la semaine",
-      "efficiency": "soit {{value}} d’efficacité.",
-      "finisher": "Achevé par {{player}}.",
-      "materials": "matériaux banqués,",
-      "morale": "de moral pour la colonie.",
-      "newChallenges": "Voir les cinq nouveaux défis",
-      "reviewWeek": "Revoir cette semaine",
-      "survived": "Boss survivant",
-      "title": "La semaine {{week}} est close"
-    },
-    "weekSummary": {
-      "link": "Voir la semaine",
-      "title": "Semaine {{week}} / {{weeks}}"
-    },
-    "weeklyChallenges": {
-      "damageDestination": "Boss et classement",
-      "damageLabel": "Dégâts",
-      "difficulty": {
-        "EASY": "Facile",
-        "HARD": "Difficile",
-        "MEDIUM": "Moyen",
-        "NORMAL": "Normal",
-        "VERY_HARD": "Très difficile"
-      },
-      "empty": "Aucun défi n'est actif cette semaine.",
-      "error": "Impossible de charger les défis de la semaine.",
-      "loading": "Chargement des défis…",
-      "metric": {
-        "ACS": "ACS",
-        "ACS_PROGRESS": "Progression ACS",
-        "ADR": "ADR",
-        "ADR_PROGRESS": "Progression ADR",
-        "ASSISTS": "Assists",
-        "DAMAGE_DEALT": "Dégâts",
-        "HEADSHOTS": "Headshots",
-        "HEADSHOT_RATE": "% HS",
-        "HEADSHOT_RATE_PROGRESS": "Progression % HS",
-        "KD": "K/D",
-        "KD_PROGRESS": "Progression K/D",
-        "KILLS": "Kills",
-        "MATCHES_PLAYED": "Matchs",
-        "MATCHES_WON": "Victoires",
-        "PLAY_DAY": "Jours",
-        "ROUNDS_PLAYED": "Rounds",
-        "SCORE": "Score"
-      },
-      "materialsDestination": "Colonie",
-      "nextDraw": {
-        "date": "Lundi {{date}} · 00h00",
-        "description": "Cinq nouveaux défis seront tirés du catalogue.",
-        "label": "Prochain tirage"
-      },
-      "title": "La semaine",
-      "heading": "Défis",
-      "subheading": "Le boss et les cinq défis de la semaine"
-    },
-    "weeklyRanking": {
-      "champion": "Champion",
-      "columns": {
-        "activeDays": "Jours joués",
-        "bonusDamage": "Bonus",
-        "bossesJoined": "Boss",
-        "challengesCleared": "Défis validés",
-        "dailyDamage": "Dégâts du jour",
-        "damage": "Dégâts",
-        "damageVariation": "Écart / hier",
-        "materials": "Matériaux",
-        "player": "Joueur"
-      },
-      "columnHelp": {
-        "activeDays": "Nombre de jours distincts de la semaine où au moins une partie comptabilisée a été jouée. C'est cette valeur qui fixe le bonus de régularité.",
-        "bonusDamage": "Part du total venant des deux bonus, déjà comprise dans la colonne Dégâts. Régularité : jusqu'à 6 000 pour sept jours joués, à partir de deux. Escouade : +10 % des dégâts d'un défi par joueur supplémentaire l'ayant validé, plafonné à +50 %.",
-        "bossesJoined": "Nombre de semaines du run où le joueur a infligé des dégâts au boss. Le bonus de régularité ne compte pas : il n'atteint jamais la barre de vie partagée.",
-        "challengesCleared": "Nombre de défis de la semaine validés, sur les cinq tirés le lundi.",
-        "dailyDamage": "Dégâts des matchs de la journée, après le dégressif quotidien. Les dégâts des défis et les bonus se règlent à la semaine : ils n'existent pas à cette échelle.",
-        "damage": "Total de la semaine, et la valeur sur laquelle le classement est trié : dégâts des matchs après le dégressif de la journée, plus les dégâts des défis validés, plus les bonus.",
-        "damageVariation": "Différence entre les dégâts d'aujourd'hui et ceux d'hier. La réponse à « est-ce qu'on a fait une bonne soirée ? ».",
-        "materials": "Matériaux versés à la colonie par les défis déjà validés cette semaine. Ils augmentent l'efficacité de la ville, définitivement.",
-        "player": "Chaque ligne mène au profil du joueur. Les joueurs hors campagne sont regroupés en bas : ils valident des défis mais n'occupent pas de place au classement."
-      },
-      "scope": {
-        "CAMPAIGN": "Campagne",
-        "DAY": "Jour",
-        "WEEK": "Semaine",
-        "campaignProgress": "Run en cours · semaine {{index}} sur {{count}}",
-        "dayTurnout": "{{played}} joueurs sur {{roster}} ont joué",
-        "label": "Portée du classement"
-      },
-      "completed": "Défi terminé",
-      "empty": "Aucun classement n'est disponible cette semaine.",
-      "emptyWeek": "L'escouade n'a pas encore joué cette semaine.",
-      "error": "Impossible de charger le classement de la semaine.",
-      "outOfCampaign": {
-        "title": "Hors campagne"
-      },
-      "loading": "Chargement du classement…",
-      "title": "Classement de la semaine",
-      "heading": "Classement",
-      "subheading": "Le classement des dégâts de la semaine",
-      "totalDamage": "Dégâts cumulés · {{damage}}",
-      "week": {
-        "closedNote": "Semaine close. Seuls les totaux sont conservés : le détail défi par défi n'existe que pour la semaine en cours.",
-        "live": "En cours",
-        "next": "Semaine suivante",
-        "previous": "Semaine précédente",
-        "seeOnCampaign": "Voir sur la campagne"
-      },
-      "damageVariation": {
-        "down": "{{count}} dégâts de moins qu'hier",
-        "flat": "Autant qu'hier",
-        "up": "{{count}} dégâts de plus qu'hier"
-      },
-      "variation": {
-        "down": {
-          "one": "{{count}} place perdue",
-          "other": "{{count}} places perdues"
-        },
-        "up": {
-          "one": "{{count}} place gagnée",
-          "other": "{{count}} places gagnées"
-        }
-      }
-    }
   },
   "playerProfile": {
     "breadcrumb": {
@@ -985,19 +534,6 @@
         "winRate": "Winrate"
       }
     },
-    "run": {
-      "activeDays": "Jours joués",
-      "bosses": "Boss abattus",
-      "challenges": "Défis",
-      "damage": "{{damage}} PV",
-      "frieze": "Sa campagne, semaine par semaine",
-      "friezeWeek": "{{week}} : {{damage}} PV portés au boss. Ouvrir le classement de cette semaine.",
-      "position": {
-        "one": "{{count}}ᵉʳ",
-        "other": "{{count}}ᵉ"
-      },
-      "week": "Cette semaine"
-    },
     "stats": {
       "acs": "ACS",
       "adr": "ADR",
@@ -1069,129 +605,7 @@
   },
   "retry": "Réessayer",
   "rules": {
-    "chain": {
-      "damage": "Dégâts",
-      "materials": "Matériaux",
-      "outcome": "Boss vaincu ou défi validé",
-      "play": "Jouer",
-      "town": "La ville grandit"
-    },
-    "contents": {
-      "clear": "Effacer la recherche",
-      "noMatch": "Aucune section ne parle de « {{query}} ».",
-      "searchLabel": "Chercher une règle",
-      "searchPlaceholder": "rendement, moral…",
-      "title": "Sommaire"
-    },
-    "heading": "Règles",
-    "parts": {
-      "rates": {
-        "eyebrow": "Partie 2",
-        "title": "Les barèmes"
-      },
-      "week": {
-        "eyebrow": "Partie 1",
-        "title": "Une semaine, en 6 temps"
-      }
-    },
-    "readingTime": {
-      "label": "Lecture",
-      "value": "4 min"
-    },
-    "replayTour": "Revoir le tour d'horizon",
-    "sections": {
-      "bonuses": {
-        "days": "{{days}} j",
-        "footnote": "La régularité s'ajoute à ton total de la semaine mais n'entame pas le boss : elle récompense ta présence, pas ta production. L'escouade, elle, multiplie les dégâts du défi pour tout le monde, y compris ceux qui l'avaient déjà fini.",
-        "players": "{{count}} joueurs",
-        "regularityLabel": "Régularité · jours joués dans la semaine",
-        "teamLabel": "Escouade · multiplicateur sur les dégâts du défi",
-        "title": "Régularité & escouade"
-      },
-      "boss": {
-        "categories": {
-          "ELITE": "Environ 105 % d'une semaine type. Il faut pousser un peu plus que d'habitude.",
-          "MINOR": "Environ 65 % d'une semaine type de l'escouade. Elle le plie souvent en milieu de semaine.",
-          "STANDARD": "Environ 85 % d'une semaine type de l'escouade. Une semaine creuse reste rattrapable."
-        },
-        "description": "Chaque semaine, un boss débarque avec des PV partagés par toute l'escouade. Sa barre n'est pas un chiffre figé : elle est calculée d'après ce que l'escouade a réellement produit lors des dernières semaines closes, multiplié par le nombre de joueurs actifs. Un joueur actif qui ne joue pas alourdit donc le boss sans l'entamer. Terrasse-le avant dimanche soir. La campagne, elle, ne court que sur celle en cours, soit dix combats : à la campagne suivante la carte repart à zéro, sans effacer les combats déjà livrés.",
-        "ladderFootnote": "La classe du boss ne sort pas du tirage : elle est fixée par la place de la semaine dans la campagne. Les semaines 5 et 10 sont les deux pics, chacune suivie d'un boss mineur pour souffler. Le tirage ne décide que de quel boss de cette classe se présente, et un boss ne revient jamais deux fois dans la même campagne.",
-        "ladderLabel": "Classe du boss, semaine par semaine",
-        "title": "Un boss, une barre de vie commune"
-      },
-      "calibration": {
-        "bounds": "La référence ne peut pas s'emballer : elle reste encadrée, pour qu'un arrêt total ne fasse pas tomber le boss en un match et qu'une envolée ne le rende pas inatteignable.",
-        "description": "La barre du boss ne se règle pas à la main : elle suit la médiane de ce que l'escouade a réellement produit lors des 4 dernières semaines closes. Si le groupe joue plus, le boss grossit ; s'il lève le pied, le boss maigrit. Une semaine marathon isolée ne compte pas, la médiane l'ignore. Le calibrage joue sur la taille du combat, jamais sur sa classe : celle-là est fixée par le calendrier de la campagne.",
-        "title": "Une difficulté qui s'ajuste toute seule"
-      },
-      "challenges": {
-        "damageLabel": "Dégâts",
-        "description": "Chaque lundi, cinq défis sont tirés du catalogue, un par niveau de difficulté. Plus le niveau est élevé, plus le défi pèse lourd sur le boss. Un défi ne revient pas tant que son palier n'a pas été parcouru en entier.",
-        "difficultyLabel": "Difficulté",
-        "title": "Cinq défis, un par difficulté"
-      },
-      "colony": {
-        "title": "La colonie",
-        "description": "Vous jouez, ça produit de la nourriture. La nourriture dit combien d'habitants la ville peut nourrir. Chaque journée, la ville se rapproche un peu de ce nombre. Il n'y a pas d'autre règle de population.",
-        "facts": {
-          "harvest": "85 dégâts font 1 nourriture. Une compétitive moyenne en vaut donc 5, et ce sont les dégâts du barème, déjà passés par le dégressif de la journée.",
-          "feeds": "1 nourriture nourrit 8 habitants au départ, et davantage à mesure que la ville se développe. C'est la seule grandeur qui relie la nourriture à la population.",
-          "eats": "La ville mange population / efficacité par semaine. Plus elle est grande, plus elle mange, donc le reste fond tout seul à mesure qu'elle grandit.",
-          "window": "Seuls les sept derniers jours comptent. Chaque jour, aujourd'hui entre dans le compte et le jour d'il y a sept jours en sort : c'est une moyenne, pas une réserve."
-        },
-        "presenceLabel": "L'escouade du jour",
-        "presence": "Tout ce que vous récoltez dans la journée est multiplié par 1 + (joueurs présents / taille du groupe). Le groupe entier présent fait donc compter la journée double. Un joueur compte s'il a fait plus de 300 dégâts bruts dans la journée, soit une compétitive ou trois deathmatchs : sans ce seuil, un deathmatch de deux minutes suffirait à toucher le maximum."
-      },
-      "damage": {
-        "description": "Le mode et l'issue du match déterminent les dégâts infligés. Une victoire en compétitif pèse le plus, mais toute partie jouée, gagnée ou non, y contribue.",
-        "modeLabel": "Mode de jeu",
-        "title": "Chaque match tape fort",
-        "decayLabel": "Rendement du jour · rang du match dans la journée",
-        "decayRank": "Match {{rank}}",
-        "decayFootnote": "Au-delà de la cinquième partie du jour, une partie rapporte moins. Les parties d'une même journée sont classées de la plus à la moins payante, jamais dans l'ordre où tu les as jouées : un échauffement ne fera donc jamais baisser tes compétitives. Enchaîner sur plusieurs jours vaut mieux que tout faire d'un coup."
-      },
-      "eligibility": {
-        "description": "Une seule règle, partout : une partie compte si elle s'est jouée dans un mode suivi par le tracker, si elle a joué au moins un round, si tu y as marqué des points, et si ce n'est pas un remake. Un remake, une partie abandonnée ou une file d'attente non reconnue ne rapporte aucun dégât, ne compte pas comme jour joué, et ne fait progresser aucun défi. Elle reste visible dans ton historique : elle a été jouée, elle ne compte simplement pas pour la semaine.",
-        "title": "Ce qui compte comme partie jouée"
-      },
-      "night": {
-        "title": "La journée",
-        "description": "Chaque journée, la ville comble 15 % de l'écart entre ce qu'elle compte et ce que sa nourriture permet. Il n'y a qu'un seul plafond, donc rien n'est jamais gaspillé.",
-        "gap": "Elle avance vite au début puis de plus en plus lentement, et n'arrive jamais tout à fait au bout. C'est fait exprès : il y a toujours quelque chose à gagner, et jamais une journée où jouer ne sert à rien. Dans l'autre sens, si la nourriture ne suffit plus, elle redescend à la même vitesse.",
-        "moraleLabel": "Le moral, de 20 à 100",
-        "morale": {
-          "MINOR": "Mineur vaincu",
-          "STANDARD": "Standard vaincu",
-          "ELITE": "Élite vaincu",
-          "SURVIVED": "Boss survivant"
-        },
-        "moraleFootnote": "Le moral démarre à 50 et ne dépend que des boss. Il multiplie la vitesse de montée : à 50, la ville comble 7,5 % de l'écart par journée au lieu de 15 %. Il ne ralentit jamais la descente. Les dix combats d'une campagne rapportent 50 de moral à eux tous, soit exactement la place jusqu'au plafond : une campagne sans faute n'atteint 100 qu'à son dixième combat, donc aucun boss n'est jamais sans effet. Au plancher, il reste 3 % par journée, soit environ 19 % par semaine : une campagne mal partie rampe, mais elle n'est jamais bloquée."
-      },
-      "progression": {
-        "description": "Certains défis ne demandent pas un seuil absolu mais un progrès sur toi-même : dépasser ton propre K/D, ton ACS ou ton taux de headshots des 4 semaines précédentes, d'un pourcentage donné. Enchaîner les parties au même niveau ne les valide pas, puisque la mesure est un taux. Sans historique sur les 4 dernières semaines, le défi reste hors de portée.",
-        "title": "Les défis de progression"
-      },
-      "ranking": {
-        "description": "Les dégâts totaux de la semaine font le classement. Le reste, c'est de la gloire.",
-        "facts": {
-          "championTitle": "1re place d'une semaine clôturée = titre de Champion, affiché sur la vue d'ensemble.",
-          "crown": "La couronne reste au Champion jusqu'à la clôture de la semaine suivante.",
-          "damage": "Classement hebdo : somme de tes dégâts (matchs + défis + bonus).",
-          "finishingBlow": "Le coup de grâce sur le boss est crédité à part, dans l'historique des combats."
-        },
-        "title": "Classement & couronne"
-      },
-      "town": {
-        "title": "La ville",
-        "description": "Les matériaux amassés augmentent l'efficacité : tous les 150 matériaux par joueur, une nourriture nourrit un habitant de plus. Il n'y a pas de seuil à franchir ni de maximum : chaque défi validé fait porter la nourriture plus loin, le lundi même, et un défi validé la dernière semaine vaut exactement ce que valait un défi de la première.",
-        "bossMaterialsLabel": "Matériaux par boss vaincu, et par joueur",
-        "materialsLabel": "Matériaux par défi validé, et par joueur",
-        "tiersLabel": "Les paliers, tous les 0,75 d'efficacité",
-        "tiersFootnote": "Un boss vaincu rapporte ses matériaux à chaque joueur du groupe, jamais des habitants : des habitants s'effaceraient à 15 % par journée, alors que l'efficacité ne redescend jamais. Les matériaux sont divisés par la taille du groupe avant d'être convertis, ce qui rend l'équilibre identique de 2 à 20 joueurs. Une campagne régulière va de 8 à 16 d'efficacité, soit un palier par semaine."
-      }
-    },
-    "subheading": "Comment marche l'escouade",
-    "title": "Règles et fonctionnement"
+    "title": "Règles"
   },
   "seasons": {
     "episode": "Ép. {{episode}} · Acte {{act}}",
@@ -1228,9 +642,9 @@
       "adminCampaigns": "Campagnes",
       "adminMaintenance": "Maintenance",
       "adminOperations": "Opérations",
-      "adminPlayers": "Joueurs",
+      "adminPlayers": "Opérateurs",
       "campaign": "Campagne",
-      "challenges": "La semaine",
+      "challenges": "Défis",
       "leaderboard": "Classement",
       "overview": "Vue d'ensemble",
       "players": "Escouade",
@@ -1240,157 +654,16 @@
     "openMenu": "Ouvrir le menu",
     "rulesSubmenu": "Déplier les sections des règles"
   },
+  "skipToContent": "Aller au contenu principal",
   "snackbar": {
     "dismiss": "Fermer"
   },
-  "skipToContent": "Aller au contenu principal",
   "tour": {
-    "ariaLabel": "Tour d'horizon de l'application",
-    "finish": "Entrer",
-    "next": "Suivant",
-    "previous": "Retour",
-    "progress": {
-      "counter": "{{current}} / {{total}}",
-      "label": "Étape"
-    },
-    "skip": "Passer le tour",
-    "steps": {
-      "colony": {
-        "claim": "Un campement au départ, une cité si la campagne tient. *Tout sort des parties réelles.*",
-        "eyebrow": "L'objectif",
-        "spec1": {
-          "label": "paliers à gravir",
-          "value": "12+"
-        },
-        "spec2": {
-          "label": "dégâts = 1 nourriture",
-          "value": "85"
-        },
-        "spec3": {
-          "label": "le groupe au complet",
-          "value": "×2"
-        },
-        "title": "La ville est le score"
-      },
-      "intro": {
-        "claim": "Chaque match est lu automatiquement, et fait grandir une colonie que *toute l'escouade* partage.",
-        "eyebrow": "ValoQuests",
-        "spec1": {
-          "label": "semaines par campagne",
-          "value": "10"
-        },
-        "spec2": {
-          "label": "score commun",
-          "value": "1"
-        },
-        "spec3": {
-          "label": "saisie manuelle",
-          "value": "0"
-        },
-        "title": "Vos parties construisent une ville"
-      },
-      "ladder": {
-        "claim": "La nourriture se périme en sept jours. Les matériaux, *jamais* : ils portent chaque récolte plus loin.",
-        "eyebrow": "La progression",
-        "spec1": {
-          "label": "la fenêtre de récolte",
-          "value": "7 j"
-        },
-        "spec2": {
-          "label": "matériaux = +1 nourri",
-          "value": "150"
-        },
-        "spec3": {
-          "label": "matériaux, boss élite",
-          "value": "140"
-        },
-        "title": "De la partie à l'habitant"
-      },
-      "players": {
-        "claim": "Rang, historique, K/D, headshots, records. *Match par match*, depuis le premier jour.",
-        "eyebrow": "Les joueurs",
-        "spec1": {
-          "label": "modes de jeu suivis",
-          "value": "7"
-        },
-        "spec2": {
-          "label": "dégâts, compét. gagnée",
-          "value": "500"
-        },
-        "spec3": {
-          "label": "de recul sur vos progrès",
-          "value": "4 sem."
-        },
-        "title": "Chaque joueur a sa fiche"
-      },
-      "ranking": {
-        "claim": "Tout repart à zéro le lundi. Le premier d'une semaine close garde la couronne de *Champion*.",
-        "eyebrow": "Le classement",
-        "spec1": {
-          "label": "pour sept jours joués",
-          "value": "+6 000"
-        },
-        "spec2": {
-          "label": "défi validé à six",
-          "value": "+50 %"
-        },
-        "spec3": {
-          "label": "champion par semaine",
-          "value": "1"
-        },
-        "title": "Qui a porté la semaine"
-      },
-      "week": {
-        "claim": "Sa barre de vie est *calibrée sur vos vraies semaines*. Le groupe joue plus, le boss grossit.",
-        "eyebrow": "La semaine",
-        "spec1": {
-          "label": "défis tirés le lundi",
-          "value": "5"
-        },
-        "spec2": {
-          "label": "défis au catalogue",
-          "value": "60+"
-        },
-        "spec3": {
-          "label": "classes de boss",
-          "value": "3"
-        },
-        "title": "Un boss, cinq défis, sept jours"
-      }
-    },
-    "title": "Tour d'horizon"
+    "title": "Visite guidée",
+    "finish": "Aller à la vue d'ensemble"
   },
-  "week": {
-    "boss": {
-      "remainingHp": "PV restants"
-    },
-    "bossSection": {
-      "link": "Voir la campagne",
-      "title": "Boss à vaincre cette semaine"
-    },
-    "catalogue": {
-      "columns": {
-        "challenge": "Défi"
-      },
-      "groupCount": "{{count}} défis",
-      "hint": "Ce que le tirage de lundi peut encore proposer, en plus des cinq défis ci-dessus.",
-      "title": "Liste des défis disponibles"
-    },
-    "challengesSection": {
-      "link": "Qui a validé quoi",
-      "title": "Les cinq défis"
-    },
-    "payout": {
-      "currentTier": "Palier actuel",
-      "ifSurvives": "S'il survit",
-      "moraleCost": "{{morale}} moral",
-      "nextTier": "Palier suivant",
-      "ofTier": "du palier {{name}}, en une semaine.",
-      "title": "Vaincre ce boss",
-      "titleDefeated": "Ce que ce boss a payé"
-    },
-    "squad": {
-      "cleared": "{{done}} / {{total}} ont validé"
-    }
+  "wip": {
+    "eyebrow": "Refonte en cours",
+    "description": "Cet écran est en cours de refonte. Il sera livré au lot {{lot}} du gameplay v2."
   }
 }

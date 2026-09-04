@@ -14,7 +14,6 @@ import {
 import { RouterLink } from '@angular/router';
 import { LucideLoaderCircle } from '@lucide/angular';
 
-import { BossCampaign } from '@core/boss/boss-campaign';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalTime } from '@core/date/date-time.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -48,7 +47,6 @@ import {
 } from '@core/players/player-format.utils';
 import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/player-stats.utils';
 import { PlayersApi } from '@core/players/players-api';
-import { RankingEntry } from '@core/ranking/ranking.model';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { Avatar } from '@shared/avatar/avatar';
@@ -114,7 +112,6 @@ const MAX_PROGRESSION_SEASONS = 5;
   ],
   templateUrl: './player-profile.html',
   host: { class: PAGE_LAYOUT_CLASS },
-  providers: [BossCampaign],
 })
 export class PlayerProfile {
   /**
@@ -146,15 +143,6 @@ export class PlayerProfile {
    * Data-access service backing the reigning-champion lookup.
    */
   private readonly rankingApi = inject(RankingApi);
-
-  /**
-   * The whole run, already resolved week by week — what the profile's run band is drawn from.
-   *
-   * Provided at component level rather than injected from the root, so its countdown ticker is cut
-   * when the reader leaves the page; the underlying resources are shared with the campaign either
-   * way.
-   */
-  private readonly campaign = inject(BossCampaign);
 
   /**
    * i18n service used to resolve the player's translated rank label.
@@ -189,78 +177,6 @@ export class PlayerProfile {
    * history's filters - are shown with the history alone.
    */
   protected readonly viewMode = signal<'MATCHES' | 'PROGRESS'>('MATCHES');
-
-  /**
-   * This player's line in the week's ranking, or `null` while it loads or if they have none.
-   *
-   * The run band reads from here: the ranking already carries the week's total, the days played and
-   * the per-challenge progress, per player and per week. Nothing in the band needed a new endpoint.
-   */
-  protected readonly contribution = computed<RankingEntry | null>(() => {
-    const ranking = resourceValue(this.rankingApi.current, null);
-    return ranking?.ranking.find((entry) => entry.player.id === this.playerId()) ?? null;
-  });
-
-  /**
-   * How many of the run's bosses went down on a week this player took part in, over how many have
-   * been fought so far.
-   *
-   * Scoped to the player on purpose: the run's own tally already stands on `/campaign`, and
-   * repeating it under a portrait would say nothing about the portrait. What this counts is the
-   * kills the reader was there for.
-   */
-  protected readonly bossesFelled = computed(() => {
-    const fought = this.campaign.nodes().filter((node) => node.hasDamage);
-    const playerId = this.playerId();
-
-    return {
-      taken: fought.filter(
-        (node) =>
-          node.status === 'defeated' &&
-          node.contributions.some(
-            (contribution) => contribution.playerId === playerId && contribution.damage > 0,
-          ),
-      ).length,
-      fought: fought.length,
-    };
-  });
-
-  /**
-   * The run's ten weeks, each carrying this player's share of that week's boss, as a bar height.
-   *
-   * The one fact about a player that neither the leaderboard nor the campaign states: the
-   * leaderboard shows one week at a time and the campaign sums the squad, so a player's constancy
-   * over the whole run has nowhere else to be read.
-   *
-   * Heights are relative to this player's own best week rather than to the squad's: the frieze is
-   * read as a shape — steady, climbing, or one spike and nothing since — and measuring a player
-   * against the week's top scorer would flatten every profile but that one's.
-   */
-  protected readonly runFrieze = computed(() => {
-    const playerId = this.playerId();
-
-    const weeks = this.campaign.nodes().map((node) => ({
-      weekStart: node.weekStart,
-      // A node always words its own week; the run index is the fallback for the one shape that
-      // cannot, a placeholder whose calendar week is not resolved yet.
-      weekLabel:
-        node.weekLabel ??
-        this.translation.translate('boss.week.label', { number: node.runWeekIndex }),
-      isCurrent: node.status === 'current',
-      damage:
-        node.contributions.find((contribution) => contribution.playerId === playerId)?.damage ?? 0,
-    }));
-
-    const best = Math.max(...weeks.map((week) => week.damage), 0);
-
-    return weeks.map((week) => ({
-      ...week,
-      damageLabel: this.formatDamageAmount(week.damage),
-      // Floored so a week that was played but barely scored still reads as played rather than as
-      // one of the empty slots ahead of the run.
-      heightPercentage: best === 0 ? 0 : Math.max(12, Math.round((week.damage / best) * 100)),
-    }));
-  });
 
   /**
    * Every match fetched so far for the current filters, oldest fetch first.

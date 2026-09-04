@@ -1,3 +1,4 @@
+import { CampaignStatus, CampaignTier } from '@core/campaign/campaign.model';
 import { PlayerStatus } from '@core/players/player-summary.model';
 
 /**
@@ -192,42 +193,78 @@ export interface SynchronizationPlayerResult {
 }
 
 /**
- * A run's own place in the campaign's lifecycle.
- *
- * Mirrors the backend `CampaignRunStatus` enum.
- */
-export type CampaignRunStatus = 'RUNNING' | 'COMPLETED' | 'STOPPED';
-
-/**
- * One run of the campaign, current or closed, as exposed by `GET /api/admin/campaigns`.
- *
- * Mirrors the backend `CampaignAdminResponse.CampaignRunSummary`.
- */
-export interface CampaignRun {
-  readonly id: number;
-  readonly firstDay: string;
-
-  /**
-   * The run's final day: its settlement day for one that ran (or is running) its full course, or
-   * the day an operator stopped it early.
-   */
-  readonly finalDay: string;
-  readonly rosterSize: number;
-  readonly status: CampaignRunStatus;
-
-  /**
-   * Population as of {@link finalDay} — the run's score once closed, its standing so far while
-   * still running.
-   */
-  readonly score: number;
-}
-
-/**
- * The campaign's lifecycle, as exposed by `GET /api/admin/campaigns`.
+ * One campaign as the backoffice sees it, returned by the opening and stopping commands.
  *
  * Mirrors the backend `CampaignAdminResponse`.
  */
 export interface CampaignAdmin {
-  readonly autoRenewEnabled: boolean;
-  readonly runs: readonly CampaignRun[];
+  readonly number: number;
+  readonly status: CampaignStatus;
+
+  /**
+   * Monday of the first week, as an ISO-8601 date (`YYYY-MM-DD`).
+   */
+  readonly firstWeekStart: string;
+
+  /**
+   * Monday of the tenth week, as an ISO-8601 date (`YYYY-MM-DD`).
+   */
+  readonly lastWeekStart: string;
+
+  /**
+   * Day the campaign was frozen on when stopped early, or `null`.
+   */
+  readonly stoppedOn: string | null;
+  readonly reference: number;
+  readonly tier: CampaignTier;
+  readonly rosterSize: number;
+}
+
+/**
+ * One operator's share of the squad's calibration.
+ *
+ * Mirrors the backend `PlayerCalibration`.
+ */
+export interface PlayerCalibration {
+  readonly playerId: number;
+  readonly displayName: string;
+
+  /**
+   * Average weekly output over the window, in guardian damage.
+   */
+  readonly weeklyAverage: number;
+  readonly weeksCounted: number;
+
+  /**
+   * First day a match is known for, as an ISO-8601 date, or `null` with no history at all.
+   */
+  readonly earliestMatchDay: string | null;
+
+  /**
+   * Whether the imported history reaches back to the start of the window.
+   */
+  readonly covered: boolean;
+
+  /**
+   * Whether the operator has under a month of history and takes the squad's median instead.
+   */
+  readonly beginner: boolean;
+}
+
+/**
+ * The measure a campaign opened today would be given, from `GET /api/admin/campaigns/calibration`.
+ *
+ * Mirrors the backend `SquadCalibrationResponse`.
+ */
+export interface SquadCalibration {
+  readonly reference: number;
+  readonly tier: CampaignTier;
+  readonly volumeFactor: number;
+  readonly windowMonths: number;
+
+  /**
+   * First day of the window, as an ISO-8601 date (`YYYY-MM-DD`).
+   */
+  readonly firstDay: string;
+  readonly players: readonly PlayerCalibration[];
 }

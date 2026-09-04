@@ -4,12 +4,12 @@ import { WorkInProgress } from '@shared/work-in-progress/work-in-progress';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 
 /**
- * Placeholder for the gameplay v2 screen, delivered by lot 10 of the redesign.
+ * Placeholder for the gameplay v2 screen, delivered by lot 9 of the redesign.
  */
 @Component({
-  selector: 'app-leaderboard',
+  selector: 'app-challenges',
   imports: [WorkInProgress],
-  template: '<app-work-in-progress headingKey="leaderboard.title" [lot]="10" />',
+  template: '<app-work-in-progress headingKey="challenges.title" [lot]="9" />',
   host: { class: PAGE_LAYOUT_CLASS },
 })
-export class Leaderboard {}
+export class Challenges {}
