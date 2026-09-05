@@ -23,11 +23,21 @@ export interface BoardColumn {
 }
 
 /**
- * One operator's progress toward one weekly challenge, as a ring closing toward its target.
+ * One operator's progress toward one weekly challenge: a ring closing toward its target on the
+ * wide board, a bar under the name on the narrow one.
  */
 export interface BoardProgress extends ChallengeRingCell {
   readonly id: number;
   readonly mark: ChallengeTier;
+
+  /**
+   * The challenge's name alone, as the narrow board lists it.
+   */
+  readonly label: string;
+
+  /**
+   * The name, what had to be done and the metric, as the header's column names it.
+   */
   readonly name: string;
   readonly barClass: string;
 

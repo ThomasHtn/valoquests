@@ -1,7 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideChevronDown, LucideChevronUp } from '@lucide/angular';
+import { LucideCheck, LucideChevronDown, LucideChevronUp } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT, CampaignHistory } from '@core/campaign/campaign.model';
@@ -34,6 +34,7 @@ import {
   EmptyReadout,
 } from '@shared/empty-plate/empty-plate.model';
 import { PositionBadge } from '@shared/position-badge/position-badge';
+import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
@@ -89,8 +90,10 @@ function daysBetween(from: string, to: string): number {
     ChampionBadge,
     PositionBadge,
     Podium,
+    ProgressBar,
     Tooltip,
     WeekPicker,
+    LucideCheck,
     LucideChevronDown,
     LucideChevronUp,
   ],
@@ -442,6 +445,7 @@ export class Leaderboard {
     return {
       id: progress.id,
       mark: visual.tier,
+      label: progress.name,
       name: `${title} · ${category}`,
       categoryLabel: category,
       currentValueLabel: current,

@@ -210,25 +210,64 @@
       </span>
 
       @if (row.progress; as cells) {
-        <!-- One cell per weekly challenge of the board: the figure over its target, the bar under
-             it, the whole sentence on hover and for assistive technology. -->
+        <!-- One cell per weekly challenge of the board. Below the wide breakpoint each cell is a
+             line of its own: tier badge, name, then a bar closing toward the target and the figure
+             over it, the way the board read before the rings; from it the line dissolves into the
+             header's column and the ring alone stays. The whole sentence stays on hover. -->
         <span
           [attr.aria-label]="'leaderboard.board.progress' | translate"
           class="cell-progress"
           role="group"
         >
           @for (cell of cells; track cell.id) {
-            <!-- The ring closes toward the target and tints its centre once reached; it announces
-                 itself, the whole sentence stays on hover. -->
             <span [appTooltip]="cell.tip" appTooltipSize="md" class="prog">
-              <span
-                [class]="cell.visual.iconClass"
-                aria-hidden="true"
-                class="prog-mark label-caption"
-              >
-                {{ cell.mark }}
+              <span [class]="cell.barClass" aria-hidden="true" class="prog-tier clip-hex">
+                <span
+                  [class]="cell.visual.iconClass"
+                  class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-2xs leading-none font-bold"
+                >
+                  {{ cell.mark }}
+                </span>
               </span>
-              <app-challenge-ring [cell]="cell" />
+              <span class="prog-name text-sm text-text-secondary">
+                {{ cell.label }}
+                <span class="sr-only">— {{ cell.categoryLabel }}</span>
+              </span>
+              <!-- Fixed width whether or not the bar is drawn, so the bars of stacked lines share
+                   one leading edge and the figures one trailing edge. -->
+              <span class="prog-gauge">
+                <!-- Dropped once validated: the badge carries the signal, a full bar would only
+                     repeat it. -->
+                @if (!cell.completed) {
+                  <app-progress-bar
+                    [colorClass]="cell.barClass"
+                    [percentage]="cell.completionPercentage"
+                    class="w-14 shrink-0 border border-edge"
+                    heightClass="h-1.5"
+                  />
+                }
+                <span
+                  [class]="
+                    cell.completed
+                      ? [cell.visual.iconClass, cell.visual.badgeClass]
+                      : cell.visual.iconClass
+                  "
+                  class="prog-value"
+                >
+                  <span class="flex items-baseline gap-0.5 font-mono text-xs tabular-nums">
+                    <span class="font-bold">{{ cell.currentValueLabel }}</span>
+                    @if (cell.targetValueLabel) {
+                      <span class="font-normal opacity-50">/</span>
+                      <span class="font-semibold opacity-75">{{ cell.targetValueLabel }}</span>
+                    }
+                  </span>
+                  @if (cell.completed) {
+                    <svg aria-hidden="true" class="size-3" lucideCheck></svg>
+                    <span class="sr-only">{{ 'common.challenge.completed' | translate }}</span>
+                  }
+                </span>
+              </span>
+              <app-challenge-ring [cell]="cell" class="prog-ring" />
             </span>
           }
         </span>
