@@ -194,6 +194,11 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
     ) {
         Challenge challenge = selection.getChallenge();
         ChallengeDefinition definition = definitionParser.parse(selection);
+        String description = ChallengeDescriptionResolver.resolve(
+            challenge.getDescription(),
+            definitionParser.parse(challenge),
+            definition
+        );
         List<Long> completedPlayerIds = completedPlayerIds(
             progressByChallenge.getOrDefault(selection.getId(), List.of())
         );
@@ -204,7 +209,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             selection.getId(),
             challenge.getCode(),
             challenge.getName(),
-            challenge.getDescription(),
+            description,
             selection.getCadence(),
             challenge.getDifficulty(),
             selection.getDay(),

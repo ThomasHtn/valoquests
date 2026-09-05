@@ -108,8 +108,9 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
         Challenge challenge,
         ChallengeCalibration calibration
     ) {
+        ChallengeDefinition base = definitionParser.parse(challenge);
         ChallengeDefinition definition = targetResolver.resolve(
-            definitionParser.parse(challenge),
+            base,
             challenge.getCadence(),
             challenge.getDifficulty(),
             calibration.scaling()
@@ -120,7 +121,7 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
             challenge.getId(),
             challenge.getCode(),
             challenge.getName(),
-            challenge.getDescription(),
+            ChallengeDescriptionResolver.resolve(challenge.getDescription(), base, definition),
             challenge.getCadence(),
             challenge.getDifficulty(),
             definition.isCompetitiveOnly(),

@@ -222,6 +222,10 @@ class DefaultChallengeQueryServiceTest {
         challenge.setDifficulty(difficulty);
         challenge.setProgressMode(ProgressMode.COUNT_MATCHES);
         challenge.setSchemaVersion(3);
+        challenge.setConditionsJson(
+            "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":10,\"gameMode\":\"" + gameMode
+                + "\",\"occurrences\":3,\"scope\":\"PER_MATCH\"}]"
+        );
 
         WeeklyChallenge selection = new WeeklyChallenge();
         selection.setId(id);
@@ -250,6 +254,10 @@ class DefaultChallengeQueryServiceTest {
         challenge.setCadence(ChallengeCadence.DAILY);
         challenge.setProgressMode(ProgressMode.SUM);
         challenge.setSchemaVersion(3);
+        challenge.setConditionsJson(
+            "[{\"metric\":\"MATCHES_PLAYED\",\"operator\":\"GTE\",\"target\":1,"
+                + "\"gameMode\":\"COMPETITIVE_OR_UNRATED\"}]"
+        );
 
         WeeklyChallenge selection = new WeeklyChallenge();
         selection.setId(id);

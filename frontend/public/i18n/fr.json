@@ -803,7 +803,7 @@
       "aria": "La ville de nuit, {{population}} habitants. Au centre, la fusée montée à {{stages}} étages sur {{weeks}}, et le profil du lanceur complet en pointillé au-dessus.",
       "base": "La base",
       "unit": "habitants",
-      "delta": "hier soir"
+      "delta": "aujourd’hui · provisoire"
     },
     "frieze": {
       "title": "La campagne",

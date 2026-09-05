@@ -803,7 +803,7 @@
       "aria": "The city at night, {{population}} inhabitants. In the middle, the rocket built to {{stages}} stages out of {{weeks}}, and the dotted outline of the full launcher above.",
       "base": "The base",
       "unit": "inhabitants",
-      "delta": "last night"
+      "delta": "today · provisional"
     },
     "frieze": {
       "title": "The campaign",
