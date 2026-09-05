@@ -198,7 +198,6 @@ export class Challenges {
         mark: visual.tier,
         kind: this.translation.translate(`common.difficulty.${challenge.difficulty ?? 'EASY'}`),
         aside: '',
-        competitiveOnly: challenge.competitiveOnly,
         name: challenge.name,
         description: challenge.description,
         survivors: challenge.survivors,
@@ -287,7 +286,6 @@ export class Challenges {
         state === 'closed'
           ? this.translation.translate('challenges.daily.closed', { weekday, date })
           : '',
-      competitiveOnly: daily.competitiveOnly,
       name: daily.name,
       description: daily.description,
       survivors: daily.survivors,

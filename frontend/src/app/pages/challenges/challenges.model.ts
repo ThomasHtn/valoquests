@@ -36,7 +36,6 @@ export interface ChallengeCard {
    * Second part of the key line, for a closed day: the date and that the day is over.
    */
   readonly aside: string;
-  readonly competitiveOnly: boolean;
   readonly name: string;
   readonly description: string;
 

@@ -88,6 +88,14 @@
   white-space: nowrap;
 }
 
+/* Icon and figure travel together under one bubble, still sitting on the line's baseline. */
+.pay-figure {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  cursor: help;
+}
+
 @media (width < 48rem) {
   .pay {
     grid-column: 2;

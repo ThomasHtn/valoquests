@@ -13,8 +13,8 @@
     padding="px-4 py-10 sm:px-6"
   >
     <main class="flex flex-col gap-[clamp(3.5rem,6vw,6rem)] pb-20">
-      <!-- The briefing: what a challenge is for, and the two draws that hand them out. The one
-           place on the page where the rule is stated. -->
+      <!-- The briefing: what a challenge is for. The one place on the page where the rule is
+           stated. -->
       <section aria-labelledby="brief-title" class="brief">
         <div>
           <p class="label-caption text-brand-400" id="brief-title">
@@ -26,20 +26,6 @@
             {{ 'challenges.brief.sunday' | translate }}
           </p>
         </div>
-        <ul class="brief-draws">
-          <li style="--tone: var(--color-accent-cyan)">
-            <span class="brief-when label-caption">{{
-              'challenges.brief.morning' | translate
-            }}</span>
-            <span>{{ 'challenges.brief.morningText' | translate }}</span>
-          </li>
-          <li style="--tone: var(--color-brand-400)">
-            <span class="brief-when label-caption">{{
-              'challenges.brief.monday' | translate
-            }}</span>
-            <span>{{ 'challenges.brief.mondayText' | translate }}</span>
-          </li>
-        </ul>
       </section>
 
       <section aria-labelledby="daily-title">

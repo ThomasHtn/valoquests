@@ -16,22 +16,33 @@
     @if (card.aside) {
       <span class="key-aside">{{ card.aside }}</span>
     }
-    @if (card.competitiveOnly) {
-      <span class="key-aside">{{ 'challenges.card.competitiveOnly' | translate }}</span>
-    }
   </p>
   <h3 class="name">{{ card.name }}</h3>
   <p class="desc">{{ card.description }}</p>
 </div>
 
+<!-- The bubble hangs off the figure itself, not the whole line: it is the number the reader
+     questions, and it spells out that every operator brings that many back. -->
 <p class="pay">
   @if (card.rescueActive) {
-    <svg aria-hidden="true" class="size-4" lucideUsers></svg>
-    <b class="tabular-nums">+{{ card.survivors }}</b>
+    <span
+      [appTooltip]="'challenges.card.woundedTooltip' | translate: { count: card.survivors }"
+      class="pay-figure focus-ring"
+      tabindex="0"
+    >
+      <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+      <b class="tabular-nums">+{{ card.survivors }}</b>
+    </span>
     <span>{{ 'challenges.card.perOperator' | translate }}</span>
   } @else {
-    <svg aria-hidden="true" class="size-4" lucideUsers></svg>
-    <b class="tabular-nums">+{{ card.rankingPoints }}</b>
+    <span
+      [appTooltip]="'challenges.card.pointsTooltip' | translate: { count: card.rankingPoints }"
+      class="pay-figure focus-ring"
+      tabindex="0"
+    >
+      <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+      <b class="tabular-nums">+{{ card.rankingPoints }}</b>
+    </span>
   }
 </p>
 

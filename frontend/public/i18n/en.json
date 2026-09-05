@@ -531,11 +531,7 @@
       "eyebrow": "What challenges are for",
       "rescue": "A validated challenge brings wounded back to the base. They are earned whatever happens:",
       "noDamage": "a challenge deals no damage to the guardian,",
-      "sunday": "and nothing is taken back if the week goes badly. The wounded leave with the ship on Sunday, at no cost in components or food.",
-      "morning": "Every morning",
-      "morningText": "A daily challenge is drawn for the whole squad.",
-      "monday": "Every Monday",
-      "mondayText": "Five challenges are drawn, one per difficulty: the harder, the more it brings back."
+      "sunday": "and nothing is taken back if the week goes badly. The wounded leave with the ship on Sunday, at no cost in components or food."
     },
     "daily": {
       "title": "The daily challenge",
@@ -558,7 +554,14 @@
     },
     "card": {
       "perOperator": "per operator",
-      "competitiveOnly": "Competitive only",
+      "woundedTooltip": {
+        "one": "Every operator who validates this challenge brings {{count}} wounded home.",
+        "other": "Every operator who validates this challenge brings {{count}} wounded home."
+      },
+      "pointsTooltip": {
+        "one": "Every operator who validates this challenge scores {{count}} ranking point.",
+        "other": "Every operator who validates this challenge scores {{count}} ranking points."
+      },
       "validated": {
         "one": "validated",
         "other": "validated"
@@ -891,7 +894,7 @@
       "none": {
         "eyebrow": "Mission pending",
         "title": "No campaign open",
-        "text": "The weekly ranking already runs. The mission starts with the first campaign: opened from the backoffice, it begins the following Monday and lasts ten weeks.",
+        "text": "The weekly ranking already runs. The mission starts with the first campaign.",
         "ranking": "Weekly ranking",
         "rankingValue": "running",
         "campaign": "Campaign",

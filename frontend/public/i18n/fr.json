@@ -531,11 +531,7 @@
       "eyebrow": "À quoi servent les défis",
       "rescue": "Un défi validé ramène des blessés à la base. Ils sont acquis quoi qu'il arrive :",
       "noDamage": "un défi ne fait aucun dégât au gardien,",
-      "sunday": "et rien n'est repris si la semaine tourne mal. Les blessés partent avec le vaisseau le dimanche, sans coûter de composants ni de nourriture.",
-      "morning": "Chaque matin",
-      "morningText": "Un défi du jour est tiré pour toute l'escouade.",
-      "monday": "Chaque lundi",
-      "mondayText": "Cinq défis sont tirés, un par difficulté : plus c'est dur, plus ça ramène."
+      "sunday": "et rien n'est repris si la semaine tourne mal. Les blessés partent avec le vaisseau le dimanche, sans coûter de composants ni de nourriture."
     },
     "daily": {
       "title": "Le défi du jour",
@@ -558,7 +554,14 @@
     },
     "card": {
       "perOperator": "par opérateur",
-      "competitiveOnly": "Compétitif uniquement",
+      "woundedTooltip": {
+        "one": "Chaque opérateur qui valide ce défi ramène {{count}} blessé à la base.",
+        "other": "Chaque opérateur qui valide ce défi ramène {{count}} blessés à la base."
+      },
+      "pointsTooltip": {
+        "one": "Chaque opérateur qui valide ce défi marque {{count}} point au classement.",
+        "other": "Chaque opérateur qui valide ce défi marque {{count}} points au classement."
+      },
       "validated": {
         "one": "a validé",
         "other": "ont validé"
@@ -891,7 +894,7 @@
       "none": {
         "eyebrow": "Mission en attente",
         "title": "Aucune campagne ouverte",
-        "text": "Le classement de la semaine tourne déjà. La mission commence avec la première campagne : ouverte depuis le backoffice, elle démarre le lundi suivant et dure dix semaines.",
+        "text": "Le classement de la semaine tourne déjà. La mission commence avec la première campagne.",
         "ranking": "Classement de la semaine",
         "rankingValue": "en cours",
         "campaign": "Campagne",
