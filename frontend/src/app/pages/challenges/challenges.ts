@@ -102,7 +102,7 @@ export class Challenges {
   /**
    * Whether validated challenges bring wounded home right now: only a running campaign has a base.
    */
-  private readonly rescueActive = computed(() => this.campaign()?.status === 'RUNNING');
+  protected readonly rescueActive = computed(() => this.campaign()?.status === 'RUNNING');
 
   protected readonly hasChallenges = computed(() => {
     const current = this.current();

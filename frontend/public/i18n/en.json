@@ -303,7 +303,7 @@
       "none": {
         "eyebrow": "Road not drawn",
         "title": "Ten planets to reach",
-        "text": "Once a campaign is opened from the backoffice, the road of ten planets draws itself here: one planet a week, one guardian per planet, one group of wounded to bring home.",
+        "text": "Once the squad opens a campaign, the road of ten planets draws itself here: one planet a week, one guardian per planet, one group of wounded to bring home.",
         "start": "Start",
         "startValue": "the Monday after opening",
         "duration": "Length",
@@ -531,7 +531,10 @@
       "eyebrow": "What challenges are for",
       "rescue": "A validated challenge brings wounded back to the base. They are earned whatever happens:",
       "noDamage": "a challenge deals no damage to the guardian,",
-      "sunday": "and nothing is taken back if the week goes badly. The wounded leave with the ship on Sunday, at no cost in components or food."
+      "sunday": "and nothing is taken back if the week goes badly. The wounded leave with the ship on Sunday, at no cost in components or food.",
+      "rescueOff": "No campaign is running: a validated challenge counts toward the weekly ranking,",
+      "pointsOff": "one point per wounded it would bring home,",
+      "sundayOff": "and nothing is taken back if the week goes badly. The wounded themselves wait for the next campaign."
     },
     "daily": {
       "title": "The daily challenge",
@@ -719,7 +722,7 @@
     "header": {
       "heading": "The week's leaderboard",
       "week": "Week {{week}} of {{weeks}}",
-      "weekOf": "Week of {{date}}",
+      "outsideCampaign": "Outside a campaign",
       "tier": "{{tier}} tier"
     },
     "state": {
@@ -747,6 +750,9 @@
       "points": "Wounded",
       "damageHelp": "The hit points taken from the planet's guardian by the week's matches.",
       "pointsHelp": "The wounded brought home by validated challenges, one point each.",
+      "totalHelpOff": "The week's match value plus the points of validated challenges. No campaign is running: nothing is taken from a guardian. The total restarts from zero every Monday.",
+      "damageHelpOff": "The week's match value, counted as damage. No campaign is running: no guardian takes it.",
+      "pointsHelpOff": "The points of validated challenges, one per wounded they would bring home in a campaign.",
       "progress": "Challenge progress",
       "variation": {
         "up": {
@@ -908,7 +914,7 @@
       "closed": {
         "eyebrow": "Campaign closed",
         "title": "Waiting for the next campaign",
-        "text": "The campaign is closed. The next mission waits for a new campaign to be opened from the backoffice."
+        "text": "The campaign is closed. The next mission waits for a new campaign to be opened."
       },
       "settling": {
         "eyebrow": "Week settled",
@@ -940,7 +946,7 @@
       "matches": "Matches",
       "progress": "Progression"
     },
-    "error": "Failed to load this player's profile.",
+    "error": "Failed to load this operator's profile.",
     "filters": {
       "allSeasons": "All seasons",
       "gameModeLabel": "Filter by game mode",
@@ -1021,7 +1027,7 @@
         "tooltip": "Win rate, ACS and match count for every agent played in competitive over the selected seasons, most played first."
       },
       "empty": "No competitive match over the selected seasons.",
-      "error": "Could not load this player's progression.",
+      "error": "Could not load this operator's progression.",
       "evolution": {
         "alignmentNote": "Shorter seasons start further along the axis: every curve ends at the same point, so seasons are compared on where they left off.",
         "axis": {
@@ -1139,7 +1145,7 @@
       "winRate": "Win rate",
       "wins": "{{count}} W"
     },
-    "title": "Player profile"
+    "title": "Operator profile"
   },
   "players": {
     "columns": {
@@ -1150,29 +1156,29 @@
       "rank": "Rank",
       "winRate": "Win rate"
     },
-    "empty": "No player is tracked yet.",
-    "error": "Failed to load players.",
+    "empty": "No operator is tracked yet.",
+    "error": "Failed to load the operators.",
     "eyebrow": {
       "inCampaign": {
-        "one": "{{count}} in the campaign",
-        "other": "{{count}} in the campaign"
+        "one": "{{count}} active",
+        "other": "{{count}} active"
       },
       "outOfCampaign": {
-        "one": "{{count}} outside it",
-        "other": "{{count}} outside it"
+        "one": "{{count}} waiting",
+        "other": "{{count}} waiting"
       }
     },
-    "heading": "Players",
+    "heading": "Squad",
     "inCampaign": {
-      "title": "In the current campaign",
+      "title": "Active operators",
       "count": {
-        "one": "{{count}} player",
-        "other": "{{count}} players"
+        "one": "{{count}} operator",
+        "other": "{{count}} operators"
       }
     },
-    "loading": "Loading players…",
+    "loading": "Loading the operators…",
     "outOfCampaign": {
-      "title": "Out of campaign"
+      "title": "Waiting for the next campaign"
     },
     "subheading": "Players",
     "tiers": {

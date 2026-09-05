@@ -142,13 +142,16 @@ export class Players {
   protected readonly rows = computed<readonly PlayerRow[]>(() => this.allRows());
 
   /**
-   * The context bar's caption line: how the roster splits between the campaign and outside it.
+   * The context bar's caption line: how the roster splits between active operators and those
+   * waiting for the next campaign.
    *
    * The eyebrow used to repeat the heading word for word — "Escouade" over "Escouade", under a
    * navigation entry already reading "Escouade" — which spent the one line above the title saying
    * nothing. The split is the fact this page exists to report and the one the campaign's every
-   * denominator counts on, so it belongs there. Empty while the roster is still loading rather than
-   * announcing a count of zero it is about to contradict.
+   * denominator counts on, so it belongs there. It names the roster status, not campaign
+   * membership: a campaign's roster is frozen when it opens, and there may be none running. Empty
+   * while the roster is still loading rather than announcing a count of zero it is about to
+   * contradict.
    */
   protected readonly rosterEyebrow = computed(() => {
     const active = this.inCampaignRows().length;

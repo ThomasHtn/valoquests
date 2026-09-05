@@ -19,39 +19,41 @@
     }
     <div aria-hidden="true" class="scene-wash absolute inset-0"></div>
 
-    <div class="absolute inset-x-0 bottom-0 pb-[clamp(1.25rem,2vw,2rem)]">
-      <div
-        class="mx-auto flex w-full max-w-[1440px] flex-wrap items-end gap-x-14 gap-y-6 px-4 sm:px-6"
-      >
-        <div>
-          <p class="label-caption mb-2 flex items-center gap-2 text-text-muted">
-            <svg aria-hidden="true" class="size-3.5" lucideUsers></svg>
-            {{ 'overview.scene.base' | translate }}
-          </p>
-          <p class="pop-figure flex items-baseline gap-3">
-            <span [appCountUp]="population()" class="tabular-nums"></span>
-            <span
-              class="font-display text-lg font-medium tracking-[0.16em] text-text-secondary uppercase"
-              >{{ 'overview.scene.unit' | translate }}</span
-            >
-          </p>
-          @if (populationChange() !== 0) {
-            <p
-              class="pop-delta mt-3.5 inline-flex items-center gap-1.5 border px-2.5 py-1.5 font-display text-[1.0625rem] font-semibold tracking-[0.04em]"
-              [class.border-accent-green/45]="populationChange() > 0"
-              [class.text-accent-green]="populationChange() > 0"
-              [class.border-boss-hp-edge/45]="populationChange() < 0"
-              [class.text-boss-hp-edge]="populationChange() < 0"
-            >
-              {{ signed(populationChange()) }}
-              <small class="font-sans font-medium text-text-secondary">{{
-                'overview.scene.delta' | translate
-              }}</small>
+    @if (hasBase()) {
+      <div class="absolute inset-x-0 bottom-0 pb-[clamp(1.25rem,2vw,2rem)]">
+        <div
+          class="mx-auto flex w-full max-w-[1440px] flex-wrap items-end gap-x-14 gap-y-6 px-4 sm:px-6"
+        >
+          <div>
+            <p class="label-caption mb-2 flex items-center gap-2 text-text-muted">
+              <svg aria-hidden="true" class="size-3.5" lucideUsers></svg>
+              {{ 'overview.scene.base' | translate }}
             </p>
-          }
+            <p class="pop-figure flex items-baseline gap-3">
+              <span [appCountUp]="population()" class="tabular-nums"></span>
+              <span
+                class="font-display text-lg font-medium tracking-[0.16em] text-text-secondary uppercase"
+                >{{ 'overview.scene.unit' | translate }}</span
+              >
+            </p>
+            @if (populationChange() !== 0) {
+              <p
+                class="pop-delta mt-3.5 inline-flex items-center gap-1.5 border px-2.5 py-1.5 font-display text-[1.0625rem] font-semibold tracking-[0.04em]"
+                [class.border-accent-green/45]="populationChange() > 0"
+                [class.text-accent-green]="populationChange() > 0"
+                [class.border-boss-hp-edge/45]="populationChange() < 0"
+                [class.text-boss-hp-edge]="populationChange() < 0"
+              >
+                {{ signed(populationChange()) }}
+                <small class="font-sans font-medium text-text-secondary">{{
+                  'overview.scene.delta' | translate
+                }}</small>
+              </p>
+            }
+          </div>
         </div>
       </div>
-    </div>
+    }
   </section>
 
   <!-- The frieze: ten weeks in order, what is won, what is lost, where the two peaks are. The only

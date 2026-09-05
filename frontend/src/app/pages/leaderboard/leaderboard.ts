@@ -245,6 +245,12 @@ export class Leaderboard {
   });
 
   /**
+   * Whether the week on screen belongs to a campaign: its figures are then guardian damage and
+   * wounded brought home, otherwise ranking points with no guardian nor base behind them.
+   */
+  protected readonly rescueActive = computed(() => this.board()?.weekIndex != null);
+
+  /**
    * The week, then the campaign's tier when the week belongs to one.
    */
   protected readonly headerEyebrow = computed(() => {
@@ -253,15 +259,15 @@ export class Leaderboard {
     if (!board) {
       return this.translation.translate('leaderboard.title');
     }
+    // Outside a campaign the picker beside the bar already names the week's dates; the eyebrow
+    // then states the one thing the picker does not, and stays short enough for a phone.
     const week =
       board.weekIndex !== null
         ? this.translation.translate('leaderboard.header.week', {
             week: board.weekIndex,
             weeks: CAMPAIGN_WEEK_COUNT,
           })
-        : this.translation.translate('leaderboard.header.weekOf', {
-            date: this.dayMonth(board.weekStart),
-          });
+        : this.translation.translate('leaderboard.header.outsideCampaign');
     const tier =
       board.weekIndex !== null && campaign?.tier
         ? this.translation.translate('leaderboard.header.tier', {
@@ -478,12 +484,6 @@ export class Leaderboard {
 
   private locale(): string {
     return this.translation.language() === 'fr' ? 'fr-FR' : 'en-US';
-  }
-
-  private dayMonth(isoDate: string): string {
-    return new Intl.DateTimeFormat(this.locale(), { day: 'numeric', month: 'long' }).format(
-      localMidnight(isoDate),
-    );
   }
 
   /**

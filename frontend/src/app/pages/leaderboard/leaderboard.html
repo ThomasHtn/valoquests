@@ -52,19 +52,34 @@
                 {{ 'leaderboard.board.operator' | translate }}
               </span>
               <span
-                [appTooltip]="'leaderboard.board.totalHelp' | translate"
+                [appTooltip]="
+                  (rescueActive()
+                    ? 'leaderboard.board.totalHelp'
+                    : 'leaderboard.board.totalHelpOff'
+                  ) | translate
+                "
                 class="head-fig label-caption cursor-help text-text-muted"
               >
                 {{ 'leaderboard.board.total' | translate }}
               </span>
               <span
-                [appTooltip]="'leaderboard.board.damageHelp' | translate"
+                [appTooltip]="
+                  (rescueActive()
+                    ? 'leaderboard.board.damageHelp'
+                    : 'leaderboard.board.damageHelpOff'
+                  ) | translate
+                "
                 class="head-fig label-caption cursor-help text-text-muted"
               >
                 {{ 'leaderboard.board.damage' | translate }}
               </span>
               <span
-                [appTooltip]="'leaderboard.board.pointsHelp' | translate"
+                [appTooltip]="
+                  (rescueActive()
+                    ? 'leaderboard.board.pointsHelp'
+                    : 'leaderboard.board.pointsHelpOff'
+                  ) | translate
+                "
                 class="head-fig label-caption cursor-help text-text-muted"
               >
                 {{ 'leaderboard.board.points' | translate }}
@@ -187,25 +202,33 @@
       </span>
 
       <!-- The figure a place is made of, then the two halves it adds. Neither half wears a colour
-           of the challenge ladder: red and blue beside five tier rings read as two more tiers. -->
+           of the challenge ladder: red and blue beside five tier rings read as two more tiers.
+           An unranked operator scores nothing by definition: dashes, not three zeroes that would
+           contradict the challenge cells beside them. -->
       <span class="cell-figs">
         <span class="cell-fig">
           <span class="cap label-caption text-2xs">{{
             'leaderboard.board.total' | translate
           }}</span>
-          <span class="fig text-text-primary">{{ format(row.total) }}</span>
+          <span class="fig text-text-primary">{{
+            row.position === null ? '—' : format(row.total)
+          }}</span>
         </span>
         <span class="cell-fig">
           <span class="cap label-caption text-2xs">{{
             'leaderboard.board.damage' | translate
           }}</span>
-          <span class="fig text-accent-gold">{{ format(row.damage) }}</span>
+          <span class="fig text-accent-gold">{{
+            row.position === null ? '—' : format(row.damage)
+          }}</span>
         </span>
         <span class="cell-fig">
           <span class="cap label-caption text-2xs">{{
             'leaderboard.board.points' | translate
           }}</span>
-          <span class="fig text-brand-400">{{ format(row.challengePoints) }}</span>
+          <span class="fig text-brand-400">{{
+            row.position === null ? '—' : format(row.challengePoints)
+          }}</span>
         </span>
       </span>
 

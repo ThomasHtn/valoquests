@@ -53,7 +53,7 @@ export function groupMatchesByDay(
 
     days.push({
       dayKey,
-      dateLabel: formatLocalDayMonth(match.startedAt, language),
+      dateLabel: formatLocalDayMonth(match.startedAt, language, 'short'),
       wins: match.result === 'WIN' ? 1 : 0,
       losses: match.result === 'LOSS' ? 1 : 0,
       matches: [match],

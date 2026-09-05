@@ -303,7 +303,7 @@
       "none": {
         "eyebrow": "Route non tracée",
         "title": "Dix planètes à atteindre",
-        "text": "Quand une campagne sera ouverte depuis le backoffice, la route des dix planètes se dessinera ici : une planète par semaine, un gardien par planète, un groupe de blessés à ramener.",
+        "text": "Quand l'escouade ouvrira une campagne, la route des dix planètes se dessinera ici : une planète par semaine, un gardien par planète, un groupe de blessés à ramener.",
         "start": "Départ",
         "startValue": "le lundi suivant l’ouverture",
         "duration": "Durée",
@@ -531,7 +531,10 @@
       "eyebrow": "À quoi servent les défis",
       "rescue": "Un défi validé ramène des blessés à la base. Ils sont acquis quoi qu'il arrive :",
       "noDamage": "un défi ne fait aucun dégât au gardien,",
-      "sunday": "et rien n'est repris si la semaine tourne mal. Les blessés partent avec le vaisseau le dimanche, sans coûter de composants ni de nourriture."
+      "sunday": "et rien n'est repris si la semaine tourne mal. Les blessés partent avec le vaisseau le dimanche, sans coûter de composants ni de nourriture.",
+      "rescueOff": "Aucune campagne en cours : un défi validé compte au classement de la semaine,",
+      "pointsOff": "un point par blessé qu'il ramènerait,",
+      "sundayOff": "et rien n'est repris si la semaine tourne mal. Les blessés, eux, attendent la prochaine campagne."
     },
     "daily": {
       "title": "Le défi du jour",
@@ -719,7 +722,7 @@
     "header": {
       "heading": "Le classement de la semaine",
       "week": "Semaine {{week}} sur {{weeks}}",
-      "weekOf": "Semaine du {{date}}",
+      "outsideCampaign": "Hors campagne",
       "tier": "Palier {{tier}}"
     },
     "state": {
@@ -747,6 +750,9 @@
       "points": "Blessés",
       "damageHelp": "Les points de vie retirés au gardien de la planète par les parties de la semaine.",
       "pointsHelp": "Les blessés ramenés à la base par les défis validés, un point par blessé.",
+      "totalHelpOff": "La valeur des parties de la semaine plus les points des défis validés. Aucune campagne en cours : rien n'est retiré à un gardien. Le total repart de zéro chaque lundi.",
+      "damageHelpOff": "La valeur des parties de la semaine, comptée comme des dégâts. Aucune campagne en cours : aucun gardien ne les encaisse.",
+      "pointsHelpOff": "Les points des défis validés, un point par blessé qu'ils ramèneraient en campagne.",
       "progress": "Progression des défis",
       "variation": {
         "up": {
@@ -908,7 +914,7 @@
       "closed": {
         "eyebrow": "Campagne close",
         "title": "En attente de la prochaine campagne",
-        "text": "La campagne est close. La prochaine mission attend l'ouverture d'une nouvelle campagne depuis le backoffice."
+        "text": "La campagne est close. La prochaine mission attend l'ouverture d'une nouvelle campagne."
       },
       "settling": {
         "eyebrow": "Semaine réglée",
@@ -940,7 +946,7 @@
       "matches": "Matchs",
       "progress": "Progression"
     },
-    "error": "Impossible de charger le profil de ce joueur.",
+    "error": "Impossible de charger le profil de cet opérateur.",
     "filters": {
       "allSeasons": "Toutes les saisons",
       "gameModeLabel": "Filtrer par mode de jeu",
@@ -951,7 +957,7 @@
       "seasonLimit": "{{count}} saisons au maximum, pour que chaque courbe garde une couleur lisible.",
       "seasonsLabel": "Filtrer par saisons"
     },
-    "loading": "Chargement du profil du joueur…",
+    "loading": "Chargement du profil de l'opérateur…",
     "matches": {
       "damage": {
         "coefficient": "Dégâts infligés au boss de la semaine. Ce match a conservé {{percent}} % de sa valeur de base : les meilleures parties d'une journée comptent en entier, les suivantes de moins en moins.",
@@ -1021,7 +1027,7 @@
         "tooltip": "Winrate, ACS et nombre de matchs pour chaque agent joué en compétitif sur les saisons sélectionnées, du plus joué au moins joué."
       },
       "empty": "Aucun match compétitif sur les saisons sélectionnées.",
-      "error": "Impossible de charger la progression de ce joueur.",
+      "error": "Impossible de charger la progression de cet opérateur.",
       "evolution": {
         "alignmentNote": "Les saisons les plus courtes démarrent plus loin sur l'axe : toutes les courbes se terminent au même endroit, pour comparer les fins de saison.",
         "axis": {
@@ -1139,7 +1145,7 @@
       "winRate": "Winrate",
       "wins": "{{count}} V"
     },
-    "title": "Profil du joueur"
+    "title": "Profil de l'opérateur"
   },
   "players": {
     "columns": {
@@ -1150,29 +1156,29 @@
       "rank": "Rang",
       "winRate": "Winrate"
     },
-    "empty": "Aucun joueur suivi pour le moment.",
-    "error": "Impossible de charger les joueurs.",
+    "empty": "Aucun opérateur suivi pour le moment.",
+    "error": "Impossible de charger les opérateurs.",
     "eyebrow": {
       "inCampaign": {
-        "one": "{{count}} en campagne",
-        "other": "{{count}} en campagne"
+        "one": "{{count}} actif",
+        "other": "{{count}} actifs"
       },
       "outOfCampaign": {
-        "one": "{{count}} hors campagne",
-        "other": "{{count}} hors campagne"
+        "one": "{{count}} en attente",
+        "other": "{{count}} en attente"
       }
     },
     "heading": "Escouade",
     "inCampaign": {
-      "title": "Dans la campagne en cours",
+      "title": "Opérateurs actifs",
       "count": {
-        "one": "{{count}} joueur",
-        "other": "{{count}} joueurs"
+        "one": "{{count}} opérateur",
+        "other": "{{count}} opérateurs"
       }
     },
-    "loading": "Chargement des joueurs…",
+    "loading": "Chargement des opérateurs…",
     "outOfCampaign": {
-      "title": "Hors campagne"
+      "title": "En attente de la prochaine campagne"
     },
     "subheading": "Escouade",
     "tiers": {

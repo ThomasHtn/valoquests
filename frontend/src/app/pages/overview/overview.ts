@@ -343,6 +343,15 @@ export class Overview {
   );
 
   /**
+   * Whether a base exists to be counted: only a running or closed campaign has one. Before that,
+   * the scene stays but the figure is hidden rather than reading a population of zero.
+   */
+  protected readonly hasBase = computed(() => {
+    const key = this.stateKey();
+    return key === 'settling' || key === 'closed';
+  });
+
+  /**
    * What the empty state says when there is no mission to show.
    */
   protected readonly stateKey = computed(() => {

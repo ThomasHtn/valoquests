@@ -20,11 +20,21 @@
           <p class="label-caption text-brand-400" id="brief-title">
             {{ 'challenges.brief.eyebrow' | translate }}
           </p>
-          <p class="brief-text">
-            {{ 'challenges.brief.rescue' | translate }}
-            <b>{{ 'challenges.brief.noDamage' | translate }}</b>
-            {{ 'challenges.brief.sunday' | translate }}
-          </p>
+          <!-- Two readings of the same rule: with a base to bring the wounded to, or, between two
+               campaigns, with only the weekly ranking to count them. -->
+          @if (rescueActive()) {
+            <p class="brief-text">
+              {{ 'challenges.brief.rescue' | translate }}
+              <b>{{ 'challenges.brief.noDamage' | translate }}</b>
+              {{ 'challenges.brief.sunday' | translate }}
+            </p>
+          } @else {
+            <p class="brief-text">
+              {{ 'challenges.brief.rescueOff' | translate }}
+              <b>{{ 'challenges.brief.pointsOff' | translate }}</b>
+              {{ 'challenges.brief.sundayOff' | translate }}
+            </p>
+          }
         </div>
       </section>
 

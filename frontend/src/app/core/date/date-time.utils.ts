@@ -30,19 +30,23 @@ export function toLocalDayKey(instant: string): string {
 const MONTH_NAME_LOCALES: Record<'fr' | 'en', string> = { fr: 'fr-FR', en: 'en-US' };
 
 /**
- * Formats an ISO-8601 instant as `"<Month> <day>"` (e.g. `"Août 7"`) in the reader's timezone,
- * with the month name spelled out in `language`.
+ * Formats an ISO-8601 instant as a day and month in the reader's timezone, in the order
+ * `language` writes dates (`"7 août"`, `"August 7"`).
  *
  * @param instant - The instant to format, as an ISO-8601 instant.
- * @param language - The app language whose month names to use.
+ * @param language - The app language whose month names and date order to use.
+ * @param month - `'short'` abbreviates the month (`"7 août"` stays, `"7 sept."`, `"Sep 7"`) for a
+ *   label that must fit a narrow column instead of truncating to an ellipsis.
  * @returns The formatted date.
  */
-export function formatLocalDayMonth(instant: string, language: 'fr' | 'en'): string {
-  const date = new Date(instant);
-  const month = new Intl.DateTimeFormat(MONTH_NAME_LOCALES[language], { month: 'long' }).format(
-    date,
+export function formatLocalDayMonth(
+  instant: string,
+  language: 'fr' | 'en',
+  month: 'long' | 'short' = 'long',
+): string {
+  return new Intl.DateTimeFormat(MONTH_NAME_LOCALES[language], { day: 'numeric', month }).format(
+    new Date(instant),
   );
-  return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${date.getDate()}`;
 }
 
 /**
