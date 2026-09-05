@@ -12,6 +12,7 @@ import java.util.List;
  * is what lets the site say "no campaign is running" from the same call rather than from a 404 it
  * would have to treat as a state.
  *
+ * @param id               campaign identifier, {@code null} when there is none
  * @param status           where the campaign stands, {@code null} when there is none
  * @param number           campaign number
  * @param tier             bracket the reference falls in
@@ -28,6 +29,7 @@ import java.util.List;
  * @param totals           what the campaign has amounted to so far
  */
 public record CampaignResponse(
+    Long id,
     CampaignStatus status,
     Integer number,
     CampaignTier tier,
@@ -58,7 +60,7 @@ public record CampaignResponse(
      */
     public static CampaignResponse none(LocalDate today) {
         return new CampaignResponse(
-            null, null, null, null, null, null, null, today, null, null, null, List.of(), null
+            null, null, null, null, null, null, null, null, today, null, null, null, List.of(), null
         );
     }
 }

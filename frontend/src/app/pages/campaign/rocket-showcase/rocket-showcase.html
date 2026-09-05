@@ -1,0 +1,64 @@
+<div class="showcase">
+  <div class="viewer">
+    <svg
+      #viewer
+      [attr.aria-label]="
+        'campaign.rocket.viewerAria' | translate: { built: builtCount(), total: total }
+      "
+      class="viewer-svg"
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      viewBox="0 0 600 520"
+    ></svg>
+    <p class="viewer-cap">
+      @if (shownPart(); as part) {
+        <b>{{ part.name }}</b>
+        <span class="label-caption text-2xs">{{
+          'campaign.rocket.part'
+            | translate: { index: part.index, total: total, week: part.week ?? 0 }
+        }}</span>
+      } @else {
+        <b>{{ 'campaign.rocket.viewerEmpty' | translate }}</b>
+        <span class="label-caption text-2xs">{{
+          'campaign.rocket.viewerEmptyText' | translate
+        }}</span>
+      }
+    </p>
+  </div>
+
+  <ol [attr.aria-label]="'campaign.rocket.partsAria' | translate" class="parts">
+    @for (part of parts(); track part.index) {
+      <li>
+        @if (part.state === 'built') {
+          <button
+            (click)="select(part)"
+            [attr.aria-pressed]="part.index === shown()"
+            class="focus-ring part part--built"
+            type="button"
+          >
+            <span class="part-no">{{ part.label }}</span>
+            <span class="part-name">{{ part.name }}</span>
+            <span class="part-sub">
+              <svg aria-hidden="true" class="size-3.5" lucideCheck></svg>
+              {{ 'campaign.rocket.built' | translate: { week: part.week ?? 0 } }}
+            </span>
+          </button>
+        } @else {
+          <div [class]="'part part--' + part.state">
+            <span class="part-no">{{ part.label }}</span>
+            <span class="part-name">{{ part.name }}</span>
+            <span class="part-sub">
+              @if (part.state === 'next') {
+                <svg aria-hidden="true" class="size-3.5" lucideTarget></svg>
+                {{ 'campaign.rocket.next' | translate }}
+              } @else {
+                <svg aria-hidden="true" class="size-3.5" lucideLock></svg>
+                {{ 'campaign.rocket.locked' | translate: { index: part.index } }}
+              }
+            </span>
+          </div>
+        }
+      </li>
+    }
+  </ol>
+</div>

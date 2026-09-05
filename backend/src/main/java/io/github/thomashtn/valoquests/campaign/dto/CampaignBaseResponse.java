@@ -17,6 +17,7 @@ package io.github.thomashtn.valoquests.campaign.dto;
  * @param populationChange     inhabitants gained or lost over the last replayed day
  * @param componentsPerRescue  components one rescue costs the ship
  * @param foodPerRescue        food one rescue costs the base
+ * @param guardianLossPercent  share of the base a guardian left standing at zero breakthrough would kill
  */
 public record CampaignBaseResponse(
     int population,
@@ -28,6 +29,7 @@ public record CampaignBaseResponse(
     int rescuesByFood,
     int populationChange,
     int componentsPerRescue,
-    int foodPerRescue
+    int foodPerRescue,
+    int guardianLossPercent
 ) {
 }

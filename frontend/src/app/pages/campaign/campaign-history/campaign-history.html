@@ -1,0 +1,80 @@
+<div class="history">
+  <figure class="chart">
+    <div class="chart-box">
+      @if (curves().length > 0) {
+        <p class="legend">
+          @for (curve of curves(); track curve.series.label) {
+            <span class="legend-item">
+              <i [style.--k]="curve.series.color" aria-hidden="true"></i>
+              {{ curve.series.label }} ·
+              <b class="tabular-nums">{{ format(curve.figure) }}</b>
+              @if (!curve.current) {
+                {{ 'campaign.history.atEnd' | translate }}
+              }
+            </span>
+          }
+        </p>
+        <app-line-chart
+          [ariaLabel]="'campaign.history.chartAria' | translate"
+          [pointLabel]="'campaign.history.pointLabel' | translate"
+          [series]="series()"
+          [xLabels]="xLabels"
+          heightClass="h-full w-full"
+        />
+      } @else {
+        <p class="chart-empty">{{ 'campaign.history.empty' | translate }}</p>
+      }
+    </div>
+  </figure>
+
+  @if (rows().length > 0) {
+    <div class="scroll-subtle overflow-x-auto">
+      <table [attr.aria-label]="'campaign.history.tableAria' | translate" class="past-table">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">{{ 'campaign.history.colCampaign' | translate }}</th>
+            <th scope="col">{{ 'campaign.history.colTier' | translate }}</th>
+            <th scope="col">
+              <svg aria-hidden="true" class="ico text-accent-gold" lucideUsers></svg>
+              {{ 'common.resource.base' | translate }}
+            </th>
+            <th scope="col">
+              <svg aria-hidden="true" class="ico text-boss-hp-edge" lucideSkull></svg>
+              {{ 'campaign.history.colGuardians' | translate }}
+            </th>
+            <th scope="col">
+              <svg aria-hidden="true" class="ico text-accent-cyan" lucideHeartPulse></svg>
+              {{ 'common.resource.wounded' | translate }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.number) {
+            <tr [class.past-row--now]="row.current">
+              <td class="past-rank">{{ row.rank }}</td>
+              <th scope="row">
+                <b>{{ 'campaign.history.past' | translate: { number: row.number } }}</b>
+                <span>{{ row.subtitle }}</span>
+              </th>
+              <td>
+                <span [class]="'tier tier--' + row.tier">{{
+                  'common.tier.' + row.tier | translate
+                }}</span>
+              </td>
+              <td class="tabular-nums">{{ format(row.population) }}</td>
+              <td class="tabular-nums">
+                {{ row.guardiansDefeated }}
+                <small>{{
+                  'campaign.history.of'
+                    | translate: { count: row.current ? row.weeksPlayed : weekCount }
+                }}</small>
+              </td>
+              <td class="tabular-nums">{{ format(row.rescued) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

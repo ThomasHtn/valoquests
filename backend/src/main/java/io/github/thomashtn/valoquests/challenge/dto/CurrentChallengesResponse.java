@@ -16,6 +16,7 @@ import java.util.List;
  * @param weekEnd                         Sunday of the current week
  * @param today                           current day, the one whose daily challenge is in play
  * @param lastSuccessfulSynchronizationAt last time progress was refreshed from Riot data
+ * @param roster                          active players the challenges apply to, in roster order
  * @param challenges                      weekly pack, easiest tier first
  * @param dailies                         daily challenges drawn this week, oldest day first
  */
@@ -26,9 +27,24 @@ public record CurrentChallengesResponse(
     LocalDate weekEnd,
     LocalDate today,
     Instant lastSuccessfulSynchronizationAt,
+    List<RosterPlayerResponse> roster,
     List<ChallengeProgressResponse> challenges,
     List<ChallengeProgressResponse> dailies
 ) {
+    /**
+     * Exposes one active player, the unit every completion count below is read against.
+     *
+     * @param id          player identifier, the one {@link ChallengeProgressResponse#completedPlayerIds()}
+     *                    references
+     * @param displayName name shown for the player
+     */
+    public record RosterPlayerResponse(
+
+        Long id,
+        String displayName
+    ) {
+    }
+
     /**
      * Exposes one selected challenge and how far the squad has got with it.
      *
@@ -51,6 +67,7 @@ public record CurrentChallengesResponse(
      * @param rankingPoints        points one player earns in the weekly ranking by completing it
      * @param completedPlayers     active players who completed it
      * @param totalPlayers         active players it applies to
+     * @param completedPlayerIds   identifiers of the active players who completed it, ascending
      * @param completionPercentage completed players as a percentage of the total
      */
     public record ChallengeProgressResponse(
@@ -69,14 +86,22 @@ public record CurrentChallengesResponse(
         int rankingPoints,
         int completedPlayers,
         int totalPlayers,
+        List<Long> completedPlayerIds,
         BigDecimal completionPercentage
     ) {
+        /**
+         * Creates an immutable challenge progress response.
+         */
+        public ChallengeProgressResponse {
+            completedPlayerIds = List.copyOf(completedPlayerIds);
+        }
     }
 
     /**
      * Creates an immutable current-challenges response.
      */
     public CurrentChallengesResponse {
+        roster = List.copyOf(roster);
         challenges = List.copyOf(challenges);
         dailies = List.copyOf(dailies);
     }

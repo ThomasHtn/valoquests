@@ -7,6 +7,7 @@ import java.time.LocalDate;
 /**
  * What the backoffice gets back after opening or stopping a campaign.
  *
+ * @param id             campaign identifier
  * @param number         campaign number
  * @param status         where it now stands
  * @param firstWeekStart Monday it starts on
@@ -17,6 +18,7 @@ import java.time.LocalDate;
  * @param rosterSize     operators frozen into it
  */
 public record CampaignAdminResponse(
+    long id,
     int number,
     CampaignStatus status,
     LocalDate firstWeekStart,

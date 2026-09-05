@@ -455,13 +455,17 @@ export class Overview {
         }),
       };
     }
+    // A closed campaign's remaining weeks were never played: they are not coming any more.
+    const unplayed = campaign.status === 'CLOSED';
     return {
       index: week.weekIndex,
       label,
       state: 'ahead',
       advance: 0,
-      mark: week.weekIndex === CAMPAIGN_WEEK_COUNT ? '★' : '·',
-      title: this.translation.translate('overview.frieze.ahead'),
+      mark: week.weekIndex === CAMPAIGN_WEEK_COUNT && !unplayed ? '★' : '·',
+      title: this.translation.translate(
+        unplayed ? 'overview.frieze.unplayed' : 'overview.frieze.ahead',
+      ),
     };
   }
 }

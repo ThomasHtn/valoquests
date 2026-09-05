@@ -41,3 +41,17 @@ export function formatSquadMultiplier(bonusPercent: number, language: 'fr' | 'en
 
   return `×${formatted}`;
 }
+
+/**
+ * Formats a challenge's resolved target (`16`, `27 000`, `1,2`): the figure the draw actually set,
+ * shown next to a description that keeps the catalogue's base wording.
+ *
+ * @param target - The resolved target value.
+ * @param language - The app language whose separators to use.
+ * @returns The formatted target.
+ */
+export function formatChallengeTarget(target: number, language: 'fr' | 'en'): string {
+  return new Intl.NumberFormat(DAMAGE_GROUPING_LOCALES[language], {
+    maximumFractionDigits: 2,
+  }).format(target);
+}

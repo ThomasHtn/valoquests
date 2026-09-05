@@ -1,0 +1,120 @@
+<app-page-header [eyebrow]="headerEyebrow()" [heading]="'challenges.header.heading' | translate">
+  @if (dayLabel(); as day) {
+    <p
+      class="label-caption hidden shrink-0 items-center gap-2 text-brand-400 md:inline-flex"
+      headingAside
+    >
+      <svg aria-hidden="true" class="size-4" lucideCalendar></svg>
+      {{ day }}
+    </p>
+  }
+</app-page-header>
+
+<div class="page-body">
+  <app-resource-state
+    (retry)="retry()"
+    [emptyText]="'challenges.state.empty' | translate"
+    [errorText]="'challenges.state.error' | translate"
+    [isEmpty]="!hasChallenges()"
+    [isError]="isError()"
+    [isLoading]="isLoading()"
+    [loadingText]="'challenges.state.loading' | translate"
+    emptyKind="waiting"
+    padding="px-4 py-10 sm:px-6"
+  >
+    <main class="flex flex-col gap-[clamp(3.5rem,6vw,6rem)] pb-20">
+      <!-- The briefing: what a challenge is for, and the two draws that hand them out. The one
+           place on the page where the rule is stated. -->
+      <section aria-labelledby="brief-title" class="brief">
+        <div>
+          <p class="label-caption text-brand-400" id="brief-title">
+            {{ 'challenges.brief.eyebrow' | translate }}
+          </p>
+          <p class="brief-text">
+            {{ 'challenges.brief.rescue' | translate }}
+            <b>{{ 'challenges.brief.noDamage' | translate }}</b>
+            {{ 'challenges.brief.sunday' | translate }}
+          </p>
+        </div>
+        <ul class="brief-draws">
+          <li style="--tone: var(--color-accent-cyan)">
+            <span class="brief-when label-caption">{{
+              'challenges.brief.morning' | translate
+            }}</span>
+            <span>{{ 'challenges.brief.morningText' | translate }}</span>
+          </li>
+          <li style="--tone: var(--color-brand-400)">
+            <span class="brief-when label-caption">{{
+              'challenges.brief.monday' | translate
+            }}</span>
+            <span>{{ 'challenges.brief.mondayText' | translate }}</span>
+          </li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="daily-title">
+        <app-section-rule
+          [heading]="'challenges.daily.title' | translate"
+          headingId="daily-title"
+        />
+        <app-daily-frieze [days]="days()" />
+      </section>
+
+      <section aria-labelledby="weekly-title">
+        <app-section-rule
+          [heading]="'challenges.weekly.title' | translate"
+          headingId="weekly-title"
+        />
+        @if (weeklyCards().length > 0) {
+          <ol [attr.aria-label]="'challenges.weekly.list' | translate" class="weekly">
+            @for (card of weeklyCards(); track card.name) {
+              <li>
+                <app-challenge-card [card]="card" />
+              </li>
+            }
+          </ol>
+        } @else {
+          <p class="text-lead text-text-secondary">{{ 'challenges.weekly.none' | translate }}</p>
+        }
+      </section>
+
+      <!-- The catalogue is folded: a reserve to consult, not an entry point. Its bar is the
+           section's own title, and nothing of the hundred-odd rows exists before it opens. -->
+      <section aria-labelledby="catalogue-title">
+        <details (toggle)="toggleCatalogue($event)" class="fold">
+          <summary class="fold-bar focus-ring">
+            <h2
+              class="font-display text-[clamp(1.5rem,1.1rem+1.1vw,2rem)] leading-tight font-semibold tracking-[0.01em] text-brand-400 uppercase"
+              id="catalogue-title"
+            >
+              {{ 'challenges.catalogue.title' | translate }}
+            </h2>
+            <span
+              aria-hidden="true"
+              class="h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent"
+            ></span>
+            <span class="fold-cue label-caption text-2xs">
+              {{
+                (catalogueOpen() ? 'challenges.catalogue.hide' : 'challenges.catalogue.show')
+                  | translate
+              }}
+              <svg aria-hidden="true" class="size-3.5" lucideChevronDown></svg>
+            </span>
+          </summary>
+          @if (catalogueOpen()) {
+            <app-resource-state
+              (retry)="retryCatalogue()"
+              [errorText]="'challenges.catalogue.error' | translate"
+              [isError]="catalogueError()"
+              [isLoading]="catalogueLoading()"
+              [loadingText]="'challenges.catalogue.loading' | translate"
+              padding="py-8"
+            >
+              <app-challenge-catalogue [groups]="catalogueGroups()" />
+            </app-resource-state>
+          }
+        </details>
+      </section>
+    </main>
+  </app-resource-state>
+</div>

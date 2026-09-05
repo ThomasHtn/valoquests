@@ -96,6 +96,30 @@ export interface CampaignBase {
    * Food one rescue costs the base.
    */
   readonly foodPerRescue: number;
+
+  /**
+   * Share of the base a guardian left standing at zero breakthrough would kill, in percent.
+   */
+  readonly guardianLossPercent: number;
+}
+
+/**
+ * The base at the close of one week, and what the week added to its stocks.
+ *
+ * Mirrors the backend `CampaignWeekBaseResponse`. For the week in progress the figures stop at
+ * the last replayed day.
+ */
+export interface CampaignWeekBase {
+  readonly population: number;
+
+  /**
+   * Inhabitants gained or lost since the previous week's close.
+   */
+  readonly populationChange: number;
+  readonly foodStock: number;
+  readonly componentsStock: number;
+  readonly foodGained: number;
+  readonly componentsGained: number;
 }
 
 /**
@@ -168,6 +192,11 @@ export interface CampaignWeek {
    */
   readonly baseLoss: number;
   readonly settled: boolean;
+
+  /**
+   * The base at the week's close, `null` before its first replayed day.
+   */
+  readonly base: CampaignWeekBase | null;
 }
 
 /**
@@ -193,6 +222,10 @@ export interface CampaignTotals {
  * (then empty) are the only fields always set. The status tells which case the page is in.
  */
 export interface Campaign {
+  /**
+   * Internal identifier, `null` between two campaigns. What the backoffice deletes by.
+   */
+  readonly id: number | null;
   readonly status: CampaignStatus | null;
   readonly number: number | null;
   readonly tier: CampaignTier | null;
@@ -292,6 +325,7 @@ export interface CampaignToday {
  * One closed campaign and how it ended, as returned by `GET /api/campaign/history`.
  */
 export interface CampaignHistory {
+  readonly id: number;
   readonly number: number;
   readonly tier: CampaignTier;
   readonly reference: number;

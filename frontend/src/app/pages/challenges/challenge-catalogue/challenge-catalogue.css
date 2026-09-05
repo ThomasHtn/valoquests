@@ -1,0 +1,85 @@
+.catalogue {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.cgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* The group's header is a plate: it is what opens the difficulty, not a mere title. */
+.cgroup-head {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  gap: 0.5rem 1.25rem;
+  align-items: center;
+  padding: 0.6rem 1.2rem;
+  background: rgb(236 232 225 / 7%);
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
+.cgroup-head .hex-mark > span {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.cgroup-name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.cgroup-count {
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+/* Two columns: beyond that the rows get too dense to scan. */
+.cgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+@media (width < 60rem) {
+  .cgrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.crow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.2rem;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
+.crow-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.crow-desc {
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+
+.crow-target {
+  margin-top: 0.35rem;
+  color: var(--color-text-muted);
+}

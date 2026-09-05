@@ -51,10 +51,9 @@ export interface AdminPlayer {
   /**
    * Whether the player has played at all in the last two weeks.
    *
-   * Shown because an active player who has stopped playing costs the colony real points: the roster
-   * size drives the turnout denominator, the opening housing and both sides of the weekly fight at
-   * once, so an account left active and away widens the town without feeding it. Roughly five
-   * percent of a run's final score, which nobody would guess from this screen.
+   * Shown because an active operator who has stopped playing costs the squad: the roster size
+   * sizes the guardian and the group of wounded, so an account left active and away raises both
+   * without contributing to either.
    */
   readonly hasRecentMatch: boolean;
 }
@@ -83,8 +82,8 @@ export interface AdminPlayerUpdateRequest {
 /**
  * What a deletion request did to a player.
  *
- * Not predictable by the caller: a player that fought a boss is archived rather than deleted, so
- * the screen only learns which happened from the response.
+ * Not predictable by the caller: a player frozen into a campaign's roster is archived rather than
+ * deleted, so the screen only learns which happened from the response.
  */
 export type AdminPlayerDeletionOutcome = 'DELETED' | 'ARCHIVED';
 
@@ -198,6 +197,7 @@ export interface SynchronizationPlayerResult {
  * Mirrors the backend `CampaignAdminResponse`.
  */
 export interface CampaignAdmin {
+  readonly id: number;
   readonly number: number;
   readonly status: CampaignStatus;
 

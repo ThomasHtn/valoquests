@@ -12,6 +12,9 @@
   <!-- Link and diamond travel together: on a phone the line wraps, and a diamond alone on a third
        line would read as a stray mark. -->
   <span class="ml-auto inline-flex items-center gap-4">
+    @if (side(); as caption) {
+      <span class="label-caption text-2xs text-text-muted">{{ caption }}</span>
+    }
     @if (link(); as route) {
       <a
         [routerLink]="route"

@@ -1,0 +1,251 @@
+.fold {
+  margin-top: 1.25rem;
+  background: rgb(236 232 225 / 4%);
+}
+
+.fold-sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  min-height: 3.5rem;
+  padding: 1.1rem 1.25rem;
+  list-style: none;
+  cursor: pointer;
+}
+
+.fold-sum::-webkit-details-marker {
+  display: none;
+}
+
+.fold-sum:hover .fold-cue {
+  color: var(--color-text-primary);
+}
+
+.chart-head b {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-brand-400);
+}
+
+.fold-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-text-muted);
+}
+
+.fold-hide,
+.fold[open] .fold-show,
+.fold[open] .fold-spark {
+  display: none;
+}
+
+.fold[open] .fold-hide {
+  display: inline;
+}
+
+.fold[open] .fold-cue {
+  margin-left: auto;
+}
+
+.fold-chev {
+  transition: rotate 0.25s var(--ease-out-quart);
+}
+
+.fold[open] .fold-chev {
+  rotate: 180deg;
+}
+
+/* The miniature: two rows of ten, food then components, on the same scale. */
+.fold-spark {
+  display: grid;
+  gap: 0.3rem;
+  margin-left: auto;
+}
+
+.sp-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.22rem;
+  height: 1.1rem;
+}
+
+.sp-row i {
+  width: 0.34rem;
+  height: max(2px, var(--h, 0) * 1.1rem);
+  background: var(--k);
+}
+
+.sp-row i.sp-todo {
+  height: 2px;
+  background: rgb(236 232 225 / 18%);
+}
+
+.sp-row--food {
+  --k: var(--color-accent-green);
+}
+
+.sp-row--components {
+  --k: var(--color-accent-cyan);
+}
+
+.fold-body {
+  animation: campaign-open 0.3s var(--ease-out-quart) both;
+}
+
+.ledger-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  padding: 0 1.25rem 0.9rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.ledger-key li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ledger-key i {
+  width: 0.9rem;
+  height: 0.9rem;
+  background: var(--color-text-secondary);
+}
+
+.ledger-key .k-spent {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-text-secondary) 0 2px,
+    transparent 2px 5px
+  );
+}
+
+.ledger-key .k-carry {
+  width: 1.2rem;
+  height: 0;
+  border-top: 2px dashed var(--color-text-secondary);
+  background: none;
+}
+
+.ledger-scroll {
+  overflow-x: auto;
+}
+
+.ledger {
+  --up: 7rem;
+
+  display: grid;
+  grid-template-columns: 11.5rem repeat(10, minmax(0, 1fr));
+  min-width: 64rem;
+}
+
+.lg-col {
+  --tone: var(--color-text-primary);
+
+  padding: 0.75rem 0.4rem 0.6rem;
+  text-align: center;
+}
+
+.lg-col b,
+.lg-col span {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--tone);
+}
+
+.lg-col b {
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.lg-col span {
+  margin-top: 0.3rem;
+  font-size: 1rem;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lg-col--won {
+  --tone: var(--color-brand-400);
+}
+
+.lg-col--lost {
+  --tone: var(--color-boss-hp-edge);
+}
+
+.lg-col--won span,
+.lg-col--lost span {
+  color: var(--color-text-primary);
+}
+
+.lg-col--now {
+  --tone: var(--color-accent-cyan);
+}
+
+.lg-col--ahead {
+  --tone: var(--color-text-muted);
+}
+
+.lg-lead {
+  --tone: var(--color-text-secondary);
+
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.35rem 1rem;
+  align-items: start;
+  align-content: start;
+  padding: 1.25rem 1rem 1.25rem 1.1rem;
+  border-top: 1px solid var(--color-edge);
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
+.lg-lead--components {
+  --tone: var(--color-accent-cyan);
+}
+
+.lg-lead--food {
+  --tone: var(--color-accent-green);
+}
+
+.lg-lead .hex-mark {
+  grid-row: span 3;
+  width: 2.5rem;
+  height: 2.85rem;
+}
+
+.lg-total {
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tone);
+}
+
+.lg-total small {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.lg-spent-total {
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+
+.lg-spent-total b {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}

@@ -1,0 +1,165 @@
+/* Ten planets on a grid and the road between them; the drawer under the strip is a report. */
+.strip-wrap {
+  padding: 1.5rem clamp(1.5rem, 3vw, 3rem) 2rem;
+}
+
+.strip {
+  --orbit: 6.5rem;
+  --seg-gap: 0.4rem;
+
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.strip > li {
+  position: relative;
+}
+
+.strip > li + li::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--orbit) / 2);
+  left: calc(-50% + var(--orbit) / 2 + var(--seg-gap));
+  width: calc(100% - var(--orbit) - var(--seg-gap) * 2);
+  height: 0;
+  border-top: 2px dashed rgb(91 118 136 / 70%);
+}
+
+.strip > li.seg--done + li::before {
+  border-top: 2px solid rgb(217 149 74 / 80%);
+}
+
+@media (width < 64rem) {
+  .strip-wrap {
+    padding-inline: 0;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+  }
+
+  .strip {
+    --orbit: 6rem;
+
+    grid-template-columns: repeat(10, 8rem);
+    padding-inline: 1rem;
+  }
+
+  .strip > li {
+    scroll-snap-align: center;
+  }
+
+  .drawer::before {
+    display: none;
+  }
+}
+
+.pl {
+  --tone: var(--color-text-muted);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.pl--won {
+  --tone: var(--color-brand-400);
+}
+
+.pl--lost {
+  --tone: var(--color-boss-hp-edge);
+}
+
+.pl--now {
+  --tone: var(--color-accent-cyan);
+}
+
+.pl--final {
+  --tone: var(--color-brand-500);
+}
+
+.pl-orbit {
+  position: relative;
+  width: var(--orbit);
+  height: var(--orbit);
+  display: block;
+}
+
+/* Halo on hover, dotted ring while the planet is open. */
+.pl-orbit::before {
+  content: '';
+  position: absolute;
+  inset: 0.4rem;
+  border-radius: 50%;
+  background: var(--tone);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.pl-orbit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px dashed var(--color-text-primary);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.pl:hover .pl-orbit::before,
+.pl:focus-visible .pl-orbit::before,
+.pl[aria-expanded='true'] .pl-orbit::before {
+  opacity: 0.12;
+}
+
+.pl:focus-visible {
+  outline: none;
+}
+
+.pl:focus-visible .pl-orbit::after,
+.pl[aria-expanded='true'] .pl-orbit::after {
+  opacity: 0.8;
+}
+
+.pl-no {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tone);
+}
+
+.pl-name {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pl--ahead .pl-name,
+.pl--ahead .pl-state {
+  color: var(--color-text-muted);
+}
+
+.pl-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.pl-state svg {
+  color: var(--tone);
+}

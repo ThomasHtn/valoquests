@@ -8,7 +8,7 @@
 
   <!-- State of the latest run. Sits above the commands because it answers the question that decides
      whether any of them should be triggered at all. -->
-  <div class="notch-tr notch-tr-edge panel p-5 [--notch:0.875rem]">
+  <div class="notch-tr panel p-5 [--notch:0.875rem]">
     <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
       <h2 class="tracking-label font-display text-base font-bold text-text-primary uppercase">
         {{ 'admin.operations.lastRun' | translate }}
@@ -115,6 +115,14 @@
       [description]="'admin.operations.weekSelection.description' | translate"
       [heading]="'admin.operations.weekSelection.heading' | translate"
       [state]="weekSelectionState()"
+    />
+
+    <app-admin-action-card
+      (triggered)="selectDailyChallenge()"
+      [actionLabel]="'admin.operations.dailySelection.action' | translate"
+      [description]="'admin.operations.dailySelection.description' | translate"
+      [heading]="'admin.operations.dailySelection.heading' | translate"
+      [state]="dailySelectionState()"
     />
   </div>
 

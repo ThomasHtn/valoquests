@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -230,7 +231,7 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         mockMvc.perform(get("/api/campaign"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("OPENED"))
-            .andExpect(jsonPath("$.currentWeekIndex").doesNotExist())
+            .andExpect(jsonPath("$.currentWeekIndex").value(nullValue()))
             .andExpect(jsonPath("$.weeks.length()").value(CampaignSchedule.WEEK_COUNT));
     }
 

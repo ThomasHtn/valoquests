@@ -1,0 +1,130 @@
+<!-- Two blocks, the week then the campaign: the same shape, the ranking's figures on the left,
+     the campaign's on the right. Each block is a row of the registry opened on one scale. -->
+@if (resource.isLoading()) {
+  <div aria-busy="true" class="blocks">
+    @for (placeholder of [0, 1]; track placeholder) {
+      <div class="block">
+        <span class="mb-4 block h-2.5 w-24 bg-surface-700"></span>
+        <span class="block h-6 w-40 bg-surface-700"></span>
+      </div>
+    }
+  </div>
+} @else if (resource.error()) {
+  <p class="block flex flex-wrap items-center gap-x-4 gap-y-2 text-text-secondary">
+    {{ 'playerProfile.contribution.error' | translate }}
+    <button (click)="resource.reload()" class="retry focus-ring" type="button">
+      <svg aria-hidden="true" class="size-3.5" lucideRefreshCw></svg>
+      {{ 'retry' | translate }}
+    </button>
+  </p>
+} @else if (contribution()) {
+  <div class="blocks">
+    <section aria-labelledby="week-contrib-title" class="block">
+      <p class="block-head">
+        <span class="label-caption text-brand-400" id="week-contrib-title">{{
+          'playerProfile.contribution.week' | translate
+        }}</span>
+        <a class="block-link focus-ring" routerLink="/leaderboard">
+          {{ 'playerProfile.contribution.weekLink' | translate }}
+          <span aria-hidden="true">→</span>
+        </a>
+      </p>
+
+      @if (week(); as week) {
+        <p class="lead">
+          @if (week.position !== null) {
+            <span class="lead-pos tabular-nums">#{{ week.position }}</span>
+          } @else {
+            <span class="lead-pos lead-pos--none">·</span>
+          }
+          <span class="lead-total tabular-nums">{{ format(week.totalPoints) }}</span>
+          <span class="lead-unit">{{ 'playerProfile.contribution.total' | translate }}</span>
+          @if (week.position === null) {
+            <span class="lead-note">{{ 'playerProfile.contribution.unranked' | translate }}</span>
+          }
+        </p>
+        <ng-container
+          [ngTemplateOutletContext]="{ cells: weekCells(), titles: weekTitles() }"
+          [ngTemplateOutlet]="cells"
+        />
+      } @else {
+        <p class="empty">{{ 'playerProfile.contribution.weekNone' | translate }}</p>
+      }
+    </section>
+
+    <section aria-labelledby="campaign-contrib-title" class="block">
+      <p class="block-head">
+        <span class="label-caption text-brand-400" id="campaign-contrib-title">
+          @if (campaign(); as campaign) {
+            {{
+              'playerProfile.contribution.campaign' | translate: { number: campaign.campaignNumber }
+            }}
+            @if (campaign.status !== 'RUNNING') {
+              · {{ 'common.campaignStatus.' + campaign.status | translate }}
+            }
+          } @else {
+            {{ 'playerProfile.contribution.campaignTitle' | translate }}
+          }
+        </span>
+        <a class="block-link focus-ring" routerLink="/campaign">
+          {{ 'playerProfile.contribution.campaignLink' | translate }}
+          <span aria-hidden="true">→</span>
+        </a>
+      </p>
+
+      @if (campaign()) {
+        <ng-container
+          [ngTemplateOutletContext]="{ cells: campaignCells(), titles: campaignTitles() }"
+          [ngTemplateOutlet]="cells"
+        />
+      } @else {
+        <p class="empty">{{ 'playerProfile.contribution.campaignNone' | translate }}</p>
+      }
+    </section>
+  </div>
+}
+
+<!-- The figures of one block, then the titles under them. -->
+<ng-template #cells let-cells="cells" let-titles="titles">
+  <dl class="cells">
+    @for (cell of cells; track cell.key) {
+      <div class="cell">
+        <dt class="label-caption text-2xs text-text-muted">
+          {{ 'playerProfile.contribution.' + cell.key | translate }}
+        </dt>
+        <dd [style.--cell]="cell.tone || null" class="cell-val tabular-nums">
+          {{ cell.value }}
+          @if (cell.note) {
+            <small>{{ cell.note }}</small>
+          }
+        </dd>
+      </div>
+    }
+  </dl>
+  @if (titles.length > 0) {
+    <ul [attr.aria-label]="'playerProfile.contribution.titles' | translate" class="titles">
+      @for (title of titles; track title.key) {
+        <li [class]="'title ' + title.colorClass">
+          @switch (title.icon) {
+            @case ('wrench') {
+              <svg aria-hidden="true" class="size-3.5" lucideWrench></svg>
+            }
+            @case ('wheat') {
+              <svg aria-hidden="true" class="size-3.5" lucideWheat></svg>
+            }
+            @case ('flame') {
+              <svg aria-hidden="true" class="size-3.5" lucideFlame></svg>
+            }
+            @case ('target') {
+              <svg aria-hidden="true" class="size-3.5" lucideTarget></svg>
+            }
+          }
+          {{ 'common.title.' + title.key | translate }}
+          @if (title.count > 1) {
+            <span class="title-count tabular-nums">×{{ title.count }}</span>
+          }
+        </li>
+      }
+    </ul>
+  }
+</ng-template>

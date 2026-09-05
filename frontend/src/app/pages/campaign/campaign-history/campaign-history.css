@@ -1,0 +1,195 @@
+.history {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+}
+
+@media (min-width: 68rem) {
+  .history {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+}
+
+@media (min-width: 84rem) {
+  .history {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  }
+}
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* The chart sinks into the ground, like the data cells. */
+.chart-box {
+  display: flex;
+  flex-direction: column;
+  height: clamp(17rem, 25vw, 23rem);
+  padding: 0.9rem 0.75rem 0.5rem 0.25rem;
+  background: rgb(4 10 15 / 45%);
+}
+
+.chart-box app-line-chart {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-top: 0.75rem;
+}
+
+.chart-empty {
+  margin: auto;
+  padding: 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* The legend lives in the chart's hollow: its top edge then lines up with the table's. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.5rem;
+  padding: 0 0.75rem 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-edge);
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.legend-item i {
+  width: 1rem;
+  height: 2px;
+  background: var(--k);
+}
+
+.legend-item b {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.past-table {
+  width: 100%;
+  min-width: 30rem;
+  border-collapse: collapse;
+}
+
+.past-table th,
+.past-table td {
+  padding: 0.8rem 0.6rem;
+  text-align: right;
+  white-space: nowrap;
+  border-top: 1px solid var(--color-edge);
+  vertical-align: middle;
+}
+
+.past-table thead th {
+  border-top: 0;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.ico {
+  width: 0.8125rem;
+  height: 0.8125rem;
+  display: inline;
+  vertical-align: -0.2em;
+}
+
+.past-table th[scope='row'],
+.past-table thead th:nth-child(-n + 3),
+.past-table td:nth-child(3) {
+  text-align: left;
+}
+
+.past-table th[scope='row'] b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.past-table th[scope='row'] span {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.past-table td {
+  font-family: var(--font-display);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.past-table td small {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.past-rank {
+  width: 2rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.past-table tr:first-child .past-rank {
+  color: #e8ab6b;
+}
+
+/* The squad's tier during that campaign: the same badge as in the page header. */
+.tier {
+  display: inline-flex;
+  padding: 0.3rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tier--AMATEUR {
+  background: rgb(236 232 225 / 10%);
+  color: var(--color-text-secondary);
+}
+
+.tier--NORMAL {
+  background: rgb(217 149 74 / 16%);
+  color: #e8ab6b;
+}
+
+.tier--CONFIRMED {
+  background: rgb(127 182 216 / 18%);
+  color: #7fb6d8;
+}
+
+.tier--ELITE {
+  background: rgb(224 64 78 / 18%);
+  color: var(--color-boss-hp-edge);
+}
+
+/* The running campaign keeps the page's warmth; the past ones stay at rest. */
+.past-row--now {
+  background: rgb(217 149 74 / 9%);
+  box-shadow: inset 3px 0 0 var(--color-accent-gold);
+}
+
+.past-row--now td.tabular-nums {
+  color: #e8ab6b;
+}

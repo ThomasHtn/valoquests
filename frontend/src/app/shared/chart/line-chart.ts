@@ -182,29 +182,31 @@ export class LineChart {
    * @returns the datasets to plot
    */
   private datasets(): ChartConfiguration<'line'>['data']['datasets'] {
-    const filled = this.filled();
-
-    return this.series().map((series) => ({
-      label: series.label,
-      data: [...series.points],
-      borderColor: series.color,
-      // Filled: a transparent tint of the line's own color, resolved to a literal value since
-      // canvas cannot compute `color-mix()` itself. Unfilled: the flat color, unused as a fill.
-      backgroundColor: filled
-        ? resolveCssColor(`color-mix(in oklab, ${series.color} 20%, transparent)`)
-        : series.color,
-      borderWidth: 2,
-      // A season runs to hundreds of matches: a marker on every one of them would fuse into a
-      // solid band and bury the trend the chart exists to show.
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      pointHoverBorderWidth: 0,
-      tension: 0.2,
-      spanGaps: false,
-      // 'origin' shades down to zero, clipped to the chart area's own bottom edge when zero falls
-      // outside the visible scale — exactly the "between the point and the bottom" band asked for.
-      fill: filled ? 'origin' : false,
-    }));
+    return this.series().map((series) => {
+      const filled = series.filled ?? this.filled();
+      return {
+        label: series.label,
+        data: [...series.points],
+        borderColor: series.color,
+        // Filled: a transparent tint of the line's own color, resolved to a literal value since
+        // canvas cannot compute `color-mix()` itself. Unfilled: the flat color, unused as a fill.
+        backgroundColor: filled
+          ? resolveCssColor(`color-mix(in oklab, ${series.color} 20%, transparent)`)
+          : series.color,
+        borderWidth: 2,
+        borderDash: series.dashed ? [4, 4] : [],
+        // A season runs to hundreds of matches: a marker on every one of them would fuse into a
+        // solid band and bury the trend the chart exists to show.
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBorderWidth: 0,
+        tension: 0.2,
+        spanGaps: false,
+        // 'origin' shades down to zero, clipped to the chart area's own bottom edge when zero falls
+        // outside the visible scale — exactly the "between the point and the bottom" band asked for.
+        fill: filled ? 'origin' : false,
+      };
+    });
   }
 
   /**

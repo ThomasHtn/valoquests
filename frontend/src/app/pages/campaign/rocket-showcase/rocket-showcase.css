@@ -1,0 +1,125 @@
+/* The drawing on the left, the ten parts on the right; stacked on a phone. */
+.showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+@media (min-width: 64rem) {
+  .showcase {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* The plan takes the height of the parts list: the drawing frames itself inside. */
+.viewer {
+  position: relative;
+  min-height: clamp(20rem, 60vw, 30rem);
+  background: #0c1b28;
+  box-shadow: inset 0 0 0 1px rgb(127 182 216 / 22%);
+}
+
+.viewer-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.viewer-cap {
+  position: absolute;
+  top: 1.1rem;
+  left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  pointer-events: none;
+}
+
+.viewer-cap b {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #e8ab6b;
+}
+
+.viewer-cap span {
+  color: #7fb6d8;
+}
+
+.parts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.45rem;
+}
+
+.part {
+  --tone: var(--color-text-muted);
+  display: grid;
+  width: 100%;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 0.2rem 0.9rem;
+  align-items: center;
+  padding: 0.65rem 1rem;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.part--built {
+  --tone: #e8ab6b;
+  cursor: pointer;
+}
+
+.part--built:hover {
+  background: rgb(236 232 225 / 8%);
+}
+
+.part--next {
+  --tone: var(--color-accent-cyan);
+}
+
+.part--locked .part-name {
+  color: var(--color-text-muted);
+}
+
+.part[aria-pressed='true'] {
+  background: rgb(217 149 74 / 12%);
+  outline: 1px solid rgb(217 149 74 / 45%);
+  outline-offset: -1px;
+}
+
+.part-no {
+  grid-row: span 2;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tone);
+}
+
+.part-name {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.part-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}

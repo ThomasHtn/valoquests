@@ -1,0 +1,74 @@
+<details class="fold">
+  <summary class="fold-sum focus-ring">
+    <p class="chart-head">
+      <b>
+        <svg aria-hidden="true" class="size-4" lucideTrendingUp></svg>
+        {{ 'campaign.ledger.title' | translate }}
+      </b>
+    </p>
+    <span aria-hidden="true" class="fold-spark">
+      @for (row of rows(); track row.key) {
+        <span [class]="'sp-row sp-row--' + row.key">
+          @for (bar of row.spark; track $index) {
+            @if (bar === null) {
+              <i class="sp-todo"></i>
+            } @else {
+              <i [style.--h]="bar"></i>
+            }
+          }
+        </span>
+      }
+    </span>
+    <span class="fold-cue label-caption text-2xs">
+      <span class="fold-show">{{ 'campaign.ledger.show' | translate }}</span>
+      <span class="fold-hide">{{ 'campaign.ledger.hide' | translate }}</span>
+      <svg aria-hidden="true" class="fold-chev size-4" lucideChevronDown></svg>
+    </span>
+  </summary>
+
+  <div class="fold-body">
+    <ul [attr.aria-label]="'campaign.ledger.legend' | translate" class="ledger-key">
+      <li><i class="k-got"></i>{{ 'campaign.ledger.keyGot' | translate }}</li>
+      <li><i class="k-spent"></i>{{ 'campaign.ledger.keySpent' | translate }}</li>
+      <li><i class="k-carry"></i>{{ 'campaign.ledger.keyCarry' | translate }}</li>
+    </ul>
+    <div class="ledger-scroll scroll-subtle">
+      <div [attr.aria-label]="'campaign.ledger.aria' | translate" class="ledger" role="group">
+        <div aria-hidden="true" class="lg-col"></div>
+        @for (column of columns(); track column.index) {
+          <div [class]="'lg-col lg-col--' + column.state">
+            <b>{{ column.index }}</b>
+            <span>{{ column.name }}</span>
+          </div>
+        }
+
+        @for (row of rows(); track row.key) {
+          <div [class]="'lg-lead lg-lead--' + row.key">
+            <span aria-hidden="true" class="hex-mark clip-hex"
+              ><span class="clip-hex">
+                @if (row.key === 'food') {
+                  <svg class="size-4" lucideWheat></svg>
+                } @else {
+                  <svg class="size-4" lucideWrench></svg>
+                }</span
+            ></span>
+            <span class="label-caption text-2xs text-text-secondary">{{
+              'common.resource.' + row.key | translate
+            }}</span>
+            <p class="lg-total tabular-nums">
+              {{ format(row.gained) }} <small>{{ 'campaign.ledger.total' | translate }}</small>
+            </p>
+            <p class="lg-spent-total">
+              <b class="tabular-nums">{{ format(row.spent) }}</b>
+              {{ 'campaign.ledger.spentTotal' | translate }}
+            </p>
+          </div>
+
+          @for (cell of row.cells; track cell.index) {
+            <app-ledger-cell [cell]="cell" [label]="cellLabel(row, cell)" [row]="row" />
+          }
+        }
+      </div>
+    </div>
+  </div>
+</details>

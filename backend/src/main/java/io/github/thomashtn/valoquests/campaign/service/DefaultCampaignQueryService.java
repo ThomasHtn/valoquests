@@ -8,6 +8,7 @@ import io.github.thomashtn.valoquests.campaign.dto.CampaignHistoryResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignTodayResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignTotalsResponse;
+import io.github.thomashtn.valoquests.campaign.dto.CampaignWeekBaseResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignWeekResponse;
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignDailySnapshot;
@@ -20,6 +21,7 @@ import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,11 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
      * Percentage scale.
      */
     private static final int PERCENT = 100;
+
+    /**
+     * Share of the base a guardian left standing at zero breakthrough would kill, in percent.
+     */
+    private static final int GUARDIAN_LOSS_PERCENT = (int) Math.round(CampaignRuleset.GUARDIAN_LOSS_RATE * PERCENT);
 
     /**
      * Repository resolving the campaign to show.
@@ -110,7 +117,10 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
         List<CampaignWeek> weeks = weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(campaign.getId());
         List<CampaignDailySnapshot> days = snapshotRepository.findAllByCampaignIdOrderByDayAsc(campaign.getId());
 
+        Integer currentWeekIndex = currentWeekIndex(campaign, today);
+
         return new CampaignResponse(
+            campaign.getId(),
             campaign.getStatus(),
             campaign.getNumber(),
             campaign.getTier(),
@@ -119,10 +129,10 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
             campaign.getFirstWeekStart(),
             campaign.getLastWeekStart(),
             today,
-            currentWeekIndex(campaign, today),
+            currentWeekIndex,
             base(days),
             forecast(campaign, weeks, days, today),
-            weeks.stream().map(this::toWeekResponse).toList(),
+            weekResponses(weeks, days, currentWeekIndex),
             totals(weeks, days)
         );
     }
@@ -193,7 +203,8 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
     private CampaignBaseResponse base(List<CampaignDailySnapshot> days) {
         if (days.isEmpty()) {
             return new CampaignBaseResponse(
-                0, 0, 0, 0, 0, 0, 0, 0, CampaignRuleset.COMPONENTS_PER_RESCUE, CampaignRuleset.FOOD_PER_RESCUE
+                0, 0, 0, 0, 0, 0, 0, 0,
+                CampaignRuleset.COMPONENTS_PER_RESCUE, CampaignRuleset.FOOD_PER_RESCUE, GUARDIAN_LOSS_PERCENT
             );
         }
 
@@ -215,7 +226,8 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
             (int) Math.floor(Math.max(0, food - protectedFood) / CampaignRuleset.FOOD_PER_RESCUE),
             (int) Math.round(population - previous),
             CampaignRuleset.COMPONENTS_PER_RESCUE,
-            CampaignRuleset.FOOD_PER_RESCUE
+            CampaignRuleset.FOOD_PER_RESCUE,
+            GUARDIAN_LOSS_PERCENT
         );
     }
 
@@ -299,19 +311,84 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
     }
 
     /**
+     * Maps the stored weeks to what the map shows, each closed by the base as it stood that Sunday.
+     *
+     * @param weeks            stored weeks, week one first
+     * @param days             the campaign's days, oldest first
+     * @param currentWeekIndex one-based week in progress, {@code null} before the campaign starts
+     * @return the week responses
+     */
+    private List<CampaignWeekResponse> weekResponses(
+        List<CampaignWeek> weeks,
+        List<CampaignDailySnapshot> days,
+        Integer currentWeekIndex
+    ) {
+        List<CampaignWeekResponse> responses = new ArrayList<>(weeks.size());
+        double previousPopulation = 0;
+        // A guardian is revealed when its week is reached; the ones ahead stay a category.
+        int revealedUpTo = currentWeekIndex == null ? 0 : currentWeekIndex;
+
+        for (CampaignWeek week : weeks) {
+            CampaignWeekBaseResponse base = weekBase(week, days, previousPopulation);
+            responses.add(toWeekResponse(week, base, week.getWeekIndex() <= revealedUpTo));
+            if (base != null) {
+                previousPopulation = base.population();
+            }
+        }
+
+        return responses;
+    }
+
+    /**
+     * Reads the base at the close of one week from its replayed days.
+     *
+     * @param week               stored week
+     * @param days               the campaign's days, oldest first
+     * @param previousPopulation inhabitants at the previous week's close
+     * @return the week's base, {@code null} before its first replayed day
+     */
+    private CampaignWeekBaseResponse weekBase(
+        CampaignWeek week,
+        List<CampaignDailySnapshot> days,
+        double previousPopulation
+    ) {
+        List<CampaignDailySnapshot> weekDays = days.stream()
+            .filter(day -> !day.getDay().isBefore(week.getWeekStart()) && !day.getDay().isAfter(week.settlementDay()))
+            .toList();
+
+        if (weekDays.isEmpty()) {
+            return null;
+        }
+
+        CampaignDailySnapshot last = weekDays.getLast();
+        double population = last.getPopulation().doubleValue();
+
+        return new CampaignWeekBaseResponse(
+            (int) Math.round(population),
+            (int) Math.round(population - previousPopulation),
+            (int) Math.round(last.getFoodStock().doubleValue()),
+            (int) Math.round(last.getComponentsStock().doubleValue()),
+            weekDays.stream().mapToInt(CampaignDailySnapshot::getFoodGained).sum(),
+            weekDays.stream().mapToInt(CampaignDailySnapshot::getComponentsGained).sum()
+        );
+    }
+
+    /**
      * Maps one stored week to what the map shows.
      *
-     * @param week stored week
+     * @param week     stored week
+     * @param base     the base at the week's close
+     * @param revealed whether the week's guardian is named yet
      * @return the week response
      */
-    private CampaignWeekResponse toWeekResponse(CampaignWeek week) {
+    private CampaignWeekResponse toWeekResponse(CampaignWeek week, CampaignWeekBaseResponse base, boolean revealed) {
         return new CampaignWeekResponse(
             week.getWeekIndex(),
             week.getWeekStart(),
             week.getPlanetName(),
             week.getCategory(),
-            week.getGuardian().getName(),
-            week.getGuardian().getDescription(),
+            revealed ? week.getGuardian().getName() : null,
+            revealed ? week.getGuardian().getDescription() : null,
             week.getGuardianHitPoints(),
             week.getDamageDealt(),
             progressPercent(week),
@@ -325,7 +402,8 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
             week.getComponentsSpent(),
             week.getLimiter(),
             (int) Math.round(week.getBaseLoss().doubleValue()),
-            week.isSettled()
+            week.isSettled(),
+            base
         );
     }
 
@@ -354,6 +432,7 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
         List<CampaignDailySnapshot> days = snapshotRepository.findAllByCampaignIdOrderByDayAsc(campaign.getId());
 
         return new CampaignHistoryResponse(
+            campaign.getId(),
             campaign.getNumber(),
             campaign.getTier(),
             campaign.getReference(),

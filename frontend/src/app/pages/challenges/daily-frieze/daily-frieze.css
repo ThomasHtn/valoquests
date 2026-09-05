@@ -1,0 +1,176 @@
+/* Seven cells in a line, the same shape as the ten weeks on the overview. */
+.frieze {
+  display: flex;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dcell {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  background: rgb(4 10 15 / 45%);
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dcell:disabled {
+  cursor: default;
+}
+
+.dcell-day {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.dcell-day small {
+  margin-left: 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-text-muted);
+}
+
+/* The figure stays short: the sentence is in the tooltip, the name in the drawer. */
+.dcell-score {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.dcell-score span,
+.dcell--ahead .dcell-score {
+  color: var(--color-text-muted);
+}
+
+.dcell--now {
+  background: rgb(78 201 214 / 10%);
+}
+
+.dcell--now .dcell-day,
+.dcell--now .dcell-score {
+  color: var(--color-accent-cyan);
+}
+
+.dcell:not(:disabled):hover {
+  background: rgb(236 232 225 / 7%);
+}
+
+.dcell--now:not(:disabled):hover {
+  background: rgb(78 201 214 / 15%);
+}
+
+.dcell[aria-expanded='true'] {
+  outline: 1px solid var(--color-accent-cyan);
+  outline-offset: -1px;
+}
+
+.dcell--closed[aria-expanded='true'] {
+  outline-color: var(--color-accent-green);
+}
+
+/* The whole sentence on demand, never in the cell. At both ends it hugs the edge instead of
+   overflowing the strip. Not rendered at rest rather than transparent: an invisible box that
+   overhangs the strip still widens the page's scroll area on a phone. */
+.dcell::after {
+  content: attr(data-tip);
+  position: absolute;
+  display: none;
+  top: calc(100% + 0.35rem);
+  left: 50%;
+  z-index: 5;
+  translate: -50% 0;
+  padding: 0.35rem 0.65rem;
+  background: #040a11;
+  border: 1px solid var(--color-edge-strong);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  pointer-events: none;
+}
+
+.dcell:first-child::after {
+  left: 0;
+  translate: 0 0;
+}
+
+.dcell:last-child::after {
+  left: auto;
+  right: 0;
+  translate: 0 0;
+}
+
+.dcell:hover::after,
+.dcell:focus-visible::after {
+  display: block;
+}
+
+/* On a phone the seven cells share 360px: the weekday above the figure, the date left to the
+   drawer. */
+@media (width < 48rem) {
+  .dcell {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.7rem 0.2rem;
+  }
+
+  .dcell-day small {
+    display: none;
+  }
+}
+
+/* The drawer points at the open day; the panel carries the day's colour, cyan today, green
+   once the day is closed. */
+.drawer {
+  --sel-tone: var(--color-accent-cyan);
+
+  position: relative;
+}
+
+.drawer-panel {
+  position: relative;
+  margin-top: 0.9rem;
+  border-top: 1px solid var(--sel-tone);
+  animation: campaign-open 0.35s var(--ease-out-quart) both;
+}
+
+.drawer-panel.drawer--closed {
+  --sel-tone: var(--color-accent-green);
+}
+
+.drawer-panel::before {
+  content: '';
+  position: absolute;
+  top: -0.55rem;
+  left: var(--x);
+  width: 1rem;
+  height: 1rem;
+  translate: -50% 0;
+  rotate: 45deg;
+  background: #132430;
+  border: 1px solid var(--sel-tone);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}

@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.campaign.controller;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -44,7 +45,7 @@ class CampaignControllerTest {
 
         mockMvc.perform(get("/api/campaign"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").doesNotExist())
+            .andExpect(jsonPath("$.status").value(nullValue()))
             .andExpect(jsonPath("$.today").value("2026-09-16"))
             .andExpect(jsonPath("$.weeks").isEmpty());
     }

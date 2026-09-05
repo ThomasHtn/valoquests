@@ -1,0 +1,162 @@
+/*
+ * The tour is otherwise pure utility classes; this file holds what they cannot express: the
+ * opening step's masked horizon, the readings' shared shape, and the spec strip's dividers.
+ * Colours spelled out: a component stylesheet is compiled outside the Tailwind theme context.
+ *   brand-400 #e8ab6b · brand-500 #d9954a · text-primary #ece8e1 · edge rgb(236 232 225 / 14%)
+ */
+
+/* Step one: the base as a horizon, masked into the page top and sides. */
+.tour-hero {
+  width: 100%;
+  max-width: 64rem;
+  mask-image:
+    linear-gradient(to bottom, transparent, #000 46%),
+    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  mask-composite: intersect;
+  pointer-events: none;
+}
+
+@media (width < 40rem) {
+  .tour-hero {
+    mask-image: linear-gradient(to bottom, transparent, #000 46%);
+  }
+}
+
+/* A reading: flat tint and a rule on the leading edge, the mark that opens a block everywhere. */
+.tour-card {
+  max-width: 26rem;
+  margin-inline: auto;
+  padding: 22px 26px 24px;
+  width: 100%;
+  background: rgb(236 232 225 / 4%);
+  border-left: 2px solid #d9954a;
+}
+
+.tour-card--cyan {
+  border-left-color: #2dd4bf;
+}
+
+.tour-card--empty {
+  border-left-color: rgb(236 232 225 / 25%);
+  color: #a4a7a6;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.tour-card-caption {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 14px;
+  font-weight: 500;
+  font-size: 0.6875rem;
+  font-family: var(--font-mono);
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #e8ab6b;
+}
+
+.tour-card-note {
+  margin-top: 8px;
+  font-size: 0.9375rem;
+  color: #a4a7a6;
+}
+
+/* What today added, on its own line: it qualifies the figure, it is not part of it. */
+.tour-card-delta {
+  margin: 16px 0 0;
+  font-weight: 700;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tour-card-delta small {
+  margin-left: 6px;
+  font-weight: 500;
+  font-size: 0.625rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #868b8d;
+}
+
+.tour-planet {
+  max-width: 26rem;
+  margin-inline: auto;
+  width: 100%;
+}
+
+/* The three leading rows of the week, the leaderboard's own shape at a glance. */
+.tour-podium {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 26rem;
+  margin-inline: auto;
+  width: 100%;
+}
+
+.tour-podium-row {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  gap: 0 14px;
+  align-items: center;
+  padding: 12px 16px;
+  color: #a4a7a6;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 rgb(236 232 225 / 25%);
+}
+
+.tour-podium-row--first {
+  color: #e8ab6b;
+  box-shadow: inset 3px 0 0 #d9954a;
+}
+
+/* The words a claim turns on. Weight and value only: the eyebrow and the figures spend the accent. */
+.tour-em {
+  font-weight: 600;
+  color: #ece8e1;
+}
+
+/* The spec strip: three columns whatever the viewport, the figures are short. */
+.tour-specs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgb(236 232 225 / 14%);
+  text-align: center;
+}
+
+.tour-spec {
+  padding-inline: 12px;
+  border-left: 1px solid rgb(236 232 225 / 14%);
+}
+
+.tour-spec:first-child {
+  border-left: 0;
+}
+
+/* Not `label-caption`: its tracking is built for one line, and these run to two. */
+.tour-spec-label {
+  margin-top: 6px;
+  font-weight: 500;
+  font-size: 0.625rem;
+  font-family: var(--font-mono);
+  line-height: 1.45;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #868b8d;
+}
+
+@media (width < 40rem) {
+  .tour-specs {
+    margin-top: 24px;
+    padding-top: 16px;
+  }
+
+  .tour-spec {
+    padding-inline: 10px;
+  }
+}

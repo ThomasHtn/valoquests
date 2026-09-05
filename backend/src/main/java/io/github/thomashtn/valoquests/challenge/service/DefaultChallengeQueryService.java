@@ -122,9 +122,15 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
         ChallengeCalibration calibration = calibrationSource.forWeek(weekStart);
         Map<Long, List<PlayerChallengeProgress>> progressByChallenge =
             groupProgressByChallenge(weekStart);
-        int totalPlayers = Math.toIntExact(
-            playerRepository.countByStatus(Player.COMPETITIVE_STATUS)
-        );
+        List<CurrentChallengesResponse.RosterPlayerResponse> roster = playerRepository
+            .findAllByStatusOrderByIdAsc(Player.COMPETITIVE_STATUS)
+            .stream()
+            .map(player -> new CurrentChallengesResponse.RosterPlayerResponse(
+                player.getId(),
+                player.getDisplayName()
+            ))
+            .toList();
+        int totalPlayers = roster.size();
 
         List<WeeklyChallenge> selections =
             weeklyChallengeRepository.findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(weekStart);
@@ -146,6 +152,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             weekStart.plusDays(DAYS_TO_SUNDAY),
             weekCalendar.today(),
             findLastSuccessfulSynchronizationAt(),
+            roster,
             weekly,
             dailies
         );
@@ -187,9 +194,10 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
     ) {
         Challenge challenge = selection.getChallenge();
         ChallengeDefinition definition = definitionParser.parse(selection);
-        int completedPlayers = countCompletedPlayers(
+        List<Long> completedPlayerIds = completedPlayerIds(
             progressByChallenge.getOrDefault(selection.getId(), List.of())
         );
+        int completedPlayers = completedPlayerIds.size();
         double weight = ruleset.challengeWeight(selection.getCadence(), challenge.getDifficulty());
 
         return new CurrentChallengesResponse.ChallengeProgressResponse(
@@ -207,27 +215,28 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             ruleset.challengeRankingPoints(calibration.reference(), weight),
             completedPlayers,
             totalPlayers,
+            completedPlayerIds,
             calculateCompletionPercentage(completedPlayers, totalPlayers)
         );
     }
 
     /**
-     * Counts completed progress rows belonging to an active player.
+     * Lists the active players whose progress row is completed.
      *
      * <p>An inactive player can still complete a challenge, but it must never inflate the
      * collective completion reported here: {@code totalPlayers} only counts active players, so
      * the numerator must stay consistent with it.
      *
      * @param progressRows progress rows to inspect
-     * @return number of completed rows from active players
+     * @return identifiers of the active players who completed the challenge, ascending
      */
-    private int countCompletedPlayers(List<PlayerChallengeProgress> progressRows) {
-        return Math.toIntExact(
-            progressRows.stream()
-                .filter(PlayerChallengeProgress::isCompleted)
-                .filter(progress -> progress.getPlayer().isCompetitive())
-                .count()
-        );
+    private List<Long> completedPlayerIds(List<PlayerChallengeProgress> progressRows) {
+        return progressRows.stream()
+            .filter(PlayerChallengeProgress::isCompleted)
+            .filter(progress -> progress.getPlayer().isCompetitive())
+            .map(progress -> progress.getPlayer().getId())
+            .sorted()
+            .toList();
     }
 
     /**

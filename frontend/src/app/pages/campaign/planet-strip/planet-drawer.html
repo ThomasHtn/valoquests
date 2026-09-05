@@ -1,0 +1,258 @@
+@let planet = this.planet();
+<div
+  [class]="'drawer drawer--' + planet.state"
+  [style.--x]="pointerX()"
+  class="relative z-[1]"
+  id="planet-drawer"
+>
+  <p class="bar-head drawer-head">
+    <span aria-hidden="true" class="bar-count clip-hex"
+      ><span class="clip-hex">{{ planet.label }}</span></span
+    >
+    <span class="bar-title">{{ planet.name }}</span>
+    <span class="label-caption text-2xs text-text-muted">{{
+      'campaign.drawer.week'
+        | translate
+          : {
+              index: planet.index,
+              category: 'common.guardianCategory.' + planet.category | translate,
+            }
+    }}</span>
+    <button
+      (click)="close()"
+      class="focus-ring label-caption ml-auto inline-flex min-h-10 items-center gap-1.5 px-2 text-2xs text-text-muted transition-colors hover:text-text-primary"
+      type="button"
+    >
+      {{ 'campaign.drawer.close' | translate }}
+      <svg aria-hidden="true" class="size-3.5" lucideX></svg>
+    </button>
+  </p>
+
+  <div class="drawer-body">
+    @switch (planet.report.kind) {
+      @case ('now') {
+        @if (planet.report.kind === 'now') {
+          <div class="dcol dcol--foe">
+            <p class="dcol-key label-caption text-2xs">
+              <svg aria-hidden="true" class="size-3.5" lucideSkull></svg>
+              {{ 'campaign.drawer.guardian' | translate }}
+            </p>
+            <p class="dcol-fig">
+              <b class="tabular-nums">{{ format(planet.report.hitPointsLeft) }}</b>
+              <span>{{
+                'campaign.drawer.hpLeft' | translate: { total: format(planet.report.hitPoints) }
+              }}</span>
+            </p>
+            <span
+              [style.--lvl]="100 - planet.report.breachPercent + '%'"
+              aria-hidden="true"
+              class="rep-bar rep-bar--hp"
+              ><i></i
+            ></span>
+            <p class="dcol-text">
+              {{ 'campaign.drawer.nowText' | translate: { percent: planet.report.breachPercent } }}
+              @if (planet.report.daysLeft > 0) {
+                {{ 'campaign.drawer.daysLeft' | translate: { count: planet.report.daysLeft } }}
+              } @else {
+                {{ 'campaign.drawer.tonight' | translate }}
+              }
+            </p>
+          </div>
+          <div class="dcol dcol--saved">
+            <p class="dcol-key label-caption text-2xs">
+              <svg aria-hidden="true" class="size-3.5" lucideHeartPulse></svg>
+              {{ 'campaign.drawer.wounded' | translate }}
+            </p>
+            <p class="dcol-fig">
+              <b class="tabular-nums">{{ format(planet.report.wounded) }}</b>
+              <span>{{ 'campaign.drawer.spotted' | translate: { planet: planet.name } }}</span>
+            </p>
+            <span
+              [style.--lvl]="
+                (planet.report.wounded > 0
+                  ? (planet.report.tonight / planet.report.wounded) * 100
+                  : 0) + '%'
+              "
+              aria-hidden="true"
+              class="rep-bar"
+              ><i></i
+            ></span>
+            <p class="dcol-text">
+              {{ 'campaign.drawer.forecast' | translate: { count: format(planet.report.tonight) } }}
+            </p>
+          </div>
+          <div class="dcol dcol--next">
+            <p class="dcol-key label-caption text-2xs">
+              <svg aria-hidden="true" class="size-3.5" lucideTarget></svg>
+              {{ 'campaign.drawer.follow' | translate }}
+            </p>
+            <p class="dcol-text">{{ 'campaign.drawer.followText' | translate }}</p>
+            <a
+              class="focus-ring label-caption inline-flex items-center gap-1.5 text-2xs text-accent-cyan hover:underline hover:underline-offset-4"
+              routerLink="/challenges"
+            >
+              {{ 'campaign.drawer.followLink' | translate }}
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        }
+      }
+      @case ('ahead') {
+        @if (planet.report.kind === 'ahead') {
+          <div class="dcol dcol--foe">
+            <p class="dcol-key label-caption text-2xs">
+              <svg aria-hidden="true" class="size-3.5" lucideSkull></svg>
+              {{ 'campaign.drawer.guardian' | translate }}
+            </p>
+            <p class="dcol-fig">
+              <b>{{ 'common.guardianCategory.' + planet.category | translate }}</b>
+              <span>{{
+                (planet.report.unplayed ? 'campaign.drawer.unplayed' : 'campaign.drawer.ahead')
+                  | translate
+              }}</span>
+            </p>
+          </div>
+          <div class="dcol dcol--saved">
+            <p class="dcol-key label-caption text-2xs">
+              @if (planet.report.final) {
+                <svg aria-hidden="true" class="size-3.5" lucideStar></svg>
+                {{ 'campaign.drawer.final' | translate }}
+              } @else {
+                <svg aria-hidden="true" class="size-3.5" lucideHeartPulse></svg>
+                {{ 'campaign.drawer.wounded' | translate }}
+              }
+            </p>
+            <p class="dcol-text">
+              {{
+                'campaign.drawer.hint.' + (planet.report.final ? 'FINAL' : planet.category)
+                  | translate
+              }}
+            </p>
+          </div>
+          <div class="dcol dcol--next">
+            <p class="dcol-key label-caption text-2xs">
+              <svg aria-hidden="true" class="size-3.5" lucideWheat></svg>
+              {{ 'campaign.drawer.prepare' | translate }}
+            </p>
+            <p class="dcol-text">{{ 'campaign.drawer.prepareText' | translate }}</p>
+          </div>
+        }
+      }
+      @default {
+        @if (planet.report.kind === 'settled') {
+          <div class="dcol dcol--foe">
+            <p class="dcol-key label-caption text-2xs">
+              <svg aria-hidden="true" class="size-3.5" lucideSkull></svg>
+              {{ 'campaign.drawer.guardian' | translate }}
+            </p>
+            <p class="dcol-fig">
+              @if (planet.report.defeated) {
+                <b
+                  ><svg aria-hidden="true" class="size-6" lucideCheck></svg
+                  >{{ 'campaign.drawer.defeated' | translate }}</b
+                >
+                <span>{{
+                  'campaign.drawer.defeatedOn'
+                    | translate: { weekday: planet.report.defeatedWeekday }
+                }}</span>
+              } @else {
+                <b
+                  ><svg aria-hidden="true" class="size-6" lucideX></svg
+                  >{{ 'campaign.drawer.held' | translate }}</b
+                >
+                <span>{{ 'campaign.drawer.heldAll' | translate }}</span>
+              }
+            </p>
+            <span
+              [style.--lvl]="100 - planet.report.breachPercent + '%'"
+              aria-hidden="true"
+              class="rep-bar rep-bar--hp"
+              ><i></i
+            ></span>
+            <p class="dcol-text">
+              @if (planet.report.defeated) {
+                {{
+                  'campaign.drawer.defeatedText'
+                    | translate
+                      : {
+                          hp: format(planet.report.hitPoints),
+                          weekday: planet.report.defeatedWeekday,
+                        }
+                }}
+              } @else {
+                {{
+                  'campaign.drawer.heldText'
+                    | translate
+                      : {
+                          percent: planet.report.breachPercent,
+                          left: format(planet.report.hitPointsLeft),
+                          total: format(planet.report.hitPoints),
+                        }
+                }}
+              }
+            </p>
+          </div>
+          <div class="dcol dcol--saved">
+            <p class="dcol-key label-caption text-2xs">
+              <svg aria-hidden="true" class="size-3.5" lucideHeartPulse></svg>
+              {{ 'campaign.drawer.wounded' | translate }}
+            </p>
+            <p class="dcol-fig">
+              <b class="tabular-nums">{{ format(planet.report.rescued) }}</b>
+              <span>{{
+                'campaign.drawer.saved' | translate: { spotted: format(planet.report.spotted) }
+              }}</span>
+            </p>
+            <span
+              [style.--lvl]="
+                (planet.report.spotted > 0
+                  ? (planet.report.rescued / planet.report.spotted) * 100
+                  : 0) + '%'
+              "
+              aria-hidden="true"
+              class="rep-bar"
+              ><i></i
+            ></span>
+            <p class="dcol-text">
+              <svg aria-hidden="true" class="inline size-3.5 text-accent-blue" lucideTarget></svg>
+              {{
+                'campaign.drawer.savedText'
+                  | translate
+                    : {
+                        count: format(planet.report.byChallenges),
+                        limiter: 'campaign.drawer.limiter.' + planet.report.limiter | translate,
+                      }
+              }}
+            </p>
+          </div>
+          <div class="dcol dcol--base">
+            <p class="dcol-key label-caption text-2xs">
+              <svg aria-hidden="true" class="size-3.5" lucideUsers></svg>
+              {{ 'campaign.drawer.base' | translate }}
+            </p>
+            @if (hasBase(planet.report.population)) {
+              <p class="dcol-fig">
+                <b class="tabular-nums">{{ format(planet.report.population) }}</b>
+                <span>{{ 'campaign.drawer.inhabitants' | translate }}</span>
+              </p>
+              <p class="dcol-text">
+                {{
+                  'campaign.drawer.gainText'
+                    | translate: { change: signed(planet.report.populationChange) }
+                }}
+                @if (planet.report.baseLoss > 0) {
+                  <span class="text-boss-hp-edge">{{
+                    'campaign.drawer.lostText'
+                      | translate: { count: format(planet.report.baseLoss) }
+                  }}</span>
+                }
+              </p>
+            } @else {
+              <p class="dcol-text">{{ 'campaign.drawer.noBase' | translate }}</p>
+            }
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

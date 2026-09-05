@@ -221,6 +221,7 @@ public class CampaignAdminController {
      */
     private CampaignAdminResponse toResponse(Campaign campaign) {
         return new CampaignAdminResponse(
+            campaign.getId(),
             campaign.getNumber(),
             campaign.getStatus(),
             campaign.getFirstWeekStart(),

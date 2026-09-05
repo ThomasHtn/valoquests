@@ -1,0 +1,142 @@
+/* The report of one planet, under the strip; `--x` is where the pointer sits. */
+.drawer {
+  --tone: var(--color-text-muted);
+
+  margin: 0 clamp(1rem, 3vw, 3rem) 2rem;
+  border: 1px solid var(--color-edge);
+  background: rgb(10 21 29 / 88%);
+  animation: campaign-open 0.3s var(--ease-out-quart) both;
+}
+
+.drawer--won {
+  --tone: var(--color-brand-400);
+}
+
+.drawer--lost {
+  --tone: var(--color-boss-hp-edge);
+}
+
+.drawer--now {
+  --tone: var(--color-accent-cyan);
+}
+
+.drawer::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: var(--x);
+  width: 12px;
+  height: 12px;
+  translate: -50% 0;
+  rotate: 45deg;
+  background: var(--tone);
+}
+
+.drawer-head {
+  border-left-color: var(--tone);
+}
+
+.drawer-head .bar-count {
+  background: color-mix(in srgb, var(--tone) 55%, transparent);
+}
+
+.drawer-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (width >= 60rem) {
+  .drawer-body {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .drawer-body > .dcol + .dcol {
+    border-top: 0;
+    border-left: 1px solid var(--color-edge);
+  }
+}
+
+/* One column per subject: the key, the figure, the bar, then a whole sentence. */
+.dcol {
+  --tone: var(--color-text-secondary);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.35rem 1.5rem 1.5rem;
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
+.dcol + .dcol {
+  border-top: 1px solid var(--color-edge);
+}
+
+.dcol--foe {
+  --tone: var(--color-boss-hp-edge);
+}
+
+.dcol--saved {
+  --tone: var(--color-accent-cyan);
+}
+
+.dcol--base {
+  --tone: var(--color-brand-400);
+}
+
+.dcol--next {
+  --tone: var(--color-accent-blue);
+}
+
+.dcol-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--tone);
+}
+
+.dcol-fig {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.6rem;
+}
+
+.dcol-fig b {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tone);
+}
+
+.dcol-fig span {
+  font-size: 1.125rem;
+  color: var(--color-text-secondary);
+}
+
+.dcol-text {
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+.rep-bar {
+  position: relative;
+  display: block;
+  height: 8px;
+  background: rgb(4 10 15 / 70%);
+}
+
+.rep-bar > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--lvl);
+  background: var(--tone);
+}
+
+.rep-bar--hp > i {
+  background: var(--color-boss-hp);
+  border-right: 3px solid var(--color-boss-hp-edge);
+}

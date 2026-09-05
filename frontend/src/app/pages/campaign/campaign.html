@@ -1,0 +1,100 @@
+<app-page-header [eyebrow]="headerEyebrow()" [heading]="'campaign.header.heading' | translate">
+  @if (dayLabel(); as day) {
+    <p
+      class="label-caption hidden shrink-0 items-center gap-2 text-brand-400 md:inline-flex"
+      headingAside
+    >
+      <svg aria-hidden="true" class="size-4" lucideCalendar></svg>
+      {{ day }}
+    </p>
+  }
+</app-page-header>
+
+<div class="page-body !gap-0 !pt-0">
+  <app-resource-state
+    (retry)="retry()"
+    [emptyText]="'campaign.state.none' | translate"
+    [errorText]="'campaign.state.error' | translate"
+    [isEmpty]="!hasCampaign()"
+    [isError]="isError()"
+    [isLoading]="isLoading()"
+    [loadingText]="'campaign.state.loading' | translate"
+    emptyKind="creation"
+    padding="px-4 py-10 sm:px-6"
+  >
+    <!-- The road: the ten planets in a line, the way travelled in full, what remains dotted.
+         Each planet opens on its report, in the drawer below the strip. -->
+    <section
+      [attr.aria-label]="'campaign.galaxy.section' | translate"
+      class="galaxy relative !max-w-none shrink-0 overflow-hidden bg-[#040a11] !px-0"
+    >
+      <app-star-field />
+      <p
+        class="label-caption relative z-[1] flex items-center gap-2 px-[clamp(1.5rem,3vw,3rem)] pt-5 text-2xs text-text-muted"
+      >
+        <svg aria-hidden="true" class="size-3.5 text-accent-cyan" lucideTarget></svg>
+        {{ 'campaign.galaxy.hint' | translate }}
+      </p>
+      <app-planet-strip [planets]="planets()" />
+    </section>
+
+    <main
+      class="body flex flex-col gap-[clamp(3.5rem,6vw,6rem)] pt-[clamp(2.5rem,4vw,3.5rem)] pb-20"
+    >
+      @if (stateKey(); as state) {
+        <p class="state-note label-caption text-2xs text-text-secondary">
+          {{ 'campaign.state.' + state | translate }}
+        </p>
+      }
+
+      @if (law() || notes()) {
+        <section aria-labelledby="law-title">
+          <app-section-rule [heading]="'campaign.law.title' | translate" headingId="law-title" />
+          <app-rescue-law [law]="law()" [notes]="notes()" />
+        </section>
+      }
+
+      @if (reserves(); as reserves) {
+        <section aria-labelledby="reserve-title">
+          <app-section-rule
+            [heading]="'campaign.reserves.title' | translate"
+            headingId="reserve-title"
+          />
+          <app-base-reserves [reserves]="reserves" />
+          @if (ledger().length > 0) {
+            @defer (on viewport; prefetch on idle) {
+              <app-reserve-ledger [columns]="ledgerColumns()" [rows]="ledger()" />
+            } @placeholder {
+              <div class="min-h-14"></div>
+            }
+          }
+        </section>
+      }
+
+      <section aria-labelledby="ship-title">
+        <app-section-rule
+          [heading]="'campaign.rocket.title' | translate"
+          [side]="'campaign.rocket.side' | translate: { built: builtCount(), total: weekCount }"
+          headingId="ship-title"
+        />
+        @defer (on viewport; prefetch on idle) {
+          <app-rocket-showcase [campaignNumber]="campaign()?.number ?? 0" [parts]="rocketParts()" />
+        } @placeholder {
+          <div class="min-h-[20rem]"></div>
+        }
+      </section>
+
+      <section aria-labelledby="history-title">
+        <app-section-rule
+          [heading]="'campaign.history.title' | translate"
+          headingId="history-title"
+        />
+        @defer (on viewport; prefetch on idle) {
+          <app-campaign-history [curves]="curves()" [rows]="historyRows()" />
+        } @placeholder {
+          <div class="min-h-[17rem]"></div>
+        }
+      </section>
+    </main>
+  </app-resource-state>
+</div>

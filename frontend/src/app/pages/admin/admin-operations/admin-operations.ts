@@ -37,9 +37,9 @@ const SYNCHRONIZATION_POLL_INTERVAL_MS = 3_000;
  * Backoffice operations screen.
  *
  * Gathers every command that repairs or refreshes the tracker: synchronizing the squad or one
- * player, rebuilding progress and ranking, drawing a week the Monday rollover failed to open,
- * running that rollover in full when it never fired at all, replaying the campaign, and throwing the
- * week's challenge pack away for a new one.
+ * player, rebuilding progress and ranking, drawing a week the Monday rollover failed to open or a
+ * daily challenge the nightly tick missed, running that rollover in full when it never fired at
+ * all, replaying the campaign, and throwing the week's challenge pack away for a new one.
  *
  * A synchronization runs in the background and outlives the request that started it, so the page
  * opens on the state of the latest run and polls it while it is in flight. That poll is the only
@@ -183,6 +183,11 @@ export class AdminOperations {
    * State of the campaign replay command.
    */
   protected readonly campaignReplayState = signal<AdminActionState>(IDLE_ACTION);
+
+  /**
+   * State of the daily challenge draw command.
+   */
+  protected readonly dailySelectionState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
    * Translated label of the latest execution's status.
@@ -410,6 +415,16 @@ export class AdminOperations {
     await this.commandRunner.run(() => this.adminApi.runWeeklyRollover(), {
       state: this.rolloverState,
       successMessage: () => this.translation.translate('admin.operations.rollover.done'),
+    });
+  }
+
+  /**
+   * Draws today's daily challenge, for a morning the nightly tick missed.
+   */
+  protected async selectDailyChallenge(): Promise<void> {
+    await this.commandRunner.run(() => this.adminApi.selectDailyChallenge(), {
+      state: this.dailySelectionState,
+      successMessage: () => this.translation.translate('admin.operations.dailySelection.done'),
     });
   }
 

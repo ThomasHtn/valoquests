@@ -89,7 +89,23 @@ export interface ChallengeProgress extends ChallengeIdentity {
   readonly day: string | null;
   readonly completedPlayers: number;
   readonly totalPlayers: number;
+
+  /**
+   * Identifiers of the active operators who validated it, matched against
+   * {@link CurrentChallenges.roster}.
+   */
+  readonly completedPlayerIds: readonly number[];
   readonly completionPercentage: number;
+}
+
+/**
+ * One active operator, the unit every completion count is read against.
+ *
+ * Mirrors `CurrentChallengesResponse.RosterPlayerResponse` from the backend.
+ */
+export interface RosterPlayer {
+  readonly id: number;
+  readonly displayName: string;
 }
 
 /**
@@ -118,6 +134,11 @@ export interface CurrentChallenges {
    * completed yet.
    */
   readonly lastSuccessfulSynchronizationAt: string | null;
+
+  /**
+   * The active operators every challenge applies to, in roster order.
+   */
+  readonly roster: readonly RosterPlayer[];
 
   /**
    * The week's five, one per difficulty, easiest first.

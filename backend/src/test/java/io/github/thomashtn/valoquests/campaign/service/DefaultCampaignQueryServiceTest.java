@@ -10,6 +10,7 @@ import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignHistoryResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignTodayResponse;
+import io.github.thomashtn.valoquests.campaign.dto.CampaignWeekBaseResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignWeekResponse;
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignDailySnapshot;
@@ -95,7 +96,37 @@ class DefaultCampaignQueryServiceTest {
         assertThat(response.base().populationChange()).isEqualTo(500);
         assertThat(response.base().componentsPerRescue()).isEqualTo(14);
         assertThat(response.base().foodPerRescue()).isEqualTo(12);
+        assertThat(response.base().guardianLossPercent()).isEqualTo(35);
         assertThat(response.forecast()).isNull();
+    }
+
+    @Test
+    @DisplayName("Closes each week on the base as it stood that Sunday")
+    void shouldCloseEachWeekOnItsBase() {
+        live();
+        CampaignWeek first = CampaignFixtures.week(campaign, 1, 1_000, 50);
+        first.setSettled(true);
+        CampaignWeek second = CampaignFixtures.week(campaign, 2, 1_000, 50);
+        CampaignWeek third = CampaignFixtures.week(campaign, 3, 1_000, 50);
+        CampaignDailySnapshot saturday = snapshot(first.settlementDay().minusDays(1), 300, 900, 700);
+        saturday.setFoodGained(400);
+        saturday.setComponentsGained(300);
+        CampaignDailySnapshot sunday = snapshot(first.settlementDay(), 500, 100, 40);
+        sunday.setFoodGained(200);
+        sunday.setComponentsGained(100);
+        CampaignDailySnapshot wednesday = snapshot(TODAY, 1_000, 2_000, 1_400);
+        wednesday.setFoodGained(50);
+        when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L)).thenReturn(List.of(first, second, third));
+        when(snapshotRepository.findAllByCampaignIdOrderByDayAsc(1L))
+            .thenReturn(List.of(saturday, sunday, wednesday));
+
+        CampaignResponse response = service.currentCampaign();
+
+        assertThat(response.weeks().getFirst().base())
+            .isEqualTo(new CampaignWeekBaseResponse(500, 500, 100, 40, 600, 400));
+        assertThat(response.weeks().get(1).base())
+            .isEqualTo(new CampaignWeekBaseResponse(1_000, 500, 2_000, 1_400, 50, 0));
+        assertThat(response.weeks().get(2).base()).isNull();
     }
 
     @Test

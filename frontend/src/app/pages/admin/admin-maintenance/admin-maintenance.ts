@@ -26,7 +26,7 @@ const CLEARED_DATA_KEYS: readonly string[] = [
   'admin.maintenance.reset.cleared.matches',
   'admin.maintenance.reset.cleared.challenges',
   'admin.maintenance.reset.cleared.rankings',
-  'admin.maintenance.reset.cleared.bosses',
+  'admin.maintenance.reset.cleared.campaigns',
   'admin.maintenance.reset.cleared.synchronizations',
 ];
 
@@ -36,7 +36,7 @@ const CLEARED_DATA_KEYS: readonly string[] = [
 const KEPT_DATA_KEYS: readonly string[] = [
   'admin.maintenance.reset.kept.players',
   'admin.maintenance.reset.kept.challengeCatalogue',
-  'admin.maintenance.reset.kept.bossCatalogue',
+  'admin.maintenance.reset.kept.guardianCatalogue',
 ];
 
 /**

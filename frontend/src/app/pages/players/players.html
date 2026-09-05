@@ -116,11 +116,29 @@
             <app-champion-badge />
           }
         </span>
-        @if (row.tag) {
-          <span class="mt-1.5 block truncate font-mono text-xs text-text-muted"
-            >#{{ row.tag }}</span
-          >
-        }
+        <!-- The activity dot: lit once the operator has played today, and the streak of days
+             it keeps alive. Read from the day's board, not computed here. -->
+        <span class="mt-1.5 flex items-center gap-2 font-mono text-xs text-text-muted">
+          <span
+            [attr.aria-label]="
+              (row.playedToday ? 'players.activity.played' : 'players.activity.notPlayed')
+                | translate
+            "
+            [class.bg-accent-green]="row.playedToday"
+            [class.bg-text-muted/40]="!row.playedToday"
+            class="size-1.5 shrink-0 rounded-full"
+            role="img"
+          ></span>
+          @if (row.streakDays > 0) {
+            <span class="inline-flex items-center gap-1 text-brand-400">
+              <svg aria-hidden="true" class="size-3" lucideFlame></svg>
+              {{ 'players.activity.streak' | translate: { count: row.streakDays } }}
+            </span>
+          }
+          @if (row.tag) {
+            <span class="truncate">#{{ row.tag }}</span>
+          }
+        </span>
       </span>
     </span>
 

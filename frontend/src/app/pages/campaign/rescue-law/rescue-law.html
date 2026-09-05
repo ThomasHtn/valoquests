@@ -1,0 +1,108 @@
+<div class="law">
+  @if (law(); as law) {
+    <div class="formula">
+      <div class="term term--ship">
+        <span aria-hidden="true" class="hex-mark clip-hex"
+          ><span class="clip-hex"><svg class="size-5.5" lucideRocket></svg></span
+        ></span>
+        <span class="term-name">{{ 'campaign.law.carry' | translate }}</span>
+        <span class="term-num tabular-nums">{{ format(law.carry) }}</span>
+        <span class="term-pay">{{ 'campaign.law.carryPay' | translate }}</span>
+        <span class="term-rate"
+          ><svg aria-hidden="true" class="size-4" lucideWrench></svg
+          ><b class="tabular-nums">{{ law.componentsPerRescue }}</b>
+          {{ 'campaign.law.carryRate' | translate }}</span
+        >
+      </div>
+      <div class="term term--base">
+        <span aria-hidden="true" class="hex-mark clip-hex"
+          ><span class="clip-hex"><svg class="size-5.5" lucideBuilding2></svg></span
+        ></span>
+        <span class="term-name">{{ 'campaign.law.shelter' | translate }}</span>
+        <span class="term-num tabular-nums">{{ format(law.shelter) }}</span>
+        <span class="term-pay">{{ 'campaign.law.shelterPay' | translate }}</span>
+        <span class="term-rate"
+          ><svg aria-hidden="true" class="size-4" lucideWheat></svg
+          ><b class="tabular-nums">{{ law.foodPerRescue }}</b>
+          {{ 'campaign.law.shelterRate' | translate }}</span
+        >
+      </div>
+      <div class="term term--ground">
+        <span aria-hidden="true" class="hex-mark clip-hex"
+          ><span class="clip-hex"><svg class="size-5.5" lucideHeartPulse></svg></span
+        ></span>
+        <span class="term-name">{{ 'campaign.law.ground' | translate }}</span>
+        <span class="term-num tabular-nums">{{ format(law.wounded) }}</span>
+        <span class="term-pay">{{ 'campaign.law.groundPay' | translate }}</span>
+        <span class="term-rate"
+          ><svg aria-hidden="true" class="size-4" lucideTarget></svg
+          >{{ 'campaign.law.groundRate' | translate: { planet: law.planetName } }}</span
+        >
+      </div>
+      <span aria-hidden="true" class="op">×</span>
+      <div class="term term--breach">
+        <span aria-hidden="true" class="hex-mark clip-hex"
+          ><span class="clip-hex"><svg class="size-5.5" lucideSwords></svg></span
+        ></span>
+        <span class="term-name">{{ 'campaign.law.breach' | translate }}</span>
+        <span class="term-num tabular-nums">{{ law.breachPercent }} %</span>
+        <span class="term-pay">{{ 'campaign.law.breachPay' | translate }}</span>
+        <span class="term-rate"
+          ><svg aria-hidden="true" class="size-4" lucideSkull></svg
+          ><b class="tabular-nums">{{ format(law.hitPointsPerPercent) }}</b>
+          {{ 'campaign.law.breachRate' | translate }}</span
+        >
+      </div>
+      <span aria-hidden="true" class="op">=</span>
+      <div class="term term--out">
+        <span aria-hidden="true" class="hex-mark clip-hex"
+          ><span class="clip-hex"><svg class="size-5.5" lucideHeartPulse></svg></span
+        ></span>
+        <span class="term-name">{{ 'campaign.law.out' | translate }}</span>
+        <span class="term-num tabular-nums">{{ format(law.extracted) }}</span>
+        <span class="term-pay">{{ 'campaign.law.outPay' | translate }}</span>
+        <span class="term-rate"
+          ><svg aria-hidden="true" class="size-4" lucideTarget></svg>+
+          <b class="tabular-nums">{{ format(law.byChallenges) }}</b>
+          {{ 'campaign.law.outRate' | translate }}</span
+        >
+      </div>
+    </div>
+  }
+
+  @if (notes(); as notes) {
+    <div class="notes">
+      <p class="note note--tier">
+        <svg aria-hidden="true" class="size-6" lucideGauge></svg>
+        <span class="note-title">{{
+          'campaign.law.noteTier' | translate: { tier: 'common.tier.' + notes.tier | translate }
+        }}</span>
+        <span class="note-text">{{
+          'campaign.law.noteTierText' | translate: { reference: format(notes.reference) }
+        }}</span>
+      </p>
+      <p class="note note--grow">
+        <svg aria-hidden="true" class="size-6" lucideTrendingUp></svg>
+        <span class="note-title">{{ 'campaign.law.noteGrow' | translate }}</span>
+        <span class="note-text">{{ 'campaign.law.noteGrowText' | translate }}</span>
+      </p>
+      <p class="note note--loss">
+        <svg aria-hidden="true" class="size-6" lucideSkull></svg>
+        <span class="note-title">{{ 'campaign.law.noteLoss' | translate }}</span>
+        <span class="note-text">{{
+          (notes.sample ? 'campaign.law.noteLossSampleText' : 'campaign.law.noteLossText')
+            | translate
+              : {
+                  population: format(notes.population),
+                  a: format(notes.losses[0].lost),
+                  pa: notes.losses[0].breachPercent,
+                  b: format(notes.losses[1].lost),
+                  pb: notes.losses[1].breachPercent,
+                  c: format(notes.losses[2].lost),
+                  pc: notes.losses[2].breachPercent,
+                }
+        }}</span>
+      </p>
+    </div>
+  }
+</div>

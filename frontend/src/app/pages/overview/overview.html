@@ -75,7 +75,7 @@
           <b class="font-display text-lg font-semibold tracking-[0.06em] uppercase">{{
             'overview.frieze.title' | translate
           }}</b>
-          @if (campaign()?.currentWeekIndex; as week) {
+          @if (campaign()?.status === 'RUNNING' && campaign()?.currentWeekIndex; as week) {
             <span class="label-caption text-2xs text-text-muted">{{
               'overview.frieze.week' | translate: { week: week, weeks: weekCount }
             }}</span>

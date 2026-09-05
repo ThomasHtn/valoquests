@@ -138,3 +138,14 @@
     stroke-dashoffset: 0;
   }
 }
+
+/*
+ * A drawer or a fold opening under the band that summoned it, on the campaign page. Reached from
+ * component stylesheets, whose own keyframes would be scoped away.
+ */
+@keyframes campaign-open {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}

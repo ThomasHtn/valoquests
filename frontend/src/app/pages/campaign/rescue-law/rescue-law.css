@@ -1,0 +1,220 @@
+/*
+ * Five terms and two operators on one row: the formula takes the whole width, the notes go
+ * under it. The four terms share their rows, so plate, name, sentence and rate land at the same
+ * height from one block to the next.
+ */
+
+.law {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.formula {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) auto
+    minmax(0, 1.1fr);
+  grid-template-rows: auto auto auto auto auto;
+  column-gap: 0.75rem;
+}
+
+.formula .term,
+.formula .op {
+  grid-row: 1 / span 5;
+}
+
+@media (width < 56rem) {
+  .formula {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: 0.5rem;
+  }
+
+  .formula .term,
+  .formula .op {
+    grid-row: auto;
+  }
+
+  .formula .op {
+    justify-self: center;
+  }
+
+  /* Stacked: the plate on the left and the words beside it, the accent moved to the left edge. */
+  .formula .term {
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+    grid-template-rows: auto;
+    gap: 0.35rem 1rem;
+    justify-items: start;
+    padding: 1rem 1rem 1rem 0.9rem;
+    box-shadow: inset 3px 0 0 var(--tone);
+    text-align: left;
+  }
+
+  .formula .term .hex-mark {
+    grid-row: span 4;
+  }
+
+  .formula .term-rate {
+    justify-self: stretch;
+    justify-content: flex-start;
+  }
+}
+
+.term {
+  --tone: var(--color-text-secondary);
+
+  display: grid;
+  grid-template-rows: subgrid;
+  row-gap: 0.6rem;
+  justify-items: center;
+  align-items: start;
+  padding: 1.35rem 1rem 1.25rem;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 0 3px 0 var(--tone);
+  text-align: center;
+}
+
+.term .hex-mark {
+  width: 3.25rem;
+  height: 3.7rem;
+}
+
+.term-name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.term-num {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tone);
+}
+
+.term-pay {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+/* The rate of each term: how much of the resource for one wounded, as on the overview. */
+.term-rate {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  align-self: end;
+  gap: 0.25rem 0.4rem;
+  margin-top: 0.25rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--color-edge);
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.term-rate svg {
+  color: var(--tone);
+}
+
+.term-rate b {
+  font-weight: 700;
+  color: var(--tone);
+}
+
+.term--ship {
+  --tone: var(--color-accent-cyan);
+}
+
+.term--base {
+  --tone: var(--color-accent-green);
+}
+
+.term--ground {
+  --tone: var(--color-brand-500);
+}
+
+.term--breach {
+  --tone: var(--color-boss-hp-edge);
+}
+
+.term--out {
+  --tone: var(--color-brand-400);
+
+  background: rgb(217 149 74 / 9%);
+}
+
+.op {
+  align-self: center;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-text-muted);
+}
+
+/* The notes: a key, a sentence. No frame, it is the same sheet as the rest. */
+.notes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+@media (width >= 64rem) {
+  .notes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2.5rem;
+  }
+
+  .note + .note {
+    padding-left: 2.5rem;
+    border-left: 1px solid var(--color-edge);
+  }
+}
+
+.note {
+  --tone: var(--color-text-secondary);
+
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 0.25rem 0.9rem;
+}
+
+.note > svg {
+  grid-row: span 2;
+  margin-top: 0.15rem;
+  color: var(--tone);
+}
+
+.note-title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.note-text {
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.note--tier {
+  --tone: var(--color-brand-400);
+}
+
+.note--grow {
+  --tone: var(--color-accent-blue);
+}
+
+.note--loss {
+  --tone: var(--color-boss-hp-edge);
+}

@@ -1,0 +1,63 @@
+@let card = this.card();
+
+<span aria-hidden="true" class="hex-mark clip-hex">
+  <span class="clip-hex">
+    @if (card.mark === 'D') {
+      <svg class="size-5" lucideZap></svg>
+    } @else {
+      {{ card.mark }}
+    }
+  </span>
+</span>
+
+<div class="body">
+  <p class="key label-caption text-2xs">
+    <span>{{ card.kind }}</span>
+    @if (card.aside) {
+      <span class="key-aside">{{ card.aside }}</span>
+    }
+    @if (card.competitiveOnly) {
+      <span class="key-aside">{{ 'challenges.card.competitiveOnly' | translate }}</span>
+    }
+  </p>
+  <h3 class="name">{{ card.name }}</h3>
+  <p class="desc">{{ card.description }}</p>
+  @if (card.target) {
+    <p class="target label-caption text-2xs">
+      <svg aria-hidden="true" class="size-3" lucideTarget></svg>
+      {{ 'challenges.card.target' | translate: { value: card.target } }}
+    </p>
+  }
+</div>
+
+<p class="pay">
+  @if (card.rescueActive) {
+    <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+    <b class="tabular-nums">+{{ card.survivors }}</b>
+    <span>{{ 'challenges.card.perOperator' | translate }}</span>
+  } @else {
+    <svg aria-hidden="true" class="size-4" lucideZap></svg>
+    <b class="tabular-nums">+{{ card.rankingPoints }}</b>
+    <span>{{ 'challenges.card.points' | translate }}</span>
+  }
+</p>
+
+<hr aria-hidden="true" class="rule" />
+
+<p class="tally">
+  <b class="tabular-nums"
+    >{{ card.doneCount }}<span>/{{ card.slots.length }}</span></b
+  >
+  <em>{{ 'challenges.card.validated' | translate: { count: card.doneCount } }}</em>
+  <span
+    [attr.aria-label]="
+      'challenges.card.squadAria' | translate: { done: card.doneCount, total: card.slots.length }
+    "
+    class="slugs"
+    role="img"
+  >
+    @for (slot of card.slots; track slot.name) {
+      <i [attr.data-name]="slot.name" [class.on]="slot.done"></i>
+    }
+  </span>
+</p>

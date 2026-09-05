@@ -16,8 +16,8 @@ import java.time.LocalDate;
  * @param weekStart          Monday identifying the week
  * @param planetName         planet the wounded are stranded on
  * @param category           weight class of the week's guardian
- * @param guardianName       guardian's name
- * @param guardianDescription guardian's one-line description
+ * @param guardianName       guardian's name, {@code null} until its week is reached
+ * @param guardianDescription guardian's one-line description, {@code null} until its week is reached
  * @param guardianHitPoints  hit points the guardian opened the week with
  * @param damageDealt        damage the roster dealt over the week
  * @param progressPercent    share of the guardian's hit points removed, capped at a hundred
@@ -32,6 +32,7 @@ import java.time.LocalDate;
  * @param limiter            what capped the extraction
  * @param baseLoss           inhabitants a surviving guardian killed
  * @param settled            whether the week's Sunday has been settled
+ * @param base               the base at the week's close, {@code null} before its first replayed day
  */
 public record CampaignWeekResponse(
     int weekIndex,
@@ -53,6 +54,7 @@ public record CampaignWeekResponse(
     int componentsSpent,
     ExtractionLimiter limiter,
     int baseLoss,
-    boolean settled
+    boolean settled,
+    CampaignWeekBaseResponse base
 ) {
 }

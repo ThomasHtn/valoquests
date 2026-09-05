@@ -2,6 +2,7 @@ import { httpResource, HttpClient, HttpResourceRef } from '@angular/common/http'
 import { inject, Service, Signal } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
 
+import { CampaignApi } from '@core/campaign/campaign-api';
 import { PageResponse } from '@core/http/page-response.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
@@ -42,6 +43,13 @@ export class AdminApi {
    * Session deciding whether the reactive resources may fetch at all.
    */
   private readonly session = inject(AdminSession);
+
+  /**
+   * The public campaign resources, refreshed with the administration ones: the backoffice reads
+   * the live campaign and the closed ones from the same endpoints the site does, and a lifecycle
+   * command moves both.
+   */
+  private readonly campaignApi = inject(CampaignApi);
 
   /**
    * Every tracked player, archived ones included.
@@ -335,6 +343,8 @@ export class AdminApi {
     this.players.reload();
     this.latestSynchronization.reload();
     this.calibration.reload();
+    this.campaignApi.campaign.reload();
+    this.campaignApi.history.reload();
   }
 
   /**

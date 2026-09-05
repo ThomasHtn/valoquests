@@ -10,6 +10,7 @@ import java.util.List;
  * <p>The tier is what makes two of these comparable: a base of 30 000 at Normal and one of 119 000
  * at Elite describe the same ten weeks played by two different squads.
  *
+ * @param id                campaign identifier
  * @param number            campaign number
  * @param tier              bracket the reference fell in
  * @param reference         squad's weekly reference per player
@@ -23,6 +24,7 @@ import java.util.List;
  * @param weeklyPopulation  base at the close of each settled week, week one first
  */
 public record CampaignHistoryResponse(
+    long id,
     int number,
     CampaignTier tier,
     int reference,

@@ -1,0 +1,34 @@
+<div class="catalogue">
+  @for (group of groups(); track group.key) {
+    <section [attr.aria-label]="group.label" [style.--tone]="group.tone" class="cgroup">
+      <header class="cgroup-head">
+        <span aria-hidden="true" class="hex-mark clip-hex">
+          <span class="clip-hex">
+            @if (group.mark === 'D') {
+              <svg class="size-5" lucideZap></svg>
+            } @else {
+              {{ group.mark }}
+            }
+          </span>
+        </span>
+        <p class="cgroup-name">{{ group.label }}</p>
+        <p class="cgroup-count label-caption text-2xs">
+          {{ 'challenges.catalogue.count' | translate: { count: group.entries.length } }}
+        </p>
+      </header>
+      <ul class="cgrid">
+        @for (entry of group.entries; track entry.id) {
+          <li class="crow">
+            <p class="crow-name">{{ entry.name }}</p>
+            <p class="crow-desc">{{ entry.description }}</p>
+            @if (entry.targetValue !== null) {
+              <p class="crow-target label-caption text-2xs">
+                {{ 'challenges.card.target' | translate: { value: target(entry.targetValue) } }}
+              </p>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

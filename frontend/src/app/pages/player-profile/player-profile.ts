@@ -65,6 +65,7 @@ import { Breakpoint } from '@core/viewport/breakpoint';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { MatchDay } from './match-day.model';
 import { groupMatchesByDay } from './match-day.utils';
+import { PlayerContribution } from './contribution/contribution';
 import { MediaThumbnail } from './media-thumbnail/media-thumbnail';
 import { Progression } from './progression/progression';
 
@@ -99,6 +100,7 @@ const MAX_PROGRESSION_SEASONS = 5;
     Avatar,
     ChampionBadge,
     MediaThumbnail,
+    PlayerContribution,
     ProgressBar,
     RankIconView,
     ResourceState,

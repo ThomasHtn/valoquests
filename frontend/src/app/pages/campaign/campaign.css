@@ -1,0 +1,7 @@
+/* The road is the hero and sits flush with the column; below it the body is one report sheet. */
+
+.state-note {
+  padding: 0.9rem 1.25rem;
+  border-left: 2px solid var(--color-brand-500);
+  background: rgb(236 232 225 / 4%);
+}

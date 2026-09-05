@@ -1,0 +1,372 @@
+<app-page-header
+  [eyebrow]="'admin.eyebrow' | translate"
+  [heading]="'admin.campaigns.heading' | translate"
+/>
+
+<div class="page-body">
+  <!-- The campaign the operator is about to act on, as figures rather than as a row of a list. -->
+  <app-section-label [label]="'admin.campaigns.liveLabel' | translate" />
+
+  @if (live(); as live) {
+    <div class="notch-tr panel border-l-2 border-l-brand-500 p-5 [--notch:0.875rem]">
+      <div class="flex flex-wrap items-center justify-between gap-x-5 gap-y-2">
+        <h2
+          class="flex flex-wrap items-center gap-3 font-display text-lg font-bold text-text-primary uppercase"
+        >
+          {{ 'admin.campaigns.live.number' | translate: { number: live.number } }}
+          <app-status-badge
+            [label]="'common.campaignStatus.' + live.status | translate"
+            [tone]="statusTone(live.status)"
+          />
+        </h2>
+        <p class="font-mono text-xs text-text-muted tabular-nums">{{ live.range }}</p>
+      </div>
+
+      @if (live.status === 'OPENED') {
+        <app-inline-message class="mt-4">
+          {{ 'admin.campaigns.live.startsOn' | translate: { date: live.startsOn } }}
+        </app-inline-message>
+      }
+
+      <dl class="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-4">
+        <div>
+          <dt class="label-caption text-text-muted">
+            {{ 'admin.campaigns.live.tier' | translate }}
+          </dt>
+          <dd class="font-display mt-1.5 text-xl font-bold text-text-primary uppercase">
+            {{ 'common.tier.' + live.tier | translate }}
+          </dd>
+          <dd class="mt-1 text-sm text-text-muted tabular-nums">
+            {{
+              'admin.campaigns.live.reference' | translate: { reference: amount(live.reference) }
+            }}
+          </dd>
+        </div>
+        <div>
+          <!-- Frozen, and said so: activating somebody today does not change this number. -->
+          <dt class="label-caption text-text-muted">
+            {{ 'admin.campaigns.live.roster' | translate }}
+          </dt>
+          <dd class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
+            {{ live.rosterSize }}
+          </dd>
+          <dd class="mt-1 text-sm text-text-muted">
+            {{ 'admin.campaigns.live.frozen' | translate }}
+          </dd>
+        </div>
+        @if (live.status === 'RUNNING') {
+          <div>
+            <dt class="label-caption text-text-muted">
+              {{ 'admin.campaigns.live.week' | translate }}
+            </dt>
+            <dd class="font-display mt-1.5 text-xl font-bold text-brand-500 tabular-nums">
+              {{ live.weekIndex }}<span class="text-sm text-text-muted">/{{ weekCount }}</span>
+            </dd>
+          </div>
+          <div>
+            <dt class="label-caption text-text-muted">
+              {{ 'admin.campaigns.live.day' | translate }}
+            </dt>
+            <dd class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
+              {{ live.dayIndex }}<span class="text-sm text-text-muted">/{{ campaignDays }}</span>
+            </dd>
+            <dd class="mt-1 text-sm text-text-muted">
+              {{ 'admin.campaigns.live.daysLeft' | translate: { count: live.daysLeft } }}
+            </dd>
+          </div>
+        }
+      </dl>
+
+      <div class="mt-5 flex flex-wrap gap-3">
+        @if (live.status === 'RUNNING') {
+          <button
+            appButton="danger"
+            (click)="askToStop()"
+            [disabled]="stopState().status === 'running'"
+            class="flex min-h-10 items-center px-4 text-sm font-medium [--notch:0.5rem]"
+            type="button"
+          >
+            {{ 'admin.campaigns.stop.action' | translate }}
+          </button>
+        }
+        <!-- Deleting rather than stopping, for a campaign opened by mistake: stopping it before its
+             first Monday would leave an empty campaign in the history. -->
+        <button
+          appButton="danger-outline"
+          (click)="askForDeletion(live.id, live.number, live.status === 'OPENED')"
+          [disabled]="deleting()"
+          class="flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold [--notch:0.375rem]"
+          type="button"
+        >
+          <svg aria-hidden="true" class="size-3.5 shrink-0" lucideTrash2></svg>
+          {{ 'admin.campaigns.delete.action' | translate }}
+        </button>
+      </div>
+    </div>
+  } @else if (campaignResource.isLoading()) {
+    <p class="text-base text-text-secondary">{{ 'admin.campaigns.loading' | translate }}</p>
+  } @else {
+    <p class="max-w-2xl text-base text-pretty text-text-secondary">
+      {{ 'admin.campaigns.none' | translate }}
+    </p>
+  }
+
+  <!-- The calibration, before the command that freezes it: the only moment to notice a thin
+       history or a window that had to shrink. -->
+  <app-section-label [label]="'admin.campaigns.calibration.label' | translate" class="mt-12" />
+
+  <app-resource-state
+    (retry)="calibrationResource.reload()"
+    [errorText]="'admin.campaigns.calibration.error' | translate"
+    [isError]="!!calibrationResource.error()"
+    [isLoading]="calibrationResource.isLoading()"
+    [loadingText]="'admin.campaigns.calibration.loading' | translate"
+  >
+    @if (calibration(); as calibration) {
+      <div class="notch-tr panel p-5 [--notch:0.875rem]">
+        <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+          <h2 class="tracking-label font-display text-base font-bold text-text-primary uppercase">
+            {{ 'admin.campaigns.calibration.heading' | translate }}
+          </h2>
+          <button
+            (click)="calibrationResource.reload()"
+            class="focus-ring label-caption flex h-9 cursor-pointer items-center gap-1.5 text-text-muted transition-colors hover:text-text-primary"
+            type="button"
+          >
+            <svg aria-hidden="true" class="size-3.5" lucideRefreshCw></svg>
+            {{ 'admin.campaigns.calibration.reload' | translate }}
+          </button>
+        </div>
+
+        <dl class="mt-4 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-4">
+          <div>
+            <dt class="label-caption text-text-muted">
+              {{ 'admin.campaigns.calibration.reference' | translate }}
+            </dt>
+            <dd class="font-display mt-1.5 text-xl font-bold text-brand-500 tabular-nums">
+              {{ amount(calibration.reference) }}
+            </dd>
+          </div>
+          <div>
+            <dt class="label-caption text-text-muted">
+              {{ 'admin.campaigns.calibration.tier' | translate }}
+            </dt>
+            <dd class="font-display mt-1.5 text-xl font-bold text-text-primary uppercase">
+              {{ 'common.tier.' + calibration.tier | translate }}
+            </dd>
+          </div>
+          <div>
+            <dt class="label-caption text-text-muted">
+              {{ 'admin.campaigns.calibration.volumeFactor' | translate }}
+            </dt>
+            <dd class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
+              {{ factor(calibration.volumeFactor) }}
+            </dd>
+          </div>
+          <div>
+            <dt class="label-caption text-text-muted">
+              {{ 'admin.campaigns.calibration.window' | translate }}
+            </dt>
+            <dd class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
+              {{
+                'admin.campaigns.calibration.months'
+                  | translate: { count: calibration.windowMonths }
+              }}
+            </dd>
+            <dd class="mt-1 text-sm text-text-muted">
+              {{
+                'admin.campaigns.calibration.since'
+                  | translate: { date: fullDate(calibration.firstDay) }
+              }}
+            </dd>
+          </div>
+        </dl>
+
+        @if (uncovered().length > 0) {
+          <app-inline-message class="mt-5" tone="danger">
+            {{ 'admin.campaigns.calibration.uncovered' | translate: { count: uncovered().length } }}
+          </app-inline-message>
+        }
+
+        <!-- One row per operator: the average, how many weeks it stands on, and how far back the
+             history goes. -->
+        <div class="mt-5 overflow-x-auto">
+          <table class="w-full min-w-[32rem] text-left text-sm">
+            <thead>
+              <tr class="border-b border-brand-500/30">
+                <th class="label-caption pb-2 font-medium text-text-muted">
+                  {{ 'admin.campaigns.calibration.columns.operator' | translate }}
+                </th>
+                <th class="label-caption pb-2 text-right font-medium text-text-muted">
+                  {{ 'admin.campaigns.calibration.columns.weeklyAverage' | translate }}
+                </th>
+                <th class="label-caption pb-2 text-right font-medium text-text-muted">
+                  {{ 'admin.campaigns.calibration.columns.weeks' | translate }}
+                </th>
+                <th class="label-caption pb-2 text-right font-medium text-text-muted">
+                  {{ 'admin.campaigns.calibration.columns.earliest' | translate }}
+                </th>
+                <th class="label-caption pb-2 text-right font-medium text-text-muted">
+                  {{ 'admin.campaigns.calibration.columns.coverage' | translate }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (player of calibration.players; track player.playerId) {
+                <tr class="border-b border-text-primary/8 last:border-b-0">
+                  <td class="py-2.5 font-semibold text-text-primary">{{ player.displayName }}</td>
+                  <td
+                    class="py-2.5 text-right font-display font-bold text-text-primary tabular-nums"
+                  >
+                    {{ amount(player.weeklyAverage) }}
+                  </td>
+                  <td class="py-2.5 text-right text-text-secondary tabular-nums">
+                    {{ player.weeksCounted }}
+                  </td>
+                  <td class="py-2.5 text-right font-mono text-xs text-text-secondary tabular-nums">
+                    {{ player.earliestMatchDay ? fullDate(player.earliestMatchDay) : '—' }}
+                  </td>
+                  <td class="py-2.5 text-right">
+                    @if (player.beginner) {
+                      <app-status-badge
+                        [label]="'admin.campaigns.calibration.beginner' | translate"
+                        tone="neutral"
+                      />
+                    } @else if (player.covered) {
+                      <app-status-badge
+                        [label]="'admin.campaigns.calibration.covered' | translate"
+                        tone="brand"
+                      />
+                    } @else {
+                      <app-status-badge
+                        [label]="'admin.campaigns.calibration.notCovered' | translate"
+                        tone="danger"
+                      />
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </app-resource-state>
+
+  <app-section-label [label]="'admin.campaigns.commandsLabel' | translate" class="mt-12" />
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <app-admin-action-card
+      (triggered)="backfill()"
+      [actionLabel]="'admin.campaigns.backfill.action' | translate"
+      [description]="'admin.campaigns.backfill.description' | translate"
+      [disabled]="synchronizing()"
+      [heading]="'admin.campaigns.backfill.heading' | translate"
+      [state]="backfillState()"
+    />
+
+    <app-admin-action-card
+      (triggered)="askToOpen()"
+      [actionLabel]="'admin.campaigns.open.action' | translate"
+      [description]="'admin.campaigns.open.description' | translate"
+      [disabled]="live() !== null"
+      [heading]="'admin.campaigns.open.heading' | translate"
+      [state]="openState()"
+    />
+  </div>
+
+  <!-- The archive, last: an operator opens this page to act on the live campaign. -->
+  <app-section-label [label]="'admin.campaigns.pastLabel' | translate" class="mt-12" />
+
+  <app-resource-state
+    (retry)="historyResource.reload()"
+    emptyKind="creation"
+    [emptyText]="'admin.campaigns.pastEmpty' | translate"
+    [errorText]="'admin.campaigns.error' | translate"
+    [isEmpty]="closed().length === 0"
+    [isError]="!!historyResource.error()"
+    [isLoading]="historyResource.isLoading()"
+    [loadingText]="'admin.campaigns.loading' | translate"
+  >
+    <ul class="flex flex-col gap-2">
+      @for (campaign of closed(); track campaign.id) {
+        <li
+          class="notch-tr flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-l-2 border-l-edge panel px-4 py-3 [--notch:0.625rem]"
+        >
+          <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span class="font-display text-sm font-semibold text-text-primary uppercase">
+              {{ 'admin.campaigns.live.number' | translate: { number: campaign.number } }}
+            </span>
+            <span class="font-mono text-xs text-text-muted tabular-nums">
+              {{ range(campaign.firstWeekStart, campaign.lastWeekStart) }}
+            </span>
+            <app-status-badge [label]="'common.tier.' + campaign.tier | translate" tone="neutral" />
+            @if (campaign.stoppedOn) {
+              <span class="text-xs text-danger">
+                {{
+                  'admin.campaigns.past.stopped'
+                    | translate: { date: formatDayMonth(campaign.stoppedOn) }
+                }}
+              </span>
+            }
+          </span>
+
+          <span class="flex items-center gap-4 text-right">
+            <span class="text-sm text-text-muted tabular-nums">
+              {{
+                'admin.campaigns.past.guardians'
+                  | translate: { count: campaign.guardiansDefeated, total: weekCount }
+              }}
+            </span>
+            <span class="font-display text-lg font-bold text-text-primary tabular-nums">
+              {{ amount(campaign.population) }}
+            </span>
+            <button
+              appButton="danger-outline"
+              (click)="askForDeletion(campaign.id, campaign.number, false)"
+              [attr.aria-label]="'admin.campaigns.delete.action' | translate"
+              [disabled]="deleting()"
+              class="flex min-h-10 items-center px-2.5 [--notch:0.375rem]"
+              type="button"
+            >
+              <svg aria-hidden="true" class="size-3.5 shrink-0" lucideTrash2></svg>
+            </button>
+          </span>
+        </li>
+      }
+    </ul>
+  </app-resource-state>
+
+  <app-confirm-dialog
+    (confirmed)="confirmOpen()"
+    (dismissed)="dismissOpen()"
+    [body]="'admin.campaigns.open.confirmBody' | translate"
+    [busy]="openState().status === 'running'"
+    [cancelLabel]="'admin.cancel' | translate"
+    [confirmLabel]="'admin.campaigns.open.confirm' | translate"
+    [heading]="'admin.campaigns.open.heading' | translate"
+    [open]="openDialogOpen()"
+  />
+
+  <app-confirm-dialog
+    (confirmed)="confirmStop()"
+    (dismissed)="dismissStop()"
+    [body]="'admin.campaigns.stop.confirmBody' | translate"
+    [busy]="stopState().status === 'running'"
+    [cancelLabel]="'admin.cancel' | translate"
+    [confirmLabel]="'admin.campaigns.stop.confirm' | translate"
+    [heading]="'admin.campaigns.stop.heading' | translate"
+    [open]="stopDialogOpen()"
+  />
+
+  <app-confirm-dialog
+    (confirmed)="confirmDeletion()"
+    (dismissed)="dismissDeletion()"
+    [body]="deletionBody()"
+    [busy]="deleting()"
+    [cancelLabel]="'admin.cancel' | translate"
+    [confirmLabel]="'admin.campaigns.delete.confirm' | translate"
+    [heading]="'admin.campaigns.delete.heading' | translate"
+    [open]="pendingDeletion() !== null"
+  />
+</div>

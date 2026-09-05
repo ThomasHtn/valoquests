@@ -1,0 +1,39 @@
+@let cell = this.cell();
+@if (cell.kind === 'ahead') {
+  <div class="lg-plot"></div>
+} @else {
+  <div aria-hidden="true" class="lg-plot">
+    <span [attr.data-v]="format(cell.got)" class="lg-up tabular-nums"></span>
+    @if (cell.kind === 'now') {
+      <span class="lg-now">{{ 'campaign.ledger.sinceMonday' | translate }}</span>
+    } @else {
+      <span
+        [attr.data-v]="'campaign.ledger.spentSunday' | translate: { count: format(cell.spent) }"
+        class="lg-down tabular-nums"
+      ></span>
+      <span class="lg-carry"></span>
+    }
+  </div>
+  <span aria-hidden="true" class="lg-tip">
+    <b>{{ 'campaign.ledger.tip' | translate: { index: cell.index, planet: cell.planetName } }}</b>
+    @if (cell.kind === 'now') {
+      {{ 'campaign.ledger.tipCarriedIn' | translate: { count: format(cell.carriedIn) } }}
+      <br />
+      {{ 'campaign.ledger.tipSince' | translate: { count: format(cell.got) } }}
+      <br />
+      {{
+        'campaign.ledger.tipStock'
+          | translate: { count: format(cell.stock), rescues: format(cell.stockRescues) }
+      }}
+    } @else {
+      {{
+        'campaign.ledger.tipGot'
+          | translate: { count: format(cell.got), rescues: format(cell.rescues) }
+      }}
+      <br />
+      {{ 'campaign.ledger.tipSpent' | translate: { count: format(cell.spent) } }}
+      <br />
+      {{ 'campaign.ledger.tipCarry' | translate: { count: format(cell.carry) } }}
+    }
+  </span>
+}

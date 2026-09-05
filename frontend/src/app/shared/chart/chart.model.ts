@@ -19,6 +19,16 @@ export interface ChartSeries {
    * same abscissa; Chart.js draws nothing for them.
    */
   readonly points: readonly (number | null)[];
+
+  /**
+   * Shades the area under this curve alone, whatever the chart's own `filled` setting.
+   */
+  readonly filled?: boolean;
+
+  /**
+   * Draws this curve dashed, so two neighbours of close colour stay apart.
+   */
+  readonly dashed?: boolean;
 }
 
 /**

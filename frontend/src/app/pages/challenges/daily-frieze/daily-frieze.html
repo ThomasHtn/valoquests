@@ -1,0 +1,35 @@
+<div [attr.aria-label]="'challenges.daily.strip' | translate" class="frieze" role="group">
+  @for (day of days(); track day.index) {
+    <button
+      (click)="pick(day)"
+      [attr.aria-expanded]="day.card ? pickedIndex() === day.index : null"
+      [attr.aria-label]="day.weekday + ' ' + day.date + ', ' + day.tip"
+      [attr.data-tip]="day.tip"
+      [class]="'focus-ring dcell dcell--' + day.state"
+      [disabled]="!day.card"
+      aria-controls="daily-drawer"
+      type="button"
+    >
+      <span class="dcell-day"
+        >{{ day.weekday }}<small>{{ day.date }}</small></span
+      >
+      <span class="dcell-score tabular-nums">
+        @if (day.card) {
+          {{ day.doneCount }}<span>/{{ day.total }}</span>
+        } @else {
+          —
+        }
+      </span>
+    </button>
+  }
+</div>
+
+<!-- The drawer under the strip. Keyed on the day's index so that picking another day rebuilds the
+     card, which replays its entrance rather than swapping text in place. -->
+<div [style.--x]="pointerX()" class="drawer" id="daily-drawer">
+  @for (day of picked() ? [picked()!] : []; track day.index) {
+    <div [class.drawer--closed]="day.state === 'closed'" class="drawer-panel">
+      <app-challenge-card [card]="day.card!" />
+    </div>
+  }
+</div>

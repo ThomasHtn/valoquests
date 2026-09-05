@@ -1,0 +1,197 @@
+/* The card is a grid: the hexagon, the body, the gain on the right, then the rule and the tally
+   across the whole width. */
+:host {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 0.5rem 1.25rem;
+  align-items: start;
+  padding: 1.1rem 1.25rem;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
+@media (width >= 48rem) {
+  :host {
+    grid-template-columns: 3rem minmax(0, 1fr) 9.5rem;
+  }
+}
+
+:host(.card--done) {
+  background: rgb(95 184 138 / 6%);
+}
+
+.hex-mark > span {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  color: var(--tone);
+}
+
+.key-aside {
+  color: var(--color-text-muted);
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.desc {
+  font-size: 1rem;
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+
+/* The figure the draw set, under a description that keeps the catalogue's base wording. */
+.target {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  color: var(--color-text-muted);
+}
+
+.pay {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  font-size: 0.9375rem;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+}
+
+.pay svg {
+  align-self: center;
+  color: var(--color-brand-400);
+}
+
+.pay b {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-brand-400);
+}
+
+.pay span {
+  white-space: nowrap;
+}
+
+@media (width < 48rem) {
+  .pay {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+}
+
+.rule {
+  grid-column: 1 / -1;
+  height: 1px;
+  margin: 0.4rem 0 0;
+  border: 0;
+  background: var(--color-edge);
+}
+
+/* The count on the left, the squad gauge on the right. */
+.tally {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+}
+
+.tally b {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  color: var(--tone);
+}
+
+.tally b span {
+  color: var(--color-text-muted);
+}
+
+.tally em {
+  font-style: normal;
+  font-size: 0.9375rem;
+  line-height: 1;
+  color: var(--color-text-secondary);
+}
+
+/* One hexagon per operator, lit when validated, the name on hover. */
+.slugs {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.slugs i {
+  position: relative;
+  display: block;
+  width: 0.9rem;
+  height: 1rem;
+}
+
+.slugs i::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(236 232 225 / 12%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  transition: filter 0.15s;
+}
+
+.slugs i.on::before {
+  background: var(--tone);
+}
+
+.slugs i:hover::before {
+  filter: brightness(1.35);
+}
+
+/* Not rendered at rest rather than transparent: the last name overhangs the card's edge and would
+   widen the page's scroll area on a phone. */
+.slugs i::after {
+  content: attr(data-name);
+  position: absolute;
+  display: none;
+  bottom: calc(100% + 0.4rem);
+  left: 50%;
+  z-index: 5;
+  translate: -50% 0;
+  padding: 0.25rem 0.55rem;
+  background: #040a11;
+  border: 1px solid var(--color-edge-strong);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  pointer-events: none;
+}
+
+.slugs i:hover::after {
+  display: block;
+}

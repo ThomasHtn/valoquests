@@ -89,7 +89,13 @@ class DefaultChallengeQueryServiceTest {
 
         when(calibrationSource.forWeek(WEEK_START))
             .thenReturn(new ChallengeCalibration(REFERENCE, 1, ChallengeScaling.NONE));
-        when(playerRepository.countByStatus(PlayerStatus.ACTIVE)).thenReturn(4L);
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
+            .thenReturn(List.of(
+                player(1L, PlayerStatus.ACTIVE),
+                player(2L, PlayerStatus.ACTIVE),
+                player(3L, PlayerStatus.ACTIVE),
+                player(4L, PlayerStatus.ACTIVE)
+            ));
         when(playerRepository.findLatestSuccessfulSynchronizationAt())
             .thenReturn(Optional.of(SYNCHRONIZED_AT));
 
@@ -120,10 +126,10 @@ class DefaultChallengeQueryServiceTest {
         when(progressRepository
             .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(WEEK_START))
             .thenReturn(List.of(
-                progress(easy, PlayerStatus.ACTIVE, true),
-                progress(easy, PlayerStatus.INACTIVE, true),
-                progress(easy, PlayerStatus.ACTIVE, false),
-                progress(today, PlayerStatus.ACTIVE, true)
+                progress(easy, player(3L, PlayerStatus.ACTIVE), true),
+                progress(easy, player(9L, PlayerStatus.INACTIVE), true),
+                progress(easy, player(1L, PlayerStatus.ACTIVE), false),
+                progress(today, player(2L, PlayerStatus.ACTIVE), true)
             ));
 
         CurrentChallengesResponse response = service.findCurrent();
@@ -132,6 +138,10 @@ class DefaultChallengeQueryServiceTest {
         assertThat(response.weekEnd()).isEqualTo(WEEK_START.plusDays(6));
         assertThat(response.today()).isEqualTo(TODAY);
         assertThat(response.lastSuccessfulSynchronizationAt()).isEqualTo(SYNCHRONIZED_AT);
+        assertThat(response.roster())
+            .extracting(CurrentChallengesResponse.RosterPlayerResponse::id)
+            .containsExactly(1L, 2L, 3L, 4L);
+        assertThat(response.roster().getFirst().displayName()).isEqualTo("Player 1");
 
         assertThat(response.challenges())
             .extracting(CurrentChallengesResponse.ChallengeProgressResponse::difficulty)
@@ -151,6 +161,7 @@ class DefaultChallengeQueryServiceTest {
         // The inactive player's completion never inflates the collective count.
         assertThat(easyEntry.completedPlayers()).isEqualTo(1);
         assertThat(easyEntry.totalPlayers()).isEqualTo(4);
+        assertThat(easyEntry.completedPlayerIds()).containsExactly(3L);
         assertThat(easyEntry.completionPercentage()).isEqualByComparingTo(BigDecimal.valueOf(25));
 
         assertThat(response.challenges().getLast().competitiveOnly()).isTrue();
@@ -162,6 +173,7 @@ class DefaultChallengeQueryServiceTest {
         assertThat(todayEntry.survivors()).isEqualTo(6);
         assertThat(todayEntry.rankingPoints()).isEqualTo(64);
         assertThat(todayEntry.completedPlayers()).isEqualTo(1);
+        assertThat(todayEntry.completedPlayerIds()).containsExactly(2L);
     }
 
     /**
@@ -169,12 +181,28 @@ class DefaultChallengeQueryServiceTest {
      */
     @Test
     void shouldExposeEmptyListsBeforeAnyDraw() {
-        when(playerRepository.countByStatus(PlayerStatus.ACTIVE)).thenReturn(0L);
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE)).thenReturn(List.of());
 
         CurrentChallengesResponse response = service.findCurrent();
 
+        assertThat(response.roster()).isEmpty();
         assertThat(response.challenges()).isEmpty();
         assertThat(response.dailies()).isEmpty();
+    }
+
+    /**
+     * Creates a player fixture.
+     *
+     * @param id     player identifier
+     * @param status lifecycle status
+     * @return player fixture
+     */
+    private Player player(long id, PlayerStatus status) {
+        Player player = new Player();
+        player.setId(id);
+        player.setDisplayName("Player " + id);
+        player.setStatus(status);
+        return player;
     }
 
     /**
@@ -240,18 +268,15 @@ class DefaultChallengeQueryServiceTest {
      * Creates one progress row.
      *
      * @param selection evaluated selection
-     * @param status    status of the player who owns the row
+     * @param player    player who owns the row
      * @param completed whether the challenge is completed
      * @return progress fixture
      */
     private PlayerChallengeProgress progress(
         WeeklyChallenge selection,
-        PlayerStatus status,
+        Player player,
         boolean completed
     ) {
-        Player player = new Player();
-        player.setStatus(status);
-
         PlayerChallengeProgress progress = new PlayerChallengeProgress();
         progress.setPlayer(player);
         progress.setWeeklyChallenge(selection);

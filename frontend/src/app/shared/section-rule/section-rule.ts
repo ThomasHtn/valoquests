@@ -34,4 +34,9 @@ export class SectionRule {
    * Route the link leads to.
    */
   public readonly link = input<string | null>(null);
+
+  /**
+   * Caption on the right, for a section whose heading needs a count beside it.
+   */
+  public readonly side = input('');
 }

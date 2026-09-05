@@ -63,14 +63,13 @@
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
-/* The disc a completed `app-progress-circle` encloses: the ring itself is drawn by
-   `angular-svg-round-progressbar`, this is only the attenuated ground inside it, so a full-strength
-   arc and a tinted centre read as ring-then-core rather than one filled badge. Kept here rather
-   than handed to the library's own `innerCircleFill`, which takes a color string — the tint is a
-   Tailwind utility off the challenge palette, and the string would fork the palette in two.
+/* The disc a completed `app-progress-circle` encloses: the ring itself is drawn by that component,
+   this is only the attenuated ground inside it, so a full-strength arc and a tinted centre read as
+   ring-then-core rather than one filled badge. The tint is a Tailwind utility off the challenge
+   palette, set by the call site.
 
-   The inset clears the ring's stroke (`RING.stroke` over its diameter, 4 in 44 ≈ 9%) plus two
-   points of clear ground. Both are shares of the box, so they hold at any size the caller picks. */
+   The inset clears the ring's stroke (4 in 44 ≈ 9%) plus two points of clear ground. Both are shares
+   of the box, so they hold at any size the caller picks. */
 @utility progress-ring-core {
   border-radius: 50%;
   inset: 11%;
@@ -854,6 +853,28 @@
   display: grid;
   place-items: center;
   background: var(--color-surface-950);
+}
+
+/*
+ * Hexagonal mark of a term or a resource key: a coloured rim, `--tone`, around a dark core. Used
+ * with `clip-hex` on both spans.
+ */
+.hex-mark {
+  width: 3rem;
+  height: 3.4rem;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--tone, var(--color-text-secondary)) 55%, transparent);
+}
+
+.hex-mark > span {
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-950);
+  color: var(--tone, var(--color-text-secondary));
 }
 
 .bar-title {

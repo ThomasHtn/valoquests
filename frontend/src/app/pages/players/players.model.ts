@@ -38,6 +38,12 @@ export interface PlayerRow {
    * groups the row under "hors campagne" instead of the roster proper — see root `CLAUDE.md`.
    */
   readonly inCampaign: boolean;
+
+  /**
+   * Whether the operator has played today, and the streak of days they are on.
+   */
+  readonly playedToday: boolean;
+  readonly streakDays: number;
 }
 
 /**

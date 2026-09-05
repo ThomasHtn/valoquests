@@ -11,8 +11,6 @@ import { Leaderboard } from '@pages/leaderboard/leaderboard';
 import { NotFound } from '@pages/not-found/not-found';
 import { Overview } from '@pages/overview/overview';
 import { Players } from '@pages/players/players';
-import { Rules } from '@pages/rules/rules';
-import { Tour } from '@pages/tour/tour';
 
 /**
  * Application routes.
@@ -24,7 +22,8 @@ import { Tour } from '@pages/tour/tour';
  * is the second heaviest term of the page's environmental footprint, so the public pages, which
  * together weigh less than the shared chunks they were dragging in, now ride in the initial bundle.
  * The exceptions carry weight nothing else needs: the profile and the two-player comparison both
- * own `chart.js` through `EvolutionChart`, and the backoffice is reachable by URL only.
+ * own `chart.js` through `EvolutionChart`, the tour and the rules are read once, and the
+ * backoffice is reachable by URL only.
  *
  * A route's `title` is a translation key rather than a literal; it is resolved against the active
  * dictionary by `TranslatedTitleStrategy`.
@@ -53,10 +52,12 @@ export const routes: Routes = [
     component: Landing,
   },
   {
+    // Lazy, unlike the other public pages: a one-time briefing that draws the base scene and the
+    // planet, neither of which the initial bundle needs on every visit.
     path: 'tour',
     title: 'tour.title',
     canActivate: [tourEntryGuard],
-    component: Tour,
+    loadComponent: () => import('@pages/tour/tour').then((m) => m.Tour),
   },
   {
     path: 'admin/login',
@@ -122,9 +123,10 @@ export const routes: Routes = [
         pathMatch: 'full',
       },
       {
+        // Lazy for the same reason as the tour: a reference read once, not a screen of the loop.
         path: 'rules',
         title: 'rules.title',
-        component: Rules,
+        loadComponent: () => import('@pages/rules/rules').then((m) => m.Rules),
       },
       {
         path: 'admin/operations',

@@ -1,0 +1,182 @@
+/* One week of one resource: the plot above and below the ground, and its tooltip. */
+:host {
+  --tone: var(--color-text-secondary);
+  --got: 0;
+  --spent: 0;
+  --carry: 0;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-edge);
+  border-left: 1px solid rgb(236 232 225 / 6%);
+}
+
+:host(.lg-cell--food) {
+  --tone: var(--color-accent-green);
+}
+
+:host(.lg-cell--components) {
+  --tone: var(--color-accent-cyan);
+}
+
+/* The plot: the ground in the middle, what came in above, what was spent below, same scale. */
+.lg-plot {
+  --room: 2rem;
+
+  position: relative;
+  flex: 0 0 auto;
+  height: calc(var(--up) * 2 + var(--room) * 2);
+}
+
+.lg-plot::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--room) + var(--up));
+  border-top: 1px solid var(--color-edge-strong);
+}
+
+.lg-up,
+.lg-down {
+  position: absolute;
+  left: 30%;
+  width: 40%;
+}
+
+.lg-up {
+  bottom: calc(100% - var(--room) - var(--up));
+  height: calc(var(--up) * var(--got));
+  background: var(--tone);
+}
+
+.lg-up::after,
+.lg-down::after {
+  content: attr(data-v);
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.lg-up::after {
+  bottom: 100%;
+  margin-bottom: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--tone);
+}
+
+.lg-down {
+  top: calc(var(--room) + var(--up) + 1px);
+  height: calc(var(--up) * var(--spent));
+  background: repeating-linear-gradient(135deg, var(--tone) 0 2px, transparent 2px 5px);
+  opacity: 0.8;
+}
+
+.lg-down::after {
+  top: 100%;
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+/* The carried level: a dashed line from the top of what is left, crossing the column. */
+.lg-carry {
+  position: absolute;
+  z-index: 1;
+  left: 70%;
+  width: 60%;
+  top: calc(var(--room) + var(--up) - var(--up) * var(--carry));
+  border-top: 2px dashed var(--tone);
+  pointer-events: none;
+}
+
+.lg-carry::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: -4px;
+  width: 6px;
+  height: 6px;
+  background: var(--tone);
+  rotate: 45deg;
+}
+
+:host(.lg-cell--now) .lg-up {
+  background: color-mix(in srgb, var(--tone) 45%, transparent);
+  outline: 1px dashed var(--tone);
+  outline-offset: -1px;
+}
+
+:host(.lg-cell--ahead) .lg-plot::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(var(--room) + var(--up));
+  width: 5px;
+  height: 5px;
+  translate: -50% -50%;
+  background: var(--color-text-muted);
+  rotate: 45deg;
+  opacity: 0.6;
+}
+
+.lg-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--room) + var(--up) + 0.6rem);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
+  color: var(--color-accent-cyan);
+}
+
+.lg-tip {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: 0.35rem;
+  width: max-content;
+  max-width: 16rem;
+  translate: -50% 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--color-edge-strong);
+  background: rgb(10 21 29 / 96%);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+
+.lg-tip b {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+:host(:hover) .lg-tip,
+:host(:focus-visible) .lg-tip {
+  opacity: 1;
+  visibility: visible;
+}
+
+:host(:nth-child(-n + 13)) .lg-tip {
+  left: 0;
+  translate: 0;
+}

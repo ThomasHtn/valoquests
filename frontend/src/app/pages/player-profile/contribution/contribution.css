@@ -1,0 +1,153 @@
+:host {
+  display: block;
+}
+
+.blocks {
+  display: grid;
+  gap: 0.5rem;
+}
+
+@media (width >= 64rem) {
+  .blocks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The same surface as the identity banner above: flat tint, leading rule, no shadow. */
+.block {
+  padding: 1.1rem 1.25rem 1.25rem;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--color-brand-400);
+}
+
+.block-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+
+.block-link {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  transition: color 0.15s;
+}
+
+.block-link:hover {
+  color: var(--color-brand-400);
+}
+
+/* The week opens on the place and the total it was earned on. */
+.lead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
+  margin-top: 0.9rem;
+}
+
+.lead-pos {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-brand-400);
+}
+
+.lead-pos--none {
+  color: var(--color-text-muted);
+}
+
+.lead-total {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.lead-unit,
+.lead-note {
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+
+.empty {
+  margin-top: 0.9rem;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+.cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.5rem;
+  margin-top: 1.1rem;
+}
+
+.cell {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.cell-val {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--cell, var(--color-text-primary));
+}
+
+.cell-val small {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  white-space: normal;
+  color: var(--color-text-muted);
+}
+
+.titles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-top: 1rem;
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.title-count {
+  color: var(--color-text-muted);
+}
+
+.retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-brand-400);
+  cursor: pointer;
+}

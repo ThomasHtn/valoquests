@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.player.controller;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -49,7 +50,7 @@ class PlayerControllerTest {
             .andExpect(jsonPath("$.playerId").value(3))
             .andExpect(jsonPath("$.week.totalPoints").value(1_620))
             .andExpect(jsonPath("$.week.titles[0]").value("REGULAR"))
-            .andExpect(jsonPath("$.campaign").doesNotExist());
+            .andExpect(jsonPath("$.campaign").value(nullValue()));
     }
 
     /**

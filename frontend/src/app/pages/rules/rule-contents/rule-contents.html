@@ -1,0 +1,120 @@
+<!-- The rail's two pieces, written once and placed twice: the same search and the same sections
+     whether the rulebook is read on a desk or on a phone, only the shape they are put in changes. -->
+
+<ng-template #field>
+  <div
+    class="notch-tr h-10 min-w-0 flex-1 bg-edge-strong p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500"
+  >
+    <label
+      class="notch-tr flex h-full items-center gap-2 bg-surface-950 pr-1 pl-2.5 [--notch:0.5rem]"
+    >
+      <svg aria-hidden="true" class="size-4 shrink-0 text-text-muted" lucideSearch></svg>
+      <input
+        #control
+        (focus)="reveal()"
+        (input)="onInput($event)"
+        [attr.aria-label]="'rules.contents.searchLabel' | translate"
+        [placeholder]="'rules.contents.searchPlaceholder' | translate"
+        [value]="query()"
+        autocapitalize="off"
+        class="h-full min-w-0 flex-1 bg-transparent text-base text-text-primary placeholder:text-text-muted focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
+        spellcheck="false"
+        type="search"
+      />
+      @if (query() !== '') {
+        <button
+          (click)="clear(control)"
+          [attr.aria-label]="'rules.contents.clear' | translate"
+          class="focus-ring-inset flex size-7 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:text-text-primary"
+          type="button"
+        >
+          <svg aria-hidden="true" class="size-3.5" lucideX></svg>
+        </button>
+      }
+    </label>
+  </div>
+</ng-template>
+
+<ng-template #list>
+  @if (entries().length === 0) {
+    <p class="px-4 py-4 text-prose text-text-secondary">
+      {{ 'rules.contents.noMatch' | translate: { query: query() } }}
+    </p>
+  } @else {
+    <ul>
+      @for (entry of entries(); track entry.id) {
+        <li>
+          <!-- A button rather than a fragment link: the router would push a history entry for
+               every section a reader glances at. -->
+          <button
+            (click)="choose(entry.id)"
+            [attr.aria-current]="entry.id === activeId() ? 'true' : null"
+            [class]="entry.id === activeId() ? activeEntryClass : idleEntryClass"
+            class="focus-ring-inset relative flex min-h-11 w-full cursor-pointer items-center gap-3.5 px-4 py-3 text-left transition-colors before:absolute before:inset-y-0 before:left-0 before:w-1 before:content-['']"
+            type="button"
+          >
+            <span aria-hidden="true" class="w-4 shrink-0 font-mono text-2xs tabular-nums">
+              {{ entry.index }}
+            </span>
+            <span class="text-base leading-snug">
+              {{ 'rules.sections.' + entry.key + '.title' | translate }}
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</ng-template>
+
+<!-- Phone and tablet: a band under the context bar, outside the scrolling column, so the field
+     stays on screen for the whole document. The sections drop from it on demand. -->
+@if (open()) {
+  <div
+    (click)="close()"
+    aria-hidden="true"
+    class="fixed inset-0 z-10 bg-surface-950/70 lg:hidden"
+  ></div>
+}
+
+<div class="relative z-20 border-b border-edge bg-surface-sunken lg:hidden">
+  <div class="mx-auto flex w-full max-w-[1440px] items-center gap-2 px-4 py-2.5 sm:px-6">
+    <ng-container [ngTemplateOutlet]="field" />
+
+    <button
+      (click)="toggle()"
+      [attr.aria-controls]="panelId"
+      [attr.aria-expanded]="open()"
+      class="focus-ring notch-tr flex h-10 shrink-0 cursor-pointer items-center gap-2 border border-edge px-3 text-text-secondary transition-colors [--notch:0.5rem] hover:border-edge-strong hover:text-text-primary motion-safe:active:scale-[0.96]"
+      type="button"
+    >
+      <span class="label-caption">{{ 'rules.contents.title' | translate }}</span>
+      <svg
+        [class.rotate-180]="open()"
+        aria-hidden="true"
+        class="size-4 shrink-0 text-text-muted transition-transform duration-200 motion-reduce:transition-none"
+        lucideChevronDown
+      ></svg>
+    </button>
+  </div>
+
+  @if (open()) {
+    <div
+      [id]="panelId"
+      class="absolute inset-x-0 top-full z-10 max-h-[60vh] overflow-y-auto border-b border-brand-500/40 bg-surface-sunken pb-2 motion-safe:animate-panel-drop"
+    >
+      <ng-container [ngTemplateOutlet]="list" />
+    </div>
+  }
+</div>
+
+<!-- Desktop: its own scroller, carved below the page ground like the application's own rail. -->
+<aside
+  [attr.aria-label]="'rules.contents.title' | translate"
+  class="hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-edge bg-surface-sunken pb-8 lg:flex"
+>
+  <div class="sticky top-0 z-10 bg-surface-sunken px-4 pt-5 pb-4">
+    <ng-container [ngTemplateOutlet]="field" />
+  </div>
+
+  <ng-container [ngTemplateOutlet]="list" />
+</aside>

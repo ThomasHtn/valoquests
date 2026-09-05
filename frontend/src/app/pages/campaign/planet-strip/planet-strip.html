@@ -1,0 +1,56 @@
+<div class="strip-wrap relative z-[1]">
+  <ol [attr.aria-label]="'campaign.galaxy.strip' | translate" class="strip">
+    @for (planet of planets(); track planet.index) {
+      <li [class.seg--done]="planet.state === 'won' || planet.state === 'lost'">
+        <button
+          (click)="toggle(planet)"
+          [attr.aria-expanded]="openedIndex() === planet.index"
+          [class]="'pl pl--' + planet.state"
+          [class.pl--final]="planet.final"
+          aria-controls="planet-drawer"
+          type="button"
+        >
+          <span class="pl-orbit">
+            <app-planet-orb
+              [advance]="planet.advance"
+              [hue]="planet.hue"
+              [radius]="planet.radius"
+              [seed]="planet.index + 20"
+              [state]="planet.state"
+            />
+          </span>
+          <span class="pl-no">{{ planet.label }}</span>
+          <span class="pl-name">{{ planet.name }}</span>
+          <span
+            [class.text-boss-hp-edge]="planet.category === 'ELITE'"
+            class="label-caption text-2xs text-text-muted"
+            >{{ 'common.guardianCategory.' + planet.category | translate }}</span
+          >
+          <span class="pl-state">
+            @switch (planet.stateIcon) {
+              @case ('check') {
+                <svg aria-hidden="true" class="size-3.5" lucideCheck></svg>
+              }
+              @case ('x') {
+                <svg aria-hidden="true" class="size-3.5" lucideX></svg>
+              }
+              @case ('swords') {
+                <svg aria-hidden="true" class="size-3.5" lucideSwords></svg>
+              }
+              @case ('star') {
+                <svg aria-hidden="true" class="size-3.5" lucideStar></svg>
+              }
+            }
+            {{ planet.stateLabel }}
+          </span>
+        </button>
+      </li>
+    }
+  </ol>
+</div>
+
+<!-- The report of the opened planet. Closed at rest; it opens under the strip and points at the
+     planet clicked. -->
+@if (opened(); as planet) {
+  <app-planet-drawer (closed)="close()" [planet]="planet" [pointerX]="pointerX()" />
+}
