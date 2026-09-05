@@ -1,7 +1,7 @@
 import { LowerCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideCalendar, LucideRocket, LucideSkull, LucideUsers } from '@lucide/angular';
+import { LucideRocket, LucideSkull, LucideUsers } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
 import {
@@ -20,6 +20,7 @@ import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { PageHeader } from '@layout/page-header/page-header';
 import { CountUp } from '@shared/count-up/count-up';
+import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { Countdown } from '@shared/countdown/countdown';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionRule } from '@shared/section-rule/section-rule';
@@ -82,7 +83,6 @@ function daysBetween(from: string, to: string): number {
     ExtractionGauges,
     DayOrders,
     SquadSheet,
-    LucideCalendar,
     LucideRocket,
     LucideSkull,
     LucideUsers,
@@ -159,25 +159,6 @@ export class Overview {
     return this.translation.translate('overview.header.eyebrow', {
       number: campaign.number,
       tier: this.translation.translate(`common.tier.${campaign.tier}`),
-    });
-  });
-
-  protected readonly dayLabel = computed(() => {
-    const campaign = this.campaign();
-    if (!campaign) {
-      return '';
-    }
-    const weekday = new Intl.DateTimeFormat(this.locale(), { weekday: 'long' }).format(
-      new Date(localMidnight(campaign.today)),
-    );
-    const capitalised = weekday.charAt(0).toUpperCase() + weekday.slice(1);
-    if (campaign.currentWeekIndex === null) {
-      return capitalised;
-    }
-    return this.translation.translate('overview.header.day', {
-      weekday: capitalised,
-      week: campaign.currentWeekIndex,
-      weeks: CAMPAIGN_WEEK_COUNT,
     });
   });
 
@@ -373,6 +354,27 @@ export class Overview {
       return 'opened';
     }
     return campaign.status === 'CLOSED' ? 'closed' : 'settling';
+  });
+
+  /**
+   * The empty state, by campaign state: what the squad waits on, and that the ranking already runs.
+   */
+  protected readonly emptyPlate = computed<EmptyPlate>(() => {
+    const key = this.stateKey();
+    const t = (suffix: string) => this.translation.translate(`overview.state.${key}.${suffix}`);
+    return {
+      illustration: 'radar',
+      eyebrow: t('eyebrow'),
+      title: t('title'),
+      text: t('text'),
+      readouts:
+        key === 'none'
+          ? [
+              { tone: 'live', label: t('ranking'), value: t('rankingValue') },
+              { tone: 'todo', label: t('campaign'), value: t('campaignValue') },
+            ]
+          : [],
+    };
   });
 
   protected retry(): void {

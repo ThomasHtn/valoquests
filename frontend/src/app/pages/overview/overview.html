@@ -1,14 +1,4 @@
-<app-page-header [eyebrow]="headerEyebrow()" [heading]="'overview.header.heading' | translate">
-  @if (dayLabel(); as day) {
-    <p
-      class="label-caption hidden shrink-0 items-center gap-2 text-brand-400 md:inline-flex"
-      headingAside
-    >
-      <svg aria-hidden="true" class="size-4" lucideCalendar></svg>
-      {{ day }}
-    </p>
-  }
-</app-page-header>
+<app-page-header [eyebrow]="headerEyebrow()" [heading]="'overview.header.heading' | translate" />
 
 <div class="page-body !gap-0 !pt-0">
   <!-- The state of the campaign, drawn. The city is the score; the rocket in its middle gains a
@@ -112,7 +102,7 @@
   <app-resource-state
     (retry)="retry()"
     [emptyKind]="stateKey() === 'none' ? 'creation' : 'waiting'"
-    [emptyText]="'overview.state.' + stateKey() | translate"
+    [emptyPlate]="emptyPlate()"
     [errorText]="'overview.state.error' | translate"
     [isEmpty]="!isRunning()"
     [isError]="isError()"

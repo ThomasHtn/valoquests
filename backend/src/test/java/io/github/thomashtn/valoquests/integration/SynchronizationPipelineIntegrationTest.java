@@ -528,7 +528,7 @@ class SynchronizationPipelineIntegrationTest
      *
      * <p>The two imported matches fall on two consecutive days, so the second carries the 2 % streak
      * bonus: WIN 500 + LOSS 350 × 1.02 = 357, for 857 of guardian damage. The five weekly challenges
-     * pay 20 + 34 + 54 + 78 + 108 = 294 points at the 2 000 floor, plus the day's challenge when the
+     * pay 2 + 3 + 5 + 8 + 11 = 29 points at the 2 000 floor, plus the day's challenge when the
      * player validated it.
      */
     private void assertCalculatedRanking(
@@ -549,9 +549,9 @@ class SynchronizationPipelineIntegrationTest
         assertThat(score.getStreakDays())
             .isEqualTo(2);
         assertThat(score.getChallengePoints())
-            .isEqualTo(294 + dailyPoints);
+            .isEqualTo(29 + dailyPoints);
         assertThat(score.getTotalPoints())
-            .isEqualTo(857 + 294 + dailyPoints);
+            .isEqualTo(857 + 29 + dailyPoints);
         assertThat(score.getCompletedChallenges())
             .isEqualTo(5);
         assertThat(score.getCompletedDailyChallenges())
@@ -576,7 +576,7 @@ class SynchronizationPipelineIntegrationTest
      * @return the points those dailies add
      */
     private int dailyPoints(Player player) {
-        return completedDailies(player) * 24;
+        return completedDailies(player) * 2;
     }
 
     /**

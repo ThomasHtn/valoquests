@@ -127,7 +127,7 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
             ChallengeMetricLabels.of(definition),
             definition.progressTarget(),
             ruleset.challengeSurvivors(calibration.reference(), weight, calibration.weekIndex()),
-            ruleset.challengeRankingPoints(calibration.reference(), weight)
+            ruleset.challengeRankingPoints(calibration.reference(), weight, calibration.weekIndex())
         );
     }
 }

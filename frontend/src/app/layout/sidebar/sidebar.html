@@ -89,72 +89,91 @@
          The active entry is marked by a brand bar along its left edge, drawn as a `::before` so the
          indicator needs no extra element and never affects the entry's own layout. Only its color
          is bound to the active state; its geometry is static. -->
-    <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex flex-col">
-      @for (item of navItems(); track item.labelKey) {
-        <a
-          (click)="onNavItemActivated()"
-          [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
-          [attr.aria-disabled]="item.routerLink ? null : 'true'"
-          [class.cursor-default]="!item.routerLink"
-          [class]="navItemClass() + navActiveClass(item)"
-          [appTooltipDisabled]="!collapsed()"
-          [appTooltip]="'sidebar.nav.' + item.labelKey | translate"
-          [routerLink]="item.routerLink"
-          class="group focus-ring-inset relative flex min-h-11 w-full cursor-pointer items-center gap-3.5 px-6 py-3 text-start text-sm font-medium text-text-secondary transition-colors before:absolute before:inset-y-0 before:left-0 before:w-1 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary"
-          appTooltipPosition="right"
-          appTooltipSize="md"
-        >
-          <!-- Per-section pictogram. It distinguishes the entries instead of repeating the same
+    <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex flex-col gap-5">
+      @for (group of navGroups(); track group.labelKey) {
+        <div class="flex flex-col">
+          <!-- Chapter caption, replaced by a hairline on the collapsed rail: the icons there have
+               no room for a word, but the break between chapters still reads. -->
+          @if (!$first) {
+            <span
+              [class]="navGroupRuleClass()"
+              aria-hidden="true"
+              class="mx-6 mb-4 hidden h-px bg-brand-500/25"
+            ></span>
+          }
+          <p
+            [class]="navGroupLabelClass()"
+            class="label-caption mb-1.5 px-6 text-2xs text-text-muted"
+          >
+            {{ 'sidebar.group.' + group.labelKey | translate }}
+          </p>
+          @for (item of group.items; track item.labelKey) {
+            <a
+              (click)="onNavItemActivated()"
+              [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
+              [attr.aria-disabled]="item.routerLink ? null : 'true'"
+              [class.cursor-default]="!item.routerLink"
+              [class]="navItemClass() + navActiveClass(item)"
+              [appTooltipDisabled]="!collapsed()"
+              [appTooltip]="'sidebar.nav.' + item.labelKey | translate"
+              [routerLink]="item.routerLink"
+              class="group focus-ring-inset relative flex min-h-11 w-full cursor-pointer items-center gap-3.5 px-6 py-3 text-start text-sm font-medium text-text-secondary transition-colors before:absolute before:inset-y-0 before:left-0 before:w-1 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary"
+              appTooltipPosition="right"
+              appTooltipSize="md"
+            >
+              <!-- Per-section pictogram. It distinguishes the entries instead of repeating the same
                shape, and it is the only thing identifying them on the collapsed rail. Inherits the
                link's text color and turns brand once active, keyed off `aria-current` which
                `isNavItemActive` sets, so the active state needs no second source of truth. -->
-          <span
-            aria-hidden="true"
-            class="block h-5 w-5 shrink-0 group-aria-[current=page]:text-brand-500"
-          >
-            @switch (item.icon) {
-              @case ('layout-dashboard') {
-                <svg class="h-full w-full" lucideLayoutDashboard></svg>
-              }
-              @case ('target') {
-                <svg class="h-full w-full" lucideTarget></svg>
-              }
-              @case ('map') {
-                <svg class="h-full w-full" lucideMap></svg>
-              }
-              @case ('trophy') {
-                <svg class="h-full w-full" lucideTrophy></svg>
-              }
-              @case ('users') {
-                <svg class="h-full w-full" lucideUsers></svg>
-              }
-              @case ('book-open') {
-                <svg class="h-full w-full" lucideBookOpen></svg>
-              }
-              @case ('refresh-cw') {
-                <svg class="h-full w-full" lucideRefreshCw></svg>
-              }
-              @case ('user-cog') {
-                <svg class="h-full w-full" lucideUserCog></svg>
-              }
-              @case ('database-backup') {
-                <svg class="h-full w-full" lucideDatabaseBackup></svg>
-              }
-              @case ('palette') {
-                <svg class="h-full w-full" lucidePalette></svg>
-              }
-              @case ('flag') {
-                <svg class="h-full w-full" lucideFlag></svg>
-              }
-            }
-          </span>
-          <span
-            [class]="navLabelClass()"
-            class="tracking-label font-display uppercase group-aria-[current=page]:text-brand-500"
-          >
-            {{ 'sidebar.nav.' + item.labelKey | translate }}
-          </span>
-        </a>
+              <span
+                aria-hidden="true"
+                class="block h-5 w-5 shrink-0 group-aria-[current=page]:text-brand-500"
+              >
+                @switch (item.icon) {
+                  @case ('layout-dashboard') {
+                    <svg class="h-full w-full" lucideLayoutDashboard></svg>
+                  }
+                  @case ('target') {
+                    <svg class="h-full w-full" lucideTarget></svg>
+                  }
+                  @case ('map') {
+                    <svg class="h-full w-full" lucideMap></svg>
+                  }
+                  @case ('trophy') {
+                    <svg class="h-full w-full" lucideTrophy></svg>
+                  }
+                  @case ('users') {
+                    <svg class="h-full w-full" lucideUsers></svg>
+                  }
+                  @case ('book-open') {
+                    <svg class="h-full w-full" lucideBookOpen></svg>
+                  }
+                  @case ('refresh-cw') {
+                    <svg class="h-full w-full" lucideRefreshCw></svg>
+                  }
+                  @case ('user-cog') {
+                    <svg class="h-full w-full" lucideUserCog></svg>
+                  }
+                  @case ('database-backup') {
+                    <svg class="h-full w-full" lucideDatabaseBackup></svg>
+                  }
+                  @case ('palette') {
+                    <svg class="h-full w-full" lucidePalette></svg>
+                  }
+                  @case ('flag') {
+                    <svg class="h-full w-full" lucideFlag></svg>
+                  }
+                }
+              </span>
+              <span
+                [class]="navLabelClass()"
+                class="tracking-label font-display uppercase group-aria-[current=page]:text-brand-500"
+              >
+                {{ 'sidebar.nav.' + item.labelKey | translate }}
+              </span>
+            </a>
+          }
+        </div>
       }
     </nav>
   </div>

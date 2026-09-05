@@ -212,7 +212,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             ChallengeMetricLabels.of(definition),
             definition.progressTarget(),
             ruleset.challengeSurvivors(calibration.reference(), weight, calibration.weekIndex()),
-            ruleset.challengeRankingPoints(calibration.reference(), weight),
+            ruleset.challengeRankingPoints(calibration.reference(), weight, calibration.weekIndex()),
             completedPlayers,
             totalPlayers,
             completedPlayerIds,

@@ -15,6 +15,8 @@
   }
 
   body {
+    /* The direction's text colour, so an element that sets none never falls back to UA black. */
+    color: var(--color-text-primary);
     /* Dark grounds render text optically heavier; antialiasing keeps it crisp. */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -470,10 +472,8 @@
  * this lands in the utilities layer, which wins over base whatever the selectors' specificity.
  */
 @utility scroll-subtle {
-  /* Reserves the scrollbar's own column outside the content box, so a full-width sticky child
-     (the page header) stops before it instead of running underneath — without this, the native
-     scrollbar always paints on top of that child regardless of z-index. */
-  scrollbar-gutter: stable;
+  /* No reserved gutter: the page header sits outside this box (see `page-stack`), so nothing runs
+     under the scrollbar, and a page that does not scroll must reach the column's right edge. */
   scrollbar-color: transparent transparent;
 
   &:hover,

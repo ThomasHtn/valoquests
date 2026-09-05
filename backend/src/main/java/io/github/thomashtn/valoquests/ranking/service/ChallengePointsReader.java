@@ -67,19 +67,31 @@ public class ChallengePointsReader {
     }
 
     /**
+     * Returns the campaign week one week's challenges are priced at, driving the reward
+     * progression; {@code 0} between two campaigns.
+     *
+     * @param weekStart Monday identifying the week
+     * @return the one-based campaign week, or {@code 0}
+     */
+    public int weekIndexFor(LocalDate weekStart) {
+        return calibrationSource.forWeek(weekStart).weekIndex();
+    }
+
+    /**
      * Prices one selection.
      *
      * @param selection selected challenge
      * @param reference reference in force for its week
-     * @return the ranking points validating it earns
+     * @param weekIndex campaign week of that week, {@code 0} between two campaigns
+     * @return the ranking points validating it earns, one per wounded
      */
-    public int pointsOf(WeeklyChallenge selection, int reference) {
+    public int pointsOf(WeeklyChallenge selection, int reference, int weekIndex) {
         double weight = ruleset.challengeWeight(
             selection.getChallenge().getCadence(),
             selection.getChallenge().getDifficulty()
         );
 
-        return ruleset.challengeRankingPoints(reference, weight);
+        return ruleset.challengeRankingPoints(reference, weight, weekIndex);
     }
 
     /**
@@ -90,6 +102,7 @@ public class ChallengePointsReader {
      */
     public Map<Long, ChallengeTally> read(LocalDate weekStart) {
         int reference = referenceFor(weekStart);
+        int weekIndex = weekIndexFor(weekStart);
         Map<Long, ChallengeTally> tallies = new HashMap<>();
 
         for (PlayerChallengeProgress progress : progressRepository
@@ -104,7 +117,7 @@ public class ChallengePointsReader {
 
             tallies.merge(
                 progress.getPlayer().getId(),
-                new ChallengeTally(pointsOf(selection, reference), daily ? 0 : 1, daily ? 1 : 0),
+                new ChallengeTally(pointsOf(selection, reference, weekIndex), daily ? 0 : 1, daily ? 1 : 0),
                 ChallengeTally::plus
             );
         }
@@ -115,7 +128,7 @@ public class ChallengePointsReader {
     /**
      * What one player's validated challenges add up to over a week.
      *
-     * @param points         ranking points, priced at the reference in force
+     * @param points         ranking points, one per wounded, priced at the reference in force
      * @param completedWeekly weekly challenges validated
      * @param completedDaily  daily challenges validated
      */

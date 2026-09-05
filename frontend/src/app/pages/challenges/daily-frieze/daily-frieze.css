@@ -161,6 +161,11 @@
   --sel-tone: var(--color-accent-green);
 }
 
+/* The panel's top rule already carries the day's colour: no second stripe down the card's edge. */
+.drawer-panel app-challenge-card {
+  box-shadow: none;
+}
+
 .drawer-panel::before {
   content: '';
   position: absolute;

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { LucideCalendar, LucideChevronDown } from '@lucide/angular';
+import { LucideChevronDown } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.model';
@@ -9,13 +9,13 @@ import {
   ChallengeProgress,
   CurrentChallenges,
 } from '@core/challenges/challenge.model';
-import { formatChallengeTarget } from '@core/challenges/challenge-format.utils';
 import { resolveDifficultyVisual } from '@core/challenges/challenge-visual.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PageHeader } from '@layout/page-header/page-header';
+import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionRule } from '@shared/section-rule/section-rule';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
@@ -65,7 +65,6 @@ function shiftDay(isoDate: string, offset: number): string {
     DailyFrieze,
     ChallengeCardView,
     ChallengeCatalogueView,
-    LucideCalendar,
     LucideChevronDown,
   ],
   templateUrl: './challenges.html',
@@ -141,17 +140,21 @@ export class Challenges {
     return tier ? `${week} · ${tier}` : week;
   });
 
-  protected readonly dayLabel = computed(() => {
-    const current = this.current();
-    if (!current) {
-      return '';
-    }
-    const weekday = this.weekday(current.today, 'long');
-    return this.translation.translate('challenges.header.day', {
-      weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1),
-      day: this.dayIndex(current) + 1,
-      days: WEEK_DAYS,
-    });
+  /**
+   * The empty state: the two draws that have not run, and when they do.
+   */
+  protected readonly emptyPlate = computed<EmptyPlate>(() => {
+    const t = (suffix: string) => this.translation.translate(`challenges.state.empty.${suffix}`);
+    return {
+      illustration: 'draw',
+      eyebrow: t('eyebrow'),
+      title: t('title'),
+      text: t('text'),
+      readouts: [
+        { tone: 'todo', label: t('weekly'), value: t('weeklyValue') },
+        { tone: 'todo', label: t('daily'), value: t('dailyValue') },
+      ],
+    };
   });
 
   protected readonly days = computed<readonly DayCell[]>(() => {
@@ -198,7 +201,6 @@ export class Challenges {
         competitiveOnly: challenge.competitiveOnly,
         name: challenge.name,
         description: challenge.description,
-        target: this.target(challenge.targetValue),
         survivors: challenge.survivors,
         rankingPoints: challenge.rankingPoints,
         rescueActive: this.rescueActive(),
@@ -288,7 +290,6 @@ export class Challenges {
       competitiveOnly: daily.competitiveOnly,
       name: daily.name,
       description: daily.description,
-      target: this.target(daily.targetValue),
       survivors: daily.survivors,
       rankingPoints: daily.rankingPoints,
       rescueActive: this.rescueActive(),
@@ -316,10 +317,6 @@ export class Challenges {
     return count === 0
       ? t(`tipNone${today}`, { total, weekday })
       : t(`tipDone${today}`, { count, total, weekday });
-  }
-
-  private target(value: number | null): string | null {
-    return value === null ? null : formatChallengeTarget(value, this.translation.language());
   }
 
   private locale(): string {

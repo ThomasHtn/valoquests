@@ -1,0 +1,144 @@
+<!-- Every drawing shares one box (260 × 180) and one palette: `line` for what exists, `line` dotted
+     for what does not yet, `text-brand-500` (currentColor) for the mark the reader waits on. -->
+@switch (kind()) {
+  @case ('radar') {
+    <svg class="ill text-brand-500" viewBox="0 0 260 180">
+      <defs>
+        <linearGradient id="empty-sweep" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stop-color="currentColor" stop-opacity="0" />
+          <stop offset="1" stop-color="currentColor" stop-opacity="0.45" />
+        </linearGradient>
+      </defs>
+      <g class="stars">
+        <circle cx="22" cy="18" r="1" />
+        <circle cx="238" cy="30" r="1.2" />
+        <circle cx="206" cy="12" r="0.8" />
+        <circle cx="48" cy="150" r="0.9" />
+        <circle cx="230" cy="160" r="1" />
+      </g>
+      <g class="line">
+        <circle class="dotted" cx="130" cy="92" r="78" />
+        <circle class="dotted" cx="130" cy="92" r="54" />
+        <circle class="dotted" cx="130" cy="92" r="30" />
+        <line class="faint" x1="130" x2="130" y1="10" y2="174" />
+        <line class="faint" x1="48" x2="212" y1="92" y2="92" />
+      </g>
+      <g class="sweep">
+        <path d="M130 92 L130 14 A78 78 0 0 1 195 44 Z" fill="url(#empty-sweep)" />
+        <line stroke="currentColor" stroke-width="1.2" x1="130" x2="130" y1="92" y2="14" />
+      </g>
+      <polygon fill="currentColor" points="130,84 137,88 137,96 130,100 123,96 123,88" />
+      <g class="mark dotted" opacity="0.8">
+        <circle cx="172" cy="56" r="4" />
+        <circle cx="92" cy="128" r="3" />
+        <circle cx="182" cy="120" r="3" />
+      </g>
+    </svg>
+  }
+  @case ('road') {
+    <!-- The strip of `/campaign` before it exists: the base at the left, ten planets on one line,
+         the road dotted between them, the first planet in brand since it is where the squad starts. -->
+    <svg class="ill text-brand-500" viewBox="0 0 260 180">
+      <g class="stars">
+        <circle cx="30" cy="22" r="1" />
+        <circle cx="120" cy="16" r="0.8" />
+        <circle cx="228" cy="28" r="1.1" />
+        <circle cx="70" cy="52" r="0.7" />
+        <circle cx="176" cy="46" r="0.9" />
+        <circle cx="46" cy="150" r="0.8" />
+        <circle cx="150" cy="160" r="0.8" />
+        <circle cx="236" cy="142" r="1" />
+      </g>
+      <polygon fill="currentColor" points="14,82 21,86 21,94 14,98 7,94 7,86" />
+      <g class="road">
+        <line x1="23.5" x2="26.5" y1="90" y2="90" />
+        <line x1="45.5" x2="51.5" y1="90" y2="90" />
+        <line x1="66.5" x2="73.5" y1="90" y2="90" />
+        <line x1="90.5" x2="98.5" y1="90" y2="90" />
+        <line x1="111.5" x2="114.5" y1="90" y2="90" />
+        <line x1="141.5" x2="143.5" y1="90" y2="90" />
+        <line x1="158.5" x2="165.5" y1="90" y2="90" />
+        <line x1="182.5" x2="187.5" y1="90" y2="90" />
+        <line x1="206.5" x2="212.5" y1="90" y2="90" />
+        <line x1="227.5" x2="234.5" y1="90" y2="90" />
+      </g>
+      <g class="line">
+        <circle cx="59" cy="90" r="5" />
+        <circle cx="82" cy="90" r="6" />
+        <circle cx="105" cy="90" r="4" />
+        <circle cx="128" cy="90" r="8" />
+        <ellipse cx="128" cy="90" rx="14" ry="4" transform="rotate(-18 128 90)" />
+        <circle cx="151" cy="90" r="5" />
+        <circle cx="174" cy="90" r="6" />
+        <circle cx="197" cy="90" r="7" />
+        <circle cx="220" cy="90" r="5" />
+        <circle cx="246" cy="90" r="9" />
+        <circle class="faint" cx="246" cy="90" r="13" />
+      </g>
+      <g class="line faint">
+        <line x1="31" x2="41" y1="112" y2="112" />
+        <line x1="54" x2="64" y1="112" y2="112" />
+        <line x1="77" x2="87" y1="112" y2="112" />
+        <line x1="100" x2="110" y1="112" y2="112" />
+        <line x1="123" x2="133" y1="112" y2="112" />
+        <line x1="146" x2="156" y1="112" y2="112" />
+        <line x1="169" x2="179" y1="112" y2="112" />
+        <line x1="192" x2="202" y1="112" y2="112" />
+        <line x1="215" x2="225" y1="112" y2="112" />
+        <line x1="241" x2="251" y1="112" y2="112" />
+      </g>
+      <circle class="mark solid" cx="36" cy="90" r="7" />
+    </svg>
+  }
+  @case ('podium') {
+    <svg class="ill text-brand-500" viewBox="0 0 260 180">
+      <g class="stars">
+        <circle cx="24" cy="22" r="1" />
+        <circle cx="236" cy="18" r="1" />
+        <circle cx="200" cy="52" r="0.8" />
+        <circle cx="56" cy="70" r="0.7" />
+      </g>
+      <g class="line">
+        <path class="dotted" d="M60 150 V112 H110" />
+        <path class="dotted" d="M110 150 V84 H150 V150" />
+        <path class="dotted" d="M150 150 V124 H200 V150" />
+        <line x1="30" x2="230" y1="150" y2="150" />
+        <polygon class="dotted" points="85,86 93,90.5 93,99.5 85,104 77,99.5 77,90.5" />
+        <polygon class="dotted" points="175,98 183,102.5 183,111.5 175,116 167,111.5 167,102.5" />
+      </g>
+      <polygon class="mark dotted" points="130,54 139,59 139,69 130,74 121,69 121,59" />
+      <g class="digits">
+        <text fill="currentColor" font-size="11" x="126.5" y="68">1</text>
+        <text font-size="9" x="82.5" y="98">2</text>
+        <text font-size="9" x="172.5" y="110">3</text>
+      </g>
+    </svg>
+  }
+  @case ('draw') {
+    <svg class="ill text-brand-500" viewBox="0 0 260 180">
+      <g class="stars">
+        <circle cx="28" cy="26" r="1" />
+        <circle cx="232" cy="20" r="1" />
+        <circle cx="212" cy="70" r="0.8" />
+        <circle cx="40" cy="100" r="0.7" />
+      </g>
+      <g class="line dotted">
+        <circle cx="130" cy="72" r="46" />
+        <circle cx="130" cy="72" r="30" />
+        <circle cx="130" cy="72" r="14" />
+      </g>
+      <g fill="none" stroke="currentColor" stroke-width="1.2">
+        <line x1="130" x2="130" y1="60" y2="84" />
+        <line x1="118" x2="142" y1="72" y2="72" />
+      </g>
+      <g class="line dotted">
+        <polygon points="62,142 69,146 69,154 62,158 55,154 55,146" />
+        <polygon points="96,142 103,146 103,154 96,158 89,154 89,146" />
+        <polygon points="130,142 137,146 137,154 130,158 123,154 123,146" />
+        <polygon points="164,142 171,146 171,154 164,158 157,154 157,146" />
+        <polygon points="198,142 205,146 205,154 198,158 191,154 191,146" />
+      </g>
+      <polygon class="mark dotted" points="230,144 235,147 235,153 230,156 225,153 225,147" />
+    </svg>
+  }
+}

@@ -1,0 +1,31 @@
+<app-empty-illustration [kind]="plate().illustration" class="mb-1.5 h-60 w-[22.5rem] max-w-full" />
+
+<p
+  [class]="tone() === 'waiting' ? 'text-accent-cyan' : 'text-brand-500'"
+  class="label-caption tracking-label-wide flex items-center gap-2.5"
+>
+  <span aria-hidden="true" class="clip-hex h-2.5 w-[0.5625rem] shrink-0 bg-current"></span>
+  {{ plate().eyebrow }}
+</p>
+
+<h2 class="font-display text-3xl leading-[1.1] font-bold text-text-primary uppercase">
+  {{ plate().title }}
+</h2>
+
+<p class="max-w-[64ch] text-prose text-text-secondary">{{ plate().text }}</p>
+
+@if (plate().readouts.length > 0) {
+  <ul class="mt-1.5 flex flex-wrap justify-center gap-x-7 gap-y-2">
+    @for (readout of plate().readouts; track readout.label) {
+      <li class="label-caption flex items-center gap-2 text-text-muted">
+        <span
+          [class]="readoutTones[readout.tone].dot"
+          aria-hidden="true"
+          class="h-[7px] w-[7px] shrink-0 rounded-full border"
+        ></span>
+        <span class="text-text-secondary">{{ readout.label }}</span>
+        <span [class]="readoutTones[readout.tone].value">{{ readout.value }}</span>
+      </li>
+    }
+  </ul>
+}

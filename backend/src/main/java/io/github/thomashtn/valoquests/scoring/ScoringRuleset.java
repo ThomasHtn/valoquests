@@ -101,14 +101,16 @@ public interface ScoringRuleset {
     /**
      * Returns the points one validated challenge adds to its player's weekly ranking.
      *
-     * <p>Sized so a perfect week of challenges weighs about a fifth of a median week of guardian
-     * damage: a substantial bonus, never a mandatory path.
+     * <p>One point per wounded it brings back, so the ranking reads as guardian damage plus wounded
+     * and the two pillars share one figure per challenge. Priced at the reference in force, so a
+     * challenge validated between two campaigns still pays.
      *
      * @param reference reference in force, the weekly output one active player is expected to produce
      * @param weight    challenge weight from {@link #challengeWeight}
-     * @return ranking points, rounded once
+     * @param weekIndex one-based week inside the campaign, driving the reward progression
+     * @return ranking points, equal to {@link #challengeSurvivors}
      */
-    int challengeRankingPoints(int reference, double weight);
+    int challengeRankingPoints(int reference, double weight, int weekIndex);
 
     /**
      * Returns the lowest reference any campaign can be calibrated at, and the reference used when no

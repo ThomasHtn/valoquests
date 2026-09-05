@@ -255,16 +255,16 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
      * competitive match a day over four consecutive days, so the streak bonus climbs by 2 % a day:
      * WIN 500 + LOSS 350 × 1.02 + WIN 500 × 1.04 + LOSS 350 × 1.06 = 500 + 357 + 520 + 371 = 1748.
      * Bravo plays two matches a day over two days: LOSS 350 + LOSS 350, then WIN 500 × 1.02 + LOSS
-     * 350 × 1.02 = 700 + 510 + 357 = 1567. Alpha completes all five weekly challenges (20 + 34 + 54
-     * + 78 + 108 = 294 points at the 2 000 floor), bravo only the EASY kills challenge (20); each may
+     * 350 × 1.02 = 700 + 510 + 357 = 1567. Alpha completes all five weekly challenges (2 + 3 + 5
+     * + 8 + 11 = 29 points at the 2 000 floor), bravo only the EASY kills challenge (2); each may
      * also have validated the day's challenge, which is read back rather than assumed.
      */
     private void assertCurrentRanking(Player alpha, Player bravo) {
         List<WeeklyPlayerScore> scores = loadScores(COMPETITION_WEEK_START);
 
         assertThat(scores).hasSize(2);
-        assertScore(scores.get(0), alpha, 1_748, 294 + dailyPoints(alpha), 5, 1, null, null);
-        assertScore(scores.get(1), bravo, 1_567, 20 + dailyPoints(bravo), 1, 2, null, null);
+        assertScore(scores.get(0), alpha, 1_748, 29 + dailyPoints(alpha), 5, 1, null, null);
+        assertScore(scores.get(1), bravo, 1_567, 2 + dailyPoints(bravo), 1, 2, null, null);
     }
 
     /**
@@ -281,8 +281,8 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
 
         List<WeeklyPlayerScore> scores = loadScores(COMPETITION_WEEK_START);
         assertThat(scores).hasSize(2);
-        assertScore(scores.get(0), alpha, 1_748, 294 + dailyPoints(alpha), 5, 1, 1, ROLLOVER_TIME);
-        assertScore(scores.get(1), bravo, 1_567, 20 + dailyPoints(bravo), 1, 2, 2, ROLLOVER_TIME);
+        assertScore(scores.get(0), alpha, 1_748, 29 + dailyPoints(alpha), 5, 1, 1, ROLLOVER_TIME);
+        assertScore(scores.get(1), bravo, 1_567, 2 + dailyPoints(bravo), 1, 2, 2, ROLLOVER_TIME);
     }
 
     /**
@@ -407,7 +407,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
      * @return the points those dailies add
      */
     private int dailyPoints(Player player) {
-        return completedDailies(player) * 24;
+        return completedDailies(player) * 2;
     }
 
     /**

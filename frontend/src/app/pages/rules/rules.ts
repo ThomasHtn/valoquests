@@ -1,12 +1,4 @@
-import {
-  AfterViewInit,
-  Component,
-  computed,
-  DestroyRef,
-  ElementRef,
-  inject,
-  signal,
-} from '@angular/core';
+import { AfterViewInit, Component, computed, DestroyRef, ElementRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
@@ -26,36 +18,39 @@ import { resolveDifficultyVisual } from '@core/challenges/challenge-visual.utils
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
 import { PageHeader } from '@layout/page-header/page-header';
-import { RuleContents } from './rule-contents/rule-contents';
 import { RuleSection } from './rule-section/rule-section';
 import { RuleText } from './rule-text/rule-text';
 import {
+  CALIBRATION_FACT_KEYS,
   CAMPAIGN_WEEKS,
   CHALLENGE_WORTH,
   CONSTANT_KEYS,
-  DAY_STEP_KEYS,
   DECAY_LADDER,
+  EXAMPLE_OPERATORS,
   EXAMPLE_REFERENCE,
-  FAMINE_LADDER,
+  GROUP_FACTOR,
+  GUARDIAN_FACTOR,
   GUARDIAN_LOSS_LADDER,
-  LOOP_KEYS,
-  MATCH_DAMAGE,
-  REFERENCE_FLOOR,
-  RESOURCE_EXAMPLES,
+  LIFECYCLE_KEYS,
+  MODE_GROUPS,
+  PROGRESSION_PER_WEEK,
   STREAK_LADDER,
-  STREAK_RULE_KEYS,
+  SUNDAY_EXAMPLE,
+  SUNDAY_TERM_KEYS,
   TIER_BANDS,
-  UPKEEP_LADDER,
+  WEEK_STEP_KEYS,
 } from './rules.constants';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 
 /**
  * Rules page.
  *
- * `docs/GAMEPLAY.md`, read top to bottom: one section per chapter, each pairing a short narrative
- * with the numbers behind it, for anyone landing on the tracker without prior context. The figures
- * are the document's, not a campaign's: the page explains the game as written.
+ * `docs/GAMEPLAY.md` in eight numbered sections, each stating its rule in one sentence and
+ * pairing a short description with the figures behind it, for anyone landing on the tracker
+ * without prior context. The figures are the document's, not a campaign's: the page explains the
+ * game as written, and its worked examples are sized on the squad the document itself uses.
  */
 @Component({
   selector: 'app-rules',
@@ -71,7 +66,6 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     LucideWrench,
     LucideZap,
     PageHeader,
-    RuleContents,
     RuleSection,
     RuleText,
   ],
@@ -88,38 +82,31 @@ export class Rules implements AfterViewInit {
 
   private readonly destroyRef = inject(DestroyRef);
 
-  /**
-   * Fragment of the section on screen, marked in the contents rail.
-   */
-  protected readonly activeAnchor = signal<string | null>(null);
+  protected readonly anchor = RULE_ANCHOR;
 
   protected readonly exampleReference = EXAMPLE_REFERENCE;
 
-  protected readonly referenceFloor = REFERENCE_FLOOR;
+  protected readonly exampleOperators = EXAMPLE_OPERATORS;
 
-  protected readonly loopKeys = LOOP_KEYS;
-
-  protected readonly matchDamage = MATCH_DAMAGE;
-
-  protected readonly resourceExamples = RESOURCE_EXAMPLES;
+  protected readonly modeGroups = MODE_GROUPS;
 
   protected readonly decayLadder = DECAY_LADDER;
 
   protected readonly streakLadder = STREAK_LADDER;
 
-  protected readonly streakRuleKeys = STREAK_RULE_KEYS;
+  protected readonly weekStepKeys = WEEK_STEP_KEYS;
 
-  protected readonly dayStepKeys = DAY_STEP_KEYS;
+  protected readonly sundayTermKeys = SUNDAY_TERM_KEYS;
 
-  protected readonly upkeepLadder = UPKEEP_LADDER;
-
-  protected readonly famineLadder = FAMINE_LADDER;
+  protected readonly sundayExample = SUNDAY_EXAMPLE;
 
   protected readonly guardianLossLadder = GUARDIAN_LOSS_LADDER;
 
-  protected readonly campaignWeeks = CAMPAIGN_WEEKS;
+  protected readonly lifecycleKeys = LIFECYCLE_KEYS;
 
   protected readonly tierBands = TIER_BANDS;
+
+  protected readonly calibrationFactKeys = CALIBRATION_FACT_KEYS;
 
   protected readonly constantKeys = CONSTANT_KEYS;
 
@@ -135,6 +122,21 @@ export class Rules implements AfterViewInit {
     ...worth,
     visual: resolveDifficultyVisual(worth.difficulty),
   }));
+
+  /**
+   * The ten weeks sized for the example squad: the document's two weights turned into the hit
+   * points and the wounded a reader can picture, rounded to the hundred and to the ten.
+   */
+  protected readonly campaignWeeks = CAMPAIGN_WEEKS.map((week, index) => {
+    const weekly = EXAMPLE_REFERENCE * EXAMPLE_OPERATORS;
+    const progression = 1 + PROGRESSION_PER_WEEK * index;
+    return {
+      ...week,
+      number: index + 1,
+      hitPoints: Math.round((weekly * GUARDIAN_FACTOR * week.guardian) / 100) * 100,
+      wounded: Math.round((weekly * GROUP_FACTOR * week.group * progression) / 10) * 10,
+    };
+  });
 
   /**
    * The colour a guardian's category is drawn in, the campaign page's own.
@@ -171,28 +173,26 @@ export class Rules implements AfterViewInit {
   }
 
   /**
-   * Formats a weight, `× 1,30`.
+   * Formats a challenge's weight, `× 1,7`.
    *
    * @param value - The multiplier.
    * @returns The formatted multiplier.
    */
   protected times(value: number): string {
-    const digits = new Intl.NumberFormat(this.locale(), {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+    const formatted = new Intl.NumberFormat(this.locale(), {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
     }).format(value);
-    return `× ${digits}`;
+    return `× ${formatted}`;
   }
 
   /**
-   * Starts following the reader's scroll, and honours the fragment they arrived on.
+   * Honours the fragment the reader arrived on.
    *
    * Scrolled by hand rather than through the router's `anchorScrolling`, which scrolls the
    * document: this application's document never scrolls, every page's own `page-body` does.
    */
   public ngAfterViewInit(): void {
-    this.observeSections();
-
     this.route.fragment.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((fragment) => {
       if (fragment !== null) {
         this.scrollTo(fragment);
@@ -200,46 +200,8 @@ export class Rules implements AfterViewInit {
     });
   }
 
-  /**
-   * Scrolls a section into view and marks it current.
-   *
-   * @param anchor - Fragment of the section to reveal.
-   */
-  protected scrollTo(anchor: string): void {
+  private scrollTo(anchor: string): void {
     const target = this.host.nativeElement.querySelector(`#${CSS.escape(anchor)}`);
-    if (target === null) {
-      return;
-    }
-
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    this.activeAnchor.set(anchor);
-  }
-
-  /**
-   * Follows which section is on screen, so the contents rail can mark it. Rooted on `page-body`,
-   * the scroller; the bottom margin pulls the observation line up to the top third of the column.
-   */
-  private observeSections(): void {
-    const root = this.host.nativeElement.querySelector('.page-body');
-    const sections = [...this.host.nativeElement.querySelectorAll('section[id]')];
-    if (root === null || sections.length === 0) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const onScreen = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-
-        if (onScreen.length > 0) {
-          this.activeAnchor.set(onScreen[0].target.id);
-        }
-      },
-      { root, rootMargin: '0px 0px -66% 0px', threshold: 0 },
-    );
-
-    sections.forEach((section) => observer.observe(section));
-    this.destroyRef.onDestroy(() => observer.disconnect());
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }

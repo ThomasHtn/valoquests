@@ -106,7 +106,7 @@ class DefaultChallengeCatalogueQueryServiceTest {
         assertThat(veryHard.targetValue()).isEqualByComparingTo(BigDecimal.valueOf(180));
         // 10 600 x 5.4 / 1 000 x 1.08 (third week) = 61.8.
         assertThat(veryHard.survivors()).isEqualTo(62);
-        assertThat(veryHard.rankingPoints()).isEqualTo(572);
+        assertThat(veryHard.rankingPoints()).isEqualTo(62);
 
         ChallengeCatalogueResponse.ChallengeCatalogueEntry daily = response.challenges().getLast();
         assertThat(daily.cadence()).isEqualTo(ChallengeCadence.DAILY);
@@ -116,7 +116,7 @@ class DefaultChallengeCatalogueQueryServiceTest {
         // daily; the bar itself moved to 20 x 0.85 = 17 kills.
         assertThat(daily.targetValue()).isEqualByComparingTo(BigDecimal.ONE);
         assertThat(daily.survivors()).isEqualTo(14);
-        assertThat(daily.rankingPoints()).isEqualTo(127);
+        assertThat(daily.rankingPoints()).isEqualTo(14);
     }
 
     /**
@@ -139,7 +139,7 @@ class DefaultChallengeCatalogueQueryServiceTest {
 
         assertThat(entry.targetValue()).isEqualByComparingTo(BigDecimal.valueOf(40));
         assertThat(entry.survivors()).isEqualTo(2);
-        assertThat(entry.rankingPoints()).isEqualTo(20);
+        assertThat(entry.rankingPoints()).isEqualTo(2);
     }
 
     /**

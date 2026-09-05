@@ -5,8 +5,7 @@ import { ChallengeDifficulty } from '@core/challenges/challenge.model';
  * The figures the rules page quotes, copied from `docs/GAMEPLAY.md`.
  *
  * Static on purpose: the page explains the game as it is written, not as a given campaign happens
- * to be sized. The one live figure, the reference a squad is measured at, is shown as the example
- * the document itself uses.
+ * to be sized. The worked examples are computed on the squad the document itself uses.
  */
 
 /**
@@ -15,62 +14,71 @@ import { ChallengeDifficulty } from '@core/challenges/challenge.model';
 export const EXAMPLE_REFERENCE = 5_300;
 
 /**
- * Floor a squad's reference never goes under.
+ * Active operators of the squad the campaign example is sized for.
  */
-export const REFERENCE_FLOOR = 2_000;
+export const EXAMPLE_OPERATORS = 7;
 
 /**
- * The four loops, from the fastest to the slowest.
+ * Share of the squad's weekly reference a guardian's hit points are set at.
  */
-export const LOOP_KEYS: readonly string[] = ['sync', 'daily', 'weekly', 'campaign'];
+export const GUARDIAN_FACTOR = 0.78;
 
 /**
- * What a match is worth by mode and outcome, with how long one lasts on average.
+ * Share of the squad's weekly reference a week's group of wounded is set at.
+ */
+export const GROUP_FACTOR = 0.05;
+
+/**
+ * Linear growth of groups and challenge rewards, per campaign week past the first.
+ */
+export const PROGRESSION_PER_WEEK = 0.04;
+
+/**
+ * What a match is worth by mode and outcome.
  */
 export interface MatchDamageRow {
   readonly key: string;
   readonly loss: number;
   readonly draw: number | null;
   readonly win: number;
-  readonly minutes: number;
-
-  /**
-   * Share of the value that becomes food, the rest being components.
-   */
-  readonly foodPercent: number;
 }
 
-export const MATCH_DAMAGE: readonly MatchDamageRow[] = [
-  { key: 'competitive', loss: 350, draw: 425, win: 500, minutes: 35, foodPercent: 30 },
-  { key: 'unrated', loss: 320, draw: 390, win: 460, minutes: 33, foodPercent: 30 },
-  { key: 'teamDeathmatch', loss: 110, draw: 135, win: 160, minutes: 10, foodPercent: 70 },
-  { key: 'spikeRush', loss: 110, draw: null, win: 150, minutes: 9, foodPercent: 70 },
-  { key: 'deathmatch', loss: 100, draw: null, win: 150, minutes: 9, foodPercent: 70 },
-  { key: 'skirmish', loss: 90, draw: 110, win: 130, minutes: 6, foodPercent: 70 },
-];
-
 /**
- * Four matches, split into the two resources.
+ * The modes, grouped by how their value splits into food and components: the split is the group's,
+ * not the mode's, so it is stated once per group.
  */
-export interface ResourceExample {
+export interface ModeGroup {
   readonly key: string;
-  readonly total: number;
-  readonly food: number;
-  readonly components: number;
+  readonly foodPercent: number;
+  readonly modes: readonly MatchDamageRow[];
 }
 
-export const RESOURCE_EXAMPLES: readonly ResourceExample[] = [
-  { key: 'competitiveWin', total: 500, food: 150, components: 350 },
-  { key: 'competitiveLoss', total: 350, food: 105, components: 245 },
-  { key: 'deathmatchWin', total: 150, food: 105, components: 45 },
-  { key: 'deathmatchLoss', total: 100, food: 70, components: 30 },
+export const MODE_GROUPS: readonly ModeGroup[] = [
+  {
+    key: 'long',
+    foodPercent: 30,
+    modes: [
+      { key: 'competitive', loss: 350, draw: 425, win: 500 },
+      { key: 'unrated', loss: 320, draw: 390, win: 460 },
+    ],
+  },
+  {
+    key: 'short',
+    foodPercent: 70,
+    modes: [
+      { key: 'teamDeathmatch', loss: 110, draw: 135, win: 160 },
+      { key: 'spikeRush', loss: 110, draw: null, win: 150 },
+      { key: 'deathmatch', loss: 100, draw: null, win: 150 },
+      { key: 'skirmish', loss: 90, draw: 110, win: 130 },
+    ],
+  },
 ];
 
 /**
- * A step of a ladder: a label and the percentage it applies.
+ * A step of a ladder: a label key and the percentage it applies.
  */
 export interface LadderStep {
-  readonly label: string;
+  readonly key: string;
   readonly percent: number;
 }
 
@@ -78,100 +86,101 @@ export interface LadderStep {
  * Daily diminishing returns, by rank of the match in the day.
  */
 export const DECAY_LADDER: readonly LadderStep[] = [
-  { label: '1 – 5', percent: 100 },
-  { label: '6 – 9', percent: 50 },
-  { label: '10+', percent: 25 },
+  { key: 'first', percent: 100 },
+  { key: 'next', percent: 50 },
+  { key: 'rest', percent: 25 },
 ];
 
 /**
- * Streak bonus, by consecutive days played.
+ * Streak bonus, by consecutive days played; the last step is open-ended.
  */
-export const STREAK_LADDER: readonly LadderStep[] = [
-  { label: '1', percent: 0 },
-  { label: '2', percent: 2 },
-  { label: '3', percent: 4 },
-  { label: '4', percent: 6 },
-  { label: '5', percent: 8 },
-  { label: '6+', percent: 10 },
-];
-
-/**
- * The rules of the streak, in the order the document states them.
- */
-export const STREAK_RULE_KEYS: readonly string[] = [
-  'individual',
-  'valued',
-  'wholeDay',
-  'calendar',
-  'neverStops',
-  'everything',
-];
-
-/**
- * What a day does, in order.
- */
-export const DAY_STEP_KEYS: readonly string[] = ['grow', 'guardian', 'eat', 'daily'];
-
-/**
- * Share of the squad's food the base's upkeep absorbs, by campaign week.
- */
-export const UPKEEP_LADDER: readonly LadderStep[] = [
-  { label: '1', percent: 0.7 },
-  { label: '3', percent: 2.6 },
-  { label: '5', percent: 5.1 },
-  { label: '7', percent: 7.2 },
-  { label: '9', percent: 9.6 },
-  { label: '10', percent: 11 },
-];
-
-/**
- * Inhabitants lost by evenings of famine.
- */
-export interface FamineStep {
-  readonly evenings: number;
+export interface StreakStep {
+  readonly days: number;
   readonly percent: number;
+  readonly open: boolean;
 }
 
-export const FAMINE_LADDER: readonly FamineStep[] = [
-  { evenings: 1, percent: 5 },
-  { evenings: 3, percent: 14 },
-  { evenings: 5, percent: 23 },
-  { evenings: 7, percent: 30 },
+export const STREAK_LADDER: readonly StreakStep[] = [
+  { days: 1, percent: 0, open: false },
+  { days: 2, percent: 2, open: false },
+  { days: 3, percent: 4, open: false },
+  { days: 4, percent: 6, open: false },
+  { days: 5, percent: 8, open: false },
+  { days: 6, percent: 10, open: true },
+];
+
+/**
+ * What a day of the week does, in order.
+ */
+export const WEEK_STEP_KEYS: readonly string[] = ['sync', 'midnight', 'sunday', 'monday'];
+
+/**
+ * The three limits of Sunday's extraction, then what they add up to.
+ */
+export const SUNDAY_TERM_KEYS: readonly string[] = ['seats', 'beds', 'breach', 'rescued'];
+
+/**
+ * Sunday's worked example, one line per figure, on a group of forty wounded.
+ */
+export interface SundayExampleRow {
+  readonly key: string;
+  readonly value: string;
+  readonly emphasised: boolean;
+}
+
+export const SUNDAY_EXAMPLE: readonly SundayExampleRow[] = [
+  { key: 'challenges', value: '12', emphasised: true },
+  { key: 'remaining', value: '28', emphasised: false },
+  { key: 'seats', value: '30', emphasised: false },
+  { key: 'beds', value: '20', emphasised: false },
+  { key: 'extraction', value: '15', emphasised: false },
+  { key: 'rescued', value: '12 + 15 = 27', emphasised: true },
 ];
 
 /**
  * What a surviving guardian takes from the base, by breach reached.
  */
-export const GUARDIAN_LOSS_LADDER: readonly LadderStep[] = [
-  { label: '99 %', percent: 0.004 },
-  { label: '93 %', percent: 0.2 },
-  { label: '84 %', percent: 0.9 },
-  { label: '70 %', percent: 3.2 },
-  { label: '20 %', percent: 22 },
+export interface LossStep {
+  readonly breach: number;
+  readonly percent: number;
+}
+
+export const GUARDIAN_LOSS_LADDER: readonly LossStep[] = [
+  { breach: 99, percent: 0.004 },
+  { breach: 84, percent: 0.9 },
+  { breach: 70, percent: 3.2 },
+  { breach: 20, percent: 22 },
+  { breach: 0, percent: 35 },
 ];
 
 /**
  * The ten weeks of a campaign: the guardian's category and the two weights, in shares of the
- * squad's reference.
+ * squad's reference. `how` names the weeks whose shape is worth a word.
  */
 export interface CampaignWeekShape {
   readonly category: GuardianCategory;
   readonly guardian: number;
   readonly group: number;
+  readonly how: boolean;
 }
 
 export const CAMPAIGN_WEEKS: readonly CampaignWeekShape[] = [
-  { category: 'MINOR', guardian: 0.6, group: 1 },
-  { category: 'STANDARD', guardian: 0.8, group: 1.3 },
-  { category: 'STANDARD', guardian: 0.95, group: 0.9 },
-  { category: 'STANDARD', guardian: 0.85, group: 1.1 },
-  { category: 'ELITE', guardian: 1.3, group: 1.5 },
-  { category: 'MINOR', guardian: 0.6, group: 1.2 },
-  { category: 'STANDARD', guardian: 1, group: 0.8 },
-  { category: 'STANDARD', guardian: 0.9, group: 1.1 },
-  { category: 'STANDARD', guardian: 0.95, group: 1 },
-  { category: 'ELITE', guardian: 1.35, group: 2 },
+  { category: 'MINOR', guardian: 0.6, group: 1, how: true },
+  { category: 'STANDARD', guardian: 0.8, group: 1.3, how: false },
+  { category: 'STANDARD', guardian: 0.95, group: 0.9, how: false },
+  { category: 'STANDARD', guardian: 0.85, group: 1.1, how: false },
+  { category: 'ELITE', guardian: 1.3, group: 1.5, how: true },
+  { category: 'MINOR', guardian: 0.6, group: 1.2, how: true },
+  { category: 'STANDARD', guardian: 1, group: 0.8, how: true },
+  { category: 'STANDARD', guardian: 0.9, group: 1.1, how: false },
+  { category: 'STANDARD', guardian: 0.95, group: 1, how: false },
+  { category: 'ELITE', guardian: 1.35, group: 2, how: true },
 ];
+
+/**
+ * The campaign's life, in order.
+ */
+export const LIFECYCLE_KEYS: readonly string[] = ['open', 'start', 'close', 'between'];
 
 /**
  * The tiers, with the reference each spans.
@@ -190,22 +199,26 @@ export const TIER_BANDS: readonly TierBand[] = [
 ];
 
 /**
+ * How the reference is read, in the order the document states it.
+ */
+export const CALIBRATION_FACT_KEYS: readonly string[] = ['window', 'emptyWeeks', 'floor', 'once'];
+
+/**
  * What a challenge is worth, by cadence and difficulty, at the example reference.
  */
 export interface ChallengeWorth {
   readonly difficulty: ChallengeDifficulty | null;
   readonly weight: number;
   readonly survivors: number;
-  readonly points: number;
 }
 
 export const CHALLENGE_WORTH: readonly ChallengeWorth[] = [
-  { difficulty: null, weight: 1.2, survivors: 6, points: 64 },
-  { difficulty: 'EASY', weight: 1, survivors: 5, points: 53 },
-  { difficulty: 'NORMAL', weight: 1.7, survivors: 9, points: 90 },
-  { difficulty: 'MEDIUM', weight: 2.7, survivors: 14, points: 143 },
-  { difficulty: 'HARD', weight: 3.9, survivors: 21, points: 207 },
-  { difficulty: 'VERY_HARD', weight: 5.4, survivors: 29, points: 286 },
+  { difficulty: null, weight: 1.2, survivors: 6 },
+  { difficulty: 'EASY', weight: 1, survivors: 5 },
+  { difficulty: 'NORMAL', weight: 1.7, survivors: 9 },
+  { difficulty: 'MEDIUM', weight: 2.7, survivors: 14 },
+  { difficulty: 'HARD', weight: 3.9, survivors: 21 },
+  { difficulty: 'VERY_HARD', weight: 5.4, survivors: 29 },
 ];
 
 /**

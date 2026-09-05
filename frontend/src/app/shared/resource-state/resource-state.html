@@ -33,26 +33,33 @@
     [class]="padding()"
     class="flex flex-col items-center gap-3 text-center"
   >
-    <span
-      [class]="emptyGlyphClass()"
-      class="clip-hex flex h-12 w-11 shrink-0 items-center justify-center"
-    >
-      @switch (emptyKind()) {
-        @case ('waiting') {
-          <svg class="h-5 w-5" lucideHourglass></svg>
+    @if (emptyPlate(); as plate) {
+      <app-empty-plate
+        [plate]="plate"
+        [tone]="emptyKind() === 'waiting' ? 'waiting' : 'creation'"
+      />
+    } @else {
+      <span
+        [class]="emptyGlyphClass()"
+        class="clip-hex flex h-12 w-11 shrink-0 items-center justify-center"
+      >
+        @switch (emptyKind()) {
+          @case ('waiting') {
+            <svg class="h-5 w-5" lucideHourglass></svg>
+          }
+          @case ('creation') {
+            <svg class="h-5 w-5" lucidePlus></svg>
+          }
+          @case ('anomaly') {
+            <svg class="h-5 w-5" lucideTriangleAlert></svg>
+          }
+          @default {
+            <svg class="h-5 w-5" lucideFilter></svg>
+          }
         }
-        @case ('creation') {
-          <svg class="h-5 w-5" lucidePlus></svg>
-        }
-        @case ('anomaly') {
-          <svg class="h-5 w-5" lucideTriangleAlert></svg>
-        }
-        @default {
-          <svg class="h-5 w-5" lucideFilter></svg>
-        }
-      }
-    </span>
-    <p class="text-prose text-text-secondary">{{ emptyText() }}</p>
+      </span>
+      <p class="text-prose text-text-secondary">{{ emptyText() }}</p>
+    }
 
     <!-- The way out of the empty state, projected by the caller: the filter to clear, the record to
          create, the operation to run. An empty screen is an invitation to act, and eleven of these

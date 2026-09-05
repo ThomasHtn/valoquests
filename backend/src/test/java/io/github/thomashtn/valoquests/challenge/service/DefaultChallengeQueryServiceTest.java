@@ -157,7 +157,7 @@ class DefaultChallengeQueryServiceTest {
         assertThat(easyEntry.metric()).isEqualTo("KILLS");
         assertThat(easyEntry.targetValue()).isEqualByComparingTo(BigDecimal.valueOf(3));
         assertThat(easyEntry.survivors()).isEqualTo(5);
-        assertThat(easyEntry.rankingPoints()).isEqualTo(53);
+        assertThat(easyEntry.rankingPoints()).isEqualTo(5);
         // The inactive player's completion never inflates the collective count.
         assertThat(easyEntry.completedPlayers()).isEqualTo(1);
         assertThat(easyEntry.totalPlayers()).isEqualTo(4);
@@ -171,7 +171,7 @@ class DefaultChallengeQueryServiceTest {
         assertThat(todayEntry.cadence()).isEqualTo(ChallengeCadence.DAILY);
         assertThat(todayEntry.difficulty()).isNull();
         assertThat(todayEntry.survivors()).isEqualTo(6);
-        assertThat(todayEntry.rankingPoints()).isEqualTo(64);
+        assertThat(todayEntry.rankingPoints()).isEqualTo(6);
         assertThat(todayEntry.completedPlayers()).isEqualTo(1);
         assertThat(todayEntry.completedPlayerIds()).containsExactly(2L);
     }

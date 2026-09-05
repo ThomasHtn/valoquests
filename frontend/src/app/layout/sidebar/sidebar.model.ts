@@ -18,6 +18,17 @@ export type NavIcon =
   | 'flag';
 
 /**
+ * Chapter of the navigation: a caption over the entries it gathers.
+ */
+export interface NavGroup {
+  /**
+   * Suffix appended to `sidebar.group.` to resolve the caption.
+   */
+  readonly labelKey: string;
+  readonly items: readonly NavItem[];
+}
+
+/**
  * Primary navigation entry.
  */
 export interface NavItem {

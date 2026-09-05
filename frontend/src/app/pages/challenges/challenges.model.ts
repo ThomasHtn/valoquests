@@ -39,11 +39,6 @@ export interface ChallengeCard {
   readonly competitiveOnly: boolean;
   readonly name: string;
   readonly description: string;
-  /**
-   * Resolved target as drawn, formatted; `null` for a composite challenge with no single target.
-   * The description keeps the catalogue's base figure, so this is where the real one is read.
-   */
-  readonly target: string | null;
 
   /**
    * Wounded one operator brings back by validating it.

@@ -1,0 +1,91 @@
+.ill {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The scene's own line colour, between `surface-600` and the text greys. */
+.line {
+  fill: none;
+  stroke: #5b7688;
+  stroke-width: 1;
+}
+
+.dotted {
+  stroke-dasharray: 2 4;
+}
+
+.faint {
+  stroke-opacity: 0.5;
+}
+
+/* The road between planets: the strip's own dashed segment, scaled down. */
+.road {
+  fill: none;
+  stroke: #5b7688;
+  stroke-width: 1.5;
+  stroke-dasharray: 2 2;
+}
+
+/* The thing the reader waits on: brand, still dotted because it does not exist yet. */
+.mark {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+/* Planets are drawn full, unlike the rest: dotted at this size they vanish. */
+.mark.solid {
+  stroke-dasharray: none;
+  stroke-width: 1.25;
+}
+
+.stars {
+  fill: #cfe4ee;
+}
+
+.digits {
+  fill: #5b7688;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.sweep {
+  transform-box: view-box;
+  transform-origin: 130px 92px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sweep {
+    animation: sweep 6s linear infinite;
+  }
+
+  .stars circle {
+    animation: twinkle 3.2s ease-in-out infinite alternate;
+  }
+
+  .stars circle:nth-child(2n) {
+    animation-delay: -1.4s;
+  }
+
+  .stars circle:nth-child(3n) {
+    animation-delay: -2.3s;
+  }
+}
+
+@keyframes sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes twinkle {
+  from {
+    opacity: 0.35;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

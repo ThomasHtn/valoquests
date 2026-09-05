@@ -83,6 +83,7 @@ public class RankingProgressMapper {
      */
     public WeekBoard forWeek(LocalDate weekStart, LocalDate today, Collection<Long> playerIds) {
         int reference = challengePointsReader.referenceFor(weekStart);
+        int weekIndex = challengePointsReader.weekIndexFor(weekStart);
 
         List<WeeklyChallenge> selections = weeklyChallengeRepository
             .findAllByWeekStartOrderByIdAsc(weekStart)
@@ -105,7 +106,7 @@ public class RankingProgressMapper {
             List<ChallengeProgressResponse> lines = new ArrayList<>(selections.size());
 
             for (WeeklyChallenge selection : selections) {
-                lines.add(toLine(selection, rows.get(selection.getId()), reference));
+                lines.add(toLine(selection, rows.get(selection.getId()), reference, weekIndex));
             }
 
             board.put(playerId, List.copyOf(lines));
@@ -124,12 +125,14 @@ public class RankingProgressMapper {
      * @param selection selected challenge
      * @param progress  the player's stored progress, or {@code null} when not evaluated yet
      * @param reference reference in force for the week
+     * @param weekIndex campaign week of that week, {@code 0} between two campaigns
      * @return the line
      */
     private ChallengeProgressResponse toLine(
         WeeklyChallenge selection,
         PlayerChallengeProgress progress,
-        int reference
+        int reference,
+        int weekIndex
     ) {
         ChallengeDefinition definition = definitionParser.parse(selection);
         Challenge challenge = selection.getChallenge();
@@ -153,7 +156,7 @@ public class RankingProgressMapper {
             progress == null ? definition.progressTarget() : progress.getTargetValue(),
             unit,
             progress != null && progress.isCompleted(),
-            challengePointsReader.pointsOf(selection, reference)
+            challengePointsReader.pointsOf(selection, reference, weekIndex)
         );
     }
 

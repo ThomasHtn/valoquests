@@ -1,12 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  LucideChevronDown,
-  LucideChevronRight,
-  LucideChevronUp,
-  LucideFlame,
-} from '@lucide/angular';
+import { LucideChevronDown, LucideChevronRight, LucideChevronUp } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -55,7 +50,6 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     LucideChevronDown,
     LucideChevronRight,
     LucideChevronUp,
-    LucideFlame,
     Avatar,
     ChampionBadge,
     ProgressBar,
@@ -94,18 +88,6 @@ export class Players {
    * Reactive resource fetching every tracked player's summary.
    */
   protected readonly playersResource = this.playersApi.players;
-
-  /**
-   * Today's board, by operator: whether they played yet, and the streak they are on. The day is
-   * the backend's own, so the dot never lights an hour early.
-   */
-  private readonly today = computed(() => {
-    const byId = new Map<number, { readonly played: boolean; readonly streak: number }>();
-    for (const entry of resourceValue(this.rankingApi.daily, null)?.ranking ?? []) {
-      byId.set(entry.playerId, { played: entry.matchCount > 0, streak: entry.streakDays });
-    }
-    return byId;
-  });
 
   /**
    * Placeholder line widths driving the loading skeleton.
@@ -233,8 +215,6 @@ export class Players {
       headshotPercentage: player.headshotPercentage,
       matchesPlayed: player.matchesPlayed,
       inCampaign: player.status === 'ACTIVE',
-      playedToday: this.today().get(player.id)?.played ?? false,
-      streakDays: this.today().get(player.id)?.streak ?? 0,
     };
   }
 

@@ -29,6 +29,15 @@
   background: rgb(224 64 78 / 6%);
 }
 
+/* The line a group of modes shares: what the modes under it have in common, stated once. */
+.rule-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 0 0.375rem;
+  border-bottom: 1px solid rgb(236 232 225 / 8%);
+}
+
 /* A remark set apart from the flow: flat tint and a leading rule, the block's own colour. */
 .rule-note {
   padding: 0.75rem 0.875rem;

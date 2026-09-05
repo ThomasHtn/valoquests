@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { LucideTarget, LucideUsers, LucideZap } from '@lucide/angular';
+import { LucideUsers, LucideZap } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { ChallengeCard } from '../challenges.model';
@@ -12,7 +12,7 @@ import { ChallengeCard } from '../challenges.model';
  */
 @Component({
   selector: 'app-challenge-card',
-  imports: [TranslatePipe, LucideTarget, LucideUsers, LucideZap],
+  imports: [TranslatePipe, LucideUsers, LucideZap],
   templateUrl: './challenge-card.html',
   styleUrl: './challenge-card.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

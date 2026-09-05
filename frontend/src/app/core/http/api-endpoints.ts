@@ -95,15 +95,6 @@ export const API_ENDPOINTS = {
   campaignHistory: `${environment.apiBaseUrl}/campaign/history`,
 
   /**
-   * `GET` one tracked player's contribution to the week and to the live campaign.
-   *
-   * @param playerId - Internal player identifier.
-   * @returns The endpoint URL.
-   */
-  playerContribution: (playerId: number): string =>
-    `${environment.apiBaseUrl}/players/${playerId}/contribution`,
-
-  /**
    * Administration routes, every one of them guarded by the `X-Admin-Key` header that
    * `adminKeyInterceptor` attaches.
    *

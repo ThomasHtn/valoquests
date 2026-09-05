@@ -67,13 +67,13 @@ class ChallengePointsReaderTest {
     }
 
     @Test
-    @DisplayName("Prices the document's figures: 64 for the daily, then 53 to 286 by difficulty")
-    void shouldPriceTheDocumentsFigures() {
-        assertThat(reader.pointsOf(selection(1, ChallengeCadence.DAILY, null), REFERENCE)).isEqualTo(64);
-        assertThat(reader.pointsOf(selection(2, ChallengeCadence.WEEKLY, ChallengeDifficulty.EASY), REFERENCE))
-            .isEqualTo(53);
-        assertThat(reader.pointsOf(selection(3, ChallengeCadence.WEEKLY, ChallengeDifficulty.VERY_HARD), REFERENCE))
-            .isEqualTo(286);
+    @DisplayName("Prices one point per wounded: 6 for the daily, then 5 to 29 by difficulty on week one")
+    void shouldPriceOnePointPerWounded() {
+        assertThat(reader.pointsOf(selection(1, ChallengeCadence.DAILY, null), REFERENCE, 1)).isEqualTo(6);
+        assertThat(reader.pointsOf(selection(2, ChallengeCadence.WEEKLY, ChallengeDifficulty.EASY), REFERENCE, 1))
+            .isEqualTo(5);
+        assertThat(reader.pointsOf(selection(3, ChallengeCadence.WEEKLY, ChallengeDifficulty.VERY_HARD), REFERENCE, 1))
+            .isEqualTo(29);
     }
 
     @Test
@@ -92,7 +92,7 @@ class ChallengePointsReaderTest {
 
         // EASY 53 + HARD 207 + daily 64: the incomplete VERY_HARD pays nothing.
         assertThat(tallies).containsOnlyKeys(ALPHA.getId());
-        assertThat(tallies.get(ALPHA.getId())).isEqualTo(new ChallengeTally(324, 2, 1));
+        assertThat(tallies.get(ALPHA.getId())).isEqualTo(new ChallengeTally(35, 2, 1));
     }
 
     @Test

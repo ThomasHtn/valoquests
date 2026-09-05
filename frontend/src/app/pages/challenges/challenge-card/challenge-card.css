@@ -60,15 +60,6 @@
   color: var(--color-text-secondary);
 }
 
-/* The figure the draw set, under a description that keeps the catalogue's base wording. */
-.target {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.5rem;
-  color: var(--color-text-muted);
-}
-
 .pay {
   display: flex;
   flex-wrap: wrap;

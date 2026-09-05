@@ -21,11 +21,6 @@
           <li class="crow">
             <p class="crow-name">{{ entry.name }}</p>
             <p class="crow-desc">{{ entry.description }}</p>
-            @if (entry.targetValue !== null) {
-              <p class="crow-target label-caption text-2xs">
-                {{ 'challenges.card.target' | translate: { value: target(entry.targetValue) } }}
-              </p>
-            }
           </li>
         }
       </ul>

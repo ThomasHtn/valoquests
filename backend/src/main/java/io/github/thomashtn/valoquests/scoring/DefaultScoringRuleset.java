@@ -79,11 +79,6 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
     private static final double SURVIVORS_PER_REFERENCE_DIVISOR = 1_000.0;
 
     /**
-     * Divisor turning a challenge weight into ranking points per unit of reference.
-     */
-    private static final double RANKING_POINTS_PER_REFERENCE_DIVISOR = 100.0;
-
-    /**
      * Lowest reference a campaign can be calibrated at: four competitive matches and three quick
      * games a week, which is what an irregular squad's first campaign is played at, on purpose.
      */
@@ -210,8 +205,8 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
     }
 
     @Override
-    public int challengeRankingPoints(int reference, double weight) {
-        return (int) Math.round(reference * weight / RANKING_POINTS_PER_REFERENCE_DIVISOR);
+    public int challengeRankingPoints(int reference, double weight, int weekIndex) {
+        return challengeSurvivors(reference, weight, weekIndex);
     }
 
     @Override

@@ -30,9 +30,8 @@ export type ChallengeCadence = 'WEEKLY' | 'DAILY';
  * What every challenge carries, whether drawn or read from the catalogue.
  *
  * Targets come already resolved: the backend scales them at the draw from the campaign's own
- * measure of the squad, so the figure shown is the figure that counts. A description names the
- * catalogue's base figure, which is why a screen prints {@link targetValue} rather than trusting
- * the description alone.
+ * measure of the squad. The description keeps the catalogue's base wording and is what the
+ * screens show; {@link targetValue} is the figure progress is measured against.
  */
 export interface ChallengeIdentity {
   readonly id: number;

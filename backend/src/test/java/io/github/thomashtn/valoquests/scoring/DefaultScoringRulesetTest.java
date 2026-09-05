@@ -143,30 +143,20 @@ class DefaultScoringRulesetTest {
     }
 
     /**
-     * The ranking points table of the gameplay document, at its reference of 5 300.
+     * One point per wounded: the ranking reads as guardian damage plus wounded brought home, and a
+     * challenge is worth the same figure on both pillars, progression included.
      */
     @Test
-    void shouldPriceTheDocumentsRankingPointsPerChallenge() {
-        assertThat(pointsOf(ChallengeCadence.DAILY, null)).isEqualTo(64);
-        assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.EASY)).isEqualTo(53);
-        assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.NORMAL)).isEqualTo(90);
-        assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.MEDIUM)).isEqualTo(143);
-        assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.HARD)).isEqualTo(207);
-        assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.VERY_HARD)).isEqualTo(286);
-    }
-
-    /**
-     * A perfect week of challenges must weigh about a fifth of a median week of guardian damage, so
-     * they stay a substantial bonus without ever becoming the way the ranking is won.
-     */
-    @Test
-    void shouldKeepAPerfectWeekOfChallengesAroundAFifthOfTheRanking() {
-        int perfectWeek = 7 * pointsOf(ChallengeCadence.DAILY, null);
+    void shouldPriceOneRankingPointPerSurvivor() {
         for (ChallengeDifficulty difficulty : ChallengeDifficulty.values()) {
-            perfectWeek += pointsOf(ChallengeCadence.WEEKLY, difficulty);
+            double weight = ruleset.challengeWeight(ChallengeCadence.WEEKLY, difficulty);
+            assertThat(ruleset.challengeRankingPoints(DOCUMENT_REFERENCE, weight, 1))
+                .isEqualTo(ruleset.challengeSurvivors(DOCUMENT_REFERENCE, weight, 1));
+            assertThat(ruleset.challengeRankingPoints(DOCUMENT_REFERENCE, weight, 10))
+                .isEqualTo(ruleset.challengeSurvivors(DOCUMENT_REFERENCE, weight, 10));
         }
-
-        assertThat(perfectWeek).isBetween(DOCUMENT_REFERENCE / 6, DOCUMENT_REFERENCE / 4);
+        assertThat(pointsOf(ChallengeCadence.DAILY, null)).isEqualTo(6);
+        assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.VERY_HARD)).isEqualTo(29);
     }
 
     @Test
@@ -179,6 +169,6 @@ class DefaultScoringRulesetTest {
     }
 
     private int pointsOf(ChallengeCadence cadence, ChallengeDifficulty difficulty) {
-        return ruleset.challengeRankingPoints(DOCUMENT_REFERENCE, ruleset.challengeWeight(cadence, difficulty));
+        return ruleset.challengeRankingPoints(DOCUMENT_REFERENCE, ruleset.challengeWeight(cadence, difficulty), 1);
     }
 }

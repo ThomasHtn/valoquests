@@ -9,6 +9,8 @@ import {
 
 import { Translation } from '@core/i18n/translation';
 import { Button } from '@shared/button/button';
+import { EmptyPlate } from '@shared/empty-plate/empty-plate';
+import { EmptyPlate as EmptyPlateContent } from '@shared/empty-plate/empty-plate.model';
 
 /**
  * Loading / error / empty / content switch for a resource-backed view.
@@ -25,6 +27,7 @@ import { Button } from '@shared/button/button';
   selector: 'app-resource-state',
   imports: [
     Button,
+    EmptyPlate,
     LucideFilter,
     LucideHourglass,
     LucidePlus,
@@ -79,6 +82,13 @@ export class ResourceState {
    * Already-translated text shown when the resource is empty, if {@link isEmpty} can be `true`.
    */
   public readonly emptyText = input('');
+
+  /**
+   * The empty state as a mission plate — drawing, eyebrow, title, text, readouts — for the screens
+   * whose emptiness is the mission's own state (no campaign yet, nobody ranked, no draw). When set
+   * it replaces {@link emptyText} and the hexagon; the `emptyKind` still decides the register.
+   */
+  public readonly emptyPlate = input<EmptyPlateContent | null>(null);
 
   /**
    * Tailwind padding utility applied to the error and empty states, so this component fits both

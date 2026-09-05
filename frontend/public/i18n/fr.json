@@ -295,13 +295,20 @@
       "heading": "Dix planètes, dix semaines",
       "eyebrow": "Campagne {{number}}",
       "noCampaign": "Campagne",
-      "tier": "Palier {{tier}}",
-      "day": "{{weekday}} · semaine {{week}} sur {{weeks}}"
+      "tier": "Palier {{tier}}"
     },
     "state": {
       "loading": "Chargement de la campagne…",
       "error": "La campagne n'a pas pu être chargée.",
-      "none": "Aucune campagne n'a encore été ouverte. Quand une campagne sera lancée depuis le backoffice, la route des dix planètes se dessinera ici.",
+      "none": {
+        "eyebrow": "Route non tracée",
+        "title": "Dix planètes à atteindre",
+        "text": "Quand une campagne sera ouverte depuis le backoffice, la route des dix planètes se dessinera ici : une planète par semaine, un gardien par planète, un groupe de blessés à ramener.",
+        "start": "Départ",
+        "startValue": "le lundi suivant l’ouverture",
+        "duration": "Durée",
+        "durationValue": "{{weeks}} semaines"
+      },
       "opened": "La campagne est ouverte : la route commence lundi. Les compteurs de la base démarreront avec les premières parties de la semaine.",
       "closed": "La campagne est close. Sa route reste consultable jusqu'à l'ouverture de la prochaine."
     },
@@ -505,13 +512,20 @@
       "heading": "Les défis de la semaine",
       "week": "Semaine {{week}} sur {{weeks}}",
       "weekOf": "Semaine du {{date}}",
-      "tier": "Palier {{tier}}",
-      "day": "{{weekday}} · jour {{day}} sur {{days}}"
+      "tier": "Palier {{tier}}"
     },
     "state": {
       "loading": "Chargement des défis…",
       "error": "Les défis n'ont pas pu être chargés.",
-      "empty": "Aucun défi n'a encore été tiré cette semaine. Les cinq de la semaine sont tirés le lundi, le défi du jour chaque matin."
+      "empty": {
+        "eyebrow": "Tirage du lundi",
+        "title": "Aucun défi tiré cette semaine",
+        "text": "Les cinq défis de la semaine sont tirés le lundi, un par difficulté. Le défi du jour est retiré chaque matin.",
+        "weekly": "Hebdomadaires",
+        "weeklyValue": "5 à tirer le lundi",
+        "daily": "Du jour",
+        "dailyValue": "1 chaque matin"
+      }
     },
     "brief": {
       "eyebrow": "À quoi servent les défis",
@@ -549,9 +563,7 @@
         "one": "a validé",
         "other": "ont validé"
       },
-      "squadAria": "{{done}} opérateurs sur {{total}} ont validé ce défi.",
-      "points": "points au classement",
-      "target": "Cible {{value}}"
+      "squadAria": "{{done}} opérateurs sur {{total}} ont validé ce défi."
     },
     "weekly": {
       "title": "Les défis de la semaine",
@@ -705,49 +717,64 @@
       "heading": "Le classement de la semaine",
       "week": "Semaine {{week}} sur {{weeks}}",
       "weekOf": "Semaine du {{date}}",
-      "tier": "Palier {{tier}}",
-      "day": "{{weekday}} · jour {{day}} sur {{days}}",
-      "closed": "Semaine close · figée le {{date}}"
+      "tier": "Palier {{tier}}"
     },
     "state": {
       "loading": "Chargement du classement…",
       "error": "Le classement n'a pas pu être chargé.",
-      "empty": "Aucun classement pour l'instant : il est calculé à la première synchronisation de la semaine."
-    },
-    "law": {
-      "eyebrow": "Comment on est classé",
-      "total": "Le total d'un opérateur additionne",
-      "damage": "les dégâts infligés au gardien",
-      "plus": "et",
-      "points": "les points des défis validés.",
-      "reset": "Il repart de zéro chaque lundi ; une semaine close reste figée telle qu'elle s'est terminée."
+      "empty": {
+        "eyebrow": "Classement",
+        "title": "Aucun classement pour l’instant",
+        "text": "Le classement est calculé à la première synchronisation de la semaine. Dès qu'un opérateur joue, sa ligne apparaît ici."
+      }
     },
     "nav": {
-      "weekOf": "Semaine du {{date}}",
       "previous": "Semaine précédente",
       "next": "Semaine suivante",
       "live": "En cours",
-      "closed": "Close"
+      "choose": "Choisir la semaine",
+      "weekIndex": "Semaine {{week}}"
     },
     "board": {
+      "label": "Le classement",
       "operator": "Opérateur",
       "total": "Total",
-      "damage": "Dégâts au gardien",
-      "points": "Points de défis",
-      "streak": "Série",
-      "days": "Jours joués",
+      "totalHelp": "Les dégâts au gardien plus les blessés ramenés par les défis validés, un point par blessé. Le total repart de zéro chaque lundi.",
+      "damage": "Dégâts",
+      "points": "Blessés",
+      "damageHelp": "Les points de vie retirés au gardien de la planète par les parties de la semaine.",
+      "pointsHelp": "Les blessés ramenés à la base par les défis validés, un point par blessé.",
       "progress": "Progression des défis",
-      "nobody": "Personne n'est classé cette semaine.",
-      "weekly": "{{done}}/{{total}} hebdo",
-      "weeklyDone": "{{count}} hebdo",
-      "daily": "{{count}} du jour",
-      "streakDays": "{{count}} j",
-      "daysOf": "sur {{count}}",
+      "variation": {
+        "up": {
+          "one": "{{count}} place gagnée",
+          "other": "{{count}} places gagnées"
+        },
+        "down": {
+          "one": "{{count}} place perdue",
+          "other": "{{count}} places perdues"
+        }
+      },
+      "nobody": {
+        "title": "Personne n'est encore classé",
+        "text": "Le classement se calcule à la première synchronisation de la semaine : dès qu'un opérateur joue, sa ligne apparaît ici avec ses dégâts au gardien et ses blessés ramenés.",
+        "day": "Jour",
+        "dayValue": "{{day}} sur {{days}}",
+        "reset": "Remise à zéro",
+        "resetValue": "lundi"
+      },
       "unranked": "Hors classement",
-      "unrankedNote": "Hors campagne cette semaine : suivis, mais sans prendre de place.",
-      "ringTip": "{{name}} · {{current}} sur {{target}} · +{{points}} pts une fois validé",
-      "ringTipOpen": "{{name}} · {{current}} · +{{points}} pts une fois validé",
-      "ringTipDone": "{{name}} · validé · +{{points}} pts"
+      "cellTip": "{{name}} · {{current}} sur {{target}} · +{{points}} blessés une fois validé",
+      "cellTipOpen": "{{name}} · {{current}} · +{{points}} blessés une fois validé",
+      "cellTipDone": "{{name}} · validé · +{{points}} blessés"
+    },
+    "podium": {
+      "label": "Le podium de la semaine",
+      "rank": {
+        "1": "Première place",
+        "2": "Deuxième place",
+        "3": "Troisième place"
+      }
     }
   },
   "notFound": {
@@ -760,8 +787,7 @@
     "header": {
       "eyebrow": "Campagne {{number}} · Palier {{tier}}",
       "noCampaign": "Aucune campagne",
-      "heading": "Ramener les blessés de dix planètes",
-      "day": "{{weekday}} · semaine {{week}} sur {{weeks}}"
+      "heading": "Ramener les blessés de dix planètes"
     },
     "scene": {
       "section": "La ville de nuit et la fusée en construction",
@@ -862,10 +888,30 @@
     "state": {
       "loading": "Lecture de la campagne…",
       "error": "Impossible de lire la campagne.",
-      "none": "Aucune campagne n'a encore été ouverte. Le classement de la semaine tourne, la mission commence avec la première campagne.",
-      "opened": "La campagne est ouverte : la mission démarre lundi.",
-      "closed": "La campagne est close. La prochaine mission attend l'ouverture d'une nouvelle campagne.",
-      "settling": "La semaine est réglée, la mission reprend lundi."
+      "none": {
+        "eyebrow": "Mission en attente",
+        "title": "Aucune campagne ouverte",
+        "text": "Le classement de la semaine tourne déjà. La mission commence avec la première campagne : ouverte depuis le backoffice, elle démarre le lundi suivant et dure dix semaines.",
+        "ranking": "Classement de la semaine",
+        "rankingValue": "en cours",
+        "campaign": "Campagne",
+        "campaignValue": "à ouvrir"
+      },
+      "opened": {
+        "eyebrow": "Départ lundi",
+        "title": "La campagne est ouverte",
+        "text": "La mission démarre lundi. Les compteurs de la base partiront avec les premières parties de la semaine."
+      },
+      "closed": {
+        "eyebrow": "Campagne close",
+        "title": "En attente de la prochaine campagne",
+        "text": "La campagne est close. La prochaine mission attend l'ouverture d'une nouvelle campagne depuis le backoffice."
+      },
+      "settling": {
+        "eyebrow": "Semaine réglée",
+        "title": "La mission reprend lundi",
+        "text": "La semaine est réglée : les blessés extraits sont comptés, la base attend la planète suivante."
+      }
     }
   },
   "pageHeader": {
@@ -1090,36 +1136,7 @@
       "winRate": "Winrate",
       "wins": "{{count}} V"
     },
-    "title": "Profil du joueur",
-    "contribution": {
-      "week": "Cette semaine",
-      "weekLink": "Le classement",
-      "total": "points",
-      "unranked": "hors classement cette semaine",
-      "weekNone": "Pas encore calculé cette semaine : la première synchronisation n'a pas tourné.",
-      "campaign": "Campagne {{number}}",
-      "campaignTitle": "Campagne",
-      "campaignLink": "La campagne",
-      "campaignNone": "Hors campagne : cet opérateur n'est pas sur le roster de la campagne en cours, ou aucune campagne ne tourne.",
-      "damage": "Dégâts au gardien",
-      "points": "Points de défis",
-      "weekly": "{{count}} hebdo",
-      "daily": "{{count}} du jour",
-      "streak": "Série",
-      "streakDays": "{{count}} j",
-      "days": "Jours joués",
-      "daysOf": "sur {{count}}",
-      "matches": "Parties",
-      "components": "Composants",
-      "food": "Nourriture",
-      "rescued": "Blessés ramenés",
-      "rescuedNote": "par {{count}} défis validés",
-      "blows": "Coups fatals",
-      "longestStreak": "Plus longue série",
-      "daysPlayed": "{{count}} jours joués",
-      "titles": "Titres",
-      "error": "La contribution n'a pas pu être chargée."
-    }
+    "title": "Profil du joueur"
   },
   "players": {
     "columns": {
@@ -1167,69 +1184,31 @@
       "silver": "Argent",
       "unranked": "Non classé"
     },
-    "title": "Escouade",
-    "activity": {
-      "played": "A joué aujourd'hui",
-      "notPlayed": "N'a pas encore joué aujourd'hui",
-      "streak": "{{count}} j"
-    }
+    "title": "Escouade"
   },
   "retry": "Réessayer",
   "rules": {
     "title": "Règles du jeu",
     "heading": "Règles",
     "subheading": "Comment marche la mission",
-    "readingTime": {
-      "label": "Lecture",
-      "value": "8 min"
-    },
     "replayTour": "Revoir la visite guidée",
-    "contents": {
-      "title": "Sommaire",
-      "searchLabel": "Chercher une règle",
-      "searchPlaceholder": "série, famine, calibration…",
-      "clear": "Effacer la recherche",
-      "noMatch": "Aucune section ne parle de « {{query}} »."
-    },
     "sections": {
-      "mission": {
-        "title": "La mission",
-        "description": "Une escouade tient une {base} *base*, et un {rocket} *vaisseau* se construit en son centre. Pendant dix semaines, elle part chercher les {wounded} *blessés* abandonnés sur dix planètes : chaque semaine, une planète, un groupe à évacuer, et un {guardian} *gardien* qui les retient au sol tant que l'escouade n'a pas percé ses lignes.",
-        "score": "Tout ce que les opérateurs jouent dans Valorant alimente la base. Le score de la campagne est la *taille de la base* {base}. Le nombre de gardiens vaincus décide de l'état final de la fusée {rocket}.",
-        "loopLabel": "Boucle",
-        "rhythmLabel": "Rythme",
-        "effectLabel": "Ce qui se passe",
-        "loops": {
-          "sync": {
-            "name": "Synchronisation",
-            "rhythm": "toutes les 30 min",
-            "effect": "Les parties arrivent, les stocks {food} {components} montent, le gardien {guardian} encaisse."
-          },
-          "daily": {
-            "name": "Journée",
-            "rhythm": "à minuit",
-            "effect": "La base mange, la journée se ferme, le défi du jour {challenge} se résout."
-          },
-          "weekly": {
-            "name": "Semaine",
-            "rhythm": "lundi → dimanche",
-            "effect": "On abat le gardien et on sauve les blessés {wounded}."
-          },
-          "campaign": {
-            "name": "Campagne",
-            "rhythm": "dix semaines",
-            "effect": "La fusée {rocket} se construit, le score final se fige."
-          }
-        }
-      },
-      "resources": {
-        "title": "Les deux ressources",
-        "description": "Chaque partie produit de la {food} *nourriture* et des {components} *composants* en même temps, répartis selon le mode joué : 30 % de nourriture en Compétitif, Premier et Non classé, 70 % en Deathmatch, Team Deathmatch, Spike Rush et Skirmish. Le montant réparti est la valeur de la partie.",
+      "match": {
+        "title": "La partie",
+        "statement": "Chaque partie jouée dans Valorant alimente la base",
+        "description": "Une partie vaut des points selon le mode et le résultat. Ces points font *trois choses à la fois* : ils frappent le gardien {guardian} de la semaine en entier, et ils se répartissent en nourriture {food} et en composants {components}. Les valeurs sont calées pour qu'une *heure de jeu rapporte à peu près pareil* dans tous les modes.",
         "modeLabel": "Mode de jeu",
         "loss": "Défaite",
         "draw": "Nul",
         "win": "Victoire",
-        "minutes": "{{count}} min",
+        "groups": {
+          "long": "Modes longs",
+          "short": "Modes courts",
+          "none": "Sans valeur"
+        },
+        "noneModes": "Swiftplay, Escalade",
+        "foodShare": "{{percent}} % nourriture",
+        "componentsShare": "{{percent}} % composants",
         "modes": {
           "competitive": "Compétitif, Premier",
           "unrated": "Non classé",
@@ -1238,183 +1217,176 @@
           "deathmatch": "Deathmatch",
           "skirmish": "Skirmish"
         },
-        "hourly": "Les valeurs sont calées pour que *l'heure de jeu rapporte à peu près la même chose quel que soit le mode*, rendements décroissants compris : entre 680 et 780 {damage} par heure pour une session d'une heure. Le Swiftplay et l'Escalade ne valent rien.",
         "foodUse": "Nourrir la base {base} chaque jour, et installer les rescapés {wounded} du dimanche.",
-        "componentsUse": "Atteindre les survivants {wounded} : véhicules et matériel d'expédition.",
-        "examplesLabel": "Exemples",
-        "examples": {
-          "competitiveWin": "Compétitif gagné",
-          "competitiveLoss": "Compétitif perdu",
-          "deathmatchWin": "Deathmatch gagné",
-          "deathmatchLoss": "Deathmatch perdu"
-        },
-        "stocks": "*Ce sont de vrais stocks.* Rien n'est remis à zéro : ce qui n'a pas été dépensé reste en réserve d'une semaine sur l'autre, ce qui permet de mettre de côté avant une grosse semaine. Par partie, le compétitif rapporte plus des deux ; c'est à l'heure de jeu que l'arbitrage existe."
+        "componentsUse": "Atteindre les blessés {wounded} : véhicules et matériel d'expédition."
       },
       "multipliers": {
-        "title": "Les deux multiplicateurs",
-        "description": "Ils s'appliquent à toute partie et sont affichés sur chaque ligne d'opérateur : les *rendements décroissants* contre le farm, et la *série de jours consécutifs* {streak} pour récompenser l'effort quotidien.",
-        "decayLabel": "Rendements décroissants, par rang de la partie dans la journée",
-        "decayRank": "Partie {{rank}}",
-        "decayNote": "Le rang se calcule par *valeur décroissante*, pas par heure : les meilleures parties du jour gardent toujours 100 %, et un échauffement en Deathmatch ne dévalue jamais la compétitive jouée ensuite. Tant que la journée n'est pas finie, un total affiché peut légèrement reculer ; c'est tranché à minuit.",
-        "streakLabel": "Série de jours consécutifs",
-        "streakDays": "{{days}} j",
-        "streakNote": "Le premier jour ne donne rien : un bonus que tout le monde a n'est pas un bonus. Le plafond est volontairement bas, pour qu'un opérateur qui saute une journée puisse encore rattraper le premier du classement.",
-        "streakRules": {
-          "individual": "La série {streak} est *individuelle* et remise à zéro à minuit dès qu'un opérateur saute une journée.",
-          "valued": "Une journée compte si l'opérateur y a joué *au moins une partie valorisée* : un mode qui vaut zéro ne fait pas de journée.",
-          "wholeDay": "Dès qu'une partie valorisée existe, *toutes les parties de la journée* prennent le bonus du nouveau compteur. Il n'y a qu'un bonus par journée.",
-          "calendar": "Une journée {day} est le jour calendaire du fuseau du projet, celui de l'heure de début de la partie.",
-          "neverStops": "Le compteur ne s'arrête jamais : ni au lundi, ni entre deux campagnes. L'affichage continue au-delà de six, « 12 j », mais le bonus reste à +10 %.",
-          "everything": "Le bonus s'applique à tout ce qu'une partie produit : dégâts {damage}, composants {components}, nourriture {food}, croissance de la base {base}. *Jamais aux défis* {challenge}."
+        "title": "Les multiplicateurs",
+        "statement": "Le farm rapporte moins, la régularité rapporte plus",
+        "description": "Deux coefficients modifient la *valeur de chaque partie*, donc à la fois ses dégâts {damage}, sa nourriture {food} et ses composants {components}. Le premier baisse avec le nombre de parties dans la journée. Le second monte avec le nombre de jours joués de suite {streak}. Aucun des deux ne touche les défis.",
+        "decayLabel": "Rendement, par rang de la partie dans la journée",
+        "decayRanks": {
+          "first": "Parties 1 à 5",
+          "next": "Parties 6 à 9",
+          "rest": "10 et plus"
         },
-        "combined": "Les deux se multiplient : valeur de la partie × rendement décroissant × (1 + bonus de série), arrondi à l'entier *une seule fois*, à la fin, par partie."
-      },
-      "day": {
-        "title": "La journée",
-        "description": "Une journée {day} produit en continu et se clôt à minuit, dans un ordre fixe. Tout ce qui est joué fait grandir la base {base}, quel que soit le mode : aucun mode n'est un mauvais choix pour le score.",
-        "steps": {
-          "grow": {
-            "title": "La base grandit",
-            "when": "à chaque synchro",
-            "text": "28 dégâts {damage} font un habitant {base}. C'est la seule source de croissance quotidienne, volontairement neutre par mode."
-          },
-          "guardian": {
-            "title": "Le gardien encaisse",
-            "when": "à chaque synchro",
-            "text": "Chaque partie inflige ses dégâts {damage} au gardien {guardian} dès qu'elle remonte, sans attendre la fin de la journée."
-          },
-          "eat": {
-            "title": "La base mange",
-            "when": "à minuit",
-            "text": "Chaque habitant consomme 0,008 nourriture {food}. Tant que le stock suit, tout va bien. S'il se vide, les habitants qui ne mangent pas commencent à mourir."
-          },
-          "daily": {
-            "title": "Le défi du jour se résout",
-            "when": "à minuit",
-            "text": "Les blessés {wounded} qu'il ramène sont *acquis quoi qu'il arrive* et comptés pour le dimanche : ils partent avec le vaisseau."
-          }
+        "decayNote": "Les parties du jour sont classées de la plus forte à la plus faible : les cinq meilleures comptent en entier, quel que soit l'ordre où elles ont été jouées.",
+        "streakLabel": "Série de jours joués de suite {streak}, toutes les parties du jour valent",
+        "streakDays": {
+          "one": "{{count}} jour",
+          "other": "{{count}} jours"
         },
-        "upkeepLabel": "Part de votre nourriture absorbée par l'entretien, selon la semaine",
-        "week": "Sem. {{week}}",
-        "upkeepNote": "L'entretien monte avec la population, doucement et volontairement : une base de dix mille habitants demande plus d'attention qu'un campement de mille, sans jamais devenir le sujet principal.",
-        "famineLabel": "Habitants perdus, par soirs de famine",
-        "evenings": {
-          "one": "{{count}} soir",
-          "other": "{{count}} soirs"
-        },
-        "famineNote": "En jeu normal la base ne meurt jamais de faim : le vaisseau laisse toujours sept repas de côté le dimanche. La famine ne commence que *lorsque la réserve est vide*, donc après plus d'une semaine sans aucune partie ; chaque soir sans nourriture, 5 % des habitants non nourris meurent. Le vrai prix de l'arrêt, c'est le gardien {guardian} laissé debout : 35 % de la base."
+        "streakDaysMore": "{{count}} jours et plus",
+        "streakNote": "Une journée compte si l'opérateur y a joué au moins une partie valorisée. La série est individuelle et retombe à 1 dès qu'une journée est sautée.",
+        "exampleLabel": "Exemple",
+        "example": "Compétitif gagné, sixième partie du jour, quatrième jour de suite : *500 × 50 % × 1,06 = 265* dégâts {damage}, répartis en 80 nourriture {food} et 185 composants {components}."
       },
       "week": {
         "title": "La semaine",
-        "description": "Le gardien {guardian} a des points de vie fixés au lundi. *Toute partie jouée par n'importe quel opérateur actif lui inflige ses dégâts* {damage}, à trente minutes près. Il peut tomber le mardi à midi comme le dimanche soir. Seules les parties lui font des dégâts : un défi validé {challenge} ne lui en fait aucun, il ramène des blessés.",
-        "live": "Le combat est strictement insensible au mix de modes : c'est le total joué qui compte. Quand il tombe, l'application retient *qui a porté le coup fatal et sur quelle partie*. La semaine n'est pas finie pour autant : les jours restants continuent de remplir les réserves et de faire grandir la base. Tuer le gardien tôt est un avantage, jamais une fin de semaine.",
-        "settlementLabel": "Le règlement du dimanche",
-        "settlement": {
-          "challenges": {
-            "term": "Blessés des défis",
-            "value": "ce que les défis {challenge} de la semaine ont ramené, jamais plus que le groupe"
+        "statement": "Un gardien par semaine, et chaque partie de l'escouade le frappe",
+        "description": "Chaque lundi, une nouvelle planète : un gardien {guardian} avec ses points de vie, et un groupe de blessés {wounded} qu'il retient au sol. Toute partie de tout opérateur actif lui inflige ses dégâts dès qu'elle remonte. Il peut tomber le mardi comme le dimanche ; la semaine continue de remplir les réserves.",
+        "steps": {
+          "sync": {
+            "title": "Les parties remontent",
+            "when": "toutes les 30 min",
+            "text": "Le gardien encaisse, les réserves montent, et la base grandit : *28 dégâts font un habitant* {base}."
           },
-          "extraction": {
-            "term": "Extraction",
-            "value": "le plus petit de : le reste du groupe, ce que les composants {components} permettent d'atteindre, ce que la nourriture {food} permet d'installer ; multiplié par l'*avancement* sur le gardien"
+          "midnight": {
+            "title": "La base mange",
+            "when": "à minuit",
+            "text": "Chaque habitant consomme *0,008 nourriture* {food}. Le défi du jour se résout, un nouveau est tiré. La série {streak} avance ou retombe."
+          },
+          "sunday": {
+            "title": "Le règlement",
+            "when": "dimanche soir",
+            "text": "Dans cet ordre : le dernier défi du jour, l'attaque du gardien s'il est encore debout, puis le retour du vaisseau {rocket} avec les sauvés."
+          },
+          "monday": {
+            "title": "Nouvelle planète",
+            "when": "lundi",
+            "text": "Nouveau gardien, nouveau groupe, réserves conservées : *une mauvaise semaine ne se paie jamais la suivante*."
+          }
+        },
+        "guardianNote": "*Points de vie du gardien* : référence × poids de la semaine × 0,78 × opérateurs actifs. Seuls les opérateurs actifs au lundi d'ouverture comptent ; un inactif reste suivi, mais n'apporte ni ne coûte rien.",
+        "famineNote": "*La famine* n'existe qu'une fois la réserve vide, soit après plus d'une semaine sans aucune partie : chaque soir, 5 % des habitants non nourris meurent."
+      },
+      "sunday": {
+        "title": "Le dimanche",
+        "statement": "On ramène le plus petit de trois nombres, jamais plus que le groupe",
+        "description": "Un blessé {wounded} ne rentre que s'il a une *place à bord*, un *lit à la base*, et que le blocus est *ouvert d'autant*. Les blessés des défis ne suivent pas cette règle : ils partent les premiers, sans rien dépenser.",
+        "settlementLabel": "Le règlement du dimanche",
+        "terms": {
+          "seats": {
+            "term": "Places à bord",
+            "value": "*14 composants* {components} par blessé."
+          },
+          "beds": {
+            "term": "Lits à la base",
+            "value": "*12 nourriture* {food} par blessé, une fois les sept prochains repas de la base mis de côté. Le vaisseau n'y touche jamais."
+          },
+          "breach": {
+            "term": "Brèche",
+            "value": "La part des points de vie retirés au gardien {guardian}. Elle multiplie l'extraction : 100 % s'il est tombé."
           },
           "rescued": {
             "term": "Sauvés",
-            "value": "blessés des défis + extraction {wounded}"
+            "value": "blessés des défis {challenge} + min( reste du groupe, places, lits ) × brèche"
           }
         },
-        "settlementNote": "Les blessés des défis font partie du groupe repéré : ils partent les premiers, sans dépenser de ressources et sans subir l'avancement. L'avancement vaut 1 si le gardien est tombé, sinon la part de ses points de vie retirés. Composants et nourriture ne sont dépensés que pour les blessés *effectivement extraits* : 14 {components} et 12 {food} par blessé à bord.",
-        "protectedFood": "*Le vaisseau ne touche jamais aux sept prochains repas.* Avant d'extraire, la nourriture des sept soirs à venir est mise de côté ; seule la nourriture au-delà de cette réserve paie des lits.",
-        "lossLabel": "Si le gardien survit : pertes de la base, selon l'avancement atteint",
-        "lossNote": "Les pertes sont continues et quadratiques, sans aucun seuil : base × (1 − avancement)² × 35 %. Rater de peu ne coûte quasiment rien. Ne rien faire coûte cher.",
-        "sundayOrder": "*L'ordre du dimanche soir* : le défi du jour se résout, le gardien attaque s'il est encore debout, puis le vaisseau revient et les sauvés rejoignent la base. Les blessés ramenés ne subissent jamais l'attaque : ils n'étaient pas encore là.",
-        "monday": "*Le lundi* : nouveau groupe, nouveau gardien. Les réserves {food} {components} sont conservées ; une mauvaise semaine ne se paie jamais la suivante. Le roster ne change pas pendant une campagne.",
-        "whoCounts": "Seuls les opérateurs *actifs au lundi d'ouverture* comptent : pour les dégâts, les ressources, la croissance et les blessés des défis. Un opérateur inactif reste synchronisé et voit sa progression sur chaque défi, à titre indicatif : il mesure à quelle vitesse il irait, sans rien apporter ni rien coûter."
+        "exampleLabel": "Exemple, un groupe de 40 blessés",
+        "example": {
+          "challenges": "Blessés des défis",
+          "remaining": "Reste du groupe",
+          "seats": "Places à bord : 420 composants {components} ÷ 14",
+          "beds": "Lits : 240 nourriture libre {food} ÷ 12",
+          "extraction": "Extraction : le plus petit des trois, 20, × brèche 75 %",
+          "rescued": "Sauvés"
+        },
+        "exampleNote": "Seuls les 15 extraits coûtent quelque chose : 210 composants et 180 nourriture. Le reste des réserves est conservé.",
+        "lossLabel": "Si le gardien survit : habitants perdus, selon la brèche atteinte",
+        "lossNote": "Le gardien attaque la base {base} : base × (1 − brèche)² × 35 %. Rater de peu ne coûte presque rien, ne rien faire coûte cher."
       },
       "campaign": {
         "title": "La campagne",
-        "description": "Dix semaines, chacune avec sa forme propre, décrite par deux nombres exprimés en part de la *référence* de l'escouade : le poids du gardien {guardian} et la taille du groupe de blessés {wounded}.",
+        "statement": "Dix semaines, dix planètes, et un gardien dont on connaît la taille d'avance",
+        "description": "Une campagne dure dix semaines. Chaque semaine, une planète : un gardien {guardian} avec un nombre de points de vie fixé, et un groupe de blessés {wounded} d'une taille fixée. Ces deux nombres sont calculés à l'ouverture à partir de la référence de l'escouade, voir la section 06. Le score final est la *population de la base* {base}.",
         "weekLabel": "Sem.",
-        "categoryLabel": "Catégorie",
-        "groupLabel": "Groupe",
-        "weightsNote": "Cela produit des semaines qui se vivent différemment sans qu'aucune règle ne change.",
-        "examples": {
-          "six": {
-            "title": "Semaine 6",
-            "text": "Gros groupe, gardien faible. Une course au ravitaillement."
-          },
-          "seven": {
-            "title": "Semaine 7",
-            "text": "Petit groupe, gardien coriace. Un siège."
-          },
-          "ten": {
-            "title": "Semaine 10",
-            "text": "Le plus gros groupe de la campagne derrière le plus gros gardien."
-          }
+        "guardianLabel": "Gardien",
+        "hpLabel": "Points de vie",
+        "woundedLabel": "Blessés",
+        "howLabel": "Comment ça se joue",
+        "how": {
+          "1": "Mise en route : gardien faible, groupe modeste.",
+          "5": "Le premier mur.",
+          "6": "Gros groupe, gardien faible : une course au ravitaillement.",
+          "7": "Petit groupe, gardien coriace : un siège.",
+          "10": "Le plus gros groupe derrière le plus gros gardien."
         },
-        "progression": "*Les récompenses montent* : les groupes et les rescapés des défis progressent de +4 % par semaine, en progression linéaire, × 1,00 en semaine 1, × 1,36 en semaine 10. Jamais composée. Combinée à l'entretien qui monte, la campagne se durcit progressivement tout en payant mieux.",
+        "exampleNote": "Exemple pour une escouade de {{operators}} opérateurs actifs à {{reference}} de référence, soit {{weekly}} dégâts par semaine ordinaire : un gardien Mineur tombe en trois jours, un Élite demande plus qu'une semaine. Les groupes grossissent de 4 % par semaine, la campagne se durcit et paie mieux à mesure.",
         "lifecycle": {
-          "open": "L'administrateur *ouvre* la campagne depuis le backoffice. À cet instant, le roster est gelé et la calibration est calculée.",
-          "start": "La campagne *démarre le lundi suivant* et dure dix semaines.",
-          "close": "Elle se *clôt* après le règlement du dixième dimanche, et son score final se fige.",
-          "between": "Entre deux campagnes, ni gardien, ni base, ni réserves : seul le classement hebdomadaire {points} continue de tourner. Chaque campagne repart de zéro."
+          "open": {
+            "title": "Ouverture",
+            "text": "Depuis le backoffice. Le roster est gelé et les dix gardiens sont dimensionnés, une fois pour toutes."
+          },
+          "start": {
+            "title": "Le lundi suivant",
+            "text": "La semaine 1 commence. Chaque dimanche soir règle sa semaine, chaque lundi ouvre la suivante."
+          },
+          "close": {
+            "title": "Dixième dimanche",
+            "text": "La campagne se clôt. La population de la base {base} est son score ; la fusée {rocket} affiche un état par gardien vaincu."
+          },
+          "between": {
+            "title": "Entre deux campagnes",
+            "text": "Ni gardien, ni base, ni réserves : seul le classement de la semaine {points} continue de tourner. Chaque campagne repart de zéro."
+          }
         }
       },
       "calibration": {
-        "title": "La calibration et les paliers",
-        "description": "Avant le lancement, l'application lit l'historique du roster gelé et en tire une *référence* : les dégâts {damage} hebdomadaires qu'un opérateur de l'escouade produit en moyenne. Elle fixe la taille des gardiens, celle des groupes et la valeur des défis.",
-        "facts": {
-          "window": "Une fenêtre de *neuf mois* d'historique, pour chaque opérateur actif.",
-          "average": "La référence est la *moyenne des moyennes hebdomadaires* : le gardien vaut « référence × opérateurs », c'est une somme que l'on vise, et un opérateur très fort doit y peser.",
-          "emptyWeeks": "Toutes les semaines de la fenêtre comptent, *y compris celles sans aucune partie*, à zéro. Un opérateur qui joue peu est un opérateur faible, et la référence doit le refléter.",
-          "floor": "Un *plancher de 2 000*, soit quatre compétitives et trois parties rapides par semaine. En dessous, un gardien tomberait en une soirée.",
-          "shrink": "Si l'historique d'un opérateur ne couvre pas neuf mois, la fenêtre est *réduite d'un mois à la fois, pour tout le monde*, jusqu'à ce que chacun soit couvert.",
-          "beginner": "Un opérateur qui a moins d'un mois d'historique est un *débutant* : il ne fait pas réduire la fenêtre et prend la médiane de son escouade.",
-          "once": "La référence est calculée *une seule fois*, à l'ouverture, et plus jamais recalculée."
-        },
-        "sameMultipliers": "*Point critique* : la référence est calculée avec exactement les mêmes multiplicateurs que pendant la campagne, série {streak} et rendements décroissants compris. Les appliquer d'un côté et pas de l'autre décalerait la barre du gardien d'environ 30 %.",
+        "title": "La référence",
+        "statement": "Tout est taillé à la mesure de l'escouade",
+        "description": "La référence est ce qu'un opérateur de l'escouade produit par semaine, lue sur l'historique du roster gelé. Gardiens, groupes et défis en découlent, *par opérateur actif* : le jeu est le même à 2 comme à 20. Le palier qui en résulte permet de comparer deux campagnes d'escouades de niveaux différents.",
         "tierLabel": "Palier",
         "referenceLabel": "Référence par opérateur",
-        "exampleLabel": "Exemple par semaine",
+        "exampleLabel": "Par semaine, en pratique",
         "examples": {
-          "AMATEUR": "4 compétitifs et 3 rapides",
-          "NORMAL": "7 compétitifs et 9 rapides",
-          "CONFIRMED": "16 compétitifs et 25 rapides",
-          "ELITE": "28 compétitifs et 35 rapides"
+          "AMATEUR": "4 Compétitifs et 3 rapides",
+          "NORMAL": "7 Compétitifs et 9 rapides",
+          "CONFIRMED": "16 Compétitifs et 25 rapides",
+          "ELITE": "28 Compétitifs et 35 rapides"
         },
-        "tiersNote": "Le palier existe pour que deux escouades de niveaux très différents puissent comparer leurs campagnes. *Toutes les grandeurs sont exprimées par opérateur actif*, ce qui rend le jeu identique à 2 comme à 20 opérateurs."
+        "facts": {
+          "window": "Une fenêtre de *neuf mois* d'historique, pour chaque opérateur actif. Si l'un d'eux n'a pas neuf mois, elle est réduite d'un mois à la fois, pour tout le monde.",
+          "emptyWeeks": "Les *semaines sans partie comptent à zéro*. Un opérateur qui joue peu est un opérateur faible, et la référence doit le refléter.",
+          "floor": "Un *plancher de 2 000*, soit quatre Compétitifs et trois parties rapides par semaine. En dessous, un gardien tomberait en une soirée.",
+          "once": "Calculée *une seule fois*, à l'ouverture, avec les mêmes multiplicateurs que la campagne. Un débutant de moins d'un mois prend la médiane de l'escouade."
+        }
       },
       "challenges": {
-        "title": "Les défis",
-        "description": "*Un défi du jour* {challenge}, commun à l'escouade, tiré chaque matin dans un pool de 21 sans répétition sur 21 jours, résolu le soir même. *Cinq défis hebdomadaires*, un par difficulté, tirés le lundi dans un catalogue de 100. Les deux ramènent des blessés {wounded} acquis quoi qu'il arrive ; aucun ne fait de dégâts au gardien.",
+        "title": "Les défis et le classement",
+        "statement": "Un défi ramène des blessés quoi qu'il arrive, et chaque blessé vaut un point",
+        "description": "Un *défi du jour* {challenge}, commun à l'escouade, tiré chaque matin parmi 21 et résolu le soir même. *Cinq défis de la semaine*, un par difficulté, tirés le lundi parmi 100. Leurs blessés {wounded} sont acquis quoi qu'il arrive, mais aucun défi ne touche le gardien.",
         "challengeLabel": "Défi",
         "weightLabel": "Poids",
+        "woundedLabel": "Blessés",
         "daily": "Défi du jour",
-        "worthNote": "Blessés et points par opérateur qui valide, pour une référence de {{reference}}. Une semaine parfaite, sept défis du jour et les cinq hebdomadaires, vaut 120 blessés par opérateur. Les valeurs progressent de +4 % par semaine, comme le reste.",
+        "worthNote": "Blessés par opérateur qui valide, pour une référence de {{reference}}. Une semaine parfaite, sept défis du jour et les cinq de la semaine, vaut 120 blessés par opérateur.",
         "survivorsFormula": {
           "title": "Blessés ramenés",
-          "formula": "référence × poids / 1000",
-          "text": "Par opérateur qui valide, versés le dimanche {wounded}. Proportionnel à la référence : le même poids relatif pour des amateurs et pour des pros."
+          "formula": "référence × poids ÷ 1 000",
+          "text": "Par opérateur qui valide, versés le dimanche {wounded}. Le même poids relatif pour des amateurs et pour des pros."
         },
         "pointsFormula": {
           "title": "Points au classement",
-          "formula": "référence × poids / 100",
-          "text": "Le classement de la semaine {points} additionne les dégâts au gardien {damage}, multiplicateurs compris, et les points des défis validés."
+          "formula": "1 point par blessé ramené",
+          "text": "Le classement de la semaine {points} additionne les dégâts au gardien {damage}, multiplicateurs compris, et les blessés des défis validés. Face à 5 300 de dégâts, les défis départagent, ils ne font pas le classement."
         },
-        "ranking": "Une semaine parfaite de défis vaut environ 1 200 points, contre 5 300 de dégâts pour une semaine médiane : les défis pèsent *un cinquième du classement*, jamais la moitié. Le classement affiche, pour chaque opérateur, l'état d'avancement de chaque défi en cours."
-      },
-      "titles": {
-        "title": "Les titres",
-        "description": "Quatre titres décernés chaque semaine, pour que la reconnaissance ne se concentre pas sur un seul opérateur. Purement honorifiques : un opérateur peut en cumuler plusieurs, et en cas d'égalité, le titre n'est pas décerné."
-      },
-      "rocket": {
-        "title": "La fusée",
-        "description": "Au centre de la base, la fusée {rocket} est le trophée de la campagne.",
-        "text": "*Dix états visuels indexés sur le nombre de gardiens vaincus* {guardian}. Dix sur dix donne le visuel maximal. Aucun effet sur les règles."
+        "titlesLabel": "Quatre titres chaque semaine, honorifiques, jamais en cas d'égalité"
       },
       "constants": {
         "title": "Les constantes",
-        "description": "Toutes les valeurs du jeu, en une table. Vérifiées par simulation : une escouade calibrée sur elle-même bat 8 gardiens sur 10, l'effort paie, et le résultat par opérateur est identique de 2 à 20 opérateurs.",
+        "statement": "Toutes les valeurs du jeu, en une table",
+        "description": "Telles que le code les applique. Vérifiées par simulation : une escouade calibrée sur elle-même bat 8 gardiens sur 10, et le résultat par opérateur est identique de 2 à 20 opérateurs.",
         "items": {
           "growth": {
             "label": "Dégâts pour 1 habitant",
@@ -1426,23 +1398,23 @@
           },
           "famine": {
             "label": "Perte quotidienne en cas de famine",
-            "value": "5 % de la part non nourrie, uniquement si la réserve est vide"
+            "value": "5 % de la part non nourrie, si la réserve est vide"
           },
           "guardianSize": {
             "label": "Taille du gardien",
-            "value": "référence × poids de la semaine × 0,78 × opérateurs actifs"
+            "value": "référence × poids × 0,78 × opérateurs actifs"
           },
           "groupSize": {
             "label": "Taille du groupe",
-            "value": "référence × poids de la semaine × 0,050 × opérateurs actifs × progression"
+            "value": "référence × poids × 0,050 × opérateurs actifs × progression"
           },
           "progression": {
             "label": "Progression des récompenses",
-            "value": "+4 % par semaine de campagne, linéaire"
+            "value": "+4 % par semaine, linéaire"
           },
           "challengePoints": {
             "label": "Points d'un défi au classement",
-            "value": "référence × poids / 100"
+            "value": "1 par blessé ramené"
           },
           "componentsPerRescue": {
             "label": "Composants pour atteindre 1 blessé",
@@ -1453,24 +1425,24 @@
             "value": "12, dépensée seulement pour les blessés extraits"
           },
           "protectedFood": {
-            "label": "Réserve de nourriture protégée à l'extraction",
+            "label": "Réserve de nourriture protégée",
             "value": "7 soirs de repas"
           },
           "challengeWounded": {
             "label": "Blessés des défis",
-            "value": "pris dans le groupe de la semaine, partent les premiers, sans ressources ni avancement"
+            "value": "pris dans le groupe, partent les premiers, sans ressources ni brèche"
           },
           "challengeDamage": {
             "label": "Dégâts d'un défi au gardien",
             "value": "aucun"
           },
           "guardianLoss": {
-            "label": "Pertes de base si le gardien survit",
-            "value": "base × (1 − avancement)² × 35 %"
+            "label": "Pertes si le gardien survit",
+            "value": "base × (1 − brèche)² × 35 %"
           },
           "challengeSurvivors": {
             "label": "Blessés ramenés par un défi",
-            "value": "référence × poids / 1000, par opérateur qui valide, versés le dimanche"
+            "value": "référence × poids ÷ 1 000, par opérateur qui valide"
           },
           "syncInterval": {
             "label": "Fréquence de synchronisation",
@@ -1478,7 +1450,7 @@
           },
           "calibrationWindow": {
             "label": "Fenêtre de calibration",
-            "value": "9 mois, réduits d'un mois à la fois tant qu'un opérateur n'est pas couvert"
+            "value": "9 mois, réduits d'un mois tant qu'un opérateur n'est pas couvert"
           },
           "reference": {
             "label": "Référence",
@@ -1504,6 +1476,12 @@
     "closeMenu": "Fermer le menu",
     "collapse": "Réduire la barre latérale",
     "expand": "Déplier la barre latérale",
+    "group": {
+      "admin": "Administration",
+      "expedition": "Expédition",
+      "help": "Aide",
+      "squad": "Escouade"
+    },
     "label": "Barre latérale",
     "language": {
       "label": "Langue",
@@ -1657,7 +1635,7 @@
       "ranking": {
         "eyebrow": "Le classement",
         "title": "Qui a porté la semaine",
-        "claim": "Dégâts au gardien plus points de défis, remis à zéro le lundi. *Quatre titres* saluent le reste, et les règles disent tout.",
+        "claim": "Dégâts au gardien plus blessés ramenés, remis à zéro le lundi. *Quatre titres* saluent le reste, et les règles disent tout.",
         "spec1": {
           "value": "4",
           "label": "titres par semaine"

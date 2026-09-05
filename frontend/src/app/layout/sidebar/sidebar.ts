@@ -36,7 +36,7 @@ import { Translation } from '@core/i18n/translation';
 import { Language } from '@core/i18n/translation.model';
 import { PlayersApi } from '@core/players/players-api';
 import { NavigationPanel } from '@layout/navigation-panel';
-import { ADMIN_NAV_ITEMS, APP_VERSION, NAV_ITEMS } from './sidebar.constants';
+import { ADMIN_NAV_GROUPS, APP_VERSION, NAV_GROUPS } from './sidebar.constants';
 import { NavItem } from './sidebar.model';
 import { formatSynchronizationTimestamp, resolveLatestSynchronization } from './sidebar.utils';
 
@@ -142,12 +142,12 @@ export class Sidebar {
   protected readonly adminMode = computed(() => this.adminSession.isAuthenticated());
 
   /**
-   * Navigation entries currently on offer.
+   * Navigation chapters currently on offer.
    *
    * The backoffice replaces the public entries rather than adding to them — see
-   * {@link ADMIN_NAV_ITEMS}.
+   * {@link ADMIN_NAV_GROUPS}.
    */
-  protected readonly navItems = computed(() => (this.adminMode() ? ADMIN_NAV_ITEMS : NAV_ITEMS));
+  protected readonly navGroups = computed(() => (this.adminMode() ? ADMIN_NAV_GROUPS : NAV_GROUPS));
 
   /**
    * Version shown at the very bottom of the sidebar.
@@ -254,6 +254,17 @@ export class Sidebar {
    * shares the same markup.
    */
   protected readonly navLabelClass = computed(() => (this.collapsed() ? 'lg:hidden' : ''));
+
+  /**
+   * Visibility utility applied to each chapter caption, hidden on a collapsed rail where a
+   * hairline marks the break instead.
+   */
+  protected readonly navGroupLabelClass = computed(() => (this.collapsed() ? 'lg:hidden' : ''));
+
+  /**
+   * Visibility utility applied to the hairline between chapters, shown only on a collapsed rail.
+   */
+  protected readonly navGroupRuleClass = computed(() => (this.collapsed() ? 'lg:block' : ''));
 
   /**
    * Direction/alignment utility applied to the row pairing the last-synchronization info with the

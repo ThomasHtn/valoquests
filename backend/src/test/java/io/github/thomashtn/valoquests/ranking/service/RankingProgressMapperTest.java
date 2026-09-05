@@ -88,7 +88,7 @@ class RankingProgressMapperTest {
         when(weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(WEEK_START))
             .thenReturn(List.of(weekly, todaysDaily, yesterdaysDaily));
         when(challengePointsReader.referenceFor(WEEK_START)).thenReturn(2_000);
-        when(challengePointsReader.pointsOf(any(), anyInt())).thenReturn(54);
+        when(challengePointsReader.pointsOf(any(), anyInt(), anyInt())).thenReturn(54);
     }
 
     @Test

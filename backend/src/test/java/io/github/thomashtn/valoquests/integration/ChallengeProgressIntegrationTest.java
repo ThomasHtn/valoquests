@@ -291,8 +291,8 @@ class ChallengeProgressIntegrationTest
      * streak that the week extends day after day, so the daily bonus climbs from 2 % on Monday to
      * 10 % on Friday: WIN 500 × 1.02 = 510, LOSS 350 × 1.04 = 364, WIN 500 × 1.06 = 530, LOSS
      * 350 × 1.08 = 378, then the 40-kill Deathmatch victory, WIN 150 × 1.10 = 165, for 1947. None of
-     * these reaches the sixth match of its day. The five weekly challenges pay 20 + 34 + 54 + 78 +
-     * 108 = 294 points at the 2 000 floor no campaign has raised, plus the day's challenge when this
+     * these reaches the sixth match of its day. The five weekly challenges pay 2 + 3 + 5 + 8 +
+     * 11 = 29 points at the 2 000 floor no campaign has raised, plus the day's challenge when this
      * player validated it.
      *
      * @param player expected ranked player
@@ -331,7 +331,7 @@ class ChallengeProgressIntegrationTest
                     .isEqualTo(6);
 
                 assertThat(score.getChallengePoints())
-                    .isEqualTo(294 + dailyPoints);
+                    .isEqualTo(29 + dailyPoints);
 
                 assertThat(score.getCompletedChallenges())
                     .isEqualTo(5);
@@ -340,7 +340,7 @@ class ChallengeProgressIntegrationTest
                     .isEqualTo(completedDailies(player));
 
                 assertThat(score.getTotalPoints())
-                    .isEqualTo(1_947 + 294 + dailyPoints);
+                    .isEqualTo(1_947 + 29 + dailyPoints);
 
                 assertThat(score.getCalculatedAt())
                     .isEqualTo(CALCULATION_TIME);
@@ -358,7 +358,7 @@ class ChallengeProgressIntegrationTest
      * @return the points those dailies add
      */
     private int dailyPoints(Player player) {
-        return completedDailies(player) * 24;
+        return completedDailies(player) * 2;
     }
 
     /**

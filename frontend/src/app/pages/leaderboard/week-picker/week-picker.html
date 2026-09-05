@@ -1,0 +1,104 @@
+<button
+  (click)="step(1)"
+  [attr.aria-label]="'leaderboard.nav.previous' | translate"
+  [disabled]="!canGoBack()"
+  class="step focus-ring-inset"
+  type="button"
+>
+  <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
+</button>
+
+<!-- The week on screen, and the handle to every other. The badge carries its place in the
+     campaign; a week outside one wears a dash instead. -->
+<button
+  (click)="toggle()"
+  [attr.aria-controls]="listboxId"
+  [attr.aria-expanded]="isOpen()"
+  aria-haspopup="listbox"
+  class="trigger notch-tr focus-ring-inset [--notch:0.5rem]"
+  type="button"
+>
+  @if (current(); as current) {
+    <ng-container
+      [ngTemplateOutlet]="weekMark"
+      [ngTemplateOutletContext]="{ $implicit: current }"
+    />
+    <span class="trigger-span">{{ current.label }}</span>
+    @if (current.live) {
+      <span class="live label-caption text-2xs">{{ 'leaderboard.nav.live' | translate }}</span>
+    }
+  }
+  <svg
+    [class.rotate-180]="isOpen()"
+    aria-hidden="true"
+    class="size-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none"
+    lucideChevronDown
+  ></svg>
+</button>
+
+<button
+  (click)="step(-1)"
+  [attr.aria-label]="'leaderboard.nav.next' | translate"
+  [disabled]="!canGoForward()"
+  class="step focus-ring-inset"
+  type="button"
+>
+  <svg aria-hidden="true" class="size-4" lucideChevronRight></svg>
+</button>
+
+<!-- Every week at once, newest first. Runs of weeks are ruled off from each other rather than
+     named: the badge already says whether a week belongs to a campaign. -->
+<div
+  [attr.aria-label]="'leaderboard.nav.choose' | translate"
+  [hidden]="!isOpen()"
+  [id]="listboxId"
+  class="menu-panel listbox"
+  role="listbox"
+>
+  <div class="panel-scroll">
+    @for (option of options(); track option.weekStart) {
+      @if (startsGroup($index)) {
+        <hr aria-hidden="true" class="rule" />
+      }
+      <button
+        (click)="select(option)"
+        [attr.aria-selected]="option.weekStart === selected()"
+        [class.text-brand-500]="option.weekStart === selected()"
+        class="menu-option option text-text-secondary hover:bg-brand-500/8 hover:text-text-primary"
+        role="option"
+        tabindex="-1"
+        type="button"
+      >
+        <ng-container
+          [ngTemplateOutlet]="weekMark"
+          [ngTemplateOutletContext]="{ $implicit: option }"
+        />
+        <span class="option-span">{{ option.label }}</span>
+        <!-- Who won it, on a column of its own so portraits and names line up down the list. -->
+        <span class="option-winner">
+          @if (option.live) {
+            <span class="live label-caption text-2xs">{{
+              'leaderboard.nav.live' | translate
+            }}</span>
+          } @else if (option.winner; as winner) {
+            <app-avatar [src]="winner.portrait" size="xs" />
+            <span class="truncate text-sm font-medium text-accent-gold">{{ winner.name }}</span>
+          }
+        </span>
+      </button>
+    }
+  </div>
+</div>
+
+<ng-template #weekMark let-option>
+  @if (option.index !== null) {
+    <span class="mark">
+      <span class="sr-only">{{
+        'leaderboard.nav.weekIndex' | translate: { week: option.index }
+      }}</span>
+      <span aria-hidden="true">S{{ option.index }}</span>
+    </span>
+  } @else {
+    <span aria-hidden="true" class="mark mark--none">—</span>
+  }
+</ng-template>

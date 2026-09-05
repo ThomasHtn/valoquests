@@ -1,19 +1,18 @@
 <app-page-header [eyebrow]="headerEyebrow()" [heading]="'leaderboard.header.heading' | translate">
-  @if (headingAside(); as aside) {
-    <p
-      class="label-caption hidden shrink-0 items-center gap-2 text-brand-400 md:inline-flex"
-      headingAside
-    >
-      <svg aria-hidden="true" class="size-4" lucideCalendar></svg>
-      {{ aside }}
-    </p>
+  <!-- The week on screen and the way to any other, in the bar's trailing slot. -->
+  @if (weekOptions().length > 0) {
+    <app-week-picker
+      (selectedChange)="selectWeek($event)"
+      [options]="weekOptions()"
+      [selected]="selectedWeekStart()"
+    />
   }
 </app-page-header>
 
 <div class="page-body">
   <app-resource-state
     (retry)="retry()"
-    [emptyText]="'leaderboard.state.empty' | translate"
+    [emptyPlate]="emptyPlate()"
     [errorText]="'leaderboard.state.error' | translate"
     [isEmpty]="!board()"
     [isError]="isError()"
@@ -23,128 +22,96 @@
     padding="px-4 py-10 sm:px-6"
   >
     @if (board(); as board) {
-      <main class="flex flex-col gap-10 pb-20">
-        <!-- The law: what a place is made of. Stated once, above the figures it explains. -->
-        <section aria-labelledby="law-title" class="law">
-          <p class="label-caption text-brand-400" id="law-title">
-            {{ 'leaderboard.law.eyebrow' | translate }}
-          </p>
-          <p class="law-text">
-            {{ 'leaderboard.law.total' | translate }}
-            <b>
-              <svg aria-hidden="true" class="size-4" lucideSwords></svg>
-              {{ 'leaderboard.law.damage' | translate }}
-            </b>
-            {{ 'leaderboard.law.plus' | translate }}
-            <b>
-              <svg aria-hidden="true" class="size-4" lucideZap></svg>
-              {{ 'leaderboard.law.points' | translate }}
-            </b>
-            {{ 'leaderboard.law.reset' | translate }}
-          </p>
-        </section>
+      <main class="flex flex-col gap-6 pb-20">
+        <!-- Dropped on a week nobody has played yet: the board below says the true thing on its
+             own. The rule closing the podium spans the page, so it lands on the board's edges and
+             reads as its top edge rather than as a floating bar. -->
+        @if (hasActivity()) {
+          <section aria-labelledby="podium-title" class="-mt-4">
+            <h2 class="sr-only" id="podium-title">{{ 'leaderboard.podium.label' | translate }}</h2>
+            <app-podium [rows]="board.ranked" />
+            <span aria-hidden="true" class="block h-0.5 w-full bg-edge-strong"></span>
+          </section>
+        }
 
-        <section aria-labelledby="board-title" class="flex flex-col gap-2">
-          <!-- The week strip: the Monday on screen, the arrows to the closed weeks. -->
-          <div class="strip">
-            <button
-              (click)="goBack()"
-              [attr.aria-label]="'leaderboard.nav.previous' | translate"
-              [disabled]="!canGoBack()"
-              class="strip-arrow focus-ring"
-              type="button"
-            >
-              <svg aria-hidden="true" class="size-5" lucideChevronLeft></svg>
-            </button>
-            <h2 class="strip-label" id="board-title">
-              <span class="font-display text-lg font-semibold tracking-[0.04em] uppercase">
-                {{ weekLabel() }}
+        <section
+          [class.board--live]="board.live && board.columns.length > 0"
+          [style.--cols]="board.columns.length"
+          aria-labelledby="board-title"
+          class="board"
+        >
+          <h2 class="sr-only" id="board-title">{{ 'leaderboard.board.label' | translate }}</h2>
+
+          <!-- Column header, from the width where a row really holds columns. Hidden from
+               assistive technology because it labels nothing: the rows are a list of links, not
+               table cells, so each value carries its own caption instead. -->
+          @if (board.ranked.length > 0) {
+            <div aria-hidden="true" class="head">
+              <span></span>
+              <span class="label-caption text-text-muted">
+                {{ 'leaderboard.board.operator' | translate }}
               </span>
               <span
-                [class.strip-state--live]="board.live"
-                class="strip-state label-caption text-2xs"
+                [appTooltip]="'leaderboard.board.totalHelp' | translate"
+                class="head-fig label-caption cursor-help text-text-muted"
               >
-                {{ (board.live ? 'leaderboard.nav.live' : 'leaderboard.nav.closed') | translate }}
+                {{ 'leaderboard.board.total' | translate }}
               </span>
-            </h2>
-            <button
-              (click)="goForward()"
-              [attr.aria-label]="'leaderboard.nav.next' | translate"
-              [disabled]="!canGoForward()"
-              class="strip-arrow focus-ring"
-              type="button"
-            >
-              <svg aria-hidden="true" class="size-5" lucideChevronRight></svg>
-            </button>
-          </div>
-
-          <!-- Column names live in the header bar, on the rows' grid, from the point where that
-               grid really holds columns. -->
-          <div [class.board--live]="board.live" class="board">
-            <p class="bar-head bar-head--cols">
-              <span aria-hidden="true" class="bar-count clip-hex"
-                ><span class="clip-hex">{{ board.ranked.length }}</span></span
+              <span
+                [appTooltip]="'leaderboard.board.damageHelp' | translate"
+                class="head-fig label-caption cursor-help text-text-muted"
               >
-              <span class="bar-col label-caption text-2xs">{{
-                'leaderboard.board.operator' | translate
-              }}</span>
-              <span class="bar-col label-caption text-2xs">{{
-                'leaderboard.board.total' | translate
-              }}</span>
-              <span class="bar-col label-caption text-2xs">{{
-                'leaderboard.board.damage' | translate
-              }}</span>
-              <span class="bar-col label-caption text-2xs">{{
-                'leaderboard.board.points' | translate
-              }}</span>
-              <span class="bar-col label-caption text-2xs">{{
-                'leaderboard.board.streak' | translate
-              }}</span>
-              <span class="bar-col label-caption text-2xs">{{
-                'leaderboard.board.days' | translate
-              }}</span>
-              @if (board.live) {
-                <span class="bar-col label-caption text-2xs">{{
-                  'leaderboard.board.progress' | translate
-                }}</span>
+                {{ 'leaderboard.board.damage' | translate }}
+              </span>
+              <span
+                [appTooltip]="'leaderboard.board.pointsHelp' | translate"
+                class="head-fig label-caption cursor-help text-text-muted"
+              >
+                {{ 'leaderboard.board.points' | translate }}
+              </span>
+              <!-- A column is named by its tier badge, not by the challenge's name, which would
+                   not fit at this width. The name is one hover away, and restated on every cell. -->
+              @for (column of board.columns; track column.id) {
+                <span [appTooltip]="column.tip" appTooltipSize="md" class="head-tier cursor-help">
+                  <span [class]="column.barClass" class="clip-hex relative h-8 w-7">
+                    <span
+                      [class]="column.iconClass"
+                      class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-xs leading-none font-bold"
+                    >
+                      {{ column.mark }}
+                    </span>
+                  </span>
+                </span>
               }
-            </p>
+            </div>
+          }
 
-            @if (board.ranked.length === 0) {
-              <p class="px-4 py-6 text-text-secondary">
-                {{ 'leaderboard.board.nobody' | translate }}
-              </p>
-            }
+          @if (board.ranked.length === 0) {
+            <app-empty-plate [plate]="nobodyPlate()" class="px-4 py-10" tone="waiting" />
+          }
 
+          <ul class="rows">
             @for (row of board.ranked; track row.playerId) {
               <ng-container
                 [ngTemplateOutlet]="boardRow"
                 [ngTemplateOutletContext]="{ $implicit: row }"
               />
             }
-          </div>
+          </ul>
 
           @if (board.unranked.length > 0) {
-            <!-- Out of the campaign this week: tracked, never ranked. Their figures stand, their
-                 place does not. -->
-            <div class="mt-8 flex flex-col gap-2">
-              <p
-                class="label-caption flex flex-wrap items-baseline gap-x-3 gap-y-1 text-text-muted"
-              >
-                <span>{{ 'leaderboard.board.unranked' | translate }}</span>
-                <span class="normal-case tracking-normal">
-                  {{ 'leaderboard.board.unrankedNote' | translate }}
-                </span>
-              </p>
-              <div [class.board--live]="board.live" class="board">
-                @for (row of board.unranked; track row.playerId) {
-                  <ng-container
-                    [ngTemplateOutlet]="boardRow"
-                    [ngTemplateOutletContext]="{ $implicit: row }"
-                  />
-                }
-              </div>
-            </div>
+            <!-- Out of the campaign this week: tracked, never ranked. -->
+            <p class="label-caption mt-6 text-text-muted">
+              {{ 'leaderboard.board.unranked' | translate }}
+            </p>
+            <ul class="rows">
+              @for (row of board.unranked; track row.playerId) {
+                <ng-container
+                  [ngTemplateOutlet]="boardRow"
+                  [ngTemplateOutletContext]="{ $implicit: row }"
+                />
+              }
+            </ul>
           }
         </section>
       </main>
@@ -152,140 +119,120 @@
   </app-resource-state>
 </div>
 
-<!-- One row of the board, entirely a link to the operator's profile. Below the wide breakpoint
-     the five cells wrap under the name, each with its own caption; from it they dissolve into the
-     header's columns. -->
+<!-- One row of the board, entirely a link to the operator's profile. Below the wide breakpoint the
+     figures keep their own captions and the challenge cells wrap under the name, each with its
+     tier; from it they dissolve into the header's columns. -->
 <ng-template #boardRow let-row>
-  <a
-    [class.row--1]="row.position === 1"
-    [class.row--2]="row.position === 2"
-    [class.row--3]="row.position === 3"
-    [class.row--idle]="row.position === null"
-    [routerLink]="['/players', row.playerId]"
-    class="row focus-ring"
-  >
-    <span class="row-pos">
-      <span class="row-rank tabular-nums">{{ row.position ?? '·' }}</span>
-      @if (row.variation !== 0) {
-        <span
-          [class.text-accent-green]="row.variation > 0"
-          [class.text-boss-hp-edge]="row.variation < 0"
-          class="row-move tabular-nums"
-        >
-          {{ row.variation > 0 ? '▲' : '▼'
-          }}{{ row.variation > 0 ? row.variation : -row.variation }}
-        </span>
-      }
-    </span>
+  <li>
+    <a
+      [class.row-link--idle]="row.position === null"
+      [routerLink]="['/players', row.playerId]"
+      class="row-link notch-tr focus-ring-inset border-l-2 border-edge row transition-colors [--notch:0.875rem] hover:bg-brand-500/15"
+    >
+      <span class="cell-pos">
+        @if (row.position === null) {
+          <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
+        }
+        <app-position-badge [position]="row.position" />
+        @if (row.variation > 0) {
+          <span class="variation text-accent-green">
+            <svg aria-hidden="true" class="size-3" lucideChevronUp></svg>
+            <span aria-hidden="true">{{ row.variation }}</span>
+            <span class="sr-only">
+              {{ 'leaderboard.board.variation.up' | translate: { count: row.variation } }}
+            </span>
+          </span>
+        } @else if (row.variation < 0) {
+          <span class="variation text-accent-red">
+            <svg aria-hidden="true" class="size-3" lucideChevronDown></svg>
+            <span aria-hidden="true">{{ -row.variation }}</span>
+            <span class="sr-only">
+              {{ 'leaderboard.board.variation.down' | translate: { count: -row.variation } }}
+            </span>
+          </span>
+        }
+      </span>
 
-    <span class="row-who">
-      <app-avatar [champion]="row.isChampion" [src]="row.portrait" size="sm" />
-      <span class="min-w-0">
-        <span class="row-name">
-          <span [class.text-accent-gold]="row.isChampion" class="truncate">{{ row.name }}</span>
-          @if (row.isChampion) {
-            <app-champion-badge />
+      <span class="cell-who">
+        <app-avatar [champion]="row.isChampion" [src]="row.portrait" size="sm" />
+        <span class="who">
+          <span class="who-name">
+            <span
+              [class.text-accent-gold]="row.isChampion"
+              [class.text-text-primary]="!row.isChampion"
+              class="name font-display"
+            >
+              {{ row.name }}
+            </span>
+            @if (row.isChampion) {
+              <app-champion-badge />
+            }
+          </span>
+          @if (row.titles.length > 0) {
+            <!-- The week's titles, under the name rather than beside it: a name with two titles
+                 ran wider than its column and folded the titles under itself anyway. -->
+            <span class="who-titles">
+              @for (title of row.titles; track title.key) {
+                <span
+                  [appTooltip]="'common.titleHint.' + title.key | translate"
+                  [class]="title.colorClass"
+                  class="title"
+                >
+                  {{ 'common.title.' + title.key | translate }}
+                </span>
+              }
+            </span>
           }
         </span>
-        @if (row.titles.length > 0) {
-          <span class="row-titles">
-            @for (title of row.titles; track title.key) {
+      </span>
+
+      <!-- The figure a place is made of, then the two halves it adds. Neither half wears a colour
+           of the challenge ladder: red and blue beside five tier rings read as two more tiers. -->
+      <span class="cell-figs">
+        <span class="cell-fig">
+          <span class="cap label-caption text-2xs">{{
+            'leaderboard.board.total' | translate
+          }}</span>
+          <span class="fig text-text-primary">{{ format(row.total) }}</span>
+        </span>
+        <span class="cell-fig">
+          <span class="cap label-caption text-2xs">{{
+            'leaderboard.board.damage' | translate
+          }}</span>
+          <span class="fig text-accent-gold">{{ format(row.damage) }}</span>
+        </span>
+        <span class="cell-fig">
+          <span class="cap label-caption text-2xs">{{
+            'leaderboard.board.points' | translate
+          }}</span>
+          <span class="fig text-accent-purple">{{ format(row.challengePoints) }}</span>
+        </span>
+      </span>
+
+      @if (row.progress; as cells) {
+        <!-- One cell per weekly challenge of the board: the figure over its target, the bar under
+             it, the whole sentence on hover and for assistive technology. -->
+        <span
+          [attr.aria-label]="'leaderboard.board.progress' | translate"
+          class="cell-progress"
+          role="group"
+        >
+          @for (cell of cells; track cell.id) {
+            <!-- The ring closes toward the target and tints its centre once reached; it announces
+                 itself, the whole sentence stays on hover. -->
+            <span [appTooltip]="cell.tip" appTooltipSize="md" class="prog">
               <span
-                [appTooltip]="'common.titleHint.' + title.key | translate"
-                [class]="'row-title ' + title.colorClass"
+                [class]="cell.visual.iconClass"
+                aria-hidden="true"
+                class="prog-mark label-caption"
               >
-                @switch (title.icon) {
-                  @case ('wrench') {
-                    <svg aria-hidden="true" class="size-3.5" lucideWrench></svg>
-                  }
-                  @case ('wheat') {
-                    <svg aria-hidden="true" class="size-3.5" lucideWheat></svg>
-                  }
-                  @case ('flame') {
-                    <svg aria-hidden="true" class="size-3.5" lucideFlame></svg>
-                  }
-                  @case ('target') {
-                    <svg aria-hidden="true" class="size-3.5" lucideTarget></svg>
-                  }
-                }
-                {{ 'common.title.' + title.key | translate }}
+                {{ cell.mark }}
               </span>
-            }
-          </span>
-        }
-      </span>
-    </span>
-
-    <span class="row-cells">
-      <span class="row-cell">
-        <span class="row-cap label-caption text-2xs">{{
-          'leaderboard.board.total' | translate
-        }}</span>
-        <span class="row-val row-val--total tabular-nums">{{ format(row.total) }}</span>
-      </span>
-      <span class="row-cell">
-        <span class="row-cap label-caption text-2xs">{{
-          'leaderboard.board.damage' | translate
-        }}</span>
-        <span class="row-val tabular-nums" style="--cell: var(--color-boss-hp-edge)">{{
-          format(row.damage)
-        }}</span>
-      </span>
-      <span class="row-cell">
-        <span class="row-cap label-caption text-2xs">{{
-          'leaderboard.board.points' | translate
-        }}</span>
-        <span class="row-val tabular-nums" style="--cell: var(--color-accent-blue)"
-          >{{ format(row.challengePoints)
-          }}<small>
-            @if (row.totalChallenges > 0) {
-              {{
-                'leaderboard.board.weekly'
-                  | translate: { done: row.completedChallenges, total: row.totalChallenges }
-              }}
-            } @else {
-              {{ 'leaderboard.board.weeklyDone' | translate: { count: row.completedChallenges } }}
-            }
-            · {{ 'leaderboard.board.daily' | translate: { count: row.completedDaily } }}
-          </small></span
-        >
-      </span>
-      <span class="row-cell">
-        <span class="row-cap label-caption text-2xs">{{
-          'leaderboard.board.streak' | translate
-        }}</span>
-        <span class="row-val tabular-nums" style="--cell: var(--color-brand-400)">{{
-          'leaderboard.board.streakDays' | translate: { count: row.streakDays }
-        }}</span>
-      </span>
-      <span class="row-cell">
-        <span class="row-cap label-caption text-2xs">{{
-          'leaderboard.board.days' | translate
-        }}</span>
-        <span class="row-val tabular-nums"
-          >{{ row.activeDays
-          }}<small>{{ 'leaderboard.board.daysOf' | translate: { count: weekDays } }}</small></span
-        >
-      </span>
-    </span>
-
-    @if (row.rings; as rings) {
-      <!-- One ring per challenge of the board, the day's one last: the exact figure inside, the
-           whole sentence on hover and for assistive tech. -->
-      <span
-        [attr.aria-label]="'leaderboard.board.progress' | translate"
-        class="row-rings"
-        role="group"
-      >
-        @for (ring of rings; track ring.id) {
-          <span [appTooltip]="ring.tip" appTooltipSize="md" class="row-ring">
-            <app-challenge-ring [cell]="ring" />
-            <span aria-hidden="true" class="row-ring-mark label-caption text-2xs">{{
-              ring.mark
-            }}</span>
-          </span>
-        }
-      </span>
-    }
-  </a>
+              <app-challenge-ring [cell]="cell" />
+            </span>
+          }
+        </span>
+      }
+    </a>
+  </li>
 </ng-template>

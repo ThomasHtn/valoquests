@@ -4,7 +4,6 @@ import { Service, Signal } from '@angular/core';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 import { GameMode } from '@core/matches/game-mode.model';
 
-import { PlayerContribution } from './player-contribution.model';
 import { PlayerDetails } from './player-details.model';
 import { PlayerProgression } from './player-progression.model';
 import { PlayerSummary } from './player-summary.model';
@@ -81,15 +80,5 @@ export class PlayersApi {
         params: { ...(selectedSeasonIds.length > 0 ? { seasonIds: [...selectedSeasonIds] } : {}) },
       };
     });
-  }
-
-  /**
-   * One tracked player's contribution to the week and to the live campaign.
-   *
-   * @param id - Reactive internal player identifier.
-   * @returns The reactive resource fetching the requested player's contribution.
-   */
-  public contribution(id: Signal<number>): HttpResourceRef<PlayerContribution | undefined> {
-    return httpResource<PlayerContribution>(() => API_ENDPOINTS.playerContribution(id()));
   }
 }

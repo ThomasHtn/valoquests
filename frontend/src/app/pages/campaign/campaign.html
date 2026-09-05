@@ -1,19 +1,9 @@
-<app-page-header [eyebrow]="headerEyebrow()" [heading]="'campaign.header.heading' | translate">
-  @if (dayLabel(); as day) {
-    <p
-      class="label-caption hidden shrink-0 items-center gap-2 text-brand-400 md:inline-flex"
-      headingAside
-    >
-      <svg aria-hidden="true" class="size-4" lucideCalendar></svg>
-      {{ day }}
-    </p>
-  }
-</app-page-header>
+<app-page-header [eyebrow]="headerEyebrow()" [heading]="'campaign.header.heading' | translate" />
 
 <div class="page-body !gap-0 !pt-0">
   <app-resource-state
     (retry)="retry()"
-    [emptyText]="'campaign.state.none' | translate"
+    [emptyPlate]="emptyPlate()"
     [errorText]="'campaign.state.error' | translate"
     [isEmpty]="!hasCampaign()"
     [isError]="isError()"

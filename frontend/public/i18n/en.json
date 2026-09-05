@@ -295,13 +295,20 @@
       "heading": "Ten planets, ten weeks",
       "eyebrow": "Campaign {{number}}",
       "noCampaign": "Campaign",
-      "tier": "{{tier}} tier",
-      "day": "{{weekday}} · week {{week}} of {{weeks}}"
+      "tier": "{{tier}} tier"
     },
     "state": {
       "loading": "Loading the campaign…",
       "error": "The campaign could not be loaded.",
-      "none": "No campaign has been opened yet. Once a campaign is launched from the backoffice, the road of ten planets will draw itself here.",
+      "none": {
+        "eyebrow": "Road not drawn",
+        "title": "Ten planets to reach",
+        "text": "Once a campaign is opened from the backoffice, the road of ten planets draws itself here: one planet a week, one guardian per planet, one group of wounded to bring home.",
+        "start": "Start",
+        "startValue": "the Monday after opening",
+        "duration": "Length",
+        "durationValue": "{{weeks}} weeks"
+      },
       "opened": "The campaign is open: the road starts on Monday. The base's counters start with the first matches of the week.",
       "closed": "The campaign is closed. Its road stays readable until the next one opens."
     },
@@ -505,13 +512,20 @@
       "heading": "The week's challenges",
       "week": "Week {{week}} of {{weeks}}",
       "weekOf": "Week of {{date}}",
-      "tier": "{{tier}} tier",
-      "day": "{{weekday}} · day {{day}} of {{days}}"
+      "tier": "{{tier}} tier"
     },
     "state": {
       "loading": "Loading the challenges…",
       "error": "The challenges could not be loaded.",
-      "empty": "No challenge has been drawn this week yet. The week's five are drawn on Monday, the daily challenge every morning."
+      "empty": {
+        "eyebrow": "Monday draw",
+        "title": "No challenge drawn this week",
+        "text": "The week's five challenges are drawn on Monday, one per difficulty. The daily challenge is redrawn every morning.",
+        "weekly": "Weekly",
+        "weeklyValue": "5 drawn on Monday",
+        "daily": "Daily",
+        "dailyValue": "1 every morning"
+      }
     },
     "brief": {
       "eyebrow": "What challenges are for",
@@ -549,9 +563,7 @@
         "one": "validated",
         "other": "validated"
       },
-      "squadAria": "{{done}} operators out of {{total}} validated this challenge.",
-      "points": "ranking points",
-      "target": "Target {{value}}"
+      "squadAria": "{{done}} operators out of {{total}} validated this challenge."
     },
     "weekly": {
       "title": "The week's challenges",
@@ -705,49 +717,64 @@
       "heading": "The week's leaderboard",
       "week": "Week {{week}} of {{weeks}}",
       "weekOf": "Week of {{date}}",
-      "tier": "{{tier}} tier",
-      "day": "{{weekday}} · day {{day}} of {{days}}",
-      "closed": "Week closed · frozen on {{date}}"
+      "tier": "{{tier}} tier"
     },
     "state": {
       "loading": "Loading the leaderboard…",
       "error": "The leaderboard could not be loaded.",
-      "empty": "No leaderboard yet: it is calculated at the week's first synchronization."
-    },
-    "law": {
-      "eyebrow": "How the ranking works",
-      "total": "An operator's total adds",
-      "damage": "the damage dealt to the guardian",
-      "plus": "and",
-      "points": "the points of the challenges validated.",
-      "reset": "It restarts from zero every Monday; a closed week stays frozen as it ended."
+      "empty": {
+        "eyebrow": "Ranking",
+        "title": "No ranking yet",
+        "text": "The ranking is calculated at the week's first synchronization. As soon as an operator plays, their row appears here."
+      }
     },
     "nav": {
-      "weekOf": "Week of {{date}}",
       "previous": "Previous week",
       "next": "Next week",
       "live": "Live",
-      "closed": "Closed"
+      "choose": "Choose the week",
+      "weekIndex": "Week {{week}}"
     },
     "board": {
+      "label": "The ranking",
       "operator": "Operator",
       "total": "Total",
-      "damage": "Guardian damage",
-      "points": "Challenge points",
-      "streak": "Streak",
-      "days": "Days played",
+      "totalHelp": "Guardian damage plus the wounded brought home by validated challenges, one point each. The total restarts from zero every Monday.",
+      "damage": "Damage",
+      "points": "Wounded",
+      "damageHelp": "The hit points taken from the planet's guardian by the week's matches.",
+      "pointsHelp": "The wounded brought home by validated challenges, one point each.",
       "progress": "Challenge progress",
-      "nobody": "Nobody is ranked this week.",
-      "weekly": "{{done}}/{{total}} weekly",
-      "weeklyDone": "{{count}} weekly",
-      "daily": "{{count}} daily",
-      "streakDays": "{{count}} d",
-      "daysOf": "of {{count}}",
+      "variation": {
+        "up": {
+          "one": "{{count}} place gained",
+          "other": "{{count}} places gained"
+        },
+        "down": {
+          "one": "{{count}} place lost",
+          "other": "{{count}} places lost"
+        }
+      },
+      "nobody": {
+        "title": "Nobody is ranked yet",
+        "text": "The ranking is calculated at the week's first synchronization: as soon as an operator plays, their row appears here with their guardian damage and wounded brought home.",
+        "day": "Day",
+        "dayValue": "{{day}} of {{days}}",
+        "reset": "Reset",
+        "resetValue": "Monday"
+      },
       "unranked": "Unranked",
-      "unrankedNote": "Out of the campaign this week: tracked, but taking no slot.",
-      "ringTip": "{{name}} · {{current}} of {{target}} · +{{points}} pts once validated",
-      "ringTipOpen": "{{name}} · {{current}} · +{{points}} pts once validated",
-      "ringTipDone": "{{name}} · validated · +{{points}} pts"
+      "cellTip": "{{name}} · {{current}} of {{target}} · +{{points}} wounded once validated",
+      "cellTipOpen": "{{name}} · {{current}} · +{{points}} wounded once validated",
+      "cellTipDone": "{{name}} · validated · +{{points}} wounded"
+    },
+    "podium": {
+      "label": "The week's podium",
+      "rank": {
+        "1": "First place",
+        "2": "Second place",
+        "3": "Third place"
+      }
     }
   },
   "notFound": {
@@ -760,8 +787,7 @@
     "header": {
       "eyebrow": "Campaign {{number}} · {{tier}} tier",
       "noCampaign": "No campaign",
-      "heading": "Bring the wounded home from ten planets",
-      "day": "{{weekday}} · week {{week}} of {{weeks}}"
+      "heading": "Bring the wounded home from ten planets"
     },
     "scene": {
       "section": "The city at night and the rocket under construction",
@@ -862,10 +888,30 @@
     "state": {
       "loading": "Reading the campaign…",
       "error": "The campaign could not be read.",
-      "none": "No campaign has been opened yet. The weekly ranking runs; the mission starts with the first campaign.",
-      "opened": "The campaign is open: the mission starts on Monday.",
-      "closed": "The campaign is closed. The next mission waits for a new campaign to open.",
-      "settling": "The week is settled, the mission resumes on Monday."
+      "none": {
+        "eyebrow": "Mission pending",
+        "title": "No campaign open",
+        "text": "The weekly ranking already runs. The mission starts with the first campaign: opened from the backoffice, it begins the following Monday and lasts ten weeks.",
+        "ranking": "Weekly ranking",
+        "rankingValue": "running",
+        "campaign": "Campaign",
+        "campaignValue": "to open"
+      },
+      "opened": {
+        "eyebrow": "Starts Monday",
+        "title": "The campaign is open",
+        "text": "The mission starts on Monday. The base's counters begin with the first matches of the week."
+      },
+      "closed": {
+        "eyebrow": "Campaign closed",
+        "title": "Waiting for the next campaign",
+        "text": "The campaign is closed. The next mission waits for a new campaign to be opened from the backoffice."
+      },
+      "settling": {
+        "eyebrow": "Week settled",
+        "title": "The mission resumes Monday",
+        "text": "The week is settled: the extracted wounded are counted, the base waits for the next planet."
+      }
     }
   },
   "pageHeader": {
@@ -1090,36 +1136,7 @@
       "winRate": "Win rate",
       "wins": "{{count}} W"
     },
-    "title": "Player profile",
-    "contribution": {
-      "week": "This week",
-      "weekLink": "Leaderboard",
-      "total": "points",
-      "unranked": "unranked this week",
-      "weekNone": "Not calculated yet this week: the first synchronization has not run.",
-      "campaign": "Campaign {{number}}",
-      "campaignTitle": "Campaign",
-      "campaignLink": "The campaign",
-      "campaignNone": "Out of campaign: this operator is not on the live campaign's roster, or no campaign is running.",
-      "damage": "Guardian damage",
-      "points": "Challenge points",
-      "weekly": "{{count}} weekly",
-      "daily": "{{count}} daily",
-      "streak": "Streak",
-      "streakDays": "{{count}} d",
-      "days": "Days played",
-      "daysOf": "of {{count}}",
-      "matches": "Matches",
-      "components": "Components",
-      "food": "Food",
-      "rescued": "Wounded rescued",
-      "rescuedNote": "by {{count}} validated challenges",
-      "blows": "Finishing blows",
-      "longestStreak": "Longest streak",
-      "daysPlayed": "{{count}} days played",
-      "titles": "Titles",
-      "error": "The contribution could not be loaded."
-    }
+    "title": "Player profile"
   },
   "players": {
     "columns": {
@@ -1167,69 +1184,31 @@
       "silver": "Silver",
       "unranked": "Unranked"
     },
-    "title": "Players",
-    "activity": {
-      "played": "Played today",
-      "notPlayed": "Not played yet today",
-      "streak": "{{count}} d"
-    }
+    "title": "Players"
   },
   "retry": "Retry",
   "rules": {
     "title": "Rules of the game",
     "heading": "Rules",
     "subheading": "How the mission works",
-    "readingTime": {
-      "label": "Reading",
-      "value": "8 min"
-    },
     "replayTour": "Replay the guided tour",
-    "contents": {
-      "title": "Contents",
-      "searchLabel": "Search a rule",
-      "searchPlaceholder": "streak, famine, calibration…",
-      "clear": "Clear the search",
-      "noMatch": "No section mentions “{{query}}”."
-    },
     "sections": {
-      "mission": {
-        "title": "The mission",
-        "description": "A squad holds a {base} *base*, and a {rocket} *ship* is being built in its middle. For ten weeks it goes after the {wounded} *wounded* left behind on ten planets: each week, one planet, one group to evacuate, and a {guardian} *guardian* pinning them to the ground until the squad breaks through its lines.",
-        "score": "Everything the operators play in Valorant feeds the base. The campaign's score is the *size of the base* {base}. The number of guardians defeated decides the final state of the rocket {rocket}.",
-        "loopLabel": "Loop",
-        "rhythmLabel": "Rhythm",
-        "effectLabel": "What happens",
-        "loops": {
-          "sync": {
-            "name": "Synchronization",
-            "rhythm": "every 30 min",
-            "effect": "Matches come in, the stocks {food} {components} rise, the guardian {guardian} takes the hits."
-          },
-          "daily": {
-            "name": "Day",
-            "rhythm": "at midnight",
-            "effect": "The base eats, the day closes, the day's challenge {challenge} is resolved."
-          },
-          "weekly": {
-            "name": "Week",
-            "rhythm": "Monday → Sunday",
-            "effect": "The guardian goes down and the wounded {wounded} are rescued."
-          },
-          "campaign": {
-            "name": "Campaign",
-            "rhythm": "ten weeks",
-            "effect": "The rocket {rocket} is built, the final score is frozen."
-          }
-        }
-      },
-      "resources": {
-        "title": "The two resources",
-        "description": "Every match produces {food} *food* and {components} *components* at once, split by the mode played: 30 % food in Competitive, Premier and Unrated, 70 % in Deathmatch, Team Deathmatch, Spike Rush and Skirmish. The amount split is the match's value.",
+      "match": {
+        "title": "The match",
+        "statement": "Every match played in Valorant feeds the base",
+        "description": "A match is worth points by mode and outcome. Those points do *three things at once*: they hit the week's guardian {guardian} in full, and they split into food {food} and components {components}. The values are set so that *an hour of play pays about the same* in every mode.",
         "modeLabel": "Game mode",
         "loss": "Loss",
         "draw": "Draw",
         "win": "Win",
-        "minutes": "{{count}} min",
+        "groups": {
+          "long": "Long modes",
+          "short": "Short modes",
+          "none": "Worth nothing"
+        },
+        "noneModes": "Swiftplay, Escalation",
+        "foodShare": "{{percent}} % food",
+        "componentsShare": "{{percent}} % components",
         "modes": {
           "competitive": "Competitive, Premier",
           "unrated": "Unrated",
@@ -1238,183 +1217,176 @@
           "deathmatch": "Deathmatch",
           "skirmish": "Skirmish"
         },
-        "hourly": "The values are set so that *an hour of play pays about the same whatever the mode*, diminishing returns included: between 680 and 780 {damage} per hour over a one-hour session. Swiftplay and Escalation are worth nothing.",
         "foodUse": "Feed the base {base} every day, and settle Sunday's rescued {wounded}.",
-        "componentsUse": "Reach the survivors {wounded}: vehicles and expedition gear.",
-        "examplesLabel": "Examples",
-        "examples": {
-          "competitiveWin": "Competitive won",
-          "competitiveLoss": "Competitive lost",
-          "deathmatchWin": "Deathmatch won",
-          "deathmatchLoss": "Deathmatch lost"
-        },
-        "stocks": "*These are real stocks.* Nothing is reset: what was not spent stays in reserve from one week to the next, which is what lets a squad save up before a big week. Per match, competitive pays more of both; the trade-off exists per hour of play."
+        "componentsUse": "Reach the wounded {wounded}: vehicles and expedition gear."
       },
       "multipliers": {
-        "title": "The two multipliers",
-        "description": "They apply to every match and are shown on every operator's row: *diminishing returns* against farming, and the *streak of consecutive days* {streak} rewarding daily effort.",
-        "decayLabel": "Diminishing returns, by the match's rank in the day",
-        "decayRank": "Match {{rank}}",
-        "decayNote": "The rank is computed by *decreasing value*, not by time: the day's best matches always keep 100 %, and a Deathmatch warm-up never devalues the competitive played after it. Until the day is over, a displayed total may slip back a little; it is settled at midnight.",
-        "streakLabel": "Streak of consecutive days",
-        "streakDays": "{{days}} d",
-        "streakNote": "The first day gives nothing: a bonus everyone has is not a bonus. The cap is deliberately low, so that an operator who skips a day can still catch the leader.",
-        "streakRules": {
-          "individual": "The streak {streak} is *individual* and reset at midnight as soon as an operator skips a day.",
-          "valued": "A day counts if the operator played *at least one valued match* in it: a mode worth zero makes no day.",
-          "wholeDay": "As soon as one valued match exists, *every match of that day* takes the new counter's bonus. There is one bonus per day.",
-          "calendar": "A day {day} is the calendar day of the project's time zone, the one the match started in.",
-          "neverStops": "The counter never stops: not on Monday, not between two campaigns. The display keeps counting past six, “12 d”, but the bonus stays at +10 %.",
-          "everything": "The bonus applies to everything a match produces: damage {damage}, components {components}, food {food}, base growth {base}. *Never to challenges* {challenge}."
+        "title": "The multipliers",
+        "statement": "Farming pays less, consistency pays more",
+        "description": "Two coefficients change the *value of every match*, so its damage {damage}, its food {food} and its components {components} at once. The first drops with the number of matches in the day. The second rises with the number of days played in a row {streak}. Neither touches the challenges.",
+        "decayLabel": "Yield, by rank of the match in the day",
+        "decayRanks": {
+          "first": "Matches 1 to 5",
+          "next": "Matches 6 to 9",
+          "rest": "10 and beyond"
         },
-        "combined": "The two multiply: match value × diminishing return × (1 + streak bonus), rounded to the integer *once*, at the end, per match."
-      },
-      "day": {
-        "title": "The day",
-        "description": "A day {day} produces continuously and closes at midnight, in a fixed order. Everything played grows the base {base}, whatever the mode: no mode is a bad choice for the score.",
-        "steps": {
-          "grow": {
-            "title": "The base grows",
-            "when": "every sync",
-            "text": "28 damage {damage} make one inhabitant {base}. The only source of daily growth, deliberately neutral by mode."
-          },
-          "guardian": {
-            "title": "The guardian takes the hits",
-            "when": "every sync",
-            "text": "Every match deals its damage {damage} to the guardian {guardian} as soon as it comes in, without waiting for the end of the day."
-          },
-          "eat": {
-            "title": "The base eats",
-            "when": "at midnight",
-            "text": "Every inhabitant eats 0.008 food {food}. As long as the stock keeps up, all is well. Once it runs dry, the unfed inhabitants start dying."
-          },
-          "daily": {
-            "title": "The day's challenge is resolved",
-            "when": "at midnight",
-            "text": "The wounded {wounded} it brings back are *earned whatever happens* and counted for Sunday: they leave with the ship."
-          }
+        "decayNote": "The day's matches are ranked from the strongest to the weakest: the best five count in full, whatever the order they were played in.",
+        "streakLabel": "Days played in a row {streak}, every match of the day is worth",
+        "streakDays": {
+          "one": "{{count}} day",
+          "other": "{{count}} days"
         },
-        "upkeepLabel": "Share of your food absorbed by upkeep, by week",
-        "week": "Wk {{week}}",
-        "upkeepNote": "Upkeep rises with the population, gently and on purpose: a base of ten thousand needs more attention than a camp of one thousand, without ever becoming the main subject.",
-        "famineLabel": "Inhabitants lost, by evenings of famine",
-        "evenings": {
-          "one": "{{count}} evening",
-          "other": "{{count}} evenings"
-        },
-        "famineNote": "In ordinary play the base never starves: the ship always leaves seven meals aside on Sunday. Famine only begins *once the reserve is empty*, so after more than a week without a single match; every evening without food, 5 % of the unfed inhabitants die. The real price of stopping is the guardian {guardian} left standing: 35 % of the base."
+        "streakDaysMore": "{{count}} days and more",
+        "streakNote": "A day counts if the operator played at least one valued match in it. The streak is individual and falls back to 1 as soon as a day is skipped.",
+        "exampleLabel": "Example",
+        "example": "Competitive win, sixth match of the day, fourth day in a row: *500 × 50 % × 1.06 = 265* damage {damage}, split into 80 food {food} and 185 components {components}."
       },
       "week": {
         "title": "The week",
-        "description": "The guardian {guardian} has hit points set on Monday. *Every match played by any active operator deals it damage* {damage}, within thirty minutes. It can fall on Tuesday at noon as well as on Sunday night. Only matches hurt it: a completed challenge {challenge} deals none, it brings back wounded.",
-        "live": "The fight is strictly insensitive to the mix of modes: the total played is what counts. When it falls, the application records *who dealt the finishing blow and on which match*. The week is not over for that: the remaining days keep filling the reserves and growing the base. Killing the guardian early is an advantage, never an end of week.",
-        "settlementLabel": "Sunday's settlement",
-        "settlement": {
-          "challenges": {
-            "term": "Challenge wounded",
-            "value": "what the week's challenges {challenge} brought back, never more than the group"
+        "statement": "One guardian per week, and every match of the squad hits it",
+        "description": "Every Monday, a new planet: a guardian {guardian} with its hit points, and a group of wounded {wounded} it keeps on the ground. Every match of every active operator deals it damage as soon as it comes in. It can fall on Tuesday as well as on Sunday; the week keeps filling the reserves.",
+        "steps": {
+          "sync": {
+            "title": "Matches come in",
+            "when": "every 30 min",
+            "text": "The guardian takes the hit, the reserves rise, and the base grows: *28 damage make one inhabitant* {base}."
           },
-          "extraction": {
-            "term": "Extraction",
-            "value": "the smallest of: the rest of the group, what the components {components} can reach, what the food {food} can settle; multiplied by the *breach* on the guardian"
+          "midnight": {
+            "title": "The base eats",
+            "when": "at midnight",
+            "text": "Each inhabitant eats *0.008 food* {food}. The daily challenge resolves, a new one is drawn. The streak {streak} moves on or falls."
+          },
+          "sunday": {
+            "title": "The settlement",
+            "when": "Sunday evening",
+            "text": "In this order: the last daily challenge, the guardian's attack if it is still standing, then the ship's return {rocket} with the rescued."
+          },
+          "monday": {
+            "title": "New planet",
+            "when": "Monday",
+            "text": "New guardian, new group, reserves kept: *a bad week is never paid for the next one*."
+          }
+        },
+        "guardianNote": "*Guardian hit points*: reference × week weight × 0.78 × active operators. Only the operators active on the opening Monday count; an inactive one is still tracked, but brings nothing and costs nothing.",
+        "famineNote": "*Famine* only exists once the reserve is empty, that is after more than a week without a single match: each evening, 5 % of the unfed inhabitants die."
+      },
+      "sunday": {
+        "title": "Sunday",
+        "statement": "We bring back the smallest of three numbers, never more than the group",
+        "description": "A wounded {wounded} only comes home with a *seat aboard*, a *bed at the base*, and a blockade *open by as much*. The challenges' wounded skip that rule: they leave first, spending nothing.",
+        "settlementLabel": "Sunday's settlement",
+        "terms": {
+          "seats": {
+            "term": "Seats aboard",
+            "value": "*14 components* {components} per wounded."
+          },
+          "beds": {
+            "term": "Beds at the base",
+            "value": "*12 food* {food} per wounded, once the base's next seven meals are set aside. The ship never touches them."
+          },
+          "breach": {
+            "term": "Breach",
+            "value": "The share of hit points taken from the guardian {guardian}. It multiplies the extraction: 100 % if it fell."
           },
           "rescued": {
             "term": "Rescued",
-            "value": "challenge wounded + extraction {wounded}"
+            "value": "challenges' wounded {challenge} + min( rest of the group, seats, beds ) × breach"
           }
         },
-        "settlementNote": "The challenge wounded are part of the spotted group: they leave first, without spending resources and without the breach applying. The breach is 1 if the guardian fell, otherwise the share of its hit points removed. Components and food are only spent on the wounded *actually extracted*: 14 {components} and 12 {food} per wounded aboard.",
-        "protectedFood": "*The ship never touches the next seven meals.* Before extracting, the food of the seven evenings to come is set aside; only the food beyond that reserve pays for beds.",
-        "lossLabel": "If the guardian survives: base losses, by breach reached",
-        "lossNote": "Losses are continuous and quadratic, with no threshold: base × (1 − breach)² × 35 %. Missing by a little costs almost nothing. Doing nothing costs a lot.",
-        "sundayOrder": "*Sunday night's order*: the day's challenge is resolved, the guardian attacks if it still stands, then the ship returns and the rescued join the base. The wounded brought back never suffer the attack: they were not there yet.",
-        "monday": "*Monday*: new group, new guardian. The reserves {food} {components} are kept; a bad week never costs the next one. The roster does not change during a campaign.",
-        "whoCounts": "Only the operators *active on the opening Monday* count: for damage, resources, growth and challenge wounded. An inactive operator stays synchronized and sees their progress on every challenge, for reference: they measure how fast they would go, bringing nothing and costing nothing."
+        "exampleLabel": "Example, a group of 40 wounded",
+        "example": {
+          "challenges": "Challenges' wounded",
+          "remaining": "Rest of the group",
+          "seats": "Seats aboard: 420 components {components} ÷ 14",
+          "beds": "Beds: 240 free food {food} ÷ 12",
+          "extraction": "Extraction: the smallest of the three, 20, × breach 75 %",
+          "rescued": "Rescued"
+        },
+        "exampleNote": "Only the 15 extracted cost anything: 210 components and 180 food. The rest of the reserves is kept.",
+        "lossLabel": "If the guardian survives: inhabitants lost, by breach reached",
+        "lossNote": "The guardian attacks the base {base}: base × (1 − breach)² × 35 %. Missing by a little costs almost nothing, doing nothing costs a lot."
       },
       "campaign": {
         "title": "The campaign",
-        "description": "Ten weeks, each with its own shape, described by two numbers expressed as a share of the squad's *reference*: the guardian's {guardian} weight and the size of the group of wounded {wounded}.",
-        "weekLabel": "Wk",
-        "categoryLabel": "Category",
-        "groupLabel": "Group",
-        "weightsNote": "This produces weeks that play differently without a single rule changing.",
-        "examples": {
-          "six": {
-            "title": "Week 6",
-            "text": "Big group, weak guardian. A supply run."
-          },
-          "seven": {
-            "title": "Week 7",
-            "text": "Small group, tough guardian. A siege."
-          },
-          "ten": {
-            "title": "Week 10",
-            "text": "The campaign's biggest group behind its biggest guardian."
-          }
+        "statement": "Ten weeks, ten planets, and a guardian whose size is known in advance",
+        "description": "A campaign lasts ten weeks. Each week, a planet: a guardian {guardian} with a set number of hit points, and a group of wounded {wounded} of a set size. Both numbers are computed at the opening from the squad's reference, see section 06. The final score is the *base's population* {base}.",
+        "weekLabel": "Week",
+        "guardianLabel": "Guardian",
+        "hpLabel": "Hit points",
+        "woundedLabel": "Wounded",
+        "howLabel": "How it plays",
+        "how": {
+          "1": "Warm-up: weak guardian, modest group.",
+          "5": "The first wall.",
+          "6": "Big group, weak guardian: a supply race.",
+          "7": "Small group, tough guardian: a siege.",
+          "10": "The biggest group behind the biggest guardian."
         },
-        "progression": "*Rewards climb*: groups and challenge rescues progress by +4 % per week, linearly, × 1.00 in week 1, × 1.36 in week 10. Never compounded. Combined with rising upkeep, the campaign gets progressively harder while paying better.",
+        "exampleNote": "Example for a squad of {{operators}} active operators at a reference of {{reference}}, that is {{weekly}} damage in an ordinary week: a Minor guardian falls in three days, an Elite takes more than a week. Groups grow by 4 % a week, the campaign gets harder and pays better as it goes.",
         "lifecycle": {
-          "open": "The administrator *opens* the campaign from the backoffice. At that instant the roster is frozen and the calibration is computed.",
-          "start": "The campaign *starts the following Monday* and lasts ten weeks.",
-          "close": "It *closes* after the tenth Sunday's settlement, and its final score is frozen.",
-          "between": "Between two campaigns, no guardian, no base, no reserves: only the weekly ranking {points} keeps running. Every campaign starts from scratch."
+          "open": {
+            "title": "Opening",
+            "text": "From the backoffice. The roster is frozen and the ten guardians are sized, once and for all."
+          },
+          "start": {
+            "title": "The following Monday",
+            "text": "Week 1 begins. Every Sunday evening settles its week, every Monday opens the next."
+          },
+          "close": {
+            "title": "Tenth Sunday",
+            "text": "The campaign closes. The base's population {base} is its score; the rocket {rocket} shows one state per guardian defeated."
+          },
+          "between": {
+            "title": "Between two campaigns",
+            "text": "No guardian, no base, no reserves: only the weekly ranking {points} keeps running. Every campaign starts from zero."
+          }
         }
       },
       "calibration": {
-        "title": "Calibration and tiers",
-        "description": "Before launch, the application reads the frozen roster's history and draws a *reference* from it: the weekly damage {damage} an operator of the squad produces on average. It sets the size of the guardians, of the groups, and the worth of the challenges.",
-        "facts": {
-          "window": "A window of *nine months* of history, for every active operator.",
-          "average": "The reference is the *mean of the weekly means*: the guardian is worth “reference × operators”, a sum being aimed at, and a very strong operator must weigh in it.",
-          "emptyWeeks": "Every week of the window counts, *including the ones without a single match*, at zero. An operator who plays little is a weak operator, and the reference must reflect it.",
-          "floor": "A *floor of 2,000*, four competitives and three quick matches a week. Below it, a guardian would fall in one evening.",
-          "shrink": "If an operator's history does not cover nine months, the window is *shrunk one month at a time, for everyone*, until each is covered.",
-          "beginner": "An operator with under a month of history is a *beginner*: they do not shrink the window and take the squad's median.",
-          "once": "The reference is computed *once*, at opening, and never recomputed."
-        },
-        "sameMultipliers": "*Critical point*: the reference is computed with exactly the same multipliers as during the campaign, streak {streak} and diminishing returns included. Applying them on one side and not the other would shift the guardian's bar by about 30 %.",
+        "title": "The reference",
+        "statement": "Everything is cut to the squad's measure",
+        "description": "The reference is what an operator of the squad produces in a week, read from the frozen roster's history. Guardians, groups and challenges follow from it, *per active operator*: the game is the same at 2 as at 20. The resulting tier lets two squads of different levels compare their campaigns.",
         "tierLabel": "Tier",
         "referenceLabel": "Reference per operator",
-        "exampleLabel": "Example per week",
+        "exampleLabel": "Per week, in practice",
         "examples": {
-          "AMATEUR": "4 competitives and 3 quick ones",
-          "NORMAL": "7 competitives and 9 quick ones",
-          "CONFIRMED": "16 competitives and 25 quick ones",
-          "ELITE": "28 competitives and 35 quick ones"
+          "AMATEUR": "4 Competitive and 3 quick ones",
+          "NORMAL": "7 Competitive and 9 quick ones",
+          "CONFIRMED": "16 Competitive and 25 quick ones",
+          "ELITE": "28 Competitive and 35 quick ones"
         },
-        "tiersNote": "The tier exists so that two squads of very different levels can compare their campaigns. *Every quantity is expressed per active operator*, which makes the game identical with 2 or 20 operators."
+        "facts": {
+          "window": "A window of *nine months* of history, for each active operator. If one of them lacks nine months, it shrinks one month at a time, for everyone.",
+          "emptyWeeks": "*Weeks without a match count as zero*. An operator who plays little is a weak operator, and the reference has to reflect it.",
+          "floor": "A *floor of 2,000*, that is four Competitive and three quick matches a week. Below it, a guardian would fall in one evening.",
+          "once": "Computed *once*, at the opening, with the same multipliers as the campaign. A beginner with less than a month takes the squad's median."
+        }
       },
       "challenges": {
-        "title": "The challenges",
-        "description": "*One daily challenge* {challenge}, shared by the squad, drawn every morning from a pool of 21 with no repeat over 21 days, resolved the same evening. *Five weekly challenges*, one per difficulty, drawn on Monday from a catalogue of 100. Both bring back wounded {wounded} earned whatever happens; neither deals damage to the guardian.",
+        "title": "Challenges and ranking",
+        "statement": "A challenge brings wounded home no matter what, and each wounded is worth one point",
+        "description": "One *daily challenge* {challenge}, shared by the squad, drawn every morning from 21 and resolved the same evening. *Five weekly challenges*, one per difficulty, drawn on Monday from 100. Their wounded {wounded} are earned no matter what, but no challenge touches the guardian.",
         "challengeLabel": "Challenge",
         "weightLabel": "Weight",
+        "woundedLabel": "Wounded",
         "daily": "Daily challenge",
-        "worthNote": "Wounded and points per completing operator, at a reference of {{reference}}. A perfect week, seven daily challenges and the five weekly ones, is worth 120 wounded per operator. The values progress by +4 % per week, like everything else.",
+        "worthNote": "Wounded per operator who validates, for a reference of {{reference}}. A perfect week, seven daily challenges and the five weekly ones, is worth 120 wounded per operator.",
         "survivorsFormula": {
-          "title": "Wounded brought back",
-          "formula": "reference × weight / 1000",
-          "text": "Per completing operator, paid on Sunday {wounded}. Proportional to the reference: the same relative weight for amateurs and for pros."
+          "title": "Wounded brought home",
+          "formula": "reference × weight ÷ 1,000",
+          "text": "Per operator who validates, paid on Sunday {wounded}. The same relative weight for amateurs and for pros."
         },
         "pointsFormula": {
           "title": "Ranking points",
-          "formula": "reference × weight / 100",
-          "text": "The week's ranking {points} adds the guardian damage {damage}, multipliers included, and the points of the completed challenges."
+          "formula": "1 point per wounded brought home",
+          "text": "The weekly ranking {points} adds up guardian damage {damage}, multipliers included, and the wounded of validated challenges. Against 5,300 damage, challenges break ties, they do not make the ranking."
         },
-        "ranking": "A perfect week of challenges is worth about 1,200 points, against 5,300 of damage for a median week: challenges weigh *a fifth of the ranking*, never half. The ranking shows, for every operator, the progress on every challenge in play."
-      },
-      "titles": {
-        "title": "The titles",
-        "description": "Four titles handed out every week, so that recognition does not gather on a single operator. Purely honorary: an operator may hold several, and on a tie the title is not awarded."
-      },
-      "rocket": {
-        "title": "The rocket",
-        "description": "In the middle of the base, the rocket {rocket} is the campaign's trophy.",
-        "text": "*Ten visual states indexed on the number of guardians defeated* {guardian}. Ten out of ten gives the full picture. No effect on the rules."
+        "titlesLabel": "Four titles every week, honorary, never on a tie"
       },
       "constants": {
         "title": "The constants",
-        "description": "Every value of the game, in one table. Checked by simulation: a squad calibrated on itself beats 8 guardians out of 10, effort pays, and the result per operator is identical from 2 to 20 operators.",
+        "statement": "Every value of the game, in one table",
+        "description": "As the code applies them. Checked by simulation: a squad calibrated on itself beats 8 guardians out of 10, and the result per operator is identical from 2 to 20 operators.",
         "items": {
           "growth": {
             "label": "Damage for 1 inhabitant",
@@ -1426,23 +1398,23 @@
           },
           "famine": {
             "label": "Daily loss under famine",
-            "value": "5 % of the unfed share, only when the reserve is empty"
+            "value": "5 % of the unfed share, only if the reserve is empty"
           },
           "guardianSize": {
             "label": "Guardian size",
-            "value": "reference × week weight × 0.78 × active operators"
+            "value": "reference × weight × 0.78 × active operators"
           },
           "groupSize": {
             "label": "Group size",
-            "value": "reference × week weight × 0.050 × active operators × progression"
+            "value": "reference × weight × 0.050 × active operators × progression"
           },
           "progression": {
             "label": "Reward progression",
-            "value": "+4 % per campaign week, linear"
+            "value": "+4 % per week, linear"
           },
           "challengePoints": {
             "label": "Ranking points of a challenge",
-            "value": "reference × weight / 100"
+            "value": "1 per wounded brought home"
           },
           "componentsPerRescue": {
             "label": "Components to reach 1 wounded",
@@ -1453,15 +1425,15 @@
             "value": "12, spent only on the wounded extracted"
           },
           "protectedFood": {
-            "label": "Food reserve protected at extraction",
+            "label": "Protected food reserve",
             "value": "7 evenings of meals"
           },
           "challengeWounded": {
-            "label": "Challenge wounded",
-            "value": "taken from the week's group, leave first, no resources and no breach"
+            "label": "Challenges' wounded",
+            "value": "taken from the group, leave first, no resources nor breach"
           },
           "challengeDamage": {
-            "label": "Challenge damage to the guardian",
+            "label": "Damage of a challenge to the guardian",
             "value": "none"
           },
           "guardianLoss": {
@@ -1469,8 +1441,8 @@
             "value": "base × (1 − breach)² × 35 %"
           },
           "challengeSurvivors": {
-            "label": "Wounded brought back by a challenge",
-            "value": "reference × weight / 1000, per completing operator, paid on Sunday"
+            "label": "Wounded brought home by a challenge",
+            "value": "reference × weight ÷ 1,000, per operator who validates"
           },
           "syncInterval": {
             "label": "Synchronization interval",
@@ -1482,10 +1454,10 @@
           },
           "reference": {
             "label": "Reference",
-            "value": "mean of the weekly means per active operator, empty weeks at zero, floor 2,000"
+            "value": "mean of weekly means per active operator, empty weeks at zero, floor 2,000"
           },
           "duration": {
-            "label": "Campaign length",
+            "label": "Campaign duration",
             "value": "10 weeks"
           }
         }
@@ -1504,6 +1476,12 @@
     "closeMenu": "Close menu",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
+    "group": {
+      "admin": "Administration",
+      "expedition": "Expedition",
+      "help": "Help",
+      "squad": "Squad"
+    },
     "label": "Sidebar",
     "language": {
       "label": "Language",
@@ -1657,7 +1635,7 @@
       "ranking": {
         "eyebrow": "The ranking",
         "title": "Who carried the week",
-        "claim": "Guardian damage plus challenge points, reset on Monday. *Four titles* salute the rest, and the rules tell everything.",
+        "claim": "Guardian damage plus wounded brought home, reset on Monday. *Four titles* honour the rest, and the rules say it all.",
         "spec1": {
           "value": "4",
           "label": "titles per week"

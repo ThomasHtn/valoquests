@@ -1,6 +1,5 @@
 import { WeeklyTitle } from '@core/campaign/campaign.model';
 import { TitleVisual } from '@core/campaign/campaign-visual.utils';
-import { ChallengeCadence } from '@core/challenges/challenge.model';
 import { ChallengeTier } from '@core/challenges/challenge-visual.model';
 import { ChallengeRingCell } from '@shared/challenge-ring/challenge-ring';
 
@@ -12,15 +11,28 @@ export interface BoardTitle extends TitleVisual {
 }
 
 /**
- * One operator's exact progress toward one challenge of the board, as a ring.
+ * One challenge column of a live board: the tier badge the header shows in place of the
+ * challenge's name, which would not fit at this width. The name stays one hover away.
  */
-export interface BoardRing extends ChallengeRingCell {
+export interface BoardColumn {
   readonly id: number;
-  readonly cadence: ChallengeCadence;
   readonly mark: ChallengeTier;
+  readonly barClass: string;
+  readonly iconClass: string;
+  readonly tip: string;
+}
+
+/**
+ * One operator's progress toward one weekly challenge, as a ring closing toward its target.
+ */
+export interface BoardProgress extends ChallengeRingCell {
+  readonly id: number;
+  readonly mark: ChallengeTier;
+  readonly name: string;
+  readonly barClass: string;
 
   /**
-   * The whole sentence the ring abbreviates: the name, where the operator stands, the points.
+   * The whole sentence the cell abbreviates: the name, where the operator stands, the wounded.
    */
   readonly tip: string;
 }
@@ -47,17 +59,13 @@ export interface BoardRow {
   readonly total: number;
   readonly damage: number;
   readonly challengePoints: number;
-  readonly completedChallenges: number;
-  readonly totalChallenges: number;
-  readonly completedDaily: number;
-  readonly streakDays: number;
-  readonly activeDays: number;
   readonly titles: readonly BoardTitle[];
 
   /**
-   * One ring per challenge on the board, or `null` on a closed week, whose progress was not kept.
+   * One cell per weekly challenge of the board, or `null` on a closed week, whose progress was
+   * not kept.
    */
-  readonly rings: readonly BoardRing[] | null;
+  readonly progress: readonly BoardProgress[] | null;
 }
 
 /**
@@ -74,6 +82,46 @@ export interface BoardWeek {
    * Position in the campaign, or `null` for a week outside one.
    */
   readonly weekIndex: number | null;
+
+  /** The challenge columns, in the rows' order; empty on a closed week, which keeps no progress. */
+  readonly columns: readonly BoardColumn[];
   readonly ranked: readonly BoardRow[];
   readonly unranked: readonly BoardRow[];
+}
+
+/**
+ * The operator who finished a closed week first, as the week picker names it.
+ */
+export interface WeekWinner {
+  readonly name: string;
+  readonly portrait: string | null;
+}
+
+/**
+ * One week the picker offers, newest first.
+ */
+export interface WeekOption {
+  readonly weekStart: string;
+
+  /**
+   * Monday to Sunday, the month spelled once when both days share it.
+   */
+  readonly label: string;
+
+  /**
+   * Position in its campaign, or `null` for a week outside one.
+   */
+  readonly index: number | null;
+
+  /**
+   * What the option belongs to — a campaign's id, or `null` outside one — so the picker can rule
+   * off one run of weeks from the next without naming them.
+   */
+  readonly group: number | null;
+  readonly live: boolean;
+
+  /**
+   * Who won the week; `null` while it is still running or when nobody was ranked.
+   */
+  readonly winner: WeekWinner | null;
 }

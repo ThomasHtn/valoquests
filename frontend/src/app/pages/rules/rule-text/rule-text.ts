@@ -43,7 +43,14 @@ interface RuleRun {
   readonly text: string;
   readonly strong: boolean;
   readonly icon: RuleIcon | null;
+  /** Text colour of the icon: the resource's own everywhere else in the app, brand otherwise. */
+  readonly tone: string;
 }
+
+const ICON_TONES: Partial<Record<RuleIcon, string>> = {
+  food: 'text-accent-green',
+  components: 'text-accent-cyan',
+};
 
 const TOKEN = /(\{[a-z]+\}|\*[^*]+\*)/;
 
@@ -86,13 +93,14 @@ export class RuleText {
         if (part.startsWith('{') && part.endsWith('}')) {
           const name = part.slice(1, -1);
           if ((RULE_ICONS as readonly string[]).includes(name)) {
-            return { text: '', strong: false, icon: name as RuleIcon };
+            const icon = name as RuleIcon;
+            return { text: '', strong: false, icon, tone: ICON_TONES[icon] ?? 'text-brand-400' };
           }
         }
         if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
-          return { text: part.slice(1, -1), strong: true, icon: null };
+          return { text: part.slice(1, -1), strong: true, icon: null, tone: '' };
         }
-        return { text: part, strong: false, icon: null };
+        return { text: part, strong: false, icon: null, tone: '' };
       }),
   );
 }

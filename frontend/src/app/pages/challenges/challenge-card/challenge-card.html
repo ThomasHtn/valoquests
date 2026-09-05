@@ -22,12 +22,6 @@
   </p>
   <h3 class="name">{{ card.name }}</h3>
   <p class="desc">{{ card.description }}</p>
-  @if (card.target) {
-    <p class="target label-caption text-2xs">
-      <svg aria-hidden="true" class="size-3" lucideTarget></svg>
-      {{ 'challenges.card.target' | translate: { value: card.target } }}
-    </p>
-  }
 </div>
 
 <p class="pay">
@@ -36,9 +30,8 @@
     <b class="tabular-nums">+{{ card.survivors }}</b>
     <span>{{ 'challenges.card.perOperator' | translate }}</span>
   } @else {
-    <svg aria-hidden="true" class="size-4" lucideZap></svg>
+    <svg aria-hidden="true" class="size-4" lucideUsers></svg>
     <b class="tabular-nums">+{{ card.rankingPoints }}</b>
-    <span>{{ 'challenges.card.points' | translate }}</span>
   }
 </p>
 

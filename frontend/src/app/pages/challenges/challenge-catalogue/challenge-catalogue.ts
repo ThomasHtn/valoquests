@@ -1,9 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { LucideZap } from '@lucide/angular';
 
-import { formatChallengeTarget } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { Translation } from '@core/i18n/translation';
 import { CatalogueGroup } from '../challenges.model';
 
 /**
@@ -19,13 +17,4 @@ import { CatalogueGroup } from '../challenges.model';
 })
 export class ChallengeCatalogueView {
   public readonly groups = input.required<readonly CatalogueGroup[]>();
-
-  private readonly translation = inject(Translation);
-
-  /**
-   * The target as resolved for the campaign in force, the figure the description does not carry.
-   */
-  protected target(value: number): string {
-    return formatChallengeTarget(value, this.translation.language());
-  }
 }

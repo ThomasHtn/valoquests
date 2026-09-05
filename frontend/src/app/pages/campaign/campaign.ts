@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { LucideCalendar, LucideTarget } from '@lucide/angular';
+import { LucideTarget } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
 import {
@@ -14,6 +14,7 @@ import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resou
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PageHeader } from '@layout/page-header/page-header';
+import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { ROCKET_PART_COUNT } from '@shared/rocket/rocket-drawing';
 import { SectionRule } from '@shared/section-rule/section-rule';
@@ -93,7 +94,6 @@ function daysBetween(from: string, to: string): number {
     ReserveLedger,
     RocketShowcase,
     CampaignHistoryView,
-    LucideCalendar,
     LucideTarget,
   ],
   templateUrl: './campaign.html',
@@ -153,22 +153,6 @@ export class Campaign {
           tier: this.translation.translate(`common.tier.${campaign.tier}`),
         })}`
       : eyebrow;
-  });
-
-  protected readonly dayLabel = computed(() => {
-    const campaign = this.campaign();
-    if (!campaign) {
-      return '';
-    }
-    const weekday = this.weekday(localMidnight(campaign.today));
-    if (campaign.currentWeekIndex === null || campaign.status !== 'RUNNING') {
-      return weekday;
-    }
-    return this.translation.translate('campaign.header.day', {
-      weekday,
-      week: campaign.currentWeekIndex,
-      weeks: CAMPAIGN_WEEK_COUNT,
-    });
   });
 
   protected readonly planets = computed<readonly Planet[]>(() => {
@@ -418,6 +402,28 @@ export class Campaign {
       return 'none';
     }
     return campaign.status === 'OPENED' ? 'opened' : campaign.status === 'CLOSED' ? 'closed' : '';
+  });
+
+  /**
+   * The empty state: the road to be drawn, and when it starts once a campaign is opened.
+   */
+  protected readonly emptyPlate = computed<EmptyPlate>(() => {
+    const t = (suffix: string, params?: Readonly<Record<string, number>>) =>
+      this.translation.translate(`campaign.state.none.${suffix}`, params);
+    return {
+      illustration: 'road',
+      eyebrow: t('eyebrow'),
+      title: t('title'),
+      text: t('text'),
+      readouts: [
+        { tone: 'todo', label: t('start'), value: t('startValue') },
+        {
+          tone: 'info',
+          label: t('duration'),
+          value: t('durationValue', { weeks: CAMPAIGN_WEEK_COUNT }),
+        },
+      ],
+    };
   });
 
   protected retry(): void {

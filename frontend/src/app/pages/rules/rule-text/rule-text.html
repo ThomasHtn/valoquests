@@ -2,7 +2,11 @@
   @if (run.icon) {
     <!-- The icon is a word: it sits in the line at the text's own size, on its baseline, and the
          word it stands for is written right next to it in the dictionary. -->
-    <span aria-hidden="true" class="inline-block size-[1em] translate-y-[0.15em] text-brand-400">
+    <span
+      [class]="run.tone"
+      aria-hidden="true"
+      class="inline-block size-[1em] translate-y-[0.15em]"
+    >
       @switch (run.icon) {
         @case ('food') {
           <svg class="size-full" lucideWheat></svg>
