@@ -12,6 +12,7 @@ import io.github.thomashtn.valoquests.campaign.dto.CampaignResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignTodayResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignWeekBaseResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignWeekResponse;
+import io.github.thomashtn.valoquests.campaign.dto.FatalBlowResponse;
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignDailySnapshot;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
@@ -20,6 +21,10 @@ import io.github.thomashtn.valoquests.campaign.model.ExtractionLimiter;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignDailySnapshotRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
+import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
+import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
+import io.github.thomashtn.valoquests.match.model.GameMode;
+import io.github.thomashtn.valoquests.match.model.MatchResult;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -178,6 +183,17 @@ class DefaultCampaignQueryServiceTest {
         CampaignWeek won = CampaignFixtures.week(campaign, 2, 1_000, 50);
         won.setDamageDealt(4_000);
         won.setDefeated(true);
+        PlayerMatch finishing = new PlayerMatch();
+        ValorantMatch match = new ValorantMatch();
+        match.setMapName("Split");
+        match.setGameMode(GameMode.COMPETITIVE);
+        match.setRedScore(13);
+        match.setBlueScore(11);
+        finishing.setMatch(match);
+        finishing.setTeamId("Red");
+        finishing.setResult(MatchResult.WIN);
+        finishing.setAgentName("Jett");
+        won.setFinishingPlayerMatch(finishing);
         CampaignWeek untouched = CampaignFixtures.week(campaign, 3, 1_000, 50);
 
         when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L))
@@ -191,6 +207,9 @@ class DefaultCampaignQueryServiceTest {
             .containsExactly(70, 100, 0);
         assertThat(response.weeks().getFirst().limiter()).isEqualTo(ExtractionLimiter.FOOD);
         assertThat(response.weeks().getFirst().baseLoss()).isEqualTo(3);
+        assertThat(response.weeks().getFirst().fatalBlow()).isNull();
+        assertThat(response.weeks().get(1).fatalBlow())
+            .isEqualTo(new FatalBlowResponse("Split", GameMode.COMPETITIVE, MatchResult.WIN, 13, 11, "Jett"));
         assertThat(response.totals().guardiansDefeated()).isEqualTo(1);
         assertThat(response.totals().weeksSettled()).isEqualTo(1);
     }

@@ -1,13 +1,27 @@
 import { LowerCasePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideRocket, LucideSkull, LucideUsers } from '@lucide/angular';
+import {
+  LucideCheck,
+  LucideFileText,
+  LucideRocket,
+  LucideSkull,
+  LucideUsers,
+} from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
 import {
   Campaign,
   CAMPAIGN_WEEK_COUNT,
   CampaignWeek,
+  WEEKLY_TITLES,
   WeeklyTitle,
 } from '@core/campaign/campaign.model';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
@@ -17,6 +31,7 @@ import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resou
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
+import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { PageHeader } from '@layout/page-header/page-header';
 import { CountUp } from '@shared/count-up/count-up';
@@ -28,7 +43,16 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { BaseScene } from './base-scene/base-scene';
 import { DayOrders } from './day-orders/day-orders';
 import { ExtractionGauges } from './extraction-gauges/extraction-gauges';
-import { Capacity, DailyOrder, DayTally, FriezeWeek, Mission, SquadRow } from './overview.model';
+import { MissionReport } from './mission-report/mission-report';
+import {
+  Capacity,
+  DailyOrder,
+  DayTally,
+  FriezeWeek,
+  Mission,
+  MissionReport as MissionReportView,
+  SquadRow,
+} from './overview.model';
 import { PlanetFigure } from './planet-figure/planet-figure';
 import { ScanWires } from './scan-wires';
 import { SquadSheet } from './squad-sheet/squad-sheet';
@@ -60,6 +84,28 @@ function daysBetween(from: string, to: string): number {
 }
 
 /**
+ * Browser-side memory of the last report seen, so the dialog opens once per settled week. Storage
+ * can be unavailable (private window, blocked site data): then the report simply opens again.
+ */
+const SEEN_REPORT_KEY = 'valoquests.missionReport.seen';
+
+function readSeenReport(): string | null {
+  try {
+    return localStorage.getItem(SEEN_REPORT_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeSeenReport(weekStart: string): void {
+  try {
+    localStorage.setItem(SEEN_REPORT_KEY, weekStart);
+  } catch {
+    // Nothing to do: the report will open again next time.
+  }
+}
+
+/**
  * The state of the campaign, at a glance: the base and its rocket, the ten weeks, the mission of
  * the week, the orders of the day and what each operator brought in today.
  *
@@ -69,6 +115,8 @@ function daysBetween(from: string, to: string): number {
 @Component({
   selector: 'app-overview',
   imports: [
+    LucideCheck,
+    LucideFileText,
     LowerCasePipe,
     TranslatePipe,
     RouterLink,
@@ -81,6 +129,7 @@ function daysBetween(from: string, to: string): number {
     PlanetFigure,
     ScanWires,
     ExtractionGauges,
+    MissionReport,
     DayOrders,
     SquadSheet,
     LucideRocket,
@@ -103,6 +152,8 @@ export class Overview {
 
   private readonly rankingApi = inject(RankingApi);
 
+  private readonly playersApi = inject(PlayersApi);
+
   private readonly translation = inject(Translation);
 
   protected readonly campaignResource = this.campaignApi.campaign;
@@ -114,6 +165,12 @@ export class Overview {
   protected readonly rankingResource = this.rankingApi.current;
 
   protected readonly dailyResource = this.rankingApi.daily;
+
+  /**
+   * The frozen weeks, for the report's titles and ranking. Never awaited: the report reads what
+   * it finds.
+   */
+  private readonly historyResource = this.rankingApi.history;
 
   protected readonly isLoading = anyLoading(
     this.campaignResource,
@@ -203,9 +260,82 @@ export class Overview {
       hitPoints: week.guardianHitPoints,
       breachPercent: week.progressPercent,
       guardianLeft: week.guardianHitPoints > 0 ? hitPointsLeft / week.guardianHitPoints : 0,
+      defeated: this.fatalBlow(week),
       wounded: week.woundedCount,
       crew: campaign.rosterSize ?? 0,
       extractionDeadline: localMidnight(week.weekStart, 7),
+    };
+  });
+
+  /**
+   * Whether the Monday report is on screen.
+   */
+  protected readonly reportOpen = signal(false);
+
+  /**
+   * The last settled week, told as the Monday report; `null` before the first Sunday.
+   */
+  protected readonly missionReport = computed<MissionReportView | null>(() => {
+    const campaign = this.campaign();
+    const settled = campaign?.weeks.filter((week) => week.settled).at(-1);
+    if (!campaign || !settled) {
+      return null;
+    }
+    const players = resourceValue(this.playersApi.players, []);
+    const portraitOf = (id: number): string | null =>
+      resolvePlayerAvatarUrl(players.find((player) => player.id === id)?.portrait ?? null);
+    const frozen =
+      resourceValue(this.historyResource, null)?.content.find(
+        (week) => week.weekStart === settled.weekStart,
+      ) ?? null;
+    const next = campaign.weeks[settled.weekIndex] ?? null;
+    return {
+      weekStart: settled.weekStart,
+      weekIndex: settled.weekIndex,
+      planetName: settled.planetName,
+      settledOn: new Intl.DateTimeFormat(this.translation.language(), {
+        day: 'numeric',
+        month: 'short',
+      }).format(new Date(localMidnight(settled.weekStart, 6))),
+      guardianName: settled.guardianName ?? '',
+      defeated: settled.defeated,
+      hitPoints: settled.guardianHitPoints,
+      hitPointsLeft: Math.max(0, settled.guardianHitPoints - settled.damageDealt),
+      breachPercent: settled.progressPercent,
+      blow: this.blowLine(settled),
+      baseLoss: settled.baseLoss,
+      rescued: settled.challengeRescued + settled.extractionRescued,
+      spotted: settled.woundedCount,
+      byChallenges: settled.challengeRescued,
+      limiter: settled.limiter,
+      population: settled.base?.population ?? null,
+      populationChange: settled.base?.populationChange ?? 0,
+      titles: frozen
+        ? WEEKLY_TITLES.map((key) => {
+            const holder = frozen.ranking.find((entry) => entry.titles.includes(key)) ?? null;
+            return {
+              key,
+              ...resolveTitleVisual(key),
+              holder: holder?.displayName ?? null,
+              portrait: holder ? portraitOf(holder.playerId) : null,
+            };
+          })
+        : null,
+      ranking: frozen
+        ? frozen.ranking.map((entry) => ({
+            position: entry.position,
+            name: entry.displayName,
+            portrait: portraitOf(entry.playerId),
+            total: entry.totalPoints,
+          }))
+        : [],
+      next: next
+        ? {
+            planetName: next.planetName,
+            hitPoints: next.guardianHitPoints,
+            wounded: next.woundedCount,
+          }
+        : null,
     };
   });
 
@@ -310,7 +440,10 @@ export class Overview {
         titlesByPlayer.set(playerId, title as WeeklyTitle);
       }
     }
-    return daily.ranking.map((entry) => {
+    // An inactive operator has no ranking slot: they never deal guardian damage, so they have no
+    // line here either.
+    const active = daily.ranking.filter((entry) => entry.position !== null);
+    return active.map((entry) => {
       const title = titlesByPlayer.get(entry.playerId) ?? null;
       const played = entry.matchCount > 0;
       return {
@@ -385,6 +518,17 @@ export class Overview {
           : [],
     };
   });
+
+  constructor() {
+    // The report opens on its own once per settled week, the first time the page is opened after
+    // Sunday; the context bar's button brings it back afterwards.
+    effect(() => {
+      const report = this.missionReport();
+      if (report && readSeenReport() !== report.weekStart) {
+        this.reportOpen.set(true);
+      }
+    });
+  }
 
   protected retry(): void {
     reloadAll(
@@ -478,5 +622,60 @@ export class Overview {
         unplayed ? 'overview.frieze.unplayed' : 'overview.frieze.ahead',
       ),
     };
+  }
+
+  /**
+   * The fatal blow as the report states it, or `null` while the guardian stands. The blow belongs
+   * to the match, so its time is the match's, never the synchronization's.
+   */
+  private fatalBlow(week: CampaignWeek): Mission['defeated'] {
+    if (!week.defeated || !week.defeatedAt) {
+      return null;
+    }
+    const at = new Date(week.defeatedAt);
+    const locale = this.translation.language();
+    const players = resourceValue(this.playersApi.players, []);
+    return {
+      weekday: new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(at),
+      time: new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(at),
+      by: players.find((player) => player.id === week.defeatedByPlayerId)?.displayName ?? null,
+    };
+  }
+
+  protected openReport(): void {
+    this.reportOpen.set(true);
+  }
+
+  protected closeReport(): void {
+    const report = this.missionReport();
+    if (report) {
+      writeSeenReport(report.weekStart);
+    }
+    this.reportOpen.set(false);
+  }
+
+  /**
+   * The fatal blow in one line: who, when, on which map, in which mode and on what score.
+   */
+  private blowLine(week: CampaignWeek): string | null {
+    const blow = this.fatalBlow(week);
+    if (!blow) {
+      return null;
+    }
+    const detail = week.fatalBlow;
+    const score =
+      detail?.allyScore !== null && detail?.allyScore !== undefined && detail.enemyScore !== null
+        ? `${detail.allyScore} – ${detail.enemyScore}`
+        : '';
+    return this.translation.translate('overview.missionReport.blow', {
+      name: blow.by ?? '',
+      weekday: blow.weekday,
+      time: blow.time,
+      map: detail?.mapName ?? '',
+      mode: detail?.gameMode
+        ? this.translation.translate(`common.gameMode.${detail.gameMode}`)
+        : '',
+      score,
+    });
   }
 }

@@ -1,8 +1,11 @@
 <app-page-header [eyebrow]="headerEyebrow()" [heading]="'campaign.header.heading' | translate" />
 
 <div class="page-body !gap-0 !pt-0">
+  <!-- The gutter and width cap ride on `main.body`, not on this host, so the road above can run
+       flush from edge to edge of the column. -->
   <app-resource-state
     (retry)="retry()"
+    class="!max-w-none !px-0"
     [emptyPlate]="emptyPlate()"
     [errorText]="'campaign.state.error' | translate"
     [isEmpty]="!hasCampaign()"
@@ -16,7 +19,7 @@
          Each planet opens on its report, in the drawer below the strip. -->
     <section
       [attr.aria-label]="'campaign.galaxy.section' | translate"
-      class="galaxy relative !max-w-none shrink-0 overflow-hidden bg-[#040a11] !px-0"
+      class="galaxy relative shrink-0 overflow-hidden bg-[#040a11]"
     >
       <app-star-field />
       <p
@@ -29,7 +32,7 @@
     </section>
 
     <main
-      class="body flex flex-col gap-[clamp(3.5rem,6vw,6rem)] pt-[clamp(2.5rem,4vw,3.5rem)] pb-20"
+      class="body mx-auto flex w-full max-w-[1440px] flex-col gap-[clamp(3.5rem,6vw,6rem)] px-4 pt-[clamp(2.5rem,4vw,3.5rem)] pb-20 sm:px-6"
     >
       @if (stateKey(); as state) {
         <p class="state-note label-caption text-2xs text-text-secondary">

@@ -8,6 +8,26 @@ import { ChallengeRingCell } from '@shared/challenge-ring/challenge-ring';
  */
 export interface BoardTitle extends TitleVisual {
   readonly key: WeeklyTitle;
+
+  /**
+   * The figure the title was awarded on, worded ("2 996 composants"), or `null` when the week
+   * kept no such figure.
+   */
+  readonly measure: string | null;
+}
+
+/**
+ * One of the week's four titles, as the line under the podium states it: its holder, or why it
+ * was not awarded.
+ */
+export interface WeekTitleLine extends TitleVisual {
+  readonly key: WeeklyTitle;
+  readonly holder: string | null;
+
+  /**
+   * The holder's figure, or the tied figure nobody won outright; empty when nobody scored.
+   */
+  readonly detail: string;
 }
 
 /**

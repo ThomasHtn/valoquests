@@ -172,11 +172,15 @@
             <p class="dcol-text">
               @if (planet.report.defeated) {
                 {{
-                  'campaign.drawer.defeatedText'
+                  (planet.report.defeatedBy
+                    ? 'campaign.drawer.defeatedByText'
+                    : 'campaign.drawer.defeatedText'
+                  )
                     | translate
                       : {
                           hp: format(planet.report.hitPoints),
                           weekday: planet.report.defeatedWeekday,
+                          name: planet.report.defeatedBy ?? '',
                         }
                 }}
               } @else {

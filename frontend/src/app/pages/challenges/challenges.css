@@ -1,8 +1,35 @@
 /* The briefing: the rule, stated once. */
 .brief {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  gap: 1rem 3rem;
   padding: 1.25rem 1.5rem;
   background: rgb(236 232 225 / 4%);
   box-shadow: inset 3px 0 0 var(--color-brand-400);
+}
+
+.brief > div:last-child {
+  flex: 1 1 24rem;
+}
+
+/* The week's yield, at the brief's trailing end. */
+.brief-acquired {
+  order: 1;
+  flex: 0 0 auto;
+  display: grid;
+  gap: 0.25rem;
+  align-content: start;
+}
+
+.brief-acquired-fig {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-accent-purple);
 }
 
 .brief-text {

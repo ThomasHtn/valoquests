@@ -24,6 +24,7 @@ import java.time.LocalDate;
  * @param defeated           whether the guardian fell
  * @param defeatedAt         start instant of the match that landed the finishing blow
  * @param defeatedByPlayerId operator who landed it
+ * @param fatalBlow          the match that landed it, {@code null} while the guardian stands
  * @param woundedCount       wounded stranded on the planet
  * @param challengeRescued   wounded the week's challenges brought back
  * @param extractionRescued  wounded the ship extracted
@@ -47,6 +48,7 @@ public record CampaignWeekResponse(
     boolean defeated,
     Instant defeatedAt,
     Long defeatedByPlayerId,
+    FatalBlowResponse fatalBlow,
     int woundedCount,
     int challengeRescued,
     int extractionRescued,

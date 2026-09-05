@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import {
+  afterRenderEffect,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { LucideCheck, LucideStar, LucideSwords, LucideX } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -41,6 +50,28 @@ export class PlanetStrip {
     const count = this.planets().length;
     return index === null || count === 0 ? '50%' : `${((index - 0.5) / count) * 100}%`;
   });
+
+  private readonly wrap = viewChild.required<ElementRef<HTMLElement>>('wrap');
+
+  constructor() {
+    // On a phone the strip scrolls: it opens on the last planet reached, not on the first one.
+    // The planets arrive with the campaign, after the first render, so this waits for them and
+    // then runs once. The week's planet reads `won` once its guardian is down, so `now` alone
+    // would miss it.
+    let scrolled = false;
+    afterRenderEffect(() => {
+      if (scrolled || this.planets().length === 0) {
+        return;
+      }
+      scrolled = true;
+      const wrap = this.wrap().nativeElement;
+      const reached = [...wrap.querySelectorAll<HTMLElement>('.pl:not(.pl--ahead)')];
+      const current = reached.at(-1) ?? null;
+      if (current && wrap.scrollWidth > wrap.clientWidth) {
+        current.scrollIntoView({ inline: 'center', block: 'nearest' });
+      }
+    });
+  }
 
   protected toggle(planet: Planet): void {
     this.openedIndex.update((current) => (current === planet.index ? null : planet.index));

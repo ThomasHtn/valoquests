@@ -48,6 +48,11 @@ export interface SettledReport {
    * Weekday the guardian fell on, empty when it held.
    */
   readonly defeatedWeekday: string;
+
+  /**
+   * Who played the fatal blow, `null` when the guardian held or the roster is not loaded.
+   */
+  readonly defeatedBy: string | null;
   readonly hitPoints: number;
   readonly hitPointsLeft: number;
   readonly breachPercent: number;

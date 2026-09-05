@@ -1,4 +1,21 @@
-<app-page-header [eyebrow]="headerEyebrow()" [heading]="'overview.header.heading' | translate" />
+<app-page-header [eyebrow]="headerEyebrow()" [heading]="'overview.header.heading' | translate">
+  <!-- The way back to the Monday report, at the bar's trailing end, once a Sunday has settled. -->
+  @if (missionReport()) {
+    <button
+      (click)="openReport()"
+      class="hdr-report focus-ring notch-tr label-caption inline-flex h-9 shrink-0 cursor-pointer items-center gap-2 border border-brand-500/45 bg-brand-500/10 px-3 text-2xs text-brand-400 transition-colors hover:bg-brand-500/20 [--notch:0.5rem]"
+      type="button"
+    >
+      <svg aria-hidden="true" class="size-4" lucideFileText></svg>
+      <span class="hidden sm:inline">{{ 'overview.missionReport.button' | translate }}</span>
+      <span class="sr-only sm:hidden">{{ 'overview.missionReport.button' | translate }}</span>
+    </button>
+  }
+</app-page-header>
+
+@if (missionReport(); as report) {
+  <app-mission-report (closed)="closeReport()" [open]="reportOpen()" [report]="report" />
+}
 
 <div class="page-body !gap-0 !pt-0">
   <!-- The state of the campaign, drawn. The city is the score; the rocket in its middle gains a
@@ -206,7 +223,25 @@
                       ><i></i
                     ></span>
                   </div>
-                  <p class="rep-note">{{ 'overview.report.targetNote' | translate }}</p>
+                  <!-- Once the guardian is down the consigne changes: the blow is named, and the
+                       week goes on filling the reserves. -->
+                  @if (mission.defeated; as blow) {
+                    <p class="rep-blow">
+                      <svg aria-hidden="true" class="size-3.5" lucideCheck></svg>
+                      {{
+                        'overview.report.defeatedLine'
+                          | translate
+                            : {
+                                weekday: blow.weekday,
+                                time: blow.time,
+                                name: blow.by ?? '',
+                              }
+                      }}
+                    </p>
+                    <p class="rep-note">{{ 'overview.report.targetNoteDefeated' | translate }}</p>
+                  } @else {
+                    <p class="rep-note">{{ 'overview.report.targetNote' | translate }}</p>
+                  }
                 </div>
               </div>
 

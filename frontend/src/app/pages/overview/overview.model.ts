@@ -18,6 +18,68 @@ export interface FriezeWeek {
 }
 
 /**
+ * One of the four weekly titles as the mission report lists it: its holder, or nobody.
+ */
+export interface MissionReportTitle extends TitleVisual {
+  readonly key: WeeklyTitle;
+  readonly holder: string | null;
+  readonly portrait: string | null;
+}
+
+/**
+ * One line of the frozen ranking the mission report shows.
+ */
+export interface MissionReportRank {
+  readonly position: number;
+  readonly name: string;
+  readonly portrait: string | null;
+  readonly total: number;
+}
+
+/**
+ * The last settled week, as the Monday report tells it: the guardian, the wounded, the base, the
+ * titles, the frozen ranking, and the planet ahead.
+ */
+export interface MissionReport {
+  readonly weekStart: string;
+  readonly weekIndex: number;
+  readonly planetName: string;
+  readonly settledOn: string;
+  readonly guardianName: string;
+  readonly defeated: boolean;
+  readonly hitPoints: number;
+  readonly hitPointsLeft: number;
+  readonly breachPercent: number;
+
+  /**
+   * The fatal blow in one line (who, when, where), or `null` when the guardian held.
+   */
+  readonly blow: string | null;
+  readonly baseLoss: number;
+  readonly rescued: number;
+  readonly spotted: number;
+  readonly byChallenges: number;
+  readonly limiter: ExtractionLimiter;
+
+  /**
+   * Inhabitants at the week's close, `null` when no day of it was replayed.
+   */
+  readonly population: number | null;
+  readonly populationChange: number;
+
+  /**
+   * The four titles, or `null` when the week's ranking was never frozen.
+   */
+  readonly titles: readonly MissionReportTitle[] | null;
+  readonly ranking: readonly MissionReportRank[];
+  readonly next: {
+    readonly planetName: string;
+    readonly hitPoints: number;
+    readonly wounded: number;
+  } | null;
+}
+
+/**
  * The week in progress, as the situation report states it.
  */
 export interface Mission {
@@ -34,6 +96,16 @@ export interface Mission {
    * Share of the hit points still standing, in [0, 1], what the health bar and the ring show.
    */
   readonly guardianLeft: number;
+
+  /**
+   * The fatal blow, once the guardian is down: weekday and time of the match, and who played it
+   * (`null` while the roster is not known yet). `null` while the guardian stands.
+   */
+  readonly defeated: {
+    readonly weekday: string;
+    readonly time: string;
+    readonly by: string | null;
+  } | null;
   readonly wounded: number;
   readonly crew: number;
 

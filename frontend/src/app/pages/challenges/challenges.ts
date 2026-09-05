@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { LucideChevronDown } from '@lucide/angular';
+import { LucideChevronDown, LucideUsers } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.model';
@@ -58,6 +58,7 @@ function shiftDay(isoDate: string, offset: number): string {
 @Component({
   selector: 'app-challenges',
   imports: [
+    LucideUsers,
     TranslatePipe,
     PageHeader,
     ResourceState,
@@ -103,6 +104,26 @@ export class Challenges {
    * Whether validated challenges bring wounded home right now: only a running campaign has a base.
    */
   protected readonly rescueActive = computed(() => this.campaign()?.status === 'RUNNING');
+
+  /**
+   * What the week's challenges already secured: the wounded the campaign counts as acquired, and
+   * the validations behind them. `null` outside a running campaign.
+   */
+  protected readonly acquired = computed<{ wounded: number; done: number; total: number } | null>(
+    () => {
+      const current = this.current();
+      const forecast = this.campaign()?.forecast;
+      if (!current || !this.rescueActive() || !forecast) {
+        return null;
+      }
+      const done = current.challenges.reduce(
+        (sum, challenge) => sum + challenge.completedPlayers,
+        0,
+      );
+      const total = current.challenges.reduce((sum, challenge) => sum + challenge.totalPlayers, 0);
+      return { wounded: forecast.challengeRescued, done, total };
+    },
+  );
 
   protected readonly hasChallenges = computed(() => {
     const current = this.current();
@@ -197,7 +218,10 @@ export class Challenges {
         tone: visual.tierColor,
         mark: visual.tier,
         kind: this.translation.translate(`common.difficulty.${challenge.difficulty ?? 'EASY'}`),
-        aside: '',
+        // The one tier closed to an operator who never plays ranked: the rules want it said.
+        aside: challenge.competitiveOnly
+          ? this.translation.translate('challenges.card.competitiveOnly')
+          : '',
         name: challenge.name,
         description: challenge.description,
         survivors: challenge.survivors,

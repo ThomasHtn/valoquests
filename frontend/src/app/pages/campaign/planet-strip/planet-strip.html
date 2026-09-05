@@ -1,4 +1,4 @@
-<div class="strip-wrap relative z-[1]">
+<div #wrap class="strip-wrap relative z-[1]">
   <ol [attr.aria-label]="'campaign.galaxy.strip' | translate" class="strip">
     @for (planet of planets(); track planet.index) {
       <li [class.seg--done]="planet.state === 'won' || planet.state === 'lost'">
@@ -19,29 +19,32 @@
               [state]="planet.state"
             />
           </span>
-          <span class="pl-no">{{ planet.label }}</span>
-          <span class="pl-name">{{ planet.name }}</span>
-          <span
-            [class.text-boss-hp-edge]="planet.category === 'ELITE'"
-            class="label-caption text-2xs text-text-muted"
-            >{{ 'common.guardianCategory.' + planet.category | translate }}</span
-          >
-          <span class="pl-state">
-            @switch (planet.stateIcon) {
-              @case ('check') {
-                <svg aria-hidden="true" class="size-3.5" lucideCheck></svg>
+          <!-- The label plate: a translucent card so the text reads over the stars. -->
+          <span class="pl-card">
+            <span class="pl-no">{{ planet.label }}</span>
+            <span class="pl-name">{{ planet.name }}</span>
+            <span
+              [class.text-boss-hp-edge]="planet.category === 'ELITE'"
+              class="label-caption text-2xs text-text-muted"
+              >{{ 'common.guardianCategory.' + planet.category | translate }}</span
+            >
+            <span class="pl-state">
+              @switch (planet.stateIcon) {
+                @case ('check') {
+                  <svg aria-hidden="true" class="size-3.5" lucideCheck></svg>
+                }
+                @case ('x') {
+                  <svg aria-hidden="true" class="size-3.5" lucideX></svg>
+                }
+                @case ('swords') {
+                  <svg aria-hidden="true" class="size-3.5" lucideSwords></svg>
+                }
+                @case ('star') {
+                  <svg aria-hidden="true" class="size-3.5" lucideStar></svg>
+                }
               }
-              @case ('x') {
-                <svg aria-hidden="true" class="size-3.5" lucideX></svg>
-              }
-              @case ('swords') {
-                <svg aria-hidden="true" class="size-3.5" lucideSwords></svg>
-              }
-              @case ('star') {
-                <svg aria-hidden="true" class="size-3.5" lucideStar></svg>
-              }
-            }
-            {{ planet.stateLabel }}
+              {{ planet.stateLabel }}
+            </span>
           </span>
         </button>
       </li>

@@ -18,6 +18,9 @@ import { buildTownScene, TOWN_HEIGHT, TOWN_WIDTH } from './town-scene.builder';
  * a view, and a template of `@for` loops over generated geometry would say nothing a reader could
  * follow.
  */
+/** Sky kept above the drawing, in viewBox units. */
+const SCENE_HEADROOM = 40;
+
 @Component({
   selector: 'app-base-scene',
   template: `
@@ -58,7 +61,10 @@ export class BaseScene {
    */
   public readonly label = input('');
 
-  protected readonly viewBox = `0 0 ${TOWN_WIDTH} ${TOWN_HEIGHT}`;
+  // Headroom above the drawing: the launcher's dotted outline reaches the top of the frame, and
+  // on a phone the frame is cropped to its height, so without it the rocket's tip went under the
+  // context bar.
+  protected readonly viewBox = `0 -${SCENE_HEADROOM} ${TOWN_WIDTH} ${TOWN_HEIGHT + SCENE_HEADROOM}`;
 
   private readonly town = viewChild.required<ElementRef<SVGSVGElement>>('town');
 

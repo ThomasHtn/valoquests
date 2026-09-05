@@ -10,6 +10,7 @@ import io.github.thomashtn.valoquests.campaign.dto.CampaignTodayResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignTotalsResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignWeekBaseResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignWeekResponse;
+import io.github.thomashtn.valoquests.campaign.dto.FatalBlowResponse;
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignDailySnapshot;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
@@ -19,6 +20,8 @@ import io.github.thomashtn.valoquests.campaign.model.ExtractionEstimate;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignDailySnapshotRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
+import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
+import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -395,6 +398,7 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
             week.isDefeated(),
             week.getDefeatedAt(),
             week.getDefeatedByPlayer() == null ? null : week.getDefeatedByPlayer().getId(),
+            fatalBlow(week.getFinishingPlayerMatch()),
             week.getWoundedCount(),
             week.getChallengeRescued(),
             week.getExtractionRescued(),
@@ -404,6 +408,28 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
             (int) Math.round(week.getBaseLoss().doubleValue()),
             week.isSettled(),
             base
+        );
+    }
+
+    /**
+     * Names the match that brought the guardian down, the way the mission report states it.
+     *
+     * @param playerMatch the finishing match, {@code null} while the guardian stands
+     * @return the fatal blow, or {@code null}
+     */
+    private FatalBlowResponse fatalBlow(PlayerMatch playerMatch) {
+        if (playerMatch == null) {
+            return null;
+        }
+        ValorantMatch match = playerMatch.getMatch();
+        boolean redTeam = "Red".equalsIgnoreCase(playerMatch.getTeamId());
+        return new FatalBlowResponse(
+            match.getMapName(),
+            match.getGameMode(),
+            playerMatch.getResult(),
+            redTeam ? match.getRedScore() : match.getBlueScore(),
+            redTeam ? match.getBlueScore() : match.getRedScore(),
+            playerMatch.getAgentName()
         );
     }
 

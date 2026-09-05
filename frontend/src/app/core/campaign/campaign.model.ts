@@ -146,6 +146,19 @@ export interface CampaignForecast {
 }
 
 /**
+ * The match that brought a week's guardian down, as the mission report names it. Scores are
+ * `null` for a mode that keeps none.
+ */
+export interface FatalBlow {
+  readonly mapName: string | null;
+  readonly gameMode: string | null;
+  readonly result: string | null;
+  readonly allyScore: number | null;
+  readonly enemyScore: number | null;
+  readonly agentName: string | null;
+}
+
+/**
  * One of the campaign's ten weeks: its planet, its guardian, and how Sunday settled it.
  *
  * Mirrors the backend `CampaignWeekResponse`. The guardian's name and description are only
@@ -176,6 +189,11 @@ export interface CampaignWeek {
    */
   readonly defeatedAt: string | null;
   readonly defeatedByPlayerId: number | null;
+
+  /**
+   * The match that dealt the finishing blow, or `null` while the guardian stands.
+   */
+  readonly fatalBlow: FatalBlow | null;
 
   /**
    * Survivors stranded on the planet, the most the week can bring home.

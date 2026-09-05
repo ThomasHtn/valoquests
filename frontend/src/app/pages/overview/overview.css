@@ -259,6 +259,18 @@
   color: var(--color-text-secondary);
 }
 
+/* The fatal blow, named: the one line of the report that reads as a win. */
+.rep-blow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-accent-green);
+}
+
 /* The health bar fills from the left and recedes: anchored right, it reads backwards from every
    game. */
 .hpbar {

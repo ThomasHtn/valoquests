@@ -98,7 +98,7 @@
       "eyebrow": "Administration de l'escouade",
       "heading": "Poste de commandement",
       "hideKey": "Masquer la clé",
-      "keyHint": "La clé ouvre la synchronisation, la gestion des joueurs et le pilotage de la campagne.",
+      "keyHint": "La clé ouvre la synchronisation, la gestion des opérateurs et le pilotage de la campagne.",
       "keyLabel": "Clé d'administration",
       "rejected": "Clé refusée par le serveur.",
       "showKey": "Afficher la clé",
@@ -208,20 +208,20 @@
     },
     "players": {
       "activate": "Activer",
-      "addPlayer": "Ajouter un joueur",
+      "addPlayer": "Ajouter un opérateur",
       "archived": "Opérateur archivé : une campagne le compte dans son roster. Il reste restaurable.",
       "columns": {
         "lastSync": "Dernière synchro"
       },
-      "created": "Joueur ajouté à l'effectif.",
+      "created": "Opérateur ajouté à l'effectif.",
       "deactivate": "Désactiver",
-      "deleted": "Joueur supprimé définitivement.",
+      "deleted": "Opérateur supprimé définitivement.",
       "edit": "Modifier",
-      "empty": "Aucun joueur suivi.",
+      "empty": "Aucun opérateur suivi.",
       "error": "Impossible de charger l'effectif.",
       "form": {
-        "createHeading": "Nouveau joueur",
-        "editHeading": "Modifier le joueur",
+        "createHeading": "Nouvel opérateur",
+        "editHeading": "Modifier l'opérateur",
         "gameName": "Nom Riot",
         "tagLine": "Tag (sans #)",
         "portrait": "Avatar",
@@ -230,10 +230,10 @@
       },
       "frozenRoster": "La campagne {{run}} tourne sur un roster gelé à {{roster}} opérateurs. Activer ou désactiver quelqu'un ici ne prendra effet qu'à la campagne suivante.",
       "gettingStarted": {
-        "addPlayers": "Ajoutez chaque joueur avec son Riot ID complet, au format pseudo#tag.",
+        "addPlayers": "Ajoutez chaque opérateur avec son Riot ID complet, au format pseudo#tag.",
         "operationsLink": "Aller aux opérations",
         "share": "Partagez l'adresse de l'application avec l'équipe. Le tour d'accueil se lance tout seul à la première visite : personne n'a besoin d'expliquer le fonctionnement.",
-        "synchronize": "Lancez une première synchronisation pour récupérer leur historique de matchs. Le classement et la colonie se remplissent ensuite tout seuls chaque semaine.",
+        "synchronize": "Lancez une première synchronisation pour récupérer leur historique de matchs. Le classement et la campagne se remplissent ensuite tout seuls chaque semaine.",
         "title": "Démarrage"
       },
       "heading": "Escouade",
@@ -255,8 +255,8 @@
         "ARCHIVED": "Archivé"
       },
       "statusChanged": "Statut mis à jour.",
-      "title": "Joueurs",
-      "updated": "Joueur mis à jour."
+      "title": "Opérateurs",
+      "updated": "Opérateur mis à jour."
     },
     "maintenance": {
       "title": "Maintenance",
@@ -355,6 +355,7 @@
       "held": "A tenu",
       "heldAll": "toute la semaine",
       "defeatedText": "Ses {{hp}} points de vie sont tombés {{weekday}}.",
+      "defeatedByText": "Ses {{hp}} points de vie sont tombés {{weekday}}, coup fatal de {{name}}.",
       "heldText": "Percée à {{percent}} % : il lui restait {{left}} points de vie sur {{total}}.",
       "saved": "ramenés sur {{spotted}} repérés",
       "savedText": "Dont {{count}} grâce aux défis. {{limiter}}",
@@ -534,7 +535,10 @@
       "sunday": "et rien n'est repris si la semaine tourne mal. Les blessés partent avec le vaisseau le dimanche, sans coûter de composants ni de nourriture.",
       "rescueOff": "Aucune campagne en cours : un défi validé compte au classement de la semaine,",
       "pointsOff": "un point par blessé qu'il ramènerait,",
-      "sundayOff": "et rien n'est repris si la semaine tourne mal. Les blessés, eux, attendent la prochaine campagne."
+      "sundayOff": "et rien n'est repris si la semaine tourne mal. Les blessés, eux, attendent la prochaine campagne.",
+      "acquired": "Acquis cette semaine",
+      "acquiredWounded": "{{count}} blessés",
+      "acquiredValidations": "{{done}} validations sur {{total}}"
     },
     "daily": {
       "title": "Le défi du jour",
@@ -557,6 +561,7 @@
     },
     "card": {
       "perOperator": "par opérateur",
+      "competitiveOnly": "Compétitif uniquement",
       "woundedTooltip": {
         "one": "Chaque opérateur qui valide ce défi ramène {{count}} blessé à la base.",
         "other": "Chaque opérateur qui valide ce défi ramène {{count}} blessés à la base."
@@ -753,6 +758,15 @@
       "totalHelpOff": "La valeur des parties de la semaine plus les points des défis validés. Aucune campagne en cours : rien n'est retiré à un gardien. Le total repart de zéro chaque lundi.",
       "damageHelpOff": "La valeur des parties de la semaine, comptée comme des dégâts. Aucune campagne en cours : aucun gardien ne les encaisse.",
       "pointsHelpOff": "Les points des défis validés, un point par blessé qu'ils ramèneraient en campagne.",
+      "titlesLabel": "Les titres de la semaine",
+      "titleNotAwarded": "Non décerné",
+      "titleTie": "égalité à {{value}}",
+      "measure": {
+        "MECHANIC": "{{value}} composants",
+        "QUARTERMASTER": "{{value}} nourriture",
+        "REGULAR": "{{value}} j de série",
+        "SCOUT": "{{value}} défis validés"
+      },
       "progress": "Progression des défis",
       "variation": {
         "up": {
@@ -830,6 +844,8 @@
       "hp": "PV",
       "hpSide": "sur {{total}} · percée à {{percent}} %",
       "targetNote": "Battez-vous sur le champ de bataille, tous modes confondus, pour faire tomber le gardien. Les défis ne lui font aucun dégât : ils ramènent des blessés.",
+      "targetNoteDefeated": "La percée est ouverte : chaque partie continue de remplir les réserves de la base jusqu'à dimanche.",
+      "defeatedLine": "Abattu {{weekday}} à {{time}} par {{name}}",
       "ground": "Au sol",
       "spotted": "repérés cette semaine",
       "groundNote": "Construisez un vaisseau assez grand et agrandissez la base pour en sauver le maximum.",
@@ -921,6 +937,34 @@
         "title": "La mission reprend lundi",
         "text": "La semaine est réglée : les blessés extraits sont comptés, la base attend la planète suivante."
       }
+    },
+    "missionReport": {
+      "button": "Rapport de mission",
+      "eyebrow": "Rapport de mission · réglé {{date}}",
+      "title": "Semaine {{index}} · {{planet}}",
+      "close": "Fermer",
+      "won": "Vaincu",
+      "held": "A tenu",
+      "blow": "{{name}} · {{weekday}} {{time}} · {{map}} · {{mode}} {{score}}",
+      "heldLine": "Debout dimanche à minuit · la base a perdu {{count}} habitants",
+      "gauge": "{{left}} PV sur {{total}} · percée à {{percent}} %",
+      "rescued": "blessés ramenés",
+      "rescuedSub": "sur {{spotted}} · {{challenges}} par les défis",
+      "limiter": {
+        "FOOD": "limité par la nourriture",
+        "COMPONENTS": "limité par les composants",
+        "GROUP": "tout le groupe est rentré",
+        "NONE": "rien n'a limité"
+      },
+      "inhabitants": "habitants",
+      "baseSub": "{{change}} cette semaine · {{lost}} perdus",
+      "baseNone": "Relevé de la base indisponible",
+      "next": "Semaine prochaine",
+      "nextSub": "{{hp}} PV · {{wounded}} blessés au sol",
+      "titles": "Les titres de la semaine",
+      "notAwarded": "Non décerné",
+      "ranking": "Le classement figé",
+      "rankingNotFrozen": "Le classement de cette semaine n'a pas été figé."
     }
   },
   "pageHeader": {
@@ -960,7 +1004,7 @@
     "loading": "Chargement du profil de l'opérateur…",
     "matches": {
       "damage": {
-        "coefficient": "Dégâts infligés au boss de la semaine. Ce match a conservé {{percent}} % de sa valeur de base : les meilleures parties d'une journée comptent en entier, les suivantes de moins en moins.",
+        "coefficient": "Dégâts infligés au gardien de la semaine. Ce match a conservé {{percent}} % de sa valeur de base : les meilleures parties d'une journée comptent en entier, les suivantes de moins en moins.",
         "share": "{{percent}} % de la valeur",
         "unvalued": "Ce match ne compte pas pour ValoQuests : le barème ne valorise ni ce mode ni ce type de partie."
       },
@@ -1627,7 +1671,7 @@
       "challenges": {
         "eyebrow": "Les défis",
         "title": "Un défi du jour, cinq de la semaine",
-        "claim": "Ils ramènent des blessés *acquis quoi qu'il arrive*, sans dépenser une ressource, et pèsent un cinquième du classement.",
+        "claim": "Ils ramènent des blessés *acquis quoi qu'il arrive*, sans dépenser une ressource, et départagent le classement.",
         "spec1": {
           "value": "21",
           "label": "défis du jour au catalogue"
@@ -1637,8 +1681,8 @@
           "label": "défis hebdomadaires"
         },
         "spec3": {
-          "value": "120",
-          "label": "blessés pour une semaine parfaite"
+          "value": "12",
+          "label": "défis à valider par semaine"
         }
       },
       "ranking": {

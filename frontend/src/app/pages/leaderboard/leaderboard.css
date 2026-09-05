@@ -139,12 +139,44 @@
   height: 1.75rem;
 }
 
+/* Wraps on two lines rather than cutting a challenge's name short on a phone. */
 .prog-name {
   flex: 1 1 0;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.2;
+}
+
+/* The week's four titles under the podium: holder or the tie that withheld it. */
+.titles-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.titles-line li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5rem;
+}
+
+.titles-line b {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.titles-line small {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
 }
 
 .prog-gauge {

@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { LucideCheck, LucideChevronDown, LucideChevronUp } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
-import { CAMPAIGN_WEEK_COUNT, CampaignHistory } from '@core/campaign/campaign.model';
+import { CAMPAIGN_WEEK_COUNT, CampaignHistory, WeeklyTitle } from '@core/campaign/campaign.model';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
@@ -45,6 +45,7 @@ import {
   BoardTitle,
   BoardWeek,
   WeekOption,
+  WeekTitleLine,
 } from './leaderboard.model';
 import { Podium } from './podium/podium';
 import { WeekPicker } from './week-picker/week-picker';
@@ -253,6 +254,36 @@ export class Leaderboard {
   /**
    * The week, then the campaign's tier when the week belongs to one.
    */
+  /**
+   * The week's four titles under the podium: who holds each, or the tie that withheld it. Live
+   * week only, the history keeps the holders but not every figure.
+   */
+  protected readonly weekTitles = computed<readonly WeekTitleLine[]>(() => {
+    const entries = this.current()?.ranking.filter((entry) => entry.position !== null) ?? [];
+    if (entries.length === 0) {
+      return [];
+    }
+    const keys: WeeklyTitle[] = ['MECHANIC', 'QUARTERMASTER', 'REGULAR', 'SCOUT'];
+    return keys.map((key) => {
+      const holder = entries.find((entry) => entry.titles.includes(key)) ?? null;
+      const best = Math.max(...entries.map((entry) => this.measures(entry)[key] ?? 0));
+      const detail =
+        best > 0
+          ? holder
+            ? this.measure(key, best)
+            : this.translation.translate('leaderboard.board.titleTie', {
+                value: this.measure(key, best),
+              })
+          : '';
+      return {
+        key,
+        ...resolveTitleVisual(key),
+        holder: holder?.player.displayName ?? null,
+        detail,
+      };
+    });
+  });
+
   protected readonly headerEyebrow = computed(() => {
     const board = this.board();
     const campaign = this.campaign();
@@ -346,14 +377,31 @@ export class Leaderboard {
       total: entry.totalPoints,
       damage: entry.guardianDamage,
       challengePoints: entry.challengePoints,
-      titles: this.titles(entry.titles),
-      // Weekly challenges only: the day's challenge changes every morning, and a column for it
-      // would not survive the week it sits in.
-      progress: entry.challengeProgress
-        .filter((progress) => progress.cadence === 'WEEKLY')
+      titles: this.titles(entry.titles, this.measures(entry)),
+      // The day's challenge first: it changes every morning, so its column is the one that moves.
+      progress: [...entry.challengeProgress]
+        .sort((a, b) => Number(b.cadence === 'DAILY') - Number(a.cadence === 'DAILY'))
         .map((progress) => this.progress(progress)),
     }));
     return this.split(rows, weekStart, true);
+  }
+
+  /**
+   * The figure each title is awarded on, the way the backend awards them.
+   */
+  private measures(entry: RankingEntry): Partial<Record<WeeklyTitle, number>> {
+    return {
+      MECHANIC: entry.components,
+      QUARTERMASTER: entry.food,
+      REGULAR: entry.streakDays,
+      SCOUT: entry.completedChallenges + entry.completedDailyChallenges,
+    };
+  }
+
+  private measure(key: WeeklyTitle, value: number): string {
+    return this.translation.translate(`leaderboard.board.measure.${key}`, {
+      value: this.format(value),
+    });
   }
 
   private closedBoard(week: RankingHistoryWeek): BoardWeek {
@@ -368,7 +416,10 @@ export class Leaderboard {
       total: entry.totalPoints,
       damage: entry.guardianDamage,
       challengePoints: entry.challengePoints,
-      titles: this.titles(entry.titles),
+      titles: this.titles(entry.titles, {
+        REGULAR: entry.streakDays,
+        SCOUT: entry.completedChallenges + entry.completedDailyChallenges,
+      }),
       progress: null,
     }));
     return this.split(rows, week.weekStart, false);
@@ -407,8 +458,18 @@ export class Leaderboard {
     return { index: null, group: null };
   }
 
-  private titles(keys: readonly BoardTitle['key'][]): BoardTitle[] {
-    return keys.map((key) => ({ key, ...resolveTitleVisual(key) }));
+  private titles(
+    keys: readonly BoardTitle['key'][],
+    measures: Partial<Record<WeeklyTitle, number>>,
+  ): BoardTitle[] {
+    return keys.map((key) => {
+      const value = measures[key];
+      return {
+        key,
+        ...resolveTitleVisual(key),
+        measure: value === undefined ? null : this.measure(key, value),
+      };
+    });
   }
 
   /**

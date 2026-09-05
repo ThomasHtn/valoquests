@@ -13,6 +13,7 @@ import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { PlayersApi } from '@core/players/players-api';
 import { PageHeader } from '@layout/page-header/page-header';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -105,6 +106,8 @@ export class Campaign {
   protected readonly weekCount = CAMPAIGN_WEEK_COUNT;
 
   private readonly campaignApi = inject(CampaignApi);
+
+  private readonly playersApi = inject(PlayersApi);
 
   private readonly translation = inject(Translation);
 
@@ -557,6 +560,10 @@ export class Campaign {
       kind: 'settled',
       defeated: week.defeated,
       defeatedWeekday: this.defeatedWeekday(week).toLowerCase(),
+      defeatedBy:
+        resourceValue(this.playersApi.players, []).find(
+          (player) => player.id === week.defeatedByPlayerId,
+        )?.displayName ?? null,
       hitPoints: week.guardianHitPoints,
       hitPointsLeft,
       breachPercent: week.progressPercent,

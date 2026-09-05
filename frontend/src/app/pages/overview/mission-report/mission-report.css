@@ -1,0 +1,291 @@
+/* The report panel: one screen on a desktop, a scrolling sheet on a phone. */
+.rep {
+  display: flex;
+  flex-direction: column;
+  width: min(74rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+}
+
+.rep-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.375rem 1.75rem 1rem;
+  border-bottom: 1px solid var(--color-brand-500);
+}
+
+.rep-title {
+  margin-top: 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 1.1rem + 1.1vw, 2.125rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rep-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.rep-close:hover {
+  color: var(--color-text-primary);
+}
+
+.rep-body {
+  overflow-y: auto;
+  padding: 0.25rem 1.75rem 1.625rem;
+}
+
+.rep-s {
+  padding: 1.125rem 0;
+  border-bottom: 1px solid var(--color-edge);
+}
+
+.rep-s:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Guardian: the stamp, then name, line and gauge. */
+.rep-guardian {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.625rem;
+  align-items: center;
+}
+
+.rep-stamp {
+  display: block;
+  width: 8rem;
+  height: 8rem;
+  padding: 0.375rem;
+  color: var(--color-accent-green);
+  background: color-mix(in srgb, currentcolor 45%, transparent);
+}
+
+.rep-stamp > span {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: var(--color-surface-sunken);
+}
+
+.rep-stamp > span > span {
+  transform: rotate(-8deg);
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rep-stamp--held {
+  color: var(--color-boss-hp-edge);
+}
+
+.rep-name {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.rep-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  font-size: 1.1875rem;
+  color: var(--color-text-secondary);
+}
+
+.rep-bar {
+  display: block;
+  position: relative;
+  height: 0.5rem;
+  margin-top: 0.375rem;
+  background: var(--color-surface-800);
+}
+
+.rep-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--lvl);
+  background: var(--color-boss-hp);
+  box-shadow: inset -2px 0 0 var(--color-boss-hp-edge);
+}
+
+/* The three readings. */
+.rep-figs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2rem;
+}
+
+.rep-fig {
+  font-family: var(--font-display);
+  font-size: 2.875rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.rep-fig small {
+  margin-left: 0.375rem;
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.rep-sub {
+  margin-top: 0.375rem;
+  font-size: 1rem;
+  color: var(--color-text-muted);
+}
+
+.rep-next {
+  padding-left: 1.75rem;
+  border-left: 1px solid var(--color-edge);
+}
+
+.rep-next .rep-name {
+  margin-top: 0.375rem;
+}
+
+/* Titles: four plates, the holder's portrait and name. */
+.rep-titles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rep-t {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  background: rgb(236 232 225 / 4%);
+  border-left: 2px solid currentcolor;
+}
+
+.rep-t > :first-child {
+  grid-row: 1 / span 2;
+}
+
+.rep-t-empty {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--color-surface-800);
+}
+
+.rep-t b {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-primary);
+}
+
+.rep-t-none {
+  font-weight: 500 !important;
+  color: var(--color-text-muted) !important;
+}
+
+/* The frozen ranking: one tile per operator. */
+.rep-rank {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rep-rank li {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-edge);
+}
+
+.rep-rank li:first-child {
+  border-color: rgb(217 149 74 / 50%);
+  background: rgb(217 149 74 / 8%);
+}
+
+.rep-rank li > :nth-child(-n + 2) {
+  grid-row: 1 / span 2;
+}
+
+.rep-r-pos {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.rep-rank li:first-child .rep-r-pos {
+  color: var(--color-brand-500);
+}
+
+.rep-r-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+.rep-r-total {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+@media (width < 48rem) {
+  .rep-top,
+  .rep-body {
+    padding-inline: 1.125rem;
+  }
+
+  .rep-guardian {
+    grid-template-columns: 1fr;
+  }
+
+  .rep-stamp {
+    width: 6rem;
+    height: 6rem;
+  }
+
+  .rep-figs {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .rep-next {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .rep-titles {
+    grid-template-columns: 1fr 1fr;
+  }
+}

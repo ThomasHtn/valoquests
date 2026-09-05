@@ -31,6 +31,26 @@
             <h2 class="sr-only" id="podium-title">{{ 'leaderboard.podium.label' | translate }}</h2>
             <app-podium [rows]="board.ranked" />
             <span aria-hidden="true" class="block h-0.5 w-full bg-edge-strong"></span>
+            <!-- The four titles with the figure that decides them, so a title withheld by a tie
+                 says so instead of silently missing. -->
+            @if (board.live && weekTitles().length > 0) {
+              <ul
+                [attr.aria-label]="'leaderboard.board.titlesLabel' | translate"
+                class="titles-line"
+              >
+                @for (line of weekTitles(); track line.key) {
+                  <li>
+                    <span [class]="line.colorClass" class="label-caption text-2xs">
+                      {{ 'common.title.' + line.key | translate }}
+                    </span>
+                    <b>{{ line.holder ?? ('leaderboard.board.titleNotAwarded' | translate) }}</b>
+                    @if (line.detail) {
+                      <small>{{ line.detail }}</small>
+                    }
+                  </li>
+                }
+              </ul>
+            }
           </section>
         }
 
@@ -189,7 +209,10 @@
             <span class="who-titles">
               @for (title of row.titles; track title.key) {
                 <span
-                  [appTooltip]="'common.titleHint.' + title.key | translate"
+                  [appTooltip]="
+                    ('common.titleHint.' + title.key | translate) +
+                    (title.measure ? ' · ' + title.measure : '')
+                  "
                   [class]="title.colorClass"
                   class="title"
                 >
