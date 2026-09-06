@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 290" width="1200" height="290" role="img" aria-label="Across the week every match takes hit points from the guardian, and the ship extracts the wounded on Sunday.">
+  <defs>
+    <linearGradient id="hp" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#d9954a" stop-opacity="0.26"/>
+      <stop offset="100%" stop-color="#d9954a" stop-opacity="0.04"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="1" y="1" width="1198" height="288" rx="18" fill="#0f1c26" stroke="#253645" stroke-width="2"/>
+
+  <text x="72" y="46" font-family="Oswald, 'Arial Narrow', Helvetica, Arial, sans-serif" font-size="18" letter-spacing="3" fill="#868b8d">GUARDIAN HIT POINTS</text>
+
+  <path d="M72 68h144v24h144v30h144v34h144v30h144v18h288V204H72Z" fill="url(#hp)"/>
+  <path d="M72 68h144v24h144v30h144v34h144v30h144v18h288" fill="none" stroke="#d9954a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="792" cy="204" r="5" fill="#d9954a"/>
+
+  <path d="M72 204h1056" stroke="#253645" stroke-width="2"/>
+  <g stroke="#33495b" stroke-width="2">
+    <path d="M72 198v12"/><path d="M216 198v12"/><path d="M360 198v12"/><path d="M504 198v12"/>
+    <path d="M648 198v12"/><path d="M792 198v12"/><path d="M936 198v12"/><path d="M1128 198v12"/>
+  </g>
+
+  <g font-family="Oswald, 'Arial Narrow', Helvetica, Arial, sans-serif" font-size="19" letter-spacing="3" fill="#a4a7a6" text-anchor="middle">
+    <text x="144" y="240">MON</text><text x="288" y="240">TUE</text><text x="432" y="240">WED</text>
+    <text x="576" y="240">THU</text><text x="720" y="240">FRI</text><text x="864" y="240">SAT</text>
+    <text x="1032" y="240" fill="#d9954a">SUN</text>
+  </g>
+
+  <g font-family="'Barlow Condensed', 'Arial Narrow', Helvetica, Arial, sans-serif" font-size="17" fill="#868b8d">
+    <text x="72" y="268">new planet, new guardian</text>
+    <text x="800" y="268" fill="#a4a7a6">guardian down</text>
+    <text x="1128" y="268" text-anchor="end" fill="#d9954a">the ship extracts</text>
+  </g>
+
+  <g fill="none" stroke="#d9954a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(1014 128) scale(1.6)"><path d="M12 2c3 2.5 4.5 6 4.5 10L12 17l-4.5-5C7.5 8 9 4.5 12 2Z"/><path d="M7.5 12 4 14.5 5 19l3-1.5"/><path d="M16.5 12 20 14.5 19 19l-3-1.5"/><circle cx="12" cy="9" r="1.6"/></g>
+  </g>
+</svg>

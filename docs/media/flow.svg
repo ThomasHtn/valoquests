@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 230" width="1200" height="230" role="img" aria-label="A match is imported within thirty minutes, split into food and components, and the base grows.">
+  <rect x="1" y="1" width="1198" height="228" rx="18" fill="#0f1c26" stroke="#253645" stroke-width="2"/>
+
+  <g stroke="#33495b" stroke-width="2" stroke-dasharray="6 8" stroke-linecap="round">
+    <path d="M228 88h96"/><path d="M528 88h96"/><path d="M828 88h96"/>
+  </g>
+
+  <g fill="none" stroke="#d9954a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(126 64) scale(2)"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></g>
+    <g transform="translate(426 64) scale(2)"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g>
+    <g transform="translate(700 64) scale(2)"><path d="M12 22V9"/><path d="M12 9c0-2 1-3.5 3-4 .5 2-.5 3.6-3 4Z"/><path d="M12 9c0-2-1-3.5-3-4-.5 2 .5 3.6 3 4Z"/><path d="M12 15c0-2 1-3.5 3-4 .5 2-.5 3.6-3 4Z"/><path d="M12 15c0-2-1-3.5-3-4-.5 2 .5 3.6 3 4Z"/></g>
+    <g transform="translate(752 64) scale(2)"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></g>
+    <g transform="translate(1026 64) scale(2)"><path d="M3 21h18"/><path d="M5 21V10l4-3 4 3v11"/><path d="M13 21V13h6v8"/></g>
+  </g>
+
+  <g font-family="Oswald, 'Arial Narrow', Helvetica, Arial, sans-serif" font-size="20" letter-spacing="3" fill="#ece8e1" text-anchor="middle">
+    <text x="150" y="164">MATCH PLAYED</text>
+    <text x="450" y="164">IMPORTED</text>
+    <text x="750" y="164">FOOD + COMPONENTS</text>
+    <text x="1050" y="164">THE BASE GROWS</text>
+  </g>
+  <g font-family="'Barlow Condensed', 'Arial Narrow', Helvetica, Arial, sans-serif" font-size="17" letter-spacing="1" fill="#868b8d" text-anchor="middle">
+    <text x="150" y="190">any mode, any operator</text>
+    <text x="450" y="190">within 30 minutes</text>
+    <text x="750" y="190">both, from every match</text>
+    <text x="1050" y="190">and the guardian falls</text>
+  </g>
+</svg>

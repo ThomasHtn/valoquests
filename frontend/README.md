@@ -1,408 +1,117 @@
 # ValoQuests — Frontend
 
-The site people actually look at. Angular 22, standalone, zoneless, and deliberately **incapable of
-computing anything**: every number on screen was calculated by the
-[backend](../backend/README.md) and is rendered here as-is.
+Angular single-page application for ValoQuests: the base and its rocket, the ten-planet campaign, the
+challenges, the leaderboard, the player profiles and the backoffice. It reads everything from the
+[backend API](../backend/README.md).
 
-> New here? Start with the [root README](../README.md) — it covers the product, and its Part II walks
-> through running the whole stack from scratch.
+| | |
+|---|---|
+| Framework | Angular 22, standalone components, signals, zoneless, no NgModules |
+| Language | TypeScript 6, strict |
+| Styling | Tailwind 4 plus the "Expédition" design system in `src/styles/` |
+| Icons and charts | `@lucide/angular`, `chart.js` (lazy, profile screens only) |
+| Tests | Vitest with jsdom |
+| Gates | Prettier, ESLint (`angular-eslint`), `ng build` |
 
-## Role in the system
+## Getting started
 
-A read-only HTTP consumer of `/api/**`, plus a small session-gated backoffice on top of
-`/api/admin/**`. That constraint is the whole design brief:
-
-- No duplicated domain logic. A damage formula lives in exactly one place, and it is not here.
-- No client-side state machine. Server data *is* the state; the UI is a projection of it.
-- The backend must be running and reachable, or every data screen shows its error state.
-
-What the frontend does own: routing, layout, i18n, the design system, loading/error/empty
-presentation, the read models that turn API payloads into display-ready shapes, and the backoffice's
-session handling.
-
-## Stack
-
-| Concern | Choice | Notes |
-| --- | --- | --- |
-| Framework | Angular 22, fully standalone | No `NgModule` anywhere under `src/app` |
-| Change detection | Zoneless | `provideHttpClient(withFetch())` — the fetch backend, not the legacy XHR one |
-| Server state | Signals + `httpResource` | No NgRx, no Akita, no RxJS store |
-| Styling | Tailwind v4, CSS-first | No `tailwind.config.js`; the theme is `@theme` blocks in `src/styles/` |
-| Charts | `chart.js` | Loaded only by the player profile, which is why that route is lazy |
-| Icons | `@lucide/angular` | |
-| i18n | Hand-rolled | JSON dictionaries in `public/i18n/`, English and French |
-| Tests | Vitest via `@angular/build:unit-test` | No separate `vitest.config.ts` |
-| Lint / format | angular-eslint, Prettier | Both enforced in CI |
-
-## Getting it running
-
-Prerequisite: **Node 22 LTS or newer** — Angular 22 refuses older runtimes.
+Requirements: Node.js 22, and the backend running on `localhost:8080`.
 
 ```bash
-npm ci           # or `npm install` if you plan to change dependencies
-npm start        # http://localhost:4200
+npm ci
+npm start        # dev server on :4200, proxies /api to localhost:8080
 ```
 
-`npm start` proxies every `/api/...` request to `http://localhost:8080` (`proxy.conf.json`), so the
-dev server and the API stay same-origin and no CORS setup is needed locally. Start the
-[backend](../backend/README.md) first, or you will get a site full of error states.
+`proxy.conf.json` keeps both sides same-origin during development, so no CORS setup is needed.
+`node_modules/` is not checked in: `npm ci` comes before any lint, test or build.
 
 ## Commands
 
 ```bash
-npm start            # dev server with proxy and live reload
-npm run build        # production build → dist/frontend/browser/
-npm run watch        # development build, rebuilt on change
-npm test             # Vitest
-npm run lint         # angular-eslint
-npm run format       # prettier --write
-npm run format:check # prettier --check
+npm start                                                        # dev server
+npm test -- --watch=false                                        # the suite CI runs
+npm test -- --include=src/app/core/admin/admin-session.spec.ts   # a single spec
+npm run lint
+npm run format                                                   # format:check is the CI gate
+npm run build                                                    # production bundle in dist/
 ```
 
-Run `npm run format` and `npm run lint` before pushing — CI runs
-`format:check`, `lint`, `test`, `build` in that order
-([`frontend-ci.yml`](../.github/workflows/frontend-ci.yml)), and a formatting diff fails the build as
-hard as a broken test.
+## Structure
 
-## Project structure
+Path aliases: `@core/*`, `@shared/*`, `@layout/*`, `@pages/*`, `@env/*`.
 
-```text
-src/
-├── app/
-│   ├── core/       Data access and domain-adjacent logic. No UI, ever.
-│   ├── layout/     Application chrome: shell, sidebar, page header, drawer state
-│   ├── pages/      One folder per routed screen
-│   └── shared/     Reusable presentational components
-├── environments/   Build-time configuration
-├── styles/         Design tokens and animations, imported by styles.css
-└── styles.css      Tailwind entry point + shape/utility layer
-public/i18n/        en.json, fr.json
-```
+| Folder | What lives there |
+|---|---|
+| `core/` | Data access (`*-api.ts`), models and pure `*.utils.ts` helpers, grouped by domain: admin, campaign, challenges, matches, players, ranking, i18n, http, viewport |
+| `pages/` | Routed screens with their own sub-components |
+| `layout/` | The `Shell` (sidebar) and the page header |
+| `shared/` | Presentational primitives: gauges, tiles, drawers, empty states, the rocket, the charts |
+| `styles/` | `colors.css`, `typography.css`, `elevation.css`, `animations.css` |
 
-Path aliases (`tsconfig.json`): `@core/*`, `@shared/*`, `@layout/*`, `@pages/*`, `@env/*`. Use them —
-relative `../../../` imports across these boundaries will not survive review.
+A screen is `x.ts` + `x.html` + `x.css`, plus `x.model.ts` for its view models.
 
-`core/` is organized by backend domain, not by technical kind:
+## Data access
 
-```text
-core/
-├── http/         api-endpoints.ts, page-response.model.ts, resource-state.utils.ts
-├── players/  matches/  challenges/  ranking/      *-api.ts + *.model.ts + *.utils.ts
-├── boss/         BossApi + BossCampaign — the run's weeks as timeline nodes
-├── colony/       ColonyApi + ColonyView — population, food, morale, turnout, tier ladder
-├── admin/        session, guard, HTTP interceptor, command runner
-├── i18n/         Translation service, TranslatePipe, TranslatedTitleStrategy
-├── date/         week-period and countdown helpers
-├── viewport/     breakpoint observation
-├── landing/  tour/   one-time-entry guards and their visit records
-└── snackbar/     the global outcome queue
-```
+- `@Service()` from `@angular/core`, not `@Injectable`.
+- Every backend URL is declared once in `core/http/api-endpoints.ts`. Components never build URLs.
+- `*-api.ts` services expose `httpResource<T>()` as fields, so every consumer shares one in-flight
+  request instead of triggering its own call.
+- **Always read a resource through `resourceValue(resource, fallback)`.** `value()` throws once the
+  resource settles into an error state, even when declared with a `defaultValue`, and takes navigation
+  down with it.
+- Combine multi-resource views with `anyLoading` / `anyError` / `reloadAll`
+  (`core/http/resource-state.utils.ts`) and render them through the `ResourceState` component.
+- `environment.apiBaseUrl` is relative (`/api`) by default: the app is served from the same origin as
+  the API in production. Point it at an absolute URL only if that stops being true.
 
 ## Routing
 
-The route table in `app.routes.ts` has a shape worth understanding before editing it:
-
-```text
-''            (pathMatch: 'full')  → Landing      chrome-free doorway, landingEntryGuard
-'tour'                             → Tour         chrome-free briefing, tourEntryGuard
-'admin/login'                      → AdminLogin   chrome-free sign-in
-''                                 → Shell        the sidebar layout
-   ├── overview | challenges | leaderboard | players | campaign | rules
-   ├── players/:id                          (lazy — it owns chart.js)
-   ├── colony                               (redirect to campaign)
-   ├── admin/operations | admin/players | admin/maintenance   (lazy, adminGuard)
-   └── '**'                        → NotFound
-```
-
-**Public pages are referenced eagerly on purpose.** Route-level splitting used to be the rule, but a
-bundler chunk is emitted per shared primitive — some under a kilobyte — and the public site ended up
-pulling around twenty-five of them per screen. Only `players/:id` (which owns `chart.js`) and the
-backoffice still use `loadComponent`. The file's own comment records this; read it before splitting a
-route again.
-
-Route `title`s are **translation keys**, resolved against the active dictionary by
-`TranslatedTitleStrategy` and suffixed with the application name.
-
-Two empty paths coexist: the first matches the root URL exactly and serves the landing page;
-everything else falls through to the second, which activates `Shell`.
-
-**The three chrome-free routes must stay declared before `Shell`.** Declared after it, they would be
-resolved as its children — wrapped in the sidebar, or handed to the wildcard.
-
-**The wildcard is a `Shell` child on purpose**, so a wrong URL still lands on a page the visitor can
-navigate away from.
-
-The backoffice is reachable by URL only; nothing in the site links to it. Signing in swaps the
-sidebar's entries rather than replacing the layout, so the operator stays in the same application.
-
-### One-time entries
-
-`landingEntryGuard` and `tourEntryGuard` let their page render once per visitor and redirect returning
-visitors to `/overview`. Both honour the same `?replay` query parameter — one convention, reused
-rather than redeclared — which is what the rules page's "replay the tour" link relies on. The visit
-record itself lives in `LandingVisit` / `TourVisit`.
-
-## Campaign and colony
-
-The campaign pillar lives on `/campaign` — the run's map, its boss timeline and every colony gauge —
-plus the `colony-summary` and `boss-encounter` blocks on `/overview`. `/colony` is only a redirect.
-
-Both read models are resolved in `core/`, **never in templates**:
-
-- `BossCampaign` (`core/boss/`) turns the run's weeks into display-ready timeline nodes, already
-  translated and formatted, padding to the run's fixed ten rollovers so the map has its final size
-  from the moment it opens. A player's damage to a boss is their weekly total **minus the regularity
-  bonus** — the same subtraction `DefaultBossQueryService` makes on the backend, so the rows add up to
-  the health bar above them.
-- `ColonyView` (`core/colony/`) does the same for population, food, morale, turnout and the tier
-  ladder, with `colony-format.utils.ts` and `colony-tier.utils.ts` alongside it.
-
-Any constant these mirror from the backend's `DefaultColonyRuleset` or `DefaultScoringRuleset` is
-documented as such at its declaration. **When a backend number moves, grep `colony-view.ts` and
-`rules.constants.ts` for it** — the rules page shows the barème, so it duplicates it by nature.
-
-## State management
-
-There is no store. Server data is held by Angular's `httpResource`, and everything else is a plain
-signal.
-
-Each domain exposes one `@Service()`-decorated `*-api.ts`:
-
-```ts
-// No-parameter resource: created once at service level, so every consumer shares one in-flight
-// request instead of each triggering its own GET /api/players.
-public readonly players = httpResource<readonly PlayerSummary[]>(
-  () => API_ENDPOINTS.players,
-  { defaultValue: [] },
-);
-
-// Parameterized resource: created per call site, taking reactive Signals as inputs.
-public details(
-  id: Signal<number>,
-  gameMode: Signal<GameMode>,
-  seasonId: Signal<number | null>,
-  weekStart: Signal<string | null>,
-): HttpResourceRef<PlayerDetails | undefined>
-```
-
-That split is the rule: **share it at service level if it takes no parameters, expose it as a function
-if it does.**
-
-### Reading resources safely
-
-`Resource.value()` **throws** once a resource settles into an error state — even one declared with a
-`defaultValue`. An unguarded `value()` in a template breaks navigation when the backend is down.
-
-Always go through `core/http/resource-state.utils.ts`:
-
-| Helper | Use |
-| --- | --- |
-| `resourceValue(resource, fallback)` | Read a value without throwing. **Use this instead of `value()`.** |
-| `anyLoading(...resources)` | Combined loading state — a view is only as ready as its slowest dependency |
-| `anyError(...resources)` | Combined error state — one failure is enough to refuse a half-populated screen |
-| `reloadAll(...resources)` | Retry everything, since a combined view cannot tell which one failed |
-
-These pair with the shared `<app-resource-state>` component, which renders uniform loading, error and
-empty states across every page. Use it rather than hand-rolling a spinner.
-
-## API communication
-
-`core/http/api-endpoints.ts` centralizes **every** backend URL, resolved against
-`environment.apiBaseUrl`. Never write an endpoint literal in a service. Public endpoints and
-administration endpoints are separated into two groups within that object so nothing outside the
-backoffice reaches for an admin route by accident.
-
-Paginated responses arrive in the backend's `PageResponse<T>` envelope, typed in
-`core/http/page-response.model.ts`.
-
-## Authentication
-
-There are no user accounts. The backend's single `ADMIN_API_KEY` is the entire credential, so "signed
-in" means nothing more than holding a key the API accepts.
-
-```text
-AdminSession          Holds the key in sessionStorage. The only place that reads or writes it.
-adminKeyInterceptor   Attaches X-Admin-Key to /api/admin requests. Signs out on 401/403.
-adminGuard            Redirects to /admin/login when no key is held.
-```
-
-Three decisions worth not undoing:
-
-- **`sessionStorage`, not `localStorage`.** The key is readable by any script on the page — acceptable
-  for one shared key on a personal project — so it dies with the tab rather than waiting there for the
-  next visitor.
-- **The interceptor is scoped to `/api/admin`.** The public API needs no credential, and sending one
-  everywhere would hand the key to routes that have no business seeing it.
-- **A request that already carries the header is left alone, failures included.** That is the sign-in
-  probe testing a key the session does not hold yet; signing out over its rejection would be
-  meaningless, and the login screen needs the raw error to tell a missing key from a wrong one.
-
-`adminGuard` is **not a security boundary** — the API is. It only spares the operator a screen full of
-failed requests.
-
-### Running an admin command
-
-Mutating backoffice actions go through `AdminCommandRunner`, which owns the busy/settled/failed cycle
-so no page re-derives its own `try/catch/finally`. The outcome is reported through the global
-`Snackbar`, not inline: a fixed bottom-anchored snackbar has one slot, and messages are *queued*
-rather than overwritten, because the operations screen runs several commands back to back.
-
-## Application chrome
-
-`Shell` (`layout/shell/`) is the sidebar layout. Its scroll container belongs to the routed content,
-which is why `html, body { overflow: hidden }` in `styles.css` is load-bearing rather than cosmetic.
-
-`<app-page-header>` (`layout/page-header/`) is the horizontal bar at the top of the routed content at
-every breakpoint — rendered by the page itself, `sticky` inside the shell's scroll container. It takes
-three inputs (`eyebrow`, `heading`, `backLink`) and two projection slots (`[headingAside]`, and the
-default one for the page's own countdown, action or view toggle).
-
-**Every page nested under `Shell` must render it as its first child.** Below `lg` the sidebar is a
-drawer with no bar of its own, and this component carries the burger that opens it — a page without it
-is a phone with no way into the navigation. The shared open state lives in `layout/navigation-panel.ts`.
-
-Detail pages pass `backLink` (which turns the eyebrow line into the way back to the parent) and drop
-`heading` when their own opening block already names the subject.
-
-`PAGE_LAYOUT_CLASS` → the `page-stack` utility stays bare so the bar reaches the edges of the column
-`main` gives it; the gutter and the 1440 px cap ride on the page's *blocks* instead. A block that hosts
-itself as `display: contents` slips through that rule and comes out flush, which is why
-`app-resource-state` and `app-rule-section` carry a box of their own.
-
-`<app-section-label>` (`shared/section-label/`) is the mono caption set against the trailing edge above
-a block. It renders nothing without a label.
-
-## Styling
-
-Tailwind v4, configured in CSS. `src/styles.css` imports the token files and declares the project's
-own utility layer:
-
-| File | Holds |
-| --- | --- |
-| `src/styles/colors.css` | `@theme` — brand, surfaces, text, category accents, podium, semantic success/danger |
-| `src/styles/typography.css` | `@theme` — the type scale |
-| `src/styles/animations.css` | Keyframes and motion utilities |
-| `src/styles.css` | Tailwind entry, base layer, and the shape/run utilities below |
-
-Reach for these before writing a class run by hand — **each one exists because the hand-written
-version had already drifted between screens**:
-
-- `notch-tr` / `notch-tr-edge` / `clip-hex` / `clip-shear` — the direction's silhouettes
-- `label-caption` — the mono uppercase micro-label captioning a value (70+ call sites; carries the
-  typography, never a color)
-- `menu-panel` / `menu-option` — the surface and rows of any panel opening over the page
-- `ambient-field`, `scroll-subtle`
-- `focus-ring` / `focus-ring-inset` — custom `@utility` classes replacing the default outline, which is
-  invisible against `surface-950`
-
-Shared presentational components live in `shared/` (`avatar`, `progress-bar`, `progress-circle`,
-`stat-tile`, `colony-resource-band`, `week-countdown`, `tooltip`, `select`, `multi-select`, …). Put a
-new primitive there rather than inlining it in a page, and reuse the existing tokens instead of a
-one-off hex.
+`app.routes.ts` is deliberately mostly **eager**. Public pages ride the initial bundle because
+route-level splitting emitted a chunk per shared primitive and cost more requests than it saved. Only
+the profile and comparison screens (which own `chart.js`), the tour, the rules and the backoffice are
+lazy. The landing page and the tour must stay declared before the `Shell` route: they render
+chrome-free.
 
 ## Internationalization
 
-Hand-rolled, not a library. `Translation` (`core/i18n/translation.ts`) loads
-`public/i18n/{lang}.json`, exposes `translate(key, params?)` and a `language` signal, and persists the
-choice to `localStorage`. `provideAppInitializer` loads the initial dictionary before the UI renders,
-so no screen ever flashes raw keys.
+French and English dictionaries live in `public/i18n/*.json` and are resolved by `TranslatePipe`.
+Route titles are translation keys resolved by `TranslatedTitleStrategy`. **No user-facing literal in a
+template**, ever.
 
-Templates use `TranslatePipe`:
+## Backoffice
 
-```html
-{{ 'landing.weekLabel' | translate: { week: week } }}
-```
+The admin area is reachable by URL only. `adminKeyInterceptor` attaches the `X-Admin-Key` header to
+`/api/admin` requests and `adminGuard` protects the routes (`core/admin`).
 
-Adding user-facing copy means adding the key to **both** `en.json` and `fr.json`. A key present in one
-and missing from the other is a bug that only shows up for half the audience.
+## Design system
 
-## Environment configuration
+The "Expédition" identity lives in `src/styles/`. The site is **dark only**, and there is no light
+theme by design.
 
-No `.env`. Two files under `src/environments/`, swapped by the `fileReplacements` entry in
-`angular.json`:
+- Reuse the existing utilities before writing new class chains: `notch-tr`, `clip-hex`,
+  `label-caption`, `menu-panel`, `menu-option`, `ambient-field`.
+- Take colors from `colors.css` rather than inventing them.
+- Read [`docs/DESIGN.md`](../docs/DESIGN.md) §8 before restyling anything: every constraint listed
+  there is a correction already made once.
+- Screen redesigns go through a published mockup before any Angular is written.
+- Icons are a vocabulary, not decoration: the same Lucide icon means the same thing on every screen,
+  and it appears where the word appears, including mid-sentence.
 
-| File | Used by | `apiBaseUrl` |
-| --- | --- | --- |
-| `environment.development.ts` | `npm start`, `npm run watch` | `/api` — proxied to `localhost:8080` |
-| `environment.ts` | `npm run build` (default configuration) | `/api` — same origin as the deployed site |
+## Code style
 
-Both are relative on purpose: the backend is expected to serve the built frontend from the same
-origin. Point `apiBaseUrl` at an absolute URL only if you deploy the API on a different origin — and
-then set `FRONTEND_ORIGIN` on the backend to match, or CORS will reject you.
+TypeScript is strict (`noUnusedLocals`, `noPropertyAccessFromIndexSignature`, `strictTemplates`).
+ESLint adds explicit member accessibility, member ordering (fields, constructor, methods), no
+`console.log`, `app` selector prefixes, native control flow only (`@if` / `@for`), `NgOptimizedImage`
+for static images, and an explicit `type` on every button.
 
-## Build
+## Docker
 
-```bash
-npm run build     # → dist/frontend/browser/
-```
+`Dockerfile` builds the production bundle on `node:22-alpine` and serves it with nginx
+(`nginx.conf`). Quality gates run in CI before an image is built, so the build stage only produces the
+artifact. In production Traefik terminates HTTPS and routes `/api/*` to the backend on the same origin.
 
-Builder: `@angular/build:application`. The production configuration adds output hashing and size
-budgets — **500 kB warning / 1 MB error** on the initial bundle, 4 kB / 8 kB per component stylesheet.
-A budget warning on a routine change usually means an eagerly imported dependency that should have
-been lazy.
+---
 
-`public/` is copied verbatim into the output, which is how the i18n dictionaries ship.
-
-## Testing
-
-Vitest through Angular's `@angular/build:unit-test` builder — there is no `vitest.config.ts`. Specs
-are colocated with the file under test (`tooltip.ts` + `tooltip.spec.ts`).
-
-```bash
-npm test
-npm test -- --watch=false   # what CI runs
-```
-
-> **Known gap, not a design choice.** Coverage is thin: eight spec files today, concentrated on the
-> admin session, the HTTP interceptor, the command runner, the resource-state helpers and a couple of
-> pure utilities — the pieces whose failure modes are silent. Pages and most shared components are
-> untested. New logic in `core/` should arrive with a spec.
->
-> Single-file filtering through the CLI has not been confirmed against the installed `@angular/build`
-> version; check before relying on a specific flag.
-
-## Conventions
-
-Enforced by `eslint.config.js` — these fail `npm run lint`, not review:
-
-- Components: element selector, `app-` prefix, kebab-case. Directives: attribute selector, `app`
-  prefix, camelCase.
-- **Explicit member accessibility on every class member** (constructors excluded).
-- Member order: `signature, field, constructor, method` — deliberately *not* accessibility-ordered, so
-  `inject()`-initialized fields precede the derived public signals that read them.
-- Templates: native control flow only (`@if` / `@for`) — no `*ngIf` / `*ngFor`. Static images through
-  `NgOptimizedImage`. `eqeqeq`. No positive `tabindex`.
-- `no-console` except `console.error` / `console.warn`.
-- Prettier: `printWidth: 100`, single quotes, HTML parsed with the `angular` parser.
-- `strictTemplates` is on. A template type error is a build failure.
-
-## Extending it
-
-| You want to… | Do this |
-| --- | --- |
-| Add a screen | Add a route as a `Shell` child unless it must be chrome-free, a `title` translation key in both dictionaries, and render `<app-page-header>` first. Reference the component eagerly unless it drags a heavy dependency in |
-| Consume a new endpoint | Add it to `API_ENDPOINTS`, then expose an `httpResource` from the domain's `*-api.ts` — shared if parameterless, a function if not |
-| Show a computed shape | Resolve it in `core/` (as `BossCampaign` and `ColonyView` do), never in a template |
-| Add a shared component | Put it in `shared/`, reusing the existing tokens and utilities |
-| Add a color, size or motion | Extend the `@theme` block in `src/styles/`, never a one-off hex in a template |
-| Add an admin action | Route it through `AdminCommandRunner`; report the outcome through `Snackbar` |
-| Add copy | Both `en.json` and `fr.json` |
-
-## Troubleshooting
-
-| Symptom | Cause / fix |
-| --- | --- |
-| Every screen shows its error state | The backend is not running on `localhost:8080` |
-| A screen breaks on navigation instead of showing an error | Somewhere a template calls `value()` directly. Use `resourceValue()` |
-| Raw translation keys on screen | The key is missing from the active dictionary |
-| A page has no burger below `lg` | It is not rendering `<app-page-header>` as its first child |
-| `npm start` fails immediately | Run `npm ci` first |
-| CI fails on `format:check` but the app works | Run `npm run format` |
-| Production build warns about bundle size | Expected at the 500 kB threshold — investigate if it moved on a change that should not have added weight |
-| Redirected to `/overview` when opening `/` or `/tour` | The one-time-entry guards. Append `?replay` |
-| Empty campaign or colony screen | No run has been opened yet. Force the week's selection from `/admin/operations` |
-
-## Related documents
-
-- [Root README](../README.md) — the product, and the from-scratch setup walkthrough.
-- [backend/README.md](../backend/README.md) — the API this site consumes, and its Swagger contract.
+Design direction: [`docs/DESIGN.md`](../docs/DESIGN.md) ·
+game rules: [`docs/GAMEPLAY.md`](../docs/GAMEPLAY.md) ·
+product overview: [root README](../README.md).
