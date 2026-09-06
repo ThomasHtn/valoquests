@@ -8,6 +8,7 @@ import { IN_FLIGHT_SYNCHRONIZATION_STATUSES, PlayerCalibration } from '@core/adm
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT, CampaignStatus } from '@core/campaign/campaign.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { daysBetween } from '@core/date/date-time.utils';
 import { addDays, formatDateRange, formatDayMonth } from '@core/date/week-period.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -26,23 +27,6 @@ import { AdminActionCard } from '../admin-action-card/admin-action-card';
  * Days a campaign spans: ten weeks of seven days.
  */
 const CAMPAIGN_DAYS = CAMPAIGN_WEEK_COUNT * 7;
-
-/**
- * Whole days from one ISO date to another, ignoring clocks. On `Date.UTC` so a daylight-saving
- * change never makes a seventy-day count a day short.
- *
- * @param from - Earlier ISO date, `YYYY-MM-DD`.
- * @param to - Later ISO date, `YYYY-MM-DD`.
- * @returns Whole days between the two.
- */
-function daysBetween(from: string, to: string): number {
-  const asUtc = (iso: string): number => {
-    const [year, month, day] = iso.split('-').map(Number);
-    return Date.UTC(year, month - 1, day);
-  };
-
-  return Math.round((asUtc(to) - asUtc(from)) / 86_400_000);
-}
 
 /**
  * A campaign the operator can act on, with the figures the decision is made against.

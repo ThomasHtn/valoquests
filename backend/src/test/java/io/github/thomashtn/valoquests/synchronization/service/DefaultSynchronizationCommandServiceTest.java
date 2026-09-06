@@ -15,6 +15,7 @@ import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valoquests.henrik.exception.HenrikServiceUnavailableException;
 import io.github.thomashtn.valoquests.player.entity.Player;
+import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationResponse;
@@ -31,6 +32,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -309,6 +311,8 @@ class DefaultSynchronizationCommandServiceTest {
     void shouldRecordCompletedPlayerSynchronization() {
         Player player = player(3L);
 
+        when(playerRepository.findById(3L))
+            .thenReturn(Optional.of(player));
         when(playerSynchronizationService.synchronize(3L))
             .thenReturn(
                 result(
@@ -330,7 +334,7 @@ class DefaultSynchronizationCommandServiceTest {
             .isEqualTo(SynchronizationStatus.COMPLETED);
         assertThat(response.startedAt()).isEqualTo(STARTED_AT);
         assertThat(response.finishedAt())
-            .isEqualTo(PLAYER_ONE_COMPLETED_AT);
+            .isEqualTo(STARTED_AT);
         assertThat(response.playersProcessed()).isEqualTo(1);
         assertThat(response.failureCount()).isZero();
         assertThat(response.matchesImported()).isEqualTo(7);
@@ -338,15 +342,19 @@ class DefaultSynchronizationCommandServiceTest {
     }
 
     /**
-     * Verifies that an individual failure is recorded and propagated.
+     * Verifies that an individual failure is recorded, produces a failed player result, and is
+     * propagated to the caller.
      */
     @Test
     void shouldRecordFailedPlayerSynchronization() {
+        Player player = player(3L);
         HenrikServiceUnavailableException exception =
             new HenrikServiceUnavailableException(
                 "Henrik service is unavailable"
             );
 
+        when(playerRepository.findById(3L))
+            .thenReturn(Optional.of(player));
         when(playerSynchronizationService.synchronize(3L))
             .thenThrow(exception);
 
@@ -358,6 +366,28 @@ class DefaultSynchronizationCommandServiceTest {
             synchronizationRepository,
             times(2)
         ).save(any(Synchronization.class));
+
+        ArgumentCaptor<SynchronizationPlayerResult> playerResult =
+            ArgumentCaptor.forClass(SynchronizationPlayerResult.class);
+        verify(playerResultRepository).save(playerResult.capture());
+
+        assertThat(playerResult.getValue().getPlayer().getId()).isEqualTo(3L);
+        assertThat(playerResult.getValue().getStatus())
+            .isEqualTo(SynchronizationStatus.FAILED);
+    }
+
+    /**
+     * Verifies that synchronizing an unknown player fails fast, before any execution is recorded.
+     */
+    @Test
+    void shouldRejectUnknownPlayer() {
+        when(playerRepository.findById(3L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+            () -> service.synchronizePlayer(3L)
+        ).isInstanceOf(PlayerNotFoundException.class);
+
+        verifyNoInteractions(synchronizationRepository, playerSynchronizationService);
     }
 
     /**
@@ -487,6 +517,8 @@ class DefaultSynchronizationCommandServiceTest {
     void shouldRecalculateChallengeProgressAfterSinglePlayerImport() {
         Player firstPlayer = player(1L);
 
+        when(playerRepository.findById(1L))
+            .thenReturn(Optional.of(firstPlayer));
         when(playerSynchronizationService.synchronize(1L))
             .thenReturn(result(firstPlayer, 7, PLAYER_ONE_COMPLETED_AT));
 

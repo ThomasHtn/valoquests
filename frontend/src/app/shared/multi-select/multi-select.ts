@@ -1,9 +1,7 @@
 import {
-  afterNextRender,
   afterRenderEffect,
   Component,
   computed,
-  DestroyRef,
   ElementRef,
   inject,
   input,
@@ -13,6 +11,7 @@ import {
 } from '@angular/core';
 import { LucideChevronDown } from '@lucide/angular';
 
+import { createPositionedDropdown } from '@shared/positioned-dropdown/positioned-dropdown';
 import { SelectOption } from '@shared/select/select.model';
 
 /**
@@ -41,9 +40,7 @@ let instanceCount = 0;
   templateUrl: './multi-select.html',
   host: {
     class: 'relative inline-block',
-    '(document:click)': 'onDocumentClick($event)',
     '(keydown)': 'onKeydown($event)',
-    '(window:resize)': 'close()',
   },
 })
 export class MultiSelect<T> {
@@ -89,11 +86,6 @@ export class MultiSelect<T> {
   protected readonly listboxId = `multi-select-listbox-${++instanceCount}`;
 
   /**
-   * Whether the options panel is currently open.
-   */
-  protected readonly isOpen = signal(false);
-
-  /**
    * Index of the keyboard-highlighted option, or `-1` when none is highlighted.
    */
   protected readonly activeIndex = signal(-1);
@@ -109,18 +101,28 @@ export class MultiSelect<T> {
   private readonly triggerButton = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
 
   /**
-   * Options panel, reparented to `document.body` once opened.
-   *
-   * `position: fixed` alone only escapes an ancestor's `overflow: hidden` — it does not escape a
-   * `clip-path` (e.g. a `notch-tr` card), which clips its whole painted subtree regardless of how
-   * a descendant is positioned. Moving the node itself out to the document body sidesteps that.
+   * Options panel, reparented out of the host once rendered. See {@link createPositionedDropdown}.
    */
   private readonly panelElement = viewChild.required<ElementRef<HTMLDivElement>>('panel');
 
   /**
+   * Pinning, reparenting and dismissal shared with every other positioned dropdown panel.
+   */
+  private readonly dropdown = createPositionedDropdown({
+    host: this.elementRef,
+    trigger: this.triggerButton,
+    panel: this.panelElement,
+  });
+
+  /**
+   * Whether the options panel is currently open.
+   */
+  protected readonly isOpen = this.dropdown.isOpen;
+
+  /**
    * Viewport-relative coordinates the panel is pinned to while open.
    */
-  protected readonly panelPosition = signal({ top: 0, right: 0, minWidth: 0 });
+  protected readonly panelPosition = this.dropdown.panelPosition;
 
   /**
    * Whether the selection has reached {@link maxSelection}.
@@ -139,12 +141,9 @@ export class MultiSelect<T> {
   });
 
   /**
-   * Registers the panel's reparenting, the highlight's scroll-into-view and the scroll listener.
+   * Registers the effect keeping the highlighted option visible once the panel scrolls.
    */
   constructor() {
-    afterNextRender(() => document.body.appendChild(this.panelElement().nativeElement));
-    inject(DestroyRef).onDestroy(() => this.panelElement().nativeElement.remove());
-
     afterRenderEffect(() => {
       const index = this.activeIndex();
       if (!this.isOpen() || index < 0) {
@@ -154,16 +153,6 @@ export class MultiSelect<T> {
       const panel: HTMLElement = this.panelElement().nativeElement;
       panel.querySelector(`#${this.optionId(index)}`)?.scrollIntoView({ block: 'nearest' });
     });
-
-    // `scroll` doesn't bubble, so a `document:scroll` host binding would miss scrolling inside a
-    // container rather than the window itself. Listening on the capture phase still sees it.
-    const closeOnScroll = (): void => {
-      if (this.isOpen()) {
-        this.close();
-      }
-    };
-    window.addEventListener('scroll', closeOnScroll, true);
-    inject(DestroyRef).onDestroy(() => window.removeEventListener('scroll', closeOnScroll, true));
   }
 
   /**
@@ -280,8 +269,8 @@ export class MultiSelect<T> {
       case 'Escape': {
         if (this.isOpen()) {
           event.preventDefault();
-          this.close();
-          this.triggerButton().nativeElement.focus();
+          this.dropdown.closeAndRefocus();
+          this.activeIndex.set(-1);
         }
         return;
       }
@@ -298,47 +287,23 @@ export class MultiSelect<T> {
   }
 
   /**
-   * Closes the panel when a click lands outside this component.
-   *
-   * The panel is checked separately from the host: it lives under `document.body`, not under the
-   * host element, so a click on its own padding would otherwise read as "outside".
-   *
-   * @param event - The document-wide click event.
-   */
-  protected onDocumentClick(event: MouseEvent): void {
-    const target = event.target as Node;
-    if (
-      !this.elementRef.nativeElement.contains(target) &&
-      !this.panelElement().nativeElement.contains(target)
-    ) {
-      this.close();
-    }
-  }
-
-  /**
    * Opens the panel, highlighting the first held value so arrows start from the current selection.
    */
   private open(): void {
-    const rect = this.triggerButton().nativeElement.getBoundingClientRect();
-    this.panelPosition.set({
-      top: rect.bottom + 8,
-      right: window.innerWidth - rect.right,
-      minWidth: rect.width,
-    });
+    this.dropdown.open();
     this.activeIndex.set(
       Math.max(
         0,
         this.options().findIndex((option) => this.isSelected(option)),
       ),
     );
-    this.isOpen.set(true);
   }
 
   /**
    * Closes the panel and clears the keyboard highlight.
    */
   protected close(): void {
-    this.isOpen.set(false);
+    this.dropdown.close();
     this.activeIndex.set(-1);
   }
 }

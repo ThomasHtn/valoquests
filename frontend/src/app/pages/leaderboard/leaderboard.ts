@@ -12,6 +12,7 @@ import {
   resolveChallengeMetricLabel,
   resolveChallengeVisual,
 } from '@core/challenges/challenge-visual.utils';
+import { daysBetween, localMidnight } from '@core/date/date-time.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -51,24 +52,6 @@ import { Podium } from './podium/podium';
 import { WeekPicker } from './week-picker/week-picker';
 
 const WEEK_DAYS = 7;
-const MILLISECONDS_PER_DAY = 86_400_000;
-
-/**
- * Parses an ISO date (`YYYY-MM-DD`) as local midnight.
- */
-function localMidnight(isoDate: string): Date {
-  const [year, month, day] = isoDate.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
-
-/**
- * Whole days from one ISO date to another, negative when the second comes first.
- */
-function daysBetween(from: string, to: string): number {
-  return Math.round(
-    (localMidnight(to).getTime() - localMidnight(from).getTime()) / MILLISECONDS_PER_DAY,
-  );
-}
 
 /**
  * The week's ranking: who stands where, on what, and how far each operator is on every weekly

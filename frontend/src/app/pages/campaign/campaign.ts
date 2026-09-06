@@ -10,6 +10,7 @@ import {
   ExtractionLimiter,
 } from '@core/campaign/campaign.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { daysBetween, localMidnight } from '@core/date/date-time.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -44,8 +45,6 @@ import { ReserveLedger } from './reserve-ledger/reserve-ledger';
 import { RocketShowcase } from './rocket-showcase/rocket-showcase';
 import { StarField } from './star-field';
 
-const DAY_MS = 86_400_000;
-
 /**
  * Breakthroughs the loss note is illustrated at.
  */
@@ -58,21 +57,6 @@ const SAMPLE_POPULATION = 10_000;
  * Colours of the past campaigns' curves, most recent first; the live one is always amber.
  */
 const PAST_CURVE_COLORS: readonly string[] = ['#7fb6d8', '#868b8d', '#8c6fdc', '#ec4899'];
-
-/**
- * Parses an ISO date (`YYYY-MM-DD`) as local midnight.
- */
-function localMidnight(isoDate: string): Date {
-  const [year, month, day] = isoDate.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
-
-/**
- * Whole days from one ISO date to another.
- */
-function daysBetween(from: string, to: string): number {
-  return Math.round((localMidnight(to).getTime() - localMidnight(from).getTime()) / DAY_MS);
-}
 
 /**
  * The road of the ten planets: where the campaign stands, the rule that settles every Sunday,

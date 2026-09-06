@@ -9,6 +9,40 @@ function padToTwoDigits(value: number): string {
 }
 
 /**
+ * Milliseconds in a day.
+ */
+const MILLISECONDS_PER_DAY = 86_400_000;
+
+/**
+ * Parses an ISO date (`YYYY-MM-DD`) as local midnight, optionally offset by a number of days.
+ *
+ * @param isoDate - The day to parse, as `YYYY-MM-DD`.
+ * @param plusDays - Days to add to the parsed date, negative to go backward.
+ * @returns The resulting local midnight.
+ */
+export function localMidnight(isoDate: string, plusDays = 0): Date {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  return new Date(year, month - 1, day + plusDays);
+}
+
+/**
+ * Whole days from one ISO date to another, negative when the second comes first.
+ *
+ * Rounded rather than floored: a daylight-saving change between the two shifts the raw
+ * millisecond difference by an hour either way, well short of the half-day this would need to tip
+ * the rounding to the wrong calendar day.
+ *
+ * @param from - The starting day, as `YYYY-MM-DD`.
+ * @param to - The ending day, as `YYYY-MM-DD`.
+ * @returns The signed day count between the two.
+ */
+export function daysBetween(from: string, to: string): number {
+  return Math.round(
+    (localMidnight(to).getTime() - localMidnight(from).getTime()) / MILLISECONDS_PER_DAY,
+  );
+}
+
+/**
  * Resolves the calendar day an ISO-8601 instant falls on, in the reader's timezone.
  *
  * Deliberately local rather than UTC: a match played at 00:30 belongs to the evening the player

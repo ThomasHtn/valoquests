@@ -1,9 +1,7 @@
 import {
-  afterNextRender,
   afterRenderEffect,
   Component,
   computed,
-  DestroyRef,
   ElementRef,
   inject,
   input,
@@ -13,6 +11,7 @@ import {
 } from '@angular/core';
 import { LucideChevronDown, LucideEllipsisVertical } from '@lucide/angular';
 
+import { createPositionedDropdown } from '@shared/positioned-dropdown/positioned-dropdown';
 import { SelectOption } from './select.model';
 
 /**
@@ -43,9 +42,7 @@ let instanceCount = 0;
   templateUrl: './select.html',
   host: {
     class: 'relative inline-block',
-    '(document:click)': 'onDocumentClick($event)',
     '(keydown)': 'onKeydown($event)',
-    '(window:resize)': 'close()',
   },
 })
 export class Select<T> {
@@ -83,11 +80,6 @@ export class Select<T> {
   protected readonly listboxId = `select-listbox-${++instanceCount}`;
 
   /**
-   * Whether the options panel is currently open.
-   */
-  protected readonly isOpen = signal(false);
-
-  /**
    * Index of the keyboard-highlighted option, or `-1` when none is highlighted.
    *
    * Distinct from the selected index: moving the highlight with the arrow keys must not commit a
@@ -106,25 +98,28 @@ export class Select<T> {
   private readonly triggerButton = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
 
   /**
-   * Options panel, reparented out of the host once rendered.
-   *
-   * `position: fixed` alone only escapes an ancestor's `overflow: hidden` — it does not escape a
-   * `clip-path` (e.g. a `notch-tr` card), which clips its whole painted subtree regardless of how
-   * a descendant is positioned. Moving the node itself out of the host sidesteps that.
-   *
-   * It moves to the nearest enclosing modal `<dialog>` when there is one (the drawers), and to
-   * `document.body` otherwise. A modal dialog paints in the top layer and renders the rest of the
-   * document inert, so a panel parked on the body would sit behind the backdrop and take no
-   * clicks — the dropdown would look like it never opens.
+   * Options panel, reparented out of the host once rendered. See {@link createPositionedDropdown}.
    */
   private readonly panelElement = viewChild.required<ElementRef<HTMLDivElement>>('panel');
 
   /**
-   * Viewport-relative coordinates the panel is pinned to while open.
-   *
-   * Computed from the trigger's own bounding rect each time the panel opens.
+   * Pinning, reparenting and dismissal shared with every other positioned dropdown panel.
    */
-  protected readonly panelPosition = signal({ top: 0, right: 0, minWidth: 0 });
+  private readonly dropdown = createPositionedDropdown({
+    host: this.elementRef,
+    trigger: this.triggerButton,
+    panel: this.panelElement,
+  });
+
+  /**
+   * Whether the options panel is currently open.
+   */
+  protected readonly isOpen = this.dropdown.isOpen;
+
+  /**
+   * Viewport-relative coordinates the panel is pinned to while open.
+   */
+  protected readonly panelPosition = this.dropdown.panelPosition;
 
   /**
    * Index of the currently selected option, or `-1` when none matches.
@@ -157,13 +152,6 @@ export class Select<T> {
    * panel cannot be measured until its `hidden` attribute has been written to the DOM.
    */
   constructor() {
-    afterNextRender(() => {
-      const host: HTMLElement = this.elementRef.nativeElement;
-      const panelHost = host.closest('dialog') ?? document.body;
-      panelHost.appendChild(this.panelElement().nativeElement);
-    });
-    inject(DestroyRef).onDestroy(() => this.panelElement().nativeElement.remove());
-
     afterRenderEffect(() => {
       const index = this.activeIndex();
       if (!this.isOpen() || index < 0) {
@@ -174,19 +162,6 @@ export class Select<T> {
       const panel: HTMLElement = this.panelElement().nativeElement;
       panel.querySelector(`#${this.optionId(index)}`)?.scrollIntoView({ block: 'nearest' });
     });
-
-    // `scroll` doesn't bubble, so a `document:scroll` host binding would miss scrolling that
-    // happens inside a container (e.g. the app's own scrollable `<main>`) rather than the window
-    // itself. Listening on the capture phase still sees it, wherever it happens, since capture
-    // fires while the event travels down toward its target. Closing rather than repositioning
-    // keeps this simple and avoids the panel trailing a stale position for a frame.
-    const closeOnScroll = (): void => {
-      if (this.isOpen()) {
-        this.close();
-      }
-    };
-    window.addEventListener('scroll', closeOnScroll, true);
-    inject(DestroyRef).onDestroy(() => window.removeEventListener('scroll', closeOnScroll, true));
   }
 
   /**
@@ -217,8 +192,8 @@ export class Select<T> {
    */
   protected select(option: SelectOption<T>): void {
     this.value.set(option.value);
-    this.close();
-    this.triggerButton().nativeElement.focus();
+    this.dropdown.closeAndRefocus();
+    this.activeIndex.set(-1);
   }
 
   /**
@@ -270,8 +245,8 @@ export class Select<T> {
       case 'Escape': {
         if (this.isOpen()) {
           event.preventDefault();
-          this.close();
-          this.triggerButton().nativeElement.focus();
+          this.dropdown.closeAndRefocus();
+          this.activeIndex.set(-1);
         }
         return;
       }
@@ -288,42 +263,18 @@ export class Select<T> {
   }
 
   /**
-   * Closes the panel when a click lands outside this component.
-   *
-   * The panel itself is checked separately from the host: it lives under `document.body`, not
-   * under the host element, so a click on its own padding would otherwise read as "outside".
-   *
-   * @param event - The document-wide click event.
-   */
-  protected onDocumentClick(event: MouseEvent): void {
-    const target = event.target as Node;
-    if (
-      !this.elementRef.nativeElement.contains(target) &&
-      !this.panelElement().nativeElement.contains(target)
-    ) {
-      this.close();
-    }
-  }
-
-  /**
    * Opens the panel, highlighting the selected option so arrow keys start from the current value.
    */
   private open(): void {
-    const rect = this.triggerButton().nativeElement.getBoundingClientRect();
-    this.panelPosition.set({
-      top: rect.bottom + 8,
-      right: window.innerWidth - rect.right,
-      minWidth: rect.width,
-    });
+    this.dropdown.open();
     this.activeIndex.set(Math.max(0, this.selectedIndex()));
-    this.isOpen.set(true);
   }
 
   /**
    * Closes the panel and clears the keyboard highlight.
    */
   protected close(): void {
-    this.isOpen.set(false);
+    this.dropdown.close();
     this.activeIndex.set(-1);
   }
 }

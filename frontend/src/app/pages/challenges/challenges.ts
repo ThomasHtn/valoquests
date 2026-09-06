@@ -11,6 +11,7 @@ import {
 } from '@core/challenges/challenge.model';
 import { resolveDifficultyVisual } from '@core/challenges/challenge-visual.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
+import { localMidnight } from '@core/date/date-time.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -29,14 +30,6 @@ const WEEK_DAYS = 7;
 const DAILY_TONE = 'var(--color-accent-cyan)';
 
 const CLOSED_DAY_TONE = 'var(--color-accent-green)';
-
-/**
- * Parses an ISO date (`YYYY-MM-DD`) as local midnight.
- */
-function localMidnight(isoDate: string): Date {
-  const [year, month, day] = isoDate.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
 
 /**
  * The ISO date `offset` days after another.

@@ -17,20 +17,12 @@ import {
 } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
-import {
-  Campaign,
-  CAMPAIGN_WEEK_COUNT,
-  CampaignWeek,
-  WEEKLY_TITLES,
-  WeeklyTitle,
-} from '@core/campaign/campaign.model';
-import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
+import { CAMPAIGN_WEEK_COUNT, CampaignWeek } from '@core/campaign/campaign.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { PageHeader } from '@layout/page-header/page-header';
@@ -53,6 +45,15 @@ import {
   MissionReport as MissionReportView,
   SquadRow,
 } from './overview.model';
+import {
+  buildCapacity,
+  buildDailyOrder,
+  buildFrieze,
+  buildMission,
+  buildMissionReport,
+  buildSquad,
+  buildTally,
+} from './overview.utils';
 import { PlanetFigure } from './planet-figure/planet-figure';
 import { ScanWires } from './scan-wires';
 import { SquadSheet } from './squad-sheet/squad-sheet';
@@ -62,26 +63,6 @@ import { SquadSheet } from './squad-sheet/squad-sheet';
  * city grows on, so a base that went the distance fills its whole skyline.
  */
 const FULL_CAMPAIGN_POPULATION = 30_000;
-
-/**
- * Milliseconds in a day.
- */
-const DAY_MS = 86_400_000;
-
-/**
- * Parses an ISO date (`YYYY-MM-DD`) as local midnight.
- */
-function localMidnight(isoDate: string, plusDays = 0): number {
-  const [year, month, day] = isoDate.split('-').map(Number);
-  return new Date(year, month - 1, day + plusDays).getTime();
-}
-
-/**
- * Whole days from one ISO date to another.
- */
-function daysBetween(from: string, to: string): number {
-  return Math.round((localMidnight(to) - localMidnight(from)) / DAY_MS);
-}
 
 /**
  * Browser-side memory of the last report seen, so the dialog opens once per settled week. Storage
@@ -235,37 +216,18 @@ export class Overview {
     }),
   );
 
-  protected readonly frieze = computed<readonly FriezeWeek[]>(() => {
-    const campaign = this.campaign();
-    if (!campaign || campaign.weeks.length === 0) {
-      return [];
-    }
-    return campaign.weeks.map((week) => this.toFriezeWeek(week, campaign));
-  });
+  protected readonly frieze = computed<readonly FriezeWeek[]>(() =>
+    buildFrieze(this.campaign(), (key, params) => this.translation.translate(key, params)),
+  );
 
-  protected readonly mission = computed<Mission | null>(() => {
-    const campaign = this.campaign();
-    const week = this.currentWeek();
-    if (!campaign || !week) {
-      return null;
-    }
-    const hitPointsLeft = Math.max(0, week.guardianHitPoints - week.damageDealt);
-    return {
-      weekIndex: week.weekIndex,
-      planetName: week.planetName,
-      category: week.category,
-      dayOfWeek: Math.min(7, Math.max(1, daysBetween(week.weekStart, campaign.today) + 1)),
-      guardianName: week.guardianName ?? '',
-      hitPointsLeft,
-      hitPoints: week.guardianHitPoints,
-      breachPercent: week.progressPercent,
-      guardianLeft: week.guardianHitPoints > 0 ? hitPointsLeft / week.guardianHitPoints : 0,
-      defeated: this.fatalBlow(week),
-      wounded: week.woundedCount,
-      crew: campaign.rosterSize ?? 0,
-      extractionDeadline: localMidnight(week.weekStart, 7),
-    };
-  });
+  protected readonly mission = computed<Mission | null>(() =>
+    buildMission(
+      this.campaign(),
+      this.currentWeek(),
+      resourceValue(this.playersApi.players, []),
+      this.translation.language(),
+    ),
+  );
 
   /**
    * Whether the Monday report is on screen.
@@ -275,197 +237,42 @@ export class Overview {
   /**
    * The last settled week, told as the Monday report; `null` before the first Sunday.
    */
-  protected readonly missionReport = computed<MissionReportView | null>(() => {
-    const campaign = this.campaign();
-    const settled = campaign?.weeks.filter((week) => week.settled).at(-1);
-    if (!campaign || !settled) {
-      return null;
-    }
-    const players = resourceValue(this.playersApi.players, []);
-    const portraitOf = (id: number): string | null =>
-      resolvePlayerAvatarUrl(players.find((player) => player.id === id)?.portrait ?? null);
-    const frozen =
-      resourceValue(this.historyResource, null)?.content.find(
-        (week) => week.weekStart === settled.weekStart,
-      ) ?? null;
-    const next = campaign.weeks[settled.weekIndex] ?? null;
-    return {
-      weekStart: settled.weekStart,
-      weekIndex: settled.weekIndex,
-      planetName: settled.planetName,
-      settledOn: new Intl.DateTimeFormat(this.translation.language(), {
-        day: 'numeric',
-        month: 'short',
-      }).format(new Date(localMidnight(settled.weekStart, 6))),
-      guardianName: settled.guardianName ?? '',
-      defeated: settled.defeated,
-      hitPoints: settled.guardianHitPoints,
-      hitPointsLeft: Math.max(0, settled.guardianHitPoints - settled.damageDealt),
-      breachPercent: settled.progressPercent,
-      blow: this.blowLine(settled),
-      baseLoss: settled.baseLoss,
-      rescued: settled.challengeRescued + settled.extractionRescued,
-      spotted: settled.woundedCount,
-      byChallenges: settled.challengeRescued,
-      limiter: settled.limiter,
-      population: settled.base?.population ?? null,
-      populationChange: settled.base?.populationChange ?? 0,
-      titles: frozen
-        ? WEEKLY_TITLES.map((key) => {
-            const holder = frozen.ranking.find((entry) => entry.titles.includes(key)) ?? null;
-            return {
-              key,
-              ...resolveTitleVisual(key),
-              holder: holder?.displayName ?? null,
-              portrait: holder ? portraitOf(holder.playerId) : null,
-            };
-          })
-        : null,
-      ranking: frozen
-        ? frozen.ranking.map((entry) => ({
-            position: entry.position,
-            name: entry.displayName,
-            portrait: portraitOf(entry.playerId),
-            total: entry.totalPoints,
-          }))
-        : [],
-      next: next
-        ? {
-            planetName: next.planetName,
-            hitPoints: next.guardianHitPoints,
-            wounded: next.woundedCount,
-          }
-        : null,
-    };
-  });
+  protected readonly missionReport = computed<MissionReportView | null>(() =>
+    buildMissionReport(
+      this.campaign(),
+      resourceValue(this.playersApi.players, []),
+      resourceValue(this.historyResource, null)?.content ?? [],
+      this.translation.language(),
+      (key, params) => this.translation.translate(key, params),
+    ),
+  );
 
-  protected readonly capacity = computed<Capacity | null>(() => {
-    const campaign = this.campaign();
-    const week = this.currentWeek();
-    const base = campaign?.base;
-    const forecast = campaign?.forecast;
-    if (!campaign || !week || !base || !forecast) {
-      return null;
-    }
-    const wounded = Math.max(1, week.woundedCount);
-    const fraction = (value: number): number => Math.min(1, value / wounded);
-    return {
-      wounded: week.woundedCount,
-      carry: {
-        value: base.rescuesByComponents,
-        fraction: fraction(base.rescuesByComponents),
-        stock: base.componentsStock,
-      },
-      shelter: {
-        value: base.rescuesByFood,
-        fraction: fraction(base.rescuesByFood),
-        stock: base.foodStock,
-      },
-      breach: {
-        value: week.progressPercent,
-        fraction: week.progressPercent / 100,
-        stock: Math.max(0, week.guardianHitPoints - week.damageDealt),
-      },
-      aboard: forecast.rescued,
-      aboardFraction: fraction(forecast.rescued),
-      fromGuardian: forecast.extractionRescued,
-      fromChallenges: forecast.challengeRescued,
-      leftBehind: forecast.leftBehind,
-      limiter: forecast.limiter,
-      componentsPerRescue: base.componentsPerRescue,
-      foodPerRescue: base.foodPerRescue,
-      hitPointsPerPercent: Math.round(week.guardianHitPoints / 100),
-    };
-  });
+  protected readonly capacity = computed<Capacity | null>(() =>
+    buildCapacity(this.campaign(), this.currentWeek()),
+  );
 
-  protected readonly dailyOrder = computed<DailyOrder | null>(() => {
-    const challenges = resourceValue(this.challengesResource, null);
-    const ranking = resourceValue(this.rankingResource, null);
-    if (!challenges) {
-      return null;
-    }
-    const daily = challenges.dailies.find((entry) => entry.day === challenges.today) ?? null;
-    if (!daily) {
-      return null;
-    }
-    const validated = (ranking?.ranking ?? [])
-      .filter((entry) => entry.position !== null)
-      .map((entry) => ({
-        name: entry.player.displayName,
-        done:
-          entry.challengeProgress.find((line) => line.cadence === 'DAILY' && line.id === daily.id)
-            ?.completed ?? false,
-      }));
-    return {
-      name: daily.name,
-      description: daily.description,
-      survivors: daily.survivors,
-      validated,
-      doneCount: validated.filter((operator) => operator.done).length,
-      deadline: localMidnight(challenges.today, 1),
-    };
-  });
+  protected readonly dailyOrder = computed<DailyOrder | null>(() =>
+    buildDailyOrder(
+      resourceValue(this.challengesResource, null) ?? null,
+      resourceValue(this.rankingResource, null) ?? null,
+    ),
+  );
 
-  protected readonly tally = computed<DayTally | null>(() => {
-    const today = resourceValue(this.todayResource, null);
-    const week = this.currentWeek();
-    const base = this.campaign()?.base;
-    if (!today || !week || !base) {
-      return null;
-    }
-    return {
-      guardianName: week.guardianName ?? '',
-      damage: today.damage,
-      components: today.components,
-      carryGained: today.carryGained,
-      food: today.food,
-      shelterGained: today.shelterGained,
-      upkeep: today.dailyUpkeep,
-      population: base.population,
-      presence: today.presenceCount,
-      roster: today.rosterSize,
-      pips: Array.from({ length: today.rosterSize }, (_, index) => index < today.presenceCount),
-    };
-  });
+  protected readonly tally = computed<DayTally | null>(() =>
+    buildTally(
+      resourceValue(this.todayResource, null) ?? null,
+      this.currentWeek(),
+      this.campaign(),
+    ),
+  );
 
-  protected readonly squad = computed<readonly SquadRow[]>(() => {
-    const daily = resourceValue(this.dailyResource, null);
-    const today = resourceValue(this.todayResource, null);
-    if (!daily) {
-      return [];
-    }
-    const titlesByPlayer = new Map<number, WeeklyTitle>();
-    for (const [title, playerId] of Object.entries(today?.titles ?? {})) {
-      if (playerId !== undefined && !titlesByPlayer.has(playerId)) {
-        titlesByPlayer.set(playerId, title as WeeklyTitle);
-      }
-    }
-    // An inactive operator has no ranking slot: they never deal guardian damage, so they have no
-    // line here either.
-    const active = daily.ranking.filter((entry) => entry.position !== null);
-    return active.map((entry) => {
-      const title = titlesByPlayer.get(entry.playerId) ?? null;
-      const played = entry.matchCount > 0;
-      return {
-        position: played ? entry.position : null,
-        playerId: entry.playerId,
-        name: entry.displayName,
-        portrait: resolvePlayerAvatarUrl(entry.portrait),
-        title: title === null ? null : { key: title, ...resolveTitleVisual(title) },
-        played,
-        streakMultiplier: this.formatMultiplier(
-          played ? entry.streakBonusPercent : this.streakBonusOf(entry.streakAtStake),
-        ),
-        streakDays: played ? entry.streakDays : entry.streakAtStake,
-        streakAtStake: entry.streakAtStake,
-        damage: entry.damage,
-        matchCount: entry.matchCount,
-        reducedMatchCount: entry.reducedMatchCount,
-        components: entry.components,
-        food: entry.food,
-      };
-    });
-  });
+  protected readonly squad = computed<readonly SquadRow[]>(() =>
+    buildSquad(
+      resourceValue(this.dailyResource, null) ?? null,
+      resourceValue(this.todayResource, null) ?? null,
+      this.translation.language(),
+    ),
+  );
 
   protected readonly rosterCount = computed(
     () => resourceValue(this.dailyResource, null)?.rosterPlayerCount ?? 0,
@@ -553,95 +360,6 @@ export class Overview {
     return Math.round(fraction * 100);
   }
 
-  private locale(): string {
-    return this.translation.language() === 'fr' ? 'fr-FR' : 'en-US';
-  }
-
-  private formatMultiplier(bonusPercent: number): string {
-    return `×${new Intl.NumberFormat(this.locale(), {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(1 + bonusPercent / 100)}`;
-  }
-
-  /**
-   * Bonus a streak of that many days pays: nothing on the first day, two percent per day after,
-   * capped at ten — the barème's ladder, restated for an operator who has not played yet and
-   * whose streak the daily board therefore does not price.
-   */
-  private streakBonusOf(streakDays: number): number {
-    return Math.max(0, Math.min(10, (streakDays - 1) * 2));
-  }
-
-  private toFriezeWeek(week: CampaignWeek, campaign: Campaign): FriezeWeek {
-    const isCurrent = week.weekIndex === campaign.currentWeekIndex && campaign.status === 'RUNNING';
-    const label = String(week.weekIndex).padStart(2, '0');
-    if (week.defeated) {
-      return {
-        index: week.weekIndex,
-        label,
-        state: 'won',
-        advance: 1,
-        mark: '✓',
-        title: this.translation.translate('overview.frieze.won'),
-      };
-    }
-    if (week.settled) {
-      return {
-        index: week.weekIndex,
-        label,
-        state: 'lost',
-        advance: week.progressPercent / 100,
-        mark: '✕',
-        title: this.translation.translate('overview.frieze.lost', {
-          percent: week.progressPercent,
-        }),
-      };
-    }
-    if (isCurrent) {
-      return {
-        index: week.weekIndex,
-        label,
-        state: 'now',
-        advance: week.progressPercent / 100,
-        mark: '●',
-        title: this.translation.translate('overview.frieze.now', {
-          percent: week.progressPercent,
-        }),
-      };
-    }
-    // A closed campaign's remaining weeks were never played: they are not coming any more.
-    const unplayed = campaign.status === 'CLOSED';
-    return {
-      index: week.weekIndex,
-      label,
-      state: 'ahead',
-      advance: 0,
-      mark: week.weekIndex === CAMPAIGN_WEEK_COUNT && !unplayed ? '★' : '·',
-      title: this.translation.translate(
-        unplayed ? 'overview.frieze.unplayed' : 'overview.frieze.ahead',
-      ),
-    };
-  }
-
-  /**
-   * The fatal blow as the report states it, or `null` while the guardian stands. The blow belongs
-   * to the match, so its time is the match's, never the synchronization's.
-   */
-  private fatalBlow(week: CampaignWeek): Mission['defeated'] {
-    if (!week.defeated || !week.defeatedAt) {
-      return null;
-    }
-    const at = new Date(week.defeatedAt);
-    const locale = this.translation.language();
-    const players = resourceValue(this.playersApi.players, []);
-    return {
-      weekday: new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(at),
-      time: new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(at),
-      by: players.find((player) => player.id === week.defeatedByPlayerId)?.displayName ?? null,
-    };
-  }
-
   protected openReport(): void {
     this.reportOpen.set(true);
   }
@@ -652,30 +370,5 @@ export class Overview {
       writeSeenReport(report.weekStart);
     }
     this.reportOpen.set(false);
-  }
-
-  /**
-   * The fatal blow in one line: who, when, on which map, in which mode and on what score.
-   */
-  private blowLine(week: CampaignWeek): string | null {
-    const blow = this.fatalBlow(week);
-    if (!blow) {
-      return null;
-    }
-    const detail = week.fatalBlow;
-    const score =
-      detail?.allyScore !== null && detail?.allyScore !== undefined && detail.enemyScore !== null
-        ? `${detail.allyScore} – ${detail.enemyScore}`
-        : '';
-    return this.translation.translate('overview.missionReport.blow', {
-      name: blow.by ?? '',
-      weekday: blow.weekday,
-      time: blow.time,
-      map: detail?.mapName ?? '',
-      mode: detail?.gameMode
-        ? this.translation.translate(`common.gameMode.${detail.gameMode}`)
-        : '',
-      score,
-    });
   }
 }

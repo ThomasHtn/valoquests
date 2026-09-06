@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valoquests.player.entity.Player;
+import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationResponse;
@@ -143,7 +144,7 @@ public class DefaultSynchronizationCommandService
         );
 
         for (Player player : players) {
-            summary = synchronizePlayerWithinBatch(synchronization, player, summary);
+            summary = synchronizeOnePlayer(synchronization, player, summary).summary();
         }
 
         completeBatchSynchronization(
@@ -170,12 +171,16 @@ public class DefaultSynchronizationCommandService
     /**
      * Executes a synchronization for one player and records its outcome.
      *
-     * <p>The original runtime exception is deliberately propagated after the
-     * failed execution has been persisted. Preserving the same exception
-     * instance keeps its concrete type, stack trace and diagnostic context.</p>
+     * <p>Treated as a batch of one: the same per-player step, completion and status derivation as
+     * {@link #synchronizeAllPlayers(SynchronizationTrigger)} apply here, so a failure is recorded
+     * with a {@link SynchronizationPlayerResult} row exactly like a batch failure would be. The
+     * original runtime exception is then deliberately re-thrown, since unlike the batch path this
+     * method reports the outcome of the one player its caller asked for. Preserving the same
+     * exception instance keeps its concrete type, stack trace and diagnostic context.</p>
      *
      * @param playerId tracked player identifier
      * @return persisted synchronization summary
+     * @throws PlayerNotFoundException when no tracked player owns the identifier
      */
     @Override
     @SuppressFBWarnings(
@@ -187,53 +192,52 @@ public class DefaultSynchronizationCommandService
             """
     )
     public SynchronizationResponse synchronizePlayer(long playerId) {
+        Player player = playerRepository.findById(playerId)
+            .orElseThrow(() -> new PlayerNotFoundException(playerId));
+
         Synchronization synchronization =
             startSynchronization(SynchronizationTrigger.MANUAL);
 
         LOGGER.info("Starting synchronization for player {}", playerId);
 
-        try {
-            PlayerSynchronizationResult result =
-                playerSynchronizationService.synchronize(playerId);
+        PlayerSynchronizationOutcome outcome = synchronizeOnePlayer(
+            synchronization,
+            player,
+            SynchronizationBatchSummary.empty()
+        );
 
-            saveSuccessfulPlayerResult(synchronization, result);
-            completeSinglePlayerSynchronization(synchronization, result);
+        completeBatchSynchronization(synchronization, 1, outcome.summary());
+        refreshChallengeProgress(outcome.summary().matchesImported());
 
-            LOGGER.info(
-                "Synchronization completed for player {} with {} pages and {} imported matches",
-                playerId,
-                result.pagesFetched(),
-                result.matchesImported()
-            );
-
-            refreshChallengeProgress(result.matchesImported());
-
-            return toResponse(
-                synchronization,
-                result.completedAt()
-            );
-        } catch (RuntimeException exception) {
-            failSinglePlayerSynchronization(synchronization, exception);
-
-            LOGGER.error(
-                "Synchronization failed for player {}",
-                playerId,
-                exception
-            );
-
-            throw exception;
+        if (outcome.failure() != null) {
+            throw outcome.failure();
         }
+
+        LOGGER.info(
+            "Synchronization completed for player {} with {} imported matches",
+            playerId,
+            outcome.summary().matchesImported()
+        );
+
+        return toResponse(
+            synchronization,
+            outcome.summary().lastSuccessfulSynchronizationAt()
+        );
     }
 
     /**
-     * Executes one player within a batch and returns the updated aggregate.
+     * Executes one player and returns the updated batch aggregate alongside the original failure,
+     * if any.
+     *
+     * <p>Shared by the batch loop, which discards the failure and moves on to the next player, and
+     * by {@link #synchronizePlayer(long)}, which re-throws it once completion has been recorded.</p>
      *
      * @param synchronization global execution
      * @param player          player to process
      * @param summary         current batch summary
-     * @return updated immutable batch summary
+     * @return updated batch summary and the original exception, {@code null} on success
      */
-    private SynchronizationBatchSummary synchronizePlayerWithinBatch(
+    private PlayerSynchronizationOutcome synchronizeOnePlayer(
         Synchronization synchronization,
         Player player,
         SynchronizationBatchSummary summary
@@ -242,7 +246,10 @@ public class DefaultSynchronizationCommandService
             PlayerSynchronizationResult result =
                 playerSynchronizationService.synchronize(player.getId());
             saveSuccessfulPlayerResult(synchronization, result);
-            return summary.withSuccess(result);
+            return new PlayerSynchronizationOutcome(
+                summary.withSuccess(result),
+                null
+            );
         } catch (RuntimeException exception) {
             String errorMessage = safeErrorMessage(exception);
 
@@ -263,7 +270,10 @@ public class DefaultSynchronizationCommandService
                 null
             );
 
-            return summary.withFailure(player, errorMessage);
+            return new PlayerSynchronizationOutcome(
+                summary.withFailure(player, errorMessage),
+                exception
+            );
         }
     }
 
@@ -375,48 +385,6 @@ public class DefaultSynchronizationCommandService
         synchronization.setMatchesImported(summary.matchesImported());
         synchronization.setErrorMessage(
             nullableTruncatedErrorMessage(summary.errorMessages())
-        );
-
-        synchronizationRepository.save(synchronization);
-    }
-
-    /**
-     * Marks a single-player execution as completed.
-     *
-     * @param synchronization execution to update
-     * @param result          successful player outcome
-     */
-    private void completeSinglePlayerSynchronization(
-        Synchronization synchronization,
-        PlayerSynchronizationResult result
-    ) {
-        synchronization.setStatus(SynchronizationStatus.COMPLETED);
-        synchronization.setFinishedAt(result.completedAt());
-        synchronization.setPlayersProcessed(1);
-        synchronization.setFailureCount(0);
-        synchronization.setMatchesImported(result.matchesImported());
-        synchronization.setErrorMessage(null);
-
-        synchronizationRepository.save(synchronization);
-    }
-
-    /**
-     * Marks a single-player execution as failed.
-     *
-     * @param synchronization execution to update
-     * @param exception       synchronization failure
-     */
-    private void failSinglePlayerSynchronization(
-        Synchronization synchronization,
-        RuntimeException exception
-    ) {
-        synchronization.setStatus(SynchronizationStatus.FAILED);
-        synchronization.setFinishedAt(clock.instant());
-        synchronization.setPlayersProcessed(1);
-        synchronization.setFailureCount(1);
-        synchronization.setMatchesImported(0);
-        synchronization.setErrorMessage(
-            truncateErrorMessage(safeErrorMessage(exception))
         );
 
         synchronizationRepository.save(synchronization);

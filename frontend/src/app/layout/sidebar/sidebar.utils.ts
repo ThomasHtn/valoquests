@@ -1,4 +1,24 @@
 import { PlayerSummary } from '@core/players/player-summary.model';
+import { NavItem } from './sidebar.model';
+
+/**
+ * Whether `item` should render as the active navigation entry for `url`.
+ *
+ * `exactMatch` entries only match the current URL outright; every other entry also matches a child
+ * route under its own `routerLink`, and under any of its `activeRoutes` (a second page reached from
+ * within the section rather than from the sidebar, which still shares this one entry).
+ *
+ * @param url - The current URL.
+ * @param item - The navigation entry to check.
+ * @returns Whether the entry is active for `url`.
+ */
+export function isNavItemActive(url: string, item: NavItem): boolean {
+  const routes = [item.routerLink, ...(item.activeRoutes ?? [])].filter(
+    (route): route is string => !!route,
+  );
+
+  return routes.some((route) => url === route || (!item.exactMatch && url.startsWith(`${route}/`)));
+}
 
 /**
  * Resolves the most recent successful synchronization among `players`.
