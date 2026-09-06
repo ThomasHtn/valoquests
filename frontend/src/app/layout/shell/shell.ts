@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
+import { LiveRefresh } from '@core/http/live-refresh';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Sidebar } from '@layout/sidebar/sidebar';
 
@@ -20,4 +21,10 @@ import { Sidebar } from '@layout/sidebar/sidebar';
   // full-height flex layout its template lays out.
   host: { class: 'contents' },
 })
-export class Shell {}
+export class Shell {
+  constructor() {
+    // Started here rather than in a page: the shell outlives every route, so the screens keep
+    // following the backend for as long as the tab is open.
+    inject(LiveRefresh);
+  }
+}

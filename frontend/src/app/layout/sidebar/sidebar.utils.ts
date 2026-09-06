@@ -1,4 +1,3 @@
-import { PlayerSummary } from '@core/players/player-summary.model';
 import { NavItem } from './sidebar.model';
 
 /**
@@ -18,26 +17,6 @@ export function isNavItemActive(url: string, item: NavItem): boolean {
   );
 
   return routes.some((route) => url === route || (!item.exactMatch && url.startsWith(`${route}/`)));
-}
-
-/**
- * Resolves the most recent successful synchronization among `players`.
- *
- * @param players - Tracked players' summaries.
- * @returns The latest `lastSuccessfulSynchronizationAt` instant, as an ISO-8601 string, or `null`
- * when no player has been synchronized successfully yet.
- */
-export function resolveLatestSynchronization(players: readonly PlayerSummary[]): string | null {
-  return players.reduce<string | null>((latest, player) => {
-    const candidate = player.lastSuccessfulSynchronizationAt;
-    if (!candidate) {
-      return latest;
-    }
-
-    return !latest || new Date(candidate).getTime() > new Date(latest).getTime()
-      ? candidate
-      : latest;
-  }, null);
 }
 
 /**

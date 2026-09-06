@@ -12,10 +12,10 @@ import org.springframework.stereotype.Component;
 /**
  * Automatically finalizes the previous week and prepares the new one.
  *
- * <p>A synchronization runs first. The last scheduled synchronization of the week ends hours before
- * this rollover, so without it the matches played in that gap would be imported after the week was
- * frozen and would count for nothing: they belong to a week that is finalized and immutable, and no
- * later run ever revisits it.
+ * <p>A synchronization runs first, and the job fires two hours after midnight rather than at it.
+ * Henrik only returns finished matches, and a competitive game started late on Sunday ends well
+ * after 00:00: frozen at 00:05, the week lost those matches for its ranking and its challenges,
+ * which no later run ever revisits, while the campaign, replayed whole, still counted them.
  */
 @Component
 @ConditionalOnProperty(
@@ -65,7 +65,7 @@ public class WeeklyRolloverScheduler {
     }
 
     /**
-     * Executes the rollover every Monday shortly after midnight UTC.
+     * Executes the rollover every Monday, at the configured hour of the week zone.
      *
      * <p>Errors are logged and allowed to be retried during the next
      * execution. The transactional service prevents partial finalization.</p>

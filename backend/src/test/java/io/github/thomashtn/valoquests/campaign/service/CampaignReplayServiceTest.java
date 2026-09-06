@@ -73,7 +73,7 @@ class CampaignReplayServiceTest {
 
         when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.of(campaign));
         when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L)).thenReturn(weeks);
-        when(assembler.assemble(campaign, weeks, today)).thenReturn(NO_INPUTS);
+        when(assembler.assemble(campaign, weeks, today, today.minusDays(1))).thenReturn(NO_INPUTS);
         when(engine.replay(anyList(), anyList())).thenReturn(NO_RESULT);
 
         assertThat(service.replayRunningCampaign()).contains(NO_RESULT);
@@ -87,12 +87,30 @@ class CampaignReplayServiceTest {
         CampaignReplayService service = serviceOn(campaign.finalDay().plusMonths(2));
 
         when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L)).thenReturn(List.of());
-        when(assembler.assemble(eq(campaign), anyList(), eq(campaign.finalDay()))).thenReturn(NO_INPUTS);
+        when(assembler.assemble(eq(campaign), anyList(), eq(campaign.finalDay()), eq(campaign.finalDay())))
+            .thenReturn(NO_INPUTS);
         when(engine.replay(anyList(), anyList())).thenReturn(NO_RESULT);
 
         service.replay(campaign);
 
-        verify(assembler).assemble(campaign, List.of(), campaign.finalDay());
+        verify(assembler).assemble(campaign, List.of(), campaign.finalDay(), campaign.finalDay());
+    }
+
+    @Test
+    @DisplayName("Settles a Sunday only from the day after it")
+    void shouldSettleASundayTheDayAfter() {
+        Campaign campaign = CampaignFixtures.runningCampaign(1);
+        LocalDate sunday = CampaignFixtures.FIRST_WEEK_START.plusDays(6);
+
+        when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L)).thenReturn(List.of());
+        when(assembler.assemble(any(), anyList(), any(), any())).thenReturn(NO_INPUTS);
+        when(engine.replay(anyList(), anyList())).thenReturn(NO_RESULT);
+
+        serviceOn(sunday).replay(campaign);
+        serviceOn(sunday.plusDays(1)).replay(campaign);
+
+        verify(assembler).assemble(campaign, List.of(), sunday, sunday.minusDays(1));
+        verify(assembler).assemble(campaign, List.of(), sunday.plusDays(1), sunday);
     }
 
     @Test
@@ -103,12 +121,12 @@ class CampaignReplayServiceTest {
         CampaignReplayService service = serviceOn(campaign.getLastWeekStart());
 
         when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L)).thenReturn(List.of());
-        when(assembler.assemble(any(), anyList(), any())).thenReturn(NO_INPUTS);
+        when(assembler.assemble(any(), anyList(), any(), any())).thenReturn(NO_INPUTS);
         when(engine.replay(anyList(), anyList())).thenReturn(NO_RESULT);
 
         service.replay(campaign);
 
-        verify(assembler).assemble(campaign, List.of(), campaign.getStoppedOn());
+        verify(assembler).assemble(campaign, List.of(), campaign.getStoppedOn(), campaign.getStoppedOn());
     }
 
     @Test

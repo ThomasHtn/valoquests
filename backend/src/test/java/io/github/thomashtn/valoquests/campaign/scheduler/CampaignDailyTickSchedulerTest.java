@@ -1,7 +1,9 @@
 package io.github.thomashtn.valoquests.campaign.scheduler;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -62,14 +64,13 @@ class CampaignDailyTickSchedulerTest {
             recalculationService,
             lifecycleService,
             replayService,
-            new WeekCalendar(clock, ZoneOffset.UTC),
-            clock
+            new WeekCalendar(clock, ZoneOffset.UTC)
         );
     }
 
     @Test
-    @DisplayName("Replays the campaign before closing it, so its last Sunday is settled")
-    void shouldReplayBeforeClosing() {
+    @DisplayName("Draws the day and starts a due campaign before replaying, and never closes one")
+    void shouldDrawThenReplayWithoutClosing() {
         scheduler.tick();
 
         InOrder order = inOrder(selectionService, recalculationService, lifecycleService, replayService);
@@ -77,7 +78,7 @@ class CampaignDailyTickSchedulerTest {
         order.verify(recalculationService).recalculateCurrentWeekProgress();
         order.verify(lifecycleService).startIfDue();
         order.verify(replayService).replayRunningCampaign();
-        order.verify(lifecycleService).closeIfComplete(clock);
+        verify(lifecycleService, never()).closeIfComplete(any());
     }
 
     @Test

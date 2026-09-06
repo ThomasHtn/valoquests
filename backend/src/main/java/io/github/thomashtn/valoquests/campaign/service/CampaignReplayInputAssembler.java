@@ -77,12 +77,22 @@ public class CampaignReplayInputAssembler {
     /**
      * Gathers one campaign's inputs from its first day to a last day.
      *
-     * @param campaign campaign to read
-     * @param weeks    the campaign's ten weeks, week one first
-     * @param lastDay  last day to read, never past the campaign's own final day
+     * <p>Two cutoffs, because a day is played before it is closed: the matches of {@code lastDay}
+     * feed the base and the guardian, while only a Sunday on or before {@code settledThrough} is
+     * settled. Handing the same day to both settles a Sunday that is still being played.
+     *
+     * @param campaign       campaign to read
+     * @param weeks          the campaign's ten weeks, week one first
+     * @param lastDay        last day to read, never past the campaign's own final day
+     * @param settledThrough last Sunday to settle, at most {@code lastDay}
      * @return everything the engine and the writer need
      */
-    public CampaignReplayInputs assemble(Campaign campaign, List<CampaignWeek> weeks, LocalDate lastDay) {
+    public CampaignReplayInputs assemble(
+        Campaign campaign,
+        List<CampaignWeek> weeks,
+        LocalDate lastDay,
+        LocalDate settledThrough
+    ) {
         Set<Long> roster = campaignPlayerRepository
             .findAllByCampaignIdOrderByPlayerIdAsc(campaign.getId())
             .stream()
@@ -100,7 +110,13 @@ public class CampaignReplayInputAssembler {
             days.add(dayOf(day, roster, output, playerDays));
         }
 
-        return new CampaignReplayInputs(days, weekInputs(weeks, fights, yields, lastDay), fights, yields, playerDays);
+        return new CampaignReplayInputs(
+            days,
+            weekInputs(weeks, fights, yields, settledThrough),
+            fights,
+            yields,
+            playerDays
+        );
     }
 
     /**
@@ -213,22 +229,22 @@ public class CampaignReplayInputAssembler {
     }
 
     /**
-     * Turns the weeks whose Sunday has been reached into the engine's settlement inputs.
+     * Turns the weeks whose Sunday is over into the engine's settlement inputs.
      *
-     * @param weeks   the campaign's weeks
-     * @param fights  each started week's fight
-     * @param yields  each week's challenge yield
-     * @param lastDay last day read
+     * @param weeks          the campaign's weeks
+     * @param fights         each started week's fight
+     * @param yields         each week's challenge yield
+     * @param settledThrough last Sunday to settle
      * @return the weeks to settle, week one first
      */
     private List<CampaignWeekInput> weekInputs(
         List<CampaignWeek> weeks,
         Map<Integer, GuardianFight> fights,
         Map<Integer, WeekChallengeYield> yields,
-        LocalDate lastDay
+        LocalDate settledThrough
     ) {
         return weeks.stream()
-            .filter(week -> !week.settlementDay().isAfter(lastDay))
+            .filter(week -> !week.settlementDay().isAfter(settledThrough))
             .map(week -> {
                 GuardianFight fight = fights.getOrDefault(week.getWeekIndex(), GuardianFight.UNTOUCHED);
 

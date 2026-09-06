@@ -6,7 +6,6 @@ import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
-import java.time.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -16,10 +15,11 @@ import org.springframework.stereotype.Component;
 /**
  * Closes the day just past and opens the new one.
  *
- * <p>Four things, in order: the day's challenge is drawn so the squad wakes up with one, a campaign
- * whose first Monday has come starts, the whole campaign is replayed so the evening's meal and the
- * Sunday settlement are written down, and only then is a campaign past its tenth Sunday closed —
- * closing first would freeze a score one settlement short.
+ * <p>Three things, in order: the day's challenge is drawn so the squad wakes up with one, a campaign
+ * whose first Monday has come starts, and the whole campaign is replayed so the evening's meal and
+ * yesterday's Sunday settlement are written down. A finished campaign is not closed here: on a
+ * Monday the tick fires before the rollover has imported the last Sunday matches, and a campaign
+ * closed at 00:10 would freeze its final score without them.
  *
  * <p>Scheduled in {@code app.scheduling.week-rollover-zone}, the zone {@code WeekCalendar} splits
  * days on. That is not cosmetic: the calendar decides which day a match counts towards, so a tick
@@ -68,11 +68,6 @@ public class CampaignDailyTickScheduler {
     private final WeekCalendar weekCalendar;
 
     /**
-     * Clock stamping a campaign's closing instant.
-     */
-    private final Clock clock;
-
-    /**
      * Creates the campaign daily tick scheduler.
      *
      * @param selectionService     challenge selection service
@@ -80,7 +75,6 @@ public class CampaignDailyTickScheduler {
      * @param lifecycleService     campaign lifecycle service
      * @param replayService        campaign replay service
      * @param weekCalendar         week calendar
-     * @param clock                clock
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -91,19 +85,17 @@ public class CampaignDailyTickScheduler {
         ChallengeRecalculationService recalculationService,
         CampaignLifecycleService lifecycleService,
         CampaignReplayService replayService,
-        WeekCalendar weekCalendar,
-        Clock clock
+        WeekCalendar weekCalendar
     ) {
         this.selectionService = selectionService;
         this.recalculationService = recalculationService;
         this.lifecycleService = lifecycleService;
         this.replayService = replayService;
         this.weekCalendar = weekCalendar;
-        this.clock = clock;
     }
 
     /**
-     * Draws the day's challenge, evaluates it, advances the campaign's lifecycle and replays it.
+     * Draws the day's challenge, evaluates it, starts a due campaign and replays it.
      *
      * <p>The recalculation sits between the draw and the replay: the challenge drawn a second ago
      * has no progress row until it runs, and the replay reads those rows for the week's rescues.
@@ -120,7 +112,6 @@ public class CampaignDailyTickScheduler {
             recalculationService.recalculateCurrentWeekProgress();
             lifecycleService.startIfDue();
             replayService.replayRunningCampaign();
-            lifecycleService.closeIfComplete(clock);
             LOGGER.info("Scheduled campaign tick completed");
         } catch (RuntimeException exception) {
             LOGGER.error("Scheduled campaign tick failed unexpectedly", exception);

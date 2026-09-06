@@ -60,8 +60,8 @@ Everything converges on a single replay.
 | Loop | Trigger | What it does |
 |---|---|---|
 | Synchronization | every 30 min (`STANDARD_SYNC_CRON`) | `SynchronizationLaunchService` → `PlayerSynchronizationService` → `SeasonMatchHistoryWalker` walks Henrik season by season, checkpointing per season so an interrupted walk resumes |
-| Daily tick | 00:10 (`CampaignDailyTickScheduler`) | Draws the day's challenge, starts a campaign whose first Monday has come, replays it, then closes one past its tenth Sunday, in that order |
-| Weekly rollover | Monday 00:05 (`DefaultWeeklyRolloverService`) | Finalizes the previous week and opens the new one in a single transaction |
+| Daily tick | 00:10 (`CampaignDailyTickScheduler`) | Draws the day's challenge, starts a campaign whose first Monday has come, then replays it |
+| Weekly rollover | Monday 02:05 (`DefaultWeeklyRolloverService`) | Imports the last Sunday matches, finalizes the previous week, opens the new one and closes a finished campaign, in a single transaction |
 | Campaign replay | every one of the above | `CampaignReplayService` → `CampaignReplayEngine` rebuilds the campaign from day one |
 
 ### Invariants

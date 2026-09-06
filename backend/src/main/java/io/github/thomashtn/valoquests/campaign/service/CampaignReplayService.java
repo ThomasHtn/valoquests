@@ -118,15 +118,22 @@ public class CampaignReplayService {
     /**
      * Replays one campaign up to today, or up to its final day once it is past.
      *
+     * <p>Today's matches are played but today's Sunday is not settled: a settlement written while
+     * the Sunday is still being played would strike the base, spend the stocks and open the mission
+     * report on figures that the evening's matches are about to change. A week is settled from the
+     * day after its Sunday, which is when its matches are all in.
+     *
      * @param campaign campaign to replay
      * @return what the replay produced
      */
     @Transactional
     public CampaignReplayResult replay(Campaign campaign) {
-        LocalDate lastDay = earlier(weekCalendar.today(), campaign.finalDay());
+        LocalDate today = weekCalendar.today();
+        LocalDate lastDay = earlier(today, campaign.finalDay());
+        LocalDate settledThrough = earlier(today.minusDays(1), campaign.finalDay());
         List<CampaignWeek> weeks = weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(campaign.getId());
 
-        CampaignReplayInputs inputs = assembler.assemble(campaign, weeks, lastDay);
+        CampaignReplayInputs inputs = assembler.assemble(campaign, weeks, lastDay, settledThrough);
         CampaignReplayResult result = engine.replay(inputs.days(), inputs.weeks());
         writer.write(campaign, weeks, inputs, result);
 

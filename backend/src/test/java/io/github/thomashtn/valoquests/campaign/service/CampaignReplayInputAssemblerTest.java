@@ -100,7 +100,7 @@ class CampaignReplayInputAssemblerTest {
             valued(30L, 1L, MONDAY.plusDays(2), 400)
         ));
 
-        CampaignReplayInputs inputs = assembler.assemble(campaign, weeks, SUNDAY);
+        CampaignReplayInputs inputs = assembler.assemble(campaign, weeks, SUNDAY, SUNDAY);
         GuardianFight fight = inputs.fights().get(1);
 
         assertThat(fight.damageDealt()).isEqualTo(1_200);
@@ -115,7 +115,7 @@ class CampaignReplayInputAssemblerTest {
     void shouldLeaveTheGuardianStanding() {
         stubOutput(List.of(valued(10L, 1L, MONDAY, 400)));
 
-        GuardianFight fight = assembler.assemble(campaign, weeks, SUNDAY).fights().get(1);
+        GuardianFight fight = assembler.assemble(campaign, weeks, SUNDAY, SUNDAY).fights().get(1);
 
         assertThat(fight.damageDealt()).isEqualTo(400);
         assertThat(fight.defeated()).isFalse();
@@ -130,7 +130,7 @@ class CampaignReplayInputAssemblerTest {
             valued(99L, 9L, MONDAY, 5_000)
         ));
 
-        CampaignReplayInputs inputs = assembler.assemble(campaign, weeks, SUNDAY);
+        CampaignReplayInputs inputs = assembler.assemble(campaign, weeks, SUNDAY, SUNDAY);
 
         assertThat(inputs.fights().get(1).damageDealt()).isEqualTo(400);
         assertThat(inputs.days().getFirst().damage()).isEqualTo(400);
@@ -143,7 +143,7 @@ class CampaignReplayInputAssemblerTest {
     void shouldReportEveryDay() {
         stubOutput(List.of(valued(10L, 1L, MONDAY, 400)));
 
-        CampaignReplayInputs inputs = assembler.assemble(campaign, weeks, SUNDAY);
+        CampaignReplayInputs inputs = assembler.assemble(campaign, weeks, SUNDAY, SUNDAY);
 
         assertThat(inputs.days()).hasSize(7);
         assertThat(inputs.days())
@@ -158,10 +158,22 @@ class CampaignReplayInputAssemblerTest {
     void shouldSettleOnlyReachedWeeks() {
         stubOutput(List.of(valued(10L, 1L, MONDAY, 400)));
 
-        CampaignReplayInputs midWeek = assembler.assemble(campaign, weeks, MONDAY.plusDays(2));
+        CampaignReplayInputs midWeek = assembler.assemble(campaign, weeks, MONDAY.plusDays(2), MONDAY.plusDays(1));
 
         assertThat(midWeek.weeks()).isEmpty();
         assertThat(midWeek.fights()).containsOnlyKeys(1);
+    }
+
+    @Test
+    @DisplayName("Plays a Sunday's matches without settling it while it is still being played")
+    void shouldNotSettleASundayStillBeingPlayed() {
+        stubOutput(List.of(valued(10L, 1L, SUNDAY, 400)));
+
+        CampaignReplayInputs sunday = assembler.assemble(campaign, weeks, SUNDAY, SUNDAY.minusDays(1));
+
+        assertThat(sunday.weeks()).isEmpty();
+        assertThat(sunday.fights().get(1).damageDealt()).isEqualTo(400);
+        assertThat(sunday.days()).hasSize(7);
     }
 
     @Test
@@ -169,7 +181,7 @@ class CampaignReplayInputAssemblerTest {
     void shouldCarryTheChallengeYieldIntoTheSettlement() {
         stubOutput(List.of(valued(10L, 1L, MONDAY, 400)));
 
-        assertThat(assembler.assemble(campaign, weeks, SUNDAY).weeks().getFirst().challengeRescued())
+        assertThat(assembler.assemble(campaign, weeks, SUNDAY, SUNDAY).weeks().getFirst().challengeRescued())
             .isEqualTo(12);
     }
 
