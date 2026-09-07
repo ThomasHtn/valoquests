@@ -15,6 +15,8 @@ import { PlayerSummary } from '@core/players/player-summary.model';
 import { CurrentRanking, DailyRanking, RankingHistoryWeek } from '@core/ranking/ranking.model';
 import {
   Capacity,
+  Contribution,
+  ContributionShare,
   DailyOrder,
   DayTally,
   FriezeWeek,
@@ -294,6 +296,46 @@ export function buildCapacity(
     foodPerRescue: base.foodPerRescue,
     hitPointsPerPercent: Math.round(week.guardianHitPoints / 100),
   };
+}
+
+/**
+ * Builds the squad's contribution to the week, on the guardian's own scale.
+ *
+ * The bar answers one question the four dials cannot: who is carrying the week. It is drawn on the
+ * guardian's hit points rather than on the squad's own total, so the empty end of the bar states
+ * what is left to do — and the challenge points ride in the same segments, because that sum is what
+ * the ranking orders on and calling it "damage" would hide half of it.
+ *
+ * @param ranking - The current weekly ranking, or `null` while unresolved.
+ * @param week - The week in progress, or `null` outside one.
+ * @returns The contribution, or `null` outside a week with a roster to read.
+ */
+export function buildContribution(
+  ranking: CurrentRanking | null,
+  week: CampaignWeek | null,
+): Contribution | null {
+  if (!ranking || !week || week.guardianHitPoints <= 0) {
+    return null;
+  }
+  if (ranking.ranking.length === 0) {
+    return null;
+  }
+  // Monday opens with every figure at zero, and the row stays: an empty bar beside a full guardian
+  // is the week's starting position, not a missing reading.
+  const total = ranking.ranking.reduce((sum, entry) => sum + entry.totalPoints, 0);
+  const shares: ContributionShare[] = ranking.ranking
+    .filter((entry) => entry.totalPoints > 0)
+    .map((entry) => ({
+      playerId: entry.player.id,
+      name: entry.player.displayName,
+      damage: entry.guardianDamage,
+      challengePoints: entry.challengePoints,
+      total: entry.totalPoints,
+      fraction: Math.min(1, entry.totalPoints / week.guardianHitPoints),
+      sharePercent: total > 0 ? Math.round((entry.totalPoints / total) * 100) : 0,
+    }))
+    .sort((left, right) => right.total - left.total);
+  return { total, hitPoints: week.guardianHitPoints, shares };
 }
 
 /**

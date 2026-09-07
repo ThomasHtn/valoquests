@@ -2,10 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import { Campaign, CampaignBase, CampaignToday, CampaignWeek } from '@core/campaign/campaign.model';
 import { CurrentChallenges } from '@core/challenges/challenge.model';
-import { CurrentRanking, DailyRanking, RankingHistoryWeek } from '@core/ranking/ranking.model';
+import {
+  CurrentRanking,
+  DailyRanking,
+  RankingEntry,
+  RankingHistoryWeek,
+} from '@core/ranking/ranking.model';
 import { PlayerSummary } from '@core/players/player-summary.model';
 import {
   buildCapacity,
+  buildContribution,
   buildDailyOrder,
   buildFrieze,
   buildMission,
@@ -313,6 +319,79 @@ describe('buildCapacity', () => {
     expect(capacity?.carry).toMatchObject({ value: 20, fraction: 1, stock: 100 });
     expect(capacity?.shelter).toMatchObject({ value: 3, fraction: 0.3 });
     expect(capacity?.aboardFraction).toBe(0.7);
+  });
+});
+
+describe('buildContribution', () => {
+  function entry(id: number, damage: number, points: number): RankingEntry {
+    return {
+      position: id,
+      previousPosition: id,
+      positionVariation: 0,
+      player: {
+        id,
+        displayName: `Operator ${id}`,
+        portrait: null,
+        competitiveTier: 'GOLD_1',
+        rankRating: null,
+      },
+      guardianDamage: damage,
+      food: 0,
+      components: 0,
+      matchCount: 1,
+      activeDays: 1,
+      streakDays: 1,
+      challengePoints: points,
+      completedChallenges: 0,
+      totalChallenges: 5,
+      completedDailyChallenges: 0,
+      totalPoints: damage + points,
+      titles: [],
+      challengeProgress: [],
+    };
+  }
+
+  function ranking(entries: readonly RankingEntry[]): CurrentRanking {
+    return {
+      weekStart: '2026-01-05',
+      weekEnd: '2026-01-11',
+      today: '2026-01-08',
+      calculatedAt: null,
+      ranking: entries,
+    };
+  }
+
+  it('returns null without a ranking to read', () => {
+    expect(buildContribution(null, week())).toBeNull();
+    expect(buildContribution(ranking([]), week())).toBeNull();
+  });
+
+  it("keeps the reading with an empty bar before the week's first match", () => {
+    const contribution = buildContribution(ranking([entry(1, 0, 0)]), week());
+
+    expect(contribution?.total).toBe(0);
+    expect(contribution?.shares).toEqual([]);
+  });
+
+  it('orders the segments by contribution and measures them on the guardian', () => {
+    const contribution = buildContribution(
+      ranking([entry(1, 100, 0), entry(2, 300, 100)]),
+      week({ guardianHitPoints: 1000 }),
+    );
+
+    expect(contribution?.total).toBe(500);
+    expect(contribution?.hitPoints).toBe(1000);
+    expect(contribution?.shares.map((share) => share.name)).toEqual(['Operator 2', 'Operator 1']);
+    expect(contribution?.shares[0]).toMatchObject({ total: 400, fraction: 0.4, sharePercent: 80 });
+  });
+
+  it('caps a segment at the whole bar once one operator covers the guardian alone', () => {
+    const contribution = buildContribution(
+      ranking([entry(1, 4000, 0)]),
+      week({ guardianHitPoints: 1000 }),
+    );
+
+    expect(contribution?.shares[0].fraction).toBe(1);
   });
 });
 

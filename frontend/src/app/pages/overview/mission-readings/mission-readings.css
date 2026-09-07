@@ -1,0 +1,208 @@
+/*
+ * Four readings, in the order the week is played: the clock, what comes home, the guardian, the
+ * squad. No header and no prose — each row is a figure, a reference and one bar, and what tells a
+ * row from the next is its key and the colour of that bar.
+ *
+ * The clock spans the block and centres: it is the only value here that moves on its own.
+ */
+.rep-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1.25rem 1.5rem 1.35rem;
+  background: rgb(4 10 15 / 52%);
+  box-shadow: inset 3px 0 0 var(--color-accent-cyan);
+}
+
+.rep-row {
+  --tone: var(--color-text-muted);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6rem 1.25rem;
+  padding: 1.25rem 1.5rem 1.35rem;
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
+.rep-row + .rep-row,
+.rep-clock + .rep-row {
+  border-top: 1px solid var(--color-edge);
+}
+
+.rep-row--aboard {
+  --tone: var(--color-brand-400);
+}
+
+.rep-row--foe {
+  --tone: var(--color-boss-hp-edge);
+}
+
+.rep-row--squad {
+  --tone: var(--color-accent-violet);
+}
+
+.rep-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: center;
+  color: var(--tone);
+}
+
+@media (width >= 40rem) {
+  .rep-row {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+  }
+}
+
+/* The plate the daily challenge already carries, so both read as one family. */
+.rep-mark {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.95rem;
+  background: color-mix(in srgb, var(--tone) 55%, transparent);
+}
+
+.rep-mark > span {
+  display: grid;
+  place-items: center;
+  width: calc(100% - 3px);
+  height: calc(100% - 3px);
+  background: var(--color-surface-950);
+  color: var(--tone);
+}
+
+.rep-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rep-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 1rem;
+}
+
+.rep-fig {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tone);
+}
+
+.rep-fig small {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* The scale each figure is read against, in the row's own colour: a bar without it is a
+   decoration. */
+.rep-side {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
+.rep-side b {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--tone);
+}
+
+/* One track, three fills, all read left to right: the empty end is always what is left to do. */
+.rep-bar,
+.rep-stack {
+  position: relative;
+  display: flex;
+  height: 22px;
+  background:
+    linear-gradient(
+        to right,
+        transparent calc(25% - 1px),
+        rgb(4 10 15 / 70%) calc(25% - 1px) 25%,
+        transparent 25%
+      )
+      0 0 / 25% 100%,
+    rgb(4 10 15 / 60%);
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 45%);
+}
+
+.rep-bar > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--lvl);
+}
+
+.rep-bar--aboard > i {
+  background: var(--color-brand-500);
+  box-shadow: inset -3px 0 0 var(--color-brand-400);
+  animation: overview-fill 900ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+.rep-bar--foe {
+  height: 26px;
+}
+
+.rep-bar--foe > i {
+  background: var(--color-boss-hp);
+  box-shadow: inset -3px 0 0 var(--color-boss-hp-edge);
+  animation: overview-drain 900ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+@keyframes overview-fill {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes overview-drain {
+  from {
+    width: 100%;
+  }
+}
+
+/* The squad's segments: two steps of the same violet in turn, so the reader counts operators
+   rather than reading a gradient. */
+.rep-stack > i {
+  display: block;
+  width: var(--w);
+  background: var(--color-accent-violet);
+  transition: filter var(--duration-fast) var(--ease-out-quart);
+  animation: overview-fill 900ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+.rep-stack > i:nth-child(even) {
+  background: color-mix(in srgb, var(--color-accent-violet) 62%, #0a151d);
+}
+
+.rep-stack > i + i {
+  box-shadow: inset 2px 0 0 rgb(4 10 15 / 70%);
+}
+
+.rep-stack > i:hover,
+.rep-stack > i:focus-visible {
+  filter: brightness(1.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rep-bar > i,
+  .rep-stack > i {
+    animation: none;
+  }
+}

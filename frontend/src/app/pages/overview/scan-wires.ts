@@ -13,12 +13,13 @@ interface Mark {
 }
 
 /**
- * The guardian, the wounded on the ground, the ship coming in.
+ * The wounded on the ground, then the guardian. Ordered top to bottom like the rows they land on,
+ * so no wire crosses another; the countdown above them is not wired, it points at nothing on the
+ * planet.
  */
 const MARKS: readonly Mark[] = [
-  { vx: 292, vy: 106, card: 'target', tone: '#e0404e' },
   { vx: 215, vy: 150, card: 'ground', tone: '#d9954a' },
-  { vx: 298, vy: 272, card: 'extraction', tone: '#2dd4bf' },
+  { vx: 300, vy: 236, card: 'target', tone: '#e0404e' },
 ];
 
 /**

@@ -1,0 +1,122 @@
+<!-- Not a sheet with a header any more: four readings, each one figure wide, in the
+             order the week is played. The clock leads, spanning the block, because it is the
+             only thing here that moves on its own. -->
+<div class="report bg-text-primary/4">
+  <div class="rep-clock">
+    <app-countdown
+      [deadline]="mission().extractionDeadline"
+      [label]="'overview.report.countdownAria' | translate"
+    />
+    <p class="rep-when label-caption text-2xs text-text-muted">
+      {{ 'overview.report.deadline' | translate }}
+    </p>
+  </div>
+
+  @if (capacity(); as capacity) {
+    <div class="rep-row rep-row--aboard" data-card="ground">
+      <p class="rep-key label-caption text-2xs">
+        <span aria-hidden="true" class="rep-mark clip-hex"
+          ><span class="clip-hex"><svg class="size-4" lucideUsers></svg></span
+        ></span>
+        {{ 'overview.report.aboard' | translate }}
+      </p>
+      <div class="rep-body">
+        <p class="rep-line">
+          <span class="rep-fig tabular-nums"
+            >{{ format(capacity.aboard) }}
+            <small>{{ 'overview.report.aboardUnit' | translate }}</small></span
+          >
+          <span class="rep-side label-caption text-2xs">
+            <span>{{ 'overview.report.of' | translate }}</span>
+            <b class="tabular-nums">{{ format(mission().wounded) }}</b>
+            <span>{{ 'overview.report.spotted' | translate }}</span>
+          </span>
+        </p>
+        <span
+          [style.--lvl]="percent(capacity.aboardFraction) + '%'"
+          aria-hidden="true"
+          class="rep-bar rep-bar--aboard"
+          ><i></i
+        ></span>
+      </div>
+    </div>
+  }
+
+  <div class="rep-row rep-row--foe" data-card="target">
+    <p class="rep-key label-caption text-2xs">
+      <span aria-hidden="true" class="rep-mark clip-hex"
+        ><span class="clip-hex"><svg class="size-4" lucideSkull></svg></span
+      ></span>
+      {{ 'overview.report.boss' | translate: { index: bossIndex() } }}
+    </p>
+    <div class="rep-body">
+      <p class="rep-line">
+        <span class="rep-fig tabular-nums"
+          >{{ format(mission().hitPointsLeft) }}
+          <small>{{ 'overview.report.hpLeft' | translate }}</small></span
+        >
+        <span class="rep-side label-caption text-2xs">
+          <span>{{ 'overview.report.of' | translate }}</span>
+          <b class="tabular-nums">{{ format(mission().hitPoints) }}</b>
+          <span>{{ 'overview.report.breach' | translate }}</span>
+          <b class="tabular-nums">{{
+            'overview.report.percent' | translate: { value: mission().breachPercent }
+          }}</b>
+        </span>
+      </p>
+      <!-- The guardian drains from the left: anchored right it reads backwards from
+                   every game. -->
+      <span
+        [style.--lvl]="percent(mission().guardianLeft) + '%'"
+        aria-hidden="true"
+        class="rep-bar rep-bar--foe"
+        ><i></i
+      ></span>
+    </div>
+  </div>
+
+  <!-- The squad, on the guardian's own scale: one segment per operator, so the bar says
+               both who is carrying the week and what is left of the guardian. -->
+  @if (contribution(); as contribution) {
+    <div class="rep-row rep-row--squad">
+      <p class="rep-key label-caption text-2xs">
+        <span aria-hidden="true" class="rep-mark clip-hex"
+          ><span class="clip-hex"><svg class="size-4" lucideSwords></svg></span
+        ></span>
+        {{ 'overview.report.squad' | translate }}
+      </p>
+      <div class="rep-body">
+        <p class="rep-line">
+          <span class="rep-fig tabular-nums"
+            >{{ format(contribution.total) }}
+            <small>{{ 'overview.report.contribution' | translate }}</small></span
+          >
+          <span class="rep-side label-caption text-2xs">
+            <span>{{ 'overview.report.of' | translate }}</span>
+            <b class="tabular-nums">{{ format(contribution.hitPoints) }}</b>
+          </span>
+        </p>
+        <span class="rep-stack">
+          @for (share of contribution.shares; track share.playerId) {
+            <i
+              [appTooltip]="
+                'overview.report.contributionTooltip'
+                  | translate
+                    : {
+                        name: share.name,
+                        damage: format(share.damage),
+                        points: format(share.challengePoints),
+                        total: format(share.total),
+                        percent: share.sharePercent,
+                      }
+              "
+              [style.--w]="share.fraction * 100 + '%'"
+              class="focus-ring"
+              tabindex="0"
+            ></i>
+          }
+        </span>
+      </div>
+    </div>
+  }
+</div>

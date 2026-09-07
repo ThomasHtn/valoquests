@@ -116,6 +116,49 @@ export interface Mission {
 }
 
 /**
+ * One operator's share of the squad's weekly contribution, as one segment of the contribution bar.
+ */
+export interface ContributionShare {
+  readonly playerId: number;
+  readonly name: string;
+
+  /**
+   * Damage dealt to the week's guardian, streak bonus included.
+   */
+  readonly damage: number;
+
+  /**
+   * Ranking points banked by the challenges validated this week.
+   */
+  readonly challengePoints: number;
+
+  /**
+   * {@link damage} + {@link challengePoints}: what the ranking orders on.
+   */
+  readonly total: number;
+
+  /**
+   * Share of the guardian's hit points this segment covers, in [0, 1] — the segment's width.
+   */
+  readonly fraction: number;
+
+  /**
+   * Share of the squad's own contribution, in percent — what the segment is worth beside the others.
+   */
+  readonly sharePercent: number;
+}
+
+/**
+ * What the squad has put into the week, read on the guardian's own scale: the whole bar is the
+ * guardian's hit points, each segment one operator, and the empty end what is left to do.
+ */
+export interface Contribution {
+  readonly total: number;
+  readonly hitPoints: number;
+  readonly shares: readonly ContributionShare[];
+}
+
+/**
  * One dial of the extraction capacity: a figure over the wounded spotted, and the raw stock
  * that produces it.
  */

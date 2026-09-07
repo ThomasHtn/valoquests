@@ -1,4 +1,3 @@
-import { LowerCasePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,13 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  LucideCheck,
-  LucideFileText,
-  LucideRocket,
-  LucideSkull,
-  LucideUsers,
-} from '@lucide/angular';
+import { LucideFileText, LucideUsers } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT, CampaignWeek } from '@core/campaign/campaign.model';
@@ -28,16 +21,17 @@ import { RankingApi } from '@core/ranking/ranking-api';
 import { PageHeader } from '@layout/page-header/page-header';
 import { CountUp } from '@shared/count-up/count-up';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
-import { Countdown } from '@shared/countdown/countdown';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionRule } from '@shared/section-rule/section-rule';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { BaseScene } from './base-scene/base-scene';
 import { DayOrders } from './day-orders/day-orders';
 import { ExtractionGauges } from './extraction-gauges/extraction-gauges';
+import { MissionReadings } from './mission-readings/mission-readings';
 import { MissionReport } from './mission-report/mission-report';
 import {
   Capacity,
+  Contribution,
   DailyOrder,
   DayTally,
   FriezeWeek,
@@ -47,6 +41,7 @@ import {
 } from './overview.model';
 import {
   buildCapacity,
+  buildContribution,
   buildDailyOrder,
   buildFrieze,
   buildMission,
@@ -96,25 +91,21 @@ function writeSeenReport(weekStart: string): void {
 @Component({
   selector: 'app-overview',
   imports: [
-    LucideCheck,
     LucideFileText,
-    LowerCasePipe,
     TranslatePipe,
     RouterLink,
     PageHeader,
     ResourceState,
     SectionRule,
-    Countdown,
     CountUp,
     BaseScene,
     PlanetFigure,
     ScanWires,
     ExtractionGauges,
+    MissionReadings,
     MissionReport,
     DayOrders,
     SquadSheet,
-    LucideRocket,
-    LucideSkull,
     LucideUsers,
   ],
   templateUrl: './overview.html',
@@ -249,6 +240,13 @@ export class Overview {
 
   protected readonly capacity = computed<Capacity | null>(() =>
     buildCapacity(this.campaign(), this.currentWeek()),
+  );
+
+  /**
+   * What the squad has put into the week, one segment per operator.
+   */
+  protected readonly contribution = computed<Contribution | null>(() =>
+    buildContribution(resourceValue(this.rankingResource, null) ?? null, this.currentWeek()),
   );
 
   protected readonly dailyOrder = computed<DailyOrder | null>(() =>
