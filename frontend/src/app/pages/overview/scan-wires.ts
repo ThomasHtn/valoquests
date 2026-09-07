@@ -13,14 +13,10 @@ interface Mark {
 }
 
 /**
- * The wounded on the ground, then the guardian. Ordered top to bottom like the rows they land on,
- * so no wire crosses another; the countdown above them is not wired, it points at nothing on the
- * planet.
+ * A single callout: the wounded on the ground. The other readings point at nothing on the planet,
+ * so they stay unwired.
  */
-const MARKS: readonly Mark[] = [
-  { vx: 215, vy: 150, card: 'ground', tone: '#d9954a' },
-  { vx: 300, vy: 236, card: 'target', tone: '#e0404e' },
-];
+const MARKS: readonly Mark[] = [{ vx: 215, vy: 150, card: 'ground', tone: '#d9954a' }];
 
 /**
  * Callout wires from the planet to the situation report: a marker on what it points at, a bent

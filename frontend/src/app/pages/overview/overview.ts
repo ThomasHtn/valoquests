@@ -6,7 +6,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { LucideFileText, LucideUsers } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
@@ -93,7 +92,6 @@ function writeSeenReport(weekStart: string): void {
   imports: [
     LucideFileText,
     TranslatePipe,
-    RouterLink,
     PageHeader,
     ResourceState,
     SectionRule,

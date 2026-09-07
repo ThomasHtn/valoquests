@@ -14,15 +14,36 @@
       <span aria-hidden="true" class="bar-count clip-hex"
         ><span class="clip-hex">{{ rosterCount() }}</span></span
       >
-      <span class="bar-col label-caption text-2xs">{{
-        'overview.squad.operator' | translate
-      }}</span>
-      <span class="bar-col label-caption text-2xs">{{ 'overview.squad.streak' | translate }}</span>
-      <span class="bar-col label-caption text-2xs">{{ 'overview.squad.damage' | translate }}</span>
-      <span class="bar-col label-caption text-2xs">{{
-        'common.resource.components' | translate
-      }}</span>
-      <span class="bar-col label-caption text-2xs">{{ 'common.resource.food' | translate }}</span>
+      <span
+        [appTooltip]="'overview.squad.operatorTooltip' | translate"
+        class="bar-col label-caption text-2xs focus-ring"
+        tabindex="0"
+        >{{ 'overview.squad.operator' | translate }}</span
+      >
+      <span
+        [appTooltip]="'overview.squad.streakTooltip' | translate"
+        class="bar-col label-caption text-2xs focus-ring"
+        tabindex="0"
+        >{{ 'overview.squad.streak' | translate }}</span
+      >
+      <span
+        [appTooltip]="'overview.squad.damageTooltip' | translate"
+        class="bar-col label-caption text-2xs focus-ring"
+        tabindex="0"
+        >{{ 'overview.squad.damage' | translate }}</span
+      >
+      <span
+        [appTooltip]="'overview.squad.componentsTooltip' | translate"
+        class="bar-col label-caption text-2xs focus-ring"
+        tabindex="0"
+        >{{ 'common.resource.components' | translate }}</span
+      >
+      <span
+        [appTooltip]="'overview.squad.foodTooltip' | translate"
+        class="bar-col label-caption text-2xs focus-ring"
+        tabindex="0"
+        >{{ 'common.resource.food' | translate }}</span
+      >
     </p>
 
     @for (row of rows(); track row.playerId) {
@@ -71,13 +92,7 @@
               [class.ros-nil]="!row.played"
               class="ros-val tabular-nums"
               style="--cell: var(--color-brand-400)"
-              >{{ row.streakMultiplier
-              }}<small
-                >{{ 'overview.squad.days' | translate: { count: row.streakDays } }}
-                @if (!row.played && row.streakAtStake > 0) {
-                  · {{ 'overview.squad.toPlay' | translate }}
-                }
-              </small></span
+              >{{ row.streakMultiplier }}</span
             >
           </span>
           <span class="ros-cell">

@@ -107,13 +107,6 @@
             </li>
           }
         </ul>
-
-        <a
-          class="focus-ring tracking-label ml-auto inline-flex items-center gap-2 font-mono text-xs font-medium text-brand-400 uppercase transition-colors hover:text-[#f0c493] hover:underline hover:underline-offset-4"
-          routerLink="/campaign"
-        >
-          {{ 'overview.frieze.link' | translate }} <span aria-hidden="true">→</span>
-        </a>
       </div>
     </div>
   }
@@ -131,7 +124,7 @@
   >
     <main class="body flex flex-col gap-[clamp(3rem,5vw,5rem)] pt-[clamp(2.5rem,4vw,3.5rem)] pb-24">
       <!-- The mission: the planet of the week on the left, the situation report on the right.
-           The three markers of the scan each point at one entry of the report. -->
+           A single scan wire ties the planet to the row it points at. -->
       @if (mission(); as mission) {
         <section aria-labelledby="mission-title">
           <app-section-rule
@@ -183,7 +176,7 @@
             />
           </div>
 
-          <app-extraction-gauges [capacity]="capacity()" [guardianName]="mission.guardianName" />
+          <app-extraction-gauges [capacity]="capacity()" [weekIndex]="mission.weekIndex" />
         </section>
       }
 

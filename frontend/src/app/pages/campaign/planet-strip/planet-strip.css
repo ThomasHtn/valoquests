@@ -4,7 +4,7 @@
 }
 
 .strip {
-  --orbit: 6.5rem;
+  --orbit: 7.5rem;
   --seg-gap: 0.4rem;
 
   display: grid;
@@ -37,7 +37,7 @@
   }
 
   .strip {
-    --orbit: 6rem;
+    --orbit: 7rem;
 
     grid-template-columns: repeat(10, 8rem);
     padding-inline: 1rem;
@@ -129,25 +129,24 @@
   opacity: 0.8;
 }
 
-/* The label plate: frosted over the star field, its top edge carrying the planet's tone. */
+/* The label plate: flat glass over the star field, no hard edge. */
 .pl-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
   width: calc(100% - 0.5rem);
-  padding: 0.55rem 0.25rem 0.65rem;
-  background: rgb(4 10 17 / 62%);
-  border: 1px solid rgb(236 232 225 / 9%);
-  border-top-color: color-mix(in srgb, var(--tone) 55%, transparent);
-  backdrop-filter: blur(8px);
-  transition: border-color 0.2s;
+  padding: 0.6rem 1.1rem 0.7rem;
+  border-radius: 1.75rem;
+  background: rgb(236 232 225 / 3%);
+  backdrop-filter: blur(14px) saturate(160%);
+  transition: background 0.2s;
 }
 
 .pl:hover .pl-card,
 .pl:focus-visible .pl-card,
 .pl[aria-expanded='true'] .pl-card {
-  border-color: color-mix(in srgb, var(--tone) 45%, rgb(236 232 225 / 9%));
+  background: color-mix(in srgb, var(--tone) 8%, rgb(236 232 225 / 3%));
 }
 
 .pl-no {
@@ -163,7 +162,7 @@
   font-size: 1.375rem;
   font-weight: 600;
   line-height: 1.1;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 

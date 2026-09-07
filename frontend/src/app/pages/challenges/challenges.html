@@ -16,44 +16,24 @@
       <!-- The briefing: what a challenge is for. The one place on the page where the rule is
            stated. -->
       <section aria-labelledby="brief-title" class="brief">
-        <!-- Beside the rule, what it has already yielded this week. -->
-        @if (acquired(); as acquired) {
-          <div class="brief-acquired">
-            <p class="label-caption text-2xs text-text-muted">
-              {{ 'challenges.brief.acquired' | translate }}
-            </p>
-            <p class="brief-acquired-fig">
-              <svg aria-hidden="true" class="size-4" lucideUsers></svg>
-              {{ 'challenges.brief.acquiredWounded' | translate: { count: acquired.wounded } }}
-            </p>
-            <p class="text-sm text-text-secondary">
-              {{
-                'challenges.brief.acquiredValidations'
-                  | translate: { done: acquired.done, total: acquired.total }
-              }}
-            </p>
-          </div>
-        }
-        <div>
-          <p class="label-caption text-brand-400" id="brief-title">
-            {{ 'challenges.brief.eyebrow' | translate }}
+        <p class="label-caption text-brand-400" id="brief-title">
+          {{ 'challenges.brief.eyebrow' | translate }}
+        </p>
+        <!-- Two readings of the same rule: with a base to bring the wounded to, or, between two
+             campaigns, with only the weekly ranking to count them. -->
+        @if (rescueActive()) {
+          <p class="brief-text">
+            {{ 'challenges.brief.rescue' | translate }}
+            <b>{{ 'challenges.brief.noDamage' | translate }}</b>
+            {{ 'challenges.brief.sunday' | translate }}
           </p>
-          <!-- Two readings of the same rule: with a base to bring the wounded to, or, between two
-               campaigns, with only the weekly ranking to count them. -->
-          @if (rescueActive()) {
-            <p class="brief-text">
-              {{ 'challenges.brief.rescue' | translate }}
-              <b>{{ 'challenges.brief.noDamage' | translate }}</b>
-              {{ 'challenges.brief.sunday' | translate }}
-            </p>
-          } @else {
-            <p class="brief-text">
-              {{ 'challenges.brief.rescueOff' | translate }}
-              <b>{{ 'challenges.brief.pointsOff' | translate }}</b>
-              {{ 'challenges.brief.sundayOff' | translate }}
-            </p>
-          }
-        </div>
+        } @else {
+          <p class="brief-text">
+            {{ 'challenges.brief.rescueOff' | translate }}
+            <b>{{ 'challenges.brief.pointsOff' | translate }}</b>
+            {{ 'challenges.brief.sundayOff' | translate }}
+          </p>
+        }
       </section>
 
       <section aria-labelledby="daily-title">

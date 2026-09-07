@@ -55,6 +55,7 @@
   .bar-col {
     display: block;
     color: var(--color-text-muted);
+    cursor: help;
   }
 
   .ros-cells {

@@ -2,9 +2,10 @@
   @for (day of days(); track day.index) {
     <button
       (click)="pick(day)"
+      [appTooltip]="day.tip"
+      appTooltipPosition="below"
       [attr.aria-expanded]="day.card ? pickedIndex() === day.index : null"
       [attr.aria-label]="day.weekday + ' ' + day.date + ', ' + day.tip"
-      [attr.data-tip]="day.tip"
       [class]="'focus-ring dcell dcell--' + day.state"
       [disabled]="!day.card"
       aria-controls="daily-drawer"

@@ -16,7 +16,6 @@ const SEGMENTS = 26;
 const BRAND = '#d9954a';
 const WARM = '#ffc477';
 const WARM_CORE = '#fff0cf';
-const CYAN = '#2dd4bf';
 
 type Attrs = Readonly<Record<string, string | number>>;
 
@@ -216,27 +215,6 @@ export class PlanetFigure {
       ring.append(segment);
     }
     add(ring);
-
-    // The ship's approach, from the bottom right. It passes beside the globe and never in front:
-    // that side is also where the three callout wires leave from.
-    add(
-      el('path', {
-        d: `M356 356 Q332 320 ${CX + 118} ${CY + 92}`,
-        fill: 'none',
-        stroke: CYAN,
-        'stroke-width': 1.4,
-        'stroke-dasharray': '5 7',
-        opacity: 0.4,
-      }),
-    );
-    add(
-      el('path', {
-        d: 'M0 -8 L7 8 L0 5 L-7 8 Z',
-        fill: CYAN,
-        opacity: 0.9,
-        transform: `translate(${CX + 118} ${CY + 92}) rotate(-42)`,
-      }),
-    );
 
     svg.replaceChildren(frag);
   }

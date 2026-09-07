@@ -19,7 +19,7 @@
   font: inherit;
   color: inherit;
   text-align: left;
-  cursor: pointer;
+  cursor: help;
   transition: background 0.2s;
 }
 
@@ -87,44 +87,6 @@
 
 .dcell--closed[aria-expanded='true'] {
   outline-color: var(--color-accent-green);
-}
-
-/* The whole sentence on demand, never in the cell. At both ends it hugs the edge instead of
-   overflowing the strip. Not rendered at rest rather than transparent: an invisible box that
-   overhangs the strip still widens the page's scroll area on a phone. */
-.dcell::after {
-  content: attr(data-tip);
-  position: absolute;
-  display: none;
-  top: calc(100% + 0.35rem);
-  left: 50%;
-  z-index: 5;
-  translate: -50% 0;
-  padding: 0.35rem 0.65rem;
-  background: #040a11;
-  border: 1px solid var(--color-edge-strong);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1.2;
-  white-space: nowrap;
-  color: var(--color-text-primary);
-  pointer-events: none;
-}
-
-.dcell:first-child::after {
-  left: 0;
-  translate: 0 0;
-}
-
-.dcell:last-child::after {
-  left: auto;
-  right: 0;
-  translate: 0 0;
-}
-
-.dcell:hover::after,
-.dcell:focus-visible::after {
-  display: block;
 }
 
 /* On a phone the seven cells share 360px: the weekday above the figure, the date left to the

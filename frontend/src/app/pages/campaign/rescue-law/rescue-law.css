@@ -46,7 +46,7 @@
     grid-template-rows: auto;
     gap: 0.35rem 1rem;
     justify-items: start;
-    padding: 1rem 1rem 1rem 0.9rem;
+    padding: 1rem 0 1rem 0.9rem;
     box-shadow: inset 3px 0 0 var(--tone);
     text-align: left;
   }
@@ -55,21 +55,25 @@
     grid-row: span 4;
   }
 
-  .formula .term-rate {
-    justify-self: stretch;
+  .formula .term-foot {
+    grid-column: 2;
     justify-content: flex-start;
+    width: calc(100% + 1rem);
+    margin: 0.35rem -1rem -1rem 0;
+    padding: 0.6rem 1rem 1rem 0;
   }
 }
 
 .term {
   --tone: var(--color-text-secondary);
+  --pad: 1rem;
 
   display: grid;
   grid-template-rows: subgrid;
   row-gap: 0.6rem;
   justify-items: center;
   align-items: start;
-  padding: 1.35rem 1rem 1.25rem;
+  padding: 1.35rem var(--pad) 0;
   background: rgb(236 232 225 / 4%);
   box-shadow: inset 0 3px 0 var(--tone);
   text-align: center;
@@ -103,17 +107,23 @@
   color: var(--color-text-secondary);
 }
 
-/* The rate of each term: how much of the resource for one wounded, as on the overview. */
+/* The rate of each term sits on its own band, as on the overview's extraction gauges. */
+.term-foot {
+  display: flex;
+  align-self: end;
+  justify-content: center;
+  width: calc(100% + var(--pad) * 2);
+  margin: 0 calc(var(--pad) * -1);
+  padding: 0.6rem var(--pad) 0.9rem;
+  background: rgb(4 10 15 / 45%);
+}
+
 .term-rate {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  align-self: end;
   gap: 0.25rem 0.4rem;
-  margin-top: 0.25rem;
-  padding-top: 0.6rem;
-  border-top: 1px solid var(--color-edge);
   font-size: 0.9375rem;
   color: var(--color-text-secondary);
 }
@@ -217,4 +227,11 @@
 
 .note--loss {
   --tone: var(--color-boss-hp-edge);
+}
+
+/* No title on this one: the icon carries the whole row alone, centered on the sentence. */
+.note--loss > svg {
+  grid-row: span 1;
+  align-self: center;
+  margin-top: 0;
 }

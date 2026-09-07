@@ -1,5 +1,5 @@
 import { LowerCasePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import {
   LucideBuilding2,
   LucideRocket,
@@ -57,9 +57,10 @@ export class ExtractionGauges {
   public readonly capacity = input.required<Capacity | null>();
 
   /**
-   * Name of the week's guardian, worded into the breakthrough dial.
+   * The week's number, worded into the breakthrough dial as `Boss 04` rather than the
+   * guardian's own name.
    */
-  public readonly guardianName = input.required<string>();
+  public readonly weekIndex = input.required<number>();
 
   protected readonly carryModes = CARRY_MODES;
 
@@ -68,12 +69,13 @@ export class ExtractionGauges {
   private readonly translation = inject(Translation);
 
   /**
-   * The guardian's first name, before any epithet: "Kharn" rather than "Kharn, the watcher of
-   * the dunes", which the dial has no room for.
+   * `Boss 04`, padded like the frieze's own week labels.
    */
-  protected guardianShortName(): string {
-    return this.guardianName().split(',')[0].trim();
-  }
+  protected readonly bossLabel = computed(() =>
+    this.translation.translate('overview.report.boss', {
+      index: String(this.weekIndex()).padStart(2, '0'),
+    }),
+  );
 
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());

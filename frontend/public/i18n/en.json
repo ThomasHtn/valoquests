@@ -394,8 +394,8 @@
       "noteGrow": "Ever larger groups",
       "noteGrowText": "Every week, the group of wounded grows by 4%. The tenth planet's will be 36% larger than the first. The base, more populated, eats a little more every night.",
       "noteLoss": "When the guardian holds",
-      "noteLossText": "If the guardian still stands on Sunday night, the base loses inhabitants. The loss depends on the breach reached and climbs fast. On today's base, {{population}} inhabitants: {{a}} lost if the breach reaches {{pa}}%, {{b}} at {{pb}}%, {{c}} at {{pc}}%. Missing the guardian narrowly costs very little, giving up on it costs dearly.",
-      "noteLossSampleText": "If the guardian still stands on Sunday night, the base loses inhabitants. The loss depends on the breach reached and climbs fast. For a base of {{population}} inhabitants: {{a}} lost if the breach reaches {{pa}}%, {{b}} at {{pb}}%, {{c}} at {{pc}}%. Missing the guardian narrowly costs very little, giving up on it costs dearly."
+      "noteLossText": "If the guardian still stands on Sunday night, the base loses inhabitants. The loss depends on the breach reached. On today's base, {{population}} inhabitants: {{a}} lost if the breach reaches {{pa}}%, {{b}} at {{pb}}%, {{c}} at {{pc}}%. Missing the guardian narrowly costs very little, giving up on it costs dearly.",
+      "noteLossSampleText": "If the guardian still stands on Sunday night, the base loses inhabitants. The loss depends on the breach reached. For a base of {{population}} inhabitants: {{a}} lost if the breach reaches {{pa}}%, {{b}} at {{pb}}%, {{c}} at {{pc}}%. Missing the guardian narrowly costs very little, giving up on it costs dearly."
     },
     "reserves": {
       "title": "Base details",
@@ -535,10 +535,7 @@
       "sunday": "and nothing is taken back if the week goes badly. The wounded leave with the ship on Sunday, at no cost in components or food.",
       "rescueOff": "No campaign is running: a validated challenge counts toward the weekly ranking,",
       "pointsOff": "one point per wounded it would bring home,",
-      "sundayOff": "and nothing is taken back if the week goes badly. The wounded themselves wait for the next campaign.",
-      "acquired": "Earned this week",
-      "acquiredWounded": "{{count}} wounded",
-      "acquiredValidations": "{{done}} validations out of {{total}}"
+      "sundayOff": "and nothing is taken back if the week goes badly. The wounded themselves wait for the next campaign."
     },
     "daily": {
       "title": "The daily challenge",
@@ -823,7 +820,6 @@
       "title": "The campaign",
       "week": "Week {{week}} of {{weeks}}",
       "aria": "The ten weeks of the campaign",
-      "link": "The campaign",
       "won": "Guardian defeated",
       "lost": "Guardian pushed back to {{percent}}%",
       "now": "Breakthrough at {{percent}}%",
@@ -859,17 +855,17 @@
       "shelter": "Shelter capacity",
       "shelterAria": "Food can shelter {{count}} wounded out of the {{wounded}} spotted, {{percent}}%.",
       "breach": "The breakthrough",
-      "breachAria": "The breakthrough in {{guardian}}'s lines reaches {{percent}}%: only that share of what is ready to board gets away.",
-      "aboard": "Aboard on Sunday",
+      "breachAria": "The breakthrough in {{boss}}'s lines reaches {{percent}}%: only that share of what is ready to board gets away.",
+      "aboard": "Aboard",
       "aboardAria": "{{count}} wounded would be aboard on Sunday out of the {{wounded}} spotted, {{percent}}%: {{extraction}} by the extraction and {{challenges}} already secured by the challenges.",
       "of": "of {{count}} spotted",
       "lever": "Lever",
       "allModes": "Every mode",
-      "hpStanding": "HP still standing",
+      "hpStanding": "HP remaining",
       "carryRate": "components = 1 wounded",
       "shelterRate": "food = 1 wounded",
       "breachRate": "HP = 1% of breakthrough",
-      "fromGuardian": "wrested from {{guardian}}",
+      "fromGuardian": "rescued",
       "fromChallenges": "secured by the challenges",
       "leftBehind": "would stay on the ground"
     },
@@ -896,8 +892,13 @@
       "title": "The squad today",
       "link": "Full leaderboard",
       "operator": "Operator",
+      "operatorTooltip": "The operator's name, with their title of the week if they hold one: the best on a resource (components, food, streak) or on damage to the guardian.",
       "streak": "Streak",
+      "streakTooltip": "Consecutive days the operator played at least one scored match. Each day past the first adds +2% to everything their matches produce that day (damage, components, food), capped at +10% from 6 days on. Resets to zero as soon as a day is skipped.",
       "damage": "Guardian damage",
+      "damageTooltip": "Damage dealt to the week's guardian by the operator today, after diminishing returns and the streak bonus.",
+      "componentsTooltip": "Components produced today by the operator, based on each match's mode and outcome, after diminishing returns and the streak bonus.",
+      "foodTooltip": "Food produced today by the operator, based on each match's mode and outcome, after diminishing returns and the streak bonus.",
       "days": "{{count}} d",
       "toPlay": "play today to keep it",
       "matches": {

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, linkedSignal } from '@angular/core';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { ChallengeCardView } from '../challenge-card/challenge-card';
 import { DayCell } from '../challenges.model';
 
@@ -12,7 +13,7 @@ import { DayCell } from '../challenges.model';
  */
 @Component({
   selector: 'app-daily-frieze',
-  imports: [TranslatePipe, ChallengeCardView],
+  imports: [TranslatePipe, ChallengeCardView, Tooltip],
   templateUrl: './daily-frieze.html',
   styleUrl: './daily-frieze.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -113,7 +113,7 @@
         <span
           [attr.aria-label]="
             'overview.capacity.breachAria'
-              | translate: { guardian: guardianName(), percent: capacity.breach.value }
+              | translate: { boss: bossLabel(), percent: capacity.breach.value }
           "
           [style.--pct]="capacity.breach.fraction"
           class="gauge"
@@ -198,7 +198,7 @@
             <span class="split-row" style="--tone: var(--color-brand-400)">
               <b class="tabular-nums">{{ format(capacity.fromGuardian) }}</b>
               <span class="label-caption text-2xs">{{
-                'overview.capacity.fromGuardian' | translate: { guardian: guardianShortName() }
+                'overview.capacity.fromGuardian' | translate
               }}</span>
             </span>
             <span class="split-row" style="--tone: #7fb6d8">

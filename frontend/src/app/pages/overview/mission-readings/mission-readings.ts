@@ -16,8 +16,8 @@ import { Capacity, Contribution, Mission } from '../overview.model';
  * squad's bar rides on the guardian's own hit points rather than on the squad's total, which is
  * what lets the empty end of every bar mean the same thing — what is left to do before Sunday.
  *
- * The two middle rows carry a `data-card` anchor: `ScanWires` measures them to land its callout
- * wires from the planet beside them.
+ * The "aboard" row carries a `data-card` anchor: `ScanWires` measures it to land its callout wire
+ * from the planet beside it.
  */
 @Component({
   selector: 'app-mission-readings',

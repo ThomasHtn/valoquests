@@ -394,8 +394,8 @@
       "noteGrow": "Des groupes de plus en plus grands",
       "noteGrowText": "Chaque semaine, le groupe de blessés grossit de 4 %. Celui de la dixième planète sera 36 % plus grand que le premier. La base, plus peuplée, mange chaque soir un peu plus.",
       "noteLoss": "Quand le gardien tient",
-      "noteLossText": "Si le gardien est encore debout dimanche soir, la base perd des habitants. La perte dépend de la percée atteinte et grimpe vite. Sur la base d'aujourd'hui, {{population}} habitants : {{a}} perdus si la percée atteint {{pa}} %, {{b}} à {{pb}} %, {{c}} à {{pc}} %. Manquer le gardien de peu coûte très peu, l'abandonner coûte cher.",
-      "noteLossSampleText": "Si le gardien est encore debout dimanche soir, la base perd des habitants. La perte dépend de la percée atteinte et grimpe vite. Pour une base de {{population}} habitants : {{a}} perdus si la percée atteint {{pa}} %, {{b}} à {{pb}} %, {{c}} à {{pc}} %. Manquer le gardien de peu coûte très peu, l'abandonner coûte cher."
+      "noteLossText": "Si le gardien est encore debout dimanche soir, la base perd des habitants. La perte dépend de la percée atteinte. Sur la base d'aujourd'hui, {{population}} habitants : {{a}} perdus si la percée atteint {{pa}} %, {{b}} à {{pb}} %, {{c}} à {{pc}} %. Manquer le gardien de peu coûte très peu, l'abandonner coûte cher.",
+      "noteLossSampleText": "Si le gardien est encore debout dimanche soir, la base perd des habitants. La perte dépend de la percée atteinte. Pour une base de {{population}} habitants : {{a}} perdus si la percée atteint {{pa}} %, {{b}} à {{pb}} %, {{c}} à {{pc}} %. Manquer le gardien de peu coûte très peu, l'abandonner coûte cher."
     },
     "reserves": {
       "title": "Détails de la base",
@@ -535,10 +535,7 @@
       "sunday": "et rien n'est repris si la semaine tourne mal. Les blessés partent avec le vaisseau le dimanche, sans coûter de composants ni de nourriture.",
       "rescueOff": "Aucune campagne en cours : un défi validé compte au classement de la semaine,",
       "pointsOff": "un point par blessé qu'il ramènerait,",
-      "sundayOff": "et rien n'est repris si la semaine tourne mal. Les blessés, eux, attendent la prochaine campagne.",
-      "acquired": "Acquis cette semaine",
-      "acquiredWounded": "{{count}} blessés",
-      "acquiredValidations": "{{done}} validations sur {{total}}"
+      "sundayOff": "et rien n'est repris si la semaine tourne mal. Les blessés, eux, attendent la prochaine campagne."
     },
     "daily": {
       "title": "Le défi du jour",
@@ -823,7 +820,6 @@
       "title": "La campagne",
       "week": "Semaine {{week}} sur {{weeks}}",
       "aria": "Les dix semaines de la campagne",
-      "link": "La campagne",
       "won": "Gardien vaincu",
       "lost": "Gardien repoussé à {{percent}} %",
       "now": "Percée à {{percent}} %",
@@ -859,17 +855,17 @@
       "shelter": "Capacité d'accueil",
       "shelterAria": "La nourriture permet d'accueillir {{count}} blessés sur les {{wounded}} repérés, soit {{percent}} %.",
       "breach": "La percée",
-      "breachAria": "La percée dans les lignes de {{guardian}} atteint {{percent}} % : il ne laisse partir que cette part de ce qui est prêt à embarquer.",
-      "aboard": "À bord dimanche",
+      "breachAria": "La percée dans les lignes de {{boss}} atteint {{percent}} % : il ne laisse partir que cette part de ce qui est prêt à embarquer.",
+      "aboard": "À bord",
       "aboardAria": "{{count}} blessés seraient à bord dimanche sur les {{wounded}} repérés, soit {{percent}} % : {{extraction}} par l'extraction et {{challenges}} déjà acquis par les défis.",
       "of": "sur {{count}} repérés",
       "lever": "Levier",
       "allModes": "Tous les modes",
-      "hpStanding": "PV encore debout",
+      "hpStanding": "PV restants",
       "carryRate": "composants = 1 blessé",
       "shelterRate": "nourriture = 1 blessé",
       "breachRate": "PV = 1 % de percée",
-      "fromGuardian": "arrachés à {{guardian}}",
+      "fromGuardian": "secourus",
       "fromChallenges": "acquis par les défis",
       "leftBehind": "resteraient au sol"
     },
@@ -888,7 +884,7 @@
       "shelterGain": "+{{count}} d'accueil",
       "ate": "La base a mangé",
       "inhabitants": "{{count}} habitants",
-      "squad": "Escouade",
+      "squad": "Opérateurs actifs",
       "presenceAria": "{{present}} opérateurs sur {{roster}} ont joué aujourd'hui.",
       "of": "sur {{count}}"
     },
@@ -896,8 +892,13 @@
       "title": "L'escouade aujourd'hui",
       "link": "Tout le classement",
       "operator": "Opérateur",
-      "streak": "Série",
+      "operatorTooltip": "Le pseudo de l'opérateur, avec son titre de la semaine s'il en détient un : le meilleur sur une ressource (composants, nourriture, série) ou en dégâts au gardien.",
+      "streak": "Bonus de série",
+      "streakTooltip": "Jours consécutifs où l'opérateur a joué au moins une partie valorisée. Chaque jour au-delà du premier ajoute +2 % à tout ce que ses parties produisent ce jour-là (dégâts, composants, nourriture), plafonné à +10 % à partir de 6 jours. Remis à zéro dès qu'une journée est sautée.",
       "damage": "Dégâts au gardien",
+      "damageTooltip": "Dégâts infligés au gardien de la semaine par l'opérateur aujourd'hui, après rendements décroissants et bonus de série.",
+      "componentsTooltip": "Composants produits aujourd'hui par l'opérateur, selon le mode et l'issue de chaque partie, après rendements décroissants et bonus de série.",
+      "foodTooltip": "Nourriture produite aujourd'hui par l'opérateur, selon le mode et l'issue de chaque partie, après rendements décroissants et bonus de série.",
       "days": "{{count}} j",
       "toPlay": "à jouer aujourd'hui",
       "matches": {

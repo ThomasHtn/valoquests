@@ -40,13 +40,6 @@
         </p>
       }
 
-      @if (law() || notes()) {
-        <section aria-labelledby="law-title">
-          <app-section-rule [heading]="'campaign.law.title' | translate" headingId="law-title" />
-          <app-rescue-law [law]="law()" [notes]="notes()" />
-        </section>
-      }
-
       @if (reserves(); as reserves) {
         <section aria-labelledby="reserve-title">
           <app-section-rule
@@ -76,6 +69,13 @@
           <div class="min-h-[20rem]"></div>
         }
       </section>
+
+      @if (law() || notes()) {
+        <section aria-labelledby="law-title">
+          <app-section-rule [heading]="'campaign.law.title' | translate" headingId="law-title" />
+          <app-rescue-law [law]="law()" [notes]="notes()" />
+        </section>
+      }
 
       <section aria-labelledby="history-title">
         <app-section-rule

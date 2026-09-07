@@ -7,6 +7,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
 import { SectionRule } from '@shared/section-rule/section-rule';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { SquadRow } from '../overview.model';
 
 /**
@@ -23,6 +24,7 @@ import { SquadRow } from '../overview.model';
     SectionRule,
     RouterLink,
     Avatar,
+    Tooltip,
     LucideFlame,
     LucideTarget,
     LucideWheat,
