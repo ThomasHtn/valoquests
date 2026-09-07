@@ -317,7 +317,8 @@ mieux.
 ## Le cycle de vie d'une campagne
 
 L'administrateur **ouvre** la campagne depuis le backoffice. À cet instant, le roster est gelé et la
-calibration est calculée. La campagne **démarre le lundi suivant** et dure dix semaines. Elle se
+calibration est calculée. La campagne **démarre le jour même si l'ouverture a lieu un lundi, sinon le
+lundi suivant**, et dure dix semaines. Elle se
 **clôt** après le règlement du dixième dimanche, et son score final se fige.
 
 Entre deux campagnes, il n'y a ni gardien, ni base, ni réserves qui bougent : seul le **classement

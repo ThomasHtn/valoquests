@@ -130,7 +130,7 @@ public class CampaignLifecycleService {
     }
 
     /**
-     * Opens a campaign starting the Monday after today.
+     * Opens a campaign starting this Monday if opened on one, otherwise the following Monday.
      *
      * @return the campaign, still {@link CampaignStatus#OPENED}
      * @throws CampaignLifecycleException when a campaign is already live or no player is active
@@ -145,7 +145,8 @@ public class CampaignLifecycleService {
 
         List<Player> roster = activeRoster();
         LocalDate today = weekCalendar.today();
-        LocalDate firstWeekStart = weekCalendar.weekStartOf(today).plusWeeks(1);
+        LocalDate weekStart = weekCalendar.weekStartOf(today);
+        LocalDate firstWeekStart = weekStart.equals(today) ? today : weekStart.plusWeeks(1);
 
         int number = campaignRepository.findFirstByOrderByNumberDesc()
             .map(campaign -> campaign.getNumber() + 1)

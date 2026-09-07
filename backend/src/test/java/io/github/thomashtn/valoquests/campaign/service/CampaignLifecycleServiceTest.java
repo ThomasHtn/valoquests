@@ -96,6 +96,27 @@ class CampaignLifecycleServiceTest {
     }
 
     @Test
+    @DisplayName("Opens a campaign starting the same day when opened on a Monday")
+    void shouldOpenACampaignStartingTheSameMonday() {
+        Instant monday = Instant.parse("2026-09-07T10:00:00Z");
+        CampaignLifecycleService service = serviceAt(monday);
+        Player operator = CampaignFixtures.player(1, "Alpha");
+        Campaign campaign = CampaignFixtures.runningCampaign(1);
+        campaign.setStatus(CampaignStatus.OPENED);
+
+        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE)).thenReturn(List.of(operator));
+        when(calibrationService.calibrate(List.of(operator), FIRST_WEEK_START)).thenReturn(calibration());
+        when(factory.build(anyInt(), anyList(), any(), any()))
+            .thenReturn(new NewCampaign(campaign, List.of(), List.of()));
+        when(campaignRepository.save(campaign)).thenReturn(campaign);
+
+        service.open();
+
+        verify(factory).build(1, List.of(operator), calibration(), FIRST_WEEK_START);
+    }
+
+    @Test
     @DisplayName("Numbers a new campaign one past the last one ever opened")
     void shouldNumberTheNextCampaign() {
         CampaignLifecycleService service = serviceAt(OPENING_DAY);
