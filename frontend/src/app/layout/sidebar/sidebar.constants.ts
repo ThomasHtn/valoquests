@@ -6,7 +6,7 @@ import { NavGroup } from './sidebar.model';
  * Written here rather than read from `package.json`: the manifest's version is never bumped for a
  * deployment of this personal project, so the displayed one would always lie.
  */
-export const APP_VERSION = '1.0-beta';
+export const APP_VERSION = '2.0-beta';
 
 /**
  * Primary navigation, in display order, chaptered the way the game reads: the expedition (the

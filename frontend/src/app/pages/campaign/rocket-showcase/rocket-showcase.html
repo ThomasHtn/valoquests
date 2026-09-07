@@ -10,20 +10,6 @@
       role="img"
       viewBox="0 0 600 520"
     ></svg>
-    <p class="viewer-cap">
-      @if (shownPart(); as part) {
-        <b>{{ part.name }}</b>
-        <span class="label-caption text-2xs">{{
-          'campaign.rocket.part'
-            | translate: { index: part.index, total: total, week: part.week ?? 0 }
-        }}</span>
-      } @else {
-        <b>{{ 'campaign.rocket.viewerEmpty' | translate }}</b>
-        <span class="label-caption text-2xs">{{
-          'campaign.rocket.viewerEmptyText' | translate
-        }}</span>
-      }
-    </p>
   </div>
 
   <ol [attr.aria-label]="'campaign.rocket.partsAria' | translate" class="parts">

@@ -25,7 +25,6 @@ import {
 import { RocketPart } from '../campaign.model';
 
 const VIEW_WIDTH = 600;
-const VIEW_HEIGHT = 520;
 const BASE_Y = 468;
 const CENTER_X = 300;
 const BLUE = '#7fb6d8';
@@ -88,29 +87,6 @@ export class RocketShowcase {
     const put = (node: SVGElement): void => {
       frame.appendChild(node);
     };
-
-    put(el('rect', { x: 0, y: 0, width: VIEW_WIDTH, height: VIEW_HEIGHT, fill: '#0c1b28' }));
-    for (let x = 0; x <= VIEW_WIDTH; x += 25) {
-      put(this.gridLine(x, x, 0, VIEW_HEIGHT, x % 100 === 0));
-    }
-    for (let y = 0; y <= VIEW_HEIGHT; y += 25) {
-      put(this.gridLine(0, VIEW_WIDTH, y, y, y % 100 === 0));
-    }
-    const corners: readonly [number, number][] = [
-      [14, 14],
-      [VIEW_WIDTH - 14, 14],
-      [14, VIEW_HEIGHT - 14],
-      [VIEW_WIDTH - 14, VIEW_HEIGHT - 14],
-    ];
-    for (const [x, y] of corners) {
-      put(
-        el('path', {
-          d: `M${x - 8} ${y} H${x + 8} M${x} ${y - 8} V${y + 8}`,
-          stroke: 'rgb(127 182 216 / 45%)',
-          'stroke-width': 1,
-        }),
-      );
-    }
 
     // Ground line with its hatches.
     put(this.stroke(120, VIEW_WIDTH - 120, BASE_Y, BASE_Y, 'rgb(127 182 216 / 55%)', 1.5));
@@ -180,11 +156,11 @@ export class RocketShowcase {
   }
 
   /**
-   * The plan's cartouche, bottom right.
+   * The plan's cartouche, top left.
    */
   private drawCartouche(put: (node: SVGElement) => void): void {
-    const x = VIEW_WIDTH - 214;
-    const y = VIEW_HEIGHT - 70;
+    const x = 14;
+    const y = 14;
     put(
       el('rect', {
         x,
@@ -218,11 +194,6 @@ export class RocketShowcase {
     if (week !== null) {
       put(this.text(x + 10, y + 49, t('cartoucheWeek', { week }), mono));
     }
-  }
-
-  private gridLine(x1: number, x2: number, y1: number, y2: number, major: boolean): SVGElement {
-    const stroke = major ? 'rgb(127 182 216 / 13%)' : 'rgb(127 182 216 / 6%)';
-    return this.stroke(x1, x2, y1, y2, stroke, 1);
   }
 
   private stroke(
