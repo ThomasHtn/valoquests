@@ -97,9 +97,10 @@
         >
           @for (week of frieze(); track week.index) {
             <li
-              [attr.title]="week.title"
-              [class]="'week week--' + week.state"
+              [appTooltip]="week.title"
+              [class]="'week week--' + week.state + ' focus-ring'"
               [style.--adv]="week.advance"
+              tabindex="0"
             >
               <span class="week-no">{{ week.label }}</span>
               <span class="week-mark">{{ week.mark }}</span>

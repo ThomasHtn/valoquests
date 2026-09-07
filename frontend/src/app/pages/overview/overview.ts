@@ -22,6 +22,7 @@ import { CountUp } from '@shared/count-up/count-up';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionRule } from '@shared/section-rule/section-rule';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { BaseScene } from './base-scene/base-scene';
 import { DayOrders } from './day-orders/day-orders';
@@ -105,6 +106,7 @@ function writeSeenReport(weekStart: string): void {
     DayOrders,
     SquadSheet,
     LucideUsers,
+    Tooltip,
   ],
   templateUrl: './overview.html',
   styleUrl: './overview.css',

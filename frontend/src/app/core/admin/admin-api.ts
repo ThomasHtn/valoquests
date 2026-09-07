@@ -3,8 +3,10 @@ import { inject, Service, Signal } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
+import { ChallengesApi } from '@core/challenges/challenges-api';
 import { PageResponse } from '@core/http/page-response.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
+import { RankingApi } from '@core/ranking/ranking-api';
 
 import { ADMIN_KEY_HEADER } from './admin-session.constants';
 import { AdminSession } from './admin-session';
@@ -50,6 +52,19 @@ export class AdminApi {
    * command moves both.
    */
   private readonly campaignApi = inject(CampaignApi);
+
+  /**
+   * The public challenge resources, refreshed with the administration ones: a recalculation or a
+   * redraw changes what `GET /api/challenges/current` answers.
+   */
+  private readonly challengesApi = inject(ChallengesApi);
+
+  /**
+   * The public ranking resources, refreshed with the administration ones: a recalculation, a
+   * redraw, a rollover or a replay all change what the current, daily and finalized rankings
+   * answer.
+   */
+  private readonly rankingApi = inject(RankingApi);
 
   /**
    * Every tracked player, archived ones included.
@@ -344,7 +359,13 @@ export class AdminApi {
     this.latestSynchronization.reload();
     this.calibration.reload();
     this.campaignApi.campaign.reload();
+    this.campaignApi.today.reload();
     this.campaignApi.history.reload();
+    this.challengesApi.current.reload();
+    this.rankingApi.current.reload();
+    this.rankingApi.daily.reload();
+    this.rankingApi.latestFinalizedWeek.reload();
+    this.rankingApi.history.reload();
   }
 
   /**

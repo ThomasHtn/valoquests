@@ -205,6 +205,9 @@ public class SeasonMatchHistoryWalker {
                     scope = crossedScope.get();
                     fromIndex = foreignIndex;
                     remainingTrailingSeasons--;
+                    // The vacated season's checkpoint must never leak into the new scope: it was
+                    // computed for a season this run just left, not for the one it is entering.
+                    pendingResumeOffset = 0;
                     continue;
                 }
 
