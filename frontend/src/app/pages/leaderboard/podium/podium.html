@@ -26,6 +26,25 @@
               <app-champion-badge />
             }
           </span>
+          @if (row.title; as title) {
+            <span [class]="'title ' + title.colorClass">
+              @switch (title.icon) {
+                @case ('wrench') {
+                  <svg aria-hidden="true" class="size-3" lucideWrench></svg>
+                }
+                @case ('wheat') {
+                  <svg aria-hidden="true" class="size-3" lucideWheat></svg>
+                }
+                @case ('flame') {
+                  <svg aria-hidden="true" class="size-3" lucideFlame></svg>
+                }
+                @case ('target') {
+                  <svg aria-hidden="true" class="size-3" lucideTarget></svg>
+                }
+              }
+              {{ 'common.title.' + title.key | translate }}
+            </span>
+          }
 
           <span class="plinth">
             <span aria-hidden="true" class="plate tabular-nums">{{ row.position }}</span>

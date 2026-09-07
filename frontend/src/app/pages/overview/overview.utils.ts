@@ -4,8 +4,8 @@ import {
   CampaignToday,
   CampaignWeek,
   WEEKLY_TITLES,
-  WeeklyTitle,
 } from '@core/campaign/campaign.model';
+import { primaryTitleOf } from '@core/campaign/campaign-title.utils';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
 import { CurrentChallenges } from '@core/challenges/challenge.model';
 import { daysBetween, localMidnight } from '@core/date/date-time.utils';
@@ -442,17 +442,12 @@ export function buildSquad(
   if (!daily) {
     return [];
   }
-  const titlesByPlayer = new Map<number, WeeklyTitle>();
-  for (const [title, playerId] of Object.entries(today?.titles ?? {})) {
-    if (playerId !== undefined && !titlesByPlayer.has(playerId)) {
-      titlesByPlayer.set(playerId, title as WeeklyTitle);
-    }
-  }
+  const titles = today?.titles ?? {};
   // An inactive operator has no ranking slot: they never deal guardian damage, so they have no
   // line here either.
   const active = daily.ranking.filter((entry) => entry.position !== null);
   return active.map((entry) => {
-    const title = titlesByPlayer.get(entry.playerId) ?? null;
+    const title = primaryTitleOf(titles, entry.playerId);
     const played = entry.matchCount > 0;
     return {
       position: played ? entry.position : null,

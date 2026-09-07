@@ -203,22 +203,20 @@
               <app-champion-badge />
             }
           </span>
-          @if (row.titles.length > 0) {
-            <!-- The week's titles, under the name rather than beside it: a name with two titles
-                 ran wider than its column and folded the titles under itself anyway. -->
+          @if (row.title; as title) {
+            <!-- The one title held, under the name rather than beside it: a long name plus a
+                 badge ran wider than its column and folded onto itself anyway. -->
             <span class="who-titles">
-              @for (title of row.titles; track title.key) {
-                <span
-                  [appTooltip]="
-                    ('common.titleHint.' + title.key | translate) +
-                    (title.measure ? ' · ' + title.measure : '')
-                  "
-                  [class]="title.colorClass"
-                  class="title"
-                >
-                  {{ 'common.title.' + title.key | translate }}
-                </span>
-              }
+              <span
+                [appTooltip]="
+                  ('common.titleHint.' + title.key | translate) +
+                  (title.measure ? ' · ' + title.measure : '')
+                "
+                [class]="title.colorClass"
+                class="title"
+              >
+                {{ 'common.title.' + title.key | translate }}
+              </span>
             </span>
           }
         </span>

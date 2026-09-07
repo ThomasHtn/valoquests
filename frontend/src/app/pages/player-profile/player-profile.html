@@ -77,9 +77,30 @@
                 <app-champion-badge />
               }
             </h1>
-            @if (tag()) {
-              <p class="mt-2.5 font-mono text-2xs text-text-muted">#{{ tag() }}</p>
-            }
+            <p class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              @if (tag()) {
+                <span class="font-mono text-2xs text-text-muted">#{{ tag() }}</span>
+              }
+              @if (title(); as playerTitle) {
+                <span [class]="playerTitle.colorClass" class="label-caption flex items-center gap-1">
+                  @switch (playerTitle.icon) {
+                    @case ('wrench') {
+                      <svg aria-hidden="true" class="size-3" lucideWrench></svg>
+                    }
+                    @case ('wheat') {
+                      <svg aria-hidden="true" class="size-3" lucideWheat></svg>
+                    }
+                    @case ('flame') {
+                      <svg aria-hidden="true" class="size-3" lucideFlame></svg>
+                    }
+                    @case ('target') {
+                      <svg aria-hidden="true" class="size-3" lucideTarget></svg>
+                    }
+                  }
+                  {{ 'common.title.' + playerTitle.key | translate }}
+                </span>
+              }
+            </p>
           </div>
         </div>
 

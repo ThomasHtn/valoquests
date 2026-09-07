@@ -141,11 +141,7 @@
           <ul class="rep-titles">
             @for (title of titles; track title.key) {
               <li [class]="title.colorClass" class="rep-t">
-                @if (title.portrait) {
-                  <app-avatar [src]="title.portrait" size="sm" />
-                } @else {
-                  <span aria-hidden="true" class="rep-t-empty"></span>
-                }
+                <app-avatar [src]="title.portrait" size="sm" />
                 <span class="label-caption text-2xs">{{
                   'common.title.' + title.key | translate
                 }}</span>

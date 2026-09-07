@@ -1,8 +1,19 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideChevronDown, LucideChevronRight, LucideChevronUp } from '@lucide/angular';
+import {
+  LucideChevronDown,
+  LucideChevronRight,
+  LucideChevronUp,
+  LucideFlame,
+  LucideTarget,
+  LucideWheat,
+  LucideWrench,
+} from '@lucide/angular';
 
+import { primaryTitle } from '@core/campaign/campaign-title.utils';
+import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
+import { WeeklyTitle } from '@core/campaign/campaign.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import {
@@ -50,6 +61,10 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     LucideChevronDown,
     LucideChevronRight,
     LucideChevronUp,
+    LucideFlame,
+    LucideTarget,
+    LucideWheat,
+    LucideWrench,
     Avatar,
     ChampionBadge,
     ProgressBar,
@@ -83,6 +98,20 @@ export class Players {
   private readonly championPlayerId = computed(() =>
     resolveChampionPlayerId(resourceValue(this.rankingApi.latestFinalizedWeek, null)),
   );
+
+  /**
+   * The current week's title, if any, held by each player id.
+   */
+  private readonly titlesByPlayer = computed(() => {
+    const byPlayer = new Map<number, WeeklyTitle>();
+    for (const entry of resourceValue(this.rankingApi.current, null)?.ranking ?? []) {
+      const title = primaryTitle(entry.titles);
+      if (title !== null) {
+        byPlayer.set(entry.player.id, title);
+      }
+    }
+    return byPlayer;
+  });
 
   /**
    * Reactive resource fetching every tracked player's summary.
@@ -201,12 +230,14 @@ export class Players {
    * @returns The corresponding display-ready row.
    */
   private toRow(player: PlayerSummary): PlayerRow {
+    const title = this.titlesByPlayer().get(player.id) ?? null;
     return {
       id: player.id,
       displayName: player.displayName,
       isChampion: player.id === this.championPlayerId(),
       tag: extractRiotTag(player.riotId),
       avatarUrl: resolvePlayerAvatarUrl(player.portrait),
+      title: title === null ? null : { key: title, ...resolveTitleVisual(title) },
       competitiveTier: player.competitiveTier,
       tier: resolveCompetitiveTierVisual(player.competitiveTier, (key) =>
         this.translation.translate(key),

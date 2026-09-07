@@ -5,6 +5,7 @@ import { LucideCheck, LucideChevronDown, LucideChevronUp } from '@lucide/angular
 
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT, CampaignHistory, WeeklyTitle } from '@core/campaign/campaign.model';
+import { primaryTitle } from '@core/campaign/campaign-title.utils';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
@@ -360,7 +361,7 @@ export class Leaderboard {
       total: entry.totalPoints,
       damage: entry.guardianDamage,
       challengePoints: entry.challengePoints,
-      titles: this.titles(entry.titles, this.measures(entry)),
+      title: this.title(entry.titles, this.measures(entry)),
       // The day's challenge first: it changes every morning, so its column is the one that moves.
       progress: [...entry.challengeProgress]
         .sort((a, b) => Number(b.cadence === 'DAILY') - Number(a.cadence === 'DAILY'))
@@ -399,7 +400,7 @@ export class Leaderboard {
       total: entry.totalPoints,
       damage: entry.guardianDamage,
       challengePoints: entry.challengePoints,
-      titles: this.titles(entry.titles, {
+      title: this.title(entry.titles, {
         REGULAR: entry.streakDays,
         SCOUT: entry.completedChallenges + entry.completedDailyChallenges,
       }),
@@ -441,18 +442,24 @@ export class Leaderboard {
     return { index: null, group: null };
   }
 
-  private titles(
+  /**
+   * The single title an operator is decorated with: the highest-priority one they hold, or `null`
+   * when they hold none.
+   */
+  private title(
     keys: readonly BoardTitle['key'][],
     measures: Partial<Record<WeeklyTitle, number>>,
-  ): BoardTitle[] {
-    return keys.map((key) => {
-      const value = measures[key];
-      return {
-        key,
-        ...resolveTitleVisual(key),
-        measure: value === undefined ? null : this.measure(key, value),
-      };
-    });
+  ): BoardTitle | null {
+    const key = primaryTitle(keys);
+    if (key === null) {
+      return null;
+    }
+    const value = measures[key];
+    return {
+      key,
+      ...resolveTitleVisual(key),
+      measure: value === undefined ? null : this.measure(key, value),
+    };
   }
 
   /**

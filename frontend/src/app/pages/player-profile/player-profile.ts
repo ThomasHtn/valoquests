@@ -12,8 +12,16 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideLoaderCircle } from '@lucide/angular';
+import {
+  LucideFlame,
+  LucideLoaderCircle,
+  LucideTarget,
+  LucideWheat,
+  LucideWrench,
+} from '@lucide/angular';
 
+import { primaryTitle } from '@core/campaign/campaign-title.utils';
+import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalTime } from '@core/date/date-time.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -105,7 +113,11 @@ const MAX_PROGRESSION_SEASONS = 5;
     MultiSelect,
     Progression,
     Select,
+    LucideFlame,
     LucideLoaderCircle,
+    LucideTarget,
+    LucideWheat,
+    LucideWrench,
     PageHeader,
     StatTile,
     Tooltip,
@@ -453,6 +465,21 @@ export class PlayerProfile {
       resourceValue(this.rankingApi.latestFinalizedWeek, null),
     );
     return this.details()?.id === championPlayerId;
+  });
+
+  /**
+   * The one weekly title this player is decorated with this week, or `null` when they hold none
+   * or their details have not loaded yet.
+   */
+  protected readonly title = computed(() => {
+    const playerId = this.details()?.id;
+    if (playerId === undefined) {
+      return null;
+    }
+    const current = resourceValue(this.rankingApi.current, null);
+    const entry = current?.ranking.find((candidate) => candidate.player.id === playerId);
+    const key = entry ? primaryTitle(entry.titles) : null;
+    return key === null ? null : { key, ...resolveTitleVisual(key) };
   });
 
   /**

@@ -89,7 +89,12 @@ export interface BoardRow {
   readonly total: number;
   readonly damage: number;
   readonly challengePoints: number;
-  readonly titles: readonly BoardTitle[];
+
+  /**
+   * The one title this operator is decorated with, the highest-priority one held, or `null` when
+   * they hold none.
+   */
+  readonly title: BoardTitle | null;
 
   /**
    * One cell per weekly challenge of the board, or `null` on a closed week, whose progress was

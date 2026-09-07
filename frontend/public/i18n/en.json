@@ -867,7 +867,11 @@
       "breachRate": "HP = 1% of breakthrough",
       "fromGuardian": "rescued",
       "fromChallenges": "secured by the challenges",
-      "leftBehind": "would stay on the ground"
+      "leftBehind": "would stay on the ground",
+      "carryTooltip": "The components in stock, divided by {{rate}}: how many wounded the ship can reach. Ranked (Competitive, Premier, Unrated) earns the most.",
+      "shelterTooltip": "The food in reserve, once the next seven meals are set aside, divided by {{rate}}: how many wounded the base can shelter. Casual (Deathmatch, Spike Rush, Team Deathmatch, Skirmish) earns the most.",
+      "breachTooltip": "The share of the guardian's hit points already removed. It caps the extraction: a guardian pushed to 70% only lets 70% of what is ready to board get away. Every match counts toward it, whatever the mode.",
+      "aboardTooltip": "The smallest of the three caps beside it, multiplied by the breakthrough, plus the wounded already secured by validated challenges: what comes home on Sunday night."
     },
     "orders": {
       "title": "Orders of the day",

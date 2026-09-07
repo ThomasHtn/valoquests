@@ -867,7 +867,11 @@
       "breachRate": "PV = 1 % de percée",
       "fromGuardian": "secourus",
       "fromChallenges": "acquis par les défis",
-      "leftBehind": "resteraient au sol"
+      "leftBehind": "resteraient au sol",
+      "carryTooltip": "Le stock de composants divisé par {{rate}} : autant de blessés que le vaisseau peut aller chercher. Le classé (Compétitif, Premier, Non classé) en rapporte le plus.",
+      "shelterTooltip": "La nourriture en réserve, une fois les sept prochains repas mis de côté, divisée par {{rate}} : autant de blessés que la base peut loger. Le décontracté (Deathmatch, Spike Rush, Team Deathmatch, Skirmish) en rapporte le plus.",
+      "breachTooltip": "La part des points de vie déjà retirés au gardien. Elle plafonne l'extraction : un gardien repoussé à 70 % ne laisse partir que 70 % de ce qui est prêt à embarquer. Toute partie y contribue, quel que soit le mode.",
+      "aboardTooltip": "Le plus petit des trois plafonds voisins, multiplié par la percée, plus les blessés déjà acquis par les défis validés : ce qui reviendra dimanche soir."
     },
     "orders": {
       "title": "Ordre du jour",

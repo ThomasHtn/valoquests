@@ -8,6 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LucideFlame, LucideTarget, LucideWheat, LucideWrench } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
@@ -32,7 +33,16 @@ const EMBER = '#e8ab6b';
  */
 @Component({
   selector: 'app-podium',
-  imports: [RouterLink, TranslatePipe, Avatar, ChampionBadge],
+  imports: [
+    RouterLink,
+    TranslatePipe,
+    Avatar,
+    ChampionBadge,
+    LucideFlame,
+    LucideTarget,
+    LucideWheat,
+    LucideWrench,
+  ],
   templateUrl: './podium.html',
   styleUrl: './podium.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

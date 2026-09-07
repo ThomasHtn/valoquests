@@ -1,3 +1,5 @@
+import { TitleVisual } from '@core/campaign/campaign-visual.utils';
+import { WeeklyTitle } from '@core/campaign/campaign.model';
 import { CompetitiveTier, CompetitiveTierVisual } from '@core/players/competitive-tier.model';
 
 /**
@@ -19,6 +21,11 @@ export interface PlayerRow {
    */
   readonly tag: string | null;
   readonly avatarUrl: string | null;
+
+  /**
+   * The one weekly title this player is decorated with this week, or `null` when they hold none.
+   */
+  readonly title: (TitleVisual & { readonly key: WeeklyTitle }) | null;
 
   /**
    * The tier's raw enum value, kept alongside {@link tier}'s translated label — sorting needs the

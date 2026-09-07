@@ -102,13 +102,7 @@
   stroke-width: var(--ring, 7);
   stroke-dasharray: 270.18; /* 2 pi r, r = 43 */
   stroke-dashoffset: calc(270.18 * (1 - var(--pct)));
-  animation: overview-sweep 1s cubic-bezier(0.25, 1, 0.5, 1) both;
-}
-
-@keyframes overview-sweep {
-  from {
-    stroke-dashoffset: 270.18;
-  }
+  transition: stroke-dashoffset 1s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .gauge-mid {
@@ -245,6 +239,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .g-arc {
-    animation: none;
+    transition: none;
   }
 }

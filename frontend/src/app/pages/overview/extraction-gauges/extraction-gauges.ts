@@ -13,6 +13,7 @@ import {
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { BLOCK_TOOLTIP_DELAY_MS, Tooltip } from '@shared/tooltip/tooltip';
 import { Capacity } from '../overview.model';
 
 /**
@@ -45,6 +46,7 @@ const SHELTER_MODES: readonly string[] = [
     LucideUsers,
     LucideWheat,
     LucideWrench,
+    Tooltip,
   ],
   templateUrl: './extraction-gauges.html',
   styleUrl: './extraction-gauges.css',
@@ -75,6 +77,37 @@ export class ExtractionGauges {
     this.translation.translate('overview.report.boss', {
       index: String(this.weekIndex()).padStart(2, '0'),
     }),
+  );
+
+  /**
+   * What the tooltip hung off each ring waits before opening: the ring sits inside a card a reader
+   * scans past, so it gets the same grace period as the other whole-block tooltips rather than
+   * flashing on every pass.
+   */
+  protected readonly tooltipDelay = BLOCK_TOOLTIP_DELAY_MS;
+
+  /**
+   * How the "capacité d'emport" dial is worked out, read on hover: the mechanic a raw percentage
+   * cannot carry on its own.
+   */
+  protected readonly carryTooltip = computed(() =>
+    this.translation.translate('overview.capacity.carryTooltip', {
+      rate: this.capacity()?.componentsPerRescue ?? 0,
+    }),
+  );
+
+  protected readonly shelterTooltip = computed(() =>
+    this.translation.translate('overview.capacity.shelterTooltip', {
+      rate: this.capacity()?.foodPerRescue ?? 0,
+    }),
+  );
+
+  protected readonly breachTooltip = computed(() =>
+    this.translation.translate('overview.capacity.breachTooltip'),
+  );
+
+  protected readonly aboardTooltip = computed(() =>
+    this.translation.translate('overview.capacity.aboardTooltip'),
   );
 
   protected format(amount: number): string {
