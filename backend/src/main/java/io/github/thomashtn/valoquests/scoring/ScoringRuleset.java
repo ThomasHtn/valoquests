@@ -112,11 +112,4 @@ public interface ScoringRuleset {
      */
     int challengeRankingPoints(int reference, double weight, int weekIndex);
 
-    /**
-     * Returns the lowest reference any campaign can be calibrated at, and the reference used when no
-     * campaign has ever been played.
-     *
-     * @return reference floor
-     */
-    int referenceFloor();
 }

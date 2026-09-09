@@ -100,9 +100,8 @@ Les règles de la série, dans le détail :
 4. Une journée est le jour calendaire du fuseau du projet, celui de **l'heure de début** de la
    partie.
 5. Le compteur **repart à un chaque lundi** : le bonus d'une semaine se gagne dans la semaine, et
-   tout le monde ouvre le lundi à égalité, campagne ou pas. Il est calculé de la même façon sur
-   l'historique de calibration. L'affichage plafonne donc à « 7 j » le dimanche, le bonus à +10 %
-   dès le sixième jour.
+   tout le monde ouvre le lundi à égalité, campagne ou pas. L'affichage plafonne donc à « 7 j » le
+   dimanche, le bonus à +10 % dès le sixième jour.
 6. Le bonus s'applique à tout ce qu'une partie produit : dégâts au gardien, composants, nourriture,
    croissance de la base. Jamais aux défis.
 
@@ -316,10 +315,10 @@ mieux.
 
 ## Le cycle de vie d'une campagne
 
-L'administrateur **ouvre** la campagne depuis le backoffice. À cet instant, le roster est gelé et la
-calibration est calculée. La campagne **démarre le jour même si l'ouverture a lieu un lundi, sinon le
-lundi suivant**, et dure dix semaines. Elle se
-**clôt** après le règlement du dixième dimanche, et son score final se fige.
+L'administrateur **ouvre** la campagne depuis le backoffice. À cet instant, le roster et la
+difficulté sont gelés. Il choisit le lundi de départ : **la semaine en cours** — la campagne est
+alors immédiatement en cours et les jours déjà joués sont comptés — ou **la semaine suivante**. Elle
+dure dix semaines, se **clôt** après le règlement du dixième dimanche, et son score final se fige.
 
 Entre deux campagnes, il n'y a ni gardien, ni base, ni réserves qui bougent : seul le **classement
 hebdomadaire** continue de tourner. Les réserves de nourriture et de composants ne se reportent pas
@@ -327,69 +326,33 @@ d'une campagne à l'autre : chaque campagne repart de zéro.
 
 ---
 
-## La calibration et les paliers
+## La difficulté et la référence
 
-Avant le lancement, l'application lit **neuf mois d'historique** du roster gelé. Pour chaque joueur
-actif, elle calcule la **moyenne de ses dégâts hebdomadaires** sur la fenêtre ; la référence de la
-campagne est la **moyenne de ces moyennes**, avec un **plancher de 3 500**. Des moyennes, parce que
-le gardien vaut « référence × joueurs » : c'est une somme que l'on vise, et un joueur très fort doit
-y peser.
+La difficulté est **choisie par l'administrateur à l'ouverture** et figée pour les dix semaines.
+Deux valeurs, et rien d'autre :
 
-Toutes les semaines de la fenêtre comptent, **y compris celles où le joueur n'a rien joué** : elles
-valent zéro dans sa moyenne. Un joueur qui joue peu est un joueur faible, et la référence doit le
-refléter. Pas de médiane : mesurée le 04/09/2026 sur le roster réel, la médiane avec les semaines
-vides tombait à 396 par joueur, soit une compétitive par semaine, parce que la moitié du roster joue
-une semaine sur deux. La moyenne donnait environ 1 050.
+| Difficulté | Référence hebdomadaire par joueur |
+|---|---|
+| Amateur | 5 300 |
+| Pro | 10 600 |
 
-Le plancher de 3 500 correspond à neuf parties par semaine, six compétitives et trois rapides, le
-minimum qu'un joueur régulier joue. En dessous, un gardien tomberait en une soirée et le jeu n'aurait
-plus d'objet : la première campagne d'une escouade irrégulière se joue donc au plancher, et c'est
-voulu. Le palier Amateur n'est donc atteint que par une escouade dont l'historique est plus mince
-que le plancher : il se lit, il ne se joue pas.
+La référence est le nombre dont **tout le reste est un multiple** : taille des gardiens, taille des
+groupes de blessés, rescapés et points d'un défi. Elle vaut **par joueur actif**, ce qui rend le jeu
+identique à 2 comme à 20 joueurs.
 
-Si l'historique d'un joueur ne couvre pas neuf mois, la fenêtre est **réduite d'un mois à la
-fois, pour tout le monde**, jusqu'à ce que chaque joueur soit couvert. Un joueur est couvert quand
-sa plus ancienne partie connue est antérieure au début de la fenêtre. Un joueur qui a **moins d'un
-mois** d'historique est un débutant : il ne fait pas réduire la fenêtre et prend la médiane de son
-escouade. Sondé le 04/09/2026 : Henrik rend l'historique jusqu'à juillet 2024 pour le roster, à
-30 requêtes par minute ; le walker actuel, qui ne remonte que deux actes, est à remplacer par une
-lecture de toute la fenêtre.
+La difficulté décide aussi **laquelle des deux séries de nombres écrites au catalogue** la campagne
+joue : chaque défi porte un objectif amateur et un objectif pro. Une escouade pro vise donc des
+objectifs plus durs, et affronte un gardien deux fois plus gros, pour la même récompense relative.
+Voir `CHALLENGES.md`.
 
-> **Point critique.** La référence doit être calculée avec **exactement les mêmes multiplicateurs**
-> que pendant la campagne, série de jours consécutifs et rendements décroissants compris. Les
-> appliquer d'un côté et pas de l'autre décale la barre du gardien, d'environ 30 % avec l'ancien
-> plafond de +50 %, ce qui faisait passer une escouade régulière de 8 gardiens vaincus à 6,8 sans
-> que personne ne comprenne pourquoi.
+Rien n'est déduit de l'historique des parties. La référence était auparavant mesurée sur une fenêtre
+de plusieurs mois, en comptant à zéro chaque semaine non jouée : une escouade dont la fenêtre n'avait
+pas été importée tombait sur un plancher et battait son gardien de première semaine dès le mercredi.
+La fenêtre de calibration, l'import d'historique, le palier dérivé et le recalibrage ont disparu
+avec elle.
 
-Elle fixe la taille des gardiens, celle des groupes de survivants et la valeur des défis. Elle est
-calculée **une seule fois** et **plus jamais recalculée** : rien n'est ajustable une fois la campagne
-lancée.
-
-À l'ouverture se fige aussi le **niveau d'escouade**, choisi par l'opérateur entre *référence* et
-*expert*. Il ne touche ni les gardiens, ni les groupes, ni la valeur d'un défi : il décide seulement
-laquelle des deux séries de nombres écrites au catalogue la campagne joue. Une escouade experte vise
-donc des objectifs plus durs pour la même récompense. Voir `CHALLENGES.md`.
-
-Une seule exception, administrative : le **recalibrage** d'une campagne ouverte avant que la fenêtre
-de neuf mois n'ait été importée. L'ouverture est d'ailleurs refusée quand la fenêtre a dû se réduire
-sans qu'aucun import d'historique n'ait jamais tourné. Le recalibrage remesure le roster gelé,
-redimensionne le gardien et le groupe de chaque semaine **non encore réglée**, puis rejoue la
-campagne ; une semaine réglée garde son gardien.
-
-Un joueur sans historique est un débutant et prend la médiane de son escouade.
-
-De cette référence découle le **palier**, affiché sur la campagne :
-
-| Palier | Référence hebdomadaire par joueur | Exemple |
-|---|---|---|
-| Amateur | moins de 3 500 | 4 compétitifs et 3 rapides par semaine |
-| Normal | 3 500 à 9 000 | 7 compétitifs et 9 rapides |
-| Confirmé | 9 000 à 16 000 | 16 compétitifs et 25 rapides |
-| Élite | plus de 16 000 | 28 compétitifs et 35 rapides |
-
-Le palier existe pour que deux escouades de niveaux très différents puissent comparer leurs campagnes.
-Une base de 30 000 en palier Normal et une base de 119 000 en palier Élite se lisent côte à côte, et
-toutes deux auront vaincu environ 8 gardiens sur 10.
+5 300 est aussi la référence à laquelle les objectifs du catalogue sont écrits, donc les nombres du
+catalogue sont servis tels quels en Amateur.
 
 **Toutes les grandeurs sont exprimées par joueur actif**, ce qui rend le jeu identique à 2 comme à 20
 joueurs. Le roster est gelé à l'ouverture de la campagne et ne peut plus changer, pas même par le
@@ -437,7 +400,7 @@ joueur**. Les valeurs progressent comme le reste des récompenses, de +4 % par s
 Le poids des défis dans le score final est **à resimuler** avec la règle ci-dessus : les chiffres de
 la version précédente supposaient des blessés ajoutés au-dessus du groupe et ne sont plus valables.
 L'intention ne change pas : un bonus substantiel qui n'est jamais un passage obligé, dans la même
-proportion à tous les paliers.
+proportion aux deux difficultés.
 
 ### Le classement hebdomadaire
 
@@ -512,8 +475,8 @@ donne le visuel maximal. Aucun effet sur les règles : c'est le trophée de la c
 | Pertes de base si le gardien survit | base × (1 − avancement)² × 35 % |
 | Rescapés d'un défi | référence × poids du défi / 1000, par joueur qui le valide, versés le dimanche |
 | Fréquence de synchronisation | 30 minutes |
-| Fenêtre de calibration | 9 mois, réduits d'un mois à la fois tant qu'un joueur n'est pas couvert |
-| Référence | moyenne des moyennes hebdomadaires par joueur actif, semaines vides à zéro, plancher 3 500 |
+| Difficulté | choisie à l'ouverture, figée : Amateur ou Pro |
+| Référence | 5 300 par joueur actif en Amateur, 10 600 en Pro |
 | Durée de la campagne | 10 semaines |
 
 ---

@@ -1,16 +1,14 @@
 package io.github.thomashtn.valoquests.campaign.service;
 
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
-import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayer;
-import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
 import io.github.thomashtn.valoquests.campaign.exception.CampaignLifecycleException;
+import io.github.thomashtn.valoquests.campaign.model.CampaignStartWeek;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.model.NewCampaign;
-import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
@@ -32,9 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
  * meant a squad that stopped playing came back to a run six weeks in that they had already lost;
  * here an operator decides, and between two campaigns only the weekly ranking keeps turning.
  *
- * <p>Opening freezes two things at once: the roster and the calibration. Both are read on the day
- * the button is pressed and neither is ever read again, so a deactivation, an archive or a change
- * of form during the ten weeks cannot resize a guardian that has already been fought.
+ * <p>Opening freezes two things: the roster and the difficulty. Both are decided on the day the
+ * button is pressed and neither is ever read again, so a deactivation or an archive during the ten
+ * weeks cannot resize a guardian that has already been fought.
  */
 @Service
 public class CampaignLifecycleService {
@@ -65,11 +63,6 @@ public class CampaignLifecycleService {
     private final PlayerRepository playerRepository;
 
     /**
-     * Service measuring the squad at opening.
-     */
-    private final SquadCalibrationService calibrationService;
-
-    /**
      * Factory building the campaign, its roster and its weeks.
      */
     private final CampaignFactory factory;
@@ -86,7 +79,6 @@ public class CampaignLifecycleService {
      * @param campaignPlayerRepository campaign roster repository
      * @param campaignWeekRepository   campaign week repository
      * @param playerRepository         player repository
-     * @param calibrationService       squad calibration service
      * @param factory                  campaign factory
      * @param weekCalendar             week calendar
      */
@@ -95,7 +87,6 @@ public class CampaignLifecycleService {
         CampaignPlayerRepository campaignPlayerRepository,
         CampaignWeekRepository campaignWeekRepository,
         PlayerRepository playerRepository,
-        SquadCalibrationService calibrationService,
         CampaignFactory factory,
         WeekCalendar weekCalendar
     ) {
@@ -103,7 +94,6 @@ public class CampaignLifecycleService {
         this.campaignPlayerRepository = campaignPlayerRepository;
         this.campaignWeekRepository = campaignWeekRepository;
         this.playerRepository = playerRepository;
-        this.calibrationService = calibrationService;
         this.factory = factory;
         this.weekCalendar = weekCalendar;
     }
@@ -119,29 +109,19 @@ public class CampaignLifecycleService {
     }
 
     /**
-     * Measures the squad without committing to anything.
+     * Opens a campaign on the chosen Monday.
      *
-     * <p>What the backoffice shows before the operator opens: the calibration is decided once and
-     * never revised, so this is the only chance to notice that a player's history is thin.
+     * <p>{@link CampaignStartWeek#CURRENT_WEEK} is retroactive: the campaign is opened on a Monday
+     * that has already passed, so it starts {@link CampaignStatus#RUNNING} and the caller replays
+     * it to rebuild the days that are already over.
      *
-     * @param level squad level the campaign would play its challenges at
-     * @return the calibration a campaign opened today would be given
-     * @throws CampaignLifecycleException when no player is active
-     */
-    @Transactional(readOnly = true)
-    public SquadCalibration previewCalibration(SquadLevel level) {
-        return calibrationService.calibrate(activeRoster(), weekCalendar.today(), level);
-    }
-
-    /**
-     * Opens a campaign starting this Monday if opened on one, otherwise the following Monday.
-     *
-     * @param level squad level the campaign plays its challenges at
-     * @return the campaign, still {@link CampaignStatus#OPENED}
+     * @param difficulty difficulty the campaign is played at
+     * @param startWeek  week the campaign starts on
+     * @return the campaign, {@link CampaignStatus#RUNNING} when its first Monday is already past
      * @throws CampaignLifecycleException when a campaign is already live or no player is active
      */
     @Transactional
-    public Campaign open(SquadLevel level) {
+    public Campaign open(CampaignDifficulty difficulty, CampaignStartWeek startWeek) {
         if (liveCampaign().isPresent()) {
             throw new CampaignLifecycleException(
                 "A campaign is already opened or running. Stop it before opening another one."
@@ -151,71 +131,34 @@ public class CampaignLifecycleService {
         List<Player> roster = activeRoster();
         LocalDate today = weekCalendar.today();
         LocalDate weekStart = weekCalendar.weekStartOf(today);
-        LocalDate firstWeekStart = weekStart.equals(today) ? today : weekStart.plusWeeks(1);
+        LocalDate firstWeekStart = startWeek == CampaignStartWeek.CURRENT_WEEK
+            ? weekStart
+            : weekStart.plusWeeks(1);
 
         int number = campaignRepository.findFirstByOrderByNumberDesc()
             .map(campaign -> campaign.getNumber() + 1)
             .orElse(1);
 
-        SquadCalibration calibration = calibrationService.calibrateCovered(roster, today, level);
-        NewCampaign built = factory.build(number, roster, calibration, firstWeekStart);
+        NewCampaign built = factory.build(number, roster, difficulty, firstWeekStart);
+
+        // A campaign opened on the week in progress is already under way, so it never waits for the
+        // nightly tick to flip it.
+        if (!today.isBefore(firstWeekStart)) {
+            built.campaign().setStatus(CampaignStatus.RUNNING);
+        }
+
         Campaign campaign = campaignRepository.save(built.campaign());
         campaignPlayerRepository.saveAll(built.roster());
         campaignWeekRepository.saveAll(built.weeks());
 
         LOGGER.info(
-            "Campaign {} opened on {} for {} operator(s) at reference {} ({}), starting {}.",
+            "Campaign {} opened on {} for {} operator(s) at {} ({} reference), starting {}.",
             number,
             today,
             roster.size(),
-            campaign.getReference(),
-            campaign.getTier(),
+            difficulty,
+            campaign.reference(),
             firstWeekStart
-        );
-
-        return campaign;
-    }
-
-    /**
-     * Measures the squad again and resizes what the live campaign has not settled yet.
-     *
-     * <p>The one exception to a calibration being decided once: a campaign opened on a window that
-     * was never imported was sized on a floor, and the alternative is to throw the week away. A
-     * settled week keeps its guardian; the caller replays the campaign afterwards.
-     *
-     * @param level squad level the campaign plays its challenges at
-     * @return the campaign, recalibrated
-     * @throws CampaignLifecycleException when no campaign is live or the window is not covered
-     */
-    @Transactional
-    public Campaign recalibrate(SquadLevel level) {
-        Campaign campaign = liveCampaign().orElseThrow(() -> new CampaignLifecycleException(
-            "No campaign is opened or running, so there is nothing to recalibrate."
-        ));
-        List<Player> roster = campaignPlayerRepository
-            .findAllByCampaignIdOrderByPlayerIdAsc(campaign.getId())
-            .stream()
-            .map(CampaignPlayer::getPlayer)
-            .toList();
-
-        factory.calibrate(
-            campaign,
-            calibrationService.calibrateCovered(roster, weekCalendar.today(), level)
-        );
-        campaignRepository.save(campaign);
-
-        List<CampaignWeek> weeks = campaignWeekRepository
-            .findAllByCampaignIdOrderByWeekIndexAsc(campaign.getId());
-        weeks.stream()
-            .filter(week -> !week.isSettled())
-            .forEach(week -> factory.size(week, campaign));
-        campaignWeekRepository.saveAll(weeks);
-
-        LOGGER.warn(
-            "Campaign {} recalibrated at reference {} ({}); unsettled weeks resized.",
-            campaign.getNumber(),
-            campaign.getReference(),
-            campaign.getTier()
         );
 
         return campaign;

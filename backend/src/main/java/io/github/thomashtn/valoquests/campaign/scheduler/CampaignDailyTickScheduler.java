@@ -1,11 +1,7 @@
 package io.github.thomashtn.valoquests.campaign.scheduler;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.github.thomashtn.valoquests.campaign.service.CampaignLifecycleService;
-import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
-import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
-import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.campaign.service.DailyTickService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,62 +39,25 @@ public class CampaignDailyTickScheduler {
     private static final Logger LOGGER = LoggerFactory.getLogger(CampaignDailyTickScheduler.class);
 
     /**
-     * Service drawing the day's challenge.
+     * Service running the tick, shared with the administrative route that triggers it by hand.
      */
-    private final WeeklyChallengeSelectionService selectionService;
-
-    /**
-     * Service giving the day's challenge its progress rows, and the ranking its points.
-     */
-    private final ChallengeRecalculationService recalculationService;
-
-    /**
-     * Service starting and closing campaigns.
-     */
-    private final CampaignLifecycleService lifecycleService;
-
-    /**
-     * Service replaying the campaign in progress.
-     */
-    private final CampaignReplayService replayService;
-
-    /**
-     * Calendar resolving the day being opened.
-     */
-    private final WeekCalendar weekCalendar;
+    private final DailyTickService dailyTickService;
 
     /**
      * Creates the campaign daily tick scheduler.
      *
-     * @param selectionService     challenge selection service
-     * @param recalculationService challenge recalculation service
-     * @param lifecycleService     campaign lifecycle service
-     * @param replayService        campaign replay service
-     * @param weekCalendar         week calendar
+     * @param dailyTickService daily tick service
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
         justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
     )
-    public CampaignDailyTickScheduler(
-        WeeklyChallengeSelectionService selectionService,
-        ChallengeRecalculationService recalculationService,
-        CampaignLifecycleService lifecycleService,
-        CampaignReplayService replayService,
-        WeekCalendar weekCalendar
-    ) {
-        this.selectionService = selectionService;
-        this.recalculationService = recalculationService;
-        this.lifecycleService = lifecycleService;
-        this.replayService = replayService;
-        this.weekCalendar = weekCalendar;
+    public CampaignDailyTickScheduler(DailyTickService dailyTickService) {
+        this.dailyTickService = dailyTickService;
     }
 
     /**
-     * Draws the day's challenge, evaluates it, starts a due campaign and replays it.
-     *
-     * <p>The recalculation sits between the draw and the replay: the challenge drawn a second ago
-     * has no progress row until it runs, and the replay reads those rows for the week's rescues.
+     * Runs the tick, swallowing any failure so a bad night never kills the schedule.
      */
     @Scheduled(
         cron = "${app.scheduling.campaign-tick-cron}",
@@ -108,10 +67,7 @@ public class CampaignDailyTickScheduler {
         LOGGER.info("Scheduled campaign tick started");
 
         try {
-            selectionService.selectDailyChallenge(weekCalendar.today());
-            recalculationService.recalculateCurrentWeekProgress();
-            lifecycleService.startIfDue();
-            replayService.replayRunningCampaign();
+            dailyTickService.run();
             LOGGER.info("Scheduled campaign tick completed");
         } catch (RuntimeException exception) {
             LOGGER.error("Scheduled campaign tick failed unexpectedly", exception);

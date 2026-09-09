@@ -19,6 +19,7 @@ import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContex
 import io.github.thomashtn.valoquests.challenge.calculator.RatioChallengeProgressCalculator;
 import io.github.thomashtn.valoquests.challenge.calculator.SumChallengeProgressCalculator;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
@@ -28,7 +29,6 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGroupBy;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.match.service.MatchEligibility;
@@ -197,7 +197,7 @@ class ChallengeCatalogueCompatibilityTest {
             .hasSize(WEEKLY_PER_DIFFICULTY * ChallengeDifficulty.values().length + DAILY_POOL_SIZE);
 
         for (Challenge challenge : challenges) {
-            for (SquadLevel level : SquadLevel.values()) {
+            for (CampaignDifficulty level : CampaignDifficulty.values()) {
                 assertThatCode(() -> calculate(challenge, level))
                     .as("compatibility of %s at %s", challenge.getCode(), level)
                     .doesNotThrowAnyException();
@@ -263,9 +263,9 @@ class ChallengeCatalogueCompatibilityTest {
     void shouldNeverWriteAnExpertGridBelowItsReference() throws IOException {
         for (Challenge challenge : loadChallenges()) {
             List<ChallengeCondition> reference =
-                definitionParser.parse(challenge, SquadLevel.REFERENCE).conditions();
+                definitionParser.parse(challenge, CampaignDifficulty.AMATEUR).conditions();
             List<ChallengeCondition> expert =
-                definitionParser.parse(challenge, SquadLevel.EXPERT).conditions();
+                definitionParser.parse(challenge, CampaignDifficulty.PRO).conditions();
 
             assertThat(expert)
                 .as("%s declares the same conditions at both levels", challenge.getCode())
@@ -443,9 +443,9 @@ class ChallengeCatalogueCompatibilityTest {
      */
     private List<ChallengeCondition> everyCondition(Challenge challenge) {
         List<ChallengeCondition> conditions =
-            new ArrayList<>(definitionParser.parse(challenge, SquadLevel.REFERENCE).conditions());
+            new ArrayList<>(definitionParser.parse(challenge, CampaignDifficulty.AMATEUR).conditions());
 
-        conditions.addAll(definitionParser.parse(challenge, SquadLevel.EXPERT).conditions());
+        conditions.addAll(definitionParser.parse(challenge, CampaignDifficulty.PRO).conditions());
 
         return conditions;
     }
@@ -457,7 +457,7 @@ class ChallengeCatalogueCompatibilityTest {
      * @param level     squad level whose grid is read
      * @return normalized calculation result
      */
-    private ChallengeProgressResult calculate(Challenge challenge, SquadLevel level) {
+    private ChallengeProgressResult calculate(Challenge challenge, CampaignDifficulty level) {
         ChallengeDefinition definition = definitionParser.parse(challenge, level);
 
         return calculatorRegistry.getCalculator(definition.progressMode())

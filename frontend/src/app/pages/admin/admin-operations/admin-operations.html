@@ -73,11 +73,10 @@
     }
   </div>
 
-  <!-- The operations, split in two rather than laid out as one undifferentiated grid.
-       Three of them are the ordinary gestures of a week; the others rewrite history that is
-       already written, and an operator scanning a flat grid had nothing telling them which
-       was which — the two groups sat interleaved, "recalculer la progression" between "synchroniser
-       un joueur" and "ouvrir la semaine". -->
+  <!-- The operations, split in two rather than laid out as one undifferentiated grid: the routine
+       gestures of a week on one side, the commands that rewrite history already written on the
+       other. Each one is the whole scheduled job it stands for, never a fragment of it: the
+       fragments duplicated what the synchronization and the tick already run on their own. -->
   <app-section-label [label]="'admin.operations.groups.routine' | translate" class="mt-12" />
   <p class="-mt-1 text-prose text-text-secondary">
     {{ 'admin.operations.groups.routineHint' | translate }}
@@ -110,19 +109,11 @@
     </app-admin-action-card>
 
     <app-admin-action-card
-      (triggered)="selectCurrentWeek()"
-      [actionLabel]="'admin.operations.weekSelection.action' | translate"
-      [description]="'admin.operations.weekSelection.description' | translate"
-      [heading]="'admin.operations.weekSelection.heading' | translate"
-      [state]="weekSelectionState()"
-    />
-
-    <app-admin-action-card
-      (triggered)="selectDailyChallenge()"
-      [actionLabel]="'admin.operations.dailySelection.action' | translate"
-      [description]="'admin.operations.dailySelection.description' | translate"
-      [heading]="'admin.operations.dailySelection.heading' | translate"
-      [state]="dailySelectionState()"
+      (triggered)="runDailyTick()"
+      [actionLabel]="'admin.operations.dailyTick.action' | translate"
+      [description]="'admin.operations.dailyTick.description' | translate"
+      [heading]="'admin.operations.dailyTick.heading' | translate"
+      [state]="dailyTickState()"
     />
   </div>
 
@@ -133,27 +124,11 @@
 
   <div class="mt-2 grid gap-6 lg:grid-cols-2">
     <app-admin-action-card
-      (triggered)="recalculateProgress()"
-      [actionLabel]="'admin.operations.recalculate.action' | translate"
-      [description]="'admin.operations.recalculate.description' | translate"
-      [heading]="'admin.operations.recalculate.heading' | translate"
-      [state]="recalculateState()"
-    />
-
-    <app-admin-action-card
       (triggered)="runWeeklyRollover()"
       [actionLabel]="'admin.operations.rollover.action' | translate"
       [description]="'admin.operations.rollover.description' | translate"
       [heading]="'admin.operations.rollover.heading' | translate"
       [state]="rolloverState()"
-    />
-
-    <app-admin-action-card
-      (triggered)="replayCampaign()"
-      [actionLabel]="'admin.operations.campaignReplay.action' | translate"
-      [description]="'admin.operations.campaignReplay.description' | translate"
-      [heading]="'admin.operations.campaignReplay.heading' | translate"
-      [state]="campaignReplayState()"
     />
 
     <!-- The only command here that destroys rather than rebuilds, hence the danger tones and the

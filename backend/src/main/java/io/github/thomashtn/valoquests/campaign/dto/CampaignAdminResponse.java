@@ -1,7 +1,7 @@
 package io.github.thomashtn.valoquests.campaign.dto;
 
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
-import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import java.time.LocalDate;
 
 /**
@@ -14,7 +14,7 @@ import java.time.LocalDate;
  * @param lastWeekStart  Monday its tenth week starts on
  * @param stoppedOn      day it was cut short, {@code null} otherwise
  * @param reference      squad's weekly reference per player
- * @param tier           bracket the reference falls in
+ * @param difficulty     difficulty the campaign is played at
  * @param rosterSize     operators frozen into it
  */
 public record CampaignAdminResponse(
@@ -25,7 +25,7 @@ public record CampaignAdminResponse(
     LocalDate lastWeekStart,
     LocalDate stoppedOn,
     int reference,
-    CampaignTier tier,
+    CampaignDifficulty difficulty,
     int rosterSize
 ) {
 }

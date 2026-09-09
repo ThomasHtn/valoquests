@@ -3,9 +3,9 @@ package io.github.thomashtn.valoquests.challenge.parser;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Component;
@@ -63,22 +63,22 @@ public class JacksonChallengeDefinitionParser
             "Challenge must not be null."
         );
 
-        return parse(challenge, SquadLevel.REFERENCE);
+        return parse(challenge, CampaignDifficulty.AMATEUR);
     }
 
     /**
-     * Parses and validates one persisted challenge definition at one squad level.
+     * Parses and validates one persisted challenge definition at one difficulty.
      *
-     * @param challenge challenge to parse
-     * @param level     squad level whose grid is read
+     * @param challenge  challenge to parse
+     * @param difficulty difficulty whose grid is read
      * @return typed challenge definition
      */
     @Override
-    public ChallengeDefinition parse(Challenge challenge, SquadLevel level) {
+    public ChallengeDefinition parse(Challenge challenge, CampaignDifficulty difficulty) {
         Objects.requireNonNull(challenge, "Challenge must not be null.");
-        Objects.requireNonNull(level, "Squad level must not be null.");
+        Objects.requireNonNull(difficulty, "Difficulty must not be null.");
 
-        return parseJson(challenge, challenge.conditionsFor(level));
+        return parseJson(challenge, challenge.conditionsFor(difficulty));
     }
 
     /**

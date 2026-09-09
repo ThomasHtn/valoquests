@@ -11,7 +11,6 @@ import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
 import io.github.thomashtn.valoquests.campaign.entity.Guardian;
 import io.github.thomashtn.valoquests.campaign.model.CampaignSchedule;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
-import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.model.CampaignWeekShape;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignDailySnapshotRepository;
@@ -21,7 +20,7 @@ import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
 import io.github.thomashtn.valoquests.campaign.repository.GuardianRepository;
 import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
@@ -77,7 +76,7 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Reference the campaign is calibrated at.
      */
-    private static final int REFERENCE = 5_300;
+    private static final int REFERENCE = CampaignDifficulty.AMATEUR.reference();
 
     @Autowired
     private CampaignReplayService replayService;
@@ -234,11 +233,7 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
         opened.setFirstWeekStart(FIRST_WEEK_START);
         opened.setLastWeekStart(FIRST_WEEK_START.plusWeeks(CampaignSchedule.WEEK_COUNT - 1L));
         opened.setRosterSize(1);
-        opened.setReference(REFERENCE);
-        opened.setTier(CampaignTier.NORMAL);
-        opened.setSquadLevel(SquadLevel.REFERENCE);
-        opened.setCalibrationWindowMonths(9);
-        opened.setCalibrationFirstDay(FIRST_WEEK_START.minusMonths(9));
+        opened.setDifficulty(CampaignDifficulty.AMATEUR);
         opened = campaignRepository.save(opened);
 
         CampaignPlayer member = new CampaignPlayer();

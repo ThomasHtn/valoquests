@@ -92,7 +92,7 @@ public class ChallengeSelectionFactory {
     ) {
         ChallengeCadence cadence = day == null ? ChallengeCadence.WEEKLY : ChallengeCadence.DAILY;
         ChallengeCalibration calibration = calibrationSource.forWeek(weekStart);
-        ChallengeDefinition played = definitionParser.parse(challenge, calibration.level());
+        ChallengeDefinition played = definitionParser.parse(challenge, calibration.difficulty());
 
         WeeklyChallenge selection = new WeeklyChallenge();
         selection.setWeekStart(weekStart);

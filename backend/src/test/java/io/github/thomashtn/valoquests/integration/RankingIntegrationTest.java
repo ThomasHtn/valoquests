@@ -108,10 +108,10 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         List<WeeklyPlayerScore> scores = loadScores();
 
         assertThat(scores).hasSize(3);
-        // bravo: HARD 14 alone. alpha: EASY 4 + NORMAL 6 = 10. charlie validated nothing, and
+        // bravo: HARD 21 alone. alpha: EASY 5 + NORMAL 9 = 14. charlie validated nothing, and
         // at zero points holds no position at all.
-        assertScore(scores.get(0), bravo, 14, 1, 0, 1, null);
-        assertScore(scores.get(1), alpha, 10, 2, 0, 2, null);
+        assertScore(scores.get(0), bravo, 21, 1, 0, 1, null);
+        assertScore(scores.get(1), alpha, 14, 2, 0, 2, null);
         assertScore(scores.get(2), charlie, 0, 0, 0, null, null);
     }
 
@@ -135,11 +135,10 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         List<WeeklyPlayerScore> scores = loadScores();
 
         assertThat(scores).hasSize(2);
-        // The daily weighs 1.2 against EASY's 1.0, but both round to 4 wounded at the 3 500 floor:
-        // equal points share the first place, alpha reads first on identifier, and the two are
-        // still counted apart.
-        assertScore(scores.get(0), alpha, 4, 0, 1, 1, null);
-        assertScore(scores.get(1), bravo, 4, 1, 0, 1, null);
+        // The daily weighs 1.2 against EASY's 1.0, so at the amateur reference it pays 6 against 5
+        // and takes the first place on its own. Both are counted apart all the same.
+        assertScore(scores.get(0), alpha, 6, 0, 1, 1, null);
+        assertScore(scores.get(1), bravo, 5, 1, 0, 2, null);
     }
 
     /**
@@ -178,11 +177,11 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         List<WeeklyPlayerScore> scores = loadScores();
 
         assertThat(scores).hasSize(3);
-        // First pass: alpha (MEDIUM 9) > bravo (NORMAL 6) > charlie (EASY 4), which seeds the
-        // previous positions. Second pass: bravo also validates MEDIUM (6 + 9 = 15) while alpha
+        // First pass: alpha (MEDIUM 14) > bravo (NORMAL 9) > charlie (EASY 5), which seeds the
+        // previous positions. Second pass: bravo also validates MEDIUM (9 + 14 = 23) while alpha
         // loses hers and, at zero, her position.
-        assertScore(scores.get(0), bravo, 15, 2, 0, 1, 2);
-        assertScore(scores.get(1), charlie, 4, 1, 0, 2, 3);
+        assertScore(scores.get(0), bravo, 23, 2, 0, 1, 2);
+        assertScore(scores.get(1), charlie, 5, 1, 0, 2, 3);
         assertScore(scores.get(2), alpha, 0, 0, 0, null, 1);
     }
 
@@ -197,20 +196,18 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         Player bravo = createPlayer("ranking-tie-bravo", "Bravo");
         Player charlie = createPlayer("ranking-tie-charlie", "Charlie");
 
-        // bravo reaches 14 through EASY 4 + EASY 4 + NORMAL 6; alpha and charlie each reach 14
-        // through one HARD. Nobody dealt damage, so the three share the first place; rows read back
-        // in identifier order once positions tie.
+        // bravo reaches 14 through EASY 5 + NORMAL 9; alpha and charlie each reach 14 through one
+        // MEDIUM. Nobody dealt damage, so the three share the first place; rows read back in
+        // identifier order once positions tie.
         WeeklyChallenge bravoEasy = createWeeklyChallenge("RANKING_TIE_BRAVO_EASY", ChallengeDifficulty.EASY);
-        WeeklyChallenge bravoOtherEasy = createWeeklyChallenge("RANKING_TIE_BRAVO_EASY_2", ChallengeDifficulty.EASY);
         WeeklyChallenge bravoNormal = createWeeklyChallenge("RANKING_TIE_BRAVO_NORMAL", ChallengeDifficulty.NORMAL);
-        WeeklyChallenge alphaHard = createWeeklyChallenge("RANKING_TIE_ALPHA_HARD", ChallengeDifficulty.HARD);
-        WeeklyChallenge charlieHard = createWeeklyChallenge("RANKING_TIE_CHARLIE_HARD", ChallengeDifficulty.HARD);
+        WeeklyChallenge alphaMedium = createWeeklyChallenge("RANKING_TIE_ALPHA_MEDIUM", ChallengeDifficulty.MEDIUM);
+        WeeklyChallenge charlieMedium = createWeeklyChallenge("RANKING_TIE_CHARLIE_MEDIUM", ChallengeDifficulty.MEDIUM);
 
-        createProgress(alpha, alphaHard, true);
+        createProgress(alpha, alphaMedium, true);
         createProgress(bravo, bravoEasy, true);
-        createProgress(bravo, bravoOtherEasy, true);
         createProgress(bravo, bravoNormal, true);
-        createProgress(charlie, charlieHard, true);
+        createProgress(charlie, charlieMedium, true);
 
         rankingRecalculationService.recalculateWeek(WEEK_START);
 
@@ -218,7 +215,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
 
         assertThat(scores).hasSize(3);
         assertScore(scores.get(0), alpha, 14, 1, 0, 1, null);
-        assertScore(scores.get(1), bravo, 14, 3, 0, 1, null);
+        assertScore(scores.get(1), bravo, 14, 2, 0, 1, null);
         assertScore(scores.get(2), charlie, 14, 1, 0, 1, null);
     }
 
@@ -255,8 +252,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
             assertThat(score.getPreviousPosition()).isEqualTo(score.getPosition());
             assertThat(score.getCalculatedAt()).isEqualTo(CALCULATION_TIME);
         });
-        assertScore(secondScores.get(0), alpha, 6, 1, 0, 1, 1);
-        assertScore(secondScores.get(1), bravo, 4, 1, 0, 2, 2);
+        assertScore(secondScores.get(0), alpha, 9, 1, 0, 1, 1);
+        assertScore(secondScores.get(1), bravo, 5, 1, 0, 2, 2);
     }
 
     /**
@@ -296,7 +293,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
             .findFirst()
             .orElseThrow();
 
-        assertScore(activeScore, activePlayer, 4, 1, 0, 1, 1);
+        assertScore(activeScore, activePlayer, 5, 1, 0, 1, 1);
         assertThat(inactiveScore.getChallengePoints()).isZero();
         assertThat(inactiveScore.getTotalPoints()).isZero();
         assertThat(inactiveScore.getCompletedChallenges()).isEqualTo(1);
@@ -334,7 +331,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(proScore.getTotalPoints()).isZero();
         assertThat(proScore.getCompletedChallenges()).isEqualTo(1);
         assertThat(proScore.getPosition()).isNull();
-        assertScore(regularScore, regular, 4, 1, 0, 1, null);
+        assertScore(regularScore, regular, 5, 1, 0, 1, null);
     }
 
     /**

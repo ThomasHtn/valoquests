@@ -75,7 +75,7 @@ public class CampaignChallengeReader {
 
             WeeklyChallenge selection = progress.getWeeklyChallenge();
             int weekIndex = campaign.weekIndexOf(selection.getWeekStart());
-            int survivors = survivorsOf(selection, campaign.getReference(), weekIndex);
+            int survivors = survivorsOf(selection, campaign.reference(), weekIndex);
 
             totals.merge(weekIndex, survivors, Integer::sum);
             survivorsByPlayer.computeIfAbsent(weekIndex, ignored -> new HashMap<>())

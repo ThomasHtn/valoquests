@@ -85,10 +85,11 @@
       <p class="note note--tier">
         <svg aria-hidden="true" class="size-6" lucideGauge></svg>
         <span class="note-title">{{
-          'campaign.law.noteTier' | translate: { tier: 'common.tier.' + notes.tier | translate }
+          'campaign.law.noteDifficulty'
+            | translate: { difficulty: 'common.difficulty.' + notes.difficulty | translate }
         }}</span>
         <span class="note-text">{{
-          'campaign.law.noteTierText' | translate: { reference: format(notes.reference) }
+          'campaign.law.noteDifficultyText' | translate: { reference: format(notes.reference) }
         }}</span>
       </p>
       <p class="note note--grow">

@@ -4,7 +4,6 @@ import static io.github.thomashtn.valoquests.shared.config.OpenApiConfig.ADMIN_K
 
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -16,7 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Exposes the protected challenge-progress maintenance operation.
+ * Exposes the protected challenge-pack maintenance operation.
  */
 @RestController
 @RequestMapping("/api/admin/challenges")
@@ -35,45 +34,15 @@ public class ChallengeAdminController {
     private final WeeklyChallengeSelectionService selectionService;
 
     /**
-     * Calendar resolving the current day.
-     */
-    private final WeekCalendar weekCalendar;
-
-    /**
      * @param recalculationService challenge progress recalculation service
      * @param selectionService     challenge selection service
-     * @param weekCalendar         calendar resolving the current day
      */
     public ChallengeAdminController(
         ChallengeRecalculationService recalculationService,
-        WeeklyChallengeSelectionService selectionService,
-        WeekCalendar weekCalendar
+        WeeklyChallengeSelectionService selectionService
     ) {
         this.recalculationService = recalculationService;
         this.selectionService = selectionService;
-        this.weekCalendar = weekCalendar;
-    }
-
-    /**
-     * Recalculates progress exclusively from matches already stored in PostgreSQL.
-     */
-    @PostMapping("/progress/recalculation")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(
-        summary = "Recalculate current challenge progress",
-        description = """
-            Rebuilds the active-week challenge progress from matches already stored in PostgreSQL.
-            This operation does not call the Henrik API and refreshes the weekly ranking after the
-            progress calculation completes.
-
-            Synchronization already runs this recalculation whenever it imports a match, so this
-            route is a repair tool: it is what replays the calculation after a challenge definition
-            changed, or after a recalculation failed at the end of a synchronization.
-            """
-    )
-    @ApiResponse(responseCode = "204", description = "Progress and ranking recalculated successfully.")
-    public void recalculateChallengeProgress() {
-        recalculationService.recalculateCurrentWeekProgress();
     }
 
     /**
@@ -111,30 +80,6 @@ public class ChallengeAdminController {
     )
     public void redrawCurrentWeekChallenges() {
         selectionService.redrawCurrentWeekChallenges();
-        recalculationService.recalculateCurrentWeekProgress();
-    }
-
-    /**
-     * Draws today's daily challenge if the day has none yet, then rebuilds progress against it.
-     */
-    @PostMapping("/daily/selection")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(
-        summary = "Draw today's daily challenge",
-        description = """
-            Draws the daily challenge of the current day from the daily pool when the day has none
-            yet, then rebuilds the week's progress and ranking. Idempotent: a day keeps the
-            challenge it was given.
-
-            The scheduled synchronization draws it on its own within half an hour of midnight; this
-            route is for the operator who does not want to wait, or whose scheduler did not run.
-            """
-    )
-    @ApiResponse(responseCode = "204", description = "Today's challenge is drawn and progress rebuilt.")
-    @ApiResponse(responseCode = "401", description = "X-Admin-Key header is missing.")
-    @ApiResponse(responseCode = "403", description = "X-Admin-Key value is invalid.")
-    public void drawDailyChallenge() {
-        selectionService.selectDailyChallenge(weekCalendar.today());
         recalculationService.recalculateCurrentWeekProgress();
     }
 }

@@ -112,12 +112,12 @@ export class Challenges {
               date: this.dayMonth(current.weekStart),
             })
           : this.translation.translate('challenges.title');
-    const tier = campaign?.tier
-      ? this.translation.translate('challenges.header.tier', {
-          tier: this.translation.translate(`common.tier.${campaign.tier}`),
+    const difficulty = campaign?.difficulty
+      ? this.translation.translate('challenges.header.difficulty', {
+          difficulty: this.translation.translate(`common.difficulty.${campaign.difficulty}`),
         })
       : '';
-    return tier ? `${week} · ${tier}` : week;
+    return difficulty ? `${week} · ${difficulty}` : week;
   });
 
   /**

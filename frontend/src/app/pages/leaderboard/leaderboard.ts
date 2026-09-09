@@ -237,7 +237,7 @@ export class Leaderboard {
   protected readonly rescueActive = computed(() => this.board()?.weekIndex != null);
 
   /**
-   * The week, then the campaign's tier when the week belongs to one.
+   * The week, then the campaign's difficulty when the week belongs to one.
    */
   protected readonly headerEyebrow = computed(() => {
     const board = this.board();
@@ -254,13 +254,13 @@ export class Leaderboard {
             weeks: CAMPAIGN_WEEK_COUNT,
           })
         : this.translation.translate('leaderboard.header.outsideCampaign');
-    const tier =
-      board.weekIndex !== null && campaign?.tier
-        ? this.translation.translate('leaderboard.header.tier', {
-            tier: this.translation.translate(`common.tier.${campaign.tier}`),
+    const difficulty =
+      board.weekIndex !== null && campaign?.difficulty
+        ? this.translation.translate('leaderboard.header.difficulty', {
+            difficulty: this.translation.translate(`common.difficulty.${campaign.difficulty}`),
           })
         : '';
-    return tier ? `${week} · ${tier}` : week;
+    return difficulty ? `${week} · ${difficulty}` : week;
   });
 
   /**

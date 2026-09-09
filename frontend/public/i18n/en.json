@@ -14,7 +14,6 @@
       "live": {
         "number": "Campaign {{number}}",
         "startsOn": "Starts on {{date}}. The roster and the reference are already frozen; if something is wrong, delete the campaign and open it again.",
-        "tier": "Tier",
         "reference": "Reference {{reference}}",
         "roster": "Operators",
         "frozen": "Roster frozen",
@@ -23,59 +22,26 @@
         "daysLeft": {
           "one": "{{count}} day left",
           "other": "{{count}} days left"
-        }
-      },
-      "calibration": {
-        "label": "Calibration",
-        "heading": "What a campaign opened today would be given",
-        "reload": "Recompute",
-        "loading": "Computing the calibration…",
-        "error": "Could not compute the calibration.",
-        "reference": "Reference",
-        "tier": "Tier",
-        "level": "Level",
-        "window": "Window",
-        "months": {
-          "one": "{{count}} month",
-          "other": "{{count}} months"
         },
-        "since": "since {{date}}",
-        "uncovered": {
-          "one": "{{count}} operator is not covered by their history: the window was shrunk for everyone. Import the history before opening.",
-          "other": "{{count}} operators are not covered by their history: the window was shrunk for everyone. Import the history before opening."
-        },
-        "columns": {
-          "operator": "Operator",
-          "weeklyAverage": "Weekly average",
-          "weeks": "Weeks",
-          "earliest": "First match",
-          "coverage": "Coverage"
-        },
-        "covered": "Covered",
-        "notCovered": "Not covered",
-        "beginner": "Beginner"
+        "difficulty": "Difficulty"
       },
       "commandsLabel": "Commands",
-      "backfill": {
-        "heading": "Import the history",
-        "description": "Walks nine months of matches back for every active operator, in the background, so the calibration is measured on the whole window. Thousands of calls under the Riot rate limit: follow it in the synchronization history.",
-        "action": "Import",
-        "accepted": "Import started. Follow its progress in the operations."
-      },
       "open": {
         "heading": "Open the campaign",
-        "description": "Freezes the active roster, computes the reference and draws the ten guardians. The campaign starts the following Monday and runs ten weeks. Refused while a campaign is opened or running.",
+        "description": "Freezes the active roster and draws the ten guardians. Pick the difficulty, which decides the size of the guardians, the groups of wounded and the challenge targets, then the starting Monday. Refused while a campaign is opened or running.",
         "action": "Open",
         "confirm": "Open the campaign",
-        "confirmBody": "The roster and the reference are frozen at this instant and never recomputed. Check the calibration first: it decides the size of the ten guardians.",
-        "done": "Campaign {{number}} opened, starting on {{date}}."
-      },
-      "recalibrate": {
-        "heading": "Recalibrate the campaign",
-        "action": "Recalibrate",
-        "confirm": "Recalibrate",
-        "confirmBody": "The frozen roster is measured again over the nine-month window, then the guardian and the group of every week not settled yet are resized and the campaign is replayed. Settled weeks keep their guardian. Run the history import first, and wait for it to finish.",
-        "done": "Campaign recalibrated, reference {{reference}}."
+        "confirmBody": {
+          "CURRENT_WEEK": "The campaign starts on the Monday of the week in progress: it is running immediately and the days already played are rebuilt from the imported matches. The difficulty is frozen at this instant and can never be changed.",
+          "NEXT_WEEK": "The campaign starts on the following Monday. The difficulty is frozen at this instant and can never be changed: it decides the size of the ten guardians."
+        },
+        "done": "Campaign {{number}} opened, starting on {{date}}.",
+        "startLabel": "Start",
+        "startWeek": {
+          "CURRENT_WEEK": "Current week",
+          "NEXT_WEEK": "Next week"
+        },
+        "difficultyLabel": "Difficulty"
       },
       "stop": {
         "heading": "Stop the campaign",
@@ -116,9 +82,9 @@
       "failures": "Failures",
       "groups": {
         "repair": "Repair",
-        "repairHint": "These replay history that is already written. Run them when a figure is wrong, not as part of an ordinary week.",
+        "repairHint": "These rewrite history that is already written. Run them when a figure is wrong, not as part of an ordinary week.",
         "routine": "Routine",
-        "routineHint": "The ordinary gestures of a week, with no retroactive effect."
+        "routineHint": "The ordinary gestures of a day. Each one replays a whole scheduled job and is safe to run twice: every step is idempotent."
       },
       "heading": "Operations",
       "history": {
@@ -147,12 +113,6 @@
       "lastRun": "Latest synchronization",
       "matchesImported": "Matches imported",
       "playersProcessed": "Operators processed",
-      "recalculate": {
-        "heading": "Recalculate progress",
-        "description": "Rebuilds this week's challenge progress and the ranking from the matches already stored. Never calls the Riot API.",
-        "action": "Recalculate",
-        "done": "Progress and ranking recalculated."
-      },
       "redraw": {
         "heading": "Redraw the challenges",
         "description": "Throws away the current week's five challenges, draws five new ones from the catalogue as it now stands, then rebuilds progress and ranking. Use it when the draw itself became wrong: a challenge disabled or removed from the catalogue after the week opened.",
@@ -193,25 +153,13 @@
         "placeholder": "Pick an operator",
         "noneSelected": "Pick an operator first."
       },
-      "title": "Operations",
-      "weekSelection": {
-        "heading": "Open the week",
-        "description": "Draws the current week's five missing challenges and the daily one, exactly as Monday's rollover does. Does nothing when the week is already set up.",
-        "action": "Run the selection",
-        "done": "The current week is fully set up."
+      "dailyTick": {
+        "heading": "Run the daily tick",
+        "description": "Replays the whole midnight tick: draws the day's challenge, recalculates progress and the ranking, starts a campaign whose Monday has come and replays the campaign. Does nothing when everything is already up to date.",
+        "action": "Run the tick",
+        "done": "Daily tick completed."
       },
-      "campaignReplay": {
-        "heading": "Replay the campaign",
-        "description": "Replays the running campaign from its first day, from the matches and challenges already stored. Safe: the base is never advanced incrementally, it is always recomputed in full.",
-        "action": "Replay",
-        "done": "Campaign replayed."
-      },
-      "dailySelection": {
-        "heading": "Draw the daily challenge",
-        "description": "Draws today's challenge if the midnight tick missed it, from the pool of 21 with no repeat over 21 days. Does nothing when it is already drawn.",
-        "action": "Draw",
-        "done": "Today's challenge is in place."
-      }
+      "title": "Operations"
     },
     "players": {
       "activate": "Activate",
@@ -302,7 +250,7 @@
       "heading": "Ten planets, ten weeks",
       "eyebrow": "Campaign {{number}}",
       "noCampaign": "Campaign",
-      "tier": "{{tier}} tier"
+      "difficulty": "Difficulty {{difficulty}}"
     },
     "state": {
       "loading": "Loading the campaign…",
@@ -395,8 +343,8 @@
       "out": "Wounded rescued",
       "outPay": "What the extraction would bring back on Sunday night, as things stand",
       "outRate": "rescued through challenges, taken from the same group",
-      "noteTier": "{{tier}} tier",
-      "noteTierText": "Guardians and groups of wounded are sized on the squad's real level: its reference for this campaign is {{reference}} damage per week per operator.",
+      "noteDifficulty": "Difficulty {{difficulty}}",
+      "noteDifficultyText": "Guardians and groups of wounded are sized on the difficulty picked at opening: this campaign's reference is {{reference}} damage a week per operator.",
       "noteGrow": "Ever larger groups",
       "noteGrowText": "Every week, the group of wounded grows by 4%. The tenth planet's will be 36% larger than the first. The base, more populated, eats a little more every night.",
       "noteLoss": "When the guardian holds",
@@ -519,7 +467,7 @@
       "heading": "The week's challenges",
       "week": "Week {{week}} of {{weeks}}",
       "weekOf": "Week of {{date}}",
-      "tier": "{{tier}} tier"
+      "difficulty": "Difficulty {{difficulty}}"
     },
     "state": {
       "loading": "Loading the challenges…",
@@ -634,21 +582,12 @@
       "PLAY_DAY": "Days played"
     },
     "difficulty": {
-      "EASY": "Easy",
-      "NORMAL": "Normal",
-      "MEDIUM": "Medium",
-      "HARD": "Hard",
-      "VERY_HARD": "Very hard"
+      "AMATEUR": "Amateur",
+      "PRO": "Pro"
     },
     "cadence": {
       "WEEKLY": "Weekly",
       "DAILY": "Daily"
-    },
-    "tier": {
-      "AMATEUR": "Amateur",
-      "NORMAL": "Normal",
-      "CONFIRMED": "Confirmed",
-      "ELITE": "Elite"
     },
     "guardianCategory": {
       "MINOR": "Minor",
@@ -694,11 +633,6 @@
       "SKIRMISH": "Skirmish",
       "SWIFTPLAY": "Swiftplay",
       "ESCALATION": "Escalation"
-    },
-    "squadLevel": {
-      "REFERENCE": "Reference",
-      "EXPERT": "Expert",
-      "hint": "Decides which of the catalogue’s two grids the campaign plays."
     }
   },
   "landing": {
@@ -736,7 +670,7 @@
       "heading": "The week's leaderboard",
       "week": "Week {{week}} of {{weeks}}",
       "outsideCampaign": "Outside a campaign",
-      "tier": "{{tier}} tier"
+      "difficulty": "Difficulty {{difficulty}}"
     },
     "state": {
       "loading": "Loading the leaderboard…",
@@ -813,7 +747,7 @@
   "overview": {
     "title": "Overview",
     "header": {
-      "eyebrow": "Campaign {{number}} · {{tier}} tier",
+      "eyebrow": "Campaign {{number}} · Difficulty {{difficulty}}",
       "noCampaign": "No campaign",
       "heading": "Bring the wounded home from ten planets"
     },
@@ -1407,24 +1341,22 @@
         }
       },
       "calibration": {
-        "title": "The reference",
-        "statement": "Everything is cut to the squad's measure",
-        "description": "The reference is what an operator of the squad produces in a week, read from the frozen roster's history. Guardians, groups and challenges follow from it, *per active operator*: the game is the same at 2 as at 20. The resulting tier lets two squads of different levels compare their campaigns.",
-        "tierLabel": "Tier",
+        "title": "The difficulty",
+        "statement": "One dial, picked at opening",
+        "description": "The difficulty is picked by the administrator at launch and frozen for the ten weeks. It carries the *reference*, the number everything else is a multiple of: guardians, groups of wounded and challenge rewards, *per active operator*. The game plays the same at 2 as at 20. Nothing is derived from match history.",
         "referenceLabel": "Reference per operator",
-        "exampleLabel": "Per week, in practice",
+        "exampleLabel": "What it asks for",
         "examples": {
-          "AMATEUR": "4 Competitive and 3 quick ones",
-          "NORMAL": "7 Competitive and 9 quick ones",
-          "CONFIRMED": "16 Competitive and 25 quick ones",
-          "ELITE": "28 Competitive and 35 quick ones"
+          "AMATEUR": "A squad that plays regularly",
+          "PRO": "Twice the guardian, and the harder written targets"
         },
         "facts": {
-          "window": "A window of *nine months* of history, for each active operator. If one of them lacks nine months, it shrinks one month at a time, for everyone.",
-          "emptyWeeks": "*Weeks without a match count as zero*. An operator who plays little is a weak operator, and the reference has to reflect it.",
-          "floor": "A *floor of 2,000*, that is four Competitive and three quick matches a week. Below it, a guardian would fall in one evening.",
-          "once": "Computed *once*, at the opening, with the same multipliers as the campaign. A beginner with less than a month takes the squad's median."
-        }
+          "chosen": "*Picked at opening* by the administrator, never measured. Amateur or Pro, and it is frozen for the whole campaign.",
+          "perOperator": "The reference counts *per active operator*. A squad of two faces a guardian half the size of a squad of four's.",
+          "grid": "It also decides *which catalogue grid* is played: every challenge carries two written targets, one for Amateur and one for Pro.",
+          "once": "The *week's weight* applies on top: the first planet is worth 0.60 reference, the tenth 1.35."
+        },
+        "difficultyLabel": "Difficulty"
       },
       "challenges": {
         "title": "Challenges and ranking",
@@ -1514,7 +1446,7 @@
           },
           "calibrationWindow": {
             "label": "Calibration window",
-            "value": "9 months, shrunk one month at a time while an operator is not covered"
+            "value": "3 months, shrunk one month at a time while an operator is not covered"
           },
           "reference": {
             "label": "Reference",

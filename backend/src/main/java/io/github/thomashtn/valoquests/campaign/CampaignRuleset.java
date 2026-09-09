@@ -75,24 +75,9 @@ public class CampaignRuleset {
     public static final double GUARDIAN_LOSS_RATE = 0.35;
 
     /**
-     * Reference the challenge catalogue's base targets are written at.
-     */
-    public static final int CALIBRATION_ANCHOR_REFERENCE = 5_300;
-
-    /**
-     * Months of history a calibration reads, before any reduction.
-     */
-    public static final int CALIBRATION_WINDOW_MONTHS = 9;
-
-    /**
-     * Months of history under which a player is a beginner and takes the squad's median.
-     */
-    public static final int BEGINNER_HISTORY_MONTHS = 1;
-
-    /**
      * Returns the hit points of one week's guardian.
      *
-     * @param reference     squad's weekly reference per player
+     * @param reference     reference the campaign's difficulty carries
      * @param guardianWeight week's guardian weight
      * @param activePlayers players the campaign froze into its roster
      * @return hit points the guardian opens the week with

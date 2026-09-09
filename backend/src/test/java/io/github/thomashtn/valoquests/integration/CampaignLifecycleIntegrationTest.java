@@ -13,16 +13,16 @@ import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayer;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayerDay;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
 import io.github.thomashtn.valoquests.campaign.model.CampaignSchedule;
+import io.github.thomashtn.valoquests.campaign.model.CampaignStartWeek;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
-import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignDailySnapshotRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerDayRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
 import io.github.thomashtn.valoquests.campaign.service.CampaignLifecycleService;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeCalibrationSource;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
@@ -39,10 +39,6 @@ import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
-import io.github.thomashtn.valoquests.synchronization.entity.Synchronization;
-import io.github.thomashtn.valoquests.synchronization.model.SynchronizationStatus;
-import io.github.thomashtn.valoquests.synchronization.model.SynchronizationTrigger;
-import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationRepository;
 import io.github.thomashtn.valoquests.week.service.WeeklyRolloverService;
 import jakarta.persistence.EntityManager;
@@ -71,7 +67,7 @@ import org.springframework.transaction.annotation.Transactional;
  * started and settled by the production rollover, closed after its tenth Sunday, then a second one
  * stopped early and deleted.
  *
- * <p>What unit tests cannot vouch for: that the calibration, the roster freeze, the guardian draw,
+ * <p>What unit tests cannot vouch for: that the difficulty, the roster freeze, the guardian draw,
  * the replay and the closing agree on the same rows once every service runs against the migrated
  * schema, and that the campaign's own reference is the one the challenges are priced at.
  */
@@ -190,33 +186,12 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         bravo = createPlayer("lifecycle-bravo", "Bravo", PlayerStatus.ACTIVE);
         charlie = createPlayer("lifecycle-charlie", "Charlie", PlayerStatus.INACTIVE);
         season = createSeason();
-        // Alpha alone has history before the opening: the calibration covers them, Bravo is a beginner.
         playCompetitiveMatches(alpha, LocalDate.of(2026, 6, 2), 2);
-        // The window is short, and only a backfill that ran makes a short window acceptable.
-        recordCompletedBackfill();
-    }
-
-    private void recordCompletedBackfill() {
-        Synchronization backfill = new Synchronization();
-        backfill.setType(SynchronizationType.HISTORY_BACKFILL);
-        backfill.setTrigger(SynchronizationTrigger.MANUAL);
-        backfill.setStatus(SynchronizationStatus.COMPLETED);
-        backfill.setStartedAt(OPENING_TIME.minusSeconds(3_600));
-        backfill.setFinishedAt(OPENING_TIME.minusSeconds(60));
-        synchronizationRepository.save(backfill);
     }
 
     @Test
     @DisplayName("Opens a campaign on the active roster from the backoffice, once")
     void shouldOpenACampaignOnTheActiveRoster() throws Exception {
-        mockMvc.perform(get("/api/admin/campaigns/calibration").header("X-Admin-Key", ADMIN_KEY))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.reference").value(3_500))
-            .andExpect(jsonPath("$.tier").value("NORMAL"))
-            .andExpect(jsonPath("$.players.length()").value(2))
-            .andExpect(jsonPath("$.players[?(@.displayName == 'Alpha#TEST')].beginner").value(false))
-            .andExpect(jsonPath("$.players[?(@.displayName == 'Bravo#TEST')].beginner").value(true));
-
         mockMvc.perform(post("/api/admin/campaigns").header("X-Admin-Key", ADMIN_KEY))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.number").value(1))
@@ -229,8 +204,8 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
             .andExpect(status().isConflict());
 
         Campaign campaign = campaignRepository.findByStatusNot(CampaignStatus.CLOSED).orElseThrow();
-        assertThat(campaign.getReference()).isEqualTo(3_500);
-        assertThat(campaign.getTier()).isEqualTo(CampaignTier.NORMAL);
+        assertThat(campaign.getDifficulty()).isEqualTo(CampaignDifficulty.AMATEUR);
+        assertThat(campaign.reference()).isEqualTo(CampaignDifficulty.AMATEUR.reference());
         assertThat(campaign.getOpenedAt()).isEqualTo(OPENING_TIME);
 
         List<CampaignPlayer> roster = campaignPlayerRepository.findAllByCampaignIdOrderByPlayerIdAsc(campaign.getId());
@@ -259,7 +234,7 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     @Test
     @DisplayName("Starts, replays, settles and closes the campaign through the production rollover")
     void shouldRunTheCampaignFromItsFirstMondayToItsClosing() throws Exception {
-        Campaign campaign = lifecycleService.open(SquadLevel.REFERENCE);
+        Campaign campaign = lifecycleService.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.NEXT_WEEK);
 
         mutableClock.setInstant(START_TIME);
         weeklyRolloverService.rolloverIfNeeded();
@@ -272,14 +247,14 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         )).hasSize(5);
         assertThat(weeklyChallengeRepository.findByCadenceAndDay(ChallengeCadence.DAILY, FIRST_WEEK_START))
             .isPresent();
-        assertThat(calibrationSource.forWeek(FIRST_WEEK_START).reference()).isEqualTo(campaign.getReference());
+        assertThat(calibrationSource.forWeek(FIRST_WEEK_START).reference()).isEqualTo(campaign.reference());
         assertThat(calibrationSource.forWeek(FIRST_WEEK_START).weekIndex()).isEqualTo(1);
         assertThat(snapshotRepository.findAllByCampaignIdOrderByDayAsc(campaign.getId())).hasSize(1);
         assertThat(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(FIRST_WEEK_START)).hasSize(3);
 
         playCompetitiveMatches(alpha, FIRST_WEEK_START.plusDays(1), 3);
         mutableClock.setInstant(Instant.parse("2026-07-22T12:00:00Z"));
-        mockMvc.perform(post("/api/admin/campaigns/replay").header("X-Admin-Key", ADMIN_KEY))
+        mockMvc.perform(post("/api/admin/campaigns/tick").header("X-Admin-Key", ADMIN_KEY))
             .andExpect(status().isNoContent());
 
         assertThat(snapshotRepository.findAllByCampaignIdOrderByDayAsc(campaign.getId())).hasSize(3);
@@ -320,7 +295,7 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
 
         // Between two campaigns the challenges keep the last closed campaign's reference.
         assertThat(calibrationSource.forWeek(LocalDate.of(2026, 9, 28)).reference())
-            .isEqualTo(campaign.getReference());
+            .isEqualTo(campaign.reference());
 
         mockMvc.perform(get("/api/campaign"))
             .andExpect(status().isOk())
@@ -336,10 +311,10 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     @Test
     @DisplayName("Stops a campaign early and deletes it with everything it owns")
     void shouldStopAndDeleteACampaignFromTheBackoffice() throws Exception {
-        Campaign campaign = lifecycleService.open(SquadLevel.REFERENCE);
+        Campaign campaign = lifecycleService.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.NEXT_WEEK);
         mutableClock.setInstant(Instant.parse("2026-07-29T12:00:00Z"));
         lifecycleService.startIfDue();
-        mockMvc.perform(post("/api/admin/campaigns/replay").header("X-Admin-Key", ADMIN_KEY))
+        mockMvc.perform(post("/api/admin/campaigns/tick").header("X-Admin-Key", ADMIN_KEY))
             .andExpect(status().isNoContent());
         assertThat(snapshotRepository.findAllByCampaignIdOrderByDayAsc(campaign.getId())).hasSize(10);
 
@@ -351,7 +326,7 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         mockMvc.perform(post("/api/admin/campaigns/stop").header("X-Admin-Key", ADMIN_KEY))
             .andExpect(status().isConflict());
 
-        Campaign next = lifecycleService.open(SquadLevel.REFERENCE);
+        Campaign next = lifecycleService.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.NEXT_WEEK);
         assertThat(next.getNumber()).isEqualTo(2);
         assertThat(next.getFirstWeekStart()).isEqualTo(LocalDate.of(2026, 8, 3));
 

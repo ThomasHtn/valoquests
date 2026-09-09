@@ -1,4 +1,4 @@
-import { CampaignStatus, CampaignTier, SquadLevel } from '@core/campaign/campaign.model';
+import { CampaignDifficulty, CampaignStatus } from '@core/campaign/campaign.model';
 import { PlayerStatus } from '@core/players/player-summary.model';
 
 /**
@@ -390,91 +390,12 @@ export interface CampaignAdmin {
   readonly reference: number;
 
   /**
-   * Tier the squad was measured at.
+   * Difficulty the campaign is played at.
    */
-  readonly tier: CampaignTier;
+  readonly difficulty: CampaignDifficulty;
 
   /**
    * Players on the roster.
    */
   readonly rosterSize: number;
-}
-
-/**
- * One operator's share of the squad's calibration.
- *
- * Mirrors the backend `PlayerCalibration`.
- */
-export interface PlayerCalibration {
-  /**
-   * Internal identifier of the player.
-   */
-  readonly playerId: number;
-
-  /**
-   * Name shown across the application.
-   */
-  readonly displayName: string;
-
-  /**
-   * Average weekly output over the window, in guardian damage.
-   */
-  readonly weeklyAverage: number;
-
-  /**
-   * Weeks of history the calibration counted.
-   */
-  readonly weeksCounted: number;
-
-  /**
-   * First day a match is known for, as an ISO-8601 date, or `null` with no history at all.
-   */
-  readonly earliestMatchDay: string | null;
-
-  /**
-   * Whether the imported history reaches back to the start of the window.
-   */
-  readonly covered: boolean;
-
-  /**
-   * Whether the operator has under a month of history and takes the squad's median instead.
-   */
-  readonly beginner: boolean;
-}
-
-/**
- * The measure a campaign opened today would be given, from `GET /api/admin/campaigns/calibration`.
- *
- * Mirrors the backend `SquadCalibrationResponse`.
- */
-export interface SquadCalibration {
-  /**
-   * Reference figure the squad was calibrated on.
-   */
-  readonly reference: number;
-
-  /**
-   * Tier the squad was measured at.
-   */
-  readonly tier: CampaignTier;
-
-  /**
-   * Which of the catalogue's two grids the campaign would play.
-   */
-  readonly level: SquadLevel;
-
-  /**
-   * Months of history the calibration read.
-   */
-  readonly windowMonths: number;
-
-  /**
-   * First day of the window, as an ISO-8601 date (`YYYY-MM-DD`).
-   */
-  readonly firstDay: string;
-
-  /**
-   * One calibration line per player.
-   */
-  readonly players: readonly PlayerCalibration[];
 }

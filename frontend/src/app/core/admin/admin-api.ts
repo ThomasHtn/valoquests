@@ -1,8 +1,8 @@
 import { httpResource, HttpClient, HttpResourceRef } from '@angular/common/http';
-import { inject, signal, Service, Signal } from '@angular/core';
+import { inject, Service, Signal } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
 import { CampaignApi } from '@core/campaign/campaign-api';
-import { SquadLevel } from '@core/campaign/campaign.model';
+import { CampaignDifficulty, CampaignStartWeek } from '@core/campaign/campaign.model';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { PageResponse } from '@core/http/page-response.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
@@ -16,7 +16,6 @@ import {
   AdminPlayerStatus,
   AdminPlayerUpdateRequest,
   CampaignAdmin,
-  SquadCalibration,
   SynchronizationDetails,
   SynchronizationExecution,
 } from './admin.model';
@@ -82,22 +81,6 @@ export class AdminApi {
    */
   public readonly latestSynchronization = httpResource<SynchronizationExecution>(() =>
     this.session.isAuthenticated() ? API_ENDPOINTS.admin.latestSynchronization : undefined,
-  );
-
-  /**
-   * Level the calibration and the next opening are read at. Written by the backoffice.
-   */
-  public readonly level = signal<SquadLevel>('REFERENCE');
-
-  /**
-   * The measure a campaign opened today would be given. Gated on the session like
-   * {@link players}, and read again after every command since the roster or the imported history
-   * may have moved. Follows {@link level} so the panel and the opening always agree.
-   */
-  public readonly calibration = httpResource<SquadCalibration>(() =>
-    this.session.isAuthenticated()
-      ? { url: API_ENDPOINTS.admin.campaignCalibration, params: { level: this.level() } }
-      : undefined,
   );
 
   /**
@@ -183,15 +166,6 @@ export class AdminApi {
   }
 
   /**
-   * Rebuilds the current week's challenge progress and the weekly ranking.
-   *
-   * @returns A promise that resolves once the rebuild has completed.
-   */
-  public async recalculateProgress(): Promise<void> {
-    await this.mutate(this.http.post(API_ENDPOINTS.admin.challengeRecalculation, null));
-  }
-
-  /**
    * Throws away the current week's challenge pack, draws a new one, and rebuilds progress against
    * it.
    *
@@ -213,15 +187,6 @@ export class AdminApi {
   }
 
   /**
-   * Draws the current week's missing challenges and its boss encounter.
-   *
-   * @returns A promise that resolves once the week is fully set up.
-   */
-  public async selectCurrentWeek(): Promise<void> {
-    await this.mutate(this.http.post(API_ENDPOINTS.admin.currentWeekSelection, null));
-  }
-
-  /**
    * Runs the whole weekly rollover now: finalizes every past week left open, settles the boss
    * fights they never resolved, and opens the week in progress.
    *
@@ -232,21 +197,13 @@ export class AdminApi {
   }
 
   /**
-   * Draws today's daily challenge, for a morning the nightly tick missed.
+   * Runs the nightly tick now: the day's challenge, the week's progress and ranking, a due campaign
+   * started, and the campaign replayed from its first day.
    *
-   * @returns A promise that resolves once the draw is stored.
+   * @returns A promise that resolves once the tick has completed.
    */
-  public async selectDailyChallenge(): Promise<void> {
-    await this.mutate(this.http.post(API_ENDPOINTS.admin.dailyChallengeSelection, null));
-  }
-
-  /**
-   * Replays the running campaign from its first day.
-   *
-   * @returns A promise that resolves once the replay has completed.
-   */
-  public async replayCampaign(): Promise<void> {
-    await this.mutate(this.http.post(API_ENDPOINTS.admin.campaignReplay, null));
+  public async runDailyTick(): Promise<void> {
+    await this.mutate(this.http.post(API_ENDPOINTS.admin.campaignTick, null));
   }
 
   /**
@@ -312,34 +269,19 @@ export class AdminApi {
   }
 
   /**
-   * Imports every active operator's match history over the calibration window, in the background.
+   * Opens a campaign at the chosen difficulty, on the chosen Monday, on the active roster.
    *
-   * @returns A promise that resolves once the import is accepted, not once it is done.
-   */
-  public async backfillHistory(): Promise<void> {
-    await this.mutate(this.http.post(API_ENDPOINTS.admin.campaignBackfill, null));
-  }
-
-  /**
-   * Opens a campaign starting the Monday after today, on the active roster.
-   *
+   * @param difficulty - Difficulty the campaign is played at.
+   * @param startWeek - Week the campaign starts on.
    * @returns A promise that resolves with the opened campaign.
    */
-  public async openCampaign(): Promise<CampaignAdmin> {
-    return this.mutate(this.http.post<CampaignAdmin>(API_ENDPOINTS.admin.campaigns, null, {
-      params: { level: this.level() },
-    }));
-  }
-
-  /**
-   * Measures the live campaign's roster again and resizes the weeks not settled yet.
-   *
-   * @returns A promise that resolves with the recalibrated campaign.
-   */
-  public async recalibrateCampaign(): Promise<CampaignAdmin> {
+  public async openCampaign(
+    difficulty: CampaignDifficulty,
+    startWeek: CampaignStartWeek,
+  ): Promise<CampaignAdmin> {
     return this.mutate(
-      this.http.post<CampaignAdmin>(API_ENDPOINTS.admin.campaignRecalibrate, null, {
-        params: { level: this.level() },
+      this.http.post<CampaignAdmin>(API_ENDPOINTS.admin.campaigns, null, {
+        params: { difficulty, startWeek },
       }),
     );
   }
@@ -374,7 +316,6 @@ export class AdminApi {
   public refresh(): void {
     this.players.reload();
     this.latestSynchronization.reload();
-    this.calibration.reload();
     this.campaignApi.campaign.reload();
     this.campaignApi.today.reload();
     this.campaignApi.history.reload();

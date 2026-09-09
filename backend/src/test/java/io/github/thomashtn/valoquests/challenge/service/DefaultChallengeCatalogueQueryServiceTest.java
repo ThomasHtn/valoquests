@@ -6,11 +6,11 @@ import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.challenge.dto.ChallengeCatalogueResponse;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
@@ -73,7 +73,7 @@ class DefaultChallengeCatalogueQueryServiceTest {
     @Test
     void shouldExposeEveryEntryAtTheLevelInForce() {
         when(calibrationSource.forWeek(WEEK_START))
-            .thenReturn(new ChallengeCalibration(10_600, 3, SquadLevel.EXPERT));
+            .thenReturn(new ChallengeCalibration(10_600, 3, CampaignDifficulty.PRO));
         when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(List.of(
             weekly(
                 1L,
@@ -122,7 +122,7 @@ class DefaultChallengeCatalogueQueryServiceTest {
     @Test
     void shouldExposeReferenceTargetsOutsideAnyCampaign() {
         when(calibrationSource.forWeek(WEEK_START))
-            .thenReturn(new ChallengeCalibration(2_000, 1, SquadLevel.REFERENCE));
+            .thenReturn(new ChallengeCalibration(2_000, 1, CampaignDifficulty.AMATEUR));
         when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(List.of(
             weekly(
                 1L,

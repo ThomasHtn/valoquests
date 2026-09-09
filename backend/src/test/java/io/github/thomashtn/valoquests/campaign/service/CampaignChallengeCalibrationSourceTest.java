@@ -7,9 +7,8 @@ import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
-import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,10 +31,7 @@ class CampaignChallengeCalibrationSourceTest {
 
     @BeforeEach
     void setUp() {
-        source = new CampaignChallengeCalibrationSource(
-            campaignRepository,
-            new DefaultScoringRuleset()
-        );
+        source = new CampaignChallengeCalibrationSource(campaignRepository);
     }
 
     @Test
@@ -68,7 +64,7 @@ class CampaignChallengeCalibrationSourceTest {
     void shouldFallBackOnTheLastClosedCampaign() {
         Campaign closed = CampaignFixtures.runningCampaign(1);
         closed.setStatus(CampaignStatus.CLOSED);
-        closed.setReference(9_400);
+        closed.setDifficulty(CampaignDifficulty.PRO);
 
         when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
         when(campaignRepository.findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED))
@@ -76,20 +72,20 @@ class CampaignChallengeCalibrationSourceTest {
 
         ChallengeCalibration calibration = source.forWeek(CampaignFixtures.FIRST_WEEK_START.plusWeeks(20));
 
-        assertThat(calibration.reference()).isEqualTo(9_400);
+        assertThat(calibration.reference()).isEqualTo(CampaignDifficulty.PRO.reference());
         assertThat(calibration.weekIndex()).isEqualTo(1);
     }
 
     @Test
-    @DisplayName("Falls back on the floor when no campaign has ever existed")
-    void shouldFallBackOnTheFloor() {
+    @DisplayName("Falls back on the amateur difficulty when no campaign has ever existed")
+    void shouldFallBackOnAmateur() {
         when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
         when(campaignRepository.findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED)).thenReturn(List.of());
 
         ChallengeCalibration calibration = source.forWeek(CampaignFixtures.FIRST_WEEK_START);
 
-        assertThat(calibration.reference()).isEqualTo(new DefaultScoringRuleset().referenceFloor());
+        assertThat(calibration.reference()).isEqualTo(CampaignDifficulty.AMATEUR.reference());
         assertThat(calibration.weekIndex()).isEqualTo(1);
-        assertThat(calibration.level()).isEqualTo(SquadLevel.REFERENCE);
+        assertThat(calibration.difficulty()).isEqualTo(CampaignDifficulty.AMATEUR);
     }
 }

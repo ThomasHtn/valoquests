@@ -1,4 +1,4 @@
-import { GuardianCategory } from '@core/campaign/campaign.model';
+import { CampaignDifficulty, GuardianCategory } from '@core/campaign/campaign.model';
 import { ChallengeDifficulty } from '@core/challenges/challenge.model';
 
 /**
@@ -198,28 +198,25 @@ export const CAMPAIGN_WEEKS: readonly CampaignWeekShape[] = [
 export const LIFECYCLE_KEYS: readonly string[] = ['open', 'start', 'close', 'between'];
 
 /**
- * The tiers, with the reference each spans.
+ * One difficulty, with the reference it carries.
  */
-export interface TierBand {
-  readonly key: string;
-  readonly min: number | null;
-  readonly max: number | null;
+export interface DifficultyBand {
+  readonly key: CampaignDifficulty;
+  readonly reference: number;
 }
 
 /**
- * Reference bands that place a squad in a tier.
+ * The two difficulties and their references. Mirrors the backend `CampaignDifficulty`.
  */
-export const TIER_BANDS: readonly TierBand[] = [
-  { key: 'AMATEUR', min: null, max: 3_500 },
-  { key: 'NORMAL', min: 3_500, max: 9_000 },
-  { key: 'CONFIRMED', min: 9_000, max: 16_000 },
-  { key: 'ELITE', min: 16_000, max: null },
+export const DIFFICULTY_BANDS: readonly DifficultyBand[] = [
+  { key: 'AMATEUR', reference: 5_300 },
+  { key: 'PRO', reference: 10_600 },
 ];
 
 /**
- * How the reference is read, in the order the document states it.
+ * How the difficulty is decided, in the order the document states it.
  */
-export const CALIBRATION_FACT_KEYS: readonly string[] = ['window', 'emptyWeeks', 'floor', 'once'];
+export const CALIBRATION_FACT_KEYS: readonly string[] = ['chosen', 'perOperator', 'grid', 'once'];
 
 /**
  * What a challenge is worth, by cadence and difficulty, at the example reference.

@@ -438,7 +438,7 @@
       </div>
     </app-rule-section>
 
-    <!-- 06 · The reference and its tiers. -->
+    <!-- 06 · The difficulty and the reference it carries. -->
     <app-rule-section
       [anchor]="anchor.calibration"
       [description]="'rules.sections.calibration.description' | translate"
@@ -452,7 +452,7 @@
             class="rule-head grid grid-cols-[6rem_minmax(0,1fr)] gap-x-3 sm:grid-cols-[6rem_9rem_minmax(0,1fr)]"
           >
             <span class="label-caption text-text-muted">
-              {{ 'rules.sections.calibration.tierLabel' | translate }}
+              {{ 'rules.sections.calibration.difficultyLabel' | translate }}
             </span>
             <span class="label-caption text-text-muted">
               {{ 'rules.sections.calibration.referenceLabel' | translate }}
@@ -462,23 +462,17 @@
             </span>
           </div>
           <ul>
-            @for (band of tierBands; track band.key) {
+            @for (band of difficultyBands; track band.key) {
               <li
                 class="rule-row grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-x-3 sm:grid-cols-[6rem_9rem_minmax(0,1fr)]"
               >
                 <span
                   class="font-display text-sm font-semibold tracking-[0.06em] text-text-primary uppercase"
                 >
-                  {{ 'common.tier.' + band.key | translate }}
+                  {{ 'common.difficulty.' + band.key | translate }}
                 </span>
                 <span class="font-display font-bold text-brand-500 tabular-nums">
-                  @if (band.min === null) {
-                    &lt; {{ amount(band.max!) }}
-                  } @else if (band.max === null) {
-                    &gt; {{ amount(band.min) }}
-                  } @else {
-                    {{ amount(band.min) }} – {{ amount(band.max) }}
-                  }
+                  {{ amount(band.reference) }}
                   <span class="block text-sm text-text-muted sm:hidden">
                     {{ 'rules.sections.calibration.examples.' + band.key | translate }}
                   </span>

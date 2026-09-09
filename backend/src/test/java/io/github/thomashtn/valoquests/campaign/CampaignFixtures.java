@@ -5,9 +5,8 @@ import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayer;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
 import io.github.thomashtn.valoquests.campaign.entity.Guardian;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
-import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -29,7 +28,7 @@ public final class CampaignFixtures {
     /**
      * Reference the catalogue's examples are written at.
      */
-    public static final int REFERENCE = 5_300;
+    public static final int REFERENCE = CampaignDifficulty.AMATEUR.reference();
 
     /**
      * Instant the fixture campaign was opened at.
@@ -57,11 +56,7 @@ public final class CampaignFixtures {
         campaign.setFirstWeekStart(FIRST_WEEK_START);
         campaign.setLastWeekStart(FIRST_WEEK_START.plusWeeks(9));
         campaign.setRosterSize(7);
-        campaign.setReference(REFERENCE);
-        campaign.setTier(CampaignTier.NORMAL);
-        campaign.setSquadLevel(SquadLevel.REFERENCE);
-        campaign.setCalibrationWindowMonths(9);
-        campaign.setCalibrationFirstDay(FIRST_WEEK_START.minusMonths(9));
+        campaign.setDifficulty(CampaignDifficulty.AMATEUR);
 
         return campaign;
     }

@@ -39,7 +39,7 @@ import {
   STREAK_LADDER,
   SUNDAY_EXAMPLE,
   SUNDAY_TERM_KEYS,
-  TIER_BANDS,
+  DIFFICULTY_BANDS,
   WEEK_STEP_KEYS,
 } from './rules.constants';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
@@ -104,7 +104,7 @@ export class Rules implements AfterViewInit {
 
   protected readonly lifecycleKeys = LIFECYCLE_KEYS;
 
-  protected readonly tierBands = TIER_BANDS;
+  protected readonly difficultyBands = DIFFICULTY_BANDS;
 
   protected readonly calibrationFactKeys = CALIBRATION_FACT_KEYS;
 

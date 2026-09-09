@@ -29,9 +29,12 @@ import { SYNCHRONIZATION_POLL_INTERVAL_MS } from './admin-operations.constants';
  * Backoffice operations screen.
  *
  * Gathers every command that repairs or refreshes the tracker: synchronizing the squad or one
- * player, rebuilding progress and ranking, drawing a week the Monday rollover failed to open or a
- * daily challenge the nightly tick missed, running that rollover in full when it never fired at
- * all, replaying the campaign, and throwing the week's challenge pack away for a new one.
+ * player, running the nightly tick or the Monday rollover by hand when either did not fire, and
+ * throwing the week's challenge pack away for a new one.
+ *
+ * Each card triggers a whole scheduled job rather than one of its steps. The steps used to be
+ * offered on their own — recalculate, draw the day, replay, open the week — and every one of them
+ * was already run by the job above it, so an operator had to know the chain to pick the right one.
  *
  * A synchronization runs in the background and outlives the request that started it, so the page
  * opens on the state of the latest run and polls it while it is in flight. That poll is the only
@@ -142,11 +145,6 @@ export class AdminOperations {
   protected readonly syncPlayerState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
-   * State of the progress recalculation command.
-   */
-  protected readonly recalculateState = signal<AdminActionState>(IDLE_ACTION);
-
-  /**
    * State of the challenge redraw command.
    */
   protected readonly redrawState = signal<AdminActionState>(IDLE_ACTION);
@@ -162,24 +160,14 @@ export class AdminOperations {
   protected readonly redrawing = signal(false);
 
   /**
-   * State of the weekly selection command.
+   * State of the daily tick command.
    */
-  protected readonly weekSelectionState = signal<AdminActionState>(IDLE_ACTION);
+  protected readonly dailyTickState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
    * State of the weekly rollover command.
    */
   protected readonly rolloverState = signal<AdminActionState>(IDLE_ACTION);
-
-  /**
-   * State of the campaign replay command.
-   */
-  protected readonly campaignReplayState = signal<AdminActionState>(IDLE_ACTION);
-
-  /**
-   * State of the daily challenge draw command.
-   */
-  protected readonly dailySelectionState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
    * Translated label of the latest execution's status.
@@ -348,16 +336,6 @@ export class AdminOperations {
   }
 
   /**
-   * Rebuilds the current week's challenge progress and the weekly ranking.
-   */
-  protected async recalculateProgress(): Promise<void> {
-    await this.commandRunner.run(() => this.adminApi.recalculateProgress(), {
-      state: this.recalculateState,
-      successMessage: () => this.translation.translate('admin.operations.recalculate.done'),
-    });
-  }
-
-  /**
    * Opens the redraw confirmation dialog.
    *
    * The one command on this page that destroys data rather than rebuilding it, so it is the one
@@ -391,12 +369,13 @@ export class AdminOperations {
   }
 
   /**
-   * Draws the current week's missing challenges and its boss encounter.
+   * Runs the nightly tick now: the day's challenge, the week's progress and ranking, a due campaign
+   * started, and the campaign replayed.
    */
-  protected async selectCurrentWeek(): Promise<void> {
-    await this.commandRunner.run(() => this.adminApi.selectCurrentWeek(), {
-      state: this.weekSelectionState,
-      successMessage: () => this.translation.translate('admin.operations.weekSelection.done'),
+  protected async runDailyTick(): Promise<void> {
+    await this.commandRunner.run(() => this.adminApi.runDailyTick(), {
+      state: this.dailyTickState,
+      successMessage: () => this.translation.translate('admin.operations.dailyTick.done'),
     });
   }
 
@@ -407,26 +386,6 @@ export class AdminOperations {
     await this.commandRunner.run(() => this.adminApi.runWeeklyRollover(), {
       state: this.rolloverState,
       successMessage: () => this.translation.translate('admin.operations.rollover.done'),
-    });
-  }
-
-  /**
-   * Draws today's daily challenge, for a morning the nightly tick missed.
-   */
-  protected async selectDailyChallenge(): Promise<void> {
-    await this.commandRunner.run(() => this.adminApi.selectDailyChallenge(), {
-      state: this.dailySelectionState,
-      successMessage: () => this.translation.translate('admin.operations.dailySelection.done'),
-    });
-  }
-
-  /**
-   * Replays the running campaign from its first day.
-   */
-  protected async replayCampaign(): Promise<void> {
-    await this.commandRunner.run(() => this.adminApi.replayCampaign(), {
-      state: this.campaignReplayState,
-      successMessage: () => this.translation.translate('admin.operations.campaignReplay.done'),
     });
   }
 }

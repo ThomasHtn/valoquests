@@ -155,12 +155,12 @@ export class Overview {
 
   protected readonly headerEyebrow = computed(() => {
     const campaign = this.campaign();
-    if (campaign?.number === null || campaign?.tier === null || !campaign) {
+    if (campaign?.number === null || campaign?.difficulty === null || !campaign) {
       return this.translation.translate('overview.header.noCampaign');
     }
     return this.translation.translate('overview.header.eyebrow', {
       number: campaign.number,
-      tier: this.translation.translate(`common.tier.${campaign.tier}`),
+      difficulty: this.translation.translate(`common.difficulty.${campaign.difficulty}`),
     });
   });
 

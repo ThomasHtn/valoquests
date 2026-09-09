@@ -11,11 +11,9 @@ import io.github.thomashtn.valoquests.campaign.entity.Guardian;
 import io.github.thomashtn.valoquests.campaign.exception.CampaignLifecycleException;
 import io.github.thomashtn.valoquests.campaign.model.CampaignSchedule;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
-import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
 import io.github.thomashtn.valoquests.campaign.model.NewCampaign;
-import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import java.time.Clock;
@@ -65,11 +63,11 @@ class CampaignFactoryTest {
     }
 
     @Test
-    @DisplayName("Freezes the roster, the calibration and the ten weeks in one go")
+    @DisplayName("Freezes the roster, the difficulty and the ten weeks in one go")
     void shouldBuildTheWholeCampaign() {
         stockCatalogue(6, 10, 6);
 
-        NewCampaign built = factory.build(3, ROSTER, calibration(), FIRST_WEEK_START);
+        NewCampaign built = factory.build(3, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START);
 
         assertThat(built.campaign().getNumber()).isEqualTo(3);
         assertThat(built.campaign().getStatus()).isEqualTo(CampaignStatus.OPENED);
@@ -77,8 +75,8 @@ class CampaignFactoryTest {
         assertThat(built.campaign().getFirstWeekStart()).isEqualTo(FIRST_WEEK_START);
         assertThat(built.campaign().getLastWeekStart()).isEqualTo(FIRST_WEEK_START.plusWeeks(9));
         assertThat(built.campaign().getRosterSize()).isEqualTo(7);
-        assertThat(built.campaign().getReference()).isEqualTo(CampaignFixtures.REFERENCE);
-        assertThat(built.campaign().getTier()).isEqualTo(CampaignTier.NORMAL);
+        assertThat(built.campaign().reference()).isEqualTo(CampaignFixtures.REFERENCE);
+        assertThat(built.campaign().getDifficulty()).isEqualTo(CampaignDifficulty.AMATEUR);
         assertThat(built.roster()).hasSize(7);
         assertThat(built.weeks()).hasSize(CampaignSchedule.WEEK_COUNT);
     }
@@ -88,7 +86,7 @@ class CampaignFactoryTest {
     void shouldSizeEveryWeek() {
         stockCatalogue(6, 10, 6);
 
-        NewCampaign built = factory.build(1, ROSTER, calibration(), FIRST_WEEK_START);
+        NewCampaign built = factory.build(1, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START);
         CampaignWeek first = built.weeks().getFirst();
         CampaignWeek last = built.weeks().getLast();
 
@@ -105,7 +103,7 @@ class CampaignFactoryTest {
     void shouldDrawEveryGuardianOnlyOnce() {
         stockCatalogue(6, 10, 6);
 
-        NewCampaign built = factory.build(1, ROSTER, calibration(), FIRST_WEEK_START);
+        NewCampaign built = factory.build(1, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START);
 
         assertThat(built.weeks())
             .extracting(week -> week.getGuardian().getCode())
@@ -119,8 +117,8 @@ class CampaignFactoryTest {
     void shouldDrawReproducibly() {
         stockCatalogue(6, 10, 6);
 
-        List<String> first = codesOf(factory.build(4, ROSTER, calibration(), FIRST_WEEK_START));
-        List<String> second = codesOf(factory.build(4, ROSTER, calibration(), FIRST_WEEK_START));
+        List<String> first = codesOf(factory.build(4, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START));
+        List<String> second = codesOf(factory.build(4, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START));
 
         assertThat(first).isEqualTo(second);
     }
@@ -134,7 +132,7 @@ class CampaignFactoryTest {
         when(guardianRepository.findAllByEnabledTrueAndCategoryOrderByIdAsc(GuardianCategory.STANDARD))
             .thenReturn(entries(GuardianCategory.STANDARD, 100, 3));
 
-        assertThatThrownBy(() -> factory.build(1, ROSTER, calibration(), FIRST_WEEK_START))
+        assertThatThrownBy(() -> factory.build(1, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START))
             .isInstanceOf(CampaignLifecycleException.class)
             .hasMessageContaining("STANDARD");
     }
@@ -181,22 +179,6 @@ class CampaignFactoryTest {
      */
     private List<String> codesOf(NewCampaign built) {
         return built.weeks().stream().map(week -> week.getGuardian().getCode()).toList();
-    }
-
-    /**
-     * Builds the calibration the fixtures are sized on.
-     *
-     * @return the calibration
-     */
-    private SquadCalibration calibration() {
-        return new SquadCalibration(
-            CampaignFixtures.REFERENCE,
-            CampaignTier.NORMAL,
-            SquadLevel.REFERENCE,
-            9,
-            FIRST_WEEK_START.minusMonths(9),
-            List.of()
-        );
     }
 
     /**

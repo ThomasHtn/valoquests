@@ -8,10 +8,9 @@ récompense dans `GAMEPLAY.md`.
 
 ## 1. Deux grilles écrites à la main
 
-Chaque défi porte **deux séries de nombres** : une **référence**, pour une escouade qui joue
-régulièrement, et une grille **experte**, pour une escouade qui valide la référence sans effort. Une
-campagne fige son niveau à l'ouverture, au même moment que sa référence de calibration, et ne joue
-que cette colonne.
+Chaque défi porte **deux séries de nombres** : une grille **amateur**, pour une escouade qui joue
+régulièrement, et une grille **pro**, pour une escouade qui valide l'amateur sans effort. Une
+campagne fige sa difficulté à l'ouverture et ne joue que cette colonne.
 
 Rien n'est calculé. C'est le point sur lequel le système précédent a échoué : les cibles étaient
 dérivées de neuf mois d'historique par un facteur de volume borné et une ancre de talent par
@@ -20,10 +19,10 @@ trente à une autre — et une escouade sous le plancher voyait chaque objectif 
 deux et demi, jusqu'à ce qu'un seul Deathmatch le règle. Le facteur de volume, les ancres de talent
 et les coefficients de difficulté n'existent plus.
 
-Ce que le niveau ne touche pas : la référence de calibration, qui continue de mesurer le volume de
-jeu de l'escouade et de dimensionner les gardiens, les groupes et la valeur en points d'un défi.
+La difficulté porte aussi la **référence** qui dimensionne les gardiens, les groupes et la valeur
+en points d'un défi : 5 300 par joueur actif en Amateur, 10 600 en Pro. Voir `GAMEPLAY.md`.
 
-**Le tirage copie, la ligne stocke, tout le reste lit.** Une sélection porte la grille du niveau au
+**Le tirage copie, la ligne stocke, tout le reste lit.** Une sélection porte la grille de la difficulté au
 moment où elle est tirée. Une campagne rejouée depuis son premier jour retrouve donc les objectifs
 qu'elle a réellement joués, même si son niveau a changé depuis.
 
@@ -41,7 +40,7 @@ jamais sur une liste de codes, pour qu'un défi ajouté plus tard tombe sous la 
 - aucune condition ne mesure les headshots ou les dégâts en Deathmatch ou en Skirmish ;
 - aucun défi n'exige à la fois du Deathmatch et du Team Deathmatch, deux modes joués par à-coups et
   rarement dans la même semaine ;
-- la grille experte n'est jamais inférieure à la référence, sur aucune condition, et déclare les
+- la grille pro n'est jamais inférieure à la grille amateur, sur aucune condition, et déclare les
   mêmes conditions dans le même ordre.
 
 ---
@@ -98,18 +97,18 @@ jour.
 
 ## 5. Ce qui décide de la valeur d'un défi
 
-Le niveau ne rapporte rien de plus. Un défi vaut ce que `GAMEPLAY.md` lui donne selon sa cadence et
-sa difficulté, multiplié par la référence de la campagne et par la progression de la semaine. Une
-escouade experte joue donc des objectifs plus durs pour la même récompense : le niveau est une
-question de justesse, pas de barème.
+Un défi vaut ce que `GAMEPLAY.md` lui donne selon sa cadence et sa difficulté, multiplié par la
+référence de la campagne et par la progression de la semaine. Une escouade pro joue des objectifs
+plus durs, mais contre une référence deux fois plus grande : la récompense suit dans la même
+proportion, et affronte un gardien deux fois plus gros.
 
 ---
 
 ## 6. Où ça vit dans le code
 
-- `SquadLevel` : les deux niveaux, et rien d'autre.
-- `Challenge` : les deux grilles, et `conditionsFor(level)` qui choisit.
-- `ChallengeCalibration` : ce contre quoi une semaine se joue — référence, index de semaine, niveau.
+- `CampaignDifficulty` : les deux difficultés et la référence que chacune porte.
+- `Challenge` : les deux grilles, et `conditionsFor(campaignDifficulty)` qui choisit.
+- `ChallengeCalibration` : ce contre quoi une semaine se joue — référence, index de semaine, difficulté.
 - `ChallengeSelectionFactory` : le seul endroit où une grille devient l'objectif d'une sélection.
 - `DefaultWeeklyChallengeSelectionService` : les deux tirages et leurs fenêtres de non-répétition.
 - `ChallengeGameMode` : les filtres de mode, Skirmish compris.

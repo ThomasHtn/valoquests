@@ -101,7 +101,7 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
         ChallengeCalibration calibration
     ) {
         ChallengeDefinition base = definitionParser.parse(challenge);
-        ChallengeDefinition definition = definitionParser.parse(challenge, calibration.level());
+        ChallengeDefinition definition = definitionParser.parse(challenge, calibration.difficulty());
         double weight = ruleset.challengeWeight(challenge.getCadence(), challenge.getDifficulty());
 
         return new ChallengeCatalogueResponse.ChallengeCatalogueEntry(

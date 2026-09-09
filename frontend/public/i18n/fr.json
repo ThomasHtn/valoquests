@@ -14,7 +14,6 @@
       "live": {
         "number": "Campagne {{number}}",
         "startsOn": "Départ le {{date}}. Le roster et la référence sont déjà figés ; s'il y a une erreur, supprime la campagne et rouvre-la.",
-        "tier": "Palier",
         "reference": "Référence {{reference}}",
         "roster": "Opérateurs",
         "frozen": "Roster gelé",
@@ -23,59 +22,26 @@
         "daysLeft": {
           "one": "{{count}} jour restant",
           "other": "{{count}} jours restants"
-        }
-      },
-      "calibration": {
-        "label": "Calibration",
-        "heading": "Ce qu'une campagne ouverte aujourd'hui vaudrait",
-        "reload": "Recalculer",
-        "loading": "Calcul de la calibration…",
-        "error": "Impossible de calculer la calibration.",
-        "reference": "Référence",
-        "tier": "Palier",
-        "level": "Niveau",
-        "window": "Fenêtre",
-        "months": {
-          "one": "{{count}} mois",
-          "other": "{{count}} mois"
         },
-        "since": "depuis le {{date}}",
-        "uncovered": {
-          "one": "{{count}} opérateur n'est pas couvert par son historique : la fenêtre a été réduite pour tout le monde. Importe l'historique avant d'ouvrir.",
-          "other": "{{count}} opérateurs ne sont pas couverts par leur historique : la fenêtre a été réduite pour tout le monde. Importe l'historique avant d'ouvrir."
-        },
-        "columns": {
-          "operator": "Opérateur",
-          "weeklyAverage": "Moyenne hebdo",
-          "weeks": "Semaines",
-          "earliest": "Première partie",
-          "coverage": "Couverture"
-        },
-        "covered": "Couvert",
-        "notCovered": "Non couvert",
-        "beginner": "Débutant"
+        "difficulty": "Difficulté"
       },
       "commandsLabel": "Commandes",
-      "backfill": {
-        "heading": "Importer l'historique",
-        "description": "Remonte neuf mois de parties pour chaque opérateur actif, en arrière-plan, pour que la calibration se mesure sur toute la fenêtre. Des milliers d'appels sous le quota Riot : suis l'avancement dans l'historique des synchronisations.",
-        "action": "Importer",
-        "accepted": "Import lancé. Suis son avancement dans les opérations."
-      },
       "open": {
         "heading": "Ouvrir la campagne",
-        "description": "Gèle le roster actif, calcule la référence et tire les dix gardiens. La campagne démarre le lundi suivant et dure dix semaines. Refusé tant qu'une campagne est ouverte ou en cours.",
+        "description": "Gèle le roster actif et tire les dix gardiens. Choisis la difficulté, qui décide de la taille des gardiens, des groupes de blessés et des objectifs des défis, puis le lundi de départ. Refusé tant qu'une campagne est ouverte ou en cours.",
         "action": "Ouvrir",
         "confirm": "Ouvrir la campagne",
-        "confirmBody": "Le roster et la référence sont figés à cet instant et ne seront plus jamais recalculés. Vérifie la calibration avant : elle décide de la taille des dix gardiens.",
-        "done": "Campagne {{number}} ouverte, départ le {{date}}."
-      },
-      "recalibrate": {
-        "heading": "Recalibrer la campagne",
-        "action": "Recalibrer",
-        "confirm": "Recalibrer",
-        "confirmBody": "Le roster gelé est remesuré sur la fenêtre de neuf mois, puis le gardien et le groupe de chaque semaine non encore réglée sont redimensionnés et la campagne est rejouée. Les semaines réglées gardent leur gardien. Lance l'import de l'historique avant, et attends qu'il soit terminé.",
-        "done": "Campagne recalibrée, référence {{reference}}."
+        "confirmBody": {
+          "CURRENT_WEEK": "La campagne démarre au lundi de la semaine en cours : elle est immédiatement en cours et les jours déjà joués sont recalculés à partir des matchs importés. La difficulté est figée à cet instant et ne pourra plus être changée.",
+          "NEXT_WEEK": "La campagne démarre au lundi suivant. La difficulté est figée à cet instant et ne pourra plus être changée : elle décide de la taille des dix gardiens."
+        },
+        "done": "Campagne {{number}} ouverte, départ le {{date}}.",
+        "startLabel": "Départ",
+        "startWeek": {
+          "CURRENT_WEEK": "Semaine en cours",
+          "NEXT_WEEK": "Semaine suivante"
+        },
+        "difficultyLabel": "Difficulté"
       },
       "stop": {
         "heading": "Arrêter la campagne",
@@ -116,9 +82,9 @@
       "failures": "Échecs",
       "groups": {
         "repair": "Réparation",
-        "repairHint": "Ces opérations rejouent un historique déjà écrit. À lancer quand une donnée est fausse, pas dans le cours normal d'une semaine.",
+        "repairHint": "Ces opérations réécrivent un historique déjà écrit. À lancer quand une donnée est fausse, pas dans le cours normal d'une semaine.",
         "routine": "Routine",
-        "routineHint": "Les gestes ordinaires d'une semaine, sans effet rétroactif."
+        "routineHint": "Les gestes ordinaires d'une journée. Chaque action rejoue une tâche planifiée entière, et reste sans risque : tout y est idempotent."
       },
       "heading": "Opérations",
       "history": {
@@ -147,12 +113,6 @@
       "lastRun": "Dernière synchronisation",
       "matchesImported": "Matchs importés",
       "playersProcessed": "Opérateurs traités",
-      "recalculate": {
-        "heading": "Recalculer la progression",
-        "description": "Reconstruit la progression des défis de la semaine et le classement à partir des matchs déjà stockés. N'appelle pas l'API Riot.",
-        "action": "Recalculer",
-        "done": "Progression et classement recalculés."
-      },
       "redraw": {
         "heading": "Retirer les défis",
         "description": "Jette les cinq défis de la semaine en cours et en tire cinq nouveaux dans le catalogue actuel, puis recalcule la progression et le classement. À utiliser quand le tirage lui-même est devenu faux : un défi désactivé ou supprimé du catalogue après l'ouverture de la semaine.",
@@ -193,25 +153,13 @@
         "placeholder": "Choisir un opérateur",
         "noneSelected": "Choisis d'abord un opérateur."
       },
-      "title": "Opérations",
-      "weekSelection": {
-        "heading": "Ouvrir la semaine",
-        "description": "Tire les cinq défis manquants de la semaine en cours et le défi du jour, comme le fait le passage de semaine du lundi. Sans effet si tout est déjà en place.",
-        "action": "Démarrer",
-        "done": "La semaine en cours est complète."
+      "dailyTick": {
+        "heading": "Relancer le tick quotidien",
+        "description": "Rejoue tout le tick de minuit : tire le défi du jour, recalcule la progression et le classement, démarre une campagne dont le lundi est arrivé et rejoue la campagne. Sans effet si tout est déjà à jour.",
+        "action": "Relancer",
+        "done": "Tick quotidien terminé."
       },
-      "campaignReplay": {
-        "heading": "Rejouer la campagne",
-        "description": "Rejoue la campagne en cours depuis son premier jour, à partir des parties et des défis déjà enregistrés. Sans risque : la base n'est jamais incrémentée, elle est toujours recalculée entièrement.",
-        "action": "Rejouer",
-        "done": "Campagne rejouée."
-      },
-      "dailySelection": {
-        "heading": "Tirer le défi du jour",
-        "description": "Tire le défi du jour si le tick de minuit l'a manqué, dans le pool des 21 sans répétition sur 21 jours. Sans effet s'il est déjà tiré.",
-        "action": "Tirer",
-        "done": "Le défi du jour est en place."
-      }
+      "title": "Opérations"
     },
     "players": {
       "activate": "Activer",
@@ -302,7 +250,7 @@
       "heading": "Dix planètes, dix semaines",
       "eyebrow": "Campagne {{number}}",
       "noCampaign": "Campagne",
-      "tier": "Palier {{tier}}"
+      "difficulty": "Difficulté {{difficulty}}"
     },
     "state": {
       "loading": "Chargement de la campagne…",
@@ -395,8 +343,8 @@
       "out": "Blessés ramenés",
       "outPay": "Ce que l'extraction rapporterait dimanche soir, en l'état",
       "outRate": "ramenés par les défis, pris dans le même groupe",
-      "noteTier": "Palier {{tier}}",
-      "noteTierText": "Les gardiens et les groupes de blessés sont dimensionnés sur le niveau réel de l'escouade : sa référence pour cette campagne est de {{reference}} dégâts par semaine et par opérateur.",
+      "noteDifficulty": "Difficulté {{difficulty}}",
+      "noteDifficultyText": "Les gardiens et les groupes de blessés sont dimensionnés sur la difficulté choisie à l'ouverture : sa référence pour cette campagne est de {{reference}} dégâts par semaine et par opérateur.",
       "noteGrow": "Des groupes de plus en plus grands",
       "noteGrowText": "Chaque semaine, le groupe de blessés grossit de 4 %. Celui de la dixième planète sera 36 % plus grand que le premier. La base, plus peuplée, mange chaque soir un peu plus.",
       "noteLoss": "Quand le gardien tient",
@@ -519,7 +467,7 @@
       "heading": "Les défis de la semaine",
       "week": "Semaine {{week}} sur {{weeks}}",
       "weekOf": "Semaine du {{date}}",
-      "tier": "Palier {{tier}}"
+      "difficulty": "Difficulté {{difficulty}}"
     },
     "state": {
       "loading": "Chargement des défis…",
@@ -634,21 +582,12 @@
       "PLAY_DAY": "Jours joués"
     },
     "difficulty": {
-      "EASY": "Facile",
-      "NORMAL": "Normal",
-      "MEDIUM": "Moyen",
-      "HARD": "Difficile",
-      "VERY_HARD": "Très difficile"
+      "AMATEUR": "Amateur",
+      "PRO": "Pro"
     },
     "cadence": {
       "WEEKLY": "Hebdomadaire",
       "DAILY": "Du jour"
-    },
-    "tier": {
-      "AMATEUR": "Amateur",
-      "NORMAL": "Normal",
-      "CONFIRMED": "Confirmé",
-      "ELITE": "Élite"
     },
     "guardianCategory": {
       "MINOR": "Mineur",
@@ -694,11 +633,6 @@
       "SKIRMISH": "Skirmish",
       "SWIFTPLAY": "Swiftplay",
       "ESCALATION": "Escalade"
-    },
-    "squadLevel": {
-      "REFERENCE": "Référence",
-      "EXPERT": "Expert",
-      "hint": "Décide laquelle des deux grilles du catalogue la campagne joue."
     }
   },
   "landing": {
@@ -736,7 +670,7 @@
       "heading": "Le classement de la semaine",
       "week": "Semaine {{week}} sur {{weeks}}",
       "outsideCampaign": "Hors campagne",
-      "tier": "Palier {{tier}}"
+      "difficulty": "Difficulté {{difficulty}}"
     },
     "state": {
       "loading": "Chargement du classement…",
@@ -813,7 +747,7 @@
   "overview": {
     "title": "Vue d'ensemble",
     "header": {
-      "eyebrow": "Campagne {{number}} · Palier {{tier}}",
+      "eyebrow": "Campagne {{number}} · Difficulté {{difficulty}}",
       "noCampaign": "Aucune campagne",
       "heading": "Ramener les blessés de dix planètes"
     },
@@ -1407,24 +1341,22 @@
         }
       },
       "calibration": {
-        "title": "La référence",
-        "statement": "Tout est taillé à la mesure de l'escouade",
-        "description": "La référence est ce qu'un opérateur de l'escouade produit par semaine, lue sur l'historique du roster gelé. Gardiens, groupes et défis en découlent, *par opérateur actif* : le jeu est le même à 2 comme à 20. Le palier qui en résulte permet de comparer deux campagnes d'escouades de niveaux différents.",
-        "tierLabel": "Palier",
+        "title": "La difficulté",
+        "statement": "Une seule molette, choisie à l'ouverture",
+        "description": "La difficulté est choisie par l'administrateur au lancement et figée pour les dix semaines. Elle porte la *référence*, le nombre dont tout le reste est un multiple : gardiens, groupes de blessés et récompenses des défis, *par opérateur actif*. Le jeu est donc le même à 2 comme à 20. Rien n'est déduit de l'historique des parties.",
         "referenceLabel": "Référence par opérateur",
-        "exampleLabel": "Par semaine, en pratique",
+        "exampleLabel": "Ce que ça demande",
         "examples": {
-          "AMATEUR": "4 Compétitifs et 3 rapides",
-          "NORMAL": "7 Compétitifs et 9 rapides",
-          "CONFIRMED": "16 Compétitifs et 25 rapides",
-          "ELITE": "28 Compétitifs et 35 rapides"
+          "AMATEUR": "Une escouade qui joue régulièrement",
+          "PRO": "Deux fois plus de gardien, et les objectifs de défis les plus durs"
         },
         "facts": {
-          "window": "Une fenêtre de *neuf mois* d'historique, pour chaque opérateur actif. Si l'un d'eux n'a pas neuf mois, elle est réduite d'un mois à la fois, pour tout le monde.",
-          "emptyWeeks": "Les *semaines sans partie comptent à zéro*. Un opérateur qui joue peu est un opérateur faible, et la référence doit le refléter.",
-          "floor": "Un *plancher de 2 000*, soit quatre Compétitifs et trois parties rapides par semaine. En dessous, un gardien tomberait en une soirée.",
-          "once": "Calculée *une seule fois*, à l'ouverture, avec les mêmes multiplicateurs que la campagne. Un débutant de moins d'un mois prend la médiane de l'escouade."
-        }
+          "chosen": "*Choisie à l'ouverture* par l'administrateur, jamais mesurée. Amateur ou Pro, et c'est figé pour toute la campagne.",
+          "perOperator": "La référence vaut *par opérateur actif*. Le gardien d'une escouade de deux est deux fois plus petit que celui d'une escouade de quatre.",
+          "grid": "Elle décide aussi *quelle grille du catalogue* est jouée : chaque défi porte deux objectifs écrits, un pour Amateur, un pour Pro.",
+          "once": "Le *poids de la semaine* s'applique par-dessus : la première planète vaut 0,60 référence, la dixième 1,35."
+        },
+        "difficultyLabel": "Difficulté"
       },
       "challenges": {
         "title": "Les défis et le classement",
@@ -1514,7 +1446,7 @@
           },
           "calibrationWindow": {
             "label": "Fenêtre de calibration",
-            "value": "9 mois, réduits d'un mois tant qu'un opérateur n'est pas couvert"
+            "value": "3 mois, réduits d'un mois tant qu'un opérateur n'est pas couvert"
           },
           "reference": {
             "label": "Référence",

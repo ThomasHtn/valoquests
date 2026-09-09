@@ -37,7 +37,7 @@ export function buildRescueLaw(
  * The loss note: what a failed breakthrough costs, illustrated at a few breach levels.
  */
 export function buildLawNotes(campaign: Campaign | null): LawNotes | null {
-  if (!campaign?.tier || campaign.reference === null) {
+  if (!campaign?.difficulty || campaign.reference === null) {
     return null;
   }
   // Before the first day is replayed the base is empty: the note then reasons on a sample base.
@@ -45,7 +45,7 @@ export function buildLawNotes(campaign: Campaign | null): LawNotes | null {
   const population = sample ? SAMPLE_POPULATION : (campaign.base?.population ?? 0);
   const rate = (campaign.base?.guardianLossPercent ?? 0) / 100;
   return {
-    tier: campaign.tier,
+    difficulty: campaign.difficulty,
     reference: campaign.reference,
     population,
     sample,

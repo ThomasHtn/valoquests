@@ -549,9 +549,9 @@ class SynchronizationPipelineIntegrationTest
         assertThat(score.getStreakDays())
             .isEqualTo(2);
         assertThat(score.getChallengePoints())
-            .isEqualTo(52 + dailyPoints);
+            .isEqualTo(78 + dailyPoints);
         assertThat(score.getTotalPoints())
-            .isEqualTo(857 + 52 + dailyPoints);
+            .isEqualTo(857 + 78 + dailyPoints);
         assertThat(score.getCompletedChallenges())
             .isEqualTo(5);
         assertThat(score.getCompletedDailyChallenges())
@@ -576,7 +576,7 @@ class SynchronizationPipelineIntegrationTest
      * @return the points those dailies add
      */
     private int dailyPoints(Player player) {
-        return completedDailies(player) * 4;
+        return completedDailies(player) * 6;
     }
 
     /**

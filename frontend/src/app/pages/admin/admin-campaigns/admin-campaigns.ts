@@ -3,13 +3,14 @@ import { LucideRefreshCw, LucideTrash2 } from '@lucide/angular';
 import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminCommandRunner } from '@core/admin/admin-command-runner';
-import { IN_FLIGHT_SYNCHRONIZATION_STATUSES, PlayerCalibration } from '@core/admin/admin.model';
 import { CampaignApi } from '@core/campaign/campaign-api';
 import {
+  CAMPAIGN_DIFFICULTIES,
+  CAMPAIGN_START_WEEKS,
   CAMPAIGN_WEEK_COUNT,
+  CampaignDifficulty,
+  CampaignStartWeek,
   CampaignStatus,
-  SQUAD_LEVELS,
-  SquadLevel,
 } from '@core/campaign/campaign.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { daysBetween } from '@core/date/date-time.utils';
@@ -33,12 +34,11 @@ import { LiveCampaign } from './admin-campaigns.model';
 /**
  * Backoffice campaign lifecycle screen.
  *
- * The one place a campaign is opened, and the only moment its calibration can be looked at before
- * it is decided for good: the page shows the measure a campaign opened today would be given,
- * operator by operator, with how far back each one's history reaches. Then the three commands:
- * import the calibration window, open, recalibrate, stop. A campaign opened by mistake before its
- * first Monday is deleted rather than stopped, since stopping it would leave an empty campaign in
- * the history.
+ * The one place a campaign is opened, and the only moment its difficulty is decided: the choice is
+ * frozen for the whole run and sizes the guardians, the groups of wounded and the challenge
+ * rewards. Then two commands on the live campaign: stop it, or delete it. A campaign opened by
+ * mistake before its first Monday is deleted rather than stopped, since stopping it would leave an
+ * empty campaign in the history.
  */
 @Component({
   selector: 'app-admin-campaigns',
@@ -67,41 +67,32 @@ export class AdminCampaigns {
 
   private readonly commandRunner = inject(AdminCommandRunner);
 
-  protected readonly calibrationResource = this.adminApi.calibration;
+  /**
+   * Difficulty the next opening plays at.
+   */
+  protected readonly difficulty = signal<CampaignDifficulty>('AMATEUR');
 
   /**
-   * Level the calibration panel reads at, and the next opening plays at.
+   * The two difficulties, in ladder order, for the selector.
    */
-  protected readonly level = this.adminApi.level;
+  protected readonly difficulties = CAMPAIGN_DIFFICULTIES;
 
   /**
-   * The two levels, in ladder order, for the selector.
+   * Monday the next opening starts on.
+   *
+   * Defaults to the next week: opening on the current one is retroactive, and an operator who did
+   * not choose must not start a campaign on days that are already played.
    */
-  protected readonly levels = SQUAD_LEVELS;
+  protected readonly startWeek = signal<CampaignStartWeek>('NEXT_WEEK');
+
+  /**
+   * The two start weeks, for the selector.
+   */
+  protected readonly startWeeks = CAMPAIGN_START_WEEKS;
 
   protected readonly campaignResource = this.campaignApi.campaign;
 
   protected readonly historyResource = this.campaignApi.history;
-
-  protected readonly calibration = computed(() =>
-    resourceValue(this.calibrationResource, undefined),
-  );
-
-  /**
-   * Operators whose history does not reach the start of the window and who are not beginners:
-   * the ones an import would help.
-   */
-  protected readonly uncovered = computed<readonly PlayerCalibration[]>(
-    () => this.calibration()?.players.filter((player) => !player.covered && !player.beginner) ?? [],
-  );
-
-  /**
-   * Whether a synchronization or an import is in flight, which the backend refuses to run beside.
-   */
-  protected readonly synchronizing = computed(() => {
-    const execution = resourceValue(this.adminApi.latestSynchronization, undefined);
-    return execution !== undefined && IN_FLIGHT_SYNCHRONIZATION_STATUSES.includes(execution.status);
-  });
 
   /**
    * The campaign opened or running, resolved into the figures an operator decides against, or
@@ -131,7 +122,7 @@ export class AdminCampaigns {
       id: campaign.id,
       number: campaign.number ?? 0,
       status: campaign.status,
-      tier: campaign.tier ?? 'AMATEUR',
+      difficulty: campaign.difficulty ?? 'AMATEUR',
       reference: campaign.reference ?? 0,
       rosterSize: campaign.rosterSize ?? 0,
       range: formatDateRange(campaign.firstWeekStart, addDays(campaign.lastWeekStart, 6)),
@@ -144,15 +135,9 @@ export class AdminCampaigns {
 
   protected readonly closed = computed(() => resourceValue(this.historyResource, []));
 
-  protected readonly backfillState = signal<AdminActionState>(IDLE_ACTION);
-
   protected readonly openState = signal<AdminActionState>(IDLE_ACTION);
 
   protected readonly stopState = signal<AdminActionState>(IDLE_ACTION);
-
-  protected readonly recalibrateState = signal<AdminActionState>(IDLE_ACTION);
-
-  protected readonly recalibrateDialogOpen = signal(false);
 
   protected readonly deleteState = signal<AdminActionState>(IDLE_ACTION);
 
@@ -194,21 +179,6 @@ export class AdminCampaigns {
 
   protected readonly formatDayMonth = formatDayMonth;
 
-  /**
-   * Formats a day with its year: the calibration window reaches months back, and a first match
-   * from last year shown as `01/06` reads as this year's.
-   *
-   * @param iso - ISO-8601 date, `YYYY-MM-DD`.
-   * @returns The day in the reader's own notation.
-   */
-  protected fullDate(iso: string): string {
-    return new Intl.DateTimeFormat(this.translation.language() === 'fr' ? 'fr-FR' : 'en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(new Date(`${iso}T00:00:00`));
-  }
-
   protected statusTone(status: CampaignStatus): StatusBadgeTone {
     return status === 'RUNNING' ? 'brand' : 'neutral';
   }
@@ -224,20 +194,6 @@ export class AdminCampaigns {
     return formatDateRange(firstWeekStart, addDays(lastWeekStart, 6));
   }
 
-  /**
-   * Records the level the next opening, recalibration and calibration read are made at.
-   */
-  protected chooseLevel(level: SquadLevel): void {
-    this.adminApi.level.set(level);
-  }
-
-  protected async backfill(): Promise<void> {
-    await this.commandRunner.run(() => this.adminApi.backfillHistory(), {
-      state: this.backfillState,
-      successMessage: () => this.translation.translate('admin.campaigns.backfill.accepted'),
-    });
-  }
-
   protected askToOpen(): void {
     this.openDialogOpen.set(true);
   }
@@ -246,38 +202,27 @@ export class AdminCampaigns {
     this.openDialogOpen.set(false);
   }
 
+  protected chooseDifficulty(difficulty: CampaignDifficulty): void {
+    this.difficulty.set(difficulty);
+  }
+
+  protected chooseStartWeek(startWeek: CampaignStartWeek): void {
+    this.startWeek.set(startWeek);
+  }
+
   protected async confirmOpen(): Promise<void> {
-    await this.commandRunner.run(() => this.adminApi.openCampaign(), {
-      state: this.openState,
-      successMessage: (campaign) =>
-        this.translation.translate('admin.campaigns.open.done', {
-          number: campaign.number,
-          date: formatDayMonth(campaign.firstWeekStart),
-        }),
-      onSuccess: () => this.openDialogOpen.set(false),
-    });
-  }
-
-  protected askToRecalibrate(): void {
-    this.recalibrateDialogOpen.set(true);
-  }
-
-  protected dismissRecalibrate(): void {
-    this.recalibrateDialogOpen.set(false);
-  }
-
-  protected async confirmRecalibrate(): Promise<void> {
-    await this.commandRunner.run(() => this.adminApi.recalibrateCampaign(), {
-      state: this.recalibrateState,
-      successMessage: (campaign) =>
-        this.translation.translate('admin.campaigns.recalibrate.done', {
-          reference: campaign.reference,
-        }),
-      onSuccess: () => {
-        this.recalibrateDialogOpen.set(false);
-        this.calibrationResource.reload();
+    await this.commandRunner.run(
+      () => this.adminApi.openCampaign(this.difficulty(), this.startWeek()),
+      {
+        state: this.openState,
+        successMessage: (campaign) =>
+          this.translation.translate('admin.campaigns.open.done', {
+            number: campaign.number,
+            date: formatDayMonth(campaign.firstWeekStart),
+          }),
+        onSuccess: () => this.openDialogOpen.set(false),
       },
-    });
+    );
   }
 
   protected askToStop(): void {

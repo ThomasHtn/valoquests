@@ -1,10 +1,10 @@
 package io.github.thomashtn.valoquests.challenge.entity;
 
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.shared.entity.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -133,14 +133,17 @@ public class Challenge extends AuditableEntity {
     private int schemaVersion;
 
     /**
-     * Returns the rule grid one squad level plays against.
+     * Returns the rule grid one campaign difficulty plays against.
      *
-     * @param level level of the campaign in force
+     * <p>Named apart from this challenge's own {@code difficulty}, which grades the challenge inside
+     * a week and has nothing to do with the campaign's setting.
+     *
+     * @param campaignDifficulty difficulty of the campaign in force
      * @return the matching JSON definition
      */
-    public String conditionsFor(SquadLevel level) {
-        Objects.requireNonNull(level, "Squad level must not be null.");
+    public String conditionsFor(CampaignDifficulty campaignDifficulty) {
+        Objects.requireNonNull(campaignDifficulty, "Campaign difficulty must not be null.");
 
-        return level == SquadLevel.EXPERT ? expertConditionsJson : conditionsJson;
+        return campaignDifficulty == CampaignDifficulty.PRO ? expertConditionsJson : conditionsJson;
     }
 }

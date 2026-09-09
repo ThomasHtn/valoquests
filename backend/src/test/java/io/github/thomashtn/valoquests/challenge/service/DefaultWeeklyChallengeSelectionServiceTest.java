@@ -14,6 +14,7 @@ import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressCalc
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.exception.WeeklyChallengeSelectionException;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
@@ -23,12 +24,10 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
-import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import io.github.thomashtn.valoquests.shared.exception.ConflictException;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.math.BigDecimal;
@@ -138,9 +137,9 @@ class DefaultWeeklyChallengeSelectionServiceTest {
             new ChallengeSelectionFactory(
                 definitionParser,
                 weekStart -> new ChallengeCalibration(
-                    new DefaultScoringRuleset().referenceFloor(),
+                    CampaignDifficulty.AMATEUR.reference(),
                     1,
-                    SquadLevel.REFERENCE
+                    CampaignDifficulty.AMATEUR
                 )
             ),
             clock,

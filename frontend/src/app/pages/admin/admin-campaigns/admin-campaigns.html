@@ -31,10 +31,10 @@
       <dl class="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-4">
         <div>
           <dt class="label-caption text-text-muted">
-            {{ 'admin.campaigns.live.tier' | translate }}
+            {{ 'admin.campaigns.live.difficulty' | translate }}
           </dt>
           <dd class="font-display mt-1.5 text-xl font-bold text-text-primary uppercase">
-            {{ 'common.tier.' + live.tier | translate }}
+            {{ 'common.difficulty.' + live.difficulty | translate }}
           </dd>
           <dd class="mt-1 text-sm text-text-muted tabular-nums">
             {{
@@ -78,17 +78,6 @@
       </dl>
 
       <div class="mt-5 flex flex-wrap gap-3">
-        <!-- Recalibrating, for a campaign opened before the history backfill ran: the frozen
-             roster is measured again and the weeks not settled yet are resized. -->
-        <button
-          appButton="secondary"
-          (click)="askToRecalibrate()"
-          [disabled]="recalibrateState().status === 'running' || synchronizing()"
-          class="flex min-h-10 items-center px-4 text-sm font-medium [--notch:0.5rem]"
-          type="button"
-        >
-          {{ 'admin.campaigns.recalibrate.action' | translate }}
-        </button>
         @if (live.status === 'RUNNING') {
           <button
             appButton="danger"
@@ -122,169 +111,9 @@
     </p>
   }
 
-  <!-- The calibration, before the command that freezes it: the only moment to notice a thin
-       history or a window that had to shrink. -->
-  <app-section-label [label]="'admin.campaigns.calibration.label' | translate" class="mt-12" />
-
-  <app-resource-state
-    (retry)="calibrationResource.reload()"
-    [errorText]="'admin.campaigns.calibration.error' | translate"
-    [isError]="!!calibrationResource.error()"
-    [isLoading]="calibrationResource.isLoading()"
-    [loadingText]="'admin.campaigns.calibration.loading' | translate"
-  >
-    @if (calibration(); as calibration) {
-      <div class="notch-tr panel p-5 [--notch:0.875rem]">
-        <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-          <h2 class="tracking-label font-display text-base font-bold text-text-primary uppercase">
-            {{ 'admin.campaigns.calibration.heading' | translate }}
-          </h2>
-          <button
-            (click)="calibrationResource.reload()"
-            class="focus-ring label-caption flex h-9 cursor-pointer items-center gap-1.5 text-text-muted transition-colors hover:text-text-primary"
-            type="button"
-          >
-            <svg aria-hidden="true" class="size-3.5" lucideRefreshCw></svg>
-            {{ 'admin.campaigns.calibration.reload' | translate }}
-          </button>
-        </div>
-
-        <dl class="mt-4 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-4">
-          <div>
-            <dt class="label-caption text-text-muted">
-              {{ 'admin.campaigns.calibration.reference' | translate }}
-            </dt>
-            <dd class="font-display mt-1.5 text-xl font-bold text-brand-500 tabular-nums">
-              {{ amount(calibration.reference) }}
-            </dd>
-          </div>
-          <div>
-            <dt class="label-caption text-text-muted">
-              {{ 'admin.campaigns.calibration.tier' | translate }}
-            </dt>
-            <dd class="font-display mt-1.5 text-xl font-bold text-text-primary uppercase">
-              {{ 'common.tier.' + calibration.tier | translate }}
-            </dd>
-          </div>
-          <div>
-            <dt class="label-caption text-text-muted">
-              {{ 'admin.campaigns.calibration.level' | translate }}
-            </dt>
-            <dd class="mt-1.5 flex gap-2">
-              @for (option of levels; track option) {
-                <button
-                  [appButton]="level() === option ? 'primary' : 'secondary'"
-                  (click)="chooseLevel(option)"
-                  class="font-display flex min-h-9 items-center px-3 text-sm font-bold uppercase [--notch:0.5rem]"
-                  type="button"
-                >
-                  {{ 'common.squadLevel.' + option | translate }}
-                </button>
-              }
-            </dd>
-          </div>
-          <div>
-            <dt class="label-caption text-text-muted">
-              {{ 'admin.campaigns.calibration.window' | translate }}
-            </dt>
-            <dd class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
-              {{
-                'admin.campaigns.calibration.months'
-                  | translate: { count: calibration.windowMonths }
-              }}
-            </dd>
-            <dd class="mt-1 text-sm text-text-muted">
-              {{
-                'admin.campaigns.calibration.since'
-                  | translate: { date: fullDate(calibration.firstDay) }
-              }}
-            </dd>
-          </div>
-        </dl>
-
-        @if (uncovered().length > 0) {
-          <app-inline-message class="mt-5" tone="danger">
-            {{ 'admin.campaigns.calibration.uncovered' | translate: { count: uncovered().length } }}
-          </app-inline-message>
-        }
-
-        <!-- One row per operator: the average, how many weeks it stands on, and how far back the
-             history goes. -->
-        <div class="mt-5 overflow-x-auto">
-          <table class="w-full min-w-[32rem] text-left text-sm">
-            <thead>
-              <tr class="border-b border-brand-500/30">
-                <th class="label-caption pb-2 font-medium text-text-muted">
-                  {{ 'admin.campaigns.calibration.columns.operator' | translate }}
-                </th>
-                <th class="label-caption pb-2 text-right font-medium text-text-muted">
-                  {{ 'admin.campaigns.calibration.columns.weeklyAverage' | translate }}
-                </th>
-                <th class="label-caption pb-2 text-right font-medium text-text-muted">
-                  {{ 'admin.campaigns.calibration.columns.weeks' | translate }}
-                </th>
-                <th class="label-caption pb-2 text-right font-medium text-text-muted">
-                  {{ 'admin.campaigns.calibration.columns.earliest' | translate }}
-                </th>
-                <th class="label-caption pb-2 text-right font-medium text-text-muted">
-                  {{ 'admin.campaigns.calibration.columns.coverage' | translate }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (player of calibration.players; track player.playerId) {
-                <tr class="border-b border-text-primary/8 last:border-b-0">
-                  <td class="py-2.5 font-semibold text-text-primary">{{ player.displayName }}</td>
-                  <td
-                    class="py-2.5 text-right font-display font-bold text-text-primary tabular-nums"
-                  >
-                    {{ amount(player.weeklyAverage) }}
-                  </td>
-                  <td class="py-2.5 text-right text-text-secondary tabular-nums">
-                    {{ player.weeksCounted }}
-                  </td>
-                  <td class="py-2.5 text-right font-mono text-xs text-text-secondary tabular-nums">
-                    {{ player.earliestMatchDay ? fullDate(player.earliestMatchDay) : '—' }}
-                  </td>
-                  <td class="py-2.5 text-right">
-                    @if (player.beginner) {
-                      <app-status-badge
-                        [label]="'admin.campaigns.calibration.beginner' | translate"
-                        tone="neutral"
-                      />
-                    } @else if (player.covered) {
-                      <app-status-badge
-                        [label]="'admin.campaigns.calibration.covered' | translate"
-                        tone="brand"
-                      />
-                    } @else {
-                      <app-status-badge
-                        [label]="'admin.campaigns.calibration.notCovered' | translate"
-                        tone="danger"
-                      />
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    }
-  </app-resource-state>
-
   <app-section-label [label]="'admin.campaigns.commandsLabel' | translate" class="mt-12" />
 
-  <div class="grid gap-6 lg:grid-cols-2">
-    <app-admin-action-card
-      (triggered)="backfill()"
-      [actionLabel]="'admin.campaigns.backfill.action' | translate"
-      [description]="'admin.campaigns.backfill.description' | translate"
-      [disabled]="synchronizing()"
-      [heading]="'admin.campaigns.backfill.heading' | translate"
-      [state]="backfillState()"
-    />
-
+  <div class="grid gap-6">
     <app-admin-action-card
       (triggered)="askToOpen()"
       [actionLabel]="'admin.campaigns.open.action' | translate"
@@ -292,7 +121,47 @@
       [disabled]="live() !== null"
       [heading]="'admin.campaigns.open.heading' | translate"
       [state]="openState()"
-    />
+    >
+      <!-- The difficulty carries the reference the whole campaign is sized on, so it is picked
+           here and frozen at opening. -->
+      <div>
+        <span class="label-caption text-text-muted">
+          {{ 'admin.campaigns.open.difficultyLabel' | translate }}
+        </span>
+        <div class="mt-1.5 flex gap-2">
+          @for (option of difficulties; track option) {
+            <button
+              [appButton]="difficulty() === option ? 'primary' : 'secondary'"
+              (click)="chooseDifficulty(option)"
+              class="font-display flex min-h-9 items-center px-3 text-sm font-bold uppercase [--notch:0.5rem]"
+              type="button"
+            >
+              {{ 'common.difficulty.' + option | translate }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- The first Monday is picked before opening, never after: the ten weeks are drawn around
+           it and a campaign is never rescheduled. -->
+      <div>
+        <span class="label-caption text-text-muted">
+          {{ 'admin.campaigns.open.startLabel' | translate }}
+        </span>
+        <div class="mt-1.5 flex gap-2">
+          @for (option of startWeeks; track option) {
+            <button
+              [appButton]="startWeek() === option ? 'primary' : 'secondary'"
+              (click)="chooseStartWeek(option)"
+              class="flex min-h-9 items-center px-3 text-sm font-medium [--notch:0.5rem]"
+              type="button"
+            >
+              {{ 'admin.campaigns.open.startWeek.' + option | translate }}
+            </button>
+          }
+        </div>
+      </div>
+    </app-admin-action-card>
   </div>
 
   <!-- The archive, last: an operator opens this page to act on the live campaign. -->
@@ -320,7 +189,10 @@
             <span class="font-mono text-xs text-text-muted tabular-nums">
               {{ range(campaign.firstWeekStart, campaign.lastWeekStart) }}
             </span>
-            <app-status-badge [label]="'common.tier.' + campaign.tier | translate" tone="neutral" />
+            <app-status-badge
+              [label]="'common.difficulty.' + campaign.difficulty | translate"
+              tone="neutral"
+            />
             @if (campaign.stoppedOn) {
               <span class="text-xs text-danger">
                 {{
@@ -360,23 +232,12 @@
   <app-confirm-dialog
     (confirmed)="confirmOpen()"
     (dismissed)="dismissOpen()"
-    [body]="'admin.campaigns.open.confirmBody' | translate"
+    [body]="'admin.campaigns.open.confirmBody.' + startWeek() | translate"
     [busy]="openState().status === 'running'"
     [cancelLabel]="'admin.cancel' | translate"
     [confirmLabel]="'admin.campaigns.open.confirm' | translate"
     [heading]="'admin.campaigns.open.heading' | translate"
     [open]="openDialogOpen()"
-  />
-
-  <app-confirm-dialog
-    (confirmed)="confirmRecalibrate()"
-    (dismissed)="dismissRecalibrate()"
-    [body]="'admin.campaigns.recalibrate.confirmBody' | translate"
-    [busy]="recalibrateState().status === 'running'"
-    [cancelLabel]="'admin.cancel' | translate"
-    [confirmLabel]="'admin.campaigns.recalibrate.confirm' | translate"
-    [heading]="'admin.campaigns.recalibrate.heading' | translate"
-    [open]="recalibrateDialogOpen()"
   />
 
   <app-confirm-dialog

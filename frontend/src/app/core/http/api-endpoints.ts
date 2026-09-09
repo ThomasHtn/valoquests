@@ -141,11 +141,6 @@ export const API_ENDPOINTS = {
       `${environment.apiBaseUrl}/admin/players/${playerId}/synchronizations`,
 
     /**
-     * `POST` a rebuild of the current week's challenge progress and ranking.
-     */
-    challengeRecalculation: `${environment.apiBaseUrl}/admin/challenges/progress/recalculation`,
-
-    /**
      * `POST` a fresh draw of the current week's challenges, discarding the pack it holds.
      */
     challengeRedraw: `${environment.apiBaseUrl}/admin/challenges/current/redraw`,
@@ -154,11 +149,6 @@ export const API_ENDPOINTS = {
      * `POST` a rebuild of the current weekly ranking alone.
      */
     rankingRecalculation: `${environment.apiBaseUrl}/admin/rankings/recalculation`,
-
-    /**
-     * `POST` the selection of the current week's five challenges.
-     */
-    currentWeekSelection: `${environment.apiBaseUrl}/admin/weeks/current/selection`,
 
     /**
      * `POST` the whole weekly rollover, run now instead of on the next Monday.
@@ -193,30 +183,9 @@ export const API_ENDPOINTS = {
     campaignReset: `${environment.apiBaseUrl}/admin/maintenance/campaign-reset`,
 
     /**
-     * `POST` the draw of today's daily challenge, when the nightly tick missed it.
-     */
-    dailyChallengeSelection: `${environment.apiBaseUrl}/admin/challenges/daily/selection`,
-
-    /**
-     * `GET` the calibration a campaign opened today would be given, or `POST` the opening itself.
+     * `POST` the opening of a campaign, at a difficulty and on a starting Monday.
      */
     campaigns: `${environment.apiBaseUrl}/admin/campaigns`,
-
-    /**
-     * `GET` the squad's measure without opening anything: reference, tier, per-operator coverage.
-     */
-    campaignCalibration: `${environment.apiBaseUrl}/admin/campaigns/calibration`,
-
-    /**
-     * `POST` a background import of every active operator's match history over the calibration
-     * window, so the measure above stands on real weeks rather than on the last two acts.
-     */
-    campaignBackfill: `${environment.apiBaseUrl}/admin/campaigns/backfill`,
-
-    /**
-     * `POST` a new measure of the live campaign's frozen roster, resizing its unsettled weeks.
-     */
-    campaignRecalibrate: `${environment.apiBaseUrl}/admin/campaigns/recalibrate`,
 
     /**
      * `POST` the stop of the live campaign, frozen at yesterday's base.
@@ -224,10 +193,10 @@ export const API_ENDPOINTS = {
     campaignStop: `${environment.apiBaseUrl}/admin/campaigns/stop`,
 
     /**
-     * `POST` a replay of the running campaign from its first day. Idempotent: the base is never
-     * advanced incrementally, so this rewrites exactly what a nightly tick would.
+     * `POST` the nightly tick, run now: the day's challenge, the week's progress and ranking, a due
+     * campaign started, and the campaign replayed from its first day. Idempotent.
      */
-    campaignReplay: `${environment.apiBaseUrl}/admin/campaigns/replay`,
+    campaignTick: `${environment.apiBaseUrl}/admin/campaigns/tick`,
 
     /**
      * `DELETE` one campaign with its weeks, roster and snapshots.

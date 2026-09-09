@@ -4,10 +4,9 @@ import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.model.CampaignSchedule;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeCalibrationSource;
-import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -35,29 +34,19 @@ public class CampaignChallengeCalibrationSource implements ChallengeCalibrationS
     private final CampaignRepository campaignRepository;
 
     /**
-     * Barème owning the reference floor.
-     */
-    private final ScoringRuleset ruleset;
-
-    /**
      * Creates the campaign-backed calibration source.
      *
      * @param campaignRepository campaign repository
-     * @param ruleset            scoring ruleset
      */
-    public CampaignChallengeCalibrationSource(
-        CampaignRepository campaignRepository,
-        ScoringRuleset ruleset
-    ) {
+    public CampaignChallengeCalibrationSource(CampaignRepository campaignRepository) {
         this.campaignRepository = campaignRepository;
-        this.ruleset = ruleset;
     }
 
     /**
      * Returns the calibration in force for one week.
      *
      * @param weekStart Monday identifying the week
-     * @return the covering campaign's calibration, the last closed one's, or the floor
+     * @return the covering campaign's calibration, the last closed one's, or the amateur one
      */
     @Override
     public ChallengeCalibration forWeek(LocalDate weekStart) {
@@ -72,7 +61,16 @@ public class CampaignChallengeCalibrationSource implements ChallengeCalibrationS
         return campaignRepository.findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED).stream()
             .findFirst()
             .map(campaign -> calibrationOf(campaign, 1))
-            .orElseGet(() -> new ChallengeCalibration(ruleset.referenceFloor(), 1, SquadLevel.REFERENCE));
+            .orElseGet(CampaignChallengeCalibrationSource::amateurCalibration);
+    }
+
+    /**
+     * Returns the calibration read outside any campaign: the amateur grid, on its first week.
+     *
+     * @return the fallback calibration
+     */
+    private static ChallengeCalibration amateurCalibration() {
+        return new ChallengeCalibration(CampaignDifficulty.AMATEUR.reference(), 1, CampaignDifficulty.AMATEUR);
     }
 
     /**
@@ -84,9 +82,9 @@ public class CampaignChallengeCalibrationSource implements ChallengeCalibrationS
      */
     private ChallengeCalibration calibrationOf(Campaign campaign, int weekIndex) {
         return new ChallengeCalibration(
-            campaign.getReference(),
+            campaign.reference(),
             weekIndex,
-            campaign.getSquadLevel()
+            campaign.getDifficulty()
         );
     }
 

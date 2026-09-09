@@ -1,4 +1,4 @@
-import { CampaignStatus } from '@core/campaign/campaign.model';
+import { CampaignDifficulty, CampaignStatus } from '@core/campaign/campaign.model';
 
 /**
  * A campaign the operator can act on, with the figures the decision is made against.
@@ -20,12 +20,12 @@ export interface LiveCampaign {
   readonly status: CampaignStatus;
 
   /**
-   * Translated tier name.
+   * Difficulty the campaign is played at.
    */
-  readonly tier: string;
+  readonly difficulty: CampaignDifficulty;
 
   /**
-   * Reference figure the squad was calibrated on.
+   * Reference the difficulty carries, every figure of the campaign being a multiple of it.
    */
   readonly reference: number;
 

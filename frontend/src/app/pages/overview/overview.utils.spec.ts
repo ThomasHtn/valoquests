@@ -74,7 +74,7 @@ function campaign(overrides: Partial<Campaign> = {}): Campaign {
     id: 1,
     status: 'RUNNING',
     number: 3,
-    tier: 'NORMAL',
+    difficulty: 'AMATEUR',
     reference: 1000,
     rosterSize: 5,
     firstWeekStart: '2026-01-05',

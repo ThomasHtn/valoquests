@@ -11,8 +11,8 @@ import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.model.CampaignWeekShape;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
 import io.github.thomashtn.valoquests.campaign.model.NewCampaign;
-import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
 import io.github.thomashtn.valoquests.campaign.repository.GuardianRepository;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import java.math.BigDecimal;
@@ -91,14 +91,14 @@ public class CampaignFactory {
      *
      * @param number         campaign number, one more than the last one ever opened
      * @param roster         players to freeze, never empty
-     * @param calibration    what the squad was measured at
-     * @param firstWeekStart Monday the campaign starts on, strictly after today
+     * @param difficulty     difficulty the campaign is played at
+     * @param firstWeekStart Monday the campaign starts on
      * @return the campaign, its roster and its ten weeks
      */
     public NewCampaign build(
         int number,
         List<Player> roster,
-        SquadCalibration calibration,
+        CampaignDifficulty difficulty,
         LocalDate firstWeekStart
     ) {
         Campaign campaign = new Campaign();
@@ -108,23 +108,9 @@ public class CampaignFactory {
         campaign.setFirstWeekStart(firstWeekStart);
         campaign.setLastWeekStart(firstWeekStart.plusWeeks(CampaignSchedule.WEEK_COUNT - 1L));
         campaign.setRosterSize(roster.size());
-        calibrate(campaign, calibration);
+        campaign.setDifficulty(difficulty);
 
         return new NewCampaign(campaign, roster(campaign, roster), weeks(campaign));
-    }
-
-    /**
-     * Writes a calibration onto a campaign.
-     *
-     * @param campaign    campaign to calibrate
-     * @param calibration what the squad was measured at
-     */
-    public void calibrate(Campaign campaign, SquadCalibration calibration) {
-        campaign.setReference(calibration.reference());
-        campaign.setTier(calibration.tier());
-        campaign.setSquadLevel(calibration.level());
-        campaign.setCalibrationWindowMonths(calibration.windowMonths());
-        campaign.setCalibrationFirstDay(calibration.firstDay());
     }
 
     /**
@@ -137,12 +123,12 @@ public class CampaignFactory {
         int progressionPercent = scoringRuleset.rewardProgressionPercent(week.getWeekIndex());
 
         week.setGuardianHitPoints(campaignRuleset.guardianHitPoints(
-            campaign.getReference(),
+            campaign.reference(),
             week.getGuardianWeight().doubleValue(),
             campaign.getRosterSize()
         ));
         week.setWoundedCount(campaignRuleset.groupSize(
-            campaign.getReference(),
+            campaign.reference(),
             week.getGroupWeight().doubleValue(),
             campaign.getRosterSize(),
             progressionPercent

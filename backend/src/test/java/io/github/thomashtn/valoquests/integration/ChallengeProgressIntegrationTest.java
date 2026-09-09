@@ -292,7 +292,7 @@ class ChallengeProgressIntegrationTest
      * to 8 % on Friday: WIN 500 = 500, LOSS 350 × 1.02 = 357, WIN 500 × 1.04 = 520, LOSS
      * 350 × 1.06 = 371, then the 40-kill Deathmatch victory, WIN 150 × 1.08 = 162, for 1910. None of
      * these reaches the sixth match of its day. The five weekly challenges pay 4 + 6 + 9 + 14 +
-     * 19 = 52 points at the 3 500 floor no campaign has raised, plus the day's challenge when this
+     * 29 = 78 points at the amateur reference no campaign has raised, plus the day's challenge when this
      * player validated it.
      *
      * @param player expected ranked player
@@ -331,7 +331,7 @@ class ChallengeProgressIntegrationTest
                     .isEqualTo(5);
 
                 assertThat(score.getChallengePoints())
-                    .isEqualTo(52 + dailyPoints);
+                    .isEqualTo(78 + dailyPoints);
 
                 assertThat(score.getCompletedChallenges())
                     .isEqualTo(5);
@@ -340,7 +340,7 @@ class ChallengeProgressIntegrationTest
                     .isEqualTo(completedDailies(player));
 
                 assertThat(score.getTotalPoints())
-                    .isEqualTo(1_910 + 52 + dailyPoints);
+                    .isEqualTo(1_910 + 78 + dailyPoints);
 
                 assertThat(score.getCalculatedAt())
                     .isEqualTo(CALCULATION_TIME);
@@ -358,7 +358,7 @@ class ChallengeProgressIntegrationTest
      * @return the points those dailies add
      */
     private int dailyPoints(Player player) {
-        return completedDailies(player) * 4;
+        return completedDailies(player) * 6;
     }
 
     /**

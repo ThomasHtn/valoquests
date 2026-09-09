@@ -1,18 +1,18 @@
 package io.github.thomashtn.valoquests.campaign.dto;
 
-import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import java.time.LocalDate;
 import java.util.List;
 
 /**
  * One closed campaign, as the history table reads it.
  *
- * <p>The tier is what makes two of these comparable: a base of 30 000 at Normal and one of 119 000
- * at Elite describe the same ten weeks played by two different squads.
+ * <p>The difficulty is what makes two of these comparable: a base of 30 000 at Amateur and one of
+ * 60 000 at Pro describe the same ten weeks played at two settings.
  *
  * @param id                campaign identifier
  * @param number            campaign number
- * @param tier              bracket the reference fell in
+ * @param difficulty        difficulty the campaign was played at
  * @param reference         squad's weekly reference per player
  * @param rosterSize        operators frozen into it
  * @param firstWeekStart    Monday it started on
@@ -26,7 +26,7 @@ import java.util.List;
 public record CampaignHistoryResponse(
     long id,
     int number,
-    CampaignTier tier,
+    CampaignDifficulty difficulty,
     int reference,
     int rosterSize,
     LocalDate firstWeekStart,

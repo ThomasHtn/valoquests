@@ -79,12 +79,6 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
     private static final double SURVIVORS_PER_REFERENCE_DIVISOR = 1_000.0;
 
     /**
-     * Lowest reference a campaign can be calibrated at: nine games a week, six competitive and
-     * three quick ones, the least a squad plays for a guardian to outlast a single evening.
-     */
-    private static final int REFERENCE_FLOOR = 3_500;
-
-    /**
      * Divisor turning a percentage into a ratio.
      */
     private static final double PERCENT_SCALE = 100.0;
@@ -209,8 +203,4 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
         return challengeSurvivors(reference, weight, weekIndex);
     }
 
-    @Override
-    public int referenceFloor() {
-        return REFERENCE_FLOOR;
-    }
 }

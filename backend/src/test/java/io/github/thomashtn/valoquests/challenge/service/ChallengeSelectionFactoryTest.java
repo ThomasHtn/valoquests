@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -43,7 +43,7 @@ class ChallengeSelectionFactoryTest {
      */
     @Test
     void shouldStoreTheGridOfTheWeeksLevel() {
-        ChallengeSelectionFactory factory = factory(SquadLevel.EXPERT);
+        ChallengeSelectionFactory factory = factory(CampaignDifficulty.PRO);
 
         WeeklyChallenge selection = factory.weekly(WEEK_START, challenge(), DRAWN_AT);
 
@@ -64,7 +64,7 @@ class ChallengeSelectionFactoryTest {
      */
     @Test
     void shouldCreateADailySelectionOnItsDay() {
-        ChallengeSelectionFactory factory = factory(SquadLevel.REFERENCE);
+        ChallengeSelectionFactory factory = factory(CampaignDifficulty.AMATEUR);
         Challenge challenge = challenge();
         challenge.setCadence(ChallengeCadence.DAILY);
         challenge.setDifficulty(null);
@@ -84,7 +84,7 @@ class ChallengeSelectionFactoryTest {
      * @param level level in force
      * @return factory under test
      */
-    private ChallengeSelectionFactory factory(SquadLevel level) {
+    private ChallengeSelectionFactory factory(CampaignDifficulty level) {
         return new ChallengeSelectionFactory(
             parser,
             weekStart -> new ChallengeCalibration(5_300, 1, level)

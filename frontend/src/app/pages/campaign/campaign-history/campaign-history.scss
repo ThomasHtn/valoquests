@@ -165,21 +165,11 @@
 }
 
 .tier--AMATEUR {
-  background: rgb(236 232 225 / 10%);
-  color: var(--color-text-secondary);
-}
-
-.tier--NORMAL {
   background: rgb(217 149 74 / 16%);
   color: #e8ab6b;
 }
 
-.tier--CONFIRMED {
-  background: rgb(127 182 216 / 18%);
-  color: #7fb6d8;
-}
-
-.tier--ELITE {
+.tier--PRO {
   background: rgb(224 64 78 / 18%);
   color: var(--color-boss-hp-edge);
 }

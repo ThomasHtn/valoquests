@@ -1,5 +1,5 @@
 import {
-  CampaignTier,
+  CampaignDifficulty,
   CampaignWeek,
   ExtractionLimiter,
   GuardianCategory,
@@ -297,7 +297,7 @@ export interface LawNotes {
   /**
    * Tier the squad was measured at.
    */
-  readonly tier: CampaignTier;
+  readonly difficulty: CampaignDifficulty;
 
   /**
    * Reference figure the squad was calibrated on.
@@ -601,7 +601,7 @@ export interface HistoryRow {
   /**
    * Tier the squad was measured at.
    */
-  readonly tier: CampaignTier;
+  readonly difficulty: CampaignDifficulty;
 
   /**
    * Inhabitants of the base.

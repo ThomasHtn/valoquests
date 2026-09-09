@@ -8,11 +8,11 @@ import io.github.thomashtn.valoquests.challenge.dto.CurrentChallengesResponse;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
@@ -88,7 +88,7 @@ class DefaultChallengeQueryServiceTest {
         ChallengeCalibrationSource calibrationSource = mock(ChallengeCalibrationSource.class);
 
         when(calibrationSource.forWeek(WEEK_START))
-            .thenReturn(new ChallengeCalibration(REFERENCE, 1, SquadLevel.REFERENCE));
+            .thenReturn(new ChallengeCalibration(REFERENCE, 1, CampaignDifficulty.AMATEUR));
         when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
             .thenReturn(List.of(
                 player(1L, PlayerStatus.ACTIVE),

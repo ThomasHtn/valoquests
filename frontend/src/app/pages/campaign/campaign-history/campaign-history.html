@@ -58,8 +58,8 @@
                 <span>{{ row.subtitle }}</span>
               </th>
               <td>
-                <span [class]="'tier tier--' + row.tier">{{
-                  'common.tier.' + row.tier | translate
+                <span [class]="'tier tier--' + row.difficulty">{{
+                  'common.difficulty.' + row.difficulty | translate
                 }}</span>
               </td>
               <td class="tabular-nums">{{ format(row.population) }}</td>

@@ -114,8 +114,8 @@ export class Campaign {
   });
 
   /**
-   * The campaign, then its tier: the header's slot beside the eyebrow only exists on a page with a
-   * way back, so the tier rides in the line itself.
+   * The campaign, then its difficulty: the header's slot beside the eyebrow only exists on a page
+   * with a way back, so the difficulty rides in the line itself.
    */
   protected readonly headerEyebrow = computed(() => {
     const campaign = this.campaign();
@@ -125,9 +125,9 @@ export class Campaign {
     const eyebrow = this.translation.translate('campaign.header.eyebrow', {
       number: campaign.number,
     });
-    return campaign.tier
-      ? `${eyebrow} · ${this.translation.translate('campaign.header.tier', {
-          tier: this.translation.translate(`common.tier.${campaign.tier}`),
+    return campaign.difficulty
+      ? `${eyebrow} · ${this.translation.translate('campaign.header.difficulty', {
+          difficulty: this.translation.translate(`common.difficulty.${campaign.difficulty}`),
         })}`
       : eyebrow;
   });
@@ -231,14 +231,19 @@ export class Campaign {
           : this.translation.translate('campaign.history.stopped', {
               season: this.season(past.firstWeekStart),
             }),
-      tier: past.tier,
+      difficulty: past.difficulty,
       population: past.population,
       guardiansDefeated: past.guardiansDefeated,
       weeksPlayed: past.weeklyPopulation.length,
       rescued: past.rescued,
       current: false,
     }));
-    if (campaign && campaign.number !== null && campaign.tier && campaign.status !== 'CLOSED') {
+    if (
+      campaign &&
+      campaign.number !== null &&
+      campaign.difficulty &&
+      campaign.status !== 'CLOSED'
+    ) {
       rows.push({
         rank: 0,
         number: campaign.number,
@@ -249,7 +254,7 @@ export class Campaign {
                 weeks: CAMPAIGN_WEEK_COUNT,
               })
             : this.translation.translate('common.campaignStatus.OPENED'),
-        tier: campaign.tier,
+        difficulty: campaign.difficulty,
         population: campaign.base?.population ?? 0,
         guardiansDefeated: campaign.totals?.guardiansDefeated ?? 0,
         weeksPlayed: campaign.totals?.weeksSettled ?? 0,

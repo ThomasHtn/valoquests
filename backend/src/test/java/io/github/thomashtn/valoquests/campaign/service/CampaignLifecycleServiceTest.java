@@ -11,16 +11,14 @@ import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
-import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
 import io.github.thomashtn.valoquests.campaign.exception.CampaignLifecycleException;
+import io.github.thomashtn.valoquests.campaign.model.CampaignStartWeek;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
-import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.model.NewCampaign;
-import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
@@ -67,9 +65,6 @@ class CampaignLifecycleServiceTest {
     private PlayerRepository playerRepository;
 
     @Mock
-    private SquadCalibrationService calibrationService;
-
-    @Mock
     private CampaignFactory factory;
 
     @Test
@@ -82,40 +77,37 @@ class CampaignLifecycleServiceTest {
 
         when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
         when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE)).thenReturn(List.of(operator));
-        when(calibrationService.calibrateCovered(List.of(operator), LocalDate.of(2026, 9, 4), SquadLevel.REFERENCE))
-            .thenReturn(calibration());
         when(factory.build(anyInt(), anyList(), any(), any()))
             .thenReturn(new NewCampaign(campaign, List.of(), List.of()));
         when(campaignRepository.save(campaign)).thenReturn(campaign);
 
-        Campaign opened = service.open(SquadLevel.REFERENCE);
+        Campaign opened = service.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.NEXT_WEEK);
 
         assertThat(opened.getStatus()).isEqualTo(CampaignStatus.OPENED);
-        verify(factory).build(1, List.of(operator), calibration(), FIRST_WEEK_START);
+        verify(factory).build(1, List.of(operator), CampaignDifficulty.AMATEUR, FIRST_WEEK_START);
         verify(campaignPlayerRepository).saveAll(List.of());
         verify(campaignWeekRepository).saveAll(List.of());
     }
 
     @Test
-    @DisplayName("Opens a campaign starting the same day when opened on a Monday")
-    void shouldOpenACampaignStartingTheSameMonday() {
-        Instant monday = Instant.parse("2026-09-07T10:00:00Z");
-        CampaignLifecycleService service = serviceAt(monday);
+    @DisplayName("Opens a campaign on the Monday of the week in progress, already running")
+    void shouldOpenACampaignOnTheCurrentWeek() {
+        CampaignLifecycleService service = serviceAt(OPENING_DAY);
         Player operator = CampaignFixtures.player(1, "Alpha");
         Campaign campaign = CampaignFixtures.runningCampaign(1);
         campaign.setStatus(CampaignStatus.OPENED);
 
         when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
         when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE)).thenReturn(List.of(operator));
-        when(calibrationService.calibrateCovered(List.of(operator), FIRST_WEEK_START, SquadLevel.REFERENCE))
-            .thenReturn(calibration());
         when(factory.build(anyInt(), anyList(), any(), any()))
             .thenReturn(new NewCampaign(campaign, List.of(), List.of()));
         when(campaignRepository.save(campaign)).thenReturn(campaign);
 
-        service.open(SquadLevel.REFERENCE);
+        Campaign opened = service.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.CURRENT_WEEK);
 
-        verify(factory).build(1, List.of(operator), calibration(), FIRST_WEEK_START);
+        // The first Monday is already past, so the campaign never waits for the nightly tick.
+        assertThat(opened.getStatus()).isEqualTo(CampaignStatus.RUNNING);
+        verify(factory).build(1, List.of(operator), CampaignDifficulty.AMATEUR, FIRST_WEEK_START.minusWeeks(1));
     }
 
     @Test
@@ -129,15 +121,14 @@ class CampaignLifecycleServiceTest {
 
         when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
         when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE)).thenReturn(List.of(operator));
-        when(calibrationService.calibrateCovered(anyList(), any(), any())).thenReturn(calibration());
         when(campaignRepository.findFirstByOrderByNumberDesc()).thenReturn(Optional.of(previous));
         when(factory.build(anyInt(), anyList(), any(), any()))
             .thenReturn(new NewCampaign(campaign, List.of(), List.of()));
         when(campaignRepository.save(campaign)).thenReturn(campaign);
 
-        service.open(SquadLevel.REFERENCE);
+        service.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.NEXT_WEEK);
 
-        verify(factory).build(5, List.of(operator), calibration(), FIRST_WEEK_START);
+        verify(factory).build(5, List.of(operator), CampaignDifficulty.AMATEUR, FIRST_WEEK_START);
     }
 
     @Test
@@ -148,7 +139,7 @@ class CampaignLifecycleServiceTest {
         when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED))
             .thenReturn(Optional.of(CampaignFixtures.runningCampaign(1)));
 
-        assertThatThrownBy(() -> service.open(SquadLevel.REFERENCE))
+        assertThatThrownBy(() -> service.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.NEXT_WEEK))
             .isInstanceOf(CampaignLifecycleException.class)
             .hasMessageContaining("already opened or running");
     }
@@ -161,7 +152,7 @@ class CampaignLifecycleServiceTest {
         when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
         when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE)).thenReturn(List.of());
 
-        assertThatThrownBy(() -> service.open(SquadLevel.REFERENCE))
+        assertThatThrownBy(() -> service.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.NEXT_WEEK))
             .isInstanceOf(CampaignLifecycleException.class)
             .hasMessageContaining("No operator is active");
     }
@@ -273,43 +264,6 @@ class CampaignLifecycleServiceTest {
         verify(campaignRepository).delete(campaign);
     }
 
-    @Test
-    @DisplayName("Recalibrates the live campaign and resizes only the weeks not settled yet")
-    void shouldRecalibrateTheLiveCampaign() {
-        CampaignLifecycleService service = serviceAt(OPENING_DAY);
-        Campaign campaign = CampaignFixtures.runningCampaign(1);
-        Player operator = CampaignFixtures.player(1, "Alpha");
-        CampaignWeek settled = CampaignFixtures.week(campaign, 1, 100, 10);
-        settled.setSettled(true);
-        CampaignWeek open = CampaignFixtures.week(campaign, 2, 100, 10);
-
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.of(campaign));
-        when(campaignPlayerRepository.findAllByCampaignIdOrderByPlayerIdAsc(campaign.getId()))
-            .thenReturn(List.of(CampaignFixtures.member(campaign, operator)));
-        when(calibrationService.calibrateCovered(List.of(operator), LocalDate.of(2026, 9, 4), SquadLevel.REFERENCE))
-            .thenReturn(calibration());
-        when(campaignWeekRepository.findAllByCampaignIdOrderByWeekIndexAsc(campaign.getId()))
-            .thenReturn(List.of(settled, open));
-
-        Campaign recalibrated = service.recalibrate(SquadLevel.REFERENCE);
-
-        assertThat(recalibrated).isSameAs(campaign);
-        verify(factory).calibrate(campaign, calibration());
-        verify(factory).size(open, campaign);
-        verify(factory, never()).size(settled, campaign);
-        verify(campaignWeekRepository).saveAll(List.of(settled, open));
-    }
-
-    @Test
-    @DisplayName("Refuses to recalibrate when no campaign is live")
-    void shouldRefuseToRecalibrateWithoutALiveCampaign() {
-        CampaignLifecycleService service = serviceAt(OPENING_DAY);
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> service.recalibrate(SquadLevel.REFERENCE))
-            .isInstanceOf(CampaignLifecycleException.class);
-    }
-
     /**
      * Builds the service on a clock frozen at one instant.
      *
@@ -324,35 +278,8 @@ class CampaignLifecycleServiceTest {
             campaignPlayerRepository,
             campaignWeekRepository,
             playerRepository,
-            calibrationService,
             factory,
             new WeekCalendar(clock, ZoneOffset.UTC)
-        );
-    }
-
-    /**
-     * Builds the calibration the fixtures are sized on.
-     *
-     * @return the calibration
-     */
-    private SquadCalibration calibration() {
-        return calibration(9);
-    }
-
-    /**
-     * Builds a calibration read over a given window.
-     *
-     * @param windowMonths months the window covers
-     * @return the calibration
-     */
-    private SquadCalibration calibration(int windowMonths) {
-        return new SquadCalibration(
-            CampaignFixtures.REFERENCE,
-            CampaignTier.NORMAL,
-            SquadLevel.REFERENCE,
-            windowMonths,
-            FIRST_WEEK_START.minusMonths(windowMonths),
-            List.of()
         );
     }
 }

@@ -2,9 +2,9 @@ package io.github.thomashtn.valoquests.challenge.parser;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import java.util.List;
 
 /**
@@ -13,7 +13,7 @@ import java.util.List;
 public interface ChallengeDefinitionParser {
 
     /**
-     * Parses and validates one catalogue challenge at the reference level.
+     * Parses and validates one catalogue challenge at the amateur difficulty.
      *
      * @param challenge challenge to parse
      * @return typed challenge definition
@@ -21,13 +21,13 @@ public interface ChallengeDefinitionParser {
     ChallengeDefinition parse(Challenge challenge);
 
     /**
-     * Parses and validates one catalogue challenge at the level a campaign plays.
+     * Parses and validates one catalogue challenge at the difficulty a campaign plays.
      *
      * @param challenge challenge to parse
-     * @param level     squad level whose grid is read
+     * @param difficulty difficulty whose grid is read
      * @return typed challenge definition
      */
-    ChallengeDefinition parse(Challenge challenge, SquadLevel level);
+    ChallengeDefinition parse(Challenge challenge, CampaignDifficulty difficulty);
 
     /**
      * Parses and validates the definition a selection was resolved to at draw time.

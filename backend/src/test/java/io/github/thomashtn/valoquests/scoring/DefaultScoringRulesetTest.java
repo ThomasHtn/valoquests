@@ -159,11 +159,6 @@ class DefaultScoringRulesetTest {
         assertThat(pointsOf(ChallengeCadence.WEEKLY, ChallengeDifficulty.VERY_HARD)).isEqualTo(29);
     }
 
-    @Test
-    void shouldFloorTheReferenceAtThirtyFiveHundred() {
-        assertThat(ruleset.referenceFloor()).isEqualTo(3_500);
-    }
-
     private int survivorsOf(ChallengeCadence cadence, ChallengeDifficulty difficulty) {
         return ruleset.challengeSurvivors(DOCUMENT_REFERENCE, ruleset.challengeWeight(cadence, difficulty), 1);
     }

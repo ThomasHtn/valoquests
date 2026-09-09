@@ -1,8 +1,7 @@
 package io.github.thomashtn.valoquests.campaign.entity;
 
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
-import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.shared.entity.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,10 +21,9 @@ import lombok.Setter;
 /**
  * One ten-week rescue campaign, opened from the backoffice and calibrated once.
  *
- * <p>The calibration block — reference, tier, squad level — is written at opening and never touched
- * again. It sizes the guardians and the groups, and decides which of a challenge's two written
- * grids is played, so a reference that moved mid-campaign would resize a guardian the squad has
- * already spent a week on.
+ * <p>The difficulty is written at opening and never touched again. It sizes the guardians and the
+ * groups, and decides which of a challenge's two written grids is played, so a difficulty that moved
+ * mid-campaign would resize a guardian the squad has already spent a week on.
  */
 @Getter
 @Setter
@@ -94,36 +92,26 @@ public class Campaign extends AuditableEntity {
     private int rosterSize;
 
     /**
-     * Squad's weekly reference per player, the unit every other figure is a multiple of.
-     */
-    @Column(nullable = false)
-    private int reference;
-
-    /**
-     * Bracket the reference falls in, printed next to the score and used in no formula.
+     * Difficulty the operator chose at opening, frozen for the whole run.
+     *
+     * <p>The only dial: it carries the reference every other figure is a multiple of, and decides
+     * which of the two grids written in the catalogue this campaign's challenges are drawn from.
      */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 12)
-    private CampaignTier tier;
+    private CampaignDifficulty difficulty;
 
     /**
-     * Which of the two grids written in the catalogue this campaign's challenges are drawn from.
+     * Returns the weekly reference per player every figure of this campaign is a multiple of.
+     *
+     * <p>Read from the difficulty rather than stored: the difficulty is frozen at opening, so the
+     * reference cannot drift, and there is no second copy to keep in step with it.
+     *
+     * @return the campaign's reference
      */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "squad_level", nullable = false, length = 12)
-    private SquadLevel squadLevel;
-
-    /**
-     * Months of history the calibration ended up reading.
-     */
-    @Column(name = "calibration_window_months", nullable = false)
-    private int calibrationWindowMonths;
-
-    /**
-     * First day of that window.
-     */
-    @Column(name = "calibration_first_day", nullable = false)
-    private LocalDate calibrationFirstDay;
+    public int reference() {
+        return difficulty.reference();
+    }
 
     /**
      * Returns the last day this campaign's base is ever computed on.

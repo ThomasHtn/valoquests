@@ -86,21 +86,19 @@ purpose: miss a day, and first place is still within reach.
 
 ---
 
-## <img src="docs/media/icons/squad.svg" width="22" alt=""> Calibrated to your squad. Not to strangers.
+## <img src="docs/media/icons/squad.svg" width="22" alt=""> One dial, picked at launch.
 
-Before week one, ValoQuests reads **nine months of history** for everyone on the roster and sizes the
-entire campaign around it. Guardians, groups of wounded, challenge rewards, all of it, per active
-player. Two operators or twenty, the campaign plays the same.
+You pick the difficulty when you open a campaign, and it is frozen for the ten weeks. It carries the
+**reference** everything else is a multiple of: guardians, groups of wounded, challenge rewards, all
+of it, per active player. Two operators or twenty, the campaign plays the same.
 
-| Tier | Weekly reference per player | Roughly |
+| Difficulty | Weekly reference per player | What it asks for |
 |---|---|---|
-| Amateur | under 3,500 | 4 competitive and 3 quick matches a week |
-| Normal | 3,500 to 9,000 | 7 competitive and 9 quick matches |
-| Confirmed | 9,000 to 16,000 | 16 competitive and 25 quick matches |
-| Elite | over 16,000 | 28 competitive and 35 quick matches |
+| Amateur | 5,300 | A squad that plays regularly |
+| Pro | 10,600 | Twice the guardian, and the harder written targets |
 
-A casual five stack and a full academy roster both end up defeating around **8 guardians out of 10**.
-The tier is what lets their two campaigns be read side by side.
+The difficulty also decides which of a challenge's two hand-written targets you play against, so a
+Pro squad chases harder objectives against a bigger guardian for the same relative reward.
 
 ---
 

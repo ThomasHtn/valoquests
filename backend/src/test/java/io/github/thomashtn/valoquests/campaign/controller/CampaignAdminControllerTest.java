@@ -4,21 +4,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
 import io.github.thomashtn.valoquests.campaign.exception.CampaignLifecycleException;
-import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
-import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
-import io.github.thomashtn.valoquests.campaign.service.AsyncHistoryBackfillRunner;
+import io.github.thomashtn.valoquests.campaign.model.CampaignStartWeek;
 import io.github.thomashtn.valoquests.campaign.service.CampaignLifecycleService;
 import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
-import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
+import io.github.thomashtn.valoquests.campaign.service.DailyTickService;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.shared.config.AdminApiKeyFilter;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,36 +45,18 @@ class CampaignAdminControllerTest {
     private CampaignReplayService replayService;
 
     @MockitoBean
-    private AsyncHistoryBackfillRunner backfillRunner;
-
-    /**
-     * Verifies that the calibration preview commits to nothing.
-     */
-    @Test
-    void shouldPreviewTheCalibration() throws Exception {
-        when(lifecycleService.previewCalibration(SquadLevel.REFERENCE)).thenReturn(new SquadCalibration(
-            5_300,
-            CampaignTier.NORMAL,
-            SquadLevel.REFERENCE,
-            9,
-            CampaignFixtures.FIRST_WEEK_START.minusMonths(9),
-            List.of()
-        ));
-
-        mockMvc.perform(get("/api/admin/campaigns/calibration")
-                .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.reference").value(5_300))
-            .andExpect(jsonPath("$.tier").value("NORMAL"))
-            .andExpect(jsonPath("$.windowMonths").value(9));
-    }
+    private DailyTickService dailyTickService;
 
     /**
      * Verifies that opening a campaign answers with the ten weeks it just scheduled.
+     *
+     * <p>Also pins the default: an unqualified request opens on the next Monday, so the operator
+     * who does not choose never starts a campaign retroactively by accident.
      */
     @Test
     void shouldOpenACampaign() throws Exception {
-        when(lifecycleService.open(SquadLevel.REFERENCE)).thenReturn(CampaignFixtures.runningCampaign(1));
+        when(lifecycleService.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.NEXT_WEEK))
+            .thenReturn(CampaignFixtures.runningCampaign(1));
 
         mockMvc.perform(post("/api/admin/campaigns")
                 .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
@@ -93,24 +72,12 @@ class CampaignAdminControllerTest {
      */
     @Test
     void shouldRefuseASecondCampaign() throws Exception {
-        when(lifecycleService.open(SquadLevel.REFERENCE))
+        when(lifecycleService.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.NEXT_WEEK))
             .thenThrow(new CampaignLifecycleException("A campaign is already opened or running."));
 
         mockMvc.perform(post("/api/admin/campaigns")
                 .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
             .andExpect(status().isConflict());
-    }
-
-    /**
-     * Verifies that the history backfill is accepted and left to run in the background.
-     */
-    @Test
-    void shouldAcceptTheHistoryBackfill() throws Exception {
-        mockMvc.perform(post("/api/admin/campaigns/backfill")
-                .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
-            .andExpect(status().isAccepted());
-
-        verify(backfillRunner).run();
     }
 
     /**
@@ -127,15 +94,34 @@ class CampaignAdminControllerTest {
     }
 
     /**
-     * Verifies that the replay route is a repair tool with no body of its own.
+     * Verifies that a campaign opened on the week in progress is replayed on the spot.
+     *
+     * <p>Without that replay the days already played would show as empty until the next tick, on a
+     * campaign the operator opened precisely to count them.
      */
     @Test
-    void shouldReplayTheCampaign() throws Exception {
-        mockMvc.perform(post("/api/admin/campaigns/replay")
+    void shouldReplayACampaignOpenedOnTheCurrentWeek() throws Exception {
+        when(lifecycleService.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.CURRENT_WEEK))
+            .thenReturn(CampaignFixtures.runningCampaign(1));
+
+        mockMvc.perform(post("/api/admin/campaigns")
+                .param("startWeek", "CURRENT_WEEK")
+                .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
+            .andExpect(status().isCreated());
+
+        verify(replayService).replay(any());
+    }
+
+    /**
+     * Verifies that the tick route is a repair tool with no body of its own.
+     */
+    @Test
+    void shouldRunTheDailyTick() throws Exception {
+        mockMvc.perform(post("/api/admin/campaigns/tick")
                 .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
             .andExpect(status().isNoContent());
 
-        verify(replayService).replayRunningCampaign();
+        verify(dailyTickService).run();
     }
 
     /**

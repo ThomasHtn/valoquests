@@ -7,27 +7,31 @@
 export type CampaignStatus = 'OPENED' | 'RUNNING' | 'CLOSED';
 
 /**
- * Tier the squad was measured at when the campaign opened. Mirrors the backend `CampaignTier`.
- */
-export type CampaignTier = 'AMATEUR' | 'NORMAL' | 'CONFIRMED' | 'ELITE';
-
-/**
- * The four tiers from the lowest reference to the highest, in ladder order.
- */
-export const CAMPAIGN_TIERS: readonly CampaignTier[] = ['AMATEUR', 'NORMAL', 'CONFIRMED', 'ELITE'];
-
-/**
- * Which of a challenge's two written grids a campaign plays. Mirrors the backend `SquadLevel`.
+ * Difficulty a campaign is played at, chosen at opening. Mirrors the backend `CampaignDifficulty`.
  *
- * Replaces the volume factor and the talent anchors: targets are no longer computed from history,
- * the catalogue writes both numbers and a campaign picks a side once at opening.
+ * The single dial: it carries the reference the guardians, the groups of wounded and the challenge
+ * rewards are multiples of, and decides which of a challenge's two written grids is played. Nothing
+ * is derived from match history any more.
  */
-export type SquadLevel = 'REFERENCE' | 'EXPERT';
+export type CampaignDifficulty = 'AMATEUR' | 'PRO';
 
 /**
- * The two levels, from the one a squad playing regularly is asked to the harder one.
+ * The two difficulties, from the one a squad playing regularly is asked to the harder one.
  */
-export const SQUAD_LEVELS: readonly SquadLevel[] = ['REFERENCE', 'EXPERT'];
+export const CAMPAIGN_DIFFICULTIES: readonly CampaignDifficulty[] = ['AMATEUR', 'PRO'];
+
+/**
+ * Which Monday a campaign is opened on. Mirrors the backend `CampaignStartWeek`.
+ *
+ * `CURRENT_WEEK` is retroactive: the campaign starts on the Monday of the week in progress, so the
+ * days already played count and it is running the moment it is opened.
+ */
+export type CampaignStartWeek = 'CURRENT_WEEK' | 'NEXT_WEEK';
+
+/**
+ * The two start weeks, in the order the backoffice offers them.
+ */
+export const CAMPAIGN_START_WEEKS: readonly CampaignStartWeek[] = ['CURRENT_WEEK', 'NEXT_WEEK'];
 
 /**
  * Weight class of a week's guardian. Mirrors the backend `GuardianCategory`.
@@ -431,9 +435,9 @@ export interface Campaign {
   readonly number: number | null;
 
   /**
-   * Tier of the campaign, or `null` when none exists.
+   * Difficulty of the campaign, or `null` when none exists.
    */
-  readonly tier: CampaignTier | null;
+  readonly difficulty: CampaignDifficulty | null;
 
   /**
    * Reference figure, or `null` when none exists.
@@ -620,9 +624,9 @@ export interface CampaignHistory {
   readonly number: number;
 
   /**
-   * Tier the squad was measured at.
+   * Difficulty the campaign was played at.
    */
-  readonly tier: CampaignTier;
+  readonly difficulty: CampaignDifficulty;
 
   /**
    * Reference figure the squad was calibrated on.

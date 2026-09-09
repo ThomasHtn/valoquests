@@ -5,8 +5,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import io.github.thomashtn.valoquests.shared.config.AdminApiKeyFilter;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
-import io.github.thomashtn.valoquests.week.service.WeeklyLifecycleCoordinator;
 import io.github.thomashtn.valoquests.week.service.WeeklyRolloverService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,31 +28,8 @@ class WeekAdminControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private WeekCalendar weekCalendar;
-
-    @MockitoBean
-    private WeeklyLifecycleCoordinator weeklyLifecycleCoordinator;
-
     @MockitoBean
     private WeeklyRolloverService weeklyRolloverService;
-
-    /**
-     * Verifies that the route opens the week currently in progress.
-     *
-     * <p>Pinning the week matters: opening any other one would draw challenges and a boss for a
-     * week nobody is playing, while leaving the broken one just as empty.
-     */
-    @Test
-    void shouldOpenTheWeekCurrentlyInProgress() throws Exception {
-        mockMvc.perform(
-                post("/api/admin/weeks/current/selection")
-                    .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)
-            )
-            .andExpect(status().isNoContent());
-
-        verify(weeklyLifecycleCoordinator).openWeek(weekCalendar.currentWeekStart());
-    }
 
     /**
      * Verifies that the route runs the same catch-up rollover the Monday schedule runs.
