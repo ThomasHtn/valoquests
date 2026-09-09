@@ -62,23 +62,7 @@
           <span class="min-w-0">
             <span class="ros-name">{{ row.name }}</span>
             @if (row.title; as title) {
-              <span [class]="'ros-title ' + title.colorClass">
-                @switch (title.icon) {
-                  @case ('wrench') {
-                    <svg aria-hidden="true" class="size-3.5" lucideWrench></svg>
-                  }
-                  @case ('wheat') {
-                    <svg aria-hidden="true" class="size-3.5" lucideWheat></svg>
-                  }
-                  @case ('flame') {
-                    <svg aria-hidden="true" class="size-3.5" lucideFlame></svg>
-                  }
-                  @case ('target') {
-                    <svg aria-hidden="true" class="size-3.5" lucideTarget></svg>
-                  }
-                }
-                {{ 'common.title.' + title.key | translate }}
-              </span>
+              <span class="ros-title"><app-title-badge [title]="title.key" /></span>
             }
           </span>
         </span>

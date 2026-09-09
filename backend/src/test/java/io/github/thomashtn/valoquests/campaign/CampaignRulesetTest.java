@@ -26,7 +26,7 @@ class CampaignRulesetTest {
     @Test
     @DisplayName("Sizes week one's guardian at the documented value for a squad of seven")
     void shouldSizeTheFirstGuardian() {
-        assertThat(ruleset.guardianHitPoints(REFERENCE, 0.60, 7)).isEqualTo(17_363);
+        assertThat(ruleset.guardianHitPoints(REFERENCE, 0.60, 7)).isEqualTo(24_486);
     }
 
     @Test
@@ -37,7 +37,7 @@ class CampaignRulesetTest {
 
     @ParameterizedTest(name = "{0} operator(s) get {1} hit points per operator")
     @DisplayName("Keeps the guardian's size per operator identical whatever the roster")
-    @CsvSource({"2, 2480", "7, 2480", "20, 2480"})
+    @CsvSource({"2, 3498", "7, 3498", "20, 3498"})
     void shouldKeepGuardianSizePerOperatorConstant(int players, int expectedPerPlayer) {
         assertThat(ruleset.guardianHitPoints(REFERENCE, 0.60, players) / players)
             .isEqualTo(expectedPerPlayer);

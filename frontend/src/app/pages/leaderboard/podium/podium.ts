@@ -8,11 +8,11 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideFlame, LucideTarget, LucideWheat, LucideWrench } from '@lucide/angular';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { createSeededRandom } from '@core/random/seeded-random.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
+import { TitleBadge } from '@shared/title-badge/title-badge';
 import { svgElement as el } from '@core/svg/svg-element.utils';
 import { SKY_SEED } from '@pages/campaign/star-field.constants';
 import { BoardRow } from '../leaderboard.model';
@@ -29,16 +29,7 @@ import { WIDTH, HEIGHT, STAR_COUNT, STAR, EMBER } from './podium.constants';
  */
 @Component({
   selector: 'app-podium',
-  imports: [
-    RouterLink,
-    TranslatePipe,
-    Avatar,
-    ChampionBadge,
-    LucideFlame,
-    LucideTarget,
-    LucideWheat,
-    LucideWrench,
-  ],
+  imports: [RouterLink, TranslatePipe, Avatar, ChampionBadge, TitleBadge],
   templateUrl: './podium.html',
   styleUrl: './podium.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,11 +37,13 @@ import { WIDTH, HEIGHT, STAR_COUNT, STAR, EMBER } from './podium.constants';
 })
 export class Podium {
   /**
-   * The ranked rows, in order; only the first three are drawn.
+   * The ranked rows, in order; only the places one to three are drawn, ties included.
    */
   public readonly rows = input.required<readonly BoardRow[]>();
 
-  protected readonly top = computed(() => this.rows().slice(0, 3));
+  protected readonly top = computed(() =>
+    this.rows().filter((row) => row.position !== null && row.position <= 3),
+  );
 
   private readonly sky = viewChild.required<ElementRef<SVGSVGElement>>('sky');
 

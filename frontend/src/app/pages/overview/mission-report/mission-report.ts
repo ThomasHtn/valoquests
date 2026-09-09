@@ -15,6 +15,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
 import { MissionReport as MissionReportView } from '../overview.model';
+import { TitleBadge } from '@shared/title-badge/title-badge';
 
 /**
  * The Monday report: what Sunday settled, told in the order Sunday settles it, in a dialog over
@@ -25,7 +26,7 @@ import { MissionReport as MissionReportView } from '../overview.model';
  */
 @Component({
   selector: 'app-mission-report',
-  imports: [TranslatePipe, Avatar, LucideCheck, LucideX],
+  imports: [TranslatePipe, Avatar, TitleBadge, LucideCheck, LucideX],
   templateUrl: './mission-report.html',
   styleUrl: './mission-report.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

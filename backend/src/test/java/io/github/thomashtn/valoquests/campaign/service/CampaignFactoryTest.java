@@ -95,7 +95,7 @@ class CampaignFactoryTest {
         CampaignWeek last = built.weeks().getLast();
 
         assertThat(first.getWeekStart()).isEqualTo(FIRST_WEEK_START);
-        assertThat(first.getGuardianHitPoints()).isEqualTo(17_363);
+        assertThat(first.getGuardianHitPoints()).isEqualTo(24_486);
         assertThat(first.getWoundedCount()).isEqualTo(1_855);
         assertThat(last.getWeekStart()).isEqualTo(FIRST_WEEK_START.plusWeeks(9));
         assertThat(last.getCategory()).isEqualTo(GuardianCategory.ELITE);

@@ -1,6 +1,8 @@
 package io.github.thomashtn.valoquests.campaign.service;
 
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
+import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayer;
+import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
 import io.github.thomashtn.valoquests.campaign.exception.CampaignLifecycleException;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.model.NewCampaign;
@@ -152,7 +154,8 @@ public class CampaignLifecycleService {
             .map(campaign -> campaign.getNumber() + 1)
             .orElse(1);
 
-        NewCampaign built = factory.build(number, roster, calibrationService.calibrate(roster, today), firstWeekStart);
+        SquadCalibration calibration = calibrationService.calibrateCovered(roster, today);
+        NewCampaign built = factory.build(number, roster, calibration, firstWeekStart);
         Campaign campaign = campaignRepository.save(built.campaign());
         campaignPlayerRepository.saveAll(built.roster());
         campaignWeekRepository.saveAll(built.weeks());
@@ -165,6 +168,47 @@ public class CampaignLifecycleService {
             campaign.getReference(),
             campaign.getTier(),
             firstWeekStart
+        );
+
+        return campaign;
+    }
+
+    /**
+     * Measures the squad again and resizes what the live campaign has not settled yet.
+     *
+     * <p>The one exception to a calibration being decided once: a campaign opened on a window that
+     * was never imported was sized on a floor, and the alternative is to throw the week away. A
+     * settled week keeps its guardian; the caller replays the campaign afterwards.
+     *
+     * @return the campaign, recalibrated
+     * @throws CampaignLifecycleException when no campaign is live or the window is not covered
+     */
+    @Transactional
+    public Campaign recalibrate() {
+        Campaign campaign = liveCampaign().orElseThrow(() -> new CampaignLifecycleException(
+            "No campaign is opened or running, so there is nothing to recalibrate."
+        ));
+        List<Player> roster = campaignPlayerRepository
+            .findAllByCampaignIdOrderByPlayerIdAsc(campaign.getId())
+            .stream()
+            .map(CampaignPlayer::getPlayer)
+            .toList();
+
+        factory.calibrate(campaign, calibrationService.calibrateCovered(roster, weekCalendar.today()));
+        campaignRepository.save(campaign);
+
+        List<CampaignWeek> weeks = campaignWeekRepository
+            .findAllByCampaignIdOrderByWeekIndexAsc(campaign.getId());
+        weeks.stream()
+            .filter(week -> !week.isSettled())
+            .forEach(week -> factory.size(week, campaign));
+        campaignWeekRepository.saveAll(weeks);
+
+        LOGGER.warn(
+            "Campaign {} recalibrated at reference {} ({}); unsettled weeks resized.",
+            campaign.getNumber(),
+            campaign.getReference(),
+            campaign.getTier()
         );
 
         return campaign;

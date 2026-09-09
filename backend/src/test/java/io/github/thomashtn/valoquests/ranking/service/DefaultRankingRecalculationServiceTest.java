@@ -100,7 +100,7 @@ class DefaultRankingRecalculationServiceTest {
             )
         )));
         when(challengePointsReader.read(WEEK_START)).thenReturn(Map.of(
-            ALPHA.getId(), new ChallengeTally(300, 2, 1)
+            ALPHA.getId(), new ChallengeTally(200, 2, 1)
         ));
 
         List<WeeklyPlayerScore> scores = recalculate();
@@ -124,10 +124,10 @@ class DefaultRankingRecalculationServiceTest {
         assertThat(alpha.getGuardianDamage()).isEqualTo(1_200);
         assertThat(alpha.getActiveDays()).isEqualTo(2);
         assertThat(alpha.getStreakDays()).isEqualTo(2);
-        assertThat(alpha.getChallengePoints()).isEqualTo(300);
+        assertThat(alpha.getChallengePoints()).isEqualTo(200);
         assertThat(alpha.getCompletedChallenges()).isEqualTo(2);
         assertThat(alpha.getCompletedDailyChallenges()).isEqualTo(1);
-        assertThat(alpha.getTotalPoints()).isEqualTo(1_500);
+        assertThat(alpha.getTotalPoints()).isEqualTo(1_400);
         assertThat(alpha.getCalculatedAt()).isEqualTo(RankingFixtures.MIDWEEK);
         assertThat(alpha.getPreviousPosition()).isNull();
     }
@@ -147,9 +147,27 @@ class DefaultRankingRecalculationServiceTest {
 
         List<WeeklyPlayerScore> scores = recalculate();
 
-        // Same total, same damage: Bravo validated more challenges, so Bravo is first.
+        // Same total, same damage: Bravo validated more challenges, so Bravo reads first, but the
+        // points are equal and the position is shared.
         assertThat(scores).extracting(score -> score.getPlayer().getId()).containsExactly(2L, 1L);
-        assertThat(scores).extracting(WeeklyPlayerScore::getPosition).containsExactly(1, 2);
+        assertThat(scores).extracting(WeeklyPlayerScore::getPosition).containsExactly(1, 1);
+    }
+
+    @Test
+    @DisplayName("Shares a position on equal points, skips the next one, and ranks nobody at zero")
+    void shouldShareAPositionOnEqualPointsAndLeaveZeroUnranked() {
+        Player delta = RankingFixtures.player(4, "Delta", PlayerStatus.ACTIVE);
+        givenRoster(ALPHA, BRAVO, delta);
+        givenOutput(RankingFixtures.output(Map.of(
+            ALPHA.getId(), Map.of(WEEK_START, RankingFixtures.dayOutput(1_000, 1, 1)),
+            BRAVO.getId(), Map.of(WEEK_START, RankingFixtures.dayOutput(1_000, 2, 1))
+        )));
+        when(challengePointsReader.read(WEEK_START)).thenReturn(Map.of());
+
+        List<WeeklyPlayerScore> scores = recalculate();
+
+        assertThat(scores).extracting(score -> score.getPlayer().getId()).containsExactly(1L, 2L, 4L);
+        assertThat(scores).extracting(WeeklyPlayerScore::getPosition).containsExactly(1, 1, null);
     }
 
     @Test
@@ -191,7 +209,7 @@ class DefaultRankingRecalculationServiceTest {
     void shouldPreserveThePreviousPositionOfAnExistingRow() {
         givenRoster(ALPHA, BRAVO);
         WeeklyPlayerScore existing = RankingFixtures.score(ALPHA, 2, 0, 0);
-        when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START)).thenReturn(List.of(existing));
+        when(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(WEEK_START)).thenReturn(List.of(existing));
         givenOutput(RankingFixtures.output(Map.of(
             ALPHA.getId(), Map.of(WEEK_START, RankingFixtures.dayOutput(900, 1, 1))
         )));

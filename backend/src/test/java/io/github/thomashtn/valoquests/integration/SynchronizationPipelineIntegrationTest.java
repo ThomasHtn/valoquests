@@ -549,9 +549,9 @@ class SynchronizationPipelineIntegrationTest
         assertThat(score.getStreakDays())
             .isEqualTo(2);
         assertThat(score.getChallengePoints())
-            .isEqualTo(29 + dailyPoints);
+            .isEqualTo(52 + dailyPoints);
         assertThat(score.getTotalPoints())
-            .isEqualTo(857 + 29 + dailyPoints);
+            .isEqualTo(857 + 52 + dailyPoints);
         assertThat(score.getCompletedChallenges())
             .isEqualTo(5);
         assertThat(score.getCompletedDailyChallenges())
@@ -576,7 +576,7 @@ class SynchronizationPipelineIntegrationTest
      * @return the points those dailies add
      */
     private int dailyPoints(Player player) {
-        return completedDailies(player) * 2;
+        return completedDailies(player) * 4;
     }
 
     /**
@@ -638,7 +638,7 @@ class SynchronizationPipelineIntegrationTest
      */
     private WeeklyPlayerScore loadScore(Player player) {
         return scoreRepository
-            .findAllByWeekStartOrderByPositionAsc(WEEK_START)
+            .findAllByWeekStartOrderByPositionAscPlayerIdAsc(WEEK_START)
             .stream()
             .filter(score -> score.getPlayer().getId()
                 .equals(player.getId()))

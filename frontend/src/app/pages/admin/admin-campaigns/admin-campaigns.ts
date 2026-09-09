@@ -31,8 +31,9 @@ import { LiveCampaign } from './admin-campaigns.model';
  * The one place a campaign is opened, and the only moment its calibration can be looked at before
  * it is decided for good: the page shows the measure a campaign opened today would be given,
  * operator by operator, with how far back each one's history reaches. Then the three commands:
- * import the calibration window, open, stop. A campaign opened by mistake before its first Monday
- * is deleted rather than stopped, since stopping it would leave an empty campaign in the history.
+ * import the calibration window, open, recalibrate, stop. A campaign opened by mistake before its
+ * first Monday is deleted rather than stopped, since stopping it would leave an empty campaign in
+ * the history.
  */
 @Component({
   selector: 'app-admin-campaigns',
@@ -133,6 +134,10 @@ export class AdminCampaigns {
   protected readonly openState = signal<AdminActionState>(IDLE_ACTION);
 
   protected readonly stopState = signal<AdminActionState>(IDLE_ACTION);
+
+  protected readonly recalibrateState = signal<AdminActionState>(IDLE_ACTION);
+
+  protected readonly recalibrateDialogOpen = signal(false);
 
   protected readonly deleteState = signal<AdminActionState>(IDLE_ACTION);
 
@@ -238,6 +243,28 @@ export class AdminCampaigns {
           date: formatDayMonth(campaign.firstWeekStart),
         }),
       onSuccess: () => this.openDialogOpen.set(false),
+    });
+  }
+
+  protected askToRecalibrate(): void {
+    this.recalibrateDialogOpen.set(true);
+  }
+
+  protected dismissRecalibrate(): void {
+    this.recalibrateDialogOpen.set(false);
+  }
+
+  protected async confirmRecalibrate(): Promise<void> {
+    await this.commandRunner.run(() => this.adminApi.recalibrateCampaign(), {
+      state: this.recalibrateState,
+      successMessage: (campaign) =>
+        this.translation.translate('admin.campaigns.recalibrate.done', {
+          reference: campaign.reference,
+        }),
+      onSuccess: () => {
+        this.recalibrateDialogOpen.set(false);
+        this.calibrationResource.reload();
+      },
     });
   }
 

@@ -9,6 +9,7 @@ import io.github.thomashtn.valoquests.scoring.model.DailyYield;
 import io.github.thomashtn.valoquests.scoring.model.PlayerDayOutput;
 import io.github.thomashtn.valoquests.scoring.model.ValuedMatch;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -201,7 +202,11 @@ public class DailyOutputReader {
 
             for (Map.Entry<LocalDate, List<PricedMatch>> entry : days.entrySet()) {
                 LocalDate day = entry.getKey();
-                streak = previousDay != null && previousDay.plusDays(1).equals(day) ? streak + 1 : 1;
+                // A streak restarts every Monday: the week's bonus is earned inside the week.
+                boolean continued = previousDay != null
+                    && previousDay.plusDays(1).equals(day)
+                    && day.getDayOfWeek() != DayOfWeek.MONDAY;
+                streak = continued ? streak + 1 : 1;
                 previousDay = day;
                 streakByDay.put(day, streak);
 

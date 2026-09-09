@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   ElementRef,
   input,
   signal,
@@ -18,9 +19,9 @@ import { PlanetOrb } from './planet-orb';
 /**
  * Ten planets in a line and the drawer under them.
  *
- * The drawer is closed at rest and opens on the planet clicked, pointing at it; the positions are
- * not data, the grid gives them. On a phone the strip scrolls sideways and the pointer goes, the
- * drawer then simply follows the strip.
+ * The drawer is always open: on the week's planet at rest, on the planet clicked afterwards,
+ * pointing at it; the positions are not data, the grid gives them. On a phone the strip scrolls
+ * sideways and the pointer goes, the drawer then simply follows the strip.
  */
 @Component({
   selector: 'app-planet-strip',
@@ -33,9 +34,18 @@ export class PlanetStrip {
   public readonly planets = input.required<readonly Planet[]>();
 
   /**
-   * Index of the planet whose report is open, or `null`.
+   * Index of the planet whose report is open; `null` only until the planets arrive.
    */
   protected readonly openedIndex = signal<number | null>(null);
+
+  /**
+   * The planet the campaign stands on: the last one reached. The week's planet reads `won` once
+   * its guardian is down, so `now` alone would miss it.
+   */
+  private readonly currentIndex = computed<number | null>(() => {
+    const reached = this.planets().filter((planet) => planet.state !== 'ahead');
+    return reached.at(-1)?.index ?? this.planets()[0]?.index ?? null;
+  });
 
   protected readonly opened = computed<Planet | null>(() => {
     const index = this.openedIndex();
@@ -54,10 +64,17 @@ export class PlanetStrip {
   private readonly wrap = viewChild.required<ElementRef<HTMLElement>>('wrap');
 
   constructor() {
+    // The week's planet opens by itself, once, when the planets arrive with the campaign.
+    effect(() => {
+      const current = this.currentIndex();
+      if (this.openedIndex() === null && current !== null) {
+        this.openedIndex.set(current);
+      }
+    });
+
     // On a phone the strip scrolls: it opens on the last planet reached, not on the first one.
     // The planets arrive with the campaign, after the first render, so this waits for them and
-    // then runs once. The week's planet reads `won` once its guardian is down, so `now` alone
-    // would miss it.
+    // then runs once.
     let scrolled = false;
     afterRenderEffect(() => {
       if (scrolled || this.planets().length === 0) {
@@ -73,11 +90,7 @@ export class PlanetStrip {
     });
   }
 
-  protected toggle(planet: Planet): void {
-    this.openedIndex.update((current) => (current === planet.index ? null : planet.index));
-  }
-
-  protected close(): void {
-    this.openedIndex.set(null);
+  protected open(planet: Planet): void {
+    this.openedIndex.set(planet.index);
   }
 }

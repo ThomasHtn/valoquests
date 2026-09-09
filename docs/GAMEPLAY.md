@@ -99,10 +99,10 @@ Les règles de la série, dans le détail :
    reste. Il n'y a qu'un bonus par journée : il ne monte pas partie après partie.
 4. Une journée est le jour calendaire du fuseau du projet, celui de **l'heure de début** de la
    partie.
-5. Le compteur ne s'arrête jamais : ni au lundi, ni entre deux campagnes. Il est calculé sur
-   l'historique de calibration aussi, et un joueur peut donc déjà être à six jours le lundi
-   d'ouverture. L'affichage continue de compter au-delà de six, « 12 j », mais le bonus reste à
-   +10 %.
+5. Le compteur **repart à un chaque lundi** : le bonus d'une semaine se gagne dans la semaine, et
+   tout le monde ouvre le lundi à égalité, campagne ou pas. Il est calculé de la même façon sur
+   l'historique de calibration. L'affichage plafonne donc à « 7 j » le dimanche, le bonus à +10 %
+   dès le sixième jour.
 6. Le bonus s'applique à tout ce qu'une partie produit : dégâts au gardien, composants, nourriture,
    croissance de la base. Jamais aux défis.
 
@@ -331,7 +331,7 @@ d'une campagne à l'autre : chaque campagne repart de zéro.
 
 Avant le lancement, l'application lit **neuf mois d'historique** du roster gelé. Pour chaque joueur
 actif, elle calcule la **moyenne de ses dégâts hebdomadaires** sur la fenêtre ; la référence de la
-campagne est la **moyenne de ces moyennes**, avec un **plancher de 2 000**. Des moyennes, parce que
+campagne est la **moyenne de ces moyennes**, avec un **plancher de 3 500**. Des moyennes, parce que
 le gardien vaut « référence × joueurs » : c'est une somme que l'on vise, et un joueur très fort doit
 y peser.
 
@@ -341,9 +341,11 @@ refléter. Pas de médiane : mesurée le 04/09/2026 sur le roster réel, la méd
 vides tombait à 396 par joueur, soit une compétitive par semaine, parce que la moitié du roster joue
 une semaine sur deux. La moyenne donnait environ 1 050.
 
-Le plancher de 2 000 correspond à l'exemple Amateur ci-dessous, quatre compétitives et trois parties
-rapides par semaine. En dessous, un gardien tomberait en une soirée et le jeu n'aurait plus d'objet :
-la première campagne d'une escouade irrégulière se joue donc au plancher, et c'est voulu.
+Le plancher de 3 500 correspond à neuf parties par semaine, six compétitives et trois rapides, le
+minimum qu'un joueur régulier joue. En dessous, un gardien tomberait en une soirée et le jeu n'aurait
+plus d'objet : la première campagne d'une escouade irrégulière se joue donc au plancher, et c'est
+voulu. Le palier Amateur n'est donc atteint que par une escouade dont l'historique est plus mince
+que le plancher : il se lit, il ne se joue pas.
 
 Si l'historique d'un joueur ne couvre pas neuf mois, la fenêtre est **réduite d'un mois à la
 fois, pour tout le monde**, jusqu'à ce que chaque joueur soit couvert. Un joueur est couvert quand
@@ -362,6 +364,12 @@ lecture de toute la fenêtre.
 Elle fixe la taille des gardiens, celle des groupes de survivants et la valeur des défis. Elle est
 calculée **une seule fois** et **plus jamais recalculée** : rien n'est ajustable une fois la campagne
 lancée.
+
+Une seule exception, administrative : le **recalibrage** d'une campagne ouverte avant que la fenêtre
+de neuf mois n'ait été importée. L'ouverture est d'ailleurs refusée quand la fenêtre a dû se réduire
+sans qu'aucun import d'historique n'ait jamais tourné. Le recalibrage remesure le roster gelé,
+redimensionne le gardien et le groupe de chaque semaine **non encore réglée**, puis rejoue la
+campagne ; une semaine réglée garde son gardien.
 
 Un joueur sans historique est un débutant et prend la médiane de son escouade.
 
@@ -445,6 +453,11 @@ chiffre par défi sur les deux piliers, c'est ce qui rend la lecture simple.
 Le classement affiche, pour chaque joueur, **l'état d'avancement de chaque défi** en cours, du jour
 comme de la semaine.
 
+Les **égalités** se lisent : deux joueurs au même nombre de points partagent le même rang, et le
+rang suivant saute d'autant (1, 1, 3). Un joueur à zéro point n'a **pas de rang** : il n'est pas
+dernier, il n'a pas encore joué. L'ordre d'affichage entre ex æquo reste celui des dégâts au gardien,
+puis des défis validés, puis des jours actifs.
+
 ---
 
 ## Les titres
@@ -462,6 +475,10 @@ joueur :
 Purement honorifiques. Un opérateur peut en cumuler plusieurs ; en cas d'égalité, le titre n'est pas
 décerné.
 
+S'y ajoute le **Champion** : le premier du classement de la dernière semaine finalisée, porté toute
+la semaine suivante. Il n'existe qu'en campagne : une semaine jouée entre deux campagnes ne fait pas
+de champion, et une première place partagée non plus.
+
 ---
 
 ## La fusée
@@ -478,7 +495,7 @@ donne le visuel maximal. Aucun effet sur les règles : c'est le trophée de la c
 | Dégâts totaux pour 1 habitant (croissance quotidienne) | 28 |
 | Nourriture mangée par habitant et par jour | 0,008 |
 | Perte quotidienne en cas de famine | 5 % de la part non nourrie, uniquement si la réserve est vide |
-| Taille du gardien | référence × poids de la semaine × **0,78** × joueurs actifs |
+| Taille du gardien | référence × poids de la semaine × **1,10** × joueurs actifs |
 | Taille du groupe | référence × poids de la semaine × 0,050 × joueurs actifs × progression |
 | Progression des récompenses | +4 % par semaine de campagne, linéaire |
 | Points d'un défi au classement | 1 par blessé ramené (référence × poids / 1000 × progression) |
@@ -491,7 +508,7 @@ donne le visuel maximal. Aucun effet sur les règles : c'est le trophée de la c
 | Rescapés d'un défi | référence × poids du défi / 1000, par joueur qui le valide, versés le dimanche |
 | Fréquence de synchronisation | 30 minutes |
 | Fenêtre de calibration | 9 mois, réduits d'un mois à la fois tant qu'un joueur n'est pas couvert |
-| Référence | moyenne des moyennes hebdomadaires par joueur actif, semaines vides à zéro, plancher 2 000 |
+| Référence | moyenne des moyennes hebdomadaires par joueur actif, semaines vides à zéro, plancher 3 500 |
 | Durée de la campagne | 10 semaines |
 
 ---
@@ -499,7 +516,9 @@ donne le visuel maximal. Aucun effet sur les règles : c'est le trophée de la c
 ## Ce que la simulation vérifie
 
 Les constantes ci-dessus ont été vérifiées le 04/09/2026 en faisant jouer des escouades simulées sur
-dix semaines. À refaire avant tout réglage. Les invariants à conserver :
+dix semaines. Le facteur du gardien est passé de 0,78 à 1,10 et le plancher de 2 000 à 3 500 le
+09/09/2026, après qu'un gardien de première semaine est tombé en une soirée : la simulation est à
+refaire sur ces valeurs. Les invariants à conserver :
 
 - Une escouade calibrée sur elle-même bat **8 gardiens sur 10**, les deux Élite manqués de peu.
 - L'effort paie : assidu > régulier > mou, et le résultat par joueur est identique de 2 à 20 joueurs.

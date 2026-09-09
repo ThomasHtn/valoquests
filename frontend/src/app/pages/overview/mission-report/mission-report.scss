@@ -278,6 +278,23 @@
   }
 
   .rep-titles {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
+  }
+
+  /* One tile a row: the auto-fit grid squeezed two tiles into a phone and folded the names. */
+  .rep-rank {
+    grid-template-columns: 1fr;
+  }
+
+  .rep-top {
+    align-items: flex-start;
+  }
+
+  .rep-name {
+    font-size: 1.5rem;
+  }
+
+  .rep-fig {
+    font-size: 2.25rem;
   }
 }

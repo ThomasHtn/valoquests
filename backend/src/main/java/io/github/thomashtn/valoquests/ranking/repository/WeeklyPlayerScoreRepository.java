@@ -20,10 +20,10 @@ public interface WeeklyPlayerScoreRepository
      * Retrieves every score for one week with its player in ranking order.
      *
      * @param weekStart Monday identifying the week
-     * @return weekly scores ordered by position
+     * @return weekly scores ordered by position, unranked rows last in identifier order
      */
     @EntityGraph(attributePaths = "player")
-    List<WeeklyPlayerScore> findAllByWeekStartOrderByPositionAsc(
+    List<WeeklyPlayerScore> findAllByWeekStartOrderByPositionAscPlayerIdAsc(
         LocalDate weekStart
     );
 

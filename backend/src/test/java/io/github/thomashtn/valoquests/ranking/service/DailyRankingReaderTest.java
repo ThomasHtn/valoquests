@@ -104,6 +104,7 @@ class DailyRankingReaderTest {
 
         DailyRankingEntryResponse alpha = board.ranking().getFirst();
         assertThat(alpha.playerId()).isEqualTo(ALPHA.getId());
+        assertThat(alpha.position()).as("no damage, no position").isNull();
         assertThat(alpha.damage()).isZero();
         assertThat(alpha.matchCount()).isZero();
         assertThat(alpha.streakDays()).isZero();
@@ -122,11 +123,29 @@ class DailyRankingReaderTest {
 
         DailyRankingResponse board = reader.read(DAY);
 
-        // Charlie brought the most and is listed first, but the only slot goes to Alpha.
+        // Charlie brought the most and is listed first, but takes no slot; Alpha played nothing
+        // and has no position either.
         assertThat(board.ranking()).extracting(DailyRankingEntryResponse::playerId).containsExactly(3L, 1L);
         assertThat(board.ranking().get(0).position()).isNull();
-        assertThat(board.ranking().get(1).position()).isEqualTo(1);
+        assertThat(board.ranking().get(1).position()).isNull();
         assertThat(board.playedPlayerCount()).isZero();
         assertThat(board.rosterPlayerCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Shares a position between players who dealt the same damage")
+    void shouldShareAPositionOnEqualDamage() {
+        Player delta = RankingFixtures.player(4, "Delta", PlayerStatus.ACTIVE);
+        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
+            .thenReturn(List.of(ALPHA, BRAVO, delta));
+        when(dailyOutputReader.read(any(), any(), any())).thenReturn(RankingFixtures.output(Map.of(
+            ALPHA.getId(), Map.of(DAY, RankingFixtures.dayOutput(500, 1, 1)),
+            BRAVO.getId(), Map.of(DAY, RankingFixtures.dayOutput(500, 2, 1)),
+            delta.getId(), Map.of(DAY, RankingFixtures.dayOutput(100, 1, 1))
+        )));
+
+        DailyRankingResponse board = reader.read(DAY);
+
+        assertThat(board.ranking()).extracting(DailyRankingEntryResponse::position).containsExactly(1, 1, 3);
     }
 }

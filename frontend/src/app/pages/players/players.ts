@@ -1,15 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  LucideChevronDown,
-  LucideChevronRight,
-  LucideChevronUp,
-  LucideFlame,
-  LucideTarget,
-  LucideWheat,
-  LucideWrench,
-} from '@lucide/angular';
+import { LucideChevronDown, LucideChevronRight, LucideChevronUp } from '@lucide/angular';
 
 import { primaryTitle } from '@core/campaign/campaign-title.utils';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
@@ -43,6 +35,7 @@ import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { PLAYER_SORT_COLUMNS, PlayerRow, PlayerSortKey } from './players.model';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
+import { TitleBadge } from '@shared/title-badge/title-badge';
 
 /**
  * Players list page — "Escouade".
@@ -61,11 +54,8 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     LucideChevronDown,
     LucideChevronRight,
     LucideChevronUp,
-    LucideFlame,
-    LucideTarget,
-    LucideWheat,
-    LucideWrench,
     Avatar,
+    TitleBadge,
     ChampionBadge,
     ProgressBar,
     RankIconView,

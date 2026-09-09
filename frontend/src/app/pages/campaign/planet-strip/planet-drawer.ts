@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucideCheck,
@@ -45,13 +45,7 @@ export class PlanetDrawer {
    */
   public readonly pointerX = input.required<string>();
 
-  public readonly closed = output();
-
   private readonly translation = inject(Translation);
-
-  protected close(): void {
-    this.closed.emit();
-  }
 
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());

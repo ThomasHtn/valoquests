@@ -70,6 +70,13 @@
         "confirmBody": "Le roster et la référence sont figés à cet instant et ne seront plus jamais recalculés. Vérifie la calibration avant : elle décide de la taille des dix gardiens.",
         "done": "Campagne {{number}} ouverte, départ le {{date}}."
       },
+      "recalibrate": {
+        "heading": "Recalibrer la campagne",
+        "action": "Recalibrer",
+        "confirm": "Recalibrer",
+        "confirmBody": "Le roster gelé est remesuré sur la fenêtre de neuf mois, puis le gardien et le groupe de chaque semaine non encore réglée sont redimensionnés et la campagne est rejouée. Les semaines réglées gardent leur gardien. Lance l'import de l'historique avant, et attends qu'il soit terminé.",
+        "done": "Campagne recalibrée, référence {{reference}}."
+      },
       "stop": {
         "heading": "Arrêter la campagne",
         "description": "Clôt la campagne en cours maintenant, figée à la dernière journée terminée. Son score ne sera plus recalculé.",
@@ -325,7 +332,6 @@
     },
     "drawer": {
       "week": "Semaine {{index}} · {{category}}",
-      "close": "Fermer",
       "guardian": "Gardien",
       "hpLeft": "points de vie restants sur {{total}}",
       "nowText": "La percée est à {{percent}} %.",
@@ -755,9 +761,6 @@
       "totalHelpOff": "La valeur des parties de la semaine plus les points des défis validés. Aucune campagne en cours : rien n'est retiré à un gardien. Le total repart de zéro chaque lundi.",
       "damageHelpOff": "La valeur des parties de la semaine, comptée comme des dégâts. Aucune campagne en cours : aucun gardien ne les encaisse.",
       "pointsHelpOff": "Les points des défis validés, un point par blessé qu'ils ramèneraient en campagne.",
-      "titlesLabel": "Les titres de la semaine",
-      "titleNotAwarded": "Non décerné",
-      "titleTie": "égalité à {{value}}",
       "measure": {
         "MECHANIC": "{{value}} composants",
         "QUARTERMASTER": "{{value}} nourriture",
@@ -859,7 +862,7 @@
       "aboard": "À bord",
       "aboardAria": "{{count}} blessés seraient à bord dimanche sur les {{wounded}} repérés, soit {{percent}} % : {{extraction}} par l'extraction et {{challenges}} déjà acquis par les défis.",
       "of": "sur {{count}} repérés",
-      "lever": "Levier",
+      "lever": "Obtention",
       "allModes": "Tous les modes",
       "hpStanding": "PV restants",
       "carryRate": "composants = 1 blessé",

@@ -116,14 +116,46 @@ public class CampaignFactory {
         campaign.setFirstWeekStart(firstWeekStart);
         campaign.setLastWeekStart(firstWeekStart.plusWeeks(CampaignSchedule.WEEK_COUNT - 1L));
         campaign.setRosterSize(roster.size());
+        calibrate(campaign, calibration);
+
+        return new NewCampaign(campaign, roster(campaign, roster), weeks(campaign));
+    }
+
+    /**
+     * Writes a calibration onto a campaign.
+     *
+     * @param campaign    campaign to calibrate
+     * @param calibration what the squad was measured at
+     */
+    public void calibrate(Campaign campaign, SquadCalibration calibration) {
         campaign.setReference(calibration.reference());
         campaign.setTier(calibration.tier());
         campaign.setVolumeFactor(calibration.scaling().volumeFactor());
         campaign.setSkillAnchorsJson(skillAnchorCodec.toJson(calibration.scaling().anchors()));
         campaign.setCalibrationWindowMonths(calibration.windowMonths());
         campaign.setCalibrationFirstDay(calibration.firstDay());
+    }
 
-        return new NewCampaign(campaign, roster(campaign, roster), weeks(campaign));
+    /**
+     * Sizes a week's guardian and group from its campaign's current reference.
+     *
+     * @param week     week to size, its weights already set
+     * @param campaign campaign the week belongs to
+     */
+    public void size(CampaignWeek week, Campaign campaign) {
+        int progressionPercent = scoringRuleset.rewardProgressionPercent(week.getWeekIndex());
+
+        week.setGuardianHitPoints(campaignRuleset.guardianHitPoints(
+            campaign.getReference(),
+            week.getGuardianWeight().doubleValue(),
+            campaign.getRosterSize()
+        ));
+        week.setWoundedCount(campaignRuleset.groupSize(
+            campaign.getReference(),
+            week.getGroupWeight().doubleValue(),
+            campaign.getRosterSize(),
+            progressionPercent
+        ));
     }
 
     /**
@@ -171,8 +203,6 @@ public class CampaignFactory {
      * @return the week, unsaved
      */
     private CampaignWeek week(Campaign campaign, CampaignWeekShape shape, Guardian guardian) {
-        int progressionPercent = scoringRuleset.rewardProgressionPercent(shape.weekIndex());
-
         CampaignWeek week = new CampaignWeek();
         week.setCampaign(campaign);
         week.setWeekIndex(shape.weekIndex());
@@ -182,17 +212,7 @@ public class CampaignFactory {
         week.setGuardianWeight(BigDecimal.valueOf(shape.guardianWeight()));
         week.setGroupWeight(BigDecimal.valueOf(shape.groupWeight()));
         week.setGuardian(guardian);
-        week.setGuardianHitPoints(campaignRuleset.guardianHitPoints(
-            campaign.getReference(),
-            shape.guardianWeight(),
-            campaign.getRosterSize()
-        ));
-        week.setWoundedCount(campaignRuleset.groupSize(
-            campaign.getReference(),
-            shape.groupWeight(),
-            campaign.getRosterSize(),
-            progressionPercent
-        ));
+        size(week, campaign);
 
         return week;
     }

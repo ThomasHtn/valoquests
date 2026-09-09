@@ -142,9 +142,7 @@
             @for (title of titles; track title.key) {
               <li [class]="title.colorClass" class="rep-t">
                 <app-avatar [src]="title.portrait" size="sm" />
-                <span class="label-caption text-2xs">{{
-                  'common.title.' + title.key | translate
-                }}</span>
+                <app-title-badge [title]="title.key" />
                 <b [class.rep-t-none]="!title.holder">{{
                   title.holder ?? ('overview.missionReport.notAwarded' | translate)
                 }}</b>
@@ -155,7 +153,7 @@
 
         <section [attr.aria-label]="'overview.missionReport.ranking' | translate" class="rep-s">
           <ol class="rep-rank">
-            @for (row of report.ranking; track row.position) {
+            @for (row of report.ranking; track row.name) {
               <li>
                 <span class="rep-r-pos">{{ row.position }}</span>
                 <app-avatar [src]="row.portrait" size="sm" />

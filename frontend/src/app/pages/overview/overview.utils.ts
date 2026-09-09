@@ -361,7 +361,7 @@ export function buildDailyOrder(
     return null;
   }
   const validated = (ranking?.ranking ?? [])
-    .filter((entry) => entry.position !== null)
+    .filter((entry) => entry.competing)
     .map((entry) => ({
       name: entry.player.displayName,
       done:
@@ -447,9 +447,8 @@ export function buildSquad(
     return [];
   }
   const titles = today?.titles ?? {};
-  // An inactive operator has no ranking slot: they never deal guardian damage, so they have no
-  // line here either.
-  const active = daily.ranking.filter((entry) => entry.position !== null);
+  // An inactive operator never deals guardian damage, so they have no line here either.
+  const active = daily.ranking.filter((entry) => entry.competing);
   return active.map((entry) => {
     const title = primaryTitleOf(titles, entry.playerId);
     const played = entry.matchCount > 0;

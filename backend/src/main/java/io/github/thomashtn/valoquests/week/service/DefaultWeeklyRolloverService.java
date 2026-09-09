@@ -228,7 +228,7 @@ public class DefaultWeeklyRolloverService
 
         List<WeeklyPlayerScore> weeklyScores =
             weeklyPlayerScoreRepository
-                .findAllByWeekStartOrderByPositionAsc(
+                .findAllByWeekStartOrderByPositionAscPlayerIdAsc(
                     weekStart
                 );
 

@@ -49,7 +49,7 @@ public class CampaignRuleset {
     /**
      * Guardian hit points per point of reference, per active player.
      */
-    public static final double GUARDIAN_HIT_POINTS_FACTOR = 0.78;
+    public static final double GUARDIAN_HIT_POINTS_FACTOR = 1.10;
 
     /**
      * Wounded stranded per point of reference, per active player, before the weekly progression.

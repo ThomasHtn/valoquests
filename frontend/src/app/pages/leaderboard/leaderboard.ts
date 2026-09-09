@@ -40,6 +40,7 @@ import {
 import { PositionBadge } from '@shared/position-badge/position-badge';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ResourceState } from '@shared/resource-state/resource-state';
+import { TitleBadge } from '@shared/title-badge/title-badge';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import {
@@ -49,15 +50,7 @@ import {
   placeWeekInCampaign,
   resolveTitleMeasures,
 } from './leaderboard-board.utils';
-import { WEEK_TITLE_KEYS } from './leaderboard.constants';
-import {
-  BoardProgress,
-  BoardRow,
-  BoardTitle,
-  BoardWeek,
-  WeekOption,
-  WeekTitleLine,
-} from './leaderboard.model';
+import { BoardProgress, BoardRow, BoardTitle, BoardWeek, WeekOption } from './leaderboard.model';
 import { Podium } from './podium/podium';
 import { WeekPicker } from './week-picker/week-picker';
 
@@ -82,6 +75,7 @@ import { WeekPicker } from './week-picker/week-picker';
     ChampionBadge,
     PositionBadge,
     Podium,
+    TitleBadge,
     ProgressBar,
     Tooltip,
     WeekPicker,
@@ -245,35 +239,6 @@ export class Leaderboard {
   /**
    * The week, then the campaign's tier when the week belongs to one.
    */
-  /**
-   * The week's four titles under the podium: who holds each, or the tie that withheld it. Live
-   * week only, the history keeps the holders but not every figure.
-   */
-  protected readonly weekTitles = computed<readonly WeekTitleLine[]>(() => {
-    const entries = this.current()?.ranking.filter((entry) => entry.position !== null) ?? [];
-    if (entries.length === 0) {
-      return [];
-    }
-    return WEEK_TITLE_KEYS.map((key) => {
-      const holder = entries.find((entry) => entry.titles.includes(key)) ?? null;
-      const best = Math.max(...entries.map((entry) => resolveTitleMeasures(entry)[key] ?? 0));
-      const detail =
-        best > 0
-          ? holder
-            ? this.measure(key, best)
-            : this.translation.translate('leaderboard.board.titleTie', {
-                value: this.measure(key, best),
-              })
-          : '';
-      return {
-        key,
-        ...resolveTitleVisual(key),
-        holder: holder?.player.displayName ?? null,
-        detail,
-      };
-    });
-  });
-
   protected readonly headerEyebrow = computed(() => {
     const board = this.board();
     const campaign = this.campaign();

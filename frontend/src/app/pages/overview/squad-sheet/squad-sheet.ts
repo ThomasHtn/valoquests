@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideFlame, LucideTarget, LucideWheat, LucideWrench } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -9,6 +8,7 @@ import { Avatar } from '@shared/avatar/avatar';
 import { SectionRule } from '@shared/section-rule/section-rule';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { SquadRow } from '../overview.model';
+import { TitleBadge } from '@shared/title-badge/title-badge';
 
 /**
  * The squad, by the day: the operator-by-operator detail of the day's tally.
@@ -19,17 +19,7 @@ import { SquadRow } from '../overview.model';
  */
 @Component({
   selector: 'app-squad-sheet',
-  imports: [
-    TranslatePipe,
-    SectionRule,
-    RouterLink,
-    Avatar,
-    Tooltip,
-    LucideFlame,
-    LucideTarget,
-    LucideWheat,
-    LucideWrench,
-  ],
+  imports: [TranslatePipe, SectionRule, RouterLink, Avatar, Tooltip, TitleBadge],
   templateUrl: './squad-sheet.html',
   styleUrl: './squad-sheet.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

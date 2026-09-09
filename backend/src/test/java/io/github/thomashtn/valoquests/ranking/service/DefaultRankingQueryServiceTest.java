@@ -9,6 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
+import io.github.thomashtn.valoquests.campaign.entity.Campaign;
+import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.ranking.RankingFixtures;
@@ -82,6 +85,9 @@ class DefaultRankingQueryServiceTest {
     @Mock
     private WeeklyTitleResolver titleResolver;
 
+    @Mock
+    private CampaignRepository campaignRepository;
+
     private DefaultRankingQueryService service;
 
     @BeforeEach
@@ -91,7 +97,8 @@ class DefaultRankingQueryServiceTest {
             progressMapper,
             dailyRankingReader,
             titleResolver,
-            new WeekCalendar(Clock.fixed(RankingFixtures.MIDWEEK, ZoneOffset.UTC), ZoneOffset.UTC)
+            new WeekCalendar(Clock.fixed(RankingFixtures.MIDWEEK, ZoneOffset.UTC), ZoneOffset.UTC),
+            campaignRepository
         );
     }
 
@@ -103,7 +110,7 @@ class DefaultRankingQueryServiceTest {
         WeeklyPlayerScore bravo = RankingFixtures.score(BRAVO, 2, 900, 0);
         bravo.setCalculatedAt(RankingFixtures.MIDWEEK.plusSeconds(60));
         WeeklyPlayerScore charlie = RankingFixtures.score(CHARLIE, null, 0, 0);
-        when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START))
+        when(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(WEEK_START))
             .thenReturn(List.of(alpha, bravo, charlie));
         when(progressMapper.forWeek(WEEK_START, TODAY, List.of(1L, 2L, 3L)))
             .thenReturn(new WeekBoard(5, Map.of()));
@@ -141,7 +148,7 @@ class DefaultRankingQueryServiceTest {
     @Test
     @DisplayName("Answers an empty week without a calculation instant")
     void shouldAnswerAnEmptyWeek() {
-        when(scoreRepository.findAllByWeekStartOrderByPositionAsc(WEEK_START)).thenReturn(List.of());
+        when(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(WEEK_START)).thenReturn(List.of());
         when(progressMapper.forWeek(WEEK_START, TODAY, List.of())).thenReturn(new WeekBoard(0, Map.of()));
         when(titleResolver.resolve(anyList())).thenReturn(Map.of());
 
@@ -171,6 +178,7 @@ class DefaultRankingQueryServiceTest {
         when(scoreRepository.findAllByWeekStartInOrderByWeekStartDescPositionAsc(List.of(lastWeek)))
             .thenReturn(List.of(bravo, alpha, charlie));
         when(titleResolver.resolve(List.of(bravo, alpha))).thenReturn(Map.of(WeeklyTitle.REGULAR, BRAVO.getId()));
+        when(campaignRepository.findAll()).thenReturn(List.of(campaignCovering(lastWeek)));
 
         PageResponse<RankingHistoryWeekResponse> page = service.findHistory(0, 10);
 
@@ -214,5 +222,56 @@ class DefaultRankingQueryServiceTest {
         assertThat(service.findDaily(null)).isSameAs(board);
         assertThat(service.findDaily(TODAY.minusDays(3))).isSameAs(board);
         verify(dailyRankingReader).read(eq(TODAY));
+    }
+
+    @Test
+    @DisplayName("Names no winner for a week played outside a campaign")
+    void shouldNameNoWinnerOutsideACampaign() {
+        LocalDate lastWeek = WEEK_START.minusWeeks(1);
+        WeeklyPlayerScore bravo = RankingFixtures.score(BRAVO, 1, 2_000, 100);
+        bravo.setWeekStart(lastWeek);
+
+        Page<LocalDate> weekPage = new PageImpl<>(List.of(lastWeek), PageRequest.of(0, 10), 1);
+        when(scoreRepository.findFinalizedWeekStarts(PageRequest.of(0, 10))).thenReturn(weekPage);
+        when(scoreRepository.findAllByWeekStartInOrderByWeekStartDescPositionAsc(List.of(lastWeek)))
+            .thenReturn(List.of(bravo));
+        when(campaignRepository.findAll()).thenReturn(List.of(campaignCovering(lastWeek.plusWeeks(1))));
+
+        PageResponse<RankingHistoryWeekResponse> page = service.findHistory(0, 10);
+
+        assertThat(page.content().getFirst().winnerPlayerId()).isNull();
+    }
+
+    @Test
+    @DisplayName("Names no winner when the first place is shared")
+    void shouldNameNoWinnerOnASharedFirstPlace() {
+        LocalDate lastWeek = WEEK_START.minusWeeks(1);
+        WeeklyPlayerScore bravo = RankingFixtures.score(BRAVO, 1, 2_000, 0);
+        bravo.setWeekStart(lastWeek);
+        WeeklyPlayerScore alpha = RankingFixtures.score(ALPHA, 1, 2_000, 0);
+        alpha.setWeekStart(lastWeek);
+
+        Page<LocalDate> weekPage = new PageImpl<>(List.of(lastWeek), PageRequest.of(0, 10), 1);
+        when(scoreRepository.findFinalizedWeekStarts(PageRequest.of(0, 10))).thenReturn(weekPage);
+        when(scoreRepository.findAllByWeekStartInOrderByWeekStartDescPositionAsc(List.of(lastWeek)))
+            .thenReturn(List.of(bravo, alpha));
+
+        PageResponse<RankingHistoryWeekResponse> page = service.findHistory(0, 10);
+
+        assertThat(page.content().getFirst().winnerPlayerId()).isNull();
+    }
+
+    /**
+     * Builds a running campaign whose first week is the given Monday.
+     *
+     * @param firstWeekStart Monday the campaign starts on
+     * @return the campaign
+     */
+    private static Campaign campaignCovering(LocalDate firstWeekStart) {
+        Campaign campaign = CampaignFixtures.runningCampaign(1);
+        campaign.setFirstWeekStart(firstWeekStart);
+        campaign.setLastWeekStart(firstWeekStart.plusWeeks(9));
+
+        return campaign;
     }
 }

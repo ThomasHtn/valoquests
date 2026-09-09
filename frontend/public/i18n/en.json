@@ -70,6 +70,13 @@
         "confirmBody": "The roster and the reference are frozen at this instant and never recomputed. Check the calibration first: it decides the size of the ten guardians.",
         "done": "Campaign {{number}} opened, starting on {{date}}."
       },
+      "recalibrate": {
+        "heading": "Recalibrate the campaign",
+        "action": "Recalibrate",
+        "confirm": "Recalibrate",
+        "confirmBody": "The frozen roster is measured again over the nine-month window, then the guardian and the group of every week not settled yet are resized and the campaign is replayed. Settled weeks keep their guardian. Run the history import first, and wait for it to finish.",
+        "done": "Campaign recalibrated, reference {{reference}}."
+      },
       "stop": {
         "heading": "Stop the campaign",
         "description": "Closes the running campaign now, frozen at the last day that is over. Its score is never recomputed.",
@@ -325,7 +332,6 @@
     },
     "drawer": {
       "week": "Week {{index}} · {{category}}",
-      "close": "Close",
       "guardian": "Guardian",
       "hpLeft": "hit points left out of {{total}}",
       "nowText": "The breach stands at {{percent}}%.",
@@ -755,9 +761,6 @@
       "totalHelpOff": "The week's match value plus the points of validated challenges. No campaign is running: nothing is taken from a guardian. The total restarts from zero every Monday.",
       "damageHelpOff": "The week's match value, counted as damage. No campaign is running: no guardian takes it.",
       "pointsHelpOff": "The points of validated challenges, one per wounded they would bring home in a campaign.",
-      "titlesLabel": "The week's titles",
-      "titleNotAwarded": "Not awarded",
-      "titleTie": "tied at {{value}}",
       "measure": {
         "MECHANIC": "{{value}} components",
         "QUARTERMASTER": "{{value}} food",
@@ -859,7 +862,7 @@
       "aboard": "Aboard",
       "aboardAria": "{{count}} wounded would be aboard on Sunday out of the {{wounded}} spotted, {{percent}}%: {{extraction}} by the extraction and {{challenges}} already secured by the challenges.",
       "of": "of {{count}} spotted",
-      "lever": "Lever",
+      "lever": "Source",
       "allModes": "Every mode",
       "hpStanding": "HP remaining",
       "carryRate": "components = 1 wounded",

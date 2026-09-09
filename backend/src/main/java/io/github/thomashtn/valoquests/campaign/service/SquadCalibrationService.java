@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.campaign.service;
 
 import io.github.thomashtn.valoquests.campaign.CampaignRuleset;
+import io.github.thomashtn.valoquests.campaign.exception.CampaignLifecycleException;
 import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.model.PlayerCalibration;
 import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
@@ -12,6 +13,9 @@ import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
+import io.github.thomashtn.valoquests.synchronization.model.SynchronizationStatus;
+import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
+import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationRepository;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import io.github.thomashtn.valoquests.week.WeekConstants;
 import java.math.BigDecimal;
@@ -19,6 +23,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,23 +92,68 @@ public class SquadCalibrationService {
     private final WeekCalendar weekCalendar;
 
     /**
+     * Repository telling whether the calibration window was ever imported.
+     */
+    private final SynchronizationRepository synchronizationRepository;
+
+    /**
      * Creates the squad calibration service.
      *
      * @param playerMatchRepository player match repository
      * @param dailyOutputReader     daily output reader
      * @param ruleset               scoring ruleset
-     * @param weekCalendar          week calendar
+     * @param weekCalendar              week calendar
+     * @param synchronizationRepository synchronization repository
      */
     public SquadCalibrationService(
         PlayerMatchRepository playerMatchRepository,
         DailyOutputReader dailyOutputReader,
         ScoringRuleset ruleset,
-        WeekCalendar weekCalendar
+        WeekCalendar weekCalendar,
+        SynchronizationRepository synchronizationRepository
     ) {
         this.playerMatchRepository = playerMatchRepository;
         this.dailyOutputReader = dailyOutputReader;
         this.ruleset = ruleset;
         this.weekCalendar = weekCalendar;
+        this.synchronizationRepository = synchronizationRepository;
+    }
+
+    /**
+     * Calibrates a roster for a campaign, refusing a window the history never covered.
+     *
+     * <p>The ordinary synchronization keeps two acts, so without a backfill the window silently
+     * shrinks and the squad lands on the floor. A short window after a backfill is a young roster,
+     * and that one is accepted.
+     *
+     * @param roster       players the campaign will freeze, never empty
+     * @param referenceDay last day of the window
+     * @return the calibration
+     * @throws CampaignLifecycleException when the window shrank and no backfill ever ran
+     */
+    public SquadCalibration calibrateCovered(List<Player> roster, LocalDate referenceDay) {
+        SquadCalibration calibration = calibrate(roster, referenceDay);
+
+        if (calibration.windowMonths() < CampaignRuleset.CALIBRATION_WINDOW_MONTHS && !backfilled()) {
+            throw new CampaignLifecycleException(
+                "The calibration window covers only " + calibration.windowMonths()
+                    + " month(s) and no history backfill ever ran. Run the backfill first."
+            );
+        }
+
+        return calibration;
+    }
+
+    /**
+     * Tells whether a history backfill ever reached its end.
+     *
+     * @return {@code true} when one completed, even partially
+     */
+    private boolean backfilled() {
+        return synchronizationRepository.existsByTypeAndStatusIn(
+            SynchronizationType.HISTORY_BACKFILL,
+            EnumSet.of(SynchronizationStatus.COMPLETED, SynchronizationStatus.PARTIAL)
+        );
     }
 
     /**

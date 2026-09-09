@@ -214,6 +214,11 @@ export const API_ENDPOINTS = {
     campaignBackfill: `${environment.apiBaseUrl}/admin/campaigns/backfill`,
 
     /**
+     * `POST` a new measure of the live campaign's frozen roster, resizing its unsettled weeks.
+     */
+    campaignRecalibrate: `${environment.apiBaseUrl}/admin/campaigns/recalibrate`,
+
+    /**
      * `POST` the stop of the live campaign, frozen at yesterday's base.
      */
     campaignStop: `${environment.apiBaseUrl}/admin/campaigns/stop`,

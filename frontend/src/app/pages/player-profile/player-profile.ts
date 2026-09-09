@@ -9,7 +9,6 @@ import {
   untracked,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideFlame, LucideTarget, LucideWheat, LucideWrench } from '@lucide/angular';
 
 import { primaryTitle } from '@core/campaign/campaign-title.utils';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
@@ -62,6 +61,7 @@ import {
 } from './player-profile.constants';
 import { resolveCurrentSeasonId, resolveYieldToneClass } from './player-profile.utils';
 import { Progression } from './progression/progression';
+import { TitleBadge } from '@shared/title-badge/title-badge';
 
 /**
  * Player-profile page.
@@ -84,10 +84,7 @@ import { Progression } from './progression/progression';
     MultiSelect,
     Progression,
     Select,
-    LucideFlame,
-    LucideTarget,
-    LucideWheat,
-    LucideWrench,
+    TitleBadge,
     PageHeader,
     StatTile,
     Tooltip,

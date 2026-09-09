@@ -150,35 +150,6 @@
   line-height: 1.2;
 }
 
-/* The week's four titles under the podium: holder or the tie that withheld it. */
-.titles-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 2rem;
-  margin: 0.75rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.titles-line li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 0.5rem;
-}
-
-.titles-line b {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.titles-line small {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-}
-
 .prog-gauge {
   display: flex;
   flex-shrink: 0;

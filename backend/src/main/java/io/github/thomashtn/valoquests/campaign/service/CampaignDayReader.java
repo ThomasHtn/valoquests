@@ -116,7 +116,7 @@ public class CampaignDayReader {
             components / CampaignRuleset.COMPONENTS_PER_RESCUE,
             food / CampaignRuleset.FOOD_PER_RESCUE,
             playerDays.stream().map(this::toResponse).toList(),
-            titleResolver.resolve(scoreRepository.findAllByWeekStartOrderByPositionAsc(weekStart))
+            titleResolver.resolve(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(weekStart))
         );
     }
 

@@ -42,8 +42,9 @@ public record CurrentRankingResponse(
      * <p>An inactive player is listed with their validation counts and their progress, and nothing
      * else: they measure themselves against the squad without adding to it or taking a slot.
      *
-     * @param position                 current rank, starting at 1, {@code null} when the player is
-     *     not competitive and therefore never ranked
+     * @param position                 current rank, starting at 1, shared on equal points,
+     *     {@code null} when the player has no points yet or is not competitive
+     * @param competing                whether the player takes part in the ranking at all
      * @param previousPosition         rank held before the latest rebuild, {@code null} when none
      * @param positionVariation        places gained since the previous rebuild, negative when lost
      * @param player                   identity shown next to the rank
@@ -64,6 +65,7 @@ public record CurrentRankingResponse(
     public record RankingEntryResponse(
 
         Integer position,
+        boolean competing,
         Integer previousPosition,
         int positionVariation,
         PlayerRankingResponse player,

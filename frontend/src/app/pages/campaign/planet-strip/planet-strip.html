@@ -3,7 +3,7 @@
     @for (planet of planets(); track planet.index) {
       <li [class.seg--done]="planet.state === 'won' || planet.state === 'lost'">
         <button
-          (click)="toggle(planet)"
+          (click)="open(planet)"
           [attr.aria-expanded]="openedIndex() === planet.index"
           [class]="'pl pl--' + planet.state"
           [class.pl--final]="planet.final"
@@ -52,8 +52,7 @@
   </ol>
 </div>
 
-<!-- The report of the opened planet. Closed at rest; it opens under the strip and points at the
-     planet clicked. -->
+<!-- The report of the opened planet, under the strip, pointing at it. -->
 @if (opened(); as planet) {
-  <app-planet-drawer (closed)="close()" [planet]="planet" [pointerX]="pointerX()" />
+  <app-planet-drawer [planet]="planet" [pointerX]="pointerX()" />
 }

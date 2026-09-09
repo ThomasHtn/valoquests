@@ -322,6 +322,17 @@ export class AdminApi {
   }
 
   /**
+   * Measures the live campaign's roster again and resizes the weeks not settled yet.
+   *
+   * @returns A promise that resolves with the recalibrated campaign.
+   */
+  public async recalibrateCampaign(): Promise<CampaignAdmin> {
+    return this.mutate(
+      this.http.post<CampaignAdmin>(API_ENDPOINTS.admin.campaignRecalibrate, null),
+    );
+  }
+
+  /**
    * Stops the live campaign now, frozen at yesterday's base.
    *
    * @returns A promise that resolves with the stopped campaign.

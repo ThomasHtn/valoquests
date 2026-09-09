@@ -31,26 +31,6 @@
             <h2 class="sr-only" id="podium-title">{{ 'leaderboard.podium.label' | translate }}</h2>
             <app-podium [rows]="board.ranked" />
             <span aria-hidden="true" class="block h-0.5 w-full bg-edge-strong"></span>
-            <!-- The four titles with the figure that decides them, so a title withheld by a tie
-                 says so instead of silently missing. -->
-            @if (board.live && weekTitles().length > 0) {
-              <ul
-                [attr.aria-label]="'leaderboard.board.titlesLabel' | translate"
-                class="titles-line"
-              >
-                @for (line of weekTitles(); track line.key) {
-                  <li>
-                    <span [class]="line.colorClass" class="label-caption text-2xs">
-                      {{ 'common.title.' + line.key | translate }}
-                    </span>
-                    <b>{{ line.holder ?? ('leaderboard.board.titleNotAwarded' | translate) }}</b>
-                    @if (line.detail) {
-                      <small>{{ line.detail }}</small>
-                    }
-                  </li>
-                }
-              </ul>
-            }
           </section>
         }
 
@@ -207,16 +187,7 @@
             <!-- The one title held, under the name rather than beside it: a long name plus a
                  badge ran wider than its column and folded onto itself anyway. -->
             <span class="who-titles">
-              <span
-                [appTooltip]="
-                  ('common.titleHint.' + title.key | translate) +
-                  (title.measure ? ' · ' + title.measure : '')
-                "
-                [class]="title.colorClass"
-                class="title"
-              >
-                {{ 'common.title.' + title.key | translate }}
-              </span>
+              <app-title-badge [measure]="title.measure" [title]="title.key" />
             </span>
           }
         </span>

@@ -1,6 +1,9 @@
 package io.github.thomashtn.valoquests.ranking.service;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.thomashtn.valoquests.campaign.entity.Campaign;
+import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
+import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.ranking.dto.CurrentRankingResponse;
 import io.github.thomashtn.valoquests.ranking.dto.DailyRankingResponse;
 import io.github.thomashtn.valoquests.ranking.dto.RankingHistoryWeekResponse;
@@ -57,6 +60,11 @@ public class DefaultRankingQueryService implements RankingQueryService {
     private final WeekCalendar weekCalendar;
 
     /**
+     * Repository telling which weeks a campaign covered.
+     */
+    private final CampaignRepository campaignRepository;
+
+    /**
      * Creates the ranking query service.
      *
      * @param scoreRepository    weekly score repository
@@ -64,6 +72,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
      * @param dailyRankingReader daily ranking reader
      * @param titleResolver      weekly title resolver
      * @param weekCalendar       week calendar
+     * @param campaignRepository campaign repository
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -74,20 +83,22 @@ public class DefaultRankingQueryService implements RankingQueryService {
         RankingProgressMapper progressMapper,
         DailyRankingReader dailyRankingReader,
         WeeklyTitleResolver titleResolver,
-        WeekCalendar weekCalendar
+        WeekCalendar weekCalendar,
+        CampaignRepository campaignRepository
     ) {
         this.scoreRepository = scoreRepository;
         this.progressMapper = progressMapper;
         this.dailyRankingReader = dailyRankingReader;
         this.titleResolver = titleResolver;
         this.weekCalendar = weekCalendar;
+        this.campaignRepository = campaignRepository;
     }
 
     @Override
     public CurrentRankingResponse findCurrent() {
         LocalDate weekStart = weekCalendar.currentWeekStart();
         LocalDate today = weekCalendar.today();
-        List<WeeklyPlayerScore> scores = scoreRepository.findAllByWeekStartOrderByPositionAsc(weekStart);
+        List<WeeklyPlayerScore> scores = scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(weekStart);
 
         WeekBoard board = progressMapper.forWeek(
             weekStart,
@@ -166,6 +177,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
 
         return new CurrentRankingResponse.RankingEntryResponse(
             currentPosition,
+            score.getPlayer().isCompetitive(),
             previousPosition,
             variation,
             new CurrentRankingResponse.PlayerRankingResponse(
@@ -213,11 +225,12 @@ public class DefaultRankingQueryService implements RankingQueryService {
             .filter(Objects::nonNull)
             .max(Instant::compareTo)
             .orElse(null);
-        Long winnerPlayerId = orderedScores.stream()
+        // The champion is a campaign honour: none between campaigns, none on a shared first place.
+        List<Long> leaders = orderedScores.stream()
             .filter(score -> Integer.valueOf(1).equals(score.getPosition()))
             .map(score -> score.getPlayer().getId())
-            .findFirst()
-            .orElse(null);
+            .toList();
+        Long winnerPlayerId = leaders.size() == 1 && coveredByCampaign(weekStart) ? leaders.getFirst() : null;
 
         List<RankingHistoryWeekResponse.FinalRankingEntryResponse> ranking = orderedScores.stream()
             .map(score -> new RankingHistoryWeekResponse.FinalRankingEntryResponse(
@@ -257,5 +270,32 @@ public class DefaultRankingQueryService implements RankingQueryService {
             .map(Map.Entry::getKey)
             .sorted()
             .toList();
+    }
+
+    /**
+     * Tells whether a week was played inside a campaign, running or already closed.
+     *
+     * @param weekStart Monday identifying the week
+     * @return {@code true} when a campaign covered it
+     */
+    private boolean coveredByCampaign(LocalDate weekStart) {
+        return campaignRepository.findAll().stream()
+            .filter(campaign -> campaign.getStatus() != CampaignStatus.OPENED)
+            .anyMatch(campaign -> covers(campaign, weekStart));
+    }
+
+    /**
+     * Tells whether a campaign's weeks include one, a stopped campaign ending where it stopped.
+     *
+     * @param campaign  campaign to check
+     * @param weekStart Monday identifying the week
+     * @return {@code true} when the week is one of the campaign's
+     */
+    private static boolean covers(Campaign campaign, LocalDate weekStart) {
+        LocalDate lastMonday = campaign.getStoppedOn() == null
+            ? campaign.getLastWeekStart()
+            : campaign.getStoppedOn();
+
+        return !weekStart.isBefore(campaign.getFirstWeekStart()) && !weekStart.isAfter(lastMonday);
     }
 }

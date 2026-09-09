@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Exposes the protected campaign lifecycle: calibrate, backfill, open, stop, replay, delete.
+ * Exposes the protected campaign lifecycle: calibrate, backfill, open, recalibrate, stop, replay, delete.
  *
  * <p>Nothing here happens on its own. A campaign is opened by a person who has looked at the
  * calibration first, and the ten weeks that follow are decided in that single moment.
@@ -170,6 +170,31 @@ public class CampaignAdminController {
     @ApiResponse(responseCode = "409", description = "No campaign is opened or running.")
     public CampaignAdminResponse stopCampaign() {
         return toResponse(lifecycleService.stop(clock));
+    }
+
+    /**
+     * Measures the squad again and resizes the live campaign's unsettled weeks.
+     *
+     * @return the campaign, recalibrated and replayed
+     */
+    @PostMapping("/recalibrate")
+    @Operation(
+        summary = "Recalibrate the live campaign",
+        description = """
+            Measures the frozen roster again on the calibration window and resizes the guardian
+            and the group of every week not settled yet, then replays the campaign.
+
+            The one exception to a calibration being decided once: meant for a campaign opened
+            before the history backfill ran. Run the backfill first, and wait for it to finish.
+            """
+    )
+    @ApiResponse(responseCode = "200", description = "Campaign recalibrated successfully.")
+    @ApiResponse(responseCode = "409", description = "No campaign is live, or the window is not covered.")
+    public CampaignAdminResponse recalibrateCampaign() {
+        Campaign campaign = lifecycleService.recalibrate();
+        replayService.replay(campaign);
+
+        return toResponse(campaign);
     }
 
     /**

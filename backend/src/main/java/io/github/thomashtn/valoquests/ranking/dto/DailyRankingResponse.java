@@ -41,8 +41,9 @@ public record DailyRankingResponse(
      * that discourages marathon sessions only discourages one if the player can see it coming, and a
      * streak only rewards regularity if the counter is on screen.
      *
-     * @param position           rank on the day, starting at 1, {@code null} when the player is not
-     *     competitive and therefore never consumes a ranking slot
+     * @param position           rank on the day, starting at 1, shared on equal damage, {@code null}
+     *     when the player dealt none or is not competitive
+     * @param competing          whether the player takes part in the ranking at all
      * @param playerId           internal player identifier
      * @param displayName        player name shown in the ranking
      * @param portrait           relative path of the player portrait, or {@code null} when unknown
@@ -61,6 +62,7 @@ public record DailyRankingResponse(
     public record DailyRankingEntryResponse(
 
         Integer position,
+        boolean competing,
         Long playerId,
         String displayName,
         String portrait,

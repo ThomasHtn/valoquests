@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import io.github.thomashtn.valoquests.campaign.exception.CampaignLifecycleException;
 import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.model.PlayerCalibration;
 import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
@@ -20,6 +21,8 @@ import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.model.PlayerDayOutput;
 import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
+import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
+import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationRepository;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -76,6 +79,9 @@ class SquadCalibrationServiceTest {
     @Mock
     private DailyOutputReader dailyOutputReader;
 
+    @Mock
+    private SynchronizationRepository synchronizationRepository;
+
     private SquadCalibrationService service;
 
     @BeforeEach
@@ -85,7 +91,8 @@ class SquadCalibrationServiceTest {
             playerMatchRepository,
             dailyOutputReader,
             new DefaultScoringRuleset(),
-            new WeekCalendar(clock, ZoneOffset.UTC)
+            new WeekCalendar(clock, ZoneOffset.UTC),
+            synchronizationRepository
         );
     }
 
@@ -124,8 +131,8 @@ class SquadCalibrationServiceTest {
 
         SquadCalibration calibration = service.calibrate(List.of(quiet), REFERENCE_DAY);
 
-        assertThat(calibration.reference()).isEqualTo(2_000);
-        assertThat(calibration.tier()).isEqualTo(CampaignTier.AMATEUR);
+        assertThat(calibration.reference()).isEqualTo(3_500);
+        assertThat(calibration.tier()).isEqualTo(CampaignTier.NORMAL);
     }
 
     @Test
@@ -149,6 +156,36 @@ class SquadCalibrationServiceTest {
         assertThat(calibration.players())
             .extracting(PlayerCalibration::covered)
             .containsExactly(true, true);
+    }
+
+    @Test
+    @DisplayName("Refuses a campaign calibration on a shrunken window when no backfill ever ran")
+    void shouldRefuseAShrunkenWindowWithoutBackfill() {
+        Player recent = player(2, "Bravo");
+        when(playerMatchRepository.findEarliestMatchStartedAt(2L))
+            .thenReturn(java.util.Optional.of(instant(REFERENCE_DAY.minusMonths(4))));
+        producesAnyWindow(recent, 0);
+        noMatches(recent);
+        when(synchronizationRepository.existsByTypeAndStatusIn(eq(SynchronizationType.HISTORY_BACKFILL), any()))
+            .thenReturn(false);
+
+        assertThatThrownBy(() -> service.calibrateCovered(List.of(recent), REFERENCE_DAY))
+            .isInstanceOf(CampaignLifecycleException.class)
+            .hasMessageContaining("backfill");
+    }
+
+    @Test
+    @DisplayName("Accepts a shrunken window once a backfill ran: the roster is simply young")
+    void shouldAcceptAShrunkenWindowAfterBackfill() {
+        Player recent = player(2, "Bravo");
+        when(playerMatchRepository.findEarliestMatchStartedAt(2L))
+            .thenReturn(java.util.Optional.of(instant(REFERENCE_DAY.minusMonths(4))));
+        producesAnyWindow(recent, 0);
+        noMatches(recent);
+        when(synchronizationRepository.existsByTypeAndStatusIn(eq(SynchronizationType.HISTORY_BACKFILL), any()))
+            .thenReturn(true);
+
+        assertThat(service.calibrateCovered(List.of(recent), REFERENCE_DAY).windowMonths()).isEqualTo(4);
     }
 
     @Test
@@ -210,7 +247,8 @@ class SquadCalibrationServiceTest {
 
         SquadCalibration calibration = service.calibrate(List.of(quiet), REFERENCE_DAY);
 
-        assertThat(calibration.scaling().volumeFactor()).isEqualByComparingTo(new BigDecimal("0.40"));
+        // The reference floor of 3 500 bounds a quiet squad before the factor's own minimum does.
+        assertThat(calibration.scaling().volumeFactor()).isEqualByComparingTo(new BigDecimal("0.6604"));
     }
 
     @Test

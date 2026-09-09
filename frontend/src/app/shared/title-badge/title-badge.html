@@ -1,0 +1,23 @@
+@let look = visual();
+<span
+  [appTooltip]="('common.titleHint.' + title() | translate) + (measure() ? ' · ' + measure() : '')"
+  [class]="'title-badge title-badge--' + size() + ' ' + look.colorClass"
+  class="focus-ring"
+  tabindex="0"
+>
+  @switch (look.icon) {
+    @case ('wrench') {
+      <svg aria-hidden="true" class="title-badge-icon" lucideWrench></svg>
+    }
+    @case ('wheat') {
+      <svg aria-hidden="true" class="title-badge-icon" lucideWheat></svg>
+    }
+    @case ('flame') {
+      <svg aria-hidden="true" class="title-badge-icon" lucideFlame></svg>
+    }
+    @case ('target') {
+      <svg aria-hidden="true" class="title-badge-icon" lucideTarget></svg>
+    }
+  }
+  {{ 'common.title.' + title() | translate }}
+</span>

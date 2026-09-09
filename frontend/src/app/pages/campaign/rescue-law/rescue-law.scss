@@ -40,27 +40,28 @@
     justify-self: center;
   }
 
-  /* Stacked: the plate on the left and the words beside it, the accent moved to the left edge. */
+  /* Stacked: the plate on the left and the words beside it, the accent moved to the left edge.
+     The band at the foot keeps its full-bleed formula, so `--pad` is what changes, not the band. */
   .formula .term {
+    --pad: 0.9rem;
+
     grid-template-columns: 3.25rem minmax(0, 1fr);
     grid-template-rows: auto;
     gap: 0.35rem 1rem;
     justify-items: start;
-    padding: 1rem 0 1rem 0.9rem;
+    padding: 1rem var(--pad) 0;
     box-shadow: inset 3px 0 0 var(--tone);
     text-align: left;
   }
 
   .formula .term .hex-mark {
-    grid-row: span 4;
+    grid-row: span 3;
   }
 
   .formula .term-foot {
-    grid-column: 2;
+    grid-column: 1 / -1;
     justify-content: flex-start;
-    width: calc(100% + 1rem);
-    margin: 0.35rem -1rem -1rem 0;
-    padding: 0.6rem 1rem 1rem 0;
+    margin-top: 0.35rem;
   }
 }
 

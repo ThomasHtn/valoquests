@@ -171,34 +171,53 @@ class DailyOutputReaderTest {
     @DisplayName("counts the streak from before the range, so the first day is not always day one")
     void shouldCountTheStreakFromBeforeTheRange() {
         Player player = player(1L, PlayerStatus.ACTIVE);
+        LocalDate sunday = MONDAY.plusDays(6);
         for (int offset = 1; offset <= 6; offset++) {
-            givenMatches(player, competitiveWins(MONDAY.minusDays(offset), 1));
+            givenMatches(player, competitiveWins(sunday.minusDays(offset), 1));
         }
-        givenMatches(player, competitiveWins(MONDAY, 1));
+        givenMatches(player, competitiveWins(sunday, 1));
 
-        DailyOutput output = reader.read(everyone(), MONDAY, MONDAY);
+        DailyOutput output = reader.read(everyone(), sunday, sunday);
 
-        assertThat(output.of(1L, MONDAY).streakDays()).isEqualTo(7);
-        assertThat(output.of(1L, MONDAY).streakBonusPercent()).isEqualTo(10);
-        assertThat(output.of(1L, MONDAY).damage()).isEqualTo(550);
-        assertThat(output.streakEndingOn(1L, MONDAY.minusDays(1))).isEqualTo(6);
-        assertThat(output.on(MONDAY.minusDays(1))).as("days before the range are not reported").isEmpty();
+        assertThat(output.of(1L, sunday).streakDays()).isEqualTo(7);
+        assertThat(output.of(1L, sunday).streakBonusPercent()).isEqualTo(10);
+        assertThat(output.of(1L, sunday).damage()).isEqualTo(550);
+        assertThat(output.streakEndingOn(1L, sunday.minusDays(1))).isEqualTo(6);
+        assertThat(output.on(sunday.minusDays(1))).as("days before the range are not reported").isEmpty();
         verify(playerMatchRepository).findAllForPeriod(
             everyone(),
-            MONDAY.minusDays(DailyOutputReader.STREAK_LOOKBACK_DAYS).atStartOfDay(ZoneOffset.UTC).toInstant(),
-            MONDAY.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant()
+            sunday.minusDays(DailyOutputReader.STREAK_LOOKBACK_DAYS).atStartOfDay(ZoneOffset.UTC).toInstant(),
+            sunday.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant()
         );
+    }
+
+    @Test
+    @DisplayName("restarts the streak every Monday, whatever was played the week before")
+    void shouldRestartTheStreakOnMonday() {
+        Player player = player(1L, PlayerStatus.ACTIVE);
+        givenMatches(player, competitiveWins(MONDAY.minusDays(2), 1));
+        givenMatches(player, competitiveWins(MONDAY.minusDays(1), 1));
+        givenMatches(player, competitiveWins(MONDAY, 1));
+        givenMatches(player, competitiveWins(MONDAY.plusDays(1), 1));
+
+        DailyOutput output = reader.read(everyone(), MONDAY, MONDAY.plusDays(1));
+
+        assertThat(output.streakEndingOn(1L, MONDAY.minusDays(1))).isEqualTo(2);
+        assertThat(output.of(1L, MONDAY).streakDays()).isEqualTo(1);
+        assertThat(output.of(1L, MONDAY).streakBonusPercent()).isZero();
+        assertThat(output.of(1L, MONDAY.plusDays(1)).streakDays()).isEqualTo(2);
     }
 
     @Test
     @DisplayName("rounds once, at the end, with both multipliers applied")
     void shouldRoundOnceWithBothMultipliersApplied() {
         Player player = player(1L, PlayerStatus.ACTIVE);
-        givenMatches(player, competitiveWins(MONDAY.minusDays(1), 1));
-        givenMatches(player, competitiveWins(MONDAY, 5));
-        givenMatches(player, deathmatchWins(MONDAY, 1));
+        LocalDate tuesday = MONDAY.plusDays(1);
+        givenMatches(player, competitiveWins(MONDAY, 1));
+        givenMatches(player, competitiveWins(tuesday, 5));
+        givenMatches(player, deathmatchWins(tuesday, 1));
 
-        List<ValuedMatch> valued = reader.read(everyone(), MONDAY, MONDAY).valuedMatches();
+        List<ValuedMatch> valued = reader.read(everyone(), tuesday, tuesday).valuedMatches();
 
         ValuedMatch sixth = valued.stream()
             .filter(match -> match.coefficientPercent() == 50)

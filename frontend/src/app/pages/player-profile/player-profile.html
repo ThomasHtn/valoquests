@@ -82,26 +82,7 @@
                 <span class="font-mono text-2xs text-text-muted">#{{ tag() }}</span>
               }
               @if (title(); as playerTitle) {
-                <span
-                  [class]="playerTitle.colorClass"
-                  class="label-caption flex items-center gap-1"
-                >
-                  @switch (playerTitle.icon) {
-                    @case ('wrench') {
-                      <svg aria-hidden="true" class="size-3" lucideWrench></svg>
-                    }
-                    @case ('wheat') {
-                      <svg aria-hidden="true" class="size-3" lucideWheat></svg>
-                    }
-                    @case ('flame') {
-                      <svg aria-hidden="true" class="size-3" lucideFlame></svg>
-                    }
-                    @case ('target') {
-                      <svg aria-hidden="true" class="size-3" lucideTarget></svg>
-                    }
-                  }
-                  {{ 'common.title.' + playerTitle.key | translate }}
-                </span>
+                <app-title-badge [title]="playerTitle.key" size="md" />
               }
             </p>
           </div>

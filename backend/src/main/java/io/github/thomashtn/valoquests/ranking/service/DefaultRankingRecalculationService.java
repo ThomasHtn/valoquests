@@ -146,7 +146,7 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
         );
 
         Map<Long, WeeklyPlayerScore> existingByPlayerId = scoreRepository
-            .findAllByWeekStartOrderByPositionAsc(weekStart)
+            .findAllByWeekStartOrderByPositionAscPlayerIdAsc(weekStart)
             .stream()
             .collect(Collectors.toMap(score -> score.getPlayer().getId(), Function.identity()));
 
@@ -169,15 +169,36 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
         }
 
         scores.sort(RANKING_ORDER);
-
-        int position = 1;
-        for (WeeklyPlayerScore score : scores) {
-            score.setPosition(score.getPlayer().isCompetitive() ? position++ : null);
-        }
+        rank(scores);
 
         scoreRepository.saveAll(scores);
 
         LOGGER.info("Ranking recalculated for week {} with {} player(s).", weekStart, scores.size());
+    }
+
+    /**
+     * Assigns standing-competition positions to an ordered week: equal points share a position
+     * and the next one skips ahead (1, 1, 3). No points, no position; an inactive player neither.
+     *
+     * @param scores rows already in ranking order
+     */
+    private static void rank(List<WeeklyPlayerScore> scores) {
+        int rank = 0;
+        int position = 0;
+        Integer previousPoints = null;
+
+        for (WeeklyPlayerScore score : scores) {
+            if (!score.getPlayer().isCompetitive() || score.getTotalPoints() <= 0) {
+                score.setPosition(null);
+                continue;
+            }
+            rank++;
+            if (!Integer.valueOf(score.getTotalPoints()).equals(previousPoints)) {
+                position = rank;
+                previousPoints = score.getTotalPoints();
+            }
+            score.setPosition(position);
+        }
     }
 
     /**

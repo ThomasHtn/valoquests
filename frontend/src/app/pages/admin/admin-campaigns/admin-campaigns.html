@@ -78,6 +78,17 @@
       </dl>
 
       <div class="mt-5 flex flex-wrap gap-3">
+        <!-- Recalibrating, for a campaign opened before the history backfill ran: the frozen
+             roster is measured again and the weeks not settled yet are resized. -->
+        <button
+          appButton="secondary"
+          (click)="askToRecalibrate()"
+          [disabled]="recalibrateState().status === 'running' || synchronizing()"
+          class="flex min-h-10 items-center px-4 text-sm font-medium [--notch:0.5rem]"
+          type="button"
+        >
+          {{ 'admin.campaigns.recalibrate.action' | translate }}
+        </button>
         @if (live.status === 'RUNNING') {
           <button
             appButton="danger"
@@ -346,6 +357,17 @@
     [confirmLabel]="'admin.campaigns.open.confirm' | translate"
     [heading]="'admin.campaigns.open.heading' | translate"
     [open]="openDialogOpen()"
+  />
+
+  <app-confirm-dialog
+    (confirmed)="confirmRecalibrate()"
+    (dismissed)="dismissRecalibrate()"
+    [body]="'admin.campaigns.recalibrate.confirmBody' | translate"
+    [busy]="recalibrateState().status === 'running'"
+    [cancelLabel]="'admin.cancel' | translate"
+    [confirmLabel]="'admin.campaigns.recalibrate.confirm' | translate"
+    [heading]="'admin.campaigns.recalibrate.heading' | translate"
+    [open]="recalibrateDialogOpen()"
   />
 
   <app-confirm-dialog

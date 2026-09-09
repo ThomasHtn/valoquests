@@ -74,21 +74,34 @@ public class DailyRankingReader {
             .thenComparing(Player::getId));
 
         List<DailyRankingResponse.DailyRankingEntryResponse> ranking = new ArrayList<>(ordered.size());
-        int position = 1;
+        int rank = 0;
+        int position = 0;
+        int lastRankedDamage = -1;
         int played = 0;
         int competitors = 0;
 
         for (Player player : ordered) {
             PlayerDayOutput today = output.of(player.getId(), day);
             int previousDamage = output.of(player.getId(), previous).damage();
+            Integer ranked = null;
 
             if (player.isCompetitive()) {
                 competitors++;
                 played += today.matchCount() > 0 ? 1 : 0;
             }
+            // Equal damage shares a position, the next one skips ahead; no damage, no position.
+            if (player.isCompetitive() && today.damage() > 0) {
+                rank++;
+                if (today.damage() != lastRankedDamage) {
+                    position = rank;
+                    lastRankedDamage = today.damage();
+                }
+                ranked = position;
+            }
 
             ranking.add(new DailyRankingResponse.DailyRankingEntryResponse(
-                player.isCompetitive() ? position++ : null,
+                ranked,
+                player.isCompetitive(),
                 player.getId(),
                 player.getDisplayName(),
                 player.getPortrait(),

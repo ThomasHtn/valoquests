@@ -38,6 +38,11 @@ import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.synchronization.entity.Synchronization;
+import io.github.thomashtn.valoquests.synchronization.model.SynchronizationStatus;
+import io.github.thomashtn.valoquests.synchronization.model.SynchronizationTrigger;
+import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
+import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationRepository;
 import io.github.thomashtn.valoquests.week.service.WeeklyRolloverService;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
@@ -123,6 +128,9 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     private CampaignLifecycleService lifecycleService;
 
     @Autowired
+    private SynchronizationRepository synchronizationRepository;
+
+    @Autowired
     private WeeklyRolloverService weeklyRolloverService;
 
     @Autowired
@@ -183,6 +191,18 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         season = createSeason();
         // Alpha alone has history before the opening: the calibration covers them, Bravo is a beginner.
         playCompetitiveMatches(alpha, LocalDate.of(2026, 6, 2), 2);
+        // The window is short, and only a backfill that ran makes a short window acceptable.
+        recordCompletedBackfill();
+    }
+
+    private void recordCompletedBackfill() {
+        Synchronization backfill = new Synchronization();
+        backfill.setType(SynchronizationType.HISTORY_BACKFILL);
+        backfill.setTrigger(SynchronizationTrigger.MANUAL);
+        backfill.setStatus(SynchronizationStatus.COMPLETED);
+        backfill.setStartedAt(OPENING_TIME.minusSeconds(3_600));
+        backfill.setFinishedAt(OPENING_TIME.minusSeconds(60));
+        synchronizationRepository.save(backfill);
     }
 
     @Test
@@ -190,8 +210,8 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     void shouldOpenACampaignOnTheActiveRoster() throws Exception {
         mockMvc.perform(get("/api/admin/campaigns/calibration").header("X-Admin-Key", ADMIN_KEY))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.reference").value(2_000))
-            .andExpect(jsonPath("$.tier").value("AMATEUR"))
+            .andExpect(jsonPath("$.reference").value(3_500))
+            .andExpect(jsonPath("$.tier").value("NORMAL"))
             .andExpect(jsonPath("$.players.length()").value(2))
             .andExpect(jsonPath("$.players[?(@.displayName == 'Alpha#TEST')].beginner").value(false))
             .andExpect(jsonPath("$.players[?(@.displayName == 'Bravo#TEST')].beginner").value(true));
@@ -208,8 +228,8 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
             .andExpect(status().isConflict());
 
         Campaign campaign = campaignRepository.findByStatusNot(CampaignStatus.CLOSED).orElseThrow();
-        assertThat(campaign.getReference()).isEqualTo(2_000);
-        assertThat(campaign.getTier()).isEqualTo(CampaignTier.AMATEUR);
+        assertThat(campaign.getReference()).isEqualTo(3_500);
+        assertThat(campaign.getTier()).isEqualTo(CampaignTier.NORMAL);
         assertThat(campaign.getOpenedAt()).isEqualTo(OPENING_TIME);
 
         List<CampaignPlayer> roster = campaignPlayerRepository.findAllByCampaignIdOrderByPlayerIdAsc(campaign.getId());
@@ -254,7 +274,7 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(calibrationSource.forWeek(FIRST_WEEK_START).reference()).isEqualTo(campaign.getReference());
         assertThat(calibrationSource.forWeek(FIRST_WEEK_START).weekIndex()).isEqualTo(1);
         assertThat(snapshotRepository.findAllByCampaignIdOrderByDayAsc(campaign.getId())).hasSize(1);
-        assertThat(scoreRepository.findAllByWeekStartOrderByPositionAsc(FIRST_WEEK_START)).hasSize(3);
+        assertThat(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(FIRST_WEEK_START)).hasSize(3);
 
         playCompetitiveMatches(alpha, FIRST_WEEK_START.plusDays(1), 3);
         mutableClock.setInstant(Instant.parse("2026-07-22T12:00:00Z"));
@@ -291,7 +311,8 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(weeks.getFirst().getDamageDealt()).isEqualTo(alphaDays.getFirst().getDamage());
         assertThat(weeks.subList(1, weeks.size())).allMatch(week -> week.getDamageDealt() == 0);
 
-        List<WeeklyPlayerScore> firstWeek = scoreRepository.findAllByWeekStartOrderByPositionAsc(FIRST_WEEK_START);
+        List<WeeklyPlayerScore> firstWeek = scoreRepository
+            .findAllByWeekStartOrderByPositionAscPlayerIdAsc(FIRST_WEEK_START);
         assertThat(firstWeek).allSatisfy(score -> assertThat(score.getFinalizedAt()).isEqualTo(CLOSING_TIME));
         assertThat(firstWeek.getFirst().getPlayer().getId()).isEqualTo(alpha.getId());
         assertThat(firstWeek.getFirst().getGuardianDamage()).isEqualTo(alphaDays.getFirst().getDamage());

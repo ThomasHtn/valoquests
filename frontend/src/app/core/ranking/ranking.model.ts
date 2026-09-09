@@ -110,10 +110,15 @@ export interface RankingChallengeProgress {
  */
 export interface RankingEntry {
   /**
-   * 1-based ranking position, or `null` when the player is inactive and therefore never
-   * consumes a ranking slot.
+   * 1-based ranking position, shared on equal points, or `null` when the player has no points
+   * yet or is inactive and therefore never consumes a ranking slot.
    */
   readonly position: number | null;
+
+  /**
+   * Whether the player takes part in the ranking at all: `false` for an inactive player.
+   */
+  readonly competing: boolean;
 
   /**
    * Position at the previous calculation, or `null` when new.
@@ -236,10 +241,15 @@ export interface CurrentRanking {
  */
 export interface DailyRankingEntry {
   /**
-   * 1-based rank on the day, or `null` when the player is inactive and therefore never consumes a
-   * ranking slot — same rule as {@link RankingEntry.position}.
+   * 1-based rank on the day, shared on equal damage, or `null` when the player dealt none or is
+   * inactive — same rule as {@link RankingEntry.position}.
    */
   readonly position: number | null;
+
+  /**
+   * Whether the player takes part in the ranking at all: `false` for an inactive player.
+   */
+  readonly competing: boolean;
 
   /**
    * Internal identifier of the player.

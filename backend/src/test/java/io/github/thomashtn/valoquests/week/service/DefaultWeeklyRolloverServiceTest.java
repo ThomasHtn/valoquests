@@ -158,7 +158,7 @@ class DefaultWeeklyRolloverServiceTest {
 
         when(
             weeklyPlayerScoreRepository
-                .findAllByWeekStartOrderByPositionAsc(
+                .findAllByWeekStartOrderByPositionAscPlayerIdAsc(
                     PREVIOUS_WEEK_START
                 )
         ).thenReturn(

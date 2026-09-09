@@ -160,8 +160,8 @@ class DefaultScoringRulesetTest {
     }
 
     @Test
-    void shouldFloorTheReferenceAtTwoThousand() {
-        assertThat(ruleset.referenceFloor()).isEqualTo(2_000);
+    void shouldFloorTheReferenceAtThirtyFiveHundred() {
+        assertThat(ruleset.referenceFloor()).isEqualTo(3_500);
     }
 
     private int survivorsOf(ChallengeCadence cadence, ChallengeDifficulty difficulty) {

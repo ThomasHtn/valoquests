@@ -287,12 +287,12 @@ class ChallengeProgressIntegrationTest
      * Verifies the ranking generated from the stored matches and the completed challenge progress.
      *
      * <p>Guardian damage sums the five valued matches this player played this week, priced by the v2
-     * barème with both multipliers. The competitive match of the day before the week starts a
-     * streak that the week extends day after day, so the daily bonus climbs from 2 % on Monday to
-     * 10 % on Friday: WIN 500 × 1.02 = 510, LOSS 350 × 1.04 = 364, WIN 500 × 1.06 = 530, LOSS
-     * 350 × 1.08 = 378, then the 40-kill Deathmatch victory, WIN 150 × 1.10 = 165, for 1947. None of
-     * these reaches the sixth match of its day. The five weekly challenges pay 2 + 3 + 5 + 8 +
-     * 11 = 29 points at the 2 000 floor no campaign has raised, plus the day's challenge when this
+     * barème with both multipliers. The competitive match of the day before the week counts for
+     * nothing on Monday, where every streak restarts, so the daily bonus climbs from 0 % on Monday
+     * to 8 % on Friday: WIN 500 = 500, LOSS 350 × 1.02 = 357, WIN 500 × 1.04 = 520, LOSS
+     * 350 × 1.06 = 371, then the 40-kill Deathmatch victory, WIN 150 × 1.08 = 162, for 1910. None of
+     * these reaches the sixth match of its day. The five weekly challenges pay 4 + 6 + 9 + 14 +
+     * 19 = 52 points at the 3 500 floor no campaign has raised, plus the day's challenge when this
      * player validated it.
      *
      * @param player expected ranked player
@@ -300,7 +300,7 @@ class ChallengeProgressIntegrationTest
     private void assertGeneratedRanking(Player player) {
         List<WeeklyPlayerScore> scores =
             scoreRepository
-                .findAllByWeekStartOrderByPositionAsc(
+                .findAllByWeekStartOrderByPositionAscPlayerIdAsc(
                     WEEK_START
                 );
 
@@ -319,7 +319,7 @@ class ChallengeProgressIntegrationTest
                     .isNull();
 
                 assertThat(score.getGuardianDamage())
-                    .isEqualTo(1_947);
+                    .isEqualTo(1_910);
 
                 assertThat(score.getMatchCount())
                     .isEqualTo(5);
@@ -328,10 +328,10 @@ class ChallengeProgressIntegrationTest
                     .isEqualTo(5);
 
                 assertThat(score.getStreakDays())
-                    .isEqualTo(6);
+                    .isEqualTo(5);
 
                 assertThat(score.getChallengePoints())
-                    .isEqualTo(29 + dailyPoints);
+                    .isEqualTo(52 + dailyPoints);
 
                 assertThat(score.getCompletedChallenges())
                     .isEqualTo(5);
@@ -340,7 +340,7 @@ class ChallengeProgressIntegrationTest
                     .isEqualTo(completedDailies(player));
 
                 assertThat(score.getTotalPoints())
-                    .isEqualTo(1_947 + 29 + dailyPoints);
+                    .isEqualTo(1_910 + 52 + dailyPoints);
 
                 assertThat(score.getCalculatedAt())
                     .isEqualTo(CALCULATION_TIME);
@@ -358,7 +358,7 @@ class ChallengeProgressIntegrationTest
      * @return the points those dailies add
      */
     private int dailyPoints(Player player) {
-        return completedDailies(player) * 2;
+        return completedDailies(player) * 4;
     }
 
     /**

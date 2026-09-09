@@ -79,10 +79,10 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
     private static final double SURVIVORS_PER_REFERENCE_DIVISOR = 1_000.0;
 
     /**
-     * Lowest reference a campaign can be calibrated at: four competitive matches and three quick
-     * games a week, which is what an irregular squad's first campaign is played at, on purpose.
+     * Lowest reference a campaign can be calibrated at: nine games a week, six competitive and
+     * three quick ones, the least a squad plays for a guardian to outlast a single evening.
      */
-    private static final int REFERENCE_FLOOR = 2_000;
+    private static final int REFERENCE_FLOOR = 3_500;
 
     /**
      * Divisor turning a percentage into a ratio.

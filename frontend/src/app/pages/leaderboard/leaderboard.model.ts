@@ -20,27 +20,6 @@ export interface BoardTitle extends TitleVisual {
 }
 
 /**
- * One of the week's four titles, as the line under the podium states it: its holder, or why it
- * was not awarded.
- */
-export interface WeekTitleLine extends TitleVisual {
-  /**
-   * Which weekly title.
-   */
-  readonly key: WeeklyTitle;
-
-  /**
-   * Name of the holder, or `null` when nobody earned it.
-   */
-  readonly holder: string | null;
-
-  /**
-   * The holder's figure, or the tied figure nobody won outright; empty when nobody scored.
-   */
-  readonly detail: string;
-}
-
-/**
  * One challenge column of a live board: the tier badge the header shows in place of the
  * challenge's name, which would not fit at this width. The name stays one hover away.
  */

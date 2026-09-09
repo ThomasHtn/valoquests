@@ -326,6 +326,7 @@ describe('buildContribution', () => {
   function entry(id: number, damage: number, points: number): RankingEntry {
     return {
       position: id,
+      competing: true,
       previousPosition: id,
       positionVariation: 0,
       player: {
@@ -442,6 +443,7 @@ describe('buildDailyOrder', () => {
       ranking: [
         {
           position: 1,
+          competing: true,
           previousPosition: 1,
           positionVariation: 0,
           player: {
@@ -529,7 +531,10 @@ describe('buildSquad', () => {
       previousDay: '2026-01-05',
       playedPlayerCount: 1,
       rosterPlayerCount: 2,
-      ranking: [entry({ playerId: 1, position: 1 }), entry({ playerId: 2, position: null })],
+      ranking: [
+        entry({ playerId: 1, position: 1 }),
+        entry({ playerId: 2, position: null, competing: false }),
+      ],
     };
 
     const squad = buildSquad(daily, null, 'en');
@@ -583,11 +588,13 @@ describe('buildSquad', () => {
   function entry(overrides: {
     playerId: number;
     position: number | null;
+    competing?: boolean;
     matchCount?: number;
     streakAtStake?: number;
   }) {
     return {
       position: overrides.position,
+      competing: overrides.competing ?? true,
       playerId: overrides.playerId,
       displayName: `Player ${overrides.playerId}`,
       portrait: null,

@@ -1,17 +1,17 @@
-<div class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+<!-- One line at every width: on a phone the hairline gives way and the heading wraps on itself,
+     the link stays on the right instead of dropping under the title. -->
+<div class="mb-6 flex items-center gap-x-4">
   <h2
     [id]="headingId()"
-    class="font-display text-[clamp(1.5rem,1.1rem+1.1vw,2rem)] leading-tight font-semibold tracking-[0.01em] text-brand-400 uppercase"
+    class="font-display min-w-0 text-[clamp(1.5rem,1.1rem+1.1vw,2rem)] leading-tight font-semibold tracking-[0.01em] text-brand-400 uppercase"
   >
     {{ heading() }}
   </h2>
   <span
     aria-hidden="true"
-    class="h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent"
+    class="hidden h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent sm:block"
   ></span>
-  <!-- Link and diamond travel together: on a phone the line wraps, and a diamond alone on a third
-       line would read as a stray mark. -->
-  <span class="ml-auto inline-flex items-center gap-4">
+  <span class="ml-auto inline-flex shrink-0 items-center gap-4">
     @if (side(); as caption) {
       <span class="label-caption text-2xs text-text-muted">{{ caption }}</span>
     }

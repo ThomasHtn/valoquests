@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.synchronization.repository;
 
 import io.github.thomashtn.valoquests.synchronization.entity.Synchronization;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationStatus;
+import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -39,4 +40,13 @@ public interface SynchronizationRepository
      * @return matching executions
      */
     List<Synchronization> findAllByStatusIn(Collection<SynchronizationStatus> statuses);
+
+    /**
+     * Determines whether an execution of one type ended in one of the supplied statuses.
+     *
+     * @param type     execution type to look for
+     * @param statuses statuses to look for
+     * @return {@code true} when at least one such execution exists
+     */
+    boolean existsByTypeAndStatusIn(SynchronizationType type, Collection<SynchronizationStatus> statuses);
 }
