@@ -23,6 +23,9 @@ final class PlayerRecordsCalculator {
      */
     private static final int MINIMUM_HEADSHOT_ROUNDS = 10;
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private PlayerRecordsCalculator() {
     }
 

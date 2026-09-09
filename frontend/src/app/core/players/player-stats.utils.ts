@@ -16,6 +16,10 @@ export interface StatVisual {
  * for attention).
  */
 const WIN_RATE_GOOD_THRESHOLD = 50;
+
+/**
+ * KDA from which a figure is shown as good.
+ */
 const KDA_GOOD_THRESHOLD = 1.3;
 
 /**
@@ -26,11 +30,17 @@ const UNKNOWN_STAT_VISUAL: StatVisual = {
   barClass: 'bg-text-secondary',
 };
 
+/**
+ * Colours of a figure at or above its good threshold.
+ */
 const GOOD_STAT_VISUAL: StatVisual = {
   textClass: 'text-accent-green',
   barClass: 'bg-accent-green',
 };
 
+/**
+ * Colours of a figure below its good threshold.
+ */
 const AVERAGE_STAT_VISUAL: StatVisual = {
   textClass: 'text-accent-gold',
   barClass: 'bg-accent-gold',

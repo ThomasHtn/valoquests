@@ -10,7 +10,6 @@ import {
   LucideTrendingUp,
   LucideZap,
 } from '@lucide/angular';
-
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalDayMonth } from '@core/date/date-time.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -26,40 +25,7 @@ import {
   RecordEntry,
 } from '@core/players/player-progression.model';
 import { Tooltip } from '@shared/tooltip/tooltip';
-
-/**
- * Every record the section can show, in display order. Doubles as the translation key suffix.
- */
-type RecordKey =
-  | 'mostKills'
-  | 'bestAcs'
-  | 'mostDamage'
-  | 'bestKda'
-  | 'bestHeadshotPercentage'
-  | 'longestWinStreak'
-  | 'longestActiveDayStreak'
-  | 'mvps'
-  | 'peakTier';
-
-/**
- * One record, ready to render.
- */
-interface RecordTile {
-  /**
-   * Which record this is; picks both the icon and the label.
-   */
-  readonly key: RecordKey;
-
-  /**
-   * The record itself, already formatted.
-   */
-  readonly value: string;
-
-  /**
-   * Already-translated explanation shown on the label, carrying where and when it was set.
-   */
-  readonly tooltip: string;
-}
+import { RecordKey, RecordTile } from './personal-records.model';
 
 /**
  * A player's personal bests, as icon-and-figure tiles.

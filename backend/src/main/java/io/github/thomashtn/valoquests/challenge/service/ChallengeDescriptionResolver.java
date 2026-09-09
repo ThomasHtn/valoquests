@@ -41,6 +41,9 @@ final class ChallengeDescriptionResolver {
      */
     private static final int GROUP_SIZE = 3;
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private ChallengeDescriptionResolver() {
     }
 
@@ -94,6 +97,9 @@ final class ChallengeDescriptionResolver {
         return agreed.toString();
     }
 
+    /**
+     * Pairs every figure of the base definition with its resolved value, in the order the text quotes them.
+     */
     private static Deque<Replacement> replacements(ChallengeDefinition base, ChallengeDefinition resolved) {
         Deque<Replacement> pending = new ArrayDeque<>();
         for (int index = 0; index < base.conditions().size(); index++) {
@@ -106,6 +112,9 @@ final class ChallengeDescriptionResolver {
         return pending;
     }
 
+    /**
+     * Pairs every figure of the base definition with its resolved value, in the order the text quotes them.
+     */
     private static List<Replacement> replacements(ChallengeCondition from, ChallengeCondition to) {
         List<Replacement> ordered = new ArrayList<>();
         boolean perMatch = from.scope() == ChallengeScope.PER_MATCH;
@@ -122,21 +131,33 @@ final class ChallengeDescriptionResolver {
         return ordered;
     }
 
+    /**
+     * Adds a count replacement when both sides carry one.
+     */
     private static void addCount(List<Replacement> ordered, Integer from, Integer to) {
         if (from != null && to != null) {
             ordered.add(new Replacement(BigDecimal.valueOf(from), BigDecimal.valueOf(to)));
         }
     }
 
+    /**
+     * Reads a French-formatted figure (spaces as thousands separator, comma as decimal point).
+     */
     private static BigDecimal parse(String token) {
         return new BigDecimal(token.replace(" ", "").replace(',', '.'));
     }
 
+    /**
+     * Decimal places a French-formatted figure was written with.
+     */
     private static int decimals(String token) {
         int comma = token.indexOf(',');
         return comma < 0 ? 0 : token.length() - comma - 1;
     }
 
+    /**
+     * Writes a figure the French way: thousands grouped by a space, comma as decimal point.
+     */
     private static String format(BigDecimal value, int decimals) {
         BigDecimal scaled = value.setScale(decimals, RoundingMode.HALF_UP);
         String plain = scaled.abs().toPlainString().replace('.', ',');

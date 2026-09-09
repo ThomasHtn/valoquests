@@ -21,11 +21,6 @@ import {
   WOUNDED_MARKS,
 } from './planet-figure.constants';
 
-const CX = PLANET_CX;
-const CY = PLANET_CY;
-const R = PLANET_RADIUS;
-const C = PLANET_COLORS;
-
 /**
  * The planet of the week: the wounded on its lit face, and the guardian's lines around it.
  *
@@ -69,8 +64,17 @@ export class PlanetFigure {
     const frag = document.createDocumentFragment();
 
     frag.append(this.buildDefs());
-    frag.append(el('circle', { cx: CX, cy: CY, r: R * 1.62, fill: 'url(#planet-halo)' }));
-    frag.append(el('circle', { cx: CX, cy: CY, r: R, fill: 'url(#planet-globe)' }));
+    frag.append(
+      el('circle', {
+        cx: PLANET_CX,
+        cy: PLANET_CY,
+        r: PLANET_RADIUS * 1.62,
+        fill: 'url(#planet-halo)',
+      }),
+    );
+    frag.append(
+      el('circle', { cx: PLANET_CX, cy: PLANET_CY, r: PLANET_RADIUS, fill: 'url(#planet-globe)' }),
+    );
     frag.append(this.buildRelief(rn));
     frag.append(...this.buildShadowAndAtmosphere());
     frag.append(this.buildWoundedMarks(rn));
@@ -94,12 +98,12 @@ export class PlanetFigure {
     );
     const halo = el('radialGradient', { id: 'planet-halo', cx: 0.5, cy: 0.5, r: 0.5 });
     halo.append(
-      el('stop', { offset: 0.62, 'stop-color': C.brand, 'stop-opacity': 0 }),
-      el('stop', { offset: 0.78, 'stop-color': C.brand, 'stop-opacity': 0.14 }),
-      el('stop', { offset: 1, 'stop-color': C.brand, 'stop-opacity': 0 }),
+      el('stop', { offset: 0.62, 'stop-color': PLANET_COLORS.brand, 'stop-opacity': 0 }),
+      el('stop', { offset: 0.78, 'stop-color': PLANET_COLORS.brand, 'stop-opacity': 0.14 }),
+      el('stop', { offset: 1, 'stop-color': PLANET_COLORS.brand, 'stop-opacity': 0 }),
     );
     const clip = el('clipPath', { id: 'planet-disc' });
-    clip.append(el('circle', { cx: CX, cy: CY, r: R }));
+    clip.append(el('circle', { cx: PLANET_CX, cy: PLANET_CY, r: PLANET_RADIUS }));
     defs.append(globe, halo, clip);
     return defs;
   }
@@ -111,16 +115,16 @@ export class PlanetFigure {
     const crust = el('g', { 'clip-path': 'url(#planet-disc)' });
     for (let i = 0; i < RELIEF_PATCHES; i++) {
       const a = rn() * Math.PI * 2;
-      const d = Math.sqrt(rn()) * R * 0.88;
+      const d = Math.sqrt(rn()) * PLANET_RADIUS * 0.88;
       crust.append(
         el('ellipse', {
-          cx: (CX + Math.cos(a) * d).toFixed(1),
-          cy: (CY + Math.sin(a) * d * 0.82).toFixed(1),
+          cx: (PLANET_CX + Math.cos(a) * d).toFixed(1),
+          cy: (PLANET_CY + Math.sin(a) * d * 0.82).toFixed(1),
           rx: (10 + rn() * 26).toFixed(1),
           ry: (6 + rn() * 13).toFixed(1),
           fill: rn() < 0.55 ? '#000000' : '#8a755a',
           opacity: (0.1 + rn() * 0.13).toFixed(2),
-          transform: `rotate(${(rn() * 60 - 30).toFixed(0)} ${CX} ${CY})`,
+          transform: `rotate(${(rn() * 60 - 30).toFixed(0)} ${PLANET_CX} ${PLANET_CY})`,
         }),
       );
     }
@@ -132,19 +136,19 @@ export class PlanetFigure {
    */
   private buildShadowAndAtmosphere(): readonly SVGCircleElement[] {
     const shadow = el('circle', {
-      cx: CX + 26,
-      cy: CY + 20,
-      r: R,
-      fill: C.night,
+      cx: PLANET_CX + 26,
+      cy: PLANET_CY + 20,
+      r: PLANET_RADIUS,
+      fill: PLANET_COLORS.night,
       opacity: 0.42,
       'clip-path': 'url(#planet-disc)',
     });
     const atmosphere = el('circle', {
-      cx: CX,
-      cy: CY,
-      r: R + 1,
+      cx: PLANET_CX,
+      cy: PLANET_CY,
+      r: PLANET_RADIUS + 1,
       fill: 'none',
-      stroke: C.warm,
+      stroke: PLANET_COLORS.warm,
       'stroke-width': 1,
       opacity: 0.28,
     });
@@ -159,13 +163,18 @@ export class PlanetFigure {
     const marks = el('g');
     for (let i = 0; i < WOUNDED_MARKS; i++) {
       const a = rn() * Math.PI * 2;
-      const d = Math.sqrt(rn()) * R * 0.74;
-      const px = CX + Math.cos(a) * d;
-      const py = CY + Math.sin(a) * d * 0.9;
-      if (px - CX > 34 && py - CY > 24) {
+      const d = Math.sqrt(rn()) * PLANET_RADIUS * 0.74;
+      const px = PLANET_CX + Math.cos(a) * d;
+      const py = PLANET_CY + Math.sin(a) * d * 0.9;
+      if (px - PLANET_CX > 34 && py - PLANET_CY > 24) {
         continue; // nothing in the shadow
       }
-      const mark = el('circle', { cx: px.toFixed(1), cy: py.toFixed(1), r: 2.6, fill: C.warmCore });
+      const mark = el('circle', {
+        cx: px.toFixed(1),
+        cy: py.toFixed(1),
+        r: 2.6,
+        fill: PLANET_COLORS.warmCore,
+      });
       mark.append(
         el('animate', {
           attributeName: 'opacity',
@@ -176,7 +185,13 @@ export class PlanetFigure {
       );
       marks.append(mark);
       marks.append(
-        el('circle', { cx: px.toFixed(1), cy: py.toFixed(1), r: 7, fill: C.warm, opacity: 0.1 }),
+        el('circle', {
+          cx: px.toFixed(1),
+          cy: py.toFixed(1),
+          r: 7,
+          fill: PLANET_COLORS.warm,
+          opacity: 0.1,
+        }),
       );
     }
     return marks;
@@ -194,14 +209,14 @@ export class PlanetFigure {
       const angle = (-90 + (i * 360) / RING_SEGMENTS) * (Math.PI / 180);
       const alive = i < held;
       const drift = alive ? 0 : 9 + ((i * 37) % 11);
-      const r0 = R + 20 + drift;
+      const r0 = PLANET_RADIUS + 20 + drift;
       const r1 = r0 + (alive ? 13 : 6);
       const segment = el('line', {
-        x1: (CX + Math.cos(angle) * r0).toFixed(1),
-        y1: (CY + Math.sin(angle) * r0).toFixed(1),
-        x2: (CX + Math.cos(angle) * r1).toFixed(1),
-        y2: (CY + Math.sin(angle) * r1).toFixed(1),
-        stroke: alive ? C.segmentAlive : C.segmentDead,
+        x1: (PLANET_CX + Math.cos(angle) * r0).toFixed(1),
+        y1: (PLANET_CY + Math.sin(angle) * r0).toFixed(1),
+        x2: (PLANET_CX + Math.cos(angle) * r1).toFixed(1),
+        y2: (PLANET_CY + Math.sin(angle) * r1).toFixed(1),
+        stroke: alive ? PLANET_COLORS.segmentAlive : PLANET_COLORS.segmentDead,
         'stroke-width': alive ? 5 : 3,
         'stroke-linecap': 'round',
         opacity: alive ? 0.92 : 0.3,

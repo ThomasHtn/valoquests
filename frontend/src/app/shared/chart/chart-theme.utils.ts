@@ -13,31 +13,12 @@ import {
   Tooltip,
   TooltipOptions,
 } from 'chart.js';
-
-/**
- * Number of series the validated palette covers.
- *
- * A caller with more entities than this folds the extras away rather than generating a sixth hue:
- * see {@link SERIES_COLOR_VARIABLES}.
- */
-export const SERIES_COLOR_COUNT = 5;
-
-/**
- * Theme variables holding the chart series palette, in the order they must be assigned.
- *
- * The order is not cosmetic. The palette was validated as an ordered set against the dark page
- * surface — lightness band, chroma floor, colorblind separation between *adjacent* slots, contrast
- * — and permuting it drops the worst deuteranopia pair from ΔE 9.9 to 3.9, which is two curves a
- * colorblind reader cannot tell apart. Assign slots in sequence and re-run the data-viz validator
- * before touching either this list or the values behind it in `styles/colors.css`.
- */
-const SERIES_COLOR_VARIABLES = [
-  '--color-series-1',
-  '--color-series-2',
-  '--color-series-3',
-  '--color-series-4',
-  '--color-series-5',
-] as const;
+import {
+  SERIES_COLOR_COUNT,
+  SERIES_COLOR_VARIABLES,
+  AXIS_TITLE_FONT,
+} from './chart-theme.constants';
+import { ChartTheme } from './chart-theme.model';
 
 /**
  * Whether the Chart.js controllers, scales and elements this application uses are registered.
@@ -46,46 +27,6 @@ const SERIES_COLOR_VARIABLES = [
  * registry is global, so registering once for the whole application is enough.
  */
 let registered = false;
-
-/**
- * Colors every chart borrows from the design system, resolved once per chart build.
- */
-export interface ChartTheme {
-  /**
-   * Grid lines and axis borders, recessive enough to sit behind the data.
-   */
-  readonly grid: string;
-
-  /**
-   * Axis tick labels.
-   */
-  readonly tick: string;
-
-  /**
-   * Tooltip background.
-   */
-  readonly tooltipSurface: string;
-
-  /**
-   * Tooltip border.
-   */
-  readonly tooltipBorder: string;
-
-  /**
-   * Tooltip text.
-   */
-  readonly tooltipText: string;
-
-  /**
-   * The state color marking a player's strongest slot on the schedule charts.
-   */
-  readonly highlight: string;
-
-  /**
-   * Fill of a bar whose sample is too small to be judged.
-   */
-  readonly muted: string;
-}
 
 /**
  * Registers the Chart.js pieces this application draws with.
@@ -123,7 +64,7 @@ export function registerChartComponents(): void {
  * @param fallback value to use when the property is missing, as in a test document
  * @returns the token's computed value
  */
-function token(variable: string, fallback: string): string {
+export function token(variable: string, fallback: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
   return value || fallback;
 }
@@ -183,24 +124,6 @@ export function resolveChartTheme(): ChartTheme {
 export function chartPixelRatio(): number {
   return Math.max(Math.ceil(window.devicePixelRatio || 1), 2);
 }
-
-/**
- * Font of an axis title. Larger than a tick label, since it names the whole axis rather than one
- * value on it.
- */
-export const AXIS_TITLE_FONT = {
-  family: 'Barlow Condensed, sans-serif',
-  size: 13,
-  weight: 600,
-} as const;
-
-/**
- * Font of an axis tick label.
- */
-export const AXIS_TICK_FONT = {
-  family: 'Barlow Condensed, sans-serif',
-  size: 13,
-} as const;
 
 /**
  * Builds an axis title, hidden when the caller has nothing to name the axis with.

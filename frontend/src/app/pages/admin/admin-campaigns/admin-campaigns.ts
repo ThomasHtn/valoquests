@@ -1,6 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { LucideRefreshCw, LucideTrash2 } from '@lucide/angular';
-
 import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminCommandRunner } from '@core/admin/admin-command-runner';
@@ -20,30 +19,11 @@ import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { InlineMessage } from '@shared/inline-message/inline-message';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionLabel } from '@shared/section-label/section-label';
-import { StatusBadge, StatusBadgeTone } from '@shared/status-badge/status-badge';
+import { StatusBadge } from '@shared/status-badge/status-badge';
+import { StatusBadgeTone } from '@shared/status-badge/status-badge.model';
 import { AdminActionCard } from '../admin-action-card/admin-action-card';
-
-/**
- * Days a campaign spans: ten weeks of seven days.
- */
-const CAMPAIGN_DAYS = CAMPAIGN_WEEK_COUNT * 7;
-
-/**
- * A campaign the operator can act on, with the figures the decision is made against.
- */
-interface LiveCampaign {
-  readonly id: number;
-  readonly number: number;
-  readonly status: CampaignStatus;
-  readonly tier: string;
-  readonly reference: number;
-  readonly rosterSize: number;
-  readonly range: string;
-  readonly startsOn: string;
-  readonly weekIndex: number;
-  readonly dayIndex: number;
-  readonly daysLeft: number;
-}
+import { CAMPAIGN_DAYS } from './admin-campaigns.constants';
+import { LiveCampaign } from './admin-campaigns.model';
 
 /**
  * Backoffice campaign lifecycle screen.

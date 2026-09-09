@@ -1,16 +1,6 @@
 import { Component, computed, input } from '@angular/core';
-
-/**
- * Weight a status badge carries: the brand tint for a state that is live or current, a neutral one
- * for a state that is merely inert, and the danger tint for one that is out of play.
- */
-export type StatusBadgeTone = 'brand' | 'neutral' | 'danger';
-
-const TONE_CLASS: Record<StatusBadgeTone, string> = {
-  brand: 'border-brand-500/50 bg-brand-500/12 text-brand-400',
-  neutral: 'border-surface-600 bg-surface-800 text-text-secondary',
-  danger: 'border-danger/40 bg-danger/10 text-danger',
-};
+import { StatusBadgeTone } from './status-badge.model';
+import { TONE_CLASS } from './status-badge.constants';
 
 /**
  * A state, stated in words and tinted — never tinted alone: a roster player's status on their row,

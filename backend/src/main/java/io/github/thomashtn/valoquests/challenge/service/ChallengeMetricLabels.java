@@ -9,6 +9,9 @@ import java.util.stream.Collectors;
  */
 final class ChallengeMetricLabels {
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private ChallengeMetricLabels() {
     }
 

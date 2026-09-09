@@ -1,12 +1,5 @@
 import { DestroyRef, Injectable, inject, signal, Signal } from '@angular/core';
-
-/**
- * Tailwind's default `md`, `lg` and `xl` breakpoints, in pixels — the widths at which the screens
- * holding two distinct layouts switch from the narrow one to the wide one.
- */
-const MD_BREAKPOINT_PX = 768;
-const LG_BREAKPOINT_PX = 1024;
-const XL_BREAKPOINT_PX = 1280;
+import { MD_BREAKPOINT_PX, LG_BREAKPOINT_PX, XL_BREAKPOINT_PX } from './breakpoint.constants';
 
 /**
  * Reactive viewport width, exposed as the breakpoints the layouts actually branch on.

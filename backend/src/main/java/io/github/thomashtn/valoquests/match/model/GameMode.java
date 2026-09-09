@@ -31,6 +31,9 @@ import java.util.Set;
  */
 public enum GameMode {
 
+    /**
+     * Ranked queue, the reference mode of the game.
+     */
     COMPETITIVE(true, true, "competitive"),
     UNRATED(true, true, "unrated"),
     SWIFTPLAY(true, false, "swiftplay"),
@@ -44,6 +47,9 @@ public enum GameMode {
      */
     NEW_MAP(true, false, "newmap"),
 
+    /**
+     * Short round-based mode.
+     */
     SPIKE_RUSH(true, true, "spikerush"),
     DEATHMATCH(false, true, "deathmatch"),
     TEAM_DEATHMATCH(false, true, "teamdeathmatch", "hurm"),
@@ -57,6 +63,9 @@ public enum GameMode {
      */
     SKIRMISH(true, true, "skirmish2v2", "skirmish"),
 
+    /**
+     * Team-based ranked queue.
+     */
     PREMIER(true, true, "premier"),
 
     /**
@@ -110,10 +119,19 @@ public enum GameMode {
         PREMIER
     );
 
+    /**
+     * Whether the mode is played in rounds, so a round score and a headshot rate mean something.
+     */
     private final boolean roundBased;
 
+    /**
+     * Whether synchronization stores matches of this mode.
+     */
     private final boolean importEligible;
 
+    /**
+     * Names the Henrik API uses for this mode, lower-cased.
+     */
     private final Set<String> aliases;
 
     GameMode(boolean roundBased, boolean importEligible, String... aliases) {
@@ -180,6 +198,9 @@ public enum GameMode {
         return importEligible;
     }
 
+    /**
+     * Lower-cases a mode name and strips its separators, so aliases compare loosely.
+     */
     private static String normalize(String value) {
         return value
             .toLowerCase(Locale.ROOT)

@@ -2,7 +2,8 @@ import { Component, inject } from '@angular/core';
 import { LucideCircleCheck, LucideTriangleAlert, LucideX } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { SNACKBAR_DURATION_MS, SnackbarService } from '@core/snackbar/snackbar';
+import { SnackbarService } from '@core/snackbar/snackbar';
+import { SNACKBAR_DURATION_MS } from '@core/snackbar/snackbar.constants';
 
 /**
  * Application-wide snackbar, mounted once at the root so every page shares the same single slot.

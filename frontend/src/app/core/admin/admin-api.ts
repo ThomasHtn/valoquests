@@ -1,13 +1,11 @@
 import { httpResource, HttpClient, HttpResourceRef } from '@angular/common/http';
 import { inject, Service, Signal } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
-
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { PageResponse } from '@core/http/page-response.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 import { RankingApi } from '@core/ranking/ranking-api';
-
 import { ADMIN_KEY_HEADER } from './admin-session.constants';
 import { AdminSession } from './admin-session';
 import {
@@ -21,11 +19,7 @@ import {
   SynchronizationDetails,
   SynchronizationExecution,
 } from './admin.model';
-
-/**
- * Executions requested per page of the synchronization history.
- */
-const SYNCHRONIZATION_HISTORY_PAGE_SIZE = 10;
+import { SYNCHRONIZATION_HISTORY_PAGE_SIZE } from './admin-api.constants';
 
 /**
  * Data-access service for the administration API.

@@ -22,6 +22,9 @@ public final class PaginationGuard {
      */
     public static final int MAXIMUM_PAGE_SIZE = 100;
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private PaginationGuard() {
     }
 

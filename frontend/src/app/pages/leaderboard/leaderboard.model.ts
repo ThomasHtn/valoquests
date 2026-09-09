@@ -1,12 +1,15 @@
 import { WeeklyTitle } from '@core/campaign/campaign.model';
 import { TitleVisual } from '@core/campaign/campaign-visual.utils';
 import { ChallengeTier } from '@core/challenges/challenge-visual.model';
-import { ChallengeRingCell } from '@shared/challenge-ring/challenge-ring';
+import { ChallengeRingCell } from '@shared/challenge-ring/challenge-ring.model';
 
 /**
  * A title an operator holds on the board, with the icon and colour it is drawn in.
  */
 export interface BoardTitle extends TitleVisual {
+  /**
+   * Which weekly title.
+   */
   readonly key: WeeklyTitle;
 
   /**
@@ -21,7 +24,14 @@ export interface BoardTitle extends TitleVisual {
  * was not awarded.
  */
 export interface WeekTitleLine extends TitleVisual {
+  /**
+   * Which weekly title.
+   */
   readonly key: WeeklyTitle;
+
+  /**
+   * Name of the holder, or `null` when nobody earned it.
+   */
   readonly holder: string | null;
 
   /**
@@ -35,10 +45,29 @@ export interface WeekTitleLine extends TitleVisual {
  * challenge's name, which would not fit at this width. The name stays one hover away.
  */
 export interface BoardColumn {
+  /**
+   * Identifier of the challenge.
+   */
   readonly id: number;
+
+  /**
+   * Tier mark drawn on the badge.
+   */
   readonly mark: ChallengeTier;
+
+  /**
+   * Tailwind class of the progress bar.
+   */
   readonly barClass: string;
+
+  /**
+   * Tailwind class of the icon.
+   */
   readonly iconClass: string;
+
+  /**
+   * Tooltip text.
+   */
   readonly tip: string;
 }
 
@@ -47,7 +76,14 @@ export interface BoardColumn {
  * wide board, a bar under the name on the narrow one.
  */
 export interface BoardProgress extends ChallengeRingCell {
+  /**
+   * Identifier of the challenge.
+   */
   readonly id: number;
+
+  /**
+   * Tier mark drawn on the badge.
+   */
   readonly mark: ChallengeTier;
 
   /**
@@ -59,6 +95,10 @@ export interface BoardProgress extends ChallengeRingCell {
    * The name, what had to be done and the metric, as the header's column names it.
    */
   readonly name: string;
+
+  /**
+   * Tailwind class of the progress bar.
+   */
   readonly barClass: string;
 
   /**
@@ -71,8 +111,19 @@ export interface BoardProgress extends ChallengeRingCell {
  * One row of the board: where the operator stands and what got them there.
  */
 export interface BoardRow {
+  /**
+   * Internal identifier of the player.
+   */
   readonly playerId: number;
+
+  /**
+   * Operator name.
+   */
   readonly name: string;
+
+  /**
+   * Bundled agent portrait name, or `null` when none was chosen.
+   */
   readonly portrait: string | null;
 
   /**
@@ -85,9 +136,25 @@ export interface BoardRow {
    * Places climbed since the last calculation, negative when lost. Zero on a closed week.
    */
   readonly variation: number;
+
+  /**
+   * Whether the operator holds the reigning Champion title.
+   */
   readonly isChampion: boolean;
+
+  /**
+   * Total ranking points.
+   */
   readonly total: number;
+
+  /**
+   * Guardian damage this week.
+   */
   readonly damage: number;
+
+  /**
+   * Ranking points earned from challenges.
+   */
   readonly challengePoints: number;
 
   /**
@@ -111,6 +178,10 @@ export interface BoardWeek {
    * Monday identifying the week, as an ISO-8601 date (`YYYY-MM-DD`).
    */
   readonly weekStart: string;
+
+  /**
+   * Whether this is the week in progress.
+   */
   readonly live: boolean;
 
   /**
@@ -118,9 +189,21 @@ export interface BoardWeek {
    */
   readonly weekIndex: number | null;
 
-  /** The challenge columns, in the rows' order; empty on a closed week, which keeps no progress. */
+  /**
+
+   * The challenge columns, in the rows' order; empty on a closed week, which keeps no progress.
+
+   */
   readonly columns: readonly BoardColumn[];
+
+  /**
+   * Rows with a position.
+   */
   readonly ranked: readonly BoardRow[];
+
+  /**
+   * Rows without a position yet.
+   */
   readonly unranked: readonly BoardRow[];
 }
 
@@ -128,7 +211,14 @@ export interface BoardWeek {
  * The operator who finished a closed week first, as the week picker names it.
  */
 export interface WeekWinner {
+  /**
+   * Operator name.
+   */
   readonly name: string;
+
+  /**
+   * Bundled agent portrait name, or `null` when none was chosen.
+   */
   readonly portrait: string | null;
 }
 
@@ -136,6 +226,9 @@ export interface WeekWinner {
  * One week the picker offers, newest first.
  */
 export interface WeekOption {
+  /**
+   * Monday of the week, ISO date.
+   */
   readonly weekStart: string;
 
   /**
@@ -153,6 +246,10 @@ export interface WeekOption {
    * off one run of weeks from the next without naming them.
    */
   readonly group: number | null;
+
+  /**
+   * Whether this is the week in progress.
+   */
   readonly live: boolean;
 
   /**

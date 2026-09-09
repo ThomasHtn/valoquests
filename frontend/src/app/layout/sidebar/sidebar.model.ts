@@ -25,6 +25,10 @@ export interface NavGroup {
    * Suffix appended to `sidebar.group.` to resolve the caption.
    */
   readonly labelKey: string;
+
+  /**
+   * Entries of the chapter, in display order.
+   */
   readonly items: readonly NavItem[];
 }
 

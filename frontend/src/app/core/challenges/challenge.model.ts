@@ -34,14 +34,29 @@ export type ChallengeCadence = 'WEEKLY' | 'DAILY';
  * screens show; {@link targetValue} is the figure progress is measured against.
  */
 export interface ChallengeIdentity {
+  /**
+   * Internal identifier.
+   */
   readonly id: number;
 
   /**
    * Stable catalogue code (`EASY_DM_HEADSHOTS`), the key to any per-challenge visual.
    */
   readonly code: string;
+
+  /**
+   * Translated name of the challenge.
+   */
   readonly name: string;
+
+  /**
+   * What has to be done, translated.
+   */
   readonly description: string;
+
+  /**
+   * Whether the challenge is daily or weekly.
+   */
   readonly cadence: ChallengeCadence;
 
   /**
@@ -86,7 +101,15 @@ export interface ChallengeProgress extends ChallengeIdentity {
    * Day a daily challenge is decided on, as an ISO-8601 date (`YYYY-MM-DD`); `null` for a weekly.
    */
   readonly day: string | null;
+
+  /**
+   * Players who validated the challenge.
+   */
   readonly completedPlayers: number;
+
+  /**
+   * Players on the roster.
+   */
   readonly totalPlayers: number;
 
   /**
@@ -94,6 +117,10 @@ export interface ChallengeProgress extends ChallengeIdentity {
    * {@link CurrentChallenges.roster}.
    */
   readonly completedPlayerIds: readonly number[];
+
+  /**
+   * Share of the target reached, in percent.
+   */
   readonly completionPercentage: number;
 }
 
@@ -103,7 +130,14 @@ export interface ChallengeProgress extends ChallengeIdentity {
  * Mirrors `CurrentChallengesResponse.RosterPlayerResponse` from the backend.
  */
 export interface RosterPlayer {
+  /**
+   * Internal identifier.
+   */
   readonly id: number;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
 }
 
@@ -170,5 +204,9 @@ export interface ChallengeCatalogue {
    * closed one's, else the floor.
    */
   readonly reference: number;
+
+  /**
+   * Catalogue entries.
+   */
   readonly challenges: readonly ChallengeCatalogueEntry[];
 }

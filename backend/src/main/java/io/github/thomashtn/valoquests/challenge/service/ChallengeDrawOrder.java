@@ -49,6 +49,9 @@ final class ChallengeDrawOrder {
      */
     private static final int AVALANCHE_FINAL_SHIFT = 31;
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private ChallengeDrawOrder() {
     }
 

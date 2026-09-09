@@ -11,17 +11,17 @@ import {
 } from '@angular/core';
 import { Chart, ChartConfiguration, Plugin } from 'chart.js';
 
+import { AXIS_TICK_FONT } from './chart-theme.constants';
 import {
-  AXIS_TICK_FONT,
   axisTitleOptions,
   chartPixelRatio,
   chartTooltipOptions,
-  ChartTheme,
   prefersReducedMotion,
   registerChartComponents,
   resolveChartTheme,
   resolveCssColor,
-} from './chart-theme';
+} from './chart-theme.utils';
+import { ChartTheme } from './chart-theme.model';
 import { ChartSeries } from './chart.model';
 
 /**

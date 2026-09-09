@@ -17,6 +17,9 @@ import java.util.Optional;
  */
 final class WeeklyPackSolver {
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private WeeklyPackSolver() {
     }
 

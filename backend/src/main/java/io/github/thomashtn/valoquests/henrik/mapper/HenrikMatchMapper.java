@@ -177,6 +177,9 @@ public class HenrikMatchMapper {
         );
     }
 
+    /**
+     * The match metadata, or an exception when Henrik sent none.
+     */
     private HenrikMatchMetadata requireMetadata(
         HenrikMatchData source
     ) {
@@ -188,6 +191,9 @@ public class HenrikMatchMapper {
         return source.metadata();
     }
 
+    /**
+     * Milliseconds to whole seconds, keeping {@code null}.
+     */
     private Integer toDurationSeconds(Long milliseconds) {
         if (milliseconds == null) {
             return null;
@@ -277,6 +283,9 @@ public class HenrikMatchMapper {
         return resolution;
     }
 
+    /**
+     * Win or loss from the team's flag, unknown when Henrik did not say.
+     */
     private MatchResult toResult(HenrikMatchTeam team) {
         if (team == null || team.won() == null) {
             return MatchResult.UNKNOWN;
@@ -286,6 +295,9 @@ public class HenrikMatchMapper {
             : MatchResult.LOSS;
     }
 
+    /**
+     * Henrik tier name to the enum, unranked when absent or unknown.
+     */
     private CompetitiveTier toCompetitiveTier(
         HenrikMatchPlayer.HenrikTier tier
     ) {
@@ -307,6 +319,9 @@ public class HenrikMatchMapper {
         }
     }
 
+    /**
+     * Rounds won by one team, or {@code null} when the mode keeps no round score.
+     */
     private Integer teamScore(
         HenrikMatchData source,
         String teamId
@@ -317,6 +332,9 @@ public class HenrikMatchMapper {
             : team.rounds().won();
     }
 
+    /**
+     * The team with this identifier, or {@code null}.
+     */
     private HenrikMatchTeam findTeam(
         HenrikMatchData source,
         String teamId
@@ -331,6 +349,9 @@ public class HenrikMatchMapper {
             .orElse(null);
     }
 
+    /**
+     * Rounds won plus rounds lost by the team, zero when unknown.
+     */
     private int roundsPlayed(HenrikMatchTeam team) {
         if (team == null || team.rounds() == null) {
             return 0;
@@ -340,6 +361,9 @@ public class HenrikMatchMapper {
             + value(team.rounds().lost());
     }
 
+    /**
+     * Whether the player holds the match's highest score.
+     */
     private boolean isMvp(
         HenrikMatchData source,
         HenrikMatchPlayer player
@@ -360,6 +384,9 @@ public class HenrikMatchMapper {
         return playerScore == highestScore;
     }
 
+    /**
+     * Per-round average, two decimals, or {@code null} without rounds.
+     */
     private BigDecimal average(int total, int rounds) {
         if (rounds <= 0) {
             return null;
@@ -373,6 +400,9 @@ public class HenrikMatchMapper {
             );
     }
 
+    /**
+     * Unboxes a count, {@code null} reading as zero.
+     */
     private int value(Integer value) {
         return value == null ? 0 : value;
     }

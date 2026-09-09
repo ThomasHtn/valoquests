@@ -11,16 +11,9 @@ import {
 } from '@angular/core';
 import { LucideChevronDown } from '@lucide/angular';
 
-import { createPositionedDropdown } from '@shared/positioned-dropdown/positioned-dropdown';
+import { createPositionedDropdown } from '@shared/positioned-dropdown/positioned-dropdown.utils';
 import { SelectOption } from '@shared/select/select.model';
-
-/**
- * Monotonically increasing counter backing the per-instance element ids.
- *
- * `aria-controls` and `aria-activedescendant` must resolve to exactly one element in the document,
- * so ids cannot be shared between instances.
- */
-let instanceCount = 0;
+import { nextInstanceId } from '@core/dom/instance-id.utils';
 
 /**
  * Dropdown holding several values at once, wearing the same notched surface as {@link Select}.
@@ -83,7 +76,7 @@ export class MultiSelect<T> {
   /**
    * Id of the options panel, referenced by the trigger's `aria-controls`.
    */
-  protected readonly listboxId = `multi-select-listbox-${++instanceCount}`;
+  protected readonly listboxId = nextInstanceId('multi-select-listbox');
 
   /**
    * Index of the keyboard-highlighted option, or `-1` when none is highlighted.

@@ -10,27 +10,21 @@ import {
   viewChild,
 } from '@angular/core';
 import { LucideCheck, LucideLock, LucideTarget } from '@lucide/angular';
-
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import {
-  drawShip,
-  noseHeight,
-  outline,
-  ROCKET_PART_COUNT,
-  SHIP,
-  SKIRT,
-} from '@shared/rocket/rocket-drawing';
+import { drawShip, noseHeight, outline } from '@shared/rocket/rocket-drawing.utils';
+import { ROCKET_PART_COUNT, SHIP, SKIRT } from '@shared/rocket/rocket-drawing.constants';
 import { svgElement as el } from '@core/svg/svg-element.utils';
 import { RocketPart } from '../campaign.model';
-
-const VIEW_WIDTH = 600;
-const BASE_Y = 468;
-const CENTER_X = 300;
-const BLUE = '#7fb6d8';
-const AMBER = '#e8ab6b';
-const DISPLAY_FONT = 'font-family: var(--font-display)';
-const MONO_FONT = 'font-family: var(--font-mono)';
+import {
+  VIEW_WIDTH,
+  BASE_Y,
+  CENTER_X,
+  BLUE,
+  AMBER,
+  DISPLAY_FONT,
+  MONO_FONT,
+} from './rocket-showcase.constants';
 
 /**
  * The rocket on its blueprint, part by part.

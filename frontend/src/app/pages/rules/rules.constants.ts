@@ -53,6 +53,9 @@ export interface ModeGroup {
   readonly modes: readonly MatchDamageRow[];
 }
 
+/**
+ * Game modes grouped by the share of a match going to food.
+ */
 export const MODE_GROUPS: readonly ModeGroup[] = [
   {
     key: 'long',
@@ -100,6 +103,9 @@ export interface StreakStep {
   readonly open: boolean;
 }
 
+/**
+ * Bonus per consecutive active day, capped at the last step.
+ */
 export const STREAK_LADDER: readonly StreakStep[] = [
   { days: 1, percent: 0, open: false },
   { days: 2, percent: 2, open: false },
@@ -128,6 +134,9 @@ export interface SundayExampleRow {
   readonly emphasised: boolean;
 }
 
+/**
+ * Worked example of one Sunday settlement, line by line.
+ */
 export const SUNDAY_EXAMPLE: readonly SundayExampleRow[] = [
   { key: 'challenges', value: '12', emphasised: true },
   { key: 'remaining', value: '28', emphasised: false },
@@ -145,6 +154,9 @@ export interface LossStep {
   readonly percent: number;
 }
 
+/**
+ * Share of the base lost, per breakthrough level, when the guardian stands.
+ */
 export const GUARDIAN_LOSS_LADDER: readonly LossStep[] = [
   { breach: 99, percent: 0.004 },
   { breach: 84, percent: 0.9 },
@@ -164,6 +176,9 @@ export interface CampaignWeekShape {
   readonly how: boolean;
 }
 
+/**
+ * The ten weeks: guardian class, hit points and group size.
+ */
 export const CAMPAIGN_WEEKS: readonly CampaignWeekShape[] = [
   { category: 'MINOR', guardian: 0.6, group: 1, how: true },
   { category: 'STANDARD', guardian: 0.8, group: 1.3, how: false },
@@ -191,6 +206,9 @@ export interface TierBand {
   readonly max: number | null;
 }
 
+/**
+ * Reference bands that place a squad in a tier.
+ */
 export const TIER_BANDS: readonly TierBand[] = [
   { key: 'AMATEUR', min: null, max: 3_500 },
   { key: 'NORMAL', min: 3_500, max: 9_000 },
@@ -212,6 +230,9 @@ export interface ChallengeWorth {
   readonly survivors: number;
 }
 
+/**
+ * Points and survivors a challenge is worth, per difficulty.
+ */
 export const CHALLENGE_WORTH: readonly ChallengeWorth[] = [
   { difficulty: null, weight: 1.2, survivors: 6 },
   { difficulty: 'EASY', weight: 1, survivors: 5 },

@@ -1,6 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { LucideChevronDown, LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
-
 import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminCommandRunner } from '@core/admin/admin-command-runner';
@@ -21,17 +20,10 @@ import { ResourceState } from '@shared/resource-state/resource-state';
 import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
 import { SectionLabel } from '@shared/section-label/section-label';
-import { StatusBadge, StatusBadgeTone } from '@shared/status-badge/status-badge';
+import { StatusBadge } from '@shared/status-badge/status-badge';
+import { StatusBadgeTone } from '@shared/status-badge/status-badge.model';
 import { AdminActionCard } from '../admin-action-card/admin-action-card';
-
-/**
- * Delay between two polls of the running synchronization, in milliseconds.
- *
- * A synchronization walks the Henrik match history under a rate limit of a few dozen requests per
- * minute, so its counters move in steps of seconds at best. Polling faster would only multiply
- * requests against a status that has not changed.
- */
-const SYNCHRONIZATION_POLL_INTERVAL_MS = 3_000;
+import { SYNCHRONIZATION_POLL_INTERVAL_MS } from './admin-operations.constants';
 
 /**
  * Backoffice operations screen.

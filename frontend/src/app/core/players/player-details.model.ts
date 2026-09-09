@@ -9,17 +9,64 @@ import { CompetitiveTier } from './competitive-tier.model';
  * recomputed from match history rather than read from a cached, possibly-unset field.
  */
 export interface PlayerStatistics {
+  /**
+   * Ratio of kills and assists to deaths.
+   */
   readonly kda: number;
+
+  /**
+   * Share of matches won, in percent.
+   */
   readonly winRate: number;
+
+  /**
+   * Average damage per round.
+   */
   readonly adr: number;
+
+  /**
+   * Average combat score.
+   */
   readonly acs: number;
+
+  /**
+   * Share of hits that landed on the head, in percent.
+   */
   readonly headshotPercentage: number;
+
+  /**
+   * Kills scored.
+   */
   readonly kills: number;
+
+  /**
+   * Deaths suffered.
+   */
   readonly deaths: number;
+
+  /**
+   * Assists given.
+   */
   readonly assists: number;
+
+  /**
+   * Matches played.
+   */
   readonly matchesPlayed: number;
+
+  /**
+   * Matches won.
+   */
   readonly wins: number;
+
+  /**
+   * Loss examples at a few breakthrough levels.
+   */
   readonly losses: number;
+
+  /**
+   * Matches finished as MVP.
+   */
   readonly mvps: number;
 }
 
@@ -30,8 +77,19 @@ export interface PlayerStatistics {
  * rank and aggregated statistics.
  */
 export interface PlayerDetails {
+  /**
+   * Internal identifier.
+   */
   readonly id: number;
+
+  /**
+   * Full Riot ID, `gameName#tagLine`.
+   */
   readonly riotId: string;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
 
   /**
@@ -39,13 +97,25 @@ export interface PlayerDetails {
    * yet synchronized.
    */
   readonly portrait: string | null;
+
+  /**
+   * Competitive rank held.
+   */
   readonly competitiveTier: CompetitiveTier;
 
   /**
    * Rank rating within the player's current tier, or `null` when not yet synchronized.
    */
   readonly rankRating: number | null;
+
+  /**
+   * Aggregated figures over the filtered matches.
+   */
   readonly statistics: PlayerStatistics;
+
+  /**
+   * Where the player stands on today’s ladder.
+   */
   readonly dailyYield: DailyYield;
 }
 

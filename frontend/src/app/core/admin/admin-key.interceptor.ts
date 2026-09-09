@@ -3,15 +3,8 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 
-import { environment } from '@env/environment';
-
-import { ADMIN_KEY_HEADER, ADMIN_LOGIN_ROUTE } from './admin-session.constants';
+import { ADMIN_API_PREFIX, ADMIN_KEY_HEADER, ADMIN_LOGIN_ROUTE } from './admin-session.constants';
 import { AdminSession } from './admin-session';
-
-/**
- * URL prefix identifying the administration API.
- */
-const ADMIN_API_PREFIX = `${environment.apiBaseUrl}/admin`;
 
 /**
  * Attaches the administrator key to administration requests, and ends the session when the backend

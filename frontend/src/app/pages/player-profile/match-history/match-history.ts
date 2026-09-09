@@ -101,7 +101,11 @@ export class MatchHistory {
    */
   protected readonly isLarge = inject(Breakpoint).isLarge;
 
-  /** Shared column grid of the desktop rows, so header and rows line up. */
+  /**
+
+   * Shared column grid of the desktop rows, so header and rows line up.
+
+   */
   protected readonly rowGridClass = MATCH_ROW_GRID_CLASS;
 
   protected readonly skeletonRows = SKELETON_ROWS;

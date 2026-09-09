@@ -36,6 +36,13 @@ export type CompetitiveTier =
  * `"Diamond 1"`) paired with the color class shared by its badge and text.
  */
 export interface CompetitiveTierVisual {
+  /**
+   * Translated tier name.
+   */
   readonly label: string;
+
+  /**
+   * Tailwind text colour of the tier.
+   */
   readonly colorClass: string;
 }

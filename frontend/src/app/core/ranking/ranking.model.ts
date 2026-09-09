@@ -8,14 +8,29 @@ import { CompetitiveTier } from '@core/players/competitive-tier.model';
  * Mirrors `CurrentRankingResponse.PlayerRankingResponse` from the backend.
  */
 export interface PlayerRanking {
+  /**
+   * Internal identifier of the player.
+   */
   readonly id: number;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
 
   /**
    * Relative path or URL of the player portrait, or `null` when not yet synchronized.
    */
   readonly portrait: string | null;
+
+  /**
+   * Competitive rank held.
+   */
   readonly competitiveTier: CompetitiveTier;
+
+  /**
+   * Rank rating points within the tier, or `null` when unranked.
+   */
   readonly rankRating: number | null;
 }
 
@@ -26,9 +41,24 @@ export interface PlayerRanking {
  * Mirrors `CurrentRankingResponse.ChallengeProgressResponse` from the backend.
  */
 export interface RankingChallengeProgress {
+  /**
+   * Identifier of the challenge.
+   */
   readonly id: number;
+
+  /**
+   * Stable catalogue code of the challenge.
+   */
   readonly code: string;
+
+  /**
+   * Translated name of the challenge.
+   */
   readonly name: string;
+
+  /**
+   * Whether the challenge is daily or weekly.
+   */
   readonly cadence: ChallengeCadence;
 
   /**
@@ -40,10 +70,30 @@ export interface RankingChallengeProgress {
    * Day the daily is decided on, as an ISO-8601 date (`YYYY-MM-DD`); `null` for a weekly.
    */
   readonly day: string | null;
+
+  /**
+   * Metric the challenge measures.
+   */
   readonly metric: string;
+
+  /**
+   * Progress so far.
+   */
   readonly currentValue: number;
+
+  /**
+   * Value to reach, or `null` for an open-ended challenge.
+   */
   readonly targetValue: number | null;
+
+  /**
+   * Unit of the values.
+   */
   readonly unit: string;
+
+  /**
+   * Whether the challenge is validated.
+   */
   readonly completed: boolean;
 
   /**
@@ -64,17 +114,45 @@ export interface RankingEntry {
    * consumes a ranking slot.
    */
   readonly position: number | null;
+
+  /**
+   * Position at the previous calculation, or `null` when new.
+   */
   readonly previousPosition: number | null;
+
+  /**
+   * Places gained (positive) or lost since the previous calculation.
+   */
   readonly positionVariation: number;
+
+  /**
+   * The ranked player.
+   */
   readonly player: PlayerRanking;
 
   /**
    * Damage dealt to the week's guardian by the matches that counted, streak bonus included.
    */
   readonly guardianDamage: number;
+
+  /**
+   * Food.
+   */
   readonly food: number;
+
+  /**
+   * Components.
+   */
   readonly components: number;
+
+  /**
+   * Matches played.
+   */
   readonly matchCount: number;
+
+  /**
+   * Days with at least one match this week.
+   */
   readonly activeDays: number;
 
   /**
@@ -91,7 +169,15 @@ export interface RankingEntry {
    * Weekly challenges validated, over {@link totalChallenges}.
    */
   readonly completedChallenges: number;
+
+  /**
+   * Challenges drawn this week.
+   */
   readonly totalChallenges: number;
+
+  /**
+   * Daily challenges validated this week.
+   */
   readonly completedDailyChallenges: number;
 
   /**
@@ -136,6 +222,10 @@ export interface CurrentRanking {
    * the week's first calculation.
    */
   readonly calculatedAt: string | null;
+
+  /**
+   * Entries in board order.
+   */
   readonly ranking: readonly RankingEntry[];
 }
 
@@ -150,7 +240,15 @@ export interface DailyRankingEntry {
    * ranking slot — same rule as {@link RankingEntry.position}.
    */
   readonly position: number | null;
+
+  /**
+   * Internal identifier of the player.
+   */
   readonly playerId: number;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
 
   /**
@@ -162,15 +260,35 @@ export interface DailyRankingEntry {
    * Damage dealt by the day's valued matches, diminishing returns and streak bonus applied.
    */
   readonly damage: number;
+
+  /**
+   * Food.
+   */
   readonly food: number;
+
+  /**
+   * Components.
+   */
   readonly components: number;
+
+  /**
+   * Matches played.
+   */
   readonly matchCount: number;
 
   /**
    * Matches priced below their full value by the day's diminishing returns.
    */
   readonly reducedMatchCount: number;
+
+  /**
+   * Consecutive active days.
+   */
   readonly streakDays: number;
+
+  /**
+   * Bonus the streak grants, in percent.
+   */
   readonly streakBonusPercent: number;
 
   /**
@@ -178,6 +296,10 @@ export interface DailyRankingEntry {
    * played, or when there was nothing to lose.
    */
   readonly streakAtStake: number;
+
+  /**
+   * Guardian damage before today.
+   */
   readonly previousDamage: number;
 
   /**
@@ -225,20 +347,59 @@ export interface DailyRanking {
  * Mirrors `RankingHistoryWeekResponse.FinalRankingEntryResponse` from the backend.
  */
 export interface RankingHistoryEntry {
+  /**
+   * Position on the board, first being 1.
+   */
   readonly position: number;
+
+  /**
+   * Internal identifier of the player.
+   */
   readonly playerId: number;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
+
+  /**
+   * Guardian damage dealt this week.
+   */
   readonly guardianDamage: number;
+
+  /**
+   * Ranking points earned from challenges.
+   */
   readonly challengePoints: number;
 
   /**
    * The player's frozen weekly total, what the finalized position was ordered on.
    */
   readonly totalPoints: number;
+
+  /**
+   * Weekly challenges validated this week.
+   */
   readonly completedChallenges: number;
+
+  /**
+   * Daily challenges validated this week.
+   */
   readonly completedDailyChallenges: number;
+
+  /**
+   * Days with at least one match this week.
+   */
   readonly activeDays: number;
+
+  /**
+   * Consecutive active days.
+   */
   readonly streakDays: number;
+
+  /**
+   * Weekly titles held.
+   */
   readonly titles: readonly WeeklyTitle[];
 }
 
@@ -267,5 +428,9 @@ export interface RankingHistoryWeek {
    * Who finished first, or `null` on a week nobody was ranked.
    */
   readonly winnerPlayerId: number | null;
+
+  /**
+   * Final ranking of the closed week.
+   */
   readonly ranking: readonly RankingHistoryEntry[];
 }

@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideFlame, LucideTarget, LucideWheat, LucideWrench } from '@lucide/angular';
-
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { createSeededRandom } from '@core/random/seeded-random.utils';
 import { Avatar } from '@shared/avatar/avatar';
@@ -17,12 +16,7 @@ import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { svgElement as el } from '@core/svg/svg-element.utils';
 import { SKY_SEED } from '@pages/campaign/star-field.constants';
 import { BoardRow } from '../leaderboard.model';
-
-const WIDTH = 1600;
-const HEIGHT = 280;
-const STAR_COUNT = 140;
-const STAR = '#ece8e1';
-const EMBER = '#e8ab6b';
+import { WIDTH, HEIGHT, STAR_COUNT, STAR, EMBER } from './podium.constants';
 
 /**
  * The week's three leaders on their plinths, under the same sky as the campaign's road. Each

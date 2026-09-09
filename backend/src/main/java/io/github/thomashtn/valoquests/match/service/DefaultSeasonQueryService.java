@@ -93,6 +93,9 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
         return seasons.isEmpty() ? null : seasons.get(0).getId();
     }
 
+    /**
+     * Every season, newest first, ordered by era and act rather than by identifier.
+     */
     private List<Season> chronologicallyOrderedSeasons() {
         return seasonRepository.findAllByOrderByIdDesc().stream()
             .sorted(Comparator.comparingLong(DefaultSeasonQueryService::chronologicalKey).reversed())
@@ -131,6 +134,9 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
         return eraNumber * ERA_SCALE + Long.parseLong(act);
     }
 
+    /**
+     * Maps one season.
+     */
     private SeasonResponse toResponse(Season season) {
         return new SeasonResponse(season.getId(), season.getName(), season.isActive());
     }

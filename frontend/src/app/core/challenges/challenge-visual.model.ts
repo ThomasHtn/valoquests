@@ -30,14 +30,29 @@ export type ChallengeTier = 'I' | 'II' | 'III' | 'IV' | 'V' | 'D';
  * render time) so Tailwind's build-time class scanner can find them in this file.
  */
 export interface ChallengeVisual {
+  /**
+   * Icon standing for the metric.
+   */
   readonly icon: ChallengeIcon;
 
   /**
    * Difficulty rank shown inside the hex badge, so the tier is not conveyed by color alone.
    */
   readonly tier: ChallengeTier;
+
+  /**
+   * Tailwind class of the icon.
+   */
   readonly iconClass: string;
+
+  /**
+   * Tailwind class of the badge.
+   */
   readonly badgeClass: string;
+
+  /**
+   * Tailwind class of the progress bar.
+   */
   readonly barClass: string;
 
   /**

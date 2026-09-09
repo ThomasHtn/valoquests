@@ -6,7 +6,14 @@ import { CompetitiveTier, CompetitiveTierVisual } from '@core/players/competitiv
  * Single row of the players table: a tracked player mapped to display-ready fields.
  */
 export interface PlayerRow {
+  /**
+   * Internal identifier.
+   */
   readonly id: number;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
 
   /**
@@ -20,6 +27,10 @@ export interface PlayerRow {
    * absent.
    */
   readonly tag: string | null;
+
+  /**
+   * Resolved avatar URL, or `null` when the player has none.
+   */
   readonly avatarUrl: string | null;
 
   /**
@@ -32,12 +43,40 @@ export interface PlayerRow {
    * former (a stable, orderable value), the template only ever the latter.
    */
   readonly competitiveTier: CompetitiveTier;
+
+  /**
+   * Translated rank label and colour.
+   */
   readonly tier: CompetitiveTierVisual;
+
+  /**
+   * Icon of the competitive rank, or `null` when unranked.
+   */
   readonly rankIconUrl: string | null;
+
+  /**
+   * Rank rating points within the tier, or `null` when unranked.
+   */
   readonly rankRating: number | null;
+
+  /**
+   * Win rate in percent, or `null` without matches.
+   */
   readonly winRate: number | null;
+
+  /**
+   * KDA, or `null` without matches.
+   */
   readonly kda: number | null;
+
+  /**
+   * Headshot rate in percent, or `null` without matches.
+   */
   readonly headshotPercentage: number | null;
+
+  /**
+   * Matches played.
+   */
   readonly matchesPlayed: number;
 
   /**
@@ -57,8 +96,19 @@ export type PlayerSortKey =
  * One sortable header of the table: a column paired with its translation key and text alignment.
  */
 export interface PlayerSortColumn {
+  /**
+   * Column the header sorts on.
+   */
   readonly key: PlayerSortKey;
+
+  /**
+   * Translation key of the header.
+   */
   readonly labelKey: string;
+
+  /**
+   * Text alignment of the column.
+   */
   readonly align: 'left' | 'right';
 }
 

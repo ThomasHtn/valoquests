@@ -10,7 +10,8 @@ import {
 import { PlayersApi } from '@core/players/players-api';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
-import { EntityStats, EntityStatsRow } from './entity-stats/entity-stats';
+import { EntityStats } from './entity-stats/entity-stats';
+import { EntityStatsRow } from './entity-stats/entity-stats.model';
 import { EvolutionChart } from './evolution-chart/evolution-chart';
 import { PersonalRecords } from './personal-records/personal-records';
 import { PlayStyle } from './play-style/play-style';

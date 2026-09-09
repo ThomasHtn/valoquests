@@ -1,14 +1,8 @@
 import { effect, inject, Injectable, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
-
 import { Translation } from './translation';
-
-/**
- * Suffix appended to every page title, so the browser tab identifies the application even when
- * several are open.
- */
-const APPLICATION_NAME = 'ValoQuests';
+import { APPLICATION_NAME } from './translated-title-strategy.constants';
 
 /**
  * Sets the document title from each route's `title`, treated as a translation key.

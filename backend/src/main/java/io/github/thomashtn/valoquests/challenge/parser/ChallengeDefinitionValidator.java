@@ -15,6 +15,9 @@ import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
  */
 final class ChallengeDefinitionValidator {
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private ChallengeDefinitionValidator() {
     }
 
@@ -60,6 +63,9 @@ final class ChallengeDefinitionValidator {
         return new InvalidChallengeDefinitionException(buildErrorMessage(challenge, message), cause);
     }
 
+    /**
+     * Every condition needs a metric, an operator and a non-negative target.
+     */
     private static void validateCondition(Challenge challenge, ChallengeCondition condition) {
         if (condition == null) {
             throw invalidDefinition(challenge, "A challenge condition must not be null.");
@@ -78,6 +84,9 @@ final class ChallengeDefinitionValidator {
         }
     }
 
+    /**
+     * ALL combines at least two conditions; every other mode takes exactly one.
+     */
     private static void validateConditionCount(Challenge challenge, ChallengeDefinition definition) {
         // ALL is the only mode that combines conditions, so it is the only one taking more than one.
         boolean combining = definition.progressMode() == ProgressMode.ALL;
@@ -94,6 +103,9 @@ final class ChallengeDefinitionValidator {
         }
     }
 
+    /**
+     * Dispatches to the rule of the definition's progress mode.
+     */
     private static void validateProgressMode(Challenge challenge, ChallengeDefinition definition) {
         switch (definition.progressMode()) {
             case SUM -> validateSum(challenge, definition);
@@ -108,18 +120,27 @@ final class ChallengeDefinitionValidator {
         }
     }
 
+    /**
+     * SUM adds one metric up, so a groupBy would mean nothing.
+     */
     private static void validateSum(Challenge challenge, ChallengeDefinition definition) {
         if (definition.singleCondition().groupBy() != null) {
             throw invalidDefinition(challenge, "SUM conditions must not define groupBy.");
         }
     }
 
+    /**
+     * DISTINCT_COUNT and MAX_GROUP count within groups, so they need a groupBy.
+     */
     private static void validateGrouped(Challenge challenge, ChallengeDefinition definition) {
         if (definition.singleCondition().groupBy() == null) {
             throw invalidDefinition(challenge, definition.progressMode() + " requires a groupBy value.");
         }
     }
 
+    /**
+     * COUNT_MATCHES counts per-match hits, a positive number of times.
+     */
     private static void validateOccurrences(Challenge challenge, ChallengeDefinition definition) {
         ChallengeCondition condition = definition.singleCondition();
 
@@ -132,6 +153,9 @@ final class ChallengeDefinitionValidator {
         }
     }
 
+    /**
+     * MAX_STREAK counts consecutive per-match hits, a positive number of them.
+     */
     private static void validateStreak(Challenge challenge, ChallengeDefinition definition) {
         ChallengeCondition condition = definition.singleCondition();
 
@@ -144,6 +168,9 @@ final class ChallengeDefinitionValidator {
         }
     }
 
+    /**
+     * RATIO may ask for a minimum sample, which must then be positive.
+     */
     private static void validateRatio(Challenge challenge, ChallengeDefinition definition) {
         ChallengeCondition condition = definition.singleCondition();
 
@@ -152,6 +179,9 @@ final class ChallengeDefinitionValidator {
         }
     }
 
+    /**
+     * BASELINE compares against the player's own history: a positive improvement over a positive sample.
+     */
     private static void validateBaseline(Challenge challenge, ChallengeDefinition definition) {
         ChallengeCondition condition = definition.singleCondition();
 
@@ -164,6 +194,9 @@ final class ChallengeDefinitionValidator {
         }
     }
 
+    /**
+     * Prefixes a message with the challenge code, or a placeholder when it has none.
+     */
     private static String buildErrorMessage(Challenge challenge, String message) {
         String challengeCode = challenge.getCode() == null ? "<unknown>" : challenge.getCode();
 

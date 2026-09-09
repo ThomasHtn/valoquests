@@ -9,23 +9,13 @@ import {
   LucideWheat,
   LucideWrench,
 } from '@lucide/angular';
-
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { BLOCK_TOOLTIP_DELAY_MS, Tooltip } from '@shared/tooltip/tooltip';
+import { Tooltip } from '@shared/tooltip/tooltip';
+import { BLOCK_TOOLTIP_DELAY_MS } from '@shared/tooltip/tooltip.constants';
 import { Capacity } from '../overview.model';
-
-/**
- * Game modes that feed each stock the most, as the scoring splits a match's value.
- */
-const CARRY_MODES: readonly string[] = ['COMPETITIVE', 'PREMIER', 'UNRATED'];
-const SHELTER_MODES: readonly string[] = [
-  'DEATHMATCH',
-  'SPIKE_RUSH',
-  'TEAM_DEATHMATCH',
-  'SKIRMISH',
-];
+import { CARRY_MODES, SHELTER_MODES } from './extraction-gauges.constants';
 
 /**
  * What would come home on Sunday, and the three things that bound it: four dials on the same

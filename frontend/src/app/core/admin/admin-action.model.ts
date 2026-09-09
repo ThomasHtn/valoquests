@@ -11,6 +11,9 @@ export type AdminActionStatus = 'idle' | 'running' | 'done' | 'error';
  * State of one backoffice action.
  */
 export interface AdminActionState {
+  /**
+   * Where the action stands.
+   */
   readonly status: AdminActionStatus;
 
   /**

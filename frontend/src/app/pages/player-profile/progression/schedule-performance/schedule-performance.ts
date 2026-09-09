@@ -1,17 +1,11 @@
 import { Component, computed, inject, input } from '@angular/core';
-
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { HourSlotPerformance, WeekdayPerformance } from '@core/players/player-progression.model';
 import { BarChart } from '@shared/chart/bar-chart';
 import { ChartBar } from '@shared/chart/chart.model';
 import { Tooltip } from '@shared/tooltip/tooltip';
-
-/**
- * Matches a slot needs before it can be called a best. Mirrors the backend's own floor, and is
- * shown to the reader so a greyed-out bar explains itself.
- */
-const MINIMUM_SAMPLE = 5;
+import { MINIMUM_SAMPLE } from './schedule-performance.constants';
 
 /**
  * When a player wins, by day of the week and by time of day.

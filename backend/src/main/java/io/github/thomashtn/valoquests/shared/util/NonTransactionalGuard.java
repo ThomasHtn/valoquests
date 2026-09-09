@@ -14,6 +14,9 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  */
 public final class NonTransactionalGuard {
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private NonTransactionalGuard() {
     }
 

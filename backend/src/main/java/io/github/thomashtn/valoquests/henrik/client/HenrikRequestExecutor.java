@@ -106,6 +106,9 @@ public class HenrikRequestExecutor {
             : new HenrikApiException(message, failure, true);
     }
 
+    /**
+     * Whether a transport failure was a timeout, whichever timeout class raised it.
+     */
     private static boolean isTimeout(Throwable cause) {
         return cause instanceof java.util.concurrent.TimeoutException
             || cause instanceof TimeoutException;

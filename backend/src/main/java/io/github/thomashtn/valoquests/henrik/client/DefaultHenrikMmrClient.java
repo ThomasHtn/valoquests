@@ -81,6 +81,9 @@ public class DefaultHenrikMmrClient implements HenrikMmrClient {
         );
     }
 
+    /**
+     * One GET of the current MMR, HTTP errors mapped by the shared response handler.
+     */
     private Mono<HenrikMmrResponse> executeRequest(String puuid) {
         return henrikWebClient.get()
             .uri(
@@ -97,6 +100,9 @@ public class DefaultHenrikMmrClient implements HenrikMmrClient {
             .bodyToMono(HenrikMmrResponse.class);
     }
 
+    /**
+     * Rejects a blank PUUID before any request goes out.
+     */
     private void validatePuuid(String puuid) {
         if (Objects.requireNonNullElse(puuid, "").isBlank()) {
             throw new IllegalArgumentException(

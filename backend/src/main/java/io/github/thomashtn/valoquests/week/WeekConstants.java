@@ -15,6 +15,9 @@ public final class WeekConstants {
      */
     public static final int LAST_DAY_OFFSET = DAYS_PER_WEEK - 1;
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private WeekConstants() {
     }
 }

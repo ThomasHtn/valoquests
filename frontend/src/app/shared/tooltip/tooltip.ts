@@ -1,33 +1,8 @@
 import { Directive, ElementRef, OnDestroy, Renderer2, inject, input, signal } from '@angular/core';
-
 import { TOOLTIP_SURFACE_CLASS } from './tooltip.constants';
-
-/**
- * Monotonically increasing counter backing {@link Tooltip.tooltipId}.
- *
- * A per-instance id is required because the host references its tooltip through
- * `aria-describedby`, which must resolve to exactly one element in the document.
- */
-let instanceCount = 0;
-
-/**
- * Distance in pixels between the host element and its tooltip.
- */
-const OFFSET = 8;
-
-/**
- * Side of the host the tooltip is rendered on.
- */
-export type TooltipPosition = 'above' | 'below' | 'left' | 'right';
-
-/**
- * Delay a tooltip hung off a whole block waits before opening, in milliseconds.
- *
- * Long enough that crossing the block on the way somewhere else never opens the bubble, short
- * enough that stopping on it to ask "what is this" does not feel like waiting. Shared so the two
- * overview blocks answer at the same pace rather than each picking a number.
- */
-export const BLOCK_TOOLTIP_DELAY_MS = 400;
+import { OFFSET } from './tooltip.constants';
+import { TooltipPosition } from './tooltip.model';
+import { nextInstanceId } from '@core/dom/instance-id.utils';
 
 /**
  * Shows a short text bubble describing its host on hover and on keyboard focus.
@@ -109,7 +84,7 @@ export class Tooltip implements OnDestroy {
   /**
    * Unique identifier linking the host to its bubble through `aria-describedby`.
    */
-  private readonly tooltipId = `app-tooltip-${(instanceCount += 1)}`;
+  private readonly tooltipId = nextInstanceId('app-tooltip');
 
   /**
    * Bubble currently attached to the document, or `null` while hidden.

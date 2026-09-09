@@ -24,6 +24,7 @@ import {
   MissionReport,
   SquadRow,
 } from './overview.model';
+import { SEEN_REPORT_KEY } from './overview.constants';
 
 /**
  * Translates a key, the same shape as `Translation.translate`, kept as a structural type here so
@@ -48,6 +49,9 @@ export function buildFrieze(
   return campaign.weeks.map((week) => toFriezeWeek(week, campaign, translate));
 }
 
+/**
+ * Maps one campaign week onto its frieze cell.
+ */
 function toFriezeWeek(week: CampaignWeek, campaign: Campaign, translate: Translate): FriezeWeek {
   const isCurrent = week.weekIndex === campaign.currentWeekIndex && campaign.status === 'RUNNING';
   const label = String(week.weekIndex).padStart(2, '0');
@@ -469,4 +473,26 @@ export function buildSquad(
       food: entry.food,
     };
   });
+}
+
+/**
+ * Monday of the last mission report the reader dismissed, or `null`; storage failures read as never seen.
+ */
+export function readSeenReport(): string | null {
+  try {
+    return localStorage.getItem(SEEN_REPORT_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Remembers the mission report as dismissed; storage failures are ignored.
+ */
+export function writeSeenReport(weekStart: string): void {
+  try {
+    localStorage.setItem(SEEN_REPORT_KEY, weekStart);
+  } catch {
+    // Nothing to do: the report will open again next time.
+  }
 }

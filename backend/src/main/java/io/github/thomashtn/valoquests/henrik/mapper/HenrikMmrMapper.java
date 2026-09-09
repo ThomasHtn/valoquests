@@ -37,6 +37,9 @@ public class HenrikMmrMapper {
         player.setRankRating(current.rankRating());
     }
 
+    /**
+     * Henrik tier name to the enum, unranked when absent or unknown.
+     */
     private CompetitiveTier toCompetitiveTier(
         HenrikMmrResponse.HenrikTier tier
     ) {

@@ -5,6 +5,9 @@ import { LedgerCell, LedgerRow, Planet } from './campaign.model';
  * Pure builder of the reserve ledger: one row per resource, one cell per planet.
  */
 
+/**
+ * Resource a ledger row tracks.
+ */
 type LedgerKey = LedgerRow['key'];
 
 /**

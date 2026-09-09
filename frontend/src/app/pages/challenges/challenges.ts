@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { LucideChevronDown } from '@lucide/angular';
-
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.model';
 import {
@@ -26,20 +25,8 @@ import { ChallengeCardView } from './challenge-card/challenge-card';
 import { ChallengeCatalogueView } from './challenge-catalogue/challenge-catalogue';
 import { CatalogueGroup, ChallengeCard, DayCell, DayState, SquadSlot } from './challenges.model';
 import { DailyFrieze } from './daily-frieze/daily-frieze';
-
-const DAILY_TONE = 'var(--color-accent-cyan)';
-
-const CLOSED_DAY_TONE = 'var(--color-accent-green)';
-
-/**
- * The ISO date `offset` days after another.
- */
-function shiftDay(isoDate: string, offset: number): string {
-  const date = localMidnight(isoDate);
-  date.setDate(date.getDate() + offset);
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${`${date.getDate()}`.padStart(2, '0')}`;
-}
+import { DAILY_TONE, CLOSED_DAY_TONE } from './challenges.constants';
+import { shiftDay } from './challenges.utils';
 
 /**
  * The week's challenges: what they are for, the day's one over the seven days, the week's five,

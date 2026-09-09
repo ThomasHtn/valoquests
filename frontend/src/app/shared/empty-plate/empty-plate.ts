@@ -1,19 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-
 import { EmptyIllustration } from './empty-illustration';
-import { EmptyPlate as EmptyPlateContent, ReadoutTone } from './empty-plate.model';
-
-/**
- * Tailwind classes of a readout's dot and value, by tone.
- */
-const READOUT_TONES: Record<ReadoutTone, { dot: string; value: string }> = {
-  live: {
-    dot: 'border-success bg-success shadow-[0_0_0_3px_rgb(95_184_138/20%)]',
-    value: 'text-success',
-  },
-  todo: { dot: 'border-brand-500', value: 'text-text-primary' },
-  info: { dot: 'border-text-muted bg-text-muted', value: 'text-text-primary' },
-};
+import { EmptyPlate as EmptyPlateContent } from './empty-plate.model';
+import { READOUT_TONES } from './empty-plate.constants';
 
 /**
  * An empty state shaped like a mission plate: a line drawing, an eyebrow naming the situation, a

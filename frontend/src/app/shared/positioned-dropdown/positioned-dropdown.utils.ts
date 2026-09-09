@@ -1,50 +1,9 @@
-import { afterNextRender, DestroyRef, ElementRef, inject, Signal, signal } from '@angular/core';
-
-/**
- * Viewport-relative coordinates a dropdown panel is pinned to while open.
- */
-export interface DropdownPanelPosition {
-  top: number;
-  right: number;
-  minWidth: number;
-}
-
-/**
- * Refs a positioned dropdown needs to pin, reparent and dismiss its panel.
- */
-export interface PositionedDropdownRefs {
-  /**
-   * Host element of the trigger, used to detect a click landing outside the whole control.
-   */
-  host: ElementRef<HTMLElement>;
-
-  /**
-   * Trigger button, refocused by {@link PositionedDropdown.closeAndRefocus}.
-   */
-  trigger: Signal<ElementRef<HTMLButtonElement>>;
-
-  /**
-   * Options panel, reparented out of the host once rendered.
-   */
-  panel: Signal<ElementRef<HTMLElement>>;
-}
-
-/**
- * Open state, position and controls of a positioned dropdown.
- */
-export interface PositionedDropdown {
-  readonly isOpen: Signal<boolean>;
-  readonly panelPosition: Signal<DropdownPanelPosition>;
-  open(): void;
-  close(): void;
-  toggle(): void;
-
-  /**
-   * Closes the panel and returns focus to the trigger, for a caller-driven dismissal (Escape, a
-   * confirmed selection) as opposed to one detected from the outside (a click, a resize, a scroll).
-   */
-  closeAndRefocus(): void;
-}
+import { afterNextRender, DestroyRef, inject, signal } from '@angular/core';
+import {
+  DropdownPanelPosition,
+  PositionedDropdownRefs,
+  PositionedDropdown,
+} from './positioned-dropdown.model';
 
 /**
  * Wires the behaviour shared by every fixed-position, portalled dropdown panel in the design

@@ -13,6 +13,10 @@ export interface SnackbarMessage {
    * with the same text and type as the last.
    */
   readonly id: number;
+
+  /**
+   * Tone of the message.
+   */
   readonly type: SnackbarType;
 
   /**

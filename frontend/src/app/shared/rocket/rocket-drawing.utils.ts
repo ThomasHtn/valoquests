@@ -1,3 +1,7 @@
+import { svgElement } from '@core/svg/svg-element.utils';
+import { ROCKET_PALETTE, SHIP, SKIRT } from './rocket-drawing.constants';
+import { ShipStage } from './rocket-drawing.model';
+
 /**
  * The rocket, part by part.
  *
@@ -9,71 +13,9 @@
  * on `y = 0` and builds upward, so it is placed under a `scale(1 -1)` transform.
  */
 
-import { svgElement } from '@core/svg/svg-element.utils';
-
 /**
- * Palette of the ship, in the colours of the rest of the site.
+ * Height of the nose for a stage, from its shape and hull width.
  */
-export const ROCKET_PALETTE = {
-  mast: '#2b3a45',
-  steel: '#25384a',
-  steelDark: '#1a2531',
-  steelLit: '#33495b',
-  ghost: '#5b7688',
-  warm: '#ffc477',
-  warmCore: '#fff0cf',
-  brand: '#d9954a',
-  cyan: '#2dd4bf',
-  red: '#ff4655',
-} as const;
-
-const C = ROCKET_PALETTE;
-
-/**
- * Number of parts the finished launcher has: one per guardian of the campaign.
- */
-export const ROCKET_PART_COUNT = 10;
-
-const el = svgElement;
-
-/**
- * One stage of the rocket: half-width and height of the hull, fins, booster height, nose shape,
- * engines, gantry, portholes and marking bands.
- *
- * Ten states, and each guardian defeated adds a real part: the rocket of state ten is not the one
- * of state one scaled up.
- */
-export interface ShipStage {
-  readonly w: number;
-  readonly h: number;
-  readonly fins: number;
-  readonly boost: number;
-  readonly nose: 'none' | 'dome' | 'cone' | 'capsule';
-  readonly eng: number;
-  readonly gantry: number;
-  readonly ports: number;
-  readonly bands: number;
-}
-
-export const SHIP: readonly ShipStage[] = [
-  { w: 0, h: 0, fins: 0, boost: 0, nose: 'none', eng: 0, gantry: 0, ports: 0, bands: 0 },
-  { w: 11, h: 32, fins: 0, boost: 0, nose: 'dome', eng: 1, gantry: 0, ports: 0, bands: 0 },
-  { w: 13, h: 52, fins: 1, boost: 0, nose: 'dome', eng: 1, gantry: 0, ports: 0, bands: 0 },
-  { w: 15, h: 76, fins: 1, boost: 0, nose: 'cone', eng: 1, gantry: 0, ports: 1, bands: 0 },
-  { w: 17, h: 104, fins: 1, boost: 0, nose: 'cone', eng: 1, gantry: 0, ports: 1, bands: 0 },
-  { w: 19, h: 134, fins: 1, boost: 60, nose: 'cone', eng: 1, gantry: 0, ports: 2, bands: 0 },
-  { w: 21, h: 164, fins: 1, boost: 82, nose: 'cone', eng: 3, gantry: 0, ports: 2, bands: 1 },
-  { w: 22, h: 194, fins: 1, boost: 104, nose: 'cone', eng: 3, gantry: 1, ports: 2, bands: 1 },
-  { w: 24, h: 222, fins: 1, boost: 126, nose: 'cone', eng: 3, gantry: 1, ports: 3, bands: 1 },
-  { w: 25, h: 250, fins: 1, boost: 146, nose: 'capsule', eng: 3, gantry: 2, ports: 3, bands: 1 },
-  { w: 27, h: 282, fins: 1, boost: 168, nose: 'capsule', eng: 3, gantry: 2, ports: 4, bands: 1 },
-];
-
-/**
- * Engine skirt, under the hull.
- */
-export const SKIRT = 14;
-
 export function noseHeight(stage: ShipStage): number {
   if (stage.nose === 'dome') {
     return stage.w * 0.8;
@@ -81,6 +23,9 @@ export function noseHeight(stage: ShipStage): number {
   return stage.nose === 'cone' ? stage.w * 2.4 : stage.w * 2.1;
 }
 
+/**
+ * Half-width of the ship at its widest, boosters and fins included.
+ */
 export function shipHalf(stage: ShipStage): number {
   const boosterEdge = stage.boost ? stage.w + stage.w * 0.42 * 2 : 0;
   const finEdge = stage.fins ? stage.w * 1.9 : stage.w;
@@ -125,8 +70,11 @@ export function outline(stage: ShipStage): string {
   return parts.join(' ');
 }
 
+/**
+ * Opacity animation node, looping forever.
+ */
 export function animate(values: string, dur: string, begin?: string): SVGAnimateElement {
-  return el('animate', {
+  return svgElement('animate', {
     attributeName: 'opacity',
     values,
     dur,
@@ -140,7 +88,7 @@ export function animate(values: string, dur: string, begin?: string): SVGAnimate
  */
 export function drawShip(stageIndex: number): SVGGElement {
   const stage = SHIP[stageIndex];
-  const g = el('g');
+  const g = svgElement('g');
   if (!stageIndex) {
     return g;
   }
@@ -154,10 +102,23 @@ export function drawShip(stageIndex: number): SVGGElement {
   if (stage.gantry) {
     const gx = -(shipHalf(stage) + 22);
     const gh = stage.h * (stage.gantry === 2 ? 0.86 : 0.7);
-    g.append(el('rect', { x: gx - 5, y: 0, width: 4, height: gh, fill: C.mast }));
-    g.append(el('rect', { x: gx + 9, y: 0, width: 4, height: gh, fill: C.mast }));
+    g.append(
+      svgElement('rect', { x: gx - 5, y: 0, width: 4, height: gh, fill: ROCKET_PALETTE.mast }),
+    );
+    g.append(
+      svgElement('rect', { x: gx + 9, y: 0, width: 4, height: gh, fill: ROCKET_PALETTE.mast }),
+    );
     for (let y = 10; y < gh; y += 18) {
-      g.append(el('rect', { x: gx - 5, y, width: 18, height: 1.4, fill: C.mast, opacity: 0.7 }));
+      g.append(
+        svgElement('rect', {
+          x: gx - 5,
+          y,
+          width: 18,
+          height: 1.4,
+          fill: ROCKET_PALETTE.mast,
+          opacity: 0.7,
+        }),
+      );
     }
     const arms = stage.gantry === 2 ? [26, 74, 122, 170] : [26, 78];
     for (const ay of arms) {
@@ -165,16 +126,21 @@ export function drawShip(stageIndex: number): SVGGElement {
         continue;
       }
       g.append(
-        el('rect', {
+        svgElement('rect', {
           x: gx + 13,
           y: ay,
           width: -gx - shipHalf(stage) - 5,
           height: 2.6,
-          fill: C.mast,
+          fill: ROCKET_PALETTE.mast,
         }),
       );
     }
-    const beacon = el('circle', { cx: gx + 4, cy: gh + 4, r: 2.6, fill: C.red });
+    const beacon = svgElement('circle', {
+      cx: gx + 4,
+      cy: gh + 4,
+      r: 2.6,
+      fill: ROCKET_PALETTE.red,
+    });
     beacon.append(animate('1;0.15;1', '2.6s'));
     g.append(beacon);
   }
@@ -184,26 +150,34 @@ export function drawShip(stageIndex: number): SVGGElement {
     for (const dir of [-1, 1]) {
       const cx = dir * (w + bw);
       g.append(
-        el('rect', {
+        svgElement('rect', {
           x: cx - bw,
           y: 4,
           width: bw * 2,
           height: stage.boost,
-          fill: C.steelDark,
-          stroke: C.steelLit,
+          fill: ROCKET_PALETTE.steelDark,
+          stroke: ROCKET_PALETTE.steelLit,
           'stroke-width': 1,
         }),
       );
       g.append(
-        el('path', {
+        svgElement('path', {
           d: `M${cx - bw} ${4 + stage.boost} L${cx} ${4 + stage.boost + bw * 2.1} L${cx + bw} ${4 + stage.boost} Z`,
-          fill: C.steel,
-          stroke: C.cyan,
+          fill: ROCKET_PALETTE.steel,
+          stroke: ROCKET_PALETTE.cyan,
           'stroke-width': 1,
           'stroke-opacity': 0.5,
         }),
       );
-      g.append(el('rect', { x: cx - bw, y: 2, width: bw * 2, height: 5, fill: C.steelLit }));
+      g.append(
+        svgElement('rect', {
+          x: cx - bw,
+          y: 2,
+          width: bw * 2,
+          height: 5,
+          fill: ROCKET_PALETTE.steelLit,
+        }),
+      );
     }
   }
 
@@ -212,10 +186,10 @@ export function drawShip(stageIndex: number): SVGGElement {
     const fh = Math.max(14, stage.h * 0.26);
     for (const dir of [-1, 1]) {
       g.append(
-        el('path', {
+        svgElement('path', {
           d: `M${dir * w} ${SKIRT} L${dir * w * 1.9} ${SKIRT - 2} L${dir * w} ${SKIRT + fh} Z`,
-          fill: C.steel,
-          stroke: C.cyan,
+          fill: ROCKET_PALETTE.steel,
+          stroke: ROCKET_PALETTE.cyan,
           'stroke-width': 1,
           'stroke-opacity': 0.45,
         }),
@@ -225,10 +199,10 @@ export function drawShip(stageIndex: number): SVGGElement {
 
   // Skirt and engines.
   g.append(
-    el('path', {
+    svgElement('path', {
       d: `M${-w} ${SKIRT} L${-w * 1.12} 0 L${w * 1.12} 0 L${w} ${SKIRT} Z`,
-      fill: C.steelDark,
-      stroke: C.steelLit,
+      fill: ROCKET_PALETTE.steelDark,
+      stroke: ROCKET_PALETTE.steelLit,
       'stroke-width': 1,
     }),
   );
@@ -236,10 +210,10 @@ export function drawShip(stageIndex: number): SVGGElement {
   for (const ex of spread) {
     const r = stage.eng === 1 ? w * 0.5 : w * 0.3;
     g.append(
-      el('path', {
+      svgElement('path', {
         d: `M${ex - r * 0.6} 11 L${ex - r} 1 L${ex + r} 1 L${ex + r * 0.6} 11 Z`,
         fill: '#0c141c',
-        stroke: C.steelLit,
+        stroke: ROCKET_PALETTE.steelLit,
         'stroke-width': 0.8,
       }),
     );
@@ -247,18 +221,18 @@ export function drawShip(stageIndex: number): SVGGElement {
 
   // The hull in rings, one per guardian defeated, the seam between them visible.
   g.append(
-    el('rect', {
+    svgElement('rect', {
       x: -w,
       y: SKIRT,
       width: w * 2,
       height: stage.h,
-      fill: C.steel,
-      stroke: C.cyan,
+      fill: ROCKET_PALETTE.steel,
+      stroke: ROCKET_PALETTE.cyan,
       'stroke-width': 1.5,
     }),
   );
   g.append(
-    el('rect', {
+    svgElement('rect', {
       x: -w,
       y: SKIRT,
       width: w * 0.42,
@@ -269,28 +243,36 @@ export function drawShip(stageIndex: number): SVGGElement {
   );
   for (let ring = 1; ring < stageIndex; ring++) {
     const y = SKIRT + (stage.h / stageIndex) * ring;
-    g.append(el('rect', { x: -w, y: y - 1.5, width: w * 2, height: 3, fill: C.steelLit }));
+    g.append(
+      svgElement('rect', {
+        x: -w,
+        y: y - 1.5,
+        width: w * 2,
+        height: 3,
+        fill: ROCKET_PALETTE.steelLit,
+      }),
+    );
   }
 
   // Marking bands, from the sixth stage.
   if (stage.bands) {
     g.append(
-      el('rect', {
+      svgElement('rect', {
         x: -w,
         y: SKIRT + stage.h * 0.62,
         width: w * 2,
         height: 6,
-        fill: C.brand,
+        fill: ROCKET_PALETTE.brand,
         opacity: 0.85,
       }),
     );
     g.append(
-      el('rect', {
+      svgElement('rect', {
         x: -w,
         y: SKIRT + stage.h * 0.2,
         width: w * 2,
         height: 3,
-        fill: C.warmCore,
+        fill: ROCKET_PALETTE.warmCore,
         opacity: 0.55,
       }),
     );
@@ -301,7 +283,12 @@ export function drawShip(stageIndex: number): SVGGElement {
     const rows = stage.ports * 2;
     for (let r = 0; r < rows; r++) {
       const y = SKIRT + stage.h * (0.3 + (r / rows) * 0.6);
-      const port = el('circle', { cx: 0, cy: y, r: Math.max(1.6, w * 0.16), fill: C.warm });
+      const port = svgElement('circle', {
+        cx: 0,
+        cy: y,
+        r: Math.max(1.6, w * 0.16),
+        fill: ROCKET_PALETTE.warm,
+      });
       port.append(animate('0.95;0.55;0.95', `${(3 + r * 0.4).toFixed(1)}s`));
       g.append(port);
     }
@@ -310,17 +297,17 @@ export function drawShip(stageIndex: number): SVGGElement {
   // The nose.
   if (stage.nose === 'dome') {
     g.append(
-      el('path', {
+      svgElement('path', {
         d: `M${-w} ${top} Q${-w} ${top + nh} 0 ${top + nh} Q${w} ${top + nh} ${w} ${top} Z`,
-        fill: C.steelLit,
+        fill: ROCKET_PALETTE.steelLit,
       }),
     );
   } else {
     g.append(
-      el('path', {
+      svgElement('path', {
         d: `M${-w} ${top} L0 ${top + nh} L${w} ${top} Z`,
-        fill: C.steelLit,
-        stroke: C.cyan,
+        fill: ROCKET_PALETTE.steelLit,
+        stroke: ROCKET_PALETTE.cyan,
         'stroke-width': 1.2,
       }),
     );
@@ -329,11 +316,19 @@ export function drawShip(stageIndex: number): SVGGElement {
   // Capsule and escape tower, the last two parts fitted.
   if (stage.nose === 'capsule') {
     const capBase = top + nh;
-    g.append(el('rect', { x: -2, y: capBase, width: 4, height: w * 1.6, fill: C.mast }));
     g.append(
-      el('path', {
+      svgElement('rect', {
+        x: -2,
+        y: capBase,
+        width: 4,
+        height: w * 1.6,
+        fill: ROCKET_PALETTE.mast,
+      }),
+    );
+    g.append(
+      svgElement('path', {
         d: `M-5 ${capBase + w * 1.6} L0 ${capBase + w * 2.2} L5 ${capBase + w * 1.6} Z`,
-        fill: C.brand,
+        fill: ROCKET_PALETTE.brand,
       }),
     );
   }

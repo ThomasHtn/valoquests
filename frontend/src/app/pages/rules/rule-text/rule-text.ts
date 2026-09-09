@@ -12,47 +12,8 @@ import {
   LucideWrench,
   LucideZap,
 } from '@lucide/angular';
-
-/**
- * Icons a rule may name inline, by the token written in the dictionary (`{food}`, `{guardian}`).
- *
- * The same vocabulary as the rest of the gameplay pages: a wheat ear is food everywhere, a skull is
- * the guardian everywhere. A token outside this list is rendered as its own text, so a typo in a
- * dictionary shows up on screen rather than vanishing.
- */
-const RULE_ICONS = [
-  'food',
-  'components',
-  'damage',
-  'guardian',
-  'wounded',
-  'base',
-  'challenge',
-  'streak',
-  'points',
-  'rocket',
-  'day',
-] as const;
-
-type RuleIcon = (typeof RULE_ICONS)[number];
-
-/**
- * One run of a rule's text: plain words, a word set in relief, or an icon standing for a word.
- */
-interface RuleRun {
-  readonly text: string;
-  readonly strong: boolean;
-  readonly icon: RuleIcon | null;
-  /** Text colour of the icon: the resource's own everywhere else in the app, brand otherwise. */
-  readonly tone: string;
-}
-
-const ICON_TONES: Partial<Record<RuleIcon, string>> = {
-  food: 'text-accent-green',
-  components: 'text-accent-cyan',
-};
-
-const TOKEN = /(\{[a-z]+\}|\*[^*]+\*)/;
+import { RULE_ICONS, ICON_TONES, TOKEN } from './rule-text.constants';
+import { RuleIcon, RuleRun } from './rule-text.model';
 
 /**
  * A sentence of the rulebook with its icons and emphasis in place.

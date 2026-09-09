@@ -176,6 +176,9 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
         );
     }
 
+    /**
+     * Maps one player with the statistics of their filtered matches.
+     */
     private PlayerSummaryResponse toSummary(Player player, List<PlayerMatch> matches) {
         MatchStatistics statistics = MatchStatistics.from(matches);
         return new PlayerSummaryResponse(
@@ -194,6 +197,9 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
         );
     }
 
+    /**
+     * Groups matches by a key, dropping the ones the key cannot be read from.
+     */
     private <K> Map<K, List<PlayerMatch>> groupBy(
         List<PlayerMatch> matches,
         Function<PlayerMatch, K> classifier
@@ -202,10 +208,16 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
             .collect(Collectors.groupingBy(classifier));
     }
 
+    /**
+     * The full Riot ID, {@code gameName#tagLine}.
+     */
     private String riotId(Player player) {
         return player.getGameName() + "#" + player.getTagLine();
     }
 
+    /**
+     * Reads the game mode filter, {@code null} when absent.
+     */
     private GameMode parseGameMode(String value) {
         if (value == null || value.isBlank()) {
             return null;

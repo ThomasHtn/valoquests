@@ -1,16 +1,10 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal } from '@angular/core';
-
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
-
 import { PageResponse } from '@core/http/page-response.model';
 import { GameMode } from './game-mode.model';
 import { Match, MatchDetail } from './match.model';
-
-/**
- * Number of matches requested per page of a player's match history.
- */
-const MATCH_HISTORY_PAGE_SIZE = 10;
+import { MATCH_HISTORY_PAGE_SIZE } from './matches-api.constants';
 
 /**
  * Data-access service for tracked players' match history.

@@ -5,7 +5,14 @@ import { ChallengeTier } from '@core/challenges/challenge-visual.model';
  * One operator on the squad gauge: a hexagon lit when they validated the challenge.
  */
 export interface SquadSlot {
+  /**
+   * Operator name.
+   */
   readonly name: string;
+
+  /**
+   * Whether the operator validated it.
+   */
   readonly done: boolean;
 }
 
@@ -36,7 +43,15 @@ export interface ChallengeCard {
    * Second part of the key line, for a closed day: the date and that the day is over.
    */
   readonly aside: string;
+
+  /**
+   * Translated name.
+   */
   readonly name: string;
+
+  /**
+   * What has to be done, translated.
+   */
   readonly description: string;
 
   /**
@@ -51,7 +66,15 @@ export interface ChallengeCard {
    * True while a campaign is running: the wounded count is then what the card shows.
    */
   readonly rescueActive: boolean;
+
+  /**
+   * One slot per operator.
+   */
   readonly slots: readonly SquadSlot[];
+
+  /**
+   * Operators who validated it.
+   */
   readonly doneCount: number;
 }
 
@@ -68,6 +91,10 @@ export interface DayCell {
    * Position in the week, Monday first.
    */
   readonly index: number;
+
+  /**
+   * Where the day stands.
+   */
   readonly state: DayState;
 
   /**
@@ -85,7 +112,15 @@ export interface DayCell {
    * missed).
    */
   readonly card: ChallengeCard | null;
+
+  /**
+   * Operators who validated it.
+   */
   readonly doneCount: number;
+
+  /**
+   * Operators on the roster.
+   */
   readonly total: number;
 
   /**
@@ -98,9 +133,28 @@ export interface DayCell {
  * One group of the catalogue: the daily pool, or one difficulty of the weekly one.
  */
 export interface CatalogueGroup {
+  /**
+   * Translation key suffix of the group.
+   */
   readonly key: string;
+
+  /**
+   * Accent colour.
+   */
   readonly tone: string;
+
+  /**
+   * Tier mark drawn on the badge.
+   */
   readonly mark: ChallengeTier;
+
+  /**
+   * Translated group title.
+   */
   readonly label: string;
+
+  /**
+   * Catalogue entries of the group.
+   */
   readonly entries: readonly ChallengeCatalogueEntry[];
 }

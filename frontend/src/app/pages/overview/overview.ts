@@ -7,7 +7,6 @@ import {
   signal,
 } from '@angular/core';
 import { LucideFileText, LucideUsers } from '@lucide/angular';
-
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT, CampaignWeek } from '@core/campaign/campaign.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
@@ -52,34 +51,8 @@ import {
 import { PlanetFigure } from './planet-figure/planet-figure';
 import { ScanWires } from './scan-wires';
 import { SquadSheet } from './squad-sheet/squad-sheet';
-
-/**
- * Population a campaign run to its end is expected to reach at the normal tier: the scale the
- * city grows on, so a base that went the distance fills its whole skyline.
- */
-const FULL_CAMPAIGN_POPULATION = 30_000;
-
-/**
- * Browser-side memory of the last report seen, so the dialog opens once per settled week. Storage
- * can be unavailable (private window, blocked site data): then the report simply opens again.
- */
-const SEEN_REPORT_KEY = 'valoquests.missionReport.seen';
-
-function readSeenReport(): string | null {
-  try {
-    return localStorage.getItem(SEEN_REPORT_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function writeSeenReport(weekStart: string): void {
-  try {
-    localStorage.setItem(SEEN_REPORT_KEY, weekStart);
-  } catch {
-    // Nothing to do: the report will open again next time.
-  }
-}
+import { FULL_CAMPAIGN_POPULATION } from './overview.constants';
+import { readSeenReport, writeSeenReport } from './overview.utils';
 
 /**
  * The state of the campaign, at a glance: the base and its rocket, the ten weeks, the mission of

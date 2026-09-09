@@ -26,8 +26,10 @@ import { PageHeader } from '@layout/page-header/page-header';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionLabel } from '@shared/section-label/section-label';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
-import { StatusBadge, StatusBadgeTone } from '@shared/status-badge/status-badge';
-import { PlayerFormPanel, PlayerFormResult } from './player-form-panel/player-form-panel';
+import { StatusBadge } from '@shared/status-badge/status-badge';
+import { StatusBadgeTone } from '@shared/status-badge/status-badge.model';
+import { PlayerFormPanel } from './player-form-panel/player-form-panel';
+import { PlayerFormResult } from './player-form-panel/player-form-panel.model';
 
 /**
  * Backoffice roster screen.

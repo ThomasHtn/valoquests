@@ -1,5 +1,16 @@
+/**
+ * Milliseconds in one minute.
+ */
 const MILLISECONDS_PER_MINUTE = 60_000;
+
+/**
+ * Milliseconds in one hour.
+ */
 const MILLISECONDS_PER_HOUR = 60 * MILLISECONDS_PER_MINUTE;
+
+/**
+ * Milliseconds in one day.
+ */
 const MILLISECONDS_PER_DAY = 24 * MILLISECONDS_PER_HOUR;
 
 /**

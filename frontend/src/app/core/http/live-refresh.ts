@@ -1,27 +1,13 @@
 import { DOCUMENT, effect, inject, Service } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, fromEvent, interval } from 'rxjs';
-
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
-
 import { liveRefreshStamp } from './live-refresh.utils';
 import { reloadAll, resourceValue } from './resource-state.utils';
-
-/**
- * How often the roster is re-read to detect a change on the backend.
- */
-export const LIVE_REFRESH_POLL_MS = 60_000;
-
-/**
- * Delay between detecting a change and reloading the screens.
- *
- * A player's synchronization instant is written before the replay that follows it has committed, so
- * a reload fired the second the change is seen could still read the base as it stood before.
- */
-export const LIVE_REFRESH_SETTLE_MS = 20_000;
+import { LIVE_REFRESH_POLL_MS, LIVE_REFRESH_SETTLE_MS } from './live-refresh.constants';
 
 /**
  * Keeps every screen current without a page refresh.

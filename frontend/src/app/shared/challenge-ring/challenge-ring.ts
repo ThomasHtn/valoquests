@@ -1,35 +1,8 @@
 import { Component, computed, input } from '@angular/core';
-
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { ProgressCircle } from '@shared/progress-circle/progress-circle';
-
-/**
- * What the ring holds, in characters, measured against the 34px disc it encloses at `size-11`:
- * `text-2xs` runs ~6px per monospaced digit and `text-3xs tracking-tighter` ~5px, and a grouped
- * damage count spends a character on its thousands separator too. Past the wider of the two, no
- * type step left is still legible — a six-figure total is abbreviated instead.
- */
-const LABEL_FITS_AT_BASE_SIZE = 4;
-const LABEL_FITS_IN_RING = 6;
-
-/**
- * A single player's progress toward one challenge, the shape {@link ChallengeRing} needs to draw
- * itself — deliberately narrower than `RankingCell` (`pages/leaderboard/leaderboard.model.ts`), so
- * this shared component does not depend on that page's own model. `RankingCell` structurally
- * satisfies it as-is.
- */
-export interface ChallengeRingCell {
-  readonly categoryLabel: string;
-  readonly currentValueLabel: string;
-  readonly compactValueLabel: string;
-  readonly targetValueLabel: string | null;
-  readonly completionPercentage: number;
-  readonly completed: boolean;
-  readonly visual: {
-    readonly iconClass: string;
-    readonly badgeClass: string;
-  };
-}
+import { LABEL_FITS_AT_BASE_SIZE, LABEL_FITS_IN_RING } from './challenge-ring.constants';
+import { ChallengeRingCell } from './challenge-ring.model';
 
 /**
  * One cell of a challenge progress matrix: a ring closing clockwise toward its target, and once

@@ -1,11 +1,6 @@
 import { Service, signal } from '@angular/core';
-
 import { SnackbarMessage } from './snackbar.model';
-
-/**
- * Milliseconds a snackbar stays on screen before it is replaced by the next queued one.
- */
-export const SNACKBAR_DURATION_MS = 5_000;
+import { SNACKBAR_DURATION_MS } from './snackbar.constants';
 
 /**
  * Queues and exposes the application's snackbars.

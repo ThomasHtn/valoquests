@@ -17,8 +17,19 @@ export type ReadoutTone = 'live' | 'todo' | 'info';
  * One line of the plate's status strip: a label and its value, already translated.
  */
 export interface EmptyReadout {
+  /**
+   * How the readout’s dot reads.
+   */
   readonly tone: ReadoutTone;
+
+  /**
+   * Text shown to the reader, already translated.
+   */
   readonly label: string;
+
+  /**
+   * Value of the line.
+   */
   readonly value: string;
 }
 
@@ -29,9 +40,28 @@ export interface EmptyReadout {
  * straight through `app-empty-plate` where the empty case sits inside loaded content).
  */
 export interface EmptyPlate {
+  /**
+   * Drawing shown above the text.
+   */
   readonly illustration: EmptyIllustration;
+
+  /**
+   * Small caption over the title.
+   */
   readonly eyebrow: string;
+
+  /**
+   * Title of the plate.
+   */
   readonly title: string;
+
+  /**
+   * Explanation under the title.
+   */
   readonly text: string;
+
+  /**
+   * Status lines under the text.
+   */
   readonly readouts: readonly EmptyReadout[];
 }

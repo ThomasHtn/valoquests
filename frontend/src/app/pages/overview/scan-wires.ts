@@ -1,22 +1,6 @@
 import { afterNextRender, DestroyRef, Directive, ElementRef, inject } from '@angular/core';
-
 import { svgElement } from '@core/svg/svg-element.utils';
-
-/**
- * Point aimed at, in the planet drawing's own coordinates, and the report row it is wired to.
- */
-interface Mark {
-  readonly vx: number;
-  readonly vy: number;
-  readonly card: string;
-  readonly tone: string;
-}
-
-/**
- * A single callout: the wounded on the ground. The other readings point at nothing on the planet,
- * so they stay unwired.
- */
-const MARKS: readonly Mark[] = [{ vx: 215, vy: 150, card: 'ground', tone: '#d9954a' }];
+import { MARKS } from './scan-wires.constants';
 
 /**
  * Callout wires from the planet to the situation report: a marker on what it points at, a bent

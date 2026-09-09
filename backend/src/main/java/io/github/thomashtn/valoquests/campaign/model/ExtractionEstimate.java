@@ -74,6 +74,9 @@ public record ExtractionEstimate(
         return challengeRescued + extracted;
     }
 
+    /**
+     * Names what capped the extraction: nothing, the group left, or the stock that ran out first.
+     */
     private static ExtractionLimiter limiterOf(
         int woundedCount,
         int rescued,

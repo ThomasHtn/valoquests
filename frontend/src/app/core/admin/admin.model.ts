@@ -18,15 +18,34 @@ export type AdminPlayerStatus = PlayerStatus | 'ARCHIVED';
  * aggregated statistics.
  */
 export interface AdminPlayer {
+  /**
+   * Internal identifier.
+   */
   readonly id: number;
+
+  /**
+   * Riot ID game name, before the `#`.
+   */
   readonly gameName: string;
+
+  /**
+   * Riot ID tag line, after the `#`.
+   */
   readonly tagLine: string;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
 
   /**
    * Agent name backing the bundled avatar, or `null` when none was chosen.
    */
   readonly portrait: string | null;
+
+  /**
+   * Lifecycle status, archived included.
+   */
   readonly status: AdminPlayerStatus;
 
   /**
@@ -62,10 +81,29 @@ export interface AdminPlayer {
  * Identity of a player being added to the roster, as accepted by `POST /api/admin/players`.
  */
 export interface AdminPlayerCreateRequest {
+  /**
+   * Riot ID game name, before the `#`.
+   */
   readonly gameName: string;
+
+  /**
+   * Riot ID tag line, after the `#`.
+   */
   readonly tagLine: string;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
+
+  /**
+   * Bundled agent portrait name, or `null` when none was chosen.
+   */
   readonly portrait: string | null;
+
+  /**
+   * Status the player is created with.
+   */
   readonly status: AdminPlayerStatus;
 }
 
@@ -73,9 +111,24 @@ export interface AdminPlayerCreateRequest {
  * Editable identity of a tracked player, as accepted by `PUT /api/admin/players/{id}`.
  */
 export interface AdminPlayerUpdateRequest {
+  /**
+   * Riot ID game name, before the `#`.
+   */
   readonly gameName: string;
+
+  /**
+   * Riot ID tag line, after the `#`.
+   */
   readonly tagLine: string;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
+
+  /**
+   * Bundled agent portrait name, or `null` when none was chosen.
+   */
   readonly portrait: string | null;
 }
 
@@ -91,7 +144,14 @@ export type AdminPlayerDeletionOutcome = 'DELETED' | 'ARCHIVED';
  * Outcome of `DELETE /api/admin/players/{id}`.
  */
 export interface AdminPlayerDeletionResult {
+  /**
+   * Internal identifier of the player.
+   */
   readonly playerId: number;
+
+  /**
+   * What the deletion did.
+   */
   readonly outcome: AdminPlayerDeletionOutcome;
 }
 
@@ -111,13 +171,24 @@ export type SynchronizationStatus =
  * run: the command routes answer `202` and the walk outlives the request that started it.
  */
 export interface SynchronizationExecution {
+  /**
+   * Internal identifier.
+   */
   readonly id: number;
+
+  /**
+   * Kind of run, as named by the backend.
+   */
   readonly type: string;
 
   /**
    * Whether the run was started by hand or by the scheduler.
    */
   readonly trigger: 'SCHEDULED' | 'MANUAL';
+
+  /**
+   * Outcome of the run.
+   */
   readonly status: SynchronizationStatus;
 
   /**
@@ -129,10 +200,30 @@ export interface SynchronizationExecution {
    * ISO-8601 instant the run finished at, or `null` while it is still in flight.
    */
   readonly finishedAt: string | null;
+
+  /**
+   * Instant of the last run, ISO-8601, or `null` when none ran.
+   */
   readonly lastAttemptAt: string | null;
+
+  /**
+   * Instant of the last successful run, ISO-8601, or `null` when none succeeded.
+   */
   readonly lastSuccessfulSynchronizationAt: string | null;
+
+  /**
+   * Players the run covered.
+   */
   readonly playersProcessed: number;
+
+  /**
+   * Players whose synchronization failed.
+   */
   readonly failureCount: number;
+
+  /**
+   * Matches imported by the run.
+   */
   readonly matchesImported: number;
 
   /**
@@ -158,16 +249,59 @@ export const IN_FLIGHT_SYNCHRONIZATION_STATUSES: readonly SynchronizationStatus[
  * failed and why.
  */
 export interface SynchronizationDetails {
+  /**
+   * Internal identifier.
+   */
   readonly id: number;
+
+  /**
+   * Kind of run, as named by the backend.
+   */
   readonly type: string;
+
+  /**
+   * What started the run: the scheduler or an operator.
+   */
   readonly trigger: 'SCHEDULED' | 'MANUAL';
+
+  /**
+   * Outcome of the run.
+   */
   readonly status: SynchronizationStatus;
+
+  /**
+   * Start instant, ISO-8601, or `null` before the run started.
+   */
   readonly startedAt: string | null;
+
+  /**
+   * End instant, ISO-8601, or `null` while running.
+   */
   readonly finishedAt: string | null;
+
+  /**
+   * Players the run covered.
+   */
   readonly playersProcessed: number;
+
+  /**
+   * Players whose synchronization failed.
+   */
   readonly failureCount: number;
+
+  /**
+   * Matches imported by the run.
+   */
   readonly matchesImported: number;
+
+  /**
+   * Stored failure message, or `null` when none.
+   */
   readonly errorMessage: string | null;
+
+  /**
+   * One result per player the run covered.
+   */
   readonly players: readonly SynchronizationPlayerResult[];
 }
 
@@ -177,11 +311,34 @@ export interface SynchronizationDetails {
  * Mirrors the backend `SynchronizationDetailsResponse.PlayerResultResponse`.
  */
 export interface SynchronizationPlayerResult {
+  /**
+   * Internal identifier of the player.
+   */
   readonly playerId: number;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
+
+  /**
+   * Outcome for this player.
+   */
   readonly status: SynchronizationStatus;
+
+  /**
+   * Henrik pages fetched for the player.
+   */
   readonly pagesFetched: number;
+
+  /**
+   * Matches imported by the run.
+   */
   readonly matchesImported: number;
+
+  /**
+   * Stored failure message, or `null` when none.
+   */
   readonly errorMessage: string | null;
 
   /**
@@ -197,8 +354,19 @@ export interface SynchronizationPlayerResult {
  * Mirrors the backend `CampaignAdminResponse`.
  */
 export interface CampaignAdmin {
+  /**
+   * Internal identifier.
+   */
   readonly id: number;
+
+  /**
+   * Ordinal of the campaign, first one being 1.
+   */
   readonly number: number;
+
+  /**
+   * Lifecycle status of the campaign.
+   */
   readonly status: CampaignStatus;
 
   /**
@@ -215,8 +383,20 @@ export interface CampaignAdmin {
    * Day the campaign was frozen on when stopped early, or `null`.
    */
   readonly stoppedOn: string | null;
+
+  /**
+   * Reference figure the squad was calibrated on.
+   */
   readonly reference: number;
+
+  /**
+   * Tier the squad was measured at.
+   */
   readonly tier: CampaignTier;
+
+  /**
+   * Players on the roster.
+   */
   readonly rosterSize: number;
 }
 
@@ -226,13 +406,24 @@ export interface CampaignAdmin {
  * Mirrors the backend `PlayerCalibration`.
  */
 export interface PlayerCalibration {
+  /**
+   * Internal identifier of the player.
+   */
   readonly playerId: number;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
 
   /**
    * Average weekly output over the window, in guardian damage.
    */
   readonly weeklyAverage: number;
+
+  /**
+   * Weeks of history the calibration counted.
+   */
   readonly weeksCounted: number;
 
   /**
@@ -257,14 +448,33 @@ export interface PlayerCalibration {
  * Mirrors the backend `SquadCalibrationResponse`.
  */
 export interface SquadCalibration {
+  /**
+   * Reference figure the squad was calibrated on.
+   */
   readonly reference: number;
+
+  /**
+   * Tier the squad was measured at.
+   */
   readonly tier: CampaignTier;
+
+  /**
+   * Volume factor applied to the reference.
+   */
   readonly volumeFactor: number;
+
+  /**
+   * Months of history the calibration read.
+   */
   readonly windowMonths: number;
 
   /**
    * First day of the window, as an ISO-8601 date (`YYYY-MM-DD`).
    */
   readonly firstDay: string;
+
+  /**
+   * One calibration line per player.
+   */
   readonly players: readonly PlayerCalibration[];
 }

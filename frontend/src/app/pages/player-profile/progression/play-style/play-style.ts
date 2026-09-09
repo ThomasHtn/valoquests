@@ -1,41 +1,11 @@
 import { Component, computed, inject, input } from '@angular/core';
-
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { formatHeadshotPercentage } from '@core/players/player-format.utils';
 import { AimBreakdown } from '@core/players/player-progression.model';
 import { Tooltip } from '@shared/tooltip/tooltip';
-
-/**
- * One zone of the target dummy, with the share of hits it took.
- */
-interface AimZone {
-  /**
-   * Translation key suffix naming the zone.
-   */
-  readonly key: 'head' | 'body' | 'legs';
-
-  /**
-   * Share of registered hits that landed there, as a percentage.
-   */
-  readonly percentage: number;
-
-  /**
-   * The share, formatted for display.
-   */
-  readonly label: string;
-
-  /**
-   * Fill opacity of the zone on the silhouette, between the faintest tint and a full flat.
-   */
-  readonly opacity: number;
-}
-
-/**
- * Faintest a zone is drawn, so a zone that takes almost nothing still reads as part of the figure
- * rather than as a hole in it.
- */
-const MINIMUM_OPACITY = 0.16;
+import { AimZone } from './play-style.model';
+import { MINIMUM_OPACITY } from './play-style.constants';
 
 /**
  * Where a player's shots land, drawn on a range-target dummy.

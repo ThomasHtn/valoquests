@@ -1,15 +1,6 @@
 import { Component, computed, input } from '@angular/core';
-
-/**
- * What an inline message reports, each mapped to one rule color below.
- */
-export type InlineMessageTone = 'info' | 'success' | 'danger';
-
-const TONE_CLASS: Record<InlineMessageTone, string> = {
-  info: 'border-brand-500/60 text-text-secondary',
-  success: 'border-success/60 text-success',
-  danger: 'border-danger/60 text-danger',
-};
+import { InlineMessageTone } from './inline-message.model';
+import { TONE_CLASS } from './inline-message.constants';
 
 /**
  * A line of feedback attached to the block it concerns: the outcome of a backoffice command, the

@@ -4,7 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, it, vi } from 'vitest';
 
 import { API_ENDPOINTS } from './api-endpoints';
-import { LIVE_REFRESH_POLL_MS, LIVE_REFRESH_SETTLE_MS, LiveRefresh } from './live-refresh';
+import { LiveRefresh } from './live-refresh';
+import { LIVE_REFRESH_POLL_MS, LIVE_REFRESH_SETTLE_MS } from './live-refresh.constants';
 
 /**
  * The resources the service reloads, by the URL each one requests.

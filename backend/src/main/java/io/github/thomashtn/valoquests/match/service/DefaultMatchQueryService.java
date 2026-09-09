@@ -167,6 +167,9 @@ public class DefaultMatchQueryService implements MatchQueryService {
             .collect(Collectors.toMap(ValuedMatch::playerMatchId, Function.identity()));
     }
 
+    /**
+     * Maps one match, with its value once the day's ladder priced it.
+     */
     private MatchResponse toResponse(
         PlayerMatch playerMatch,
         Map<Long, ValuedMatch> valuedByPlayerMatchId
@@ -257,6 +260,9 @@ public class DefaultMatchQueryService implements MatchQueryService {
         );
     }
 
+    /**
+     * Maps another tracked player of the same match, flagged when on the same team.
+     */
     private MatchTeammateResponse toTeammateResponse(PlayerMatch playerMatch, PlayerMatch other) {
         boolean sameTeam = playerMatch.getTeamId() != null
             && playerMatch.getTeamId().equalsIgnoreCase(other.getTeamId());
@@ -274,11 +280,17 @@ public class DefaultMatchQueryService implements MatchQueryService {
         );
     }
 
+    /**
+     * Kills and assists over deaths, two decimals, deaths floored at one.
+     */
     private BigDecimal kdaOf(PlayerMatch playerMatch) {
         return BigDecimal.valueOf(playerMatch.getKills() + playerMatch.getAssists())
             .divide(BigDecimal.valueOf(Math.max(1, playerMatch.getDeaths())), 2, RoundingMode.HALF_UP);
     }
 
+    /**
+     * Share of hits on the head, in percent, zero without a hit.
+     */
     private BigDecimal headshotPercentageOf(PlayerMatch playerMatch) {
         int shots = playerMatch.getHeadshots() + playerMatch.getBodyshots() + playerMatch.getLegshots();
         return shots == 0 ? BigDecimal.ZERO : BigDecimal.valueOf(playerMatch.getHeadshots())
@@ -286,16 +298,25 @@ public class DefaultMatchQueryService implements MatchQueryService {
             .divide(BigDecimal.valueOf(shots), 2, RoundingMode.HALF_UP);
     }
 
+    /**
+     * Rounds won by the player's team.
+     */
     private Integer allyScore(PlayerMatch playerMatch) {
         boolean redTeam = "Red".equalsIgnoreCase(playerMatch.getTeamId());
         return redTeam ? playerMatch.getMatch().getRedScore() : playerMatch.getMatch().getBlueScore();
     }
 
+    /**
+     * Rounds won by the opposing team.
+     */
     private Integer enemyScore(PlayerMatch playerMatch) {
         boolean redTeam = "Red".equalsIgnoreCase(playerMatch.getTeamId());
         return redTeam ? playerMatch.getMatch().getBlueScore() : playerMatch.getMatch().getRedScore();
     }
 
+    /**
+     * Reads the result filter, {@code null} when absent.
+     */
     private MatchResult parseResult(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -307,6 +328,9 @@ public class DefaultMatchQueryService implements MatchQueryService {
         }
     }
 
+    /**
+     * Reads the game mode filter, {@code null} when absent.
+     */
     private GameMode parseGameMode(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -321,6 +345,9 @@ public class DefaultMatchQueryService implements MatchQueryService {
         }
     }
 
+    /**
+     * Trims a filter, {@code null} when blank.
+     */
     private String normalize(String value) {
         return value == null || value.isBlank() ? null : value.trim();
     }

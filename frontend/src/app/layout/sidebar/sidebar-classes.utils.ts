@@ -12,31 +12,57 @@
  * Utilities driven by the rail's collapsed state.
  */
 export interface RailClasses {
-  /** Rail width: icons only, or icons and labels. */
+  /**
+   * Rail width: icons only, or icons and labels.
+   */
   readonly width: string;
-  /** Cursor over empty rail space while collapsed, signalling that a click re-expands it. */
+  /**
+   * Cursor over empty rail space while collapsed, signalling that a click re-expands it.
+   */
   readonly cursor: string;
-  /** Wordmark block, replaced by the "V" mark on a collapsed rail. */
+  /**
+   * Wordmark block, replaced by the "V" mark on a collapsed rail.
+   */
   readonly brandBlock: string;
-  /** Last-synchronization block, hidden in favour of its icon-only counterpart. */
+  /**
+   * Last-synchronization block, hidden in favour of its icon-only counterpart.
+   */
   readonly syncBlock: string;
-  /** Version line, the least essential thing in the footer. */
+  /**
+   * Version line, the least essential thing in the footer.
+   */
   readonly version: string;
-  /** Navigation entry alignment: centered icon once collapsed, leading otherwise. */
+  /**
+   * Navigation entry alignment: centered icon once collapsed, leading otherwise.
+   */
   readonly navItem: string;
-  /** Navigation label, kept in the DOM so the tab bar shares the same markup. */
+  /**
+   * Navigation label, kept in the DOM so the tab bar shares the same markup.
+   */
   readonly navLabel: string;
-  /** Chapter caption, replaced by a hairline on a collapsed rail. */
+  /**
+   * Chapter caption, replaced by a hairline on a collapsed rail.
+   */
   readonly navGroupLabel: string;
-  /** Hairline between chapters, shown only on a collapsed rail. */
+  /**
+   * Hairline between chapters, shown only on a collapsed rail.
+   */
   readonly navGroupRule: string;
-  /** Footer row: stacked and centered on a collapsed rail, a left/right row elsewhere. */
+  /**
+   * Footer row: stacked and centered on a collapsed rail, a left/right row elsewhere.
+   */
   readonly footerContent: string;
-  /** Language trigger size: a centered icon-only square on a collapsed rail. */
+  /**
+   * Language trigger size: a centered icon-only square on a collapsed rail.
+   */
   readonly languageButton: string;
-  /** Language code beside the trigger's icon, no room for it on a collapsed rail. */
+  /**
+   * Language code beside the trigger's icon, no room for it on a collapsed rail.
+   */
   readonly languageCode: string;
-  /** Language panel: opens into the content on a collapsed rail, too narrow to center it. */
+  /**
+   * Language panel: opens into the content on a collapsed rail, too narrow to center it.
+   */
   readonly languagePanel: string;
 }
 
@@ -51,7 +77,9 @@ export interface DrawerClasses {
    * the moment it opens) and only after the slide on the way out.
    */
   readonly panel: string;
-  /** Scrim behind the drawer, timed the same way. */
+  /**
+   * Scrim behind the drawer, timed the same way.
+   */
   readonly scrim: string;
 }
 

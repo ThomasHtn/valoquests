@@ -14,8 +14,19 @@ export type PlayerStatus = 'ACTIVE' | 'INACTIVE';
  * synchronization timestamp, and by the players list screen for identity and statistics fields.
  */
 export interface PlayerSummary {
+  /**
+   * Internal identifier.
+   */
   readonly id: number;
+
+  /**
+   * Full Riot ID, `gameName#tagLine`.
+   */
   readonly riotId: string;
+
+  /**
+   * Name shown across the application.
+   */
   readonly displayName: string;
 
   /**
@@ -23,6 +34,10 @@ export interface PlayerSummary {
    * yet synchronized.
    */
   readonly portrait: string | null;
+
+  /**
+   * Competitive rank held.
+   */
   readonly competitiveTier: CompetitiveTier;
 
   /**
@@ -44,7 +59,15 @@ export interface PlayerSummary {
    * Headshot rate as a percentage, or `null` when not yet synchronized.
    */
   readonly headshotPercentage: number | null;
+
+  /**
+   * Matches played.
+   */
   readonly matchesPlayed: number;
+
+  /**
+   * Whether the player is active or paused.
+   */
   readonly status: PlayerStatus;
 
   /**

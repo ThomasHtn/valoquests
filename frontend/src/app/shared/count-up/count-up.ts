@@ -1,15 +1,7 @@
 import { Directive, effect, ElementRef, inject, input } from '@angular/core';
-
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { Translation } from '@core/i18n/translation';
-
-/**
- * How long a figure takes to reach its value, in milliseconds.
- *
- * Long enough to be read as a climb rather than a flicker, short enough that nobody waits on it. The
- * figure is legible throughout — this is not a loading state.
- */
-const DURATION_MS = 900;
+import { DURATION_MS } from './count-up.constants';
 
 /**
  * Counts a figure up to its value instead of printing it outright.

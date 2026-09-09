@@ -16,7 +16,7 @@ import {
   prefersReducedMotion,
   registerChartComponents,
   resolveChartTheme,
-} from './chart-theme';
+} from './chart-theme.utils';
 import { ChartGaugeSegment } from './chart.model';
 
 /**

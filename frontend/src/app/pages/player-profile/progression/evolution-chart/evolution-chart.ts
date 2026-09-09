@@ -1,5 +1,4 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
-
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { formatSeasonName } from '@core/matches/season-name.utils';
@@ -10,22 +9,14 @@ import {
 } from '@core/players/player-format.utils';
 import { SeasonEvolution } from '@core/players/player-progression.model';
 import { LineChart } from '@shared/chart/line-chart';
-import { resolveSeriesColor } from '@shared/chart/chart-theme';
+import { resolveSeriesColor } from '@shared/chart/chart-theme.utils';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import {
   buildEvolutionSeries,
   EVOLUTION_METRICS,
   EvolutionMetric,
 } from '../evolution-series.utils';
-
-/**
- * One row of the chart's legend: a season, its color, and the average it held over that season.
- */
-interface EvolutionLegendEntry {
-  readonly label: string;
-  readonly color: string;
-  readonly average: string;
-}
+import { EvolutionLegendEntry } from './evolution-chart.model';
 
 /**
  * Match-by-match evolution of one metric, across the selected seasons.

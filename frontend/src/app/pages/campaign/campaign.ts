@@ -18,7 +18,7 @@ import { PlayersApi } from '@core/players/players-api';
 import { PageHeader } from '@layout/page-header/page-header';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { ROCKET_PART_COUNT } from '@shared/rocket/rocket-drawing';
+import { ROCKET_PART_COUNT } from '@shared/rocket/rocket-drawing.constants';
 import { SectionRule } from '@shared/section-rule/section-rule';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { BaseReserves } from './base-reserves/base-reserves';

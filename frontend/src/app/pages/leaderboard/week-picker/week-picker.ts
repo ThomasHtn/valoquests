@@ -14,8 +14,7 @@ import { LucideChevronDown, LucideChevronLeft, LucideChevronRight } from '@lucid
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
 import { WeekOption } from '../leaderboard.model';
-
-let nextId = 0;
+import { nextInstanceId } from '@core/dom/instance-id.utils';
 
 /**
  * The week the board shows, and the way to any other: arrows to step through them one at a time,
@@ -56,7 +55,7 @@ export class WeekPicker {
 
   public readonly selectedChange = output<string>();
 
-  protected readonly listboxId = `week-picker-${nextId++}`;
+  protected readonly listboxId = nextInstanceId('week-picker');
 
   protected readonly isOpen = signal(false);
 

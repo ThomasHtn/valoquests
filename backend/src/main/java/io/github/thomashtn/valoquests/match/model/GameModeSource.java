@@ -31,6 +31,9 @@ public enum GameModeSource {
      */
     UNKNOWN(0);
 
+    /**
+     * Trust order between sources: a higher value overrides a lower one.
+     */
     private final int priority;
 
     GameModeSource(int priority) {

@@ -12,3 +12,17 @@
  */
 export const TOOLTIP_SURFACE_CLASS =
   'notch-tr border-l-2 border-brand-500/50 bg-surface-sunken text-text-primary [--notch:0.375rem]';
+
+/**
+ * Distance in pixels between the host element and its tooltip.
+ */
+export const OFFSET = 8;
+
+/**
+ * Delay a tooltip hung off a whole block waits before opening, in milliseconds.
+ *
+ * Long enough that crossing the block on the way somewhere else never opens the bubble, short
+ * enough that stopping on it to ask "what is this" does not feel like waiting. Shared so the two
+ * overview blocks answer at the same pace rather than each picking a number.
+ */
+export const BLOCK_TOOLTIP_DELAY_MS = 400;

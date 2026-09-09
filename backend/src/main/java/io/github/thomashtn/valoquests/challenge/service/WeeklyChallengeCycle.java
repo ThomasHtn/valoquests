@@ -19,6 +19,9 @@ import java.util.Set;
  */
 final class WeeklyChallengeCycle {
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private WeeklyChallengeCycle() {
     }
 

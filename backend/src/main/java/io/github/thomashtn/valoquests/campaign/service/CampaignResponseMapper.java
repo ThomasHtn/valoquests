@@ -31,6 +31,9 @@ final class CampaignResponseMapper {
      */
     static final int GUARDIAN_LOSS_PERCENT = (int) Math.round(CampaignRuleset.GUARDIAN_LOSS_RATE * PERCENT);
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private CampaignResponseMapper() {
     }
 
@@ -156,6 +159,9 @@ final class CampaignResponseMapper {
             .toList();
     }
 
+    /**
+     * The base at the end of one week, or {@code null} when none of its days were replayed.
+     */
     private static CampaignWeekBaseResponse weekBase(
         CampaignWeek week,
         List<CampaignDailySnapshot> days,
@@ -182,6 +188,9 @@ final class CampaignResponseMapper {
         );
     }
 
+    /**
+     * Maps one week, hiding the guardian while it is not revealed.
+     */
     private static CampaignWeekResponse week(CampaignWeek week, CampaignWeekBaseResponse base, boolean revealed) {
         return new CampaignWeekResponse(
             week.getWeekIndex(),
@@ -209,6 +218,9 @@ final class CampaignResponseMapper {
         );
     }
 
+    /**
+     * The match that finished the guardian, seen from the operator's side, or {@code null}.
+     */
     private static FatalBlowResponse fatalBlow(PlayerMatch playerMatch) {
         if (playerMatch == null) {
             return null;

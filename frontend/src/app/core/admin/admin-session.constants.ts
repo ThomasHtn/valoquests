@@ -1,3 +1,5 @@
+import { environment } from '@env/environment';
+
 /**
  * `sessionStorage` key under which the administrator key is held while the backoffice is open.
  *
@@ -21,3 +23,8 @@ export const ADMIN_LOGIN_ROUTE = '/admin/login';
  * Route the backoffice opens on once a session has been established.
  */
 export const ADMIN_HOME_ROUTE = '/admin/operations';
+
+/**
+ * URL prefix identifying the administration API.
+ */
+export const ADMIN_API_PREFIX = `${environment.apiBaseUrl}/admin`;

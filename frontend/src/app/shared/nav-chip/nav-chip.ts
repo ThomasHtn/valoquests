@@ -1,16 +1,6 @@
 import { Directive, computed, input } from '@angular/core';
-
-/**
- * Weight a navigation chip carries: the bordered default, or the one filled control that moves the
- * reader forward (the guided tour's next/finish).
- */
-export type NavChipVariant = 'outline' | 'solid';
-
-const VARIANT_CLASS: Record<NavChipVariant, string> = {
-  outline:
-    'px-4 font-medium text-text-muted hover:text-text-primary disabled:cursor-default disabled:opacity-35 disabled:hover:text-text-muted',
-  solid: 'bg-brand-500 px-5 font-bold text-surface-950 hover:bg-brand-400',
-};
+import { NavChipVariant } from './nav-chip.model';
+import { VARIANT_CLASS } from './nav-chip.constants';
 
 /**
  * The "way back / way on" chip: the guided tour's skip, previous and next controls, the player

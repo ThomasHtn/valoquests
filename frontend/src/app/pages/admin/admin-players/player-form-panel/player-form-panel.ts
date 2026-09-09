@@ -1,6 +1,5 @@
 import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
 import { LucideLoaderCircle } from '@lucide/angular';
-
 import { AdminPlayer, AdminPlayerStatus } from '@core/admin/admin.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -11,29 +10,8 @@ import { Drawer } from '@shared/drawer/drawer';
 import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
 import { TextField, TextFieldInput } from '@shared/text-field/text-field';
-
-/**
- * Value the portrait dropdown holds when no avatar is associated.
- *
- * The dropdown carries the "no avatar" case as an option of its own rather than as an unset value:
- * `app-select` renders an unset value as an icon-only trigger, which would read as "nothing chosen
- * yet" instead of the deliberate choice it is here.
- */
-const NO_PORTRAIT = '';
-
-/**
- * Identity the operator submitted, before it is turned into a create or update request.
- */
-export interface PlayerFormResult {
-  readonly gameName: string;
-  readonly tagLine: string;
-
-  /**
-   * Agent name backing the bundled avatar, or `null` when none was chosen.
-   */
-  readonly portrait: string | null;
-  readonly status: AdminPlayerStatus;
-}
+import { NO_PORTRAIT } from './player-form-panel.constants';
+import { PlayerFormResult } from './player-form-panel.model';
 
 /**
  * Right-anchored drawer for adding or editing a roster player, opened from a row or from the

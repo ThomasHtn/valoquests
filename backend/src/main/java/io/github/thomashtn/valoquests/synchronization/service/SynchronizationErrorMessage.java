@@ -18,6 +18,9 @@ final class SynchronizationErrorMessage {
      */
     private static final String FALLBACK = "Synchronization failed";
 
+    /**
+     * Not instantiable: static helpers only.
+     */
     private SynchronizationErrorMessage() {
     }
 

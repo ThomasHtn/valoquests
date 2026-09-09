@@ -10,6 +10,7 @@ import {
 import { createSeededRandom } from '@core/random/seeded-random.utils';
 import { svgElement as el } from '@core/svg/svg-element.utils';
 import { PlanetState } from '../campaign.model';
+import { nextInstanceId } from '@core/dom/instance-id.utils';
 import {
   AHEAD_FILL,
   AHEAD_STROKE,
@@ -20,8 +21,6 @@ import {
   RING_PLATE,
   SEA_COUNT,
 } from './planet-orb.constants';
-
-let nextId = 0;
 
 /**
  * One planet of the strip: its ground, a few dark seas, its shading, and the ring of the
@@ -54,8 +53,12 @@ export class PlanetOrb {
 
   private readonly orb = viewChild.required<ElementRef<SVGSVGElement>>('orb');
 
-  /** Unique gradient id: several orbs share the page, and gradient ids are global to it. */
-  private readonly id = `orb-${nextId++}`;
+  /**
+
+   * Unique gradient id: several orbs share the page, and gradient ids are global to it.
+
+   */
+  private readonly id = nextInstanceId('orb');
 
   constructor() {
     afterRenderEffect(() => this.draw(this.orb().nativeElement));
