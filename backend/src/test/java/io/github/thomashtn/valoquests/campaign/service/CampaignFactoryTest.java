@@ -15,7 +15,7 @@ import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
 import io.github.thomashtn.valoquests.campaign.model.NewCampaign;
 import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScaling;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import java.time.Clock;
@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Verifies that opening a campaign decides the whole of its ten weeks, once.
@@ -61,7 +60,6 @@ class CampaignFactoryTest {
             guardianRepository,
             new CampaignRuleset(),
             new DefaultScoringRuleset(),
-            new SkillAnchorCodec(JsonMapper.builder().build()),
             Clock.fixed(CampaignFixtures.OPENED_AT, ZoneOffset.UTC)
         );
     }
@@ -194,7 +192,7 @@ class CampaignFactoryTest {
         return new SquadCalibration(
             CampaignFixtures.REFERENCE,
             CampaignTier.NORMAL,
-            ChallengeScaling.NONE,
+            SquadLevel.REFERENCE,
             9,
             FIRST_WEEK_START.minusMonths(9),
             List.of()

@@ -10,6 +10,7 @@ import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
 import io.github.thomashtn.valoquests.campaign.service.AsyncHistoryBackfillRunner;
 import io.github.thomashtn.valoquests.campaign.service.CampaignLifecycleService;
 import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -83,6 +85,7 @@ public class CampaignAdminController {
     /**
      * Measures the squad without committing to anything.
      *
+     * @param level squad level the preview is computed for
      * @return the calibration a campaign opened today would be given
      */
     @GetMapping("/calibration")
@@ -97,13 +100,15 @@ public class CampaignAdminController {
             """
     )
     @ApiResponse(responseCode = "200", description = "Calibration computed successfully.")
-    public SquadCalibrationResponse previewCalibration() {
-        SquadCalibration calibration = lifecycleService.previewCalibration();
+    public SquadCalibrationResponse previewCalibration(
+        @RequestParam(defaultValue = "REFERENCE") SquadLevel level
+    ) {
+        SquadCalibration calibration = lifecycleService.previewCalibration(level);
 
         return new SquadCalibrationResponse(
             calibration.reference(),
             calibration.tier(),
-            calibration.scaling().volumeFactor(),
+            calibration.level(),
             calibration.windowMonths(),
             calibration.firstDay(),
             calibration.players()
@@ -134,6 +139,7 @@ public class CampaignAdminController {
     /**
      * Opens a campaign starting the Monday after today.
      *
+     * @param level squad level the campaign plays its challenges at
      * @return the campaign that was opened
      */
     @PostMapping
@@ -145,12 +151,17 @@ public class CampaignAdminController {
             guardians. The campaign starts the following Monday and runs for ten weeks.
 
             Refused while another campaign is opened or running, and refused on an empty roster.
+
+            The level decides which of the two grids written in the catalogue the campaign's
+            challenges are drawn from, and is frozen with the rest of the calibration.
             """
     )
     @ApiResponse(responseCode = "201", description = "Campaign opened successfully.")
     @ApiResponse(responseCode = "409", description = "A campaign is already live, or no operator is active.")
-    public CampaignAdminResponse openCampaign() {
-        return toResponse(lifecycleService.open());
+    public CampaignAdminResponse openCampaign(
+        @RequestParam(defaultValue = "REFERENCE") SquadLevel level
+    ) {
+        return toResponse(lifecycleService.open(level));
     }
 
     /**
@@ -175,6 +186,7 @@ public class CampaignAdminController {
     /**
      * Measures the squad again and resizes the live campaign's unsettled weeks.
      *
+     * @param level squad level the campaign plays its challenges at
      * @return the campaign, recalibrated and replayed
      */
     @PostMapping("/recalibrate")
@@ -190,8 +202,10 @@ public class CampaignAdminController {
     )
     @ApiResponse(responseCode = "200", description = "Campaign recalibrated successfully.")
     @ApiResponse(responseCode = "409", description = "No campaign is live, or the window is not covered.")
-    public CampaignAdminResponse recalibrateCampaign() {
-        Campaign campaign = lifecycleService.recalibrate();
+    public CampaignAdminResponse recalibrateCampaign(
+        @RequestParam(defaultValue = "REFERENCE") SquadLevel level
+    ) {
+        Campaign campaign = lifecycleService.recalibrate(level);
         replayService.replay(campaign);
 
         return toResponse(campaign);

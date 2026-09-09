@@ -11,7 +11,7 @@ import io.github.thomashtn.valoquests.campaign.exception.CampaignLifecycleExcept
 import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.model.PlayerCalibration;
 import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
-import io.github.thomashtn.valoquests.challenge.model.SkillAnchor;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.match.model.GameMode;
@@ -24,7 +24,6 @@ import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationRepository;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -109,7 +108,8 @@ class SquadCalibrationServiceTest {
         produces(heavy, HEAVY_TOTAL);
         noMatches(light, medium, heavy);
 
-        SquadCalibration calibration = service.calibrate(List.of(light, medium, heavy), REFERENCE_DAY);
+        SquadCalibration calibration =
+            service.calibrate(List.of(light, medium, heavy), REFERENCE_DAY, SquadLevel.REFERENCE);
 
         assertThat(calibration.reference()).isEqualTo(3_500);
         assertThat(calibration.tier()).isEqualTo(CampaignTier.NORMAL);
@@ -129,7 +129,7 @@ class SquadCalibrationServiceTest {
         produces(quiet, LIGHT_TOTAL);
         noMatches(quiet);
 
-        SquadCalibration calibration = service.calibrate(List.of(quiet), REFERENCE_DAY);
+        SquadCalibration calibration = service.calibrate(List.of(quiet), REFERENCE_DAY, SquadLevel.REFERENCE);
 
         assertThat(calibration.reference()).isEqualTo(3_500);
         assertThat(calibration.tier()).isEqualTo(CampaignTier.NORMAL);
@@ -149,7 +149,7 @@ class SquadCalibrationServiceTest {
         producesAnyWindow(recent, 0);
         noMatches(veteran, recent);
 
-        SquadCalibration calibration = service.calibrate(List.of(veteran, recent), REFERENCE_DAY);
+        SquadCalibration calibration = service.calibrate(List.of(veteran, recent), REFERENCE_DAY, SquadLevel.REFERENCE);
 
         assertThat(calibration.windowMonths()).isEqualTo(4);
         assertThat(calibration.firstDay()).isEqualTo(REFERENCE_DAY.minusMonths(4));
@@ -169,7 +169,7 @@ class SquadCalibrationServiceTest {
         when(synchronizationRepository.existsByTypeAndStatusIn(eq(SynchronizationType.HISTORY_BACKFILL), any()))
             .thenReturn(false);
 
-        assertThatThrownBy(() -> service.calibrateCovered(List.of(recent), REFERENCE_DAY))
+        assertThatThrownBy(() -> service.calibrateCovered(List.of(recent), REFERENCE_DAY, SquadLevel.REFERENCE))
             .isInstanceOf(CampaignLifecycleException.class)
             .hasMessageContaining("backfill");
     }
@@ -185,7 +185,8 @@ class SquadCalibrationServiceTest {
         when(synchronizationRepository.existsByTypeAndStatusIn(eq(SynchronizationType.HISTORY_BACKFILL), any()))
             .thenReturn(true);
 
-        assertThat(service.calibrateCovered(List.of(recent), REFERENCE_DAY).windowMonths()).isEqualTo(4);
+        assertThat(service.calibrateCovered(List.of(recent), REFERENCE_DAY, SquadLevel.REFERENCE).windowMonths())
+            .isEqualTo(4);
     }
 
     @Test
@@ -206,7 +207,8 @@ class SquadCalibrationServiceTest {
         produces(beginner, 0);
         noMatches(light, heavy, beginner);
 
-        SquadCalibration calibration = service.calibrate(List.of(light, heavy, beginner), REFERENCE_DAY);
+        SquadCalibration calibration =
+            service.calibrate(List.of(light, heavy, beginner), REFERENCE_DAY, SquadLevel.REFERENCE);
 
         assertThat(calibration.windowMonths()).isEqualTo(9);
         assertThat(calibration.players())
@@ -229,7 +231,7 @@ class SquadCalibrationServiceTest {
         produces(unknown, 0);
         noMatches(known, unknown);
 
-        SquadCalibration calibration = service.calibrate(List.of(known, unknown), REFERENCE_DAY);
+        SquadCalibration calibration = service.calibrate(List.of(known, unknown), REFERENCE_DAY, SquadLevel.REFERENCE);
 
         assertThat(calibration.players().get(1).beginner()).isTrue();
         assertThat(calibration.players().get(1).earliestMatchDay()).isNull();
@@ -237,45 +239,9 @@ class SquadCalibrationServiceTest {
     }
 
     @Test
-    @DisplayName("Bounds the volume factor so a quiet or a heavy squad still gets readable targets")
-    void shouldBoundTheVolumeFactor() {
-        Player quiet = player(1, "Alpha");
-
-        covered(quiet);
-        produces(quiet, 0);
-        noMatches(quiet);
-
-        SquadCalibration calibration = service.calibrate(List.of(quiet), REFERENCE_DAY);
-
-        // The reference floor of 3 500 bounds a quiet squad before the factor's own minimum does.
-        assertThat(calibration.scaling().volumeFactor()).isEqualByComparingTo(new BigDecimal("0.6604"));
-    }
-
-    @Test
-    @DisplayName("Measures the squad's talent as a median of medians, never as a volume")
-    void shouldMeasureTalentAnchors() {
-        Player steady = player(1, "Alpha");
-        Player spiky = player(2, "Bravo");
-
-        covered(steady, spiky);
-        produces(steady, LIGHT_TOTAL);
-        produces(spiky, LIGHT_TOTAL);
-        when(playerMatchRepository.findForChallengePeriod(eq(1L), any(), any()))
-            .thenReturn(List.of(competitive(10), competitive(20)));
-        when(playerMatchRepository.findForChallengePeriod(eq(2L), any(), any()))
-            .thenReturn(List.of(competitive(30), competitive(30), competitive(30)));
-
-        SquadCalibration calibration = service.calibrate(List.of(steady, spiky), REFERENCE_DAY);
-
-        // Steady's median is 15, spiky's is 30: the squad's is their average, 22.5, rounded to 23.
-        assertThat(calibration.scaling().anchor(SkillAnchor.LONG_KILLS))
-            .contains(BigDecimal.valueOf(23));
-    }
-
-    @Test
     @DisplayName("Refuses to calibrate an empty roster")
     void shouldRefuseAnEmptyRoster() {
-        assertThatThrownBy(() -> service.calibrate(List.of(), REFERENCE_DAY))
+        assertThatThrownBy(() -> service.calibrate(List.of(), REFERENCE_DAY, SquadLevel.REFERENCE))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("empty roster");
     }

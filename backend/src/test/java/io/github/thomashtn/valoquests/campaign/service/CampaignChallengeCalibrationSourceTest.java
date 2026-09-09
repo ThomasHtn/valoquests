@@ -8,6 +8,7 @@ import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Verifies what challenges are priced against, in a campaign and between two of them.
@@ -34,7 +34,6 @@ class CampaignChallengeCalibrationSourceTest {
     void setUp() {
         source = new CampaignChallengeCalibrationSource(
             campaignRepository,
-            new SkillAnchorCodec(JsonMapper.builder().build()),
             new DefaultScoringRuleset()
         );
     }
@@ -91,6 +90,6 @@ class CampaignChallengeCalibrationSourceTest {
 
         assertThat(calibration.reference()).isEqualTo(new DefaultScoringRuleset().referenceFloor());
         assertThat(calibration.weekIndex()).isEqualTo(1);
-        assertThat(calibration.scaling().anchors()).isEmpty();
+        assertThat(calibration.level()).isEqualTo(SquadLevel.REFERENCE);
     }
 }

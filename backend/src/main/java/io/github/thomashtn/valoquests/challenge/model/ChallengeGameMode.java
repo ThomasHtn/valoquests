@@ -42,7 +42,12 @@ public enum ChallengeGameMode {
     /**
      * Includes team deathmatch matches.
      */
-    TEAM_DEATHMATCH;
+    TEAM_DEATHMATCH,
+
+    /**
+     * Only 2v2 skirmish matches.
+     */
+    SKIRMISH;
 
     /**
      * Determines whether the supplied persisted game mode matches this filter.
@@ -63,6 +68,7 @@ public enum ChallengeGameMode {
                 gameMode == GameMode.COMPETITIVE || gameMode == GameMode.UNRATED;
             case DEATHMATCH -> gameMode == GameMode.DEATHMATCH;
             case TEAM_DEATHMATCH -> gameMode == GameMode.TEAM_DEATHMATCH;
+            case SKIRMISH -> gameMode == GameMode.SKIRMISH;
         };
     }
 

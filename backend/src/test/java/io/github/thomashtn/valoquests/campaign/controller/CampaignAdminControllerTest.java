@@ -16,7 +16,7 @@ import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
 import io.github.thomashtn.valoquests.campaign.service.AsyncHistoryBackfillRunner;
 import io.github.thomashtn.valoquests.campaign.service.CampaignLifecycleService;
 import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScaling;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.shared.config.AdminApiKeyFilter;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -55,10 +55,10 @@ class CampaignAdminControllerTest {
      */
     @Test
     void shouldPreviewTheCalibration() throws Exception {
-        when(lifecycleService.previewCalibration()).thenReturn(new SquadCalibration(
+        when(lifecycleService.previewCalibration(SquadLevel.REFERENCE)).thenReturn(new SquadCalibration(
             5_300,
             CampaignTier.NORMAL,
-            ChallengeScaling.NONE,
+            SquadLevel.REFERENCE,
             9,
             CampaignFixtures.FIRST_WEEK_START.minusMonths(9),
             List.of()
@@ -77,7 +77,7 @@ class CampaignAdminControllerTest {
      */
     @Test
     void shouldOpenACampaign() throws Exception {
-        when(lifecycleService.open()).thenReturn(CampaignFixtures.runningCampaign(1));
+        when(lifecycleService.open(SquadLevel.REFERENCE)).thenReturn(CampaignFixtures.runningCampaign(1));
 
         mockMvc.perform(post("/api/admin/campaigns")
                 .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
@@ -93,7 +93,7 @@ class CampaignAdminControllerTest {
      */
     @Test
     void shouldRefuseASecondCampaign() throws Exception {
-        when(lifecycleService.open())
+        when(lifecycleService.open(SquadLevel.REFERENCE))
             .thenThrow(new CampaignLifecycleException("A campaign is already opened or running."));
 
         mockMvc.perform(post("/api/admin/campaigns")

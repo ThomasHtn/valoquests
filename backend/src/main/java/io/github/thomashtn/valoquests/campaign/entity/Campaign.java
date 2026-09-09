@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.campaign.entity;
 
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.shared.entity.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,22 +12,20 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 /**
  * One ten-week rescue campaign, opened from the backoffice and calibrated once.
  *
- * <p>The calibration block — reference, tier, volume factor, skill anchors — is written at opening
- * and never touched again. It sizes the guardians, the groups and every challenge target, so a
- * reference that moved mid-campaign would resize a guardian the squad has already spent a week on.
+ * <p>The calibration block — reference, tier, squad level — is written at opening and never touched
+ * again. It sizes the guardians and the groups, and decides which of a challenge's two written
+ * grids is played, so a reference that moved mid-campaign would resize a guardian the squad has
+ * already spent a week on.
  */
 @Getter
 @Setter
@@ -108,17 +107,11 @@ public class Campaign extends AuditableEntity {
     private CampaignTier tier;
 
     /**
-     * Factor the challenge volume targets are scaled by, bounded at draw time.
+     * Which of the two grids written in the catalogue this campaign's challenges are drawn from.
      */
-    @Column(name = "volume_factor", nullable = false, precision = 6, scale = 4)
-    private BigDecimal volumeFactor;
-
-    /**
-     * Squad's skill anchors, serialized, the challenge talent bars are resolved against.
-     */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "skill_anchors_json", nullable = false, columnDefinition = "jsonb")
-    private String skillAnchorsJson;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "squad_level", nullable = false, length = 12)
+    private SquadLevel squadLevel;
 
     /**
      * Months of history the calibration ended up reading.

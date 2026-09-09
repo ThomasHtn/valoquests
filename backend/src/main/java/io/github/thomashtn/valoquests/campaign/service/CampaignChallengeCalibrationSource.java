@@ -5,7 +5,7 @@ import io.github.thomashtn.valoquests.campaign.model.CampaignSchedule;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScaling;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeCalibrationSource;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import java.time.LocalDate;
@@ -35,11 +35,6 @@ public class CampaignChallengeCalibrationSource implements ChallengeCalibrationS
     private final CampaignRepository campaignRepository;
 
     /**
-     * Codec rebuilding a campaign's stored scaling.
-     */
-    private final SkillAnchorCodec skillAnchorCodec;
-
-    /**
      * Barème owning the reference floor.
      */
     private final ScoringRuleset ruleset;
@@ -48,16 +43,13 @@ public class CampaignChallengeCalibrationSource implements ChallengeCalibrationS
      * Creates the campaign-backed calibration source.
      *
      * @param campaignRepository campaign repository
-     * @param skillAnchorCodec   skill anchor codec
      * @param ruleset            scoring ruleset
      */
     public CampaignChallengeCalibrationSource(
         CampaignRepository campaignRepository,
-        SkillAnchorCodec skillAnchorCodec,
         ScoringRuleset ruleset
     ) {
         this.campaignRepository = campaignRepository;
-        this.skillAnchorCodec = skillAnchorCodec;
         this.ruleset = ruleset;
     }
 
@@ -80,7 +72,7 @@ public class CampaignChallengeCalibrationSource implements ChallengeCalibrationS
         return campaignRepository.findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED).stream()
             .findFirst()
             .map(campaign -> calibrationOf(campaign, 1))
-            .orElseGet(() -> new ChallengeCalibration(ruleset.referenceFloor(), 1, ChallengeScaling.NONE));
+            .orElseGet(() -> new ChallengeCalibration(ruleset.referenceFloor(), 1, SquadLevel.REFERENCE));
     }
 
     /**
@@ -94,7 +86,7 @@ public class CampaignChallengeCalibrationSource implements ChallengeCalibrationS
         return new ChallengeCalibration(
             campaign.getReference(),
             weekIndex,
-            skillAnchorCodec.toScaling(campaign.getVolumeFactor(), campaign.getSkillAnchorsJson())
+            campaign.getSquadLevel()
         );
     }
 

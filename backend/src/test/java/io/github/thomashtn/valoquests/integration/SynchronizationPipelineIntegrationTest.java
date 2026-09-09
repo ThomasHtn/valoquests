@@ -768,6 +768,7 @@ class SynchronizationPipelineIntegrationTest
                 additionalJson
             )
         );
+        challenge.setExpertConditionsJson(challenge.getConditionsJson());
         challenge.setEnabled(true);
         challenge.setSchemaVersion(3);
         return challenge;

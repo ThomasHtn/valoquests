@@ -1,4 +1,4 @@
-import { CampaignStatus, CampaignTier } from '@core/campaign/campaign.model';
+import { CampaignStatus, CampaignTier, SquadLevel } from '@core/campaign/campaign.model';
 import { PlayerStatus } from '@core/players/player-summary.model';
 
 /**
@@ -459,9 +459,9 @@ export interface SquadCalibration {
   readonly tier: CampaignTier;
 
   /**
-   * Volume factor applied to the reference.
+   * Which of the catalogue's two grids the campaign would play.
    */
-  readonly volumeFactor: number;
+  readonly level: SquadLevel;
 
   /**
    * Months of history the calibration read.

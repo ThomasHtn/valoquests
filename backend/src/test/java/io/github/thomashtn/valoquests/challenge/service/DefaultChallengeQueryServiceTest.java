@@ -11,8 +11,8 @@ import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScaling;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
@@ -88,7 +88,7 @@ class DefaultChallengeQueryServiceTest {
         ChallengeCalibrationSource calibrationSource = mock(ChallengeCalibrationSource.class);
 
         when(calibrationSource.forWeek(WEEK_START))
-            .thenReturn(new ChallengeCalibration(REFERENCE, 1, ChallengeScaling.NONE));
+            .thenReturn(new ChallengeCalibration(REFERENCE, 1, SquadLevel.REFERENCE));
         when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE))
             .thenReturn(List.of(
                 player(1L, PlayerStatus.ACTIVE),
@@ -226,6 +226,7 @@ class DefaultChallengeQueryServiceTest {
             "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":10,\"gameMode\":\"" + gameMode
                 + "\",\"occurrences\":3,\"scope\":\"PER_MATCH\"}]"
         );
+        challenge.setExpertConditionsJson(challenge.getConditionsJson());
 
         WeeklyChallenge selection = new WeeklyChallenge();
         selection.setId(id);
@@ -258,6 +259,7 @@ class DefaultChallengeQueryServiceTest {
             "[{\"metric\":\"MATCHES_PLAYED\",\"operator\":\"GTE\",\"target\":1,"
                 + "\"gameMode\":\"COMPETITIVE_OR_UNRATED\"}]"
         );
+        challenge.setExpertConditionsJson(challenge.getConditionsJson());
 
         WeeklyChallenge selection = new WeeklyChallenge();
         selection.setId(id);

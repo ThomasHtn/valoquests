@@ -57,8 +57,8 @@ class FlywayMigrationIntegrationTest extends PostgreSqlIntegrationTest {
         );
 
         assertThat(failedMigrations).isZero();
-        // V41 replaces the whole catalogue: 20 weekly challenges per tier and a pool of 21 dailies.
-        assertThat(challenges).isEqualTo(121);
+        // V47 rewrites the whole catalogue: 20 weekly challenges per tier and 28 dailies.
+        assertThat(challenges).isEqualTo(128);
         assertThat(players).isGreaterThanOrEqualTo(6);
     }
 

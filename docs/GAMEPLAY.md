@@ -365,6 +365,11 @@ Elle fixe la taille des gardiens, celle des groupes de survivants et la valeur d
 calculée **une seule fois** et **plus jamais recalculée** : rien n'est ajustable une fois la campagne
 lancée.
 
+À l'ouverture se fige aussi le **niveau d'escouade**, choisi par l'opérateur entre *référence* et
+*expert*. Il ne touche ni les gardiens, ni les groupes, ni la valeur d'un défi : il décide seulement
+laquelle des deux séries de nombres écrites au catalogue la campagne joue. Une escouade experte vise
+donc des objectifs plus durs pour la même récompense. Voir `CHALLENGES.md`.
+
 Une seule exception, administrative : le **recalibrage** d'une campagne ouverte avant que la fenêtre
 de neuf mois n'ait été importée. L'ouverture est d'ailleurs refusée quand la fenêtre a dû se réduire
 sans qu'aucun import d'historique n'ait jamais tourné. Le recalibrage remesure le roster gelé,

@@ -21,6 +21,7 @@ import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
 import io.github.thomashtn.valoquests.campaign.repository.GuardianRepository;
 import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
@@ -235,8 +236,7 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
         opened.setRosterSize(1);
         opened.setReference(REFERENCE);
         opened.setTier(CampaignTier.NORMAL);
-        opened.setVolumeFactor(BigDecimal.ONE);
-        opened.setSkillAnchorsJson("{}");
+        opened.setSquadLevel(SquadLevel.REFERENCE);
         opened.setCalibrationWindowMonths(9);
         opened.setCalibrationFirstDay(FIRST_WEEK_START.minusMonths(9));
         opened = campaignRepository.save(opened);

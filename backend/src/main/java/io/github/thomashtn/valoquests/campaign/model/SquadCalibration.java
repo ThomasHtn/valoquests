@@ -1,6 +1,6 @@
 package io.github.thomashtn.valoquests.campaign.model;
 
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScaling;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -14,7 +14,7 @@ import java.util.Objects;
  *
  * @param reference   average of the players' weekly averages, floored by the ruleset
  * @param tier        bracket the reference falls in
- * @param scaling     volume factor and skill anchors the challenge targets are resolved against
+ * @param level     squad level the campaign plays its challenges at
  * @param windowMonths months of history the average was read over
  * @param firstDay    first day of that window
  * @param players     what each player contributed, roster order
@@ -22,7 +22,7 @@ import java.util.Objects;
 public record SquadCalibration(
     int reference,
     CampaignTier tier,
-    ChallengeScaling scaling,
+    SquadLevel level,
     int windowMonths,
     LocalDate firstDay,
     List<PlayerCalibration> players
@@ -35,7 +35,7 @@ public record SquadCalibration(
      */
     public SquadCalibration {
         Objects.requireNonNull(tier, "tier must not be null");
-        Objects.requireNonNull(scaling, "scaling must not be null");
+        Objects.requireNonNull(level, "level must not be null");
         Objects.requireNonNull(firstDay, "firstDay must not be null");
         players = List.copyOf(players);
     }

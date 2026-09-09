@@ -22,8 +22,8 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeOperator;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScaling;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
@@ -73,9 +73,9 @@ class DefaultWeeklyChallengeSelectionServiceTest {
     private static final int OBSERVED_WEEKS = 8;
 
     /**
-     * Size of the production daily pool: three weeks without a repeat.
+     * Size of the production daily pool since V45.
      */
-    private static final int DAILY_POOL_SIZE = 21;
+    private static final int DAILY_POOL_SIZE = 16;
 
     /**
      * JSON the mocked parser writes for every resolved definition.
@@ -125,6 +125,7 @@ class DefaultWeeklyChallengeSelectionServiceTest {
 
         ChallengeDefinitionParser definitionParser = mock(ChallengeDefinitionParser.class);
         when(definitionParser.parse(any(Challenge.class))).thenReturn(sumDefinition());
+        when(definitionParser.parse(any(Challenge.class), any())).thenReturn(sumDefinition());
         when(definitionParser.toJson(anyList())).thenReturn(RESOLVED_JSON);
 
         Clock clock = Clock.fixed(SELECTION_TIME, ZoneOffset.UTC);
@@ -136,11 +137,10 @@ class DefaultWeeklyChallengeSelectionServiceTest {
             calculatorRegistry,
             new ChallengeSelectionFactory(
                 definitionParser,
-                new ChallengeTargetResolver(),
                 weekStart -> new ChallengeCalibration(
                     new DefaultScoringRuleset().referenceFloor(),
                     1,
-                    ChallengeScaling.NONE
+                    SquadLevel.REFERENCE
                 )
             ),
             clock,
@@ -182,11 +182,11 @@ class DefaultWeeklyChallengeSelectionServiceTest {
     }
 
     /**
-     * Verifies that twenty-one consecutive days draw twenty-one different challenges from a pool of
-     * that size, and that the twenty-second day brings the first one back.
+     * Verifies that as many consecutive days as the pool holds draw as many different challenges,
+     * and that the next day brings the first one back.
      */
     @Test
-    void shouldNotRepeatADailyChallengeWithinTwentyOneDays() {
+    void shouldNotRepeatADailyChallengeWithinThePoolSize() {
         List<WeeklyChallenge> history = givenDailyHistory(DAILY_POOL_SIZE);
 
         List<String> codes = IntStream.range(0, DAILY_POOL_SIZE)
@@ -206,9 +206,9 @@ class DefaultWeeklyChallengeSelectionServiceTest {
                 assertThat(selection.getResolvedConditionsJson()).isEqualTo(RESOLVED_JSON);
             });
 
-        WeeklyChallenge dayTwentyTwo = service.selectDailyChallenge(WEEK_START.plusDays(DAILY_POOL_SIZE));
+        WeeklyChallenge dayAfterPool = service.selectDailyChallenge(WEEK_START.plusDays(DAILY_POOL_SIZE));
 
-        assertThat(dayTwentyTwo.getChallenge().getCode()).isEqualTo(codes.getFirst());
+        assertThat(dayAfterPool.getChallenge().getCode()).isEqualTo(codes.getFirst());
     }
 
     /**

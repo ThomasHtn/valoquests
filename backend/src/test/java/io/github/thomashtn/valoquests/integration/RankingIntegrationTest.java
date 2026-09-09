@@ -412,6 +412,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
                 ]
                 """
         );
+        challenge.setExpertConditionsJson(challenge.getConditionsJson());
         challenge.setEnabled(true);
         challenge.setSchemaVersion(3);
 

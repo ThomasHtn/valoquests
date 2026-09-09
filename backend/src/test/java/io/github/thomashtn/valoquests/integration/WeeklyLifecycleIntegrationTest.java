@@ -574,6 +574,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
                 ]
                 """.formatted(metric, target, additionalJson)
         );
+        challenge.setExpertConditionsJson(challenge.getConditionsJson());
         challenge.setEnabled(true);
         challenge.setSchemaVersion(3);
         return challenge;

@@ -5,7 +5,12 @@ import { AdminApi } from '@core/admin/admin-api';
 import { AdminCommandRunner } from '@core/admin/admin-command-runner';
 import { IN_FLIGHT_SYNCHRONIZATION_STATUSES, PlayerCalibration } from '@core/admin/admin.model';
 import { CampaignApi } from '@core/campaign/campaign-api';
-import { CAMPAIGN_WEEK_COUNT, CampaignStatus } from '@core/campaign/campaign.model';
+import {
+  CAMPAIGN_WEEK_COUNT,
+  CampaignStatus,
+  SQUAD_LEVELS,
+  SquadLevel,
+} from '@core/campaign/campaign.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { daysBetween } from '@core/date/date-time.utils';
 import { addDays, formatDateRange, formatDayMonth } from '@core/date/week-period.utils';
@@ -63,6 +68,16 @@ export class AdminCampaigns {
   private readonly commandRunner = inject(AdminCommandRunner);
 
   protected readonly calibrationResource = this.adminApi.calibration;
+
+  /**
+   * Level the calibration panel reads at, and the next opening plays at.
+   */
+  protected readonly level = this.adminApi.level;
+
+  /**
+   * The two levels, in ladder order, for the selector.
+   */
+  protected readonly levels = SQUAD_LEVELS;
 
   protected readonly campaignResource = this.campaignApi.campaign;
 
@@ -210,13 +225,10 @@ export class AdminCampaigns {
   }
 
   /**
-   * Formats the volume factor as the multiplier the challenge targets are scaled by.
+   * Records the level the next opening, recalibration and calibration read are made at.
    */
-  protected factor(value: number): string {
-    return `× ${new Intl.NumberFormat(this.translation.language() === 'fr' ? 'fr-FR' : 'en-GB', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value)}`;
+  protected chooseLevel(level: SquadLevel): void {
+    this.adminApi.level.set(level);
   }
 
   protected async backfill(): Promise<void> {

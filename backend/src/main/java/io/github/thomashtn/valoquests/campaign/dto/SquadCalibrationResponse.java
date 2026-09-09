@@ -2,7 +2,7 @@ package io.github.thomashtn.valoquests.campaign.dto;
 
 import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.model.PlayerCalibration;
-import java.math.BigDecimal;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -15,7 +15,7 @@ import java.util.List;
  *
  * @param reference    average of the players' weekly averages, floor applied
  * @param tier         bracket the reference falls in
- * @param volumeFactor factor the challenge volume targets would be scaled by
+ * @param level        squad level the campaign would play its challenges at
  * @param windowMonths months of history the average was read over
  * @param firstDay     first day of that window
  * @param players      what each player contributed
@@ -23,7 +23,7 @@ import java.util.List;
 public record SquadCalibrationResponse(
     int reference,
     CampaignTier tier,
-    BigDecimal volumeFactor,
+    SquadLevel level,
     int windowMonths,
     LocalDate firstDay,
     List<PlayerCalibration> players

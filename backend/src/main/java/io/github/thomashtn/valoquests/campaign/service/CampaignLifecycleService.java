@@ -10,6 +10,7 @@ import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
@@ -123,22 +124,24 @@ public class CampaignLifecycleService {
      * <p>What the backoffice shows before the operator opens: the calibration is decided once and
      * never revised, so this is the only chance to notice that a player's history is thin.
      *
+     * @param level squad level the campaign would play its challenges at
      * @return the calibration a campaign opened today would be given
      * @throws CampaignLifecycleException when no player is active
      */
     @Transactional(readOnly = true)
-    public SquadCalibration previewCalibration() {
-        return calibrationService.calibrate(activeRoster(), weekCalendar.today());
+    public SquadCalibration previewCalibration(SquadLevel level) {
+        return calibrationService.calibrate(activeRoster(), weekCalendar.today(), level);
     }
 
     /**
      * Opens a campaign starting this Monday if opened on one, otherwise the following Monday.
      *
+     * @param level squad level the campaign plays its challenges at
      * @return the campaign, still {@link CampaignStatus#OPENED}
      * @throws CampaignLifecycleException when a campaign is already live or no player is active
      */
     @Transactional
-    public Campaign open() {
+    public Campaign open(SquadLevel level) {
         if (liveCampaign().isPresent()) {
             throw new CampaignLifecycleException(
                 "A campaign is already opened or running. Stop it before opening another one."
@@ -154,7 +157,7 @@ public class CampaignLifecycleService {
             .map(campaign -> campaign.getNumber() + 1)
             .orElse(1);
 
-        SquadCalibration calibration = calibrationService.calibrateCovered(roster, today);
+        SquadCalibration calibration = calibrationService.calibrateCovered(roster, today, level);
         NewCampaign built = factory.build(number, roster, calibration, firstWeekStart);
         Campaign campaign = campaignRepository.save(built.campaign());
         campaignPlayerRepository.saveAll(built.roster());
@@ -180,11 +183,12 @@ public class CampaignLifecycleService {
      * was never imported was sized on a floor, and the alternative is to throw the week away. A
      * settled week keeps its guardian; the caller replays the campaign afterwards.
      *
+     * @param level squad level the campaign plays its challenges at
      * @return the campaign, recalibrated
      * @throws CampaignLifecycleException when no campaign is live or the window is not covered
      */
     @Transactional
-    public Campaign recalibrate() {
+    public Campaign recalibrate(SquadLevel level) {
         Campaign campaign = liveCampaign().orElseThrow(() -> new CampaignLifecycleException(
             "No campaign is opened or running, so there is nothing to recalibrate."
         ));
@@ -194,7 +198,10 @@ public class CampaignLifecycleService {
             .map(CampaignPlayer::getPlayer)
             .toList();
 
-        factory.calibrate(campaign, calibrationService.calibrateCovered(roster, weekCalendar.today()));
+        factory.calibrate(
+            campaign,
+            calibrationService.calibrateCovered(roster, weekCalendar.today(), level)
+        );
         campaignRepository.save(campaign);
 
         List<CampaignWeek> weeks = campaignWeekRepository

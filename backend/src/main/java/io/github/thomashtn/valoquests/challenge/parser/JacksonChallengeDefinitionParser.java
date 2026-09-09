@@ -5,6 +5,7 @@ import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Component;
@@ -62,7 +63,22 @@ public class JacksonChallengeDefinitionParser
             "Challenge must not be null."
         );
 
-        return parse(challenge, challenge.getConditionsJson());
+        return parse(challenge, SquadLevel.REFERENCE);
+    }
+
+    /**
+     * Parses and validates one persisted challenge definition at one squad level.
+     *
+     * @param challenge challenge to parse
+     * @param level     squad level whose grid is read
+     * @return typed challenge definition
+     */
+    @Override
+    public ChallengeDefinition parse(Challenge challenge, SquadLevel level) {
+        Objects.requireNonNull(challenge, "Challenge must not be null.");
+        Objects.requireNonNull(level, "Squad level must not be null.");
+
+        return parseJson(challenge, challenge.conditionsFor(level));
     }
 
     /**
@@ -75,7 +91,7 @@ public class JacksonChallengeDefinitionParser
     public ChallengeDefinition parse(WeeklyChallenge selection) {
         Objects.requireNonNull(selection, "Selection must not be null.");
 
-        return parse(selection.getChallenge(), selection.getResolvedConditionsJson());
+        return parseJson(selection.getChallenge(), selection.getResolvedConditionsJson());
     }
 
     /**
@@ -98,7 +114,7 @@ public class JacksonChallengeDefinitionParser
      * @param conditionsJson JSON array to parse, base or resolved
      * @return typed challenge definition
      */
-    private ChallengeDefinition parse(Challenge challenge, String conditionsJson) {
+    private ChallengeDefinition parseJson(Challenge challenge, String conditionsJson) {
         validateChallengeMetadata(challenge, conditionsJson);
 
         List<ChallengeCondition> conditions = parseConditions(challenge, conditionsJson);

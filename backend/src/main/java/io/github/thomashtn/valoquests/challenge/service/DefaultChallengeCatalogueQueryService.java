@@ -30,11 +30,6 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
     private final ChallengeDefinitionParser definitionParser;
 
     /**
-     * Resolver scaling base targets to the calibration in force.
-     */
-    private final ChallengeTargetResolver targetResolver;
-
-    /**
      * Barème saying what a challenge of each weight is worth.
      */
     private final ScoringRuleset ruleset;
@@ -54,7 +49,6 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
      *
      * @param challengeRepository challenge catalogue repository
      * @param definitionParser    challenge-definition parser
-     * @param targetResolver      target resolver
      * @param ruleset             scoring ruleset
      * @param calibrationSource   calibration source
      * @param weekCalendar        calendar resolving the current week
@@ -62,14 +56,12 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
     public DefaultChallengeCatalogueQueryService(
         ChallengeRepository challengeRepository,
         ChallengeDefinitionParser definitionParser,
-        ChallengeTargetResolver targetResolver,
         ScoringRuleset ruleset,
         ChallengeCalibrationSource calibrationSource,
         WeekCalendar weekCalendar
     ) {
         this.challengeRepository = challengeRepository;
         this.definitionParser = definitionParser;
-        this.targetResolver = targetResolver;
         this.ruleset = ruleset;
         this.calibrationSource = calibrationSource;
         this.weekCalendar = weekCalendar;
@@ -109,12 +101,7 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
         ChallengeCalibration calibration
     ) {
         ChallengeDefinition base = definitionParser.parse(challenge);
-        ChallengeDefinition definition = targetResolver.resolve(
-            base,
-            challenge.getCadence(),
-            challenge.getDifficulty(),
-            calibration.scaling()
-        );
+        ChallengeDefinition definition = definitionParser.parse(challenge, calibration.level());
         double weight = ruleset.challengeWeight(challenge.getCadence(), challenge.getDifficulty());
 
         return new ChallengeCatalogueResponse.ChallengeCatalogueEntry(

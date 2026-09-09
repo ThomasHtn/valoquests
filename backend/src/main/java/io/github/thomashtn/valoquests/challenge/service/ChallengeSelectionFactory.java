@@ -11,10 +11,12 @@ import java.time.LocalDate;
 import org.springframework.stereotype.Component;
 
 /**
- * Builds selections with their conditions resolved against the calibration in force.
+ * Builds selections carrying the rule grid the campaign's level plays against.
  *
- * <p>The draw resolves, the row stores, everything else reads: this is the one place a base
- * definition becomes the definition a week is actually played against.
+ * <p>The draw picks, the row stores, everything else reads: this is the one place the catalogue's
+ * two written grids become the single definition a week is played against. Storing rather than
+ * choosing again on read is what makes a replay stable — a campaign that changed level would
+ * otherwise rewrite the objectives of weeks already played.
  */
 @Component
 public class ChallengeSelectionFactory {
@@ -25,11 +27,6 @@ public class ChallengeSelectionFactory {
     private final ChallengeDefinitionParser definitionParser;
 
     /**
-     * Resolver scaling base targets.
-     */
-    private final ChallengeTargetResolver targetResolver;
-
-    /**
      * Source of the calibration a week is drawn against.
      */
     private final ChallengeCalibrationSource calibrationSource;
@@ -38,16 +35,13 @@ public class ChallengeSelectionFactory {
      * Creates the factory.
      *
      * @param definitionParser  challenge-definition parser
-     * @param targetResolver    target resolver
      * @param calibrationSource calibration source
      */
     public ChallengeSelectionFactory(
         ChallengeDefinitionParser definitionParser,
-        ChallengeTargetResolver targetResolver,
         ChallengeCalibrationSource calibrationSource
     ) {
         this.definitionParser = definitionParser;
-        this.targetResolver = targetResolver;
         this.calibrationSource = calibrationSource;
     }
 
@@ -98,12 +92,7 @@ public class ChallengeSelectionFactory {
     ) {
         ChallengeCadence cadence = day == null ? ChallengeCadence.WEEKLY : ChallengeCadence.DAILY;
         ChallengeCalibration calibration = calibrationSource.forWeek(weekStart);
-        ChallengeDefinition resolved = targetResolver.resolve(
-            definitionParser.parse(challenge),
-            cadence,
-            challenge.getDifficulty(),
-            calibration.scaling()
-        );
+        ChallengeDefinition played = definitionParser.parse(challenge, calibration.level());
 
         WeeklyChallenge selection = new WeeklyChallenge();
         selection.setWeekStart(weekStart);
@@ -111,7 +100,7 @@ public class ChallengeSelectionFactory {
         selection.setDay(day);
         selection.setChallenge(challenge);
         selection.setSelectedAt(selectionTime);
-        selection.setResolvedConditionsJson(definitionParser.toJson(resolved.conditions()));
+        selection.setResolvedConditionsJson(definitionParser.toJson(played.conditions()));
 
         return selection;
     }

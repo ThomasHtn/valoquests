@@ -168,10 +168,19 @@
           </div>
           <div>
             <dt class="label-caption text-text-muted">
-              {{ 'admin.campaigns.calibration.volumeFactor' | translate }}
+              {{ 'admin.campaigns.calibration.level' | translate }}
             </dt>
-            <dd class="font-display mt-1.5 text-xl font-bold text-text-primary tabular-nums">
-              {{ factor(calibration.volumeFactor) }}
+            <dd class="mt-1.5 flex gap-2">
+              @for (option of levels; track option) {
+                <button
+                  [appButton]="level() === option ? 'primary' : 'secondary'"
+                  (click)="chooseLevel(option)"
+                  class="font-display flex min-h-9 items-center px-3 text-sm font-bold uppercase [--notch:0.5rem]"
+                  type="button"
+                >
+                  {{ 'common.squadLevel.' + option | translate }}
+                </button>
+              }
             </dd>
           </div>
           <div>

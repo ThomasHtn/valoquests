@@ -5,9 +5,7 @@ import io.github.thomashtn.valoquests.campaign.exception.CampaignLifecycleExcept
 import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.model.PlayerCalibration;
 import io.github.thomashtn.valoquests.campaign.model.SquadCalibration;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScaling;
-import io.github.thomashtn.valoquests.challenge.model.SkillAnchor;
-import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
@@ -18,8 +16,6 @@ import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationRepository;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
 import io.github.thomashtn.valoquests.week.WeekConstants;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -55,21 +51,6 @@ public class SquadCalibrationService {
      * Application logger.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(SquadCalibrationService.class);
-
-    /**
-     * Lowest volume factor a campaign may scale challenge targets by.
-     */
-    private static final BigDecimal MINIMUM_VOLUME_FACTOR = new BigDecimal("0.40");
-
-    /**
-     * Highest volume factor a campaign may scale challenge targets by.
-     */
-    private static final BigDecimal MAXIMUM_VOLUME_FACTOR = new BigDecimal("3.00");
-
-    /**
-     * Decimals the volume factor keeps.
-     */
-    private static final int VOLUME_FACTOR_SCALE = 4;
 
     /**
      * Repository used to read history depth and per-match statistics.
@@ -128,11 +109,12 @@ public class SquadCalibrationService {
      *
      * @param roster       players the campaign will freeze, never empty
      * @param referenceDay last day of the window
+     * @param level        squad level the campaign plays its challenges at
      * @return the calibration
      * @throws CampaignLifecycleException when the window shrank and no backfill ever ran
      */
-    public SquadCalibration calibrateCovered(List<Player> roster, LocalDate referenceDay) {
-        SquadCalibration calibration = calibrate(roster, referenceDay);
+    public SquadCalibration calibrateCovered(List<Player> roster, LocalDate referenceDay, SquadLevel level) {
+        SquadCalibration calibration = calibrate(roster, referenceDay, level);
 
         if (calibration.windowMonths() < CampaignRuleset.CALIBRATION_WINDOW_MONTHS && !backfilled()) {
             throw new CampaignLifecycleException(
@@ -161,10 +143,11 @@ public class SquadCalibrationService {
      *
      * @param roster       players the campaign will freeze, never empty
      * @param referenceDay last day of the window, normally the day the campaign is opened
-     * @return the squad's reference, tier, scaling and per-player breakdown
+     * @param level        squad level the campaign plays its challenges at
+     * @return the squad's reference, tier, level and per-player breakdown
      * @throws IllegalArgumentException when the roster is empty
      */
-    public SquadCalibration calibrate(List<Player> roster, LocalDate referenceDay) {
+    public SquadCalibration calibrate(List<Player> roster, LocalDate referenceDay, SquadLevel level) {
         if (roster.isEmpty()) {
             throw new IllegalArgumentException("A campaign cannot be calibrated on an empty roster.");
         }
@@ -197,7 +180,7 @@ public class SquadCalibrationService {
         return new SquadCalibration(
             reference,
             CampaignTier.of(reference),
-            new ChallengeScaling(volumeFactor(reference), anchors(roster, firstDay, referenceDay)),
+            level,
             windowMonths,
             firstDay,
             breakdown(roster, averages, earliestDays, firstDay, beginnerThreshold, windowMonths)
@@ -308,45 +291,6 @@ public class SquadCalibrationService {
         }
 
         return (experienced.get(middle - 1) + experienced.get(middle)) / 2;
-    }
-
-    /**
-     * Measures the squad's talent anchors over the window.
-     *
-     * @param roster       players to measure
-     * @param firstDay     first day of the window, inclusive
-     * @param referenceDay last day of the window, inclusive
-     * @return the anchors, anchors nobody has a sample of omitted
-     */
-    private Map<SkillAnchor, BigDecimal> anchors(List<Player> roster, LocalDate firstDay, LocalDate referenceDay) {
-        Map<Long, List<PlayerMatch>> matchesByPlayer = new LinkedHashMap<>(roster.size());
-
-        for (Player player : roster) {
-            matchesByPlayer.put(player.getId(), playerMatchRepository.findForChallengePeriod(
-                player.getId(),
-                weekCalendar.startOfDay(firstDay),
-                weekCalendar.endOfDay(referenceDay)
-            ));
-        }
-
-        return SkillAnchorReader.read(matchesByPlayer);
-    }
-
-    /**
-     * Returns the factor the catalogue's base volume targets are scaled by.
-     *
-     * <p>Bounded so an unusually quiet or unusually heavy squad still gets targets that read as
-     * challenges rather than as jokes or as walls.
-     *
-     * @param reference squad reference
-     * @return the bounded factor
-     */
-    private BigDecimal volumeFactor(int reference) {
-        BigDecimal raw = BigDecimal.valueOf(reference)
-            .divide(BigDecimal.valueOf(CampaignRuleset.CALIBRATION_ANCHOR_REFERENCE), VOLUME_FACTOR_SCALE,
-                RoundingMode.HALF_UP);
-
-        return raw.min(MAXIMUM_VOLUME_FACTOR).max(MINIMUM_VOLUME_FACTOR);
     }
 
     /**

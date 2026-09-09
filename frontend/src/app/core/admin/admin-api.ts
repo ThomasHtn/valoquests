@@ -1,7 +1,8 @@
 import { httpResource, HttpClient, HttpResourceRef } from '@angular/common/http';
-import { inject, Service, Signal } from '@angular/core';
+import { inject, signal, Service, Signal } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
 import { CampaignApi } from '@core/campaign/campaign-api';
+import { SquadLevel } from '@core/campaign/campaign.model';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { PageResponse } from '@core/http/page-response.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
@@ -84,12 +85,19 @@ export class AdminApi {
   );
 
   /**
+   * Level the calibration and the next opening are read at. Written by the backoffice.
+   */
+  public readonly level = signal<SquadLevel>('REFERENCE');
+
+  /**
    * The measure a campaign opened today would be given. Gated on the session like
    * {@link players}, and read again after every command since the roster or the imported history
-   * may have moved.
+   * may have moved. Follows {@link level} so the panel and the opening always agree.
    */
   public readonly calibration = httpResource<SquadCalibration>(() =>
-    this.session.isAuthenticated() ? API_ENDPOINTS.admin.campaignCalibration : undefined,
+    this.session.isAuthenticated()
+      ? { url: API_ENDPOINTS.admin.campaignCalibration, params: { level: this.level() } }
+      : undefined,
   );
 
   /**
@@ -318,7 +326,9 @@ export class AdminApi {
    * @returns A promise that resolves with the opened campaign.
    */
   public async openCampaign(): Promise<CampaignAdmin> {
-    return this.mutate(this.http.post<CampaignAdmin>(API_ENDPOINTS.admin.campaigns, null));
+    return this.mutate(this.http.post<CampaignAdmin>(API_ENDPOINTS.admin.campaigns, null, {
+      params: { level: this.level() },
+    }));
   }
 
   /**
@@ -328,7 +338,9 @@ export class AdminApi {
    */
   public async recalibrateCampaign(): Promise<CampaignAdmin> {
     return this.mutate(
-      this.http.post<CampaignAdmin>(API_ENDPOINTS.admin.campaignRecalibrate, null),
+      this.http.post<CampaignAdmin>(API_ENDPOINTS.admin.campaignRecalibrate, null, {
+        params: { level: this.level() },
+      }),
     );
   }
 

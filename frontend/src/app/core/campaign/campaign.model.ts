@@ -17,6 +17,19 @@ export type CampaignTier = 'AMATEUR' | 'NORMAL' | 'CONFIRMED' | 'ELITE';
 export const CAMPAIGN_TIERS: readonly CampaignTier[] = ['AMATEUR', 'NORMAL', 'CONFIRMED', 'ELITE'];
 
 /**
+ * Which of a challenge's two written grids a campaign plays. Mirrors the backend `SquadLevel`.
+ *
+ * Replaces the volume factor and the talent anchors: targets are no longer computed from history,
+ * the catalogue writes both numbers and a campaign picks a side once at opening.
+ */
+export type SquadLevel = 'REFERENCE' | 'EXPERT';
+
+/**
+ * The two levels, from the one a squad playing regularly is asked to the harder one.
+ */
+export const SQUAD_LEVELS: readonly SquadLevel[] = ['REFERENCE', 'EXPERT'];
+
+/**
  * Weight class of a week's guardian. Mirrors the backend `GuardianCategory`.
  */
 export type GuardianCategory = 'MINOR' | 'STANDARD' | 'ELITE';

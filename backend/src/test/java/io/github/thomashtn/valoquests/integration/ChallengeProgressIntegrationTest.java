@@ -797,6 +797,7 @@ class ChallengeProgressIntegrationTest
         challenge.setConditionsJson(
             conditionsJson
         );
+        challenge.setExpertConditionsJson(challenge.getConditionsJson());
         challenge.setEnabled(true);
         challenge.setSchemaVersion(3);
 

@@ -9,7 +9,7 @@ import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScaling;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
@@ -62,7 +62,7 @@ class ChallengePointsReaderTest {
         reader = new ChallengePointsReader(
             progressRepository,
             new DefaultScoringRuleset(),
-            weekStart -> new ChallengeCalibration(REFERENCE, 3, ChallengeScaling.NONE)
+            weekStart -> new ChallengeCalibration(REFERENCE, 3, SquadLevel.REFERENCE)
         );
     }
 

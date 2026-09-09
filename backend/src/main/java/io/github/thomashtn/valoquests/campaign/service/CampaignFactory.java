@@ -62,11 +62,6 @@ public class CampaignFactory {
     private final ScoringRuleset scoringRuleset;
 
     /**
-     * Codec serializing the calibration's anchors.
-     */
-    private final SkillAnchorCodec skillAnchorCodec;
-
-    /**
      * Clock stamping the opening instant.
      */
     private final Clock clock;
@@ -77,20 +72,17 @@ public class CampaignFactory {
      * @param guardianRepository guardian repository
      * @param campaignRuleset    campaign ruleset
      * @param scoringRuleset     scoring ruleset
-     * @param skillAnchorCodec   skill anchor codec
      * @param clock              clock
      */
     public CampaignFactory(
         GuardianRepository guardianRepository,
         CampaignRuleset campaignRuleset,
         ScoringRuleset scoringRuleset,
-        SkillAnchorCodec skillAnchorCodec,
         Clock clock
     ) {
         this.guardianRepository = guardianRepository;
         this.campaignRuleset = campaignRuleset;
         this.scoringRuleset = scoringRuleset;
-        this.skillAnchorCodec = skillAnchorCodec;
         this.clock = clock;
     }
 
@@ -130,8 +122,7 @@ public class CampaignFactory {
     public void calibrate(Campaign campaign, SquadCalibration calibration) {
         campaign.setReference(calibration.reference());
         campaign.setTier(calibration.tier());
-        campaign.setVolumeFactor(calibration.scaling().volumeFactor());
-        campaign.setSkillAnchorsJson(skillAnchorCodec.toJson(calibration.scaling().anchors()));
+        campaign.setSquadLevel(calibration.level());
         campaign.setCalibrationWindowMonths(calibration.windowMonths());
         campaign.setCalibrationFirstDay(calibration.firstDay());
     }

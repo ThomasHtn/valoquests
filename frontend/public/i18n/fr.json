@@ -33,7 +33,7 @@
         "error": "Impossible de calculer la calibration.",
         "reference": "Référence",
         "tier": "Palier",
-        "volumeFactor": "Facteur de volume",
+        "level": "Niveau",
         "window": "Fenêtre",
         "months": {
           "one": "{{count}} mois",
@@ -694,6 +694,11 @@
       "SKIRMISH": "Skirmish",
       "SWIFTPLAY": "Swiftplay",
       "ESCALATION": "Escalade"
+    },
+    "squadLevel": {
+      "REFERENCE": "Référence",
+      "EXPERT": "Expert",
+      "hint": "Décide laquelle des deux grilles du catalogue la campagne joue."
     }
   },
   "landing": {

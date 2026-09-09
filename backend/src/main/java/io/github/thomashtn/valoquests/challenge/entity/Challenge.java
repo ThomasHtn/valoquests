@@ -4,6 +4,7 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.shared.entity.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +14,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -85,11 +87,10 @@ public class Challenge extends AuditableEntity {
     private ProgressMode progressMode;
 
     /**
-     * Versioned JSON rule definition interpreted by challenge calculators.
+     * Versioned JSON rule definition played by a squad at the reference level.
      *
-     * <p>Every number in it is a base target, written for the squad the catalogue was calibrated
-     * on. A draw resolves it against the campaign in force and stores the result on the selection;
-     * calculators only ever read the resolved copy.
+     * <p>Its numbers are written by hand and never computed. A draw copies the grid matching the
+     * campaign's level onto the selection; calculators only ever read that copy.
      */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(
@@ -98,6 +99,20 @@ public class Challenge extends AuditableEntity {
         columnDefinition = "jsonb"
     )
     private String conditionsJson;
+
+    /**
+     * Same rule, with the numbers written for a squad at the expert level.
+     *
+     * <p>Same conditions in the same order as {@link #conditionsJson}, so a description written for
+     * one grid reads correctly against the other.
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(
+        name = "expert_conditions_json",
+        nullable = false,
+        columnDefinition = "jsonb"
+    )
+    private String expertConditionsJson;
 
     /**
      * Optional group preventing incompatible challenges from being selected together.
@@ -116,4 +131,16 @@ public class Challenge extends AuditableEntity {
      */
     @Column(name = "schema_version", nullable = false)
     private int schemaVersion;
+
+    /**
+     * Returns the rule grid one squad level plays against.
+     *
+     * @param level level of the campaign in force
+     * @return the matching JSON definition
+     */
+    public String conditionsFor(SquadLevel level) {
+        Objects.requireNonNull(level, "Squad level must not be null.");
+
+        return level == SquadLevel.EXPERT ? expertConditionsJson : conditionsJson;
+    }
 }

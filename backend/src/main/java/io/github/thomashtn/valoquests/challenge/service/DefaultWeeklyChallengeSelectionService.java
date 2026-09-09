@@ -43,7 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
  * that way rather than left incomplete.</p>
  *
  * <p>Days are drawn the same way from their own pool: one challenge per day, never one drawn in the
- * twenty days before while the pool allows it, the least recently drawn otherwise.</p>
+ * twenty-seven days before while the pool allows it, the least recently drawn otherwise.</p>
  */
 @Service
 public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSelectionService {
@@ -56,10 +56,10 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     /**
      * Days before a draw during which a daily challenge is not drawn again.
      *
-     * <p>Twenty, so that a challenge comes back at the earliest twenty-one days after its last
-     * draw: exactly the size of the daily pool, three weeks without a repeat.
+     * <p>Twenty-seven, so that a challenge comes back at the earliest twenty-eight days after its
+     * last draw: exactly the size of the daily pool.
      */
-    private static final int DAILY_NO_REPEAT_WINDOW_DAYS = 20;
+    private static final int DAILY_NO_REPEAT_WINDOW_DAYS = 27;
 
     /**
      * Orders persisted selections from the easiest to the hardest challenge.

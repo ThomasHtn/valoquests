@@ -26,12 +26,11 @@ import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGroupBy;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScaling;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
-import io.github.thomashtn.valoquests.challenge.model.SkillAnchor;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
-import io.github.thomashtn.valoquests.challenge.service.ChallengeTargetResolver;
 import io.github.thomashtn.valoquests.match.service.MatchEligibility;
 import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
@@ -49,7 +48,6 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,8 +57,8 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Verifies that the production challenge catalogue remains compatible with the parser, the target
- * resolver and every registered progress calculator, and that it obeys the rules of
+ * Verifies that the production challenge catalogue remains compatible with the parser and every
+ * registered progress calculator, at both squad levels, and that it obeys the rules of
  * {@code docs/CHALLENGES.md}.
  *
  * <p>The rules are checked on the content of each row, never on a list of codes, so a challenge
@@ -71,15 +69,21 @@ class ChallengeCatalogueCompatibilityTest {
     /**
      * Production migration seeding the whole catalogue.
      */
-    private static final String CATALOGUE_MIGRATION = "db/migration/V41__gameplay_v2_challenge_catalogue.sql";
+    private static final String CATALOGUE_MIGRATION =
+        "db/migration/V47__hand_written_challenge_catalogue.sql";
 
     /**
-     * Pattern extracting one challenge row: nullable difficulty, then the cadence last.
+     * One SQL string literal, doubled quotes included: French copy contains apostrophes.
+     */
+    private static final String QUOTED = "'((?:[^']|'')*)'";
+
+    /**
+     * Pattern extracting one challenge row: nullable difficulty, two rule grids, cadence last.
      */
     private static final Pattern ROW = Pattern.compile(
-        "\\('([^']*)','([^']*)','([^']*)',(NULL|'[^']*'),"
-            + "'([^']*)','([^']*)','(\\[.*?])'::jsonb,"
-            + "(NULL|'[^']*'),(TRUE|FALSE),(\\d+),'([^']*)'\\)",
+        "\\(" + QUOTED + "," + QUOTED + "," + QUOTED + ",(NULL|" + QUOTED + "),"
+            + QUOTED + "," + QUOTED + ",'(\\[.*?])'::jsonb,'(\\[.*?])'::jsonb,"
+            + "(NULL|" + QUOTED + "),(TRUE|FALSE),(\\d+)," + QUOTED + "\\)",
         Pattern.DOTALL
     );
 
@@ -89,14 +93,34 @@ class ChallengeCatalogueCompatibilityTest {
     private static final int WEEKLY_PER_DIFFICULTY = 20;
 
     /**
-     * Daily entries expected: three weeks without a repeat.
+     * Daily entries expected: four weeks without a repeat.
      */
-    private static final int DAILY_POOL_SIZE = 21;
+    private static final int DAILY_POOL_SIZE = 28;
 
     /**
      * Cap on the agents a challenge may ask for, in either direction.
      */
     private static final int AGENT_CAP = 3;
+
+    /**
+     * Matches a per-match bar may ask for on a daily challenge.
+     */
+    private static final int DAILY_OCCURRENCE_CAP = 2;
+
+    /**
+     * Statistics the Henrik API never reports outside round-based modes.
+     *
+     * <p>Headshots and damage come back as zero on every deathmatch and every skirmish row. A
+     * challenge measuring them there can never be completed, whatever its target says.
+     */
+    private static final Set<ChallengeMetric> ROUND_BASED_ONLY_METRICS =
+        EnumSet.of(ChallengeMetric.HEADSHOTS, ChallengeMetric.DAMAGE_DEALT);
+
+    /**
+     * Modes the API reports no headshot and no damage for.
+     */
+    private static final Set<ChallengeGameMode> BLIND_MODES =
+        EnumSet.of(ChallengeGameMode.DEATHMATCH, ChallengeGameMode.SKIRMISH);
 
     /**
      * Progress modes the catalogue still declares.
@@ -109,19 +133,13 @@ class ChallengeCatalogueCompatibilityTest {
         ProgressMode.SUM,
         ProgressMode.COUNT_MATCHES,
         ProgressMode.DISTINCT_COUNT,
-        ProgressMode.MAX_GROUP,
-        ProgressMode.ALL
+        ProgressMode.MAX_GROUP
     );
 
     /**
      * Parser used to validate catalogue definitions.
      */
     private ChallengeDefinitionParser definitionParser;
-
-    /**
-     * Resolver used to scale catalogue definitions.
-     */
-    private ChallengeTargetResolver targetResolver;
 
     /**
      * Registry containing every production progress calculator.
@@ -134,7 +152,7 @@ class ChallengeCatalogueCompatibilityTest {
     private PlayerChallengeContext emptyContext;
 
     /**
-     * Creates the production parser, resolver, registry and calculation context.
+     * Creates the production parser, registry and calculation context.
      */
     @BeforeEach
     void setUp() {
@@ -155,7 +173,6 @@ class ChallengeCatalogueCompatibilityTest {
         );
 
         definitionParser = new JacksonChallengeDefinitionParser(JsonMapper.builder().build());
-        targetResolver = new ChallengeTargetResolver();
         calculatorRegistry = new ChallengeProgressCalculatorRegistry(calculators);
         emptyContext = new PlayerChallengeContext(
             1L,
@@ -167,13 +184,12 @@ class ChallengeCatalogueCompatibilityTest {
     }
 
     /**
-     * Verifies that every production rule can be parsed, resolved at both ends of the volume
-     * range, and calculated.
+     * Verifies that both grids of every production rule parse and calculate.
      *
      * @throws IOException when the production migration cannot be read
      */
     @Test
-    void shouldParseResolveAndCalculateEveryProductionChallenge() throws IOException {
+    void shouldParseAndCalculateEveryProductionChallengeAtBothLevels() throws IOException {
         List<Challenge> challenges = loadChallenges();
 
         assertThat(challenges)
@@ -181,16 +197,16 @@ class ChallengeCatalogueCompatibilityTest {
             .hasSize(WEEKLY_PER_DIFFICULTY * ChallengeDifficulty.values().length + DAILY_POOL_SIZE);
 
         for (Challenge challenge : challenges) {
-            for (ChallengeScaling scaling : List.of(ChallengeScaling.NONE, amateurScaling(), eliteScaling())) {
-                assertThatCode(() -> calculate(challenge, scaling))
-                    .as("compatibility of challenge %s", challenge.getCode())
+            for (SquadLevel level : SquadLevel.values()) {
+                assertThatCode(() -> calculate(challenge, level))
+                    .as("compatibility of %s at %s", challenge.getCode(), level)
                     .doesNotThrowAnyException();
 
-                ChallengeProgressResult result = calculate(challenge, scaling);
+                ChallengeProgressResult result = calculate(challenge, level);
 
                 assertThat(result.currentValue()).isNotNull().isGreaterThanOrEqualTo(BigDecimal.ZERO);
                 assertThat(result.targetValue())
-                    .as("resolved target of %s", challenge.getCode())
+                    .as("target of %s at %s", challenge.getCode(), level)
                     .isNotNull()
                     .isGreaterThan(BigDecimal.ZERO);
                 assertThat(result.progressPercentage())
@@ -207,10 +223,11 @@ class ChallengeCatalogueCompatibilityTest {
      * @throws IOException when the production migration cannot be read
      */
     @Test
-    void shouldHoldTwentyPerTierAndTwentyOneDailies() throws IOException {
+    void shouldHoldTwentyPerTierAndTwentyEightDailies() throws IOException {
         List<Challenge> challenges = loadChallenges();
         Set<String> uniqueCodes = new HashSet<>();
-        Map<ChallengeDifficulty, Integer> weeklyByDifficulty = new EnumMap<>(ChallengeDifficulty.class);
+        EnumMap<ChallengeDifficulty, Integer> weeklyByDifficulty =
+            new EnumMap<>(ChallengeDifficulty.class);
         int dailies = 0;
 
         for (Challenge challenge : challenges) {
@@ -235,6 +252,45 @@ class ChallengeCatalogueCompatibilityTest {
         assertThat(weeklyByDifficulty.keySet()).containsExactlyInAnyOrder(ChallengeDifficulty.values());
         assertThat(challenges.stream().map(Challenge::getProgressMode).collect(Collectors.toSet()))
             .containsExactlyInAnyOrderElementsOf(EXPECTED_CATALOGUE_MODES);
+    }
+
+    /**
+     * Verifies that the expert grid asks the same question as the reference one, never a lower one.
+     *
+     * @throws IOException when the production migration cannot be read
+     */
+    @Test
+    void shouldNeverWriteAnExpertGridBelowItsReference() throws IOException {
+        for (Challenge challenge : loadChallenges()) {
+            List<ChallengeCondition> reference =
+                definitionParser.parse(challenge, SquadLevel.REFERENCE).conditions();
+            List<ChallengeCondition> expert =
+                definitionParser.parse(challenge, SquadLevel.EXPERT).conditions();
+
+            assertThat(expert)
+                .as("%s declares the same conditions at both levels", challenge.getCode())
+                .hasSameSizeAs(reference);
+
+            for (int index = 0; index < reference.size(); index++) {
+                ChallengeCondition base = reference.get(index);
+                ChallengeCondition harder = expert.get(index);
+
+                assertThat(harder.metric()).as(challenge.getCode()).isEqualTo(base.metric());
+                assertThat(harder.effectiveGameMode())
+                    .as(challenge.getCode())
+                    .isEqualTo(base.effectiveGameMode());
+                assertThat(harder.groupBy()).as(challenge.getCode()).isEqualTo(base.groupBy());
+                assertThat(harder.target())
+                    .as("expert target of %s", challenge.getCode())
+                    .isGreaterThanOrEqualTo(base.target());
+
+                if (base.occurrences() != null) {
+                    assertThat(harder.occurrences())
+                        .as("expert occurrences of %s", challenge.getCode())
+                        .isGreaterThanOrEqualTo(base.occurrences());
+                }
+            }
+        }
     }
 
     /**
@@ -265,7 +321,7 @@ class ChallengeCatalogueCompatibilityTest {
     @Test
     void shouldCapAgentsAtThree() throws IOException {
         for (Challenge challenge : loadChallenges()) {
-            for (ChallengeCondition condition : definitionParser.parse(challenge).conditions()) {
+            for (ChallengeCondition condition : everyCondition(challenge)) {
                 if (condition.groupBy() == ChallengeGroupBy.AGENT) {
                     assertThat(condition.target())
                         .as("%s agent cap", challenge.getCode())
@@ -276,30 +332,71 @@ class ChallengeCatalogueCompatibilityTest {
     }
 
     /**
-     * Verifies rule five: a daily is decided in at most two matches, whatever the mode, and never
-     * declares an unresolved filter that the parser could not read.
+     * Verifies that a daily bar is never spread over more than two matches.
+     *
+     * <p>A daily may ask for a volume of matches — the catalogue writes up to six — but a bar to
+     * clear match after match stays inside two, otherwise a single bad game costs the day.
      *
      * @throws IOException when the production migration cannot be read
      */
     @Test
-    void shouldKeepDailiesWithinTwoMatches() throws IOException {
+    void shouldKeepDailyBarsWithinTwoMatches() throws IOException {
         for (Challenge challenge : loadChallenges()) {
             if (challenge.getCadence() != ChallengeCadence.DAILY) {
                 continue;
             }
 
-            ChallengeDefinition definition = definitionParser.parse(challenge);
-
-            for (ChallengeCondition condition : definition.conditions()) {
+            for (ChallengeCondition condition : everyCondition(challenge)) {
                 if (condition.occurrences() != null) {
-                    assertThat(condition.occurrences()).as(challenge.getCode()).isLessThanOrEqualTo(2);
-                }
-
-                if (condition.isMatchCountMetric() && condition.groupBy() == null) {
-                    assertThat(condition.target()).as(challenge.getCode())
-                        .isLessThanOrEqualTo(BigDecimal.valueOf(2));
+                    assertThat(condition.occurrences())
+                        .as(challenge.getCode())
+                        .isLessThanOrEqualTo(DAILY_OCCURRENCE_CAP);
                 }
             }
+        }
+    }
+
+    /**
+     * Verifies that no challenge measures a statistic its mode never reports.
+     *
+     * <p>The Henrik payload returns zero headshots and zero damage on every deathmatch and every
+     * skirmish. A challenge asking for either there is not hard, it is impossible.
+     *
+     * @throws IOException when the production migration cannot be read
+     */
+    @Test
+    void shouldNeverMeasureHeadshotsOrDamageInABlindMode() throws IOException {
+        for (Challenge challenge : loadChallenges()) {
+            for (ChallengeCondition condition : everyCondition(challenge)) {
+                boolean blind = ROUND_BASED_ONLY_METRICS.contains(condition.metric())
+                    && BLIND_MODES.contains(condition.effectiveGameMode());
+
+                assertThat(blind)
+                    .as("%s measures %s in %s, which the API never reports",
+                        challenge.getCode(), condition.metric(), condition.effectiveGameMode())
+                    .isFalse();
+            }
+        }
+    }
+
+    /**
+     * Verifies that no challenge requires deathmatch and team deathmatch at once.
+     *
+     * <p>Both modes are played in bursts and rarely in the same week, so a challenge needing a
+     * volume of each is decided by the squad's habits rather than by its play.
+     *
+     * @throws IOException when the production migration cannot be read
+     */
+    @Test
+    void shouldNeverCombineDeathmatchAndTeamDeathmatch() throws IOException {
+        for (Challenge challenge : loadChallenges()) {
+            Set<ChallengeGameMode> modes = everyCondition(challenge).stream()
+                .map(ChallengeCondition::effectiveGameMode)
+                .collect(Collectors.toSet());
+
+            assertThat(modes.containsAll(
+                Set.of(ChallengeGameMode.DEATHMATCH, ChallengeGameMode.TEAM_DEATHMATCH)
+            )).as("%s combines both short formats", challenge.getCode()).isFalse();
         }
     }
 
@@ -316,10 +413,12 @@ class ChallengeCatalogueCompatibilityTest {
         Pattern gameModePattern = Pattern.compile("\"gameMode\"\\s*:\\s*\"([A-Z_]+)\"");
 
         for (Challenge challenge : loadChallenges()) {
-            Matcher matcher = gameModePattern.matcher(challenge.getConditionsJson());
+            for (String json : List.of(challenge.getConditionsJson(), challenge.getExpertConditionsJson())) {
+                Matcher matcher = gameModePattern.matcher(json);
 
-            while (matcher.find()) {
-                assertThat(knownFilters).as(challenge.getCode()).contains(matcher.group(1));
+                while (matcher.find()) {
+                    assertThat(knownFilters).as(challenge.getCode()).contains(matcher.group(1));
+                }
             }
         }
     }
@@ -337,54 +436,32 @@ class ChallengeCatalogueCompatibilityTest {
     }
 
     /**
-     * Parses, resolves and calculates one challenge through production components.
+     * Returns every condition a challenge declares, at both levels.
+     *
+     * @param challenge challenge to read
+     * @return the conditions of both grids
+     */
+    private List<ChallengeCondition> everyCondition(Challenge challenge) {
+        List<ChallengeCondition> conditions =
+            new ArrayList<>(definitionParser.parse(challenge, SquadLevel.REFERENCE).conditions());
+
+        conditions.addAll(definitionParser.parse(challenge, SquadLevel.EXPERT).conditions());
+
+        return conditions;
+    }
+
+    /**
+     * Parses and calculates one challenge grid through production components.
      *
      * @param challenge persisted challenge definition
-     * @param scaling   scaling to resolve against
+     * @param level     squad level whose grid is read
      * @return normalized calculation result
      */
-    private ChallengeProgressResult calculate(Challenge challenge, ChallengeScaling scaling) {
-        ChallengeDefinition definition = targetResolver.resolve(
-            definitionParser.parse(challenge),
-            challenge.getCadence(),
-            challenge.getDifficulty(),
-            scaling
-        );
+    private ChallengeProgressResult calculate(Challenge challenge, SquadLevel level) {
+        ChallengeDefinition definition = definitionParser.parse(challenge, level);
 
         return calculatorRegistry.getCalculator(definition.progressMode())
             .calculate(definition, emptyContext);
-    }
-
-    /**
-     * Scaling of the weakest squad the catalogue is meant for.
-     *
-     * @return amateur scaling
-     */
-    private ChallengeScaling amateurScaling() {
-        return new ChallengeScaling(
-            new BigDecimal("0.4"),
-            Map.of(
-                SkillAnchor.LONG_KILLS, BigDecimal.valueOf(10),
-                SkillAnchor.LONG_HEADSHOTS, BigDecimal.valueOf(5),
-                SkillAnchor.LONG_ASSISTS, BigDecimal.valueOf(4),
-                SkillAnchor.LONG_SCORE, BigDecimal.valueOf(3_000),
-                SkillAnchor.LONG_KD, new BigDecimal("0.8"),
-                SkillAnchor.LONG_ADR, BigDecimal.valueOf(100),
-                SkillAnchor.LONG_ACS, BigDecimal.valueOf(160),
-                SkillAnchor.DEATHMATCH_KILLS, BigDecimal.valueOf(18),
-                SkillAnchor.DEATHMATCH_HEADSHOTS, BigDecimal.valueOf(7),
-                SkillAnchor.TEAM_DEATHMATCH_KILLS, BigDecimal.valueOf(20)
-            )
-        );
-    }
-
-    /**
-     * Scaling of a squad at the volume bound, without measured anchors.
-     *
-     * @return elite scaling
-     */
-    private ChallengeScaling eliteScaling() {
-        return new ChallengeScaling(BigDecimal.valueOf(3), Map.of());
     }
 
     /**
@@ -415,18 +492,29 @@ class ChallengeCatalogueCompatibilityTest {
         String difficulty = parseNullableSqlString(matcher.group(4));
 
         challenge.setCode(matcher.group(1));
-        challenge.setName(matcher.group(2));
-        challenge.setDescription(matcher.group(3));
+        challenge.setName(unescape(matcher.group(2)));
+        challenge.setDescription(unescape(matcher.group(3)));
         challenge.setDifficulty(difficulty == null ? null : ChallengeDifficulty.valueOf(difficulty));
-        challenge.setCategory(ChallengeCategory.valueOf(matcher.group(5)));
-        challenge.setProgressMode(ProgressMode.valueOf(matcher.group(6)));
-        challenge.setConditionsJson(matcher.group(7));
-        challenge.setExclusionGroup(parseNullableSqlString(matcher.group(8)));
-        challenge.setEnabled(Boolean.parseBoolean(matcher.group(9)));
-        challenge.setSchemaVersion(Integer.parseInt(matcher.group(10)));
-        challenge.setCadence(ChallengeCadence.valueOf(matcher.group(11)));
+        challenge.setCategory(ChallengeCategory.valueOf(matcher.group(6)));
+        challenge.setProgressMode(ProgressMode.valueOf(matcher.group(7)));
+        challenge.setConditionsJson(matcher.group(8));
+        challenge.setExpertConditionsJson(matcher.group(9));
+        challenge.setExclusionGroup(parseNullableSqlString(matcher.group(10)));
+        challenge.setEnabled(Boolean.parseBoolean(matcher.group(12)));
+        challenge.setSchemaVersion(Integer.parseInt(matcher.group(13)));
+        challenge.setCadence(ChallengeCadence.valueOf(matcher.group(14)));
 
         return challenge;
+    }
+
+    /**
+     * Restores the single quotes an SQL literal doubles.
+     *
+     * @param sqlValue value read out of a literal
+     * @return the value as written in the catalogue
+     */
+    private String unescape(String sqlValue) {
+        return sqlValue.replace("''", "'");
     }
 
     /**
@@ -440,7 +528,7 @@ class ChallengeCatalogueCompatibilityTest {
             return null;
         }
 
-        return sqlValue.substring(1, sqlValue.length() - 1);
+        return unescape(sqlValue.substring(1, sqlValue.length() - 1));
     }
 
     /**

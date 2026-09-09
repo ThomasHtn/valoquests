@@ -7,6 +7,7 @@ import io.github.thomashtn.valoquests.campaign.entity.Guardian;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.model.CampaignTier;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -58,8 +59,7 @@ public final class CampaignFixtures {
         campaign.setRosterSize(7);
         campaign.setReference(REFERENCE);
         campaign.setTier(CampaignTier.NORMAL);
-        campaign.setVolumeFactor(BigDecimal.ONE);
-        campaign.setSkillAnchorsJson("{}");
+        campaign.setSquadLevel(SquadLevel.REFERENCE);
         campaign.setCalibrationWindowMonths(9);
         campaign.setCalibrationFirstDay(FIRST_WEEK_START.minusMonths(9));
 

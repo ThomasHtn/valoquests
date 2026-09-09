@@ -22,6 +22,7 @@ import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
 import io.github.thomashtn.valoquests.campaign.service.CampaignLifecycleService;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeCalibrationSource;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
@@ -258,7 +259,7 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     @Test
     @DisplayName("Starts, replays, settles and closes the campaign through the production rollover")
     void shouldRunTheCampaignFromItsFirstMondayToItsClosing() throws Exception {
-        Campaign campaign = lifecycleService.open();
+        Campaign campaign = lifecycleService.open(SquadLevel.REFERENCE);
 
         mutableClock.setInstant(START_TIME);
         weeklyRolloverService.rolloverIfNeeded();
@@ -335,7 +336,7 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     @Test
     @DisplayName("Stops a campaign early and deletes it with everything it owns")
     void shouldStopAndDeleteACampaignFromTheBackoffice() throws Exception {
-        Campaign campaign = lifecycleService.open();
+        Campaign campaign = lifecycleService.open(SquadLevel.REFERENCE);
         mutableClock.setInstant(Instant.parse("2026-07-29T12:00:00Z"));
         lifecycleService.startIfDue();
         mockMvc.perform(post("/api/admin/campaigns/replay").header("X-Admin-Key", ADMIN_KEY))
@@ -350,7 +351,7 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         mockMvc.perform(post("/api/admin/campaigns/stop").header("X-Admin-Key", ADMIN_KEY))
             .andExpect(status().isConflict());
 
-        Campaign next = lifecycleService.open();
+        Campaign next = lifecycleService.open(SquadLevel.REFERENCE);
         assertThat(next.getNumber()).isEqualTo(2);
         assertThat(next.getFirstWeekStart()).isEqualTo(LocalDate.of(2026, 8, 3));
 

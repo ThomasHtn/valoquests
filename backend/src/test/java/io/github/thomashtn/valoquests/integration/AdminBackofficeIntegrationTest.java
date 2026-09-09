@@ -16,6 +16,7 @@ import io.github.thomashtn.valoquests.campaign.repository.GuardianRepository;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
@@ -273,8 +274,7 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
         campaign.setRosterSize(7);
         campaign.setReference(5_300);
         campaign.setTier(CampaignTier.NORMAL);
-        campaign.setVolumeFactor(BigDecimal.ONE);
-        campaign.setSkillAnchorsJson("{}");
+        campaign.setSquadLevel(SquadLevel.REFERENCE);
         campaign.setCalibrationWindowMonths(9);
         campaign.setCalibrationFirstDay(WEEK_START.minusMonths(9));
         campaignRepository.save(campaign);

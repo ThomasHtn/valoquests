@@ -221,6 +221,7 @@ class JacksonChallengeDefinitionParserTest {
         assertThat(json).contains("\"target\":1.2", "\"occurrences\":6", "\"scope\":\"PER_MATCH\"");
 
         challenge.setConditionsJson(json);
+        challenge.setExpertConditionsJson(challenge.getConditionsJson());
 
         assertThat(parser.parse(challenge).conditions()).isEqualTo(conditions);
     }
@@ -241,6 +242,7 @@ class JacksonChallengeDefinitionParserTest {
         challenge.setCode("TEST_CHALLENGE");
         challenge.setProgressMode(progressMode);
         challenge.setConditionsJson(conditionsJson);
+        challenge.setExpertConditionsJson(challenge.getConditionsJson());
         challenge.setSchemaVersion(3);
 
         return challenge;

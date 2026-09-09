@@ -7,13 +7,12 @@ import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScaling;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
+import io.github.thomashtn.valoquests.challenge.model.SquadLevel;
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -39,12 +38,12 @@ class ChallengeSelectionFactoryTest {
         new JacksonChallengeDefinitionParser(JsonMapper.builder().build());
 
     /**
-     * Verifies that a weekly selection stores its conditions scaled to the week's calibration and
-     * reads back through the parser.
+     * Verifies that a weekly selection stores the grid of the week's level and reads back through
+     * the parser.
      */
     @Test
-    void shouldStoreConditionsResolvedToTheWeeksCalibration() {
-        ChallengeSelectionFactory factory = factory(new ChallengeScaling(BigDecimal.valueOf(2), Map.of()));
+    void shouldStoreTheGridOfTheWeeksLevel() {
+        ChallengeSelectionFactory factory = factory(SquadLevel.EXPERT);
 
         WeeklyChallenge selection = factory.weekly(WEEK_START, challenge(), DRAWN_AT);
 
@@ -55,17 +54,17 @@ class ChallengeSelectionFactoryTest {
         assertThat(selection.getResolvedConditionsJson()).doesNotContain("null");
         assertThat(parser.parse(selection).singleCondition().target())
             .isEqualByComparingTo(BigDecimal.valueOf(120));
-        // The catalogue's own definition is untouched by the draw.
+        // The reference grid is untouched by the draw.
         assertThat(parser.parse(selection.getChallenge()).singleCondition().target())
             .isEqualByComparingTo(BigDecimal.valueOf(60));
     }
 
     /**
-     * Verifies that a daily selection carries its day and the base targets outside any campaign.
+     * Verifies that a daily selection carries its day and the reference grid outside any campaign.
      */
     @Test
     void shouldCreateADailySelectionOnItsDay() {
-        ChallengeSelectionFactory factory = factory(ChallengeScaling.NONE);
+        ChallengeSelectionFactory factory = factory(SquadLevel.REFERENCE);
         Challenge challenge = challenge();
         challenge.setCadence(ChallengeCadence.DAILY);
         challenge.setDifficulty(null);
@@ -80,21 +79,20 @@ class ChallengeSelectionFactoryTest {
     }
 
     /**
-     * Creates a factory whose calibration source hands back one scaling for every week.
+     * Creates a factory whose calibration source hands back one level for every week.
      *
-     * @param scaling scaling in force
+     * @param level level in force
      * @return factory under test
      */
-    private ChallengeSelectionFactory factory(ChallengeScaling scaling) {
+    private ChallengeSelectionFactory factory(SquadLevel level) {
         return new ChallengeSelectionFactory(
             parser,
-            new ChallengeTargetResolver(),
-            weekStart -> new ChallengeCalibration(5_300, 1, scaling)
+            weekStart -> new ChallengeCalibration(5_300, 1, level)
         );
     }
 
     /**
-     * Creates a summed kill challenge with a base of sixty.
+     * Creates a summed kill challenge, sixty at the reference and a hundred and twenty expert.
      *
      * @return challenge fixture
      */
@@ -107,6 +105,9 @@ class ChallengeSelectionFactoryTest {
         challenge.setSchemaVersion(3);
         challenge.setConditionsJson(
             "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":60,\"gameMode\":\"COMPETITIVE_OR_UNRATED\"}]"
+        );
+        challenge.setExpertConditionsJson(
+            "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":120,\"gameMode\":\"COMPETITIVE_OR_UNRATED\"}]"
         );
         return challenge;
     }
