@@ -15,7 +15,7 @@ import { DayCell } from '../challenges.model';
   selector: 'app-daily-frieze',
   imports: [TranslatePipe, ChallengeCardView, Tooltip],
   templateUrl: './daily-frieze.html',
-  styleUrl: './daily-frieze.css',
+  styleUrl: './daily-frieze.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DailyFrieze {

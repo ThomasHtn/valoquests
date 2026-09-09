@@ -35,7 +35,7 @@ let nextId = 0;
     LucideChevronRight,
   ],
   templateUrl: './week-picker.html',
-  styleUrl: './week-picker.css',
+  styleUrl: './week-picker.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'relative flex items-center gap-1',

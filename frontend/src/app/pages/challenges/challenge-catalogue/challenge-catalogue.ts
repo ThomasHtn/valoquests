@@ -12,7 +12,7 @@ import { CatalogueGroup } from '../challenges.model';
   selector: 'app-challenge-catalogue',
   imports: [TranslatePipe, LucideZap],
   templateUrl: './challenge-catalogue.html',
-  styleUrl: './challenge-catalogue.css',
+  styleUrl: './challenge-catalogue.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChallengeCatalogueView {

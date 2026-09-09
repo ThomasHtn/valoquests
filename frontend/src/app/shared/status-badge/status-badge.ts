@@ -22,7 +22,7 @@ const TONE_CLASS: Record<StatusBadgeTone, string> = {
  */
 @Component({
   selector: 'app-status-badge',
-  template: `{{ label() }}`,
+  templateUrl: './status-badge.html',
   host: {
     class:
       'tracking-label notch-tr notch-tr-edge inline-block shrink-0 border px-2.5 py-1 font-mono text-xs font-semibold uppercase [--notch:0.375rem]',

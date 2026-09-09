@@ -11,6 +11,7 @@ import io.github.thomashtn.valoquests.ranking.service.RankingProgressMapper.Week
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
 import io.github.thomashtn.valoquests.shared.util.PaginationGuard;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.week.WeekConstants;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -29,11 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class DefaultRankingQueryService implements RankingQueryService {
-
-    /**
-     * Days between a week's Monday and its Sunday.
-     */
-    private static final int WEEK_END_OFFSET = 6;
 
     /**
      * Repository used to read weekly ranking rows.
@@ -110,7 +106,13 @@ public class DefaultRankingQueryService implements RankingQueryService {
             .map(score -> toCurrentEntry(score, board, titlesOf(titles, score)))
             .toList();
 
-        return new CurrentRankingResponse(weekStart, weekStart.plusDays(WEEK_END_OFFSET), today, calculatedAt, ranking);
+        return new CurrentRankingResponse(
+            weekStart,
+            weekStart.plusDays(WeekConstants.LAST_DAY_OFFSET),
+            today,
+            calculatedAt,
+            ranking
+        );
     }
 
     @Override
@@ -235,7 +237,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
 
         return new RankingHistoryWeekResponse(
             weekStart,
-            weekStart.plusDays(WEEK_END_OFFSET),
+            weekStart.plusDays(WeekConstants.LAST_DAY_OFFSET),
             finalizedAt,
             winnerPlayerId,
             ranking

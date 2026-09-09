@@ -1,14 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-/**
- * Ring geometry, in the SVG viewBox's own units. The viewBox scales to whatever size the caller
- * gave the host, so the stroke stays a constant share of the diameter — 4 in 44, the share
- * `progress-ring-core` clears when it draws a disc inside the ring.
- */
-const SIZE = 44;
-const STROKE = 4;
-const RADIUS = (SIZE - STROKE) / 2;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+import {
+  RING_CIRCUMFERENCE,
+  RING_RADIUS,
+  RING_SIZE,
+  RING_STROKE,
+} from './progress-circle.constants';
 
 /**
  * Ring-shaped progress indicator, filling clockwise from the top.
@@ -27,29 +24,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
  */
 @Component({
   selector: 'app-progress-circle',
-  template: `
-    <svg class="block size-full -rotate-90" [attr.viewBox]="viewBox" aria-hidden="true">
-      <circle
-        [attr.cx]="centre"
-        [attr.cy]="centre"
-        [attr.r]="radius"
-        [attr.stroke-width]="stroke"
-        fill="none"
-        stroke="var(--color-edge)"
-      />
-      <circle
-        [attr.cx]="centre"
-        [attr.cy]="centre"
-        [attr.r]="radius"
-        [attr.stroke-width]="stroke"
-        [attr.stroke-dasharray]="circumference"
-        [attr.stroke-dashoffset]="dashOffset()"
-        fill="none"
-        stroke="currentColor"
-        stroke-linecap="round"
-      />
-    </svg>
-  `,
+  templateUrl: './progress-circle.html',
   host: {
     class: 'block',
     'aria-hidden': 'true',
@@ -71,21 +46,21 @@ export class ProgressCircle {
    */
   public readonly colorClass = input.required<string>();
 
-  protected readonly viewBox = `0 0 ${SIZE} ${SIZE}`;
+  protected readonly viewBox = `0 0 ${RING_SIZE} ${RING_SIZE}`;
 
-  protected readonly centre = SIZE / 2;
+  protected readonly centre = RING_SIZE / 2;
 
-  protected readonly radius = RADIUS;
+  protected readonly radius = RING_RADIUS;
 
-  protected readonly stroke = STROKE;
+  protected readonly stroke = RING_STROKE;
 
-  protected readonly circumference = CIRCUMFERENCE;
+  protected readonly circumference = RING_CIRCUMFERENCE;
 
   /**
    * Length of the arc left undrawn. Clamped so a value past the range stays a closed ring.
    */
   protected readonly dashOffset = computed(() => {
     const share = Math.min(100, Math.max(0, this.percentage())) / 100;
-    return CIRCUMFERENCE * (1 - share);
+    return RING_CIRCUMFERENCE * (1 - share);
   });
 }

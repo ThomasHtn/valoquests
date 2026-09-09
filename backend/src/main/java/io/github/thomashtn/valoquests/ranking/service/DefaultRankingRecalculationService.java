@@ -11,6 +11,7 @@ import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.model.PlayerDayOutput;
 import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.week.WeekConstants;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -46,11 +47,6 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
      * Application logger.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRankingRecalculationService.class);
-
-    /**
-     * Days in one ranking week.
-     */
-    private static final int DAYS_PER_WEEK = 7;
 
     /**
      * Orders a week: most points first, then whoever hit the guardian hardest, then whoever validated
@@ -159,7 +155,7 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
         DailyOutput output = dailyOutputReader.read(
             EnumSet.of(Player.COMPETITIVE_STATUS),
             weekStart,
-            weekStart.plusDays(DAYS_PER_WEEK - 1L)
+            weekStart.plusDays(WeekConstants.DAYS_PER_WEEK - 1L)
         );
         Map<Long, ChallengeTally> tallies = challengePointsReader.read(weekStart);
 
@@ -236,7 +232,7 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
         int activeDays = 0;
         int streakDays = 0;
 
-        for (int offset = 0; offset < DAYS_PER_WEEK; offset++) {
+        for (int offset = 0; offset < WeekConstants.DAYS_PER_WEEK; offset++) {
             LocalDate day = weekStart.plusDays(offset);
             PlayerDayOutput dayOutput = output.of(playerId, day);
 

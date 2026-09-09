@@ -26,7 +26,7 @@ import { PlanetOrb } from './planet-orb';
   selector: 'app-planet-strip',
   imports: [TranslatePipe, PlanetOrb, PlanetDrawer, LucideCheck, LucideStar, LucideSwords, LucideX],
   templateUrl: './planet-strip.html',
-  styleUrl: './planet-strip.css',
+  styleUrl: './planet-strip.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlanetStrip {

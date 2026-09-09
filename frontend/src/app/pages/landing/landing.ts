@@ -16,7 +16,7 @@ import { Compass } from './compass/compass';
   selector: 'app-landing',
   imports: [TranslatePipe, Compass],
   templateUrl: './landing.html',
-  styleUrl: './landing.css',
+  styleUrl: './landing.scss',
   // Diverges from `PAGE_LAYOUT_CLASS`: this page is not a stack of blocks inside the application
   // shell but a single full-viewport composition, laid out by its own template. `block` only
   // avoids the default inline display of a custom element.

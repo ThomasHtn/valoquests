@@ -109,7 +109,7 @@ function writeSeenReport(weekStart: string): void {
     Tooltip,
   ],
   templateUrl: './overview.html',
-  styleUrl: './overview.css',
+  styleUrl: './overview.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: PAGE_LAYOUT_CLASS },
 })

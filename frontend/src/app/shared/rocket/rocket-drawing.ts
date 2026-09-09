@@ -9,7 +9,7 @@
  * on `y = 0` and builds upward, so it is placed under a `scale(1 -1)` transform.
  */
 
-const NS = 'http://www.w3.org/2000/svg';
+import { svgElement } from '@core/svg/svg-element.utils';
 
 /**
  * Palette of the ship, in the colours of the rest of the site.
@@ -33,22 +33,6 @@ const C = ROCKET_PALETTE;
  * Number of parts the finished launcher has: one per guardian of the campaign.
  */
 export const ROCKET_PART_COUNT = 10;
-
-type Attrs = Readonly<Record<string, string | number>>;
-
-/**
- * Creates one SVG element with its attributes set.
- */
-export function svgElement<K extends keyof SVGElementTagNameMap>(
-  name: K,
-  attrs: Attrs = {},
-): SVGElementTagNameMap[K] {
-  const node = document.createElementNS(NS, name);
-  for (const [key, value] of Object.entries(attrs)) {
-    node.setAttribute(key, String(value));
-  }
-  return node;
-}
 
 const el = svgElement;
 

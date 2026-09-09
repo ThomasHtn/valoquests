@@ -7,10 +7,10 @@ import {
   CAMPAIGN_WEEK_COUNT,
   CampaignHistory,
   CampaignWeek,
-  ExtractionLimiter,
 } from '@core/campaign/campaign.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { daysBetween, localMidnight } from '@core/date/date-time.utils';
+import { resolveLocale } from '@core/i18n/locale.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -23,11 +23,14 @@ import { SectionRule } from '@shared/section-rule/section-rule';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { BaseReserves } from './base-reserves/base-reserves';
 import { CampaignHistoryView } from './campaign-history/campaign-history';
+import { buildLedger } from './campaign-ledger.utils';
+import { padCurve, resolvePlanetState, resolveSeasonKey } from './campaign-planet.utils';
+import { buildLawNotes, buildRescueLaw, buildReserves } from './campaign-reserves.utils';
+import { CURRENT_CURVE_COLOR, PAST_CURVE_COLORS } from './campaign.constants';
 import {
   HistoryCurve,
   HistoryRow,
   LawNotes,
-  LedgerCell,
   LedgerColumn,
   LedgerRow,
   Planet,
@@ -44,19 +47,6 @@ import { RescueLawView } from './rescue-law/rescue-law';
 import { ReserveLedger } from './reserve-ledger/reserve-ledger';
 import { RocketShowcase } from './rocket-showcase/rocket-showcase';
 import { StarField } from './star-field';
-
-/**
- * Breakthroughs the loss note is illustrated at.
- */
-const LOSS_EXAMPLES: readonly number[] = [95, 64, 20];
-
-/** Population the loss note reasons on while the base is still empty. */
-const SAMPLE_POPULATION = 10_000;
-
-/**
- * Colours of the past campaigns' curves, most recent first; the live one is always amber.
- */
-const PAST_CURVE_COLORS: readonly string[] = ['#7fb6d8', '#868b8d', '#8c6fdc', '#ec4899'];
 
 /**
  * The road of the ten planets: where the campaign stands, the rule that settles every Sunday,
@@ -82,7 +72,7 @@ const PAST_CURVE_COLORS: readonly string[] = ['#7fb6d8', '#868b8d', '#8c6fdc', '
     LucideTarget,
   ],
   templateUrl: './campaign.html',
-  styleUrl: './campaign.css',
+  styleUrl: './campaign.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: PAGE_LAYOUT_CLASS },
 })
@@ -150,96 +140,15 @@ export class Campaign {
     return campaign.weeks.map((week) => this.toPlanet(week, campaign));
   });
 
-  protected readonly law = computed<RescueLaw | null>(() => {
-    const campaign = this.campaign();
-    const week = this.currentWeek();
-    const base = campaign?.base;
-    const forecast = campaign?.forecast;
-    if (!week || !base || !forecast) {
-      return null;
-    }
-    return {
-      carry: base.rescuesByComponents,
-      shelter: base.rescuesByFood,
-      wounded: week.woundedCount,
-      planetName: week.planetName,
-      breachPercent: week.progressPercent,
-      extracted: forecast.extractionRescued,
-      byChallenges: forecast.challengeRescued,
-      componentsPerRescue: base.componentsPerRescue,
-      foodPerRescue: base.foodPerRescue,
-      hitPointsPerPercent: Math.round(week.guardianHitPoints / 100),
-    };
-  });
+  protected readonly law = computed<RescueLaw | null>(() =>
+    buildRescueLaw(this.campaign(), this.currentWeek()),
+  );
 
-  protected readonly notes = computed<LawNotes | null>(() => {
-    const campaign = this.campaign();
-    if (!campaign?.tier || campaign.reference === null) {
-      return null;
-    }
-    // Before the first day is replayed the base is empty: the note then reasons on a sample base.
-    const sample = (campaign.base?.population ?? 0) === 0;
-    const population = sample ? SAMPLE_POPULATION : (campaign.base?.population ?? 0);
-    const rate = (campaign.base?.guardianLossPercent ?? 0) / 100;
-    return {
-      tier: campaign.tier,
-      reference: campaign.reference,
-      population,
-      sample,
-      losses: LOSS_EXAMPLES.map((breachPercent) => ({
-        breachPercent,
-        lost: Math.round(population * (1 - breachPercent / 100) ** 2 * rate),
-      })),
-    };
-  });
+  protected readonly notes = computed<LawNotes | null>(() => buildLawNotes(this.campaign()));
 
-  protected readonly reserves = computed<Reserves | null>(() => {
-    const campaign = this.campaign();
-    const base = campaign?.base;
-    const totals = campaign?.totals;
-    // An opened campaign has no replayed day yet: nothing to read, so nothing shown.
-    if (!campaign || !base || !totals || campaign.status === 'OPENED') {
-      return null;
-    }
-    const settled = campaign.weeks.filter((week) => week.settled);
-    const reference = this.currentWeek() ?? settled.at(-1) ?? campaign.weeks[0];
-    const wounded = reference?.woundedCount ?? 0;
-    const spotted = settled.reduce((sum, week) => sum + week.woundedCount, 0);
-    const byExtraction = totals.rescued - totals.challengeRescued;
-    const leftBehind = Math.max(0, spotted - totals.rescued);
-    const share = (value: number): number =>
-      spotted > 0 ? Math.round((value / spotted) * 1000) / 10 : 0;
-    const limited = (limiter: ExtractionLimiter): number =>
-      settled.filter((week) => week.limiter === limiter).length;
-    return {
-      food: {
-        stock: base.foodStock,
-        capacity: base.rescuesByFood,
-        fraction: wounded > 0 ? Math.min(1, base.rescuesByFood / wounded) : 0,
-      },
-      components: {
-        stock: base.componentsStock,
-        capacity: base.rescuesByComponents,
-        fraction: wounded > 0 ? Math.min(1, base.rescuesByComponents / wounded) : 0,
-      },
-      dailyUpkeep: base.dailyUpkeep,
-      wounded,
-      planetName: reference?.planetName ?? '',
-      rescued: totals.rescued,
-      spotted,
-      byExtraction,
-      byChallenges: totals.challengeRescued,
-      byChallengesPercent:
-        totals.rescued > 0 ? Math.round((totals.challengeRescued / totals.rescued) * 100) : 0,
-      leftBehind,
-      shares: [share(byExtraction), share(totals.challengeRescued), share(leftBehind)],
-      guardiansDefeated: totals.guardiansDefeated,
-      weeksSettled: totals.weeksSettled,
-      limitedByFood: limited('FOOD'),
-      limitedByComponents: limited('COMPONENTS'),
-      wholeGroup: limited('NONE') + limited('GROUP'),
-    };
-  });
+  protected readonly reserves = computed<Reserves | null>(() =>
+    buildReserves(this.campaign(), this.currentWeek()),
+  );
 
   protected readonly ledgerColumns = computed<readonly LedgerColumn[]>(() =>
     this.planets().map((planet) => ({
@@ -249,36 +158,9 @@ export class Campaign {
     })),
   );
 
-  protected readonly ledger = computed<readonly LedgerRow[]>(() => {
-    const campaign = this.campaign();
-    const totals = campaign?.totals;
-    if (!campaign || !totals || !campaign.weeks.some((week) => week.base !== null)) {
-      return [];
-    }
-    const planets = this.planets();
-    const raw = (['food', 'components'] as const).map((key) => ({
-      key,
-      cells: this.ledgerCells(campaign, planets, key),
-    }));
-    // Both rows on one scale: a food bar and a components bar of the same height mean the same
-    // quantity.
-    const top = Math.max(
-      1,
-      ...raw.flatMap((row) => row.cells.flatMap((cell) => [cell.got, cell.spent, cell.carry])),
-    );
-    return raw.map(({ key, cells }) => ({
-      key,
-      gained: key === 'food' ? totals.foodGained : totals.componentsGained,
-      spent: cells.reduce((sum, cell) => sum + (cell.kind === 'settled' ? cell.spent : 0), 0),
-      cells: cells.map((cell) => ({
-        ...cell,
-        gotShare: cell.got / top,
-        spentShare: cell.spent / top,
-        carryShare: cell.carry / top,
-      })),
-      spark: cells.map((cell) => (cell.kind === 'ahead' ? null : cell.got / top)),
-    }));
-  });
+  protected readonly ledger = computed<readonly LedgerRow[]>(() =>
+    buildLedger(this.campaign(), this.planets()),
+  );
 
   protected readonly rocketParts = computed<readonly RocketPart[]>(() => {
     const campaign = this.campaign();
@@ -315,8 +197,8 @@ export class Campaign {
           label: this.translation.translate('campaign.history.current', {
             number: campaign.number,
           }),
-          color: '#e8ab6b',
-          points: this.padded(points),
+          color: CURRENT_CURVE_COLOR,
+          points: padCurve(points),
           filled: true,
         },
         figure: campaign.base?.population ?? 0,
@@ -328,7 +210,7 @@ export class Campaign {
         series: {
           label: this.translation.translate('campaign.history.past', { number: past.number }),
           color: PAST_CURVE_COLORS[rank % PAST_CURVE_COLORS.length],
-          points: this.padded(past.weeklyPopulation),
+          points: padCurve(past.weeklyPopulation),
           dashed: rank % 2 === 1,
         },
         figure: past.population,
@@ -422,7 +304,7 @@ export class Campaign {
   }
 
   private locale(): string {
-    return this.translation.language() === 'fr' ? 'fr-FR' : 'en-US';
+    return resolveLocale(this.translation.language());
   }
 
   private weekday(date: Date): string {
@@ -432,41 +314,13 @@ export class Campaign {
 
   private season(isoDate: string): string {
     const date = localMidnight(isoDate);
-    const month = date.getMonth();
-    const key =
-      month <= 1 || month === 11
-        ? 'winter'
-        : month <= 4
-          ? 'spring'
-          : month <= 7
-            ? 'summer'
-            : 'autumn';
-    return this.translation.translate(`campaign.history.season.${key}`, {
+    return this.translation.translate(`campaign.history.season.${resolveSeasonKey(date)}`, {
       year: date.getFullYear(),
     });
   }
 
-  /**
-   * Pads a curve with trailing gaps so every campaign spans the ten weeks.
-   */
-  private padded(points: readonly (number | null)[]): readonly (number | null)[] {
-    return Array.from({ length: CAMPAIGN_WEEK_COUNT }, (_, index) => points[index] ?? null);
-  }
-
-  private planetState(week: CampaignWeek, campaign: CampaignModel): PlanetState {
-    if (week.defeated) {
-      return 'won';
-    }
-    if (week.settled) {
-      return 'lost';
-    }
-    return week.weekIndex === campaign.currentWeekIndex && campaign.status === 'RUNNING'
-      ? 'now'
-      : 'ahead';
-  }
-
   private toPlanet(week: CampaignWeek, campaign: CampaignModel): Planet {
-    const state = this.planetState(week, campaign);
+    const state = resolvePlanetState(week, campaign);
     const final = week.weekIndex === CAMPAIGN_WEEK_COUNT;
     const { radius, hue } = planetLook(week, final);
     const [stateLabel, stateIcon] = this.stateLine(
@@ -559,42 +413,5 @@ export class Campaign {
       populationChange: week.base?.populationChange ?? 0,
       baseLoss: week.baseLoss,
     };
-  }
-
-  private ledgerCells(
-    campaign: CampaignModel,
-    planets: readonly Planet[],
-    key: 'food' | 'components',
-  ): LedgerCell[] {
-    const per = key === 'food' ? campaign.base!.foodPerRescue : campaign.base!.componentsPerRescue;
-    let carriedIn = 0;
-    return campaign.weeks.map((week, offset) => {
-      const planet = planets[offset];
-      const kind = planet.state === 'now' ? 'now' : planet.state === 'ahead' ? 'ahead' : 'settled';
-      const got =
-        key === 'food' ? (week.base?.foodGained ?? 0) : (week.base?.componentsGained ?? 0);
-      const spent = key === 'food' ? week.foodSpent : week.componentsSpent;
-      const stock =
-        key === 'food' ? (week.base?.foodStock ?? 0) : (week.base?.componentsStock ?? 0);
-      const cell: LedgerCell = {
-        index: week.weekIndex,
-        planetName: week.planetName,
-        kind: week.base === null && kind !== 'ahead' ? 'ahead' : kind,
-        got,
-        spent,
-        carry: kind === 'settled' ? stock : 0,
-        carriedIn,
-        stock,
-        rescues: Math.floor(got / per),
-        stockRescues: Math.floor(stock / per),
-        gotShare: 0,
-        spentShare: 0,
-        carryShare: 0,
-      };
-      if (kind === 'settled') {
-        carriedIn = stock;
-      }
-      return cell;
-    });
   }
 }

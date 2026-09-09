@@ -23,21 +23,8 @@ const SCENE_HEADROOM = 40;
 
 @Component({
   selector: 'app-base-scene',
-  template: `
-    <svg
-      #town
-      [attr.aria-label]="label()"
-      [attr.viewBox]="viewBox"
-      class="block aspect-[1200/430] min-h-80 w-full max-h-[40rem]"
-      preserveAspectRatio="xMidYMax slice"
-      role="img"
-    ></svg>
-  `,
-  styles: `
-    :host {
-      display: block;
-    }
-  `,
+  templateUrl: './base-scene.html',
+  styleUrl: './base-scene.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BaseScene {

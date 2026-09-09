@@ -14,7 +14,7 @@ import { Reserves } from '../campaign.model';
   selector: 'app-base-reserves',
   imports: [TranslatePipe, LucideSkull, LucideUsers, LucideWheat, LucideWrench],
   templateUrl: './base-reserves.html',
-  styleUrl: './base-reserves.css',
+  styleUrl: './base-reserves.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BaseReserves {

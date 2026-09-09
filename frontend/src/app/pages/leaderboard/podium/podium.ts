@@ -11,9 +11,11 @@ import { RouterLink } from '@angular/router';
 import { LucideFlame, LucideTarget, LucideWheat, LucideWrench } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { createSeededRandom } from '@core/random/seeded-random.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
-import { svgElement as el } from '@shared/rocket/rocket-drawing';
+import { svgElement as el } from '@core/svg/svg-element.utils';
+import { SKY_SEED } from '@pages/campaign/star-field.constants';
 import { BoardRow } from '../leaderboard.model';
 
 const WIDTH = 1600;
@@ -44,7 +46,7 @@ const EMBER = '#e8ab6b';
     LucideWrench,
   ],
   templateUrl: './podium.html',
-  styleUrl: './podium.css',
+  styleUrl: './podium.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
 })
@@ -67,11 +69,7 @@ export class Podium {
    * squared draw on `cy` piles most stars low, where the plinths stand, and leaves the top sparse.
    */
   private draw(svg: SVGSVGElement): void {
-    let seed = 20260905;
-    const random = (): number => {
-      seed = (seed * 1664525 + 1013904223) % 4294967296;
-      return seed / 4294967296;
-    };
+    const random = createSeededRandom(SKY_SEED);
     const frag = document.createDocumentFragment();
     for (let i = 0; i < STAR_COUNT; i++) {
       const y = random();

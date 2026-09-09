@@ -37,7 +37,7 @@ import { LawNotes, RescueLaw } from '../campaign.model';
     LucideWrench,
   ],
   templateUrl: './rescue-law.html',
-  styleUrl: './rescue-law.css',
+  styleUrl: './rescue-law.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RescueLawView {

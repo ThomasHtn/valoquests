@@ -1,37 +1,19 @@
 import {
-  afterRenderEffect,
   Component,
   computed,
   effect,
-  ElementRef,
   inject,
   input,
   linkedSignal,
   signal,
   untracked,
-  viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  LucideFlame,
-  LucideLoaderCircle,
-  LucideTarget,
-  LucideWheat,
-  LucideWrench,
-} from '@lucide/angular';
+import { LucideFlame, LucideTarget, LucideWheat, LucideWrench } from '@lucide/angular';
 
 import { primaryTitle } from '@core/campaign/campaign-title.utils';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
-import { formatLocalTime } from '@core/date/date-time.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
-import {
-  resolveAgentImageUrl,
-  resolveAgentInitial,
-  resolveMapImageUrl,
-  resolveMatchScore,
-} from '@core/matches/match-format.utils';
-import { resolveResultAccentClass, resolveResultTextClass } from '@core/matches/match-visual.utils';
 import { FILTERABLE_GAME_MODES, GameMode } from '@core/matches/game-mode.model';
 import { Match } from '@core/matches/match.model';
 import { MatchesApi } from '@core/matches/matches-api';
@@ -69,28 +51,17 @@ import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
 import { StatTile } from '@shared/stat-tile/stat-tile';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { Breakpoint } from '@core/viewport/breakpoint';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { MatchDay } from './match-day.model';
 import { groupMatchesByDay } from './match-day.utils';
-import { MediaThumbnail } from './media-thumbnail/media-thumbnail';
+import { MatchHistory } from './match-history/match-history';
+import {
+  DEFAULT_GAME_MODE,
+  MAX_PROGRESSION_SEASONS,
+  PRIMARY_GAME_MODES,
+} from './player-profile.constants';
+import { resolveCurrentSeasonId, resolveYieldToneClass } from './player-profile.utils';
 import { Progression } from './progression/progression';
-
-/**
- * Game modes shown as their own button in the game-mode filter's button group, in
- * {@link FILTERABLE_GAME_MODES} order. The remaining modes stay reachable through that group's
- * overflow menu rather than crowding the group itself.
- */
-const PRIMARY_GAME_MODES: readonly GameMode[] = ['COMPETITIVE', 'UNRATED', 'DEATHMATCH'];
-
-/**
- * Largest number of seasons the progression view will chart at once.
- *
- * The chart series palette holds exactly this many slots, validated as an ordered set against the
- * page's surface; a sixth curve would have to be a generated hue, which is how a chart ends up
- * with two colours a colourblind reader cannot separate. See `styles/colors.css`.
- */
-const MAX_PROGRESSION_SEASONS = 5;
 
 /**
  * Player-profile page.
@@ -106,7 +77,7 @@ const MAX_PROGRESSION_SEASONS = 5;
     RouterLink,
     Avatar,
     ChampionBadge,
-    MediaThumbnail,
+    MatchHistory,
     ProgressBar,
     RankIconView,
     ResourceState,
@@ -114,7 +85,6 @@ const MAX_PROGRESSION_SEASONS = 5;
     Progression,
     Select,
     LucideFlame,
-    LucideLoaderCircle,
     LucideTarget,
     LucideWheat,
     LucideWrench,
@@ -162,12 +132,6 @@ export class PlayerProfile {
   private readonly translation = inject(Translation);
 
   /**
-   * Whether the viewport can hold the match grid: below it, the same matches are rendered as
-   * cards. Only the matching layout is put in the DOM, never both.
-   */
-  protected readonly isLarge = inject(Breakpoint).isLarge;
-
-  /**
    * Numeric form of {@link id}, as required by the backing resources.
    */
   protected readonly playerId = computed(() => Number(this.id()));
@@ -205,7 +169,7 @@ export class PlayerProfile {
    * aggregate would mix incomparable queues (e.g. deathmatch with competitive) - so this defaults
    * to competitive rather than being nullable.
    */
-  protected readonly gameModeFilter = signal<GameMode>('COMPETITIVE');
+  protected readonly gameModeFilter = signal<GameMode>(DEFAULT_GAME_MODE);
 
   /**
    * Reactive resource fetching every known season, used by the season filter.
@@ -240,9 +204,7 @@ export class PlayerProfile {
   protected readonly seasonId = linkedSignal<readonly Season[], number | null>({
     source: this.seasons,
     computation: (seasons, previous) =>
-      previous && previous.source.length > 0
-        ? previous.value
-        : PlayerProfile.resolveCurrentSeasonId(seasons),
+      previous && previous.source.length > 0 ? previous.value : resolveCurrentSeasonId(seasons),
   });
 
   /**
@@ -329,7 +291,7 @@ export class PlayerProfile {
       if (previous && previous.source.length > 0) {
         return previous.value;
       }
-      const currentSeasonId = PlayerProfile.resolveCurrentSeasonId(seasons);
+      const currentSeasonId = resolveCurrentSeasonId(seasons);
       return currentSeasonId === null ? [] : [currentSeasonId];
     },
   });
@@ -421,19 +383,12 @@ export class PlayerProfile {
   );
 
   /**
-   * Marker element rendered right after the last loaded match, present only while
-   * {@link hasMoreMatches} holds. Observed by the constructor's intersection observer, which
-   * requests the next page as soon as this element scrolls into view.
-   */
-  private readonly loadMoreTrigger = viewChild<ElementRef<HTMLElement>>('loadMoreTrigger');
-
-  /**
    * Whether the filters differ from their default: the current season's competitive statistics.
    */
   protected readonly hasActiveFilters = computed(
     () =>
-      this.gameModeFilter() !== 'COMPETITIVE' ||
-      this.seasonId() !== PlayerProfile.resolveCurrentSeasonId(this.seasons()),
+      this.gameModeFilter() !== DEFAULT_GAME_MODE ||
+      this.seasonId() !== resolveCurrentSeasonId(this.seasons()),
   );
 
   /**
@@ -511,79 +466,25 @@ export class PlayerProfile {
   protected readonly winRateVisual = resolveWinRateVisual;
 
   /**
-   * Resolves the colors for the K/D stat tile and match rows, exposed to the template.
-   */
-  protected readonly kdaVisual = resolveKdaVisual;
-
-  /**
-   * Resolves a match row's leading-edge accent, exposed to the template.
-   */
-  protected readonly resultAccentClass = resolveResultAccentClass;
-
-  /**
-   * Shared column grid for every row of the desktop match-history grid (header, day-summary and
-   * match rows alike), so their columns land at the same horizontal position however each row is
-   * otherwise styled. A CSS Grid rather than an HTML `<table>`: match rows need a real inset
-   * margin to read as nested under the day-summary row above them, and `margin` has no effect on
-   * `<tr>`.
-   *
-   * The 8 stat columns are `fr`-based, not fixed widths: a fixed width keeps them pinned to their
-   * own narrow band regardless of how wide the row grows, bunching every stat together at the
-   * row's trailing edge instead of spreading across it.
-   */
-  protected readonly rowGridClass =
-    'grid grid-cols-[minmax(0,2fr)_repeat(8,minmax(0,1fr))] items-center';
-
-  /**
-   * Resolves the colour carrying a match's result on the player's own score, exposed to the
-   * template.
-   */
-  protected readonly resultTextClass = resolveResultTextClass;
-
-  /**
-   * Formats a match's start time, exposed to the template.
-   */
-  protected readonly matchTime = formatLocalTime;
-
-  /**
-   * Resolves the monogram standing in for a match's agent portrait, exposed to the template.
-   */
-  protected readonly agentInitial = resolveAgentInitial;
-
-  /**
-   * Resolves a match's map image, exposed to the template.
-   */
-  protected readonly mapImageUrl = resolveMapImageUrl;
-
-  /**
-   * Resolves a match's agent portrait, exposed to the template.
-   */
-  protected readonly agentImageUrl = resolveAgentImageUrl;
-
-  /**
    * Formats a win rate, exposed to the template.
    */
   protected readonly formatWinRate = formatWinRate;
 
   /**
-   * Formats a KDA ratio, exposed to the template.
+   * Formatters and colours of the stat strip, exposed to the template.
    */
   protected readonly formatKda = formatKda;
 
-  /**
-   * Formats a headshot rate, exposed to the template.
-   */
   protected readonly formatHeadshotPercentage = formatHeadshotPercentage;
 
-  /**
-   * Formats an average score (ADR or ACS), exposed to the template.
-   */
   protected readonly formatScore = formatScore;
 
+  protected readonly kdaVisual = resolveKdaVisual;
+
   /**
-   * Resolves a match's round score, exposed to the template.
+   * Colour of the share the next match keeps, exposed to the template.
    */
-  protected readonly matchScore = resolveMatchScore;
+  protected readonly yieldToneClass = resolveYieldToneClass;
 
   constructor() {
     // Folds each settled page of `matchesResource` into `matches`, replacing it on page zero (a
@@ -603,79 +504,12 @@ export class PlayerProfile {
         this.matches.update((matches) => [...matches, ...content]);
       }
     });
-
-    // Requests the next page once the trigger element scrolls into view. Registered as an
-    // after-render effect, rather than a plain one, since the element only exists in the DOM once
-    // `hasMoreMatches` has rendered it.
-    afterRenderEffect((onCleanup) => {
-      const element = this.loadMoreTrigger()?.nativeElement;
-      if (!element) {
-        return;
-      }
-
-      const observer = new IntersectionObserver((entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          this.loadMoreMatches();
-        }
-      });
-      observer.observe(element);
-      onCleanup(() => observer.disconnect());
-    });
-  }
-
-  /**
-   * Formats a ValoQuests damage amount, grouped in the active language, exposed to the template.
-   *
-   * @param damage - Damage the match or the day was worth.
-   * @returns The grouped amount, e.g. `"1 250"`.
-   */
-  protected formatDamageAmount(damage: number): string {
-    return formatDamage(damage, this.translation.language());
-  }
-
-  /**
-   * Explains the amount a match was worth: which coefficient the day's ladder applied to it, or
-   * why it was worth nothing at all.
-   *
-   * Named rather than left to be guessed: two identical wins on the same evening routinely carry
-   * different amounts, and the ladder is the only thing that tells them apart.
-   *
-   * @param match - The match the amount belongs to.
-   * @returns The tooltip sentence.
-   */
-  protected damageExplanation(match: Match): string {
-    return this.translation.translate(
-      match.damageCoefficientPercent === 0
-        ? 'playerProfile.matches.damage.unvalued'
-        : 'playerProfile.matches.damage.coefficient',
-      { percent: match.damageCoefficientPercent },
-    );
-  }
-
-  /**
-   * The reduced share a match kept, as a short visible mark, or `null` when there is nothing to
-   * explain — a match paid in full, or one the ruleset never priced.
-   *
-   * Rendered beside the amount rather than left to {@link damageExplanation} alone: that sentence
-   * lives in a tooltip, and a tooltip opens on hover or on focus, neither of which a thumb does.
-   * Two identical wins on one evening carrying different amounts has to be readable without a
-   * pointer.
-   *
-   * @param match - The match the amount belongs to.
-   * @returns The share as text, or `null` when the amount needs no qualifier.
-   */
-  protected damageShareLabel(match: Match): string | null {
-    const percent = match.damageCoefficientPercent;
-
-    return percent <= 0 || percent >= 100
-      ? null
-      : this.translation.translate('playerProfile.matches.damage.share', { percent });
   }
 
   /**
    * Requests the next page of match history, appending it to {@link matches} once it settles.
    *
-   * Called by the intersection observer registered in the constructor. Guarded against firing
+   * Called when the history's trailing sentinel scrolls into view. Guarded against firing
    * past the last page or while a page is already in flight - the observer can otherwise fire
    * again before the previous request settles, e.g. while the page is still short enough that the
    * trigger element stays on screen after a page loads.
@@ -722,8 +556,8 @@ export class PlayerProfile {
    * match history from its first page.
    */
   protected resetFilters(): void {
-    this.gameModeFilter.set('COMPETITIVE');
-    this.seasonId.set(PlayerProfile.resolveCurrentSeasonId(this.seasons()));
+    this.gameModeFilter.set(DEFAULT_GAME_MODE);
+    this.seasonId.set(resolveCurrentSeasonId(this.seasons()));
     this.restartMatchHistory();
   }
 
@@ -746,28 +580,5 @@ export class PlayerProfile {
    */
   private seasonName(season: Season): string {
     return formatSeasonName(season.name, (key, params) => this.translation.translate(key, params));
-  }
-
-  /**
-   * Resolves the id of the current season - the one flagged {@link Season.active} - or the first
-   * (most-recent) known season if none is active, or `null` if none are known yet.
-   *
-   * @param seasons - Known seasons, as returned by the seasons resource.
-   */
-  private static resolveCurrentSeasonId(seasons: readonly Season[]): number | null {
-    return (seasons.find((season) => season.active) ?? seasons[0])?.id ?? null;
-  }
-  /**
-   * Colour of the share the next match keeps.
-   *
-   * Amber at full value, muted once the ladder has started taking a cut: the band is a warning
-   * only from the moment there is something to warn about, and a red would overstate a rule that
-   * still pays half.
-   *
-   * @param percent - Share the next match would keep.
-   * @returns The Tailwind text colour utility.
-   */
-  protected yieldToneClass(percent: number): string {
-    return percent >= 100 ? 'text-brand-500' : 'text-text-secondary';
   }
 }

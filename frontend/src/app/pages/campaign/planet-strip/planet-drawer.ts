@@ -34,7 +34,7 @@ import { Planet } from '../campaign.model';
     LucideX,
   ],
   templateUrl: './planet-drawer.html',
-  styleUrl: './planet-drawer.css',
+  styleUrl: './planet-drawer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlanetDrawer {

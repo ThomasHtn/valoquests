@@ -13,8 +13,10 @@ import {
   resolveChallengeMetricLabel,
   resolveChallengeVisual,
 } from '@core/challenges/challenge-visual.utils';
-import { daysBetween, localMidnight } from '@core/date/date-time.utils';
+import { WEEK_DAYS } from '@core/date/date-time.constants';
+import { daysBetween } from '@core/date/date-time.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
+import { resolveLocale } from '@core/i18n/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
@@ -41,7 +43,14 @@ import { ResourceState } from '@shared/resource-state/resource-state';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import {
-  BoardColumn,
+  buildBoardColumns,
+  formatFigure,
+  formatWeekSpan,
+  placeWeekInCampaign,
+  resolveTitleMeasures,
+} from './leaderboard-board.utils';
+import { WEEK_TITLE_KEYS } from './leaderboard.constants';
+import {
   BoardProgress,
   BoardRow,
   BoardTitle,
@@ -51,8 +60,6 @@ import {
 } from './leaderboard.model';
 import { Podium } from './podium/podium';
 import { WeekPicker } from './week-picker/week-picker';
-
-const WEEK_DAYS = 7;
 
 /**
  * The week's ranking: who stands where, on what, and how far each operator is on every weekly
@@ -83,7 +90,7 @@ const WEEK_DAYS = 7;
     LucideChevronUp,
   ],
   templateUrl: './leaderboard.html',
-  styleUrl: './leaderboard.css',
+  styleUrl: './leaderboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: PAGE_LAYOUT_CLASS },
 })
@@ -204,7 +211,7 @@ export class Leaderboard {
       return {
         weekStart: week.weekStart,
         label: this.weekSpan(week.weekStart),
-        ...this.placeInCampaign(week.weekStart),
+        ...this.placeWeek(week.weekStart),
         live: false,
         winner: winner
           ? {
@@ -221,7 +228,7 @@ export class Leaderboard {
       {
         weekStart: current.weekStart,
         label: this.weekSpan(current.weekStart),
-        ...this.placeInCampaign(current.weekStart),
+        ...this.placeWeek(current.weekStart),
         live: true,
         winner: null,
       },
@@ -247,10 +254,9 @@ export class Leaderboard {
     if (entries.length === 0) {
       return [];
     }
-    const keys: WeeklyTitle[] = ['MECHANIC', 'QUARTERMASTER', 'REGULAR', 'SCOUT'];
-    return keys.map((key) => {
+    return WEEK_TITLE_KEYS.map((key) => {
       const holder = entries.find((entry) => entry.titles.includes(key)) ?? null;
-      const best = Math.max(...entries.map((entry) => this.measures(entry)[key] ?? 0));
+      const best = Math.max(...entries.map((entry) => resolveTitleMeasures(entry)[key] ?? 0));
       const detail =
         best > 0
           ? holder
@@ -361,25 +367,13 @@ export class Leaderboard {
       total: entry.totalPoints,
       damage: entry.guardianDamage,
       challengePoints: entry.challengePoints,
-      title: this.title(entry.titles, this.measures(entry)),
+      title: this.title(entry.titles, resolveTitleMeasures(entry)),
       // The day's challenge first: it changes every morning, so its column is the one that moves.
       progress: [...entry.challengeProgress]
         .sort((a, b) => Number(b.cadence === 'DAILY') - Number(a.cadence === 'DAILY'))
         .map((progress) => this.progress(progress)),
     }));
     return this.split(rows, weekStart, true);
-  }
-
-  /**
-   * The figure each title is awarded on, the way the backend awards them.
-   */
-  private measures(entry: RankingEntry): Partial<Record<WeeklyTitle, number>> {
-    return {
-      MECHANIC: entry.components,
-      QUARTERMASTER: entry.food,
-      REGULAR: entry.streakDays,
-      SCOUT: entry.completedChallenges + entry.completedDailyChallenges,
-    };
   }
 
   private measure(key: WeeklyTitle, value: number): string {
@@ -413,33 +407,15 @@ export class Leaderboard {
     return {
       weekStart,
       live,
-      weekIndex: this.placeInCampaign(weekStart).index,
-      columns: this.columns(rows),
+      weekIndex: this.placeWeek(weekStart).index,
+      columns: buildBoardColumns(rows),
       ranked: rows.filter((row) => row.position !== null),
       unranked: rows.filter((row) => row.position === null),
     };
   }
 
-  /**
-   * Where a Monday falls: the running campaign's own week list first, then every closed campaign
-   * by its first and last Mondays. Outside all of them, no index and no group.
-   */
-  private placeInCampaign(weekStart: string): Pick<WeekOption, 'index' | 'group'> {
-    const campaign = this.campaign();
-    const week = campaign?.weeks.find((candidate) => candidate.weekStart === weekStart);
-    if (week && campaign) {
-      return { index: week.weekIndex, group: campaign.id };
-    }
-    const closed = this.campaignHistory().find(
-      (candidate) => weekStart >= candidate.firstWeekStart && weekStart <= candidate.lastWeekStart,
-    );
-    if (closed) {
-      return {
-        index: daysBetween(closed.firstWeekStart, weekStart) / WEEK_DAYS + 1,
-        group: closed.id,
-      };
-    }
-    return { index: null, group: null };
+  private placeWeek(weekStart: string): Pick<WeekOption, 'index' | 'group'> {
+    return placeWeekInCampaign(weekStart, this.campaign(), this.campaignHistory());
   }
 
   /**
@@ -460,26 +436,6 @@ export class Leaderboard {
       ...resolveTitleVisual(key),
       measure: value === undefined ? null : this.measure(key, value),
     };
-  }
-
-  /**
-   * One column per challenge the rows carry, in the order they carry them: every operator gets
-   * the same draw, so the first row that holds a cell names the column for all of them.
-   */
-  private columns(rows: readonly BoardRow[]): BoardColumn[] {
-    const columns = new Map<number, BoardColumn>();
-    for (const cell of rows.flatMap((row) => row.progress ?? [])) {
-      if (!columns.has(cell.id)) {
-        columns.set(cell.id, {
-          id: cell.id,
-          mark: cell.mark,
-          barClass: cell.barClass,
-          iconClass: cell.visual.iconClass,
-          tip: cell.name,
-        });
-      }
-    }
-    return [...columns.values()];
   }
 
   private progress(progress: RankingChallengeProgress): BoardProgress {
@@ -521,33 +477,15 @@ export class Leaderboard {
     };
   }
 
-  /**
-   * A figure in the reader's locale; abbreviated (`27k`) on request, for the ring's own fallback
-   * once the exact figure runs wider than its disc.
-   */
   private value(amount: number, compact = false): string {
-    const label = new Intl.NumberFormat(this.locale(), {
-      notation: compact ? 'compact' : 'standard',
-      maximumFractionDigits: compact ? 1 : 2,
-    }).format(amount);
-    return compact ? label.replace(/[\s\u00a0\u202f]+/g, '') : label;
+    return formatFigure(amount, this.locale(), compact);
   }
 
   private locale(): string {
-    return this.translation.language() === 'fr' ? 'fr-FR' : 'en-US';
+    return resolveLocale(this.translation.language());
   }
 
-  /**
-   * Monday to Sunday, the month spelled once when both days share it (`31 août – 6 sept.`).
-   */
   private weekSpan(weekStart: string): string {
-    const monday = localMidnight(weekStart);
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + WEEK_DAYS - 1);
-    const short = new Intl.DateTimeFormat(this.locale(), { day: 'numeric', month: 'short' });
-    if (monday.getMonth() === sunday.getMonth()) {
-      return `${monday.getDate()} – ${short.format(sunday)}`;
-    }
-    return `${short.format(monday)} – ${short.format(sunday)}`;
+    return formatWeekSpan(weekStart, this.locale());
   }
 }

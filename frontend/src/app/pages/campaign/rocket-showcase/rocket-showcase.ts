@@ -20,8 +20,8 @@ import {
   ROCKET_PART_COUNT,
   SHIP,
   SKIRT,
-  svgElement as el,
 } from '@shared/rocket/rocket-drawing';
+import { svgElement as el } from '@core/svg/svg-element.utils';
 import { RocketPart } from '../campaign.model';
 
 const VIEW_WIDTH = 600;
@@ -43,7 +43,7 @@ const MONO_FONT = 'font-family: var(--font-mono)';
   selector: 'app-rocket-showcase',
   imports: [TranslatePipe, LucideCheck, LucideLock, LucideTarget],
   templateUrl: './rocket-showcase.html',
-  styleUrl: './rocket-showcase.css',
+  styleUrl: './rocket-showcase.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RocketShowcase {

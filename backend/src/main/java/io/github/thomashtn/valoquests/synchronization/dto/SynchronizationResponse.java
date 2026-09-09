@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.synchronization.dto;
 
+import io.github.thomashtn.valoquests.synchronization.entity.Synchronization;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationStatus;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationTrigger;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
@@ -41,4 +42,31 @@ public record SynchronizationResponse(
     int matchesImported,
     String errorMessage
 ) {
+
+    /**
+     * Summarizes a persisted execution.
+     *
+     * @param synchronization                 persisted execution
+     * @param lastSuccessfulSynchronizationAt instant of the last execution that completed, if any
+     * @return the summary
+     */
+    public static SynchronizationResponse from(
+        Synchronization synchronization,
+        Instant lastSuccessfulSynchronizationAt
+    ) {
+        return new SynchronizationResponse(
+            synchronization.getId(),
+            synchronization.getType(),
+            synchronization.getTrigger(),
+            synchronization.getStatus(),
+            synchronization.getStartedAt(),
+            synchronization.getFinishedAt(),
+            synchronization.getStartedAt(),
+            lastSuccessfulSynchronizationAt,
+            synchronization.getPlayersProcessed(),
+            synchronization.getFailureCount(),
+            synchronization.getMatchesImported(),
+            synchronization.getErrorMessage()
+        );
+    }
 }

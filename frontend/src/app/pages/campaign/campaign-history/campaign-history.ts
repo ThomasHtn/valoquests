@@ -16,7 +16,7 @@ import { HistoryCurve, HistoryRow } from '../campaign.model';
   selector: 'app-campaign-history',
   imports: [TranslatePipe, LineChart, LucideHeartPulse, LucideSkull, LucideUsers],
   templateUrl: './campaign-history.html',
-  styleUrl: './campaign-history.css',
+  styleUrl: './campaign-history.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CampaignHistoryView {

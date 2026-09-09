@@ -66,7 +66,7 @@ import { TourStepId } from './tour.model';
     NavChip,
   ],
   templateUrl: './tour.html',
-  styleUrl: './tour.css',
+  styleUrl: './tour.scss',
   // Diverges from `PAGE_LAYOUT_CLASS`, same rationale as `Landing`: a full-viewport composition
   // under the root outlet, not a stack of blocks inside the application shell.
   host: {

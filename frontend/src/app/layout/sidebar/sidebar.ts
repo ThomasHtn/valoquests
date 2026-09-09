@@ -36,6 +36,12 @@ import { Language } from '@core/i18n/translation.model';
 import { PlayersApi } from '@core/players/players-api';
 import { resolveLatestSynchronization } from '@core/players/player-summary.utils';
 import { NavigationPanel } from '@layout/navigation-panel';
+import {
+  LANGUAGE_MENU_OPEN_CLASS,
+  NAV_ACTIVE_CLASS,
+  resolveDrawerClasses,
+  resolveRailClasses,
+} from './sidebar-classes.utils';
 import { ADMIN_NAV_GROUPS, APP_VERSION, NAV_GROUPS } from './sidebar.constants';
 import { NavItem } from './sidebar.model';
 import { formatSynchronizationTimestamp, isNavItemActive } from './sidebar.utils';
@@ -165,148 +171,23 @@ export class Sidebar {
   protected readonly language = this.translation.language;
 
   /**
-   * Width utility applied to the rail, reflecting {@link collapsed}.
-   *
-   * Resolved here rather than through `[class.lg:w-20]` bindings because Angular class bindings
-   * cannot express a Tailwind variant prefix. Only applies from `lg` up, since below that
-   * breakpoint the panel is a fixed-width drawer.
+   * Tailwind utilities driven by the collapsed state, resolved once per change. See
+   * `sidebar-classes.utils.ts` for why they are resolved in code rather than bound per class.
    */
-  protected readonly railWidthClass = computed(() => (this.collapsed() ? 'lg:w-20' : 'lg:w-64'));
+  protected readonly rail = computed(() => resolveRailClasses(this.collapsed()));
 
   /**
-   * Cursor utility applied to the whole rail while collapsed, signalling that clicking any empty
-   * area re-expands it — the same affordance ChatGPT's collapsed sidebar uses. Only meaningful on
-   * the rail: buttons and links inside it declare their own cursor and take precedence over this
-   * inherited value, so it only ever shows over genuinely empty space. Rail-only for the same
-   * reason as {@link brandBlockClass}: collapsing never applies to the drawer.
+   * Tailwind utilities driven by the drawer's open state, below `lg`.
    */
-  protected readonly railCursorClass = computed(() =>
-    this.collapsed() ? 'lg:cursor-ew-resize' : '',
-  );
+  protected readonly drawer = computed(() => resolveDrawerClasses(this.navigationPanel.isOpen()));
 
   /**
-   * Position and visibility utilities driving the drawer below `lg`, reflecting
-   * {@link NavigationPanel.isOpen}. The rail restores both from `lg` up through static `lg:`
-   * utilities.
-   *
-   * `invisible` rather than `hidden`: it keeps the panel out of the tab order and out of the
-   * accessibility tree while closed, without taking it out of the layout mid-slide.
-   *
-   * Each state carries its own transition rather than sharing one declared on the element, because
-   * `visibility` has to be timed in opposite directions. Riding the shared 300ms transition, it
-   * only resolves to `visible` once the transition has actually started — two frames after the
-   * class lands — so the panel is still unfocusable at the moment the drawer moves focus into it,
-   * and a keyboard user opening the menu was left on the document body. It therefore flips at once
-   * on the way in (`visibility 0s`), and is held back until the slide has finished on the way out
-   * (`visibility 0s 300ms`), which is what keeps the panel on screen for the whole exit.
-   */
-  protected readonly drawerClass = computed(() =>
-    this.navigationPanel.isOpen()
-      ? 'visible translate-x-0 [transition:translate_300ms_ease-out,visibility_0s]'
-      : 'invisible -translate-x-full [transition:translate_300ms_ease-out,visibility_0s_300ms]',
-  );
-
-  /**
-   * Opacity and visibility utilities driving the scrim behind the drawer, for the same reason as
-   * {@link drawerClass}.
-   */
-  protected readonly scrimClass = computed(() =>
-    this.navigationPanel.isOpen() ? 'visible opacity-100' : 'invisible opacity-0',
-  );
-
-  /**
-   * Display utility applied to the wordmark block, which the collapsed rail replaces with its "V"
-   * mark. Only hidden from `lg` up: the drawer always shows the full wordmark, since collapsing is
-   * a rail-only affordance and its state must not leak into the mobile presentation.
-   */
-  protected readonly brandBlockClass = computed(() => (this.collapsed() ? 'lg:hidden' : 'lg:flex'));
-
-  /**
-   * Display utility applied to the last-synchronization block, hidden on a collapsed rail in favour
-   * of its icon-only counterpart. Rail-only for the same reason as {@link brandBlockClass}.
-   */
-  protected readonly syncBlockClass = computed(() => (this.collapsed() ? 'lg:hidden' : 'lg:block'));
-
-  /**
-   * Display utility applied to the version line, hidden on a collapsed rail: at `lg:w-20` there is
-   * no room for the string, and it is the least essential thing in the footer. Rail-only for the
-   * same reason as {@link brandBlockClass}.
-   */
-  protected readonly versionClass = computed(() => (this.collapsed() ? 'lg:hidden' : 'lg:block'));
-
-  /**
-   * Alignment utility applied to each navigation entry on the rail: centered once collapsed, so
-   * the icon sits in the middle of the icon-only rail, and leading otherwise.
-   *
-   * Both sides are resolved here rather than pairing a static `lg:justify-start` with a bound
-   * `lg:justify-center`, since two utilities of equal specificity would be settled by their order
-   * in the stylesheet instead of by the collapsed state. Never applies to the tab bar, whose
-   * entries are always centered.
-   */
-  protected readonly navItemClass = computed(() =>
-    this.collapsed() ? 'lg:justify-center' : 'lg:justify-start',
-  );
-
-  /**
-   * Visibility utility applied to each navigation label, hiding it on a collapsed rail.
-   *
-   * The label stays in the DOM rather than behind an `@if` so the tab bar, which always shows it,
-   * shares the same markup.
-   */
-  protected readonly navLabelClass = computed(() => (this.collapsed() ? 'lg:hidden' : ''));
-
-  /**
-   * Visibility utility applied to each chapter caption, hidden on a collapsed rail where a
-   * hairline marks the break instead.
-   */
-  protected readonly navGroupLabelClass = computed(() => (this.collapsed() ? 'lg:hidden' : ''));
-
-  /**
-   * Visibility utility applied to the hairline between chapters, shown only on a collapsed rail.
-   */
-  protected readonly navGroupRuleClass = computed(() => (this.collapsed() ? 'lg:block' : ''));
-
-  /**
-   * Direction/alignment utility applied to the row pairing the last-synchronization info with the
-   * language switcher: it stacks and centers on a collapsed rail, too narrow to hold both side by
-   * side, and stays a left/right row everywhere else.
-   *
-   * Resolved here for the same reason as {@link navItemClass}: a Tailwind variant prefix cannot be
-   * expressed through an Angular class binding, and pairing a static `lg:` utility with a bound one
-   * for the same property would leave their precedence to stylesheet generation order rather than
-   * the collapsed state.
-   */
-  protected readonly footerContentClass = computed(() =>
-    this.collapsed() ? 'lg:flex-col lg:items-center' : 'lg:flex-row lg:justify-between',
-  );
-
-  /**
-   * Size/alignment/state utility applied to the language switcher trigger: a centered icon-only
-   * square on a collapsed rail, its natural icon+code width everywhere else, plus the trigger's own
-   * active state once its panel is open — the same tint used on hover, with gold text layered on
-   * top so the open state reads as a stronger version of the hover state rather than a distinct one.
+   * Language trigger utilities: its collapsed-rail size plus its own open state.
    */
   protected readonly languageButtonClass = computed(() => {
-    const sizeClass = this.collapsed() ? 'lg:w-9 lg:justify-center' : '';
-    const stateClass = this.languageMenuOpen() ? 'bg-brand-500/8 text-brand-500' : '';
-    return `${sizeClass} ${stateClass}`;
+    const stateClass = this.languageMenuOpen() ? LANGUAGE_MENU_OPEN_CLASS : '';
+    return `${this.rail().languageButton} ${stateClass}`;
   });
-
-  /**
-   * Visibility utility hiding the language code next to the trigger's icon on a collapsed rail,
-   * where there is no room for it.
-   */
-  protected readonly languageCodeClass = computed(() => (this.collapsed() ? 'lg:hidden' : ''));
-
-  /**
-   * Position utility applied to the language switcher's panel: left-aligned to its icon-only
-   * trigger on a collapsed rail, opening into the routed content rather than centered — the rail is
-   * too narrow at `lg:w-20` for a centered panel to fit without spilling past the viewport's left
-   * edge. Right-aligned to the trigger everywhere else, which does have the room.
-   */
-  protected readonly languagePanelClass = computed(() =>
-    this.collapsed() ? 'lg:right-auto lg:left-0' : '',
-  );
 
   /**
    * Whether the language switcher's panel is open.
@@ -400,15 +281,13 @@ export class Sidebar {
   }
 
   /**
-   * Utilities layered onto an active entry on top of {@link navItemClass}, empty otherwise.
+   * Utilities layered onto an active entry on top of the rail's `navItem` class, empty otherwise.
    *
    * @param item - The navigation entry to check.
    * @returns The active-state utilities, or the empty string.
    */
   protected navActiveClass(item: NavItem): string {
-    return this.isNavItemActive(item)
-      ? ' bg-linear-to-r from-brand-500/20 to-transparent text-brand-500 before:bg-brand-500'
-      : '';
+    return this.isNavItemActive(item) ? NAV_ACTIVE_CLASS : '';
   }
 
   /**
@@ -420,7 +299,7 @@ export class Sidebar {
 
   /**
    * Expands the rail when a click lands on empty space while it is collapsed, mirroring
-   * {@link railCursorClass}'s affordance.
+   * the rail's cursor affordance.
    *
    * Ignores clicks landing inside a button or link — those already carry their own behaviour (the
    * collapse toggle, navigation) and must not also re-expand the rail from underneath them.

@@ -14,6 +14,7 @@ import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.week.WeekConstants;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -35,11 +36,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class DefaultChallengeQueryService implements ChallengeQueryService {
-
-    /**
-     * Number of days in a week, to derive the Sunday from the Monday.
-     */
-    private static final int DAYS_TO_SUNDAY = 6;
 
     /**
      * Orders a weekly pack from the easiest to the hardest tier.
@@ -149,7 +145,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
 
         return new CurrentChallengesResponse(
             weekStart,
-            weekStart.plusDays(DAYS_TO_SUNDAY),
+            weekStart.plusDays(WeekConstants.LAST_DAY_OFFSET),
             weekCalendar.today(),
             findLastSuccessfulSynchronizationAt(),
             roster,

@@ -49,7 +49,7 @@ const SHELTER_MODES: readonly string[] = [
     Tooltip,
   ],
   templateUrl: './extraction-gauges.html',
-  styleUrl: './extraction-gauges.css',
+  styleUrl: './extraction-gauges.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExtractionGauges {

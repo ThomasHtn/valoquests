@@ -15,7 +15,7 @@ import { ChallengeCard } from '../challenges.model';
   selector: 'app-challenge-card',
   imports: [TranslatePipe, Tooltip, LucideUsers, LucideZap],
   templateUrl: './challenge-card.html',
-  styleUrl: './challenge-card.css',
+  styleUrl: './challenge-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.card--done]': 'allDone()',

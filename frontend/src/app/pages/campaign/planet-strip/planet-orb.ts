@@ -7,17 +7,19 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { svgElement as el } from '@shared/rocket/rocket-drawing';
+import { createSeededRandom } from '@core/random/seeded-random.utils';
+import { svgElement as el } from '@core/svg/svg-element.utils';
 import { PlanetState } from '../campaign.model';
-
-const CX = 50;
-const CY = 50;
-const TONES: Readonly<Record<PlanetState, string>> = {
-  won: '#e8ab6b',
-  lost: '#e0404e',
-  now: '#2dd4bf',
-  ahead: '#5b7688',
-};
+import {
+  AHEAD_FILL,
+  AHEAD_STROKE,
+  ORB_CX as CX,
+  ORB_CY as CY,
+  ORB_TONES,
+  ORB_VIEW_SIZE,
+  RING_PLATE,
+  SEA_COUNT,
+} from './planet-orb.constants';
 
 let nextId = 0;
 
@@ -27,12 +29,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'app-planet-orb',
-  template: `<svg
-    #orb
-    aria-hidden="true"
-    class="absolute inset-0 size-full"
-    viewBox="0 0 100 100"
-  ></svg>`,
+  templateUrl: './planet-orb.html',
   host: { class: 'block size-full' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -53,8 +50,11 @@ export class PlanetOrb {
    */
   public readonly seed = input.required<number>();
 
+  protected readonly viewBox = `0 0 ${ORB_VIEW_SIZE} ${ORB_VIEW_SIZE}`;
+
   private readonly orb = viewChild.required<ElementRef<SVGSVGElement>>('orb');
 
+  /** Unique gradient id: several orbs share the page, and gradient ids are global to it. */
   private readonly id = `orb-${nextId++}`;
 
   constructor() {
@@ -63,26 +63,39 @@ export class PlanetOrb {
 
   private draw(svg: SVGSVGElement): void {
     const r = this.radius();
-    const state = this.state();
-    const tone = TONES[state];
     const frag = document.createDocumentFragment();
 
-    if (state === 'ahead') {
-      frag.append(
-        el('circle', {
-          cx: CX,
-          cy: CY,
-          r,
-          fill: '#15222c',
-          stroke: '#33495b',
-          'stroke-width': 1,
-          'stroke-dasharray': '3 3',
-        }),
-      );
-      svg.replaceChildren(frag);
-      return;
+    if (this.state() === 'ahead') {
+      frag.append(this.buildAheadDisc(r));
+    } else {
+      frag.append(this.buildShadeDefs());
+      frag.append(el('circle', { cx: CX, cy: CY, r, fill: this.hue() }));
+      frag.append(...this.buildSeas(r));
+      frag.append(el('circle', { cx: CX, cy: CY, r, fill: `url(#${this.id})` }));
+      frag.append(...this.buildRing(r));
     }
+    svg.replaceChildren(frag);
+  }
 
+  /**
+   * Dotted disc of a planet not reached yet.
+   */
+  private buildAheadDisc(r: number): SVGCircleElement {
+    return el('circle', {
+      cx: CX,
+      cy: CY,
+      r,
+      fill: AHEAD_FILL,
+      stroke: AHEAD_STROKE,
+      'stroke-width': 1,
+      'stroke-dasharray': '3 3',
+    });
+  }
+
+  /**
+   * Radial shading: a highlight top left, a shadow on the far edge.
+   */
+  private buildShadeDefs(): SVGDefsElement {
     const defs = el('defs');
     const shade = el('radialGradient', { id: this.id, cx: 0.32, cy: 0.3, r: 0.8 });
     shade.append(
@@ -91,18 +104,19 @@ export class PlanetOrb {
       el('stop', { offset: 1, 'stop-color': '#000000', 'stop-opacity': 0.65 }),
     );
     defs.append(shade);
-    frag.append(defs);
-    frag.append(el('circle', { cx: CX, cy: CY, r, fill: this.hue() }));
+    return defs;
+  }
 
-    let seed = this.seed() * 977 + 13;
-    const random = (): number => {
-      seed = (seed * 1664525 + 1013904223) % 4294967296;
-      return seed / 4294967296;
-    };
-    for (let k = 0; k < 5; k++) {
+  /**
+   * A few dark ellipses placed from the seed.
+   */
+  private buildSeas(r: number): readonly SVGEllipseElement[] {
+    const random = createSeededRandom(this.seed() * 977 + 13);
+    const seas: SVGEllipseElement[] = [];
+    for (let k = 0; k < SEA_COUNT; k++) {
       const angle = random() * Math.PI * 2;
       const distance = Math.sqrt(random()) * r * 0.8;
-      frag.append(
+      seas.push(
         el('ellipse', {
           cx: (CX + Math.cos(angle) * distance).toFixed(1),
           cy: (CY + Math.sin(angle) * distance).toFixed(1),
@@ -113,33 +127,33 @@ export class PlanetOrb {
         }),
       );
     }
-    frag.append(el('circle', { cx: CX, cy: CY, r, fill: `url(#${this.id})` }));
+    return seas;
+  }
 
-    // The ring: the guardian's lines, eaten from the top clockwise.
+  /**
+   * The ring: the guardian's lines, eaten from the top clockwise.
+   */
+  private buildRing(r: number): readonly SVGCircleElement[] {
     const ringRadius = r + Math.max(6, r * 0.3);
     const length = 2 * Math.PI * ringRadius;
-    frag.append(
-      el('circle', {
-        cx: CX,
-        cy: CY,
-        r: ringRadius,
-        fill: 'none',
-        stroke: 'rgb(4 10 15 / 70%)',
-        'stroke-width': 3,
-      }),
-    );
-    frag.append(
-      el('circle', {
-        cx: CX,
-        cy: CY,
-        r: ringRadius,
-        fill: 'none',
-        stroke: tone,
-        'stroke-width': 3,
-        'stroke-dasharray': `${(length * this.advance()).toFixed(1)} ${length.toFixed(1)}`,
-        transform: `rotate(-90 ${CX} ${CY})`,
-      }),
-    );
-    svg.replaceChildren(frag);
+    const plate = el('circle', {
+      cx: CX,
+      cy: CY,
+      r: ringRadius,
+      fill: 'none',
+      stroke: RING_PLATE,
+      'stroke-width': 3,
+    });
+    const arc = el('circle', {
+      cx: CX,
+      cy: CY,
+      r: ringRadius,
+      fill: 'none',
+      stroke: ORB_TONES[this.state()],
+      'stroke-width': 3,
+      'stroke-dasharray': `${(length * this.advance()).toFixed(1)} ${length.toFixed(1)}`,
+      transform: `rotate(-90 ${CX} ${CY})`,
+    });
+    return [plate, arc];
   }
 }

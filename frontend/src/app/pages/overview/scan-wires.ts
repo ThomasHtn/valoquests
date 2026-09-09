@@ -1,6 +1,6 @@
 import { afterNextRender, DestroyRef, Directive, ElementRef, inject } from '@angular/core';
 
-const NS = 'http://www.w3.org/2000/svg';
+import { svgElement } from '@core/svg/svg-element.utils';
 
 /**
  * Point aimed at, in the planet drawing's own coordinates, and the report row it is wired to.
@@ -95,9 +95,9 @@ export class ScanWires {
       const d = `M${x0} ${y0} H${xa} L${xa + diag} ${y2} H${x2}`;
 
       wires.append(
-        this.node('path', { d, fill: 'none', stroke: '#040a11', 'stroke-width': 4, opacity: 0.6 }),
+        svgElement('path', { d, fill: 'none', stroke: '#040a11', 'stroke-width': 4, opacity: 0.6 }),
       );
-      const line = this.node('path', {
+      const line = svgElement('path', {
         d,
         fill: 'none',
         stroke: mark.tone,
@@ -109,7 +109,7 @@ export class ScanWires {
       // The marker: a ring open on the target, and its dot. Two strokes, not a full reticle — the
       // planet is already ringed by its lines.
       wires.append(
-        this.node('circle', {
+        svgElement('circle', {
           cx: x0,
           cy: y0,
           r: 5,
@@ -119,9 +119,9 @@ export class ScanWires {
           opacity: 0.85,
         }),
       );
-      wires.append(this.node('circle', { cx: x0, cy: y0, r: 1.6, fill: mark.tone }));
+      wires.append(svgElement('circle', { cx: x0, cy: y0, r: 1.6, fill: mark.tone }));
       wires.append(
-        this.node('line', {
+        svgElement('line', {
           x1: x2,
           y1: y2 - 7,
           x2,
@@ -139,16 +139,5 @@ export class ScanWires {
         line.style.animation = `scan-wire 620ms cubic-bezier(0.25, 1, 0.5, 1) ${360 + index * 190}ms forwards`;
       }
     });
-  }
-
-  private node<K extends keyof SVGElementTagNameMap>(
-    name: K,
-    attrs: Readonly<Record<string, string | number>>,
-  ): SVGElementTagNameMap[K] {
-    const element = document.createElementNS(NS, name);
-    for (const [key, value] of Object.entries(attrs)) {
-      element.setAttribute(key, String(value));
-    }
-    return element;
   }
 }

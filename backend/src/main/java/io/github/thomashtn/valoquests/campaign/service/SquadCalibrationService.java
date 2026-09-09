@@ -13,6 +13,7 @@ import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.week.WeekConstants;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -49,11 +50,6 @@ public class SquadCalibrationService {
      * Application logger.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(SquadCalibrationService.class);
-
-    /**
-     * Days in a week, the unit the reference is expressed in.
-     */
-    private static final int DAYS_PER_WEEK = 7;
 
     /**
      * Lowest volume factor a campaign may scale challenge targets by.
@@ -231,7 +227,7 @@ public class SquadCalibrationService {
                 total += output.of(player.getId(), day).damage();
             }
 
-            averages.put(player.getId(), (int) Math.round((double) total * DAYS_PER_WEEK / days));
+            averages.put(player.getId(), (int) Math.round((double) total * WeekConstants.DAYS_PER_WEEK / days));
         }
 
         return averages;
@@ -322,7 +318,7 @@ public class SquadCalibrationService {
         LocalDate beginnerThreshold,
         int windowMonths
     ) {
-        int weeks = (int) Math.round(windowMonths * 365.0 / 12 / DAYS_PER_WEEK);
+        int weeks = (int) Math.round(windowMonths * 365.0 / 12 / WeekConstants.DAYS_PER_WEEK);
 
         return roster.stream()
             .map(player -> {

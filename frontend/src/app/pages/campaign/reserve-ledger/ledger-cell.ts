@@ -15,7 +15,7 @@ import { LedgerCell, LedgerRow } from '../campaign.model';
   selector: 'app-ledger-cell',
   imports: [TranslatePipe],
   templateUrl: './ledger-cell.html',
-  styleUrl: './ledger-cell.css',
+  styleUrl: './ledger-cell.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class]': 'hostClass()',

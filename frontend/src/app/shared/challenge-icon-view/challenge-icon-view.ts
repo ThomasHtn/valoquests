@@ -38,7 +38,7 @@ import { ChallengeIcon } from '@core/challenges/challenge-visual.model';
     LucideUsers,
   ],
   templateUrl: './challenge-icon-view.html',
-  styleUrl: './challenge-icon-view.css',
+  styleUrl: './challenge-icon-view.scss',
 })
 export class ChallengeIconView {
   /**

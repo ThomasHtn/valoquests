@@ -5,7 +5,6 @@ import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.exception.WeeklyChallengeSelectionException;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
@@ -20,7 +19,6 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -56,11 +54,6 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     private static final int WEEKLY_CHALLENGE_COUNT = ChallengeDifficulty.values().length;
 
     /**
-     * Salt used by the scheduled draw, which must stay reproducible across restarts.
-     */
-    private static final long UNSALTED_DRAW = 0L;
-
-    /**
      * Days before a draw during which a daily challenge is not drawn again.
      *
      * <p>Twenty, so that a challenge comes back at the earliest twenty-one days after its last
@@ -73,36 +66,6 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
      */
     private static final Comparator<WeeklyChallenge> WEEKLY_CHALLENGE_COMPARATOR =
         Comparator.comparingInt(selection -> selection.getChallenge().getDifficulty().ordinal());
-
-    /**
-     * Odd 64-bit constant separating consecutive weeks before diffusion (golden-ratio derived).
-     */
-    private static final long WEEK_SEED_MULTIPLIER = 0x9E3779B97F4A7C15L;
-
-    /**
-     * First SplitMix64 finalizer multiplier.
-     */
-    private static final long AVALANCHE_FIRST_MULTIPLIER = 0xBF58476D1CE4E5B9L;
-
-    /**
-     * Second SplitMix64 finalizer multiplier.
-     */
-    private static final long AVALANCHE_SECOND_MULTIPLIER = 0x94D049BB133111EBL;
-
-    /**
-     * First SplitMix64 finalizer shift.
-     */
-    private static final int AVALANCHE_FIRST_SHIFT = 30;
-
-    /**
-     * Second SplitMix64 finalizer shift.
-     */
-    private static final int AVALANCHE_SECOND_SHIFT = 27;
-
-    /**
-     * Closing SplitMix64 finalizer shift.
-     */
-    private static final int AVALANCHE_FINAL_SHIFT = 31;
 
     /**
      * Application logger.
@@ -194,7 +157,7 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     @Override
     @Transactional
     public List<WeeklyChallenge> selectWeekChallenges(LocalDate weekStart) {
-        return selectWeekChallenges(weekStart, UNSALTED_DRAW);
+        return selectWeekChallenges(weekStart, ChallengeDrawOrder.UNSALTED_DRAW);
     }
 
     /**
@@ -360,7 +323,8 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
             lastDrawnByChallengeId.put(recent.getChallenge().getId(), recent.getDay());
         }
 
-        ToLongFunction<Challenge> dayOrder = challenge -> selectionOrder(day, challenge, UNSALTED_DRAW);
+        ToLongFunction<Challenge> dayOrder =
+            challenge -> ChallengeDrawOrder.of(day, challenge, ChallengeDrawOrder.UNSALTED_DRAW);
 
         return pool.stream()
             .filter(challenge -> !lastDrawnByChallengeId.containsKey(challenge.getId()))
@@ -449,8 +413,8 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         List<WeeklyChallenge> existingSelections,
         long drawSalt
     ) {
-        SelectionState initialState = SelectionState.from(existingSelections);
-        List<ChallengeDifficulty> missingDifficulties = findMissingDifficulties(initialState);
+        WeeklyPackSelectionState initialState = WeeklyPackSelectionState.from(existingSelections);
+        List<ChallengeDifficulty> missingDifficulties = WeeklyPackSolver.missingDifficulties(initialState);
 
         if (missingDifficulties.isEmpty()) {
             return List.of();
@@ -463,112 +427,16 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         // attempt is exactly the selection this service used to make on its own, so a week that
         // could be filled before is still filled now: no-repeat is a preference, never a reason to
         // hand out an incomplete pack.
-        return firstCompleteSelection(
-            withoutCurrentCycle(candidatesByDifficulty, weekStart),
+        List<WeeklyChallenge> pastSelections = weeklyChallengeRepository
+            .findAllByCadenceAndWeekStartLessThanOrderByWeekStartAsc(ChallengeCadence.WEEKLY, weekStart);
+
+        return WeeklyPackSolver.solve(
+            WeeklyChallengeCycle.withoutCurrentCycle(candidatesByDifficulty, pastSelections),
             missingDifficulties,
             initialState
         )
-            .or(() -> firstCompleteSelection(
-                candidatesByDifficulty,
-                missingDifficulties,
-                initialState
-            ))
+            .or(() -> WeeklyPackSolver.solve(candidatesByDifficulty, missingDifficulties, initialState))
             .orElseThrow(() -> createSelectionException(weekStart));
-    }
-
-    /**
-     * Builds the best complete selection one candidate pool allows, preferring category diversity.
-     *
-     * @param candidatesByDifficulty eligible candidates grouped by difficulty
-     * @param difficulties           missing difficulty tiers
-     * @param initialState           state produced by existing selections
-     * @return complete selection when the pool allows one
-     */
-    private Optional<List<Challenge>> firstCompleteSelection(
-        Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty,
-        List<ChallengeDifficulty> difficulties,
-        SelectionState initialState
-    ) {
-        return findSelection(candidatesByDifficulty, difficulties, initialState, true)
-            .or(() -> findSelection(candidatesByDifficulty, difficulties, initialState, false));
-    }
-
-    /**
-     * Drops the candidates already drawn in the current cycle of their own difficulty.
-     *
-     * @param candidatesByDifficulty eligible candidates grouped by difficulty
-     * @param weekStart              week being drawn
-     * @return the same grouping, keeping only challenges the cycle has not used yet
-     */
-    private Map<ChallengeDifficulty, List<Challenge>> withoutCurrentCycle(
-        Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty,
-        LocalDate weekStart
-    ) {
-        Map<ChallengeDifficulty, Set<Long>> usedByDifficulty =
-            usedChallengeIdsInCurrentCycle(candidatesByDifficulty, weekStart);
-
-        Map<ChallengeDifficulty, List<Challenge>> remaining =
-            new EnumMap<>(ChallengeDifficulty.class);
-
-        candidatesByDifficulty.forEach((difficulty, candidates) -> {
-            Set<Long> used = usedByDifficulty.getOrDefault(difficulty, Set.of());
-
-            remaining.put(
-                difficulty,
-                candidates.stream()
-                    .filter(candidate -> !used.contains(candidate.getId()))
-                    .toList()
-            );
-        });
-
-        return remaining;
-    }
-
-    /**
-     * Replays every past selection to determine which challenges were already used in the cycle
-     * still in progress, per difficulty, resetting whenever a tier's cycle completes.
-     *
-     * <p>Cycles run per difficulty rather than over the catalogue as a whole: a pack draws exactly
-     * one challenge per tier, so tiers empty at their own pace and a shared cycle would let the
-     * largest one hold the smallest hostage. A tier holding a single enabled challenge clears on
-     * every draw, which is what keeps it drawable at all.
-     *
-     * <p>The same shape as {@code DefaultWeeklyBossSelectionService}'s boss cycle, for the same
-     * reason: variety is what a weekly draw is for, and a catalogue this size otherwise repeats
-     * often enough to be noticed.
-     *
-     * @param candidatesByDifficulty eligible candidates grouped by difficulty
-     * @param weekStart              week being drawn
-     * @return identifiers used since each difficulty's last completed cycle
-     */
-    private Map<ChallengeDifficulty, Set<Long>> usedChallengeIdsInCurrentCycle(
-        Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty,
-        LocalDate weekStart
-    ) {
-        Map<ChallengeDifficulty, Set<Long>> usedByDifficulty =
-            new EnumMap<>(ChallengeDifficulty.class);
-
-        for (WeeklyChallenge selection : weeklyChallengeRepository
-            .findAllByCadenceAndWeekStartLessThanOrderByWeekStartAsc(ChallengeCadence.WEEKLY, weekStart)) {
-
-            Challenge challenge = selection.getChallenge();
-            ChallengeDifficulty difficulty = challenge.getDifficulty();
-
-            Set<Long> used =
-                usedByDifficulty.computeIfAbsent(difficulty, tier -> new HashSet<>());
-
-            used.add(challenge.getId());
-
-            int tierSize = candidatesByDifficulty
-                .getOrDefault(difficulty, List.of())
-                .size();
-
-            if (used.size() >= tierSize) {
-                used.clear();
-            }
-        }
-
-        return usedByDifficulty;
     }
 
     /**
@@ -595,102 +463,10 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
         challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY)
             .stream()
             .filter(challenge -> calculatorRegistry.supports(challenge.getProgressMode()))
-            .sorted(Comparator.comparingLong(challenge -> selectionOrder(weekStart, challenge, drawSalt)))
+            .sorted(Comparator.comparingLong(challenge -> ChallengeDrawOrder.of(weekStart, challenge, drawSalt)))
             .forEach(challenge -> candidatesByDifficulty.get(challenge.getDifficulty()).add(challenge));
 
         return candidatesByDifficulty;
-    }
-
-    /**
-     * Finds the difficulty tiers not already represented in a weekly pack.
-     *
-     * @param state current selection state
-     * @return missing difficulty tiers in enum order
-     */
-    private List<ChallengeDifficulty> findMissingDifficulties(SelectionState state) {
-        return EnumSet.allOf(ChallengeDifficulty.class)
-            .stream()
-            .filter(difficulty -> !state.selectedDifficulties().contains(difficulty))
-            .toList();
-    }
-
-    /**
-     * Attempts to build a complete compatible selection.
-     *
-     * @param candidatesByDifficulty  eligible challenges grouped by difficulty
-     * @param difficulties            missing difficulty tiers
-     * @param initialState            state produced by existing selections
-     * @param requireUniqueCategories whether categories must remain unique
-     * @return complete selection when one exists
-     */
-    private Optional<List<Challenge>> findSelection(
-        Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty,
-        List<ChallengeDifficulty> difficulties,
-        SelectionState initialState,
-        boolean requireUniqueCategories
-    ) {
-        return selectNextDifficulty(
-            candidatesByDifficulty,
-            difficulties,
-            0,
-            initialState,
-            requireUniqueCategories,
-            List.of()
-        );
-    }
-
-    /**
-     * Selects one compatible challenge for every remaining difficulty using bounded backtracking.
-     *
-     * <p>The recursion depth is limited to the number of supported difficulty tiers. Immutable
-     * copies are used for each branch so failed attempts cannot leak state into later attempts.</p>
-     *
-     * @param candidatesByDifficulty  eligible challenges grouped by difficulty
-     * @param difficulties            missing difficulty tiers
-     * @param difficultyIndex         current difficulty index
-     * @param state                   current selection state
-     * @param requireUniqueCategories whether categories must remain unique
-     * @param selectedChallenges      challenges selected by the current branch
-     * @return complete selection when one exists
-     */
-    private Optional<List<Challenge>> selectNextDifficulty(
-        Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty,
-        List<ChallengeDifficulty> difficulties,
-        int difficultyIndex,
-        SelectionState state,
-        boolean requireUniqueCategories,
-        List<Challenge> selectedChallenges
-    ) {
-        if (difficultyIndex == difficulties.size()) {
-            return Optional.of(List.copyOf(selectedChallenges));
-        }
-
-        ChallengeDifficulty difficulty = difficulties.get(difficultyIndex);
-
-        for (Challenge candidate : candidatesByDifficulty.getOrDefault(difficulty, List.of())) {
-            if (!state.isCompatible(candidate, requireUniqueCategories)) {
-                continue;
-            }
-
-            List<Challenge> nextSelection = new ArrayList<>(selectedChallenges.size() + 1);
-            nextSelection.addAll(selectedChallenges);
-            nextSelection.add(candidate);
-
-            Optional<List<Challenge>> result = selectNextDifficulty(
-                candidatesByDifficulty,
-                difficulties,
-                difficultyIndex + 1,
-                state.with(candidate),
-                requireUniqueCategories,
-                nextSelection
-            );
-
-            if (result.isPresent()) {
-                return result;
-            }
-        }
-
-        return Optional.empty();
     }
 
     /**
@@ -752,43 +528,6 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
     }
 
     /**
-     * Produces a stable order for one challenge on one draw day, a Monday for the weekly pack.
-     *
-     * <p>The day has to be mixed into every candidate's value non-additively. {@code Objects.hash}
-     * only adds a shared week term to each candidate, which shifts them all equally and leaves the
-     * sorted order untouched: every week then drew the exact same pack.
-     *
-     * <p>The salt goes into the same seed rather than beside it, for the same reason: it is shared
-     * by every candidate, so only the avalanche below turns it into a different order. A redraw
-     * that added it after diffusion would shift the whole tier equally and draw the same pack.
-     *
-     * @param drawDay   day identifying the draw
-     * @param challenge challenge candidate
-     * @param drawSalt  salt separating a manual redraw from the week's scheduled draw
-     * @return deterministic ordering value
-     */
-    private long selectionOrder(LocalDate drawDay, Challenge challenge, long drawSalt) {
-        long challengeSeed = Objects.hash(challenge.getId(), challenge.getCode());
-
-        return avalanche(drawDay.toEpochDay() * WEEK_SEED_MULTIPLIER + challengeSeed + drawSalt);
-    }
-
-    /**
-     * Spreads a seed over the whole {@code long} range so neighbouring seeds order unrelatedly.
-     *
-     * <p>SplitMix64 finalizer: a bijection, so two distinct seeds keep distinct ordering values.</p>
-     *
-     * @param seed ordering seed
-     * @return diffused ordering value
-     */
-    private static long avalanche(long seed) {
-        long mixed = seed;
-        mixed = (mixed ^ (mixed >>> AVALANCHE_FIRST_SHIFT)) * AVALANCHE_FIRST_MULTIPLIER;
-        mixed = (mixed ^ (mixed >>> AVALANCHE_SECOND_SHIFT)) * AVALANCHE_SECOND_MULTIPLIER;
-        return mixed ^ (mixed >>> AVALANCHE_FINAL_SHIFT);
-    }
-
-    /**
      * Ensures that an existing weekly pack contains no duplicate difficulty or excess entry.
      *
      * @param weekStart          selected week
@@ -845,111 +584,5 @@ public class DefaultWeeklyChallengeSelectionService implements WeeklyChallengeSe
                 + ". Verify that every difficulty has at least one enabled challenge with an "
                 + "implemented progress calculator and compatible exclusion group."
         );
-    }
-
-    /**
-     * Holds immutable compatibility data for one selection branch.
-     *
-     * @param selectedDifficulties selected difficulty tiers
-     * @param categories           selected categories
-     * @param exclusionGroups      selected exclusion groups
-     */
-    private record SelectionState(
-        Set<ChallengeDifficulty> selectedDifficulties,
-        Set<ChallengeCategory> categories,
-        Set<String> exclusionGroups
-    ) {
-
-        /**
-         * Creates a state from persisted weekly selections.
-         *
-         * @param selections existing selections
-         * @return initialized selection state
-         */
-        private static SelectionState from(List<WeeklyChallenge> selections) {
-            Set<ChallengeDifficulty> difficulties = EnumSet.noneOf(ChallengeDifficulty.class);
-            Set<ChallengeCategory> categories = EnumSet.noneOf(ChallengeCategory.class);
-            Set<String> exclusionGroups = new HashSet<>();
-
-            for (WeeklyChallenge selection : selections) {
-                Challenge challenge = selection.getChallenge();
-                difficulties.add(challenge.getDifficulty());
-                categories.add(challenge.getCategory());
-
-                if (challenge.getExclusionGroup() != null) {
-                    exclusionGroups.add(challenge.getExclusionGroup());
-                }
-            }
-
-            return new SelectionState(
-                Set.copyOf(difficulties),
-                Set.copyOf(categories),
-                Set.copyOf(exclusionGroups)
-            );
-        }
-
-        /**
-         * Checks whether a challenge can be added to the current branch.
-         *
-         * @param candidate               challenge candidate
-         * @param requireUniqueCategories whether categories must remain unique
-         * @return whether the candidate is compatible
-         */
-        private boolean isCompatible(Challenge candidate, boolean requireUniqueCategories) {
-            String exclusionGroup = candidate.getExclusionGroup();
-
-            if (exclusionGroup != null && exclusionGroups.contains(exclusionGroup)) {
-                return false;
-            }
-
-            return !requireUniqueCategories || !categories.contains(candidate.getCategory());
-        }
-
-        /**
-         * Creates a new state containing one additional challenge.
-         *
-         * @param challenge selected challenge
-         * @return extended immutable state
-         */
-        private SelectionState with(Challenge challenge) {
-            Set<ChallengeDifficulty> nextDifficulties = copyDifficulties();
-            Set<ChallengeCategory> nextCategories = copyCategories();
-            Set<String> nextExclusionGroups = new HashSet<>(exclusionGroups);
-
-            nextDifficulties.add(challenge.getDifficulty());
-            nextCategories.add(challenge.getCategory());
-
-            if (challenge.getExclusionGroup() != null) {
-                nextExclusionGroups.add(challenge.getExclusionGroup());
-            }
-
-            return new SelectionState(
-                Set.copyOf(nextDifficulties),
-                Set.copyOf(nextCategories),
-                Set.copyOf(nextExclusionGroups)
-            );
-        }
-
-        /**
-         * Creates a mutable difficulty set preserving the enum implementation.
-         *
-         * @return mutable difficulty copy
-         */
-        private Set<ChallengeDifficulty> copyDifficulties() {
-            return selectedDifficulties.isEmpty()
-                ? EnumSet.noneOf(ChallengeDifficulty.class)
-                : EnumSet.copyOf(selectedDifficulties);
-        }
-
-        /**
-         * Creates a mutable category set preserving the enum implementation.
-         *
-         * @return mutable category copy
-         */
-        private Set<ChallengeCategory> copyCategories() {
-            return categories.isEmpty()
-                ? EnumSet.noneOf(ChallengeCategory.class)
-                : EnumSet.copyOf(categories);
-        }
     }
 }

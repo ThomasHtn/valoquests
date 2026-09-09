@@ -23,7 +23,7 @@ import { Capacity, Contribution, Mission } from '../overview.model';
   selector: 'app-mission-readings',
   imports: [TranslatePipe, Countdown, Tooltip, LucideSkull, LucideSwords, LucideUsers],
   templateUrl: './mission-readings.html',
-  styleUrl: './mission-readings.css',
+  styleUrl: './mission-readings.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MissionReadings {

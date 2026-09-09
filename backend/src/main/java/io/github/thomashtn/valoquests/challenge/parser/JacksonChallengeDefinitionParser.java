@@ -3,11 +3,8 @@ package io.github.thomashtn.valoquests.challenge.parser;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.exception.InvalidChallengeDefinitionException;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScope;
-import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Component;
@@ -112,7 +109,7 @@ public class JacksonChallengeDefinitionParser
             conditions
         );
 
-        validateDefinition(challenge, definition);
+        ChallengeDefinitionValidator.validate(challenge, definition);
 
         return definition;
     }
@@ -131,7 +128,7 @@ public class JacksonChallengeDefinitionParser
                 CONDITION_LIST_TYPE
             );
         } catch (JacksonException exception) {
-            throw invalidDefinition(
+            throw ChallengeDefinitionValidator.invalidDefinition(
                 challenge,
                 "The conditions JSON cannot be parsed.",
                 exception
@@ -147,14 +144,14 @@ public class JacksonChallengeDefinitionParser
      */
     private void validateChallengeMetadata(Challenge challenge, String conditionsJson) {
         if (challenge.getCode() == null || challenge.getCode().isBlank()) {
-            throw invalidDefinition(
+            throw ChallengeDefinitionValidator.invalidDefinition(
                 challenge,
                 "The challenge code must not be blank."
             );
         }
 
         if (challenge.getSchemaVersion() != SUPPORTED_SCHEMA_VERSION) {
-            throw invalidDefinition(
+            throw ChallengeDefinitionValidator.invalidDefinition(
                 challenge,
                 "Unsupported schema version "
                     + challenge.getSchemaVersion()
@@ -165,332 +162,17 @@ public class JacksonChallengeDefinitionParser
         }
 
         if (challenge.getProgressMode() == null) {
-            throw invalidDefinition(
+            throw ChallengeDefinitionValidator.invalidDefinition(
                 challenge,
                 "The progress mode must not be null."
             );
         }
 
         if (conditionsJson == null || conditionsJson.isBlank()) {
-            throw invalidDefinition(
+            throw ChallengeDefinitionValidator.invalidDefinition(
                 challenge,
                 "The conditions JSON must not be blank."
             );
         }
-    }
-
-    /**
-     * Validates the parsed conditions and their compatibility with the selected
-     * progress mode.
-     *
-     * @param challenge  persisted challenge
-     * @param definition parsed definition
-     */
-    private void validateDefinition(
-        Challenge challenge,
-        ChallengeDefinition definition
-    ) {
-        for (ChallengeCondition condition : definition.conditions()) {
-            validateCondition(challenge, condition);
-        }
-
-        validateConditionCount(challenge, definition);
-        validateProgressMode(challenge, definition);
-    }
-
-    /**
-     * Validates the mandatory attributes of one condition.
-     *
-     * @param challenge owning challenge
-     * @param condition condition to validate
-     */
-    private void validateCondition(
-        Challenge challenge,
-        ChallengeCondition condition
-    ) {
-        if (condition == null) {
-            throw invalidDefinition(
-                challenge,
-                "A challenge condition must not be null."
-            );
-        }
-
-        if (condition.metric() == null) {
-            throw invalidDefinition(
-                challenge,
-                "Every condition must define a metric."
-            );
-        }
-
-        if (condition.operator() == null) {
-            throw invalidDefinition(
-                challenge,
-                "Every condition must define an operator."
-            );
-        }
-
-        if (condition.target() == null
-            || condition.target().signum() < 0) {
-            throw invalidDefinition(
-                challenge,
-                "Every condition must define a non-negative target."
-            );
-        }
-    }
-
-    /**
-     * Verifies whether the number of conditions matches the rule structure.
-     *
-     * @param challenge  persisted challenge
-     * @param definition parsed definition
-     */
-    private void validateConditionCount(
-        Challenge challenge,
-        ChallengeDefinition definition
-    ) {
-        // ALL is the only mode that combines conditions, so it is the only one taking more than one.
-        boolean combining = definition.progressMode() == ProgressMode.ALL;
-
-        if (combining && definition.conditions().size() < 2) {
-            throw invalidDefinition(
-                challenge,
-                "An ALL challenge must contain at least two conditions."
-            );
-        }
-
-        if (!combining && definition.conditions().size() != 1) {
-            throw invalidDefinition(
-                challenge,
-                "A challenge that is not an ALL challenge must contain exactly one condition."
-            );
-        }
-    }
-
-    /**
-     * Verifies the attributes required by each progress mode.
-     *
-     * @param challenge  persisted challenge
-     * @param definition parsed definition
-     */
-    private void validateProgressMode(
-        Challenge challenge,
-        ChallengeDefinition definition
-    ) {
-        switch (definition.progressMode()) {
-            case SUM -> validateSum(challenge, definition);
-            case DISTINCT_COUNT, MAX_GROUP -> validateGrouped(challenge, definition);
-            case COUNT_MATCHES -> validateOccurrences(challenge, definition);
-            case MAX_STREAK -> validateStreak(challenge, definition);
-            case RATIO -> validateRatio(challenge, definition);
-            case BASELINE -> validateBaseline(challenge, definition);
-            // ALL delegates every condition to the mode each one declares, so it constrains nothing of
-            // its own beyond the condition count already checked by validateConditionCount.
-            case ALL -> { }
-        }
-    }
-
-    /**
-     * Validates a summed challenge definition.
-     *
-     * @param challenge  persisted challenge
-     * @param definition parsed definition
-     */
-    private void validateSum(
-        Challenge challenge,
-        ChallengeDefinition definition
-    ) {
-        ChallengeCondition condition = definition.singleCondition();
-
-        if (condition.groupBy() != null) {
-            throw invalidDefinition(
-                challenge,
-                "SUM conditions must not define groupBy."
-            );
-        }
-    }
-
-    /**
-     * Validates a grouped challenge definition.
-     *
-     * @param challenge  persisted challenge
-     * @param definition parsed definition
-     */
-    private void validateGrouped(
-        Challenge challenge,
-        ChallengeDefinition definition
-    ) {
-        ChallengeCondition condition = definition.singleCondition();
-
-        if (condition.groupBy() == null) {
-            throw invalidDefinition(
-                challenge,
-                definition.progressMode()
-                    + " requires a groupBy value."
-            );
-        }
-    }
-
-    /**
-     * Validates a match-occurrence challenge definition.
-     *
-     * @param challenge  persisted challenge
-     * @param definition parsed definition
-     */
-    private void validateOccurrences(
-        Challenge challenge,
-        ChallengeDefinition definition
-    ) {
-        ChallengeCondition condition = definition.singleCondition();
-
-        if (condition.scope() != ChallengeScope.PER_MATCH) {
-            throw invalidDefinition(
-                challenge,
-                "COUNT_MATCHES requires the PER_MATCH scope."
-            );
-        }
-
-        if (condition.occurrences() == null
-            || condition.occurrences() <= 0) {
-            throw invalidDefinition(
-                challenge,
-                "COUNT_MATCHES requires a positive occurrences value."
-            );
-        }
-    }
-
-    /**
-     * Validates a consecutive-match challenge definition.
-     *
-     * @param challenge  persisted challenge
-     * @param definition parsed definition
-     */
-    private void validateStreak(
-        Challenge challenge,
-        ChallengeDefinition definition
-    ) {
-        ChallengeCondition condition = definition.singleCondition();
-
-        if (condition.scope() != ChallengeScope.PER_MATCH) {
-            throw invalidDefinition(
-                challenge,
-                "MAX_STREAK requires the PER_MATCH scope."
-            );
-        }
-
-        if (condition.streak() == null || condition.streak() <= 0) {
-            throw invalidDefinition(
-                challenge,
-                "MAX_STREAK requires a positive streak value."
-            );
-        }
-    }
-
-    /**
-     * Validates a ratio challenge definition.
-     *
-     * @param challenge  persisted challenge
-     * @param definition parsed definition
-     */
-    private void validateRatio(
-        Challenge challenge,
-        ChallengeDefinition definition
-    ) {
-        ChallengeCondition condition = definition.singleCondition();
-
-        if (condition.minimumMatches() != null
-            && condition.minimumMatches() <= 0) {
-            throw invalidDefinition(
-                challenge,
-                "minimumMatches must be positive when provided."
-            );
-        }
-    }
-
-    /**
-     * Validates a baseline progression challenge definition.
-     *
-     * <p>The target is an improvement in percent over the player's own baseline, so it has to be
-     * strictly positive: a target of zero would be satisfied by standing still, and a negative one by
-     * getting worse.
-     *
-     * @param challenge  persisted challenge
-     * @param definition parsed definition
-     */
-    private void validateBaseline(
-        Challenge challenge,
-        ChallengeDefinition definition
-    ) {
-        ChallengeCondition condition = definition.singleCondition();
-
-        if (condition.target() == null || condition.target().signum() <= 0) {
-            throw invalidDefinition(
-                challenge,
-                "BASELINE requires a positive improvement target, in percent."
-            );
-        }
-
-        if (condition.minimumMatches() == null
-            || condition.minimumMatches() <= 0) {
-            throw invalidDefinition(
-                challenge,
-                "BASELINE requires a positive minimumMatches value."
-            );
-        }
-    }
-
-    /**
-     * Creates a contextual validation exception.
-     *
-     * @param challenge invalid challenge
-     * @param message   validation message
-     * @return contextual exception
-     */
-    private InvalidChallengeDefinitionException invalidDefinition(
-        Challenge challenge,
-        String message
-    ) {
-        return new InvalidChallengeDefinitionException(
-            buildErrorMessage(challenge, message)
-        );
-    }
-
-    /**
-     * Creates a contextual parsing exception.
-     *
-     * @param challenge invalid challenge
-     * @param message   validation message
-     * @param cause     parsing failure
-     * @return contextual exception
-     */
-    private InvalidChallengeDefinitionException invalidDefinition(
-        Challenge challenge,
-        String message,
-        Throwable cause
-    ) {
-        return new InvalidChallengeDefinitionException(
-            buildErrorMessage(challenge, message),
-            cause
-        );
-    }
-
-    /**
-     * Builds an error message containing the challenge identifier.
-     *
-     * @param challenge invalid challenge
-     * @param message   validation message
-     * @return contextual error message
-     */
-    private String buildErrorMessage(
-        Challenge challenge,
-        String message
-    ) {
-        String challengeCode = challenge.getCode() == null
-            ? "<unknown>"
-            : challenge.getCode();
-
-        return "Invalid challenge definition ["
-            + challengeCode
-            + "]: "
-            + message;
     }
 }

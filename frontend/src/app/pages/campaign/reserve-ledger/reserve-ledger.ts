@@ -25,7 +25,7 @@ import { LedgerCellView } from './ledger-cell';
     LucideWrench,
   ],
   templateUrl: './reserve-ledger.html',
-  styleUrl: './reserve-ledger.css',
+  styleUrl: './reserve-ledger.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReserveLedger {

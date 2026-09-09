@@ -7,28 +7,24 @@ import {
   viewChild,
 } from '@angular/core';
 
-const NS = 'http://www.w3.org/2000/svg';
-const CX = 180;
-const CY = 180;
-const R = 104;
-const WOUNDED_MARKS = 26;
-const SEGMENTS = 26;
-const BRAND = '#d9954a';
-const WARM = '#ffc477';
-const WARM_CORE = '#fff0cf';
+import { createSeededRandom } from '@core/random/seeded-random.utils';
+import { svgElement as el } from '@core/svg/svg-element.utils';
+import {
+  PLANET_COLORS,
+  PLANET_CX,
+  PLANET_CY,
+  PLANET_RADIUS,
+  PLANET_SEED,
+  PLANET_VIEW_SIZE,
+  RELIEF_PATCHES,
+  RING_SEGMENTS,
+  WOUNDED_MARKS,
+} from './planet-figure.constants';
 
-type Attrs = Readonly<Record<string, string | number>>;
-
-function el<K extends keyof SVGElementTagNameMap>(
-  name: K,
-  attrs: Attrs = {},
-): SVGElementTagNameMap[K] {
-  const node = document.createElementNS(NS, name);
-  for (const [key, value] of Object.entries(attrs)) {
-    node.setAttribute(key, String(value));
-  }
-  return node;
-}
+const CX = PLANET_CX;
+const CY = PLANET_CY;
+const R = PLANET_RADIUS;
+const C = PLANET_COLORS;
 
 /**
  * The planet of the week: the wounded on its lit face, and the guardian's lines around it.
@@ -40,20 +36,8 @@ function el<K extends keyof SVGElementTagNameMap>(
  */
 @Component({
   selector: 'app-planet-figure',
-  template: `
-    <svg
-      #planet
-      [attr.aria-label]="label()"
-      class="block w-full"
-      role="img"
-      viewBox="0 0 360 360"
-    ></svg>
-  `,
-  styles: `
-    :host {
-      display: block;
-    }
-  `,
+  templateUrl: './planet-figure.html',
+  styleUrl: './planet-figure.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlanetFigure {
@@ -67,6 +51,8 @@ export class PlanetFigure {
    */
   public readonly label = input('');
 
+  protected readonly viewBox = `0 0 ${PLANET_VIEW_SIZE} ${PLANET_VIEW_SIZE}`;
+
   private readonly planet = viewChild.required<ElementRef<SVGSVGElement>>('planet');
 
   constructor() {
@@ -75,22 +61,30 @@ export class PlanetFigure {
     });
   }
 
+  /**
+   * Rebuilds the whole drawing: globe, relief, shadow, wounded marks, then the ring.
+   */
   private draw(svg: SVGSVGElement, guardianLeft: number): void {
-    let seed = 815239;
-    const rn = (): number => {
-      seed = (seed * 1664525 + 1013904223) % 4294967296;
-      return seed / 4294967296;
-    };
-
+    const rn = createSeededRandom(PLANET_SEED);
     const frag = document.createDocumentFragment();
-    const add = <T extends Node>(node: T): T => {
-      frag.appendChild(node);
-      return node;
-    };
-    const defs = add(el('defs'));
 
-    // The globe, lit from the top left: without a terminator, a flat disc does not read as a
-    // planet.
+    frag.append(this.buildDefs());
+    frag.append(el('circle', { cx: CX, cy: CY, r: R * 1.62, fill: 'url(#planet-halo)' }));
+    frag.append(el('circle', { cx: CX, cy: CY, r: R, fill: 'url(#planet-globe)' }));
+    frag.append(this.buildRelief(rn));
+    frag.append(...this.buildShadowAndAtmosphere());
+    frag.append(this.buildWoundedMarks(rn));
+    frag.append(this.buildRing(guardianLeft));
+
+    svg.replaceChildren(frag);
+  }
+
+  /**
+   * Gradients and clip path. The globe is lit from the top left: without a terminator, a flat
+   * disc does not read as a planet.
+   */
+  private buildDefs(): SVGDefsElement {
+    const defs = el('defs');
     const globe = el('radialGradient', { id: 'planet-globe', cx: 0.34, cy: 0.28, r: 0.85 });
     globe.append(
       el('stop', { offset: 0, 'stop-color': '#6a5a48' }),
@@ -100,20 +94,22 @@ export class PlanetFigure {
     );
     const halo = el('radialGradient', { id: 'planet-halo', cx: 0.5, cy: 0.5, r: 0.5 });
     halo.append(
-      el('stop', { offset: 0.62, 'stop-color': BRAND, 'stop-opacity': 0 }),
-      el('stop', { offset: 0.78, 'stop-color': BRAND, 'stop-opacity': 0.14 }),
-      el('stop', { offset: 1, 'stop-color': BRAND, 'stop-opacity': 0 }),
+      el('stop', { offset: 0.62, 'stop-color': C.brand, 'stop-opacity': 0 }),
+      el('stop', { offset: 0.78, 'stop-color': C.brand, 'stop-opacity': 0.14 }),
+      el('stop', { offset: 1, 'stop-color': C.brand, 'stop-opacity': 0 }),
     );
     const clip = el('clipPath', { id: 'planet-disc' });
     clip.append(el('circle', { cx: CX, cy: CY, r: R }));
     defs.append(globe, halo, clip);
+    return defs;
+  }
 
-    add(el('circle', { cx: CX, cy: CY, r: R * 1.62, fill: 'url(#planet-halo)' }));
-    add(el('circle', { cx: CX, cy: CY, r: R, fill: 'url(#planet-globe)' }));
-
-    // Relief: dark patches cut to the disc. A plain planet looks like a marble.
+  /**
+   * Relief: dark and pale patches cut to the disc.
+   */
+  private buildRelief(rn: () => number): SVGGElement {
     const crust = el('g', { 'clip-path': 'url(#planet-disc)' });
-    for (let i = 0; i < 11; i++) {
+    for (let i = 0; i < RELIEF_PATCHES; i++) {
       const a = rn() * Math.PI * 2;
       const d = Math.sqrt(rn()) * R * 0.88;
       crust.append(
@@ -128,33 +124,38 @@ export class PlanetFigure {
         }),
       );
     }
-    add(crust);
+    return crust;
+  }
 
-    // The atmosphere, and the shadow taking the right edge.
-    add(
-      el('circle', {
-        cx: CX + 26,
-        cy: CY + 20,
-        r: R,
-        fill: '#040a11',
-        opacity: 0.42,
-        'clip-path': 'url(#planet-disc)',
-      }),
-    );
-    add(
-      el('circle', {
-        cx: CX,
-        cy: CY,
-        r: R + 1,
-        fill: 'none',
-        stroke: WARM,
-        'stroke-width': 1,
-        opacity: 0.28,
-      }),
-    );
+  /**
+   * The shadow taking the right edge, and the thin warm atmosphere line.
+   */
+  private buildShadowAndAtmosphere(): readonly SVGCircleElement[] {
+    const shadow = el('circle', {
+      cx: CX + 26,
+      cy: CY + 20,
+      r: R,
+      fill: C.night,
+      opacity: 0.42,
+      'clip-path': 'url(#planet-disc)',
+    });
+    const atmosphere = el('circle', {
+      cx: CX,
+      cy: CY,
+      r: R + 1,
+      fill: 'none',
+      stroke: C.warm,
+      'stroke-width': 1,
+      opacity: 0.28,
+    });
+    return [shadow, atmosphere];
+  }
 
-    // The wounded: marks laid on the lit face, breathing. They do not count the wounded one by
-    // one — the figure is written beside — they say there are people there.
+  /**
+   * The wounded: marks laid on the lit face, breathing. They do not count the wounded one by one
+   * — the figure is written beside — they say there are people there.
+   */
+  private buildWoundedMarks(rn: () => number): SVGGElement {
     const marks = el('g');
     for (let i = 0; i < WOUNDED_MARKS; i++) {
       const a = rn() * Math.PI * 2;
@@ -164,7 +165,7 @@ export class PlanetFigure {
       if (px - CX > 34 && py - CY > 24) {
         continue; // nothing in the shadow
       }
-      const mark = el('circle', { cx: px.toFixed(1), cy: py.toFixed(1), r: 2.6, fill: WARM_CORE });
+      const mark = el('circle', { cx: px.toFixed(1), cy: py.toFixed(1), r: 2.6, fill: C.warmCore });
       mark.append(
         el('animate', {
           attributeName: 'opacity',
@@ -175,18 +176,22 @@ export class PlanetFigure {
       );
       marks.append(mark);
       marks.append(
-        el('circle', { cx: px.toFixed(1), cy: py.toFixed(1), r: 7, fill: WARM, opacity: 0.1 }),
+        el('circle', { cx: px.toFixed(1), cy: py.toFixed(1), r: 7, fill: C.warm, opacity: 0.1 }),
       );
     }
-    add(marks);
+    return marks;
+  }
 
-    // The breakthrough. One segment per twenty-sixth of the hit points: those left are standing,
-    // in red; the others drift outward, extinguished. The same value as the bar under the planet,
-    // said in an image.
+  /**
+   * The breakthrough. One segment per share of the hit points: those left are standing, in red;
+   * the others drift outward, extinguished. The same value as the bar under the planet, said in
+   * an image.
+   */
+  private buildRing(guardianLeft: number): SVGGElement {
     const ring = el('g');
-    const held = Math.round(SEGMENTS * Math.max(0, Math.min(1, guardianLeft)));
-    for (let i = 0; i < SEGMENTS; i++) {
-      const angle = (-90 + (i * 360) / SEGMENTS) * (Math.PI / 180);
+    const held = Math.round(RING_SEGMENTS * Math.max(0, Math.min(1, guardianLeft)));
+    for (let i = 0; i < RING_SEGMENTS; i++) {
+      const angle = (-90 + (i * 360) / RING_SEGMENTS) * (Math.PI / 180);
       const alive = i < held;
       const drift = alive ? 0 : 9 + ((i * 37) % 11);
       const r0 = R + 20 + drift;
@@ -196,7 +201,7 @@ export class PlanetFigure {
         y1: (CY + Math.sin(angle) * r0).toFixed(1),
         x2: (CX + Math.cos(angle) * r1).toFixed(1),
         y2: (CY + Math.sin(angle) * r1).toFixed(1),
-        stroke: alive ? '#e0404e' : '#4a5560',
+        stroke: alive ? C.segmentAlive : C.segmentDead,
         'stroke-width': alive ? 5 : 3,
         'stroke-linecap': 'round',
         opacity: alive ? 0.92 : 0.3,
@@ -214,8 +219,6 @@ export class PlanetFigure {
       }
       ring.append(segment);
     }
-    add(ring);
-
-    svg.replaceChildren(frag);
+    return ring;
   }
 }

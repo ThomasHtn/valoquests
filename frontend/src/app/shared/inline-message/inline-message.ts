@@ -24,7 +24,7 @@ const TONE_CLASS: Record<InlineMessageTone, string> = {
  */
 @Component({
   selector: 'app-inline-message',
-  template: `<ng-content />`,
+  templateUrl: './inline-message.html',
   host: {
     class: 'block border-l-2 pl-3 text-prose text-pretty',
     '[class]': 'toneClass()',

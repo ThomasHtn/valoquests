@@ -3,18 +3,14 @@ package io.github.thomashtn.valoquests.player.service;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.match.model.GameMode;
-import io.github.thomashtn.valoquests.match.model.MatchResult;
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.dto.AgentStatisticsResponse;
 import io.github.thomashtn.valoquests.player.dto.MapStatisticsResponse;
 import io.github.thomashtn.valoquests.player.dto.PlayerProgressionResponse;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
-import io.github.thomashtn.valoquests.player.model.CompetitiveTier;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
-import java.math.BigDecimal;
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -58,14 +54,6 @@ public class DefaultPlayerProgressionQueryService implements PlayerProgressionQu
      * Number of time slots covering a day.
      */
     private static final int HOUR_SLOT_COUNT = 24 / HOUR_SLOT_SPAN;
-
-    /**
-     * Rounds a match must have lasted for its headshot rate to stand as a personal best.
-     *
-     * <p>A match abandoned after two rounds can show a headshot rate no full match will ever beat,
-     * which would freeze that record forever on a game barely played.
-     */
-    private static final int MINIMUM_HEADSHOT_ROUNDS = 10;
 
     /**
      * Repository used to confirm the requested player exists.
@@ -123,7 +111,7 @@ public class DefaultPlayerProgressionQueryService implements PlayerProgressionQu
             aim(competitive),
             weekdays(competitive),
             hourSlots(competitive),
-            records(competitive, inScope),
+            PlayerRecordsCalculator.records(competitive, inScope, weekCalendar.zone()),
             mapStatistics(competitive),
             agentStatistics(competitive)
         );
@@ -205,8 +193,8 @@ public class DefaultPlayerProgressionQueryService implements PlayerProgressionQu
     private PlayerProgressionResponse.MatchPoint toMatchPoint(PlayerMatch match) {
         return new PlayerProgressionResponse.MatchPoint(
             match.getMatch().getStartedAt(),
-            headshotPercentage(match),
-            matchKda(match),
+            PlayerRecordsCalculator.headshotPercentage(match),
+            PlayerRecordsCalculator.matchKda(match),
             match.getAcs(),
             match.getAdr()
         );
@@ -302,135 +290,6 @@ public class DefaultPlayerProgressionQueryService implements PlayerProgressionQu
     }
 
     /**
-     * Collects the player's personal bests.
-     *
-     * @param competitive competitive matches in scope, oldest first
-     * @param everyMode   every match in scope regardless of game mode, used by the day streak
-     * @return the personal records
-     */
-    private PlayerProgressionResponse.PersonalRecords records(
-        List<PlayerMatch> competitive,
-        List<PlayerMatch> everyMode
-    ) {
-        List<PlayerMatch> longEnough = competitive.stream()
-            .filter(match -> match.getRoundsPlayed() >= MINIMUM_HEADSHOT_ROUNDS)
-            .toList();
-
-        return new PlayerProgressionResponse.PersonalRecords(
-            best(competitive, match -> BigDecimal.valueOf(match.getKills())),
-            best(competitive, PlayerMatch::getAcs),
-            best(competitive, match -> BigDecimal.valueOf(match.getDamageDealt())),
-            best(competitive, DefaultPlayerProgressionQueryService::matchKda),
-            best(longEnough, DefaultPlayerProgressionQueryService::headshotPercentage),
-            longestWinStreak(competitive),
-            longestActiveDayStreak(everyMode),
-            competitive.stream().filter(PlayerMatch::isMvp).count(),
-            peakTier(competitive)
-        );
-    }
-
-    /**
-     * Finds the match holding the highest value of one metric.
-     *
-     * <p>Zero and negative values never qualify: a personal best of nothing is not a record, and
-     * reporting one would fill the section with empty boasts on a freshly synchronized player.
-     *
-     * @param matches   matches to search
-     * @param extractor reads the metric off one match, possibly returning {@code null}
-     * @return the record, or {@code null} when no match qualifies
-     */
-    private static PlayerProgressionResponse.RecordEntry best(
-        List<PlayerMatch> matches,
-        Function<PlayerMatch, BigDecimal> extractor
-    ) {
-        PlayerMatch holder = null;
-        BigDecimal record = null;
-        for (PlayerMatch match : matches) {
-            BigDecimal candidate = extractor.apply(match);
-            if (candidate == null || candidate.signum() <= 0) {
-                continue;
-            }
-            if (record == null || candidate.compareTo(record) > 0) {
-                holder = match;
-                record = candidate;
-            }
-        }
-        if (holder == null) {
-            return null;
-        }
-        return new PlayerProgressionResponse.RecordEntry(
-            record,
-            holder.getMatch().getStartedAt(),
-            holder.getMatch().getMapName(),
-            holder.getAgentName()
-        );
-    }
-
-    /**
-     * Measures the longest run of consecutive wins.
-     *
-     * <p>Remakes are skipped rather than counted as a loss: a game that never really happened
-     * should not break a streak the player did earn.
-     *
-     * @param matches competitive matches in scope, oldest first
-     * @return the longest run of wins, or zero when the player never won
-     */
-    private static int longestWinStreak(List<PlayerMatch> matches) {
-        int longest = 0;
-        int current = 0;
-        for (PlayerMatch match : matches) {
-            if (match.getResult() == MatchResult.REMAKE) {
-                continue;
-            }
-            current = match.getResult() == MatchResult.WIN ? current + 1 : 0;
-            longest = Math.max(longest, current);
-        }
-        return longest;
-    }
-
-    /**
-     * Measures the longest run of consecutive calendar days holding at least one match.
-     *
-     * <p>Counted over every game mode, deliberately: this records showing up, not competing, so a
-     * night of deathmatch keeps the run alive.
-     *
-     * @param matches every match in scope, in any order
-     * @return the longest run of active days, or zero when the player played nothing
-     */
-    private int longestActiveDayStreak(List<PlayerMatch> matches) {
-        List<LocalDate> days = matches.stream()
-            .map(match -> zoned(match).toLocalDate())
-            .distinct()
-            .sorted()
-            .toList();
-
-        int longest = 0;
-        int current = 0;
-        LocalDate previous = null;
-        for (LocalDate day : days) {
-            boolean consecutive = previous != null && day.equals(previous.plusDays(1));
-            current = consecutive ? current + 1 : 1;
-            longest = Math.max(longest, current);
-            previous = day;
-        }
-        return longest;
-    }
-
-    /**
-     * Finds the highest competitive rank the player held during the filtered matches.
-     *
-     * @param matches competitive matches in scope
-     * @return the peak tier, or {@code null} when no match carries a rank
-     */
-    private static CompetitiveTier peakTier(List<PlayerMatch> matches) {
-        return matches.stream()
-            .map(PlayerMatch::getCompetitiveTier)
-            .filter(tier -> tier != null && tier != CompetitiveTier.UNRANKED)
-            .max(Comparator.naturalOrder())
-            .orElse(null);
-    }
-
-    /**
      * Aggregates the filtered matches per map, most-played first.
      *
      * @param matches competitive matches in scope
@@ -471,30 +330,6 @@ public class DefaultPlayerProgressionQueryService implements PlayerProgressionQu
         return matches.stream()
             .filter(match -> classifier.apply(match) != null)
             .collect(Collectors.groupingBy(classifier, LinkedHashMap::new, Collectors.toList()));
-    }
-
-    /**
-     * Reads one match's headshot rate.
-     *
-     * @param match the match to measure
-     * @return the share of that match's hits that landed on the head
-     */
-    private static BigDecimal headshotPercentage(PlayerMatch match) {
-        long shots = (long) match.getHeadshots() + match.getBodyshots() + match.getLegshots();
-        return MatchStatistics.percentage(match.getHeadshots(), shots);
-    }
-
-    /**
-     * Reads one match's ratio of kills and assists to deaths.
-     *
-     * @param match the match to measure
-     * @return that match's KDA ratio
-     */
-    private static BigDecimal matchKda(PlayerMatch match) {
-        return MatchStatistics.divide(
-            (long) match.getKills() + match.getAssists(),
-            Math.max(1, match.getDeaths())
-        );
     }
 
     /**

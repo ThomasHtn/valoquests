@@ -33,7 +33,7 @@ import { DailyOrder, DayTally } from '../overview.model';
     LucideZap,
   ],
   templateUrl: './day-orders.html',
-  styleUrl: './day-orders.css',
+  styleUrl: './day-orders.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DayOrders {

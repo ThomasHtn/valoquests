@@ -10,7 +10,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, input, signal } f
 @Component({
   selector: 'app-countdown',
   templateUrl: './countdown.html',
-  styleUrl: './countdown.css',
+  styleUrl: './countdown.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.is-small]': 'size() === "sm"' },
 })

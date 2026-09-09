@@ -70,7 +70,7 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
     RuleText,
   ],
   templateUrl: './rules.html',
-  styleUrl: './rules.css',
+  styleUrl: './rules.scss',
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Rules implements AfterViewInit {

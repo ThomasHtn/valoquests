@@ -13,7 +13,9 @@ import { resolveDifficultyVisual } from '@core/challenges/challenge-visual.utils
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { localMidnight } from '@core/date/date-time.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
+import { resolveLocale } from '@core/i18n/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { WEEK_DAYS } from '@core/date/date-time.constants';
 import { Translation } from '@core/i18n/translation';
 import { PageHeader } from '@layout/page-header/page-header';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
@@ -24,8 +26,6 @@ import { ChallengeCardView } from './challenge-card/challenge-card';
 import { ChallengeCatalogueView } from './challenge-catalogue/challenge-catalogue';
 import { CatalogueGroup, ChallengeCard, DayCell, DayState, SquadSlot } from './challenges.model';
 import { DailyFrieze } from './daily-frieze/daily-frieze';
-
-const WEEK_DAYS = 7;
 
 const DAILY_TONE = 'var(--color-accent-cyan)';
 
@@ -61,7 +61,7 @@ function shiftDay(isoDate: string, offset: number): string {
     LucideChevronDown,
   ],
   templateUrl: './challenges.html',
-  styleUrl: './challenges.css',
+  styleUrl: './challenges.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: PAGE_LAYOUT_CLASS },
 })
@@ -314,7 +314,7 @@ export class Challenges {
   }
 
   private locale(): string {
-    return this.translation.language() === 'fr' ? 'fr-FR' : 'en-US';
+    return resolveLocale(this.translation.language());
   }
 
   private weekday(isoDate: string, width: 'short' | 'long'): string {

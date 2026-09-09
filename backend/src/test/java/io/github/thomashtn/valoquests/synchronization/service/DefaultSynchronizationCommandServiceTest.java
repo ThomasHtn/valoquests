@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -96,7 +97,8 @@ class DefaultSynchronizationCommandServiceTest {
             clock
         );
 
-        when(synchronizationRepository.save(any(Synchronization.class)))
+        // Shared by most tests; lenient so the fail-fast paths that never save do not trip strict stubs.
+        lenient().when(synchronizationRepository.save(any(Synchronization.class)))
             .thenAnswer(invocation -> {
                 Synchronization synchronization = invocation.getArgument(0);
 

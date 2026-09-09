@@ -1,0 +1,23 @@
+<!-- Rotated a quarter turn so the arc starts at the top; the track is the edge colour. -->
+<svg class="block size-full -rotate-90" [attr.viewBox]="viewBox" aria-hidden="true">
+  <circle
+    [attr.cx]="centre"
+    [attr.cy]="centre"
+    [attr.r]="radius"
+    [attr.stroke-width]="stroke"
+    fill="none"
+    stroke="var(--color-edge)"
+  />
+  <!-- The filled arc: dash length is the circumference, the offset hides the unfilled share. -->
+  <circle
+    [attr.cx]="centre"
+    [attr.cy]="centre"
+    [attr.r]="radius"
+    [attr.stroke-width]="stroke"
+    [attr.stroke-dasharray]="circumference"
+    [attr.stroke-dashoffset]="dashOffset()"
+    fill="none"
+    stroke="currentColor"
+    stroke-linecap="round"
+  />
+</svg>

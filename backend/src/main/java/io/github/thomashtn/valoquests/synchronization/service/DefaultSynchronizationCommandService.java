@@ -18,7 +18,6 @@ import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationPlayerResultRepository;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationRepository;
 import java.time.Clock;
-import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,11 +52,6 @@ public class DefaultSynchronizationCommandService
      */
     private static final Logger LOGGER =
         LoggerFactory.getLogger(DefaultSynchronizationCommandService.class);
-
-    /**
-     * Maximum size accepted by synchronization error columns.
-     */
-    private static final int MAXIMUM_ERROR_MESSAGE_LENGTH = 2_000;
 
     /**
      * Service used to synchronize one player.
@@ -162,7 +156,7 @@ public class DefaultSynchronizationCommandService
 
         refreshChallengeProgress(summary.matchesImported());
 
-        return toResponse(
+        return SynchronizationResponse.from(
             synchronization,
             summary.lastSuccessfulSynchronizationAt()
         );
@@ -219,7 +213,7 @@ public class DefaultSynchronizationCommandService
             outcome.summary().matchesImported()
         );
 
-        return toResponse(
+        return SynchronizationResponse.from(
             synchronization,
             outcome.summary().lastSuccessfulSynchronizationAt()
         );
@@ -251,7 +245,7 @@ public class DefaultSynchronizationCommandService
                 null
             );
         } catch (RuntimeException exception) {
-            String errorMessage = safeErrorMessage(exception);
+            String errorMessage = SynchronizationErrorMessage.of(exception);
 
             LOGGER.error(
                 "Synchronization failed for player {}",
@@ -373,7 +367,7 @@ public class DefaultSynchronizationCommandService
         SynchronizationBatchSummary summary
     ) {
         synchronization.setStatus(
-            determineGlobalStatus(
+            SynchronizationStatus.ofBatch(
                 playerCount,
                 summary.successfulPlayers(),
                 summary.failureCount()
@@ -384,7 +378,7 @@ public class DefaultSynchronizationCommandService
         synchronization.setFailureCount(summary.failureCount());
         synchronization.setMatchesImported(summary.matchesImported());
         synchronization.setErrorMessage(
-            nullableTruncatedErrorMessage(summary.errorMessages())
+            SynchronizationErrorMessage.truncateOrNull(summary.errorMessages())
         );
 
         synchronizationRepository.save(synchronization);
@@ -442,109 +436,10 @@ public class DefaultSynchronizationCommandService
         result.setErrorMessage(
             errorMessage == null
                 ? null
-                : truncateErrorMessage(errorMessage)
+                : SynchronizationErrorMessage.truncate(errorMessage)
         );
         result.setStopReason(stopReason);
 
         playerResultRepository.save(result);
-    }
-
-    /**
-     * Determines the final status of a multi-player execution.
-     *
-     * @param playerCount       selected player count
-     * @param successfulPlayers successful player count
-     * @param failureCount      failed player count
-     * @return global synchronization status
-     */
-    private SynchronizationStatus determineGlobalStatus(
-        int playerCount,
-        int successfulPlayers,
-        int failureCount
-    ) {
-        if (playerCount == 0 || failureCount == 0) {
-            return SynchronizationStatus.COMPLETED;
-        }
-
-        if (successfulPlayers == 0) {
-            return SynchronizationStatus.FAILED;
-        }
-
-        return SynchronizationStatus.PARTIAL;
-    }
-
-    /**
-     * Returns a non-empty diagnostic message for an exception.
-     *
-     * @param exception synchronization exception
-     * @return safe error description
-     */
-    private String safeErrorMessage(RuntimeException exception) {
-        String message = exception.getMessage();
-
-        if (message == null || message.isBlank()) {
-            return exception.getClass().getSimpleName();
-        }
-
-        return message;
-    }
-
-    /**
-     * Maps a persisted execution to its API representation.
-     *
-     * @param synchronization                 persisted execution
-     * @param lastSuccessfulSynchronizationAt latest successful player timestamp
-     * @return API response
-     */
-    private SynchronizationResponse toResponse(
-        Synchronization synchronization,
-        Instant lastSuccessfulSynchronizationAt
-    ) {
-        return new SynchronizationResponse(
-            synchronization.getId(),
-            synchronization.getType(),
-            synchronization.getTrigger(),
-            synchronization.getStatus(),
-            synchronization.getStartedAt(),
-            synchronization.getFinishedAt(),
-            synchronization.getStartedAt(),
-            lastSuccessfulSynchronizationAt,
-            synchronization.getPlayersProcessed(),
-            synchronization.getFailureCount(),
-            synchronization.getMatchesImported(),
-            synchronization.getErrorMessage()
-        );
-    }
-
-    /**
-     * Returns {@code null} for an empty aggregate or a truncated value.
-     *
-     * @param message aggregated errors
-     * @return nullable persisted value
-     */
-    private String nullableTruncatedErrorMessage(String message) {
-        if (message == null || message.isBlank()) {
-            return null;
-        }
-
-        return truncateErrorMessage(message);
-    }
-
-    /**
-     * Restricts an error message to the database column size.
-     *
-     * @param message original message
-     * @return non-empty persisted message
-     */
-    private String truncateErrorMessage(String message) {
-        if (message == null || message.isBlank()) {
-            return "Synchronization failed";
-        }
-
-        if (message.length() <= MAXIMUM_ERROR_MESSAGE_LENGTH) {
-            return message;
-        }
-
-        return message.substring(0, MAXIMUM_ERROR_MESSAGE_LENGTH);
     }
 }

@@ -27,7 +27,7 @@ import { MissionReport as MissionReportView } from '../overview.model';
   selector: 'app-mission-report',
   imports: [TranslatePipe, Avatar, LucideCheck, LucideX],
   templateUrl: './mission-report.html',
-  styleUrl: './mission-report.css',
+  styleUrl: './mission-report.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'contents',

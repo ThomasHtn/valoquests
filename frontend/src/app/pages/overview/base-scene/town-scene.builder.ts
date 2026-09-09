@@ -9,14 +9,8 @@
  * can be read as a drawing.
  */
 
-import {
-  animate,
-  drawShip,
-  outline,
-  ROCKET_PALETTE,
-  SHIP,
-  svgElement as el,
-} from '@shared/rocket/rocket-drawing';
+import { animate, drawShip, outline, ROCKET_PALETTE, SHIP } from '@shared/rocket/rocket-drawing';
+import { svgElement as el } from '@core/svg/svg-element.utils';
 
 /**
  * Inputs the scene is drawn from.

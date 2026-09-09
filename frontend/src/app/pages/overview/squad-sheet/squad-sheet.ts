@@ -31,7 +31,7 @@ import { SquadRow } from '../overview.model';
     LucideWrench,
   ],
   templateUrl: './squad-sheet.html',
-  styleUrl: './squad-sheet.css',
+  styleUrl: './squad-sheet.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SquadSheet {

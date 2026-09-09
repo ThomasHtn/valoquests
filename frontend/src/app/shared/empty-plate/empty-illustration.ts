@@ -14,7 +14,7 @@ import { EmptyIllustration as EmptyIllustrationKind } from './empty-plate.model'
 @Component({
   selector: 'app-empty-illustration',
   templateUrl: './empty-illustration.html',
-  styleUrl: './empty-illustration.css',
+  styleUrl: './empty-illustration.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block', 'aria-hidden': 'true' },
 })
