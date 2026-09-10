@@ -2,7 +2,7 @@
 .rows {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 /* Column names exist only from the width where a row really holds columns; below it the cells
@@ -19,6 +19,7 @@
   align-items: center;
   min-height: 5.0625rem;
   padding: 1.125rem 1.25rem;
+  background: rgb(236 232 225 / 4%);
 }
 
 .cell-pos {
@@ -196,12 +197,17 @@
       repeat(var(--cols), 4.75rem);
   }
 
-  /* The squad page's own distance from its labels to its first row: a 1.5rem block gap pulled
-     back by 0.875rem there, 0.5rem plus this margin here. */
   .head {
-    align-items: end;
-    padding: 0 1.25rem;
-    margin-bottom: 0.125rem;
+    padding: 0.6rem 1.25rem;
+  }
+
+  /* Centered on the position column below it, whose badge reads the same way. */
+  .bar-count {
+    justify-self: center;
+  }
+
+  .cell-pos {
+    justify-content: center;
   }
 
   .head-fig {

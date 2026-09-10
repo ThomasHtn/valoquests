@@ -17,10 +17,10 @@
   >
     <!-- Skeleton shaped like a loaded row — same silhouette, same leading rule — so data arriving
        does not shift the page. -->
-    <div class="flex flex-col gap-2" skeleton>
+    <div class="flex flex-col gap-1" skeleton>
       @for (placeholder of skeletonRows; track $index) {
         <div
-          class="notch-tr flex items-center gap-3 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-6 [--notch:0.875rem] lg:px-5"
+          class="flex items-center gap-3 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-6 lg:px-5"
         >
           <span class="size-9 shrink-0 rounded-full bg-surface-700"></span>
           <span class="flex min-w-0 flex-1 flex-col gap-2">
@@ -36,7 +36,7 @@
        label is a sort button, and the whole row is exposed to assistive technology now that it is
        actionable rather than decorative. -->
     <div
-      class="hidden px-5 lg:-mb-3.5 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem_13rem_6rem_6.5rem_6rem_4.5rem] lg:items-end lg:gap-x-4"
+      class="hidden border-l-2 border-brand-500 bg-text-primary/8 px-5 lg:-mb-5 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem_13rem_6rem_6.5rem_6rem_4.5rem] lg:items-center lg:gap-x-[clamp(0.875rem,4vw-2.325rem,2rem)] lg:py-4.5"
     >
       @for (column of sortColumns; track column.key) {
         <button
@@ -62,7 +62,7 @@
        on one list — an out-of-campaign player still plays and clears challenges, which a dimmed row
        would misstate as "less relevant" instead of "a different kind of row" (design-review.md
        §A8). -->
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-1">
       @for (row of inCampaignRows(); track row.id) {
         <ng-container
           [ngTemplateOutlet]="playerRow"
@@ -79,7 +79,7 @@
           {{ 'players.outOfCampaign.title' | translate }}
         </p>
       </div>
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-1">
         @for (row of outOfCampaignRows(); track row.id) {
           <ng-container
             [ngTemplateOutlet]="playerRow"
@@ -99,7 +99,7 @@
 <ng-template #playerRow let-row>
   <a
     [routerLink]="['/players', row.id]"
-    class="notch-tr focus-ring-inset grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-4.5 transition-colors [--notch:0.875rem] hover:bg-brand-500/15 lg:grid-cols-[minmax(0,1fr)_13rem_13rem_6rem_6.5rem_6rem_4.5rem] lg:gap-x-4 lg:gap-y-0 lg:px-5"
+    class="focus-ring-inset grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-4.5 transition-colors hover:bg-brand-500/15 lg:grid-cols-[minmax(0,1fr)_13rem_13rem_6rem_6.5rem_6rem_4.5rem] lg:gap-x-[clamp(0.875rem,4vw-2.325rem,2rem)] lg:gap-y-0 lg:px-5"
   >
     <span class="flex min-w-0 items-center gap-3">
       <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="sm" />

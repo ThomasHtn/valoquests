@@ -86,7 +86,12 @@
 
         <p class="dl" style="--tone: var(--color-boss-hp-edge)">
           <svg aria-hidden="true" class="size-4" lucideSkull></svg>
-          <span class="dl-key">{{ bossLabel(tally.weekIndex) }}</span>
+          <span
+            [appTooltip]="'overview.orders.damageTooltip' | translate"
+            class="dl-key focus-ring"
+            tabindex="0"
+            >{{ bossLabel(tally.weekIndex) }}</span
+          >
           <span class="dl-val">
             <b class="dl-fig tabular-nums">{{ signed(-tally.damage) }}</b>
             <small>{{ 'overview.report.hp' | translate }}</small>
@@ -95,7 +100,12 @@
 
         <p class="dl" style="--tone: var(--color-accent-cyan)">
           <svg aria-hidden="true" class="size-4" lucideWrench></svg>
-          <span class="dl-key">{{ 'common.resource.components' | translate }}</span>
+          <span
+            [appTooltip]="'overview.orders.componentsTooltip' | translate"
+            class="dl-key focus-ring"
+            tabindex="0"
+            >{{ 'common.resource.components' | translate }}</span
+          >
           <span class="dl-val">
             <b class="dl-fig tabular-nums">{{ signed(tally.components) }}</b>
             <small>{{
@@ -106,7 +116,12 @@
 
         <p class="dl" style="--tone: var(--color-accent-green)">
           <svg aria-hidden="true" class="size-4" lucideWheat></svg>
-          <span class="dl-key">{{ 'common.resource.food' | translate }}</span>
+          <span
+            [appTooltip]="'overview.orders.foodTooltip' | translate"
+            class="dl-key focus-ring"
+            tabindex="0"
+            >{{ 'common.resource.food' | translate }}</span
+          >
           <span class="dl-val">
             <b class="dl-fig tabular-nums">{{ signed(tally.food) }}</b>
             <small>{{
@@ -117,7 +132,12 @@
 
         <p class="dl dl--cost" style="--tone: var(--color-accent-green)">
           <svg aria-hidden="true" class="size-4" lucideBuilding2></svg>
-          <span class="dl-key">{{ 'overview.orders.ate' | translate }}</span>
+          <span
+            [appTooltip]="'overview.orders.ateTooltip' | translate"
+            class="dl-key focus-ring"
+            tabindex="0"
+            >{{ 'overview.orders.ate' | translate }}</span
+          >
           <span class="dl-val">
             <b class="dl-fig tabular-nums">{{ signed(-tally.upkeep) }}</b>
             <small>{{
@@ -128,7 +148,25 @@
 
         <p class="dl" style="--tone: var(--color-brand-400)">
           <svg aria-hidden="true" class="size-4" lucideUsers></svg>
-          <span class="dl-key">{{ 'overview.orders.squad' | translate }}</span>
+          <span
+            [appTooltip]="'overview.orders.populationTooltip' | translate"
+            class="dl-key focus-ring"
+            tabindex="0"
+            >{{ 'overview.orders.population' | translate }}</span
+          >
+          <span class="dl-val">
+            <b class="dl-fig tabular-nums">{{ signed(tally.populationChange) }}</b>
+          </span>
+        </p>
+
+        <p class="dl" style="--tone: var(--color-accent-purple)">
+          <svg aria-hidden="true" class="size-4" lucideUserCheck></svg>
+          <span
+            [appTooltip]="'overview.orders.squadTooltip' | translate"
+            class="dl-key focus-ring"
+            tabindex="0"
+            >{{ 'overview.orders.squad' | translate }}</span
+          >
           <span
             [attr.aria-label]="
               'overview.orders.presenceAria'

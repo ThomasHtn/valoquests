@@ -74,41 +74,24 @@
   </section>
 
   <!-- The frieze: ten weeks in order, what is won, what is lost, where the two peaks are. The only
-       object on the page whose order carries meaning. -->
+       object on the page whose order carries meaning. Full-bleed and untitled: the current week is
+       already legible from the --now cell itself, so a repeating label would only be noise. -->
   @if (frieze().length > 0) {
     <div class="frieze-bar !max-w-none shrink-0 border-b border-edge bg-surface-sunken/55 !px-0">
-      <div
-        class="mx-auto flex w-full max-w-[1440px] flex-wrap items-center gap-x-8 gap-y-4 px-4 py-3.5 sm:px-6"
-      >
-        <div class="flex flex-col gap-1">
-          <b class="font-display text-lg font-semibold tracking-[0.06em] uppercase">{{
-            'overview.frieze.title' | translate
-          }}</b>
-          @if (campaign()?.status === 'RUNNING' && campaign()?.currentWeekIndex; as week) {
-            <span class="label-caption text-2xs text-text-muted">{{
-              'overview.frieze.week' | translate: { week: week, weeks: weekCount }
-            }}</span>
-          }
-        </div>
-
-        <ul
-          [attr.aria-label]="'overview.frieze.aria' | translate"
-          class="frieze flex min-w-0 gap-[3px]"
-        >
-          @for (week of frieze(); track week.index) {
-            <li
-              [appTooltip]="week.title"
-              [class]="'week week--' + week.state + ' focus-ring'"
-              [style.--adv]="week.advance"
-              tabindex="0"
-            >
-              <span class="week-no">{{ week.label }}</span>
-              <span class="week-mark">{{ week.mark }}</span>
-              <span class="sr-only">{{ week.title }}</span>
-            </li>
-          }
-        </ul>
-      </div>
+      <ul [attr.aria-label]="'overview.frieze.aria' | translate" class="frieze flex w-full">
+        @for (week of frieze(); track week.index) {
+          <li
+            [appTooltip]="week.title"
+            [class]="'week week--' + week.state + ' focus-ring'"
+            [style.--adv]="week.advance"
+            tabindex="0"
+          >
+            <span class="week-no">{{ week.label }}</span>
+            <span class="week-mark">{{ week.mark }}</span>
+            <span class="sr-only">{{ week.title }}</span>
+          </li>
+        }
+      </ul>
     </div>
   }
 
@@ -123,7 +106,9 @@
     [loadingText]="'overview.state.loading' | translate"
     padding="px-4 py-10 sm:px-6"
   >
-    <main class="body flex flex-col gap-[clamp(3rem,5vw,5rem)] pt-[clamp(2.5rem,4vw,3.5rem)] pb-24">
+    <main
+      class="body flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)] pt-[clamp(2.5rem,4vw,3.5rem)] pb-24"
+    >
       <!-- The mission: the planet of the week on the left, the situation report on the right.
            A single scan wire ties the planet to the row it points at. -->
       @if (mission(); as mission) {

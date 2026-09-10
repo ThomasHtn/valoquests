@@ -46,8 +46,12 @@
                assistive technology because it labels nothing: the rows are a list of links, not
                table cells, so each value carries its own caption instead. -->
           @if (board.ranked.length > 0) {
-            <div aria-hidden="true" class="head">
-              <span></span>
+            <div aria-hidden="true" class="bar-head head">
+              <span class="bar-count clip-hex"
+                ><span class="clip-hex">{{
+                  board.ranked.length + board.unranked.length
+                }}</span></span
+              >
               <span class="label-caption text-text-muted">
                 {{ 'leaderboard.board.operator' | translate }}
               </span>
@@ -142,7 +146,7 @@
     <a
       [class.row-link--idle]="row.position === null"
       [routerLink]="['/players', row.playerId]"
-      class="row-link notch-tr focus-ring-inset border-l-2 border-edge row transition-colors [--notch:0.875rem] hover:bg-brand-500/15"
+      class="row-link focus-ring-inset border-l-2 border-edge row transition-colors hover:bg-brand-500/15"
     >
       <span class="cell-pos">
         @if (row.position === null) {

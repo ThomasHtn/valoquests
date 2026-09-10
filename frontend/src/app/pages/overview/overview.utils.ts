@@ -402,6 +402,7 @@ export function buildTally(
     shelterGained: today.shelterGained,
     upkeep: today.dailyUpkeep,
     population: base.population,
+    populationChange: base.populationChange,
     presence: today.presenceCount,
     roster: today.rosterSize,
     pips: Array.from({ length: today.rosterSize }, (_, index) => index < today.presenceCount),

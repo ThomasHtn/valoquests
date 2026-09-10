@@ -511,6 +511,11 @@ export interface DayTally {
   readonly population: number;
 
   /**
+   * Inhabitants gained or lost today, damage growth net of famine and guardian losses.
+   */
+  readonly populationChange: number;
+
+  /**
    * Operators who played today.
    */
   readonly presence: number;

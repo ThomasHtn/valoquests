@@ -23,10 +23,6 @@
 
 /* ---------- The ten-week frieze ---------- */
 
-.frieze {
-  flex: 1 1 26rem;
-}
-
 .week {
   position: relative;
   flex: 1 1 0;
@@ -35,7 +31,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.4rem 0.2rem;
+  padding: 0.65rem 0.2rem;
   background: rgb(4 10 15 / 45%);
   border-top: 2px solid rgb(236 232 225 / 14%);
 }
@@ -97,7 +93,6 @@
   --adv-tone: var(--color-accent-cyan);
 
   background: rgb(45 212 191 / 12%);
-  outline: 1px solid rgb(45 212 191 / 40%);
 }
 
 .week--now .week-no,
@@ -109,6 +104,10 @@
   .week {
     gap: 0.2rem;
     padding-inline: 0;
+  }
+
+  .week-no {
+    font-size: 0.75rem;
   }
 
   .week-mark {

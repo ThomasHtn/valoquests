@@ -766,8 +766,6 @@
       "delta": "aujourd’hui · provisoire"
     },
     "frieze": {
-      "title": "La campagne",
-      "week": "Semaine {{week}} sur {{weeks}}",
       "aria": "Les dix semaines de la campagne",
       "won": "Gardien vaincu",
       "lost": "Gardien repoussé à {{percent}} %",
@@ -836,11 +834,18 @@
       "perOperator": "par opérateur",
       "noDaily": "Aucun défi tiré pour aujourd'hui.",
       "tally": "Ce que la journée a donné",
+      "damageTooltip": "Dégâts infligés au gardien de la semaine par toutes les parties jouées aujourd'hui, après rendements décroissants et bonus de série de chaque opérateur.",
       "carryGain": "+{{count}} d'emport",
+      "componentsTooltip": "Composants produits aujourd'hui par l'escouade, selon le mode et l'issue de chaque partie, après rendements décroissants et bonus de série.",
       "shelterGain": "+{{count}} d'accueil",
+      "foodTooltip": "Nourriture produite aujourd'hui par l'escouade, selon le mode et l'issue de chaque partie, après rendements décroissants et bonus de série.",
       "ate": "La base a mangé",
+      "ateTooltip": "Chaque habitant mange 0,008 nourriture ce soir. Si le stock ne suffit pas, 5 % des habitants non nourris meurent de famine.",
       "inhabitants": "{{count}} habitants",
+      "population": "Habitants",
+      "populationTooltip": "28 dégâts infligés au gardien font naître 1 habitant. Une éventuelle perte par famine s'y soustrait.",
       "squad": "Opérateurs actifs",
+      "squadTooltip": "Opérateurs du roster ayant joué au moins une partie valorisée aujourd'hui.",
       "presenceAria": "{{present}} opérateurs sur {{roster}} ont joué aujourd'hui.",
       "of": "sur {{count}}"
     },

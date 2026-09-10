@@ -179,10 +179,7 @@ export class Challenges {
         kind: this.translation.translate(
           `common.challengeDifficulty.${challenge.difficulty ?? 'EASY'}`,
         ),
-        // The one tier closed to an operator who never plays ranked: the rules want it said.
-        aside: challenge.competitiveOnly
-          ? this.translation.translate('challenges.card.competitiveOnly')
-          : '',
+        aside: '',
         name: challenge.name,
         description: challenge.description,
         survivors: challenge.survivors,

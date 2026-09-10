@@ -518,6 +518,12 @@ describe('buildTally', () => {
 
     expect(tally?.pips).toEqual([true, true, true, false, false]);
   });
+
+  it('carries the base population change through', () => {
+    const tally = buildTally(today, week(), campaign({ base: base({ populationChange: -4 }) }));
+
+    expect(tally?.populationChange).toBe(-4);
+  });
 });
 
 describe('buildSquad', () => {

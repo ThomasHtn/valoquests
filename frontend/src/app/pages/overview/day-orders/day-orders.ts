@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core
 import {
   LucideBuilding2,
   LucideSkull,
+  LucideUserCheck,
   LucideUsers,
   LucideWheat,
   LucideWrench,
@@ -29,6 +30,7 @@ import { DailyOrder, DayTally } from '../overview.model';
     Tooltip,
     LucideBuilding2,
     LucideSkull,
+    LucideUserCheck,
     LucideUsers,
     LucideWheat,
     LucideWrench,

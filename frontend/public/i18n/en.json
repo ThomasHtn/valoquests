@@ -766,8 +766,6 @@
       "delta": "today · provisional"
     },
     "frieze": {
-      "title": "The campaign",
-      "week": "Week {{week}} of {{weeks}}",
       "aria": "The ten weeks of the campaign",
       "won": "Guardian defeated",
       "lost": "Guardian pushed back to {{percent}}%",
@@ -836,11 +834,18 @@
       "perOperator": "per operator",
       "noDaily": "No challenge drawn for today.",
       "tally": "What the day gave",
+      "damageTooltip": "Damage dealt to the week's guardian by every match played today, after diminishing returns and each operator's streak bonus.",
       "carryGain": "+{{count}} carried",
+      "componentsTooltip": "Components produced today by the squad, from each match's mode and outcome, after diminishing returns and streak bonuses.",
       "shelterGain": "+{{count}} sheltered",
+      "foodTooltip": "Food produced today by the squad, from each match's mode and outcome, after diminishing returns and streak bonuses.",
       "ate": "The base ate",
+      "ateTooltip": "Every inhabitant eats 0.008 food tonight. If the stock runs short, 5% of those left unfed die of famine.",
       "inhabitants": "{{count}} inhabitants",
-      "squad": "Squad",
+      "population": "Inhabitants",
+      "populationTooltip": "28 damage dealt to the guardian raises 1 inhabitant. Any famine loss is subtracted from it.",
+      "squad": "Active operators",
+      "squadTooltip": "Roster operators who played at least one valued match today.",
       "presenceAria": "{{present}} operators out of {{roster}} played today.",
       "of": "of {{count}}"
     },

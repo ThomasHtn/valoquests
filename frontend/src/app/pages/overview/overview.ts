@@ -87,8 +87,6 @@ import { readSeenReport, writeSeenReport } from './overview.utils';
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Overview {
-  protected readonly weekCount = CAMPAIGN_WEEK_COUNT;
-
   protected readonly fullCampaignPopulation = FULL_CAMPAIGN_POPULATION;
 
   private readonly campaignApi = inject(CampaignApi);
