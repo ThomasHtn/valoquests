@@ -3,19 +3,19 @@
 .roster {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0.25rem;
 }
 
 .ros {
   --tone: var(--color-text-muted);
 
   display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 2.5rem;
   gap: 0.75rem 1.25rem;
   align-items: center;
   padding: 0.85rem 1rem 0.9rem 0.75rem;
   background: rgb(236 232 225 / 4%);
-  box-shadow: inset 3px 0 0 var(--tone);
+  border-left: 2px solid var(--color-edge);
   transition: background 0.15s;
 }
 
@@ -23,9 +23,26 @@
   background: rgb(217 149 74 / 12%);
 }
 
-.ros-who,
-.ros-cells {
+/* Below the column grid the rank sits on the right of the name, not in a column of its own. */
+.ros-pos {
   grid-column: 2;
+  grid-row: 1;
+}
+
+.ros-who {
+  grid-column: 1;
+  grid-row: 1;
+  /* Same inset as the figures below, so avatar and first column share one left edge. */
+  padding-inline: 0.5rem;
+}
+
+/* Below the column grid the figures take the row's whole width, with a small inset on each side:
+   indented under the name they lost the position column for nothing. */
+.ros-cells {
+  grid-column: 1 / -1;
+  padding-top: 0.75rem;
+  padding-inline: 0.5rem;
+  border-top: 1px solid var(--color-edge);
 }
 
 /* Below the column grid the four figures sit two by two, each in its own half: a wrapping row
@@ -54,14 +71,28 @@
     padding: 0.55rem 1rem 0.55rem 0.625rem;
   }
 
+  /* Centered on the rank column below it, whose numbers read the same way. */
+  .bar-count {
+    justify-self: center;
+  }
+
   .bar-col {
     display: block;
     color: var(--color-text-muted);
     cursor: help;
   }
 
+  .ros-pos,
+  .ros-who {
+    grid-column: auto;
+    grid-row: auto;
+    padding-inline: 0;
+  }
+
   .ros-cells {
     display: contents;
+    padding-top: 0;
+    border-top: 0;
   }
 
   .ros-cap {
@@ -87,6 +118,9 @@
 
 .ros-name {
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 500;
@@ -118,6 +152,8 @@
 }
 
 .ros-cap {
+  white-space: normal;
+  line-height: 1.35;
   color: var(--color-text-muted);
 }
 
@@ -159,10 +195,6 @@
   background: rgb(236 232 225 / 2%);
 }
 
-.ros--idle .ros-name {
-  color: var(--color-text-secondary);
-}
-
 .ros--idle .ros-pos {
   font-size: 1rem;
   color: var(--color-text-muted);
@@ -170,4 +202,21 @@
 
 .ros-val.ros-nil {
   color: var(--color-text-muted);
+}
+
+@media (width < 40rem) {
+  .ros {
+    grid-template-columns: minmax(0, 1fr) 2rem;
+    gap: 0.75rem;
+    padding: 0.8rem 0.75rem 0.85rem 0.6rem;
+  }
+
+  .ros-cells {
+    gap: 0.7rem 0.5rem;
+  }
+
+  /* Tighter tracking so "Dégâts au gardien" holds one line in half a phone. */
+  .ros-cap {
+    letter-spacing: 0.06em;
+  }
 }

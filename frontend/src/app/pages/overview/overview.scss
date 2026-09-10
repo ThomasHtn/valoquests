@@ -149,3 +149,12 @@
     display: block;
   }
 }
+
+/* The orbit and its caption are a decoration on a phone: the report beside them is the reading a
+   thumb scrolls to next, and this pair only pushed it further down. */
+@media (width < 40rem) {
+  [data-planet],
+  [data-planet-label] {
+    display: none;
+  }
+}

@@ -1,4 +1,4 @@
-<div #wrap class="strip-wrap relative z-[1]">
+<div #wrap (scroll)="onScroll()" class="strip-wrap relative z-[1]">
   <ol [attr.aria-label]="'campaign.galaxy.strip' | translate" class="strip">
     @for (planet of planets(); track planet.index) {
       <li [class.seg--done]="planet.state === 'won' || planet.state === 'lost'">
@@ -51,6 +51,47 @@
     }
   </ol>
 </div>
+
+<!-- One planet per screen: the road between them is gone, so this rail carries the ten weeks and
+     jumps to any of them. -->
+@if (isSlider()) {
+  <div class="rail-bar relative z-[1]">
+    <button
+      (click)="step(-1)"
+      [attr.aria-label]="'campaign.galaxy.previous' | translate"
+      [disabled]="openedPosition() <= 0"
+      class="focus-ring rail-arrow"
+      type="button"
+    >
+      <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
+    </button>
+
+    <ol class="rail">
+      @for (planet of planets(); track planet.index) {
+        <li>
+          <button
+            (click)="goTo(planet)"
+            [attr.aria-current]="openedIndex() === planet.index ? 'true' : null"
+            [attr.aria-label]="planet.label + ' · ' + planet.name"
+            [class]="'focus-ring tick tick--' + planet.state"
+            aria-controls="planet-drawer"
+            type="button"
+          ></button>
+        </li>
+      }
+    </ol>
+
+    <button
+      (click)="step(1)"
+      [attr.aria-label]="'campaign.galaxy.next' | translate"
+      [disabled]="openedPosition() >= planets().length - 1"
+      class="focus-ring rail-arrow"
+      type="button"
+    >
+      <svg aria-hidden="true" class="size-4" lucideChevronRight></svg>
+    </button>
+  </div>
+}
 
 <!-- The report of the opened planet, under the strip, pointing at it. -->
 @if (opened(); as planet) {

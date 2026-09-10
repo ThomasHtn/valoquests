@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { LucideTarget } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
 import {
@@ -69,7 +68,6 @@ import { StarField } from './star-field';
     ReserveLedger,
     RocketShowcase,
     CampaignHistoryView,
-    LucideTarget,
   ],
   templateUrl: './campaign.html',
   styleUrl: './campaign.scss',

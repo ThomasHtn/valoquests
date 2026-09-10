@@ -270,7 +270,8 @@
     "galaxy": {
       "section": "La route des dix planètes",
       "strip": "Les dix planètes de la campagne",
-      "hint": "Cliquez une planète pour ouvrir son rapport",
+      "previous": "Planète précédente",
+      "next": "Planète suivante",
       "won": "Vaincu {{weekday}}",
       "lost": "A tenu · {{percent}} %",
       "now": "Percée {{percent}} %",
@@ -279,7 +280,6 @@
       "unplayed": "Jamais atteinte"
     },
     "drawer": {
-      "week": "Semaine {{index}} · {{category}}",
       "guardian": "Gardien",
       "hpLeft": "points de vie restants sur {{total}}",
       "nowText": "La percée est à {{percent}} %.",
@@ -585,6 +585,13 @@
       "AMATEUR": "Amateur",
       "PRO": "Pro"
     },
+    "challengeDifficulty": {
+      "EASY": "Facile",
+      "NORMAL": "Normal",
+      "MEDIUM": "Moyen",
+      "HARD": "Difficile",
+      "VERY_HARD": "Très difficile"
+    },
     "cadence": {
       "WEEKLY": "Hebdomadaire",
       "DAILY": "Du jour"
@@ -819,10 +826,13 @@
       "title": "Ordre du jour",
       "link": "Les défis",
       "daily": "Défi du jour",
-      "beforeMidnight": "avant minuit",
       "countdownAria": "Temps restant avant minuit",
-      "validated": "{{done}} sur {{total}} ont validé",
       "validatedAria": "{{done}} opérateurs sur {{total}} ont validé le défi du jour.",
+      "noneValidatedYet": "Personne n'a encore validé.",
+      "validatedNames": {
+        "one": "{{names}} a validé.",
+        "other": "{{names}} ont validé."
+      },
       "perOperator": "par opérateur",
       "noDaily": "Aucun défi tiré pour aujourd'hui.",
       "tally": "Ce que la journée a donné",

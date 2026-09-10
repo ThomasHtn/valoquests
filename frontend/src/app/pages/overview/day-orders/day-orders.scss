@@ -79,7 +79,7 @@
 
 .q-name {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2rem);
   font-weight: 600;
   line-height: 1.05;
   letter-spacing: 0.02em;
@@ -107,6 +107,7 @@
   align-items: baseline;
   gap: 0.4rem;
   margin-left: auto;
+  white-space: nowrap;
 }
 
 .q-pay svg {
@@ -128,7 +129,8 @@
 }
 
 /* One hexagon per operator, lit when validated, the name on hover: the squad gauge of the
-   challenges page, taken as is. */
+   challenges page, taken as is. Desktop only — a hover name is unreachable on touch, so phones
+   get `.tally-text` below instead. */
 .slugs {
   display: inline-flex;
   gap: 3px;
@@ -185,11 +187,42 @@
   opacity: 1;
 }
 
+/* The validated count, in the challenges page's own style: the figure in the challenge's tone,
+   the verb in plain text beside it. The figure itself carries the tooltip naming who validated.
+   Phone only, hidden by default below — see the phone layout at the bottom of this file. */
+.tally-text {
+  display: none;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.tally-text b {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  color: var(--tone);
+  cursor: help;
+}
+
+.tally-text b span {
+  color: var(--color-text-muted);
+}
+
+.tally-text em {
+  font-style: normal;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
 /* The tally: one line per destination, the icon and colour of the resource, its name, what it
    gained. */
+/* Centred, not on the baseline: the figure and its unit already share theirs inside `.dl-val`,
+   and a baseline row left the label riding high between the rules. */
 .dl {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.75rem;
   padding-block: 0.6rem;
   border-top: 1px solid var(--color-edge);
@@ -200,18 +233,33 @@
   padding-top: 0;
 }
 
+/* The column's 1.25rem gap would sit above each rule on top of the row's own padding: pull it
+   back so a line is as far from the rule above it as from the one below. */
+.dl + .dl {
+  margin-top: -0.65rem;
+}
+
 .dl > svg {
   align-self: center;
   color: var(--tone);
 }
 
 .dl-key {
+  min-width: 0;
   font-size: 1.0625rem;
   color: var(--color-text-secondary);
 }
 
-.dl-fig {
+/* The figure and its unit travel as one word, pushed to the right edge. */
+.dl-val {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.75rem;
   margin-left: auto;
+  white-space: nowrap;
+}
+
+.dl-fig {
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 600;
@@ -234,6 +282,8 @@
   opacity: 0.55;
 }
 
+/* One hexagon per operator on the roster, lit for those who played. Desktop only, same reasoning
+   as `.slugs` above. */
 .pips {
   display: flex;
   flex-wrap: wrap;
@@ -242,8 +292,12 @@
   align-self: center;
 }
 
-.pips + .dl-fig {
-  margin-left: 0.5rem;
+/* Scoped to desktop: the sibling combinator still matches `.pips` once the phone layout below
+   hides it, which pinned `.dl-val` next to a gauge that was no longer there. */
+@media (width >= 40rem) {
+  .pips + .dl-val {
+    margin-left: 0.5rem;
+  }
 }
 
 .pips i {
@@ -255,4 +309,30 @@
 
 .pips i.on {
   background: var(--color-brand-500);
+}
+
+/* Phone layout of the orders. Hexagon gauges give way to the plain counts already sitting beside
+   them: their hover names are unreachable on touch, and a phone-width row has no space to spare. */
+@media (width < 40rem) {
+  .q {
+    gap: 1rem;
+  }
+
+  .q-mark {
+    width: 4.25rem;
+    height: 4.85rem;
+  }
+
+  .day-col--quest {
+    padding-inline: 1.15rem 1.25rem;
+  }
+
+  .slugs,
+  .pips {
+    display: none;
+  }
+
+  .tally-text {
+    display: inline-flex;
+  }
 }

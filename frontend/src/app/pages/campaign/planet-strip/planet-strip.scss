@@ -1,6 +1,6 @@
 /* Ten planets on a grid and the road between them; the drawer under the strip is a report. */
 .strip-wrap {
-  padding: 1.5rem clamp(1.5rem, 3vw, 3rem) 2rem;
+  padding: 2.25rem clamp(1.5rem, 3vw, 3rem) 2rem;
 }
 
 .strip {
@@ -46,10 +46,116 @@
   .strip > li {
     scroll-snap-align: center;
   }
+}
 
-  .drawer::before {
+/* Below `md` the strip is a slider: one planet fills the screen, the swipe snaps on the next one
+   and the road between them gives way to the rail underneath. */
+@media (width < 48rem) {
+  .strip-wrap {
+    padding: 1.25rem 0 1rem;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .strip-wrap::-webkit-scrollbar {
     display: none;
   }
+
+  .strip {
+    --orbit: 9rem;
+
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 100%;
+    padding-inline: 0;
+  }
+
+  .strip > li + li::before {
+    display: none;
+  }
+
+  .pl {
+    gap: 0.6rem;
+    padding-inline: 1.25rem;
+  }
+
+  .pl-card {
+    width: 100%;
+    max-width: 20rem;
+  }
+}
+
+/* The ten weeks as a rail: colour says how each one went, the wider tick is the one on screen. */
+.rail-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem 1.25rem;
+}
+
+.rail {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 0.3rem;
+}
+
+.rail > li {
+  flex: 1 1 0;
+  display: flex;
+}
+
+.tick {
+  flex: 1 1 auto;
+  padding: 0.6rem 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.tick::before {
+  content: '';
+  display: block;
+  height: 2px;
+  background: rgb(91 118 136 / 55%);
+  transition:
+    background 0.2s,
+    height 0.2s;
+}
+
+.tick--won::before,
+.tick--lost::before {
+  background: rgb(217 149 74 / 80%);
+}
+
+.tick[aria-current]::before {
+  height: 4px;
+  background: var(--color-accent-cyan);
+}
+
+.rail-arrow {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  background: rgb(236 232 225 / 4%);
+  border: 1px solid var(--color-edge);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    opacity 0.2s;
+}
+
+.rail-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.rail-arrow:not(:disabled):hover {
+  color: var(--color-accent-cyan);
 }
 
 .pl {

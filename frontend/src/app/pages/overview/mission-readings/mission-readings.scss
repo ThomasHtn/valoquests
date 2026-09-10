@@ -93,7 +93,7 @@
   align-items: baseline;
   gap: 0.45rem;
   font-family: var(--font-display);
-  font-size: 2.25rem;
+  font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.25rem);
   font-weight: 600;
   line-height: 1;
   color: var(--tone);
@@ -204,5 +204,64 @@
   .rep-bar > i,
   .rep-stack > i {
     animation: none;
+  }
+}
+
+/* On a phone the key sits as one line above the figure, both flush left: a centred key over a
+   left-aligned figure read as two blocks, and the reference drifted to the right edge. */
+@media (width < 40rem) {
+  .rep-clock,
+  .rep-row {
+    padding-inline: 1.15rem 1.25rem;
+  }
+
+  .rep-key {
+    flex-direction: row;
+    align-items: center;
+    align-self: start;
+    gap: 0.75rem;
+  }
+
+  .rep-mark {
+    width: 2.2rem;
+    height: 2.5rem;
+  }
+
+  /* One line above each bar: figure and unit left, reference right, sized so the boss line
+     fits 360px. */
+  .rep-side {
+    flex: none;
+    gap: 0.25rem;
+    margin-left: auto;
+    font-size: 0.5rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .rep-line {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .rep-fig {
+    gap: 0.3rem;
+    font-size: 1.375rem;
+    white-space: nowrap;
+  }
+
+  .rep-fig small {
+    font-size: 0.75rem;
+  }
+
+  .rep-side b {
+    font-size: 0.9375rem;
+  }
+
+  /* One step below `text-2xs`: at the caption's own size the deadline line wrapped in two under
+     the clock, the only reference here not paired with a figure that could give up space to it. */
+  .rep-when {
+    font-size: var(--text-3xs);
+    white-space: nowrap;
   }
 }

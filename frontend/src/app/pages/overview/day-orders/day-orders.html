@@ -15,13 +15,11 @@
           <span class="day-cap label-caption text-2xs">{{
             'overview.orders.daily' | translate
           }}</span>
-          <span class="label-caption ml-auto text-2xs text-text-muted">{{
-            'overview.orders.beforeMidnight' | translate
-          }}</span>
           <app-countdown
             [deadline]="order.deadline"
             [label]="'overview.orders.countdownAria' | translate"
             [withDays]="false"
+            class="ml-auto"
             size="sm"
           />
         </p>
@@ -52,10 +50,15 @@
               <i [attr.data-name]="operator.name" [class.on]="operator.done"></i>
             }
           </span>
-          <span class="label-caption text-2xs">{{
-            'overview.orders.validated'
-              | translate: { done: order.doneCount, total: order.validated.length }
-          }}</span>
+          <!-- Phone only: the hexagons' hover names are unreachable on touch, so a tappable count
+               with a tooltip listing them takes over there. -->
+          <span class="tally-text" style="--tone: var(--color-accent-cyan)">
+            <b [appTooltip]="doneTooltip(order)" class="tabular-nums focus-ring" tabindex="0"
+              >{{ order.doneCount }}<span>/{{ order.validated.length }}</span></b
+            >
+            <!-- Zero forced to the plural branch: "0 a validé" reads as an unfinished count. -->
+            <em>{{ 'challenges.card.validated' | translate: { count: order.doneCount || 2 } }}</em>
+          </span>
           <span class="q-pay">
             <svg aria-hidden="true" class="size-4" lucideUsers></svg>
             <b class="tabular-nums">+{{ order.survivors }}</b>
@@ -83,34 +86,44 @@
 
         <p class="dl" style="--tone: var(--color-boss-hp-edge)">
           <svg aria-hidden="true" class="size-4" lucideSkull></svg>
-          <span class="dl-key">{{ tally.guardianName }}</span>
-          <b class="dl-fig tabular-nums">{{ signed(-tally.damage) }}</b>
-          <small>{{ 'overview.report.hp' | translate }}</small>
+          <span class="dl-key">{{ bossLabel(tally.weekIndex) }}</span>
+          <span class="dl-val">
+            <b class="dl-fig tabular-nums">{{ signed(-tally.damage) }}</b>
+            <small>{{ 'overview.report.hp' | translate }}</small>
+          </span>
         </p>
 
         <p class="dl" style="--tone: var(--color-accent-cyan)">
           <svg aria-hidden="true" class="size-4" lucideWrench></svg>
           <span class="dl-key">{{ 'common.resource.components' | translate }}</span>
-          <b class="dl-fig tabular-nums">{{ signed(tally.components) }}</b>
-          <small>{{ 'overview.orders.carryGain' | translate: { count: tally.carryGained } }}</small>
+          <span class="dl-val">
+            <b class="dl-fig tabular-nums">{{ signed(tally.components) }}</b>
+            <small>{{
+              'overview.orders.carryGain' | translate: { count: tally.carryGained }
+            }}</small>
+          </span>
         </p>
 
         <p class="dl" style="--tone: var(--color-accent-green)">
           <svg aria-hidden="true" class="size-4" lucideWheat></svg>
           <span class="dl-key">{{ 'common.resource.food' | translate }}</span>
-          <b class="dl-fig tabular-nums">{{ signed(tally.food) }}</b>
-          <small>{{
-            'overview.orders.shelterGain' | translate: { count: tally.shelterGained }
-          }}</small>
+          <span class="dl-val">
+            <b class="dl-fig tabular-nums">{{ signed(tally.food) }}</b>
+            <small>{{
+              'overview.orders.shelterGain' | translate: { count: tally.shelterGained }
+            }}</small>
+          </span>
         </p>
 
         <p class="dl dl--cost" style="--tone: var(--color-accent-green)">
           <svg aria-hidden="true" class="size-4" lucideBuilding2></svg>
           <span class="dl-key">{{ 'overview.orders.ate' | translate }}</span>
-          <b class="dl-fig tabular-nums">{{ signed(-tally.upkeep) }}</b>
-          <small>{{
-            'overview.orders.inhabitants' | translate: { count: format(tally.population) }
-          }}</small>
+          <span class="dl-val">
+            <b class="dl-fig tabular-nums">{{ signed(-tally.upkeep) }}</b>
+            <small>{{
+              'overview.orders.inhabitants' | translate: { count: format(tally.population) }
+            }}</small>
+          </span>
         </p>
 
         <p class="dl" style="--tone: var(--color-brand-400)">
@@ -128,8 +141,10 @@
               <i [class.on]="present"></i>
             }
           </span>
-          <b class="dl-fig tabular-nums">{{ tally.presence }}</b>
-          <small>{{ 'overview.orders.of' | translate: { count: tally.roster } }}</small>
+          <span class="dl-val">
+            <b class="dl-fig tabular-nums">{{ tally.presence }}</b>
+            <small>{{ 'overview.orders.of' | translate: { count: tally.roster } }}</small>
+          </span>
         </p>
       </div>
     }

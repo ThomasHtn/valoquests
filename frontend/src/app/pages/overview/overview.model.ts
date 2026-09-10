@@ -107,11 +107,6 @@ export interface MissionReport {
   readonly settledOn: string;
 
   /**
-   * Name of the guardian.
-   */
-  readonly guardianName: string;
-
-  /**
    * Whether the guardian was defeated.
    */
   readonly defeated: boolean;
@@ -225,11 +220,6 @@ export interface Mission {
    * Day of the week, Monday being 1.
    */
   readonly dayOfWeek: number;
-
-  /**
-   * Name of the guardian.
-   */
-  readonly guardianName: string;
 
   /**
    * Hit points the guardian still has.
@@ -480,9 +470,10 @@ export interface DailyOrder {
  */
 export interface DayTally {
   /**
-   * Name of the guardian.
+   * One-based index of the week in the campaign, worded into the label as `Boss 04` rather than
+   * the guardian's own name.
    */
-  readonly guardianName: string;
+  readonly weekIndex: number;
 
   /**
    * Guardian damage dealt today.

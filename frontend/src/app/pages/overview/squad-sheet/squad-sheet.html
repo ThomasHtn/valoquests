@@ -16,31 +16,31 @@
       >
       <span
         [appTooltip]="'overview.squad.operatorTooltip' | translate"
-        class="bar-col label-caption text-2xs focus-ring"
+        class="bar-col label-caption focus-ring"
         tabindex="0"
         >{{ 'overview.squad.operator' | translate }}</span
       >
       <span
         [appTooltip]="'overview.squad.streakTooltip' | translate"
-        class="bar-col label-caption text-2xs focus-ring"
+        class="bar-col label-caption focus-ring"
         tabindex="0"
         >{{ 'overview.squad.streak' | translate }}</span
       >
       <span
         [appTooltip]="'overview.squad.damageTooltip' | translate"
-        class="bar-col label-caption text-2xs focus-ring"
+        class="bar-col label-caption focus-ring"
         tabindex="0"
         >{{ 'overview.squad.damage' | translate }}</span
       >
       <span
         [appTooltip]="'overview.squad.componentsTooltip' | translate"
-        class="bar-col label-caption text-2xs focus-ring"
+        class="bar-col label-caption focus-ring"
         tabindex="0"
         >{{ 'common.resource.components' | translate }}</span
       >
       <span
         [appTooltip]="'overview.squad.foodTooltip' | translate"
-        class="bar-col label-caption text-2xs focus-ring"
+        class="bar-col label-caption focus-ring"
         tabindex="0"
         >{{ 'common.resource.food' | translate }}</span
       >
@@ -72,12 +72,9 @@
             <span class="ros-cap label-caption text-2xs">{{
               'overview.squad.streak' | translate
             }}</span>
-            <span
-              [class.ros-nil]="!row.played"
-              class="ros-val tabular-nums"
-              style="--cell: var(--color-brand-400)"
-              >{{ row.streakMultiplier }}</span
-            >
+            <span class="ros-val tabular-nums" style="--cell: var(--color-brand-400)">{{
+              row.streakMultiplier
+            }}</span>
           </span>
           <span class="ros-cell">
             <span class="ros-cap label-caption text-2xs">{{

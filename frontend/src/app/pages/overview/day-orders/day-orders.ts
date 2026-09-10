@@ -13,6 +13,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Countdown } from '@shared/countdown/countdown';
 import { SectionRule } from '@shared/section-rule/section-rule';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { DailyOrder, DayTally } from '../overview.model';
 
 /**
@@ -25,6 +26,7 @@ import { DailyOrder, DayTally } from '../overview.model';
     TranslatePipe,
     SectionRule,
     Countdown,
+    Tooltip,
     LucideBuilding2,
     LucideSkull,
     LucideUsers,
@@ -56,5 +58,31 @@ export class DayOrders {
   protected signed(amount: number): string {
     const sign = amount > 0 ? '+' : amount < 0 ? '−' : '';
     return `${sign}${this.format(Math.abs(amount))}`;
+  }
+
+  /**
+   * `Boss 04`, padded like the frieze's own week labels, rather than the guardian's own name.
+   */
+  protected bossLabel(weekIndex: number): string {
+    return this.translation.translate('overview.report.boss', {
+      index: String(weekIndex).padStart(2, '0'),
+    });
+  }
+
+  /**
+   * Names of the operators who validated the daily challenge, the mobile substitute for the
+   * hover names the hexagon gauge used to carry.
+   */
+  protected doneTooltip(order: DailyOrder): string {
+    const names = order.validated
+      .filter((operator) => operator.done)
+      .map((operator) => operator.name);
+    if (names.length === 0) {
+      return this.translation.translate('overview.orders.noneValidatedYet');
+    }
+    return this.translation.translate('overview.orders.validatedNames', {
+      count: names.length,
+      names: names.join(', '),
+    });
   }
 }

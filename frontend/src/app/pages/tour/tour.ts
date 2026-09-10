@@ -150,7 +150,7 @@ export class Tour {
     const left = Math.max(0, week.guardianHitPoints - week.damageDealt);
     return {
       planetName: week.planetName,
-      guardianName: week.guardianName ?? '',
+      weekIndex: week.weekIndex,
       guardianLeft: left / week.guardianHitPoints,
       progressPercent: week.progressPercent,
       woundedCount: week.woundedCount,
@@ -195,6 +195,15 @@ export class Tour {
   protected signed(amount: number): string {
     const sign = amount > 0 ? '+' : amount < 0 ? '−' : '';
     return `${sign}${this.format(Math.abs(amount))}`;
+  }
+
+  /**
+   * `Boss 04`, padded like the frieze's own week labels, rather than the guardian's own name.
+   */
+  protected bossLabel(weekIndex: number): string {
+    return this.translation.translate('overview.report.boss', {
+      index: String(weekIndex).padStart(2, '0'),
+    });
   }
 
   protected next(): void {

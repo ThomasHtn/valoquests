@@ -169,7 +169,6 @@ export function buildMission(
     planetName: week.planetName,
     category: week.category,
     dayOfWeek: Math.min(7, Math.max(1, daysBetween(week.weekStart, campaign.today) + 1)),
-    guardianName: week.guardianName ?? '',
     hitPointsLeft,
     hitPoints: week.guardianHitPoints,
     breachPercent: week.progressPercent,
@@ -213,7 +212,6 @@ export function buildMissionReport(
     settledOn: new Intl.DateTimeFormat(language, { day: 'numeric', month: 'short' }).format(
       localMidnight(settled.weekStart, 6),
     ),
-    guardianName: settled.guardianName ?? '',
     defeated: settled.defeated,
     hitPoints: settled.guardianHitPoints,
     hitPointsLeft: Math.max(0, settled.guardianHitPoints - settled.damageDealt),
@@ -396,7 +394,7 @@ export function buildTally(
     return null;
   }
   return {
-    guardianName: week.guardianName ?? '',
+    weekIndex: week.weekIndex,
     damage: today.damage,
     components: today.components,
     carryGained: today.carryGained,

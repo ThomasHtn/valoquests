@@ -1,6 +1,6 @@
-<!-- One line at every width: on a phone the hairline gives way and the heading wraps on itself,
-     the link stays on the right instead of dropping under the title. -->
-<div class="mb-6 flex items-center gap-x-4">
+<!-- One line wherever it fits: on a phone the hairline gives way first; the link only drops under
+     the title, right-aligned, when the title's longest word would otherwise run under it. -->
+<div class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
   <h2
     [id]="headingId()"
     class="font-display min-w-0 text-[clamp(1.5rem,1.1rem+1.1vw,2rem)] leading-tight font-semibold tracking-[0.01em] text-brand-400 uppercase"
@@ -11,9 +11,9 @@
     aria-hidden="true"
     class="hidden h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent sm:block"
   ></span>
-  <span class="ml-auto inline-flex shrink-0 items-center gap-4">
+  <span class="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-x-4 gap-y-1">
     @if (side(); as caption) {
-      <span class="label-caption text-2xs text-text-muted">{{ caption }}</span>
+      <span class="label-caption min-w-0 text-right text-2xs text-text-muted">{{ caption }}</span>
     }
     @if (link(); as route) {
       <a

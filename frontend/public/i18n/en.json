@@ -270,7 +270,8 @@
     "galaxy": {
       "section": "The road of ten planets",
       "strip": "The ten planets of the campaign",
-      "hint": "Click a planet to open its report",
+      "previous": "Previous planet",
+      "next": "Next planet",
       "won": "Defeated on {{weekday}}",
       "lost": "Held · {{percent}}%",
       "now": "Breach {{percent}}%",
@@ -279,7 +280,6 @@
       "unplayed": "Never reached"
     },
     "drawer": {
-      "week": "Week {{index}} · {{category}}",
       "guardian": "Guardian",
       "hpLeft": "hit points left out of {{total}}",
       "nowText": "The breach stands at {{percent}}%.",
@@ -585,6 +585,13 @@
       "AMATEUR": "Amateur",
       "PRO": "Pro"
     },
+    "challengeDifficulty": {
+      "EASY": "Easy",
+      "NORMAL": "Normal",
+      "MEDIUM": "Medium",
+      "HARD": "Hard",
+      "VERY_HARD": "Very hard"
+    },
     "cadence": {
       "WEEKLY": "Weekly",
       "DAILY": "Daily"
@@ -819,10 +826,13 @@
       "title": "Orders of the day",
       "link": "The challenges",
       "daily": "Daily challenge",
-      "beforeMidnight": "before midnight",
       "countdownAria": "Time left before midnight",
-      "validated": "{{done}} of {{total}} validated",
       "validatedAria": "{{done}} operators out of {{total}} validated the daily challenge.",
+      "noneValidatedYet": "Nobody has validated yet.",
+      "validatedNames": {
+        "one": "{{names}} validated.",
+        "other": "{{names}} validated."
+      },
       "perOperator": "per operator",
       "noDaily": "No challenge drawn for today.",
       "tally": "What the day gave",

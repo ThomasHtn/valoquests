@@ -1,25 +1,5 @@
 /* ---------- The extraction capacity ---------- */
 
-.sheet-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.4rem 1rem;
-  padding: 0.7rem 0;
-  border-bottom: 1px solid var(--color-edge-strong);
-  color: var(--color-text-muted);
-}
-
-.sheet-head b {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-}
-
 .gauges {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -41,15 +21,15 @@
   }
 }
 
-/* Three rows shared by the four dials: the ring, the name, the base. The fourth dial is larger and
-   has no mode badges; without a shared grid its title dropped by thirty pixels and the four names
-   no longer lined up. */
+/* Four rows shared by the four dials: the name, the ring, the stock, the base. The fourth dial is
+   larger and has no mode badges; without a shared grid its title dropped by thirty pixels and the
+   four names no longer lined up. */
 .gauge-cell {
   --tone: var(--color-text-muted);
   --pad: 1.25rem;
 
   display: grid;
-  grid-row: span 3;
+  grid-row: span 4;
   grid-template-rows: subgrid;
   row-gap: 0.9rem;
   justify-items: center;

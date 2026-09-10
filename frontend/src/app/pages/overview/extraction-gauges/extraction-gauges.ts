@@ -12,6 +12,7 @@ import {
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { SectionRule } from '@shared/section-rule/section-rule';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { BLOCK_TOOLTIP_DELAY_MS } from '@shared/tooltip/tooltip.constants';
 import { Capacity } from '../overview.model';
@@ -36,6 +37,7 @@ import { CARRY_MODES, SHELTER_MODES } from './extraction-gauges.constants';
     LucideUsers,
     LucideWheat,
     LucideWrench,
+    SectionRule,
     Tooltip,
   ],
   templateUrl: './extraction-gauges.html',

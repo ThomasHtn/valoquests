@@ -153,20 +153,11 @@
                 "
                 data-planet
               />
-              <p class="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-2">
+              <p class="mt-2 text-center" data-planet-label>
                 <b
                   class="font-display text-2xl leading-none font-semibold tracking-[0.04em] uppercase"
                   >{{ mission.planetName }}</b
                 >
-                <span class="label-caption text-2xs text-text-muted">{{
-                  'overview.mission.planet'
-                    | translate
-                      : {
-                          index: mission.weekIndex,
-                          weeks: weekCount,
-                          category: 'common.guardianCategory.' + mission.category | translate,
-                        }
-                }}</span>
               </p>
             </div>
 

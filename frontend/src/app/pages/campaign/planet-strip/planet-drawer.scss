@@ -32,14 +32,6 @@
   background: var(--tone);
 }
 
-.drawer-head {
-  border-left-color: var(--tone);
-}
-
-.drawer-head .bar-count {
-  background: color-mix(in srgb, var(--tone) 55%, transparent);
-}
-
 .drawer-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

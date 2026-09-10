@@ -1,13 +1,17 @@
 <!-- What would come home, and the three things that bound it. Four dials on the same
      scale, the wounded spotted: the three limits, then what gets through. -->
 @if (capacity(); as capacity) {
-  <div class="cap mt-[clamp(2.5rem,4vw,3.25rem)]">
-    <p class="sheet-head">
-      <b>{{ 'overview.capacity.title' | translate }}</b>
-    </p>
+  <div aria-labelledby="capacity-title" class="cap mt-[clamp(2.5rem,4vw,3.25rem)]">
+    <app-section-rule
+      [heading]="'overview.capacity.title' | translate"
+      headingId="capacity-title"
+    />
 
     <div class="gauges">
       <div class="gauge-cell" style="--tone: var(--color-accent-cyan)">
+        <p class="gauge-head">
+          <span class="gauge-name">{{ 'overview.capacity.carry' | translate }}</span>
+        </p>
         <span
           [appTooltip]="carryTooltip()"
           [appTooltipDelay]="tooltipDelay"
@@ -36,14 +40,11 @@
             <b class="tabular-nums">{{ format(capacity.carry.value) }}</b>
           </span>
         </span>
-        <p class="gauge-head">
-          <span class="gauge-name">{{ 'overview.capacity.carry' | translate }}</span>
-          <span class="gauge-stock label-caption text-2xs"
-            ><svg aria-hidden="true" class="size-3.5" lucideWrench></svg
-            ><b class="tabular-nums">{{ format(capacity.carry.stock) }}</b>
-            {{ 'common.resource.components' | translate | lowercase }}</span
-          >
-        </p>
+        <span class="gauge-stock label-caption text-2xs"
+          ><svg aria-hidden="true" class="size-3.5" lucideWrench></svg
+          ><b class="tabular-nums">{{ format(capacity.carry.stock) }}</b>
+          {{ 'common.resource.components' | translate | lowercase }}</span
+        >
         <div class="gauge-foot">
           <span class="label-caption text-2xs text-brand-400">{{
             'overview.capacity.lever' | translate
@@ -64,6 +65,9 @@
       </div>
 
       <div class="gauge-cell" style="--tone: var(--color-accent-green)">
+        <p class="gauge-head">
+          <span class="gauge-name">{{ 'overview.capacity.shelter' | translate }}</span>
+        </p>
         <span
           [appTooltip]="shelterTooltip()"
           [appTooltipDelay]="tooltipDelay"
@@ -92,14 +96,11 @@
             <b class="tabular-nums">{{ format(capacity.shelter.value) }}</b>
           </span>
         </span>
-        <p class="gauge-head">
-          <span class="gauge-name">{{ 'overview.capacity.shelter' | translate }}</span>
-          <span class="gauge-stock label-caption text-2xs"
-            ><svg aria-hidden="true" class="size-3.5" lucideWheat></svg
-            ><b class="tabular-nums">{{ format(capacity.shelter.stock) }}</b>
-            {{ 'common.resource.food' | translate | lowercase }}</span
-          >
-        </p>
+        <span class="gauge-stock label-caption text-2xs"
+          ><svg aria-hidden="true" class="size-3.5" lucideWheat></svg
+          ><b class="tabular-nums">{{ format(capacity.shelter.stock) }}</b>
+          {{ 'common.resource.food' | translate | lowercase }}</span
+        >
         <div class="gauge-foot">
           <span class="label-caption text-2xs text-brand-400">{{
             'overview.capacity.lever' | translate
@@ -120,6 +121,9 @@
       </div>
 
       <div class="gauge-cell" style="--tone: #ff8a94">
+        <p class="gauge-head">
+          <span class="gauge-name">{{ 'overview.capacity.breach' | translate }}</span>
+        </p>
         <span
           [appTooltip]="breachTooltip()"
           [appTooltipDelay]="tooltipDelay"
@@ -143,14 +147,11 @@
             <b class="tabular-nums">{{ capacity.breach.value }} %</b>
           </span>
         </span>
-        <p class="gauge-head">
-          <span class="gauge-name">{{ 'overview.capacity.breach' | translate }}</span>
-          <span class="gauge-stock label-caption text-2xs"
-            ><svg aria-hidden="true" class="size-3.5" lucideSkull></svg
-            ><b class="tabular-nums">{{ format(capacity.breach.stock) }}</b>
-            {{ 'overview.capacity.hpStanding' | translate }}</span
-          >
-        </p>
+        <span class="gauge-stock label-caption text-2xs"
+          ><svg aria-hidden="true" class="size-3.5" lucideSkull></svg
+          ><b class="tabular-nums">{{ format(capacity.breach.stock) }}</b>
+          {{ 'overview.capacity.hpStanding' | translate }}</span
+        >
         <div class="gauge-foot">
           <span class="label-caption text-2xs text-brand-400">{{
             'overview.capacity.lever' | translate
@@ -175,6 +176,11 @@
         class="gauge-cell gauge-cell--out"
         style="--tone: var(--color-brand-400); --size: 10.5rem; --ring: 9; --fig: 2.75rem"
       >
+        <p class="gauge-head">
+          <span class="gauge-name text-brand-400">{{
+            'overview.capacity.aboard' | translate
+          }}</span>
+        </p>
         <span
           [appTooltip]="aboardTooltip()"
           [appTooltipDelay]="tooltipDelay"
@@ -205,14 +211,9 @@
             <b class="tabular-nums">{{ format(capacity.aboard) }}</b>
           </span>
         </span>
-        <p class="gauge-head">
-          <span class="gauge-name text-brand-400">{{
-            'overview.capacity.aboard' | translate
-          }}</span>
-          <span class="gauge-stock label-caption text-2xs">{{
-            'overview.capacity.of' | translate: { count: format(capacity.wounded) }
-          }}</span>
-        </p>
+        <span class="gauge-stock label-caption text-2xs">{{
+          'overview.capacity.of' | translate: { count: format(capacity.wounded) }
+        }}</span>
         <div class="gauge-foot">
           <p class="split">
             <span class="split-row" style="--tone: var(--color-brand-400)">

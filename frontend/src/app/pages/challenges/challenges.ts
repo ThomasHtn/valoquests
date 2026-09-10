@@ -176,7 +176,9 @@ export class Challenges {
       return {
         tone: visual.tierColor,
         mark: visual.tier,
-        kind: this.translation.translate(`common.difficulty.${challenge.difficulty ?? 'EASY'}`),
+        kind: this.translation.translate(
+          `common.challengeDifficulty.${challenge.difficulty ?? 'EASY'}`,
+        ),
         // The one tier closed to an operator who never plays ranked: the rules want it said.
         aside: challenge.competitiveOnly
           ? this.translation.translate('challenges.card.competitiveOnly')
@@ -211,7 +213,7 @@ export class Challenges {
         key: difficulty,
         tone: visual.tierColor,
         mark: visual.tier,
-        label: this.translation.translate(`common.difficulty.${difficulty}`),
+        label: this.translation.translate(`common.challengeDifficulty.${difficulty}`),
         entries: catalogue.challenges.filter(
           (entry) => entry.cadence === 'WEEKLY' && entry.difficulty === difficulty,
         ),

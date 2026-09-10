@@ -5,21 +5,6 @@
   class="relative z-[1]"
   id="planet-drawer"
 >
-  <p class="bar-head drawer-head">
-    <span aria-hidden="true" class="bar-count clip-hex"
-      ><span class="clip-hex">{{ planet.label }}</span></span
-    >
-    <span class="bar-title">{{ planet.name }}</span>
-    <span class="label-caption text-2xs text-text-muted">{{
-      'campaign.drawer.week'
-        | translate
-          : {
-              index: planet.index,
-              category: 'common.guardianCategory.' + planet.category | translate,
-            }
-    }}</span>
-  </p>
-
   <div class="drawer-body">
     @switch (planet.report.kind) {
       @case ('now') {

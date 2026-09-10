@@ -62,6 +62,15 @@ export class MissionReport {
     return amount > 0 ? `+${this.format(amount)}` : this.format(amount);
   }
 
+  /**
+   * `Boss 04`, padded like the frieze's own week labels, rather than the guardian's own name.
+   */
+  protected bossLabel(weekIndex: number): string {
+    return this.translation.translate('overview.report.boss', {
+      index: String(weekIndex).padStart(2, '0'),
+    });
+  }
+
   protected onEscape(): void {
     if (this.open()) {
       this.closed.emit();

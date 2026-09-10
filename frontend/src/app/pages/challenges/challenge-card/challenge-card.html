@@ -52,7 +52,8 @@
   <b class="tabular-nums"
     >{{ card.doneCount }}<span>/{{ card.slots.length }}</span></b
   >
-  <em>{{ 'challenges.card.validated' | translate: { count: card.doneCount } }}</em>
+  <!-- Zero forced to the plural branch: "0 a validé" reads as an unfinished count. -->
+  <em>{{ 'challenges.card.validated' | translate: { count: card.doneCount || 2 } }}</em>
   <span
     [attr.aria-label]="
       'challenges.card.squadAria' | translate: { done: card.doneCount, total: card.slots.length }
