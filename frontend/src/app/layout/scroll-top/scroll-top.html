@@ -1,0 +1,12 @@
+<!-- Kept in the DOM and toggled by `inert` so the fade-out plays and focus can never land on it
+     while it is hidden. -->
+<button
+  (click)="pageScroll.toTop()"
+  [attr.aria-label]="'scrollTop' | translate"
+  [class.scroll-top--shown]="pageScroll.deep()"
+  [inert]="!pageScroll.deep()"
+  class="scroll-top focus-ring clip-hex absolute right-4 z-30 flex h-12 w-[2.625rem] cursor-pointer items-center justify-center bg-brand-500 text-surface-950 transition-[background-color,scale] hover:bg-brand-400 motion-safe:active:scale-[0.92] sm:right-6"
+  type="button"
+>
+  <svg aria-hidden="true" class="size-5" lucideArrowUp></svg>
+</button>

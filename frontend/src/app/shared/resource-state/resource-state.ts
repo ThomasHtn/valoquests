@@ -8,6 +8,7 @@ import {
 } from '@lucide/angular';
 
 import { Translation } from '@core/i18n/translation';
+import { Connectivity } from '@core/http/connectivity';
 import { Button } from '@shared/button/button';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate';
 import { EmptyPlate as EmptyPlateContent } from '@shared/empty-plate/empty-plate.model';
@@ -52,6 +53,11 @@ export class ResourceState {
    * than being repeated at each call site.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Network status of the device, which decides the error hint.
+   */
+  private readonly connectivity = inject(Connectivity);
 
   /**
    * Whether the resource is still loading.
@@ -140,6 +146,16 @@ export class ResourceState {
    * the dictionary is swapped on a language switch.
    */
   protected readonly retryLabel = computed(() => this.translation.translate('retry'));
+
+  /**
+   * Translated line under the error message, telling the reader what to do about it: whether the
+   * device is offline decides whether the fix is on their side or on the server's.
+   */
+  protected readonly errorHint = computed(() =>
+    this.translation.translate(
+      this.connectivity.online() ? 'resourceState.errorHint' : 'resourceState.offlineHint',
+    ),
+  );
 
   /**
    * Tint of the empty state's hexagon, by {@link emptyKind}.

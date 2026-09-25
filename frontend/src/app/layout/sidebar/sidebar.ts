@@ -42,7 +42,7 @@ import {
   resolveDrawerClasses,
   resolveRailClasses,
 } from './sidebar-classes.utils';
-import { ADMIN_NAV_GROUPS, APP_VERSION, NAV_GROUPS } from './sidebar.constants';
+import { ADMIN_NAV_GROUPS, NAV_GROUPS } from './sidebar.constants';
 import { NavItem } from './sidebar.model';
 import { formatSynchronizationTimestamp, isNavItemActive } from './sidebar.utils';
 
@@ -154,11 +154,6 @@ export class Sidebar {
    * {@link ADMIN_NAV_GROUPS}.
    */
   protected readonly navGroups = computed(() => (this.adminMode() ? ADMIN_NAV_GROUPS : NAV_GROUPS));
-
-  /**
-   * Version shown at the very bottom of the sidebar.
-   */
-  protected readonly appVersion = APP_VERSION;
 
   /**
    * Languages the switcher offers, in display order.

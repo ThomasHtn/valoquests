@@ -1,5 +1,15 @@
-import { afterNextRender, Component, ElementRef, input, output, viewChild } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  ElementRef,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { LucideX } from '@lucide/angular';
+
+import { DRAWER_EXIT_FALLBACK_MS } from './drawer.constants';
 
 /**
  * Panel opened over the page: the campaign's week detail, the backoffice player form, the run's
@@ -54,6 +64,12 @@ export class Drawer {
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
   /**
+   * Whether the exit animation is playing. The native dialog closes only once it ends, so the
+   * panel and its backdrop leave instead of vanishing.
+   */
+  protected readonly closing = signal(false);
+
+  /**
    * Opens the drawer as a modal as soon as it is in the DOM, and wires dismissal by clicking the
    * backdrop.
    *
@@ -69,7 +85,7 @@ export class Drawer {
       dialog.showModal();
       dialog.addEventListener('click', (event) => {
         if (event.target === dialog) {
-          dialog.close();
+          this.close();
         }
       });
     });
@@ -81,6 +97,39 @@ export class Drawer {
    * notifies the host, so this path and the platform's own (Escape) report through one channel.
    */
   public close(): void {
-    this.dialog().nativeElement.close();
+    const dialog = this.dialog().nativeElement;
+    if (this.closing() || !dialog.open) {
+      return;
+    }
+    const animated = getComputedStyle(dialog).animationName !== 'none';
+    if (!animated) {
+      dialog.close();
+      return;
+    }
+    this.closing.set(true);
+    // The class swap starts the exit animation; the timer covers a browser that never reports it.
+    const finish = (): void => {
+      clearTimeout(fallback);
+      dialog.removeEventListener('animationend', onEnd);
+      dialog.close();
+    };
+    // Animations of the panel's content bubble up here too; only the panel's own counts.
+    const onEnd = (event: AnimationEvent): void => {
+      if (event.target === dialog) {
+        finish();
+      }
+    };
+    const fallback = setTimeout(finish, DRAWER_EXIT_FALLBACK_MS);
+    dialog.addEventListener('animationend', onEnd);
+  }
+
+  /**
+   * Escape goes through the animated close rather than the platform's instant one.
+   *
+   * @param event - The dialog's `cancel` event.
+   */
+  protected onCancel(event: Event): void {
+    event.preventDefault();
+    this.close();
   }
 }

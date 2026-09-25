@@ -156,6 +156,9 @@ export class PlanetOrb {
       'stroke-width': 3,
       'stroke-dasharray': `${(length * this.advance()).toFixed(1)} ${length.toFixed(1)}`,
       transform: `rotate(-90 ${CX} ${CY})`,
+      // Closes from nothing on arrival (`.fx-arc`); the offset that hides it is the dash itself.
+      class: 'fx-arc',
+      style: `--arc-empty: ${(length * this.advance()).toFixed(1)}`,
     });
     return [plate, arc];
   }

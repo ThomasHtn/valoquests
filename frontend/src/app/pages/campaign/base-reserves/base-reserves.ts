@@ -5,6 +5,8 @@ import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Reserves } from '../campaign.model';
+import { CountUp } from '@shared/count-up/count-up';
+import { InView } from '@shared/in-view/in-view';
 
 /**
  * The base's reserves: the two stocks and what they pay for, the wounded brought home since the
@@ -12,7 +14,7 @@ import { Reserves } from '../campaign.model';
  */
 @Component({
   selector: 'app-base-reserves',
-  imports: [TranslatePipe, LucideSkull, LucideUsers, LucideWheat, LucideWrench],
+  imports: [InView, CountUp, TranslatePipe, LucideSkull, LucideUsers, LucideWheat, LucideWrench],
   templateUrl: './base-reserves.html',
   styleUrl: './base-reserves.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -3,6 +3,9 @@ import { RouterOutlet } from '@angular/router';
 
 import { LiveRefresh } from '@core/http/live-refresh';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { PageScroll } from '@core/scroll/page-scroll';
+import { RouteProgress } from '@layout/route-progress/route-progress';
+import { ScrollTop } from '@layout/scroll-top/scroll-top';
 import { Sidebar } from '@layout/sidebar/sidebar';
 
 /**
@@ -15,7 +18,7 @@ import { Sidebar } from '@layout/sidebar/sidebar';
  */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, Sidebar, TranslatePipe],
+  imports: [RouterOutlet, RouteProgress, ScrollTop, Sidebar, TranslatePipe],
   templateUrl: './shell.html',
   // `contents` so the shell element itself never becomes a box between `<app-root>` and the
   // full-height flex layout its template lays out.
@@ -26,5 +29,7 @@ export class Shell {
     // Started here rather than in a page: the shell outlives every route, so the screens keep
     // following the backend for as long as the tab is open.
     inject(LiveRefresh);
+    // Eager for the same reason: it must hear every page body's scroll to restore it on back.
+    inject(PageScroll);
   }
 }

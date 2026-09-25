@@ -149,3 +149,376 @@
     translate: 0 -6px;
   }
 }
+
+/*
+ * The motion kit: enter and leave classes for everything that opens over or inside a page.
+ *
+ * Plain global classes rather than utilities, because they are handed to Angular's `animate.enter`
+ * and `animate.leave`, which add them for the duration of the animation and, on leave, keep the
+ * element in the DOM until it ends. That is what gives a modal, a menu or a fold a real exit instead
+ * of vanishing mid-gesture.
+ *
+ * Two curves only: `--ease-out-expo` for arrivals, which decelerate hard and read as landing, and a
+ * plain ease-in for departures, which should be short and never draw the eye. Everything sits
+ * behind `prefers-reduced-motion: no-preference`: with no animation declared, Angular removes a
+ * leaving element at once, so reduced motion costs nothing and never waits.
+ */
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-quick: cubic-bezier(0.4, 0, 1, 1);
+  /* Lets a fold animate between 0 and its natural `auto` height where the browser supports it. */
+  interpolate-size: allow-keywords;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A scrim behind a modal. */
+  .fx-scrim-in {
+    animation: fx-fade-in 260ms ease-out both;
+  }
+
+  .fx-scrim-out {
+    animation: fx-fade-out 200ms ease-in both;
+  }
+
+  /* A modal panel: rises and settles from slightly small. On a phone it travels further, from the
+     bottom edge the thumb is on. */
+  .fx-modal-in {
+    animation: fx-modal-in 420ms var(--ease-out-expo) both;
+  }
+
+  .fx-modal-out {
+    animation: fx-modal-out 180ms var(--ease-in-quick) both;
+  }
+
+  /* A panel pinned to the trailing edge. */
+  .fx-sheet-in {
+    animation: fx-sheet-in 380ms var(--ease-out-expo) both;
+  }
+
+  .fx-sheet-out {
+    animation: fx-sheet-out 220ms var(--ease-in-quick) both;
+  }
+
+  /* A menu unrolling from its trigger. */
+  .fx-drop-in {
+    transform-origin: top;
+    animation: fx-drop-in 200ms var(--ease-out-expo) both;
+  }
+
+  .fx-drop-out {
+    transform-origin: top;
+    animation: fx-drop-out 120ms var(--ease-in-quick) both;
+  }
+
+  /* A fold opening in the page: its height grows (where `interpolate-size` exists) as it fades in. */
+  .fx-expand-in {
+    overflow: clip;
+    animation: fx-expand-in 380ms var(--ease-out-expo) both;
+  }
+
+  .fx-collapse-out {
+    overflow: clip;
+    animation: fx-collapse-out 220ms var(--ease-in-quick) both;
+  }
+
+  /* Content replaced in place: a tab, a day, a week, a planet. Arrives only; the old content is
+     gone the same frame, so the two never stack in the layout. */
+  .fx-swap-in {
+    animation: fx-swap-in 340ms var(--ease-out-expo) both;
+  }
+}
+
+@keyframes fx-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fx-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fx-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem) scale(0.96);
+  }
+}
+
+@keyframes fx-modal-out {
+  to {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.98);
+  }
+}
+
+@media (width < 40rem) {
+  @keyframes fx-modal-in {
+    from {
+      opacity: 0;
+      transform: translateY(3rem);
+    }
+  }
+
+  @keyframes fx-modal-out {
+    to {
+      opacity: 0;
+      transform: translateY(2rem);
+    }
+  }
+}
+
+@keyframes fx-sheet-in {
+  from {
+    opacity: 0.4;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fx-sheet-out {
+  to {
+    opacity: 0.4;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fx-drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.375rem) scaleY(0.96);
+  }
+}
+
+@keyframes fx-drop-out {
+  to {
+    opacity: 0;
+    transform: translateY(-0.25rem) scaleY(0.98);
+  }
+}
+
+@keyframes fx-expand-in {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes fx-collapse-out {
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes fx-swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+/* The native `<dialog>` backdrop of `shared/drawer`, fading with the panel it sits behind. */
+@media (prefers-reduced-motion: no-preference) {
+  .drawer::backdrop {
+    animation: fx-fade-in 260ms ease-out both;
+  }
+
+  .drawer--closing::backdrop {
+    animation: fx-fade-out 200ms ease-in both;
+  }
+}
+
+/* The snackbar (`shared/snackbar`): lifts in from the bottom edge and drops back out of it. */
+@media (prefers-reduced-motion: no-preference) {
+  .fx-snack-in {
+    animation: fx-snack-in 420ms var(--ease-out-expo) both;
+  }
+
+  .fx-snack-out {
+    animation: fx-snack-out 200ms var(--ease-in-quick) both;
+  }
+}
+
+@keyframes fx-snack-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem) scale(0.96);
+  }
+}
+
+@keyframes fx-snack-out {
+  to {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+}
+
+/*
+ * Menus kept in the DOM and toggled by `hidden` (the selects, the week picker, the language list):
+ * they unroll from their trigger and fold back into it. `@starting-style` gives the opening frame,
+ * and `allow-discrete` holds `display` until the fold-out has played.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .menu-panel[role='listbox'] {
+    transform-origin: top;
+    transition:
+      opacity 200ms var(--ease-out-expo),
+      transform 240ms var(--ease-out-expo),
+      display 200ms allow-discrete,
+      overlay 200ms allow-discrete;
+
+    @starting-style {
+      opacity: 0;
+      transform: translateY(-0.375rem) scaleY(0.96);
+    }
+  }
+
+  .menu-panel[role='listbox'][hidden] {
+    opacity: 0;
+    transform: translateY(-0.25rem) scaleY(0.98);
+    transition-duration: 120ms;
+    transition-timing-function: var(--ease-in-quick);
+  }
+
+  /* A menu opening upwards (the language list sits above its trigger) unrolls from its bottom. */
+  .menu-panel[role='listbox'].bottom-full {
+    transform-origin: bottom;
+  }
+}
+
+/*
+ * The mobile navigation drawer: as it slides in, its chapters follow it in a short cascade, so the
+ * panel reads as arriving with its contents rather than as a sheet with text printed on it. Replays
+ * on every opening because the selector starts matching again when `data-open` comes back.
+ */
+@media (prefers-reduced-motion: no-preference) and (width < 64rem) {
+  .sidebar[data-open] nav > div {
+    animation: fx-nav-in 460ms var(--ease-out-expo) both;
+  }
+
+  .sidebar[data-open] nav > div:nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  .sidebar[data-open] nav > div:nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .sidebar[data-open] nav > div:nth-child(n + 4) {
+    animation-delay: 180ms;
+  }
+}
+
+@keyframes fx-nav-in {
+  from {
+    opacity: 0;
+    transform: translateX(-1.25rem);
+  }
+}
+
+/*
+ * `<details>` folds (the reserve ledger, the challenge catalogue): the platform opens and shuts
+ * them in one frame. Where `::details-content` and `interpolate-size` exist, the body grows to its
+ * natural height and shrinks back instead; elsewhere they keep the instant behaviour.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  details::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    opacity: 0;
+    transition:
+      block-size 380ms var(--ease-out-expo),
+      opacity 260ms ease-out,
+      content-visibility 380ms allow-discrete;
+  }
+
+  details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}
+
+/* A tooltip bubble (`shared/tooltip`) blooming out of its host rather than blinking on. */
+@media (prefers-reduced-motion: no-preference) {
+  .fx-tip-in {
+    animation: fx-tip-in 180ms var(--ease-out-expo) both;
+  }
+}
+
+@keyframes fx-tip-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem) scale(0.97);
+  }
+}
+
+/*
+ * Gauges: fills, drains and rings arriving at their value. Keyframe animations rather than
+ * transitions so `appInView` can hold them (`.fx-await`) until the gauge is actually on screen;
+ * the bars' own transitions still carry later changes from one refresh to the next.
+ */
+.fx-await:not(.in-view),
+.fx-await:not(.in-view) *,
+.fx-await:not(.in-view) *::before,
+.fx-await:not(.in-view) *::after {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A bar filling from empty to its inline width. */
+  .fx-grow {
+    animation: fx-grow-w 1100ms var(--ease-out-expo) both;
+    animation-delay: var(--fx-delay, 0ms);
+  }
+
+  /* A ring's arc closing from nothing. `--arc-empty` is its full circumference. */
+  .fx-arc {
+    animation: fx-arc 1400ms var(--ease-out-expo) both;
+    animation-delay: var(--fx-delay, 0ms);
+  }
+}
+
+@keyframes fx-grow-w {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes fx-drain-w {
+  from {
+    width: 100%;
+  }
+}
+
+@keyframes fx-arc {
+  from {
+    stroke-dashoffset: var(--arc-empty);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The second band of a two-band bar, and a fill's leading-edge marker: they ride out with it. */
+  .fx-grow-in-place {
+    animation: fx-grow-in-place 1100ms var(--ease-out-expo) both;
+  }
+
+  .fx-edge {
+    animation: fx-edge 1100ms var(--ease-out-expo) both;
+  }
+}
+
+@keyframes fx-grow-in-place {
+  from {
+    left: 0;
+    width: 0;
+  }
+}
+
+@keyframes fx-edge {
+  from {
+    left: 0;
+    opacity: 0;
+  }
+}

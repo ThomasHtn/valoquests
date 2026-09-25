@@ -5,6 +5,7 @@ import { CampaignApi } from '@core/campaign/campaign-api';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
+import { Connectivity } from './connectivity';
 import { liveRefreshStamp } from './live-refresh.utils';
 import { reloadAll, resourceValue } from './resource-state.utils';
 import { LIVE_REFRESH_POLL_MS, LIVE_REFRESH_SETTLE_MS } from './live-refresh.constants';
@@ -29,6 +30,12 @@ export class LiveRefresh {
   private readonly campaignApi = inject(CampaignApi);
   private readonly rankingApi = inject(RankingApi);
   private readonly challengesApi = inject(ChallengesApi);
+  private readonly connectivity = inject(Connectivity);
+
+  /**
+   * Whether the device was online at the last check, to catch the moment it comes back.
+   */
+  private wasOnline = true;
 
   /**
    * Stamp of the roster as last read; `null` until the first read has settled.
@@ -41,9 +48,22 @@ export class LiveRefresh {
   private pending: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
+    // Polling offline would only turn every screen into an error state until the network returns.
     interval(LIVE_REFRESH_POLL_MS)
-      .pipe(takeUntilDestroyed())
+      .pipe(
+        filter(() => this.connectivity.online()),
+        takeUntilDestroyed(),
+      )
       .subscribe(() => this.playersApi.players.reload());
+
+    // Back online: whatever failed meanwhile is read again, without asking the reader to retry.
+    effect(() => {
+      const online = this.connectivity.online();
+      if (online && !this.wasOnline) {
+        this.reloadEverything();
+      }
+      this.wasOnline = online;
+    });
 
     fromEvent(this.document, 'visibilitychange')
       .pipe(
@@ -78,16 +98,21 @@ export class LiveRefresh {
     }
     this.pending = setTimeout(() => {
       this.pending = null;
-      reloadAll(
-        this.campaignApi.campaign,
-        this.campaignApi.today,
-        this.campaignApi.history,
-        this.rankingApi.current,
-        this.rankingApi.latestFinalizedWeek,
-        this.rankingApi.history,
-        this.rankingApi.daily,
-        this.challengesApi.current,
-      );
+      this.reloadEverything();
     }, LIVE_REFRESH_SETTLE_MS);
+  }
+
+  private reloadEverything(): void {
+    reloadAll(
+      this.playersApi.players,
+      this.campaignApi.campaign,
+      this.campaignApi.today,
+      this.campaignApi.history,
+      this.rankingApi.current,
+      this.rankingApi.latestFinalizedWeek,
+      this.rankingApi.history,
+      this.rankingApi.daily,
+      this.challengesApi.current,
+    );
   }
 }

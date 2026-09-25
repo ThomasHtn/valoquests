@@ -10,9 +10,13 @@
           <span class="label-caption text-2xs text-text-secondary">{{
             'campaign.reserves.food' | translate
           }}</span>
-          <span class="tank-v tabular-nums">{{ format(reserves.food.stock) }}</span>
+          <span [appCountUp]="reserves.food.stock" class="tank-v tabular-nums"></span>
         </p>
-        <span [style.--lvl]="percent(reserves.food.fraction)" aria-hidden="true" class="tank-bar"
+        <span
+          [style.--lvl]="percent(reserves.food.fraction)"
+          appInView
+          aria-hidden="true"
+          class="tank-bar"
           ><i></i
         ></span>
         <p class="tank-sub">
@@ -25,7 +29,7 @@
               | translate: { wounded: format(reserves.wounded), planet: reserves.planetName }
           }}
         </p>
-        <p class="label-caption text-2xs text-text-muted">
+        <p class="label-caption text-2xs leading-snug text-text-muted">
           {{ 'campaign.reserves.upkeep' | translate: { count: format(reserves.dailyUpkeep) } }}
         </p>
       </div>
@@ -39,10 +43,11 @@
           <span class="label-caption text-2xs text-text-secondary">{{
             'campaign.reserves.components' | translate
           }}</span>
-          <span class="tank-v tabular-nums">{{ format(reserves.components.stock) }}</span>
+          <span [appCountUp]="reserves.components.stock" class="tank-v tabular-nums"></span>
         </p>
         <span
           [style.--lvl]="percent(reserves.components.fraction)"
+          appInView
           aria-hidden="true"
           class="tank-bar"
           ><i></i
@@ -67,12 +72,12 @@
       {{ 'campaign.reserves.rescued' | translate }}
     </p>
     <p class="rescue-fig">
-      <span class="rescue-n tabular-nums">{{ format(reserves.rescued) }}</span>
+      <span [appCountUp]="reserves.rescued" class="rescue-n tabular-nums"></span>
       <span class="rescue-of">{{
         'campaign.reserves.spotted' | translate: { count: format(reserves.spotted) }
       }}</span>
     </p>
-    <div aria-hidden="true" class="stackbar">
+    <div appInView aria-hidden="true" class="stackbar">
       <span [style.width.%]="reserves.shares[0]" class="bg-accent-green"></span>
       <span [style.width.%]="reserves.shares[1]" class="bg-brand-500"></span>
       <span [style.width.%]="reserves.shares[2]" class="bg-text-primary/20"></span>

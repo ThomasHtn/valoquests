@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { InView } from '@shared/in-view/in-view';
 
 import {
   RING_CIRCUMFERENCE,
@@ -25,6 +26,8 @@ import {
 @Component({
   selector: 'app-progress-circle',
   templateUrl: './progress-circle.html',
+  // The arc waits until the ring is on screen before closing to its value.
+  hostDirectives: [InView],
   host: {
     class: 'block',
     'aria-hidden': 'true',

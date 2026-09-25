@@ -81,6 +81,7 @@
   stroke: var(--tone);
   stroke-width: var(--ring, 7);
   stroke-dasharray: 270.18; /* 2 pi r, r = 43 */
+  --arc-empty: 270.18;
   stroke-dashoffset: calc(270.18 * (1 - var(--pct)));
   transition: stroke-dashoffset 1s cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -221,4 +222,17 @@
   .g-arc {
     transition: none;
   }
+}
+
+/* The four dials close one after the other, left to right, as a single reading. */
+.gauge-cell:nth-child(2) {
+  --fx-delay: 120ms;
+}
+
+.gauge-cell:nth-child(3) {
+  --fx-delay: 240ms;
+}
+
+.gauge-cell:nth-child(4) {
+  --fx-delay: 360ms;
 }

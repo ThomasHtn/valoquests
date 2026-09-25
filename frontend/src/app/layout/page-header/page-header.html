@@ -25,13 +25,17 @@
       @if (backLink(); as parentRoute) {
         <!-- The way back, on a page whose subject is already named by the block right under the
              bar: restating that name here would only be a second source of the same fact. -->
-        <div class="flex min-w-0 items-center gap-2">
+        <div class="flex min-w-0 flex-1 items-center gap-2">
           <a
             [attr.aria-label]="'pageHeader.back' | translate: { name: backLabel() }"
             [routerLink]="parentRoute"
-            class="focus-ring tracking-label -mx-1 inline-flex h-11 max-w-full shrink-0 items-center gap-1.5 px-1 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:text-text-primary"
+            class="group/back focus-ring tracking-label -mx-1 inline-flex h-11 max-w-full shrink-0 items-center gap-1.5 px-1 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:text-text-primary"
           >
-            <svg aria-hidden="true" class="size-3.5 shrink-0" lucideChevronLeft></svg>
+            <svg
+              aria-hidden="true"
+              class="size-3.5 shrink-0 transition-transform duration-(--duration-base) group-hover/back:-translate-x-0.5"
+              lucideChevronLeft
+            ></svg>
             <span class="truncate">{{ backLabel() }}</span>
           </a>
           <ng-content select="[backAside]" />

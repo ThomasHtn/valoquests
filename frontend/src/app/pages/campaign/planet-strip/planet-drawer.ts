@@ -15,6 +15,7 @@ import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Planet } from '../campaign.model';
+import { CountUp } from '@shared/count-up/count-up';
 
 /**
  * The report of one planet: three columns whose subjects depend on where the week stands.
@@ -22,6 +23,7 @@ import { Planet } from '../campaign.model';
 @Component({
   selector: 'app-planet-drawer',
   imports: [
+    CountUp,
     TranslatePipe,
     RouterLink,
     LucideCheck,

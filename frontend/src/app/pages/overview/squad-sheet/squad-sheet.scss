@@ -16,11 +16,14 @@
   padding: 0.85rem 1rem 0.9rem 0.75rem;
   background: rgb(236 232 225 / 4%);
   border-left: 2px solid var(--color-edge);
-  transition: background 0.15s;
+  transition:
+    background-color var(--duration-fast) var(--ease-out-quart),
+    border-color var(--duration-fast) var(--ease-out-quart);
 }
 
 .ros:hover {
   background: rgb(217 149 74 / 12%);
+  border-left-color: rgb(217 149 74 / 60%);
 }
 
 /* Below the column grid the rank sits on the right of the name, not in a column of its own. */
@@ -262,6 +265,13 @@
 .ros--idle .ros-pos {
   font-size: 1rem;
   color: var(--color-text-muted);
+}
+
+/* Stacked layout: a lone dot at the row's trailing edge reads as a stray mark, not as "unranked". */
+@media (width < 72rem) {
+  .ros--idle .ros-pos {
+    visibility: hidden;
+  }
 }
 
 .ros-val.ros-nil {

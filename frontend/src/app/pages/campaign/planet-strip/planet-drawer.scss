@@ -132,3 +132,15 @@
   background: var(--color-boss-hp);
   border-right: 3px solid var(--color-boss-hp-edge);
 }
+
+/* The planet's bars run out to their value each time its report opens: the guardian drains from
+   full, the wounded fill from empty. */
+@media (prefers-reduced-motion: no-preference) {
+  .rep-bar > i {
+    animation: fx-grow-w 1100ms var(--ease-out-expo) 150ms both;
+  }
+
+  .rep-bar--hp > i {
+    animation: fx-drain-w 1300ms var(--ease-out-expo) 150ms both;
+  }
+}

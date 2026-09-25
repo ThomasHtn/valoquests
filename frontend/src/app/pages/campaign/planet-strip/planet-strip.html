@@ -93,7 +93,8 @@
   </div>
 }
 
-<!-- The report of the opened planet, under the strip, pointing at it. -->
-@if (opened(); as planet) {
+<!-- The report of the opened planet, under the strip, pointing at it. Keyed on the planet so
+     picking another one replays the drawer's entrance instead of swapping its text in place. -->
+@for (planet of opened() ? [opened()!] : []; track planet.index) {
   <app-planet-drawer [planet]="planet" [pointerX]="pointerX()" />
 }

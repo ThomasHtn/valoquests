@@ -14,6 +14,8 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { SectionRule } from '@shared/section-rule/section-rule';
 import { Tooltip } from '@shared/tooltip/tooltip';
+import { CountUp } from '@shared/count-up/count-up';
+import { InView } from '@shared/in-view/in-view';
 import { BLOCK_TOOLTIP_DELAY_MS } from '@shared/tooltip/tooltip.constants';
 import { Capacity } from '../overview.model';
 import { CARRY_MODES, SHELTER_MODES } from './extraction-gauges.constants';
@@ -39,6 +41,8 @@ import { CARRY_MODES, SHELTER_MODES } from './extraction-gauges.constants';
     LucideWrench,
     SectionRule,
     Tooltip,
+    CountUp,
+    InView,
   ],
   templateUrl: './extraction-gauges.html',
   styleUrl: './extraction-gauges.scss',

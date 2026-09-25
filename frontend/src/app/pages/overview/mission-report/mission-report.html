@@ -4,12 +4,16 @@
   <!-- Scrim. Decorative: the dialog closes from its own buttons and from Escape too. -->
   <div
     (click)="closed.emit()"
+    animate.enter="fx-scrim-in"
+    animate.leave="fx-scrim-out"
     aria-hidden="true"
     class="fixed inset-0 z-50 bg-surface-950/80"
   ></div>
 
   <div
     #panel
+    animate.enter="fx-modal-in"
+    animate.leave="fx-modal-out"
     [class.rep--held]="!report.defeated"
     aria-labelledby="mission-report-verdict"
     aria-modal="true"

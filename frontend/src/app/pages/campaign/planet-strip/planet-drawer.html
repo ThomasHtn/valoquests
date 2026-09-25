@@ -15,7 +15,7 @@
               {{ 'campaign.drawer.guardian' | translate }}
             </p>
             <p class="dcol-fig">
-              <b class="tabular-nums">{{ format(planet.report.hitPointsLeft) }}</b>
+              <b [appCountUp]="planet.report.hitPointsLeft" class="tabular-nums"></b>
               <span>{{
                 'campaign.drawer.hpLeft' | translate: { total: format(planet.report.hitPoints) }
               }}</span>
@@ -41,7 +41,7 @@
               {{ 'campaign.drawer.wounded' | translate }}
             </p>
             <p class="dcol-fig">
-              <b class="tabular-nums">{{ format(planet.report.wounded) }}</b>
+              <b [appCountUp]="planet.report.wounded" class="tabular-nums"></b>
               <span>{{ 'campaign.drawer.spotted' | translate: { planet: planet.name } }}</span>
             </p>
             <span
@@ -179,7 +179,7 @@
               {{ 'campaign.drawer.wounded' | translate }}
             </p>
             <p class="dcol-fig">
-              <b class="tabular-nums">{{ format(planet.report.rescued) }}</b>
+              <b [appCountUp]="planet.report.rescued" class="tabular-nums"></b>
               <span>{{
                 'campaign.drawer.saved' | translate: { spotted: format(planet.report.spotted) }
               }}</span>
@@ -213,7 +213,7 @@
             </p>
             @if (hasBase(planet.report.population)) {
               <p class="dcol-fig">
-                <b class="tabular-nums">{{ format(planet.report.population) }}</b>
+                <b [appCountUp]="planet.report.population" class="tabular-nums"></b>
                 <span>{{ 'campaign.drawer.inhabitants' | translate }}</span>
               </p>
               <p class="dcol-text">

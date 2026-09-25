@@ -122,7 +122,7 @@
              tap away behind the trailing dropdown. -->
           <div
             [attr.aria-label]="'playerProfile.filters.gameModeLabel' | translate"
-            class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5"
+            class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 max-sm:w-full"
             role="group"
           >
             <div class="flex items-center">
@@ -174,7 +174,7 @@
 
           <div
             [attr.aria-label]="'playerProfile.filters.seasonLabel' | translate"
-            class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5"
+            class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 max-sm:flex-1"
             role="group"
           >
             <app-select
@@ -201,7 +201,7 @@
              it drives. -->
           <div
             [attr.aria-label]="'playerProfile.filters.seasonsLabel' | translate"
-            class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5"
+            class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 max-sm:w-full"
             role="group"
           >
             <app-multi-select
@@ -218,13 +218,14 @@
         }
 
         <!-- Display switch, pushed to the trailing edge: it governs what the page shows, not what
-           it counts. -->
+           it counts. On a phone it leads the stack as a full-width switch, since it changes the
+           whole page below while the filters only narrow it. -->
         <div
           [attr.aria-label]="'playerProfile.display.label' | translate"
-          class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 sm:ms-auto"
+          class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 max-sm:order-first max-sm:w-full sm:ms-auto"
           role="group"
         >
-          <div class="flex items-center">
+          <div class="flex items-center max-sm:w-full max-sm:*:flex-1">
             <button
               (click)="onViewModeChange('MATCHES')"
               [attr.aria-pressed]="viewMode() === 'MATCHES'"
@@ -303,6 +304,8 @@
         }
 
         <app-match-history
+          animate.enter="fx-swap-in"
+          class="block"
           [playerId]="playerId()"
           [days]="matchDays()"
           [isEmpty]="matches().length === 0"
@@ -315,6 +318,8 @@
         />
       } @else {
         <app-progression
+          animate.enter="fx-swap-in"
+          class="block"
           [playerId]="playerId()"
           [seasonIds]="progressionSeasonIds()"
           [seasonOrder]="seasonOrder()"

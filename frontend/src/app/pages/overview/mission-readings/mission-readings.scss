@@ -152,7 +152,7 @@
 .rep-bar--aboard > i {
   background: var(--color-brand-500);
   box-shadow: inset -3px 0 0 var(--color-brand-400);
-  animation: overview-fill 900ms cubic-bezier(0.25, 1, 0.5, 1) both;
+  animation: overview-fill 1100ms var(--ease-out-expo) both;
 }
 
 .rep-bar--foe {
@@ -162,7 +162,7 @@
 .rep-bar--foe > i {
   background: var(--color-boss-hp);
   box-shadow: inset -3px 0 0 var(--color-boss-hp-edge);
-  animation: overview-drain 900ms cubic-bezier(0.25, 1, 0.5, 1) both;
+  animation: overview-drain 1300ms var(--ease-out-expo) both;
 }
 
 /* Defeated: no fill left to drain, so the track itself is struck through in the guardian's red and
@@ -219,7 +219,9 @@
   width: var(--w);
   background: var(--color-accent-violet);
   transition: filter var(--duration-fast) var(--ease-out-quart);
-  animation: overview-fill 900ms cubic-bezier(0.25, 1, 0.5, 1) both;
+  animation: overview-fill 1100ms var(--ease-out-expo) both;
+  /* Each operator's share lands after the previous one, so the bar is read as a sum. */
+  animation-delay: var(--fx-delay, 0ms);
 }
 
 .rep-stack > i:nth-child(even) {

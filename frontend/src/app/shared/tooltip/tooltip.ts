@@ -173,7 +173,7 @@ export class Tooltip implements OnDestroy {
     this.renderer.setAttribute(
       bubble,
       'class',
-      `${TOOLTIP_SURFACE_CLASS} pointer-events-none m-0 ${sizeClass}`,
+      `${TOOLTIP_SURFACE_CLASS} fx-tip-in pointer-events-none m-0 ${sizeClass}`,
     );
     this.renderer.setStyle(bubble, 'position', 'fixed');
 
@@ -247,7 +247,8 @@ export class Tooltip implements OnDestroy {
    */
   private position(bubble: HTMLElement): void {
     const anchor = this.host.nativeElement.getBoundingClientRect();
-    const size = bubble.getBoundingClientRect();
+    // Layout size, not the painted box: the entrance animation scales the bubble on its first frame.
+    const size = { width: bubble.offsetWidth, height: bubble.offsetHeight };
     const view = this.document().defaultView;
     const viewportWidth = view?.innerWidth ?? 0;
     const viewportHeight = view?.innerHeight ?? 0;

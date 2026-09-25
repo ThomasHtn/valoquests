@@ -13,16 +13,29 @@
   ></span>
   <span class="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-x-4 gap-y-1">
     @if (side(); as caption) {
-      <span class="label-caption min-w-0 text-right text-2xs text-text-muted">{{ caption }}</span>
+      <span
+        class="label-caption min-w-0 text-2xs leading-snug text-text-muted max-sm:basis-full sm:text-right"
+        >{{ caption }}</span
+      >
     }
     @if (link(); as route) {
       <a
         [routerLink]="route"
-        class="focus-ring tracking-label inline-flex items-center gap-2 font-mono text-xs font-medium text-brand-400 uppercase transition-colors hover:text-[#f0c493] hover:underline hover:underline-offset-4"
+        class="group/link focus-ring tracking-label inline-flex items-center gap-2 font-mono text-xs font-medium text-brand-400 uppercase transition-colors hover:text-[#f0c493] hover:underline hover:underline-offset-4"
       >
-        {{ linkLabel() }} <span aria-hidden="true">→</span>
+        {{ linkLabel() }}
+        <span
+          aria-hidden="true"
+          class="transition-transform duration-(--duration-base) group-hover/link:translate-x-1"
+          >→</span
+        >
       </a>
     }
-    <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
+    <!-- Dropped on a phone when a wrapped caption is all it would close: it would sit alone on a line. -->
+    <span
+      [class]="side() && !link() ? 'max-sm:hidden' : ''"
+      aria-hidden="true"
+      class="size-2 rotate-45 border border-brand-500/70"
+    ></span>
   </span>
 </div>

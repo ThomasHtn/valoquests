@@ -21,6 +21,8 @@
        so the gutter rides on the page's own blocks instead. `relative` gives a page a positioning
        context to anchor anything full-bleed against. -->
   <main class="relative flex-1 overflow-hidden" id="main-content" tabindex="-1">
+    <app-route-progress />
     <router-outlet />
+    <app-scroll-top />
   </main>
 </div>

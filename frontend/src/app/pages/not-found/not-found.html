@@ -3,14 +3,17 @@
 <app-page-header [heading]="'notFound.title' | translate" />
 
 <div class="page-body">
-  <section class="flex min-h-[50vh] flex-col items-start justify-center">
-    <p class="max-w-prose text-lead text-text-secondary">
-      {{ 'notFound.description' | translate }}
-    </p>
+  <!-- Told as an empty scan, in the idiom of the other empty screens, rather than as a bare line. -->
+  <section
+    class="resource-settle flex min-h-[60vh] flex-col items-center justify-center gap-6 py-6"
+  >
+    <app-empty-plate [plate]="plate()" />
     <a
-      class="focus-ring tracking-label mt-6 inline-flex h-12 items-center border border-edge px-4 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
+      appButton="primary"
+      class="inline-flex min-h-12 items-center gap-2 px-5 font-display text-sm font-semibold tracking-wide uppercase [--notch:0.625rem]"
       routerLink="/overview"
     >
+      <svg aria-hidden="true" class="size-4 shrink-0" lucideLayoutDashboard></svg>
       {{ 'notFound.backToOverview' | translate }}
     </a>
   </section>

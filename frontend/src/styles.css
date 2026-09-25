@@ -22,6 +22,33 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Mobile is the primary target: no grey flash on tap, and no double-tap zoom delay on controls. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  a,
+  button,
+  [role='button'],
+  summary,
+  label {
+    touch-action: manipulation;
+  }
+
+  /* Touch screens get no hover, so a tapped link acknowledges the press instead. */
+  @media (hover: none) {
+    a[href]:active {
+      opacity: 0.72;
+    }
+  }
+
+  ::selection {
+    background-color: --alpha(var(--color-brand-500) / 35%);
+    color: var(--color-text-primary);
+  }
+
   h1,
   h2,
   h3 {
@@ -333,6 +360,13 @@
 @utility page-body {
   @apply scroll-subtle flex w-full flex-1 flex-col gap-6 overflow-y-auto pt-10 pb-6;
 
+  /* The body is the only scroller: its bounce must not chain to the shell and drag the header. */
+  overscroll-behavior-y: contain;
+  /* Clears the home indicator on notched phones; the plain `pb-6` stays the floor. */
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  /* Anchor jumps and focus scrolls land clear of the top edge rather than flush against it. */
+  scroll-padding-top: 1.5rem;
+
   /* Named so a route change animates this column alone. Without it the whole document cross-fades,
      sidebar and context bar included, and navigating reads as the page being replaced rather than
      as its content changing. Only one `page-body` is ever mounted, so the name stays unique. */
@@ -533,6 +567,128 @@
   }
 }
 
+/*
+ * A placeholder block standing in for content that is loading. Flat fill breathing in opacity:
+ * no travelling light, which the direction rules out, and no layout cost since only opacity moves.
+ * Children of one skeleton are staggered by `--skeleton-delay` so a list reads as arriving in order.
+ */
+@utility skeleton {
+  background-color: --alpha(var(--color-text-primary) / 7%);
+  animation: skeleton-breathe 1.6s ease-in-out var(--skeleton-delay, 0s) infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes skeleton-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* A projected skeleton breathes row by row, so each call site keeps its static markup. */
+.resource-loading [skeleton] > * {
+  animation: skeleton-breathe 1.6s ease-in-out var(--skeleton-delay, 0s) infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.resource-loading [skeleton] > :nth-child(2) {
+  --skeleton-delay: 90ms;
+}
+
+.resource-loading [skeleton] > :nth-child(3) {
+  --skeleton-delay: 180ms;
+}
+
+.resource-loading [skeleton] > :nth-child(4) {
+  --skeleton-delay: 270ms;
+}
+
+.resource-loading [skeleton] > :nth-child(n + 5) {
+  --skeleton-delay: 360ms;
+}
+
+/* A skeleton that is a single block (a banner) breathes as a whole. */
+.resource-loading > [skeleton]:not(:has(> * + *)) {
+  animation: skeleton-breathe 1.6s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.resource-loading-fallback {
+  display: flex;
+}
+
+.resource-loading:has(> [skeleton]) .resource-loading-fallback {
+  display: none;
+}
+
+/* A hexagon filling and emptying: the loading mark, in the direction's own shape. */
+.loader-hex {
+  @apply relative inline-block h-3.5 w-3 shrink-0 bg-brand-500/20;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-brand-500);
+    transform-origin: bottom;
+    animation: loader-hex-fill 1.2s var(--ease-out-quart) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+      transform: scaleY(0.5);
+    }
+  }
+}
+
+@keyframes loader-hex-fill {
+  0% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+
+  50% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+
+  50.01% {
+    transform-origin: top;
+  }
+
+  100% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+}
+
+/* Content replacing a loader or an error settles in rather than snapping over it. */
+@media (prefers-reduced-motion: no-preference) {
+  .resource-settle {
+    animation: resource-settle 260ms var(--ease-out-quart) both;
+  }
+}
+
+@keyframes resource-settle {
+  from {
+    opacity: 0;
+  }
+}
+
 /* The three motions the campaign screen owns. They exist as utilities rather than as classes on a
    component because all three ride on pseudo-elements: an animated layer that has to sit inside a
    clipped hexagon cannot be a template node without adding a wrapper to every tile the map draws.
@@ -717,27 +873,6 @@
   }
 }
 
-/*
- * A gauge arriving at its value instead of appearing at it.
- *
- * The counterpart of `hp-gauge-drain` for every bar that fills: the track renders empty and the fill
- * runs out to what it holds. Same mechanism — `@starting-style` animates the *first* style change to
- * an inline-bound width and then stays out of the way, so a value moving between two refreshes still
- * uses the bar's own transition rather than replaying from zero.
- *
- * Reads as the squad's progress arriving rather than as a figure that was always there, which on a
- * page of six gauges is the difference between a dashboard and a report.
- */
-@utility gauge-rise {
-  @starting-style {
-    width: 0;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-  }
-}
-
 /* The leading-edge marker travelling with the fill it caps, on the same curve and duration.
    Same mechanism as `hp-gauge-drain`, on `left` instead of `width`. */
 @utility hp-gauge-drain-edge {
@@ -781,73 +916,9 @@
 }
 
 /*
- * Right-anchored drawer entrance: the panel sliding in from the right edge it is anchored to.
- * Shared by every native-`<dialog>` drawer (the campaign detail panel, the backoffice player form)
- * through an arbitrary `animation` utility rather than a Tailwind keyframe, each gated behind
- * `motion-safe:` at its own call site.
+ * Snackbar timebar, shared by `app-snackbar`. Animates `transform: scaleX` rather than `width` so it
+ * composites on its own layer instead of triggering layout on every frame.
  */
-@keyframes drawer-enter {
-  from {
-    opacity: 0;
-    transform: translateX(24px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/*
- * Centered dialog entrance, the counterpart of `drawer-enter` for a panel with no edge to slide in
- * from: it rises into place instead. Same duration and easing, so the two read as one family.
- */
-@keyframes dialog-enter {
-  from {
-    opacity: 0;
-    transform: scale(0.97) translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/*
- * The campaign's week panel unfolding under the threat map it is attached to. It has an edge to
- * come out of, unlike `dialog-enter`, so it drops out of that edge rather than scaling into place —
- * scaling would pull the panel off the seam that ties it to the map.
- */
-@keyframes boss-panel-unfold {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/*
- * Snackbar entrance and timebar, shared by `app-snackbar`. The timebar animates `transform: scaleX`
- * rather than `width` so it composites on its own layer instead of triggering layout on every
- * frame.
- */
-@keyframes snackbar-enter {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes snackbar-timebar {
   from {
     transform: scaleX(1);
@@ -930,4 +1001,54 @@
 
 .bar-head--cols {
   display: none;
+}
+
+/* The route progress rail (`layout/route-progress`). Scale only, so it never triggers layout. */
+.route-progress {
+  transform: scaleX(0.85);
+  animation: route-progress-creep 8s cubic-bezier(0.1, 0.7, 0.2, 1) both;
+}
+
+.route-progress--done {
+  transform: scaleX(1);
+  opacity: 0;
+  animation: none;
+  transition:
+    transform 180ms var(--ease-out-quart),
+    opacity 200ms ease-out 80ms;
+}
+
+@keyframes route-progress-creep {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-progress {
+    animation: none;
+  }
+}
+
+/* The way back to the top (`layout/scroll-top`): rises into place once the reader is deep enough. */
+.scroll-top {
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  opacity: 0;
+  translate: 0 0.75rem;
+  transition:
+    opacity var(--duration-base) var(--ease-out-quart),
+    translate var(--duration-base) var(--ease-out-quart),
+    background-color var(--duration-fast),
+    scale var(--duration-fast);
+}
+
+.scroll-top--shown {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-top {
+    translate: none;
+  }
 }

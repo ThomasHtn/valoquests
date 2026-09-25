@@ -23,7 +23,7 @@
       <div class="rep-body">
         <p class="rep-line">
           <span class="rep-fig tabular-nums"
-            >{{ format(capacity.aboard) }}
+            ><span [appCountUp]="capacity.aboard"></span>
             <small>{{ 'overview.report.aboardUnit' | translate }}</small></span
           >
           <span class="rep-side label-caption text-2xs">
@@ -34,6 +34,7 @@
         </p>
         <span
           [style.--lvl]="percent(capacity.aboardFraction) + '%'"
+          appInView
           aria-hidden="true"
           class="rep-bar rep-bar--aboard"
           ><i></i
@@ -52,7 +53,7 @@
     <div class="rep-body">
       <p class="rep-line">
         <span class="rep-fig tabular-nums"
-          >{{ format(mission().hitPointsLeft) }}
+          ><span [appCountUp]="mission().hitPointsLeft"></span>
           <small>{{ 'overview.report.hpLeft' | translate }}</small></span
         >
         <span class="rep-side label-caption text-2xs">
@@ -77,6 +78,7 @@
       } @else {
         <span
           [style.--lvl]="percent(mission().guardianLeft) + '%'"
+          appInView
           aria-hidden="true"
           class="rep-bar rep-bar--foe"
           ><i></i
@@ -98,7 +100,7 @@
       <div class="rep-body">
         <p class="rep-line">
           <span class="rep-fig tabular-nums"
-            >{{ format(contribution.total) }}
+            ><span [appCountUp]="contribution.total"></span>
             <small>{{ 'overview.report.contribution' | translate }}</small></span
           >
           <span class="rep-side label-caption text-2xs">
@@ -106,7 +108,7 @@
             <b class="tabular-nums">{{ format(contribution.hitPoints) }}</b>
           </span>
         </p>
-        <span class="rep-stack">
+        <span appInView class="rep-stack">
           @for (share of contribution.shares; track share.playerId) {
             <i
               [appTooltip]="
@@ -120,6 +122,7 @@
                         percent: share.sharePercent,
                       }
               "
+              [style.--fx-delay]="$index * 90 + 'ms'"
               [style.--w]="share.fraction * 100 + '%'"
               class="focus-ring"
               tabindex="0"

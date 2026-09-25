@@ -27,17 +27,18 @@
                   }
           "
           [style.--pct]="capacity.carry.fraction"
+          appInView
           class="gauge focus-ring cursor-help"
           role="img"
           tabindex="0"
         >
           <svg aria-hidden="true" viewBox="0 0 100 100">
             <circle class="g-track" cx="50" cy="50" r="43" />
-            <circle class="g-arc" cx="50" cy="50" r="43" />
+            <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
           </svg>
           <span class="gauge-mid">
             <svg aria-hidden="true" class="size-5" lucideRocket></svg>
-            <b class="tabular-nums">{{ format(capacity.carry.value) }}</b>
+            <b [appCountUp]="capacity.carry.value" class="tabular-nums"></b>
           </span>
         </span>
         <span class="gauge-stock label-caption text-2xs"
@@ -83,17 +84,18 @@
                   }
           "
           [style.--pct]="capacity.shelter.fraction"
+          appInView
           class="gauge focus-ring cursor-help"
           role="img"
           tabindex="0"
         >
           <svg aria-hidden="true" viewBox="0 0 100 100">
             <circle class="g-track" cx="50" cy="50" r="43" />
-            <circle class="g-arc" cx="50" cy="50" r="43" />
+            <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
           </svg>
           <span class="gauge-mid">
             <svg aria-hidden="true" class="size-5" lucideBuilding2></svg>
-            <b class="tabular-nums">{{ format(capacity.shelter.value) }}</b>
+            <b [appCountUp]="capacity.shelter.value" class="tabular-nums"></b>
           </span>
         </span>
         <span class="gauge-stock label-caption text-2xs"
@@ -134,17 +136,18 @@
               | translate: { boss: bossLabel(), percent: capacity.breach.value }
           "
           [style.--pct]="capacity.breach.fraction"
+          appInView
           class="gauge focus-ring cursor-help"
           role="img"
           tabindex="0"
         >
           <svg aria-hidden="true" viewBox="0 0 100 100">
             <circle class="g-track" cx="50" cy="50" r="43" />
-            <circle class="g-arc" cx="50" cy="50" r="43" />
+            <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
           </svg>
           <span class="gauge-mid">
             <svg aria-hidden="true" class="size-5" lucideSwords></svg>
-            <b class="tabular-nums">{{ capacity.breach.value }} %</b>
+            <b class="tabular-nums"><span [appCountUp]="capacity.breach.value"></span> %</b>
           </span>
         </span>
         <span class="gauge-stock label-caption text-2xs"
@@ -198,17 +201,18 @@
                   }
           "
           [style.--pct]="capacity.aboardFraction"
+          appInView
           class="gauge focus-ring cursor-help"
           role="img"
           tabindex="0"
         >
           <svg aria-hidden="true" viewBox="0 0 100 100">
             <circle class="g-track" cx="50" cy="50" r="43" />
-            <circle class="g-arc" cx="50" cy="50" r="43" />
+            <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
           </svg>
           <span class="gauge-mid">
             <svg aria-hidden="true" class="size-5" lucideUsers></svg>
-            <b class="tabular-nums">{{ format(capacity.aboard) }}</b>
+            <b [appCountUp]="capacity.aboard" class="tabular-nums"></b>
           </span>
         </span>
         <span class="gauge-stock label-caption text-2xs">{{

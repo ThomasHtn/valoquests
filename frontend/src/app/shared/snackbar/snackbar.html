@@ -1,5 +1,6 @@
 @if (snackbar.current(); as message) {
   <div
+    animate.leave="fx-snack-out"
     class="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-4 sm:justify-end sm:pr-6"
   >
     <!-- Keyed by `message.id` via `@for` over a single-element array rather than a plain `@if`: the
@@ -9,7 +10,7 @@
       <div
         [attr.aria-live]="message.type === 'error' ? 'assertive' : 'polite'"
         [class]="message.type === 'error' ? 'border-danger/40' : 'border-success/40'"
-        class="notch-tr notch-tr-edge pointer-events-auto relative w-full max-w-sm overflow-hidden border bg-surface-sunken shadow-lg [--notch:0.625rem] motion-safe:animate-[snackbar-enter_200ms_ease-out]"
+        class="notch-tr notch-tr-edge pointer-events-auto relative w-full max-w-sm overflow-hidden border bg-surface-sunken shadow-lg [--notch:0.625rem] fx-snack-in"
         role="status"
       >
         <p

@@ -29,10 +29,6 @@ export interface RailClasses {
    */
   readonly syncBlock: string;
   /**
-   * Version line, the least essential thing in the footer.
-   */
-  readonly version: string;
-  /**
    * Navigation entry alignment: centered icon once collapsed, leading otherwise.
    */
   readonly navItem: string;
@@ -92,7 +88,6 @@ export function resolveRailClasses(collapsed: boolean): RailClasses {
     cursor: collapsed ? 'lg:cursor-ew-resize' : '',
     brandBlock: collapsed ? 'lg:hidden' : 'lg:flex',
     syncBlock: collapsed ? 'lg:hidden' : 'lg:block',
-    version: collapsed ? 'lg:hidden' : 'lg:block',
     navItem: collapsed ? 'lg:justify-center' : 'lg:justify-start',
     navLabel: collapsed ? 'lg:hidden' : '',
     navGroupLabel: collapsed ? 'lg:hidden' : '',
@@ -110,8 +105,8 @@ export function resolveRailClasses(collapsed: boolean): RailClasses {
 export function resolveDrawerClasses(open: boolean): DrawerClasses {
   return {
     panel: open
-      ? 'visible translate-x-0 [transition:translate_300ms_ease-out,visibility_0s]'
-      : 'invisible -translate-x-full [transition:translate_300ms_ease-out,visibility_0s_300ms]',
+      ? 'visible translate-x-0 [transition:translate_420ms_var(--ease-out-expo),visibility_0s]'
+      : 'invisible -translate-x-full [transition:translate_240ms_var(--ease-in-quick),visibility_0s_240ms]',
     scrim: open ? 'visible opacity-100' : 'invisible opacity-0',
   };
 }

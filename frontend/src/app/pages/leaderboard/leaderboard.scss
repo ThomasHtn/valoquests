@@ -20,6 +20,20 @@
   min-height: 5.0625rem;
   padding: 1.125rem 1.25rem;
   background: rgb(236 232 225 / 4%);
+  transition:
+    background-color var(--duration-fast) var(--ease-out-quart),
+    border-color var(--duration-fast) var(--ease-out-quart);
+}
+
+/* Same answer to the pointer as the squad's rows: this stylesheet's fill outranks the template's
+   `hover:` utility, so the hover has to be stated here or it never shows. */
+.row-link:hover {
+  background: rgb(217 149 74 / 12%);
+  border-left-color: rgb(217 149 74 / 60%);
+}
+
+.row-link:active {
+  background: rgb(217 149 74 / 18%);
 }
 
 .cell-pos {

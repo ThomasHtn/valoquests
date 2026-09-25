@@ -11,7 +11,7 @@
      scrollbar left again — a loop, several times a second. Reserving the gutter unconditionally
      means its arrival costs no reflow and the loop has nothing to feed on. -->
 <main
-  class="relative flex h-dvh flex-col overflow-y-auto bg-surface-950 px-6 py-7 text-text-primary [scrollbar-gutter:stable] sm:px-20 sm:py-15"
+  class="scroll-subtle relative flex h-dvh flex-col overflow-y-auto overscroll-y-contain bg-surface-950 px-6 py-7 text-text-primary [scrollbar-gutter:stable] sm:px-20 sm:py-15"
 >
   <div aria-hidden="true" class="landing-sky pointer-events-none absolute inset-0"></div>
 

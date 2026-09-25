@@ -6,7 +6,12 @@
          Must match its `APPLICATION_NAME`, which is what every resolved title is suffixed with. -->
     <title>ValoQuests</title>
     <base href="/" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <!-- `viewport-fit=cover` lets the dark ground run under a notch; `page-body` pads the home
+         indicator back out with `env(safe-area-inset-bottom)`. -->
+    <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport" />
+    <!-- Mobile browser chrome painted in the rail's colour, and native controls drawn dark. -->
+    <meta content="#0a151d" name="theme-color" />
+    <meta content="dark" name="color-scheme" />
     <link href="favicon.svg" rel="icon" type="image/svg+xml" />
     <link href="favicon.ico" rel="icon" type="image/x-icon" />
     <!-- Typefaces of the "Expédition" direction: Oswald for headings and the wordmark, Barlow

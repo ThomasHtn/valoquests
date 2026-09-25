@@ -6,6 +6,8 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Countdown } from '@shared/countdown/countdown';
 import { Tooltip } from '@shared/tooltip/tooltip';
+import { CountUp } from '@shared/count-up/count-up';
+import { InView } from '@shared/in-view/in-view';
 import { Capacity, Contribution, Mission } from '../overview.model';
 
 /**
@@ -21,7 +23,16 @@ import { Capacity, Contribution, Mission } from '../overview.model';
  */
 @Component({
   selector: 'app-mission-readings',
-  imports: [TranslatePipe, Countdown, Tooltip, LucideSkull, LucideSwords, LucideUsers],
+  imports: [
+    TranslatePipe,
+    Countdown,
+    CountUp,
+    InView,
+    Tooltip,
+    LucideSkull,
+    LucideSwords,
+    LucideUsers,
+  ],
   templateUrl: './mission-readings.html',
   styleUrl: './mission-readings.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

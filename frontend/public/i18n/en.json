@@ -630,6 +630,10 @@
       "ESCALATION": "Escalation"
     }
   },
+  "connectivity": {
+    "offline": "Connection lost. What you see may be out of date; it will update once the network is back.",
+    "online": "Back online, data is up to date."
+  },
   "landing": {
     "title": "Rescue mission",
     "accroche": {
@@ -735,8 +739,11 @@
     }
   },
   "notFound": {
+    "address": "Address",
     "backToOverview": "Back to overview",
-    "description": "This page doesn't exist.",
+    "description": "The link may be incomplete, or the page has moved. Every screen of the expedition is still reachable from the menu.",
+    "eyebrow": "Error 404",
+    "heading": "Nothing at this address",
     "title": "Page not found"
   },
   "overview": {
@@ -1172,6 +1179,10 @@
       "heading": "The squad"
     }
   },
+  "resourceState": {
+    "errorHint": "The server is not answering right now. Trying again is usually enough.",
+    "offlineHint": "Device offline. The page will reload by itself once the network is back."
+  },
   "retry": "Retry",
   "rules": {
     "title": "Rules of the game",
@@ -1451,6 +1462,7 @@
       "heading": "Game rules"
     }
   },
+  "scrollTop": "Back to the top of the page",
   "seasons": {
     "episode": "Ep. {{episode}} · Act {{act}}",
     "year": "{{year}} · Act {{act}}"
@@ -1485,7 +1497,7 @@
         "offline": "API unavailable",
         "online": "API available"
       },
-      "tooltip": "Last update: {{value}}",
+      "tooltip": "Every 30 minutes, the squad's finished matches are imported and the campaign is recalculated: resources, damage to the guardian and challenge progress.",
       "unknown": "Never synchronized"
     },
     "nav": {

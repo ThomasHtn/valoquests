@@ -1,14 +1,6 @@
 import { NavGroup } from './sidebar.model';
 
 /**
- * Version of the application, shown at the very bottom of the sidebar.
- *
- * Written here rather than read from `package.json`: the manifest's version is never bumped for a
- * deployment of this personal project, so the displayed one would always lie.
- */
-export const APP_VERSION = '2.0-beta';
-
-/**
  * Primary navigation, in display order, chaptered the way the game reads: the expedition (the
  * week's home, its challenges, the campaign they add up to), then the squad (who is winning, who
  * is in it), then help. On the collapsed rail the captions have nothing to render: a hairline

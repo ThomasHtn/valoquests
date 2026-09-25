@@ -3,6 +3,8 @@
        is a convenience rather than the only way out. -->
   <div
     (click)="busy() ? null : dismissed.emit()"
+    animate.enter="fx-scrim-in"
+    animate.leave="fx-scrim-out"
     aria-hidden="true"
     class="fixed inset-0 z-50 bg-surface-950/80"
   ></div>
@@ -11,6 +13,8 @@
        surfaces below step down to 0.5rem so nested corners stay concentric rather than pinched. -->
   <div
     #panel
+    animate.enter="fx-modal-in"
+    animate.leave="fx-modal-out"
     [attr.aria-label]="heading()"
     aria-modal="true"
     class="notch-tr notch-tr-edge focus-ring fixed top-1/2 left-1/2 z-50 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 border border-brand-500/40 bg-surface-sunken p-6 [--notch:0.875rem]"

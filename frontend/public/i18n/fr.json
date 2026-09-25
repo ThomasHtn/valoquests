@@ -630,6 +630,10 @@
       "ESCALATION": "Escalade"
     }
   },
+  "connectivity": {
+    "offline": "Connexion perdue. Les données affichées peuvent dater, elles se mettront à jour au retour du réseau.",
+    "online": "Connexion rétablie, données à jour."
+  },
   "landing": {
     "title": "Mission de sauvetage",
     "accroche": {
@@ -735,8 +739,11 @@
     }
   },
   "notFound": {
+    "address": "Adresse",
     "backToOverview": "Retour à la vue d'ensemble",
-    "description": "Cette page n'existe pas.",
+    "description": "Le lien est peut-être incomplet, ou la page a changé de place. Tous les écrans de l'expédition restent accessibles depuis le menu.",
+    "eyebrow": "Erreur 404",
+    "heading": "Rien à cette adresse",
     "title": "Page introuvable"
   },
   "overview": {
@@ -1172,6 +1179,10 @@
       "heading": "L’escouade"
     }
   },
+  "resourceState": {
+    "errorHint": "Le serveur ne répond pas pour le moment. Un nouvel essai suffit souvent.",
+    "offlineHint": "Appareil hors ligne. La page se rechargera d'elle-même au retour du réseau."
+  },
   "retry": "Réessayer",
   "rules": {
     "title": "Règles du jeu",
@@ -1451,6 +1462,7 @@
       "heading": "Règles du jeu"
     }
   },
+  "scrollTop": "Revenir en haut de la page",
   "seasons": {
     "episode": "Ép. {{episode}} · Acte {{act}}",
     "year": "{{year}} · Acte {{act}}"
@@ -1485,7 +1497,7 @@
         "offline": "API indisponible",
         "online": "API disponible"
       },
-      "tooltip": "Dernière mise à jour : {{value}}",
+      "tooltip": "Toutes les 30 minutes, les parties terminées de l'escouade sont importées puis la campagne est recalculée : ressources, dégâts au gardien et progression des défis.",
       "unknown": "Jamais synchronisé"
     },
     "nav": {

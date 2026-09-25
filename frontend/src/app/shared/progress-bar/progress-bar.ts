@@ -1,5 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 
+import { InView } from '@shared/in-view/in-view';
+
 /**
  * Thin, square-ended progress track with a colored fill.
  *
@@ -17,6 +19,8 @@ import { Component, computed, input } from '@angular/core';
 @Component({
   selector: 'app-progress-bar',
   templateUrl: './progress-bar.html',
+  // The fill waits until the track is on screen before running out to its value.
+  hostDirectives: [InView],
   host: {
     class: 'relative block overflow-hidden bg-surface-sunken',
     '[class]': 'heightClass() + " " + radiusClass()',
