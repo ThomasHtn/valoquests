@@ -166,6 +166,10 @@
 :root {
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-quick: cubic-bezier(0.4, 0, 1, 1);
+  /* Gauges ease in and out: an ease-out curve lunges at the start and then trails on its last pixels. */
+  --ease-gauge: cubic-bezier(0.45, 0, 0.55, 1);
+  --duration-gauge: 800ms;
+  --duration-gauge-long: 900ms;
   /* Lets a fold animate between 0 and its natural `auto` height where the browser supports it. */
   interpolate-size: allow-keywords;
 }
@@ -469,13 +473,13 @@
 @media (prefers-reduced-motion: no-preference) {
   /* A bar filling from empty to its inline width. */
   .fx-grow {
-    animation: fx-grow-w 1100ms var(--ease-out-expo) both;
+    animation: fx-grow-w var(--duration-gauge) var(--ease-gauge) both;
     animation-delay: var(--fx-delay, 0ms);
   }
 
   /* A ring's arc closing from nothing. `--arc-empty` is its full circumference. */
   .fx-arc {
-    animation: fx-arc 1400ms var(--ease-out-expo) both;
+    animation: fx-arc var(--duration-gauge-long) var(--ease-gauge) both;
     animation-delay: var(--fx-delay, 0ms);
   }
 }
@@ -501,11 +505,11 @@
 @media (prefers-reduced-motion: no-preference) {
   /* The second band of a two-band bar, and a fill's leading-edge marker: they ride out with it. */
   .fx-grow-in-place {
-    animation: fx-grow-in-place 1100ms var(--ease-out-expo) both;
+    animation: fx-grow-in-place var(--duration-gauge) var(--ease-gauge) both;
   }
 
   .fx-edge {
-    animation: fx-edge 1100ms var(--ease-out-expo) both;
+    animation: fx-edge var(--duration-gauge) var(--ease-gauge) both;
   }
 }
 

@@ -99,7 +99,10 @@ public class PlayerAdminController {
     )
     @ApiResponse(responseCode = "201", description = "Player added successfully.")
     @ApiResponse(responseCode = "400", description = "One or more fields are invalid.")
-    @ApiResponse(responseCode = "409", description = "The Riot identity is already tracked.")
+    @ApiResponse(
+        responseCode = "409",
+        description = "The Riot identity is already tracked, or an active player is added during a campaign."
+    )
     public PlayerAdminResponse createPlayer(@Valid @RequestBody PlayerCreateRequest request) {
         return service.create(request);
     }
@@ -156,6 +159,7 @@ public class PlayerAdminController {
     @ApiResponse(responseCode = "200", description = "Status applied successfully.")
     @ApiResponse(responseCode = "400", description = "The status is missing or unknown.")
     @ApiResponse(responseCode = "404", description = "Tracked player not found.")
+    @ApiResponse(responseCode = "409", description = "A campaign is live and freezes this change.")
     public PlayerAdminResponse changePlayerStatus(
         @Parameter(description = "Internal player identifier.", example = "3", required = true)
         @PathVariable long playerId,
@@ -185,6 +189,7 @@ public class PlayerAdminController {
     )
     @ApiResponse(responseCode = "200", description = "Player deleted or archived.")
     @ApiResponse(responseCode = "404", description = "Tracked player not found.")
+    @ApiResponse(responseCode = "409", description = "The live campaign's roster counts the player.")
     public PlayerDeletionResponse deletePlayer(
         @Parameter(description = "Internal player identifier.", example = "3", required = true)
         @PathVariable long playerId

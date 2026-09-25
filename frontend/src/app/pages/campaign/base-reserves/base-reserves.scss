@@ -224,7 +224,7 @@
 @media (prefers-reduced-motion: no-preference) {
   .tank-bar > i,
   .stackbar > span {
-    animation: fx-grow-w 1100ms var(--ease-out-expo) both;
+    animation: fx-grow-w var(--duration-gauge) var(--ease-gauge) both;
   }
 
   .tank--comp .tank-bar > i {

@@ -34,9 +34,22 @@ public class WeeklyTitleResolver {
      * @return the holder of each title, titles nobody won outright omitted
      */
     public Map<WeeklyTitle, Long> resolve(List<WeeklyPlayerScore> scores, Long championId) {
+        return resolve(scores, championId, null);
+    }
+
+    /**
+     * Awards one finalized week's titles, leaving out both its champion and the one reigning over it.
+     *
+     * @param scores             the week's ranking rows
+     * @param championId         the week's own champion, or {@code null}
+     * @param reigningChampionId the previous week's champion, who wore the crown that week, or {@code null}
+     * @return the holder of each title, titles nobody won outright omitted
+     */
+    public Map<WeeklyTitle, Long> resolve(List<WeeklyPlayerScore> scores, Long championId, Long reigningChampionId) {
         List<WeeklyPlayerScore> ranked = scores.stream()
             .filter(score -> score.getPosition() != null)
             .filter(score -> !Objects.equals(score.getPlayer().getId(), championId))
+            .filter(score -> !Objects.equals(score.getPlayer().getId(), reigningChampionId))
             .toList();
 
         Map<WeeklyTitle, Long> titles = new EnumMap<>(WeeklyTitle.class);

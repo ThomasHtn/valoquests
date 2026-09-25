@@ -27,6 +27,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -276,6 +277,71 @@ class PlayerAdminServiceTest {
             playerResultRepository,
             seasonSynchronizationRepository
         );
+    }
+
+    @Test
+    @DisplayName("Refuses to change the status of a player the live campaign's roster counts")
+    void shouldRefuseAStatusChangeOnTheLiveRoster() {
+        Player member = player(3L, "Jett", "EUW");
+
+        when(playerRepository.findById(3L)).thenReturn(Optional.of(member));
+        when(contributionResolver.isOnLiveRoster(3L)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.changeStatus(3L, PlayerStatus.INACTIVE))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("frozen");
+        assertThat(member.getStatus()).isEqualTo(PlayerStatus.ACTIVE);
+        verify(playerRepository, never()).save(any(Player.class));
+    }
+
+    @Test
+    @DisplayName("Refuses to activate a player off the roster while a campaign is live")
+    void shouldRefuseAnActivationDuringACampaign() {
+        Player bench = player(7L, "Natank", "EUW");
+        bench.setStatus(PlayerStatus.INACTIVE);
+
+        when(playerRepository.findById(7L)).thenReturn(Optional.of(bench));
+        when(contributionResolver.isCampaignLive()).thenReturn(true);
+
+        assertThatThrownBy(() -> service.changeStatus(7L, PlayerStatus.ACTIVE))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("next one opens");
+    }
+
+    @Test
+    @DisplayName("Refuses to add an active player while a campaign is live, but tracks an inactive one")
+    void shouldRefuseToAddAnActivePlayerDuringACampaign() {
+        when(playerRepository.existsByGameNameIgnoreCaseAndTagLineIgnoreCase("Jett", "EUW"))
+            .thenReturn(false);
+        when(contributionResolver.isCampaignLive()).thenReturn(true);
+        when(playerRepository.save(any(Player.class))).thenAnswer(invocation -> {
+            Player saved = invocation.getArgument(0);
+            saved.setId(9L);
+            return saved;
+        });
+
+        assertThatThrownBy(() -> service.create(new PlayerCreateRequest(
+            "Jett", "EUW", "Jett", null, PlayerStatus.ACTIVE
+        ))).isInstanceOf(ConflictException.class);
+
+        PlayerAdminResponse tracked = service.create(new PlayerCreateRequest(
+            "Jett", "EUW", "Jett", null, PlayerStatus.INACTIVE
+        ));
+
+        assertThat(tracked.status()).isEqualTo(PlayerStatus.INACTIVE);
+    }
+
+    @Test
+    @DisplayName("Refuses to remove a player the live campaign's roster counts")
+    void shouldRefuseToRemoveAPlayerOnTheLiveRoster() {
+        Player member = player(3L, "Jett", "EUW");
+
+        when(playerRepository.findById(3L)).thenReturn(Optional.of(member));
+        when(contributionResolver.isOnLiveRoster(3L)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.removeFromRoster(3L)).isInstanceOf(ConflictException.class);
+        verify(playerRepository, never()).delete(any(Player.class));
+        verify(playerRepository, never()).save(any(Player.class));
     }
 
     /**

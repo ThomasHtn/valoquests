@@ -162,7 +162,7 @@
     },
     "players": {
       "activate": "Activate",
-      "addOperator": "Add a operator",
+      "addPlayer": "Add an operator",
       "archived": "Archived operator: a campaign counts them in its roster. They can be restored.",
       "columns": {
         "lastSync": "Last sync"
@@ -182,9 +182,9 @@
         "portraitNone": "No avatar",
         "status": "Initial status"
       },
-      "frozenRoster": "Campaign {{run}} runs on a roster frozen at {{roster}} operators. Activating or deactivating someone here only takes effect on the next campaign.",
+      "frozenRoster": "Campaign {{run}} runs on a roster frozen at {{roster}} operators. Its members' status is frozen until it ends, and nobody can be made active before then.",
       "gettingStarted": {
-        "addOperators": "Add each operator with their full Riot ID, in the form name#tag.",
+        "addPlayers": "Add each operator with their full Riot ID, in the form name#tag.",
         "operationsLink": "Go to operations",
         "share": "Share the app's address with the team. The guided tour opens on its own the first time somebody visits, so nobody has to explain how it works.",
         "synchronize": "Run a first synchronization to pull in their match history. The ranking and the colony fill themselves in every week after that.",
@@ -999,7 +999,12 @@
         "teammatesHeading": "Other squad members in this match",
         "sameTeam": "same team",
         "otherTeam": "enemy team",
-        "back": "Player profile"
+        "back": "Player profile",
+        "notFound": {
+          "title": "Match not found",
+          "text": "This match is not in this operator's history. The link may be incomplete.",
+          "back": "Back to the profile"
+        }
       },
       "empty": "No match found for these filters.",
       "error": "Failed to load match history.",
@@ -1137,7 +1142,12 @@
       "losses": "{{count}} L",
       "wins": "{{count}} W"
     },
-    "title": "Operator profile"
+    "title": "Operator profile",
+    "notFound": {
+      "title": "Operator not found",
+      "text": "No squad operator carries this identifier. The link may be incomplete, or the operator is no longer part of the expedition.",
+      "back": "Back to the squad"
+    }
   },
   "players": {
     "columns": {
@@ -1360,7 +1370,7 @@
       "challenges": {
         "title": "Challenges and ranking",
         "statement": "A challenge brings wounded home no matter what, and each wounded is worth one point",
-        "description": "One *daily challenge* {challenge}, shared by the squad, drawn every morning from 21 and resolved the same evening. *Five weekly challenges*, one per difficulty, drawn on Monday from 100. Their wounded {wounded} are earned no matter what, but no challenge touches the guardian.",
+        "description": "One *daily challenge* {challenge}, shared by the squad, drawn every morning from 28 and resolved the same evening. *Five weekly challenges*, one per difficulty, drawn on Monday from 100. Their wounded {wounded} are earned no matter what, but no challenge touches the guardian.",
         "challengeLabel": "Challenge",
         "weightLabel": "Weight",
         "woundedLabel": "Wounded",
@@ -1619,7 +1629,7 @@
         "title": "One a day, five a week",
         "claim": "They bring back wounded *earned whatever happens*, spending no resource, and settle the ranking's ties.",
         "spec1": {
-          "value": "21",
+          "value": "28",
           "label": "daily challenges in the catalogue"
         },
         "spec2": {

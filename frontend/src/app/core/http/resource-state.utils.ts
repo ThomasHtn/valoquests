@@ -1,3 +1,4 @@
+import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { computed, Resource, ResourceRef, Signal } from '@angular/core';
 
 /**
@@ -59,4 +60,18 @@ export function reloadAll(...resources: readonly ResourceRef<unknown>[]): void {
  */
 export function resourceValue<T, F>(resource: Resource<T>, fallback: F): T | F {
   return resource.hasValue() ? resource.value() : fallback;
+}
+
+/**
+ * Whether a resource failed because the backend does not know what it asked for (HTTP 404).
+ *
+ * Told apart from other failures so the view can say the record does not exist, which no retry
+ * would fix, rather than blame the server.
+ *
+ * @param resource - The resource to inspect.
+ * @returns Whether its error is a 404 response.
+ */
+export function isNotFound(resource: Resource<unknown>): boolean {
+  const error = resource.error();
+  return error instanceof HttpErrorResponse && error.status === HttpStatusCode.NotFound;
 }

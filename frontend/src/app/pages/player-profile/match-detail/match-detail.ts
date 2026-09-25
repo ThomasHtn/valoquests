@@ -1,9 +1,11 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { LucideChevronLeft } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalDayMonth, formatLocalTime } from '@core/date/date-time.utils';
-import { resourceValue } from '@core/http/resource-state.utils';
+import { isNotFound, resourceValue } from '@core/http/resource-state.utils';
+import { parseRouteId } from '@core/http/route-id.utils';
 import {
   resolveAgentImageUrl,
   resolveAgentInitial,
@@ -26,9 +28,11 @@ import { resolveKdVisual } from '@core/players/player-stats.utils';
 import { PageHeader } from '@layout/page-header/page-header';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { Avatar } from '@shared/avatar/avatar';
+import { Button } from '@shared/button/button';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { MediaThumbnail } from '../media-thumbnail/media-thumbnail';
+import { buildNotFoundPlate } from '../player-profile.utils';
 
 /**
  * Full detail of one of a tracked player's matches, reached from a row of their match history.
@@ -39,7 +43,17 @@ import { MediaThumbnail } from '../media-thumbnail/media-thumbnail';
  */
 @Component({
   selector: 'app-match-detail',
-  imports: [TranslatePipe, Avatar, MediaThumbnail, PageHeader, ResourceState, RouterLink, Tooltip],
+  imports: [
+    TranslatePipe,
+    Avatar,
+    Button,
+    LucideChevronLeft,
+    MediaThumbnail,
+    PageHeader,
+    ResourceState,
+    RouterLink,
+    Tooltip,
+  ],
   templateUrl: './match-detail.html',
   host: { class: PAGE_LAYOUT_CLASS },
 })
@@ -65,14 +79,19 @@ export class MatchDetail {
   public readonly matchId = input.required<string>();
 
   /**
-   * The route's player identifier, parsed once.
+   * Router, read for the address echoed by the not-found plate.
    */
-  protected readonly playerId = computed(() => Number(this.id()));
+  private readonly router = inject(Router);
 
   /**
-   * The route's player-match identifier, parsed once.
+   * The route's player identifier, parsed once, or `null` when malformed.
    */
-  protected readonly playerMatchId = computed(() => Number(this.matchId()));
+  protected readonly playerId = computed(() => parseRouteId(this.id()));
+
+  /**
+   * The route's player-match identifier, parsed once, or `null` when malformed.
+   */
+  protected readonly playerMatchId = computed(() => parseRouteId(this.matchId()));
 
   /**
    * Reactive resource fetching the requested match's full detail.
@@ -85,9 +104,31 @@ export class MatchDetail {
   protected readonly match = computed(() => resourceValue(this.detailResource, null));
 
   /**
-   * Route back to the player's own profile.
+   * Whether the route names no known match: a malformed identifier or a 404 from the backend.
    */
-  protected readonly backLink = computed(() => `/players/${this.playerId()}`);
+  protected readonly notFound = computed(
+    () =>
+      this.playerId() === null || this.playerMatchId() === null || isNotFound(this.detailResource),
+  );
+
+  /**
+   * Plate shown instead of the match when {@link notFound}.
+   */
+  protected readonly notFoundPlate = computed(() =>
+    buildNotFoundPlate(
+      (key) => this.translation.translate(key),
+      'playerProfile.matches.detail.notFound',
+      this.router.url,
+    ),
+  );
+
+  /**
+   * Route back to the player's own profile, or to the squad when the player id is malformed.
+   */
+  protected readonly backLink = computed(() => {
+    const playerId = this.playerId();
+    return playerId === null ? '/players' : `/players/${playerId}`;
+  });
 
   /**
    * Resolves the local map image matching the match, exposed to the template.

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -28,6 +29,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -78,6 +80,23 @@ class CampaignReplayServiceTest {
 
         assertThat(service.replayRunningCampaign()).contains(NO_RESULT);
         verify(writer).write(campaign, weeks, NO_INPUTS, NO_RESULT);
+    }
+
+    @Test
+    @DisplayName("Locks the campaign before rebuilding it, so two replays never interleave")
+    void shouldLockTheCampaignBeforeRebuildingIt() {
+        Campaign campaign = CampaignFixtures.runningCampaign(1);
+        CampaignReplayService service = serviceOn(CampaignFixtures.FIRST_WEEK_START.plusDays(3));
+
+        when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L)).thenReturn(List.of());
+        when(assembler.assemble(any(), anyList(), any(), any())).thenReturn(NO_INPUTS);
+        when(engine.replay(anyList(), anyList())).thenReturn(NO_RESULT);
+
+        service.replay(campaign);
+
+        InOrder order = inOrder(campaignRepository, writer);
+        order.verify(campaignRepository).lockById(1L);
+        order.verify(writer).write(campaign, List.of(), NO_INPUTS, NO_RESULT);
     }
 
     @Test

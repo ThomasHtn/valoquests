@@ -11,11 +11,13 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { LucideChevronLeft } from '@lucide/angular';
 
 import { primaryTitle } from '@core/campaign/campaign-title.utils';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
-import { resourceValue } from '@core/http/resource-state.utils';
+import { isNotFound, resourceValue } from '@core/http/resource-state.utils';
+import { parseRouteId } from '@core/http/route-id.utils';
 import { FILTERABLE_GAME_MODES, GameMode } from '@core/matches/game-mode.model';
 import { Match } from '@core/matches/match.model';
 import { MatchesApi } from '@core/matches/matches-api';
@@ -35,6 +37,7 @@ import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { Avatar } from '@shared/avatar/avatar';
+import { Button } from '@shared/button/button';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { PageHeader } from '@layout/page-header/page-header';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
@@ -47,7 +50,11 @@ import { MatchDay } from './match-day.model';
 import { groupMatchesByDay } from './match-day.utils';
 import { MatchHistory } from './match-history/match-history';
 import { GAME_MODE_BUTTON_COUNTS, MAX_PROGRESSION_SEASONS } from './player-profile.constants';
-import { resolveCurrentSeasonId, resolveYieldToneClass } from './player-profile.utils';
+import {
+  buildNotFoundPlate,
+  resolveCurrentSeasonId,
+  resolveYieldToneClass,
+} from './player-profile.utils';
 import { Progression } from './progression/progression';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 
@@ -72,6 +79,8 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
     Select,
     TitleBadge,
     PageHeader,
+    LucideChevronLeft,
+    Button,
   ],
   templateUrl: './player-profile.html',
   host: { class: PAGE_LAYOUT_CLASS },
@@ -113,9 +122,14 @@ export class PlayerProfile {
   private readonly translation = inject(Translation);
 
   /**
-   * Numeric form of {@link id}, as required by the backing resources.
+   * Router, read for the address echoed by the not-found plate.
    */
-  protected readonly playerId = computed(() => Number(this.id()));
+  private readonly router = inject(Router);
+
+  /**
+   * Numeric form of {@link id}, or `null` when the route does not name a valid player.
+   */
+  protected readonly playerId = computed(() => parseRouteId(this.id()));
 
   /**
    * Zero-based index of the last requested page of match history.
@@ -202,6 +216,24 @@ export class PlayerProfile {
    */
   protected readonly details = computed(() =>
     this.detailsResource.hasValue() ? this.detailsResource.value() : null,
+  );
+
+  /**
+   * Whether the route names no known player: an invalid identifier or a 404 from the backend.
+   */
+  protected readonly notFound = computed(
+    () => this.playerId() === null || isNotFound(this.detailsResource),
+  );
+
+  /**
+   * Plate shown instead of the profile when {@link notFound}.
+   */
+  protected readonly notFoundPlate = computed(() =>
+    buildNotFoundPlate(
+      (key) => this.translation.translate(key),
+      'playerProfile.notFound',
+      this.router.url,
+    ),
   );
 
   /**

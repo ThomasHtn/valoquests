@@ -221,7 +221,11 @@ public class DefaultRankingQueryService implements RankingQueryService {
             .max(Instant::compareTo)
             .orElse(null);
         Long winnerPlayerId = championResolver.championOf(weekStart, orderedScores);
-        Map<WeeklyTitle, Long> titles = titleResolver.resolve(orderedScores, winnerPlayerId);
+        Map<WeeklyTitle, Long> titles = titleResolver.resolve(
+            orderedScores,
+            winnerPlayerId,
+            championResolver.championBefore(weekStart)
+        );
 
         List<RankingHistoryWeekResponse.FinalRankingEntryResponse> ranking = orderedScores.stream()
             .map(score -> new RankingHistoryWeekResponse.FinalRankingEntryResponse(

@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -416,6 +417,15 @@ class HenrikMatchMapperTest {
         assertThat(result.getAdr()).isNull();
         assertThat(result.getAcs())
             .isEqualByComparingTo(new BigDecimal("250.00"));
+    }
+
+    @Test
+    @DisplayName("Leaves ADR unset when Henrik reports a zero damage total, as it does for Skirmish")
+    void shouldNotComputeAdrFromAZeroDamageTotal() {
+        PlayerMatch result = mapPlayerMatch(GameMode.SKIRMISH, new HenrikMatchPlayer.HenrikDamage(0, 0));
+
+        assertThat(result.getDamageDealt()).isZero();
+        assertThat(result.getAdr()).isNull();
     }
 
     /**

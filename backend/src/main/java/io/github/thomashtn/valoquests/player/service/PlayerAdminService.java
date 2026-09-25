@@ -128,11 +128,13 @@ public class PlayerAdminService {
      *
      * @param request player identity
      * @return the created player
-     * @throws ConflictException when the Riot identity is already tracked
+     * @throws ConflictException when the Riot identity is already tracked, or an active player is
+     *                           added while a campaign is live
      */
     @Transactional
     public PlayerAdminResponse create(PlayerCreateRequest request) {
         rejectDuplicateRiotIdentity(request.gameName(), request.tagLine(), null);
+        rejectActivationDuringCampaign(request.status());
 
         Player player = new Player();
 
@@ -187,11 +189,17 @@ public class PlayerAdminService {
      * @param status   status to apply
      * @return the updated player
      * @throws PlayerNotFoundException when no tracked player owns the identifier
+     * @throws ConflictException       when the live campaign's roster counts the player, or the
+     *                                 player would become active while a campaign is live
      */
     @Transactional
     public PlayerAdminResponse changeStatus(long playerId, PlayerStatus status) {
         Player player = requirePlayer(playerId);
 
+        if (player.getStatus() != status) {
+            rejectLiveRosterChange(playerId);
+            rejectActivationDuringCampaign(status);
+        }
         player.setStatus(status);
 
         LOGGER.info("Player {} moved to status {}", playerId, status);
@@ -210,10 +218,12 @@ public class PlayerAdminService {
      * @param playerId tracked player identifier
      * @return what the request actually did
      * @throws PlayerNotFoundException when no tracked player owns the identifier
+     * @throws ConflictException       when the live campaign's roster counts the player
      */
     @Transactional
     public PlayerDeletionResponse removeFromRoster(long playerId) {
         Player player = requirePlayer(playerId);
+        rejectLiveRosterChange(playerId);
 
         if (contributionResolver.hasContributed(playerId)) {
             player.setStatus(PlayerStatus.ARCHIVED);
@@ -254,6 +264,38 @@ public class PlayerAdminService {
     private Player requirePlayer(long playerId) {
         return playerRepository.findById(playerId)
             .orElseThrow(() -> new PlayerNotFoundException(playerId));
+    }
+
+    /**
+     * Refuses to touch a player the live campaign's frozen roster counts.
+     *
+     * <p>Applied at once, the change would stop importing their matches or drop them from the
+     * ranking while the campaign's guardians stay sized on them.
+     *
+     * @param playerId tracked player identifier
+     * @throws ConflictException when the live campaign counts the player
+     */
+    private void rejectLiveRosterChange(long playerId) {
+        if (contributionResolver.isOnLiveRoster(playerId)) {
+            throw new ConflictException(
+                "Player " + playerId + " is on the roster of the campaign in progress: "
+                    + "their status is frozen until it ends."
+            );
+        }
+    }
+
+    /**
+     * Refuses to make a player active while a campaign runs on a roster they are not on.
+     *
+     * @param status status requested
+     * @throws ConflictException when a campaign is live and the status is active
+     */
+    private void rejectActivationDuringCampaign(PlayerStatus status) {
+        if (status == PlayerStatus.ACTIVE && contributionResolver.isCampaignLive()) {
+            throw new ConflictException(
+                "A campaign is in progress: a player only becomes active when the next one opens."
+            );
+        }
     }
 
     /**

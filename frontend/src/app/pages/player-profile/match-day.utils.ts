@@ -1,4 +1,6 @@
-import { formatLocalDayMonth, toLocalDayKey } from '@core/date/date-time.utils';
+import { toCampaignDayKey } from '@core/date/campaign-time-zone.utils';
+import { CAMPAIGN_TIME_ZONE } from '@core/date/date-time.constants';
+import { formatLocalDayMonth } from '@core/date/date-time.utils';
 import { Match } from '@core/matches/match.model';
 import { MatchDay } from './match-day.model';
 
@@ -38,7 +40,7 @@ export function groupMatchesByDay(
   const days: MatchDayGroup[] = [];
 
   for (const match of matches) {
-    const dayKey = toLocalDayKey(match.startedAt);
+    const dayKey = toCampaignDayKey(match.startedAt);
     const currentDay = days.at(-1);
 
     if (currentDay?.dayKey === dayKey) {
@@ -53,7 +55,7 @@ export function groupMatchesByDay(
 
     days.push({
       dayKey,
-      dateLabel: formatLocalDayMonth(match.startedAt, language, 'short'),
+      dateLabel: formatLocalDayMonth(match.startedAt, language, 'short', CAMPAIGN_TIME_ZONE),
       wins: match.result === 'WIN' ? 1 : 0,
       losses: match.result === 'LOSS' ? 1 : 0,
       matches: [match],

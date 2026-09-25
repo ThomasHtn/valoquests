@@ -88,8 +88,9 @@ export class CountUp {
     const start = performance.now();
     const step = (now: number): void => {
       const progress = Math.min(1, (now - start) / DURATION_MS);
-      // Ease-out quintic: the figure races through the bulk and settles on its last digits.
-      const eased = 1 - Math.pow(1 - progress, 5);
+      // Ease-in-out quadratic, the curve the gauges ride, so a figure and its bar arrive together.
+      const eased =
+        progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(2 - 2 * progress, 2) / 2;
       this.write(from + (to - from) * eased);
 
       if (progress < 1) {

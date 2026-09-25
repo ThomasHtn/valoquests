@@ -92,6 +92,20 @@ class WeeklyTitleResolverTest {
     }
 
     @Test
+    @DisplayName("Leaves out the champion reigning over a finalized week as well as its own")
+    void shouldLeaveTheReigningChampionOut() {
+        WeeklyPlayerScore alpha = row(ALPHA, 1, 900, 800, 5, 2, 2);
+        WeeklyPlayerScore bravo = row(BRAVO, 2, 200, 100, 3, 1, 0);
+        WeeklyPlayerScore delta = row(DELTA, 3, 100, 300, 1, 0, 0);
+
+        Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, bravo, delta), ALPHA.getId(), BRAVO.getId());
+
+        assertThat(titles).containsExactlyInAnyOrderEntriesOf(Map.of(
+            WeeklyTitle.MECHANIC, DELTA.getId()
+        ));
+    }
+
+    @Test
     @DisplayName("Awards nothing on a tie, and nothing on a week where nobody produced")
     void shouldAwardNothingOnATieOrAnEmptyWeek() {
         WeeklyPlayerScore alpha = row(ALPHA, 1, 500, 0, 0, 0, 0);

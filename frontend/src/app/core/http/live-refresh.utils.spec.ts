@@ -21,7 +21,8 @@ function player(lastSuccessfulSynchronizationAt: string | null): PlayerSummary {
   } as PlayerSummary;
 }
 
-const NOON = new Date(2026, 8, 7, 12, 0, 0);
+// Explicit instants: Paris is UTC+2 in September, whatever the runtime zone.
+const NOON = new Date('2026-09-07T10:00:00Z');
 
 describe('liveRefreshStamp', () => {
   it('changes when a player synchronizes again', () => {
@@ -35,16 +36,16 @@ describe('liveRefreshStamp', () => {
     const players = [player('2026-09-07T09:00:00Z')];
 
     expect(liveRefreshStamp(players, NOON)).toBe(
-      liveRefreshStamp(players, new Date(2026, 8, 7, 18, 45, 0)),
+      liveRefreshStamp(players, new Date('2026-09-07T16:45:00Z')),
     );
   });
 
-  it('turns the day a quarter of an hour after local midnight, once the nightly tick is over', () => {
-    const players = [player('2026-09-07T22:00:00Z')];
-    const lateEvening = liveRefreshStamp(players, new Date(2026, 8, 7, 23, 59, 0));
+  it('turns the day a quarter of an hour after Paris midnight, once the nightly tick is over', () => {
+    const players = [player('2026-09-07T20:00:00Z')];
+    const lateEvening = liveRefreshStamp(players, new Date('2026-09-07T21:59:00Z'));
 
-    expect(liveRefreshStamp(players, new Date(2026, 8, 8, 0, 14, 0))).toBe(lateEvening);
-    expect(liveRefreshStamp(players, new Date(2026, 8, 8, 0, 16, 0))).not.toBe(lateEvening);
+    expect(liveRefreshStamp(players, new Date('2026-09-07T22:14:00Z'))).toBe(lateEvening);
+    expect(liveRefreshStamp(players, new Date('2026-09-07T22:16:00Z'))).not.toBe(lateEvening);
   });
 
   it('reads a roster nobody has synchronized as one stamp per day', () => {

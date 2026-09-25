@@ -196,7 +196,10 @@ export class Translation {
           new URL(`i18n/${language}.json`, document.baseURI).href,
         ),
       );
-      this.dictionary.set(dictionary);
+      // A quicker toggle back may have superseded this request while it was in flight.
+      if (language === this.language()) {
+        this.dictionary.set(dictionary);
+      }
     } catch (error) {
       console.error(`Failed to load the "${language}" translation dictionary.`, error);
     }

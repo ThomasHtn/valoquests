@@ -21,14 +21,28 @@
 </app-page-header>
 
 <div class="page-body">
+  <!-- A 404 or a malformed id is not a server failure: shown as the empty plate, with no retry. -->
   <app-resource-state
+    [emptyPlate]="notFoundPlate()"
     [errorText]="'playerProfile.error' | translate"
-    [isError]="!!detailsResource.error()"
+    [isEmpty]="notFound()"
+    [isError]="!!detailsResource.error() && !notFound()"
     [isLoading]="detailsResource.isLoading()"
     [loadingText]="'playerProfile.loading' | translate"
+    emptyKind="anomaly"
     padding="py-6"
     (retry)="detailsResource.reload()"
   >
+    <a
+      appButton="primary"
+      class="mt-3 inline-flex min-h-12 items-center gap-2 px-5 font-display text-sm font-semibold tracking-wide uppercase [--notch:0.625rem]"
+      emptyAction
+      routerLink="/players"
+    >
+      <svg aria-hidden="true" class="size-4 shrink-0" lucideChevronLeft></svg>
+      {{ 'playerProfile.notFound.back' | translate }}
+    </a>
+
     <!-- Skeleton shaped like the loaded banner — same silhouette, same notch — so data arriving
        does not shift the page. -->
     <div
@@ -306,7 +320,7 @@
         <app-match-history
           animate.enter="fx-swap-in"
           class="block"
-          [playerId]="playerId()"
+          [playerId]="playerDetails.id"
           [days]="matchDays()"
           [isEmpty]="matches().length === 0"
           [isError]="!!matchesResource.error()"
@@ -320,7 +334,7 @@
         <app-progression
           animate.enter="fx-swap-in"
           class="block"
-          [playerId]="playerId()"
+          [playerId]="playerDetails.id"
           [seasonIds]="progressionSeasonIds()"
           [seasonOrder]="seasonOrder()"
         />

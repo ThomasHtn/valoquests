@@ -185,7 +185,7 @@ class DefaultRankingQueryServiceTest {
         when(scoreRepository.findFinalizedWeekStarts(PageRequest.of(0, 10))).thenReturn(weekPage);
         when(scoreRepository.findAllByWeekStartInOrderByWeekStartDescPositionAsc(List.of(lastWeek)))
             .thenReturn(List.of(bravo, alpha, charlie));
-        when(titleResolver.resolve(List.of(bravo, alpha), BRAVO.getId()))
+        when(titleResolver.resolve(List.of(bravo, alpha), BRAVO.getId(), null))
             .thenReturn(Map.of(WeeklyTitle.REGULAR, ALPHA.getId()));
         when(campaignRepository.findAll()).thenReturn(List.of(campaignCovering(lastWeek)));
 

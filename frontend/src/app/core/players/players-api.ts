@@ -27,11 +27,15 @@ export class PlayersApi {
    *
    * Created per caller, unlike {@link players}, since it is parameterized by the requested player.
    *
-   * @param id - Reactive internal player identifier.
+   * @param id - Reactive internal player identifier, or `null` when the route names none, which
+   *   leaves the resource idle.
    * @returns The reactive resource fetching the requested player's detailed profile.
    */
-  public details(id: Signal<number>): HttpResourceRef<PlayerDetails | undefined> {
-    return httpResource<PlayerDetails>(() => API_ENDPOINTS.playerDetails(id()));
+  public details(id: Signal<number | null>): HttpResourceRef<PlayerDetails | undefined> {
+    return httpResource<PlayerDetails>(() => {
+      const playerId = id();
+      return playerId === null ? undefined : API_ENDPOINTS.playerDetails(playerId);
+    });
   }
 
   /**

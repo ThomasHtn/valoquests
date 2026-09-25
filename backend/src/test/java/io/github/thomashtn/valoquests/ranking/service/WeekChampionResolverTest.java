@@ -77,6 +77,16 @@ class WeekChampionResolverTest {
         assertThat(resolver.reigningChampion()).isNull();
     }
 
+    @Test
+    @DisplayName("Names the champion reigning over a week as the one crowned the week before")
+    void shouldNameTheChampionOfThePreviousWeek() {
+        when(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(LAST_WEEK))
+            .thenReturn(List.of(row(ALPHA, 1), row(BRAVO, 2)));
+        when(campaignRepository.findAll()).thenReturn(List.of(campaignCovering(LAST_WEEK)));
+
+        assertThat(resolver.championBefore(LAST_WEEK.plusWeeks(1))).isEqualTo(ALPHA.getId());
+    }
+
     private static WeeklyPlayerScore row(Player player, int position) {
         WeeklyPlayerScore score = RankingFixtures.score(player, position, 1_000, 0);
         score.setWeekStart(LAST_WEEK);

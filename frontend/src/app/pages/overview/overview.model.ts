@@ -303,7 +303,7 @@ export interface Mission {
   readonly crew: number;
 
   /**
-   * Instant the week ends at, in epoch milliseconds.
+   * Instant the week ends at (Monday 00:00 in the campaign time zone), in epoch milliseconds.
    */
   readonly extractionDeadline: number;
 }
@@ -490,7 +490,7 @@ export interface DailyOrder {
   readonly doneCount: number;
 
   /**
-   * Midnight tonight, in epoch milliseconds.
+   * Midnight tonight in the campaign time zone, in epoch milliseconds.
    */
   readonly deadline: number;
 }

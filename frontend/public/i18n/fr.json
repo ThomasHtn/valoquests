@@ -182,7 +182,7 @@
         "portraitNone": "Aucun avatar",
         "status": "Statut initial"
       },
-      "frozenRoster": "La campagne {{run}} tourne sur un roster gelé à {{roster}} opérateurs. Activer ou désactiver quelqu'un ici ne prendra effet qu'à la campagne suivante.",
+      "frozenRoster": "La campagne {{run}} tourne sur un roster gelé à {{roster}} opérateurs. Le statut de ses membres est figé jusqu'à la fin, et personne ne peut être activé d'ici là.",
       "gettingStarted": {
         "addPlayers": "Ajoutez chaque opérateur avec son Riot ID complet, au format pseudo#tag.",
         "operationsLink": "Aller aux opérations",
@@ -999,7 +999,12 @@
         "teammatesHeading": "Autres membres de l'escouade dans ce match",
         "sameTeam": "même équipe",
         "otherTeam": "équipe adverse",
-        "back": "Profil du joueur"
+        "back": "Profil du joueur",
+        "notFound": {
+          "title": "Match introuvable",
+          "text": "Ce match ne figure pas dans l'historique de cet opérateur. Le lien est peut-être incomplet.",
+          "back": "Retour au profil"
+        }
       },
       "empty": "Aucun match ne correspond à ces filtres.",
       "error": "Impossible de charger l'historique des matchs.",
@@ -1137,7 +1142,12 @@
       "losses": "{{count}} D",
       "wins": "{{count}} V"
     },
-    "title": "Profil de l'opérateur"
+    "title": "Profil de l'opérateur",
+    "notFound": {
+      "title": "Opérateur introuvable",
+      "text": "Aucun opérateur de l'escouade ne porte cet identifiant. Le lien est peut-être incomplet, ou l'opérateur ne fait plus partie de l'expédition.",
+      "back": "Retour à l'escouade"
+    }
   },
   "players": {
     "columns": {
@@ -1360,7 +1370,7 @@
       "challenges": {
         "title": "Les défis et le classement",
         "statement": "Un défi ramène des blessés quoi qu'il arrive, et chaque blessé vaut un point",
-        "description": "Un *défi du jour* {challenge}, commun à l'escouade, tiré chaque matin parmi 21 et résolu le soir même. *Cinq défis de la semaine*, un par difficulté, tirés le lundi parmi 100. Leurs blessés {wounded} sont acquis quoi qu'il arrive, mais aucun défi ne touche le gardien.",
+        "description": "Un *défi du jour* {challenge}, commun à l'escouade, tiré chaque matin parmi 28 et résolu le soir même. *Cinq défis de la semaine*, un par difficulté, tirés le lundi parmi 100. Leurs blessés {wounded} sont acquis quoi qu'il arrive, mais aucun défi ne touche le gardien.",
         "challengeLabel": "Défi",
         "weightLabel": "Poids",
         "woundedLabel": "Blessés",
@@ -1619,7 +1629,7 @@
         "title": "Un défi du jour, cinq de la semaine",
         "claim": "Ils ramènent des blessés *acquis quoi qu'il arrive*, sans dépenser une ressource, et départagent le classement.",
         "spec1": {
-          "value": "21",
+          "value": "28",
           "label": "défis du jour au catalogue"
         },
         "spec2": {

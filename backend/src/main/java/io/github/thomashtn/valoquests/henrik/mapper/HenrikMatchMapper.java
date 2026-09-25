@@ -166,12 +166,13 @@ public class HenrikMatchMapper {
         int rounds = target.getRoundsPlayed();
         target.setAcs(average(target.getScore(), rounds));
 
-        // Henrik omits the damage breakdown for some modes, Skirmish among them. The persisted
-        // total then falls back to zero because the column is not nullable, so ADR must stay unset
+        // Henrik omits the damage breakdown for some modes and sends a zero total for Skirmish. The
+        // persisted total then reads zero because the column is not nullable, so ADR must stay unset
         // rather than report a zero average that would drag the player's statistics down.
         boolean damageReported = stats != null
             && stats.damage() != null
-            && stats.damage().dealt() != null;
+            && stats.damage().dealt() != null
+            && stats.damage().dealt() > 0;
         target.setAdr(
             damageReported ? average(target.getDamageDealt(), rounds) : null
         );

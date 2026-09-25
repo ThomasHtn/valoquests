@@ -67,6 +67,9 @@ class CampaignLifecycleServiceTest {
     @Mock
     private CampaignFactory factory;
 
+    @Mock
+    private CampaignReplayService replayService;
+
     @Test
     @DisplayName("Opens a campaign starting the Monday after today")
     void shouldOpenACampaignStartingNextMonday() {
@@ -228,6 +231,39 @@ class CampaignLifecycleServiceTest {
     }
 
     @Test
+    @DisplayName("Rebuilds a running campaign up to its stop day before freezing it, dropping today's half day")
+    void shouldReplayUpToTheStopDayBeforeFreezing() {
+        Instant now = Instant.parse("2026-09-16T18:00:00Z");
+        CampaignLifecycleService service = serviceAt(now);
+        Campaign campaign = CampaignFixtures.runningCampaign(1);
+
+        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.of(campaign));
+        when(replayService.replay(campaign)).thenAnswer(invocation -> {
+            assertThat(campaign.finalDay()).isEqualTo(LocalDate.of(2026, 9, 15));
+            return null;
+        });
+
+        service.stop(Clock.fixed(now, ZoneOffset.UTC));
+
+        verify(replayService).replay(campaign);
+    }
+
+    @Test
+    @DisplayName("Closes an opened campaign that never started without replaying it")
+    void shouldNotReplayACampaignThatNeverStarted() {
+        CampaignLifecycleService service = serviceAt(OPENING_DAY);
+        Campaign campaign = CampaignFixtures.runningCampaign(1);
+        campaign.setStatus(CampaignStatus.OPENED);
+
+        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.of(campaign));
+
+        service.stop(Clock.fixed(OPENING_DAY, ZoneOffset.UTC));
+
+        assertThat(campaign.getStatus()).isEqualTo(CampaignStatus.CLOSED);
+        verify(replayService, never()).replay(any());
+    }
+
+    @Test
     @DisplayName("Refuses to stop when no campaign is live")
     void shouldRefuseToStopNothing() {
         CampaignLifecycleService service = serviceAt(OPENING_DAY);
@@ -279,7 +315,8 @@ class CampaignLifecycleServiceTest {
             campaignWeekRepository,
             playerRepository,
             factory,
-            new WeekCalendar(clock, ZoneOffset.UTC)
+            new WeekCalendar(clock, ZoneOffset.UTC),
+            replayService
         );
     }
 }

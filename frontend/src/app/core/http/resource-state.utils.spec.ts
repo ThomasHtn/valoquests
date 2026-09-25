@@ -1,7 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Resource, ResourceRef } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { anyError, anyLoading, reloadAll, resourceValue } from './resource-state.utils';
+import { anyError, anyLoading, isNotFound, reloadAll, resourceValue } from './resource-state.utils';
 
 /**
  * Builds a minimal stand-in for a {@link Resource}, implementing only the members these utilities
@@ -106,5 +107,17 @@ describe('resourceValue', () => {
     const resource = fakeResource<string>({ hasValue: false, error: new Error('unreachable') });
 
     expect(resourceValue(resource, 'fallback')).toBe('fallback');
+  });
+});
+
+describe('isNotFound', () => {
+  it('is true for a 404 response', () => {
+    expect(isNotFound(fakeResource({ error: new HttpErrorResponse({ status: 404 }) }))).toBe(true);
+  });
+
+  it('is false for any other failure or no failure at all', () => {
+    expect(isNotFound(fakeResource({ error: new HttpErrorResponse({ status: 500 }) }))).toBe(false);
+    expect(isNotFound(fakeResource({ error: new HttpErrorResponse({ status: 0 }) }))).toBe(false);
+    expect(isNotFound(fakeResource({}))).toBe(false);
   });
 });

@@ -62,6 +62,18 @@ public class WeekChampionResolver {
     }
 
     /**
+     * Names the champion who reigned over a week: the one crowned the week before it.
+     *
+     * @param weekStart Monday identifying the week
+     * @return the previous week's champion, or {@code null} when it crowned nobody
+     */
+    public Long championBefore(LocalDate weekStart) {
+        LocalDate previous = weekStart.minusWeeks(1);
+
+        return championOf(previous, scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(previous));
+    }
+
+    /**
      * Names the reigning champion, the one of the latest finalized week.
      *
      * @return the champion's player id, or {@code null} when that week crowned nobody

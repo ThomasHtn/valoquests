@@ -137,10 +137,10 @@
    full, the wounded fill from empty. */
 @media (prefers-reduced-motion: no-preference) {
   .rep-bar > i {
-    animation: fx-grow-w 1100ms var(--ease-out-expo) 150ms both;
+    animation: fx-grow-w var(--duration-gauge) var(--ease-gauge) 150ms both;
   }
 
   .rep-bar--hp > i {
-    animation: fx-drain-w 1300ms var(--ease-out-expo) 150ms both;
+    animation: fx-drain-w var(--duration-gauge-long) var(--ease-gauge) 150ms both;
   }
 }

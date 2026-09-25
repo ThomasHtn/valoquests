@@ -128,6 +128,7 @@ public class CampaignReplayService {
      */
     @Transactional
     public CampaignReplayResult replay(Campaign campaign) {
+        campaignRepository.lockById(campaign.getId());
         LocalDate today = weekCalendar.today();
         LocalDate lastDay = earlier(today, campaign.finalDay());
         LocalDate settledThrough = earlier(today.minusDays(1), campaign.finalDay());

@@ -83,7 +83,7 @@
   stroke-dasharray: 270.18; /* 2 pi r, r = 43 */
   --arc-empty: 270.18;
   stroke-dashoffset: calc(270.18 * (1 - var(--pct)));
-  transition: stroke-dashoffset 1s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: stroke-dashoffset var(--duration-gauge-long) var(--ease-gauge);
 }
 
 .gauge-mid {

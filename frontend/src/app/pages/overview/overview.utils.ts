@@ -8,6 +8,7 @@ import {
 import { primaryTitleOf } from '@core/campaign/campaign-title.utils';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
 import { CurrentChallenges } from '@core/challenges/challenge.model';
+import { campaignMidnight } from '@core/date/campaign-time-zone.utils';
 import { daysBetween, localMidnight } from '@core/date/date-time.utils';
 import { Language } from '@core/i18n/translation.model';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
@@ -185,7 +186,7 @@ export function buildMission(
     defeated: fatalBlow(week, players, language),
     wounded: week.woundedCount,
     crew: campaign.rosterSize ?? 0,
-    extractionDeadline: localMidnight(week.weekStart, 7).getTime(),
+    extractionDeadline: campaignMidnight(week.weekStart, 7).getTime(),
   };
 }
 
@@ -400,7 +401,7 @@ export function buildDailyOrder(
     survivors: daily.survivors,
     validated,
     doneCount: validated.filter((operator) => operator.done).length,
-    deadline: localMidnight(challenges.today, 1).getTime(),
+    deadline: campaignMidnight(challenges.today, 1).getTime(),
   };
 }
 

@@ -1,9 +1,9 @@
-import { toLocalDayKey } from '@core/date/date-time.utils';
+import { toCampaignDayKey } from '@core/date/campaign-time-zone.utils';
 import { PlayerSummary } from '@core/players/player-summary.model';
 import { resolveLatestSynchronization } from '@core/players/player-summary.utils';
 
 /**
- * How long after local midnight the day is considered to have turned.
+ * How long after midnight in the campaign time zone the day is considered to have turned.
  *
  * The backend closes a day at 00:10 (challenge drawn, meal written down by the nightly tick), so a
  * reload fired at 00:00 sharp would still read yesterday's state. Fifteen minutes leaves the tick
@@ -23,6 +23,6 @@ export const DAY_TURN_GRACE_MS = 15 * 60_000;
  * @returns The stamp.
  */
 export function liveRefreshStamp(players: readonly PlayerSummary[], now: Date): string {
-  const day = toLocalDayKey(new Date(now.getTime() - DAY_TURN_GRACE_MS).toISOString());
+  const day = toCampaignDayKey(new Date(now.getTime() - DAY_TURN_GRACE_MS).toISOString());
   return `${resolveLatestSynchronization(players) ?? ''}|${day}`;
 }

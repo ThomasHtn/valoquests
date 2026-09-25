@@ -110,8 +110,8 @@ export class AdminPlayers {
   protected readonly players = computed(() => resourceValue(this.playersResource, []));
 
   /**
-   * What the run in progress froze its roster at, and the reminder that editing it here lands on the
-   * next run rather than on this one.
+   * What the run in progress froze its roster at, and the reminder that the backend refuses any
+   * status change on it until the run ends.
    *
    * Empty while the campaign has not resolved, or between two campaigns: this screen must keep
    * working when the campaign endpoint does not, since the roster is what an operator comes here to

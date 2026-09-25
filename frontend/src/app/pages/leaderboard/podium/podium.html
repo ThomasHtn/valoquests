@@ -10,7 +10,8 @@
   <!-- 1st rendered larger and centred via `order`, so the DOM keeps its reading order (1st, 2nd,
        3rd) for assistive technology while the layout reads as a podium. -->
   <ol [attr.aria-label]="'leaderboard.podium.label' | translate" class="plinths">
-    @for (row of top(); track row.playerId) {
+    <!-- Keyed on the place too: NgOptimizedImage throws when a moved player's avatar resizes. -->
+    @for (row of top(); track row.playerId + ':' + row.position) {
       <li [class]="'place place--' + row.position">
         <a [routerLink]="['/players', row.playerId]" class="focus-ring link">
           <app-avatar

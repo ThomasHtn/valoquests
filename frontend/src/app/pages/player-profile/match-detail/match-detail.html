@@ -4,14 +4,28 @@
 />
 
 <div class="page-body">
+  <!-- A 404 or a malformed id is not a server failure: shown as the empty plate, with no retry. -->
   <app-resource-state
+    [emptyPlate]="notFoundPlate()"
     [errorText]="'playerProfile.matches.detail.error' | translate"
-    [isError]="!!detailResource.error()"
+    [isEmpty]="notFound()"
+    [isError]="!!detailResource.error() && !notFound()"
     [isLoading]="detailResource.isLoading()"
     [loadingText]="'playerProfile.matches.detail.loading' | translate"
+    emptyKind="anomaly"
     padding="py-6"
     (retry)="detailResource.reload()"
   >
+    <a
+      appButton="primary"
+      [routerLink]="backLink()"
+      class="mt-3 inline-flex min-h-12 items-center gap-2 px-5 font-display text-sm font-semibold tracking-wide uppercase [--notch:0.625rem]"
+      emptyAction
+    >
+      <svg aria-hidden="true" class="size-4 shrink-0" lucideChevronLeft></svg>
+      {{ 'playerProfile.matches.detail.notFound.back' | translate }}
+    </a>
+
     @if (match(); as match) {
       <!-- Same identity a history row shows — map, agent, result — opened up into the page's own
            hero rather than a card: this page has nothing else competing for the top of the fold. -->

@@ -4,7 +4,7 @@
  * Long enough to be read as a climb rather than a flicker, short enough that nobody waits on it. The
  * figure is legible throughout — this is not a loading state.
  */
-export const DURATION_MS = 1100;
+export const DURATION_MS = 800;
 
 /**
  * Share of a figure that must be on screen before its first climb starts, so a number below the

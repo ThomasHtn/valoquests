@@ -1,6 +1,10 @@
 package io.github.thomashtn.valoquests.player.service;
 
+import io.github.thomashtn.valoquests.campaign.entity.Campaign;
+import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerRepository;
+import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,12 +29,22 @@ public class PlayerCampaignContributionResolver {
     private final CampaignPlayerRepository campaignPlayerRepository;
 
     /**
+     * Repository locating the campaign opened or running, if any.
+     */
+    private final CampaignRepository campaignRepository;
+
+    /**
      * Creates the campaign contribution resolver.
      *
      * @param campaignPlayerRepository campaign roster repository
+     * @param campaignRepository       campaign repository
      */
-    public PlayerCampaignContributionResolver(CampaignPlayerRepository campaignPlayerRepository) {
+    public PlayerCampaignContributionResolver(
+        CampaignPlayerRepository campaignPlayerRepository,
+        CampaignRepository campaignRepository
+    ) {
         this.campaignPlayerRepository = campaignPlayerRepository;
+        this.campaignRepository = campaignRepository;
     }
 
     /**
@@ -42,5 +56,37 @@ public class PlayerCampaignContributionResolver {
     @Transactional(readOnly = true)
     public boolean hasContributed(long playerId) {
         return campaignPlayerRepository.existsByPlayerId(playerId);
+    }
+
+    /**
+     * Determines whether a campaign is opened or running, its roster frozen.
+     *
+     * @return {@code true} while a campaign is live
+     */
+    @Transactional(readOnly = true)
+    public boolean isCampaignLive() {
+        return liveCampaign().isPresent();
+    }
+
+    /**
+     * Determines whether a player sits on the frozen roster of the live campaign.
+     *
+     * @param playerId tracked player identifier
+     * @return {@code true} when the live campaign counts the player
+     */
+    @Transactional(readOnly = true)
+    public boolean isOnLiveRoster(long playerId) {
+        return liveCampaign()
+            .map(campaign -> campaignPlayerRepository.existsByCampaignIdAndPlayerId(campaign.getId(), playerId))
+            .orElse(false);
+    }
+
+    /**
+     * Returns the campaign opened or running, if any.
+     *
+     * @return the live campaign
+     */
+    private Optional<Campaign> liveCampaign() {
+        return campaignRepository.findByStatusNot(CampaignStatus.CLOSED);
     }
 }

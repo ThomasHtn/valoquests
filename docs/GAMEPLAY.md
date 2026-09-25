@@ -367,8 +367,8 @@ backoffice.
 
 ## Les défis
 
-**Un défi quotidien**, commun à l'escouade, tiré chaque matin dans le pool des **21 défis
-quotidiens** de `CHALLENGES-CATALOGUE.md`, sans répétition sur 21 jours. Il se résout le soir même.
+**Un défi quotidien**, commun à l'escouade, tiré chaque matin dans le pool des **28 défis
+quotidiens** de `CHALLENGES-CATALOGUE.md`, sans répétition sur 28 jours. Il se résout le soir même.
 
 **Cinq défis hebdomadaires**, un par difficulté, tirés le lundi dans les **100 défis hebdomadaires**
 du même catalogue. Les règles d'écriture sont dans `CHALLENGES.md`.

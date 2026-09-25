@@ -73,6 +73,11 @@ public class CampaignLifecycleService {
     private final WeekCalendar weekCalendar;
 
     /**
+     * Rebuilds a stopped campaign up to its final day before it freezes.
+     */
+    private final CampaignReplayService replayService;
+
+    /**
      * Creates the campaign lifecycle service.
      *
      * @param campaignRepository       campaign repository
@@ -81,6 +86,7 @@ public class CampaignLifecycleService {
      * @param playerRepository         player repository
      * @param factory                  campaign factory
      * @param weekCalendar             week calendar
+     * @param replayService            campaign replay service
      */
     public CampaignLifecycleService(
         CampaignRepository campaignRepository,
@@ -88,7 +94,8 @@ public class CampaignLifecycleService {
         CampaignWeekRepository campaignWeekRepository,
         PlayerRepository playerRepository,
         CampaignFactory factory,
-        WeekCalendar weekCalendar
+        WeekCalendar weekCalendar,
+        CampaignReplayService replayService
     ) {
         this.campaignRepository = campaignRepository;
         this.campaignPlayerRepository = campaignPlayerRepository;
@@ -96,6 +103,7 @@ public class CampaignLifecycleService {
         this.playerRepository = playerRepository;
         this.factory = factory;
         this.weekCalendar = weekCalendar;
+        this.replayService = replayService;
     }
 
     /**
@@ -228,9 +236,14 @@ public class CampaignLifecycleService {
             "No campaign is opened or running, so there is nothing to stop."
         ));
 
+        boolean running = campaign.getStatus() == CampaignStatus.RUNNING;
+        campaign.setStoppedOn(weekCalendar.today().minusDays(1));
+        // The last replay ran through today: rebuild up to the stop day, or today's half day stays frozen in.
+        if (running) {
+            replayService.replay(campaign);
+        }
         campaign.setStatus(CampaignStatus.CLOSED);
         campaign.setClosedAt(clock.instant());
-        campaign.setStoppedOn(weekCalendar.today().minusDays(1));
         campaignRepository.save(campaign);
 
         LOGGER.warn("Campaign {} was stopped early, frozen at {}.", campaign.getNumber(), campaign.getStoppedOn());
