@@ -21,12 +21,6 @@
         >{{ 'overview.squad.operator' | translate }}</span
       >
       <span
-        [appTooltip]="'overview.squad.streakTooltip' | translate"
-        class="bar-col label-caption focus-ring"
-        tabindex="0"
-        >{{ 'overview.squad.streak' | translate }}</span
-      >
-      <span
         [appTooltip]="'overview.squad.damageTooltip' | translate"
         class="bar-col label-caption focus-ring"
         tabindex="0"
@@ -43,6 +37,12 @@
         class="bar-col label-caption focus-ring"
         tabindex="0"
         >{{ 'common.resource.food' | translate }}</span
+      >
+      <span
+        [appTooltip]="'overview.squad.streakTooltip' | translate"
+        class="bar-col label-caption focus-ring"
+        tabindex="0"
+        >{{ 'overview.squad.streak' | translate }}</span
       >
     </p>
 
@@ -68,14 +68,6 @@
         </span>
 
         <span class="ros-cells">
-          <span class="ros-cell">
-            <span class="ros-cap label-caption text-2xs">{{
-              'overview.squad.streak' | translate
-            }}</span>
-            <span class="ros-val tabular-nums" style="--cell: var(--color-brand-400)">{{
-              row.streakMultiplier
-            }}</span>
-          </span>
           <span class="ros-cell">
             <span class="ros-cap label-caption text-2xs">{{
               'overview.squad.damage' | translate
@@ -130,6 +122,36 @@
                 >—</span
               >
             }
+          </span>
+          <span class="ros-cell">
+            <span class="ros-cap label-caption text-2xs">{{
+              'overview.squad.streak' | translate
+            }}</span>
+            <span
+              [attr.aria-label]="
+                'overview.squad.streakAria'
+                  | translate: { percent: row.streakBonusPercent, days: row.streakDays }
+              "
+              class="streak"
+              role="img"
+            >
+              <span aria-hidden="true" class="streak-week">
+                @for (pip of row.streakWeek; track $index) {
+                  <span class="streak-day">
+                    <b>{{ weekdays()[$index] }}</b>
+                    <i [class]="'pip--' + pip"></i>
+                  </span>
+                }
+              </span>
+              <span
+                [class.streak-bonus--none]="row.streakBonusPercent === 0"
+                aria-hidden="true"
+                class="streak-bonus tabular-nums"
+                >{{
+                  'overview.squad.streakValue' | translate: { percent: row.streakBonusPercent }
+                }}</span
+              >
+            </span>
           </span>
         </span>
       </a>

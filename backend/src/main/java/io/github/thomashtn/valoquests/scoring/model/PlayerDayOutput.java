@@ -8,7 +8,7 @@ package io.github.thomashtn.valoquests.scoring.model;
  * @param components         components produced
  * @param matchCount         valued matches played that day
  * @param reducedMatchCount  valued matches priced below full value by the daily diminishing returns
- * @param streakDays         consecutive played days ending on this day, this day included
+ * @param streakDays         days of the week played up to this day, this day included
  * @param streakBonusPercent bonus every match of the day earned from that streak
  */
 public record PlayerDayOutput(

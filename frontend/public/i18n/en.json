@@ -1,6 +1,5 @@
 {
   "admin": {
-    "eyebrow": "Backoffice",
     "actionFailed": "The operation failed. Try again, or check the backend logs.",
     "cancel": "Cancel",
     "save": "Save",
@@ -247,10 +246,7 @@
   "campaign": {
     "title": "Campaign",
     "header": {
-      "heading": "Ten planets, ten weeks",
-      "eyebrow": "Campaign {{number}}",
-      "noCampaign": "Campaign",
-      "difficulty": "Difficulty {{difficulty}}"
+      "heading": "The ten planets"
     },
     "state": {
       "loading": "Loading the campaign…",
@@ -464,22 +460,14 @@
   "challenges": {
     "title": "Challenges",
     "header": {
-      "heading": "The week's challenges",
-      "week": "Week {{week}} of {{weeks}}",
-      "weekOf": "Week of {{date}}",
-      "difficulty": "Difficulty {{difficulty}}"
+      "heading": "This week’s challenges"
     },
     "state": {
       "loading": "Loading the challenges…",
       "error": "The challenges could not be loaded.",
       "empty": {
-        "eyebrow": "Monday draw",
         "title": "No challenge drawn this week",
-        "text": "The week's five challenges are drawn on Monday, one per difficulty. The daily challenge is redrawn every morning.",
-        "weekly": "Weekly",
-        "weeklyValue": "5 drawn on Monday",
-        "daily": "Daily",
-        "dailyValue": "1 every morning"
+        "text": "The week's five challenges are drawn on Monday, one per difficulty. The daily challenge is redrawn every morning."
       }
     },
     "brief": {
@@ -563,7 +551,7 @@
     "titleHint": {
       "MECHANIC": "Most components over the week",
       "QUARTERMASTER": "Most food over the week",
-      "REGULAR": "Longest streak of days played",
+      "REGULAR": "Most days played in the week",
       "SCOUT": "Most challenges validated"
     },
     "metric": {
@@ -674,7 +662,7 @@
   "leaderboard": {
     "title": "Leaderboard",
     "header": {
-      "heading": "The week's leaderboard",
+      "heading": "Ranking",
       "week": "Week {{week}} of {{weeks}}",
       "outsideCampaign": "Outside a campaign",
       "difficulty": "Difficulty {{difficulty}}"
@@ -710,7 +698,7 @@
       "measure": {
         "MECHANIC": "{{value}} components",
         "QUARTERMASTER": "{{value}} food",
-        "REGULAR": "{{value}}-day streak",
+        "REGULAR": "{{value}} days played",
         "SCOUT": "{{value}} challenges validated"
       },
       "progress": "Challenge progress",
@@ -754,9 +742,7 @@
   "overview": {
     "title": "Overview",
     "header": {
-      "eyebrow": "Campaign {{number}} · Difficulty {{difficulty}}",
-      "noCampaign": "No campaign",
-      "heading": "Bring the wounded home from ten planets"
+      "heading": "The base"
     },
     "scene": {
       "section": "The city at night and the rocket under construction",
@@ -787,6 +773,8 @@
       "aboardUnit": "wounded aboard on Sunday",
       "boss": "Boss {{index}}",
       "hpLeft": "HP left",
+      "down": "Defeated {{weekday}} at {{time}}",
+      "downBy": "Defeated {{weekday}} at {{time}} by {{name}}",
       "squad": "Squad",
       "contribution": "of contribution",
       "contributionTooltip": "{{name}} · {{damage}} HP to the guardian · {{points}} challenge points · {{total}} of contribution, {{percent}}% of the squad",
@@ -816,7 +804,7 @@
       "fromChallenges": "secured by the challenges",
       "leftBehind": "would stay on the ground",
       "carryTooltip": "The components in stock, divided by {{rate}}: how many wounded the ship can reach. Ranked (Competitive, Premier, Unrated) earns the most.",
-      "shelterTooltip": "The food in reserve, once the next seven meals are set aside, divided by {{rate}}: how many wounded the base can shelter. Casual (Deathmatch, Spike Rush, Team Deathmatch, Skirmish) earns the most.",
+      "shelterTooltip": "The food in reserve, once the next seven meals are set aside, divided by {{rate}}: how many wounded the base can shelter. Casual (Deathmatch, Spike Rush, Team Deathmatch, Skirmish, Swiftplay, Escalation) earns the most.",
       "breachTooltip": "The share of the guardian's hit points already removed. It caps the extraction: a guardian pushed to 70% only lets 70% of what is ready to board get away. Every match counts toward it, whatever the mode.",
       "aboardTooltip": "The smallest of the three caps beside it, multiplied by the breakthrough, plus the wounded already secured by validated challenges: what comes home on Sunday night."
     },
@@ -854,8 +842,10 @@
       "link": "Full leaderboard",
       "operator": "Operator",
       "operatorTooltip": "The operator's name, with their title of the week if they hold one: the best on a resource (components, food, streak) or on damage to the guardian.",
-      "streak": "Streak",
-      "streakTooltip": "Consecutive days the operator played at least one scored match. Each day past the first adds +2% to everything their matches produce that day (damage, components, food), capped at +10% from 6 days on. Resets to zero as soon as a day is skipped.",
+      "streak": "Attendance",
+      "streakTooltip": "Days played this week. Each day after the first adds +2% to that day's gains, up to +10%. Resets on Monday.",
+      "streakValue": "+{{percent}}%",
+      "streakAria": "{{days}} of 7 days played this week, +{{percent}}% bonus",
       "damage": "Guardian damage",
       "damageTooltip": "Damage dealt to the week's guardian by the operator today, after diminishing returns and the streak bonus.",
       "componentsTooltip": "Components produced today by the operator, based on each match's mode and outcome, after diminishing returns and the streak bonus.",
@@ -900,36 +890,41 @@
     },
     "missionReport": {
       "button": "Mission report",
-      "eyebrow": "Mission report · settled {{date}}",
-      "title": "Week {{index}} · {{planet}}",
-      "close": "Close",
-      "won": "Defeated",
-      "held": "Held",
-      "blow": "{{name}} · {{weekday}} {{time}} · {{map}} · {{mode}} {{score}}",
-      "heldLine": "Standing at midnight on Sunday · the base lost {{count}} inhabitants",
-      "gauge": "{{left}} HP of {{total}} · breach at {{percent}}%",
-      "rescued": "wounded brought home",
-      "rescuedSub": "of {{spotted}} · {{challenges}} by the challenges",
-      "limiter": {
-        "FOOD": "limited by food",
-        "COMPONENTS": "limited by components",
-        "GROUP": "the whole group came home",
-        "NONE": "nothing limited"
+      "week": "Week {{index}} of {{total}}",
+      "close": "Close the report",
+      "won": "Mission complete",
+      "held": "Guardian standing",
+      "blow": "Guardian defeated on {{weekday}} at {{time}}",
+      "blowBy": "by",
+      "blowWhere": ", on {{map}} in {{mode}}",
+      "blowScore": " ({{ally}} to {{enemy}})",
+      "heldLine": "Pushed back to {{percent}}%. It killed {{count}} inhabitants at midnight on Sunday.",
+      "heldNoLoss": "Pushed back to {{percent}}%, with no loss for the base.",
+      "loot": "What the week brought home",
+      "rescued": "wounded brought home of {{spotted}}",
+      "rescuedSplit": "{{challenges}} by the challenges, {{ship}} by the ship.",
+      "allHome": "The whole group came home.",
+      "leftBehind": {
+        "FOOD": "Food ran short for the other {{count}}.",
+        "COMPONENTS": "Components ran short for the other {{count}}.",
+        "BREACH": "{{count}} stayed on the ground, the breach was incomplete."
       },
-      "inhabitants": "inhabitants",
-      "baseSub": "{{change}} this week · {{lost}} lost",
-      "baseNone": "Base reading unavailable",
-      "next": "Next week",
-      "nextSub": "{{hp}} HP · {{wounded}} wounded on the ground",
-      "titles": "The week's titles",
+      "food": "food harvested",
+      "components": "components harvested",
+      "population": "inhabitants, {{total}} in all",
+      "honours": "The week's honours",
+      "champion": "Champion of the week",
+      "championPoints": "{{points}} ranking points",
+      "noChampion": "Shared first place",
       "notAwarded": "Not awarded",
-      "ranking": "The frozen ranking",
-      "rankingNotFrozen": "This week's ranking was not frozen."
+      "notFrozen": "This week's titles were not frozen.",
+      "nextLabel": "Next planet:",
+      "nextSub": "{{hp}} HP and {{wounded}} wounded to bring home.",
+      "continue": "Continue"
     }
   },
   "pageHeader": {
-    "back": "Back to {{name}}",
-    "weekHeading": "{{page}} · Week {{number}} of {{weeks}}"
+    "back": "Back to {{name}}"
   },
   "playerProfile": {
     "breadcrumb": {
@@ -952,6 +947,7 @@
     },
     "error": "Failed to load this operator's profile.",
     "filters": {
+      "allModes": "All",
       "allSeasons": "All seasons",
       "gameModeLabel": "Filter by game mode",
       "moreGameModes": "More game modes",
@@ -981,7 +977,6 @@
       },
       "detail": {
         "title": "Match detail",
-        "eyebrow": "Back to profile",
         "error": "Could not load this match.",
         "loading": "Loading the match…",
         "duration": "{{minutes}} min",
@@ -996,7 +991,8 @@
         "tier": "Rank",
         "teammatesHeading": "Other squad members in this match",
         "sameTeam": "same team",
-        "otherTeam": "enemy team"
+        "otherTeam": "enemy team",
+        "back": "Player profile"
       },
       "empty": "No match found for these filters.",
       "error": "Failed to load match history.",
@@ -1036,7 +1032,7 @@
         "alignmentNote": "Shorter seasons start further along the axis: every curve ends at the same point, so seasons are compared on where they left off.",
         "axis": {
           "headshotPercentage": "Headshots (%)",
-          "kda": "K/D",
+          "kda": "KDA",
           "acs": "ACS",
           "adr": "ADR"
         },
@@ -1045,7 +1041,7 @@
           "acs": "ACS",
           "adr": "ADR",
           "headshotPercentage": "HS%",
-          "kda": "K/D"
+          "kda": "KDA"
         },
         "metricLabel": "Plotted statistic",
         "pointLabel": "Match",
@@ -1077,7 +1073,7 @@
         "label": {
           "bestAcs": "Best ACS",
           "bestHeadshotPercentage": "Best HS%",
-          "bestKda": "Best K/D",
+          "bestKda": "Best KDA",
           "longestActiveDayStreak": "Days in a row",
           "longestWinStreak": "Win streak",
           "mostDamage": "Most damage",
@@ -1131,22 +1127,7 @@
       }
     },
     "stats": {
-      "acs": "ACS",
-      "adr": "ADR",
-      "headshotPercentage": "HS%",
-      "kda": "K/D",
       "losses": "{{count}} L",
-      "matchesPlayed": "Matches",
-      "record": "{{wins}} W / {{losses}} L",
-      "tooltip": {
-        "acs": "Average combat score per round: combat points earned (kills, damage, assists) divided by rounds played, then averaged over the filtered matches.",
-        "adr": "Average damage dealt per round, averaged over the filtered matches.",
-        "headshotPercentage": "Share of registered hits that landed on the head: headshots divided by head + body + leg hits. Shots that missed entirely are not counted.",
-        "kda": "(Kills + assists) divided by deaths, over every filtered match.",
-        "matchesPlayed": "Number of matches matching the current filters.",
-        "winRate": "Share of matches won: wins divided by filtered matches. Cancelled matches count towards the total."
-      },
-      "winRate": "Win rate",
       "wins": "{{count}} W"
     },
     "title": "Operator profile"
@@ -1154,7 +1135,7 @@
   "players": {
     "columns": {
       "headshotPercentage": "HS%",
-      "kda": "K/D",
+      "kda": "KDA",
       "matchesPlayed": "Matches",
       "player": "Operator",
       "rank": "Rank",
@@ -1162,16 +1143,6 @@
     },
     "empty": "No operator is tracked yet.",
     "error": "Failed to load the operators.",
-    "eyebrow": {
-      "inCampaign": {
-        "one": "{{count}} active",
-        "other": "{{count}} active"
-      },
-      "outOfCampaign": {
-        "one": "{{count}} waiting",
-        "other": "{{count}} waiting"
-      }
-    },
     "heading": "Squad",
     "inCampaign": {
       "title": "Active operators",
@@ -1184,7 +1155,6 @@
     "outOfCampaign": {
       "title": "Waiting for the next campaign"
     },
-    "subheading": "Players",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -1197,13 +1167,14 @@
       "silver": "Silver",
       "unranked": "Unranked"
     },
-    "title": "Players"
+    "title": "Players",
+    "header": {
+      "heading": "The squad"
+    }
   },
   "retry": "Retry",
   "rules": {
     "title": "Rules of the game",
-    "heading": "Rules",
-    "subheading": "How the mission works",
     "replayTour": "Replay the guided tour",
     "sections": {
       "match": {
@@ -1219,7 +1190,7 @@
           "short": "Short modes",
           "none": "Worth nothing"
         },
-        "noneModes": "Swiftplay, Escalation",
+        "noneModes": "New Map, custom games",
         "foodShare": "{{percent}} % food",
         "componentsShare": "{{percent}} % components",
         "modes": {
@@ -1227,6 +1198,8 @@
           "unrated": "Unrated",
           "teamDeathmatch": "Team Deathmatch",
           "spikeRush": "Spike Rush",
+          "escalation": "Escalation",
+          "swiftplay": "Swiftplay",
           "deathmatch": "Deathmatch",
           "skirmish": "Skirmish"
         },
@@ -1236,7 +1209,7 @@
       "multipliers": {
         "title": "The multipliers",
         "statement": "Farming pays less, consistency pays more",
-        "description": "Two coefficients change the *value of every match*, so its damage {damage}, its food {food} and its components {components} at once. The first drops with the number of matches in the day. The second rises with the number of days played in a row {streak}. Neither touches the challenges.",
+        "description": "Two coefficients change the *value of every match*, so its damage {damage}, its food {food} and its components {components} at once. The first drops with the number of matches in the day. The second rises with the number of days played in the week {streak}. Neither touches the challenges.",
         "decayLabel": "Yield, by rank of the match in the day",
         "decayRanks": {
           "first": "Matches 1 to 5",
@@ -1244,15 +1217,15 @@
           "rest": "10 and beyond"
         },
         "decayNote": "The day's matches are ranked from the strongest to the weakest: the best five count in full, whatever the order they were played in.",
-        "streakLabel": "Days played in a row {streak}, every match of the day is worth",
+        "streakLabel": "Days played in the week {streak}, every match of the day is worth",
         "streakDays": {
           "one": "{{count}} day",
           "other": "{{count}} days"
         },
         "streakDaysMore": "{{count}} days and more",
-        "streakNote": "A day counts if the operator played at least one valued match in it. The streak is individual and falls back to 1 as soon as a day is skipped.",
+        "streakNote": "A day counts if the operator played at least one valued match in it. The streak is individual: a skipped day loses nothing, and the count restarts at zero every Monday.",
         "exampleLabel": "Example",
-        "example": "Competitive win, sixth match of the day, fourth day in a row: *500 × 50 % × 1.06 = 265* damage {damage}, split into 80 food {food} and 185 components {components}."
+        "example": "Competitive win, sixth match of the day, fourth day played this week: *500 × 50 % × 1.06 = 265* damage {damage}, split into 80 food {food} and 185 components {components}."
       },
       "week": {
         "title": "The week",
@@ -1267,7 +1240,7 @@
           "midnight": {
             "title": "The base eats",
             "when": "at midnight",
-            "text": "Each inhabitant eats *0.008 food* {food}. The daily challenge resolves, a new one is drawn. The streak {streak} moves on or falls."
+            "text": "Each inhabitant eats *0.008 food* {food}. The daily challenge resolves, a new one is drawn. The streak {streak} moves on if the operator played."
           },
           "sunday": {
             "title": "The settlement",
@@ -1473,6 +1446,9 @@
           }
         }
       }
+    },
+    "header": {
+      "heading": "Game rules"
     }
   },
   "seasons": {
@@ -1491,7 +1467,7 @@
       "admin": "Administration",
       "expedition": "Expedition",
       "help": "Help",
-      "squad": "Squad"
+      "operators": "Operators"
     },
     "label": "Sidebar",
     "language": {
@@ -1653,7 +1629,7 @@
         },
         "spec2": {
           "value": "+10 %",
-          "label": "six-day streak"
+          "label": "six days played in the week"
         },
         "spec3": {
           "value": "1",

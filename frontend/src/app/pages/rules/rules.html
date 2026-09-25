@@ -1,7 +1,7 @@
 <!-- Context bar: the trailing edge carries the way back into the guided tour, this page's one
      action. The replay query parameter is what lets the tour through `tourEntryGuard`. Icon-only
      below `sm`. -->
-<app-page-header [eyebrow]="'rules.heading' | translate" [heading]="'rules.subheading' | translate">
+<app-page-header [heading]="'rules.header.heading' | translate">
   <a
     [attr.aria-label]="'rules.replayTour' | translate"
     [queryParams]="{ replay: '' }"

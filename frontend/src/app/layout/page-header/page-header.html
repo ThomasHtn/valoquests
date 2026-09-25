@@ -21,62 +21,28 @@
       <svg class="block h-6 w-6 shrink-0" lucideMenu></svg>
     </button>
 
-    <div class="flex min-w-0 flex-1 flex-col justify-center py-2">
-      @if (eyebrow()) {
-        @if (backLink(); as parentRoute) {
-          <!-- The eyebrow's slot, turned into the way back. It steps up to a control of its own
-               when it is all the bar carries — on a page whose subject is already named by the
-               block right under the bar, restating that name here would only be a second source of
-               the same fact, and the way back is then the one thing the chrome has to offer. -->
-          <div class="flex min-w-0 items-center gap-2">
-            <a
-              [attr.aria-label]="'pageHeader.back' | translate: { name: eyebrow() }"
-              [class]="
-                heading()
-                  ? 'tracking-label-wide -my-2 h-5 py-2 text-2xs'
-                  : 'tracking-label h-11 text-xs'
-              "
-              [routerLink]="parentRoute"
-              class="focus-ring -mx-1 inline-flex max-w-full shrink-0 items-center gap-1.5 px-1 font-mono font-medium text-text-muted uppercase transition-colors hover:text-text-primary"
-            >
-              <svg aria-hidden="true" class="size-3.5 shrink-0" lucideChevronLeft></svg>
-              <span class="truncate">{{ eyebrow() }}</span>
-            </a>
-            <!-- Discreet complement to the way back — e.g. the player's name on a detail page —
-                 never a second source of a fact already named below the bar. -->
-            <ng-content select="[eyebrowAside]" />
-          </div>
-        } @else {
-          <!-- Fixed 20px whichever shape the line takes, so pages close the bar at the same height
-               and the chrome reads as one band rather than a strip that resizes as you move
-               through the app. -->
-          <p
-            class="tracking-label-wide h-5 truncate font-mono text-2xs font-medium text-brand-500 uppercase"
+    <div class="flex min-w-0 flex-1 items-center">
+      @if (backLink(); as parentRoute) {
+        <!-- The way back, on a page whose subject is already named by the block right under the
+             bar: restating that name here would only be a second source of the same fact. -->
+        <div class="flex min-w-0 items-center gap-2">
+          <a
+            [attr.aria-label]="'pageHeader.back' | translate: { name: backLabel() }"
+            [routerLink]="parentRoute"
+            class="focus-ring tracking-label -mx-1 inline-flex h-11 max-w-full shrink-0 items-center gap-1.5 px-1 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:text-text-primary"
           >
-            {{ eyebrow() }}
-          </p>
-        }
-      }
-
-      @if (heading()) {
-        <div class="-mt-1 flex min-w-0 items-center gap-2.5">
-          <!-- Set a full step below the old scrolling header's `text-2xl`: this is a bar the reader
-               passes under all day, not a cover. `truncate` rather than wrapping — the bar's height
-               is part of what makes the chrome read as one band across every page.
-
-               That holds from `sm` up, where the title has the room. On a phone it did not: the
-               burger, the page's own trailing control and the gutters leave the title about 187px,
-               and two of the six pages named themselves "Le classement des dégâts de l…" and "Le
-               boss et les cinq défis de l…" — a band of even height stating nothing. Below `sm` the
-               title takes a second line instead, and no more: the clamp keeps a long name from
-               growing the band without limit, which is what the single-line rule was protecting. -->
-          <h1
-            class="font-display text-base leading-tight font-bold text-text-primary uppercase max-sm:line-clamp-2 sm:truncate sm:text-lg"
-          >
-            {{ heading() }}
-          </h1>
-          <ng-content select="[headingAside]" />
+            <svg aria-hidden="true" class="size-3.5 shrink-0" lucideChevronLeft></svg>
+            <span class="truncate">{{ backLabel() }}</span>
+          </a>
+          <ng-content select="[backAside]" />
         </div>
+      } @else if (heading()) {
+        <!-- One line, never wrapping: the bar keeps the same height on every page. -->
+        <h1
+          class="truncate font-display text-xl leading-none font-bold tracking-wide text-brand-500 uppercase sm:text-2xl"
+        >
+          {{ heading() }}
+        </h1>
       }
     </div>
 

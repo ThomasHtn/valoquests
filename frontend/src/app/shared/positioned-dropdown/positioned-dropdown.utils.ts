@@ -62,8 +62,9 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
   // the capture phase still sees it, wherever it happens, since capture fires while the event
   // travels down toward its target. Closing rather than repositioning keeps this simple and avoids
   // the panel trailing a stale position for a frame.
-  const onScroll = (): void => {
-    if (isOpen()) {
+  const onScroll = (event: Event): void => {
+    // Scrolling the panel's own list leaves its pinned coordinates valid.
+    if (isOpen() && !panel().nativeElement.contains(event.target as Node)) {
       close();
     }
   };

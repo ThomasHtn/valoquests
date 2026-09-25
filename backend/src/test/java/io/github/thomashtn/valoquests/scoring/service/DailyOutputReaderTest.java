@@ -146,8 +146,8 @@ class DailyOutputReaderTest {
     }
 
     @Test
-    @DisplayName("grows the streak over consecutive played days and resets it on a gap")
-    void shouldGrowTheStreakOverConsecutiveDaysAndResetItOnAGap() {
+    @DisplayName("grows the streak with every played day of the week, a skipped day only pausing it")
+    void shouldGrowTheStreakWithEveryPlayedDayOfTheWeek() {
         Player player = player(1L, PlayerStatus.ACTIVE);
         for (int offset = 0; offset < 3; offset++) {
             givenMatches(player, competitiveWins(MONDAY.plusDays(offset), 1));
@@ -162,7 +162,8 @@ class DailyOutputReaderTest {
         assertThat(output.of(1L, MONDAY.plusDays(1)).damage()).isEqualTo(510);
         assertThat(output.of(1L, MONDAY.plusDays(2)).streakDays()).isEqualTo(3);
         assertThat(output.of(1L, MONDAY.plusDays(2)).damage()).isEqualTo(520);
-        assertThat(output.of(1L, MONDAY.plusDays(4)).streakDays()).isEqualTo(1);
+        assertThat(output.of(1L, MONDAY.plusDays(4)).streakDays()).isEqualTo(4);
+        assertThat(output.of(1L, MONDAY.plusDays(4)).damage()).isEqualTo(530);
         assertThat(output.streakEndingOn(1L, MONDAY.plusDays(2))).isEqualTo(3);
         assertThat(output.streakEndingOn(1L, MONDAY.plusDays(3))).isZero();
     }
@@ -235,15 +236,15 @@ class DailyOutputReaderTest {
     void shouldIgnoreAMatchThatIsNotValued() {
         Player player = player(1L, PlayerStatus.ACTIVE);
         givenMatches(player, competitiveWins(MONDAY, 1));
-        List<PlayerMatch> swiftplay = competitiveWins(MONDAY.plusDays(1), 1);
-        swiftplay.getFirst().getMatch().setGameMode(GameMode.SWIFTPLAY);
-        givenMatches(player, swiftplay);
+        List<PlayerMatch> newMap = competitiveWins(MONDAY.plusDays(1), 1);
+        newMap.getFirst().getMatch().setGameMode(GameMode.NEW_MAP);
+        givenMatches(player, newMap);
         givenMatches(player, competitiveWins(MONDAY.plusDays(2), 1));
 
         DailyOutput output = reader.read(everyone(), MONDAY, MONDAY.plusDays(2));
 
         assertThat(output.on(MONDAY.plusDays(1))).isEmpty();
-        assertThat(output.of(1L, MONDAY.plusDays(2)).streakDays()).isEqualTo(1);
+        assertThat(output.of(1L, MONDAY.plusDays(2)).streakDays()).as("the new-map day does not count").isEqualTo(2);
         assertThat(output.valuedMatches()).hasSize(2);
     }
 

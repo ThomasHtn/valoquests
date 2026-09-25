@@ -83,13 +83,13 @@ class DailyRankingReaderTest {
         assertThat(alpha.food()).isEqualTo(150);
         assertThat(alpha.components()).isEqualTo(350);
         assertThat(alpha.streakDays()).isEqualTo(4);
-        assertThat(alpha.streakAtStake()).isEqualTo(3);
+        assertThat(alpha.weekPlayedDays()).containsExactly(DAY.minusDays(1), DAY);
         assertThat(alpha.previousDamage()).isEqualTo(800);
         assertThat(alpha.damageVariation()).isEqualTo(-300);
     }
 
     @Test
-    @DisplayName("Gives a player who did not play a line at zero, with the streak they are defending")
+    @DisplayName("Gives a player who did not play a line at zero, with the days they already played this week")
     void shouldListAPlayerWhoDidNotPlay() {
         when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
             .thenReturn(List.of(ALPHA, BRAVO));
@@ -108,8 +108,27 @@ class DailyRankingReaderTest {
         assertThat(alpha.damage()).isZero();
         assertThat(alpha.matchCount()).isZero();
         assertThat(alpha.streakDays()).isZero();
-        assertThat(alpha.streakAtStake()).isEqualTo(5);
+        assertThat(alpha.weekPlayedDays()).containsExactly(DAY.minusDays(1));
         assertThat(alpha.damageVariation()).isEqualTo(-300);
+    }
+
+    @Test
+    @DisplayName("Lists the days played this week, a skipped day left out and last week ignored")
+    void shouldListTheDaysPlayedThisWeek() {
+        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
+            .thenReturn(List.of(ALPHA));
+        when(dailyOutputReader.read(any(), any(), any())).thenReturn(RankingFixtures.output(Map.of(
+            ALPHA.getId(), Map.of(
+                RankingFixtures.WEEK_START.minusDays(1), RankingFixtures.dayOutput(300, 1, 7),
+                RankingFixtures.WEEK_START, RankingFixtures.dayOutput(300, 1, 1)
+            )
+        )));
+
+        DailyRankingEntryResponse alpha = reader.read(DAY).ranking().getFirst();
+
+        assertThat(alpha.weekPlayedDays())
+            .as("last week's Sunday is left out")
+            .containsExactly(RankingFixtures.WEEK_START);
     }
 
     @Test

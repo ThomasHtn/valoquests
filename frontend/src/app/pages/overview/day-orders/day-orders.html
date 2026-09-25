@@ -47,7 +47,7 @@
             style="--k: var(--color-accent-cyan)"
           >
             @for (operator of order.validated; track operator.name) {
-              <i [attr.data-name]="operator.name" [class.on]="operator.done"></i>
+              <i [appTooltip]="operator.name" [class.on]="operator.done"></i>
             }
           </span>
           <!-- Phone only: the hexagons' hover names are unreachable on touch, so a tappable count
@@ -175,8 +175,8 @@
             class="pips"
             role="img"
           >
-            @for (present of tally.pips; track $index) {
-              <i [class.on]="present"></i>
+            @for (pip of tally.pips; track $index) {
+              <i [appTooltip]="pip.name ?? ''" [class.on]="pip.on"></i>
             }
           </span>
           <span class="dl-val">

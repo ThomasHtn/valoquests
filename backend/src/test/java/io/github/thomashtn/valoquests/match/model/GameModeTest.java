@@ -24,6 +24,8 @@ class GameModeTest {
         GameMode.SPIKE_RUSH,
         GameMode.SKIRMISH,
         GameMode.TEAM_DEATHMATCH,
+        GameMode.SWIFTPLAY,
+        GameMode.ESCALATION,
         GameMode.OTHER
     );
 
@@ -49,9 +51,7 @@ class GameModeTest {
 
         assertThat(imported).isEqualTo(IMPORTED);
         assertThat(excluded).containsExactlyInAnyOrder(
-            GameMode.SWIFTPLAY,
             GameMode.NEW_MAP,
-            GameMode.ESCALATION,
             GameMode.CUSTOM
         );
     }

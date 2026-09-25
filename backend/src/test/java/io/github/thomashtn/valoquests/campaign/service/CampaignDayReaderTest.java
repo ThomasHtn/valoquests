@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.campaign.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
@@ -15,6 +16,7 @@ import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerDayRepos
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.ranking.model.WeeklyTitle;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.ranking.service.WeekChampionResolver;
 import io.github.thomashtn.valoquests.ranking.service.WeeklyTitleResolver;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -52,6 +54,9 @@ class CampaignDayReaderTest {
     @Mock
     private WeeklyTitleResolver titleResolver;
 
+    @Mock
+    private WeekChampionResolver championResolver;
+
     @InjectMocks
     private CampaignDayReader reader;
 
@@ -60,7 +65,8 @@ class CampaignDayReaderTest {
     @BeforeEach
     void setUp() {
         campaign = CampaignFixtures.runningCampaign(1);
-        when(titleResolver.resolve(anyList())).thenReturn(Map.of(WeeklyTitle.MECHANIC, 1L));
+        when(championResolver.reigningChampion()).thenReturn(2L);
+        when(titleResolver.resolve(anyList(), eq(2L))).thenReturn(Map.of(WeeklyTitle.MECHANIC, 1L));
     }
 
     @Test

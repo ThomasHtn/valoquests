@@ -40,8 +40,13 @@ class DefaultScoringRulesetTest {
         assertThat(ruleset.matchDamage(GameMode.SKIRMISH, MatchOutcome.DRAW)).isEqualTo(110);
         assertThat(ruleset.matchDamage(GameMode.SKIRMISH, MatchOutcome.WIN)).isEqualTo(130);
 
+        assertThat(ruleset.matchDamage(GameMode.SWIFTPLAY, MatchOutcome.LOSS)).isEqualTo(160);
+        assertThat(ruleset.matchDamage(GameMode.SWIFTPLAY, MatchOutcome.WIN)).isEqualTo(230);
+        assertThat(ruleset.matchDamage(GameMode.ESCALATION, MatchOutcome.LOSS)).isEqualTo(110);
+        assertThat(ruleset.matchDamage(GameMode.ESCALATION, MatchOutcome.WIN)).isEqualTo(150);
+
         // Imported but not part of the competition, so worth nothing.
-        assertThat(ruleset.matchDamage(GameMode.SWIFTPLAY, MatchOutcome.WIN)).isZero();
+        assertThat(ruleset.matchDamage(GameMode.NEW_MAP, MatchOutcome.WIN)).isZero();
         assertThat(ruleset.matchDamage(GameMode.OTHER, MatchOutcome.WIN)).isZero();
         assertThat(ruleset.matchDamage(null, MatchOutcome.WIN)).isZero();
         assertThat(ruleset.matchDamage(GameMode.COMPETITIVE, null)).isZero();
@@ -97,7 +102,9 @@ class DefaultScoringRulesetTest {
         assertThat(ruleset.foodSharePercent(GameMode.TEAM_DEATHMATCH)).isEqualTo(70);
         assertThat(ruleset.foodSharePercent(GameMode.SPIKE_RUSH)).isEqualTo(70);
         assertThat(ruleset.foodSharePercent(GameMode.SKIRMISH)).isEqualTo(70);
-        assertThat(ruleset.foodSharePercent(GameMode.SWIFTPLAY)).isZero();
+        assertThat(ruleset.foodSharePercent(GameMode.SWIFTPLAY)).isEqualTo(70);
+        assertThat(ruleset.foodSharePercent(GameMode.ESCALATION)).isEqualTo(70);
+        assertThat(ruleset.foodSharePercent(GameMode.NEW_MAP)).isZero();
         assertThat(ruleset.foodSharePercent(null)).isZero();
     }
 

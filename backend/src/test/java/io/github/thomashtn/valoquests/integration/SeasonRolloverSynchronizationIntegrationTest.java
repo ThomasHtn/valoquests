@@ -186,7 +186,7 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
         assertThat(seasonStateCount(OUT_OF_SCOPE_SEASON)).isZero();
 
         assertThat(importedGameModes())
-            .doesNotContain(GameMode.SWIFTPLAY, GameMode.ESCALATION);
+            .doesNotContain(GameMode.NEW_MAP, GameMode.CUSTOM);
         assertThat(importedGameModes()).contains(GameMode.OTHER);
         assertThat(rawQueueIds()).contains("valorant_royale");
 
@@ -469,8 +469,8 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
      */
     private List<HenrikMatchData> mixedPage() {
         List<HenrikMatchData> matches = new ArrayList<>();
-        matches.add(match(SEASON_A, "swiftplay"));
-        matches.add(match(SEASON_A, "ggteam"));
+        matches.add(match(SEASON_A, "newmap"));
+        matches.add(match(SEASON_A, "custom"));
         matches.add(match(SEASON_A, "valorant_royale"));
         IntStream.range(0, PAGE_SIZE - 3)
             .forEach(index -> matches.add(match(SEASON_A, "deathmatch")));

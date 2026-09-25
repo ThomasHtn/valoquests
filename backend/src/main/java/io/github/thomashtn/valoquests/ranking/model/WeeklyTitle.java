@@ -3,8 +3,9 @@ package io.github.thomashtn.valoquests.ranking.model;
 /**
  * One of the four weekly honours, so recognition never concentrates on a single operator.
  *
- * <p>Purely honorific: no title touches a score, a resource or a guardian. One operator can hold
- * several in the same week, and a tie awards nothing — a title shared is a title that says nothing.
+ * <p>Purely honorific: no title touches a score, a resource or a guardian. One operator holds one
+ * at most, the champion none, and a tie awards nothing — a title shared is a title that says nothing.
+ * Declaration order is the award order.
  */
 public enum WeeklyTitle {
 
@@ -19,7 +20,7 @@ public enum WeeklyTitle {
     QUARTERMASTER,
 
     /**
-     * Longest run of consecutive played days reached during the week.
+     * Most days played during the week.
      */
     REGULAR,
 

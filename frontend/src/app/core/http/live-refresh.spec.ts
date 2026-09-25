@@ -67,9 +67,14 @@ describe('LiveRefresh', () => {
     await settle();
   }
 
-  async function letTheReloadSettle(): Promise<void> {
+  /**
+   * Waits out the quiet time, answering the polls it spans with an unchanged roster.
+   */
+  async function letTheReloadSettle(syncedAt: string): Promise<void> {
     await vi.advanceTimersByTimeAsync(LIVE_REFRESH_SETTLE_MS);
     TestBed.tick();
+    httpMock.match(API_ENDPOINTS.players).forEach((request) => request.flush(roster(syncedAt)));
+    await settle();
   }
 
   function expectScreensReloaded(): void {
@@ -86,7 +91,19 @@ describe('LiveRefresh', () => {
     await pollRoster('2026-09-07T10:30:00Z');
     httpMock.expectNone(API_ENDPOINTS.campaign);
 
-    await letTheReloadSettle();
+    await letTheReloadSettle('2026-09-07T10:30:00Z');
+
+    expectScreensReloaded();
+  });
+
+  it('reloads the screens once for a batch spanning several polls', async () => {
+    await settleInitialLoad('2026-09-07T10:00:00Z');
+
+    await pollRoster('2026-09-07T10:30:10Z');
+    await pollRoster('2026-09-07T10:31:05Z');
+    httpMock.expectNone(API_ENDPOINTS.campaign);
+
+    await letTheReloadSettle('2026-09-07T10:31:05Z');
 
     expectScreensReloaded();
   });
@@ -95,7 +112,7 @@ describe('LiveRefresh', () => {
     await settleInitialLoad('2026-09-07T10:00:00Z');
 
     await pollRoster('2026-09-07T10:00:00Z');
-    await letTheReloadSettle();
+    await letTheReloadSettle('2026-09-07T10:00:00Z');
 
     httpMock.verify();
   });
@@ -105,7 +122,7 @@ describe('LiveRefresh', () => {
 
     vi.setSystemTime(new Date(2026, 8, 8, 0, 20, 0));
     await pollRoster('2026-09-07T10:00:00Z');
-    await letTheReloadSettle();
+    await letTheReloadSettle('2026-09-07T10:00:00Z');
 
     expectScreensReloaded();
   });

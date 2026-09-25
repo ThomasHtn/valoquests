@@ -151,17 +151,6 @@ export class Overview {
     () => this.currentWeek() !== null && this.campaign()?.forecast !== null,
   );
 
-  protected readonly headerEyebrow = computed(() => {
-    const campaign = this.campaign();
-    if (campaign?.number === null || campaign?.difficulty === null || !campaign) {
-      return this.translation.translate('overview.header.noCampaign');
-    }
-    return this.translation.translate('overview.header.eyebrow', {
-      number: campaign.number,
-      difficulty: this.translation.translate(`common.difficulty.${campaign.difficulty}`),
-    });
-  });
-
   protected readonly population = computed(() => this.campaign()?.base?.population ?? 0);
 
   protected readonly populationChange = computed(
@@ -239,7 +228,6 @@ export class Overview {
     buildSquad(
       resourceValue(this.dailyResource, null) ?? null,
       resourceValue(this.todayResource, null) ?? null,
-      this.translation.language(),
     ),
   );
 

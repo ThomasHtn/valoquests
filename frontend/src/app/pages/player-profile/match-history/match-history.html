@@ -84,7 +84,7 @@
                 <span
                   class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
                 >
-                  {{ formatKda(day.avgKda) }}
+                  {{ formatKda(day.avgKd) }}
                 </span>
               </p>
               <p class="px-2 text-center">
@@ -196,10 +196,10 @@
                     {{ 'playerProfile.matches.columns.kd' | translate }}
                   </span>
                   <span
-                    [class]="kdaVisual(row.kda).textClass"
+                    [class]="kdVisual(row.kd).textClass"
                     class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
                   >
-                    {{ formatKda(row.kda) }}
+                    {{ formatKda(row.kd) }}
                   </span>
                 </p>
 
@@ -256,7 +256,9 @@
                     {{ formatDamageAmount(row.valoquestsDamage) }}
                   </span>
                   @if (damageShareLabel(row); as share) {
-                    <span class="label-caption mt-1 block text-text-muted tabular-nums">
+                    <span
+                      class="mt-1 block font-mono text-3xs tracking-label text-text-muted uppercase tabular-nums"
+                    >
                       {{ share }}
                     </span>
                   }
@@ -366,10 +368,10 @@
                           {{ 'playerProfile.matches.columns.kd' | translate }}
                         </dt>
                         <dd
-                          [class]="kdaVisual(row.kda).textClass"
+                          [class]="kdVisual(row.kd).textClass"
                           class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
                         >
-                          {{ formatKda(row.kda) }}
+                          {{ formatKda(row.kd) }}
                         </dd>
                       </div>
                       <div>
@@ -416,7 +418,9 @@
                         >
                           {{ formatDamageAmount(row.valoquestsDamage) }}
                           @if (damageShareLabel(row); as share) {
-                            <span class="label-caption block text-text-muted tabular-nums">
+                            <span
+                              class="block font-mono text-3xs tracking-label text-text-muted uppercase tabular-nums"
+                            >
                               {{ share }}
                             </span>
                           }

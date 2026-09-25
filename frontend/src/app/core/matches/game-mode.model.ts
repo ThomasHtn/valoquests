@@ -29,26 +29,24 @@ export const GAME_MODES = [
 export type GameMode = (typeof GAME_MODES)[number];
 
 /**
- * Game modes synchronization actually imports, in the order they are offered as a filter.
+ * Game modes offered as a filter, in order of importance: the first ones get their own button, the
+ * rest fall into the overflow menu as the screen narrows.
  *
- * Mirrors the backend `GameMode#isImportEligible()`. Swiftplay, New Map, Escalation and custom
- * games are deliberately absent: no match of those modes is ever stored, so offering them would
- * only ever yield the empty state.
- *
- * `OTHER` is offered despite naming no mode in particular: it is imported on purpose, as the
- * bucket for a queue the backend cannot classify yet, and is therefore the only way to reach those
- * matches.
+ * A subset of the modes synchronization imports (backend `GameMode#isImportEligible()`). New Map
+ * and custom games are never stored, so offering them would only ever yield the empty state;
+ * Premier and the unclassified `OTHER` bucket are stored but left out, being too rare to earn a
+ * place in the filter.
  *
  * Kept as a subset of {@link GAME_MODES} rather than replacing it, since a match returned by the
- * API may still carry a mode that is no longer imported.
+ * API may still carry a mode that is not offered here.
  */
 export const FILTERABLE_GAME_MODES = [
   'COMPETITIVE',
   'UNRATED',
-  'PREMIER',
-  'SPIKE_RUSH',
-  'SKIRMISH',
   'DEATHMATCH',
   'TEAM_DEATHMATCH',
-  'OTHER',
+  'SKIRMISH',
+  'SWIFTPLAY',
+  'SPIKE_RUSH',
+  'ESCALATION',
 ] as const satisfies readonly GameMode[];

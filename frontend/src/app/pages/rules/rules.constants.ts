@@ -69,8 +69,10 @@ export const MODE_GROUPS: readonly ModeGroup[] = [
     key: 'short',
     foodPercent: 70,
     modes: [
+      { key: 'swiftplay', loss: 160, draw: null, win: 230 },
       { key: 'teamDeathmatch', loss: 110, draw: 135, win: 160 },
       { key: 'spikeRush', loss: 110, draw: null, win: 150 },
+      { key: 'escalation', loss: 110, draw: null, win: 150 },
       { key: 'deathmatch', loss: 100, draw: null, win: 150 },
       { key: 'skirmish', loss: 90, draw: 110, win: 130 },
     ],
@@ -95,7 +97,7 @@ export const DECAY_LADDER: readonly LadderStep[] = [
 ];
 
 /**
- * Streak bonus, by consecutive days played; the last step is open-ended.
+ * Streak bonus, by days played in the week; the last step is open-ended.
  */
 export interface StreakStep {
   readonly days: number;
@@ -104,7 +106,7 @@ export interface StreakStep {
 }
 
 /**
- * Bonus per consecutive active day, capped at the last step.
+ * Bonus per day played in the week, capped at the last step.
  */
 export const STREAK_LADDER: readonly StreakStep[] = [
   { days: 1, percent: 0, open: false },

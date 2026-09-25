@@ -1,7 +1,7 @@
 @if (open()) {
   @let report = this.report();
 
-  <!-- Scrim. Decorative: the dialog closes from its own button and from Escape too. -->
+  <!-- Scrim. Decorative: the dialog closes from its own buttons and from Escape too. -->
   <div
     (click)="closed.emit()"
     aria-hidden="true"
@@ -10,164 +10,217 @@
 
   <div
     #panel
-    [attr.aria-label]="
-      'overview.missionReport.title'
-        | translate: { index: report.weekIndex, planet: report.planetName }
-    "
+    [class.rep--held]="!report.defeated"
+    aria-labelledby="mission-report-verdict"
     aria-modal="true"
-    class="rep notch-tr notch-tr-edge focus-ring fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 border border-brand-500/40 bg-surface-sunken [--notch:1.25rem]"
+    class="rep focus-ring"
     role="dialog"
     tabindex="-1"
   >
-    <div class="rep-top">
-      <div class="min-w-0">
-        <p class="label-caption text-2xs text-text-muted">
-          {{ 'overview.missionReport.eyebrow' | translate: { date: report.settledOn } }}
-        </p>
-        <h2 class="rep-title">
-          {{
-            'overview.missionReport.title'
-              | translate: { index: report.weekIndex, planet: report.planetName }
-          }}
-        </h2>
-      </div>
+    <!-- Fixed head: the week and the close button stay put while the report scrolls below. -->
+    <div class="rep-head">
+      <p class="rep-week">
+        {{
+          'overview.missionReport.week' | translate: { index: report.weekIndex, total: weekCount }
+        }}
+        · <b>{{ report.planetName }}</b>
+      </p>
       <button
         (click)="closed.emit()"
-        class="rep-close focus-ring label-caption text-2xs"
+        [attr.aria-label]="'overview.missionReport.close' | translate"
+        class="rep-x focus-ring"
         type="button"
       >
-        {{ 'overview.missionReport.close' | translate }}
-        <svg aria-hidden="true" class="size-4" lucideX></svg>
+        <svg aria-hidden="true" class="size-5" lucideX></svg>
       </button>
     </div>
 
-    <div class="rep-body">
-      <!-- The guardian: the stamp says the week in one word, the gauge is the one the overview
-           already uses, the line under the name is the blow or the loss. -->
-      <section class="rep-s rep-guardian">
-        <span
-          [class.rep-stamp--held]="!report.defeated"
-          [class.rep-stamp--won]="report.defeated"
-          aria-hidden="true"
-          class="rep-stamp clip-hex"
-        >
-          <span class="clip-hex"
-            ><span>{{
-              (report.defeated ? 'overview.missionReport.won' : 'overview.missionReport.held')
+    <div class="rep-scroll">
+      <!-- The verdict, as a game's end screen says it. -->
+      <header class="rep-banner">
+        <h2 class="rep-verdict" id="mission-report-verdict">
+          {{
+            (report.defeated ? 'overview.missionReport.won' : 'overview.missionReport.held')
+              | translate
+          }}
+        </h2>
+        <p class="rep-line">
+          @if (report.defeated) {
+            @if (report.blow; as blow) {
+              {{ blow.when }}
+              <!-- `where` hugs the name: it opens on its own comma. -->
+              @if (blow.by) {
+                {{ 'overview.missionReport.blowBy' | translate }} <b>{{ blow.by }}</b
+                >{{ blow.where }}
+              } @else {
+                {{ blow.where }}
+              }
+            }
+          } @else if (report.baseLoss > 0) {
+            {{
+              'overview.missionReport.heldLine'
+                | translate: { percent: report.breachPercent, count: format(report.baseLoss) }
+            }}
+          } @else {
+            {{ 'overview.missionReport.heldNoLoss' | translate: { percent: report.breachPercent } }}
+          }
+        </p>
+      </header>
+
+      <!-- The loot: the wounded first, the week's harvest after. -->
+      <section [attr.aria-label]="'overview.missionReport.loot' | translate" class="rep-loot">
+        <div class="rep-main">
+          <span aria-hidden="true" class="rep-hex rep-hex--lg clip-hex text-brand-400"
+            ><span class="clip-hex"><svg lucideUsers></svg></span
+          ></span>
+          <div class="min-w-0">
+            <p class="rep-main-fig">
+              <strong [appCountUp]="report.rescued"></strong>
+              <span>{{
+                'overview.missionReport.rescued' | translate: { spotted: format(report.spotted) }
+              }}</span>
+            </p>
+            <div aria-hidden="true" class="rep-leds">
+              @for (lit of segments(); track $index) {
+                <i [class.on]="lit" [style.--i]="$index"></i>
+              }
+            </div>
+          </div>
+          <p class="rep-main-sub">
+            {{
+              'overview.missionReport.rescuedSplit'
                 | translate
-            }}</span></span
-          >
-        </span>
-        <div class="min-w-0">
-          <p class="rep-name">{{ bossLabel(report.weekIndex) }}</p>
-          <p class="rep-line">
-            @if (report.defeated) {
-              <svg aria-hidden="true" class="size-4 shrink-0 text-accent-green" lucideCheck></svg>
-              {{ report.blow }}
+                  : { challenges: format(report.byChallenges), ship: format(report.byShip) }
+            }}
+            @if (report.leftBehind > 0) {
+              {{ leftBehindKey() | translate: { count: format(report.leftBehind) } }}
             } @else {
-              {{
-                'overview.missionReport.heldLine' | translate: { count: format(report.baseLoss) }
-              }}
+              {{ 'overview.missionReport.allHome' | translate }}
             }
           </p>
-          <p class="label-caption mt-3 text-2xs text-text-muted">
-            {{
-              'overview.missionReport.gauge'
-                | translate
-                  : {
-                      left: format(report.hitPointsLeft),
-                      total: format(report.hitPoints),
-                      percent: report.breachPercent,
-                    }
-            }}
-          </p>
-          <span [style.--lvl]="100 - report.breachPercent + '%'" aria-hidden="true" class="rep-bar"
-            ><i></i
-          ></span>
         </div>
-      </section>
 
-      <!-- Three readings side by side: the wounded, the base, the planet ahead. -->
-      <section class="rep-s rep-figs">
-        <div>
-          <p class="rep-fig text-accent-purple">
-            {{ format(report.rescued) }}
-            <small>{{ 'overview.missionReport.rescued' | translate }}</small>
-          </p>
-          <p class="rep-sub">
-            {{
-              'overview.missionReport.rescuedSub'
-                | translate
-                  : { spotted: format(report.spotted), challenges: format(report.byChallenges) }
-            }}
-            · {{ 'overview.missionReport.limiter.' + report.limiter | translate }}
-          </p>
-        </div>
-        <div>
-          @if (report.population !== null) {
-            <p class="rep-fig text-brand-400">
-              {{ format(report.population) }}
-              <small>{{ 'overview.missionReport.inhabitants' | translate }}</small>
-            </p>
-            <p [class.text-boss-hp-edge]="report.baseLoss > 0" class="rep-sub">
-              {{
-                'overview.missionReport.baseSub'
-                  | translate
-                    : { change: signed(report.populationChange), lost: format(report.baseLoss) }
-              }}
-            </p>
-          } @else {
-            <p class="rep-sub">{{ 'overview.missionReport.baseNone' | translate }}</p>
-          }
-        </div>
-        @if (report.next; as next) {
-          <div class="rep-next">
-            <p class="label-caption text-2xs text-text-muted">
-              {{ 'overview.missionReport.next' | translate }}
-            </p>
-            <p class="rep-name">{{ next.planetName }}</p>
-            <p class="rep-sub">
-              {{
-                'overview.missionReport.nextSub'
-                  | translate: { hp: format(next.hitPoints), wounded: format(next.wounded) }
-              }}
-            </p>
-          </div>
+        @if (report.base; as base) {
+          <ul class="rep-gains">
+            <li class="rep-gain text-accent-green" style="--i: 0">
+              <span aria-hidden="true" class="rep-hex clip-hex"
+                ><span class="clip-hex"><svg lucideWheat></svg></span
+              ></span>
+              <strong>+<span [appCountUp]="base.foodGained"></span></strong>
+              <span>{{ 'overview.missionReport.food' | translate }}</span>
+            </li>
+            <li class="rep-gain text-accent-cyan" style="--i: 1">
+              <span aria-hidden="true" class="rep-hex clip-hex"
+                ><span class="clip-hex"><svg lucideWrench></svg></span
+              ></span>
+              <strong>+<span [appCountUp]="base.componentsGained"></span></strong>
+              <span>{{ 'overview.missionReport.components' | translate }}</span>
+            </li>
+            <li
+              [class.text-boss-hp-edge]="base.populationChange < 0"
+              [class.text-brand-400]="base.populationChange >= 0"
+              class="rep-gain"
+              style="--i: 2"
+            >
+              <span aria-hidden="true" class="rep-hex clip-hex"
+                ><span class="clip-hex"><svg lucideBuilding2></svg></span
+              ></span>
+              <strong
+                >{{ base.populationChange > 0 ? '+' : ''
+                }}<span [appCountUp]="base.populationChange"></span
+              ></strong>
+              <span>{{
+                'overview.missionReport.population' | translate: { total: format(base.population) }
+              }}</span>
+            </li>
+          </ul>
         }
       </section>
 
+      <!-- The honours: the champion crowned, the four titles handed out as medals. -->
       @if (report.titles; as titles) {
-        <section [attr.aria-label]="'overview.missionReport.titles' | translate" class="rep-s">
-          <ul class="rep-titles">
-            @for (title of titles; track title.key) {
-              <li [class]="title.colorClass" class="rep-t">
-                <app-avatar [src]="title.portrait" size="sm" />
-                <app-title-badge [title]="title.key" />
-                <b [class.rep-t-none]="!title.holder">{{
-                  title.holder ?? ('overview.missionReport.notAwarded' | translate)
-                }}</b>
+        <section
+          [attr.aria-label]="'overview.missionReport.honours' | translate"
+          class="rep-honours"
+        >
+          @if (report.champion; as champion) {
+            <div [class.rep-champ--none]="!champion.holder" class="rep-champ">
+              <span class="rep-champ-avatar">
+                <app-avatar [champion]="!!champion.holder" [src]="champion.portrait" size="md" />
+              </span>
+              <span class="rep-champ-crown">
+                <svg aria-hidden="true" class="size-4" lucideCrown></svg>
+                {{ 'overview.missionReport.champion' | translate }}
+              </span>
+              @if (champion.holder) {
+                <b>{{ champion.holder }}</b>
+                <small>{{
+                  'overview.missionReport.championPoints'
+                    | translate: { points: format(champion.points) }
+                }}</small>
+              } @else {
+                <b>{{ 'overview.missionReport.noChampion' | translate }}</b>
+              }
+            </div>
+          }
+          <ul class="rep-medals">
+            @for (title of titles; track title.key; let index = $index) {
+              <li
+                [class]="title.colorClass"
+                [class.rep-medal--none]="!title.holder"
+                [style.--i]="index"
+                class="rep-medal"
+              >
+                <span aria-hidden="true" class="rep-hex clip-hex">
+                  <span class="clip-hex">
+                    @switch (title.icon) {
+                      @case ('wrench') {
+                        <svg lucideWrench></svg>
+                      }
+                      @case ('wheat') {
+                        <svg lucideWheat></svg>
+                      }
+                      @case ('flame') {
+                        <svg lucideFlame></svg>
+                      }
+                      @case ('target') {
+                        <svg lucideTarget></svg>
+                      }
+                    }
+                  </span>
+                </span>
+                <em>{{ 'common.title.' + title.key | translate }}</em>
+                <span class="rep-holder">
+                  @if (title.holder) {
+                    <app-avatar [src]="title.portrait" size="xs" />
+                    <b>{{ title.holder }}</b>
+                  } @else {
+                    <b>{{ 'overview.missionReport.notAwarded' | translate }}</b>
+                  }
+                </span>
               </li>
             }
           </ul>
         </section>
-
-        <section [attr.aria-label]="'overview.missionReport.ranking' | translate" class="rep-s">
-          <ol class="rep-rank">
-            @for (row of report.ranking; track row.name) {
-              <li>
-                <span class="rep-r-pos">{{ row.position }}</span>
-                <app-avatar [src]="row.portrait" size="sm" />
-                <span class="rep-r-name">{{ row.name }}</span>
-                <span class="rep-r-total tabular-nums">{{ format(row.total) }}</span>
-              </li>
-            }
-          </ol>
-        </section>
       } @else {
-        <p class="rep-s label-caption text-2xs text-text-muted">
-          {{ 'overview.missionReport.rankingNotFrozen' | translate }}
-        </p>
+        <p class="rep-not-frozen">{{ 'overview.missionReport.notFrozen' | translate }}</p>
       }
     </div>
+
+    <footer class="rep-foot">
+      @if (report.next; as next) {
+        <p class="rep-next">
+          {{ 'overview.missionReport.nextLabel' | translate }} <b>{{ next.planetName }}</b
+          >,
+          {{
+            'overview.missionReport.nextSub'
+              | translate: { hp: format(next.hitPoints), wounded: format(next.wounded) }
+          }}
+        </p>
+      }
+      <button (click)="closed.emit()" class="rep-continue focus-ring" type="button">
+        {{ 'overview.missionReport.continue' | translate }}
+      </button>
+    </footer>
   </div>
 }

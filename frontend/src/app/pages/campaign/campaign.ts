@@ -111,25 +111,6 @@ export class Campaign {
     return week?.settled ? null : week;
   });
 
-  /**
-   * The campaign, then its difficulty: the header's slot beside the eyebrow only exists on a page
-   * with a way back, so the difficulty rides in the line itself.
-   */
-  protected readonly headerEyebrow = computed(() => {
-    const campaign = this.campaign();
-    if (!campaign || campaign.number === null) {
-      return this.translation.translate('campaign.header.noCampaign');
-    }
-    const eyebrow = this.translation.translate('campaign.header.eyebrow', {
-      number: campaign.number,
-    });
-    return campaign.difficulty
-      ? `${eyebrow} · ${this.translation.translate('campaign.header.difficulty', {
-          difficulty: this.translation.translate(`common.difficulty.${campaign.difficulty}`),
-        })}`
-      : eyebrow;
-  });
-
   protected readonly planets = computed<readonly Planet[]>(() => {
     const campaign = this.campaign();
     if (!campaign) {
@@ -255,7 +236,7 @@ export class Campaign {
         difficulty: campaign.difficulty,
         population: campaign.base?.population ?? 0,
         guardiansDefeated: campaign.totals?.guardiansDefeated ?? 0,
-        weeksPlayed: campaign.totals?.weeksSettled ?? 0,
+        weeksPlayed: campaign.currentWeekIndex ?? campaign.totals?.weeksSettled ?? 0,
         rescued: campaign.totals?.rescued ?? 0,
         current: true,
       });

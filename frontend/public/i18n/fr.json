@@ -1,6 +1,5 @@
 {
   "admin": {
-    "eyebrow": "Backoffice",
     "actionFailed": "L'opération a échoué. Réessaie, ou consulte les logs du backend.",
     "cancel": "Annuler",
     "save": "Enregistrer",
@@ -247,10 +246,7 @@
   "campaign": {
     "title": "Campagne",
     "header": {
-      "heading": "Dix planètes, dix semaines",
-      "eyebrow": "Campagne {{number}}",
-      "noCampaign": "Campagne",
-      "difficulty": "Difficulté {{difficulty}}"
+      "heading": "Les dix planètes"
     },
     "state": {
       "loading": "Chargement de la campagne…",
@@ -464,22 +460,14 @@
   "challenges": {
     "title": "Défis",
     "header": {
-      "heading": "Les défis de la semaine",
-      "week": "Semaine {{week}} sur {{weeks}}",
-      "weekOf": "Semaine du {{date}}",
-      "difficulty": "Difficulté {{difficulty}}"
+      "heading": "Défis de la semaine"
     },
     "state": {
       "loading": "Chargement des défis…",
       "error": "Les défis n'ont pas pu être chargés.",
       "empty": {
-        "eyebrow": "Tirage du lundi",
         "title": "Aucun défi tiré cette semaine",
-        "text": "Les cinq défis de la semaine sont tirés le lundi, un par difficulté. Le défi du jour est retiré chaque matin.",
-        "weekly": "Hebdomadaires",
-        "weeklyValue": "5 à tirer le lundi",
-        "daily": "Du jour",
-        "dailyValue": "1 chaque matin"
+        "text": "Les cinq défis de la semaine sont tirés le lundi, un par difficulté. Le défi du jour est retiré chaque matin."
       }
     },
     "brief": {
@@ -563,7 +551,7 @@
     "titleHint": {
       "MECHANIC": "Le plus de composants sur la semaine",
       "QUARTERMASTER": "Le plus de nourriture sur la semaine",
-      "REGULAR": "La plus longue série de jours joués",
+      "REGULAR": "Le plus de jours joués dans la semaine",
       "SCOUT": "Le plus de défis validés"
     },
     "metric": {
@@ -674,7 +662,7 @@
   "leaderboard": {
     "title": "Classement",
     "header": {
-      "heading": "Le classement de la semaine",
+      "heading": "Classement",
       "week": "Semaine {{week}} sur {{weeks}}",
       "outsideCampaign": "Hors campagne",
       "difficulty": "Difficulté {{difficulty}}"
@@ -710,7 +698,7 @@
       "measure": {
         "MECHANIC": "{{value}} composants",
         "QUARTERMASTER": "{{value}} nourriture",
-        "REGULAR": "{{value}} j de série",
+        "REGULAR": "{{value}} j joués",
         "SCOUT": "{{value}} défis validés"
       },
       "progress": "Progression des défis",
@@ -754,9 +742,7 @@
   "overview": {
     "title": "Vue d'ensemble",
     "header": {
-      "eyebrow": "Campagne {{number}} · Difficulté {{difficulty}}",
-      "noCampaign": "Aucune campagne",
-      "heading": "Ramener les blessés de dix planètes"
+      "heading": "La base"
     },
     "scene": {
       "section": "La ville de nuit et la fusée en construction",
@@ -787,6 +773,8 @@
       "aboardUnit": "blessés à bord dimanche",
       "boss": "Boss {{index}}",
       "hpLeft": "PV restants",
+      "down": "Vaincu {{weekday}} à {{time}}",
+      "downBy": "Vaincu {{weekday}} à {{time}} par {{name}}",
       "squad": "Escouade",
       "contribution": "de contributions",
       "contributionTooltip": "{{name}} · {{damage}} PV au gardien · {{points}} points de défis · {{total}} de contribution, soit {{percent}} % de l’escouade",
@@ -816,7 +804,7 @@
       "fromChallenges": "acquis par les défis",
       "leftBehind": "resteraient au sol",
       "carryTooltip": "Le stock de composants divisé par {{rate}} : autant de blessés que le vaisseau peut aller chercher. Le classé (Compétitif, Premier, Non classé) en rapporte le plus.",
-      "shelterTooltip": "La nourriture en réserve, une fois les sept prochains repas mis de côté, divisée par {{rate}} : autant de blessés que la base peut loger. Le décontracté (Deathmatch, Spike Rush, Team Deathmatch, Skirmish) en rapporte le plus.",
+      "shelterTooltip": "La nourriture en réserve, une fois les sept prochains repas mis de côté, divisée par {{rate}} : autant de blessés que la base peut loger. Le décontracté (Deathmatch, Spike Rush, Team Deathmatch, Skirmish, Swiftplay, Escalade) en rapporte le plus.",
       "breachTooltip": "La part des points de vie déjà retirés au gardien. Elle plafonne l'extraction : un gardien repoussé à 70 % ne laisse partir que 70 % de ce qui est prêt à embarquer. Toute partie y contribue, quel que soit le mode.",
       "aboardTooltip": "Le plus petit des trois plafonds voisins, multiplié par la percée, plus les blessés déjà acquis par les défis validés : ce qui reviendra dimanche soir."
     },
@@ -854,8 +842,10 @@
       "link": "Tout le classement",
       "operator": "Opérateur",
       "operatorTooltip": "Le pseudo de l'opérateur, avec son titre de la semaine s'il en détient un : le meilleur sur une ressource (composants, nourriture, série) ou en dégâts au gardien.",
-      "streak": "Bonus de série",
-      "streakTooltip": "Jours consécutifs où l'opérateur a joué au moins une partie valorisée. Chaque jour au-delà du premier ajoute +2 % à tout ce que ses parties produisent ce jour-là (dégâts, composants, nourriture), plafonné à +10 % à partir de 6 jours. Remis à zéro dès qu'une journée est sautée.",
+      "streak": "Assiduité",
+      "streakTooltip": "Jours joués cette semaine. Chaque jour après le premier ajoute +2 % aux gains du jour, jusqu'à +10 %. Remis à zéro le lundi.",
+      "streakValue": "+{{percent}} %",
+      "streakAria": "{{days}} jours joués sur 7 cette semaine, bonus de +{{percent}} %",
       "damage": "Dégâts au gardien",
       "damageTooltip": "Dégâts infligés au gardien de la semaine par l'opérateur aujourd'hui, après rendements décroissants et bonus de série.",
       "componentsTooltip": "Composants produits aujourd'hui par l'opérateur, selon le mode et l'issue de chaque partie, après rendements décroissants et bonus de série.",
@@ -900,36 +890,41 @@
     },
     "missionReport": {
       "button": "Rapport de mission",
-      "eyebrow": "Rapport de mission · réglé {{date}}",
-      "title": "Semaine {{index}} · {{planet}}",
-      "close": "Fermer",
-      "won": "Vaincu",
-      "held": "A tenu",
-      "blow": "{{name}} · {{weekday}} {{time}} · {{map}} · {{mode}} {{score}}",
-      "heldLine": "Debout dimanche à minuit · la base a perdu {{count}} habitants",
-      "gauge": "{{left}} PV sur {{total}} · percée à {{percent}} %",
-      "rescued": "blessés ramenés",
-      "rescuedSub": "sur {{spotted}} · {{challenges}} par les défis",
-      "limiter": {
-        "FOOD": "limité par la nourriture",
-        "COMPONENTS": "limité par les composants",
-        "GROUP": "tout le groupe est rentré",
-        "NONE": "rien n'a limité"
+      "week": "Semaine {{index}} sur {{total}}",
+      "close": "Fermer le rapport",
+      "won": "Mission accomplie",
+      "held": "Gardien debout",
+      "blow": "Gardien abattu {{weekday}} à {{time}}",
+      "blowBy": "par",
+      "blowWhere": ", sur {{map}} en {{mode}}",
+      "blowScore": " ({{ally}} à {{enemy}})",
+      "heldLine": "Repoussé à {{percent}} %. Il a tué {{count}} habitants dimanche à minuit.",
+      "heldNoLoss": "Repoussé à {{percent}} %, sans perte pour la base.",
+      "loot": "Ce que la semaine a rapporté",
+      "rescued": "blessés ramenés sur {{spotted}}",
+      "rescuedSplit": "{{challenges}} par les défis, {{ship}} par le vaisseau.",
+      "allHome": "Tout le groupe est rentré.",
+      "leftBehind": {
+        "FOOD": "La nourriture manquait pour les {{count}} autres.",
+        "COMPONENTS": "Les composants manquaient pour les {{count}} autres.",
+        "BREACH": "{{count}} sont restés au sol, la percée était incomplète."
       },
-      "inhabitants": "habitants",
-      "baseSub": "{{change}} cette semaine · {{lost}} perdus",
-      "baseNone": "Relevé de la base indisponible",
-      "next": "Semaine prochaine",
-      "nextSub": "{{hp}} PV · {{wounded}} blessés au sol",
-      "titles": "Les titres de la semaine",
+      "food": "nourriture récoltée",
+      "components": "composants récoltés",
+      "population": "habitants, {{total}} au total",
+      "honours": "Les honneurs de la semaine",
+      "champion": "Champion de la semaine",
+      "championPoints": "{{points}} points au classement",
+      "noChampion": "Première place partagée",
       "notAwarded": "Non décerné",
-      "ranking": "Le classement figé",
-      "rankingNotFrozen": "Le classement de cette semaine n'a pas été figé."
+      "notFrozen": "Les titres de cette semaine n'ont pas été figés.",
+      "nextLabel": "Prochaine planète :",
+      "nextSub": "{{hp}} PV et {{wounded}} blessés à ramener.",
+      "continue": "Continuer"
     }
   },
   "pageHeader": {
-    "back": "Retour à {{name}}",
-    "weekHeading": "{{page}} · Semaine {{number}} sur {{weeks}}"
+    "back": "Retour à {{name}}"
   },
   "playerProfile": {
     "breadcrumb": {
@@ -952,6 +947,7 @@
     },
     "error": "Impossible de charger le profil de cet opérateur.",
     "filters": {
+      "allModes": "Tous",
       "allSeasons": "Toutes les saisons",
       "gameModeLabel": "Filtrer par mode de jeu",
       "moreGameModes": "Autres modes de jeu",
@@ -981,7 +977,6 @@
       },
       "detail": {
         "title": "Détail du match",
-        "eyebrow": "Retour au profil",
         "error": "Impossible de charger ce match.",
         "loading": "Chargement du match…",
         "duration": "{{minutes}} min",
@@ -996,7 +991,8 @@
         "tier": "Rang",
         "teammatesHeading": "Autres membres de l'escouade dans ce match",
         "sameTeam": "même équipe",
-        "otherTeam": "équipe adverse"
+        "otherTeam": "équipe adverse",
+        "back": "Profil du joueur"
       },
       "empty": "Aucun match ne correspond à ces filtres.",
       "error": "Impossible de charger l'historique des matchs.",
@@ -1036,7 +1032,7 @@
         "alignmentNote": "Les saisons les plus courtes démarrent plus loin sur l'axe : toutes les courbes se terminent au même endroit, pour comparer les fins de saison.",
         "axis": {
           "headshotPercentage": "Tirs à la tête (%)",
-          "kda": "K/D",
+          "kda": "KDA",
           "acs": "ACS",
           "adr": "ADR"
         },
@@ -1045,7 +1041,7 @@
           "acs": "ACS",
           "adr": "ADR",
           "headshotPercentage": "HS%",
-          "kda": "K/D"
+          "kda": "KDA"
         },
         "metricLabel": "Statistique affichée",
         "pointLabel": "Match",
@@ -1077,7 +1073,7 @@
         "label": {
           "bestAcs": "Meilleur ACS",
           "bestHeadshotPercentage": "Meilleur HS%",
-          "bestKda": "Meilleur K/D",
+          "bestKda": "Meilleur KDA",
           "longestActiveDayStreak": "Jours d'affilée",
           "longestWinStreak": "Série de victoires",
           "mostDamage": "Dégâts max",
@@ -1131,22 +1127,7 @@
       }
     },
     "stats": {
-      "acs": "ACS",
-      "adr": "ADR",
-      "headshotPercentage": "HS%",
-      "kda": "K/D",
       "losses": "{{count}} D",
-      "matchesPlayed": "Matchs",
-      "record": "{{wins}} V / {{losses}} D",
-      "tooltip": {
-        "acs": "Score de combat moyen par manche : les points de combat gagnés (éliminations, dégâts, assistances) divisés par le nombre de manches jouées, puis moyennés sur les matchs filtrés.",
-        "adr": "Dégâts moyens infligés par manche, moyennés sur les matchs filtrés.",
-        "headshotPercentage": "Part des tirs au but qui ont touché la tête : coups à la tête divisés par le total tête + corps + jambes. Les tirs manqués ne sont pas comptés.",
-        "kda": "(Éliminations + assistances) divisées par le nombre de morts, sur l'ensemble des matchs filtrés.",
-        "matchesPlayed": "Nombre de matchs correspondant aux filtres en cours.",
-        "winRate": "Part des matchs gagnés : victoires divisées par le nombre de matchs filtrés. Les matchs annulés comptent dans le total."
-      },
-      "winRate": "Winrate",
       "wins": "{{count}} V"
     },
     "title": "Profil de l'opérateur"
@@ -1154,7 +1135,7 @@
   "players": {
     "columns": {
       "headshotPercentage": "HS%",
-      "kda": "K/D",
+      "kda": "KDA",
       "matchesPlayed": "Matchs",
       "player": "Opérateur",
       "rank": "Rang",
@@ -1162,16 +1143,6 @@
     },
     "empty": "Aucun opérateur suivi pour le moment.",
     "error": "Impossible de charger les opérateurs.",
-    "eyebrow": {
-      "inCampaign": {
-        "one": "{{count}} actif",
-        "other": "{{count}} actifs"
-      },
-      "outOfCampaign": {
-        "one": "{{count}} en attente",
-        "other": "{{count}} en attente"
-      }
-    },
     "heading": "Escouade",
     "inCampaign": {
       "title": "Opérateurs actifs",
@@ -1184,7 +1155,6 @@
     "outOfCampaign": {
       "title": "En attente de la prochaine campagne"
     },
-    "subheading": "Escouade",
     "tiers": {
       "ascendant": "Ascendant",
       "bronze": "Bronze",
@@ -1197,13 +1167,14 @@
       "silver": "Argent",
       "unranked": "Non classé"
     },
-    "title": "Escouade"
+    "title": "Escouade",
+    "header": {
+      "heading": "L’escouade"
+    }
   },
   "retry": "Réessayer",
   "rules": {
     "title": "Règles du jeu",
-    "heading": "Règles",
-    "subheading": "Comment marche la mission",
     "replayTour": "Revoir la visite guidée",
     "sections": {
       "match": {
@@ -1219,7 +1190,7 @@
           "short": "Modes courts",
           "none": "Sans valeur"
         },
-        "noneModes": "Swiftplay, Escalade",
+        "noneModes": "New Map, parties personnalisées",
         "foodShare": "{{percent}} % nourriture",
         "componentsShare": "{{percent}} % composants",
         "modes": {
@@ -1227,6 +1198,8 @@
           "unrated": "Non classé",
           "teamDeathmatch": "Team Deathmatch",
           "spikeRush": "Spike Rush",
+          "escalation": "Escalade",
+          "swiftplay": "Swiftplay",
           "deathmatch": "Deathmatch",
           "skirmish": "Skirmish"
         },
@@ -1236,7 +1209,7 @@
       "multipliers": {
         "title": "Les multiplicateurs",
         "statement": "Le farm rapporte moins, la régularité rapporte plus",
-        "description": "Deux coefficients modifient la *valeur de chaque partie*, donc à la fois ses dégâts {damage}, sa nourriture {food} et ses composants {components}. Le premier baisse avec le nombre de parties dans la journée. Le second monte avec le nombre de jours joués de suite {streak}. Aucun des deux ne touche les défis.",
+        "description": "Deux coefficients modifient la *valeur de chaque partie*, donc à la fois ses dégâts {damage}, sa nourriture {food} et ses composants {components}. Le premier baisse avec le nombre de parties dans la journée. Le second monte avec le nombre de jours joués dans la semaine {streak}. Aucun des deux ne touche les défis.",
         "decayLabel": "Rendement, par rang de la partie dans la journée",
         "decayRanks": {
           "first": "Parties 1 à 5",
@@ -1244,15 +1217,15 @@
           "rest": "10 et plus"
         },
         "decayNote": "Les parties du jour sont classées de la plus forte à la plus faible : les cinq meilleures comptent en entier, quel que soit l'ordre où elles ont été jouées.",
-        "streakLabel": "Série de jours joués de suite {streak}, toutes les parties du jour valent",
+        "streakLabel": "Jours joués dans la semaine {streak}, toutes les parties du jour valent",
         "streakDays": {
           "one": "{{count}} jour",
           "other": "{{count}} jours"
         },
         "streakDaysMore": "{{count}} jours et plus",
-        "streakNote": "Une journée compte si l'opérateur y a joué au moins une partie valorisée. La série est individuelle et retombe à 1 dès qu'une journée est sautée.",
+        "streakNote": "Une journée compte si l'opérateur y a joué au moins une partie valorisée. La série est individuelle : une journée sautée ne fait rien perdre, et le compteur repart à zéro chaque lundi.",
         "exampleLabel": "Exemple",
-        "example": "Compétitif gagné, sixième partie du jour, quatrième jour de suite : *500 × 50 % × 1,06 = 265* dégâts {damage}, répartis en 80 nourriture {food} et 185 composants {components}."
+        "example": "Compétitif gagné, sixième partie du jour, quatrième jour joué de la semaine : *500 × 50 % × 1,06 = 265* dégâts {damage}, répartis en 80 nourriture {food} et 185 composants {components}."
       },
       "week": {
         "title": "La semaine",
@@ -1267,7 +1240,7 @@
           "midnight": {
             "title": "La base mange",
             "when": "à minuit",
-            "text": "Chaque habitant consomme *0,008 nourriture* {food}. Le défi du jour se résout, un nouveau est tiré. La série {streak} avance ou retombe."
+            "text": "Chaque habitant consomme *0,008 nourriture* {food}. Le défi du jour se résout, un nouveau est tiré. La série {streak} avance si l'opérateur a joué."
           },
           "sunday": {
             "title": "Le règlement",
@@ -1473,6 +1446,9 @@
           }
         }
       }
+    },
+    "header": {
+      "heading": "Règles du jeu"
     }
   },
   "seasons": {
@@ -1491,7 +1467,7 @@
       "admin": "Administration",
       "expedition": "Expédition",
       "help": "Aide",
-      "squad": "Escouade"
+      "operators": "Opérateurs"
     },
     "label": "Barre latérale",
     "language": {
@@ -1653,7 +1629,7 @@
         },
         "spec2": {
           "value": "+10 %",
-          "label": "série de six jours"
+          "label": "six jours joués dans la semaine"
         },
         "spec3": {
           "value": "1",

@@ -22,18 +22,14 @@ import { NavigationPanel } from '@layout/navigation-panel';
  * contributes a bar of its own. **Every page nested under the shell must therefore render this
  * component**, or a phone loses its way into the navigation (see `PAGE_LAYOUT_CLASS`).
  *
- * Three inputs and two slots, because a page header is only ever these shapes:
- * - {@link eyebrow} names the context above the title — the active week and the page, or the
- *   page this one was reached from.
- * - {@link backLink} turns that same line into the way back to that parent.
- * - {@link heading} is dropped on a page whose subject is already named by the block right under
- *   the bar (the player profile opens on the portrait it belongs to), leaving the way back as the
- *   one thing the chrome carries; the eyebrow then renders as a control rather than a caption.
- * - `[headingAside]` sits on the title's own line, for a chip qualifying it.
- * - `[eyebrowAside]` sits inline after the way-back link, for a discreet complement to it (the
- *   player's name on a detail page whose `<h1>` already lives in the block below the bar).
- * - the default slot sits at the trailing edge, for what the page offers here: a countdown, a
- *   primary action, a view toggle.
+ * A page header is only ever one of two shapes:
+ * - a {@link heading}: one short gold title stating what the page is, centred in the bar's height.
+ * - a way back ({@link backLink} + {@link backLabel}) on a page whose subject is already named by
+ *   the block right under the bar (the player profile opens on its portrait). `[backAside]` sits
+ *   inline after it, for a discreet complement (the player's name).
+ *
+ * The default slot sits at the trailing edge, for what the page offers here: a countdown, a
+ * primary action, a view toggle.
  *
  * What deliberately stays out of the bar: controls that *govern the content* rather than the page
  * (the profile's game-mode, season and period filters, the campaign's legend). They belong beside
@@ -49,24 +45,20 @@ import { NavigationPanel } from '@layout/navigation-panel';
 })
 export class PageHeader {
   /**
-   * Already-translated context line above the title: the section this page belongs to, or the page
-   * it was reached from. The line is dropped when empty.
-   */
-  public readonly eyebrow = input('');
-
-  /**
-   * Already-translated page title, rendered as the page's `<h1>`.
-   *
-   * Left empty by a page that names its own subject in its opening block, which is then that
-   * page's `<h1>`. The bar carries no title at all there rather than a weaker copy of it.
+   * Already-translated page title, rendered as the page's `<h1>`. Left empty by a page that names
+   * its own subject in its opening block, which is then that page's `<h1>`.
    */
   public readonly heading = input('');
 
   /**
-   * Route the context line links back to, for a page reached from another one. When set,
-   * {@link eyebrow} names that parent and becomes the way back to it.
+   * Route of the page this one was reached from. The bar then shows the way back to it.
    */
   public readonly backLink = input<string | null>(null);
+
+  /**
+   * Already-translated name of the parent page {@link backLink} leads to.
+   */
+  public readonly backLabel = input('');
 
   /**
    * Shared open state of the navigation drawer, which the burger below `lg` toggles.

@@ -22,7 +22,7 @@ import {
   formatKda,
   formatScore,
 } from '@core/players/player-format.utils';
-import { resolveKdaVisual } from '@core/players/player-stats.utils';
+import { resolveKdVisual } from '@core/players/player-stats.utils';
 import { PageHeader } from '@layout/page-header/page-header';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { Avatar } from '@shared/avatar/avatar';
@@ -122,7 +122,7 @@ export class MatchDetail {
   /**
    * Resolves a KDA's text colour, exposed to the template.
    */
-  protected readonly kdaVisual = resolveKdaVisual;
+  protected readonly kdVisual = resolveKdVisual;
 
   /**
    * Formats a KDA ratio, exposed to the template.

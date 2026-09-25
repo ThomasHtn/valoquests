@@ -88,7 +88,7 @@ public class WeeklyPlayerScore extends AuditableEntity {
     private int activeDays;
 
     /**
-     * Longest run of consecutive played days reached during the week, days before it included.
+     * Days played during the week.
      */
     @Column(name = "streak_days", nullable = false)
     private int streakDays;

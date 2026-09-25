@@ -137,7 +137,7 @@ class MatchImportServiceTest {
      * @param queueId raw Henrik queue slug of an ignored mode
      */
     @ParameterizedTest
-    @ValueSource(strings = {"swiftplay", "newmap", "ggteam", "custom"})
+    @ValueSource(strings = {"newmap", "custom"})
     void shouldSkipIgnoredGameModes(String queueId) {
         MatchImportResult result = importOne(queueId);
 
@@ -391,8 +391,8 @@ class MatchImportServiceTest {
             // record preserves them so they are counted as rejected instead of vanishing.
             new HenrikMatchHistoryResponse(200, Arrays.asList(
                 match("match-1", "competitive"),
-                match("match-2", "swiftplay"),
-                match("match-3", "ggteam"),
+                match("match-2", "newmap"),
+                match("match-3", "custom"),
                 match("match-4", "deathmatch"),
                 null
             ))

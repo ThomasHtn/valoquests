@@ -5,11 +5,16 @@ import io.github.thomashtn.valoquests.ranking.model.WeeklyTitle;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.ToIntFunction;
 import org.springframework.stereotype.Component;
 
 /**
  * Awards the four weekly honours from a week's ranking rows.
+ *
+ * <p>An operator holds one title at most. Titles are awarded in declaration order, the week's
+ * champion taking none of them, and a title whose best figure already holds one passes to the next
+ * operator on that figure.
  *
  * <p>A tie awards nothing. Two operators who both did the most are not both the most, and a title
  * that can be shared stops meaning anything the first time it is.
@@ -22,14 +27,16 @@ import org.springframework.stereotype.Component;
 public class WeeklyTitleResolver {
 
     /**
-     * Awards one week's titles.
+     * Awards one week's titles, leaving the champion out of them.
      *
-     * @param scores the week's ranking rows
+     * @param scores     the week's ranking rows
+     * @param championId the champion, who already holds the highest title, or {@code null}
      * @return the holder of each title, titles nobody won outright omitted
      */
-    public Map<WeeklyTitle, Long> resolve(List<WeeklyPlayerScore> scores) {
+    public Map<WeeklyTitle, Long> resolve(List<WeeklyPlayerScore> scores, Long championId) {
         List<WeeklyPlayerScore> ranked = scores.stream()
             .filter(score -> score.getPosition() != null)
+            .filter(score -> !Objects.equals(score.getPlayer().getId(), championId))
             .toList();
 
         Map<WeeklyTitle, Long> titles = new EnumMap<>(WeeklyTitle.class);
@@ -42,9 +49,9 @@ public class WeeklyTitleResolver {
     }
 
     /**
-     * Awards one title to the single operator holding the highest figure, if there is one.
+     * Awards one title to the single untitled operator holding the highest figure, if there is one.
      *
-     * @param titles titles awarded so far
+     * @param titles titles awarded so far, whose holders no longer compete
      * @param ranked the week's ranked rows
      * @param title  title being awarded
      * @param figure figure the title is awarded on
@@ -55,13 +62,16 @@ public class WeeklyTitleResolver {
         WeeklyTitle title,
         ToIntFunction<WeeklyPlayerScore> figure
     ) {
-        int best = ranked.stream().mapToInt(figure).max().orElse(0);
+        List<WeeklyPlayerScore> untitled = ranked.stream()
+            .filter(score -> !titles.containsValue(score.getPlayer().getId()))
+            .toList();
+        int best = untitled.stream().mapToInt(figure).max().orElse(0);
 
         if (best <= 0) {
             return;
         }
 
-        List<WeeklyPlayerScore> leaders = ranked.stream()
+        List<WeeklyPlayerScore> leaders = untitled.stream()
             .filter(score -> figure.applyAsInt(score) == best)
             .toList();
 

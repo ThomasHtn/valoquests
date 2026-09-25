@@ -23,6 +23,11 @@ const WIN_RATE_GOOD_THRESHOLD = 50;
 const KDA_GOOD_THRESHOLD = 1.3;
 
 /**
+ * K/D from which a figure is shown as good, the easiest K/D challenge's per-match bar.
+ */
+const KD_GOOD_THRESHOLD = 1;
+
+/**
  * Visual treatment applied to a statistic that has not been synchronized yet.
  */
 const UNKNOWN_STAT_VISUAL: StatVisual = {
@@ -78,4 +83,14 @@ export function resolveWinRateVisual(winRate: number | null): StatVisual {
  */
 export function resolveKdaVisual(kda: number | null): StatVisual {
   return resolveStatVisual(kda, KDA_GOOD_THRESHOLD);
+}
+
+/**
+ * Resolves the visual treatment for a K/D value.
+ *
+ * @param kd - The player's kills-to-deaths ratio, or `null` when not yet synchronized.
+ * @returns The text and bar colors to apply.
+ */
+export function resolveKdVisual(kd: number | null): StatVisual {
+  return resolveStatVisual(kd, KD_GOOD_THRESHOLD);
 }

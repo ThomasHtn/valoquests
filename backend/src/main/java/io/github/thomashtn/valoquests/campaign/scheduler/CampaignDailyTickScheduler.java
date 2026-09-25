@@ -1,6 +1,5 @@
 package io.github.thomashtn.valoquests.campaign.scheduler;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.campaign.service.DailyTickService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,10 +47,6 @@ public class CampaignDailyTickScheduler {
      *
      * @param dailyTickService daily tick service
      */
-    @SuppressFBWarnings(
-        value = "EI_EXPOSE_REP2",
-        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
-    )
     public CampaignDailyTickScheduler(DailyTickService dailyTickService) {
         this.dailyTickService = dailyTickService;
     }

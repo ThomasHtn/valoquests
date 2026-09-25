@@ -1,6 +1,6 @@
 <app-page-header
   [backLink]="backLink()"
-  [eyebrow]="'playerProfile.matches.detail.eyebrow' | translate"
+  [backLabel]="'playerProfile.matches.detail.back' | translate"
 />
 
 <div class="page-body">
@@ -82,10 +82,10 @@
             {{ 'playerProfile.matches.columns.kd' | translate }}
           </dt>
           <dd
-            [class]="kdaVisual(match.kda).textClass"
+            [class]="kdVisual(match.kd).textClass"
             class="font-display mt-1.5 text-xl font-bold tabular-nums"
           >
-            {{ formatKda(match.kda) }}
+            {{ formatKda(match.kd) }}
           </dd>
         </div>
         <div class="border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5">

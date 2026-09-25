@@ -49,15 +49,16 @@
 }
 
 .fold-cue {
-  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--color-text-muted);
 }
 
+/* Mirrors the section rule link's hover. */
 .fold-bar:hover .fold-cue {
-  color: var(--color-brand-400);
+  color: #f0c493;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .fold-cue svg {

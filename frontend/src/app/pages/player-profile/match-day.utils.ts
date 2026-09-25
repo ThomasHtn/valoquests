@@ -3,7 +3,7 @@ import { Match } from '@core/matches/match.model';
 import { MatchDay } from './match-day.model';
 
 /**
- * A {@link MatchDay} before its day-level averages ({@link MatchDay.avgKda} and friends) have been
+ * A {@link MatchDay} before its day-level averages ({@link MatchDay.avgKd} and friends) have been
  * derived from {@link MatchDay.matches} - computed once per day, after grouping, by
  * {@link withDayAverages} rather than kept incrementally in sync on every match folded into the
  * group.
@@ -13,7 +13,7 @@ type MatchDayGroup = Omit<
   | 'avgAcs'
   | 'avgAdr'
   | 'avgHeadshotPercentage'
-  | 'avgKda'
+  | 'avgKd'
   | 'totalAssists'
   | 'totalDeaths'
   | 'totalKills'
@@ -74,10 +74,19 @@ function withDayAverages(day: MatchDayGroup): MatchDay {
   const sum = (selector: (match: Match) => number): number =>
     day.matches.reduce((total, match) => total + selector(match), 0);
 
+  // Matches without shot data are left out rather than averaged in as a false 0 %.
+  const headshotPercentages = day.matches
+    .map((match) => match.headshotPercentage)
+    .filter((percentage) => percentage !== null);
+
   return {
     ...day,
-    avgKda: sum((match) => match.kda) / count,
-    avgHeadshotPercentage: sum((match) => match.headshotPercentage) / count,
+    avgKd: sum((match) => match.kd) / count,
+    avgHeadshotPercentage:
+      headshotPercentages.length === 0
+        ? null
+        : headshotPercentages.reduce((total, percentage) => total + percentage, 0) /
+          headshotPercentages.length,
     avgAdr: sum((match) => match.adr) / count,
     avgAcs: sum((match) => match.acs) / count,
     totalKills: sum((match) => match.kills),

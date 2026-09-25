@@ -614,7 +614,7 @@ export interface HistoryRow {
   readonly guardiansDefeated: number;
 
   /**
-   * Weeks played.
+   * Weeks played, the one in progress included.
    */
   readonly weeksPlayed: number;
 

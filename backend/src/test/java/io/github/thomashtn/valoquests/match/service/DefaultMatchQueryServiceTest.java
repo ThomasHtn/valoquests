@@ -160,16 +160,16 @@ class DefaultMatchQueryServiceTest {
     }
 
     @Test
-    @DisplayName("derives KDA and headshot percentage from the stored counters")
-    void shouldDeriveKdaAndHeadshotPercentage() {
+    @DisplayName("derives K/D and headshot percentage from the stored counters")
+    void shouldDeriveKdAndHeadshotPercentage() {
         given(List.of(match(20, 8, 4, 30, 60, 10, "Red")));
 
         MatchResponse response = service.findByPlayer(
             PLAYER_ID, 0, 10, MatchHistoryFilter.NONE
         ).content().getFirst();
 
-        // (20 kills + 4 assists) / 8 deaths
-        assertThat(response.kda()).isEqualByComparingTo("3.00");
+        // 20 kills / 8 deaths, assists left out as in K/D challenges
+        assertThat(response.kd()).isEqualByComparingTo("2.50");
         // 30 headshots out of 100 shots
         assertThat(response.headshotPercentage()).isEqualByComparingTo("30.00");
     }
@@ -183,19 +183,19 @@ class DefaultMatchQueryServiceTest {
             PLAYER_ID, 0, 10, MatchHistoryFilter.NONE
         ).content().getFirst();
 
-        assertThat(response.kda()).isEqualByComparingTo("15.00");
+        assertThat(response.kd()).isEqualByComparingTo("15.00");
     }
 
     @Test
-    @DisplayName("reports a zero headshot percentage when no shot was recorded")
-    void shouldReportZeroHeadshotPercentageWhenNoShotWasRecorded() {
+    @DisplayName("reports no headshot percentage when no shot was recorded")
+    void shouldReportNoHeadshotPercentageWhenNoShotWasRecorded() {
         given(List.of(match(0, 1, 0, 0, 0, 0, "Red")));
 
         MatchResponse response = service.findByPlayer(
             PLAYER_ID, 0, 10, MatchHistoryFilter.NONE
         ).content().getFirst();
 
-        assertThat(response.headshotPercentage()).isEqualByComparingTo("0");
+        assertThat(response.headshotPercentage()).isNull();
     }
 
     @Test
@@ -360,7 +360,7 @@ class DefaultMatchQueryServiceTest {
         assertThat(response.damageDealt()).isEqualTo(2500);
         assertThat(response.roundsPlayed()).isEqualTo(24);
         assertThat(response.mvp()).isTrue();
-        assertThat(response.kda()).isEqualByComparingTo("3.00");
+        assertThat(response.kd()).isEqualByComparingTo("2.50");
         assertThat(response.headshotPercentage()).isEqualByComparingTo("30.00");
         assertThat(response.valoquestsDamage()).isEqualTo(125);
         assertThat(response.damageCoefficientPercent()).isEqualTo(25);

@@ -11,6 +11,7 @@ import io.github.thomashtn.valoquests.campaign.repository.CampaignDailySnapshotR
 import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerDayRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.ranking.service.WeekChampionResolver;
 import io.github.thomashtn.valoquests.ranking.service.WeeklyTitleResolver;
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -57,12 +58,18 @@ public class CampaignDayReader {
     private final WeeklyTitleResolver titleResolver;
 
     /**
+     * Resolver naming the reigning champion, who holds no weekly title.
+     */
+    private final WeekChampionResolver championResolver;
+
+    /**
      * Creates the campaign day reader.
      *
      * @param playerDayRepository campaign player day repository
      * @param snapshotRepository  campaign daily snapshot repository
      * @param scoreRepository     weekly score repository
      * @param titleResolver       weekly title resolver
+     * @param championResolver    week champion resolver
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -72,12 +79,14 @@ public class CampaignDayReader {
         CampaignPlayerDayRepository playerDayRepository,
         CampaignDailySnapshotRepository snapshotRepository,
         WeeklyPlayerScoreRepository scoreRepository,
-        WeeklyTitleResolver titleResolver
+        WeeklyTitleResolver titleResolver,
+        WeekChampionResolver championResolver
     ) {
         this.playerDayRepository = playerDayRepository;
         this.snapshotRepository = snapshotRepository;
         this.scoreRepository = scoreRepository;
         this.titleResolver = titleResolver;
+        this.championResolver = championResolver;
     }
 
     /**
@@ -116,7 +125,10 @@ public class CampaignDayReader {
             components / CampaignRuleset.COMPONENTS_PER_RESCUE,
             food / CampaignRuleset.FOOD_PER_RESCUE,
             playerDays.stream().map(this::toResponse).toList(),
-            titleResolver.resolve(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(weekStart))
+            titleResolver.resolve(
+                scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(weekStart),
+                championResolver.reigningChampion()
+            )
         );
     }
 

@@ -21,7 +21,7 @@ import {
   formatWinRate,
 } from '@core/players/player-format.utils';
 import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/player-stats.utils';
-import { resourceValue } from '@core/http/resource-state.utils';
+import { anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { PlayerSummary } from '@core/players/player-summary.model';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
@@ -109,6 +109,11 @@ export class Players {
   protected readonly playersResource = this.playersApi.players;
 
   /**
+   * Whether the roster has nothing to show yet; the minute poll reloads it in the background.
+   */
+  protected readonly isLoading = anyLoading(this.playersResource);
+
+  /**
    * Placeholder line widths driving the loading skeleton.
    */
   protected readonly skeletonRows = SKELETON_ROWS;
@@ -159,33 +164,6 @@ export class Players {
    * group a row belongs to.
    */
   protected readonly rows = computed<readonly PlayerRow[]>(() => this.allRows());
-
-  /**
-   * The context bar's caption line: how the roster splits between active operators and those
-   * waiting for the next campaign.
-   *
-   * The eyebrow used to repeat the heading word for word — "Escouade" over "Escouade", under a
-   * navigation entry already reading "Escouade" — which spent the one line above the title saying
-   * nothing. The split is the fact this page exists to report and the one the campaign's every
-   * denominator counts on, so it belongs there. It names the roster status, not campaign
-   * membership: a campaign's roster is frozen when it opens, and there may be none running. Empty
-   * while the roster is still loading rather than announcing a count of zero it is about to
-   * contradict.
-   */
-  protected readonly rosterEyebrow = computed(() => {
-    const active = this.inCampaignRows().length;
-    const out = this.outOfCampaignRows().length;
-
-    if (active + out === 0) {
-      return '';
-    }
-
-    const activeLabel = this.translation.translate('players.eyebrow.inCampaign', { count: active });
-
-    return out === 0
-      ? activeLabel
-      : `${activeLabel} · ${this.translation.translate('players.eyebrow.outOfCampaign', { count: out })}`;
-  });
 
   /**
    * Resolves the text and bar colors for a row's win rate, exposed to the template.

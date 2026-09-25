@@ -50,7 +50,7 @@ export interface PlayerRow {
   readonly tier: CompetitiveTierVisual;
 
   /**
-   * Icon of the competitive rank, or `null` when unranked.
+   * Icon of the competitive rank, including the unranked badge.
    */
   readonly rankIconUrl: string | null;
 

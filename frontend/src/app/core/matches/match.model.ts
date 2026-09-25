@@ -65,9 +65,9 @@ export interface Match {
   readonly assists: number;
 
   /**
-   * Ratio of kills and assists to deaths.
+   * Ratio of kills to deaths, the kill total when deathless, as K/D challenges read it.
    */
-  readonly kda: number;
+  readonly kd: number;
 
   /**
    * Average combat score.
@@ -80,9 +80,9 @@ export interface Match {
   readonly adr: number;
 
   /**
-   * Share of hits that landed on the head, in percent.
+   * Share of hits that landed on the head, in percent, or `null` when Henrik reported no shot data.
    */
-  readonly headshotPercentage: number;
+  readonly headshotPercentage: number | null;
 
   /**
    * Competitive rank held.
@@ -242,9 +242,9 @@ export interface MatchDetail {
   readonly assists: number;
 
   /**
-   * Ratio of kills and assists to deaths.
+   * Ratio of kills to deaths, the kill total when deathless, as K/D challenges read it.
    */
-  readonly kda: number;
+  readonly kd: number;
 
   /**
    * Average combat score.
@@ -272,9 +272,9 @@ export interface MatchDetail {
   readonly legshots: number;
 
   /**
-   * Share of hits that landed on the head, in percent.
+   * Share of hits that landed on the head, in percent, or `null` when Henrik reported no shot data.
    */
-  readonly headshotPercentage: number;
+  readonly headshotPercentage: number | null;
 
   /**
    * Raw in-game damage dealt.

@@ -96,6 +96,26 @@ describe('MultiSelect', () => {
     expect(document.body.textContent).toContain('Two seasons at most.');
   });
 
+  it('stays open while its own option list scrolls', () => {
+    openPanel();
+
+    document.body
+      .querySelector('[role="listbox"] .menu-scroll')
+      ?.dispatchEvent(new Event('scroll'));
+    fixture.detectChanges();
+
+    expect(document.body.querySelector('[role="listbox"]')?.hasAttribute('hidden')).toBe(false);
+  });
+
+  it('closes when the page scrolls outside the panel', () => {
+    openPanel();
+
+    document.body.dispatchEvent(new Event('scroll'));
+    fixture.detectChanges();
+
+    expect(document.body.querySelector('[role="listbox"]')?.hasAttribute('hidden')).toBe(true);
+  });
+
   it('marks the held values for assistive technology', () => {
     openPanel();
 

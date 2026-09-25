@@ -28,13 +28,13 @@ import java.util.List;
  * @param kills                    kills scored
  * @param deaths                   times the player died
  * @param assists                  assists credited
- * @param kda                      kills plus assists over deaths
+ * @param kd                       kills over deaths, the kill total when deathless, as challenges read it
  * @param acs                      average combat score
  * @param adr                      average damage per round
  * @param headshots                registered headshot hits
  * @param bodyshots                registered body-shot hits
  * @param legshots                 registered leg-shot hits
- * @param headshotPercentage       share of shots that landed on the head
+ * @param headshotPercentage       share of shots that landed on the head, {@code null} without shot data
  * @param damageDealt              total damage dealt during the match
  * @param roundsPlayed             rounds used to normalize per-round statistics
  * @param mvp                      whether the player earned the match MVP designation
@@ -44,7 +44,7 @@ import java.util.List;
  * @param damageCoefficientPercent share of its base damage the match kept, {@code 100} for a day's
  *     best games and lower once the day's ladder starts reducing them; {@code 0} for an unvalued
  *     match, which never enters that ladder
- * @param streakBonusPercent       bonus the player's run of consecutive days added to this match
+ * @param streakBonusPercent       bonus the player's days played this week added to this match
  * @param food                     food share of the damage
  * @param components               components share of the damage
  * @param teammates                every other tracked player found in the same match, on either team
@@ -64,7 +64,7 @@ public record MatchDetailResponse(
     int kills,
     int deaths,
     int assists,
-    BigDecimal kda,
+    BigDecimal kd,
     BigDecimal acs,
     BigDecimal adr,
     int headshots,

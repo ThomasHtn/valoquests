@@ -34,14 +34,14 @@ export interface MatchDay {
   readonly matches: readonly Match[];
 
   /**
-   * Average KDA ratio across the day's matches.
+   * Average K/D ratio across the day's matches.
    */
-  readonly avgKda: number;
+  readonly avgKd: number;
 
   /**
-   * Average headshot percentage across the day's matches.
+   * Average headshot percentage across the day's matches that report one, or `null` when none does.
    */
-  readonly avgHeadshotPercentage: number;
+  readonly avgHeadshotPercentage: number | null;
 
   /**
    * Average damage per round across the day's matches.

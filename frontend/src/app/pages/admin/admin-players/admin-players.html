@@ -1,10 +1,7 @@
 <!-- The page's one command rides in the context bar rather than above the roster: it is what this
      screen is for, and from the bar it stays reachable however far down the list the operator is.
      Label dropped below `sm`, where the bar is at its tightest. -->
-<app-page-header
-  [eyebrow]="'admin.eyebrow' | translate"
-  [heading]="'admin.players.heading' | translate"
->
+<app-page-header [heading]="'admin.players.heading' | translate">
   <button
     appButton="primary"
     (click)="startCreating()"

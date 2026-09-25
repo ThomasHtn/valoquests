@@ -39,7 +39,7 @@ public record RankingHistoryWeekResponse(
      * @param completedChallenges      weekly challenges validated that week
      * @param completedDailyChallenges daily challenges validated that week
      * @param activeDays               distinct days with at least one valued match
-     * @param streakDays               longest run of consecutive played days reached that week
+     * @param streakDays               days played that week
      * @param titles                   honours the player won that week
      */
     public record FinalRankingEntryResponse(

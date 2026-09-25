@@ -22,7 +22,10 @@ import {
   FriezeWeek,
   Mission,
   MissionReport,
+  MissionReportBlow,
+  MissionReportChampion,
   SquadRow,
+  StreakPip,
 } from './overview.model';
 import { SEEN_REPORT_KEY } from './overview.constants';
 
@@ -118,31 +121,37 @@ function fatalBlow(
 }
 
 /**
- * The fatal blow in one line: who, when, on which map, in which mode and on what score.
+ * The fatal blow in three parts: when, who, and on which map, mode and score when the match is known.
  */
-function blowLine(
+function blowOf(
   week: CampaignWeek,
   players: readonly PlayerSummary[],
   language: Language,
   translate: Translate,
-): string | null {
+): MissionReportBlow | null {
   const blow = fatalBlow(week, players, language);
   if (!blow) {
     return null;
   }
   const detail = week.fatalBlow;
-  const score =
-    detail?.allyScore !== null && detail?.allyScore !== undefined && detail.enemyScore !== null
-      ? `${detail.allyScore} – ${detail.enemyScore}`
-      : '';
-  return translate('overview.missionReport.blow', {
-    name: blow.by ?? '',
-    weekday: blow.weekday,
-    time: blow.time,
-    map: detail?.mapName ?? '',
-    mode: detail?.gameMode ? translate(`common.gameMode.${detail.gameMode}`) : '',
-    score,
-  });
+  let where = '';
+  if (detail?.mapName && detail.gameMode) {
+    where += translate('overview.missionReport.blowWhere', {
+      map: detail.mapName,
+      mode: translate(`common.gameMode.${detail.gameMode}`),
+    });
+  }
+  if (detail && detail.allyScore !== null && detail.enemyScore !== null) {
+    where += translate('overview.missionReport.blowScore', {
+      ally: detail.allyScore,
+      enemy: detail.enemyScore,
+    });
+  }
+  return {
+    when: translate('overview.missionReport.blow', { weekday: blow.weekday, time: blow.time }),
+    by: blow.by,
+    where,
+  };
 }
 
 /**
@@ -186,7 +195,7 @@ export function buildMission(
  * @param campaign - The campaign, or `null` outside one.
  * @param players - Tracked players, used to resolve portraits and the fatal blow's name.
  * @param history - Frozen weeks, for the settled week's titles and ranking.
- * @param language - The reader's language, for dates and the fatal blow.
+ * @param language - The reader's language, for the fatal blow's weekday and time.
  * @param translate - Translation function for the fatal blow's sentence.
  * @returns The report, or `null` before the first settled week.
  */
@@ -205,25 +214,30 @@ export function buildMissionReport(
     resolvePlayerAvatarUrl(players.find((player) => player.id === id)?.portrait ?? null);
   const frozen = history.find((week) => week.weekStart === settled.weekStart) ?? null;
   const next = campaign.weeks[settled.weekIndex] ?? null;
+  const rescued = settled.challengeRescued + settled.extractionRescued;
   return {
     weekStart: settled.weekStart,
     weekIndex: settled.weekIndex,
     planetName: settled.planetName,
-    settledOn: new Intl.DateTimeFormat(language, { day: 'numeric', month: 'short' }).format(
-      localMidnight(settled.weekStart, 6),
-    ),
     defeated: settled.defeated,
-    hitPoints: settled.guardianHitPoints,
-    hitPointsLeft: Math.max(0, settled.guardianHitPoints - settled.damageDealt),
     breachPercent: settled.progressPercent,
-    blow: blowLine(settled, players, language, translate),
+    blow: blowOf(settled, players, language, translate),
     baseLoss: settled.baseLoss,
-    rescued: settled.challengeRescued + settled.extractionRescued,
+    rescued,
     spotted: settled.woundedCount,
+    rescuedShare: settled.woundedCount > 0 ? Math.min(1, rescued / settled.woundedCount) : 0,
     byChallenges: settled.challengeRescued,
+    byShip: settled.extractionRescued,
+    leftBehind: Math.max(0, settled.woundedCount - rescued),
     limiter: settled.limiter,
-    population: settled.base?.population ?? null,
-    populationChange: settled.base?.populationChange ?? 0,
+    base: settled.base
+      ? {
+          foodGained: settled.base.foodGained,
+          componentsGained: settled.base.componentsGained,
+          population: settled.base.population,
+          populationChange: settled.base.populationChange,
+        }
+      : null,
     titles: frozen
       ? WEEKLY_TITLES.map((key) => {
           const holder = frozen.ranking.find((entry) => entry.titles.includes(key)) ?? null;
@@ -235,14 +249,7 @@ export function buildMissionReport(
           };
         })
       : null,
-    ranking: frozen
-      ? frozen.ranking.map((entry) => ({
-          position: entry.position,
-          name: entry.displayName,
-          portrait: portraitOf(entry.playerId),
-          total: entry.totalPoints,
-        }))
-      : [],
+    champion: frozen ? championOf(frozen, portraitOf) : null,
     next: next
       ? {
           planetName: next.planetName,
@@ -250,6 +257,25 @@ export function buildMissionReport(
           wounded: next.woundedCount,
         }
       : null,
+  };
+}
+
+/**
+ * Resolves a frozen week's champion, the operator who finished alone in first place.
+ *
+ * @param frozen - The frozen week.
+ * @param portraitOf - Resolves a player's portrait.
+ * @returns The champion, holder `null` when nobody won the week outright.
+ */
+function championOf(
+  frozen: RankingHistoryWeek,
+  portraitOf: (id: number) => string | null,
+): MissionReportChampion {
+  const winner = frozen.ranking.find((entry) => entry.playerId === frozen.winnerPlayerId) ?? null;
+  return {
+    holder: winner?.displayName ?? null,
+    portrait: winner ? portraitOf(winner.playerId) : null,
+    points: winner?.totalPoints ?? 0,
   };
 }
 
@@ -365,7 +391,9 @@ export function buildDailyOrder(
       done:
         entry.challengeProgress.find((line) => line.cadence === 'DAILY' && line.id === daily.id)
           ?.completed ?? false,
-    }));
+    }))
+    // Validated operators first so the lit hexagons form one unbroken run.
+    .sort((left, right) => Number(right.done) - Number(left.done));
   return {
     name: daily.name,
     description: daily.description,
@@ -405,7 +433,10 @@ export function buildTally(
     populationChange: base.populationChange,
     presence: today.presenceCount,
     roster: today.rosterSize,
-    pips: Array.from({ length: today.rosterSize }, (_, index) => index < today.presenceCount),
+    pips: Array.from({ length: today.rosterSize }, (_, index) => ({
+      name: today.players[index]?.gameName ?? null,
+      on: index < today.presenceCount,
+    })),
   };
 }
 
@@ -419,14 +450,34 @@ function streakBonusOf(streakDays: number): number {
 }
 
 /**
- * Formats a streak bonus as a multiplier (`"×1.04"`).
+ * Lays out the week from Monday to Sunday around a day, marking the days an operator played.
  */
-function formatMultiplier(bonusPercent: number, language: Language): string {
-  const locale = language === 'fr' ? 'fr-FR' : 'en-US';
-  return `×${new Intl.NumberFormat(locale, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(1 + bonusPercent / 100)}`;
+function streakWeekOf(day: string, playedDays: readonly string[]): readonly StreakPip[] {
+  const todayIndex = (localMidnight(day).getDay() + 6) % 7;
+  const played = new Set(playedDays.map((playedDay) => todayIndex - daysBetween(playedDay, day)));
+  return Array.from({ length: 7 }, (_, index): StreakPip => {
+    if (played.has(index)) {
+      return 'played';
+    }
+    if (index === todayIndex) {
+      return 'today';
+    }
+    return index < todayIndex ? 'missed' : 'ahead';
+  });
+}
+
+/**
+ * Initials of the days of the week, Monday first (`L M M J V S D`, `M T W T F S S`).
+ *
+ * @param language - The reader's language.
+ * @returns Seven single-letter labels.
+ */
+export function weekdayInitials(language: Language): readonly string[] {
+  const format = new Intl.DateTimeFormat(language, { weekday: 'narrow', timeZone: 'UTC' });
+  // 2024-01-01 is a Monday; read at noon UTC so no zone shifts the weekday.
+  return Array.from({ length: 7 }, (_, index) =>
+    format.format(new Date(Date.UTC(2024, 0, 1 + index, 12))),
+  );
 }
 
 /**
@@ -434,13 +485,11 @@ function formatMultiplier(bonusPercent: number, language: Language): string {
  *
  * @param daily - The day's ranking, or `null` while unresolved.
  * @param today - The day in progress, used to resolve who holds each title today.
- * @param language - The reader's language, for the streak multiplier's number format.
  * @returns One row per active operator, or an empty sheet while unresolved.
  */
 export function buildSquad(
   daily: DailyRanking | null,
   today: CampaignToday | null,
-  language: Language,
 ): readonly SquadRow[] {
   if (!daily) {
     return [];
@@ -451,6 +500,7 @@ export function buildSquad(
   return active.map((entry) => {
     const title = primaryTitleOf(titles, entry.playerId);
     const played = entry.matchCount > 0;
+    const daysPlayed = entry.weekPlayedDays.length;
     return {
       position: played ? entry.position : null,
       playerId: entry.playerId,
@@ -458,12 +508,10 @@ export function buildSquad(
       portrait: resolvePlayerAvatarUrl(entry.portrait),
       title: title === null ? null : { key: title, ...resolveTitleVisual(title) },
       played,
-      streakMultiplier: formatMultiplier(
-        played ? entry.streakBonusPercent : streakBonusOf(entry.streakAtStake),
-        language,
-      ),
-      streakDays: played ? entry.streakDays : entry.streakAtStake,
-      streakAtStake: entry.streakAtStake,
+      // An idle operator shows the bonus playing today would earn, not yesterday's.
+      streakBonusPercent: played ? entry.streakBonusPercent : streakBonusOf(daysPlayed + 1),
+      streakDays: daysPlayed,
+      streakWeek: streakWeekOf(daily.day, entry.weekPlayedDays),
       damage: entry.damage,
       matchCount: entry.matchCount,
       reducedMatchCount: entry.reducedMatchCount,

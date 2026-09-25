@@ -15,7 +15,7 @@ import java.time.LocalDate;
  * @param day                calendar day of the project's zone the match belongs to
  * @param baseDamage         value of the match before any multiplier
  * @param coefficientPercent share kept after the day's diminishing returns
- * @param streakDays         consecutive played days ending on the match's day, that day included
+ * @param streakDays         days of the week played up to the match's day, that day included
  * @param streakBonusPercent bonus earned from that streak
  * @param damage             value after both multipliers, rounded once
  * @param food               food share of that value

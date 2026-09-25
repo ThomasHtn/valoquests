@@ -34,16 +34,15 @@
   class="menu-panel fixed z-20"
   role="listbox"
 >
-  <div class="max-h-96 overflow-y-auto">
+  <div class="menu-scroll">
     @for (option of options(); track $index) {
       <button
         (click)="toggleOption(option)"
         [attr.aria-selected]="isSelected(option)"
-        [class.bg-brand-500/8]="$index === activeIndex()"
-        [class.text-brand-500]="isSelected(option)"
+        [attr.data-active]="$index === activeIndex() || null"
         [disabled]="isDisabled(option)"
         [id]="optionId($index)"
-        class="menu-option flex items-center gap-2.5 text-text-secondary hover:bg-brand-500/8 hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
+        class="menu-option listbox-option flex items-center gap-2.5 disabled:pointer-events-none disabled:opacity-40"
         role="option"
         tabindex="-1"
         type="button"

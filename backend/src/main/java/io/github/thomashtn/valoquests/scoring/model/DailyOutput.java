@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * <p>Streaks are kept on their own, per player and per played day, over a window that starts before
  * the range: {@link #streakEndingOn(long, LocalDate)} therefore answers for the day before the range
- * too, which is what a screen needs to say what a player who has not played yet today is defending.
+ * too, which is what a screen needs to say how far a player who has not played yet today stands.
  */
 public final class DailyOutput {
 
@@ -72,7 +72,7 @@ public final class DailyOutput {
     }
 
     /**
-     * Returns the run of consecutive played days ending on a day, that day included.
+     * Returns the days of the week played up to a day, that day included.
      *
      * @param playerId internal player identifier
      * @param day      last day of the run

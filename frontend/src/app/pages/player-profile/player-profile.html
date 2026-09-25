@@ -1,16 +1,18 @@
 <!-- Context bar, carrying the way back and nothing else. The registry this profile was reached from
-     names the context *and* is the route out of it, in the line every other page uses for its
-     eyebrow — so the way back reads as part of the chrome instead of a chip floating over the
+     names the context *and* is the route out of it, in the bar — so the way back reads as part of the chrome instead of a chip floating over the
      content. No title: the identity banner right below opens on the player's name as this page's
      `<h1>`, and repeating it here would only be a second source of the same fact.
 
      Outside the resource state on purpose: it is chrome, so it has to stand while the profile
      loads or fails, and below `lg` it carries the only way into the navigation. -->
-<app-page-header [backLink]="'/players'" [eyebrow]="'playerProfile.breadcrumb.players' | translate">
+<app-page-header
+  [backLink]="'/players'"
+  [backLabel]="'playerProfile.breadcrumb.players' | translate"
+>
   @if (details(); as playerDetails) {
     <span
       class="flex min-w-0 items-center gap-2 truncate font-mono text-2xs text-text-muted"
-      eyebrowAside
+      backAside
     >
       <span aria-hidden="true">|</span>
       <span class="truncate">{{ playerDetails.displayName }}</span>
@@ -27,26 +29,17 @@
     padding="py-6"
     (retry)="detailsResource.reload()"
   >
-    <!-- Skeleton shaped like the loaded banner and stat strip — same silhouettes, same notches — so
-       data arriving does not shift the page. -->
-    <div class="flex flex-col gap-6" skeleton>
-      <div
-        class="notch-tr flex items-center gap-5 border-l-2 border-surface-700 bg-text-primary/4 p-5 [--notch:1.25rem]"
-      >
-        <span class="size-24 shrink-0 rounded-full bg-surface-700"></span>
-        <span class="flex flex-col gap-3">
-          <span class="h-6 w-48 bg-surface-700"></span>
-          <span class="h-3 w-24 bg-surface-700"></span>
-        </span>
-      </div>
-      <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        @for (placeholder of skeletonRows; track $index) {
-          <div class="border-t-2 border-surface-700 bg-text-primary/4 px-4 py-3.5">
-            <span class="mb-3 block h-2.5 w-14 bg-surface-700"></span>
-            <span class="block h-6 w-12 bg-surface-700"></span>
-          </div>
-        }
-      </div>
+    <!-- Skeleton shaped like the loaded banner — same silhouette, same notch — so data arriving
+       does not shift the page. -->
+    <div
+      class="notch-tr flex items-center gap-5 border-l-2 border-surface-700 bg-text-primary/4 p-5 [--notch:1.25rem]"
+      skeleton
+    >
+      <span class="size-24 shrink-0 rounded-full bg-surface-700"></span>
+      <span class="flex flex-col gap-3">
+        <span class="h-6 w-48 bg-surface-700"></span>
+        <span class="h-3 w-24 bg-surface-700"></span>
+      </span>
     </div>
 
     @if (details(); as playerDetails) {
@@ -120,19 +113,35 @@
          without clipping the trailing ones out of view with no visible affordance that they're
          still there, so the row wraps onto as many lines as it needs instead. -->
       <div
+        #filterRow
         class="scroll-subtle flex flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto sm:pb-1"
       >
         @if (viewMode() === 'MATCHES') {
-          <!-- Game-mode filter, as a segmented control: the modes players actually check sit right
-             in view (see `PRIMARY_GAME_MODES`), the rest stay one tap away behind the trailing
-             dropdown instead of crowding the group with every mode the backend can report. -->
+          <!-- Game-mode filter, as a segmented control: the most important modes sit right in view,
+             as many as the bar has room for (see `GAME_MODE_BUTTON_COUNTS`), the rest stay one
+             tap away behind the trailing dropdown. -->
           <div
             [attr.aria-label]="'playerProfile.filters.gameModeLabel' | translate"
             class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5"
             role="group"
           >
             <div class="flex items-center">
-              @for (mode of primaryGameModes; track mode) {
+              <!-- Every mode at once, first and default: the page opens on the latest matches
+                 whatever their queue, which is where the damage just dealt is read. -->
+              <button
+                (click)="onGameModeFilterChange(null)"
+                [attr.aria-pressed]="gameModeFilter() === null"
+                [class]="
+                  gameModeFilter() === null
+                    ? 'bg-brand-500/15 text-brand-500'
+                    : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
+                "
+                class="focus-ring-inset min-h-10 cursor-pointer self-stretch px-2.5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
+                type="button"
+              >
+                {{ 'playerProfile.filters.allModes' | translate }}
+              </button>
+              @for (mode of primaryGameModes(); track mode) {
                 <button
                   (click)="onGameModeFilterChange(mode)"
                   [attr.aria-pressed]="gameModeFilter() === mode"
@@ -246,102 +255,7 @@
         </div>
       </div>
 
-      <!-- Both blocks below belong to the match history: the tiles report what its filters
-         are counting, so showing them beside the progression view would caption one scope
-         with another's figures. -->
       @if (viewMode() === 'MATCHES') {
-        <!-- Stat strip. The win rate leads: it is the one figure that summarises a player's record, so
-           it gets the wide tile, the bar and the win/loss split, while the rest stay uniform. Each
-           tile is capped by a rule rather than boxed, so the six read as one instrument panel. -->
-        <section
-          class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(0,1fr))]"
-        >
-          <!-- With nothing in scope every figure below is a zero the backend had to send, not a
-             record: coloring them would read "0 % win rate, needs work" where the truth is "no match
-             here yet". `null` is the treatment the stats already use for a value they cannot judge,
-             so the strip greys out as a block and the empty state below says the rest. -->
-          @let hasSample = playerDetails.statistics.matchesPlayed > 0;
-          @let winRate = winRateVisual(hasSample ? playerDetails.statistics.winRate : null);
-          <!-- `border-current`, driven by the tile's own text colour: `StatVisual` carries a text and a
-             background utility, neither of which can colour a border on its own. -->
-          <div
-            [class]="winRate.textClass"
-            class="col-span-2 border-t-2 border-current bg-text-primary/4 px-4 py-3.5 sm:col-span-3 lg:col-span-1"
-          >
-            <p class="label-caption flex items-center gap-2">
-              <span
-                [class]="winRate.barClass"
-                aria-hidden="true"
-                class="size-1.5 shrink-0 rotate-45"
-              ></span>
-              <span
-                [appTooltip]="'playerProfile.stats.tooltip.winRate' | translate"
-                class="focus-ring text-text-muted"
-                tabindex="0"
-                >{{ 'playerProfile.stats.winRate' | translate }}</span
-              >
-            </p>
-            <p class="mt-2.5 flex items-baseline gap-2.5">
-              <span
-                [class]="winRate.textClass"
-                class="font-display text-2xl leading-none font-bold"
-              >
-                {{ formatWinRate(playerDetails.statistics.winRate) }}
-              </span>
-              <span class="text-sm text-text-muted tabular-nums">
-                {{
-                  'playerProfile.stats.record'
-                    | translate
-                      : {
-                          wins: playerDetails.statistics.wins,
-                          losses: playerDetails.statistics.losses,
-                        }
-                }}
-              </span>
-            </p>
-            <app-progress-bar
-              class="mt-3 w-full"
-              heightClass="h-1.5"
-              [colorClass]="winRate.barClass"
-              [percentage]="playerDetails.statistics.winRate"
-            />
-          </div>
-
-          <app-stat-tile
-            [label]="'playerProfile.stats.kda' | translate"
-            [tooltip]="'playerProfile.stats.tooltip.kda' | translate"
-            [value]="formatKda(playerDetails.statistics.kda)"
-            [valueClass]="kdaVisual(hasSample ? playerDetails.statistics.kda : null).textClass"
-          />
-
-          <app-stat-tile
-            [label]="'playerProfile.stats.headshotPercentage' | translate"
-            [tooltip]="'playerProfile.stats.tooltip.headshotPercentage' | translate"
-            [value]="formatHeadshotPercentage(playerDetails.statistics.headshotPercentage)"
-          />
-
-          <app-stat-tile
-            [label]="'playerProfile.stats.adr' | translate"
-            [tooltip]="'playerProfile.stats.tooltip.adr' | translate"
-            [value]="formatScore(playerDetails.statistics.adr)"
-          />
-
-          <app-stat-tile
-            [label]="'playerProfile.stats.acs' | translate"
-            [tooltip]="'playerProfile.stats.tooltip.acs' | translate"
-            [value]="formatScore(playerDetails.statistics.acs)"
-          />
-
-          <!-- Spans the trailing gap on the two- and three-column grids: as the sixth of six tiles it
-             would otherwise sit alone against an empty cell. -->
-          <app-stat-tile
-            [label]="'playerProfile.stats.matchesPlayed' | translate"
-            [tooltip]="'playerProfile.stats.tooltip.matchesPlayed' | translate"
-            [value]="playerDetails.statistics.matchesPlayed"
-            class="col-span-2 lg:col-span-1"
-          />
-        </section>
-
         <!-- Where today stands on the diminishing-returns ladder, above the matches it prices.
              The rule was only ever legible after the fact, in a tooltip on a match already played;
              said here it can still change what the next one is. Dropped once the day is untouched

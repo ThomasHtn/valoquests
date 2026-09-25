@@ -131,11 +131,12 @@ export class Leaderboard {
 
   /**
    * What each challenge of the week asks for, by id: the ranking carries a challenge's name and
-   * figures but not its description, which the week's own draw does.
+   * figures but not its description, which the week's own draw does, dailies included.
    */
   private readonly descriptions = computed(() => {
     const byId = new Map<number, string>();
-    for (const challenge of resourceValue(this.challengesApi.current, null)?.challenges ?? []) {
+    const current = resourceValue(this.challengesApi.current, null);
+    for (const challenge of [...(current?.challenges ?? []), ...(current?.dailies ?? [])]) {
       byId.set(challenge.id, challenge.description);
     }
     return byId;

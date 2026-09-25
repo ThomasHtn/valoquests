@@ -62,7 +62,7 @@
     role="img"
   >
     @for (slot of card.slots; track slot.name) {
-      <i [attr.data-name]="slot.name" [class.on]="slot.done"></i>
+      <i [appTooltip]="slot.name" [class.on]="slot.done"></i>
     }
   </span>
 </p>

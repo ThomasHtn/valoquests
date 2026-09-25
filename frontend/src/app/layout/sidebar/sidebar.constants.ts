@@ -28,7 +28,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     ],
   },
   {
-    labelKey: 'squad',
+    labelKey: 'operators',
     items: [
       { labelKey: 'leaderboard', icon: 'trophy', routerLink: '/leaderboard' },
       { labelKey: 'players', icon: 'users', routerLink: '/players' },

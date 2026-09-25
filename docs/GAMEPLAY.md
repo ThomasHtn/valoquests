@@ -26,7 +26,7 @@ Chaque partie produit les deux en même temps, réparties selon le mode joué.
 | Mode | Nourriture | Composants |
 |---|---|---|
 | Compétitif, Premier, Non classé (même en solo) | 30 % | **70 %** |
-| Deathmatch, Team Deathmatch, Spike Rush, Skirmish | **70 %** | 30 % |
+| Deathmatch, Team Deathmatch, Spike Rush, Skirmish, Swiftplay, Escalade | **70 %** | 30 % |
 
 Le montant réparti est la valeur de dégâts de la partie :
 
@@ -35,7 +35,8 @@ Le montant réparti est la valeur de dégâts de la partie :
 | Compétitif, Premier | 350 | 425 | 500 | 35 min |
 | Non classé | 320 | 390 | 460 | 33 min |
 | Team Deathmatch | 110 | 135 | 160 | 10 min |
-| Spike Rush | 110 | — | 150 | 9 min |
+| Swiftplay | 160 | — | 230 | 15 min |
+| Spike Rush, Escalade | 110 | — | 150 | 9 min |
 | Deathmatch | 100 | — | 150 | 9 min |
 | Skirmish | 90 | 110 | 130 | 6 min |
 
@@ -79,37 +80,41 @@ Ils s'appliquent à toute partie et doivent être **affichés explicitement** au
 |---|---|---|---|
 | Valeur | 100 % | 50 % | 25 % |
 
-**Série de jours consécutifs**, pour récompenser l'effort quotidien :
+**Série de jours joués dans la semaine**, pour récompenser la régularité :
 
-| Jours d'affilée | 1 | 2 | 3 | 4 | 5 | 6+ |
+| Jours joués dans la semaine | 1 | 2 | 3 | 4 | 5 | 6+ |
 |---|---|---|---|---|---|---|
 | Bonus | 0 % | +2 % | +4 % | +6 % | +8 % | **+10 %** |
 
-Le premier jour ne donne rien : un bonus que tout le monde a n'est pas un bonus. Le plafond est
-volontairement bas, pour qu'un joueur qui saute une journée puisse encore rattraper le premier du
-classement.
+Le premier jour ne donne rien : un bonus que tout le monde a n'est pas un bonus. Une journée
+sautée ne fait rien perdre, elle retarde seulement le palier suivant, et le plafond est volontairement
+bas pour qu'un joueur qui joue moins souvent puisse encore rattraper le premier du classement.
 
 Les règles de la série, dans le détail :
 
-1. La série est **individuelle** et remise à zéro à minuit dès qu'un joueur saute une journée.
+1. La série est **individuelle** et compte les journées jouées depuis le lundi, **consécutives ou
+   non** : sauter une journée ne la remet pas à zéro.
 2. Une journée compte si le joueur y a joué **au moins une partie valorisée** : un mode qui vaut
-   zéro, comme le Swiftplay, ne fait pas de journée.
+   zéro, comme New Map, ne fait pas de journée.
 3. Dès qu'une partie valorisée existe dans la journée, la journée compte et **toutes les parties de
-   cette journée** prennent le bonus du nouveau compteur. C'est provisoire jusqu'à minuit, comme le
-   reste. Il n'y a qu'un bonus par journée : il ne monte pas partie après partie.
+   cette journée** prennent le bonus du nouveau compteur. Le bonus est progressif : les journées
+   déjà passées gardent le leur, elles ne sont pas revalorisées quand la semaine avance. C'est
+   provisoire jusqu'à minuit, comme le reste. Il n'y a qu'un bonus par journée : il ne monte pas
+   partie après partie.
 4. Une journée est le jour calendaire du fuseau du projet, celui de **l'heure de début** de la
    partie.
 5. Le compteur **repart à un chaque lundi** : le bonus d'une semaine se gagne dans la semaine, et
-   tout le monde ouvre le lundi à égalité, campagne ou pas. L'affichage plafonne donc à « 7 j » le
-   dimanche, le bonus à +10 % dès le sixième jour.
+   tout le monde ouvre le lundi à égalité, campagne ou pas. L'affichage plafonne donc à « 7/7 j », le
+   bonus à +10 % dès le sixième jour joué.
 6. Le bonus s'applique à tout ce qu'une partie produit : dégâts au gardien, composants, nourriture,
    croissance de la base. Jamais aux défis.
 
 Les deux multiplicateurs se multiplient : valeur de la partie × rendement décroissant × (1 + bonus
 de série), arrondi à l'entier une seule fois, à la fin, par partie.
 
-Où ils s'affichent : la série sur chaque ligne d'opérateur (« × 1,08 · 5 j », et « à jouer
-aujourd'hui » tant que la journée n'a pas encore compté) ; les rendements
+Où ils s'affichent : la série sur chaque ligne d'opérateur, colonne « Assiduité » (« +8 % · 5/7 j » :
+le bonus des parties du jour et les journées jouées dans la semaine ; tant que la journée n'a pas
+encore compté, le bonus que ses parties prendraient et les journées déjà jouées) ; les rendements
 décroissants sous les dégâts du jour de chaque opérateur dès qu'ils s'appliquent (« 6 parties, 1 à
 50 % »), avec la règle rappelée en une ligne sous le tableau de l'escouade.
 
@@ -132,7 +137,7 @@ Mis à jour **à chaque synchro**, sans attendre le soir :
 Figé **à minuit**, quand la journée se ferme :
 
 - le repas de la base, et la famine si le stock n'a pas suivi,
-- la journée comptée ou perdue dans la série de jours consécutifs,
+- la journée comptée ou non dans la série de jours joués de la semaine,
 - la résolution du défi du jour,
 - la ligne de la journée, qui ne bouge plus ensuite.
 
@@ -437,15 +442,17 @@ joueur :
 |---|---|
 | Mécano | le plus de **composants** |
 | Intendant | le plus de **nourriture** |
-| Assidu | la plus longue **série** |
+| Assidu | le plus de **jours joués** dans la semaine |
 | Éclaireur | le plus de **défis** validés |
 
-Purement honorifiques. Un opérateur peut en cumuler plusieurs ; en cas d'égalité, le titre n'est pas
-décerné.
+Purement honorifiques. Un opérateur n'en porte qu'un seul à la fois : les titres sont décernés dans
+l'ordre du tableau, et quand le meilleur sur un critère en porte déjà un, le titre revient au suivant
+sur ce critère. En cas d'égalité, le titre n'est pas décerné.
 
 S'y ajoute le **Champion** : le premier du classement de la dernière semaine finalisée, porté toute
 la semaine suivante. Il n'existe qu'en campagne : une semaine jouée entre deux campagnes ne fait pas
-de champion, et une première place partagée non plus.
+de champion, et une première place partagée non plus. C'est le plus haut titre : le champion d'une
+semaine n'en reçoit aucun autre pour cette semaine, ni pour la semaine suivante où il le porte.
 
 ---
 

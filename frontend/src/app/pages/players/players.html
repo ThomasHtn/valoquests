@@ -1,7 +1,7 @@
 <!-- Context bar: how the roster splits on the caption line, the section's name as the title. The
      caption used to repeat that name word for word, under a navigation entry already carrying it. -->
 
-<app-page-header [eyebrow]="rosterEyebrow()" [heading]="'players.subheading' | translate" />
+<app-page-header [heading]="'players.header.heading' | translate" />
 
 <div class="page-body">
   <app-resource-state
@@ -10,7 +10,7 @@
     [errorText]="'players.error' | translate"
     [isEmpty]="rows().length === 0"
     [isError]="!!playersResource.error()"
-    [isLoading]="playersResource.isLoading()"
+    [isLoading]="isLoading()"
     [loadingText]="'players.loading' | translate"
     padding="py-6"
     (retry)="playersResource.reload()"
@@ -36,7 +36,7 @@
        label is a sort button, and the whole row is exposed to assistive technology now that it is
        actionable rather than decorative. -->
     <div
-      class="hidden border-l-2 border-brand-500 bg-text-primary/8 px-5 lg:-mb-5 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem_13rem_6rem_6.5rem_6rem_4.5rem] lg:items-center lg:gap-x-[clamp(0.875rem,4vw-2.325rem,2rem)] lg:py-4.5"
+      class="hidden border-l-2 border-transparent bg-text-primary/8 px-5 lg:-mb-5 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem_13rem_6rem_6.5rem_6rem_4.5rem] lg:items-center lg:gap-x-[clamp(0.875rem,4vw-2.325rem,2rem)] lg:py-4.5"
     >
       @for (column of sortColumns; track column.key) {
         <button

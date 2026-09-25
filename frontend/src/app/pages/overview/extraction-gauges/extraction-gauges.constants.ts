@@ -11,4 +11,6 @@ export const SHELTER_MODES: readonly string[] = [
   'SPIKE_RUSH',
   'TEAM_DEATHMATCH',
   'SKIRMISH',
+  'SWIFTPLAY',
+  'ESCALATION',
 ];

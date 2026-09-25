@@ -189,7 +189,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
             playerMatch.getKills(),
             playerMatch.getDeaths(),
             playerMatch.getAssists(),
-            kdaOf(playerMatch),
+            kdOf(playerMatch),
             playerMatch.getAcs(),
             playerMatch.getAdr(),
             headshotPercentageOf(playerMatch),
@@ -240,7 +240,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
             playerMatch.getKills(),
             playerMatch.getDeaths(),
             playerMatch.getAssists(),
-            kdaOf(playerMatch),
+            kdOf(playerMatch),
             playerMatch.getAcs(),
             playerMatch.getAdr(),
             playerMatch.getHeadshots(),
@@ -281,19 +281,20 @@ public class DefaultMatchQueryService implements MatchQueryService {
     }
 
     /**
-     * Kills and assists over deaths, two decimals, deaths floored at one.
+     * Kills over deaths, two decimals, deaths floored at one: the ratio K/D challenges evaluate.
      */
-    private BigDecimal kdaOf(PlayerMatch playerMatch) {
-        return BigDecimal.valueOf(playerMatch.getKills() + playerMatch.getAssists())
+    private BigDecimal kdOf(PlayerMatch playerMatch) {
+        return BigDecimal.valueOf(playerMatch.getKills())
             .divide(BigDecimal.valueOf(Math.max(1, playerMatch.getDeaths())), 2, RoundingMode.HALF_UP);
     }
 
     /**
-     * Share of hits on the head, in percent, zero without a hit.
+     * Share of hits on the head, in percent, {@code null} without a hit: Henrik then reported no
+     * shot data, and a zero would read as a real 0 %.
      */
     private BigDecimal headshotPercentageOf(PlayerMatch playerMatch) {
         int shots = playerMatch.getHeadshots() + playerMatch.getBodyshots() + playerMatch.getLegshots();
-        return shots == 0 ? BigDecimal.ZERO : BigDecimal.valueOf(playerMatch.getHeadshots())
+        return shots == 0 ? null : BigDecimal.valueOf(playerMatch.getHeadshots())
             .multiply(BigDecimal.valueOf(100))
             .divide(BigDecimal.valueOf(shots), 2, RoundingMode.HALF_UP);
     }

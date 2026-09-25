@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
  * <p>Match values are tuned so an hour of play brings roughly the same amount whatever the mode,
  * diminishing returns included: between 680 and 780 damage per hour over a one-hour session. The
  * two multipliers pull in opposite directions on purpose: past the fifth match of a day a game is
- * worth half, so the week is not won by whoever had the most free time, while a run of consecutive
- * days adds a small bonus, so turning up every evening is what wins it.
+ * worth half, so the week is not won by whoever had the most free time, while every day played in
+ * the week adds a small bonus, so turning up often is what wins it.
  */
 @Component
 public final class DefaultScoringRuleset implements ScoringRuleset {
@@ -44,12 +44,12 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
     private static final int REDUCED_DAMAGE_PERCENT = 25;
 
     /**
-     * Bonus added per consecutive played day beyond the first.
+     * Bonus added per played day of the week beyond the first.
      */
     private static final int STREAK_BONUS_PERCENT_PER_DAY = 2;
 
     /**
-     * Number of consecutive days past which the streak bonus stops growing, capping it at 10%.
+     * Number of bonus days past which the streak bonus stops growing, capping it at 10%.
      */
     private static final int STREAK_BONUS_DAY_CAP = 5;
 
@@ -105,7 +105,8 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
                 case DRAW -> 135;
                 case WIN -> 160;
             };
-            case SPIKE_RUSH -> winOrLose(outcome, 110, 150);
+            case SWIFTPLAY -> winOrLose(outcome, 160, 230);
+            case SPIKE_RUSH, ESCALATION -> winOrLose(outcome, 110, 150);
             case DEATHMATCH -> winOrLose(outcome, 100, 150);
             case SKIRMISH -> switch (outcome) {
                 case LOSS -> 90;
@@ -160,7 +161,8 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
 
         return switch (gameMode) {
             case COMPETITIVE, PREMIER, UNRATED -> LONG_MODE_FOOD_SHARE_PERCENT;
-            case DEATHMATCH, TEAM_DEATHMATCH, SPIKE_RUSH, SKIRMISH -> QUICK_MODE_FOOD_SHARE_PERCENT;
+            case DEATHMATCH, TEAM_DEATHMATCH, SPIKE_RUSH, SKIRMISH, SWIFTPLAY, ESCALATION ->
+                QUICK_MODE_FOOD_SHARE_PERCENT;
             default -> 0;
         };
     }

@@ -98,13 +98,20 @@ class DefaultRankingQueryServiceTest {
             dailyRankingReader,
             titleResolver,
             new WeekCalendar(Clock.fixed(RankingFixtures.MIDWEEK, ZoneOffset.UTC), ZoneOffset.UTC),
-            campaignRepository
+            new WeekChampionResolver(scoreRepository, campaignRepository)
         );
     }
 
     @Test
     @DisplayName("Answers the week, its board and each player's honours and variation")
     void shouldAnswerTheCurrentWeek() {
+        LocalDate lastWeek = WEEK_START.minusWeeks(1);
+        WeeklyPlayerScore champion = RankingFixtures.score(BRAVO, 1, 2_000, 0);
+        champion.setWeekStart(lastWeek);
+        when(scoreRepository.findFinalizedWeekStarts(PageRequest.of(0, 1)))
+            .thenReturn(new PageImpl<>(List.of(lastWeek), PageRequest.of(0, 1), 1));
+        when(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(lastWeek)).thenReturn(List.of(champion));
+        when(campaignRepository.findAll()).thenReturn(List.of(campaignCovering(lastWeek)));
         WeeklyPlayerScore alpha = RankingFixtures.score(ALPHA, 1, 1_200, 300);
         alpha.setPreviousPosition(2);
         WeeklyPlayerScore bravo = RankingFixtures.score(BRAVO, 2, 900, 0);
@@ -114,7 +121,7 @@ class DefaultRankingQueryServiceTest {
             .thenReturn(List.of(alpha, bravo, charlie));
         when(progressMapper.forWeek(WEEK_START, TODAY, List.of(1L, 2L, 3L)))
             .thenReturn(new WeekBoard(5, Map.of()));
-        when(titleResolver.resolve(anyList())).thenReturn(Map.of(
+        when(titleResolver.resolve(anyList(), eq(BRAVO.getId()))).thenReturn(Map.of(
             WeeklyTitle.MECHANIC, ALPHA.getId(),
             WeeklyTitle.SCOUT, ALPHA.getId()
         ));
@@ -150,7 +157,8 @@ class DefaultRankingQueryServiceTest {
     void shouldAnswerAnEmptyWeek() {
         when(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(WEEK_START)).thenReturn(List.of());
         when(progressMapper.forWeek(WEEK_START, TODAY, List.of())).thenReturn(new WeekBoard(0, Map.of()));
-        when(titleResolver.resolve(anyList())).thenReturn(Map.of());
+        when(scoreRepository.findFinalizedWeekStarts(PageRequest.of(0, 1))).thenReturn(Page.empty());
+        when(titleResolver.resolve(anyList(), eq(null))).thenReturn(Map.of());
 
         CurrentRankingResponse response = service.findCurrent();
 
@@ -177,7 +185,8 @@ class DefaultRankingQueryServiceTest {
         when(scoreRepository.findFinalizedWeekStarts(PageRequest.of(0, 10))).thenReturn(weekPage);
         when(scoreRepository.findAllByWeekStartInOrderByWeekStartDescPositionAsc(List.of(lastWeek)))
             .thenReturn(List.of(bravo, alpha, charlie));
-        when(titleResolver.resolve(List.of(bravo, alpha))).thenReturn(Map.of(WeeklyTitle.REGULAR, BRAVO.getId()));
+        when(titleResolver.resolve(List.of(bravo, alpha), BRAVO.getId()))
+            .thenReturn(Map.of(WeeklyTitle.REGULAR, ALPHA.getId()));
         when(campaignRepository.findAll()).thenReturn(List.of(campaignCovering(lastWeek)));
 
         PageResponse<RankingHistoryWeekResponse> page = service.findHistory(0, 10);
@@ -189,8 +198,8 @@ class DefaultRankingQueryServiceTest {
         assertThat(week.winnerPlayerId()).isEqualTo(BRAVO.getId());
         assertThat(week.ranking()).hasSize(2);
         assertThat(week.ranking().getFirst().totalPoints()).isEqualTo(2_100);
-        assertThat(week.ranking().getFirst().titles()).containsExactly(WeeklyTitle.REGULAR);
-        assertThat(week.ranking().getLast().titles()).isEmpty();
+        assertThat(week.ranking().getFirst().titles()).isEmpty();
+        assertThat(week.ranking().getLast().titles()).containsExactly(WeeklyTitle.REGULAR);
     }
 
     @Test

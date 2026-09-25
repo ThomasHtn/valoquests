@@ -53,7 +53,7 @@ public record CurrentRankingResponse(
      * @param components               components share of that damage
      * @param matchCount               valued matches played so far this week
      * @param activeDays               distinct days with at least one valued match
-     * @param streakDays               longest run of consecutive played days reached this week
+     * @param streakDays               days played this week
      * @param challengePoints          points of the challenges validated so far
      * @param completedChallenges      weekly challenges validated so far
      * @param totalChallenges          weekly challenges selected for the week

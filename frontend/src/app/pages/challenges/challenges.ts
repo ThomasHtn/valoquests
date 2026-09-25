@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { LucideChevronDown } from '@lucide/angular';
 import { CampaignApi } from '@core/campaign/campaign-api';
-import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.model';
 import {
   CHALLENGE_DIFFICULTIES,
   ChallengeCatalogue,
@@ -95,45 +94,15 @@ export class Challenges {
   protected readonly catalogueOpen = signal(false);
 
   /**
-   * The week, then the campaign's tier when one is in force: the tier is what the targets and
-   * rewards below were priced at.
-   */
-  protected readonly headerEyebrow = computed(() => {
-    const campaign = this.campaign();
-    const current = this.current();
-    const week =
-      campaign?.status === 'RUNNING' && campaign.currentWeekIndex !== null
-        ? this.translation.translate('challenges.header.week', {
-            week: campaign.currentWeekIndex,
-            weeks: CAMPAIGN_WEEK_COUNT,
-          })
-        : current
-          ? this.translation.translate('challenges.header.weekOf', {
-              date: this.dayMonth(current.weekStart),
-            })
-          : this.translation.translate('challenges.title');
-    const difficulty = campaign?.difficulty
-      ? this.translation.translate('challenges.header.difficulty', {
-          difficulty: this.translation.translate(`common.difficulty.${campaign.difficulty}`),
-        })
-      : '';
-    return difficulty ? `${week} · ${difficulty}` : week;
-  });
-
-  /**
    * The empty state: the two draws that have not run, and when they do.
    */
   protected readonly emptyPlate = computed<EmptyPlate>(() => {
     const t = (suffix: string) => this.translation.translate(`challenges.state.empty.${suffix}`);
     return {
       illustration: 'draw',
-      eyebrow: t('eyebrow'),
       title: t('title'),
       text: t('text'),
-      readouts: [
-        { tone: 'todo', label: t('weekly'), value: t('weeklyValue') },
-        { tone: 'todo', label: t('daily'), value: t('dailyValue') },
-      ],
+      readouts: [],
     };
   });
 
@@ -247,10 +216,13 @@ export class Challenges {
   }
 
   private slots(current: CurrentChallenges, challenge: ChallengeProgress): SquadSlot[] {
-    return current.roster.map((operator) => ({
-      name: operator.displayName,
-      done: challenge.completedPlayerIds.includes(operator.id),
-    }));
+    // Validated operators first so the lit hexagons form one unbroken run.
+    return current.roster
+      .map((operator) => ({
+        name: operator.displayName,
+        done: challenge.completedPlayerIds.includes(operator.id),
+      }))
+      .sort((left, right) => Number(right.done) - Number(left.done));
   }
 
   private dailyCard(

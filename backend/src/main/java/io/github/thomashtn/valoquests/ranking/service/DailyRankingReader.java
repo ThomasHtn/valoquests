@@ -7,7 +7,9 @@ import io.github.thomashtn.valoquests.ranking.dto.DailyRankingResponse;
 import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.model.PlayerDayOutput;
 import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -112,12 +114,32 @@ public class DailyRankingReader {
                 today.reducedMatchCount(),
                 today.streakDays(),
                 today.streakBonusPercent(),
-                output.streakEndingOn(player.getId(), previous),
+                weekPlayedDays(output, player.getId(), day),
                 previousDamage,
                 today.damage() - previousDamage
             ));
         }
 
         return new DailyRankingResponse(day, previous, played, competitors, ranking);
+    }
+
+    /**
+     * Lists the days of the week a player played, from Monday up to a day.
+     *
+     * @param output   reading covering the week up to that day
+     * @param playerId internal player identifier
+     * @param day      last day to look at, included
+     * @return played days in ascending order
+     */
+    private static List<LocalDate> weekPlayedDays(DailyOutput output, long playerId, LocalDate day) {
+        List<LocalDate> played = new ArrayList<>();
+        LocalDate monday = day.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        for (LocalDate current = monday; !current.isAfter(day); current = current.plusDays(1)) {
+            if (output.streakEndingOn(playerId, current) > 0) {
+                played.add(current);
+            }
+        }
+
+        return played;
     }
 }

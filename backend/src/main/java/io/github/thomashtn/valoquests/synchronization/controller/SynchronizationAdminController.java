@@ -82,8 +82,8 @@ public class SynchronizationAdminController {
             Imports every match of the current and previous Valorant seasons for each active tracked
             player. The operation resolves missing Riot account identifiers, refreshes competitive
             ranks and walks the Henrik match history backwards until it leaves them, importing matches
-            idempotently. Modes the tracker does not follow, such as Swiftplay, Escalation, New Map
-            and custom games, are skipped; a queue this application cannot classify is imported so it
+            idempotently. Modes the tracker does not follow, such as New Map and custom games, are
+            skipped; a queue this application cannot classify is imported so it
             is never lost. Once a season has been walked in full, later runs stop at the first
             already-stored match. A season left unfinished by an interruption, or a season the player
             was still catching up when Riot rolled the act over, is walked again in full rather than

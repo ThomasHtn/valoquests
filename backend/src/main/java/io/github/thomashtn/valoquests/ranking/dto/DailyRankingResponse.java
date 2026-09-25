@@ -52,10 +52,9 @@ public record DailyRankingResponse(
      * @param components         components share of that damage
      * @param matchCount         valued matches played that day
      * @param reducedMatchCount  those the day's diminishing returns priced below full value
-     * @param streakDays         consecutive played days ending on that day, zero when not played
+     * @param streakDays         days of the week played up to that day included, zero when not played
      * @param streakBonusPercent bonus every match of the day earned from that streak
-     * @param streakAtStake      run of consecutive played days ending the day before: what playing
-     *     today keeps alive, and what not playing loses
+     * @param weekPlayedDays     days of the week played from Monday up to that day included
      * @param previousDamage     the damage figure for {@link DailyRankingResponse#previousDay()}
      * @param damageVariation    {@code damage} minus {@code previousDamage}
      */
@@ -73,10 +72,17 @@ public record DailyRankingResponse(
         int reducedMatchCount,
         int streakDays,
         int streakBonusPercent,
-        int streakAtStake,
+        List<LocalDate> weekPlayedDays,
         int previousDamage,
         int damageVariation
     ) {
+
+        /**
+         * Creates an immutable entry.
+         */
+        public DailyRankingEntryResponse {
+            weekPlayedDays = List.copyOf(weekPlayedDays);
+        }
     }
 
     /**

@@ -26,17 +26,17 @@ import java.time.Instant;
  * @param kills                   kills scored
  * @param deaths                  times the player died
  * @param assists                 assists credited
- * @param kda                     kills plus assists over deaths
+ * @param kd                      kills over deaths, the kill total when deathless, as challenges read it
  * @param acs                     average combat score
  * @param adr                     average damage per round
- * @param headshotPercentage      share of shots that landed on the head
+ * @param headshotPercentage      share of shots that landed on the head, {@code null} without shot data
  * @param competitiveTier         tier the player held for this match
  * @param valoquestsDamage        damage this match dealt to the guardian, after both multipliers;
  *     {@code 0} for a match the ruleset does not value
  * @param damageCoefficientPercent share of its base damage the match kept, {@code 100} for a day's
  *     best games and lower once the day's ladder starts reducing them; {@code 0} for an unvalued
  *     match, which never enters that ladder
- * @param streakBonusPercent      bonus the player's run of consecutive days added to this match
+ * @param streakBonusPercent      bonus the player's days played this week added to this match
  * @param food                    food share of the damage
  * @param components              components share of the damage
  */
@@ -54,7 +54,7 @@ public record MatchResponse(
     int kills,
     int deaths,
     int assists,
-    BigDecimal kda,
+    BigDecimal kd,
     BigDecimal acs,
     BigDecimal adr,
     BigDecimal headshotPercentage,

@@ -147,7 +147,7 @@
   color: var(--color-text-secondary);
 }
 
-/* One hexagon per operator, lit when validated, the name on hover. */
+/* One hexagon per operator, lit when validated, the name in a tooltip on hover. */
 .slugs {
   display: inline-flex;
   flex: none;
@@ -177,28 +177,4 @@
 
 .slugs i:hover::before {
   filter: brightness(1.35);
-}
-
-/* Not rendered at rest rather than transparent: the last name overhangs the card's edge and would
-   widen the page's scroll area on a phone. */
-.slugs i::after {
-  content: attr(data-name);
-  position: absolute;
-  display: none;
-  bottom: calc(100% + 0.4rem);
-  left: 50%;
-  z-index: 5;
-  translate: -50% 0;
-  padding: 0.25rem 0.55rem;
-  background: #040a11;
-  border: 1px solid var(--color-edge-strong);
-  font-size: 0.8125rem;
-  line-height: 1.2;
-  white-space: nowrap;
-  color: var(--color-text-primary);
-  pointer-events: none;
-}
-
-.slugs i:hover::after {
-  display: block;
 }

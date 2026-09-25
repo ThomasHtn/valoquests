@@ -36,7 +36,7 @@ export class LiveRefresh {
   private stamp: string | null = null;
 
   /**
-   * Pending reload, so two changes seen in a row reload once.
+   * Pending reload, pushed back by every new change so a whole batch reloads once.
    */
   private pending: ReturnType<typeof setTimeout> | null = null;
 

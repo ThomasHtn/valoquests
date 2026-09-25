@@ -28,7 +28,7 @@ import {
   formatKda,
   formatScore,
 } from '@core/players/player-format.utils';
-import { resolveKdaVisual } from '@core/players/player-stats.utils';
+import { resolveKdVisual } from '@core/players/player-stats.utils';
 import { Breakpoint } from '@core/viewport/breakpoint';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
@@ -130,7 +130,7 @@ export class MatchHistory {
 
   protected readonly matchScore = resolveMatchScore;
 
-  protected readonly kdaVisual = resolveKdaVisual;
+  protected readonly kdVisual = resolveKdVisual;
 
   private readonly translation = inject(Translation);
 

@@ -88,7 +88,7 @@ public class CampaignPlayerDay extends AuditableEntity {
     private int reducedMatchCount;
 
     /**
-     * Consecutive played days ending on this day, this day included.
+     * Days of the week played up to this day, this day included.
      */
     @Column(name = "streak_days", nullable = false)
     private int streakDays;

@@ -66,12 +66,22 @@
       </p>
       <!-- The guardian drains from the left: anchored right it reads backwards from
                    every game. -->
-      <span
-        [style.--lvl]="percent(mission().guardianLeft) + '%'"
-        aria-hidden="true"
-        class="rep-bar rep-bar--foe"
-        ><i></i
-      ></span>
+      @if (mission().defeated; as blow) {
+        <!-- Once down, the empty track is struck through and carries the fatal blow instead. -->
+        <p class="rep-bar rep-bar--foe rep-bar--down">
+          <span class="rep-down label-caption text-2xs">{{
+            (blow.by ? 'overview.report.downBy' : 'overview.report.down')
+              | translate: { weekday: blow.weekday, time: blow.time, name: blow.by ?? '' }
+          }}</span>
+        </p>
+      } @else {
+        <span
+          [style.--lvl]="percent(mission().guardianLeft) + '%'"
+          aria-hidden="true"
+          class="rep-bar rep-bar--foe"
+          ><i></i
+        ></span>
+      }
     </div>
   </div>
 

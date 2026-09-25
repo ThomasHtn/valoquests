@@ -36,7 +36,7 @@ public enum GameMode {
      */
     COMPETITIVE(true, true, "competitive"),
     UNRATED(true, true, "unrated"),
-    SWIFTPLAY(true, false, "swiftplay"),
+    SWIFTPLAY(true, true, "swiftplay"),
 
     /**
      * Dedicated queue used to introduce a newly released map.
@@ -53,7 +53,7 @@ public enum GameMode {
     SPIKE_RUSH(true, true, "spikerush"),
     DEATHMATCH(false, true, "deathmatch"),
     TEAM_DEATHMATCH(false, true, "teamdeathmatch", "hurm"),
-    ESCALATION(false, false, "escalation", "ggteam"),
+    ESCALATION(false, true, "escalation", "ggteam"),
 
     /**
      * Compact 2v2 gunplay mode, distinct from {@link #ESCALATION}.
@@ -116,7 +116,9 @@ public enum GameMode {
         DEATHMATCH,
         TEAM_DEATHMATCH,
         SKIRMISH,
-        PREMIER
+        PREMIER,
+        SWIFTPLAY,
+        ESCALATION
     );
 
     /**

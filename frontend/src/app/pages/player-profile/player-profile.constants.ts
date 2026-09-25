@@ -1,17 +1,18 @@
-import { GameMode } from '@core/matches/game-mode.model';
-
 /**
- * Game mode the profile opens on. Statistics are always scoped to one concrete mode - an "all
- * modes" aggregate would mix incomparable queues - so there is no nullable default.
+ * Number of game modes given their own button after "all modes", by minimum width of the filter
+ * bar, widest first. The remaining `FILTERABLE_GAME_MODES` fall into the overflow menu.
+ *
+ * Measured so the season filter, the display switch and the reset button still fit beside the
+ * group without scrolling the bar. Capped below the full list so the overflow menu never ends up
+ * empty.
  */
-export const DEFAULT_GAME_MODE: GameMode = 'COMPETITIVE';
-
-/**
- * Game modes shown as their own button in the game-mode filter's button group, in
- * `FILTERABLE_GAME_MODES` order. The remaining modes stay reachable through that group's overflow
- * menu rather than crowding the group itself.
- */
-export const PRIMARY_GAME_MODES: readonly GameMode[] = ['COMPETITIVE', 'UNRATED', 'DEATHMATCH'];
+export const GAME_MODE_BUTTON_COUNTS: readonly { minRowWidthPx: number; count: number }[] = [
+  { minRowWidthPx: 1050, count: 6 },
+  { minRowWidthPx: 985, count: 5 },
+  { minRowWidthPx: 900, count: 4 },
+  { minRowWidthPx: 765, count: 3 },
+  { minRowWidthPx: 0, count: 2 },
+];
 
 /**
  * Largest number of seasons the progression view will chart at once.

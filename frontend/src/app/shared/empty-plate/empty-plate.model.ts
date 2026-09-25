@@ -46,9 +46,9 @@ export interface EmptyPlate {
   readonly illustration: EmptyIllustration;
 
   /**
-   * Small caption over the title.
+   * Small caption over the title, omitted when the title says enough.
    */
-  readonly eyebrow: string;
+  readonly eyebrow?: string;
 
   /**
    * Title of the plate.

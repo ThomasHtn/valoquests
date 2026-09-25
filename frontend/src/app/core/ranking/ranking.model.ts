@@ -161,7 +161,7 @@ export interface RankingEntry {
   readonly activeDays: number;
 
   /**
-   * Consecutive days played, counted up to the last day of the week played so far.
+   * Days played in the week so far.
    */
   readonly streakDays: number;
 
@@ -292,7 +292,7 @@ export interface DailyRankingEntry {
   readonly reducedMatchCount: number;
 
   /**
-   * Consecutive active days.
+   * Days of the week played up to this day, this day included; zero when not played.
    */
   readonly streakDays: number;
 
@@ -302,10 +302,9 @@ export interface DailyRankingEntry {
   readonly streakBonusPercent: number;
 
   /**
-   * Streak the player loses by not playing today: the one ending yesterday. Zero once they
-   * played, or when there was nothing to lose.
+   * Days of the week played from Monday up to this day included, ISO dates in ascending order.
    */
-  readonly streakAtStake: number;
+  readonly weekPlayedDays: readonly string[];
 
   /**
    * Guardian damage before today.
@@ -403,7 +402,7 @@ export interface RankingHistoryEntry {
   readonly activeDays: number;
 
   /**
-   * Consecutive active days.
+   * Days played in the week.
    */
   readonly streakDays: number;
 

@@ -15,7 +15,7 @@ package io.github.thomashtn.valoquests.campaign.dto;
  * @param components         components produced
  * @param matchCount         valued matches played
  * @param reducedMatchCount  those the day's diminishing returns priced below full value
- * @param streakDays         consecutive played days ending on this day
+ * @param streakDays         days of the week played up to this day
  * @param streakBonusPercent bonus every match of the day earned from that streak
  */
 public record CampaignPlayerDayResponse(

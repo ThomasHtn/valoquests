@@ -12,12 +12,14 @@ import { anyError, anyLoading, reloadAll, resourceValue } from './resource-state
  */
 function fakeResource<T>(options: {
   isLoading?: boolean;
+  status?: string;
   error?: unknown;
   hasValue?: boolean;
   value?: T;
 }): Resource<T> {
   return {
     isLoading: () => options.isLoading ?? false,
+    status: () => options.status ?? (options.isLoading ? 'loading' : 'resolved'),
     error: () => options.error,
     hasValue: () => options.hasValue ?? false,
     value: () => options.value as T,
@@ -38,6 +40,20 @@ describe('anyLoading', () => {
     const loading = anyLoading(
       fakeResource({ isLoading: false }),
       fakeResource({ isLoading: true }),
+    );
+
+    expect(loading()).toBe(true);
+  });
+
+  it('is false while a resource reloads over a value it already shows', () => {
+    const loading = anyLoading(fakeResource({ isLoading: true, status: 'reloading' }));
+
+    expect(loading()).toBe(false);
+  });
+
+  it('is true while a resource retries after an error', () => {
+    const loading = anyLoading(
+      fakeResource({ isLoading: true, status: 'reloading', error: new Error('boom') }),
     );
 
     expect(loading()).toBe(true);

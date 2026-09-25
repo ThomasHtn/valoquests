@@ -268,6 +268,44 @@
 }
 
 /*
+ * Colors of a `menu-option` in a select listbox, echoing the sidebar: a flat surface step under the
+ * pointer or the keyboard highlight (`data-active`), an amber bar and tint on the held value.
+ * Hover and highlight are scoped to unselected rows so the held value keeps its amber under them.
+ */
+@utility listbox-option {
+  @apply relative text-text-secondary before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:content-[''] not-aria-selected:hover:bg-surface-800 not-aria-selected:hover:text-text-primary not-aria-selected:data-active:bg-surface-800 not-aria-selected:data-active:text-text-primary aria-selected:bg-brand-500/10 aria-selected:text-brand-500 aria-selected:before:bg-brand-500 aria-selected:hover:bg-brand-500/15 aria-selected:data-active:bg-brand-500/15;
+}
+
+/*
+ * Scrolling option list inside a `menu-panel`, capped so a long list stays inside the viewport.
+ *
+ * Chrome ignores the `::-webkit-scrollbar` rules whenever `scrollbar-width` or `scrollbar-color` is
+ * set, and the base layer sets both, which left a native bar with arrow buttons flush against the
+ * border. Resetting them here hands the bar back to the rules below: a slim thumb inset from the
+ * border and from both ends. Firefox has no such pseudo-elements and keeps its thin bar.
+ */
+@utility menu-scroll {
+  @apply max-h-96 overflow-y-auto;
+
+  @supports selector(::-webkit-scrollbar) {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+
+  &::-webkit-scrollbar {
+    width: 14px;
+  }
+
+  &::-webkit-scrollbar-track {
+    margin-block: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 5px solid transparent;
+  }
+}
+
+/*
  * Vertical layout of a routed page: its context bar, then its scrollable body under it.
  *
  * The stack itself fills the column `main` gives it and never scrolls — that is `page-body`'s job
@@ -831,7 +869,8 @@
   align-items: center;
   gap: 0.5rem 1rem;
   padding: 0.6rem 1rem 0.6rem 0.5rem;
-  border-left: 2px solid var(--color-brand-500);
+  /* Transparent rather than removed: the rows below keep a 2px edge the columns align on. */
+  border-left: 2px solid transparent;
   background: rgb(236 232 225 / 8%);
 }
 

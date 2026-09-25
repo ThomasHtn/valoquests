@@ -9,7 +9,6 @@ import io.github.thomashtn.valoquests.scoring.model.DailyYield;
 import io.github.thomashtn.valoquests.scoring.model.PlayerDayOutput;
 import io.github.thomashtn.valoquests.scoring.model.ValuedMatch;
 import io.github.thomashtn.valoquests.week.WeekCalendar;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,8 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
  * components by the mode's share.
  *
  * <p>Both multipliers need more than the requested range. The daily coefficient ranks a match inside
- * its own calendar day, so every day the range touches is loaded whole; the streak counts the
- * consecutive played days before the range, so a fixed lookback is loaded ahead of it. One query for
+ * its own calendar day, so every day the range touches is loaded whole; the streak counts the days
+ * of the week played before the range, so the rest of that week is loaded ahead of it. One query for
  * the whole roster and the whole window, then grouped in memory: asking per player and per day cost
  * {@code players × days} round trips on a call the campaign replay makes after every synchronization.
  */
@@ -40,12 +39,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class DailyOutputReader {
 
     /**
-     * Days loaded ahead of the requested range so the streak is known on its first day.
-     *
-     * <p>Bounds what a streak can be observed at: a run longer than this reads as this many days.
-     * Generous next to a bonus that caps at six, and finite so a one-day read never scans a year.
+     * Days loaded ahead of the requested range so the streak is known on its first day: the rest of
+     * a week, since the streak restarts every Monday.
      */
-    static final int STREAK_LOOKBACK_DAYS = 60;
+    static final int STREAK_LOOKBACK_DAYS = 6;
 
     /**
      * Divisor turning a percentage into a ratio.
@@ -202,10 +199,9 @@ public class DailyOutputReader {
 
             for (Map.Entry<LocalDate, List<PricedMatch>> entry : days.entrySet()) {
                 LocalDate day = entry.getKey();
-                // A streak restarts every Monday: the week's bonus is earned inside the week.
+                // Counts the played days of the week, gaps included; restarts every Monday.
                 boolean continued = previousDay != null
-                    && previousDay.plusDays(1).equals(day)
-                    && day.getDayOfWeek() != DayOfWeek.MONDAY;
+                    && weekCalendar.weekStartOf(previousDay).equals(weekCalendar.weekStartOf(day));
                 streak = continued ? streak + 1 : 1;
                 previousDay = day;
                 streakByDay.put(day, streak);

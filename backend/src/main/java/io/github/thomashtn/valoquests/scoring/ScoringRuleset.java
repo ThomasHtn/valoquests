@@ -42,13 +42,13 @@ public interface ScoringRuleset {
     int matchDamageCoefficientPercent(int rankInDay);
 
     /**
-     * Returns the bonus a match earns from its player's run of consecutive played days.
+     * Returns the bonus a match earns from the days its player has played so far this week.
      *
-     * <p>The first day gives nothing: a bonus everyone has is not a bonus. The cap is deliberately
-     * low, so a player who skipped a day can still catch up with the leader.
+     * <p>The first day gives nothing: a bonus everyone has is not a bonus. A skipped day only delays
+     * the bonus, and the cap is deliberately low so a player who plays less can still catch up.
      *
-     * @param streakDays number of consecutive calendar days with at least one valued match, the day
-     *                   of the match included; zero or one means no streak
+     * @param streakDays number of days of the week with at least one valued match, the day of the
+     *                   match included; zero or one means no streak
      * @return bonus percentage applied on top of the daily coefficient
      */
     int streakBonusPercent(int streakDays);

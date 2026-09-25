@@ -3,11 +3,21 @@ import { computed, Resource, ResourceRef, Signal } from '@angular/core';
 /**
  * Combines the loading state of several resources a single view depends on.
  *
+ * A reload over a successful value keeps that value on screen until the new one lands: swapping the
+ * view for its skeleton on every background refresh would collapse the page and lose the reader's
+ * scroll. A retry after an error still counts as loading.
+ *
  * @param resources - The resources backing the view.
- * @returns Whether at least one of them is still loading.
+ * @returns Whether at least one of them is loading with nothing valid to show meanwhile.
  */
 export function anyLoading(...resources: readonly Resource<unknown>[]): Signal<boolean> {
-  return computed(() => resources.some((resource) => resource.isLoading()));
+  return computed(() =>
+    resources.some(
+      (resource) =>
+        resource.status() === 'loading' ||
+        (resource.status() === 'reloading' && resource.error() !== undefined),
+    ),
+  );
 }
 
 /**

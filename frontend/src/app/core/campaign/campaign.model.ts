@@ -537,7 +537,7 @@ export interface CampaignPlayerDay {
   readonly reducedMatchCount: number;
 
   /**
-   * Consecutive active days.
+   * Days of the week played up to this day.
    */
   readonly streakDays: number;
 

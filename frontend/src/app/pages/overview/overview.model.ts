@@ -57,18 +57,33 @@ export interface MissionReportTitle extends TitleVisual {
 }
 
 /**
- * One line of the frozen ranking the mission report shows.
+ * The fatal blow as the mission report tells it, split so the player's name can stand out.
  */
-export interface MissionReportRank {
+export interface MissionReportBlow {
   /**
-   * Position on the board, first being 1.
+   * When the guardian fell, as the sentence opens (`Guardian defeated on Sunday at 15:04`).
    */
-  readonly position: number;
+  readonly when: string;
 
   /**
-   * Operator name.
+   * Who dealt the blow, or `null` when the player is unknown.
    */
-  readonly name: string;
+  readonly by: string | null;
+
+  /**
+   * Map, mode and score of the match, with their leading punctuation, or empty when unknown.
+   */
+  readonly where: string;
+}
+
+/**
+ * The week's champion as the mission report crowns it, beside the four titles: its holder, or nobody.
+ */
+export interface MissionReportChampion {
+  /**
+   * Name of the champion, or `null` on a shared first place.
+   */
+  readonly holder: string | null;
 
   /**
    * Bundled agent portrait name, or `null` when none was chosen.
@@ -76,14 +91,14 @@ export interface MissionReportRank {
   readonly portrait: string | null;
 
   /**
-   * Total ranking points.
+   * The champion's ranking points, `0` when nobody won outright.
    */
-  readonly total: number;
+  readonly points: number;
 }
 
 /**
- * The last settled week, as the Monday report tells it: the guardian, the wounded, the base, the
- * titles, the frozen ranking, and the planet ahead.
+ * The last settled week, as the Monday report tells it: the verdict, the loot brought home, the
+ * honours, and the planet ahead.
  */
 export interface MissionReport {
   /**
@@ -102,24 +117,9 @@ export interface MissionReport {
   readonly planetName: string;
 
   /**
-   * Date the week was settled, ISO.
-   */
-  readonly settledOn: string;
-
-  /**
    * Whether the guardian was defeated.
    */
   readonly defeated: boolean;
-
-  /**
-   * Hit points the guardian started with.
-   */
-  readonly hitPoints: number;
-
-  /**
-   * Hit points the guardian still has.
-   */
-  readonly hitPointsLeft: number;
 
   /**
    * Share of the guardian’s hit points taken, in percent.
@@ -127,9 +127,9 @@ export interface MissionReport {
   readonly breachPercent: number;
 
   /**
-   * The fatal blow in one line (who, when, where), or `null` when the guardian held.
+   * The fatal blow, or `null` when the guardian held.
    */
-  readonly blow: string | null;
+  readonly blow: MissionReportBlow | null;
 
   /**
    * Inhabitants lost to the guardian left standing.
@@ -147,9 +147,24 @@ export interface MissionReport {
   readonly spotted: number;
 
   /**
+   * Share of the spotted wounded brought home, from 0 to 1.
+   */
+  readonly rescuedShare: number;
+
+  /**
    * Wounded rescued through validated challenges.
    */
   readonly byChallenges: number;
+
+  /**
+   * Wounded extracted by the ship.
+   */
+  readonly byShip: number;
+
+  /**
+   * Wounded left on the planet.
+   */
+  readonly leftBehind: number;
 
   /**
    * What capped the extraction: a stock, the group, or nothing.
@@ -157,14 +172,29 @@ export interface MissionReport {
   readonly limiter: ExtractionLimiter;
 
   /**
-   * Inhabitants at the week's close, `null` when no day of it was replayed.
+   * What the week harvested and how the base ended it, `null` when no day of it was replayed.
    */
-  readonly population: number | null;
+  readonly base: {
+    /**
+     * Food gained over the week.
+     */
+    readonly foodGained: number;
 
-  /**
-   * Change of population over the period.
-   */
-  readonly populationChange: number;
+    /**
+     * Components gained over the week.
+     */
+    readonly componentsGained: number;
+
+    /**
+     * Inhabitants at the week's close.
+     */
+    readonly population: number;
+
+    /**
+     * Change of population over the week.
+     */
+    readonly populationChange: number;
+  } | null;
 
   /**
    * The four titles, or `null` when the week's ranking was never frozen.
@@ -172,12 +202,12 @@ export interface MissionReport {
   readonly titles: readonly MissionReportTitle[] | null;
 
   /**
-   * Frozen ranking of the week.
+   * The week's champion, or `null` when the week's ranking was never frozen.
    */
-  readonly ranking: readonly MissionReportRank[];
+  readonly champion: MissionReportChampion | null;
 
   /**
-   * The planet ahead.
+   * The planet ahead, `null` after the last week.
    */
   readonly next: {
     /**
@@ -528,12 +558,17 @@ export interface DayTally {
   /**
    * One slot per operator of the roster, lit for those who played.
    */
-  readonly pips: readonly boolean[];
+  readonly pips: readonly DayPip[];
 }
 
 /**
  * One operator's day on the squad sheet.
  */
+/**
+ * One day of the week in a squad row's streak gauge: played, skipped, today not yet played, or to come.
+ */
+export type StreakPip = 'played' | 'missed' | 'today' | 'ahead';
+
 export interface SquadRow {
   /**
    * Position on the weekly board, or `null` when unranked.
@@ -566,19 +601,19 @@ export interface SquadRow {
   readonly played: boolean;
 
   /**
-   * Streak multiplier, formatted.
+   * Streak bonus of today's matches in percent, the one playing would earn while not played yet.
    */
-  readonly streakMultiplier: string;
+  readonly streakBonusPercent: number;
 
   /**
-   * Consecutive active days.
+   * Days of the week played so far, today included once played.
    */
   readonly streakDays: number;
 
   /**
-   * Streak days lost if the operator sits out today.
+   * The week from Monday to Sunday, one pip per day.
    */
-  readonly streakAtStake: number;
+  readonly streakWeek: readonly StreakPip[];
 
   /**
    * Guardian damage dealt today.
@@ -604,4 +639,19 @@ export interface SquadRow {
    * Food gained today.
    */
   readonly food: number;
+}
+
+/**
+ * One operator slot of the day's presence gauge.
+ */
+export interface DayPip {
+  /**
+   * Operator who played, or `null` for an empty slot: absentees are not named by the day.
+   */
+  readonly name: string | null;
+
+  /**
+   * Whether the slot is lit.
+   */
+  readonly on: boolean;
 }

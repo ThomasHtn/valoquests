@@ -1,67 +1,72 @@
-<app-page-header [eyebrow]="headerEyebrow()" [heading]="'challenges.header.heading' | translate" />
+<app-page-header [heading]="'challenges.header.heading' | translate" />
 
 <div class="page-body">
-  <app-resource-state
-    (retry)="retry()"
-    [emptyPlate]="emptyPlate()"
-    [errorText]="'challenges.state.error' | translate"
-    [isEmpty]="!hasChallenges()"
-    [isError]="isError()"
-    [isLoading]="isLoading()"
-    [loadingText]="'challenges.state.loading' | translate"
-    emptyKind="waiting"
-    padding="px-4 py-10 sm:px-6"
-  >
-    <main class="flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)] pb-20">
-      <!-- The briefing: what a challenge is for. The one place on the page where the rule is
-           stated. -->
-      <section aria-labelledby="brief-title" class="brief">
-        <p class="label-caption text-brand-400" id="brief-title">
-          {{ 'challenges.brief.eyebrow' | translate }}
-        </p>
-        <!-- Two readings of the same rule: with a base to bring the wounded to, or, between two
-             campaigns, with only the weekly ranking to count them. -->
-        @if (rescueActive()) {
-          <p class="brief-text">
-            {{ 'challenges.brief.rescue' | translate }}
-            <b>{{ 'challenges.brief.noDamage' | translate }}</b>
-            {{ 'challenges.brief.sunday' | translate }}
+  <main class="flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)] pb-20">
+    <app-resource-state
+      (retry)="retry()"
+      [emptyPlate]="emptyPlate()"
+      [errorText]="'challenges.state.error' | translate"
+      [isEmpty]="!hasChallenges()"
+      [isError]="isError()"
+      [isLoading]="isLoading()"
+      [loadingText]="'challenges.state.loading' | translate"
+      emptyKind="waiting"
+      padding="px-4 py-10 sm:px-6"
+    >
+      <div class="flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)]">
+        <!-- The briefing: what a challenge is for. The one place on the page where the rule is
+             stated. -->
+        <section aria-labelledby="brief-title" class="brief">
+          <p class="label-caption text-brand-400" id="brief-title">
+            {{ 'challenges.brief.eyebrow' | translate }}
           </p>
-        } @else {
-          <p class="brief-text">
-            {{ 'challenges.brief.rescueOff' | translate }}
-            <b>{{ 'challenges.brief.pointsOff' | translate }}</b>
-            {{ 'challenges.brief.sundayOff' | translate }}
-          </p>
-        }
-      </section>
+          <!-- Two readings of the same rule: with a base to bring the wounded to, or, between two
+               campaigns, with only the weekly ranking to count them. -->
+          @if (rescueActive()) {
+            <p class="brief-text">
+              {{ 'challenges.brief.rescue' | translate }}
+              <b>{{ 'challenges.brief.noDamage' | translate }}</b>
+              {{ 'challenges.brief.sunday' | translate }}
+            </p>
+          } @else {
+            <p class="brief-text">
+              {{ 'challenges.brief.rescueOff' | translate }}
+              <b>{{ 'challenges.brief.pointsOff' | translate }}</b>
+              {{ 'challenges.brief.sundayOff' | translate }}
+            </p>
+          }
+        </section>
 
-      <section aria-labelledby="daily-title">
-        <app-section-rule
-          [heading]="'challenges.daily.title' | translate"
-          headingId="daily-title"
-        />
-        <app-daily-frieze [days]="days()" />
-      </section>
+        <section aria-labelledby="daily-title">
+          <app-section-rule
+            [heading]="'challenges.daily.title' | translate"
+            headingId="daily-title"
+          />
+          <app-daily-frieze [days]="days()" />
+        </section>
 
-      <section aria-labelledby="weekly-title">
-        <app-section-rule
-          [heading]="'challenges.weekly.title' | translate"
-          headingId="weekly-title"
-        />
-        @if (weeklyCards().length > 0) {
-          <ol [attr.aria-label]="'challenges.weekly.list' | translate" class="weekly">
-            @for (card of weeklyCards(); track card.name) {
-              <li>
-                <app-challenge-card [card]="card" />
-              </li>
-            }
-          </ol>
-        } @else {
-          <p class="text-lead text-text-secondary">{{ 'challenges.weekly.none' | translate }}</p>
-        }
-      </section>
+        <section aria-labelledby="weekly-title">
+          <app-section-rule
+            [heading]="'challenges.weekly.title' | translate"
+            headingId="weekly-title"
+          />
+          @if (weeklyCards().length > 0) {
+            <ol [attr.aria-label]="'challenges.weekly.list' | translate" class="weekly">
+              @for (card of weeklyCards(); track card.name) {
+                <li>
+                  <app-challenge-card [card]="card" />
+                </li>
+              }
+            </ol>
+          } @else {
+            <p class="text-lead text-text-secondary">{{ 'challenges.weekly.none' | translate }}</p>
+          }
+        </section>
+      </div>
+    </app-resource-state>
 
+    <!-- Outside the state above: the catalogue stays readable while no campaign has drawn anything. -->
+    @if (!isLoading()) {
       <!-- The catalogue is folded: a reserve to consult, not an entry point. Its bar is the
            section's own title, and nothing of the hundred-odd rows exists before it opens. -->
       <section aria-labelledby="catalogue-title">
@@ -77,12 +82,18 @@
               aria-hidden="true"
               class="h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent"
             ></span>
-            <span class="fold-cue label-caption text-2xs">
-              {{
-                (catalogueOpen() ? 'challenges.catalogue.hide' : 'challenges.catalogue.show')
-                  | translate
-              }}
-              <svg aria-hidden="true" class="size-3.5" lucideChevronDown></svg>
+            <!-- Same cue as a section rule's link, with a chevron since it unfolds in place. -->
+            <span class="ml-auto flex items-center gap-x-4">
+              <span
+                class="fold-cue tracking-label font-mono text-xs font-medium text-brand-400 uppercase transition-colors"
+              >
+                {{
+                  (catalogueOpen() ? 'challenges.catalogue.hide' : 'challenges.catalogue.show')
+                    | translate
+                }}
+                <svg aria-hidden="true" class="size-3.5" lucideChevronDown></svg>
+              </span>
+              <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
             </span>
           </summary>
           @if (catalogueOpen()) {
@@ -99,6 +110,6 @@
           }
         </details>
       </section>
-    </main>
-  </app-resource-state>
+    }
+  </main>
 </div>

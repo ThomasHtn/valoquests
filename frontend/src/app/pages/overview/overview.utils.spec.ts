@@ -208,7 +208,7 @@ describe('buildMissionReport', () => {
     expect(buildMissionReport(campaign(), [], [], 'en', translate)).toBeNull();
   });
 
-  it('reports an empty ranking and no titles when the week was never frozen', () => {
+  it('reports no titles and no champion when the week was never frozen', () => {
     const report = buildMissionReport(
       campaign({ weeks: [week({ settled: true })] }),
       [],
@@ -218,10 +218,10 @@ describe('buildMissionReport', () => {
     );
 
     expect(report?.titles).toBeNull();
-    expect(report?.ranking).toEqual([]);
+    expect(report?.champion).toBeNull();
   });
 
-  it('resolves the frozen ranking and titles once the week has one', () => {
+  it('resolves the titles and the champion once the week is frozen', () => {
     const history: readonly RankingHistoryWeek[] = [
       {
         weekStart: '2026-01-05',
@@ -254,10 +254,8 @@ describe('buildMissionReport', () => {
       translate,
     );
 
-    expect(report?.ranking).toEqual([
-      { position: 1, name: 'Scout Prime', portrait: null, total: 600 },
-    ]);
     expect(report?.titles?.find((title) => title.key === 'SCOUT')?.holder).toBe('Scout Prime');
+    expect(report?.champion).toEqual({ holder: 'Scout Prime', portrait: null, points: 600 });
   });
 
   it('states the fatal blow in one line, translated', () => {
@@ -278,7 +276,58 @@ describe('buildMissionReport', () => {
       translate,
     );
 
-    expect(report?.blow).toContain('overview.missionReport.blow');
+    expect(report?.blow?.when).toContain('overview.missionReport.blow(');
+    expect(report?.blow?.by).toBe('Killjoy Main');
+  });
+
+  it('adds the map, mode and score of the fatal blow when the match is known', () => {
+    const report = buildMissionReport(
+      campaign({
+        weeks: [
+          week({
+            settled: true,
+            defeated: true,
+            defeatedAt: '2026-01-07T18:30:00Z',
+            fatalBlow: {
+              mapName: 'Ascent',
+              gameMode: 'COMPETITIVE',
+              result: 'WIN',
+              allyScore: 13,
+              enemyScore: 9,
+              agentName: 'Sova',
+            },
+          }),
+        ],
+      }),
+      [],
+      [],
+      'en',
+      translate,
+    );
+
+    expect(report?.blow?.by).toBeNull();
+    expect(report?.blow?.where).toBe(
+      'overview.missionReport.blowWhere(Ascent,common.gameMode.COMPETITIVE)' +
+        'overview.missionReport.blowScore(13,9)',
+    );
+  });
+
+  it('counts the wounded left on the planet and the share brought home', () => {
+    const report = buildMissionReport(
+      campaign({
+        weeks: [
+          week({ settled: true, woundedCount: 10, challengeRescued: 2, extractionRescued: 6 }),
+        ],
+      }),
+      [],
+      [],
+      'en',
+      translate,
+    );
+
+    expect(report?.rescued).toBe(8);
+    expect(report?.leftBehind).toBe(2);
+    expect(report?.rescuedShare).toBe(0.8);
   });
 
   it('says nothing about the blow while the guardian held', () => {
@@ -516,7 +565,7 @@ describe('buildTally', () => {
   it('lights one pip per operator who played today', () => {
     const tally = buildTally(today, week(), campaign());
 
-    expect(tally?.pips).toEqual([true, true, true, false, false]);
+    expect(tally?.pips.map((pip) => pip.on)).toEqual([true, true, true, false, false]);
   });
 
   it('carries the base population change through', () => {
@@ -528,7 +577,7 @@ describe('buildTally', () => {
 
 describe('buildSquad', () => {
   it('returns nothing while the daily ranking is unresolved', () => {
-    expect(buildSquad(null, null, 'en')).toEqual([]);
+    expect(buildSquad(null, null)).toEqual([]);
   });
 
   it('excludes an inactive operator, who never consumes a ranking slot', () => {
@@ -543,7 +592,7 @@ describe('buildSquad', () => {
       ],
     };
 
-    const squad = buildSquad(daily, null, 'en');
+    const squad = buildSquad(daily, null);
 
     expect(squad).toHaveLength(1);
     expect(squad[0].playerId).toBe(1);
@@ -571,24 +620,64 @@ describe('buildSquad', () => {
       titles: { MECHANIC: 1 },
     };
 
-    const [row] = buildSquad(daily, today, 'en');
+    const [row] = buildSquad(daily, today);
 
     expect(row.title?.key).toBe('MECHANIC');
   });
 
-  it("prices an unplayed operator's stake off yesterday's streak, not today's", () => {
+  it('shows an unplayed operator the days already played and the bonus playing today would earn', () => {
     const daily: DailyRanking = {
       day: '2026-01-06',
       previousDay: '2026-01-05',
       playedPlayerCount: 0,
       rosterPlayerCount: 1,
-      ranking: [entry({ playerId: 1, position: 1, matchCount: 0, streakAtStake: 5 })],
+      ranking: [entry({ playerId: 1, position: 1, matchCount: 0, weekPlayedDays: ['2026-01-05'] })],
     };
 
-    const [row] = buildSquad(daily, null, 'en');
+    const [row] = buildSquad(daily, null);
 
     expect(row.played).toBe(false);
-    expect(row.streakDays).toBe(5);
+    expect(row.streakDays).toBe(1);
+    expect(row.streakBonusPercent).toBe(2);
+    expect(row.streakWeek).toEqual([
+      'played',
+      'today',
+      'ahead',
+      'ahead',
+      'ahead',
+      'ahead',
+      'ahead',
+    ]);
+  });
+
+  it("shows a played operator's own streak and bonus, a skipped day left unlit", () => {
+    const daily: DailyRanking = {
+      day: '2026-01-08',
+      previousDay: '2026-01-07',
+      playedPlayerCount: 1,
+      rosterPlayerCount: 1,
+      ranking: [
+        entry({
+          playerId: 1,
+          position: 1,
+          weekPlayedDays: ['2026-01-05', '2026-01-07', '2026-01-08'],
+        }),
+      ],
+    };
+
+    const [row] = buildSquad(daily, null);
+
+    expect(row.streakDays).toBe(3);
+    expect(row.streakBonusPercent).toBe(4);
+    expect(row.streakWeek).toEqual([
+      'played',
+      'missed',
+      'played',
+      'played',
+      'ahead',
+      'ahead',
+      'ahead',
+    ]);
   });
 
   function entry(overrides: {
@@ -596,7 +685,7 @@ describe('buildSquad', () => {
     position: number | null;
     competing?: boolean;
     matchCount?: number;
-    streakAtStake?: number;
+    weekPlayedDays?: readonly string[];
   }) {
     return {
       position: overrides.position,
@@ -611,7 +700,7 @@ describe('buildSquad', () => {
       reducedMatchCount: 0,
       streakDays: 3,
       streakBonusPercent: 4,
-      streakAtStake: overrides.streakAtStake ?? 0,
+      weekPlayedDays: overrides.weekPlayedDays ?? [],
       previousDamage: 0,
       damageVariation: 100,
     };
