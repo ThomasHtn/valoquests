@@ -753,7 +753,7 @@
     },
     "scene": {
       "section": "La ville de nuit et la fusée en construction",
-      "aria": "La ville de nuit, {{population}} habitants. Au centre, la fusée montée à {{stages}} étages sur {{weeks}}, et le profil du lanceur complet en pointillé au-dessus.",
+      "aria": "La base, {{population}} habitants. Au centre, la fusée montée à {{stages}} étages sur {{weeks}}.",
       "base": "La base",
       "unit": "habitants",
       "delta": "aujourd’hui · provisoire"

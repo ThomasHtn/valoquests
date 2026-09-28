@@ -19,7 +19,7 @@
 
 <div class="page-body !gap-0 !pt-0">
   <!-- The state of the campaign, drawn. The city is the score; the rocket in its middle gains a
-       stage per guardian defeated, and what remains to be built is there, dotted. -->
+       stage per guardian defeated. -->
   <section
     [attr.aria-label]="'overview.scene.section' | translate"
     class="scene relative !max-w-none shrink-0 overflow-hidden bg-[#040a11] !px-0"
@@ -30,9 +30,10 @@
         [label]="sceneLabel()"
         [population]="population()"
         [stagesDone]="stagesDone()"
+        [trackVisits]="true"
       />
     } @placeholder {
-      <div class="aspect-[1200/430] min-h-80 w-full max-h-[40rem]"></div>
+      <div class="aspect-[1200/322] min-h-60 w-full max-h-[30rem]"></div>
     }
     <div aria-hidden="true" class="scene-wash absolute inset-0"></div>
 

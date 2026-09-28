@@ -2,13 +2,17 @@ import {
   afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
+  inject,
   input,
+  signal,
   viewChild,
 } from '@angular/core';
 import { buildTownScene } from './town-scene.utils';
-import { TOWN_HEIGHT, TOWN_WIDTH } from './town-scene.constants';
+import { CLOCK_TICK_MS, TOWN_HEIGHT, TOWN_WIDTH } from './town-scene.constants';
 import { SCENE_HEADROOM } from './base-scene.constants';
+import { readSeenPopulation, writeSeenPopulation } from './seen-population.utils';
 
 @Component({
   selector: 'app-base-scene',
@@ -37,21 +41,47 @@ export class BaseScene {
    */
   public readonly label = input('');
 
-  // Headroom above the drawing: the launcher's dotted outline reaches the top of the frame, and
-  // on a phone the frame is cropped to its height, so without it the rocket's tip went under the
-  // context bar.
+  /**
+   * Whether to remember the population between visits, so the buildings grown since the last one
+   * rise on arrival. Only the overview does: the tour shows the base, it does not follow it.
+   */
+  public readonly trackVisits = input(false);
+
   protected readonly viewBox = `0 -${SCENE_HEADROOM} ${TOWN_WIDTH} ${TOWN_HEIGHT + SCENE_HEADROOM}`;
 
   private readonly town = viewChild.required<ElementRef<SVGSVGElement>>('town');
 
+  // The light follows the viewer's clock; a few minutes between two redraws is invisible in a sky.
+  private readonly now = signal(Date.now());
+
+  // Population of the previous drawing, null until one has been made with a known population.
+  private drawnPopulation: number | null = null;
+
   constructor() {
+    const timer = setInterval(() => this.now.set(Date.now()), CLOCK_TICK_MS);
+    inject(DestroyRef).onDestroy(() => clearInterval(timer));
+
     afterRenderEffect(() => {
+      const population = this.population();
+      if (this.drawnPopulation === null && this.trackVisits()) {
+        this.drawnPopulation = readSeenPopulation();
+      }
       buildTownScene(this.town().nativeElement, {
-        population: this.population(),
+        population,
+        previousPopulation: this.drawnPopulation ?? population,
         stagesDone: this.stagesDone(),
         fullCampaignPopulation: this.fullCampaignPopulation(),
+        now: this.now(),
         reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
       });
+
+      // Zero is the campaign still loading, not a base: keeping it would raise the whole city next.
+      if (population > 0) {
+        this.drawnPopulation = population;
+        if (this.trackVisits()) {
+          writeSeenPopulation(population);
+        }
+      }
     });
   }
 }

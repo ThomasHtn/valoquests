@@ -14,6 +14,11 @@ export const ROCKET_PALETTE = {
   brand: '#d9954a',
   cyan: '#2dd4bf',
   red: '#ff4655',
+  hull: '#e4e0d8',
+  hullLit: '#ffffff',
+  ink: '#16202a',
+  nozzle: '#0c141c',
+  shade: '#0b1117',
 } as const;
 
 /**

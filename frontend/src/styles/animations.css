@@ -124,12 +124,10 @@
  * Keyframes the overview's drawings reach through inline styles set from a script: a component
  * stylesheet would scope their names away from those styles, so they live here.
  */
-@keyframes town-window-on {
+/* A building of the base grows from the height it had to the one it has; `--rise-from` is that ratio. */
+@keyframes town-rise {
   from {
-    opacity: 0;
-  }
-  to {
-    opacity: 0.92;
+    transform: scaleY(var(--rise-from, 0));
   }
 }
 

@@ -1,34 +1,49 @@
-import { animate, drawShip, outline } from '@shared/rocket/rocket-drawing.utils';
+import { animate, drawShip } from '@shared/rocket/rocket-drawing.utils';
 import { SHIP } from '@shared/rocket/rocket-drawing.constants';
 import { createSeededRandom } from '@core/random/seeded-random.utils';
-import { TownSceneInputs, Facade } from './town-scene.model';
 import { svgElement } from '@core/svg/svg-element.utils';
+import { SkyBody, SkyState, TownSceneInputs } from './town-scene.model';
 import {
+  HORIZON,
+  PAD_HALF,
+  PLOT,
+  RX,
+  SHIP_SCALE,
+  SIDE_FADE_OPACITY,
+  SIDE_FADE_STEPS,
+  SIDE_FADE_WIDTH,
+  TOWN_HEIGHT,
   TOWN_PALETTE,
   TOWN_SEED,
   TOWN_WIDTH,
-  TOWN_HEIGHT,
-  HORIZON,
-  RX,
-  SHIP_SCALE,
-  PLOT,
-  SKYLINE,
-  SPREAD,
-  RISE,
-  SEEDLING,
-  CLARITY,
 } from './town-scene.constants';
+import { buildingAt, growthOf, planCity, tierAt } from './city-plan.utils';
+import { hourOf, mixColor, moonAt, skyAt, sunAt } from './sky-cycle.utils';
+import { drawClouds, drawMoon, drawRidge, drawStars, drawSun } from './sky-drawing.utils';
+import { drawBuilding } from './building-drawing.utils';
 
 /**
- * Builds the night-time base and its rocket as SVG nodes.
+ * Builds the base and its rocket as SVG nodes, under the light of the viewer's hour.
  *
- * The city is the score, so the city has to grow: one number, the population read against what
- * a full campaign produces, drives how many buildings stand, how tall they are, their style and
- * how many windows are lit. Two settings that could disagree would end up disagreeing on screen.
+ * The state of the campaign, drawn: the city is the score, the rocket gains a stage per guardian
+ * defeated. Drawn imperatively into one `<svg>`
+ * rather than templated: a few hundred nodes computed from a handful of numbers are a drawing, not
+ * a view.
  *
  * Pure DOM construction with no Angular dependency, kept apart from the component so the drawing
  * can be read as a drawing.
  */
+
+/**
+ * The lots of the city, planned once: the plan does not depend on any input.
+ */
+const CITY = planCity();
+
+/**
+ * Drawings made so far, suffixing the ids of each one's gradients: two scenes on a page must not
+ * share a `url(#…)`.
+ */
+let sceneSerial = 0;
 
 /**
  * Draws the whole scene into an empty `<svg>`.
@@ -37,13 +52,14 @@ import {
  * @param inputs - What the scene is drawn from.
  */
 export function buildTownScene(svg: SVGSVGElement, inputs: TownSceneInputs): void {
-  const rnd = createSeededRandom(TOWN_SEED);
-  const growth = Math.min(
-    1,
-    Math.max(0.08, inputs.population / Math.max(1, inputs.fullCampaignPopulation)),
-  );
-  const litShare = 0.45 + growth * 0.35;
+  const hour = hourOf(inputs.now);
+  const sky = skyAt(hour);
+  const sun = sunAt(hour);
+  const moon = moonAt(hour);
   const stagesDone = Math.max(0, Math.min(SHIP.length - 1, inputs.stagesDone));
+
+  const serial = sceneSerial++;
+  const id = (name: string): string => `town-${name}-${serial}`;
 
   const frag = document.createDocumentFragment();
   const add = <T extends Node>(node: T): T => {
@@ -51,313 +67,282 @@ export function buildTownScene(svg: SVGSVGElement, inputs: TownSceneInputs): voi
     return node;
   };
 
-  const defs = add(svgElement('defs'));
-  const sky = svgElement('linearGradient', { id: 'town-sky', x1: 0, y1: 0, x2: 0, y2: 1 });
-  sky.append(
-    svgElement('stop', { offset: 0, 'stop-color': TOWN_PALETTE.night }),
-    svgElement('stop', { offset: 0.6, 'stop-color': '#08131c' }),
-    svgElement('stop', { offset: 1, 'stop-color': '#132430' }),
+  add(defs(sky, id));
+
+  // The sky runs above the frame too: on a phone the headroom is shown.
+  add(
+    svgElement('rect', {
+      x: 0,
+      y: -60,
+      width: TOWN_WIDTH,
+      height: HORIZON + 60,
+      fill: `url(#${id('sky')})`,
+    }),
   );
-  const glow = svgElement('radialGradient', { id: 'town-glow', cx: 0.5, cy: 0.5, r: 0.5 });
-  glow.append(
-    svgElement('stop', { offset: 0, 'stop-color': TOWN_PALETTE.brand, 'stop-opacity': 0.5 }),
-    svgElement('stop', { offset: 1, 'stop-color': TOWN_PALETTE.brand, 'stop-opacity': 0 }),
+  add(drawStars(sky));
+  if (moon) {
+    add(drawMoon(moon, id('moon-cut')));
+  }
+  if (sun) {
+    add(drawSun(sun));
+  }
+  add(drawClouds(sky, inputs.now, inputs.reducedMotion));
+  add(drawRidge(sky));
+  add(
+    svgElement('rect', {
+      x: 0,
+      y: HORIZON - 1,
+      width: TOWN_WIDTH,
+      height: 8,
+      fill: mixColor(TOWN_PALETTE.quayFace, sky.wall, 0.5),
+    }),
   );
-  const pad = svgElement('radialGradient', { id: 'town-pad', cx: 0.5, cy: 1, r: 0.7 });
-  pad.append(
-    svgElement('stop', { offset: 0, 'stop-color': TOWN_PALETTE.warm, 'stop-opacity': 0.22 }),
-    svgElement('stop', { offset: 1, 'stop-color': TOWN_PALETTE.warm, 'stop-opacity': 0 }),
+
+  add(drawCity(inputs, sky));
+  add(drawPad(sky));
+
+  // The pad's ground, the scale, and the vertical axis flipped so the rocket builds upward.
+  const built = svgElement('g', {
+    transform: `translate(${RX} ${HORIZON - 4}) scale(${SHIP_SCALE} ${-SHIP_SCALE})`,
+  });
+  built.append(drawShip(stagesDone));
+  add(built);
+  if (stagesDone > 0) {
+    add(drawVapor(SHIP[stagesDone].w * SHIP_SCALE, inputs.reducedMotion));
+  }
+
+  add(drawWater(sky, sun, moon, id('sea')));
+
+  // A light fade on both sides, so the frame eases into the page without hiding the city.
+  add(
+    svgElement('rect', {
+      x: 0,
+      y: -60,
+      width: TOWN_WIDTH,
+      height: TOWN_HEIGHT + 60,
+      fill: `url(#${id('vignette')})`,
+    }),
   );
-  const sea = svgElement('linearGradient', { id: 'town-sea', x1: 0, y1: 0, x2: 0, y2: 1 });
+
+  svg.replaceChildren(frag);
+}
+
+/**
+ * Gradients of the sky, the sea and the side fade.
+ */
+function defs(sky: SkyState, id: (name: string) => string): SVGDefsElement {
+  const defs = svgElement('defs');
+  const skyGradient = svgElement('linearGradient', { id: id('sky'), x1: 0, y1: 0, x2: 0, y2: 1 });
+  skyGradient.append(
+    svgElement('stop', { offset: 0, 'stop-color': sky.skyTop }),
+    svgElement('stop', { offset: 0.62, 'stop-color': sky.skyMid }),
+    svgElement('stop', { offset: 1, 'stop-color': sky.skyLow }),
+  );
+
+  // The sea mirrors the sky under the quay, and always ends dark: the figures stand on it.
+  const sea = svgElement('linearGradient', { id: id('sea'), x1: 0, y1: 0, x2: 0, y2: 1 });
   sea.append(
-    svgElement('stop', { offset: 0, 'stop-color': '#123340' }),
-    svgElement('stop', { offset: 0.35, 'stop-color': '#081820' }),
-    svgElement('stop', { offset: 1, 'stop-color': '#050f15' }),
+    svgElement('stop', { offset: 0, 'stop-color': sky.sea }),
+    svgElement('stop', { offset: 0.4, 'stop-color': '#081820' }),
+    svgElement('stop', { offset: 1, 'stop-color': TOWN_PALETTE.seaDeep }),
   );
+
   const vignette = svgElement('linearGradient', {
-    id: 'town-vignette',
+    id: id('vignette'),
     x1: 0,
     y1: 0,
     x2: 1,
     y2: 0,
   });
-  vignette.append(
-    svgElement('stop', { offset: 0, 'stop-color': TOWN_PALETTE.night, 'stop-opacity': 0.85 }),
-    svgElement('stop', { offset: 0.26, 'stop-color': TOWN_PALETTE.night, 'stop-opacity': 0 }),
-    svgElement('stop', { offset: 0.76, 'stop-color': TOWN_PALETTE.night, 'stop-opacity': 0 }),
-    svgElement('stop', { offset: 1, 'stop-color': TOWN_PALETTE.night, 'stop-opacity': 0.85 }),
-  );
-  defs.append(sky, glow, pad, sea, vignette);
-
-  add(
-    svgElement('rect', {
-      x: 0,
-      y: 0,
-      width: TOWN_WIDTH,
-      height: TOWN_HEIGHT,
-      fill: 'url(#town-sky)',
-    }),
-  );
-
-  // Stars: a fixed sequence cut by the clarity. Faded stars read as a rendering bug, missing ones
-  // as a bad night.
-  const starCount = Math.round(16 + CLARITY * 62);
-  for (let i = 0; i < starCount; i++) {
-    add(
-      svgElement('circle', {
-        cx: (rnd() * TOWN_WIDTH).toFixed(1),
-        cy: (rnd() * 210).toFixed(1),
-        r: rnd() < 0.12 ? 1.5 : 0.9,
-        fill: '#cfe4ee',
-        opacity: (0.35 + rnd() * 0.5).toFixed(2),
-      }),
-    );
+  // Eased rather than linear: a straight ramp leaves a visible line where it stops.
+  const fade = (offset: number, t: number): SVGStopElement =>
+    svgElement('stop', {
+      offset: offset.toFixed(4),
+      'stop-color': TOWN_PALETTE.night,
+      'stop-opacity': (SIDE_FADE_OPACITY * (1 - t) ** 3).toFixed(3),
+    });
+  for (let i = 0; i <= SIDE_FADE_STEPS; i++) {
+    vignette.append(fade((i / SIDE_FADE_STEPS) * SIDE_FADE_WIDTH, i / SIDE_FADE_STEPS));
   }
-
-  add(
-    svgElement('ellipse', {
-      cx: RX,
-      cy: HORIZON,
-      rx: 560,
-      ry: 130,
-      fill: 'url(#town-glow)',
-      opacity: 0.5,
-    }),
-  );
-
-  // Distant skyline, kept off the plot: the rocket stands against the sky, never against roofs.
-  let x = -20;
-  const farPath: string[] = [];
-  while (x < TOWN_WIDTH + 40) {
-    const w = 26 + rnd() * 52;
-    const h = 20 + rnd() * 52;
-    if (x + w < PLOT[0] || x > PLOT[1]) {
-      farPath.push(
-        `M${x.toFixed(0)} ${HORIZON} V${(HORIZON - h).toFixed(0)} H${(x + w).toFixed(0)} V${HORIZON}`,
-      );
-    }
-    x += w + rnd() * 14;
+  for (let i = SIDE_FADE_STEPS; i >= 0; i--) {
+    vignette.append(fade(1 - (i / SIDE_FADE_STEPS) * SIDE_FADE_WIDTH, i / SIDE_FADE_STEPS));
   }
-  add(svgElement('path', { d: farPath.join(' '), fill: TOWN_PALETTE.far }));
-  add(
-    svgElement('rect', {
-      x: 0,
-      y: HORIZON - 70,
-      width: TOWN_WIDTH,
-      height: 70,
-      fill: TOWN_PALETTE.hazeFar,
-      opacity: 0.45,
-    }),
-  );
+  defs.append(skyGradient, sea, vignette);
+  return defs;
+}
 
-  // Buildings, and the windows that carry the population.
-  const windows: Facade[] = [];
+/**
+ * The city at the current population, back row first; what was built since the previous drawing
+ * rises out of the ground, one building after the other.
+ */
+function drawCity(inputs: TownSceneInputs, sky: SkyState): SVGGElement {
+  const growth = growthOf(inputs.population, inputs.fullCampaignPopulation);
+  const before = growthOf(inputs.previousPopulation, inputs.fullCampaignPopulation);
+  const city = svgElement('g');
 
-  const block = (bx: number, bw: number, bh: number, dark: boolean, sign: boolean): SVGGElement => {
-    const top = HORIZON - bh;
-    const g = svgElement('g');
-    g.append(
-      svgElement('rect', {
-        x: bx,
-        y: top,
-        width: bw,
-        height: bh,
-        fill: dark ? TOWN_PALETTE.wall : TOWN_PALETTE.wallLit,
-      }),
-    );
-    g.append(svgElement('rect', { x: bx, y: top, width: bw, height: 4, fill: TOWN_PALETTE.roof }));
-    g.append(
-      svgElement('rect', {
-        x: bx + bw - 4,
-        y: top,
-        width: 4,
-        height: bh,
-        fill: '#0d141b',
-        opacity: 0.7,
-      }),
-    );
+  const rising = CITY.filter((lot) => tierAt(lot, growth) > tierAt(lot, before)).length;
+  const stagger = Math.min(160, 2400 / Math.max(1, rising));
+  let rank = 0;
 
-    // Three styles told apart by height alone: a house takes a pitched roof, a block stays flat, a
-    // tower gains a light edge on its facade. The city changes character as it grows, not only
-    // size.
-    if (bh < 46) {
-      g.append(
-        svgElement('path', {
-          d:
-            `M${(bx - 3).toFixed(1)} ${(top + 1).toFixed(1)} ` +
-            `L${(bx + bw / 2).toFixed(1)} ${(top - 10).toFixed(1)} ` +
-            `L${(bx + bw + 3).toFixed(1)} ${(top + 1).toFixed(1)} Z`,
-          fill: TOWN_PALETTE.roof,
-        }),
-      );
-    } else if (bh >= 110) {
-      g.append(
-        svgElement('rect', {
-          x: bx + 3,
-          y: top + 5,
-          width: 1.5,
-          height: bh - 5,
-          fill: TOWN_PALETTE.steelLit,
-          opacity: 0.55,
-        }),
-      );
-    }
-
-    // Windows as horizontal strips, never squares: two squares above a door make a face, and that
-    // is what makes a drawn city childish.
-    const floorH = 15;
-    const rows = Math.max(1, Math.floor((bh - 18) / floorH));
-    const cols = Math.max(1, Math.floor((bw - 12) / 14));
-    for (let r = 0; r < rows; r++) {
-      const wy = top + 11 + r * floorH;
-      if (wy > HORIZON - 10) {
-        continue;
-      }
-      const floorRoll = rnd();
-      for (let c = 0; c < cols; c++) {
-        windows.push({
-          x: bx + 7 + c * 14,
-          y: wy,
-          w: 10,
-          h: 4,
-          roll: floorRoll * 0.72 + rnd() * 0.28,
-        });
-      }
-    }
-
-    if (bh > 150) {
-      g.append(
-        svgElement('rect', {
-          x: bx + bw / 2 - 1,
-          y: top - 24,
-          width: 2,
-          height: 24,
-          fill: TOWN_PALETTE.mast,
-        }),
-      );
-      const beacon = svgElement('circle', {
-        cx: bx + bw / 2,
-        cy: top - 26,
-        r: 2,
-        fill: TOWN_PALETTE.red,
-        opacity: 0.9,
-      });
-      beacon.append(animate('0.9;0.1;0.9', `${(2 + rnd() * 2).toFixed(1)}s`));
-      g.append(beacon);
-    }
-
-    if (sign) {
-      g.append(
-        svgElement('rect', {
-          x: bx + 6,
-          y: top + bh * 0.42,
-          width: bw - 16,
-          height: 3,
-          fill: TOWN_PALETTE.cyan,
-          opacity: 0.75,
-        }),
-      );
-    }
-    return g;
-  };
-
-  // The city rises around the pad and spreads toward the edges: the base was founded where the
-  // ship is built, and that is where it grows from. A plot appears once the growth reaches its
-  // threshold, then rises for a third of a campaign to its final height, so the first houses
-  // become towers instead of being replaced.
-  for (const [bx, bw, hMax, sign] of SKYLINE) {
-    const away = Math.abs(bx + bw / 2 - RX) / RX;
-    const born = away * SPREAD;
-    if (growth < born) {
+  for (const lot of CITY) {
+    const tier = tierAt(lot, growth);
+    if (tier < 0) {
       continue;
     }
-    const age = Math.min(1, (growth - born) / RISE);
-    const bh = Math.max(20, Math.round(hMax * (SEEDLING + (1 - SEEDLING) * age)));
-    add(block(bx, bw, bh, rnd() < 0.45, Boolean(sign) && bh > 90));
-  }
+    const shape = buildingAt(lot, tier);
+    const building = drawBuilding(lot, shape, sky, inputs.reducedMotion);
 
-  // The rocket, in the middle of the village.
-  const padGroup = svgElement('g');
-  padGroup.append(
-    svgElement('ellipse', { cx: RX, cy: HORIZON + 4, rx: 210, ry: 100, fill: 'url(#town-pad)' }),
+    const previousTier = tierAt(lot, before);
+    if (!inputs.reducedMotion && tier > previousTier) {
+      const from = previousTier < 0 ? 0 : buildingAt(lot, previousTier).h / shape.h;
+      building.style.setProperty('--rise-from', from.toFixed(3));
+      building.style.transformBox = 'fill-box';
+      building.style.transformOrigin = '50% 100%';
+      building.style.animation = `town-rise 1100ms cubic-bezier(0.22, 1, 0.36, 1) ${(400 + rank * stagger).toFixed(0)}ms both`;
+      rank++;
+    }
+    city.append(building);
+  }
+  return city;
+}
+
+/**
+ * The launch pad under the rocket, its two light masts lit with the street.
+ */
+function drawPad(sky: SkyState): SVGGElement {
+  const pad = svgElement('g');
+  pad.append(
+    svgElement('rect', {
+      x: RX - PAD_HALF,
+      y: HORIZON - 5,
+      width: PAD_HALF * 2,
+      height: 12,
+      fill: mixColor(TOWN_PALETTE.padDeck, sky.wall, 0.4),
+    }),
+    svgElement('rect', {
+      x: RX - PAD_HALF,
+      y: HORIZON - 6,
+      width: PAD_HALF * 2,
+      height: 1.5,
+      fill: TOWN_PALETTE.padEdge,
+    }),
   );
-  padGroup.append(
-    svgElement('rect', { x: RX - 150, y: HORIZON - 5, width: 300, height: 12, fill: '#18232e' }),
-  );
-  padGroup.append(
-    svgElement('rect', { x: RX - 150, y: HORIZON - 6, width: 300, height: 1.5, fill: '#2a3947' }),
-  );
-  for (const lx of [RX - 138, RX + 138]) {
-    padGroup.append(
-      svgElement('rect', { x: lx, y: HORIZON - 36, width: 2, height: 32, fill: TOWN_PALETTE.mast }),
-    );
-    padGroup.append(
-      svgElement('circle', { cx: lx + 1, cy: HORIZON - 38, r: 3, fill: TOWN_PALETTE.warmCore }),
-    );
-    padGroup.append(
+  for (const lx of [RX - PAD_HALF + 10, RX + PAD_HALF - 12]) {
+    pad.append(...lamp(lx, HORIZON - 5, 30, 3, sky));
+  }
+  return pad;
+}
+
+/**
+ * Vapour venting at the foot of a fuelled rocket: flat rounded puffs drifting away from the skirt.
+ *
+ * @param half - Half-width of the hull in the scene, in viewBox units.
+ */
+function drawVapor(half: number, reducedMotion: boolean): SVGGElement {
+  const g = svgElement('g');
+  const puffs = [
+    { x: 4, y: -9, w: 18, drift: 10, dur: 5.2 },
+    { x: 14, y: -5, w: 26, drift: 16, dur: 6.8 },
+    { x: 2, y: -3, w: 14, drift: 8, dur: 4.4 },
+  ];
+  for (const dir of [-1, 1]) {
+    puffs.forEach((puff, i) => {
+      const x = dir < 0 ? RX - half - puff.x - puff.w : RX + half + puff.x;
+      const bar = svgElement('rect', {
+        x: x.toFixed(1),
+        y: HORIZON + puff.y,
+        width: puff.w,
+        height: 5,
+        rx: 2.5,
+        fill: TOWN_PALETTE.vapor,
+        opacity: 0.55,
+      });
+      if (!reducedMotion) {
+        const begin = `-${(i * 1.7 + (dir > 0 ? 0.9 : 0)).toFixed(1)}s`;
+        bar.append(
+          svgElement('animateTransform', {
+            attributeName: 'transform',
+            type: 'translate',
+            values: `0 0;${dir * puff.drift} -2`,
+            dur: `${puff.dur}s`,
+            begin,
+            repeatCount: 'indefinite',
+          }),
+          animate('0;0.6;0', `${puff.dur}s`, begin),
+        );
+      }
+      g.append(bar);
+    });
+  }
+  return g;
+}
+
+/**
+ * A lamp standing on `ground`: a foot, a mast, a bulb lit with the evening and a flat halo.
+ */
+function lamp(
+  x: number,
+  ground: number,
+  height: number,
+  bulb: number,
+  sky: SkyState,
+): SVGElement[] {
+  const on = sky.lamps > 0.35;
+  const nodes: SVGElement[] = [
+    svgElement('rect', { x: x - 1.5, y: ground - 2, width: 5, height: 2, fill: TOWN_PALETTE.mast }),
+    svgElement('rect', { x, y: ground - height, width: 2, height, fill: TOWN_PALETTE.mast }),
+    svgElement('circle', {
+      cx: x + 1,
+      cy: ground - height - 2,
+      r: bulb,
+      fill: on ? TOWN_PALETTE.warmCore : TOWN_PALETTE.lampOff,
+    }),
+  ];
+  if (on) {
+    nodes.push(
       svgElement('circle', {
-        cx: lx + 1,
-        cy: HORIZON - 38,
-        r: 14,
+        cx: x + 1,
+        cy: ground - height - 2,
+        r: bulb * 4,
         fill: TOWN_PALETTE.warm,
-        opacity: 0.14,
+        opacity: (0.14 * sky.lamps).toFixed(3),
       }),
     );
   }
-  add(padGroup);
+  return nodes;
+}
 
-  // Shared frame of both drawings: the pad's ground, the scale, and the vertical axis flipped so the
-  // rocket builds upward the way it is read.
-  const shipFrame = (): SVGGElement =>
-    svgElement('g', {
-      transform: `translate(${RX} ${HORIZON - 4}) scale(${SHIP_SCALE} ${-SHIP_SCALE})`,
-    });
-
-  // The template of the finished launcher: what remains to be built is there, dotted, at its true
-  // size. It is what says at a glance that the rocket is not finished.
-  const ghost = shipFrame();
-  ghost.append(
-    svgElement('path', {
-      d: outline(SHIP[SHIP.length - 1]),
-      fill: 'none',
-      stroke: TOWN_PALETTE.ghost,
-      'stroke-width': 1.6,
-      'stroke-dasharray': '6 8',
-      opacity: 0.45,
-    }),
-  );
-  add(ghost);
-
-  const built = shipFrame();
-  built.append(drawShip(stagesDone));
-  add(built);
-
-  // Quay, water, reflections.
-  add(
+/**
+ * Quay, water, lamps and reflections.
+ */
+function drawWater(
+  sky: SkyState,
+  sun: SkyBody | null,
+  moon: SkyBody | null,
+  seaId: string,
+): SVGGElement {
+  const g = svgElement('g');
+  g.append(
     svgElement('rect', {
       x: 0,
       y: HORIZON + 6,
       width: TOWN_WIDTH,
       height: 7,
-      fill: TOWN_PALETTE.quayEdge,
+      fill: mixColor(TOWN_PALETTE.quayEdge, sky.wallLit, 0.45),
     }),
-  );
-  add(
     svgElement('rect', {
       x: 0,
       y: HORIZON + 13,
       width: TOWN_WIDTH,
       height: 13,
-      fill: TOWN_PALETTE.quayFace,
+      fill: mixColor(TOWN_PALETTE.quayFace, sky.wall, 0.4),
     }),
-  );
-  add(
     svgElement('rect', {
       x: 0,
       y: HORIZON + 26,
       width: TOWN_WIDTH,
       height: TOWN_HEIGHT - HORIZON - 26,
-      fill: 'url(#town-sea)',
+      fill: `url(#${seaId})`,
     }),
   );
 
@@ -365,30 +350,19 @@ export function buildTownScene(svg: SVGSVGElement, inputs: TownSceneInputs): voi
     if (lx > PLOT[0] - 40 && lx < PLOT[1] + 40) {
       continue;
     }
-    add(
-      svgElement('rect', { x: lx, y: HORIZON - 22, width: 2, height: 28, fill: TOWN_PALETTE.mast }),
-    );
-    add(
-      svgElement('circle', { cx: lx + 1, cy: HORIZON - 24, r: 2.6, fill: TOWN_PALETTE.warmCore }),
-    );
-    add(
-      svgElement('circle', {
-        cx: lx + 1,
-        cy: HORIZON - 24,
-        r: 10,
-        fill: TOWN_PALETTE.warm,
-        opacity: 0.13,
-      }),
-    );
+    g.append(...lamp(lx, HORIZON + 8, 26, 2.6, sky));
   }
 
-  // Reflections: broken columns, never continuous streaks.
-  const reflect = svgElement('g', { opacity: 0.5 });
+  // Reflections: broken columns, never continuous streaks; warm lights by night, sky glints by day.
+  const rnd = createSeededRandom(TOWN_SEED + 4);
+  const night = sky.lamps > 0.35;
+  const reflect = svgElement('g', { opacity: night ? 0.5 : 0.32 });
   for (let i = 0; i < 40; i++) {
     const rx = rnd() * TOWN_WIDTH;
     const top = HORIZON + 28 + rnd() * 14;
     const warmOne = rnd() < 0.72;
     const segments = 2 + Math.floor(rnd() * 3);
+    const fill = !night ? TOWN_PALETTE.dayGlint : warmOne ? TOWN_PALETTE.warm : TOWN_PALETTE.cyan;
     for (let seg = 0; seg < segments; seg++) {
       reflect.append(
         svgElement('rect', {
@@ -396,58 +370,47 @@ export function buildTownScene(svg: SVGSVGElement, inputs: TownSceneInputs): voi
           y: (top + seg * 10).toFixed(1),
           width: (4 + rnd() * 6).toFixed(1),
           height: 2,
-          fill: warmOne ? TOWN_PALETTE.warm : TOWN_PALETTE.cyan,
+          fill,
           opacity: (0.5 - seg * 0.1).toFixed(2),
         }),
       );
     }
   }
-  add(reflect);
+  g.append(reflect);
+
+  // The sun or the moon laid on the water, widest when it is low.
+  const body = sun ?? moon;
+  if (body) {
+    const fill = sun
+      ? mixColor(TOWN_PALETTE.sunLow, TOWN_PALETTE.sunHigh, sun.elevation)
+      : TOWN_PALETTE.moon;
+    for (let seg = 0; seg < 5; seg++) {
+      const w = (26 - seg * 3) * (1.3 - body.elevation * 0.6);
+      g.append(
+        svgElement('rect', {
+          x: (body.x - w / 2 + (seg % 2 ? 3 : -3)).toFixed(1),
+          y: HORIZON + 30 + seg * 12,
+          width: w.toFixed(1),
+          height: 2.4,
+          fill,
+          opacity: ((0.42 - seg * 0.07) * (1 - body.elevation * 0.4)).toFixed(2),
+        }),
+      );
+    }
+  }
 
   // The rocket's reflection, sharper than the others: it is the monument of the scene.
-  for (let seg = 0; seg < 6; seg++) {
-    add(
+  for (let seg = 0; seg < 5; seg++) {
+    g.append(
       svgElement('rect', {
-        x: RX - 16 + (seg % 2 ? 4 : -4),
-        y: HORIZON + 30 + seg * 11,
-        width: 32,
-        height: 3.4,
+        x: RX - 12 + (seg % 2 ? 3 : -3),
+        y: HORIZON + 30 + seg * 12,
+        width: 24,
+        height: 3,
         fill: TOWN_PALETTE.cyan,
-        opacity: (0.44 - seg * 0.06).toFixed(2),
+        opacity: (0.44 - seg * 0.07).toFixed(2),
       }),
     );
   }
-
-  // Windows, lit last so they pass in front of the volumes.
-  const lit = svgElement('g');
-  windows.sort((a, b) => a.roll - b.roll);
-  const litCount = Math.round(windows.length * litShare);
-  windows.forEach((w, i) => {
-    const on = i < litCount;
-    const rect = svgElement('rect', {
-      x: w.x,
-      y: w.y,
-      width: w.w,
-      height: w.h,
-      fill: on ? (w.roll < 0.18 ? TOWN_PALETTE.warmCore : TOWN_PALETTE.warm) : '#0d1720',
-      opacity: on ? (inputs.reducedMotion ? 0.92 : 0) : 0.75,
-    });
-    if (on && !inputs.reducedMotion) {
-      rect.style.animation = `town-window-on 620ms ease-out ${(200 + (i / Math.max(1, litCount)) * 1500).toFixed(0)}ms forwards`;
-    }
-    lit.append(rect);
-  });
-  add(lit);
-
-  add(
-    svgElement('rect', {
-      x: 0,
-      y: 0,
-      width: TOWN_WIDTH,
-      height: TOWN_HEIGHT,
-      fill: 'url(#town-vignette)',
-    }),
-  );
-
-  svg.replaceChildren(frag);
+  return g;
 }

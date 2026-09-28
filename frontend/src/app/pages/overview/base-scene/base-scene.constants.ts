@@ -1,13 +1,11 @@
 /**
- * The base at night, and the rocket being built in its middle.
- *
- * The state of the campaign, drawn: the city is the score, the rocket gains a stage per guardian
- * defeated, and what remains to be built stands there, dotted. Drawn imperatively into one
- * `<svg>` rather than templated: a few hundred nodes computed from two numbers are a drawing, not
- * a view, and a template of `@for` loops over generated geometry would say nothing a reader could
- * follow.
+ * Sky kept above the drawing, in viewBox units: on a phone the frame is cropped to its height, and
+ * without it the rocket's tip went under the context bar.
  */
+export const SCENE_HEADROOM = 14;
+
 /**
- * Sky kept above the drawing, in viewBox units.
+ * `localStorage` key holding the population the overview last showed, so the buildings grown since
+ * then rise on the next visit.
  */
-export const SCENE_HEADROOM = 40;
+export const SEEN_POPULATION_KEY = 'valo-quests.base-seen-population';

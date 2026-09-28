@@ -6,9 +6,12 @@
 
 .scene-wash {
   pointer-events: none;
-  background:
-    linear-gradient(to top, rgb(4 10 17 / 92%) 0%, rgb(4 10 17 / 42%) 24%, transparent 48%),
-    linear-gradient(to right, rgb(4 10 17 / 70%) 0%, transparent 36%);
+  background: linear-gradient(
+    to top,
+    rgb(4 10 17 / 92%) 0%,
+    rgb(4 10 17 / 42%) 24%,
+    transparent 48%
+  );
 }
 
 .pop-figure {

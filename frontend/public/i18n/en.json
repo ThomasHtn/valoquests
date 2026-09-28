@@ -753,7 +753,7 @@
     },
     "scene": {
       "section": "The city at night and the rocket under construction",
-      "aria": "The city at night, {{population}} inhabitants. In the middle, the rocket built to {{stages}} stages out of {{weeks}}, and the dotted outline of the full launcher above.",
+      "aria": "The base, {{population}} inhabitants. In the middle, the rocket built to {{stages}} stages out of {{weeks}}.",
       "base": "The base",
       "unit": "inhabitants",
       "delta": "today · provisional"
