@@ -353,10 +353,9 @@ export function buildCapacity(
 /**
  * Builds the squad's contribution to the week, on the guardian's own scale.
  *
- * The bar answers one question the four dials cannot: who is carrying the week. It is drawn on the
- * guardian's hit points rather than on the squad's own total, so the empty end of the bar states
- * what is left to do — and the challenge points ride in the same segments, because that sum is what
- * the ranking orders on and calling it "damage" would hide half of it.
+ * The versus track answers one question the four dials cannot: who is carrying the week. Each share
+ * keeps its damage for the segment width and its challenge points for the tooltip, because the sum
+ * is what the ranking orders on but only the damage moves the guardian.
  *
  * @param ranking - The current weekly ranking, or `null` while unresolved.
  * @param week - The week in progress, or `null` outside one.
@@ -383,7 +382,6 @@ export function buildContribution(
       damage: entry.guardianDamage,
       challengePoints: entry.challengePoints,
       total: entry.totalPoints,
-      fraction: Math.min(1, entry.totalPoints / week.guardianHitPoints),
       sharePercent: total > 0 ? Math.round((entry.totalPoints / total) * 100) : 0,
     }))
     .sort((left, right) => right.total - left.total);

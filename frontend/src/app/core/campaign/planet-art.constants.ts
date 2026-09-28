@@ -15,6 +15,12 @@ export const PLANET_ART_DISC_RATIO = 0.36;
 export const PLANET_ART_EXTENT_RATIO = 0.49;
 
 /**
+ * Drawings, by rank on the road, whose rings reach past the globe out to {@link PLANET_ART_EXTENT_RATIO}.
+ * Every other drawing stays inside its disc.
+ */
+export const RINGED_PLANET_RANKS: readonly number[] = [9, 10];
+
+/**
  * The lit face of every drawing: a circle offset towards the top left, as shares of the globe's
  * radius. Past it, the terminator's shadow begins.
  */

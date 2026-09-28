@@ -781,7 +781,7 @@
       "openReport": "Ouvrir le rapport de mission"
     },
     "mission": {
-      "title": "La mission de la semaine",
+      "title": "Mission de la semaine : {{planet}}",
       "link": "La campagne",
       "planet": "Planète {{index}} sur {{weeks}} · {{category}}",
       "planetAria": "{{planet}}, la planète de la semaine {{week}}. Des marques ambre à sa surface tiennent lieu des {{wounded}} blessés, et la percée dans ses lignes atteint {{percent}} %."
@@ -791,18 +791,19 @@
       "hp": "PV",
       "deadline": "avant l'extraction de dimanche à minuit",
       "aboard": "À bord",
-      "aboardUnit": "blessés à bord dimanche",
+      "aboardUnit": "blessés récupérés",
       "boss": "Boss {{index}}",
+      "hpDealt": "PV infligés",
       "hpLeft": "PV restants",
       "down": "Vaincu {{weekday}} à {{time}}",
       "downBy": "Vaincu {{weekday}} à {{time}} par {{name}}",
       "squad": "Escouade",
-      "contribution": "de contributions",
       "contributionTooltip": "{{name}} · {{damage}} PV au gardien · {{points}} points de défis · {{total}} de contribution, soit {{percent}} % de l’escouade",
-      "of": "sur",
-      "spotted": "repérés au sol",
-      "breach": "· percée",
-      "percent": "{{value}} %"
+      "versus": "VS",
+      "of": "parmi",
+      "spotted": "repérés sur {{planet}}",
+      "breachTooltip": "Percée : {{percent}} % des PV du gardien déjà retirés par l'escouade. Elle plafonne l'extraction de dimanche.",
+      "hpTooltip": "{{left}} PV restants sur {{total}} au départ"
     },
     "capacity": {
       "title": "Capacité d'extraction",

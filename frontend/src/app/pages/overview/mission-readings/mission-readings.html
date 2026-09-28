@@ -1,6 +1,5 @@
-<!-- Not a sheet with a header any more: four readings, each one figure wide, in the
-             order the week is played. The clock leads, spanning the block, because it is the
-             only thing here that moves on its own. -->
+<!-- Three readings in the order the week is played: the clock, the fight, what comes home. The
+     clock leads because it is the only thing here that moves on its own. -->
 <div class="report bg-text-primary/4">
   <div class="rep-clock">
     <app-countdown
@@ -10,6 +9,88 @@
     <p class="rep-when label-caption text-2xs text-text-muted">
       {{ 'overview.report.deadline' | translate }}
     </p>
+  </div>
+
+  <!-- The squad against the guardian, on the aboard row's own grid: the key column carries the
+       fight's glyph, the body the two figures and the one track they share. -->
+  <div [class.rep-vs--down]="mission().defeated" class="rep-row rep-row--vs" data-card="guardian">
+    <p class="rep-key label-caption text-2xs">
+      <span aria-hidden="true" class="rep-mark clip-hex"
+        ><span class="clip-hex"><svg class="size-4" lucideSwords></svg></span
+      ></span>
+      {{ 'overview.report.versus' | translate }}
+    </p>
+    <div class="rep-body">
+      <p class="vs-names label-caption">
+        <span class="vs-squad">{{ 'overview.report.squad' | translate }}</span>
+        <span class="vs-foe">{{ 'overview.report.boss' | translate: { index: bossIndex() } }}</span>
+      </p>
+      <p class="vs-line">
+        <span class="rep-fig vs-squad tabular-nums"
+          ><span [appCountUp]="hitPointsDealt()"></span>
+          <small>{{ 'overview.report.hpDealt' | translate }}</small></span
+        >
+        <span class="rep-fig vs-foe tabular-nums"
+          ><span [appCountUp]="mission().hitPointsLeft"></span>
+          <small>{{ 'overview.report.hpLeft' | translate }}</small></span
+        >
+      </p>
+
+      <div [style.--breach]="breach() * 100 + '%'" appInView class="vs-bar">
+        @if (breach() > 0) {
+          <span class="vs-front">
+            @for (share of strikes(); track share.playerId) {
+              <i
+                [appTooltip]="
+                  'overview.report.contributionTooltip'
+                    | translate
+                      : {
+                          name: share.name,
+                          damage: format(share.damage),
+                          points: format(share.challengePoints),
+                          total: format(share.total),
+                          percent: share.sharePercent,
+                        }
+                "
+                [style.--w]="share.damage"
+                class="focus-ring"
+                tabindex="0"
+              ></i>
+            } @empty {
+              <i aria-hidden="true"></i>
+            }
+          </span>
+        }
+
+        <!-- Once down, the breakthrough reads 100 % and says nothing: the fatal blow replaces it. -->
+        @if (mission().defeated; as blow) {
+          <p class="vs-down label-caption text-2xs">
+            {{
+              (blow.by ? 'overview.report.downBy' : 'overview.report.down')
+                | translate: { weekday: blow.weekday, time: blow.time, name: blow.by ?? '' }
+            }}
+          </p>
+        } @else {
+          <!-- What still stands, as its own hover target so the total is one pointer away. -->
+          <span
+            [appTooltip]="
+              'overview.report.hpTooltip'
+                | translate
+                  : { left: format(mission().hitPointsLeft), total: format(mission().hitPoints) }
+            "
+            class="vs-rest focus-ring"
+            tabindex="0"
+          ></span>
+          <span
+            [appTooltip]="
+              'overview.report.breachTooltip' | translate: { percent: mission().breachPercent }
+            "
+            class="vs-cursor focus-ring"
+            tabindex="0"
+          ></span>
+        }
+      </div>
+    </div>
   </div>
 
   @if (capacity(); as capacity) {
@@ -29,7 +110,9 @@
           <span class="rep-side label-caption text-2xs">
             <span>{{ 'overview.report.of' | translate }}</span>
             <b class="tabular-nums">{{ format(mission().wounded) }}</b>
-            <span>{{ 'overview.report.spotted' | translate }}</span>
+            <span>{{
+              'overview.report.spotted' | translate: { planet: mission().planetName }
+            }}</span>
           </span>
         </p>
         <span
@@ -39,96 +122,6 @@
           class="rep-bar rep-bar--aboard"
           ><i></i
         ></span>
-      </div>
-    </div>
-  }
-
-  <div class="rep-row rep-row--foe">
-    <p class="rep-key label-caption text-2xs">
-      <span aria-hidden="true" class="rep-mark clip-hex"
-        ><span class="clip-hex"><svg class="size-4" lucideSkull></svg></span
-      ></span>
-      {{ 'overview.report.boss' | translate: { index: bossIndex() } }}
-    </p>
-    <div class="rep-body">
-      <p class="rep-line">
-        <span class="rep-fig tabular-nums"
-          ><span [appCountUp]="mission().hitPointsLeft"></span>
-          <small>{{ 'overview.report.hpLeft' | translate }}</small></span
-        >
-        <span class="rep-side label-caption text-2xs">
-          <span>{{ 'overview.report.of' | translate }}</span>
-          <b class="tabular-nums">{{ format(mission().hitPoints) }}</b>
-          <span>{{ 'overview.report.breach' | translate }}</span>
-          <b class="tabular-nums">{{
-            'overview.report.percent' | translate: { value: mission().breachPercent }
-          }}</b>
-        </span>
-      </p>
-      <!-- The guardian drains from the left: anchored right it reads backwards from
-                   every game. -->
-      @if (mission().defeated; as blow) {
-        <!-- Once down, the empty track is struck through and carries the fatal blow instead. -->
-        <p class="rep-bar rep-bar--foe rep-bar--down">
-          <span class="rep-down label-caption text-2xs">{{
-            (blow.by ? 'overview.report.downBy' : 'overview.report.down')
-              | translate: { weekday: blow.weekday, time: blow.time, name: blow.by ?? '' }
-          }}</span>
-        </p>
-      } @else {
-        <span
-          [style.--lvl]="percent(mission().guardianLeft) + '%'"
-          appInView
-          aria-hidden="true"
-          class="rep-bar rep-bar--foe"
-          ><i></i
-        ></span>
-      }
-    </div>
-  </div>
-
-  <!-- The squad, on the guardian's own scale: one segment per operator, so the bar says
-               both who is carrying the week and what is left of the guardian. -->
-  @if (contribution(); as contribution) {
-    <div class="rep-row rep-row--squad">
-      <p class="rep-key label-caption text-2xs">
-        <span aria-hidden="true" class="rep-mark clip-hex"
-          ><span class="clip-hex"><svg class="size-4" lucideSwords></svg></span
-        ></span>
-        {{ 'overview.report.squad' | translate }}
-      </p>
-      <div class="rep-body">
-        <p class="rep-line">
-          <span class="rep-fig tabular-nums"
-            ><span [appCountUp]="contribution.total"></span>
-            <small>{{ 'overview.report.contribution' | translate }}</small></span
-          >
-          <span class="rep-side label-caption text-2xs">
-            <span>{{ 'overview.report.of' | translate }}</span>
-            <b class="tabular-nums">{{ format(contribution.hitPoints) }}</b>
-          </span>
-        </p>
-        <span appInView class="rep-stack">
-          @for (share of contribution.shares; track share.playerId) {
-            <i
-              [appTooltip]="
-                'overview.report.contributionTooltip'
-                  | translate
-                    : {
-                        name: share.name,
-                        damage: format(share.damage),
-                        points: format(share.challengePoints),
-                        total: format(share.total),
-                        percent: share.sharePercent,
-                      }
-              "
-              [style.--fx-delay]="$index * 90 + 'ms'"
-              [style.--w]="share.fraction * 100 + '%'"
-              class="focus-ring"
-              tabindex="0"
-            ></i>
-          }
-        </span>
       </div>
     </div>
   }

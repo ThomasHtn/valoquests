@@ -28,14 +28,27 @@ export const PLANET_CY = 180;
 export const PLANET_RADIUS = 104;
 
 /**
- * Side of the planet drawing, sized so a ringed planet's rings stop short of the guardian's ring.
+ * Radius the guardian's standing segments start from.
  */
-export const PLANET_ART_SIDE = Math.floor((PLANET_RADIUS + 14) / PLANET_ART_EXTENT_RATIO);
+export const RING_INNER_RADIUS = PLANET_RADIUS + 20;
 
 /**
- * Radius of the globe inside the drawing, where the wounded marks are laid.
+ * Side of a ringed planet's drawing, sized so its rings stop short of the guardian's ring.
  */
-export const PLANET_DISC_RADIUS = PLANET_ART_SIDE * PLANET_ART_DISC_RATIO;
+export const RINGED_PLANET_ART_SIDE = Math.floor((PLANET_RADIUS + 14) / PLANET_ART_EXTENT_RATIO);
+
+/**
+ * Gap left between a bare globe and the guardian's ring.
+ */
+export const PLANET_RING_GAP = 22;
+
+/**
+ * Side of a bare planet's drawing: nothing reaches past its globe, so the globe grows up to
+ * {@link PLANET_RING_GAP} short of the guardian's ring.
+ */
+export const PLANET_ART_SIDE = Math.floor(
+  (RING_INNER_RADIUS - PLANET_RING_GAP) / PLANET_ART_DISC_RATIO,
+);
 
 /**
  * Seed of the wounded marks, so the planet keeps its face across visits.

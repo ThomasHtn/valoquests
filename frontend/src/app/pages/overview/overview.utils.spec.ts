@@ -499,7 +499,7 @@ describe('buildContribution', () => {
     expect(contribution?.shares).toEqual([]);
   });
 
-  it('orders the segments by contribution and measures them on the guardian', () => {
+  it('orders the segments by contribution', () => {
     const contribution = buildContribution(
       ranking([entry(1, 100, 0), entry(2, 300, 100)]),
       week({ guardianHitPoints: 1000 }),
@@ -508,16 +508,7 @@ describe('buildContribution', () => {
     expect(contribution?.total).toBe(500);
     expect(contribution?.hitPoints).toBe(1000);
     expect(contribution?.shares.map((share) => share.name)).toEqual(['Operator 2', 'Operator 1']);
-    expect(contribution?.shares[0]).toMatchObject({ total: 400, fraction: 0.4, sharePercent: 80 });
-  });
-
-  it('caps a segment at the whole bar once one operator covers the guardian alone', () => {
-    const contribution = buildContribution(
-      ranking([entry(1, 4000, 0)]),
-      week({ guardianHitPoints: 1000 }),
-    );
-
-    expect(contribution?.shares[0].fraction).toBe(1);
+    expect(contribution?.shares[0]).toMatchObject({ total: 400, sharePercent: 80 });
   });
 });
 

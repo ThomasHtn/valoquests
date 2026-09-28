@@ -74,7 +74,9 @@
        object on the page whose order carries meaning. Full-bleed and untitled: the current week is
        already legible from the --now cell itself, so a repeating label would only be noise. -->
   @if (frieze().length > 0) {
-    <div class="frieze-bar !max-w-none shrink-0 border-t-2 border-b border-edge bg-surface-sunken/55 !px-0">
+    <div
+      class="frieze-bar !max-w-none shrink-0 border-t-2 border-b border-edge bg-surface-sunken/55 !px-0"
+    >
       <ul [attr.aria-label]="'overview.frieze.aria' | translate" class="frieze flex w-full">
         @for (week of frieze(); track week.index) {
           <li class="week-slot">
@@ -156,7 +158,7 @@
       @if (mission(); as mission) {
         <section aria-labelledby="mission-title">
           <app-section-rule
-            [heading]="'overview.mission.title' | translate"
+            [heading]="'overview.mission.title' | translate: { planet: mission.planetName }"
             [linkLabel]="'overview.mission.link' | translate"
             headingId="mission-title"
             link="/campaign"
@@ -181,12 +183,6 @@
                 "
                 data-planet
               />
-              <p class="mt-2 text-center" data-planet-label>
-                <b
-                  class="font-display text-2xl leading-none font-semibold tracking-[0.04em] uppercase"
-                  >{{ mission.planetName }}</b
-                >
-              </p>
             </div>
 
             <app-mission-readings

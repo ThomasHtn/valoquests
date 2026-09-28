@@ -65,7 +65,8 @@ export class ScanWires {
       const x0 = pb.left - box.left + (mark.vx / 360) * pb.width;
       const y0 = pb.top - box.top + (mark.vy / 360) * pb.height;
       const x2 = cb.left - box.left - 10;
-      const y2 = cb.top - box.top + Math.min(34, cb.height / 2);
+      // Lands on the row's vertical centre, where its content is centred.
+      const y2 = cb.top - box.top + cb.height / 2;
 
       // A straight stub, a 45° diagonal that makes up the height, then the arrival line. The
       // diagonal is trimmed when the run is short rather than leaving the frame.

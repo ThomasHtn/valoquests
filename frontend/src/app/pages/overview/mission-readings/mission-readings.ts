@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { LucideSkull, LucideSwords, LucideUsers } from '@lucide/angular';
+import { LucideSwords, LucideUsers } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -11,28 +11,18 @@ import { InView } from '@shared/in-view/in-view';
 import { Capacity, Contribution, Mission } from '../overview.model';
 
 /**
- * The week's mission, in four readings: the clock, what comes home, the guardian, the squad.
+ * The week's mission, in three readings: the clock, the squad against the guardian, what comes home.
  *
- * Deliberately not a report sheet with a header: each row is one figure, the scale it is read
- * against, and a single bar, all drawn on the same track so the four read as one instrument. The
- * squad's bar rides on the guardian's own hit points rather than on the squad's total, which is
- * what lets the empty end of every bar mean the same thing — what is left to do before Sunday.
+ * The squad and the guardian share one track, split at the breakthrough: the violet the squad has
+ * taken on the left, the red still standing on the right, a cursor on the seam. The squad's side is cut into one segment
+ * per operator, weighted by the damage each dealt, so the seam always sits on the real hit points.
  *
- * The "aboard" row carries a `data-card` anchor: `ScanWires` measures it to land its callout wire
- * from the planet beside it.
+ * The fight and "aboard" rows carry a `data-card` anchor: `ScanWires` measures them to land its
+ * callout wires from the planet beside them.
  */
 @Component({
   selector: 'app-mission-readings',
-  imports: [
-    TranslatePipe,
-    Countdown,
-    CountUp,
-    InView,
-    Tooltip,
-    LucideSkull,
-    LucideSwords,
-    LucideUsers,
-  ],
+  imports: [TranslatePipe, Countdown, CountUp, InView, Tooltip, LucideSwords, LucideUsers],
   templateUrl: './mission-readings.html',
   styleUrl: './mission-readings.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,6 +48,28 @@ export class MissionReadings {
    * `04` are read as the same thing.
    */
   protected readonly bossIndex = computed(() => String(this.mission().weekIndex).padStart(2, '0'));
+
+  /**
+   * Hit points taken from the guardian, capped at its pool like the figure on the other side.
+   */
+  protected readonly hitPointsDealt = computed(
+    () => this.mission().hitPoints - this.mission().hitPointsLeft,
+  );
+
+  /**
+   * Share of the track the squad holds, in [0, 1].
+   */
+  protected readonly breach = computed(() => 1 - this.mission().guardianLeft);
+
+  /**
+   * The operators who hit the guardian, heaviest first: challenge points never touch its hit points,
+   * so they stay in the tooltip rather than widening a segment.
+   */
+  protected readonly strikes = computed(() =>
+    (this.contribution()?.shares ?? [])
+      .filter((share) => share.damage > 0)
+      .sort((left, right) => right.damage - left.damage),
+  );
 
   private readonly translation = inject(Translation);
 

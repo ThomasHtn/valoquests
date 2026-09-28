@@ -1,7 +1,15 @@
 import { Mark } from './scan-wires.model';
 
 /**
- * A single callout: the wounded on the ground. The other readings point at nothing on the planet,
- * so they stay unwired.
+ * Two callouts, in the order the week is played: the planet the guardian holds to the fight, the
+ * wounded on the ground to what comes home.
+ *
+ * Both marks sit on the globe, inside even the ringed weeks' smaller one (radius ~86 in the
+ * drawing), the guardian's one up and to the right of the wounded one. Both wires run a flat stub
+ * then a 45° diagonal, so with the upper row fed from the upper, outer point the two paths stay
+ * parallel and never cross.
  */
-export const MARKS: readonly Mark[] = [{ vx: 215, vy: 150, card: 'ground', tone: '#d9954a' }];
+export const MARKS: readonly Mark[] = [
+  { vx: 232, vy: 128, card: 'guardian', tone: '#ff4655' },
+  { vx: 215, vy: 150, card: 'ground', tone: '#d9954a' },
+];

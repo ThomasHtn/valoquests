@@ -360,11 +360,6 @@ export interface ContributionShare {
   readonly total: number;
 
   /**
-   * Share of the guardian's hit points this segment covers, in [0, 1] — the segment's width.
-   */
-  readonly fraction: number;
-
-  /**
    * Share of the squad's own contribution, in percent — what the segment is worth beside the others.
    */
   readonly sharePercent: number;

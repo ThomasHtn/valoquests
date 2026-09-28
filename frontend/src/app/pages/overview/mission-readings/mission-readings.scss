@@ -1,18 +1,25 @@
 /*
- * Four readings, in the order the week is played: the clock, what comes home, the guardian, the
- * squad. No header and no prose — each row is a figure, a reference and one bar, and what tells a
- * row from the next is its key and the colour of that bar.
+ * Three readings, in the order the week is played: the clock, the squad against the guardian, what
+ * comes home. No header and no prose — each row is a figure, a reference and one bar.
  *
  * The clock spans the block and centres: it is the only value here that moves on its own.
  */
+/* Flex rows on an auto height: the fight and aboard rows share the taller one's height, and the
+   clock takes a fifth more than that. */
+.report {
+  display: grid;
+  grid-template-rows: 1.2fr;
+  grid-auto-rows: 1fr;
+}
+
 .rep-clock {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   padding: 1.25rem 1.5rem 1.35rem;
   background: rgb(4 10 15 / 52%);
-  box-shadow: inset 3px 0 0 var(--color-accent-cyan);
 }
 
 .rep-row {
@@ -20,26 +27,19 @@
 
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  align-content: center;
   gap: 0.6rem 1.25rem;
   padding: 1.25rem 1.5rem 1.35rem;
   box-shadow: inset 3px 0 0 var(--tone);
 }
 
-.rep-row + .rep-row,
-.rep-clock + .rep-row {
+.rep-clock + .rep-row,
+.rep-row + .rep-row {
   border-top: 1px solid var(--color-edge);
 }
 
 .rep-row--aboard {
   --tone: var(--color-brand-400);
-}
-
-.rep-row--foe {
-  --tone: var(--color-boss-hp-edge);
-}
-
-.rep-row--squad {
-  --tone: var(--color-accent-violet);
 }
 
 .rep-key {
@@ -125,9 +125,162 @@
   color: var(--tone);
 }
 
-/* One track, three fills, all read left to right: the empty end is always what is left to do. */
-.rep-bar,
-.rep-stack {
+/*
+ * The squad against the guardian, on the aboard row's grid. The key is the guardian's red rather
+ * than a camp's colour, so it never reads as the inhabitants' amber below it; the two figures take
+ * their own camp's colour at each end of the track they share.
+ */
+.rep-row--vs {
+  --tone: var(--color-accent-red);
+  --squad: var(--color-accent-violet);
+  --foe: var(--color-accent-red);
+}
+
+.vs-squad {
+  --tone: var(--squad);
+}
+
+.vs-foe {
+  --tone: var(--foe);
+}
+
+.vs-line,
+.vs-names {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* One step above the other captions: the two camps are what the row is about. */
+.vs-names {
+  font-size: 0.8125rem;
+}
+
+.vs-names > span {
+  color: var(--tone);
+}
+
+.rep-vs--down .vs-foe .rep-fig {
+  opacity: 0.5;
+}
+
+.vs-bar {
+  position: relative;
+  height: 30px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(-45deg, rgb(4 10 15 / 22%) 0 6px, transparent 6px 12px),
+    var(--color-boss-hp);
+  box-shadow: inset -3px 0 0 var(--color-boss-hp-edge);
+}
+
+/* The squad's segments: two steps of the same violet in turn, so the reader counts operators
+   rather than reading a gradient. */
+.vs-front {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: flex;
+  width: var(--breach);
+  animation: overview-fill var(--duration-gauge-long) var(--ease-gauge) both;
+}
+
+.vs-front > i {
+  display: block;
+  flex: var(--w, 1) 1 0;
+  min-width: 0;
+  background: var(--squad);
+  cursor: help;
+  transition: filter var(--duration-fast) var(--ease-out-quart);
+}
+
+.vs-front > i:nth-child(even) {
+  background: color-mix(in srgb, var(--squad) 62%, #0a151d);
+}
+
+.vs-front > i + i {
+  box-shadow: inset 2px 0 0 rgb(4 10 15 / 70%);
+}
+
+.vs-front > i:hover,
+.vs-front > i:focus-visible {
+  filter: brightness(1.25);
+}
+
+/* The breakthrough itself: a gold post the full height of the track, ringed dark so it stands out
+   of both fills. Its percentage lives in the tooltip, so the post is the hover target. */
+.vs-cursor {
+  position: absolute;
+  inset-block: 0;
+  left: clamp(0px, calc(var(--breach) - 2px), calc(100% - 4px));
+  width: 4px;
+  background: var(--color-accent-gold);
+  box-shadow:
+    -2px 0 0 var(--color-surface-950),
+    2px 0 0 var(--color-surface-950);
+  cursor: help;
+  transition:
+    background-color var(--duration-fast) var(--ease-out-quart),
+    transform var(--duration-fast) var(--ease-out-quart);
+  animation: vs-cursor-in var(--duration-gauge-long) var(--ease-gauge) both;
+}
+
+/* A four-pixel post is too thin to aim at: the pointer catches it a few pixels either side. */
+.vs-cursor::after {
+  position: absolute;
+  inset-block: 0;
+  inset-inline: -6px;
+  content: '';
+}
+
+.vs-cursor:hover,
+.vs-cursor:focus-visible {
+  background: var(--color-brand-400);
+  transform: scaleX(1.75);
+}
+
+/* The guardian's standing hit points, laid over the red so it answers the pointer. */
+.vs-rest {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  left: var(--breach);
+  cursor: help;
+  transition:
+    background-color var(--duration-fast) var(--ease-out-quart),
+    box-shadow var(--duration-fast) var(--ease-out-quart);
+}
+
+.vs-rest:hover,
+.vs-rest:focus-visible {
+  background: rgb(236 232 225 / 10%);
+  box-shadow: inset 0 0 0 1px rgb(236 232 225 / 60%);
+}
+
+/* The fatal blow, written across the emptied track on the guardian's side. */
+.vs-down {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  max-width: calc(100% - 1rem);
+  overflow: hidden;
+  padding: 0.15rem 0.4rem;
+  background: var(--color-surface-950);
+  box-shadow: inset 0 0 0 1px var(--foe);
+  color: var(--color-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+@keyframes vs-cursor-in {
+  from {
+    left: 0;
+  }
+}
+
+/* The aboard track, quartered so a fill can be read at a glance. */
+.rep-bar {
   position: relative;
   display: flex;
   height: 22px;
@@ -155,92 +308,16 @@
   animation: overview-fill var(--duration-gauge) var(--ease-gauge) both;
 }
 
-.rep-bar--foe {
-  height: 26px;
-}
-
-.rep-bar--foe > i {
-  background: var(--color-boss-hp);
-  box-shadow: inset -3px 0 0 var(--color-boss-hp-edge);
-  animation: overview-drain var(--duration-gauge-long) var(--ease-gauge) both;
-}
-
-/* Defeated: no fill left to drain, so the track itself is struck through in the guardian's red and
-   framed by a hard ring, the fatal blow written across it. */
-.rep-bar--down {
-  align-items: center;
-  padding-inline: 0.75rem;
-  background:
-    repeating-linear-gradient(
-      -45deg,
-      color-mix(in srgb, var(--color-boss-hp) 38%, transparent) 0 6px,
-      transparent 6px 12px
-    ),
-    rgb(4 10 15 / 60%);
-  box-shadow: inset 0 0 0 1px var(--color-boss-hp-edge);
-  animation: overview-strike 600ms var(--ease-gauge) both;
-}
-
-.rep-down {
-  overflow: hidden;
-  padding: 0.15rem 0.45rem;
-  background: var(--color-surface-950);
-  color: var(--color-text-primary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* The stripes slide in once, the way a bar that just emptied would be crossed out. */
-@keyframes overview-strike {
-  from {
-    background-position:
-      -48px 0,
-      0 0;
-    opacity: 0.4;
-  }
-}
-
 @keyframes overview-fill {
   from {
     width: 0;
   }
 }
 
-@keyframes overview-drain {
-  from {
-    width: 100%;
-  }
-}
-
-/* The squad's segments: two steps of the same violet in turn, so the reader counts operators
-   rather than reading a gradient. */
-.rep-stack > i {
-  display: block;
-  width: var(--w);
-  background: var(--color-accent-violet);
-  transition: filter var(--duration-fast) var(--ease-out-quart);
-  animation: overview-fill var(--duration-gauge) var(--ease-gauge) both;
-  /* Each operator's share lands after the previous one, so the bar is read as a sum. */
-  animation-delay: var(--fx-delay, 0ms);
-}
-
-.rep-stack > i:nth-child(even) {
-  background: color-mix(in srgb, var(--color-accent-violet) 62%, #0a151d);
-}
-
-.rep-stack > i + i {
-  box-shadow: inset 2px 0 0 rgb(4 10 15 / 70%);
-}
-
-.rep-stack > i:hover,
-.rep-stack > i:focus-visible {
-  filter: brightness(1.25);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .rep-bar > i,
-  .rep-bar--down,
-  .rep-stack > i {
+  .vs-front,
+  .vs-cursor {
     animation: none;
   }
 }
@@ -248,9 +325,18 @@
 /* On a phone the key sits as one line above the figure, both flush left: a centred key over a
    left-aligned figure read as two blocks, and the reference drifted to the right edge. */
 @media (width < 40rem) {
-  .rep-clock,
+  .rep-clock {
+    padding-inline: 1.25rem;
+  }
+
+  /* A touch less on the left, where the row's 3px edge already sits. */
   .rep-row {
     padding-inline: 1.15rem 1.25rem;
+  }
+
+  .vs-line {
+    gap: 0.5rem;
+    white-space: nowrap;
   }
 
   .rep-key {
