@@ -10,6 +10,7 @@ import { Tooltip } from '@shared/tooltip/tooltip';
 import { SquadRow } from '../overview.model';
 import { weekdayInitials } from '../overview.utils';
 import { TitleBadge } from '@shared/title-badge/title-badge';
+import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 
 /**
  * The squad, by the day: the operator-by-operator detail of the day's tally.
@@ -20,7 +21,7 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
  */
 @Component({
   selector: 'app-squad-sheet',
-  imports: [TranslatePipe, SectionRule, RouterLink, Avatar, Tooltip, TitleBadge],
+  imports: [TranslatePipe, SectionRule, RouterLink, Avatar, Tooltip, TitleBadge, ChampionBadge],
   templateUrl: './squad-sheet.html',
   styleUrl: './squad-sheet.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

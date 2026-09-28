@@ -6,6 +6,9 @@
   tabindex="0"
 >
   @switch (look.icon) {
+    @case ('crown') {
+      <svg aria-hidden="true" class="title-badge-icon" lucideCrown></svg>
+    }
     @case ('wrench') {
       <svg aria-hidden="true" class="title-badge-icon" lucideWrench></svg>
     }
@@ -19,5 +22,5 @@
       <svg aria-hidden="true" class="title-badge-icon" lucideTarget></svg>
     }
   }
-  {{ 'common.title.' + title() | translate }}
+  <span class="title-badge-label">{{ 'common.title.' + title() | translate }}</span>
 </span>

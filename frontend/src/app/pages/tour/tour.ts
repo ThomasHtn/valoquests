@@ -12,17 +12,21 @@ import {
 } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
+import { primaryTitle } from '@core/campaign/campaign-title.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { RankingApi } from '@core/ranking/ranking-api';
+import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { TourVisit } from '@core/tour/tour-visit';
 import { BaseScene } from '@pages/overview/base-scene/base-scene';
 import { PlanetFigure } from '@pages/overview/planet-figure/planet-figure';
+import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { CountUp } from '@shared/count-up/count-up';
 import { NavChip } from '@shared/nav-chip/nav-chip';
+import { TitleBadge } from '@shared/title-badge/title-badge';
 
 import {
   FULL_CAMPAIGN_POPULATION,
@@ -64,6 +68,8 @@ import { TourStepId } from './tour.model';
     PlanetFigure,
     CountUp,
     NavChip,
+    ChampionBadge,
+    TitleBadge,
   ],
   templateUrl: './tour.html',
   styleUrl: './tour.scss',
@@ -173,6 +179,18 @@ export class Tour {
     const ranking = resourceValue(this.rankingApi.current, null)?.ranking ?? [];
     return ranking.filter((entry) => entry.position !== null).slice(0, 3);
   });
+
+  /**
+   * Id of the reigning weekly "Champion", or `null` while unknown.
+   */
+  protected readonly championPlayerId = computed(() =>
+    resolveChampionPlayerId(resourceValue(this.rankingApi.latestFinalizedWeek, null)),
+  );
+
+  /**
+   * Resolves the one weekly title a podium name carries, exposed to the template.
+   */
+  protected readonly primaryTitle = primaryTitle;
 
   /**
    * Splits a step's translated claim into plain and emphasized runs, marked `*so*` in the

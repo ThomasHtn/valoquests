@@ -53,10 +53,10 @@ public class WeeklyTitleResolver {
             .toList();
 
         Map<WeeklyTitle, Long> titles = new EnumMap<>(WeeklyTitle.class);
-        award(titles, ranked, WeeklyTitle.MECHANIC, WeeklyPlayerScore::getComponents);
-        award(titles, ranked, WeeklyTitle.QUARTERMASTER, WeeklyPlayerScore::getFood);
         award(titles, ranked, WeeklyTitle.REGULAR, WeeklyPlayerScore::getStreakDays);
         award(titles, ranked, WeeklyTitle.SCOUT, WeeklyPlayerScore::completedAllChallenges);
+        award(titles, ranked, WeeklyTitle.QUARTERMASTER, WeeklyPlayerScore::getFood);
+        award(titles, ranked, WeeklyTitle.MECHANIC, WeeklyPlayerScore::getComponents);
 
         return titles;
     }

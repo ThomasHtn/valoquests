@@ -224,18 +224,27 @@
                 class="notch-tr focus-ring-inset flex cursor-pointer items-center gap-3.5 bg-text-primary/4 px-4 py-3 transition-colors [--notch:0.625rem] hover:bg-brand-500/15"
                 tabindex="0"
               >
-                <app-avatar [src]="avatarUrl(teammate.portrait)" size="sm" />
+                @let champion = teammate.playerId === championPlayerId();
+                <app-avatar [champion]="champion" [src]="avatarUrl(teammate.portrait)" size="sm" />
 
                 <span class="flex min-w-0 flex-1 flex-col gap-1">
                   <span class="truncate text-sm font-semibold text-text-primary">
                     {{ teammate.displayName }}
                   </span>
-                  <span class="truncate text-xs text-text-muted">
-                    {{ teammate.agentName }} ·
-                    {{
-                      'playerProfile.matches.detail.' +
-                        (teammate.sameTeam ? 'sameTeam' : 'otherTeam') | translate
-                    }}
+                  <!-- Agent and title share one line, so a titled teammate's row is no taller. -->
+                  <span class="flex min-w-0 items-center gap-3">
+                    <span class="truncate text-xs text-text-muted">
+                      {{ teammate.agentName }} ·
+                      {{
+                        'playerProfile.matches.detail.' +
+                          (teammate.sameTeam ? 'sameTeam' : 'otherTeam') | translate
+                      }}
+                    </span>
+                    @if (champion) {
+                      <app-champion-badge />
+                    } @else if (titlesByPlayer().get(teammate.playerId); as title) {
+                      <app-title-badge [title]="title" />
+                    }
                   </span>
                 </span>
 

@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
 
-import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { TitleBadge } from '@shared/title-badge/title-badge';
 
 /**
  * Title tag marking the player who topped the most recently finalized week's ranking.
@@ -11,7 +11,12 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 @Component({
   selector: 'app-champion-badge',
   templateUrl: './champion-badge.html',
-  imports: [TranslatePipe],
+  imports: [TitleBadge],
   host: { class: 'contents' },
 })
-export class ChampionBadge {}
+export class ChampionBadge {
+  /**
+   * Icon size: `sm` in dense rows, `md` next to a heading.
+   */
+  public readonly size = input<'sm' | 'md'>('sm');
+}

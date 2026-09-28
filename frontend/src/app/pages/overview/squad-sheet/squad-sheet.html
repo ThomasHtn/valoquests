@@ -58,10 +58,12 @@
         <span class="ros-pos tabular-nums">{{ row.position ?? '·' }}</span>
 
         <span class="ros-who">
-          <app-avatar [src]="row.portrait" size="sm" />
+          <app-avatar [champion]="row.champion" [src]="row.portrait" size="sm" />
           <span class="min-w-0">
             <span class="ros-name">{{ row.name }}</span>
-            @if (row.title; as title) {
+            @if (row.champion) {
+              <span class="ros-title"><app-champion-badge /></span>
+            } @else if (row.title; as title) {
               <span class="ros-title"><app-title-badge [title]="title.key" /></span>
             }
           </span>

@@ -608,6 +608,11 @@ export interface SquadRow {
   readonly portrait: string | null;
 
   /**
+   * Whether the operator holds the reigning Champion title.
+   */
+  readonly champion: boolean;
+
+  /**
    * Weekly title held, with its visual, or `null`.
    */
   readonly title: (TitleVisual & { readonly key: WeeklyTitle }) | null;

@@ -23,13 +23,12 @@
 
           <span class="name">
             {{ row.name }}
-            @if (row.isChampion) {
-              <app-champion-badge />
-            }
           </span>
           <!-- The title's line is reserved on every plinth, held or not, so the three stand level. -->
           <span class="title">
-            @if (row.title; as title) {
+            @if (row.isChampion) {
+              <app-champion-badge />
+            } @else if (row.title; as title) {
               <app-title-badge [title]="title.key" />
             }
           </span>

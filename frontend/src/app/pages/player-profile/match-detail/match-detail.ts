@@ -2,6 +2,8 @@ import { Component, computed, inject, input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LucideChevronLeft } from '@lucide/angular';
 
+import { primaryTitle } from '@core/campaign/campaign-title.utils';
+import { WeeklyTitle } from '@core/campaign/campaign.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalDayMonth, formatLocalTime } from '@core/date/date-time.utils';
 import { isNotFound, resourceValue } from '@core/http/resource-state.utils';
@@ -25,11 +27,15 @@ import {
   formatScore,
 } from '@core/players/player-format.utils';
 import { resolveKdVisual } from '@core/players/player-stats.utils';
+import { RankingApi } from '@core/ranking/ranking-api';
+import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { PageHeader } from '@layout/page-header/page-header';
 import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
 import { Avatar } from '@shared/avatar/avatar';
 import { Button } from '@shared/button/button';
+import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { ResourceState } from '@shared/resource-state/resource-state';
+import { TitleBadge } from '@shared/title-badge/title-badge';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { MediaThumbnail } from '../media-thumbnail/media-thumbnail';
 import { buildNotFoundPlate } from '../player-profile.utils';
@@ -47,11 +53,13 @@ import { buildNotFoundPlate } from '../player-profile.utils';
     TranslatePipe,
     Avatar,
     Button,
+    ChampionBadge,
     LucideChevronLeft,
     MediaThumbnail,
     PageHeader,
     ResourceState,
     RouterLink,
+    TitleBadge,
     Tooltip,
   ],
   templateUrl: './match-detail.html',
@@ -67,6 +75,11 @@ export class MatchDetail {
    * i18n service, used to resolve the tier badge and the damage tooltip.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Data-access service backing the teammates' champion and weekly titles.
+   */
+  private readonly rankingApi = inject(RankingApi);
 
   /**
    * Route parameter naming the player, bound by `withComponentInputBinding`.
@@ -144,6 +157,27 @@ export class MatchDetail {
    * Resolves the monogram standing in for an agent's portrait, exposed to the template.
    */
   protected readonly agentInitial = resolveAgentInitial;
+
+  /**
+   * Id of the reigning weekly "Champion", or `null` while unknown.
+   */
+  protected readonly championPlayerId = computed(() =>
+    resolveChampionPlayerId(resourceValue(this.rankingApi.latestFinalizedWeek, null)),
+  );
+
+  /**
+   * The current week's title, if any, held by each player id.
+   */
+  protected readonly titlesByPlayer = computed(() => {
+    const byPlayer = new Map<number, WeeklyTitle>();
+    for (const entry of resourceValue(this.rankingApi.current, null)?.ranking ?? []) {
+      const title = primaryTitle(entry.titles);
+      if (title !== null) {
+        byPlayer.set(entry.player.id, title);
+      }
+    }
+    return byPlayer;
+  });
 
   /**
    * Resolves a player's bundled avatar, exposed to the template for the teammate rows.

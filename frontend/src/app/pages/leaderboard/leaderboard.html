@@ -183,13 +183,14 @@
             >
               {{ row.name }}
             </span>
-            @if (row.isChampion) {
-              <app-champion-badge />
-            }
           </span>
-          @if (row.title; as title) {
-            <!-- The one title held, under the name rather than beside it: a long name plus a
-                 badge ran wider than its column and folded onto itself anyway. -->
+          <!-- The one title held, under the name rather than beside it: a long name plus a
+               badge ran wider than its column and folded onto itself anyway. -->
+          @if (row.isChampion) {
+            <span class="who-titles">
+              <app-champion-badge />
+            </span>
+          } @else if (row.title; as title) {
             <span class="who-titles">
               <app-title-badge [measure]="title.measure" [title]="title.key" />
             </span>

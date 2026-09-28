@@ -71,8 +71,8 @@ class WeeklyTitleResolverTest {
         Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, bravo), null);
 
         assertThat(titles).containsExactlyInAnyOrderEntriesOf(Map.of(
-            WeeklyTitle.MECHANIC, ALPHA.getId(),
-            WeeklyTitle.QUARTERMASTER, BRAVO.getId()
+            WeeklyTitle.REGULAR, ALPHA.getId(),
+            WeeklyTitle.SCOUT, BRAVO.getId()
         ));
     }
 
@@ -86,7 +86,7 @@ class WeeklyTitleResolverTest {
         Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, bravo, delta), ALPHA.getId());
 
         assertThat(titles).containsExactlyInAnyOrderEntriesOf(Map.of(
-            WeeklyTitle.MECHANIC, BRAVO.getId(),
+            WeeklyTitle.REGULAR, BRAVO.getId(),
             WeeklyTitle.QUARTERMASTER, DELTA.getId()
         ));
     }
@@ -101,7 +101,7 @@ class WeeklyTitleResolverTest {
         Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, bravo, delta), ALPHA.getId(), BRAVO.getId());
 
         assertThat(titles).containsExactlyInAnyOrderEntriesOf(Map.of(
-            WeeklyTitle.MECHANIC, DELTA.getId()
+            WeeklyTitle.REGULAR, DELTA.getId()
         ));
     }
 

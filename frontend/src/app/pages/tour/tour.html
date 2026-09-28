@@ -280,8 +280,15 @@
                           <span class="font-display text-2xl font-semibold tabular-nums">
                             {{ entry.position }}
                           </span>
-                          <span class="min-w-0 truncate font-display text-xl font-medium">
-                            {{ entry.player.displayName }}
+                          <span class="flex min-w-0 flex-col items-start gap-1.5">
+                            <span class="min-w-0 truncate font-display text-xl font-medium">
+                              {{ entry.player.displayName }}
+                            </span>
+                            @if (entry.player.id === championPlayerId()) {
+                              <app-champion-badge />
+                            } @else if (primaryTitle(entry.titles); as title) {
+                              <app-title-badge [title]="title" />
+                            }
                           </span>
                           <span
                             class="font-display text-xl font-semibold text-text-primary tabular-nums"

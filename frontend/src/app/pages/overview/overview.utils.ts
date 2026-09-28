@@ -507,11 +507,13 @@ export function weekdayInitials(language: Language): readonly string[] {
  *
  * @param daily - The day's ranking, or `null` while unresolved.
  * @param today - The day in progress, used to resolve who holds each title today.
+ * @param championId - The reigning champion, crowned on the last finalized week, or `null`.
  * @returns One row per active operator, or an empty sheet while unresolved.
  */
 export function buildSquad(
   daily: DailyRanking | null,
   today: CampaignToday | null,
+  championId: number | null = null,
 ): readonly SquadRow[] {
   if (!daily) {
     return [];
@@ -528,6 +530,7 @@ export function buildSquad(
       playerId: entry.playerId,
       name: entry.displayName,
       portrait: resolvePlayerAvatarUrl(entry.portrait),
+      champion: entry.playerId === championId,
       title: title === null ? null : { key: title, ...resolveTitleVisual(title) },
       played,
       // An idle operator shows the bonus playing today would earn, not yesterday's.

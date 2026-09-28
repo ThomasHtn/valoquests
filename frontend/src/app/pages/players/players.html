@@ -112,16 +112,15 @@
           >
             {{ row.displayName }}
           </span>
-          @if (row.isChampion) {
-            <app-champion-badge />
-          }
         </span>
         <!-- Tag and title share one line, so a titled operator's row is no taller than the next. -->
         <span class="mt-1.5 flex min-w-0 items-center gap-3">
           @if (row.tag) {
             <span class="truncate font-mono text-xs text-text-muted">#{{ row.tag }}</span>
           }
-          @if (row.title; as title) {
+          @if (row.isChampion) {
+            <app-champion-badge />
+          } @else if (row.title; as title) {
             <app-title-badge [title]="title.key" />
           }
         </span>

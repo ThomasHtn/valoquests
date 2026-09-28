@@ -10,16 +10,6 @@ package io.github.thomashtn.valoquests.ranking.model;
 public enum WeeklyTitle {
 
     /**
-     * Most components produced over the week.
-     */
-    MECHANIC,
-
-    /**
-     * Most food produced over the week.
-     */
-    QUARTERMASTER,
-
-    /**
      * Most days played during the week.
      */
     REGULAR,
@@ -27,5 +17,15 @@ public enum WeeklyTitle {
     /**
      * Most challenges validated over the week, daily and weekly together.
      */
-    SCOUT
+    SCOUT,
+
+    /**
+     * Most food produced over the week.
+     */
+    QUARTERMASTER,
+
+    /**
+     * Most components produced over the week.
+     */
+    MECHANIC
 }

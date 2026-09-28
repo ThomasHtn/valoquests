@@ -49,19 +49,24 @@ export type ExtractionLimiter = 'NONE' | 'GROUP' | 'FOOD' | 'COMPONENTS';
 /**
  * Honorary title handed out on the week's ranking. Mirrors the backend `WeeklyTitle`.
  *
- * Mechanic for the most components, Quartermaster for the most food, Regular for the longest
- * streak, Scout for the most validated challenges. Ties award nothing.
+ * Regular for the most days played, Scout for the most validated challenges, Quartermaster for
+ * the most food, Mechanic for the most components. Ties award nothing.
  */
-export type WeeklyTitle = 'MECHANIC' | 'QUARTERMASTER' | 'REGULAR' | 'SCOUT';
+export type WeeklyTitle = 'REGULAR' | 'SCOUT' | 'QUARTERMASTER' | 'MECHANIC';
 
 /**
- * The four titles, in the order the interface lists them.
+ * Any title a name can wear: the reigning Champion or one of the four weekly titles.
+ */
+export type TitleKey = 'CHAMPION' | WeeklyTitle;
+
+/**
+ * The four titles, in award order: the backend hands them out in this sequence.
  */
 export const WEEKLY_TITLES: readonly WeeklyTitle[] = [
-  'MECHANIC',
-  'QUARTERMASTER',
   'REGULAR',
   'SCOUT',
+  'QUARTERMASTER',
+  'MECHANIC',
 ];
 
 /**

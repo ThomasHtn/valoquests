@@ -549,6 +549,7 @@
       "SCOUT": "Éclaireur"
     },
     "titleHint": {
+      "CHAMPION": "Premier du classement de la semaine passée",
       "MECHANIC": "Le plus de composants sur la semaine",
       "QUARTERMASTER": "Le plus de nourriture sur la semaine",
       "REGULAR": "Le plus de jours joués dans la semaine",
@@ -863,7 +864,7 @@
       "title": "L'escouade aujourd'hui",
       "link": "Tout le classement",
       "operator": "Opérateur",
-      "operatorTooltip": "Le pseudo de l'opérateur, avec son titre de la semaine s'il en détient un : le meilleur sur une ressource (composants, nourriture, série) ou en dégâts au gardien.",
+      "operatorTooltip": "Le pseudo de l'opérateur, avec son titre s'il en détient un : Champion pour le premier de la semaine passée, sinon Assidu, Éclaireur, Intendant ou Mécano.",
       "streak": "Assiduité",
       "streakTooltip": "Jours joués cette semaine. Chaque jour après le premier ajoute +2 % aux gains du jour, jusqu'à +10 %. Remis à zéro le lundi.",
       "streakValue": "+{{percent}} %",

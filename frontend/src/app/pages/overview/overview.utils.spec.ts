@@ -692,6 +692,20 @@ describe('buildSquad', () => {
     expect(row.title?.key).toBe('MECHANIC');
   });
 
+  it('crowns the reigning champion', () => {
+    const daily: DailyRanking = {
+      day: '2026-01-06',
+      previousDay: '2026-01-05',
+      playedPlayerCount: 2,
+      rosterPlayerCount: 2,
+      ranking: [entry({ playerId: 1, position: 1 }), entry({ playerId: 2, position: 2 })],
+    };
+
+    const squad = buildSquad(daily, null, 2);
+
+    expect(squad.map((row) => row.champion)).toEqual([false, true]);
+  });
+
   it('shows an unplayed operator the days already played and the bonus playing today would earn', () => {
     const daily: DailyRanking = {
       day: '2026-01-06',

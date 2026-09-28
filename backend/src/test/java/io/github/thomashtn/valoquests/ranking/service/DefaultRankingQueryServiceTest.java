@@ -143,7 +143,7 @@ class DefaultRankingQueryServiceTest {
         assertThat(first.challengePoints()).isEqualTo(300);
         assertThat(first.totalPoints()).isEqualTo(1_500);
         assertThat(first.totalChallenges()).isEqualTo(5);
-        assertThat(first.titles()).containsExactly(WeeklyTitle.MECHANIC, WeeklyTitle.SCOUT);
+        assertThat(first.titles()).containsExactly(WeeklyTitle.SCOUT, WeeklyTitle.MECHANIC);
         assertThat(first.challengeProgress()).isEmpty();
 
         RankingEntryResponse last = response.ranking().getLast();

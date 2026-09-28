@@ -549,6 +549,7 @@
       "SCOUT": "Scout"
     },
     "titleHint": {
+      "CHAMPION": "Top of last week's ranking",
       "MECHANIC": "Most components over the week",
       "QUARTERMASTER": "Most food over the week",
       "REGULAR": "Most days played in the week",
@@ -863,7 +864,7 @@
       "title": "The squad today",
       "link": "Full leaderboard",
       "operator": "Operator",
-      "operatorTooltip": "The operator's name, with their title of the week if they hold one: the best on a resource (components, food, streak) or on damage to the guardian.",
+      "operatorTooltip": "The operator's name, with their title if they hold one: Champion for last week's winner, otherwise Regular, Scout, Quartermaster or Mechanic.",
       "streak": "Attendance",
       "streakTooltip": "Days played this week. Each day after the first adds +2% to that day's gains, up to +10%. Resets on Monday.",
       "streakValue": "+{{percent}}%",

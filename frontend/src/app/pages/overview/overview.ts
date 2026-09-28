@@ -239,6 +239,7 @@ export class Overview {
     buildSquad(
       resourceValue(this.dailyResource, null) ?? null,
       resourceValue(this.todayResource, null) ?? null,
+      resourceValue(this.historyResource, null)?.content[0]?.winnerPlayerId ?? null,
     ),
   );
 

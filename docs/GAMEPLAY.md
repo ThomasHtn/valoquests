@@ -440,10 +440,10 @@ joueur :
 
 | Titre | Revient à |
 |---|---|
-| Mécano | le plus de **composants** |
-| Intendant | le plus de **nourriture** |
 | Assidu | le plus de **jours joués** dans la semaine |
 | Éclaireur | le plus de **défis** validés |
+| Intendant | le plus de **nourriture** |
+| Mécano | le plus de **composants** |
 
 Purement honorifiques. Un opérateur n'en porte qu'un seul à la fois : les titres sont décernés dans
 l'ordre du tableau, et quand le meilleur sur un critère en porte déjà un, le titre revient au suivant
