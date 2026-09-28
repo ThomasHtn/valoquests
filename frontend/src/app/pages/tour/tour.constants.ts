@@ -30,7 +30,20 @@ export const TOUR_SPEC_KEYS: readonly string[] = ['spec1', 'spec2', 'spec3'];
 export const TOUR_EMPHASIS_MARKER = '*';
 
 /**
- * Population a full campaign is expected to reach, the scale the hero's city is drawn on. The
- * overview's own figure.
+ * Population a full campaign is expected to reach, the scale the base step's city is drawn on.
+ * The overview's own figure.
  */
 export const FULL_CAMPAIGN_POPULATION = 30_000;
+
+/**
+ * Title key of the page each step's illustration is taken from, named under it so the visitor
+ * knows where to find the real one.
+ */
+export const TOUR_STEP_SOURCES: Readonly<Record<TourStepId, string>> = {
+  intro: 'playerProfile.title',
+  base: 'overview.title',
+  week: 'overview.title',
+  resources: 'overview.title',
+  challenges: 'challenges.title',
+  ranking: 'leaderboard.title',
+};

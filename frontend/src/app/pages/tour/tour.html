@@ -1,16 +1,22 @@
 <!-- `h-dvh` rather than `h-full`, same reason as the landing page: this renders straight under the
      root outlet. The two bands are fixed (progress on top, controls at the bottom) and only the
-     middle one scrolls, so the way out is always on screen. -->
+     middle one scrolls, so the way out is always on screen. Each step is sized to fit a phone
+     without scrolling; the scroll is only the fallback of the smallest screens. -->
 <main
   [attr.aria-label]="'tour.ariaLabel' | translate"
   class="ambient-field flex h-dvh flex-col overflow-hidden bg-surface-950 text-text-primary"
 >
+  <!-- One row at every width: the counter, the segments taking what is left, the way out. -->
   <header
-    class="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-3 border-b border-brand-500/20 bg-surface-sunken/80 px-4 py-3.5 motion-safe:animate-chrome-in sm:px-8"
+    class="flex shrink-0 items-center gap-4 border-b border-brand-500/20 bg-surface-sunken/80 px-4 py-3 motion-safe:animate-chrome-in sm:gap-6 sm:px-8 sm:py-3.5"
   >
-    <p class="flex items-baseline gap-2.5">
-      <span class="label-caption text-text-muted">{{ 'tour.progress.label' | translate }}</span>
-      <span class="font-display text-2xl leading-none font-bold text-brand-500 tabular-nums">
+    <p class="flex shrink-0 items-baseline gap-2.5">
+      <span class="label-caption text-text-muted max-sm:sr-only">{{
+        'tour.progress.label' | translate
+      }}</span>
+      <span
+        class="font-display text-xl leading-none font-bold text-brand-500 tabular-nums sm:text-2xl"
+      >
         {{
           'tour.progress.counter' | translate: { current: currentPosition(), total: steps.length }
         }}
@@ -19,9 +25,9 @@
 
     <!-- One sheared segment per step, hidden from assistive technology since the counter states
          the same position. -->
-    <div aria-hidden="true" class="order-last flex w-full gap-2 sm:order-none sm:w-auto sm:flex-1">
+    <div aria-hidden="true" class="flex min-w-0 flex-1 gap-1.5 sm:gap-2">
       @for (filled of segments(); track $index) {
-        <span class="clip-shear relative h-3 flex-1 bg-accent-gold/60 sm:max-w-28">
+        <span class="clip-shear relative h-2.5 flex-1 bg-accent-gold/60 sm:h-3 sm:max-w-28">
           <span
             [class.bg-brand-500]="filled"
             [class.bg-surface-700]="!filled"
@@ -31,287 +37,126 @@
       }
     </div>
 
-    <button appNavChip (click)="skip()" class="ml-auto" type="button">
-      {{ 'tour.skip' | translate }}
+    <button appNavChip (click)="skip()" class="shrink-0" type="button">
+      <span class="sm:hidden">{{ 'tour.skipShort' | translate }}</span>
+      <span class="max-sm:hidden">{{ 'tour.skip' | translate }}</span>
     </button>
   </header>
 
   <div
     #content
-    [class]="currentStep() === 'intro' ? 'py-6 sm:py-8' : 'py-10 sm:py-16'"
-    class="scroll-subtle flex flex-1 flex-col overflow-y-auto px-4 sm:px-8"
+    class="scroll-subtle flex flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-8 sm:py-10"
   >
     <!-- Announced on every step change: only this region swaps. Centered through `m-auto` rather
          than `justify-center`, which would push a tall step's top above the scroll origin. -->
     <div aria-live="polite" class="m-auto w-full max-w-6xl">
       @for (step of stepFrames(); track step) {
-        @let hero = step === 'intro';
-        <div
-          [class]="
-            hero
-              ? 'flex flex-col items-center gap-8'
-              : 'grid items-center gap-10 lg:grid-cols-[minmax(0,27rem)_minmax(0,1fr)] lg:gap-16'
-          "
-        >
-          <div
-            [class]="
-              hero
-                ? 'max-w-4xl items-center text-center'
-                : 'items-center text-center lg:items-start lg:text-left'
-            "
-            class="flex flex-col motion-safe:animate-step-in"
-          >
+        <div class="tour-step">
+          <div class="tour-copy flex flex-col motion-safe:animate-step-in">
             <p class="tracking-label-wide font-mono text-2xs text-brand-500 uppercase sm:text-xs">
               {{ 'tour.steps.' + step + '.eyebrow' | translate }}
             </p>
 
             <h1
-              [class]="
-                hero
-                  ? 'text-5xl/[1.04] sm:text-6xl/[1.04] lg:text-7xl/[1.04]'
-                  : 'text-[2.125rem]/[1.06] sm:text-5xl/[1.06]'
-              "
-              class="font-display mt-3 text-balance font-bold uppercase"
+              class="font-display mt-2 text-[2rem]/[1.06] text-balance font-bold uppercase sm:mt-3 sm:text-5xl/[1.06]"
             >
               {{ 'tour.steps.' + step + '.title' | translate }}
             </h1>
 
             <!-- One sentence, with the two or three words that carry it set in relief. -->
             <p
-              [class]="hero ? 'max-w-[28rem]' : 'max-w-[19rem]'"
-              class="mt-5 text-pretty text-lead text-text-secondary sm:text-xl/relaxed"
+              class="mt-2.5 max-w-[30rem] text-pretty text-[0.9375rem]/[1.55] text-text-secondary sm:mt-5 sm:text-xl/relaxed"
             >
               @for (run of claimRuns('tour.steps.' + step + '.claim' | translate); track $index) {
                 <span [class.tour-em]="run.strong">{{ run.text }}</span>
               }
             </p>
-
-            <!-- The spec sheet: three fixed rules of the game a reader takes in without a sentence.
-                 The illustration beside them is the live half. -->
-            <dl class="tour-specs w-full max-w-[30rem]">
-              @for (spec of specKeys; track spec) {
-                <div class="tour-spec">
-                  <dt class="font-display text-figure-sm font-bold text-brand-500 tabular-nums">
-                    {{ 'tour.steps.' + step + '.' + spec + '.value' | translate }}
-                  </dt>
-                  <dd class="tour-spec-label">
-                    {{ 'tour.steps.' + step + '.' + spec + '.label' | translate }}
-                  </dd>
-                </div>
-              }
-            </dl>
           </div>
 
-          <!-- The opening step's horizon: the squad's real base, run the full width under the
-               headline and faded out at the top so it rises out of the page's own dark. -->
-          @if (hero) {
-            @if (base(); as base) {
-              <div aria-hidden="true" class="tour-hero motion-safe:animate-step-in-late">
-                <app-base-scene
-                  [fullCampaignPopulation]="fullCampaignPopulation"
-                  [population]="base.population"
-                  [stagesDone]="stagesDone()"
-                  class="block"
-                />
-              </div>
-            }
-          } @else {
-            <!-- The step's reading of the live campaign: the same figures the pages show, from the
-                 same resources, so nothing here can outlive the screen it stands for. -->
-            <div class="flex min-w-0 flex-col motion-safe:animate-step-in-late">
+          <!-- The step's screen, the page's own components fed the sample campaign. Hidden from
+               assistive technology and inert: its figures are examples, and nothing in it leads
+               anywhere from here. -->
+          <figure
+            class="tour-figure flex min-w-0 flex-col gap-2.5 motion-safe:animate-step-in-late"
+          >
+            <div aria-hidden="true" class="min-w-0" inert>
               @switch (step) {
+                @case ('intro') {
+                  <app-tour-tracker [matches]="sampleMatches" />
+                }
                 @case ('base') {
-                  @if (base(); as base) {
-                    <div class="tour-card">
-                      <p class="tour-card-caption">
-                        <svg aria-hidden="true" class="size-4 shrink-0" lucideUsers></svg>
-                        {{ 'tour.readings.base' | translate }}
-                      </p>
-                      <p class="flex flex-wrap items-baseline gap-x-3.5 gap-y-1.5">
+                  <div class="relative overflow-hidden bg-[#040a11]">
+                    <app-base-scene
+                      [fullCampaignPopulation]="fullCampaignPopulation"
+                      [population]="samplePopulation"
+                      [stagesDone]="sampleStagesDone"
+                      class="block"
+                    />
+                    <div class="tour-scene-wash absolute inset-0"></div>
+                    <div class="absolute inset-x-0 bottom-0 px-4 pb-4 sm:px-6 sm:pb-5">
+                      <p class="tour-pop flex items-baseline gap-3">
+                        <span [appCountUp]="samplePopulation" class="tabular-nums"></span>
                         <span
-                          [appCountUp]="base.population"
-                          class="font-display text-figure text-text-primary tabular-nums"
-                        ></span>
-                        <span class="text-[1.0625rem] font-medium text-text-secondary">
-                          {{ 'tour.readings.inhabitants' | translate }}
-                        </span>
-                      </p>
-                      @if (base.populationChange !== 0) {
-                        <p
-                          [class.text-accent-green]="base.populationChange > 0"
-                          [class.text-boss-hp-edge]="base.populationChange < 0"
-                          class="tour-card-delta"
+                          class="font-display text-sm font-medium tracking-[0.16em] text-text-secondary uppercase sm:text-lg"
+                          >{{ 'overview.scene.unit' | translate }}</span
                         >
-                          {{ signed(base.populationChange) }}
-                          <small>{{ 'tour.readings.today' | translate }}</small>
-                        </p>
-                      }
+                      </p>
+                      <p
+                        class="mt-2.5 inline-flex items-center gap-1.5 border border-accent-green/45 px-2.5 py-1 font-display text-base font-semibold tracking-[0.04em] text-accent-green sm:mt-3.5 sm:py-1.5 sm:text-[1.0625rem]"
+                      >
+                        {{ signed(samplePopulationChange) }}
+                        <small class="font-sans font-medium text-text-secondary">{{
+                          'overview.scene.delta' | translate
+                        }}</small>
+                      </p>
                     </div>
-                  } @else {
-                    <p class="tour-card tour-card--empty">{{ 'tour.readings.none' | translate }}</p>
-                  }
+                  </div>
                 }
                 @case ('week') {
-                  @if (mission(); as mission) {
-                    <div class="tour-planet">
-                      <app-planet-figure
-                        [guardianLeft]="mission.guardianLeft"
-                        [label]="mission.planetName"
-                        [weekIndex]="mission.weekIndex"
-                        class="mx-auto w-full max-w-[18rem]"
-                      />
-                      <p class="tour-card-caption mt-4 justify-center">
-                        {{ mission.planetName }}
-                      </p>
-                      <p
-                        class="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-base text-text-secondary"
-                      >
-                        <span class="inline-flex items-center gap-1.5 text-text-primary">
-                          <svg
-                            aria-hidden="true"
-                            class="size-4 text-boss-hp-edge"
-                            lucideSkull
-                          ></svg>
-                          {{ bossLabel(mission.weekIndex) }}
-                        </span>
-                        <span class="font-display font-semibold text-brand-400 tabular-nums">
-                          @if (mission.defeated) {
-                            {{ 'tour.readings.defeated' | translate }}
-                          } @else {
-                            {{
-                              'tour.readings.breach'
-                                | translate: { percent: mission.progressPercent }
-                            }}
-                          }
-                        </span>
-                        <span class="inline-flex items-center gap-1.5">
-                          <svg
-                            aria-hidden="true"
-                            class="size-4 text-brand-400"
-                            lucideHeartPulse
-                          ></svg>
-                          {{
-                            'tour.readings.wounded'
-                              | translate: { count: format(mission.woundedCount) }
-                          }}
-                        </span>
-                      </p>
-                    </div>
-                  } @else {
-                    <p class="tour-card tour-card--empty">{{ 'tour.readings.none' | translate }}</p>
-                  }
+                  <app-mission-readings
+                    [capacity]="sampleCapacity"
+                    [contribution]="sampleContribution"
+                    [mission]="sampleMission"
+                    [showClock]="isMedium()"
+                  />
                 }
                 @case ('resources') {
-                  @if (base(); as base) {
-                    <div class="grid gap-3 sm:grid-cols-2">
-                      <div class="tour-card">
-                        <p class="tour-card-caption text-accent-green">
-                          <svg aria-hidden="true" class="size-4 shrink-0" lucideWheat></svg>
-                          {{ 'common.resource.food' | translate }}
-                        </p>
-                        <p
-                          class="font-display text-figure-sm font-bold text-text-primary tabular-nums"
-                        >
-                          {{ format(base.foodStock) }}
-                        </p>
-                        <p class="tour-card-note">
-                          {{
-                            'tour.readings.settles'
-                              | translate: { count: format(base.rescuesByFood) }
-                          }}
-                        </p>
-                      </div>
-                      <div class="tour-card">
-                        <p class="tour-card-caption text-accent-cyan">
-                          <svg aria-hidden="true" class="size-4 shrink-0" lucideWrench></svg>
-                          {{ 'common.resource.components' | translate }}
-                        </p>
-                        <p
-                          class="font-display text-figure-sm font-bold text-text-primary tabular-nums"
-                        >
-                          {{ format(base.componentsStock) }}
-                        </p>
-                        <p class="tour-card-note">
-                          {{
-                            'tour.readings.reaches'
-                              | translate: { count: format(base.rescuesByComponents) }
-                          }}
-                        </p>
-                      </div>
-                    </div>
-                  } @else {
-                    <p class="tour-card tour-card--empty">{{ 'tour.readings.none' | translate }}</p>
-                  }
+                  <app-tour-capacity [capacity]="sampleCapacity" />
                 }
                 @case ('challenges') {
-                  @if (daily(); as daily) {
-                    <div class="tour-card tour-card--cyan">
-                      <p class="tour-card-caption text-accent-cyan">
-                        <svg aria-hidden="true" class="size-4 shrink-0" lucideZap></svg>
-                        {{ 'tour.readings.daily' | translate }}
-                      </p>
-                      <p class="font-display text-2xl font-semibold text-text-primary">
-                        {{ daily.name }}
-                      </p>
-                      <p class="mt-2 text-prose text-text-secondary">{{ daily.description }}</p>
-                      <p
-                        class="mt-4 flex flex-wrap gap-x-5 gap-y-1 font-display text-base font-semibold tabular-nums"
-                      >
-                        <span class="inline-flex items-center gap-1.5 text-brand-400">
-                          <svg aria-hidden="true" class="size-4" lucideHeartPulse></svg>
-                          +{{ daily.survivors }}
-                          <span class="text-text-muted">{{
-                            'common.resource.wounded' | translate
-                          }}</span>
-                        </span>
-                      </p>
-                    </div>
-                  } @else {
-                    <p class="tour-card tour-card--empty">
-                      {{ 'tour.readings.noDaily' | translate }}
-                    </p>
-                  }
+                  <ol class="flex flex-col gap-3">
+                    @for (card of sampleChallenges(); track card.name) {
+                      <li [class.tour-extra]="$last" [class.tour-extra-short]="$index === 1">
+                        <app-challenge-card [card]="card" />
+                      </li>
+                    }
+                  </ol>
                 }
                 @case ('ranking') {
-                  @if (podium().length > 0) {
-                    <ol class="tour-podium">
-                      @for (entry of podium(); track entry.player.id) {
-                        <li class="tour-podium-row" [class.tour-podium-row--first]="$first">
-                          <span class="font-display text-2xl font-semibold tabular-nums">
-                            {{ entry.position }}
-                          </span>
-                          <span class="flex min-w-0 flex-col items-start gap-1.5">
-                            <span class="min-w-0 truncate font-display text-xl font-medium">
-                              {{ entry.player.displayName }}
-                            </span>
-                            @if (entry.player.id === championPlayerId()) {
-                              <app-champion-badge />
-                            } @else if (primaryTitle(entry.titles); as title) {
-                              <app-title-badge [title]="title" />
-                            }
-                          </span>
-                          <span
-                            class="font-display text-xl font-semibold text-text-primary tabular-nums"
-                          >
-                            {{ format(entry.totalPoints) }}
-                            <span
-                              class="text-2xs font-medium tracking-[0.12em] text-text-muted uppercase"
-                            >
-                              {{ 'common.resource.points' | translate }}
-                            </span>
-                          </span>
-                        </li>
-                      }
-                    </ol>
-                  } @else {
-                    <p class="tour-card tour-card--empty">
-                      {{ 'tour.readings.noRanking' | translate }}
-                    </p>
-                  }
+                  <app-podium [rows]="samplePodium" />
                 }
               }
             </div>
-          }
+            <figcaption class="text-xs text-text-muted sm:text-sm">
+              {{ 'tour.source' | translate: { page: (sources[step] | translate) } }}
+            </figcaption>
+          </figure>
+
+          <!-- The spec sheet: three fixed rules of the game a reader takes in without a sentence.
+             Under the copy on a wide screen, under the illustration on a phone: the headline
+             and the screen come first, the figures are the footnote. -->
+          <dl class="tour-specs motion-safe:animate-step-in">
+            @for (spec of specKeys; track spec) {
+              <div class="tour-spec">
+                <dt class="font-display text-figure-sm font-bold text-brand-500 tabular-nums">
+                  {{ 'tour.steps.' + step + '.' + spec + '.value' | translate }}
+                </dt>
+                <dd class="tour-spec-label">
+                  {{ 'tour.steps.' + step + '.' + spec + '.label' | translate }}
+                </dd>
+              </div>
+            }
+          </dl>
         </div>
       }
     </div>
@@ -319,7 +164,7 @@
 
   <!-- "Back" keeps its slot on the first step, so the buttons never shift between steps. -->
   <footer
-    class="flex shrink-0 items-center justify-between gap-4 border-t border-brand-500/20 bg-surface-sunken/80 px-4 py-3.5 motion-safe:animate-chrome-in sm:px-8"
+    class="flex shrink-0 items-center justify-between gap-4 border-t border-brand-500/20 bg-surface-sunken/80 px-4 py-3 motion-safe:animate-chrome-in sm:px-8 sm:py-3.5"
   >
     <button appNavChip (click)="previous()" [disabled]="isFirst()" type="button">
       <svg class="block h-4 w-4 shrink-0" lucideChevronLeft></svg>

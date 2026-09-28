@@ -1,15 +1,17 @@
 <!-- Three readings in the order the week is played: the clock, the fight, what comes home. The
      clock leads because it is the only thing here that moves on its own. -->
-<div class="report bg-text-primary/4">
-  <div class="rep-clock">
-    <app-countdown
-      [deadline]="mission().extractionDeadline"
-      [label]="'overview.report.countdownAria' | translate"
-    />
-    <p class="rep-when label-caption text-2xs text-text-muted">
-      {{ 'overview.report.deadline' | translate }}
-    </p>
-  </div>
+<div [class.report--bare]="!showClock()" class="report bg-text-primary/4">
+  @if (showClock()) {
+    <div class="rep-clock">
+      <app-countdown
+        [deadline]="mission().extractionDeadline"
+        [label]="'overview.report.countdownAria' | translate"
+      />
+      <p class="rep-when label-caption text-2xs text-text-muted">
+        {{ 'overview.report.deadline' | translate }}
+      </p>
+    </div>
+  }
 
   <!-- The squad against the guardian, on the aboard row's own grid: the key column carries the
        fight's glyph, the body the two figures and the one track they share. -->

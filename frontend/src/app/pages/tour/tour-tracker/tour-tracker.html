@@ -1,0 +1,97 @@
+<div class="flex flex-col gap-2">
+  <!-- The day header of the profile's card list: count, date, record, and what the evening was
+       worth to the guardian. -->
+  <div
+    class="flex flex-wrap items-center gap-x-4 gap-y-2 border-l-2 border-brand-500 bg-text-primary/8 px-4 py-2.5"
+  >
+    <span class="clip-hex relative size-8 shrink-0 bg-brand-500/50">
+      <span
+        class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-xs leading-none font-bold text-text-primary tabular-nums"
+      >
+        {{ matches().length }}
+      </span>
+    </span>
+    <span class="label-caption text-text-secondary">
+      {{ 'tour.samples.tracker.day' | translate }}
+    </span>
+    <span class="label-caption text-brand-500 tabular-nums">
+      {{ 'playerProfile.matches.columns.damage' | translate }}
+      {{ format(totalDamage()) }}
+    </span>
+    <span class="ml-auto text-sm font-semibold tabular-nums">
+      <span class="text-accent-green">
+        {{ 'playerProfile.stats.wins' | translate: { count: wins() } }}
+      </span>
+      <span class="text-text-muted">/</span>
+      <span class="text-accent-red">
+        {{ 'playerProfile.stats.losses' | translate: { count: losses() } }}
+      </span>
+    </span>
+  </div>
+
+  @for (match of matches(); track match.time) {
+    <div
+      [class]="resultAccentClass(match.result)"
+      class="row notch-tr bg-text-primary/4 [--notch:0.625rem]"
+    >
+      <div class="flex min-w-0 items-center gap-3.5">
+        <app-media-thumbnail
+          [monogram]="agentInitial(match.agentName)"
+          [src]="mapImageUrl(match.mapName)"
+        />
+        <span class="flex min-w-0 flex-col gap-1.5">
+          <span
+            class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
+          >
+            {{ match.mapName }}
+          </span>
+          <span class="truncate text-sm text-text-muted">
+            {{ match.time }} ·
+            {{ 'playerProfile.matches.gameMode.' + match.gameMode | translate }}
+          </span>
+        </span>
+      </div>
+
+      <p class="font-display text-center text-lg leading-none font-bold tabular-nums">
+        <span [class]="resultTextClass(match.result)">{{ match.allyScore }}</span>
+        <span class="text-text-muted"> : {{ match.enemyScore }}</span>
+      </p>
+
+      <app-media-thumbnail
+        [monogram]="agentInitial(match.agentName)"
+        [src]="agentImageUrl(match.agentName)"
+        class="agent"
+      />
+
+      <p class="stat kda">
+        <span class="label-caption block text-text-muted">
+          {{ 'playerProfile.matches.columns.kda' | translate }}
+        </span>
+        <span
+          class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
+        >
+          {{ match.kills }}/{{ match.deaths }}/{{ match.assists }}
+        </span>
+      </p>
+
+      <!-- The column the whole game reads from: what the match was worth to the week's boss. -->
+      <p class="stat">
+        <span class="label-caption block text-text-muted">
+          {{ 'playerProfile.matches.columns.damage' | translate }}
+        </span>
+        <span
+          class="font-display mt-2 block text-base leading-none font-semibold text-brand-500 tabular-nums"
+        >
+          {{ format(match.damage) }}
+        </span>
+        @if (match.damagePercent < 100) {
+          <span
+            class="mt-1 block font-mono text-3xs tracking-label text-text-muted uppercase tabular-nums"
+          >
+            {{ 'playerProfile.matches.damage.share' | translate: { percent: match.damagePercent } }}
+          </span>
+        }
+      </p>
+    </div>
+  }
+</div>

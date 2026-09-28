@@ -44,6 +44,12 @@ export class MissionReadings {
   public readonly contribution = input.required<Contribution | null>();
 
   /**
+   * Whether to open on the week's clock. The tour drops it on a phone, where the two other
+   * readings already fill the screen.
+   */
+  public readonly showClock = input(true);
+
+  /**
    * The guardian's number, padded like the frieze's own week labels so `Boss 04` and the frieze's
    * `04` are read as the same thing.
    */

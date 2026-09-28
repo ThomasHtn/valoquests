@@ -12,6 +12,11 @@
   grid-auto-rows: 1fr;
 }
 
+/* Without the clock, the two rows split the height evenly. */
+.report--bare {
+  grid-template-rows: none;
+}
+
 .rep-clock {
   display: flex;
   flex-direction: column;

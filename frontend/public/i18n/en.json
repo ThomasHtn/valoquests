@@ -1554,23 +1554,10 @@
       "counter": "{{current}} / {{total}}"
     },
     "skip": "Skip the tour",
+    "skipShort": "Skip",
     "previous": "Back",
     "next": "Next",
     "finish": "Enter",
-    "readings": {
-      "base": "The base",
-      "inhabitants": "inhabitants",
-      "today": "today",
-      "defeated": "Guardian defeated",
-      "breach": "Breach {{percent}} %",
-      "wounded": "{{count}} wounded on the ground",
-      "settles": "enough to settle {{count}} wounded",
-      "reaches": "enough to reach {{count}} wounded",
-      "daily": "Daily challenge",
-      "none": "No campaign in progress: the base, the guardian and the reserves will show here from the next starting Monday.",
-      "noDaily": "Today's challenge is not drawn yet.",
-      "noRanking": "The week's ranking has not been computed yet."
-    },
     "steps": {
       "intro": {
         "eyebrow": "ValoQuests",
@@ -1672,6 +1659,26 @@
         "spec3": {
           "value": "1",
           "label": "champion per week"
+        }
+      }
+    },
+    "source": "{{page}} page, sample data",
+    "samples": {
+      "tracker": {
+        "day": "Friday"
+      },
+      "challenges": {
+        "sharpSight": {
+          "name": "Dialled in",
+          "description": "Land 50 headshots in Competitive or Unrated over the week"
+        },
+        "fullWeek": {
+          "name": "Full week",
+          "description": "Play 5 matches in Competitive or Unrated over the week"
+        },
+        "insatiable": {
+          "name": "Insatiable",
+          "description": "Play 28 matches, any mode, over the week"
         }
       }
     }

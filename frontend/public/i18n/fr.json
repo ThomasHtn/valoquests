@@ -1554,23 +1554,10 @@
       "counter": "{{current}} / {{total}}"
     },
     "skip": "Passer la visite",
+    "skipShort": "Passer",
     "previous": "Retour",
     "next": "Suivant",
     "finish": "Entrer",
-    "readings": {
-      "base": "La base",
-      "inhabitants": "habitants",
-      "today": "aujourd'hui",
-      "defeated": "Gardien vaincu",
-      "breach": "Percée {{percent}} %",
-      "wounded": "{{count}} blessés au sol",
-      "settles": "de quoi installer {{count}} blessés",
-      "reaches": "de quoi atteindre {{count}} blessés",
-      "daily": "Défi du jour",
-      "none": "Aucune campagne en cours : la base, le gardien et les réserves apparaîtront ici dès le prochain lundi de départ.",
-      "noDaily": "Le défi du jour n'est pas encore tiré.",
-      "noRanking": "Le classement de la semaine n'a pas encore été calculé."
-    },
     "steps": {
       "intro": {
         "eyebrow": "ValoQuests",
@@ -1672,6 +1659,26 @@
         "spec3": {
           "value": "1",
           "label": "champion par semaine"
+        }
+      }
+    },
+    "source": "Page {{page}}, données d'exemple",
+    "samples": {
+      "tracker": {
+        "day": "Vendredi"
+      },
+      "challenges": {
+        "sharpSight": {
+          "name": "Viseur réglé",
+          "description": "Cumuler 50 headshots en Compétitif ou Non classé sur la semaine"
+        },
+        "fullWeek": {
+          "name": "Semaine pleine",
+          "description": "Jouer 5 parties en Compétitif ou Non classé sur la semaine"
+        },
+        "insatiable": {
+          "name": "Insatiable",
+          "description": "Jouer 28 parties, tous modes confondus, sur la semaine"
         }
       }
     }

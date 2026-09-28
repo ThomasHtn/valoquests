@@ -1,0 +1,74 @@
+@let capacity = this.capacity();
+<div class="tiles">
+  <div class="tile" style="--tone: var(--color-accent-cyan)">
+    <p class="name">{{ 'overview.capacity.carry' | translate }}</p>
+    <span [style.--pct]="capacity.carry.fraction" appInView class="gauge">
+      <svg viewBox="0 0 100 100">
+        <circle class="g-track" cx="50" cy="50" r="43" />
+        <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
+      </svg>
+      <span class="gauge-mid">
+        <svg class="size-5" lucideRocket></svg>
+        <b [appCountUp]="capacity.carry.value" class="tabular-nums"></b>
+      </span>
+    </span>
+    <span class="stock label-caption text-2xs"
+      ><svg class="size-3.5" lucideWrench></svg
+      ><b class="tabular-nums">{{ format(capacity.carry.stock) }}</b>
+      {{ 'common.resource.components' | translate | lowercase }}</span
+    >
+    <div class="foot">
+      <span class="lever label-caption text-2xs text-brand-400">{{
+        'overview.capacity.lever' | translate
+      }}</span>
+      <p class="modes">
+        @for (mode of carryModes; track mode) {
+          <span class="mode-tag label-caption text-2xs">{{
+            'common.gameMode.' + mode | translate
+          }}</span>
+        }
+      </p>
+      <p class="rate label-caption text-2xs">
+        <svg class="size-4" lucideWrench></svg>
+        <b class="tabular-nums">{{ capacity.componentsPerRescue }}</b>
+        {{ 'overview.capacity.carryRate' | translate }}
+      </p>
+    </div>
+  </div>
+
+  <div class="tile" style="--tone: var(--color-accent-green); --fx-delay: 120ms">
+    <p class="name">{{ 'overview.capacity.shelter' | translate }}</p>
+    <span [style.--pct]="capacity.shelter.fraction" appInView class="gauge">
+      <svg viewBox="0 0 100 100">
+        <circle class="g-track" cx="50" cy="50" r="43" />
+        <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
+      </svg>
+      <span class="gauge-mid">
+        <svg class="size-5" lucideBuilding2></svg>
+        <b [appCountUp]="capacity.shelter.value" class="tabular-nums"></b>
+      </span>
+    </span>
+    <span class="stock label-caption text-2xs"
+      ><svg class="size-3.5" lucideWheat></svg
+      ><b class="tabular-nums">{{ format(capacity.shelter.stock) }}</b>
+      {{ 'common.resource.food' | translate | lowercase }}</span
+    >
+    <div class="foot">
+      <span class="lever label-caption text-2xs text-brand-400">{{
+        'overview.capacity.lever' | translate
+      }}</span>
+      <p class="modes">
+        @for (mode of shelterModes; track mode) {
+          <span class="mode-tag label-caption text-2xs">{{
+            'common.gameMode.' + mode | translate
+          }}</span>
+        }
+      </p>
+      <p class="rate label-caption text-2xs">
+        <svg class="size-4" lucideWheat></svg>
+        <b class="tabular-nums">{{ capacity.foodPerRescue }}</b>
+        {{ 'overview.capacity.shelterRate' | translate }}
+      </p>
+    </div>
+  </div>
+</div>
