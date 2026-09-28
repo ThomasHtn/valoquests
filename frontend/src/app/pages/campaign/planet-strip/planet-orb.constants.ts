@@ -1,3 +1,7 @@
+import {
+  PLANET_ART_DISC_RATIO,
+  PLANET_ART_EXTENT_RATIO,
+} from '@core/campaign/planet-art.constants';
 import { PlanetState } from '../campaign.model';
 
 /**
@@ -5,16 +9,12 @@ import { PlanetState } from '../campaign.model';
  */
 
 /**
-
  * Side of the square viewBox.
-
  */
 export const ORB_VIEW_SIZE = 100;
 
 /**
-
  * Centre of the orb.
-
  */
 export const ORB_CX = 50;
 
@@ -24,16 +24,17 @@ export const ORB_CX = 50;
 export const ORB_CY = 50;
 
 /**
-
- * Dark seas scattered on the ground.
-
+ * Ratio of the widest planetary ring to the globe: the guardian's ring is laid past it.
  */
-export const SEA_COUNT = 5;
+export const RING_SCALE = PLANET_ART_EXTENT_RATIO / PLANET_ART_DISC_RATIO;
 
 /**
+ * Clearance between the widest planetary ring and the guardian's ring, in viewBox units.
+ */
+export const RING_GAP = 3;
 
+/**
  * Ring colour per state of the planet.
-
  */
 export const ORB_TONES: Readonly<Record<PlanetState, string>> = {
   won: '#e8ab6b',
@@ -43,20 +44,16 @@ export const ORB_TONES: Readonly<Record<PlanetState, string>> = {
 };
 
 /**
-
- * Fill and dotted stroke of a planet still ahead: a place, not a world yet.
-
+ * A planet still ahead: its drawing in grey and faded, the same silhouette as on the overview.
  */
-export const AHEAD_FILL = '#15222c';
+export const AHEAD_ART_STYLE = 'filter: grayscale(1); opacity: 0.38';
 
 /**
- * Dotted stroke of a planet still ahead.
- */
-export const AHEAD_STROKE = '#33495b';
-
-/**
-
- * Dark plate behind the ring, so the guardian's lines read on any hue.
-
+ * Dark plate behind the ring, so the guardian's lines read on any planet.
  */
 export const RING_PLATE = 'rgb(4 10 15 / 70%)';
+
+/**
+ * Plate of a defeated guardian's ring: empty, but amber so the planet reads as won.
+ */
+export const RING_PLATE_WON = 'rgb(217 149 74 / 45%)';

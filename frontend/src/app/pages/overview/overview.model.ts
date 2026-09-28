@@ -16,22 +16,44 @@ export interface FriezeWeek {
   readonly label: string;
 
   /**
+   * Name of the planet.
+   */
+  readonly name: string;
+
+  /**
+   * Public path of the planet's drawing.
+   */
+  readonly art: string;
+
+  /**
    * Won, lost, in progress, or ahead.
    */
   readonly state: 'won' | 'lost' | 'now' | 'ahead';
 
   /**
-   * Share of the guardian's hit points taken, in [0, 1], carried by the top rule.
+   * Whether Sunday has settled the week, so its mission report can be opened from the cell.
    */
-  readonly advance: number;
+  readonly settled: boolean;
 
   /**
-   * Short mark drawn in the cell.
+   * Share of the guardian's hit points still standing, in [0, 1], carried by the ring around the
+   * planet: full before the fight, empty once the guardian is down.
    */
-  readonly mark: string;
+  readonly standing: number;
 
   /**
-   * Tooltip of the cell.
+   * Abbreviated level of the week's guardian, short enough to share a line with the status.
+   */
+  readonly level: string;
+
+  /**
+   * Short status beside the level: defeated, survived with its hit points left, the breakthrough,
+   * or what is ahead.
+   */
+  readonly status: string;
+
+  /**
+   * What screen readers hear for the cell: the guardian's level in full, then how the week went.
    */
   readonly title: string;
 }

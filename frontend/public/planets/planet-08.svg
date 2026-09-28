@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <clipPath id="disc"><circle cx="50" cy="50" r="36"/></clipPath>
+  </defs>
+  <g clip-path="url(#disc)">
+    <rect width="100" height="100" fill="#a6bbc5"/>
+    <path fill="#90a8b4" d="M14 56c10-3 20 2 30 0s18-8 28-6 12 4 14 4v46H14z"/>
+    <path fill="#b7cad2" d="M24 40c6-3 14-2 17 1s-2 6-8 6-12-4-9-7z"/>
+    <g fill="none" stroke="#6a8694" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 46l13-2 8 6 14-4 8 6 14-4 12 4"/>
+      <path d="M30 44l4-12 10-6M34 32l-10-4"/>
+      <path d="M52 46l-2 14 6 10-2 14"/>
+      <path d="M60 52l10 10 12 2M38 50l-6 12-10 6"/>
+    </g>
+    <path fill="#eef3f4" d="M14 14h72v12c-8 4-16 2-24 4s-14 4-22 2-14-4-26-2z"/>
+    <path fill="#dfe8eb" d="M20 80c8-2 18 0 26 0s18-3 26-1v21H20z"/>
+    <path fill="#040a11" fill-opacity=".3" fill-rule="evenodd" d="M0 0h100v100H0z M7 41a34 34 0 1 0 68 0a34 34 0 1 0 -68 0z"/>
+    <path fill="#040a11" fill-opacity=".38" fill-rule="evenodd" d="M0 0h100v100H0z M-2 39a41 41 0 1 0 82 0a41 41 0 1 0 -82 0z"/>
+    <path fill="#fff" fill-opacity=".13" fill-rule="evenodd" d="M0 0h100v100H0z M16.5 52.5a36 36 0 1 0 72 0a36 36 0 1 0 -72 0z"/>
+  </g>
+</svg>

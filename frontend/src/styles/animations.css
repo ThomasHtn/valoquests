@@ -501,6 +501,21 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  /* A guardian's ring draining from full to the hit points it has left. `--arc-full` is its full
+     circumference. */
+  .fx-arc-drain {
+    animation: fx-arc-drain var(--duration-gauge-long) var(--ease-gauge) both;
+    animation-delay: var(--fx-delay, 0ms);
+  }
+}
+
+@keyframes fx-arc-drain {
+  from {
+    stroke-dasharray: var(--arc-full) var(--arc-full);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
   /* The second band of a two-band bar, and a fill's leading-edge marker: they ride out with it. */
   .fx-grow-in-place {
     animation: fx-grow-in-place var(--duration-gauge) var(--ease-gauge) both;

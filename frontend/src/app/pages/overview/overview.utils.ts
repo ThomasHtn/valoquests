@@ -7,6 +7,7 @@ import {
 } from '@core/campaign/campaign.model';
 import { primaryTitleOf } from '@core/campaign/campaign-title.utils';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
+import { resolvePlanetArtUrl } from '@core/campaign/planet-art.utils';
 import { CurrentChallenges } from '@core/challenges/challenge.model';
 import { campaignMidnight } from '@core/date/campaign-time-zone.utils';
 import { daysBetween, localMidnight } from '@core/date/date-time.utils';
@@ -37,10 +38,11 @@ import { SEEN_REPORT_KEY } from './overview.constants';
 export type Translate = (key: string, params?: Readonly<Record<string, string | number>>) => string;
 
 /**
- * Builds the ten-week frieze: each week's outcome, and how far the guardian was pushed.
+ * Builds the ten-week frieze: each week's planet, its guardian's level, its outcome, and how much
+ * of the guardian is left.
  *
  * @param campaign - The campaign, or `null` outside one.
- * @param translate - Translation function for each week's title tooltip.
+ * @param translate - Translation function for each week's level, status and spoken label.
  * @returns One entry per week, or an empty frieze outside a campaign.
  */
 export function buildFrieze(
@@ -58,46 +60,61 @@ export function buildFrieze(
  */
 function toFriezeWeek(week: CampaignWeek, campaign: Campaign, translate: Translate): FriezeWeek {
   const isCurrent = week.weekIndex === campaign.currentWeekIndex && campaign.status === 'RUNNING';
-  const label = String(week.weekIndex).padStart(2, '0');
+  const planet = {
+    index: week.weekIndex,
+    label: String(week.weekIndex).padStart(2, '0'),
+    name: week.planetName,
+    art: resolvePlanetArtUrl(week.weekIndex),
+    level: translate(`overview.frieze.level.${week.category}`),
+    settled: week.settled,
+  };
+  // The level in full leads the spoken label, which spells out what the cell abbreviates.
+  const category = translate(`common.guardianCategory.${week.category}`);
+  const title = (state: string): string => translate('overview.frieze.title', { category, state });
   if (week.defeated) {
     return {
-      index: week.weekIndex,
-      label,
+      ...planet,
       state: 'won',
-      advance: 1,
-      mark: '✓',
-      title: translate('overview.frieze.won'),
+      standing: 0,
+      status: translate('overview.frieze.status.won'),
+      title: title(translate('overview.frieze.won')),
     };
   }
+  // The guardian's hit points left, the reading the ring shows: a guardian that held with 22 %
+  // reads 22, not the 78 % of breakthrough.
+  const left = 100 - week.progressPercent;
   if (week.settled) {
     return {
-      index: week.weekIndex,
-      label,
+      ...planet,
       state: 'lost',
-      advance: week.progressPercent / 100,
-      mark: '✕',
-      title: translate('overview.frieze.lost', { percent: week.progressPercent }),
+      standing: left / 100,
+      status: translate('overview.frieze.status.lost', { percent: left }),
+      title: title(translate('overview.frieze.lost', { percent: left })),
     };
   }
   if (isCurrent) {
     return {
-      index: week.weekIndex,
-      label,
+      ...planet,
       state: 'now',
-      advance: week.progressPercent / 100,
-      mark: '●',
-      title: translate('overview.frieze.now', { percent: week.progressPercent }),
+      standing: left / 100,
+      status: translate('overview.frieze.status.now', { percent: week.progressPercent }),
+      title: title(translate('overview.frieze.now', { percent: week.progressPercent })),
     };
   }
   // A closed campaign's remaining weeks were never played: they are not coming any more.
   const unplayed = campaign.status === 'CLOSED';
+  let status = 'ahead';
+  if (unplayed) {
+    status = 'unplayed';
+  } else if (week.weekIndex === CAMPAIGN_WEEK_COUNT) {
+    status = 'final';
+  }
   return {
-    index: week.weekIndex,
-    label,
+    ...planet,
     state: 'ahead',
-    advance: 0,
-    mark: week.weekIndex === CAMPAIGN_WEEK_COUNT && !unplayed ? '★' : '·',
-    title: translate(unplayed ? 'overview.frieze.unplayed' : 'overview.frieze.ahead'),
+    standing: 1,
+    status: translate(`overview.frieze.status.${status}`),
+    title: title(translate(unplayed ? 'overview.frieze.unplayed' : 'overview.frieze.ahead')),
   };
 }
 
@@ -191,14 +208,15 @@ export function buildMission(
 }
 
 /**
- * Builds the last settled week's Monday report.
+ * Builds a settled week's Monday report, the last one unless another is asked for.
  *
  * @param campaign - The campaign, or `null` outside one.
  * @param players - Tracked players, used to resolve portraits and the fatal blow's name.
  * @param history - Frozen weeks, for the settled week's titles and ranking.
  * @param language - The reader's language, for the fatal blow's weekday and time.
  * @param translate - Translation function for the fatal blow's sentence.
- * @returns The report, or `null` before the first settled week.
+ * @param weekIndex - The settled week to report, or `null` for the last one.
+ * @returns The report, or `null` when that week is not settled yet.
  */
 export function buildMissionReport(
   campaign: Campaign | null,
@@ -206,8 +224,13 @@ export function buildMissionReport(
   history: readonly RankingHistoryWeek[],
   language: Language,
   translate: Translate,
+  weekIndex: number | null = null,
 ): MissionReport | null {
-  const settled = campaign?.weeks.filter((week) => week.settled).at(-1);
+  const settledWeeks = campaign?.weeks.filter((week) => week.settled) ?? [];
+  const settled =
+    weekIndex === null
+      ? settledWeeks.at(-1)
+      : settledWeeks.find((week) => week.weekIndex === weekIndex);
   if (!campaign || !settled) {
     return null;
   }

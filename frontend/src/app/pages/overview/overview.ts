@@ -6,7 +6,8 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { LucideFileText, LucideUsers } from '@lucide/angular';
+import { NgTemplateOutlet } from '@angular/common';
+import { LucideFileText } from '@lucide/angular';
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT, CampaignWeek } from '@core/campaign/campaign.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
@@ -21,7 +22,6 @@ import { CountUp } from '@shared/count-up/count-up';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionRule } from '@shared/section-rule/section-rule';
-import { Tooltip } from '@shared/tooltip/tooltip';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { BaseScene } from './base-scene/base-scene';
 import { DayOrders } from './day-orders/day-orders';
@@ -65,6 +65,7 @@ import { readSeenReport, writeSeenReport } from './overview.utils';
   selector: 'app-overview',
   imports: [
     LucideFileText,
+    NgTemplateOutlet,
     TranslatePipe,
     PageHeader,
     ResourceState,
@@ -78,8 +79,6 @@ import { readSeenReport, writeSeenReport } from './overview.utils';
     MissionReport,
     DayOrders,
     SquadSheet,
-    LucideUsers,
-    Tooltip,
   ],
   templateUrl: './overview.html',
   styleUrl: './overview.scss',
@@ -186,17 +185,29 @@ export class Overview {
   protected readonly reportOpen = signal(false);
 
   /**
+   * The settled week the report shows: `null` for the last one, or a week picked on the frieze.
+   */
+  private readonly reportWeek = signal<number | null>(null);
+
+  /**
    * The last settled week, told as the Monday report; `null` before the first Sunday.
    */
   protected readonly missionReport = computed<MissionReportView | null>(() =>
-    buildMissionReport(
-      this.campaign(),
-      resourceValue(this.playersApi.players, []),
-      resourceValue(this.historyResource, null)?.content ?? [],
-      this.translation.language(),
-      (key, params) => this.translation.translate(key, params),
-    ),
+    this.buildReport(null),
   );
+
+  /**
+   * The report on screen: the last settled week's, or the one picked on the frieze.
+   */
+  protected readonly shownReport = computed<MissionReportView | null>(() => {
+    const week = this.reportWeek();
+    return week === null ? this.missionReport() : this.buildReport(week);
+  });
+
+  /**
+   * What had focus when the report opened, to hand it back on close.
+   */
+  private reportOpener: HTMLElement | null = null;
 
   protected readonly capacity = computed<Capacity | null>(() =>
     buildCapacity(this.campaign(), this.currentWeek()),
@@ -317,15 +328,37 @@ export class Overview {
     return Math.round(fraction * 100);
   }
 
-  protected openReport(): void {
+  /**
+   * Opens a settled week's report: the last one from the context bar, any one from the frieze.
+   */
+  protected openReport(weekIndex: number | null = null): void {
+    this.reportOpener =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    this.reportWeek.set(weekIndex);
     this.reportOpen.set(true);
   }
 
+  /**
+   * Closes the report. Only the last week's counts as seen: an older one read again changes nothing.
+   */
   protected closeReport(): void {
     const report = this.missionReport();
     if (report) {
       writeSeenReport(report.weekStart);
     }
     this.reportOpen.set(false);
+    this.reportOpener?.focus();
+    this.reportOpener = null;
+  }
+
+  private buildReport(weekIndex: number | null): MissionReportView | null {
+    return buildMissionReport(
+      this.campaign(),
+      resourceValue(this.playersApi.players, []),
+      resourceValue(this.historyResource, null)?.content ?? [],
+      this.translation.language(),
+      (key, params) => this.translation.translate(key, params),
+      weekIndex,
+    );
   }
 }

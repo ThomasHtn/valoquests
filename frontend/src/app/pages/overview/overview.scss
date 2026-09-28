@@ -26,96 +26,255 @@
 
 /* ---------- The ten-week frieze ---------- */
 
-.week {
-  position: relative;
+/* Sized on the bar itself, not the viewport: the sidebar takes a varying share of the screen. */
+.frieze-bar {
+  container-type: inline-size;
+}
+
+.week-slot {
   flex: 1 1 0;
   min-width: 0;
   display: flex;
+}
+
+/* Below 70rem a cell is too narrow for the name: the planet stands over its number. */
+.week {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.65rem 0.2rem;
-  background: rgb(4 10 15 / 45%);
-  border-top: 2px solid rgb(236 232 225 / 14%);
+  gap: 0.375rem;
+  padding: 0.625rem 0.125rem 0.5rem;
 }
 
-/* The top rule carries the advance on the guardian, not only the issue: losses are quadratic and
-   without threshold, so a week pushed back to 84 % cost almost nothing and a week abandoned at
-   20 % costs a fifth of the base. A bare cross confuses the two. */
-.week::after {
-  content: '';
+/* The ring is the guardian's hit points left, not only the issue: losses are quadratic and without
+   threshold, so a guardian left at 16 % cost almost nothing and one left at 80 % costs a fifth of
+   the base. A bare cross confuses the two. */
+.orb {
+  --tone: var(--color-text-muted);
+
+  position: relative;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+/* Inset so a ringed planet's own rings stay inside the guardian's. */
+.orb-art {
   position: absolute;
-  top: -2px;
-  left: 0;
-  width: calc(var(--adv, 0) * 100%);
-  height: 2px;
-  background: var(--adv-tone, var(--color-text-muted));
+  inset: 0.25rem;
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
-.week-no {
+.orb-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  rotate: -90deg;
+  fill: none;
+  stroke-width: 2;
+}
+
+.orb-track {
+  stroke: rgb(236 232 225 / 9%);
+}
+
+/* `--arc-full` is the whole ring on the `pathLength` scale, where the drain starts from. */
+.orb-arc {
+  --arc-full: 100;
+
+  stroke: var(--tone);
+}
+
+.week-text {
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3125rem;
+}
+
+.week-name,
+.week-line {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.week-name {
   font-family: var(--font-display);
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
-.week-mark {
-  font-family: var(--font-display);
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1;
+.week-planet,
+.week-line {
+  display: none;
+}
+
+/* The level is abbreviated so level and status hold on one line; screen readers hear it in full. */
+.week-line {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.15;
   color: var(--color-text-muted);
 }
 
-.week--won {
-  --adv-tone: var(--color-brand-500);
+@container (width >= 70rem) {
+  .week {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
 
-  background: rgb(217 149 74 / 10%);
+  .week-text {
+    align-items: flex-start;
+  }
+
+  .week-name {
+    font-size: 0.9375rem;
+  }
+
+  .week-planet,
+  .week-line {
+    display: inline;
+  }
+
+  /* The corner icon only where the cell has room for it beside the planet. Qualified so it outranks
+     the hidden default declared further down with the rest of the report's styles. */
+  .week--settled .week-report {
+    display: block;
+  }
 }
 
-.week--won .week-no,
-.week--won .week-mark {
+@container (width < 30rem) {
+  .orb {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .orb-art {
+    inset: 0.1875rem;
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+
+  .week-name {
+    font-size: 0.75rem;
+  }
+}
+
+/* A settled week is a button onto its mission report: reset to the cell's own look, then lit on
+   hover with the report's icon in the corner and the planet drawn a little closer. */
+button.week {
+  margin: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.week-report {
+  position: absolute;
+  display: none;
+  top: 0.375rem;
+  right: 0.375rem;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--color-text-secondary);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.week--settled:hover,
+.week--settled:focus-visible {
+  background: rgb(236 232 225 / 6%);
+}
+
+.week--settled:hover .week-report,
+.week--settled:focus-visible .week-report {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .orb-art {
+    transition: scale 0.25s var(--ease-out-expo);
+  }
+
+  .week--settled:hover .orb-art {
+    scale: 1.1;
+  }
+
+  button.week:active {
+    scale: 0.98;
+  }
+}
+
+/* Weeks still ahead: the planet is on the map but not reached, a silhouette without colour. */
+.week--ahead .orb-art {
+  filter: grayscale(1);
+  opacity: 0.38;
+}
+
+.week--won .orb {
+  --tone: var(--color-brand-500);
+}
+
+/* The guardian is down, its ring empty: the track itself turns amber so the week reads as won. */
+.week--won .orb-track {
+  stroke: rgb(217 149 74 / 45%);
+}
+
+.week--won .week-name,
+.week--lost .week-name {
+  color: var(--color-text-primary);
+}
+
+.week--won .week-status {
   color: var(--color-brand-400);
 }
 
-/* Muted rather than bright red: on this teal ground, eight percent of bright red turns pink and
-   the lost week became the loudest cell of the frieze. */
-.week--lost {
-  --adv-tone: var(--color-boss-hp-edge);
-
-  background: rgb(4 10 15 / 55%);
+/* Muted rather than bright red: on this teal ground, bright red became the loudest cell of the
+   frieze. */
+.week--lost .orb {
+  --tone: var(--color-boss-hp-edge);
 }
 
-.week--lost .week-no,
-.week--lost .week-mark {
+.week--lost .week-status {
   color: var(--color-boss-hp-edge);
 }
 
+/* The week being played: a flat gold surface, no frame. Its ring is the guardian's hit points
+   draining, in the same red as the boss gauges. */
 .week--now {
-  --adv-tone: var(--color-accent-cyan);
-
-  background: rgb(45 212 191 / 12%);
+  background: rgb(217 149 74 / 12%);
 }
 
-.week--now .week-no,
-.week--now .week-mark {
-  color: var(--color-accent-cyan);
+.week--now .orb {
+  --tone: var(--color-boss-hp-edge);
 }
 
-@media (width < 40rem) {
-  .week {
-    gap: 0.2rem;
-    padding-inline: 0;
-  }
+.week--now .week-name {
+  color: var(--color-brand-400);
+}
 
-  .week-no {
-    font-size: 0.75rem;
-  }
-
-  .week-mark {
-    display: none;
-  }
+.week--now .week-line {
+  color: var(--color-text-secondary);
 }
 
 /* ---------- The mission: the scan ---------- */

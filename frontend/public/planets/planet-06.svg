@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <clipPath id="disc"><circle cx="50" cy="50" r="36"/></clipPath>
+  </defs>
+  <g clip-path="url(#disc)">
+    <rect width="100" height="100" fill="#4b4462"/>
+    <path fill="#3c3552" d="M21 41c6-8 18-10 24-4s2 14-6 16-18 0-18-6 0-4 0-6z"/>
+    <ellipse cx="62" cy="63" rx="12" ry="8" fill="#3c3552" transform="rotate(25 62 63)"/>
+    <g fill="none" stroke="#8f88aa" stroke-width="1.1" stroke-linecap="round" stroke-opacity=".85">
+      <path d="M56 33l10-12M56 33l17 3M56 33l4 17M56 33l-12-6M56 33l-10 11"/>
+    </g>
+    <circle cx="56" cy="33" r="3.6" fill="#a39cbd"/>
+    <circle cx="56.9" cy="33.9" r="2.3" fill="#6e6690"/>
+    <circle cx="34" cy="65" r="4.2" fill="#3a3350"/>
+    <circle cx="35" cy="66" r="3.1" fill="#564e70"/>
+    <circle cx="71" cy="50" r="2.8" fill="#3a3350"/>
+    <circle cx="71.7" cy="50.7" r="2" fill="#564e70"/>
+    <circle cx="40" cy="23" r="2.2" fill="#3a3350"/>
+    <circle cx="40.5" cy="23.5" r="1.5" fill="#564e70"/>
+    <circle cx="50" cy="78" r="3" fill="#3a3350"/>
+    <path fill="#040a11" fill-opacity=".3" fill-rule="evenodd" d="M0 0h100v100H0z M7 41a34 34 0 1 0 68 0a34 34 0 1 0 -68 0z"/>
+    <path fill="#040a11" fill-opacity=".38" fill-rule="evenodd" d="M0 0h100v100H0z M-2 39a41 41 0 1 0 82 0a41 41 0 1 0 -82 0z"/>
+    <path fill="#fff" fill-opacity=".13" fill-rule="evenodd" d="M0 0h100v100H0z M16.5 52.5a36 36 0 1 0 72 0a36 36 0 1 0 -72 0z"/>
+  </g>
+</svg>

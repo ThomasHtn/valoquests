@@ -35,7 +35,7 @@ import {
   Planet,
   PlanetReport,
   PlanetState,
-  planetLook,
+  planetRadius,
   PlanetStateIcon,
   RescueLaw,
   Reserves,
@@ -306,7 +306,7 @@ export class Campaign {
   private toPlanet(week: CampaignWeek, campaign: CampaignModel): Planet {
     const state = resolvePlanetState(week, campaign);
     const final = week.weekIndex === CAMPAIGN_WEEK_COUNT;
-    const { radius, hue } = planetLook(week, final);
+    const radius = planetRadius(week, final);
     const [stateLabel, stateIcon] = this.stateLine(
       week,
       state,
@@ -320,9 +320,8 @@ export class Campaign {
       category: week.category,
       state,
       final,
-      advance: state === 'ahead' ? 0 : week.progressPercent / 100,
+      standing: week.defeated ? 0 : 1 - week.progressPercent / 100,
       radius,
-      hue,
       stateLabel,
       stateIcon,
       report: this.report(week, state, final, campaign),
@@ -341,7 +340,8 @@ export class Campaign {
       case 'won':
         return [t('won', { weekday: this.defeatedWeekday(week).toLowerCase() }), 'check'];
       case 'lost':
-        return [t('lost', { percent: week.progressPercent }), 'x'];
+        // The hit points left, the reading the ring shows, not the breakthrough.
+        return [t('lost', { percent: 100 - week.progressPercent }), 'x'];
       case 'now':
         return [t('now', { percent: week.progressPercent }), 'swords'];
       default:

@@ -269,7 +269,7 @@
       "previous": "Planète précédente",
       "next": "Planète suivante",
       "won": "Vaincu {{weekday}}",
-      "lost": "A tenu · {{percent}} %",
+      "lost": "A tenu · {{percent}} % PV",
       "now": "Percée {{percent}} %",
       "ahead": "À venir",
       "final": "Grand final",
@@ -754,17 +754,31 @@
     "scene": {
       "section": "La ville de nuit et la fusée en construction",
       "aria": "La base, {{population}} habitants. Au centre, la fusée montée à {{stages}} étages sur {{weeks}}.",
-      "base": "La base",
       "unit": "habitants",
       "delta": "aujourd’hui · provisoire"
     },
     "frieze": {
       "aria": "Les dix semaines de la campagne",
       "won": "Gardien vaincu",
-      "lost": "Gardien repoussé à {{percent}} %",
+      "lost": "Gardien resté debout avec {{percent}} % de ses PV",
       "now": "Percée à {{percent}} %",
       "ahead": "À venir",
-      "unplayed": "Non jouée"
+      "unplayed": "Non jouée",
+      "status": {
+        "won": "Vaincu",
+        "lost": "Survécu {{percent}} %",
+        "now": "Percée {{percent}} %",
+        "ahead": "À venir",
+        "final": "Grand final",
+        "unplayed": "Non jouée"
+      },
+      "title": "{{category}} · {{state}}",
+      "level": {
+        "MINOR": "Min.",
+        "STANDARD": "Std",
+        "ELITE": "Élite"
+      },
+      "openReport": "Ouvrir le rapport de mission"
     },
     "mission": {
       "title": "La mission de la semaine",

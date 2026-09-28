@@ -112,31 +112,81 @@ describe('buildFrieze', () => {
     expect(buildFrieze(null, translate)).toEqual([]);
   });
 
-  it('marks a defeated week as won, fully advanced', () => {
-    const [entry] = buildFrieze(campaign({ weeks: [week({ defeated: true })] }), translate);
-
-    expect(entry).toMatchObject({ state: 'won', advance: 1, mark: '✓' });
-  });
-
-  it('marks a settled but undefeated week as lost, advanced by its breakthrough', () => {
+  it('names each week after its planet, its drawing and its guardian level, abbreviated', () => {
     const [entry] = buildFrieze(
-      campaign({ weeks: [week({ settled: true, progressPercent: 64 })] }),
+      campaign({ weeks: [week({ weekIndex: 3, category: 'ELITE' })] }),
       translate,
     );
 
-    expect(entry).toMatchObject({ state: 'lost', advance: 0.64, mark: '✕' });
+    expect(entry).toMatchObject({
+      label: '03',
+      name: 'Kepler',
+      art: '/planets/planet-03.svg',
+      level: 'overview.frieze.level.ELITE',
+      title: 'overview.frieze.title(common.guardianCategory.ELITE,overview.frieze.ahead)',
+    });
   });
 
-  it('marks the week in progress as now', () => {
+  it('flags only the weeks Sunday has settled, whose report can be opened', () => {
+    const [done, running] = buildFrieze(
+      campaign({
+        currentWeekIndex: 2,
+        weeks: [week({ weekIndex: 1, settled: true }), week({ weekIndex: 2, defeated: true })],
+      }),
+      translate,
+    );
+
+    expect(done.settled).toBe(true);
+    expect(running).toMatchObject({ state: 'won', settled: false });
+  });
+
+  it('marks a defeated week as won, its ring empty', () => {
+    const [entry] = buildFrieze(campaign({ weeks: [week({ defeated: true })] }), translate);
+
+    expect(entry).toMatchObject({
+      state: 'won',
+      standing: 0,
+      status: 'overview.frieze.status.won',
+    });
+  });
+
+  it('marks a settled but undefeated week as lost, with the hit points it kept', () => {
+    const [entry] = buildFrieze(
+      campaign({ weeks: [week({ settled: true, progressPercent: 78 })] }),
+      translate,
+    );
+
+    expect(entry).toMatchObject({
+      state: 'lost',
+      standing: 0.22,
+      status: 'overview.frieze.status.lost(22)',
+      title: 'overview.frieze.title(common.guardianCategory.STANDARD,overview.frieze.lost(22))',
+    });
+  });
+
+  it('marks the week in progress as now, with its breakthrough', () => {
     const [entry] = buildFrieze(
       campaign({ currentWeekIndex: 1, weeks: [week({ progressPercent: 30 })] }),
       translate,
     );
 
-    expect(entry).toMatchObject({ state: 'now', advance: 0.3, mark: '●' });
+    expect(entry).toMatchObject({
+      state: 'now',
+      standing: 0.7,
+      status: 'overview.frieze.status.now(30)',
+    });
   });
 
-  it('stars the final unplayed week of a still-running campaign', () => {
+  it('marks a week still ahead as ahead', () => {
+    const [entry] = buildFrieze(
+      campaign({ currentWeekIndex: 1, weeks: [week({ weekIndex: 4 })] }),
+      translate,
+    );
+
+    expect(entry).toMatchObject({ state: 'ahead', status: 'overview.frieze.status.ahead' });
+  });
+
+  it('announces the final unplayed week of a still-running campaign', () => {
     const [entry] = buildFrieze(
       campaign({
         currentWeekIndex: 1,
@@ -145,17 +195,19 @@ describe('buildFrieze', () => {
       translate,
     );
 
-    expect(entry).toMatchObject({ state: 'ahead', mark: '★' });
+    expect(entry).toMatchObject({ state: 'ahead', status: 'overview.frieze.status.final' });
   });
 
-  it('dots an unplayed week of a closed campaign instead of starring it', () => {
+  it('calls an unplayed week of a closed campaign unplayed rather than the final', () => {
     const [entry] = buildFrieze(
       campaign({ status: 'CLOSED', currentWeekIndex: null, weeks: [week({ weekIndex: 10 })] }),
       translate,
     );
 
-    expect(entry).toMatchObject({ state: 'ahead', mark: '·' });
-    expect(entry.title).toBe('overview.frieze.unplayed');
+    expect(entry).toMatchObject({ state: 'ahead', status: 'overview.frieze.status.unplayed' });
+    expect(entry.title).toBe(
+      'overview.frieze.title(common.guardianCategory.STANDARD,overview.frieze.unplayed)',
+    );
   });
 });
 
@@ -206,6 +258,30 @@ describe('buildMission', () => {
 describe('buildMissionReport', () => {
   it('returns null before the first settled week', () => {
     expect(buildMissionReport(campaign(), [], [], 'en', translate)).toBeNull();
+  });
+
+  it('reports the last settled week unless another one is asked for', () => {
+    const weeks = [
+      week({ weekIndex: 1, planetName: 'Orune', settled: true, defeated: true }),
+      week({ weekIndex: 2, planetName: 'Vell', settled: true }),
+      week({ weekIndex: 3, planetName: 'Tessar' }),
+    ];
+
+    expect(buildMissionReport(campaign({ weeks }), [], [], 'en', translate)).toMatchObject({
+      weekIndex: 2,
+      planetName: 'Vell',
+    });
+    expect(buildMissionReport(campaign({ weeks }), [], [], 'en', translate, 1)).toMatchObject({
+      weekIndex: 1,
+      planetName: 'Orune',
+      defeated: true,
+    });
+  });
+
+  it('reports nothing for a week Sunday has not settled yet', () => {
+    const weeks = [week({ weekIndex: 1, settled: true }), week({ weekIndex: 2 })];
+
+    expect(buildMissionReport(campaign({ weeks }), [], [], 'en', translate, 2)).toBeNull();
   });
 
   it('reports no titles and no champion when the week was never frozen', () => {

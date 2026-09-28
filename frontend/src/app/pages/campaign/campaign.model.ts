@@ -190,19 +190,14 @@ export interface Planet {
   readonly final: boolean;
 
   /**
-   * Share of the guardian's hit points taken, in [0, 1].
+   * Share of the guardian's hit points still standing, in [0, 1].
    */
-  readonly advance: number;
+  readonly standing: number;
 
   /**
    * Radius of the orb, in viewBox units.
    */
   readonly radius: number;
-
-  /**
-   * Ground colour of the orb.
-   */
-  readonly hue: string;
 
   /**
    * Translated line describing the state.
@@ -650,21 +645,12 @@ export interface HistoryCurve {
 }
 
 /**
- * Radius and colour of a planet, drawn from its category and its rank on the road.
+ * Radius of a planet's globe, drawn from its category. Sized so the final planet's rings and the
+ * guardian's ring around them still fit the orb's 100-unit square.
  */
-export function planetLook(week: CampaignWeek, final: boolean): { radius: number; hue: string } {
-  const hues = [
-    '#4a5b58',
-    '#5a4c44',
-    '#3f5566',
-    '#56594a',
-    '#6b5a3c',
-    '#3a4f5a',
-    '#4d5a4a',
-    '#5c4a5a',
-    '#3f5a5e',
-    '#4a3d3a',
-  ];
-  const radius = final ? 44 : week.category === 'ELITE' ? 38 : week.category === 'MINOR' ? 30 : 33;
-  return { radius, hue: hues[(week.weekIndex - 1) % hues.length] };
+export function planetRadius(week: CampaignWeek, final: boolean): number {
+  if (final) {
+    return 33;
+  }
+  return week.category === 'ELITE' ? 30 : week.category === 'MINOR' ? 24 : 27;
 }

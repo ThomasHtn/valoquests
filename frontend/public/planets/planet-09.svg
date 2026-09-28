@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <clipPath id="disc"><circle cx="50" cy="50" r="36"/></clipPath>
+    <clipPath id="front"><rect x="-10" y="50" width="120" height="60"/></clipPath>
+  </defs>
+  <g transform="rotate(-16 50 50)" fill="none">
+    <ellipse cx="50" cy="50" rx="48" ry="11" stroke="#9fb2a8" stroke-width="3.2"/>
+    <ellipse cx="50" cy="50" rx="42.5" ry="9.2" stroke="#6f8680" stroke-width="1.4"/>
+  </g>
+  <g clip-path="url(#disc)">
+    <g transform="rotate(-16 50 50)">
+      <rect x="-20" y="-20" width="140" height="140" fill="#3f7a74"/>
+      <rect x="-20" y="28" width="140" height="5" fill="#356863"/>
+      <rect x="-20" y="39" width="140" height="4" fill="#4e8b84"/>
+      <rect x="-20" y="58" width="140" height="6" fill="#335f5b"/>
+      <rect x="-20" y="70" width="140" height="3" fill="#4e8b84"/>
+      <rect x="-20" y="52" width="140" height="2.5" fill="#1f3b3a" fill-opacity=".55"/>
+    </g>
+    <path fill="#040a11" fill-opacity=".3" fill-rule="evenodd" d="M0 0h100v100H0z M7 41a34 34 0 1 0 68 0a34 34 0 1 0 -68 0z"/>
+    <path fill="#040a11" fill-opacity=".38" fill-rule="evenodd" d="M0 0h100v100H0z M-2 39a41 41 0 1 0 82 0a41 41 0 1 0 -82 0z"/>
+    <path fill="#fff" fill-opacity=".13" fill-rule="evenodd" d="M0 0h100v100H0z M16.5 52.5a36 36 0 1 0 72 0a36 36 0 1 0 -72 0z"/>
+  </g>
+  <g transform="rotate(-16 50 50)" clip-path="url(#front)" fill="none">
+    <ellipse cx="50" cy="50" rx="48" ry="11" stroke="#9fb2a8" stroke-width="3.2"/>
+    <ellipse cx="50" cy="50" rx="42.5" ry="9.2" stroke="#6f8680" stroke-width="1.4"/>
+  </g>
+</svg>

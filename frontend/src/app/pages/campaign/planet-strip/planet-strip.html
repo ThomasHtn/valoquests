@@ -12,11 +12,10 @@
         >
           <span class="pl-orbit">
             <app-planet-orb
-              [advance]="planet.advance"
-              [hue]="planet.hue"
+              [standing]="planet.standing"
               [radius]="planet.radius"
-              [seed]="planet.index + 20"
               [state]="planet.state"
+              [weekIndex]="planet.index"
             />
           </span>
           <!-- The label plate: a translucent card so the text reads over the stars. -->

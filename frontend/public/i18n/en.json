@@ -269,7 +269,7 @@
       "previous": "Previous planet",
       "next": "Next planet",
       "won": "Defeated on {{weekday}}",
-      "lost": "Held · {{percent}}%",
+      "lost": "Held · {{percent}}% HP",
       "now": "Breach {{percent}}%",
       "ahead": "Ahead",
       "final": "Grand finale",
@@ -754,17 +754,31 @@
     "scene": {
       "section": "The city at night and the rocket under construction",
       "aria": "The base, {{population}} inhabitants. In the middle, the rocket built to {{stages}} stages out of {{weeks}}.",
-      "base": "The base",
       "unit": "inhabitants",
       "delta": "today · provisional"
     },
     "frieze": {
       "aria": "The ten weeks of the campaign",
       "won": "Guardian defeated",
-      "lost": "Guardian pushed back to {{percent}}%",
+      "lost": "Guardian still standing with {{percent}}% of its HP",
       "now": "Breakthrough at {{percent}}%",
       "ahead": "Ahead",
-      "unplayed": "Not played"
+      "unplayed": "Not played",
+      "status": {
+        "won": "Defeated",
+        "lost": "Survived {{percent}}%",
+        "now": "Breach {{percent}}%",
+        "ahead": "Ahead",
+        "final": "Grand finale",
+        "unplayed": "Not played"
+      },
+      "title": "{{category}} · {{state}}",
+      "level": {
+        "MINOR": "Min.",
+        "STANDARD": "Std",
+        "ELITE": "Elite"
+      },
+      "openReport": "Open the mission report"
     },
     "mission": {
       "title": "This week's mission",
