@@ -9,7 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideLoaderCircle } from '@lucide/angular';
+import { LucideArrowDown, LucideLoaderCircle } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalTime } from '@core/date/date-time.utils';
@@ -45,7 +45,15 @@ import { MATCH_ROW_GRID_CLASS } from '../player-profile.constants';
  */
 @Component({
   selector: 'app-match-history',
-  imports: [TranslatePipe, RouterLink, MediaThumbnail, ResourceState, Tooltip, LucideLoaderCircle],
+  imports: [
+    TranslatePipe,
+    RouterLink,
+    MediaThumbnail,
+    ResourceState,
+    Tooltip,
+    LucideArrowDown,
+    LucideLoaderCircle,
+  ],
   templateUrl: './match-history.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -180,9 +188,8 @@ export class MatchHistory {
   }
 
   /**
-   * The reduced share a match kept, as a short visible mark, or `null` when there is nothing to
-   * explain. Rendered beside the amount because the tooltip above opens on hover or focus,
-   * neither of which a thumb does.
+   * The reduced share a match kept, read out behind the down arrow, or `null` when the match kept
+   * its full value (or none) and the arrow stays hidden.
    */
   protected damageShareLabel(match: Match): string | null {
     const percent = match.damageCoefficientPercent;

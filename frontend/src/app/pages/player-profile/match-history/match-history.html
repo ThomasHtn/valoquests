@@ -12,7 +12,7 @@
     <ul class="flex flex-col gap-2" skeleton>
       @for (placeholder of skeletonRows; track $index) {
         <li
-          class="notch-tr flex items-center gap-4 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-4 [--notch:0.625rem]"
+          class="flex items-center gap-4 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-4"
         >
           <span class="size-10 shrink-0 bg-surface-700"></span>
           <span class="flex min-w-0 flex-1 flex-col gap-2">
@@ -136,7 +136,7 @@
               <a
                 [class]="rowGridClass + ' ' + resultAccentClass(row.result)"
                 [routerLink]="['/players', playerId(), 'matches', row.id]"
-                class="notch-tr focus-ring-inset bg-text-primary/4 transition-colors [--notch:0.625rem] hover:bg-brand-500/15"
+                class="focus-ring-inset bg-text-primary/4 transition-colors hover:bg-brand-500/15"
               >
                 <div class="flex items-center gap-3.5 px-4 py-3.5">
                   <app-media-thumbnail
@@ -251,17 +251,18 @@
                   <span
                     [class.text-brand-500]="row.valoquestsDamage > 0"
                     [class.text-text-muted]="row.valoquestsDamage === 0"
-                    class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
+                    class="font-display mt-2 flex items-center justify-center gap-1 text-base leading-none font-semibold tabular-nums"
                   >
                     {{ formatDamageAmount(row.valoquestsDamage) }}
+                    @if (damageShareLabel(row); as share) {
+                      <svg
+                        aria-hidden="true"
+                        class="size-3.5 shrink-0 text-danger"
+                        lucideArrowDown
+                      ></svg>
+                      <span class="sr-only">{{ share }}</span>
+                    }
                   </span>
-                  @if (damageShareLabel(row); as share) {
-                    <span
-                      class="mt-1 block font-mono text-3xs tracking-label text-text-muted uppercase tabular-nums"
-                    >
-                      {{ share }}
-                    </span>
-                  }
                 </p>
               </a>
             }
@@ -311,7 +312,7 @@
                   <a
                     [class]="resultAccentClass(row.result)"
                     [routerLink]="['/players', playerId(), 'matches', row.id]"
-                    class="notch-tr focus-ring-inset flex flex-col gap-4 bg-text-primary/4 px-4 py-4 [--notch:0.625rem]"
+                    class="focus-ring-inset flex flex-col gap-4 bg-text-primary/4 px-4 py-4"
                   >
                     <div class="flex items-center gap-3.5">
                       <app-media-thumbnail
@@ -404,25 +405,27 @@
                           {{ formatScore(row.acs) }}
                         </dd>
                       </div>
-                      <!-- The reduced share is written out here rather than left to the
-                         tooltip: this layout is the one a phone gets, and a tooltip opens
-                         on hover or focus, neither of which a thumb does. -->
+                      <!-- Same arrow as the grid; the tooltip only helps a pointer, so the
+                         reduced share stays readable to assistive tech through `sr-only`. -->
                       <div>
                         <dt class="label-caption text-text-muted">
                           {{ 'playerProfile.matches.columns.damage' | translate }}
                         </dt>
                         <dd
+                          [appTooltip]="damageExplanation(row)"
                           [class.text-brand-500]="row.valoquestsDamage > 0"
                           [class.text-text-muted]="row.valoquestsDamage === 0"
-                          class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
+                          appTooltipPosition="above"
+                          class="font-display mt-2 flex items-center gap-1 text-base leading-none font-semibold tabular-nums"
                         >
                           {{ formatDamageAmount(row.valoquestsDamage) }}
                           @if (damageShareLabel(row); as share) {
-                            <span
-                              class="block font-mono text-3xs tracking-label text-text-muted uppercase tabular-nums"
-                            >
-                              {{ share }}
-                            </span>
+                            <svg
+                              aria-hidden="true"
+                              class="size-3.5 shrink-0 text-danger"
+                              lucideArrowDown
+                            ></svg>
+                            <span class="sr-only">{{ share }}</span>
                           }
                         </dd>
                       </div>

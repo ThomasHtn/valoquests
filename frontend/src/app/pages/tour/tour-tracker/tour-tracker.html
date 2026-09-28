@@ -30,10 +30,7 @@
   </div>
 
   @for (match of matches(); track match.time) {
-    <div
-      [class]="resultAccentClass(match.result)"
-      class="row notch-tr bg-text-primary/4 [--notch:0.625rem]"
-    >
+    <div [class]="resultAccentClass(match.result)" class="row bg-text-primary/4">
       <div class="flex min-w-0 items-center gap-3.5">
         <app-media-thumbnail
           [monogram]="agentInitial(match.agentName)"
@@ -75,22 +72,29 @@
       </p>
 
       <!-- The column the whole game reads from: what the match was worth to the week's boss. -->
-      <p class="stat">
+      <p
+        [appTooltip]="
+          'playerProfile.matches.damage.coefficient' | translate: { percent: match.damagePercent }
+        "
+        appTooltipPosition="above"
+        class="stat cursor-help"
+      >
         <span class="label-caption block text-text-muted">
           {{ 'playerProfile.matches.columns.damage' | translate }}
         </span>
         <span
-          class="font-display mt-2 block text-base leading-none font-semibold text-brand-500 tabular-nums"
+          class="font-display mt-2 flex items-center justify-center gap-1 text-base leading-none font-semibold text-brand-500 tabular-nums"
         >
           {{ format(match.damage) }}
+          @if (match.damagePercent < 100) {
+            <svg aria-hidden="true" class="size-3.5 shrink-0 text-danger" lucideArrowDown></svg>
+            <span class="sr-only">
+              {{
+                'playerProfile.matches.damage.share' | translate: { percent: match.damagePercent }
+              }}
+            </span>
+          }
         </span>
-        @if (match.damagePercent < 100) {
-          <span
-            class="mt-1 block font-mono text-3xs tracking-label text-text-muted uppercase tabular-nums"
-          >
-            {{ 'playerProfile.matches.damage.share' | translate: { percent: match.damagePercent } }}
-          </span>
-        }
       </p>
     </div>
   }

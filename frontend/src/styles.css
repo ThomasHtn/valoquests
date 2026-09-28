@@ -358,7 +358,7 @@
  * `contents` has to do the same, or it will sit flush against the column's edges.
  */
 @utility page-body {
-  @apply scroll-subtle flex w-full flex-1 flex-col gap-6 overflow-y-auto pt-10 pb-6;
+  @apply flex w-full flex-1 flex-col gap-6 overflow-y-auto pt-10 pb-6;
 
   /* The body is the only scroller: its bounce must not chain to the shell and drag the header. */
   overscroll-behavior-y: contain;
@@ -371,6 +371,15 @@
      sidebar and context bar included, and navigating reads as the page being replaced rather than
      as its content changing. Only one `page-body` is ever mounted, so the name stays unique. */
   view-transition-name: page-body;
+
+  /* Thumb always shown so a scrollable page reads as one. Full-bleed bands stop at the scrollbar,
+     so its gutter gets a sunken rail instead of letting the ambient ground show through.
+     `scrollbar-color` is what Chrome and Firefox paint; the track rule covers Safari. */
+  scrollbar-color: var(--color-surface-600) var(--color-surface-sunken);
+
+  &::-webkit-scrollbar-track {
+    background-color: var(--color-surface-sunken);
+  }
 
   & > * {
     @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6;

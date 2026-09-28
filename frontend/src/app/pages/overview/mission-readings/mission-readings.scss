@@ -4,17 +4,10 @@
  *
  * The clock spans the block and centres: it is the only value here that moves on its own.
  */
-/* Flex rows on an auto height: the fight and aboard rows share the taller one's height, and the
-   clock takes a fifth more than that. */
+/* Equal rows on an auto height: the clock and both readings share the tallest one's height. */
 .report {
   display: grid;
-  grid-template-rows: 1.2fr;
   grid-auto-rows: 1fr;
-}
-
-/* Without the clock, the two rows split the height evenly. */
-.report--bare {
-  grid-template-rows: none;
 }
 
 .rep-clock {

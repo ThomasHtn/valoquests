@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { LucideArrowDown } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -10,18 +11,19 @@ import {
 } from '@core/matches/match-format.utils';
 import { resolveResultAccentClass, resolveResultTextClass } from '@core/matches/match-visual.utils';
 import { MediaThumbnail } from '@pages/player-profile/media-thumbnail/media-thumbnail';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { TourSampleMatch } from '../tour.model';
 
 /**
  * One evening of the profile's match history, cut down to what the first step turns on: every
  * match lands there on its own, and each one carries the damage it dealt to the week's guardian.
  *
- * Built from the history's own pieces (day header, notched rows, result edge, thumbnails) rather
+ * Built from the history's own pieces (day header, rows, result edge, thumbnails) rather
  * than the component itself, which pages, links out and switches layout at `lg`.
  */
 @Component({
   selector: 'app-tour-tracker',
-  imports: [TranslatePipe, MediaThumbnail],
+  imports: [TranslatePipe, MediaThumbnail, Tooltip, LucideArrowDown],
   templateUrl: './tour-tracker.html',
   styleUrl: './tour-tracker.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
