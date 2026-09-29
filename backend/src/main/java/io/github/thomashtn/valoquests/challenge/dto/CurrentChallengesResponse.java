@@ -37,19 +37,36 @@ public record CurrentChallengesResponse(
      * @param id          player identifier, the one {@link ChallengeProgressResponse#completedPlayerIds()}
      *                    references
      * @param displayName name shown for the player
+     * @param portrait    agent portrait chosen by the player, {@code null} when none was chosen
      */
     public record RosterPlayerResponse(
 
         Long id,
-        String displayName
+        String displayName,
+        String portrait
+    ) {
+    }
+
+    /**
+     * Exposes where one active player stands on one challenge.
+     *
+     * @param playerId     player identifier, one of the roster's
+     * @param currentValue progress so far, zero while the player has not been evaluated on it
+     * @param completed    whether the player completed it
+     */
+    public record PlayerProgressResponse(
+
+        Long playerId,
+        BigDecimal currentValue,
+        boolean completed
     ) {
     }
 
     /**
      * Exposes one selected challenge and how far the squad has got with it.
      *
-     * <p>Progress here is collective, not per player: it answers "how many of us finished this"
-     * rather than "how far am I".
+     * <p>Progress is read both ways: collectively ("how many of us finished this") and player by
+     * player ("how far is each of us"), past days' challenges included.
      *
      * @param id                   selection identifier, the one progress rows reference
      * @param code                 stable catalogue code
@@ -69,6 +86,7 @@ public record CurrentChallengesResponse(
      * @param totalPlayers         active players it applies to
      * @param completedPlayerIds   identifiers of the active players who completed it, ascending
      * @param completionPercentage completed players as a percentage of the total
+     * @param players              each active player's progress, in roster order
      */
     public record ChallengeProgressResponse(
 
@@ -87,13 +105,15 @@ public record CurrentChallengesResponse(
         int completedPlayers,
         int totalPlayers,
         List<Long> completedPlayerIds,
-        BigDecimal completionPercentage
+        BigDecimal completionPercentage,
+        List<PlayerProgressResponse> players
     ) {
         /**
          * Creates an immutable challenge progress response.
          */
         public ChallengeProgressResponse {
             completedPlayerIds = List.copyOf(completedPlayerIds);
+            players = List.copyOf(players);
         }
     }
 

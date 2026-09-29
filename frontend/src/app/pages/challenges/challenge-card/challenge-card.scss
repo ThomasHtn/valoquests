@@ -1,23 +1,23 @@
-/* The card is a grid: the hexagon, the body, the gain on the right, then the rule and the tally
-   across the whole width. */
+/* A column: the head, the rule, one band per operator, then the last line with the count. */
 :host {
-  display: grid;
-  grid-template-columns: 3rem minmax(0, 1fr);
-  gap: 0.5rem 1.25rem;
-  align-items: start;
-  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  padding: 1.4rem 1.5rem 1.35rem 1.35rem;
   background: rgb(236 232 225 / 4%);
   box-shadow: inset 3px 0 0 var(--tone);
 }
 
-@media (width >= 48rem) {
-  :host {
-    grid-template-columns: 3rem minmax(0, 1fr) 9.5rem;
-  }
-}
-
 :host(.card--done) {
   background: rgb(95 184 138 / 6%);
+}
+
+/* The hexagon beside the key line and the name; the gain at the far end; what the challenge asks
+   below, aligned on the name. */
+.head {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  column-gap: 1.25rem;
+  align-items: center;
 }
 
 .hex-mark > span {
@@ -26,7 +26,7 @@
   font-weight: 600;
 }
 
-.body {
+.title {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -34,20 +34,12 @@
 }
 
 .key {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem 0.75rem;
   color: var(--tone);
-}
-
-.key-aside {
-  color: var(--color-text-muted);
 }
 
 .name {
   font-family: var(--font-display);
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: 0.02em;
@@ -55,20 +47,22 @@
 }
 
 .desc {
+  grid-column: 2 / -1;
+  max-width: 60ch;
+  margin-top: 0.5rem;
   font-size: 1rem;
-  line-height: 1.35;
+  line-height: 1.45;
   color: var(--color-text-secondary);
 }
 
 .pay {
   display: flex;
-  flex-wrap: wrap;
   align-items: baseline;
-  justify-content: flex-end;
   gap: 0.4rem;
   font-size: 0.9375rem;
   line-height: 1.2;
   color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
 .pay svg {
@@ -84,10 +78,6 @@
   color: var(--color-brand-400);
 }
 
-.pay span {
-  white-space: nowrap;
-}
-
 /* Icon and figure travel together under one bubble, still sitting on the line's baseline. */
 .pay-figure {
   display: inline-flex;
@@ -96,36 +86,139 @@
   cursor: help;
 }
 
-@media (width < 48rem) {
-  :host {
-    gap: 0.5rem 1rem;
-    padding: 1rem 1.1rem;
-  }
-
-  .pay {
-    grid-column: 2;
-    justify-content: flex-start;
-  }
-}
-
 .rule {
-  grid-column: 1 / -1;
   height: 1px;
-  margin: 0.4rem 0 0;
+  margin: 1.25rem 0 1rem;
   border: 0;
   background: var(--color-edge);
 }
 
-/* The count on the left, the squad gauge on the right. */
-.tally {
-  grid-column: 1 / -1;
+/* ---------- One band per operator ---------- */
+
+.rungs {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem 0.6rem;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-.tally b {
+/* On the day's card, which spans the column, the six bands run on two columns. */
+:host(.card--wide) .rungs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem 2.75rem;
+}
+
+.rung {
+  display: grid;
+  grid-template-columns: 1.5rem 6.5rem minmax(0, 1fr) 5.25rem;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.face {
+  display: flex;
+  border-radius: 9999px;
+}
+
+.who {
+  overflow: hidden;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A thick flat band on a ground tinted with the challenge's colour, its lead edge lit; full once
+   validated. The notches cut it into units when it counts twelve or fewer. */
+.band {
+  position: relative;
+  height: 0.875rem;
+  min-width: 0;
+  background: color-mix(in srgb, var(--tone) 10%, transparent);
+}
+
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--tone) 62%, transparent);
+  box-shadow: inset -2px 0 0 var(--tone);
+}
+
+.notch {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  translate: -1px 0;
+  background: var(--color-surface-950);
+}
+
+.val {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.val b {
+  font-weight: 600;
+  color: var(--tone);
+}
+
+.val svg {
+  color: var(--tone);
+}
+
+.rung--done .face {
+  box-shadow:
+    0 0 0 2px var(--color-surface-950),
+    0 0 0 4px var(--tone);
+}
+
+.rung--done .who {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.rung--done .fill {
+  background: var(--tone);
+}
+
+/* Not started: the portrait greys out, the figures step back. */
+.rung--idle .face {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.rung--idle .who,
+.rung--idle .val b {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* ---------- The last line: what a caller projects, then the count ---------- */
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  margin-top: 1rem;
+}
+
+.count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.count b {
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 600;
@@ -134,47 +227,68 @@
   color: var(--tone);
 }
 
-.tally b span {
+.count b span {
   color: var(--color-text-muted);
 }
 
-.tally em {
-  flex: 1 1 auto;
-  min-width: 0;
+.count em {
   font-style: normal;
   font-size: 0.9375rem;
-  line-height: 1;
   color: var(--color-text-secondary);
 }
 
-/* One hexagon per operator, lit when validated, the name in a tooltip on hover. */
-.slugs {
-  display: inline-flex;
-  flex: none;
-  gap: 3px;
-  margin-left: auto;
-}
+@media (width < 48rem) {
+  :host {
+    padding: 1.15rem 1.15rem 1.15rem 1.1rem;
+  }
 
-.slugs i {
-  position: relative;
-  display: block;
-  width: 0.9rem;
-  height: 1rem;
-}
+  .head {
+    grid-template-columns: 3rem minmax(0, 1fr);
+  }
 
-.slugs i::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgb(236 232 225 / 12%);
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  transition: filter 0.15s;
-}
+  .pay {
+    grid-column: 2;
+    margin-top: 0.5rem;
+  }
 
-.slugs i.on::before {
-  background: var(--tone);
-}
+  :host(.card--wide) .rungs {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
-.slugs i:hover::before {
-  filter: brightness(1.35);
+  /* On a phone a line would leave the band a few pixels wide: the name and the figures share the
+     top line, the band runs the whole width under them. */
+  .rungs,
+  :host(.card--wide) .rungs {
+    gap: 0.75rem;
+  }
+
+  .rung {
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      'face who val'
+      'face band band';
+    gap: 0.3rem 0.65rem;
+  }
+
+  .face {
+    grid-area: face;
+    align-self: center;
+  }
+
+  .who {
+    grid-area: who;
+  }
+
+  .band {
+    grid-area: band;
+    height: 0.625rem;
+  }
+
+  .val {
+    grid-area: val;
+  }
+
+  :host(.card--dense) .notch {
+    display: none;
+  }
 }

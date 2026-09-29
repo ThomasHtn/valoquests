@@ -94,7 +94,12 @@ export interface TourSampleChallenge {
   readonly survivors: number;
 
   /**
-   * Whether each operator of the sample roster validated it, in roster order.
+   * Value to reach, in the challenge's own unit.
    */
-  readonly done: readonly boolean[];
+  readonly target: number;
+
+  /**
+   * Each operator's progress, in roster order.
+   */
+  readonly progress: readonly number[];
 }

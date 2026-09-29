@@ -470,23 +470,18 @@
         "text": "Les cinq défis de la semaine sont tirés le lundi, un par difficulté. Le défi du jour est retiré chaque matin."
       }
     },
-    "brief": {
-      "eyebrow": "À quoi servent les défis",
-      "rescue": "Un défi validé ramène des blessés à la base. Ils sont acquis quoi qu'il arrive :",
-      "noDamage": "un défi ne fait aucun dégât au gardien,",
-      "sunday": "et rien n'est repris si la semaine tourne mal. Les blessés partent avec le vaisseau le dimanche, sans coûter de composants ni de nourriture.",
-      "rescueOff": "Aucune campagne en cours : un défi validé compte au classement de la semaine,",
-      "pointsOff": "un point par blessé qu'il ramènerait,",
-      "sundayOff": "et rien n'est repris si la semaine tourne mal. Les blessés, eux, attendent la prochaine campagne."
-    },
     "daily": {
       "title": "Le défi du jour",
       "strip": "Les sept jours de la semaine",
       "key": "Défi du jour",
-      "closed": "{{weekday}} {{date}}, journée close",
+      "keyOn": "Défi du {{weekday}} {{date}}",
+      "endsIn": "Se termine dans",
+      "closedDay": "Journée close",
+      "countdownAria": "Temps restant avant minuit",
       "tipAhead": "Le défi du {{weekday}} sera tiré le matin même.",
       "tipMissing": "Aucun défi n'a été tiré le {{weekday}}.",
       "tipNotYet": "Le défi du jour n'est pas encore tiré.",
+      "tipNamed": "{{name}} : {{tip}}",
       "tipNone": "Aucun opérateur sur {{total}} n'a accompli le défi du {{weekday}}.",
       "tipNoneToday": "Aucun opérateur sur {{total}} n'a accompli le défi du jour pour l'instant.",
       "tipDone": {
@@ -499,20 +494,18 @@
       }
     },
     "card": {
-      "perOperator": "par opérateur",
+      "perOperator": "/ Opé.",
       "competitiveOnly": "Compétitif uniquement",
       "woundedTooltip": {
-        "one": "Chaque opérateur qui valide ce défi ramène {{count}} blessé à la base.",
-        "other": "Chaque opérateur qui valide ce défi ramène {{count}} blessés à la base."
+        "one": "Chaque opérateur qui valide ce défi ramène {{count}} blessé à la base, quoi qu'il arrive au gardien.",
+        "other": "Chaque opérateur qui valide ce défi ramène {{count}} blessés à la base, quoi qu'il arrive au gardien."
       },
       "pointsTooltip": {
         "one": "Chaque opérateur qui valide ce défi marque {{count}} point au classement.",
         "other": "Chaque opérateur qui valide ce défi marque {{count}} points au classement."
       },
-      "validated": {
-        "one": "a validé",
-        "other": "ont validé"
-      },
+      "finished": "terminé",
+      "progress": "Progression de chaque opérateur",
       "squadAria": "{{done}} opérateurs sur {{total}} ont validé ce défi."
     },
     "weekly": {
@@ -535,7 +528,7 @@
   },
   "common": {
     "week": {
-      "timeLabel": "Temps restant",
+      "timeLabel": "Clôture dans",
       "timeRemaining": "{{days}}j {{hours}}h"
     },
     "challenge": {
@@ -787,6 +780,25 @@
       "planet": "Planète {{index}} sur {{weeks}} · {{category}}",
       "planetAria": "{{planet}}, la planète de la semaine {{week}}. Des marques ambre à sa surface tiennent lieu des {{wounded}} blessés, et la percée dans ses lignes atteint {{percent}} %."
     },
+    "tabs": {
+      "aria": "Sections de la vue d'ensemble",
+      "challenges": {
+        "label": "Défis",
+        "badge": "{{done}}/{{total}} aujourd'hui"
+      },
+      "contributions": {
+        "label": "Contributions",
+        "badge": "{{active}}/{{total}} actifs"
+      },
+      "matches": {
+        "label": "Parties",
+        "badge": "{{count}} aujourd'hui"
+      },
+      "campaign": {
+        "label": "Campagne",
+        "badge": "étage {{done}}/{{total}}"
+      }
+    },
     "report": {
       "countdownAria": "Temps restant avant l'extraction de dimanche",
       "hp": "PV",
@@ -832,17 +844,8 @@
       "aboardTooltip": "Le plus petit des trois plafonds voisins, multiplié par la percée, plus les blessés déjà acquis par les défis validés : ce qui reviendra dimanche soir."
     },
     "orders": {
-      "title": "Ordre du jour",
       "link": "Les défis",
       "daily": "Défi du jour",
-      "countdownAria": "Temps restant avant minuit",
-      "validatedAria": "{{done}} opérateurs sur {{total}} ont validé le défi du jour.",
-      "noneValidatedYet": "Personne n'a encore validé.",
-      "validatedNames": {
-        "one": "{{names}} a validé.",
-        "other": "{{names}} ont validé."
-      },
-      "perOperator": "par opérateur",
       "noDaily": "Aucun défi tiré pour aujourd'hui.",
       "tally": "Ce que la journée a donné",
       "damageTooltip": "Dégâts infligés au gardien de la semaine par toutes les parties jouées aujourd'hui, après rendements décroissants et bonus de série de chaque opérateur.",
@@ -861,7 +864,6 @@
       "of": "sur {{count}}"
     },
     "squad": {
-      "title": "L'escouade aujourd'hui",
       "link": "Tout le classement",
       "operator": "Opérateur",
       "operatorTooltip": "Le pseudo de l'opérateur, avec son titre s'il en détient un : Champion pour le premier de la semaine passée, sinon Assidu, Éclaireur, Intendant ou Mécano.",

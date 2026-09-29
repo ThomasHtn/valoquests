@@ -13,6 +13,7 @@ import { CAMPAIGN_WEEK_COUNT, CampaignWeek } from '@core/campaign/campaign.model
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
+import { resolveLocale } from '@core/i18n/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PlayersApi } from '@core/players/players-api';
@@ -22,12 +23,14 @@ import { CountUp } from '@shared/count-up/count-up';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionRule } from '@shared/section-rule/section-rule';
+import { formatFigure } from '../leaderboard/leaderboard-board.utils';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { BaseScene } from './base-scene/base-scene';
 import { DayOrders } from './day-orders/day-orders';
 import { ExtractionGauges } from './extraction-gauges/extraction-gauges';
 import { MissionReadings } from './mission-readings/mission-readings';
 import { MissionReport } from './mission-report/mission-report';
+import { OverviewTabs } from './overview-tabs/overview-tabs';
 import {
   Capacity,
   Contribution,
@@ -36,6 +39,8 @@ import {
   FriezeWeek,
   Mission,
   MissionReport as MissionReportView,
+  OverviewTab,
+  OverviewTabKey,
   SquadRow,
 } from './overview.model';
 import {
@@ -46,6 +51,7 @@ import {
   buildMission,
   buildMissionReport,
   buildSquad,
+  buildTabs,
   buildTally,
 } from './overview.utils';
 import { PlanetFigure } from './planet-figure/planet-figure';
@@ -77,6 +83,7 @@ import { readSeenReport, writeSeenReport } from './overview.utils';
     ExtractionGauges,
     MissionReadings,
     MissionReport,
+    OverviewTabs,
     DayOrders,
     SquadSheet,
   ],
@@ -223,7 +230,9 @@ export class Overview {
   protected readonly dailyOrder = computed<DailyOrder | null>(() =>
     buildDailyOrder(
       resourceValue(this.challengesResource, null) ?? null,
-      resourceValue(this.rankingResource, null) ?? null,
+      this.campaign()?.status === 'RUNNING',
+      this.translation.translate('challenges.daily.key'),
+      (amount) => formatFigure(amount, resolveLocale(this.translation.language()), amount >= 1_000),
     ),
   );
 
@@ -240,6 +249,22 @@ export class Overview {
       resourceValue(this.dailyResource, null) ?? null,
       resourceValue(this.todayResource, null) ?? null,
       resourceValue(this.historyResource, null)?.content[0]?.winnerPlayerId ?? null,
+    ),
+  );
+
+  /**
+   * The tab whose panel is on screen under the mission.
+   */
+  protected readonly selectedTab = signal<OverviewTabKey>('challenges');
+
+  protected readonly tabs = computed<readonly OverviewTab[]>(() =>
+    buildTabs(
+      this.dailyOrder(),
+      this.tally(),
+      this.squad(),
+      this.stagesDone(),
+      CAMPAIGN_WEEK_COUNT,
+      (key, params) => this.translation.translate(key, params),
     ),
   );
 

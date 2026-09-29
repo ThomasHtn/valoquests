@@ -1,5 +1,6 @@
 import { ExtractionLimiter, GuardianCategory, WeeklyTitle } from '@core/campaign/campaign.model';
 import { TitleVisual } from '@core/campaign/campaign-visual.utils';
+import { ChallengeCard } from '../challenges/challenges.model';
 
 /**
  * One of the ten weeks on the frieze: its issue, and how far the guardian was pushed.
@@ -478,33 +479,13 @@ export interface Capacity {
 }
 
 /**
- * The day's challenge and who has validated it.
+ * The day's challenge, drawn as the challenges page draws it, and when it closes.
  */
 export interface DailyOrder {
   /**
-   * Translated name of the challenge.
+   * The card, one band per operator.
    */
-  readonly name: string;
-
-  /**
-   * What has to be done, translated.
-   */
-  readonly description: string;
-
-  /**
-   * Survivors the challenge is worth.
-   */
-  readonly survivors: number;
-
-  /**
-   * One entry per operator, lit when validated.
-   */
-  readonly validated: readonly { readonly name: string; readonly done: boolean }[];
-
-  /**
-   * Operators who validated it.
-   */
-  readonly doneCount: number;
+  readonly card: ChallengeCard;
 
   /**
    * Midnight tonight in the campaign time zone, in epoch milliseconds.
@@ -676,4 +657,59 @@ export interface DayPip {
    * Whether the slot is lit.
    */
   readonly on: boolean;
+}
+
+/**
+ * One tab of the overview's tab bar, in bar order.
+ */
+export type OverviewTabKey = 'challenges' | 'contributions' | 'matches' | 'campaign';
+
+/**
+ * Colour family of a tab's badge, taken from the figure it summarises.
+ */
+export type OverviewTabTone = 'cyan' | 'amber' | 'violet' | 'neutral';
+
+/**
+ * One tab as the bar draws it: its name, and the figure its badge carries.
+ */
+export interface OverviewTab {
+  /**
+   * Which tab.
+   */
+  readonly key: OverviewTabKey;
+
+  /**
+   * Translated name of the tab.
+   */
+  readonly label: string;
+
+  /**
+   * Translated figure beside the name, or `null` while its data is missing.
+   */
+  readonly badge: string | null;
+
+  /**
+   * Colour family of the badge, shown only while the tab is selected.
+   */
+  readonly tone: OverviewTabTone;
+
+  /**
+   * Page that expands the tab's panel, or `null` when none does.
+   */
+  readonly link: OverviewTabLink | null;
+}
+
+/**
+ * The way out of a tab's panel to the page that expands it.
+ */
+export interface OverviewTabLink {
+  /**
+   * Route of the page.
+   */
+  readonly route: string;
+
+  /**
+   * Translation key of the link's text.
+   */
+  readonly labelKey: string;
 }

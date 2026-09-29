@@ -1,0 +1,187 @@
+/*
+ * The tabs are the heading of their panel, so they take a section rule's place and look: sitting
+ * on its hairline, left-aligned on the column, the one on screen lit in amber and underlined. Only
+ * that one carries colour, its badge included, so amber always means the selection.
+ */
+
+:host {
+  display: block;
+}
+
+.rule {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 1.5rem;
+
+  /* The hairline, drawn under the tabs so the selected one's underline can cover it. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 1px;
+    background: var(--color-edge);
+  }
+}
+
+/* When the tabs outgrow the column they scroll sideways under the thumb. */
+.bar {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tab {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.5rem 1.125rem;
+  border: 0;
+  background: none;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: color 0.2s;
+
+  /* Flush with the column, like a section title. */
+  &:first-child {
+    padding-left: 0;
+  }
+
+  /* Short hairline between tabs, the same edge as the rule beneath. */
+  & + &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 1px;
+    height: 1.25rem;
+    translate: 0 -50%;
+    background: var(--color-edge);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    inset: auto 1.125rem 0;
+    height: 2px;
+    background: transparent;
+  }
+
+  &:first-child::after {
+    left: 0;
+  }
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+}
+
+.tab--on,
+.tab--on:hover {
+  color: var(--color-brand-400);
+
+  &::after {
+    background: var(--color-brand-500);
+  }
+}
+
+.tab-icon {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* Oswald capitals with French accents: line height stays at 1 or above so no accent is clipped. */
+.tab-label {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tab-badge {
+  --tone: var(--color-text-secondary);
+
+  padding: 0.125rem 0.4375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 12%, transparent);
+}
+
+.tab--on .tab-badge--cyan {
+  --tone: var(--color-accent-cyan);
+}
+
+.tab--on .tab-badge--amber {
+  --tone: var(--color-brand-400);
+}
+
+.tab--on .tab-badge--violet {
+  --tone: var(--color-accent-purple);
+}
+
+.rule-link {
+  flex: none;
+  align-self: center;
+}
+
+/* On a phone the link climbs above the tabs, right-aligned, and leaves them the whole row. */
+@media (width < 48rem) {
+  .rule {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+  }
+
+  .bar {
+    flex-basis: 100%;
+  }
+
+  .rule-link {
+    order: -1;
+    margin-left: auto;
+  }
+
+  .tab {
+    padding-inline: 0.875rem;
+  }
+
+  .tab:first-child {
+    padding-left: 0;
+  }
+
+  .tab::after {
+    inset-inline: 0.875rem;
+  }
+
+  .tab:first-child::after {
+    left: 0;
+  }
+
+  .tab-label {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab {
+    transition: none;
+  }
+}

@@ -1,0 +1,25 @@
+<div [attr.aria-label]="'challenges.daily.strip' | translate" class="week" role="group">
+  @for (day of days(); track day.index) {
+    <button
+      (click)="selected.set(day.index)"
+      [appTooltip]="day.tip"
+      [attr.aria-label]="day.weekday + ' ' + day.date + ', ' + day.tip"
+      [attr.aria-pressed]="day.drawn ? selected() === day.index : null"
+      [class.day--picked]="selected() === day.index"
+      [class]="'day day--' + day.state"
+      [disabled]="!day.drawn"
+      appTooltipPosition="below"
+      class="focus-ring"
+      type="button"
+    >
+      <span aria-hidden="true" class="day-name">{{ day.weekday }} {{ day.date }}</span>
+      <span aria-hidden="true" class="day-score tabular-nums">
+        @if (day.drawn) {
+          {{ day.doneCount }}/{{ day.total }}
+        } @else {
+          —
+        }
+      </span>
+    </button>
+  }
+</div>

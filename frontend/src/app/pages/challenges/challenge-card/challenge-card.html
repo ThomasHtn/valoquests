@@ -1,68 +1,89 @@
 @let card = this.card();
 
-<span aria-hidden="true" class="hex-mark clip-hex">
-  <span class="clip-hex">
-    @if (card.mark === 'D') {
-      <svg class="size-5" lucideZap></svg>
-    } @else {
-      {{ card.mark }}
-    }
+<!-- The hexagon stands beside the key line and the name only; what the challenge asks runs
+     below, under the name. -->
+<div class="head">
+  <span aria-hidden="true" class="hex-mark clip-hex">
+    <span class="clip-hex">
+      @if (card.mark === 'D') {
+        <svg class="size-5" lucideZap></svg>
+      } @else {
+        {{ card.mark }}
+      }
+    </span>
   </span>
-</span>
 
-<div class="body">
-  <p class="key label-caption text-2xs">
-    <span>{{ card.kind }}</span>
-    @if (card.aside) {
-      <span class="key-aside">{{ card.aside }}</span>
+  <div class="title">
+    <p class="key label-caption text-2xs">{{ card.kind }}</p>
+    <h3 class="name">{{ card.name }}</h3>
+  </div>
+
+  <!-- The bubble hangs off the figure itself: it is the number the reader questions. -->
+  <p class="pay">
+    @if (card.rescueActive) {
+      <span
+        [appTooltip]="'challenges.card.woundedTooltip' | translate: { count: card.survivors }"
+        class="pay-figure focus-ring"
+        tabindex="0"
+      >
+        <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+        <b class="tabular-nums">+{{ card.survivors }}</b>
+      </span>
+      <span>{{ 'challenges.card.perOperator' | translate }}</span>
+    } @else {
+      <span
+        [appTooltip]="'challenges.card.pointsTooltip' | translate: { count: card.rankingPoints }"
+        class="pay-figure focus-ring"
+        tabindex="0"
+      >
+        <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+        <b class="tabular-nums">+{{ card.rankingPoints }}</b>
+      </span>
     }
   </p>
-  <h3 class="name">{{ card.name }}</h3>
+
   <p class="desc">{{ card.description }}</p>
 </div>
 
-<!-- The bubble hangs off the figure itself, not the whole line: it is the number the reader
-     questions, and it spells out that every operator brings that many back. -->
-<p class="pay">
-  @if (card.rescueActive) {
-    <span
-      [appTooltip]="'challenges.card.woundedTooltip' | translate: { count: card.survivors }"
-      class="pay-figure focus-ring"
-      tabindex="0"
-    >
-      <svg aria-hidden="true" class="size-4" lucideUsers></svg>
-      <b class="tabular-nums">+{{ card.survivors }}</b>
-    </span>
-    <span>{{ 'challenges.card.perOperator' | translate }}</span>
-  } @else {
-    <span
-      [appTooltip]="'challenges.card.pointsTooltip' | translate: { count: card.rankingPoints }"
-      class="pay-figure focus-ring"
-      tabindex="0"
-    >
-      <svg aria-hidden="true" class="size-4" lucideUsers></svg>
-      <b class="tabular-nums">+{{ card.rankingPoints }}</b>
-    </span>
-  }
-</p>
-
 <hr aria-hidden="true" class="rule" />
 
-<p class="tally">
-  <b class="tabular-nums"
-    >{{ card.doneCount }}<span>/{{ card.slots.length }}</span></b
-  >
-  <!-- Zero forced to the plural branch: "0 a validé" reads as an unfinished count. -->
-  <em>{{ 'challenges.card.validated' | translate: { count: card.doneCount || 2 } }}</em>
-  <span
+<!-- One band per operator, the furthest along first. -->
+<ul [attr.aria-label]="'challenges.card.progress' | translate" class="rungs">
+  @for (rung of card.rungs; track rung.playerId) {
+    <li [class.rung--done]="rung.done" [class.rung--idle]="rung.idle" class="rung">
+      <span class="face"><app-avatar [src]="rung.portrait" size="xs" /></span>
+      <span class="who">{{ rung.name }}</span>
+      <span aria-hidden="true" class="band">
+        <span [style.width.%]="rung.fraction * 100" class="fill"></span>
+        @for (notch of notches(); track notch) {
+          <i [style.left.%]="notch" class="notch"></i>
+        }
+      </span>
+      <span class="val tabular-nums">
+        @if (rung.done) {
+          <svg aria-hidden="true" class="size-3" lucideCheck></svg>
+          <span class="sr-only">{{ 'common.challenge.completed' | translate }}</span>
+        }
+        <b>{{ rung.valueLabel }}</b>
+        @if (rung.targetLabel) {
+          / {{ rung.targetLabel }}
+        }
+      </span>
+    </li>
+  }
+</ul>
+
+<div class="foot">
+  <ng-content select="[cardFoot]" />
+  <p
     [attr.aria-label]="
-      'challenges.card.squadAria' | translate: { done: card.doneCount, total: card.slots.length }
+      'challenges.card.squadAria' | translate: { done: card.doneCount, total: card.rungs.length }
     "
-    class="slugs"
-    role="img"
+    class="count"
   >
-    @for (slot of card.slots; track slot.name) {
-      <i [appTooltip]="slot.name" [class.on]="slot.done"></i>
-    }
-  </span>
-</p>
+    <b aria-hidden="true" class="tabular-nums"
+      >{{ card.doneCount }}<span>/{{ card.rungs.length }}</span></b
+    >
+    <em aria-hidden="true">{{ 'challenges.card.finished' | translate }}</em>
+  </p>
+</div>

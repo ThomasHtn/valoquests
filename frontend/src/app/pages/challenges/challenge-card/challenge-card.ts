@@ -1,24 +1,30 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { LucideUsers, LucideZap } from '@lucide/angular';
+import { LucideCheck, LucideUsers, LucideZap } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Avatar } from '@shared/avatar/avatar';
 import { Tooltip } from '@shared/tooltip/tooltip';
+import { MAX_NOTCHED_TARGET, MAX_NOTCHED_TARGET_PHONE } from '../challenges.constants';
 import { ChallengeCard } from '../challenges.model';
 
 /**
- * One challenge: the hexagon, the key line, the name and what it asks, what it brings back per
- * operator, then the rule and the squad gauge.
+ * One challenge: the hexagon beside the key line and the name, what it brings back per operator,
+ * what it asks, then the rule and one band per operator closing toward the target, and the count
+ * of operators who finished it.
  *
- * Shared by the day's drawer and the week's five, so both read as the same object.
+ * Shared by the day's challenge and the week's five, so both read as the same object. A caller
+ * can project a `[cardFoot]` element at the start of the last line, the day's countdown for one.
  */
 @Component({
   selector: 'app-challenge-card',
-  imports: [TranslatePipe, Tooltip, LucideUsers, LucideZap],
+  imports: [TranslatePipe, Tooltip, Avatar, LucideCheck, LucideUsers, LucideZap],
   templateUrl: './challenge-card.html',
   styleUrl: './challenge-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.card--done]': 'allDone()',
+    '[class.card--wide]': 'wide()',
+    '[class.card--dense]': 'dense()',
     '[style.--tone]': 'card().tone',
   },
 })
@@ -26,11 +32,33 @@ export class ChallengeCardView {
   public readonly card = input.required<ChallengeCard>();
 
   /**
-   * Whether every operator validated it: the card then turns green rather than lighting a full
-   * row of hexagons alone.
+   * Whether the card spans the whole column: its bands then run on two columns.
+   */
+  public readonly wide = input(false);
+
+  /**
+   * Whether every operator validated it: the card then turns green.
    */
   protected readonly allDone = computed(() => {
-    const { slots, doneCount } = this.card();
-    return slots.length > 0 && doneCount === slots.length;
+    const { rungs, doneCount } = this.card();
+    return rungs.length > 0 && doneCount === rungs.length;
+  });
+
+  /**
+   * Whether the target counts too many units for a phone's narrower band: its notches are then
+   * dropped there.
+   */
+  protected readonly dense = computed(() => (this.card().target ?? 0) > MAX_NOTCHED_TARGET_PHONE);
+
+  /**
+   * Positions of the notches along a band, in percent: one per unit when the target counts few
+   * of them, none otherwise.
+   */
+  protected readonly notches = computed<readonly number[]>(() => {
+    const target = this.card().target;
+    if (target === null || target < 2 || target > MAX_NOTCHED_TARGET) {
+      return [];
+    }
+    return Array.from({ length: target - 1 }, (_, index) => ((index + 1) / target) * 100);
   });
 }

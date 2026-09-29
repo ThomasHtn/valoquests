@@ -122,6 +122,33 @@ export interface ChallengeProgress extends ChallengeIdentity {
    * Share of the target reached, in percent.
    */
   readonly completionPercentage: number;
+
+  /**
+   * Each active operator's progress, in roster order, past days' challenges included.
+   */
+  readonly players: readonly PlayerChallengeProgress[];
+}
+
+/**
+ * Where one active operator stands on one challenge.
+ *
+ * Mirrors `CurrentChallengesResponse.PlayerProgressResponse` from the backend.
+ */
+export interface PlayerChallengeProgress {
+  /**
+   * Internal identifier of the player, one of {@link CurrentChallenges.roster}.
+   */
+  readonly playerId: number;
+
+  /**
+   * Progress so far, zero while the player has not been evaluated on it.
+   */
+  readonly currentValue: number;
+
+  /**
+   * Whether the player validated it.
+   */
+  readonly completed: boolean;
 }
 
 /**
@@ -139,6 +166,11 @@ export interface RosterPlayer {
    * Name shown across the application.
    */
   readonly displayName: string;
+
+  /**
+   * Agent portrait chosen by the player, or `null` when none was chosen.
+   */
+  readonly portrait: string | null;
 }
 
 /**

@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Provides the collective progress exposed by the current challenges endpoint.
+ * Provides the progress exposed by the current challenges endpoint, collective and per player.
  *
  * <p>Read-only: the weekly pack and the day's challenge are drawn by the recalculation that
  * follows every synchronization and by the daily tick, never by a read. A day whose challenge is
@@ -123,10 +123,13 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             .stream()
             .map(player -> new CurrentChallengesResponse.RosterPlayerResponse(
                 player.getId(),
-                player.getDisplayName()
+                player.getDisplayName(),
+                player.getPortrait()
             ))
             .toList();
-        int totalPlayers = roster.size();
+        List<Long> rosterIds = roster.stream()
+            .map(CurrentChallengesResponse.RosterPlayerResponse::id)
+            .toList();
 
         List<WeeklyChallenge> selections =
             weeklyChallengeRepository.findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(weekStart);
@@ -134,13 +137,13 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
         List<CurrentChallengesResponse.ChallengeProgressResponse> weekly = selections.stream()
             .filter(selection -> selection.getCadence() == ChallengeCadence.WEEKLY)
             .sorted(EASIEST_FIRST)
-            .map(selection -> toResponse(selection, calibration, progressByChallenge, totalPlayers))
+            .map(selection -> toResponse(selection, calibration, progressByChallenge, rosterIds))
             .toList();
 
         List<CurrentChallengesResponse.ChallengeProgressResponse> dailies = selections.stream()
             .filter(selection -> selection.getCadence() == ChallengeCadence.DAILY)
             .sorted(Comparator.comparing(WeeklyChallenge::getDay))
-            .map(selection -> toResponse(selection, calibration, progressByChallenge, totalPlayers))
+            .map(selection -> toResponse(selection, calibration, progressByChallenge, rosterIds))
             .toList();
 
         return new CurrentChallengesResponse(
@@ -179,14 +182,14 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
      * @param selection           selection to convert
      * @param calibration         calibration in force for the week
      * @param progressByChallenge progress rows indexed by selection identifier
-     * @param totalPlayers        number of active players
+     * @param rosterIds           active players, in roster order
      * @return challenge response
      */
     private CurrentChallengesResponse.ChallengeProgressResponse toResponse(
         WeeklyChallenge selection,
         ChallengeCalibration calibration,
         Map<Long, List<PlayerChallengeProgress>> progressByChallenge,
-        int totalPlayers
+        List<Long> rosterIds
     ) {
         Challenge challenge = selection.getChallenge();
         ChallengeDefinition definition = definitionParser.parse(selection);
@@ -195,10 +198,10 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             definitionParser.parse(challenge),
             definition
         );
-        List<Long> completedPlayerIds = completedPlayerIds(
-            progressByChallenge.getOrDefault(selection.getId(), List.of())
-        );
+        List<PlayerChallengeProgress> rows = progressByChallenge.getOrDefault(selection.getId(), List.of());
+        List<Long> completedPlayerIds = completedPlayerIds(rows);
         int completedPlayers = completedPlayerIds.size();
+        int totalPlayers = rosterIds.size();
         double weight = ruleset.challengeWeight(selection.getCadence(), challenge.getDifficulty());
 
         return new CurrentChallengesResponse.ChallengeProgressResponse(
@@ -217,8 +220,41 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             completedPlayers,
             totalPlayers,
             completedPlayerIds,
-            calculateCompletionPercentage(completedPlayers, totalPlayers)
+            calculateCompletionPercentage(completedPlayers, totalPlayers),
+            playerProgress(rows, rosterIds)
         );
+    }
+
+    /**
+     * Lays out every active player's progress on one selection, in roster order.
+     *
+     * <p>A player without a row has not been evaluated on it yet: they stand at zero on it rather
+     * than being absent, so a reader never has to guess who is missing.
+     *
+     * @param progressRows progress rows of the selection
+     * @param rosterIds    active players, in roster order
+     * @return one line per active player
+     */
+    private List<CurrentChallengesResponse.PlayerProgressResponse> playerProgress(
+        List<PlayerChallengeProgress> progressRows,
+        List<Long> rosterIds
+    ) {
+        Map<Long, PlayerChallengeProgress> byPlayer = progressRows.stream()
+            .collect(Collectors.toMap(
+                progress -> progress.getPlayer().getId(),
+                progress -> progress,
+                (first, second) -> first
+            ));
+        return rosterIds.stream()
+            .map(playerId -> {
+                PlayerChallengeProgress progress = byPlayer.get(playerId);
+                return new CurrentChallengesResponse.PlayerProgressResponse(
+                    playerId,
+                    progress == null ? BigDecimal.ZERO : progress.getCurrentValue(),
+                    progress != null && progress.isCompleted()
+                );
+            })
+            .toList();
     }
 
     /**

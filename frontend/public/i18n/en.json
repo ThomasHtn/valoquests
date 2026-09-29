@@ -470,23 +470,18 @@
         "text": "The week's five challenges are drawn on Monday, one per difficulty. The daily challenge is redrawn every morning."
       }
     },
-    "brief": {
-      "eyebrow": "What challenges are for",
-      "rescue": "A validated challenge brings wounded back to the base. They are earned whatever happens:",
-      "noDamage": "a challenge deals no damage to the guardian,",
-      "sunday": "and nothing is taken back if the week goes badly. The wounded leave with the ship on Sunday, at no cost in components or food.",
-      "rescueOff": "No campaign is running: a validated challenge counts toward the weekly ranking,",
-      "pointsOff": "one point per wounded it would bring home,",
-      "sundayOff": "and nothing is taken back if the week goes badly. The wounded themselves wait for the next campaign."
-    },
     "daily": {
       "title": "The daily challenge",
       "strip": "The seven days of the week",
       "key": "Daily challenge",
-      "closed": "{{weekday}} {{date}}, day over",
+      "keyOn": "{{weekday}} {{date}} challenge",
+      "endsIn": "Ends in",
+      "closedDay": "Day closed",
+      "countdownAria": "Time left before midnight",
       "tipAhead": "{{weekday}}'s challenge is drawn that very morning.",
       "tipMissing": "No challenge was drawn on {{weekday}}.",
       "tipNotYet": "Today's challenge is not drawn yet.",
+      "tipNamed": "{{name}}: {{tip}}",
       "tipNone": "No operator out of {{total}} completed {{weekday}}'s challenge.",
       "tipNoneToday": "No operator out of {{total}} has completed today's challenge so far.",
       "tipDone": {
@@ -499,20 +494,18 @@
       }
     },
     "card": {
-      "perOperator": "per operator",
+      "perOperator": "/ op.",
       "competitiveOnly": "Competitive only",
       "woundedTooltip": {
-        "one": "Every operator who validates this challenge brings {{count}} wounded home.",
-        "other": "Every operator who validates this challenge brings {{count}} wounded home."
+        "one": "Every operator who validates this challenge brings {{count}} wounded home, whatever happens to the guardian.",
+        "other": "Every operator who validates this challenge brings {{count}} wounded home, whatever happens to the guardian."
       },
       "pointsTooltip": {
         "one": "Every operator who validates this challenge scores {{count}} ranking point.",
         "other": "Every operator who validates this challenge scores {{count}} ranking points."
       },
-      "validated": {
-        "one": "validated",
-        "other": "validated"
-      },
+      "finished": "done",
+      "progress": "Each operator's progress",
       "squadAria": "{{done}} operators out of {{total}} validated this challenge."
     },
     "weekly": {
@@ -535,7 +528,7 @@
   },
   "common": {
     "week": {
-      "timeLabel": "Time remaining",
+      "timeLabel": "Closes in",
       "timeRemaining": "{{days}}d {{hours}}h"
     },
     "challenge": {
@@ -787,6 +780,25 @@
       "planet": "Planet {{index}} of {{weeks}} · {{category}}",
       "planetAria": "{{planet}}, the planet of week {{week}}. Amber marks on its surface stand for the {{wounded}} wounded, and the breakthrough in its lines reaches {{percent}}%."
     },
+    "tabs": {
+      "aria": "Overview sections",
+      "challenges": {
+        "label": "Challenges",
+        "badge": "{{done}}/{{total}} today"
+      },
+      "contributions": {
+        "label": "Contributions",
+        "badge": "{{active}}/{{total}} active"
+      },
+      "matches": {
+        "label": "Matches",
+        "badge": "{{count}} today"
+      },
+      "campaign": {
+        "label": "Campaign",
+        "badge": "stage {{done}}/{{total}}"
+      }
+    },
     "report": {
       "countdownAria": "Time left before Sunday's extraction",
       "hp": "HP",
@@ -832,17 +844,8 @@
       "aboardTooltip": "The smallest of the three caps beside it, multiplied by the breakthrough, plus the wounded already secured by validated challenges: what comes home on Sunday night."
     },
     "orders": {
-      "title": "Orders of the day",
       "link": "The challenges",
       "daily": "Daily challenge",
-      "countdownAria": "Time left before midnight",
-      "validatedAria": "{{done}} operators out of {{total}} validated the daily challenge.",
-      "noneValidatedYet": "Nobody has validated yet.",
-      "validatedNames": {
-        "one": "{{names}} validated.",
-        "other": "{{names}} validated."
-      },
-      "perOperator": "per operator",
       "noDaily": "No challenge drawn for today.",
       "tally": "What the day gave",
       "damageTooltip": "Damage dealt to the week's guardian by every match played today, after diminishing returns and each operator's streak bonus.",
@@ -861,7 +864,6 @@
       "of": "of {{count}}"
     },
     "squad": {
-      "title": "The squad today",
       "link": "Full leaderboard",
       "operator": "Operator",
       "operatorTooltip": "The operator's name, with their title if they hold one: Champion for last week's winner, otherwise Regular, Scout, Quartermaster or Mechanic.",

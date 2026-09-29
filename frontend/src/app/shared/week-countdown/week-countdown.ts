@@ -24,7 +24,9 @@ import { Translation } from '@core/i18n/translation';
   selector: 'app-week-countdown',
   imports: [TranslatePipe, LucideHourglass],
   templateUrl: './week-countdown.html',
-  host: { class: 'flex items-center gap-2' },
+  // On the baseline, not centred: the monospace label and the Oswald figure have different
+  // metrics, and centring their boxes left the label riding higher than the figure.
+  host: { class: 'flex items-baseline gap-2' },
 })
 export class WeekCountdown {
   /**
@@ -39,7 +41,7 @@ export class WeekCountdown {
   private readonly translation = inject(Translation);
 
   /**
-   * Full "time remaining: 2d 14h" phrase, naming the figure for assistive technology and for the
+   * Full "closes in 2d 14h" phrase, naming the figure for assistive technology and for the
    * viewports where the visible label is dropped.
    */
   protected readonly accessibleLabel = computed(() => {
@@ -55,6 +57,6 @@ export class WeekCountdown {
       hours: remaining.hours,
     });
 
-    return `${label} : ${value}`;
+    return `${label} ${value}`;
   });
 }

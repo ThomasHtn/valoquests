@@ -1,0 +1,53 @@
+<!-- The tabs sit on the hairline a section rule would draw, the panel's page at its trailing end. -->
+<div class="rule">
+  <div [attr.aria-label]="'overview.tabs.aria' | translate" class="bar" role="tablist">
+    @for (tab of tabs(); track tab.key; let index = $index) {
+      <button
+        #tab
+        (click)="select(tab.key, index)"
+        (keydown)="onKeydown($event, index)"
+        [attr.aria-controls]="selected() === tab.key ? panelId() : null"
+        [attr.aria-selected]="selected() === tab.key"
+        [class.tab--on]="selected() === tab.key"
+        [id]="tabId(tab.key)"
+        [tabindex]="selected() === tab.key ? 0 : -1"
+        class="tab focus-ring-inset"
+        role="tab"
+        type="button"
+      >
+        @switch (tab.key) {
+          @case ('challenges') {
+            <svg aria-hidden="true" class="tab-icon" lucideTarget></svg>
+          }
+          @case ('contributions') {
+            <svg aria-hidden="true" class="tab-icon" lucideUserPen></svg>
+          }
+          @case ('matches') {
+            <svg aria-hidden="true" class="tab-icon" lucideRadio></svg>
+          }
+          @case ('campaign') {
+            <svg aria-hidden="true" class="tab-icon" lucideMap></svg>
+          }
+        }
+        <span class="tab-label">{{ tab.label }}</span>
+        @if (tab.badge; as badge) {
+          <span [class]="'tab-badge tab-badge--' + tab.tone">{{ badge }}</span>
+        }
+      </button>
+    }
+  </div>
+
+  @if (selectedLink(); as link) {
+    <a
+      [routerLink]="link.route"
+      class="rule-link group/link focus-ring tracking-label inline-flex items-center gap-2 font-mono text-xs font-medium text-brand-400 uppercase transition-colors hover:text-[#f0c493] hover:underline hover:underline-offset-4"
+    >
+      {{ link.labelKey | translate }}
+      <span
+        aria-hidden="true"
+        class="transition-transform duration-(--duration-base) group-hover/link:translate-x-1"
+        >→</span
+      >
+    </a>
+  }
+</div>

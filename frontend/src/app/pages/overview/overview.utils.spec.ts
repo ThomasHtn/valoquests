@@ -538,73 +538,48 @@ describe('buildDailyOrder', () => {
         totalPlayers: 4,
         completedPlayerIds: [1],
         completionPercentage: 25,
+        players: [],
       },
     ],
   };
 
   it('returns null without a challenge draw', () => {
-    expect(buildDailyOrder(null, null)).toBeNull();
+    expect(buildDailyOrder(null, false, '', String)).toBeNull();
   });
 
   it('returns null when today has no daily challenge', () => {
-    expect(buildDailyOrder({ ...challenges, dailies: [] }, null)).toBeNull();
+    expect(buildDailyOrder({ ...challenges, dailies: [] }, false, '', String)).toBeNull();
   });
 
-  it('marks an operator done once their daily progress line completes', () => {
-    const ranking: CurrentRanking = {
-      weekStart: '2026-01-05',
-      weekEnd: '2026-01-11',
-      today: '2026-01-06',
-      calculatedAt: '2026-01-06T00:10:00Z',
-      ranking: [
-        {
-          position: 1,
-          competing: true,
-          previousPosition: 1,
-          positionVariation: 0,
-          player: {
-            id: 1,
-            displayName: 'Operator',
-            portrait: null,
-            competitiveTier: 'GOLD_1',
-            rankRating: null,
+  it('draws one band per roster operator, the validated first', () => {
+    const order = buildDailyOrder(
+      {
+        ...challenges,
+        roster: [
+          { id: 1, displayName: 'Operator 1', portrait: null },
+          { id: 2, displayName: 'Operator 2', portrait: null },
+        ],
+        dailies: [
+          {
+            ...challenges.dailies[0],
+            players: [
+              { playerId: 1, currentValue: 4, completed: false },
+              { playerId: 2, currentValue: 10, completed: true },
+            ],
           },
-          guardianDamage: 100,
-          food: 10,
-          components: 10,
-          matchCount: 3,
-          activeDays: 1,
-          streakDays: 1,
-          challengePoints: 5,
-          completedChallenges: 1,
-          totalChallenges: 5,
-          completedDailyChallenges: 1,
-          totalPoints: 105,
-          titles: [],
-          challengeProgress: [
-            {
-              id: 9,
-              code: 'DAILY_HEADSHOTS',
-              name: 'Headshot sweep',
-              cadence: 'DAILY',
-              difficulty: null,
-              day: '2026-01-06',
-              metric: 'HEADSHOTS',
-              currentValue: 10,
-              targetValue: 10,
-              unit: 'headshots',
-              completed: true,
-              rankingPoints: 5,
-            },
-          ],
-        },
-      ],
-    };
+        ],
+      },
+      true,
+      'Daily challenge',
+      String,
+    );
 
-    const order = buildDailyOrder(challenges, ranking);
-
-    expect(order?.doneCount).toBe(1);
-    expect(order?.validated).toEqual([{ name: 'Operator', done: true }]);
+    expect(order?.card.doneCount).toBe(1);
+    expect(order?.card.rescueActive).toBe(true);
+    expect(order?.card.rungs.map((rung) => [rung.name, rung.fraction])).toEqual([
+      ['Operator 2', 1],
+      ['Operator 1', 0.4],
+    ]);
   });
 });
 

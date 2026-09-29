@@ -1,5 +1,7 @@
 <!-- One line wherever it fits: on a phone the hairline gives way first; the link only drops under
-     the title, right-aligned, when the title's longest word would otherwise run under it. -->
+     the title, right-aligned, when the title's longest word would otherwise run under it. With
+     `wrapSide`, the phone keeps the hairline to the diamond and the projected content takes the
+     next line: the right-hand group dissolves into the row so its parts can be laid out apart. -->
 <div class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
   <h2
     [id]="headingId()"
@@ -8,16 +10,22 @@
     {{ heading() }}
   </h2>
   <span
+    [class]="wrapSide() ? 'block' : 'hidden sm:block'"
     aria-hidden="true"
-    class="hidden h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent sm:block"
+    class="h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent"
   ></span>
-  <span class="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-x-4 gap-y-1">
+  <span
+    [class]="wrapSide() ? 'max-sm:contents' : ''"
+    class="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-x-4 gap-y-1"
+  >
     @if (side(); as caption) {
       <span
         class="label-caption min-w-0 text-2xs leading-snug text-text-muted max-sm:basis-full sm:text-right"
         >{{ caption }}</span
       >
     }
+    <!-- Anything richer than a caption a section needs beside its heading, the week's days for one. -->
+    <ng-content />
     @if (link(); as route) {
       <a
         [routerLink]="route"

@@ -10,6 +10,7 @@ import { TourVisit } from '@core/tour/tour-visit';
 import { Breakpoint } from '@core/viewport/breakpoint';
 import { ChallengeCardView } from '@pages/challenges/challenge-card/challenge-card';
 import { ChallengeCard } from '@pages/challenges/challenges.model';
+import { buildRungs } from '@pages/challenges/challenges.utils';
 import { Podium } from '@pages/leaderboard/podium/podium';
 import { BaseScene } from '@pages/overview/base-scene/base-scene';
 import { MissionReadings } from '@pages/overview/mission-readings/mission-readings';
@@ -158,15 +159,19 @@ export class Tour {
   protected readonly sampleChallenges = computed<readonly ChallengeCard[]>(() =>
     TOUR_SAMPLE_CHALLENGES.map((challenge) => {
       const visual = resolveDifficultyVisual(challenge.difficulty);
-      const slots = TOUR_SAMPLE_OPERATORS.map((name, index) => ({
-        name,
-        done: challenge.done[index] ?? false,
-      }));
+      const rungs = buildRungs(
+        TOUR_SAMPLE_OPERATORS,
+        challenge.target,
+        (playerId) => {
+          const value = challenge.progress[playerId - 1] ?? 0;
+          return { value, done: value >= challenge.target };
+        },
+        (amount) => String(amount),
+      );
       return {
         tone: visual.tierColor,
         mark: visual.tier,
         kind: this.translation.translate(`common.challengeDifficulty.${challenge.difficulty}`),
-        aside: '',
         name: this.translation.translate(`tour.samples.challenges.${challenge.key}.name`),
         description: this.translation.translate(
           `tour.samples.challenges.${challenge.key}.description`,
@@ -174,8 +179,9 @@ export class Tour {
         survivors: challenge.survivors,
         rankingPoints: 0,
         rescueActive: true,
-        slots,
-        doneCount: slots.filter((slot) => slot.done).length,
+        target: challenge.target,
+        rungs,
+        doneCount: rungs.filter((rung) => rung.done).length,
       };
     }),
   );

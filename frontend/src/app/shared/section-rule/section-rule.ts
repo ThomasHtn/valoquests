@@ -39,4 +39,11 @@ export class SectionRule {
    * Caption on the right, for a section whose heading needs a count beside it.
    */
   public readonly side = input('');
+
+  /**
+   * Whether, on a phone, the projected content drops to a line of its own under the heading while
+   * the hairline stays between the heading and the diamond. The projected element takes that line
+   * itself (`order` and a full `flex-basis` below `sm`).
+   */
+  public readonly wrapSide = input(false);
 }

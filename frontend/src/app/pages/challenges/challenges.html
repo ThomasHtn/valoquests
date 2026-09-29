@@ -1,4 +1,6 @@
-<app-page-header [heading]="'challenges.header.heading' | translate" />
+<app-page-header [heading]="'challenges.header.heading' | translate">
+  <app-week-countdown [remaining]="remaining()" />
+</app-page-header>
 
 <div class="page-body">
   <main class="flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)] pb-20">
@@ -14,35 +16,35 @@
       padding="px-4 py-10 sm:px-6"
     >
       <div class="flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)]">
-        <!-- The briefing: what a challenge is for. The one place on the page where the rule is
-             stated. -->
-        <section aria-labelledby="brief-title" class="brief">
-          <p class="label-caption text-brand-400" id="brief-title">
-            {{ 'challenges.brief.eyebrow' | translate }}
-          </p>
-          <!-- Two readings of the same rule: with a base to bring the wounded to, or, between two
-               campaigns, with only the weekly ranking to count them. -->
-          @if (rescueActive()) {
-            <p class="brief-text">
-              {{ 'challenges.brief.rescue' | translate }}
-              <b>{{ 'challenges.brief.noDamage' | translate }}</b>
-              {{ 'challenges.brief.sunday' | translate }}
-            </p>
-          } @else {
-            <p class="brief-text">
-              {{ 'challenges.brief.rescueOff' | translate }}
-              <b>{{ 'challenges.brief.pointsOff' | translate }}</b>
-              {{ 'challenges.brief.sundayOff' | translate }}
-            </p>
-          }
-        </section>
-
         <section aria-labelledby="daily-title">
           <app-section-rule
             [heading]="'challenges.daily.title' | translate"
+            [wrapSide]="true"
             headingId="daily-title"
-          />
-          <app-daily-frieze [days]="days()" />
+          >
+            <app-daily-week [(selected)]="pickedDay" [days]="days()" />
+          </app-section-rule>
+          @if (dailyCard(); as card) {
+            <app-challenge-card [card]="card" [wide]="true">
+              @if (showingToday()) {
+                <p cardFoot class="ends">
+                  {{ 'challenges.daily.endsIn' | translate }}
+                  <app-countdown
+                    [deadline]="dailyDeadline()"
+                    [label]="'challenges.daily.countdownAria' | translate"
+                    [withDays]="false"
+                    size="sm"
+                  />
+                </p>
+              } @else {
+                <p cardFoot class="ends">{{ 'challenges.daily.closedDay' | translate }}</p>
+              }
+            </app-challenge-card>
+          } @else {
+            <p class="text-lead text-text-secondary">
+              {{ 'challenges.daily.tipNotYet' | translate }}
+            </p>
+          }
         </section>
 
         <section aria-labelledby="weekly-title">

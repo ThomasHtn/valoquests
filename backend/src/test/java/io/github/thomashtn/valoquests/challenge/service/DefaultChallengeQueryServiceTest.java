@@ -126,10 +126,11 @@ class DefaultChallengeQueryServiceTest {
         when(progressRepository
             .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(WEEK_START))
             .thenReturn(List.of(
-                progress(easy, player(3L, PlayerStatus.ACTIVE), true),
-                progress(easy, player(9L, PlayerStatus.INACTIVE), true),
-                progress(easy, player(1L, PlayerStatus.ACTIVE), false),
-                progress(today, player(2L, PlayerStatus.ACTIVE), true)
+                progress(easy, player(3L, PlayerStatus.ACTIVE), true, 3),
+                progress(easy, player(9L, PlayerStatus.INACTIVE), true, 3),
+                progress(easy, player(1L, PlayerStatus.ACTIVE), false, 1),
+                progress(monday, player(4L, PlayerStatus.ACTIVE), false, 2),
+                progress(today, player(2L, PlayerStatus.ACTIVE), true, 1)
             ));
 
         CurrentChallengesResponse response = service.findCurrent();
@@ -142,6 +143,7 @@ class DefaultChallengeQueryServiceTest {
             .extracting(CurrentChallengesResponse.RosterPlayerResponse::id)
             .containsExactly(1L, 2L, 3L, 4L);
         assertThat(response.roster().getFirst().displayName()).isEqualTo("Player 1");
+        assertThat(response.roster().getFirst().portrait()).isEqualTo("Agent 1");
 
         assertThat(response.challenges())
             .extracting(CurrentChallengesResponse.ChallengeProgressResponse::difficulty)
@@ -163,9 +165,23 @@ class DefaultChallengeQueryServiceTest {
         assertThat(easyEntry.totalPlayers()).isEqualTo(4);
         assertThat(easyEntry.completedPlayerIds()).containsExactly(3L);
         assertThat(easyEntry.completionPercentage()).isEqualByComparingTo(BigDecimal.valueOf(25));
+        // One line per active player in roster order, zero for those not evaluated yet.
+        assertThat(easyEntry.players())
+            .extracting(CurrentChallengesResponse.PlayerProgressResponse::playerId)
+            .containsExactly(1L, 2L, 3L, 4L);
+        assertThat(easyEntry.players())
+            .extracting(line -> line.currentValue().intValue())
+            .containsExactly(1, 0, 3, 0);
+        assertThat(easyEntry.players())
+            .extracting(CurrentChallengesResponse.PlayerProgressResponse::completed)
+            .containsExactly(false, false, true, false);
 
         assertThat(response.challenges().getLast().competitiveOnly()).isTrue();
         assertThat(response.challenges().getLast().survivors()).isEqualTo(29);
+
+        // A past day's challenge keeps each player's progress too.
+        CurrentChallengesResponse.ChallengeProgressResponse mondayEntry = response.dailies().getFirst();
+        assertThat(mondayEntry.players().getLast().currentValue()).isEqualByComparingTo(BigDecimal.valueOf(2));
 
         CurrentChallengesResponse.ChallengeProgressResponse todayEntry = response.dailies().getLast();
         assertThat(todayEntry.cadence()).isEqualTo(ChallengeCadence.DAILY);
@@ -202,6 +218,7 @@ class DefaultChallengeQueryServiceTest {
         player.setId(id);
         player.setDisplayName("Player " + id);
         player.setStatus(status);
+        player.setPortrait("Agent " + id);
         return player;
     }
 
@@ -280,17 +297,20 @@ class DefaultChallengeQueryServiceTest {
      * @param selection evaluated selection
      * @param player    player who owns the row
      * @param completed whether the challenge is completed
+     * @param value     progress so far
      * @return progress fixture
      */
     private PlayerChallengeProgress progress(
         WeeklyChallenge selection,
         Player player,
-        boolean completed
+        boolean completed,
+        int value
     ) {
         PlayerChallengeProgress progress = new PlayerChallengeProgress();
         progress.setPlayer(player);
         progress.setWeeklyChallenge(selection);
         progress.setCompleted(completed);
+        progress.setCurrentValue(BigDecimal.valueOf(value));
         return progress;
     }
 }

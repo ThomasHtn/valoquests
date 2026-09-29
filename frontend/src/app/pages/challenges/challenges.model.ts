@@ -2,13 +2,79 @@ import { ChallengeCatalogueEntry } from '@core/challenges/challenge.model';
 import { ChallengeTier } from '@core/challenges/challenge-visual.model';
 
 /**
- * One operator on the squad gauge: a hexagon lit when they validated the challenge.
+ * One operator's line on a challenge card: the portrait, the name, a band closing toward the
+ * target and the figures over it.
  */
-export interface SquadSlot {
+export interface ChallengeRung {
+  /**
+   * Internal identifier of the player.
+   */
+  readonly playerId: number;
+
   /**
    * Operator name.
    */
   readonly name: string;
+
+  /**
+   * Resolved portrait URL, or `null` for the fallback icon.
+   */
+  readonly portrait: string | null;
+
+  /**
+   * Share of the target reached, in [0, 1].
+   */
+  readonly fraction: number;
+
+  /**
+   * Progress so far, formatted.
+   */
+  readonly valueLabel: string;
+
+  /**
+   * Value to reach, formatted, or empty for an open-ended challenge.
+   */
+  readonly targetLabel: string;
+
+  /**
+   * Whether the operator validated it.
+   */
+  readonly done: boolean;
+
+  /**
+   * Whether the operator has not started it yet.
+   */
+  readonly idle: boolean;
+}
+
+/**
+ * One operator of the roster, as the cards line them up.
+ */
+export interface ChallengeOperator {
+  /**
+   * Internal identifier of the player.
+   */
+  readonly playerId: number;
+
+  /**
+   * Operator name.
+   */
+  readonly name: string;
+
+  /**
+   * Resolved portrait URL, or `null` for the fallback icon.
+   */
+  readonly portrait: string | null;
+}
+
+/**
+ * Where one operator stands on one challenge.
+ */
+export interface OperatorProgress {
+  /**
+   * Progress so far, in the challenge's own unit.
+   */
+  readonly value: number;
 
   /**
    * Whether the operator validated it.
@@ -17,15 +83,11 @@ export interface SquadSlot {
 }
 
 /**
- * A challenge as one card shows it, whether the day's or one of the week's five.
- *
- * Everything is already worded: the card only lays it out, so the day's challenge and a weekly
- * one read as the same object with a different key line.
+ * How a card is lit and keyed, the part of it that depends on the draw rather than the challenge.
  */
-export interface ChallengeCard {
+export interface ChallengeLook {
   /**
-   * CSS colour the card is lit from: the tier's accent, cyan for the day's challenge, green for
-   * a closed day.
+   * CSS colour the card is lit from: the tier's accent, or cyan for the day's challenge.
    */
   readonly tone: string;
 
@@ -38,11 +100,29 @@ export interface ChallengeCard {
    * Key line above the name: the difficulty, or "daily challenge".
    */
   readonly kind: string;
+}
+
+/**
+ * A challenge as one card shows it, whether the day's or one of the week's five.
+ *
+ * Everything is already worded: the card only lays it out, so the day's challenge and a weekly
+ * one read as the same object with a different key line.
+ */
+export interface ChallengeCard {
+  /**
+   * CSS colour the card is lit from: the tier's accent, or cyan for the day's challenge.
+   */
+  readonly tone: string;
 
   /**
-   * Second part of the key line, for a closed day: the date and that the day is over.
+   * What the hexagon carries: the tier's numeral, or the bolt of the daily draw (`D`).
    */
-  readonly aside: string;
+  readonly mark: ChallengeTier;
+
+  /**
+   * Key line above the name: the difficulty, or "daily challenge".
+   */
+  readonly kind: string;
 
   /**
    * Translated name.
@@ -58,19 +138,27 @@ export interface ChallengeCard {
    * Wounded one operator brings back by validating it.
    */
   readonly survivors: number;
+
   /**
    * Ranking points it pays, what the card shows while no campaign is running.
    */
   readonly rankingPoints: number;
+
   /**
    * True while a campaign is running: the wounded count is then what the card shows.
    */
   readonly rescueActive: boolean;
 
   /**
-   * One slot per operator.
+   * Value to reach, or `null` for an open-ended challenge: the band gets a notch per unit when
+   * it counts few enough of them.
    */
-  readonly slots: readonly SquadSlot[];
+  readonly target: number | null;
+
+  /**
+   * One line per operator, the furthest along first.
+   */
+  readonly rungs: readonly ChallengeRung[];
 
   /**
    * Operators who validated it.
@@ -103,15 +191,14 @@ export interface DayCell {
   readonly weekday: string;
 
   /**
-   * Day and month, beside the weekday (`4 sept.`).
+   * Day of the month, beside the weekday (`4`).
    */
   readonly date: string;
 
   /**
-   * The day's challenge as a card, or `null` when none was drawn (a day ahead, or a day the tick
-   * missed).
+   * Whether a challenge was drawn that day: never for a day ahead, not for a day the tick missed.
    */
-  readonly card: ChallengeCard | null;
+  readonly drawn: boolean;
 
   /**
    * Operators who validated it.

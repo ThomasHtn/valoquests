@@ -1,5 +1,6 @@
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
+import { ChallengeOperator } from '@pages/challenges/challenges.model';
 import { BoardRow } from '@pages/leaderboard/leaderboard.model';
 import { Capacity, Contribution, Mission } from '@pages/overview/overview.model';
 
@@ -12,9 +13,14 @@ import { TourSampleChallenge, TourSampleMatch } from './tour.model';
  */
 
 /**
- * The sample squad, in the order the challenge slots list them.
+ * The sample squad, in the order the challenge cards list them before sorting by progress.
  */
-export const TOUR_SAMPLE_OPERATORS: readonly string[] = ['Kairo', 'Sable', 'Nova', 'Vex'];
+export const TOUR_SAMPLE_OPERATORS: readonly ChallengeOperator[] = [
+  { playerId: 1, name: 'Kairo', portrait: resolvePlayerAvatarUrl('Neon') },
+  { playerId: 2, name: 'Sable', portrait: resolvePlayerAvatarUrl('Sova') },
+  { playerId: 3, name: 'Nova', portrait: resolvePlayerAvatarUrl('Killjoy') },
+  { playerId: 4, name: 'Vex', portrait: resolvePlayerAvatarUrl('Skye') },
+];
 
 /**
  * One evening of one operator, newest first, as the profile's match history lists it.
@@ -166,9 +172,9 @@ export const TOUR_SAMPLE_CAPACITY: Capacity = {
  * Three of the sample week's five challenges, one tier apart.
  */
 export const TOUR_SAMPLE_CHALLENGES: readonly TourSampleChallenge[] = [
-  { key: 'sharpSight', difficulty: 'NORMAL', survivors: 9, done: [true, true, false, true] },
-  { key: 'fullWeek', difficulty: 'MEDIUM', survivors: 14, done: [true, false, true, false] },
-  { key: 'insatiable', difficulty: 'HARD', survivors: 21, done: [false, false, true, false] },
+  { key: 'sharpSight', difficulty: 'NORMAL', survivors: 9, target: 50, progress: [50, 50, 31, 50] },
+  { key: 'fullWeek', difficulty: 'MEDIUM', survivors: 14, target: 5, progress: [5, 3, 5, 2] },
+  { key: 'insatiable', difficulty: 'HARD', survivors: 21, target: 28, progress: [19, 11, 28, 7] },
 ];
 
 /**

@@ -5,7 +5,6 @@ import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
-import { SectionRule } from '@shared/section-rule/section-rule';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { SquadRow } from '../overview.model';
 import { weekdayInitials } from '../overview.utils';
@@ -21,7 +20,7 @@ import { ChampionBadge } from '@shared/champion-badge/champion-badge';
  */
 @Component({
   selector: 'app-squad-sheet',
-  imports: [TranslatePipe, SectionRule, RouterLink, Avatar, Tooltip, TitleBadge, ChampionBadge],
+  imports: [TranslatePipe, RouterLink, Avatar, Tooltip, TitleBadge, ChampionBadge],
   templateUrl: './squad-sheet.html',
   styleUrl: './squad-sheet.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -196,9 +196,28 @@
         </section>
       }
 
-      <app-day-orders [order]="dailyOrder()" [tally]="tally()" />
+      <!-- The tabs stand as the heading of what follows them, in place of a section rule. -->
+      <div class="flex flex-col gap-7">
+        <app-overview-tabs [(selected)]="selectedTab" [tabs]="tabs()" panelId="overview-panel" />
 
-      <app-squad-sheet [rosterCount]="rosterCount()" [rows]="squad()" />
+        <!-- Interim split until each tab gets its own content: only the blocks that already match
+             a tab are shown. The challenges tab is the day's recap: its challenge and its gains. -->
+        <div
+          [attr.aria-labelledby]="'overview-tab-' + selectedTab()"
+          id="overview-panel"
+          role="tabpanel"
+          tabindex="0"
+        >
+          @switch (selectedTab()) {
+            @case ('challenges') {
+              <app-day-orders [order]="dailyOrder()" [tally]="tally()" />
+            }
+            @case ('contributions') {
+              <app-squad-sheet [rosterCount]="rosterCount()" [rows]="squad()" />
+            }
+          }
+        </div>
+      </div>
     </main>
   </app-resource-state>
 </div>

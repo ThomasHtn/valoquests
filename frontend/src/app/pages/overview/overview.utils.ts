@@ -26,10 +26,14 @@ import {
   MissionReport,
   MissionReportBlow,
   MissionReportChampion,
+  OverviewTab,
+  OverviewTabKey,
   SquadRow,
   StreakPip,
 } from './overview.model';
-import { SEEN_REPORT_KEY } from './overview.constants';
+import { DAILY_TONE } from '../challenges/challenges.constants';
+import { buildChallengeCard, toOperators } from '../challenges/challenges.utils';
+import { OVERVIEW_TABS, SEEN_REPORT_KEY } from './overview.constants';
 
 /**
  * Translates a key, the same shape as `Translation.translate`, kept as a structural type here so
@@ -389,15 +393,19 @@ export function buildContribution(
 }
 
 /**
- * Builds the day's challenge and who has validated it.
+ * Builds the day's challenge card and when it closes.
  *
  * @param challenges - Today's challenge draw, or `null` while unresolved.
- * @param ranking - The current weekly ranking, or `null` while unresolved.
+ * @param rescueActive - Whether a running campaign turns validations into wounded brought home.
+ * @param kind - Key line above the challenge's name.
+ * @param format - Formats a figure for the bands' labels.
  * @returns The order, or `null` when there is no daily to show.
  */
 export function buildDailyOrder(
   challenges: CurrentChallenges | null,
-  ranking: CurrentRanking | null,
+  rescueActive: boolean,
+  kind: string,
+  format: (amount: number) => string,
 ): DailyOrder | null {
   if (!challenges) {
     return null;
@@ -406,22 +414,14 @@ export function buildDailyOrder(
   if (!daily) {
     return null;
   }
-  const validated = (ranking?.ranking ?? [])
-    .filter((entry) => entry.competing)
-    .map((entry) => ({
-      name: entry.player.displayName,
-      done:
-        entry.challengeProgress.find((line) => line.cadence === 'DAILY' && line.id === daily.id)
-          ?.completed ?? false,
-    }))
-    // Validated operators first so the lit hexagons form one unbroken run.
-    .sort((left, right) => Number(right.done) - Number(left.done));
   return {
-    name: daily.name,
-    description: daily.description,
-    survivors: daily.survivors,
-    validated,
-    doneCount: validated.filter((operator) => operator.done).length,
+    card: buildChallengeCard(
+      daily,
+      { tone: DAILY_TONE, mark: 'D', kind },
+      toOperators(challenges.roster),
+      rescueActive,
+      format,
+    ),
     deadline: campaignMidnight(challenges.today, 1).getTime(),
   };
 }
@@ -566,4 +566,41 @@ export function writeSeenReport(weekStart: string): void {
   } catch {
     // Nothing to do: the report will open again next time.
   }
+}
+
+/**
+ * Builds the overview's tab bar: each tab's name and the one figure its badge summarises.
+ *
+ * @param order - The day's challenge, or `null` when none was drawn.
+ * @param tally - What the day has given, or `null` outside a week in progress.
+ * @param squad - The squad sheet, one row per active operator.
+ * @param stagesDone - Rocket stages built, one per guardian defeated.
+ * @param stageCount - Rocket stages a full campaign builds.
+ * @param translate - Resolves a translation key.
+ * @returns The tabs in bar order.
+ */
+export function buildTabs(
+  order: DailyOrder | null,
+  tally: DayTally | null,
+  squad: readonly SquadRow[],
+  stagesDone: number,
+  stageCount: number,
+  translate: Translate,
+): readonly OverviewTab[] {
+  const params: Record<OverviewTabKey, Record<string, number> | null> = {
+    challenges: order ? { done: order.card.doneCount, total: order.card.rungs.length } : null,
+    contributions: tally ? { active: tally.presence, total: tally.roster } : null,
+    matches: { count: squad.reduce((sum, row) => sum + row.matchCount, 0) },
+    campaign: { done: stagesDone, total: stageCount },
+  };
+  return OVERVIEW_TABS.map(({ key, tone, link }) => {
+    const badgeParams = params[key];
+    return {
+      key,
+      tone,
+      link,
+      label: translate(`overview.tabs.${key}.label`),
+      badge: badgeParams === null ? null : translate(`overview.tabs.${key}.badge`, badgeParams),
+    };
+  });
 }

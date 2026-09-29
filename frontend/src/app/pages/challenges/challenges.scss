@@ -1,20 +1,21 @@
-/* The briefing: the rule, stated once. */
-.brief {
-  padding: 1.25rem 1.5rem;
-  background: rgb(236 232 225 / 4%);
-  box-shadow: inset 3px 0 0 var(--color-brand-400);
+/* The day's countdown, at the start of its card's last line. */
+.ends {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
 }
 
-.brief-text {
-  margin-top: 0.7rem;
-  font-size: 1.0625rem;
-  line-height: 1.45;
-  color: var(--color-text-secondary);
+/* A card fills its grid cell, so the two of a row share one height. */
+.weekly > li {
+  display: flex;
 }
 
-.brief-text b {
-  font-weight: 600;
-  color: var(--color-text-primary);
+.weekly app-challenge-card {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* Five, one per difficulty, on two columns. */
