@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { LucideRefreshCw, LucideTrash2 } from '@lucide/angular';
+import { LucideTrash2 } from '@lucide/angular';
 import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminCommandRunner } from '@core/admin/admin-command-runner';
@@ -48,7 +48,6 @@ import { LiveCampaign } from './admin-campaigns.model';
     Button,
     ConfirmDialog,
     InlineMessage,
-    LucideRefreshCw,
     LucideTrash2,
     PageHeader,
     ResourceState,
