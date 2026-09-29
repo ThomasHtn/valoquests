@@ -27,12 +27,13 @@ import {
   MissionReportBlow,
   MissionReportChampion,
   OverviewTab,
+  OverviewTabKey,
   SquadRow,
 } from './overview.model';
 import { streakBonusOf, streakWeekOf } from '@shared/streak-gauge/streak-gauge.utils';
 import { DAILY_TONE } from '../challenges/challenges.constants';
 import { buildChallengeCard, toOperators } from '../challenges/challenges.utils';
-import { OVERVIEW_TABS, SEEN_REPORT_KEY } from './overview.constants';
+import { FAVORITE_TAB_KEY, OVERVIEW_TABS, SEEN_REPORT_KEY } from './overview.constants';
 
 /**
  * Translates a key, the same shape as `Translation.translate`, kept as a structural type here so
@@ -531,6 +532,33 @@ export function writeSeenReport(weekStart: string): void {
     localStorage.setItem(SEEN_REPORT_KEY, weekStart);
   } catch {
     // Nothing to do: the report will open again next time.
+  }
+}
+
+/**
+ * The tab the reader pinned as default, or `null`; an unknown value or a storage failure reads as none.
+ */
+export function readFavoriteTab(): OverviewTabKey | null {
+  try {
+    const stored = localStorage.getItem(FAVORITE_TAB_KEY);
+    return OVERVIEW_TABS.find((key) => key === stored) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Remembers the default tab, or forgets it on `null`; storage failures are ignored.
+ */
+export function writeFavoriteTab(key: OverviewTabKey | null): void {
+  try {
+    if (key === null) {
+      localStorage.removeItem(FAVORITE_TAB_KEY);
+    } else {
+      localStorage.setItem(FAVORITE_TAB_KEY, key);
+    }
+  } catch {
+    // Nothing to do: the page opens on its first tab next time.
   }
 }
 

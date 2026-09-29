@@ -60,7 +60,12 @@ import { ScanWires } from './scan-wires';
 import { SquadMatches } from './squad-matches/squad-matches';
 import { SquadSheet } from './squad-sheet/squad-sheet';
 import { FULL_CAMPAIGN_POPULATION } from './overview.constants';
-import { readSeenReport, writeSeenReport } from './overview.utils';
+import {
+  readFavoriteTab,
+  readSeenReport,
+  writeFavoriteTab,
+  writeSeenReport,
+} from './overview.utils';
 
 /**
  * The state of the campaign, at a glance: the base and its rocket, the ten weeks, the mission of
@@ -258,9 +263,14 @@ export class Overview {
   );
 
   /**
+   * The tab the reader pinned to open the page on, or `null` for the first one.
+   */
+  protected readonly favoriteTab = signal<OverviewTabKey | null>(readFavoriteTab());
+
+  /**
    * The tab whose panel is on screen under the mission.
    */
-  protected readonly selectedTab = signal<OverviewTabKey>('challenges');
+  protected readonly selectedTab = signal<OverviewTabKey>(this.favoriteTab() ?? 'challenges');
 
   protected readonly tabs = computed<readonly OverviewTab[]>(() =>
     buildTabs((key, params) => this.translation.translate(key, params)),
@@ -373,6 +383,11 @@ export class Overview {
     this.reportOpen.set(false);
     this.reportOpener?.focus();
     this.reportOpener = null;
+  }
+
+  protected pinTab(key: OverviewTabKey | null): void {
+    this.favoriteTab.set(key);
+    writeFavoriteTab(key);
   }
 
   private buildReport(weekIndex: number | null): MissionReportView | null {

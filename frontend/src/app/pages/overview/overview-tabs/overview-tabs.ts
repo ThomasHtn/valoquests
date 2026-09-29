@@ -6,7 +6,7 @@ import {
   model,
   viewChildren,
 } from '@angular/core';
-import { LucideMap, LucideRadio, LucideSunrise, LucideUserPen } from '@lucide/angular';
+import { LucideMap, LucideRadio, LucideStar, LucideSunrise, LucideUserPen } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { OverviewTab, OverviewTabKey } from '../overview.model';
@@ -15,10 +15,11 @@ import { OverviewTab, OverviewTabKey } from '../overview.model';
  * The overview's tab bar, under the mission. It stands as the heading of its panel, in place of a
  * section rule, its tabs sharing the rule's hairline across the full width.
  * Follows the WAI-ARIA tabs pattern, arrows and Home/End moving the selection along the bar.
+ * The tab on screen carries a star that pins it as the one the page opens on.
  */
 @Component({
   selector: 'app-overview-tabs',
-  imports: [TranslatePipe, LucideMap, LucideRadio, LucideSunrise, LucideUserPen],
+  imports: [TranslatePipe, LucideMap, LucideRadio, LucideStar, LucideSunrise, LucideUserPen],
   templateUrl: './overview-tabs.html',
   styleUrl: './overview-tabs.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +36,11 @@ export class OverviewTabs {
   public readonly selected = model.required<OverviewTabKey>();
 
   /**
+   * The tab the page opens on, or `null` when none is pinned.
+   */
+  public readonly favorite = model<OverviewTabKey | null>(null);
+
+  /**
    * Id of the panel the selected tab controls.
    */
   public readonly panelId = input.required<string>();
@@ -47,6 +53,13 @@ export class OverviewTabs {
 
   protected select(key: OverviewTabKey): void {
     this.selected.set(key);
+  }
+
+  /**
+   * Pins the tab as the default, or unpins it when it already is.
+   */
+  protected toggleFavorite(key: OverviewTabKey): void {
+    this.favorite.set(this.favorite() === key ? null : key);
   }
 
   protected onKeydown(event: KeyboardEvent, index: number): void {

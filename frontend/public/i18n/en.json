@@ -694,6 +694,11 @@
     },
     "tabs": {
       "aria": "Overview sections",
+      "favorite": {
+        "set": "Show this tab by default",
+        "unset": "Stop showing this tab by default",
+        "marker": "default tab"
+      },
       "challenges": {
         "label": "Day"
       },

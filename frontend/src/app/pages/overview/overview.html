@@ -196,7 +196,13 @@
 
       <!-- The tabs stand as the heading of what follows them, in place of a section rule. -->
       <div class="tab-deck flex flex-col gap-7">
-        <app-overview-tabs [(selected)]="selectedTab" [tabs]="tabs()" panelId="overview-panel" />
+        <app-overview-tabs
+          (favoriteChange)="pinTab($event)"
+          [(selected)]="selectedTab"
+          [favorite]="favoriteTab()"
+          [tabs]="tabs()"
+          panelId="overview-panel"
+        />
 
         <!-- The challenges tab is the day's recap: its challenge and its gains. The matches tab lists
              the roster's matches of the day, fetched only once opened. -->

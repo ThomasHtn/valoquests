@@ -694,6 +694,11 @@
     },
     "tabs": {
       "aria": "Sections de la vue d'ensemble",
+      "favorite": {
+        "set": "Afficher cet onglet par défaut",
+        "unset": "Ne plus afficher cet onglet par défaut",
+        "marker": "onglet par défaut"
+      },
       "challenges": {
         "label": "Journée"
       },

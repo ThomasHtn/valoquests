@@ -132,7 +132,7 @@
    validated. The notches cut it into units when it counts twelve or fewer. */
 .band {
   position: relative;
-  height: 0.875rem;
+  height: 1rem;
   min-width: 0;
   background: color-mix(in srgb, var(--tone) 10%, transparent);
   cursor: help;
@@ -334,7 +334,7 @@
 
   .band {
     grid-area: band;
-    height: 0.625rem;
+    height: 0.75rem;
   }
 
   .val {
