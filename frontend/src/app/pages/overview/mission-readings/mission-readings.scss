@@ -306,6 +306,28 @@
   animation: overview-fill var(--duration-gauge) var(--ease-gauge) both;
 }
 
+/* Hovered, the track takes a hard brand ring and its fill a brighter lead edge, as the challenge
+   bands do. */
+.rep-bar--aboard {
+  cursor: help;
+  transition: box-shadow var(--duration-fast) var(--ease-out-quart);
+}
+
+.rep-bar--aboard > i {
+  transition:
+    background-color var(--duration-fast) var(--ease-out-quart),
+    box-shadow var(--duration-fast) var(--ease-out-quart);
+}
+
+.rep-bar--aboard:hover {
+  box-shadow: 0 0 0 1px var(--color-brand-400);
+}
+
+.rep-bar--aboard:hover > i {
+  background: var(--color-brand-400);
+  box-shadow: inset -3px 0 0 var(--color-text-primary);
+}
+
 @keyframes overview-fill {
   from {
     width: 0;
@@ -317,6 +339,11 @@
   .vs-front,
   .vs-cursor {
     animation: none;
+  }
+
+  .rep-bar--aboard,
+  .rep-bar--aboard > i {
+    transition: none;
   }
 }
 

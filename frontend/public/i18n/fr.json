@@ -378,34 +378,37 @@
       "endsIn": "Se termine dans",
       "closedDay": "Journée close",
       "countdownAria": "Temps restant avant minuit",
-      "tipAhead": "Le défi du {{weekday}} sera tiré le matin même.",
-      "tipMissing": "Aucun défi n'a été tiré le {{weekday}}.",
+      "tipUnavailable": "Défi indisponible",
       "tipNotYet": "Le défi du jour n'est pas encore tiré.",
       "tipNamed": "{{name}} : {{tip}}",
-      "tipNone": "Aucun opérateur sur {{total}} n'a accompli le défi du {{weekday}}.",
-      "tipNoneToday": "Aucun opérateur sur {{total}} n'a accompli le défi du jour pour l'instant.",
+      "tipNone": "0 sur {{total}} validé",
       "tipDone": {
-        "one": "{{count}} opérateur sur {{total}} a accompli le défi du {{weekday}}.",
-        "other": "{{count}} opérateurs sur {{total}} ont accompli le défi du {{weekday}}."
-      },
-      "tipDoneToday": {
-        "one": "{{count}} opérateur sur {{total}} a accompli le défi du jour pour l'instant.",
-        "other": "{{count}} opérateurs sur {{total}} ont accompli le défi du jour pour l'instant."
+        "one": "{{count}} sur {{total}} validé",
+        "other": "{{count}} sur {{total}} validés"
       }
     },
     "card": {
       "perOperator": "/ Opé.",
       "competitiveOnly": "Compétitif uniquement",
       "woundedTooltip": {
-        "one": "Chaque opérateur qui valide ce défi ramène {{count}} blessé à la base, quoi qu'il arrive au gardien.",
-        "other": "Chaque opérateur qui valide ce défi ramène {{count}} blessés à la base, quoi qu'il arrive au gardien."
+        "one": "{{count}} blessé ramené par validation",
+        "other": "{{count}} blessés ramenés par validation"
       },
       "pointsTooltip": {
-        "one": "Chaque opérateur qui valide ce défi marque {{count}} point au classement.",
-        "other": "Chaque opérateur qui valide ce défi marque {{count}} points au classement."
+        "one": "{{count}} point de classement par validation",
+        "other": "{{count}} points de classement par validation"
       },
       "finished": "terminé",
       "progress": "Progression de chaque opérateur",
+      "bandTooltip": {
+        "open": {
+          "one": "{{value}} sur {{target}} - {{remaining}} restant",
+          "other": "{{value}} sur {{target}} - {{remaining}} restants"
+        },
+        "done": "{{value}} sur {{target}} - validé",
+        "openEnded": "{{value}} - pas encore validé",
+        "openEndedDone": "{{value}} - validé"
+      },
       "squadAria": "{{done}} opérateurs sur {{total}} ont validé ce défi."
     },
     "weekly": {
@@ -472,7 +475,7 @@
       "NORMAL": "Normal",
       "MEDIUM": "Moyen",
       "HARD": "Difficile",
-      "VERY_HARD": "Très difficile"
+      "VERY_HARD": "Hardcore"
     },
     "cadence": {
       "WEEKLY": "Hebdomadaire",
@@ -715,18 +718,25 @@
       "deadline": "avant l'extraction de dimanche à minuit",
       "aboard": "À bord",
       "aboardUnit": "blessés récupérés",
+      "aboardTooltip": {
+        "one": "{{aboard}} sur {{wounded}} - {{left}} restant",
+        "other": "{{aboard}} sur {{wounded}} - {{left}} restants"
+      },
       "boss": "Boss {{index}}",
       "hpDealt": "PV infligés",
       "hpLeft": "PV restants",
       "down": "Vaincu {{weekday}} à {{time}}",
       "downBy": "Vaincu {{weekday}} à {{time}} par {{name}}",
       "squad": "Escouade",
-      "contributionTooltip": "{{name}} · {{damage}} PV au gardien · {{points}} points de défis · {{total}} de contribution, soit {{percent}} % de l’escouade",
+      "contributionTooltip": "{{name}} : {{damage}} PV, {{points}} pts de défis - {{percent}} % de l’escouade",
       "versus": "VS",
       "of": "parmi",
       "spotted": "repérés sur {{planet}}",
-      "breachTooltip": "Percée : {{percent}} % des PV du gardien déjà retirés par l'escouade. Elle plafonne l'extraction de dimanche.",
-      "hpTooltip": "{{left}} PV restants sur {{total}} au départ"
+      "breachTooltip": "Percée : {{percent}} %",
+      "hpTooltip": {
+        "one": "{{dealt}} sur {{total}} PV - {{left}} restant",
+        "other": "{{dealt}} sur {{total}} PV - {{left}} restants"
+      }
     },
     "capacity": {
       "title": "Capacité d'extraction",

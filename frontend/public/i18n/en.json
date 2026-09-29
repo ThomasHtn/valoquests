@@ -378,34 +378,37 @@
       "endsIn": "Ends in",
       "closedDay": "Day closed",
       "countdownAria": "Time left before midnight",
-      "tipAhead": "{{weekday}}'s challenge is drawn that very morning.",
-      "tipMissing": "No challenge was drawn on {{weekday}}.",
+      "tipUnavailable": "Challenge unavailable",
       "tipNotYet": "Today's challenge is not drawn yet.",
       "tipNamed": "{{name}}: {{tip}}",
-      "tipNone": "No operator out of {{total}} completed {{weekday}}'s challenge.",
-      "tipNoneToday": "No operator out of {{total}} has completed today's challenge so far.",
+      "tipNone": "0 of {{total}} validated",
       "tipDone": {
-        "one": "{{count}} operator out of {{total}} completed {{weekday}}'s challenge.",
-        "other": "{{count}} operators out of {{total}} completed {{weekday}}'s challenge."
-      },
-      "tipDoneToday": {
-        "one": "{{count}} operator out of {{total}} has completed today's challenge so far.",
-        "other": "{{count}} operators out of {{total}} have completed today's challenge so far."
+        "one": "{{count}} of {{total}} validated",
+        "other": "{{count}} of {{total}} validated"
       }
     },
     "card": {
       "perOperator": "/ op.",
       "competitiveOnly": "Competitive only",
       "woundedTooltip": {
-        "one": "Every operator who validates this challenge brings {{count}} wounded home, whatever happens to the guardian.",
-        "other": "Every operator who validates this challenge brings {{count}} wounded home, whatever happens to the guardian."
+        "one": "{{count}} wounded brought home per validation",
+        "other": "{{count}} wounded brought home per validation"
       },
       "pointsTooltip": {
-        "one": "Every operator who validates this challenge scores {{count}} ranking point.",
-        "other": "Every operator who validates this challenge scores {{count}} ranking points."
+        "one": "{{count}} ranking point per validation",
+        "other": "{{count}} ranking points per validation"
       },
       "finished": "done",
       "progress": "Each operator's progress",
+      "bandTooltip": {
+        "open": {
+          "one": "{{value}} of {{target}} - {{remaining}} left",
+          "other": "{{value}} of {{target}} - {{remaining}} left"
+        },
+        "done": "{{value}} of {{target}} - validated",
+        "openEnded": "{{value}} - not validated yet",
+        "openEndedDone": "{{value}} - validated"
+      },
       "squadAria": "{{done}} operators out of {{total}} validated this challenge."
     },
     "weekly": {
@@ -472,7 +475,7 @@
       "NORMAL": "Normal",
       "MEDIUM": "Medium",
       "HARD": "Hard",
-      "VERY_HARD": "Very hard"
+      "VERY_HARD": "Hardcore"
     },
     "cadence": {
       "WEEKLY": "Weekly",
@@ -715,18 +718,25 @@
       "deadline": "before Sunday's extraction at midnight",
       "aboard": "Aboard",
       "aboardUnit": "wounded recovered",
+      "aboardTooltip": {
+        "one": "{{aboard}} of {{wounded}} - {{left}} left",
+        "other": "{{aboard}} of {{wounded}} - {{left}} left"
+      },
       "boss": "Boss {{index}}",
       "hpDealt": "HP dealt",
       "hpLeft": "HP left",
       "down": "Defeated {{weekday}} at {{time}}",
       "downBy": "Defeated {{weekday}} at {{time}} by {{name}}",
       "squad": "Squad",
-      "contributionTooltip": "{{name}} · {{damage}} HP to the guardian · {{points}} challenge points · {{total}} of contribution, {{percent}}% of the squad",
+      "contributionTooltip": "{{name}}: {{damage}} HP, {{points}} challenge pts - {{percent}}% of the squad",
       "versus": "VS",
       "of": "of",
       "spotted": "spotted on {{planet}}",
-      "breachTooltip": "Breakthrough: {{percent}}% of the guardian's HP already taken by the squad. It caps Sunday's extraction.",
-      "hpTooltip": "{{left}} HP left of {{total}} at the start"
+      "breachTooltip": "Breakthrough: {{percent}}%",
+      "hpTooltip": {
+        "one": "{{dealt}} of {{total}} HP - {{left}} left",
+        "other": "{{dealt}} of {{total}} HP - {{left}} left"
+      }
     },
     "capacity": {
       "title": "Extraction capacity",

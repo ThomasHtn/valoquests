@@ -1,6 +1,7 @@
 import { ChallengeProgress, RosterPlayer } from '@core/challenges/challenge.model';
 import { localMidnight } from '@core/date/date-time.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
+import { formatFigure } from '../leaderboard/leaderboard-board.utils';
 import {
   ChallengeCard,
   ChallengeLook,
@@ -44,6 +45,7 @@ export function buildRungs(
         name: operator.name,
         portrait: operator.portrait,
         fraction: done ? 1 : fraction,
+        value,
         valueLabel: format(value),
         targetLabel: target === null ? '' : format(target),
         done,
@@ -53,6 +55,38 @@ export function buildRungs(
     })
     .sort((left, right) => right.rung.fraction - left.rung.fraction || left.index - right.index)
     .map(({ rung }) => rung);
+}
+
+/**
+ * The line a band's tooltip reads: the exact figures its compact labels round, and what remains.
+ *
+ * @param rung - The operator's line.
+ * @param target - Value to reach, or `null` for an open-ended challenge.
+ * @param locale - `Intl` locale the figures are written in.
+ * @param translate - Resolves a `challenges.card.bandTooltip` key with its parameters.
+ * @returns The worded line.
+ */
+export function describeRung(
+  rung: ChallengeRung,
+  target: number | null,
+  locale: string,
+  translate: (key: string, params: Record<string, string | number>) => string,
+): string {
+  const value = formatFigure(rung.value, locale);
+  if (target === null || target <= 0) {
+    return translate(rung.done ? 'openEndedDone' : 'openEnded', { value });
+  }
+  const params = { value, target: formatFigure(target, locale) };
+  if (rung.done) {
+    return translate('done', params);
+  }
+  const remaining = Math.max(0, target - rung.value);
+  // `count` picks the plural branch of the remaining units.
+  return translate('open', {
+    ...params,
+    remaining: formatFigure(remaining, locale),
+    count: remaining,
+  });
 }
 
 /**

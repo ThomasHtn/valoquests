@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { LucideCheck, LucideUsers, LucideZap } from '@lucide/angular';
 
+import { resolveLocale } from '@core/i18n/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { MAX_NOTCHED_TARGET, MAX_NOTCHED_TARGET_PHONE } from '../challenges.constants';
 import { ChallengeCard } from '../challenges.model';
+import { describeRung } from '../challenges.utils';
 
 /**
  * One challenge: the hexagon beside the key line and the name, what it brings back per operator,
@@ -37,6 +40,11 @@ export class ChallengeCardView {
   public readonly wide = input(false);
 
   /**
+   * i18n service wording the bands' tooltips.
+   */
+  private readonly translation = inject(Translation);
+
+  /**
    * Whether every operator validated it: the card then turns green.
    */
   protected readonly allDone = computed(() => {
@@ -60,5 +68,19 @@ export class ChallengeCardView {
       return [];
     }
     return Array.from({ length: target - 1 }, (_, index) => ((index + 1) / target) * 100);
+  });
+
+  /**
+   * One tooltip per band, in the rungs' order: the exact figures behind the compact labels and the
+   * share of the target reached.
+   */
+  protected readonly bandTips = computed<readonly string[]>(() => {
+    const { rungs, target } = this.card();
+    const locale = resolveLocale(this.translation.language());
+    return rungs.map((rung) =>
+      describeRung(rung, target, locale, (key, params) =>
+        this.translation.translate(`challenges.card.bandTooltip.${key}`, params),
+      ),
+    );
   });
 }

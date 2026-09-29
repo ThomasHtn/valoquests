@@ -50,7 +50,6 @@
                           name: share.name,
                           damage: format(share.damage),
                           points: format(share.challengePoints),
-                          total: format(share.total),
                           percent: share.sharePercent,
                         }
                 "
@@ -78,7 +77,12 @@
             [appTooltip]="
               'overview.report.hpTooltip'
                 | translate
-                  : { left: format(mission().hitPointsLeft), total: format(mission().hitPoints) }
+                  : {
+                      dealt: format(hitPointsDealt()),
+                      total: format(mission().hitPoints),
+                      left: format(mission().hitPointsLeft),
+                      count: mission().hitPointsLeft,
+                    }
             "
             class="vs-rest focus-ring"
             tabindex="0"
@@ -117,7 +121,18 @@
             }}</span>
           </span>
         </p>
+        <!-- The figures above already read the same values; the bubble only spells out the rest. -->
         <span
+          [appTooltip]="
+            'overview.report.aboardTooltip'
+              | translate
+                : {
+                    aboard: format(capacity.aboard),
+                    wounded: format(mission().wounded),
+                    left: format(capacity.leftBehind),
+                    count: capacity.leftBehind,
+                  }
+          "
           [style.--lvl]="percent(capacity.aboardFraction) + '%'"
           appInView
           aria-hidden="true"

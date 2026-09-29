@@ -1,15 +1,15 @@
 @if (remaining(); as remaining) {
-  <svg aria-hidden="true" class="size-4 shrink-0 self-center text-text-muted" lucideHourglass></svg>
+  <svg aria-hidden="true" class="size-4 shrink-0 text-text-muted" lucideHourglass></svg>
 
   <!-- Dropped below `md`, where the bar is already holding a burger and a title: the hourglass
        names the figure there, and the accessible name carries the whole phrase throughout. -->
-  <span class="label-caption hidden text-text-muted md:inline">
+  <span class="label-caption hidden text-text-muted [text-box:trim-both_cap_alphabetic] md:inline">
     {{ 'common.week.timeLabel' | translate }}
   </span>
 
   <span
     [attr.aria-label]="accessibleLabel()"
-    class="font-display text-base leading-none font-bold text-brand-500 tabular-nums sm:text-lg"
+    class="font-display text-base leading-none font-bold text-brand-500 tabular-nums [text-box:trim-both_cap_alphabetic] sm:text-lg"
   >
     {{ 'common.week.timeRemaining' | translate: { days: remaining.days, hours: remaining.hours } }}
   </span>

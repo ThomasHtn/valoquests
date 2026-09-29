@@ -27,6 +27,11 @@ export interface ChallengeRung {
   readonly fraction: number;
 
   /**
+   * Progress so far, unformatted, which the band's tooltip spells out exactly.
+   */
+  readonly value: number;
+
+  /**
    * Progress so far, formatted.
    */
   readonly valueLabel: string;

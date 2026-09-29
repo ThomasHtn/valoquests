@@ -170,7 +170,7 @@ export class Challenges {
       const doneCount = daily
         ? current.roster.filter((operator) => daily.completedPlayerIds.includes(operator.id)).length
         : 0;
-      const tip = this.tip(state, daily !== null, doneCount, current.roster.length, isoDate);
+      const tip = this.tip(daily !== null, doneCount, current.roster.length);
       return {
         index,
         state,
@@ -304,26 +304,14 @@ export class Challenges {
     return Math.min(WEEK_DAYS - 1, Math.max(0, offset));
   }
 
-  private tip(
-    state: DayState,
-    drawn: boolean,
-    count: number,
-    total: number,
-    isoDate: string,
-  ): string {
-    const weekday = this.weekday(isoDate, 'long');
+  private tip(drawn: boolean, count: number, total: number): string {
     const t = (key: string, params?: Record<string, string | number>): string =>
       this.translation.translate(`challenges.daily.${key}`, params);
-    if (state === 'ahead') {
-      return t('tipAhead', { weekday });
-    }
+    // A day ahead, a day the tick missed and today before its draw all read the same.
     if (!drawn) {
-      return state === 'now' ? t('tipNotYet') : t('tipMissing', { weekday });
+      return t('tipUnavailable');
     }
-    const today = state === 'now' ? 'Today' : '';
-    return count === 0
-      ? t(`tipNone${today}`, { total, weekday })
-      : t(`tipDone${today}`, { count, total, weekday });
+    return count === 0 ? t('tipNone', { total }) : t('tipDone', { count, total });
   }
 
   private locale(): string {

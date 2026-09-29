@@ -56,25 +56,26 @@
 }
 
 .crow {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 1rem 1.2rem;
-  background: rgb(236 232 225 / 4%);
-  box-shadow: inset 3px 0 0 var(--tone);
-}
-
-.crow-name {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.crow-desc {
+  padding: 1.3rem 1.2rem;
   font-size: 0.9375rem;
   line-height: 1.35;
   color: var(--color-text-secondary);
+  background: rgb(236 232 225 / 4%);
+}
+
+/* No edge at rest, only the group's plate carries the tone; the hovered row takes it back with a
+   tinted ground and brighter text. */
+.crow:hover {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--tone) 10%, transparent);
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .crow {
+    transition:
+      color var(--duration-fast) var(--ease-out-quart),
+      background-color var(--duration-fast) var(--ease-out-quart),
+      box-shadow var(--duration-fast) var(--ease-out-quart);
+  }
 }

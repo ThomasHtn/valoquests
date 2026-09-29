@@ -24,9 +24,9 @@ import { Translation } from '@core/i18n/translation';
   selector: 'app-week-countdown',
   imports: [TranslatePipe, LucideHourglass],
   templateUrl: './week-countdown.html',
-  // On the baseline, not centred: the monospace label and the Oswald figure have different
-  // metrics, and centring their boxes left the label riding higher than the figure.
-  host: { class: 'flex items-baseline gap-2' },
+  // Centred on text boxes trimmed to the cap height: the monospace label and the Oswald figure have
+  // different metrics, so centring their full line boxes, or their baselines, left them offset.
+  host: { class: 'flex items-center gap-2' },
 })
 export class WeekCountdown {
   /**
