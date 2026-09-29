@@ -27,115 +27,141 @@
       </div>
     }
 
-    <!-- The tally, one line per destination, in the icons and colours of the resources. The
-         last line is the one the page lacked: a base eats every day, and it is the only thing
-         in the game that punishes stopping. -->
+    <!-- The tally, as a haul: the blow to the guardian across the column, the base's four flows
+         as tiles, the squad as a row of faces for those who played. The last tile is the one the page lacked: a base
+         eats every day, and it is the only thing in the game that punishes stopping. -->
     @if (tally(); as tally) {
       <div class="day-col">
         <p class="day-cap label-caption text-2xs">
           {{ 'overview.orders.tally' | translate }}
         </p>
 
-        <p class="dl" style="--tone: var(--color-boss-hp-edge)">
-          <svg aria-hidden="true" class="size-4" lucideSkull></svg>
-          <span
-            [appTooltip]="'overview.orders.damageTooltip' | translate"
-            class="dl-key focus-ring"
-            tabindex="0"
-            >{{ bossLabel(tally.weekIndex) }}</span
-          >
-          <span class="dl-val">
-            <b class="dl-fig tabular-nums">{{ signed(-tally.damage) }}</b>
+        <div class="hit" style="--tone: var(--color-boss-hp-edge)">
+          <span aria-hidden="true" class="hit-mark clip-hex"
+            ><span class="clip-hex"><svg class="size-5" lucideSkull></svg></span
+          ></span>
+          <p class="hit-key">
+            <span
+              [appTooltip]="'overview.orders.damageTooltip' | translate"
+              class="hit-name focus-ring"
+              tabindex="0"
+              >{{ bossLabel(tally.weekIndex) }}</span
+            >
+            <span class="hit-caption">{{ 'overview.orders.damageCaption' | translate }}</span>
+          </p>
+          <p class="hit-val">
+            <b class="hit-fig tabular-nums">{{ signed(-tally.damage) }}</b>
             <small>{{ 'overview.report.hp' | translate }}</small>
-          </span>
-        </p>
+          </p>
+        </div>
 
-        <p class="dl" style="--tone: var(--color-accent-cyan)">
-          <svg aria-hidden="true" class="size-4" lucideWrench></svg>
-          <span
-            [appTooltip]="'overview.orders.componentsTooltip' | translate"
-            class="dl-key focus-ring"
-            tabindex="0"
-            >{{ 'common.resource.components' | translate }}</span
-          >
-          <span class="dl-val">
-            <b class="dl-fig tabular-nums">{{ signed(tally.components) }}</b>
-            <small>{{
-              'overview.orders.carryGain' | translate: { count: tally.carryGained }
-            }}</small>
-          </span>
-        </p>
+        <div class="loot">
+          <div class="tile" style="--tone: var(--color-accent-cyan)">
+            <p class="tile-key">
+              <svg aria-hidden="true" class="size-4" lucideWrench></svg>
+              <span
+                [appTooltip]="'overview.orders.componentsTooltip' | translate"
+                class="focus-ring"
+                tabindex="0"
+                >{{ 'common.resource.components' | translate }}</span
+              >
+            </p>
+            <p class="tile-val">
+              <b class="tile-fig tabular-nums">{{ signed(tally.components) }}</b>
+              <span class="gain clip-shear">{{
+                'overview.orders.carryGain' | translate: { count: tally.carryGained }
+              }}</span>
+            </p>
+          </div>
 
-        <p class="dl" style="--tone: var(--color-accent-green)">
-          <svg aria-hidden="true" class="size-4" lucideWheat></svg>
-          <span
-            [appTooltip]="'overview.orders.foodTooltip' | translate"
-            class="dl-key focus-ring"
-            tabindex="0"
-            >{{ 'common.resource.food' | translate }}</span
-          >
-          <span class="dl-val">
-            <b class="dl-fig tabular-nums">{{ signed(tally.food) }}</b>
-            <small>{{
-              'overview.orders.shelterGain' | translate: { count: tally.shelterGained }
-            }}</small>
-          </span>
-        </p>
+          <div class="tile" style="--tone: var(--color-accent-green)">
+            <p class="tile-key">
+              <svg aria-hidden="true" class="size-4" lucideWheat></svg>
+              <span
+                [appTooltip]="'overview.orders.foodTooltip' | translate"
+                class="focus-ring"
+                tabindex="0"
+                >{{ 'common.resource.food' | translate }}</span
+              >
+            </p>
+            <p class="tile-val">
+              <b class="tile-fig tabular-nums">{{ signed(tally.food) }}</b>
+              <span class="gain clip-shear">{{
+                'overview.orders.shelterGain' | translate: { count: tally.shelterGained }
+              }}</span>
+            </p>
+          </div>
 
-        <p class="dl dl--cost" style="--tone: var(--color-accent-green)">
-          <svg aria-hidden="true" class="size-4" lucideBuilding2></svg>
-          <span
-            [appTooltip]="'overview.orders.ateTooltip' | translate"
-            class="dl-key focus-ring"
-            tabindex="0"
-            >{{ 'overview.orders.ate' | translate }}</span
-          >
-          <span class="dl-val">
-            <b class="dl-fig tabular-nums">{{ signed(-tally.upkeep) }}</b>
-            <small>{{
-              'overview.orders.inhabitants' | translate: { count: format(tally.population) }
-            }}</small>
-          </span>
-        </p>
+          <div class="tile" style="--tone: var(--color-brand-400)">
+            <p class="tile-key">
+              <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+              <span
+                [appTooltip]="'overview.orders.populationTooltip' | translate"
+                class="focus-ring"
+                tabindex="0"
+                >{{ 'overview.orders.population' | translate }}</span
+              >
+            </p>
+            <p class="tile-val">
+              <b class="tile-fig tabular-nums">{{ signed(tally.populationChange) }}</b>
+              <small>{{
+                'overview.orders.tonight' | translate: { count: format(tally.population) }
+              }}</small>
+            </p>
+          </div>
 
-        <p class="dl" style="--tone: var(--color-brand-400)">
-          <svg aria-hidden="true" class="size-4" lucideUsers></svg>
-          <span
-            [appTooltip]="'overview.orders.populationTooltip' | translate"
-            class="dl-key focus-ring"
-            tabindex="0"
-            >{{ 'overview.orders.population' | translate }}</span
-          >
-          <span class="dl-val">
-            <b class="dl-fig tabular-nums">{{ signed(tally.populationChange) }}</b>
-          </span>
-        </p>
+          <div class="tile tile--cost" style="--tone: var(--color-text-muted)">
+            <p class="tile-key">
+              <svg aria-hidden="true" class="size-4" lucideBuilding2></svg>
+              <span
+                [appTooltip]="'overview.orders.ateTooltip' | translate"
+                class="focus-ring"
+                tabindex="0"
+                >{{ 'overview.orders.ate' | translate }}</span
+              >
+            </p>
+            <p class="tile-val">
+              <b class="tile-fig tabular-nums">{{ signed(-tally.upkeep) }}</b>
+              <small>{{ 'overview.orders.food' | translate }}</small>
+            </p>
+          </div>
+        </div>
 
-        <p class="dl" style="--tone: var(--color-accent-purple)">
-          <svg aria-hidden="true" class="size-4" lucideUserCheck></svg>
-          <span
-            [appTooltip]="'overview.orders.squadTooltip' | translate"
-            class="dl-key focus-ring"
-            tabindex="0"
-            >{{ 'overview.orders.squad' | translate }}</span
-          >
+        <div class="crew" style="--tone: var(--color-accent-purple)">
+          <p class="tile-key">
+            <svg aria-hidden="true" class="size-4" lucideUserCheck></svg>
+            <span
+              [appTooltip]="'overview.orders.squadTooltip' | translate"
+              class="focus-ring"
+              tabindex="0"
+              >{{ 'overview.orders.squad' | translate }}</span
+            >
+          </p>
           <span
             [attr.aria-label]="
               'overview.orders.presenceAria'
                 | translate: { present: tally.presence, roster: tally.roster }
             "
-            class="pips"
+            class="faces"
             role="img"
           >
             @for (pip of tally.pips; track $index) {
-              <i [appTooltip]="pip.name ?? ''" [class.on]="pip.on"></i>
+              @if (pip.on) {
+                <span
+                  [appTooltipPortrait]="pip.portrait"
+                  [appTooltip]="pip.name ?? ''"
+                  class="face"
+                >
+                  <app-avatar [src]="pip.portrait" size="sm" />
+                </span>
+              }
             }
           </span>
-          <span class="dl-val">
-            <b class="dl-fig tabular-nums">{{ tally.presence }}</b>
+          <p class="crew-val">
+            <b class="tile-fig tabular-nums">{{ tally.presence }}</b>
             <small>{{ 'overview.orders.of' | translate: { count: tally.roster } }}</small>
-          </span>
-        </p>
+          </p>
+        </div>
       </div>
     }
   </div>

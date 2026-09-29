@@ -11,6 +11,7 @@ import {
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { Avatar } from '@shared/avatar/avatar';
 import { Countdown } from '@shared/countdown/countdown';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { ChallengeCardView } from '../../challenges/challenge-card/challenge-card';
@@ -18,12 +19,13 @@ import { DailyOrder, DayTally } from '../overview.model';
 
 /**
  * The orders of the day, in two equal columns: on the left the day's challenge card, on the right
- * what the day has already given.
+ * what the day has already given, as a haul of tiles.
  */
 @Component({
   selector: 'app-day-orders',
   imports: [
     TranslatePipe,
+    Avatar,
     Countdown,
     Tooltip,
     LucideBuilding2,

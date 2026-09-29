@@ -1,6 +1,6 @@
 /* One inner margin for every block, so banner, loot, honours and footer share their edges. */
 .rep {
-  --pad: 2.5rem;
+  --pad: 2rem;
   --tone: var(--color-brand-500);
 
   position: fixed;
@@ -9,11 +9,16 @@
   z-index: 50;
   display: flex;
   flex-direction: column;
-  width: min(52rem, calc(100vw - 2rem));
+  width: min(56rem, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
   translate: -50% -50%;
   background: var(--color-surface-sunken);
   border: 1.5px solid var(--tone);
+}
+
+/* The panel takes focus only to pull it inside the dialog; a ring there would double the frame. */
+.rep:focus {
+  outline: none;
 }
 
 .rep--held {
@@ -27,41 +32,68 @@
   overscroll-behavior: contain;
 }
 
+/* Header: framed icon, title over the week, framed exit. */
 .rep-head {
-  display: flex;
+  display: grid;
   flex: none;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem calc(var(--pad) - 0.5rem) 0.75rem var(--pad);
+  gap: 0.875rem;
+  padding: 0.875rem var(--pad);
+  border-bottom: 1px solid var(--color-edge);
+}
+
+.rep-head-icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--tone);
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+}
+
+.rep-title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
 }
 
 .rep-x {
   display: grid;
-  flex: none;
   place-items: center;
   width: 2.25rem;
   height: 2.25rem;
   color: var(--color-text-secondary);
+  border: 1px solid var(--color-edge);
   cursor: pointer;
+  transition:
+    color 0.15s,
+    background-color 0.15s;
 }
 
 .rep-x:hover {
   color: var(--color-text-primary);
+  background: rgb(236 232 225 / 10%);
 }
 
 /* Verdict. */
 /* Clips the verdict's stamp-in scale, which would otherwise push a horizontal scrollbar. */
 .rep-banner {
   overflow: clip;
-  padding: 2.5rem var(--pad);
+  padding: 1.75rem var(--pad) 1.5rem;
   text-align: center;
   border-bottom: 1px solid var(--color-edge);
 }
 
 .rep-week {
-  min-width: 0;
-  font-size: 1rem;
+  overflow: hidden;
+  font-size: 0.9375rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--color-text-secondary);
 }
 
@@ -72,9 +104,9 @@
 
 .rep-verdict {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 1.4rem + 2vw, 3.25rem);
+  font-size: clamp(2rem, 1.4rem + 1.6vw, 2.75rem);
   font-weight: 700;
-  line-height: 1.05;
+  line-height: 1.1;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-wrap: balance;
@@ -83,8 +115,8 @@
 
 .rep-line {
   max-width: 34rem;
-  margin: 1rem auto 0;
-  font-size: 1.0625rem;
+  margin: 0.625rem auto 0;
+  font-size: 1rem;
   text-wrap: balance;
   color: var(--color-text-secondary);
 }
@@ -122,22 +154,22 @@
 }
 
 .rep-hex--lg {
-  --hex: 4.5rem;
-  --glyph: 1.875rem;
+  --hex: 3.75rem;
+  --glyph: 1.5rem;
 }
 
 /* Loot. */
 .rep-loot {
   display: grid;
-  gap: 2rem;
-  padding: 2.5rem var(--pad) 0;
+  gap: 1.25rem;
+  padding: 1.5rem var(--pad) 0;
 }
 
 .rep-main {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.375rem 1.5rem;
+  gap: 0.25rem 1.25rem;
 }
 
 .rep-main > .rep-hex {
@@ -153,7 +185,7 @@
 
 .rep-main-fig strong {
   font-family: var(--font-display);
-  font-size: 3.25rem;
+  font-size: 2.75rem;
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -169,7 +201,7 @@
   display: grid;
   grid-template-columns: repeat(20, 1fr);
   gap: 3px;
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 .rep-leds i {
@@ -183,7 +215,7 @@
 
 .rep-main-sub {
   grid-column: 2;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   font-size: 0.9375rem;
   color: var(--color-text-muted);
 }
@@ -202,13 +234,19 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.25rem 1rem;
-  padding: 1.125rem 1.25rem;
+  gap: 0.125rem 0.875rem;
+  padding: 0.75rem 1rem;
 }
 
+.rep-gain > .rep-hex {
+  --hex: 2.5rem;
+  --glyph: 1.125rem;
+}
+
+/* The challenge card's treatment: its tint as it lands on the page ground, not on the sunken dialog. */
 .rep-gain {
-  background: rgb(236 232 225 / 4%);
-  border-top: 2px solid currentcolor;
+  background: color-mix(in srgb, var(--color-text-primary) 4%, var(--color-surface-950));
+  box-shadow: inset 3px 0 0 currentcolor;
 }
 
 .rep-gain > .rep-hex,
@@ -218,9 +256,9 @@
 
 .rep-gain strong {
   font-family: var(--font-display);
-  font-size: 1.625rem;
+  font-size: 1.375rem;
   font-weight: 600;
-  line-height: 1.05;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -234,17 +272,17 @@
 /* Honours. */
 .rep-honours {
   display: grid;
-  grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
-  gap: 1rem;
-  padding: 2.5rem var(--pad);
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 1.5rem var(--pad);
 }
 
 .rep-champ {
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: 0.5rem;
-  padding: 1.75rem 1.25rem;
+  gap: 0.375rem;
+  padding: 1rem;
   text-align: center;
   background: rgb(217 149 74 / 8%);
   border: 1px solid rgb(217 149 74 / 45%);
@@ -268,7 +306,7 @@
 
 .rep-champ b {
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: 0.03em;
@@ -293,7 +331,7 @@
 .rep-medals {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.75rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -304,8 +342,8 @@
 }
 
 .rep-medal > .rep-hex {
-  --hex: 3.25rem;
-  --glyph: 1.375rem;
+  --hex: 2.75rem;
+  --glyph: 1.125rem;
 }
 
 .rep-medal em {
@@ -327,7 +365,7 @@
 .rep-holder b {
   overflow: hidden;
   font-family: var(--font-display);
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   font-weight: 500;
   letter-spacing: 0.02em;
   text-overflow: ellipsis;
@@ -349,7 +387,7 @@
 }
 
 .rep-not-frozen {
-  padding: 2.5rem var(--pad);
+  padding: 1.5rem var(--pad);
   color: var(--color-text-muted);
 }
 
@@ -358,7 +396,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  padding: 1.25rem var(--pad);
+  padding: 1rem var(--pad);
   border-top: 1px solid var(--color-edge);
 }
 
@@ -373,30 +411,79 @@
   color: var(--color-text-primary);
 }
 
+/* The fill and notch come from `appButton="primary"`; only its place in the row is set here. */
 .rep-continue {
   flex: none;
   margin-left: auto;
-  padding: 0.75rem 1.5rem;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-surface-sunken);
-  background: var(--color-brand-500);
-  cursor: pointer;
-  clip-path: polygon(
-    0 0,
-    calc(100% - 0.625rem) 0,
-    100% 0.625rem,
-    100% 100%,
-    0.625rem 100%,
-    0 calc(100% - 0.625rem)
-  );
 }
 
-.rep-continue:hover {
-  background: var(--color-brand-400);
+/* Short desktop screens (768px laptops): tighter rhythm so the report still fits without scrolling. */
+@media (width >= 48rem) and (height < 50rem) {
+  .rep-head {
+    padding-block: 0.625rem;
+  }
+
+  .rep-banner {
+    padding-block: 1.125rem 1rem;
+  }
+
+  .rep-verdict {
+    font-size: 2rem;
+  }
+
+  .rep-line {
+    margin-top: 0.375rem;
+  }
+
+  .rep-loot {
+    gap: 1rem;
+    padding-top: 1.125rem;
+  }
+
+  .rep-main-fig strong {
+    font-size: 2.375rem;
+  }
+
+  .rep-gain {
+    padding-block: 0.5rem;
+  }
+
+  .rep-gain > .rep-hex,
+  .rep-medal > .rep-hex {
+    --hex: 2.25rem;
+    --glyph: 1rem;
+  }
+
+  .rep-honours {
+    grid-template-columns: minmax(0, 18.5rem) minmax(0, 1fr);
+    padding-block: 1rem;
+  }
+
+  /* Side by side, the champion no longer outgrows the two rows of medals next to it. */
+  .rep-champ {
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-items: start;
+    column-gap: 0.875rem;
+    padding-inline: 0.875rem;
+    text-align: left;
+  }
+
+  .rep-champ-avatar {
+    grid-row: 1 / span 3;
+  }
+
+  .rep-champ-crown {
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .rep-medal {
+    padding-block: 0.5rem;
+  }
+
+  .rep-foot {
+    padding-block: 0.75rem;
+  }
 }
 
 /* Phone: a full-screen sheet, everything in one column. */
@@ -478,7 +565,6 @@
     animation: rep-stamp 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
   }
 
-  .rep-week,
   .rep-line {
     animation: rep-fade 0.4s 0.3s both;
   }

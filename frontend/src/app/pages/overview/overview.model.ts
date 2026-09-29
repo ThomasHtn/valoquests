@@ -650,6 +650,11 @@ export interface DayPip {
   readonly name: string | null;
 
   /**
+   * Portrait of the operator who played, or `null` for an empty slot or a player without one.
+   */
+  readonly portrait: string | null;
+
+  /**
    * Whether the slot is lit.
    */
   readonly on: boolean;

@@ -243,6 +243,7 @@ export class Overview {
       resourceValue(this.todayResource, null) ?? null,
       this.currentWeek(),
       this.campaign(),
+      resourceValue(this.playersApi.players, []),
     ),
   );
 

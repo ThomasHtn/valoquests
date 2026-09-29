@@ -61,3 +61,18 @@
 .streak-bonus--none {
   color: var(--color-text-muted);
 }
+
+/* Stretched over the width its host is given: the pips spread out up to a measure that keeps them
+   one gauge, the bonus holds the end. */
+:host(.is-fill) {
+  display: block;
+}
+
+:host(.is-fill) .streak-week {
+  flex: 0 1 11rem;
+  justify-content: space-between;
+}
+
+:host(.is-fill) .streak-bonus {
+  margin-left: auto;
+}

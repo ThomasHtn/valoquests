@@ -1,3 +1,5 @@
+import { TooltipIconNode } from './tooltip.model';
+
 /**
  * Silhouette shared by every floating surface that describes the thing under the pointer.
  *
@@ -26,3 +28,23 @@ export const OFFSET = 8;
  * overview blocks answer at the same pace rather than each picking a number.
  */
 export const BLOCK_TOOLTIP_DELAY_MS = 400;
+
+/**
+ * Portrait beside a tooltip's text, cut to the same disc as `app-avatar` everywhere else.
+ */
+export const TOOLTIP_PORTRAIT_CLASS = 'size-9 shrink-0 rounded-full object-cover';
+
+/**
+ * Disc standing in for a missing portrait, matching `app-avatar`'s own fallback.
+ */
+export const TOOLTIP_PORTRAIT_FALLBACK_CLASS =
+  'flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-700 text-text-secondary';
+
+/**
+ * Lucide `user` glyph drawn inside {@link TOOLTIP_PORTRAIT_FALLBACK_CLASS}, built by hand because
+ * the bubble is created outside any component template.
+ */
+export const TOOLTIP_FALLBACK_ICON: readonly TooltipIconNode[] = [
+  { tag: 'path', attributes: { d: 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2' } },
+  { tag: 'circle', attributes: { cx: '12', cy: '7', r: '4' } },
+];

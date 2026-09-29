@@ -15,10 +15,10 @@
 .row-link {
   display: grid;
   grid-template-columns: 2.75rem minmax(0, 1fr);
-  gap: 0.75rem 1rem;
+  gap: 1rem;
   align-items: center;
   min-height: 5.0625rem;
-  padding: 1.125rem 1.25rem;
+  padding: 1.125rem 1rem;
   background: rgb(236 232 225 / 4%);
   transition:
     background-color var(--duration-fast) var(--ease-out-quart),
@@ -103,19 +103,26 @@
   text-transform: uppercase;
 }
 
-/* Tight enough for the four figures to hold one line on a phone. */
+/* Under a light rule and across the whole card, two figures a line like the squad's rows. */
 .cell-figs {
-  grid-column: 2;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-edge);
 }
 
 .cell-fig {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.5rem;
   white-space: nowrap;
+}
+
+/* The gauge at its widest (+10 %) outgrows half a phone's card: it takes its own line. */
+.cell-fig--start {
+  grid-column: 1 / -1;
 }
 
 .cap {
@@ -136,6 +143,17 @@
   font-weight: 600;
 }
 
+/* Wide enough for the six figures on one line. */
+@media (width >= 40rem) {
+  .cell-figs {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  }
+
+  .cell-fig--start {
+    grid-column: auto;
+  }
+}
+
 /* Opens once the name keeps room beside the six figures, like the contribution sheet. */
 @media (width >= 72rem) {
   .head,
@@ -149,6 +167,10 @@
     /* 1.25rem at the breakpoint, where the name keeps its 8rem, up to 2.75rem on a wide screen. */
     column-gap: clamp(1.25rem, 4vw - 1.5rem, 2.75rem);
     align-items: center;
+  }
+
+  .row-link {
+    padding-inline: 1.25rem;
   }
 
   .head {

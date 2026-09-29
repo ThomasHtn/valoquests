@@ -15,39 +15,47 @@
     animate.enter="fx-modal-in"
     animate.leave="fx-modal-out"
     [class.rep--held]="!report.defeated"
-    aria-labelledby="mission-report-verdict"
+    aria-labelledby="mission-report-title mission-report-verdict"
     aria-modal="true"
-    class="rep focus-ring"
+    class="rep"
     role="dialog"
     tabindex="-1"
   >
-    <!-- Fixed head: the week and the close button stay put while the report scrolls below. -->
-    <div class="rep-head">
-      <p class="rep-week">
-        {{
-          'overview.missionReport.week' | translate: { index: report.weekIndex, total: weekCount }
-        }}
-        · <b>{{ report.planetName }}</b>
-      </p>
+    <!-- Fixed header: the report's title and the week it covers, with the one framed exit. -->
+    <header class="rep-head">
+      <span aria-hidden="true" class="rep-head-icon">
+        <svg class="size-4" lucideFileText></svg>
+      </span>
+      <div class="min-w-0">
+        <h2 class="rep-title" id="mission-report-title">
+          {{ 'overview.missionReport.title' | translate }}
+        </h2>
+        <p class="rep-week">
+          {{
+            'overview.missionReport.week' | translate: { index: report.weekIndex, total: weekCount }
+          }}
+          · <b>{{ report.planetName }}</b>
+        </p>
+      </div>
       <button
         (click)="closed.emit()"
         [attr.aria-label]="'overview.missionReport.close' | translate"
-        class="rep-x focus-ring"
+        class="rep-x focus-ring-inset"
         type="button"
       >
-        <svg aria-hidden="true" class="size-5" lucideX></svg>
+        <svg aria-hidden="true" class="size-4" lucideX></svg>
       </button>
-    </div>
+    </header>
 
     <div class="rep-scroll">
       <!-- The verdict, as a game's end screen says it. -->
-      <header class="rep-banner">
-        <h2 class="rep-verdict" id="mission-report-verdict">
+      <div class="rep-banner">
+        <p class="rep-verdict" id="mission-report-verdict">
           {{
             (report.defeated ? 'overview.missionReport.won' : 'overview.missionReport.held')
               | translate
           }}
-        </h2>
+        </p>
         <p class="rep-line">
           @if (report.defeated) {
             @if (report.blow; as blow) {
@@ -69,7 +77,7 @@
             {{ 'overview.missionReport.heldNoLoss' | translate: { percent: report.breachPercent } }}
           }
         </p>
-      </header>
+      </div>
 
       <!-- The loot: the wounded first, the week's harvest after. -->
       <section [attr.aria-label]="'overview.missionReport.loot' | translate" class="rep-loot">
@@ -222,7 +230,12 @@
           }}
         </p>
       }
-      <button (click)="closed.emit()" class="rep-continue focus-ring" type="button">
+      <button
+        appButton="primary"
+        (click)="closed.emit()"
+        class="rep-continue flex min-h-11 items-center justify-center px-6 py-2 text-base font-semibold [--notch:0.5rem]"
+        type="button"
+      >
         {{ 'overview.missionReport.continue' | translate }}
       </button>
     </footer>

@@ -431,12 +431,14 @@ export function buildDailyOrder(
  * @param today - The day in progress, or `null` while unresolved.
  * @param week - The week in progress, or `null` outside one.
  * @param campaign - The campaign, or `null` outside one.
+ * @param players - Tracked players, used to resolve each active operator's portrait.
  * @returns The tally, or `null` while any of the three is missing.
  */
 export function buildTally(
   today: CampaignToday | null,
   week: CampaignWeek | null,
   campaign: Campaign | null,
+  players: readonly PlayerSummary[] = [],
 ): DayTally | null {
   const base = campaign?.base;
   if (!today || !week || !base) {
@@ -454,10 +456,15 @@ export function buildTally(
     populationChange: base.populationChange,
     presence: today.presenceCount,
     roster: today.rosterSize,
-    pips: Array.from({ length: today.rosterSize }, (_, index) => ({
-      name: today.players[index]?.gameName ?? null,
-      on: index < today.presenceCount,
-    })),
+    pips: Array.from({ length: today.rosterSize }, (_, index) => {
+      const player = today.players[index];
+      const summary = player ? players.find((entry) => entry.id === player.playerId) : undefined;
+      return {
+        name: player?.gameName ?? null,
+        portrait: resolvePlayerAvatarUrl(summary?.portrait ?? null),
+        on: index < today.presenceCount,
+      };
+    }),
   };
 }
 

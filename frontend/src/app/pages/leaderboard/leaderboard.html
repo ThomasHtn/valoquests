@@ -199,34 +199,26 @@
            colours. An unranked operator scores nothing by definition: dashes, not zeroes. -->
       <span class="cell-figs">
         <span class="cell-fig">
-          <span class="cap label-caption text-2xs">{{
-            'leaderboard.board.score' | translate
-          }}</span>
+          <span class="cap label-caption">{{ 'leaderboard.board.score' | translate }}</span>
           <span class="fig text-accent-gold">{{
             row.position === null ? '—' : format(row.total)
           }}</span>
         </span>
         <span class="cell-fig">
-          <span class="cap label-caption text-2xs">{{
-            'leaderboard.board.damage' | translate
-          }}</span>
+          <span class="cap label-caption">{{ 'leaderboard.board.damage' | translate }}</span>
           <span class="fig text-boss-hp-edge">{{
             row.position === null ? '—' : format(row.damage)
           }}</span>
         </span>
         <span class="cell-fig">
-          <span class="cap label-caption text-2xs">{{
-            'leaderboard.board.points' | translate
-          }}</span>
+          <span class="cap label-caption">{{ 'leaderboard.board.points' | translate }}</span>
           <span class="fig text-brand-400">{{
             row.position === null ? '—' : format(row.challengePoints)
           }}</span>
         </span>
         <!-- Counted for everyone, ranked or not: validating a challenge does not need a place. -->
         <span class="cell-fig">
-          <span class="cap label-caption text-2xs">{{
-            'leaderboard.board.challenges' | translate
-          }}</span>
+          <span class="cap label-caption">{{ 'leaderboard.board.challenges' | translate }}</span>
           <span class="fig">
             <span
               aria-hidden="true"
@@ -243,20 +235,17 @@
           </span>
         </span>
         <span class="cell-fig">
-          <span class="cap label-caption text-2xs">{{
-            'leaderboard.board.matches' | translate
-          }}</span>
+          <span class="cap label-caption">{{ 'leaderboard.board.matches' | translate }}</span>
           <span class="fig text-text-primary">{{ row.matchCount }}</span>
         </span>
         <!-- The contribution sheet's gauge, so attendance reads the same on both boards. -->
         <span class="cell-fig cell-fig--start">
-          <span class="cap label-caption text-2xs">{{
-            'leaderboard.board.streak' | translate
-          }}</span>
+          <span class="cap label-caption">{{ 'leaderboard.board.streak' | translate }}</span>
           <app-streak-gauge
             [bonusPercent]="row.streak.bonusPercent"
             [days]="row.streak.days"
             [week]="row.streak.week"
+            class="is-fill"
           />
         </span>
       </span>

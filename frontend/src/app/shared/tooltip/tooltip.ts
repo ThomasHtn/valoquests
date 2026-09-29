@@ -1,6 +1,11 @@
 import { Directive, ElementRef, OnDestroy, Renderer2, inject, input, signal } from '@angular/core';
-import { TOOLTIP_SURFACE_CLASS } from './tooltip.constants';
-import { OFFSET } from './tooltip.constants';
+import {
+  OFFSET,
+  TOOLTIP_FALLBACK_ICON,
+  TOOLTIP_PORTRAIT_CLASS,
+  TOOLTIP_PORTRAIT_FALLBACK_CLASS,
+  TOOLTIP_SURFACE_CLASS,
+} from './tooltip.constants';
 import { TooltipPosition } from './tooltip.model';
 import { nextInstanceId } from '@core/dom/instance-id.utils';
 
@@ -70,6 +75,12 @@ export class Tooltip implements OnDestroy {
    * bubble flashes over content the reader was heading for.
    */
   public readonly appTooltipDelay = input(0);
+
+  /**
+   * Portrait drawn before the text, for a tooltip naming a player: a URL, `null` for the generic
+   * fallback disc, or `undefined` (the default) for a text-only bubble.
+   */
+  public readonly appTooltipPortrait = input<string | null | undefined>(undefined);
 
   /**
    * Host element the bubble is positioned against and described by.
@@ -165,11 +176,17 @@ export class Tooltip implements OnDestroy {
     this.renderer.setAttribute(bubble, 'id', this.tooltipId);
     this.renderer.setAttribute(bubble, 'role', 'tooltip');
     this.renderer.setAttribute(bubble, 'popover', 'manual');
-    this.renderer.setProperty(bubble, 'textContent', this.appTooltip());
-    const sizeClass =
+    const portrait = this.appTooltipPortrait();
+    let sizeClass =
       this.appTooltipSize() === 'md'
         ? 'max-w-80 px-4 py-3 text-base'
         : 'max-w-72 px-3 py-2 text-sm';
+    if (portrait === undefined) {
+      this.renderer.setProperty(bubble, 'textContent', this.appTooltip());
+    } else {
+      this.fillWithPortrait(bubble, portrait);
+      sizeClass = 'flex items-center gap-3 py-2 pr-4 pl-2.5 font-display text-base font-semibold';
+    }
     this.renderer.setAttribute(
       bubble,
       'class',
@@ -184,6 +201,69 @@ export class Tooltip implements OnDestroy {
     this.renderer.setAttribute(this.host.nativeElement, 'aria-describedby', this.tooltipId);
     this.bubble.set(bubble);
     this.listenForEscape();
+  }
+
+  /**
+   * Fills the bubble with a portrait disc followed by the text.
+   *
+   * @param bubble - The bubble being built.
+   * @param portrait - Portrait URL, or `null` for the fallback disc.
+   */
+  private fillWithPortrait(bubble: HTMLElement, portrait: string | null): void {
+    const frame = portrait ? this.portraitImage(portrait) : this.portraitFallback();
+    const text = this.renderer.createElement('span') as HTMLElement;
+    this.renderer.setProperty(text, 'textContent', this.appTooltip());
+    this.renderer.appendChild(bubble, frame);
+    this.renderer.appendChild(bubble, text);
+  }
+
+  /**
+   * Builds the portrait image. Decorative: the player's name follows it as text.
+   *
+   * @param portrait - Portrait URL.
+   * @returns The image element.
+   */
+  private portraitImage(portrait: string): HTMLElement {
+    const image = this.renderer.createElement('img') as HTMLElement;
+    this.renderer.setAttribute(image, 'src', portrait);
+    this.renderer.setAttribute(image, 'alt', '');
+    this.renderer.setAttribute(image, 'width', '36');
+    this.renderer.setAttribute(image, 'height', '36');
+    this.renderer.setAttribute(image, 'class', TOOLTIP_PORTRAIT_CLASS);
+    return image;
+  }
+
+  /**
+   * Builds the generic disc shown for a player without a portrait.
+   *
+   * @returns The disc, carrying Lucide's `user` glyph.
+   */
+  private portraitFallback(): HTMLElement {
+    const svgNamespace = 'svg';
+    const disc = this.renderer.createElement('span') as HTMLElement;
+    this.renderer.setAttribute(disc, 'class', TOOLTIP_PORTRAIT_FALLBACK_CLASS);
+    const icon = this.renderer.createElement('svg', svgNamespace) as SVGElement;
+    const iconAttributes: Readonly<Record<string, string>> = {
+      class: 'size-5',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    };
+    for (const [name, value] of Object.entries(iconAttributes)) {
+      this.renderer.setAttribute(icon, name, value);
+    }
+    for (const node of TOOLTIP_FALLBACK_ICON) {
+      const shape = this.renderer.createElement(node.tag, svgNamespace) as SVGElement;
+      for (const [name, value] of Object.entries(node.attributes)) {
+        this.renderer.setAttribute(shape, name, value);
+      }
+      this.renderer.appendChild(icon, shape);
+    }
+    this.renderer.appendChild(disc, icon);
+    return disc;
   }
 
   /**

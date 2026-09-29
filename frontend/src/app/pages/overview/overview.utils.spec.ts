@@ -611,6 +611,35 @@ describe('buildTally', () => {
     expect(tally?.pips.map((pip) => pip.on)).toEqual([true, true, true, false, false]);
   });
 
+  it('names and portrays each operator who played, leaving empty slots blank', () => {
+    const played = {
+      ...today,
+      presenceCount: 1,
+      rosterSize: 2,
+      players: [
+        {
+          playerId: 7,
+          gameName: 'Sable',
+          tagLine: 'EU1',
+          damage: 500,
+          food: 20,
+          components: 10,
+          matchCount: 2,
+          reducedMatchCount: 0,
+          streakDays: 1,
+          streakBonusPercent: 0,
+        },
+      ],
+    };
+
+    const tally = buildTally(played, week(), campaign(), [player({ id: 7, portrait: 'Sova' })]);
+
+    expect(tally?.pips).toEqual([
+      { name: 'Sable', portrait: '/player-avatars/Sova.webp', on: true },
+      { name: null, portrait: null, on: false },
+    ]);
+  });
+
   it('carries the base population change through', () => {
     const tally = buildTally(today, week(), campaign({ base: base({ populationChange: -4 }) }));
 

@@ -10,14 +10,15 @@
   ></div>
 
   <!-- Panel. Outer notch is 0.875rem, matching the cards this dialog is opened from; the inner
-       surfaces below step down to 0.5rem so nested corners stay concentric rather than pinched. -->
+       surfaces below step down to 0.5rem so nested corners stay concentric rather than pinched.
+       It takes focus only to pull it inside the dialog, so it draws no focus ring. -->
   <div
     #panel
     animate.enter="fx-modal-in"
     animate.leave="fx-modal-out"
     [attr.aria-label]="heading()"
     aria-modal="true"
-    class="notch-tr notch-tr-edge focus-ring fixed top-1/2 left-1/2 z-50 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 border border-brand-500/40 bg-surface-sunken p-6 [--notch:0.875rem]"
+    class="notch-tr notch-tr-edge fixed top-1/2 left-1/2 z-50 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 border border-brand-500/40 bg-surface-sunken p-6 outline-none [--notch:0.875rem]"
     role="dialog"
     tabindex="-1"
   >

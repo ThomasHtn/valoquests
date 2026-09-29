@@ -126,14 +126,22 @@
     display: none;
   }
 
+  /* The host is only as wide as the trigger, flush with the bar's trailing gutter: the panel
+     grows leftwards from there to span the content column. */
   .listbox {
     right: 0;
-    left: 0;
+    width: calc(100vw - 2rem);
     min-width: 0;
   }
 
+  /* A fixed winner track keeps the column aligned down the list; the name truncates in it. */
   .option {
-    grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+    grid-template-columns: 2.25rem minmax(0, 1fr) 7rem;
+  }
+
+  .option-span {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .trigger-span {

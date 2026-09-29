@@ -258,7 +258,9 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.5rem 1rem;
-  margin-top: 1rem;
+  /* Pinned to the bottom when a neighbour stretches the card; the padding keeps the minimum gap. */
+  margin-top: auto;
+  padding-top: 1rem;
 }
 
 .count {

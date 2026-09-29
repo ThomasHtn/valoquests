@@ -38,110 +38,201 @@
   color: var(--color-text-muted);
 }
 
-/* The tally: one line per destination, the icon and colour of the resource, its name, what it
-   gained. */
-/* Centred, not on the baseline: the figure and its unit already share theirs inside `.dl-val`,
-   and a baseline row left the label riding high between the rules. */
-.dl {
+/* ---------- The tally, as a haul ---------- */
+
+/* The blow to the guardian, across the column: the day's headline. */
+.hit {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding-block: 0.6rem;
-  border-top: 1px solid var(--color-edge);
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
 }
 
-.dl:first-of-type {
-  border-top: 0;
-  padding-top: 0;
+/* The mission readings' hexagonal mark, one size up. */
+.hit-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.75rem;
+  height: 3.1rem;
+  background: color-mix(in srgb, var(--tone) 55%, transparent);
 }
 
-/* The column's 1.25rem gap would sit above each rule on top of the row's own padding: pull it
-   back so a line is as far from the rule above it as from the one below. */
-.dl + .dl {
-  margin-top: -0.65rem;
-}
-
-.dl > svg {
-  align-self: center;
+.hit-mark > span {
+  display: grid;
+  place-items: center;
+  width: calc(100% - 3px);
+  height: calc(100% - 3px);
+  background: var(--color-surface-950);
   color: var(--tone);
 }
 
-.dl-key {
+.hit-key {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
   min-width: 0;
-  font-size: 1.0625rem;
+}
+
+.hit-name {
+  align-self: flex-start;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.hit-caption {
+  font-size: 0.9375rem;
   color: var(--color-text-secondary);
 }
 
-/* The figure and its unit travel as one word, pushed to the right edge. */
-.dl-val {
+.hit-val {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.75rem;
+  gap: 0.4rem;
   margin-left: auto;
   white-space: nowrap;
 }
 
-.dl-fig {
+.hit-fig {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-accent-red);
+}
+
+.hit-val small,
+.tile-val small,
+.crew-val small {
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+
+/* The base's four flows, on the challenge card's ground: a faint neutral fill held by a rule in
+   the resource's colour. */
+.loot {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem 0.9rem 1.1rem;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
+.tile-key {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
+
+.tile-key > svg {
+  flex: none;
+  color: var(--tone);
+}
+
+/* The figure and what it bought share one line. */
+.tile-val {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.65rem;
+}
+
+.tile-fig {
+  font-family: var(--font-display);
+  font-size: 2.125rem;
   font-weight: 600;
   line-height: 1;
   color: var(--tone);
 }
 
-.dl small {
-  font-size: 0.9375rem;
-  color: var(--color-text-muted);
+/* Capacity bought by the figure beside it, tinted in its resource. */
+.gain {
+  align-self: center;
+  padding: 0.3rem 0.65rem 0.3rem 0.55rem;
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 14%, transparent);
+  --notch: 0.3rem;
 }
 
-/* A cost keeps the colour of its resource — it is food — but not its glow: a "−96" in full green
-   would read as a gain. The sign does the rest. */
-.dl--cost .dl-fig {
+/* A cost reads as a loss, not a gain: rule and figure in grey. The sign does the rest. */
+.tile--cost .tile-fig {
   color: var(--color-text-secondary);
 }
 
-.dl--cost > svg {
-  opacity: 0.55;
-}
-
-/* One hexagon per operator on the roster, lit for those who played. Desktop only: a hover name is
-   unreachable on touch. */
-.pips {
+/* The squad: one face per operator who played today, absentees left out. */
+.crew {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  /* Tall enough to centre its line on the challenge card's last one beside it: the card's 1.35rem
+     bottom padding plus half its 1.625rem countdown line, twice. Faces or not, the height holds. */
+  min-height: 4.325rem;
+  padding: 0.8rem 1.1rem;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
+.faces {
+  display: flex;
+  gap: 6px;
   margin-left: auto;
-  align-self: center;
 }
 
-/* Scoped to desktop: the sibling combinator still matches `.pips` once the phone layout below
-   hides it, which pinned `.dl-val` next to a gauge that was no longer there. */
-@media (width >= 40rem) {
-  .pips + .dl-val {
-    margin-left: 0.5rem;
-  }
+.face {
+  display: block;
+  width: 2.25rem;
+  height: 2.25rem;
 }
 
-.pips i {
-  width: 1.25rem;
-  height: 1.45rem;
-  background: rgb(236 232 225 / 9%);
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+.crew-val {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  white-space: nowrap;
 }
 
-.pips i.on {
-  background: var(--color-brand-500);
+.crew-val .tile-fig {
+  font-size: 1.5rem;
 }
 
-/* Lit pips name their operator in a tooltip. */
-.pips i.on:hover {
-  filter: brightness(1.25);
-}
-
-/* Phone layout of the tally: the hexagon gauge gives way to the plain count beside it, its hover
-   names being unreachable on touch. */
+/* Phone layout: one tile per row, so a figure and its gain keep their line; the faces give way
+   to the count beside them, their hover names being unreachable on touch. */
 @media (width < 40rem) {
-  .pips {
+  .loot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hit-fig {
+    font-size: 2rem;
+  }
+
+  .faces {
     display: none;
+  }
+
+  .crew-val {
+    margin-left: auto;
   }
 }

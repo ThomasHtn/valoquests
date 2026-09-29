@@ -12,6 +12,7 @@ import {
 import {
   LucideBuilding2,
   LucideCrown,
+  LucideFileText,
   LucideFlame,
   LucideTarget,
   LucideUsers,
@@ -25,6 +26,7 @@ import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
+import { Button } from '@shared/button/button';
 import { CountUp } from '@shared/count-up/count-up';
 import { MissionReport as MissionReportView } from '../overview.model';
 import { RESCUE_SEGMENT_COUNT } from './mission-report.constants';
@@ -40,9 +42,11 @@ import { RESCUE_SEGMENT_COUNT } from './mission-report.constants';
   imports: [
     TranslatePipe,
     Avatar,
+    Button,
     CountUp,
     LucideBuilding2,
     LucideCrown,
+    LucideFileText,
     LucideFlame,
     LucideTarget,
     LucideUsers,
