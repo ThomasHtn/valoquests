@@ -622,6 +622,10 @@
       "SKIRMISH": "Skirmish",
       "SWIFTPLAY": "Swiftplay",
       "ESCALATION": "Escalation"
+    },
+    "streak": {
+      "value": "+{{percent}}%",
+      "aria": "{{days}} of 7 days played this week, +{{percent}}% bonus"
     }
   },
   "connectivity": {
@@ -684,22 +688,31 @@
     "board": {
       "label": "The ranking",
       "operator": "Operator",
-      "total": "Total",
-      "totalHelp": "Guardian damage plus the wounded brought home by validated challenges, one point each. The total restarts from zero every Monday.",
+      "score": "Score",
+      "scoreHelp": "Guardian damage plus the wounded brought home by validated challenges, one point each. The score restarts from zero every Monday.",
       "damage": "Damage",
       "points": "Wounded",
       "damageHelp": "The hit points taken from the planet's guardian by the week's matches.",
       "pointsHelp": "The wounded brought home by validated challenges, one point each.",
-      "totalHelpOff": "The week's match value plus the points of validated challenges. No campaign is running: nothing is taken from a guardian. The total restarts from zero every Monday.",
+      "scoreHelpOff": "The week's match value plus the points of validated challenges. No campaign is running: nothing is taken from a guardian. The score restarts from zero every Monday.",
       "damageHelpOff": "The week's match value, counted as damage. No campaign is running: no guardian takes it.",
       "pointsHelpOff": "The points of validated challenges, one per wounded they would bring home in a campaign.",
+      "challenges": "Challenges",
+      "challengesHelp": "Challenges validated this week out of those it offers: the weekly ones plus a daily every day.",
+      "challengesValue": {
+        "one": "{{count}} of {{max}} challenges validated",
+        "other": "{{count}} of {{max}} challenges validated"
+      },
+      "matches": "Matches",
+      "matchesHelp": "Matches played this week, all of them, including those whose yield was reduced.",
+      "streak": "Attendance",
+      "streakHelp": "Days played this week. Each day after the first adds +2% to the day's gains, up to +10%. A closed week only keeps the number of days.",
       "measure": {
         "MECHANIC": "{{value}} components",
         "QUARTERMASTER": "{{value}} food",
         "REGULAR": "{{value}} days played",
         "SCOUT": "{{value}} challenges validated"
       },
-      "progress": "Challenge progress",
       "variation": {
         "up": {
           "one": "{{count}} place gained",
@@ -718,10 +731,7 @@
         "reset": "Reset",
         "resetValue": "Monday"
       },
-      "unranked": "Unranked",
-      "cellTip": "{{name}} · {{current}} of {{target}} · +{{points}} wounded once validated",
-      "cellTipOpen": "{{name}} · {{current}} · +{{points}} wounded once validated",
-      "cellTipDone": "{{name}} · validated · +{{points}} wounded"
+      "unranked": "Unranked"
     },
     "podium": {
       "label": "The week's podium",
@@ -869,8 +879,6 @@
       "operatorTooltip": "The operator's name, with their title if they hold one: Champion for last week's winner, otherwise Regular, Scout, Quartermaster or Mechanic.",
       "streak": "Attendance",
       "streakTooltip": "Days played this week. Each day after the first adds +2% to that day's gains, up to +10%. Resets on Monday.",
-      "streakValue": "+{{percent}}%",
-      "streakAria": "{{days}} of 7 days played this week, +{{percent}}% bonus",
       "damage": "Guardian damage",
       "damageTooltip": "Damage dealt to the week's guardian by the operator today, after diminishing returns and the streak bonus.",
       "componentsTooltip": "Components produced today by the operator, based on each match's mode and outcome, after diminishing returns and the streak bonus.",

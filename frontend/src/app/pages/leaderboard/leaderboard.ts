@@ -1,18 +1,14 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideCheck, LucideChevronDown, LucideChevronUp } from '@lucide/angular';
+import { LucideChevronDown, LucideChevronUp } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT, CampaignHistory, WeeklyTitle } from '@core/campaign/campaign.model';
 import { primaryTitle } from '@core/campaign/campaign-title.utils';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
-import { ChallengesApi } from '@core/challenges/challenges-api';
-import {
-  resolveChallengeMetricLabel,
-  resolveChallengeVisual,
-} from '@core/challenges/challenge-visual.utils';
+import { CHALLENGE_DIFFICULTIES } from '@core/challenges/challenge.model';
 import { WEEK_DAYS } from '@core/date/date-time.constants';
 import { daysBetween } from '@core/date/date-time.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
@@ -23,14 +19,13 @@ import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import {
-  RankingChallengeProgress,
+  DailyRankingEntry,
   RankingEntry,
   RankingHistoryEntry,
   RankingHistoryWeek,
 } from '@core/ranking/ranking.model';
 import { PageHeader } from '@layout/page-header/page-header';
 import { Avatar } from '@shared/avatar/avatar';
-import { ChallengeRing } from '@shared/challenge-ring/challenge-ring';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate';
 import {
@@ -38,25 +33,25 @@ import {
   EmptyReadout,
 } from '@shared/empty-plate/empty-plate.model';
 import { PositionBadge } from '@shared/position-badge/position-badge';
-import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { ResourceState } from '@shared/resource-state/resource-state';
+import { StreakGauge } from '@shared/streak-gauge/streak-gauge';
+import { streakBonusOf, streakWeekOf } from '@shared/streak-gauge/streak-gauge.utils';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import {
-  buildBoardColumns,
-  formatFigure,
   formatWeekSpan,
   placeWeekInCampaign,
   resolveTitleMeasures,
+  weekChallengeCeiling,
 } from './leaderboard-board.utils';
-import { BoardProgress, BoardRow, BoardTitle, BoardWeek, WeekOption } from './leaderboard.model';
+import { BoardRow, BoardStreak, BoardTitle, BoardWeek, WeekOption } from './leaderboard.model';
 import { Podium } from './podium/podium';
 import { WeekPicker } from './week-picker/week-picker';
 
 /**
- * The week's ranking: who stands where, on what, and how far each operator is on every weekly
- * challenge of the board. Closed weeks are browsed back to from the same page, frozen as they
+ * The week's ranking: who stands where, on what, and how many of the week's challenges each
+ * operator validated. Closed weeks are browsed back to from the same page, frozen as they
  * ended.
  *
  * The board is the backend's own order; nothing is re-sorted here.
@@ -70,16 +65,14 @@ import { WeekPicker } from './week-picker/week-picker';
     PageHeader,
     EmptyPlate,
     ResourceState,
+    StreakGauge,
     Avatar,
-    ChallengeRing,
     ChampionBadge,
     PositionBadge,
     Podium,
     TitleBadge,
-    ProgressBar,
     Tooltip,
     WeekPicker,
-    LucideCheck,
     LucideChevronDown,
     LucideChevronUp,
   ],
@@ -92,8 +85,6 @@ export class Leaderboard {
   private readonly rankingApi = inject(RankingApi);
 
   private readonly campaignApi = inject(CampaignApi);
-
-  private readonly challengesApi = inject(ChallengesApi);
 
   private readonly playersApi = inject(PlayersApi);
 
@@ -130,17 +121,9 @@ export class Leaderboard {
   );
 
   /**
-   * What each challenge of the week asks for, by id: the ranking carries a challenge's name and
-   * figures but not its description, which the week's own draw does, dailies included.
+   * Today's line of every operator, the only board that knows which days each one played.
    */
-  private readonly descriptions = computed(() => {
-    const byId = new Map<number, string>();
-    const current = resourceValue(this.challengesApi.current, null);
-    for (const challenge of [...(current?.challenges ?? []), ...(current?.dailies ?? [])]) {
-      byId.set(challenge.id, challenge.description);
-    }
-    return byId;
-  });
+  private readonly daily = computed(() => resourceValue(this.rankingApi.daily, null) ?? null);
 
   /**
    * Portraits by operator: a closed week names its operators but carries no portrait.
@@ -323,6 +306,11 @@ export class Leaderboard {
 
   private liveBoard(entries: readonly RankingEntry[], weekStart: string): BoardWeek {
     const champion = this.championId();
+    const daily = this.daily();
+    // Yesterday's board still answers in the minutes around the Monday rollover: ignore it then.
+    const offset = daily ? daysBetween(weekStart, daily.day) : -1;
+    const today = daily && offset >= 0 && offset < WEEK_DAYS ? daily : null;
+    const days = new Map(today?.ranking.map((line) => [line.playerId, line]) ?? []);
     const rows = entries.map((entry): BoardRow => ({
       playerId: entry.player.id,
       name: entry.player.displayName,
@@ -334,10 +322,10 @@ export class Leaderboard {
       damage: entry.guardianDamage,
       challengePoints: entry.challengePoints,
       title: this.title(entry.titles, resolveTitleMeasures(entry)),
-      // The day's challenge first: it changes every morning, so its column is the one that moves.
-      progress: [...entry.challengeProgress]
-        .sort((a, b) => Number(b.cadence === 'DAILY') - Number(a.cadence === 'DAILY'))
-        .map((progress) => this.progress(progress)),
+      challengesCompleted: entry.completedChallenges + entry.completedDailyChallenges,
+      challengesMax: weekChallengeCeiling(entry.totalChallenges),
+      matchCount: entry.matchCount,
+      streak: this.liveStreak(entry, today?.day ?? null, days.get(entry.player.id)),
     }));
     return this.split(rows, weekStart, true);
   }
@@ -364,9 +352,33 @@ export class Leaderboard {
         REGULAR: entry.streakDays,
         SCOUT: entry.completedChallenges + entry.completedDailyChallenges,
       }),
-      progress: null,
+      challengesCompleted: entry.completedChallenges + entry.completedDailyChallenges,
+      // A closed week keeps no draw size: the selection always holds one challenge per tier.
+      challengesMax: weekChallengeCeiling(CHALLENGE_DIFFICULTIES.length),
+      matchCount: entry.matchCount,
+      streak: { week: null, days: entry.streakDays, bonusPercent: streakBonusOf(entry.streakDays) },
     }));
     return this.split(rows, week.weekStart, false);
+  }
+
+  /**
+   * The contribution sheet's reading of the streak: the days laid out around today, and the bonus
+   * of today's matches, or the one playing would earn while the operator has not played yet.
+   */
+  private liveStreak(
+    entry: RankingEntry,
+    day: string | null,
+    line: DailyRankingEntry | undefined,
+  ): BoardStreak {
+    if (day === null || !line) {
+      return { week: null, days: entry.streakDays, bonusPercent: streakBonusOf(entry.streakDays) };
+    }
+    const days = line.weekPlayedDays.length;
+    return {
+      week: streakWeekOf(day, line.weekPlayedDays),
+      days,
+      bonusPercent: line.matchCount > 0 ? line.streakBonusPercent : streakBonusOf(days + 1),
+    };
   }
 
   private split(rows: readonly BoardRow[], weekStart: string, live: boolean): BoardWeek {
@@ -374,7 +386,6 @@ export class Leaderboard {
       weekStart,
       live,
       weekIndex: this.placeWeek(weekStart).index,
-      columns: buildBoardColumns(rows),
       ranked: rows.filter((row) => row.position !== null),
       unranked: rows.filter((row) => row.position === null),
     };
@@ -402,49 +413,6 @@ export class Leaderboard {
       ...resolveTitleVisual(key),
       measure: value === undefined ? null : this.measure(key, value),
     };
-  }
-
-  private progress(progress: RankingChallengeProgress): BoardProgress {
-    const visual = resolveChallengeVisual(progress.metric, progress.difficulty);
-    const current = this.value(progress.currentValue);
-    const target = progress.targetValue === null ? null : this.value(progress.targetValue);
-    const percent =
-      progress.targetValue !== null && progress.targetValue > 0
-        ? Math.min(100, (progress.currentValue / progress.targetValue) * 100)
-        : progress.completed
-          ? 100
-          : 0;
-    const tipKey = progress.completed ? 'cellTipDone' : target ? 'cellTip' : 'cellTipOpen';
-    const category = resolveChallengeMetricLabel(progress.metric, (key) =>
-      this.translation.translate(key),
-    );
-    const description = this.descriptions().get(progress.id);
-    // The name, then what had to be done: the figures alone do not say what they count.
-    const title = description ? `${progress.name} — ${description}` : progress.name;
-    return {
-      id: progress.id,
-      mark: visual.tier,
-      label: progress.name,
-      name: `${title} · ${category}`,
-      categoryLabel: category,
-      currentValueLabel: current,
-      compactValueLabel: this.value(progress.currentValue, true),
-      targetValueLabel: target,
-      completionPercentage: percent,
-      completed: progress.completed,
-      visual: { iconClass: visual.iconClass, badgeClass: visual.badgeClass },
-      barClass: visual.barClass,
-      tip: this.translation.translate(`leaderboard.board.${tipKey}`, {
-        name: title,
-        current,
-        target: target ?? '',
-        points: progress.rankingPoints,
-      }),
-    };
-  }
-
-  private value(amount: number, compact = false): string {
-    return formatFigure(amount, this.locale(), compact);
   }
 
   private locale(): string {

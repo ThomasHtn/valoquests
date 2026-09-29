@@ -38,6 +38,7 @@ public record RankingHistoryWeekResponse(
      * @param totalPoints              guardian damage plus challenge points
      * @param completedChallenges      weekly challenges validated that week
      * @param completedDailyChallenges daily challenges validated that week
+     * @param matchCount               matches played that week
      * @param activeDays               distinct days with at least one valued match
      * @param streakDays               days played that week
      * @param titles                   honours the player won that week
@@ -52,6 +53,7 @@ public record RankingHistoryWeekResponse(
         int totalPoints,
         int completedChallenges,
         int completedDailyChallenges,
+        int matchCount,
         int activeDays,
         int streakDays,
         List<WeeklyTitle> titles

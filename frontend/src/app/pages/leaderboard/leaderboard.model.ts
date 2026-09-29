@@ -1,7 +1,6 @@
 import { WeeklyTitle } from '@core/campaign/campaign.model';
 import { TitleVisual } from '@core/campaign/campaign-visual.utils';
-import { ChallengeTier } from '@core/challenges/challenge-visual.model';
-import { ChallengeRingCell } from '@shared/challenge-ring/challenge-ring.model';
+import { StreakPip } from '@shared/streak-gauge/streak-gauge.model';
 
 /**
  * A title an operator holds on the board, with the icon and colour it is drawn in.
@@ -20,70 +19,23 @@ export interface BoardTitle extends TitleVisual {
 }
 
 /**
- * One challenge column of a live board: the tier badge the header shows in place of the
- * challenge's name, which would not fit at this width. The name stays one hover away.
+ * An operator's attendance over the week, as the streak gauge draws it.
  */
-export interface BoardColumn {
+export interface BoardStreak {
   /**
-   * Identifier of the challenge.
+   * The week from Monday to Sunday, or `null` when only the count is known (a closed week).
    */
-  readonly id: number;
+  readonly week: readonly StreakPip[] | null;
 
   /**
-   * Tier mark drawn on the badge.
+   * Days of the week played.
    */
-  readonly mark: ChallengeTier;
+  readonly days: number;
 
   /**
-   * Tailwind class of the progress bar.
+   * Streak bonus in percent: today's, or the one playing today would earn while not played yet.
    */
-  readonly barClass: string;
-
-  /**
-   * Tailwind class of the icon.
-   */
-  readonly iconClass: string;
-
-  /**
-   * Tooltip text.
-   */
-  readonly tip: string;
-}
-
-/**
- * One operator's progress toward one weekly challenge: a ring closing toward its target on the
- * wide board, a bar under the name on the narrow one.
- */
-export interface BoardProgress extends ChallengeRingCell {
-  /**
-   * Identifier of the challenge.
-   */
-  readonly id: number;
-
-  /**
-   * Tier mark drawn on the badge.
-   */
-  readonly mark: ChallengeTier;
-
-  /**
-   * The challenge's name alone, as the narrow board lists it.
-   */
-  readonly label: string;
-
-  /**
-   * The name, what had to be done and the metric, as the header's column names it.
-   */
-  readonly name: string;
-
-  /**
-   * Tailwind class of the progress bar.
-   */
-  readonly barClass: string;
-
-  /**
-   * The whole sentence the cell abbreviates: the name, where the operator stands, the wounded.
-   */
-  readonly tip: string;
+  readonly bonusPercent: number;
 }
 
 /**
@@ -143,10 +95,24 @@ export interface BoardRow {
   readonly title: BoardTitle | null;
 
   /**
-   * One cell per weekly challenge of the board, or `null` on a closed week, whose progress was
-   * not kept.
+   * Matches played this week.
    */
-  readonly progress: readonly BoardProgress[] | null;
+  readonly matchCount: number;
+
+  /**
+   * Attendance over the week.
+   */
+  readonly streak: BoardStreak;
+
+  /**
+   * Challenges validated this week, weekly and daily alike.
+   */
+  readonly challengesCompleted: number;
+
+  /**
+   * Challenges the week draws: the weekly ones plus one daily per day.
+   */
+  readonly challengesMax: number;
 }
 
 /**
@@ -167,13 +133,6 @@ export interface BoardWeek {
    * Position in the campaign, or `null` for a week outside one.
    */
   readonly weekIndex: number | null;
-
-  /**
-
-   * The challenge columns, in the rows' order; empty on a closed week, which keeps no progress.
-
-   */
-  readonly columns: readonly BoardColumn[];
 
   /**
    * Rows with a position.

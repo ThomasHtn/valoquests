@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
@@ -7,9 +7,9 @@ import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { SquadRow } from '../overview.model';
-import { weekdayInitials } from '../overview.utils';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
+import { StreakGauge } from '@shared/streak-gauge/streak-gauge';
 
 /**
  * The squad, by the day: the operator-by-operator detail of the day's tally.
@@ -20,7 +20,7 @@ import { ChampionBadge } from '@shared/champion-badge/champion-badge';
  */
 @Component({
   selector: 'app-squad-sheet',
-  imports: [TranslatePipe, RouterLink, Avatar, Tooltip, TitleBadge, ChampionBadge],
+  imports: [TranslatePipe, RouterLink, Avatar, Tooltip, TitleBadge, ChampionBadge, StreakGauge],
   templateUrl: './squad-sheet.html',
   styleUrl: './squad-sheet.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,11 +37,6 @@ export class SquadSheet {
   public readonly rosterCount = input.required<number>();
 
   private readonly translation = inject(Translation);
-
-  /**
-   * Initials written above the streak gauge's seven pips, Monday first.
-   */
-  protected readonly weekdays = computed(() => weekdayInitials(this.translation.language()));
 
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());

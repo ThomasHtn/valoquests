@@ -397,6 +397,11 @@ export interface RankingHistoryEntry {
   readonly completedDailyChallenges: number;
 
   /**
+   * Matches played that week.
+   */
+  readonly matchCount: number;
+
+  /**
    * Days with at least one match this week.
    */
   readonly activeDays: number;

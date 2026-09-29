@@ -102,11 +102,12 @@
   text-transform: uppercase;
 }
 
+/* Tight enough for the four figures to hold one line on a phone. */
 .cell-figs {
   grid-column: 2;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1.5rem;
+  gap: 0.75rem;
 }
 
 .cell-fig {
@@ -128,87 +129,25 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* On a phone the cells take the whole row, one line each under a rule: under the position column
-   they wrapped. */
-.cell-progress {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  margin-top: 0.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-edge);
+/* The ceiling steps back so the count reads first. */
+.fig-max {
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
-.prog {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
-}
-
-.prog-tier {
-  position: relative;
-  flex-shrink: 0;
-  width: 1.5rem;
-  height: 1.75rem;
-}
-
-/* Wraps on two lines rather than cutting a challenge's name short on a phone. */
-.prog-name {
-  flex: 1 1 0;
-  min-width: 0;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-height: 1.2;
-}
-
-.prog-gauge {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 0.5rem;
-  width: 10rem;
-}
-
-/* Pinned to the trailing edge whether or not a bar sits beside it. */
-.prog-value {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  margin-inline-start: auto;
-  padding: 0.125rem 0.375rem;
-}
-
-/* The ring is the wide board's reading of the cell; below it the line says the same thing. */
-.prog-ring {
-  display: none;
-}
-
-@media (width >= 80rem) {
+/* Opens once the name keeps room beside the six figures, like the contribution sheet. */
+@media (width >= 72rem) {
   .head,
   .row-link {
     display: grid;
-    /* The three figure tracks are the width of their labels, the widest thing in them, and the
+    /* The five figure tracks are the width of their labels, the widest thing in them, and the
        figures sit on the labels' trailing edge. Fixed rather than `auto`: the header and the
-       rows are separate grids, and `auto` would size each to its own content. */
-    grid-template-columns: 3rem minmax(8rem, 1fr) 3.5rem 4.5rem 5rem;
-
-    /* One gap between every column, opening from 0.875rem at the breakpoint — where the five
-       cells and three figures only just fit beside the name — to 2rem on a wide screen. */
-    column-gap: clamp(0.875rem, 4vw - 2.325rem, 2rem);
+       rows are separate grids, and `auto` would size each to its own content. The streak track
+       holds the gauge: seven pips and the widest bonus. */
+    grid-template-columns: 3rem minmax(8rem, 1fr) 5rem 4.5rem 5rem 4rem 4.5rem 10rem;
+    /* 1.25rem at the breakpoint, where the name keeps its 8rem, up to 2.75rem on a wide screen. */
+    column-gap: clamp(1.25rem, 4vw - 1.5rem, 2.75rem);
     align-items: center;
-  }
-
-  /* A live board adds one track per weekly challenge, so the header's badge and every row's
-     cell sit on the same one. `--cols` is set by the template, never zero. */
-  .board--live .head,
-  .board--live .row-link {
-    grid-template-columns:
-      3rem minmax(8rem, 1fr) 3.5rem 4.5rem 5rem
-      repeat(var(--cols), 4.75rem);
   }
 
   .head {
@@ -229,13 +168,7 @@
     white-space: nowrap;
   }
 
-  .head-tier {
-    display: flex;
-    justify-self: center;
-  }
-
-  .cell-figs,
-  .cell-progress {
+  .cell-figs {
     display: contents;
   }
 
@@ -243,18 +176,16 @@
     align-items: flex-end;
   }
 
-  .prog {
-    justify-content: center;
+  /* Left-aligned so the pips hold still whatever width the bonus beside them takes. */
+  .head-fig--start {
+    justify-self: start;
   }
 
-  .cap,
-  .prog-tier,
-  .prog-name,
-  .prog-gauge {
+  .cell-fig--start {
+    align-items: flex-start;
+  }
+
+  .cap {
     display: none;
-  }
-
-  .prog-ring {
-    display: block;
   }
 }

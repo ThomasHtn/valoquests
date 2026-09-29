@@ -314,6 +314,7 @@ describe('buildMissionReport', () => {
             totalPoints: 600,
             completedChallenges: 5,
             completedDailyChallenges: 3,
+            matchCount: 12,
             activeDays: 7,
             streakDays: 7,
             titles: ['SCOUT'],

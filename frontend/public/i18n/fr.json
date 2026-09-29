@@ -622,6 +622,10 @@
       "SKIRMISH": "Skirmish",
       "SWIFTPLAY": "Swiftplay",
       "ESCALATION": "Escalade"
+    },
+    "streak": {
+      "value": "+{{percent}} %",
+      "aria": "{{days}} jours joués sur 7 cette semaine, bonus de +{{percent}} %"
     }
   },
   "connectivity": {
@@ -684,22 +688,31 @@
     "board": {
       "label": "Le classement",
       "operator": "Opérateur",
-      "total": "Total",
-      "totalHelp": "Les dégâts au gardien plus les blessés ramenés par les défis validés, un point par blessé. Le total repart de zéro chaque lundi.",
+      "score": "Score",
+      "scoreHelp": "Les dégâts au gardien plus les blessés ramenés par les défis validés, un point par blessé. Le score repart de zéro chaque lundi.",
       "damage": "Dégâts",
       "points": "Blessés",
       "damageHelp": "Les points de vie retirés au gardien de la planète par les parties de la semaine.",
       "pointsHelp": "Les blessés ramenés à la base par les défis validés, un point par blessé.",
-      "totalHelpOff": "La valeur des parties de la semaine plus les points des défis validés. Aucune campagne en cours : rien n'est retiré à un gardien. Le total repart de zéro chaque lundi.",
+      "scoreHelpOff": "La valeur des parties de la semaine plus les points des défis validés. Aucune campagne en cours : rien n'est retiré à un gardien. Le score repart de zéro chaque lundi.",
       "damageHelpOff": "La valeur des parties de la semaine, comptée comme des dégâts. Aucune campagne en cours : aucun gardien ne les encaisse.",
       "pointsHelpOff": "Les points des défis validés, un point par blessé qu'ils ramèneraient en campagne.",
+      "challenges": "Défis",
+      "challengesHelp": "Les défis validés cette semaine sur ceux qu'elle propose : les hebdomadaires plus un quotidien chaque jour.",
+      "challengesValue": {
+        "one": "{{count}} défi validé sur {{max}}",
+        "other": "{{count}} défis validés sur {{max}}"
+      },
+      "matches": "Parties",
+      "matchesHelp": "Les parties jouées cette semaine, toutes comptées, y compris celles dont le rendement est réduit.",
+      "streak": "Assiduité",
+      "streakHelp": "Jours joués cette semaine. Chaque jour après le premier ajoute +2 % aux gains du jour, jusqu'à +10 %. Sur une semaine close, seul le nombre de jours est conservé.",
       "measure": {
         "MECHANIC": "{{value}} composants",
         "QUARTERMASTER": "{{value}} nourriture",
         "REGULAR": "{{value}} j joués",
         "SCOUT": "{{value}} défis validés"
       },
-      "progress": "Progression des défis",
       "variation": {
         "up": {
           "one": "{{count}} place gagnée",
@@ -718,10 +731,7 @@
         "reset": "Remise à zéro",
         "resetValue": "lundi"
       },
-      "unranked": "Hors classement",
-      "cellTip": "{{name}} · {{current}} sur {{target}} · +{{points}} blessés une fois validé",
-      "cellTipOpen": "{{name}} · {{current}} · +{{points}} blessés une fois validé",
-      "cellTipDone": "{{name}} · validé · +{{points}} blessés"
+      "unranked": "Hors classement"
     },
     "podium": {
       "label": "Le podium de la semaine",
@@ -869,8 +879,6 @@
       "operatorTooltip": "Le pseudo de l'opérateur, avec son titre s'il en détient un : Champion pour le premier de la semaine passée, sinon Assidu, Éclaireur, Intendant ou Mécano.",
       "streak": "Assiduité",
       "streakTooltip": "Jours joués cette semaine. Chaque jour après le premier ajoute +2 % aux gains du jour, jusqu'à +10 %. Remis à zéro le lundi.",
-      "streakValue": "+{{percent}} %",
-      "streakAria": "{{days}} jours joués sur 7 cette semaine, bonus de +{{percent}} %",
       "damage": "Dégâts au gardien",
       "damageTooltip": "Dégâts infligés au gardien de la semaine par l'opérateur aujourd'hui, après rendements décroissants et bonus de série.",
       "componentsTooltip": "Composants produits aujourd'hui par l'opérateur, selon le mode et l'issue de chaque partie, après rendements décroissants et bonus de série.",

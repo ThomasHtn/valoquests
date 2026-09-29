@@ -1,6 +1,7 @@
 import { ExtractionLimiter, GuardianCategory, WeeklyTitle } from '@core/campaign/campaign.model';
 import { TitleVisual } from '@core/campaign/campaign-visual.utils';
 import { ChallengeCard } from '../challenges/challenges.model';
+import { StreakPip } from '@shared/streak-gauge/streak-gauge.model';
 
 /**
  * One of the ten weeks on the frieze: its issue, and how far the guardian was pushed.
@@ -562,11 +563,6 @@ export interface DayTally {
 /**
  * One operator's day on the squad sheet.
  */
-/**
- * One day of the week in a squad row's streak gauge: played, skipped, today not yet played, or to come.
- */
-export type StreakPip = 'played' | 'missed' | 'today' | 'ahead';
-
 export interface SquadRow {
   /**
    * Position on the weekly board, or `null` when unranked.

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { Campaign, CampaignHistory } from '@core/campaign/campaign.model';
-import { formatFigure, formatWeekSpan, placeWeekInCampaign } from './leaderboard-board.utils';
+import {
+  formatFigure,
+  formatWeekSpan,
+  placeWeekInCampaign,
+  weekChallengeCeiling,
+} from './leaderboard-board.utils';
 
 const running = {
   id: 7,
@@ -43,5 +48,11 @@ describe('formatFigure', () => {
   it('abbreviates on request and strips the spacing', () => {
     expect(formatFigure(27400, 'en-US', true)).toBe('27.4K');
     expect(formatFigure(27400, 'en-US')).toBe('27,400');
+  });
+});
+
+describe('weekChallengeCeiling', () => {
+  it('adds one daily per day to the weekly draw', () => {
+    expect(weekChallengeCeiling(5)).toBe(12);
   });
 });

@@ -237,6 +237,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
                 score.getTotalPoints(),
                 score.getCompletedChallenges(),
                 score.getCompletedDailyChallenges(),
+                score.getMatchCount(),
                 score.getActiveDays(),
                 score.getStreakDays(),
                 titlesOf(titles, score)

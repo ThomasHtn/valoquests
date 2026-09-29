@@ -122,31 +122,11 @@
             <span class="ros-cap label-caption text-2xs">{{
               'overview.squad.streak' | translate
             }}</span>
-            <span
-              [attr.aria-label]="
-                'overview.squad.streakAria'
-                  | translate: { percent: row.streakBonusPercent, days: row.streakDays }
-              "
-              class="streak"
-              role="img"
-            >
-              <span aria-hidden="true" class="streak-week">
-                @for (pip of row.streakWeek; track $index) {
-                  <span class="streak-day">
-                    <b>{{ weekdays()[$index] }}</b>
-                    <i [class]="'pip--' + pip"></i>
-                  </span>
-                }
-              </span>
-              <span
-                [class.streak-bonus--none]="row.streakBonusPercent === 0"
-                aria-hidden="true"
-                class="streak-bonus tabular-nums"
-                >{{
-                  'overview.squad.streakValue' | translate: { percent: row.streakBonusPercent }
-                }}</span
-              >
-            </span>
+            <app-streak-gauge
+              [bonusPercent]="row.streakBonusPercent"
+              [days]="row.streakDays"
+              [week]="row.streakWeek"
+            />
           </span>
         </span>
       </a>

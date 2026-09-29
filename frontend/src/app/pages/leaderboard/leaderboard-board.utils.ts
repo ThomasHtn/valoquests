@@ -2,7 +2,7 @@ import { Campaign, CampaignHistory, WeeklyTitle } from '@core/campaign/campaign.
 import { WEEK_DAYS } from '@core/date/date-time.constants';
 import { daysBetween, localMidnight } from '@core/date/date-time.utils';
 import { RankingEntry } from '@core/ranking/ranking.model';
-import { BoardColumn, BoardRow, WeekOption } from './leaderboard.model';
+import { WeekOption } from './leaderboard.model';
 
 /**
  * Pure helpers of the leaderboard: figures, dates and campaign placement, with no i18n service.
@@ -21,23 +21,10 @@ export function resolveTitleMeasures(entry: RankingEntry): Partial<Record<Weekly
 }
 
 /**
- * One column per challenge the rows carry, in the order they carry them: every operator gets the
- * same draw, so the first row that holds a cell names the column for all of them.
+ * Challenges a week draws: its weekly ones plus a daily every morning.
  */
-export function buildBoardColumns(rows: readonly BoardRow[]): BoardColumn[] {
-  const columns = new Map<number, BoardColumn>();
-  for (const cell of rows.flatMap((row) => row.progress ?? [])) {
-    if (!columns.has(cell.id)) {
-      columns.set(cell.id, {
-        id: cell.id,
-        mark: cell.mark,
-        barClass: cell.barClass,
-        iconClass: cell.visual.iconClass,
-        tip: cell.name,
-      });
-    }
-  }
-  return [...columns.values()];
+export function weekChallengeCeiling(weeklyCount: number): number {
+  return weeklyCount + WEEK_DAYS;
 }
 
 /**

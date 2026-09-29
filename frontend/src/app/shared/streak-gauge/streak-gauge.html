@@ -1,0 +1,21 @@
+<span
+  [attr.aria-label]="'common.streak.aria' | translate: { percent: bonusPercent(), days: days() }"
+  class="streak"
+  role="img"
+>
+  <span aria-hidden="true" class="streak-week">
+    @for (pip of pips(); track $index) {
+      <span class="streak-day">
+        <!-- Kept without the days so the gauge holds its height: a count names no weekday. -->
+        <b [class.invisible]="week() === null">{{ weekdays()[$index] }}</b>
+        <i [class]="'pip--' + pip"></i>
+      </span>
+    }
+  </span>
+  <span
+    [class.streak-bonus--none]="bonusPercent() === 0"
+    aria-hidden="true"
+    class="streak-bonus tabular-nums"
+    >{{ 'common.streak.value' | translate: { percent: bonusPercent() } }}</span
+  >
+</span>
