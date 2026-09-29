@@ -6,7 +6,7 @@ import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { LineChart } from '@shared/chart/line-chart';
-import { HistoryCurve, HistoryRow } from '../campaign.model';
+import { HistoryCurve, HistoryRow } from '../campaign-panel.model';
 
 /**
  * The base week after week, the current campaign against the closed ones, and the ranking of

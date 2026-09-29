@@ -1,12 +1,8 @@
 <!-- What would come home, and the three things that bound it. Four dials on the same
-     scale, the wounded spotted: the three limits, then what gets through. -->
+     scale, the wounded spotted: the three limits, then what gets through. Untitled: it is the
+     breakdown of the mission's aboard row, so it sits under it at the scan's own spacing. -->
 @if (capacity(); as capacity) {
-  <div aria-labelledby="capacity-title" class="cap mt-[clamp(2.5rem,4vw,3.25rem)]">
-    <app-section-rule
-      [heading]="'overview.capacity.title' | translate"
-      headingId="capacity-title"
-    />
-
+  <div [attr.aria-label]="'overview.capacity.title' | translate" class="cap mt-8" role="group">
     <div class="gauges">
       <div class="gauge-cell" style="--tone: var(--color-accent-cyan)">
         <p class="gauge-head">

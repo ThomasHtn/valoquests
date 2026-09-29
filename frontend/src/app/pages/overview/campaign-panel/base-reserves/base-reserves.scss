@@ -202,6 +202,11 @@
   --tone: var(--color-accent-cyan);
 }
 
+/* Same amber as the mission's aboard row: the wounded brought home. */
+.limit-item--group {
+  --tone: var(--color-brand-400);
+}
+
 .limit-item .hex-mark {
   width: 2.5rem;
   height: 2.85rem;

@@ -4,7 +4,7 @@ import { LucideChevronDown, LucideTrendingUp, LucideWheat, LucideWrench } from '
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { LedgerCell, LedgerColumn, LedgerRow } from '../campaign.model';
+import { LedgerCell, LedgerColumn, LedgerRow } from '../campaign-panel.model';
 import { LedgerCellView } from './ledger-cell';
 
 /**
@@ -12,7 +12,7 @@ import { LedgerCellView } from './ledger-cell';
  *
  * Above the ground, what the week brought in; below, hatched, what Sunday's rescue spent; the
  * dashed level crossing into the next column is what was carried over — the stocks never start
- * from zero. Folded at rest onto one bar with a miniature of the ten weeks.
+ * from zero. Folded at rest onto its title bar.
  */
 @Component({
   selector: 'app-reserve-ledger',

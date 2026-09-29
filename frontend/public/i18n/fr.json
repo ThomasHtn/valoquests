@@ -244,109 +244,6 @@
     }
   },
   "campaign": {
-    "title": "Campagne",
-    "header": {
-      "heading": "Les dix planètes"
-    },
-    "state": {
-      "loading": "Chargement de la campagne…",
-      "error": "La campagne n'a pas pu être chargée.",
-      "none": {
-        "eyebrow": "Route non tracée",
-        "title": "Dix planètes à atteindre",
-        "text": "Quand l'escouade ouvrira une campagne, la route des dix planètes se dessinera ici : une planète par semaine, un gardien par planète, un groupe de blessés à ramener.",
-        "start": "Départ",
-        "startValue": "le lundi suivant l’ouverture",
-        "duration": "Durée",
-        "durationValue": "{{weeks}} semaines"
-      },
-      "opened": "La campagne est ouverte : la route commence lundi. Les compteurs de la base démarreront avec les premières parties de la semaine.",
-      "closed": "La campagne est close. Sa route reste consultable jusqu'à l'ouverture de la prochaine."
-    },
-    "galaxy": {
-      "section": "La route des dix planètes",
-      "strip": "Les dix planètes de la campagne",
-      "previous": "Planète précédente",
-      "next": "Planète suivante",
-      "won": "Vaincu {{weekday}}",
-      "lost": "A tenu · {{percent}} % PV",
-      "now": "Percée {{percent}} %",
-      "ahead": "À venir",
-      "final": "Grand final",
-      "unplayed": "Jamais atteinte"
-    },
-    "drawer": {
-      "guardian": "Gardien",
-      "hpLeft": "points de vie restants sur {{total}}",
-      "nowText": "La percée est à {{percent}} %.",
-      "daysLeft": {
-        "one": "Il reste {{count}} jour avant l'extraction de dimanche.",
-        "other": "Il reste {{count}} jours avant l'extraction de dimanche."
-      },
-      "tonight": "L'extraction part ce soir.",
-      "wounded": "Blessés",
-      "spotted": "blessés repérés sur {{planet}}",
-      "forecast": "Si l'extraction partait ce soir, {{count}} seraient à bord.",
-      "follow": "Suivre",
-      "followText": "Le détail de la semaine, jour par jour, est sur la page des défis.",
-      "followLink": "Les défis",
-      "ahead": "à venir",
-      "final": "Grand final",
-      "hint": {
-        "MINOR": "Un grand groupe de blessés et un gardien faible : la semaine se jouera sur la nourriture et les composants.",
-        "STANDARD": "Une semaine ordinaire : un groupe et un gardien à la mesure de l'escouade.",
-        "ELITE": "Un groupe derrière un gardien coriace : la semaine se jouera sur la percée.",
-        "FINAL": "Le grand final : le plus grand groupe de la campagne, derrière le plus puissant des gardiens."
-      },
-      "prepare": "Préparer",
-      "prepareText": "Les composants et la nourriture mis de côté d'ici là seront disponibles à l'arrivée.",
-      "defeated": "Vaincu",
-      "defeatedOn": "le {{weekday}}",
-      "held": "A tenu",
-      "heldAll": "toute la semaine",
-      "defeatedText": "Ses {{hp}} points de vie sont tombés {{weekday}}.",
-      "defeatedByText": "Ses {{hp}} points de vie sont tombés {{weekday}}, coup fatal de {{name}}.",
-      "heldText": "Percée à {{percent}} % : il lui restait {{left}} points de vie sur {{total}}.",
-      "saved": "ramenés sur {{spotted}} repérés",
-      "savedText": "Dont {{count}} grâce aux défis. {{limiter}}",
-      "limiter": {
-        "FOOD": "La base a manqué de place.",
-        "COMPONENTS": "Le vaisseau a manqué de place.",
-        "GROUP": "Tout le groupe a été ramené.",
-        "NONE": "L'extraction n'a rien ramené."
-      },
-      "base": "La base",
-      "inhabitants": "habitants en fin de semaine",
-      "gainText": "{{change}} cette semaine.",
-      "lostText": "Dont {{count}} perdus parce que le gardien a tenu.",
-      "noBase": "Le relevé de la base n'est pas encore disponible pour cette semaine.",
-      "unplayed": "jamais affronté"
-    },
-    "law": {
-      "title": "Les règles du sauvetage",
-      "carry": "Places à bord",
-      "carryPay": "Un blessé ne part pas sans sa place dans le vaisseau",
-      "carryRate": "composants = 1 place",
-      "shelter": "Places à la base",
-      "shelterPay": "Un blessé ne rentre pas sans un lit pour l'accueillir",
-      "shelterRate": "nourriture = 1 place",
-      "ground": "Blessés au sol",
-      "groundPay": "On ne ramène jamais plus de blessés qu'il n'y en a sur la planète",
-      "groundRate": "Le groupe repéré sur {{planet}}",
-      "breach": "La percée",
-      "breachPay": "Le gardien retient les blessés tant que ses lignes ne sont pas ouvertes",
-      "breachRate": "PV = 1 % de percée",
-      "out": "Blessés ramenés",
-      "outPay": "Ce que l'extraction rapporterait dimanche soir, en l'état",
-      "outRate": "ramenés par les défis, pris dans le même groupe",
-      "noteDifficulty": "Difficulté {{difficulty}}",
-      "noteDifficultyText": "Les gardiens et les groupes de blessés sont dimensionnés sur la difficulté choisie à l'ouverture : sa référence pour cette campagne est de {{reference}} dégâts par semaine et par opérateur.",
-      "noteGrow": "Des groupes de plus en plus grands",
-      "noteGrowText": "Chaque semaine, le groupe de blessés grossit de 4 %. Celui de la dixième planète sera 36 % plus grand que le premier. La base, plus peuplée, mange chaque soir un peu plus.",
-      "noteLoss": "Quand le gardien tient",
-      "noteLossText": "Si le gardien est encore debout dimanche soir, la base perd des habitants. La perte dépend de la percée atteinte. Sur la base d'aujourd'hui, {{population}} habitants : {{a}} perdus si la percée atteint {{pa}} %, {{b}} à {{pb}} %, {{c}} à {{pc}} %. Manquer le gardien de peu coûte très peu, l'abandonner coûte cher.",
-      "noteLossSampleText": "Si le gardien est encore debout dimanche soir, la base perd des habitants. La perte dépend de la percée atteinte. Pour une base de {{population}} habitants : {{a}} perdus si la percée atteint {{pa}} %, {{b}} à {{pb}} %, {{c}} à {{pc}} %. Manquer le gardien de peu coûte très peu, l'abandonner coûte cher."
-    },
     "reserves": {
       "title": "Détails de la base",
       "food": "Nourriture",
@@ -408,7 +305,6 @@
     },
     "rocket": {
       "title": "La fusée",
-      "side": "{{built}} pièces montées sur {{total}} · une pièce par gardien vaincu",
       "parts": {
         "1": "Moteur",
         "2": "Ailerons",
@@ -436,6 +332,10 @@
     },
     "history": {
       "title": "L'historique des campagnes",
+      "show": "Afficher",
+      "hide": "Masquer",
+      "loading": "Chargement de l'historique…",
+      "error": "L'historique n'a pas pu être chargé.",
       "current": "Campagne {{number}}, en cours",
       "past": "Campagne {{number}}",
       "atEnd": "au final",
@@ -786,7 +686,7 @@
     },
     "mission": {
       "title": "Mission de la semaine : {{planet}}",
-      "link": "La campagne",
+      "link": "Le règlement",
       "planet": "Planète {{index}} sur {{weeks}} · {{category}}",
       "planetAria": "{{planet}}, la planète de la semaine {{week}}. Des marques ambre à sa surface tiennent lieu des {{wounded}} blessés, et la percée dans ses lignes atteint {{percent}} %."
     },
@@ -1541,7 +1441,6 @@
       "adminMaintenance": "Maintenance",
       "adminOperations": "Opérations",
       "adminPlayers": "Opérateurs",
-      "campaign": "Campagne",
       "challenges": "Défis",
       "leaderboard": "Classement",
       "overview": "Vue d'ensemble",

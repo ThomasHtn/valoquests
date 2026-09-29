@@ -1,0 +1,60 @@
+<!-- No section titles: the tab heads the panel, and each block names itself. The rocket leads,
+     since it is what the tab's badge counts. -->
+<div class="flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)]">
+  <section [attr.aria-label]="'campaign.rocket.title' | translate">
+    @defer (on viewport; prefetch on idle) {
+      <app-rocket-showcase [campaignNumber]="campaign()?.number ?? 0" [parts]="rocketParts()" />
+    } @placeholder {
+      <div class="min-h-[20rem]"></div>
+    }
+  </section>
+
+  <div>
+    @if (reserves(); as reserves) {
+      <section [attr.aria-label]="'campaign.reserves.title' | translate">
+        <app-base-reserves [reserves]="reserves" />
+        @if (ledger().length > 0) {
+          @defer (on viewport; prefetch on idle) {
+            <app-reserve-ledger [columns]="ledgerColumns()" [rows]="ledger()" />
+          } @placeholder {
+            <div class="min-h-14"></div>
+          }
+        }
+      </section>
+    }
+
+    <!-- Folded on the same bar as the ledger above: a comparison to consult, not part of the
+         week's loop. Nothing of it exists before it opens. -->
+    <details (toggle)="toggleHistory($event)" class="fold">
+      <summary class="fold-sum focus-ring">
+        <b class="fold-title">
+          <svg aria-hidden="true" class="size-4" lucideHistory></svg>
+          {{ 'campaign.history.title' | translate }}
+        </b>
+        <span class="fold-cue label-caption text-2xs">
+          {{ (historyOpen() ? 'campaign.history.hide' : 'campaign.history.show') | translate }}
+          <svg aria-hidden="true" class="fold-chev size-4" lucideChevronDown></svg>
+        </span>
+      </summary>
+      @if (historyOpen()) {
+        <div class="fold-body">
+          <app-resource-state
+            (retry)="retryHistory()"
+            [errorText]="'campaign.history.error' | translate"
+            [isError]="historyError()"
+            [isLoading]="historyLoading()"
+            [loadingText]="'campaign.history.loading' | translate"
+            padding="py-8"
+          >
+            <!-- Deferred so chart.js stays out of the overview's bundle until the fold opens. -->
+            @defer (on immediate) {
+              <app-campaign-history [curves]="curves()" [rows]="historyRows()" />
+            } @placeholder {
+              <div class="min-h-[17rem]"></div>
+            }
+          </app-resource-state>
+        </div>
+      }
+    </details>
+  </div>
+</div>

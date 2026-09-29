@@ -244,109 +244,6 @@
     }
   },
   "campaign": {
-    "title": "Campaign",
-    "header": {
-      "heading": "The ten planets"
-    },
-    "state": {
-      "loading": "Loading the campaign…",
-      "error": "The campaign could not be loaded.",
-      "none": {
-        "eyebrow": "Road not drawn",
-        "title": "Ten planets to reach",
-        "text": "Once the squad opens a campaign, the road of ten planets draws itself here: one planet a week, one guardian per planet, one group of wounded to bring home.",
-        "start": "Start",
-        "startValue": "the Monday after opening",
-        "duration": "Length",
-        "durationValue": "{{weeks}} weeks"
-      },
-      "opened": "The campaign is open: the road starts on Monday. The base's counters start with the first matches of the week.",
-      "closed": "The campaign is closed. Its road stays readable until the next one opens."
-    },
-    "galaxy": {
-      "section": "The road of ten planets",
-      "strip": "The ten planets of the campaign",
-      "previous": "Previous planet",
-      "next": "Next planet",
-      "won": "Defeated on {{weekday}}",
-      "lost": "Held · {{percent}}% HP",
-      "now": "Breach {{percent}}%",
-      "ahead": "Ahead",
-      "final": "Grand finale",
-      "unplayed": "Never reached"
-    },
-    "drawer": {
-      "guardian": "Guardian",
-      "hpLeft": "hit points left out of {{total}}",
-      "nowText": "The breach stands at {{percent}}%.",
-      "daysLeft": {
-        "one": "{{count}} day left before Sunday's extraction.",
-        "other": "{{count}} days left before Sunday's extraction."
-      },
-      "tonight": "The extraction leaves tonight.",
-      "wounded": "Wounded",
-      "spotted": "wounded spotted on {{planet}}",
-      "forecast": "If the extraction left tonight, {{count}} would be on board.",
-      "follow": "Follow",
-      "followText": "The week's detail, day by day, is on the challenges page.",
-      "followLink": "The challenges",
-      "ahead": "ahead",
-      "final": "Grand finale",
-      "hint": {
-        "MINOR": "A large group of wounded and a weak guardian: the week will hinge on food and components.",
-        "STANDARD": "An ordinary week: a group and a guardian sized to the squad.",
-        "ELITE": "A group behind a tough guardian: the week will hinge on the breach.",
-        "FINAL": "The grand finale: the largest group of the campaign, behind the mightiest guardian."
-      },
-      "prepare": "Prepare",
-      "prepareText": "Components and food set aside until then will be available on arrival.",
-      "defeated": "Defeated",
-      "defeatedOn": "on {{weekday}}",
-      "held": "Held",
-      "heldAll": "all week long",
-      "defeatedText": "Its {{hp}} hit points fell on {{weekday}}.",
-      "defeatedByText": "Its {{hp}} hit points fell {{weekday}}, fatal blow by {{name}}.",
-      "heldText": "Breach at {{percent}}%: it had {{left}} hit points left out of {{total}}.",
-      "saved": "rescued out of {{spotted}} spotted",
-      "savedText": "Including {{count}} through challenges. {{limiter}}",
-      "limiter": {
-        "FOOD": "The base ran out of room.",
-        "COMPONENTS": "The ship ran out of room.",
-        "GROUP": "The whole group was brought back.",
-        "NONE": "The extraction brought nobody back."
-      },
-      "base": "The base",
-      "inhabitants": "inhabitants at the end of the week",
-      "gainText": "{{change}} this week.",
-      "lostText": "Including {{count}} lost because the guardian held.",
-      "noBase": "The base's report is not available for this week yet.",
-      "unplayed": "never faced"
-    },
-    "law": {
-      "title": "The rules of the rescue",
-      "carry": "Seats on board",
-      "carryPay": "A wounded does not leave without a seat in the ship",
-      "carryRate": "components = 1 seat",
-      "shelter": "Beds at the base",
-      "shelterPay": "A wounded does not come home without a bed to take them in",
-      "shelterRate": "food = 1 bed",
-      "ground": "Wounded on the ground",
-      "groundPay": "Never more wounded brought back than there are on the planet",
-      "groundRate": "The group spotted on {{planet}}",
-      "breach": "The breach",
-      "breachPay": "The guardian holds the wounded as long as its lines are not open",
-      "breachRate": "HP = 1% of breach",
-      "out": "Wounded rescued",
-      "outPay": "What the extraction would bring back on Sunday night, as things stand",
-      "outRate": "rescued through challenges, taken from the same group",
-      "noteDifficulty": "Difficulty {{difficulty}}",
-      "noteDifficultyText": "Guardians and groups of wounded are sized on the difficulty picked at opening: this campaign's reference is {{reference}} damage a week per operator.",
-      "noteGrow": "Ever larger groups",
-      "noteGrowText": "Every week, the group of wounded grows by 4%. The tenth planet's will be 36% larger than the first. The base, more populated, eats a little more every night.",
-      "noteLoss": "When the guardian holds",
-      "noteLossText": "If the guardian still stands on Sunday night, the base loses inhabitants. The loss depends on the breach reached. On today's base, {{population}} inhabitants: {{a}} lost if the breach reaches {{pa}}%, {{b}} at {{pb}}%, {{c}} at {{pc}}%. Missing the guardian narrowly costs very little, giving up on it costs dearly.",
-      "noteLossSampleText": "If the guardian still stands on Sunday night, the base loses inhabitants. The loss depends on the breach reached. For a base of {{population}} inhabitants: {{a}} lost if the breach reaches {{pa}}%, {{b}} at {{pb}}%, {{c}} at {{pc}}%. Missing the guardian narrowly costs very little, giving up on it costs dearly."
-    },
     "reserves": {
       "title": "Base details",
       "food": "Food",
@@ -408,7 +305,6 @@
     },
     "rocket": {
       "title": "The rocket",
-      "side": "{{built}} parts fitted out of {{total}} · one part per guardian defeated",
       "parts": {
         "1": "Engine",
         "2": "Fins",
@@ -436,6 +332,10 @@
     },
     "history": {
       "title": "Campaign history",
+      "show": "Show",
+      "hide": "Hide",
+      "loading": "Loading the history…",
+      "error": "The history could not be loaded.",
       "current": "Campaign {{number}}, in progress",
       "past": "Campaign {{number}}",
       "atEnd": "at the end",
@@ -786,7 +686,7 @@
     },
     "mission": {
       "title": "This week's mission: {{planet}}",
-      "link": "The campaign",
+      "link": "The rules",
       "planet": "Planet {{index}} of {{weeks}} · {{category}}",
       "planetAria": "{{planet}}, the planet of week {{week}}. Amber marks on its surface stand for the {{wounded}} wounded, and the breakthrough in its lines reaches {{percent}}%."
     },
@@ -1541,7 +1441,6 @@
       "adminMaintenance": "Maintenance",
       "adminOperations": "Operations",
       "adminPlayers": "Operators",
-      "campaign": "Campaign",
       "challenges": "Challenges",
       "leaderboard": "Ranking",
       "overview": "Overview",

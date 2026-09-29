@@ -14,9 +14,8 @@ import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 import { svgElement as el } from '@core/svg/svg-element.utils';
-import { SKY_SEED } from '@pages/campaign/star-field.constants';
 import { BoardRow } from '../leaderboard.model';
-import { WIDTH, HEIGHT, STAR_COUNT, STAR, EMBER } from './podium.constants';
+import { WIDTH, HEIGHT, STAR_COUNT, STAR, EMBER, SKY_SEED } from './podium.constants';
 
 /**
  * The week's three leaders on their plinths, under the same sky as the campaign's road. Each

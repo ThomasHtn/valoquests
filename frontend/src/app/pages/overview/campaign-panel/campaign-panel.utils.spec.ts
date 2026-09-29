@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Campaign, CampaignWeek } from '@core/campaign/campaign.model';
-import { padCurve, resolvePlanetState, resolveSeasonKey } from './campaign-planet.utils';
+import { padCurve, resolvePlanetState, resolveSeasonKey } from './campaign-panel.utils';
 
 function week(overrides: Partial<CampaignWeek>): CampaignWeek {
   return { weekIndex: 1, defeated: false, settled: false, ...overrides } as CampaignWeek;

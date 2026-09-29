@@ -36,6 +36,11 @@ export class SectionRule {
   public readonly link = input<string | null>(null);
 
   /**
+   * Fragment of the linked page to land on, a section of the rules for one.
+   */
+  public readonly linkFragment = input<string | undefined>(undefined);
+
+  /**
    * Caption on the right, for a section whose heading needs a count beside it.
    */
   public readonly side = input('');

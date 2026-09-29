@@ -12,7 +12,6 @@ import {
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { SectionRule } from '@shared/section-rule/section-rule';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
@@ -39,7 +38,6 @@ import { CARRY_MODES, SHELTER_MODES } from './extraction-gauges.constants';
     LucideUsers,
     LucideWheat,
     LucideWrench,
-    SectionRule,
     Tooltip,
     CountUp,
     InView,

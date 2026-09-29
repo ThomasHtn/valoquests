@@ -1,19 +1,5 @@
 /**
- * Breakthroughs the loss note is illustrated at.
- */
-export const LOSS_EXAMPLES: readonly number[] = [95, 64, 20];
-
-/**
-
- * Population the loss note reasons on while the base is still empty.
-
- */
-export const SAMPLE_POPULATION = 10_000;
-
-/**
-
  * Colour of the live campaign's curve: always amber.
-
  */
 export const CURRENT_CURVE_COLOR = '#e8ab6b';
 

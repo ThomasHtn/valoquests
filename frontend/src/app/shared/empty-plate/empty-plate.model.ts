@@ -2,11 +2,10 @@
  * Drawings an empty plate can carry, one per situation the public pages run into.
  *
  * - `radar` — a scan with nothing on it yet: the overview before a campaign exists.
- * - `road` — the ten planets in a line, dotted: the campaign page before a road is drawn.
  * - `podium` — three empty steps: a week nobody is ranked in.
  * - `draw` — a target and the five weekly slots: a week whose draw has not run.
  */
-export type EmptyIllustration = 'radar' | 'road' | 'podium' | 'draw';
+export type EmptyIllustration = 'radar' | 'podium' | 'draw';
 
 /**
  * How a readout's dot reads: `live` is running now, `todo` waits on someone, `info` is a plain fact.

@@ -18,6 +18,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
+import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
 import { PageHeader } from '@layout/page-header/page-header';
 import { CountUp } from '@shared/count-up/count-up';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
@@ -26,6 +27,7 @@ import { SectionRule } from '@shared/section-rule/section-rule';
 import { formatFigure } from '../leaderboard/leaderboard-board.utils';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { BaseScene } from './base-scene/base-scene';
+import { CampaignPanel } from './campaign-panel/campaign-panel';
 import { DayOrders } from './day-orders/day-orders';
 import { ExtractionGauges } from './extraction-gauges/extraction-gauges';
 import { MissionReadings } from './mission-readings/mission-readings';
@@ -65,7 +67,7 @@ import { readSeenReport, writeSeenReport } from './overview.utils';
  * the week, the orders of the day and what each operator brought in today.
  *
  * A screen of states, never of advice: each figure is doubled by what it pays for in people, and
- * the rule of Sunday's settlement belongs to the campaign page.
+ * the rule of Sunday's settlement belongs to the rules page.
  */
 @Component({
   selector: 'app-overview',
@@ -86,6 +88,7 @@ import { readSeenReport, writeSeenReport } from './overview.utils';
     OverviewTabs,
     DayOrders,
     SquadSheet,
+    CampaignPanel,
   ],
   templateUrl: './overview.html',
   styleUrl: './overview.scss',
@@ -94,6 +97,8 @@ import { readSeenReport, writeSeenReport } from './overview.utils';
 })
 export class Overview {
   protected readonly fullCampaignPopulation = FULL_CAMPAIGN_POPULATION;
+
+  protected readonly ruleAnchor = RULE_ANCHOR;
 
   private readonly campaignApi = inject(CampaignApi);
 

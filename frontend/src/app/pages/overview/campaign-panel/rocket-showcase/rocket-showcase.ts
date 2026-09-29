@@ -15,7 +15,7 @@ import { Translation } from '@core/i18n/translation';
 import { drawShip, noseHeight, outline } from '@shared/rocket/rocket-drawing.utils';
 import { ROCKET_PART_COUNT, SHIP, SKIRT } from '@shared/rocket/rocket-drawing.constants';
 import { svgElement as el } from '@core/svg/svg-element.utils';
-import { RocketPart } from '../campaign.model';
+import { RocketPart } from '../campaign-panel.model';
 import {
   VIEW_WIDTH,
   BASE_Y,

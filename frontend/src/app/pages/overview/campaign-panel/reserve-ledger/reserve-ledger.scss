@@ -38,21 +38,17 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  margin-left: auto;
   color: var(--color-text-muted);
 }
 
 .fold-hide,
-.fold[open] .fold-show,
-.fold[open] .fold-spark {
+.fold[open] .fold-show {
   display: none;
 }
 
 .fold[open] .fold-hide {
   display: inline;
-}
-
-.fold[open] .fold-cue {
-  margin-left: auto;
 }
 
 .fold-chev {
@@ -61,39 +57,6 @@
 
 .fold[open] .fold-chev {
   rotate: 180deg;
-}
-
-/* The miniature: two rows of ten, food then components, on the same scale. */
-.fold-spark {
-  display: grid;
-  gap: 0.3rem;
-  margin-left: auto;
-}
-
-.sp-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.22rem;
-  height: 1.1rem;
-}
-
-.sp-row i {
-  width: 0.34rem;
-  height: max(2px, var(--h, 0) * 1.1rem);
-  background: var(--k);
-}
-
-.sp-row i.sp-todo {
-  height: 2px;
-  background: rgb(236 232 225 / 18%);
-}
-
-.sp-row--food {
-  --k: var(--color-accent-green);
-}
-
-.sp-row--components {
-  --k: var(--color-accent-cyan);
 }
 
 .fold-body {

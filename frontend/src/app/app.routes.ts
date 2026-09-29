@@ -4,7 +4,6 @@ import { Shell } from '@layout/shell/shell';
 import { adminGuard } from '@core/admin/admin.guard';
 import { landingEntryGuard } from '@core/landing/landing-entry.guard';
 import { tourEntryGuard } from '@core/tour/tour-entry.guard';
-import { Campaign } from '@pages/campaign/campaign';
 import { Challenges } from '@pages/challenges/challenges';
 import { Landing } from '@pages/landing/landing';
 import { Leaderboard } from '@pages/leaderboard/leaderboard';
@@ -111,15 +110,15 @@ export const routes: Routes = [
           import('@pages/player-profile/match-detail/match-detail').then((m) => m.MatchDetail),
       },
       {
+        // The campaign page was folded into the overview's campaign tab; its old addresses stay
+        // valid rather than breaking every link that already points at them.
         path: 'campaign',
-        title: 'campaign.title',
-        component: Campaign,
+        redirectTo: 'overview',
+        pathMatch: 'full',
       },
       {
-        // The colony and the campaign were two pages until they turned out to be one run; the old
-        // address stays valid rather than breaking every link that already points at it.
         path: 'colony',
-        redirectTo: 'campaign',
+        redirectTo: 'overview',
         pathMatch: 'full',
       },
       {

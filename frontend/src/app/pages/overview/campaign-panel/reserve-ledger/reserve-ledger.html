@@ -6,19 +6,6 @@
         {{ 'campaign.ledger.title' | translate }}
       </b>
     </p>
-    <span aria-hidden="true" class="fold-spark">
-      @for (row of rows(); track row.key) {
-        <span [class]="'sp-row sp-row--' + row.key">
-          @for (bar of row.spark; track $index) {
-            @if (bar === null) {
-              <i class="sp-todo"></i>
-            } @else {
-              <i [style.--h]="bar"></i>
-            }
-          }
-        </span>
-      }
-    </span>
     <span class="fold-cue label-caption text-2xs">
       <span class="fold-show">{{ 'campaign.ledger.show' | translate }}</span>
       <span class="fold-hide">{{ 'campaign.ledger.hide' | translate }}</span>

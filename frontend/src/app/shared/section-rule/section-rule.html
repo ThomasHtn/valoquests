@@ -28,6 +28,7 @@
     <ng-content />
     @if (link(); as route) {
       <a
+        [fragment]="linkFragment()"
         [routerLink]="route"
         class="group/link focus-ring tracking-label inline-flex items-center gap-2 font-mono text-xs font-medium text-brand-400 uppercase transition-colors hover:text-[#f0c493] hover:underline hover:underline-offset-4"
       >

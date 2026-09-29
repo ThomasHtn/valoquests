@@ -19,26 +19,12 @@
   stroke-opacity: 0.5;
 }
 
-/* The road between planets: the strip's own dashed segment, scaled down. */
-.road {
-  fill: none;
-  stroke: #5b7688;
-  stroke-width: 1.5;
-  stroke-dasharray: 2 2;
-}
-
 /* The thing the reader waits on: brand, still dotted because it does not exist yet. */
 .mark {
   fill: none;
   stroke: currentColor;
   stroke-width: 1;
   stroke-dasharray: 2 3;
-}
-
-/* Planets are drawn full, unlike the rest: dotted at this size they vanish. */
-.mark.solid {
-  stroke-dasharray: none;
-  stroke-width: 1.25;
 }
 
 .stars {

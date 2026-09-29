@@ -159,9 +159,10 @@
         <section aria-labelledby="mission-title">
           <app-section-rule
             [heading]="'overview.mission.title' | translate: { planet: mission.planetName }"
+            [linkFragment]="ruleAnchor.sunday"
             [linkLabel]="'overview.mission.link' | translate"
             headingId="mission-title"
-            link="/campaign"
+            link="/rules"
           />
 
           <div appScanWires class="scan">
@@ -200,8 +201,8 @@
       <div class="flex flex-col gap-7">
         <app-overview-tabs [(selected)]="selectedTab" [tabs]="tabs()" panelId="overview-panel" />
 
-        <!-- Interim split until each tab gets its own content: only the blocks that already match
-             a tab are shown. The challenges tab is the day's recap: its challenge and its gains. -->
+        <!-- The challenges tab is the day's recap: its challenge and its gains. The matches tab has
+             no content yet. -->
         <div
           [attr.aria-labelledby]="'overview-tab-' + selectedTab()"
           id="overview-panel"
@@ -214,6 +215,9 @@
             }
             @case ('contributions') {
               <app-squad-sheet [rosterCount]="rosterCount()" [rows]="squad()" />
+            }
+            @case ('campaign') {
+              <app-campaign-panel [campaign]="campaign()" />
             }
           }
         </div>

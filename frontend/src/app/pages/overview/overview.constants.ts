@@ -32,9 +32,5 @@ export const OVERVIEW_TABS: readonly {
     link: { route: '/leaderboard', labelKey: 'overview.squad.link' },
   },
   { key: 'matches', tone: 'neutral', link: null },
-  {
-    key: 'campaign',
-    tone: 'amber',
-    link: { route: '/campaign', labelKey: 'overview.mission.link' },
-  },
+  { key: 'campaign', tone: 'amber', link: null },
 ];

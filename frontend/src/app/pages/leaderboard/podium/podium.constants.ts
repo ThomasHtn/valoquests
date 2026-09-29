@@ -22,3 +22,8 @@ export const STAR = '#ece8e1';
  * Warm accent of the first plinth.
  */
 export const EMBER = '#e8ab6b';
+
+/**
+ * Seed of the star field, so the same sky comes back on every visit.
+ */
+export const SKY_SEED = 20260905;

@@ -7,7 +7,6 @@
 export type NavIcon =
   | 'layout-dashboard'
   | 'target'
-  | 'map'
   | 'trophy'
   | 'users'
   | 'book-open'

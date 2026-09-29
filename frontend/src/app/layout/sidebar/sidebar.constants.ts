@@ -2,9 +2,8 @@ import { NavGroup } from './sidebar.model';
 
 /**
  * Primary navigation, in display order, chaptered the way the game reads: the expedition (the
- * week's home, its challenges, the campaign they add up to), then the squad (who is winning, who
- * is in it), then help. On the collapsed rail the captions have nothing to render: a hairline
- * stands in for each break.
+ * week's home and its challenges), then the squad (who is winning, who is in it), then help. On
+ * the collapsed rail the captions have nothing to render: a hairline stands in for each break.
  *
  * Kept as data rather than repeated markup so the shared layout and long Tailwind class list are
  * written once and iterated with `@for`. Entries without a `routerLink` have no page yet and
@@ -16,7 +15,6 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { labelKey: 'overview', icon: 'layout-dashboard', routerLink: '/overview', exactMatch: true },
       { labelKey: 'challenges', icon: 'target', routerLink: '/challenges' },
-      { labelKey: 'campaign', icon: 'map', routerLink: '/campaign' },
     ],
   },
   {

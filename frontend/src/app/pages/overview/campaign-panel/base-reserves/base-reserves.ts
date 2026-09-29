@@ -4,7 +4,7 @@ import { LucideSkull, LucideUsers, LucideWheat, LucideWrench } from '@lucide/ang
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { Reserves } from '../campaign.model';
+import { Reserves } from '../campaign-panel.model';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
 

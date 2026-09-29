@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { LedgerCell, LedgerRow } from '../campaign.model';
+import { LedgerCell, LedgerRow } from '../campaign-panel.model';
 
 /**
  * One cell of the ledger: a week of one resource.
