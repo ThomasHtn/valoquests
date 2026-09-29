@@ -14,7 +14,10 @@ import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalDayMonth } from '@core/date/date-time.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { resolveCompetitiveTierVisual } from '@core/players/competitive-tier.utils';
+import {
+  resolveCompetitiveTierIconUrl,
+  resolveCompetitiveTierVisual,
+} from '@core/players/competitive-tier.utils';
 import {
   formatHeadshotPercentage,
   formatKda,
@@ -24,6 +27,7 @@ import {
   PersonalRecords as PersonalRecordsData,
   RecordEntry,
 } from '@core/players/player-progression.model';
+import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { RecordKey, RecordTile } from './personal-records.model';
 
@@ -39,6 +43,7 @@ import { RecordKey, RecordTile } from './personal-records.model';
   imports: [
     TranslatePipe,
     Tooltip,
+    RankIconView,
     LucideCrosshair,
     LucideZap,
     LucideFlame,
@@ -113,7 +118,10 @@ export class PersonalRecords {
       const tier = resolveCompetitiveTierVisual(records.peakTier, (key) =>
         this.translation.translate(key),
       );
-      tiles.push(this.simpleTile('peakTier', tier.label));
+      tiles.push({
+        ...this.simpleTile('peakTier', tier.label),
+        rankIcon: { src: resolveCompetitiveTierIconUrl(records.peakTier), label: tier.label },
+      });
     }
 
     const max = this.max();
@@ -147,6 +155,7 @@ export class PersonalRecords {
         agent: entry.agentName,
         date: formatLocalDayMonth(entry.achievedAt, this.translation.language()),
       }),
+      rankIcon: null,
     });
   }
 
@@ -162,6 +171,7 @@ export class PersonalRecords {
       key,
       value,
       tooltip: this.translation.translate(`playerProfile.progression.records.tooltip.${key}`),
+      rankIcon: null,
     };
   }
 }

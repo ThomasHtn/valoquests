@@ -51,11 +51,16 @@
               <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideStar></svg>
             }
             @default {
-              <svg
-                aria-hidden="true"
-                class="size-5 shrink-0 text-brand-500"
-                lucideShieldCheck
-              ></svg>
+              @if (tile.rankIcon; as rankIcon) {
+                <!-- The tier's own badge says the rank at a glance; the label below keeps its name. -->
+                <app-rank-icon-view [src]="rankIcon.src" [tierLabel]="rankIcon.label" size="sm" />
+              } @else {
+                <svg
+                  aria-hidden="true"
+                  class="size-5 shrink-0 text-brand-500"
+                  lucideShieldCheck
+                ></svg>
+              }
             }
           }
 

@@ -43,10 +43,10 @@
       {{ 'playerProfile.notFound.back' | translate }}
     </a>
 
-    <!-- Skeleton shaped like the loaded banner — same silhouette, same notch — so data arriving
-       does not shift the page. -->
+    <!-- Skeleton shaped like the loaded banner — same silhouette — so data arriving does not shift
+       the page. -->
     <div
-      class="notch-tr flex items-center gap-5 border-l-2 border-surface-700 bg-text-primary/4 p-5 [--notch:1.25rem]"
+      class="flex items-center gap-5 border-l-2 border-surface-700 bg-text-primary/4 p-5"
       skeleton
     >
       <span class="size-24 shrink-0 rounded-full bg-surface-700"></span>
@@ -58,10 +58,10 @@
 
     @if (details(); as playerDetails) {
       <!-- Identity banner: same surface as a row of the registry this page is reached from — flat
-         tint, leading rule, cut corner — so the profile reads as that row opened up rather than as
+         tint, leading rule — so the profile reads as that row opened up rather than as
          a separate kind of panel. -->
       <section
-        class="notch-tr flex flex-col gap-5 border-l-2 border-text-primary/15 bg-text-primary/4 p-5 [--notch:1.25rem] sm:flex-row sm:items-center sm:justify-between sm:p-6"
+        class="flex flex-col gap-5 border-l-2 border-text-primary/15 bg-text-primary/4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
       >
         <div class="flex items-center gap-5">
           <app-avatar [priority]="true" [src]="avatarUrl()" size="lg" />
@@ -114,8 +114,7 @@
       </section>
 
       <!-- Filter bar. Every control scoping the page — mode, season, period — is its own block,
-         each wearing the identity banner's surface and cut corner rather than sharing one
-         continuous band with hairline rules: a group reads as one instrument, not as a stretch of
+         each wearing the identity banner's surface rather than sharing one continuous band with hairline rules: a group reads as one instrument, not as a stretch of
          a longer one. The display switch is a block of its own too, pushed to the trailing edge
          since it governs what the page shows, not what it counts.
 

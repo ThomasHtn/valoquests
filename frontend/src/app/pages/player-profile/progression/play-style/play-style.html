@@ -9,10 +9,11 @@
   </h3>
 
   @if (hasSample()) {
-    <!-- Target sheet: the figure on the left, its dimensions called out on the right. The four
-         corner ticks are the whole of the framing — a full frame around the silhouette would box
-         it in and turn the one loud element on this page into another card. -->
-    <div class="relative flex items-stretch gap-4 py-4 sm:gap-6">
+    <!-- Target sheet: the figure on the left, its dimensions called out on the right, centered as
+         one group so a wide column leaves no dead space on the right. The four corner ticks are the
+         whole of the framing — a full frame around the silhouette would box it in and turn the one
+         loud element on this page into another card. -->
+    <div class="relative flex items-stretch justify-center gap-4 py-4 sm:gap-6">
       <span
         aria-hidden="true"
         class="absolute top-0 left-0 size-3 border-t border-l border-brand-500/30"
@@ -64,7 +65,7 @@
 
       <!-- Callouts. The three rows grow in the proportions of the zones they name, so each one
            lands beside its own part of the figure without a single hard-coded offset. -->
-      <ul class="flex min-w-0 flex-1 flex-col">
+      <ul class="flex min-w-0 flex-col">
         @for (zone of zones(); track zone.key; let index = $index) {
           <li
             [class]="index === 0 ? 'grow-[12]' : 'grow-[44]'"
