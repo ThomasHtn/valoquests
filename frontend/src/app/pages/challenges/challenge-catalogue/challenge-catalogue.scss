@@ -61,21 +61,19 @@
   line-height: 1.35;
   color: var(--color-text-secondary);
   background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
 }
 
-/* No edge at rest, only the group's plate carries the tone; the hovered row takes it back with a
-   tinted ground and brighter text. */
+/* The hovered row takes a tinted ground and brighter text. */
 .crow:hover {
   color: var(--color-text-primary);
   background: color-mix(in srgb, var(--tone) 10%, transparent);
-  box-shadow: inset 3px 0 0 var(--tone);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .crow {
     transition:
       color var(--duration-fast) var(--ease-out-quart),
-      background-color var(--duration-fast) var(--ease-out-quart),
-      box-shadow var(--duration-fast) var(--ease-out-quart);
+      background-color var(--duration-fast) var(--ease-out-quart);
   }
 }

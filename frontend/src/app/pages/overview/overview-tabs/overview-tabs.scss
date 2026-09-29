@@ -1,48 +1,28 @@
 /*
  * The tabs are the heading of their panel, so they take a section rule's place and look: sitting
- * on its hairline, left-aligned on the column, the one on screen lit in amber and underlined. Only
- * that one carries colour, its badge included, so amber always means the selection.
+ * on its hairline, sharing the column's full width in equal parts, the one on screen lit in amber
+ * and underlined. Only that one carries colour, so amber always means the selection.
  */
 
 :host {
   display: block;
+  container-type: inline-size;
 }
 
-.rule {
-  position: relative;
-  display: flex;
-  align-items: stretch;
-  gap: 1.5rem;
-
-  /* The hairline, drawn under the tabs so the selected one's underline can cover it. */
-  &::after {
-    content: '';
-    position: absolute;
-    inset: auto 0 0;
-    height: 1px;
-    background: var(--color-edge);
-  }
-}
-
-/* When the tabs outgrow the column they scroll sideways under the thumb. */
 .bar {
-  flex: 1 1 auto;
-  min-width: 0;
   display: flex;
-  overflow-x: auto;
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  /* The rule's hairline, painted under the tabs so the selected underline covers it. */
+  box-shadow: inset 0 -1px var(--color-edge);
 }
 
+/* Equal shares of the row, never narrower than their content. */
 .tab {
   position: relative;
-  flex: none;
+  flex: 1 0 0;
+  min-width: max-content;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   min-height: 3rem;
   padding: 0.5rem 1.125rem;
@@ -51,50 +31,39 @@
   color: var(--color-text-secondary);
   white-space: nowrap;
   cursor: pointer;
-  scroll-snap-align: start;
-  transition: color 0.2s;
-
-  /* Flush with the column, like a section title. */
-  &:first-child {
-    padding-left: 0;
-  }
-
-  /* Short hairline between tabs, the same edge as the rule beneath. */
-  & + &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 1px;
-    height: 1.25rem;
-    translate: 0 -50%;
-    background: var(--color-edge);
-  }
+  transition:
+    color 0.2s,
+    background-color 0.2s;
 
   &::after {
     content: '';
     position: absolute;
     z-index: 1;
-    inset: auto 1.125rem 0;
+    inset: auto 0 0;
     height: 2px;
-    background: transparent;
+    background: var(--color-brand-500);
+    opacity: 0;
+    transition: opacity 0.2s;
   }
 
-  &:first-child::after {
-    left: 0;
-  }
-
+  /* Hover previews the selection: a fainter tint and a half-lit bar. */
   &:hover {
     color: var(--color-text-primary);
+    background: color-mix(in srgb, var(--color-brand-500) 4%, transparent);
+
+    &::after {
+      opacity: 0.5;
+    }
   }
 }
 
 .tab--on,
 .tab--on:hover {
   color: var(--color-brand-400);
+  background: color-mix(in srgb, var(--color-brand-500) 8%, transparent);
 
   &::after {
-    background: var(--color-brand-500);
+    opacity: 1;
   }
 }
 
@@ -114,74 +83,31 @@
   text-transform: uppercase;
 }
 
-.tab-badge {
-  --tone: var(--color-text-secondary);
-
-  padding: 0.125rem 0.4375rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-  color: var(--tone);
-  background: color-mix(in srgb, var(--tone) 12%, transparent);
-}
-
-.tab--on .tab-badge--cyan {
-  --tone: var(--color-accent-cyan);
-}
-
-.tab--on .tab-badge--amber {
-  --tone: var(--color-brand-400);
-}
-
-.tab--on .tab-badge--violet {
-  --tone: var(--color-accent-purple);
-}
-
-.rule-link {
-  flex: none;
-  align-self: center;
-}
-
-/* On a phone the link climbs above the tabs, right-aligned, and leaves them the whole row. */
-@media (width < 48rem) {
-  .rule {
-    flex-wrap: wrap;
-    row-gap: 0.25rem;
-  }
-
+/* A column too narrow for one row folds the bar into a two-by-two grid, so every tab stays in
+   sight, each cell carrying its own hairline. */
+@container (width < 40rem) {
   .bar {
-    flex-basis: 100%;
-  }
-
-  .rule-link {
-    order: -1;
-    margin-left: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    box-shadow: none;
   }
 
   .tab {
-    padding-inline: 0.875rem;
-  }
-
-  .tab:first-child {
-    padding-left: 0;
-  }
-
-  .tab::after {
-    inset-inline: 0.875rem;
-  }
-
-  .tab:first-child::after {
-    left: 0;
+    min-width: 0;
+    padding-inline: 0.625rem;
+    box-shadow: inset 0 -1px var(--color-edge);
   }
 
   .tab-label {
+    overflow: hidden;
     font-size: 0.9375rem;
+    text-overflow: ellipsis;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tab {
+  .tab,
+  .tab::after {
     transition: none;
   }
 }

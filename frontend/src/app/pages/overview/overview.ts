@@ -18,7 +18,6 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
-import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
 import { PageHeader } from '@layout/page-header/page-header';
 import { CountUp } from '@shared/count-up/count-up';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
@@ -97,8 +96,6 @@ import { readSeenReport, writeSeenReport } from './overview.utils';
 })
 export class Overview {
   protected readonly fullCampaignPopulation = FULL_CAMPAIGN_POPULATION;
-
-  protected readonly ruleAnchor = RULE_ANCHOR;
 
   private readonly campaignApi = inject(CampaignApi);
 
@@ -263,14 +260,7 @@ export class Overview {
   protected readonly selectedTab = signal<OverviewTabKey>('challenges');
 
   protected readonly tabs = computed<readonly OverviewTab[]>(() =>
-    buildTabs(
-      this.dailyOrder(),
-      this.tally(),
-      this.squad(),
-      this.stagesDone(),
-      CAMPAIGN_WEEK_COUNT,
-      (key, params) => this.translation.translate(key, params),
-    ),
+    buildTabs((key, params) => this.translation.translate(key, params)),
   );
 
   protected readonly rosterCount = computed(

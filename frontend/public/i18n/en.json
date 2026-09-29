@@ -689,27 +689,22 @@
     },
     "mission": {
       "title": "This week's mission: {{planet}}",
-      "link": "The rules",
       "planet": "Planet {{index}} of {{weeks}} · {{category}}",
       "planetAria": "{{planet}}, the planet of week {{week}}. Amber marks on its surface stand for the {{wounded}} wounded, and the breakthrough in its lines reaches {{percent}}%."
     },
     "tabs": {
       "aria": "Overview sections",
       "challenges": {
-        "label": "Challenges",
-        "badge": "{{done}}/{{total}} today"
+        "label": "Challenges"
       },
       "contributions": {
-        "label": "Contributions",
-        "badge": "{{active}}/{{total}} active"
+        "label": "Contributions"
       },
       "matches": {
-        "label": "Matches",
-        "badge": "{{count}} today"
+        "label": "Matches"
       },
       "campaign": {
-        "label": "Campaign",
-        "badge": "stage {{done}}/{{total}}"
+        "label": "Campaign"
       }
     },
     "report": {
@@ -764,7 +759,6 @@
       "aboardTooltip": "The smallest of the three caps beside it, multiplied by the breakthrough, plus the wounded already secured by validated challenges: what comes home on Sunday night."
     },
     "orders": {
-      "link": "The challenges",
       "daily": "Daily challenge",
       "noDaily": "No challenge drawn for today.",
       "tally": "What the day gave",
@@ -784,7 +778,6 @@
       "of": "of {{count}}"
     },
     "squad": {
-      "link": "Full leaderboard",
       "operator": "Operator",
       "operatorTooltip": "The operator's name, with their title if they hold one: Champion for last week's winner, otherwise Regular, Scout, Quartermaster or Mechanic.",
       "streak": "Attendance",

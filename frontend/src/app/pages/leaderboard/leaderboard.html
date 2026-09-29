@@ -182,8 +182,7 @@
               {{ row.name }}
             </span>
           </span>
-          <!-- The one title held, under the name rather than beside it: a long name plus a
-               badge ran wider than its column and folded onto itself anyway. -->
+          <!-- The one title held, beside the name, dropping under only when the column is too narrow. -->
           @if (row.isChampion) {
             <span class="who-titles">
               <app-champion-badge />

@@ -7,7 +7,6 @@ import {
   linkedSignal,
   signal,
 } from '@angular/core';
-import { LucideChevronDown } from '@lucide/angular';
 import { CampaignApi } from '@core/campaign/campaign-api';
 import {
   CHALLENGE_DIFFICULTIES,
@@ -66,7 +65,6 @@ import { DailyWeek } from './daily-week/daily-week';
     DailyWeek,
     ChallengeCardView,
     ChallengeCatalogueView,
-    LucideChevronDown,
   ],
   templateUrl: './challenges.html',
   styleUrl: './challenges.scss',

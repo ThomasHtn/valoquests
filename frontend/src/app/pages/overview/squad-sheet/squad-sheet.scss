@@ -131,13 +131,14 @@
   letter-spacing: 0.02em;
 }
 
-/* The name column reserves the badge's line whether or not a title is held, so a titled row
-   stands exactly as tall as the row above it. */
+/* The badge sits beside the name and drops under only when the column is too narrow; the
+   minimum height keeps a wrapped row as tall as the others. */
 .ros-who > .min-w-0 {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.25rem;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
+  gap: 0.25rem 0.625rem;
   min-height: 2.5rem;
 }
 

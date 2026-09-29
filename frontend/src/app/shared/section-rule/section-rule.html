@@ -1,21 +1,34 @@
-<!-- One line wherever it fits: on a phone the hairline gives way first; the link only drops under
-     the title, right-aligned, when the title's longest word would otherwise run under it. With
-     `wrapSide`, the phone keeps the hairline to the diamond and the projected content takes the
-     next line: the right-hand group dissolves into the row so its parts can be laid out apart. -->
+<!-- One line wherever it fits. On a phone the hairline always runs to the diamond, save beside a
+     caption, the title wrapping rather than pushing them to a line of their own, and both sit on
+     its last line (0.9375rem is half a phone title's line); the right-hand group dissolves into
+     the row so its parts can be laid out apart: the link and the projected content (`wrapSide`)
+     take the next line. -->
 <div class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
   <h2
+    #title
+    [class]="keepsLine() ? 'max-sm:max-w-[calc(100%-3.5rem)]' : ''"
     [id]="headingId()"
     class="font-display min-w-0 text-[clamp(1.5rem,1.1rem+1.1vw,2rem)] leading-tight font-semibold tracking-[0.01em] text-brand-400 uppercase"
   >
     {{ heading() }}
   </h2>
   <span
-    [class]="wrapSide() ? 'block' : 'hidden sm:block'"
+    [class]="
+      keepsLine()
+        ? 'block max-sm:mb-[calc(0.9375rem-0.5px)] max-sm:basis-4 max-sm:self-end'
+        : 'hidden sm:block'
+    "
     aria-hidden="true"
     class="h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent"
   ></span>
   <span
-    [class]="wrapSide() ? 'max-sm:contents' : ''"
+    [class]="
+      dissolves()
+        ? 'max-sm:contents'
+        : side()
+          ? ''
+          : 'max-sm:mb-[calc(0.9375rem-4px)] max-sm:self-end'
+    "
     class="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-x-4 gap-y-1"
   >
     @if (side(); as caption) {
@@ -30,19 +43,20 @@
       <a
         [fragment]="linkFragment()"
         [routerLink]="route"
-        class="group/link focus-ring tracking-label inline-flex items-center gap-2 font-mono text-xs font-medium text-brand-400 uppercase transition-colors hover:text-[#f0c493] hover:underline hover:underline-offset-4"
+        class="focus-ring tracking-label font-mono text-xs font-medium text-brand-400 uppercase transition-colors hover:text-[#f0c493] hover:underline hover:underline-offset-4 max-sm:order-last max-sm:-mt-1.5 max-sm:basis-full max-sm:text-right"
       >
         {{ linkLabel() }}
-        <span
-          aria-hidden="true"
-          class="transition-transform duration-(--duration-base) group-hover/link:translate-x-1"
-          >→</span
-        >
       </a>
     }
     <!-- Dropped on a phone when a wrapped caption is all it would close: it would sit alone on a line. -->
     <span
-      [class]="side() && !link() ? 'max-sm:hidden' : ''"
+      [class]="
+        side() && !link()
+          ? 'max-sm:hidden'
+          : dissolves()
+            ? 'max-sm:mb-[calc(0.9375rem-4px)] max-sm:self-end'
+            : ''
+      "
       aria-hidden="true"
       class="size-2 rotate-45 border border-brand-500/70"
     ></span>

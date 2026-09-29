@@ -1,5 +1,15 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  afterRenderEffect,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  input,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
+
+import { fitToLines } from './section-rule.utils';
 
 /**
  * Heading of a page section: the title, a fading rule, an optional link to the page that owns
@@ -51,4 +61,29 @@ export class SectionRule {
    * itself (`order` and a full `flex-basis` below `sm`).
    */
   public readonly wrapSide = input(false);
+
+  /**
+   * Whether the hairline stays on a phone: only a caption, which keeps the title's line, needs its
+   * room.
+   */
+  protected readonly keepsLine = computed(() => this.wrapSide() || !this.side());
+
+  /**
+   * Whether, on a phone, the right-hand group dissolves into the row so the link or the projected
+   * content can take a line of their own.
+   */
+  protected readonly dissolves = computed(() => this.wrapSide() || !!this.link());
+
+  private readonly title = viewChild.required<ElementRef<HTMLHeadingElement>>('title');
+
+  constructor() {
+    // A title wrapped on a phone hugs its text, so the hairline starts where the words end.
+    afterRenderEffect((onCleanup) => {
+      this.heading();
+      const title = this.title().nativeElement;
+      const observer = new ResizeObserver(() => fitToLines(title));
+      observer.observe(title.parentElement ?? title);
+      onCleanup(() => observer.disconnect());
+    });
+  }
 }

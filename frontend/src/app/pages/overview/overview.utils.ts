@@ -27,7 +27,6 @@ import {
   MissionReportBlow,
   MissionReportChampion,
   OverviewTab,
-  OverviewTabKey,
   SquadRow,
 } from './overview.model';
 import { streakBonusOf, streakWeekOf } from '@shared/streak-gauge/streak-gauge.utils';
@@ -529,38 +528,11 @@ export function writeSeenReport(weekStart: string): void {
 }
 
 /**
- * Builds the overview's tab bar: each tab's name and the one figure its badge summarises.
+ * Builds the overview's tab bar: each tab's name.
  *
- * @param order - The day's challenge, or `null` when none was drawn.
- * @param tally - What the day has given, or `null` outside a week in progress.
- * @param squad - The squad sheet, one row per active operator.
- * @param stagesDone - Rocket stages built, one per guardian defeated.
- * @param stageCount - Rocket stages a full campaign builds.
  * @param translate - Resolves a translation key.
  * @returns The tabs in bar order.
  */
-export function buildTabs(
-  order: DailyOrder | null,
-  tally: DayTally | null,
-  squad: readonly SquadRow[],
-  stagesDone: number,
-  stageCount: number,
-  translate: Translate,
-): readonly OverviewTab[] {
-  const params: Record<OverviewTabKey, Record<string, number> | null> = {
-    challenges: order ? { done: order.card.doneCount, total: order.card.rungs.length } : null,
-    contributions: tally ? { active: tally.presence, total: tally.roster } : null,
-    matches: { count: squad.reduce((sum, row) => sum + row.matchCount, 0) },
-    campaign: { done: stagesDone, total: stageCount },
-  };
-  return OVERVIEW_TABS.map(({ key, tone, link }) => {
-    const badgeParams = params[key];
-    return {
-      key,
-      tone,
-      link,
-      label: translate(`overview.tabs.${key}.label`),
-      badge: badgeParams === null ? null : translate(`overview.tabs.${key}.badge`, badgeParams),
-    };
-  });
+export function buildTabs(translate: Translate): readonly OverviewTab[] {
+  return OVERVIEW_TABS.map((key) => ({ key, label: translate(`overview.tabs.${key}.label`) }));
 }

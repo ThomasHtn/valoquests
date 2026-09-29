@@ -1,4 +1,4 @@
-import { OverviewTabKey, OverviewTabLink, OverviewTabTone } from './overview.model';
+import { OverviewTabKey } from './overview.model';
 
 /**
  * Population a campaign run to its end is expected to reach at the normal tier: the scale the
@@ -13,24 +13,11 @@ export const FULL_CAMPAIGN_POPULATION = 30_000;
 export const SEEN_REPORT_KEY = 'valoquests.missionReport.seen';
 
 /**
- * The overview's tabs, in bar order, with the colour of the figure each one summarises and the
- * page that expands its panel.
+ * The overview's tabs, in bar order.
  */
-export const OVERVIEW_TABS: readonly {
-  key: OverviewTabKey;
-  tone: OverviewTabTone;
-  link: OverviewTabLink | null;
-}[] = [
-  {
-    key: 'challenges',
-    tone: 'cyan',
-    link: { route: '/challenges', labelKey: 'overview.orders.link' },
-  },
-  {
-    key: 'contributions',
-    tone: 'violet',
-    link: { route: '/leaderboard', labelKey: 'overview.squad.link' },
-  },
-  { key: 'matches', tone: 'neutral', link: null },
-  { key: 'campaign', tone: 'amber', link: null },
+export const OVERVIEW_TABS: readonly OverviewTabKey[] = [
+  'challenges',
+  'contributions',
+  'matches',
+  'campaign',
 ];

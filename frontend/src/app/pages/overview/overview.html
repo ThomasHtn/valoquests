@@ -159,16 +159,13 @@
         <section aria-labelledby="mission-title">
           <app-section-rule
             [heading]="'overview.mission.title' | translate: { planet: mission.planetName }"
-            [linkFragment]="ruleAnchor.sunday"
-            [linkLabel]="'overview.mission.link' | translate"
             headingId="mission-title"
-            link="/rules"
           />
 
           <div appScanWires class="scan">
             <svg aria-hidden="true" class="wires" data-wires></svg>
 
-            <div>
+            <div class="orbit">
               <app-planet-figure
                 [guardianLeft]="mission.guardianLeft"
                 [weekIndex]="mission.weekIndex"

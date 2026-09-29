@@ -661,12 +661,7 @@ export interface DayPip {
 export type OverviewTabKey = 'challenges' | 'contributions' | 'matches' | 'campaign';
 
 /**
- * Colour family of a tab's badge, taken from the figure it summarises.
- */
-export type OverviewTabTone = 'cyan' | 'amber' | 'violet' | 'neutral';
-
-/**
- * One tab as the bar draws it: its name, and the figure its badge carries.
+ * One tab as the bar draws it.
  */
 export interface OverviewTab {
   /**
@@ -678,34 +673,4 @@ export interface OverviewTab {
    * Translated name of the tab.
    */
   readonly label: string;
-
-  /**
-   * Translated figure beside the name, or `null` while its data is missing.
-   */
-  readonly badge: string | null;
-
-  /**
-   * Colour family of the badge, shown only while the tab is selected.
-   */
-  readonly tone: OverviewTabTone;
-
-  /**
-   * Page that expands the tab's panel, or `null` when none does.
-   */
-  readonly link: OverviewTabLink | null;
-}
-
-/**
- * The way out of a tab's panel to the page that expands it.
- */
-export interface OverviewTabLink {
-  /**
-   * Route of the page.
-   */
-  readonly route: string;
-
-  /**
-   * Translation key of the link's text.
-   */
-  readonly labelKey: string;
 }

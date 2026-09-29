@@ -21,11 +21,11 @@
             [src]="row.portrait"
           />
 
-          <span class="name">
-            {{ row.name }}
-          </span>
-          <!-- The title's line is reserved on every plinth, held or not, so the three stand level. -->
-          <span class="title">
+          <!-- The title rides beside the name, dropping under only when the plinth is too narrow. -->
+          <span class="identity">
+            <span class="name">
+              {{ row.name }}
+            </span>
             @if (row.isChampion) {
               <app-champion-badge />
             } @else if (row.title; as title) {

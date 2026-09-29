@@ -49,10 +49,13 @@
   margin-bottom: 1.5rem;
 }
 
-.fold-cue {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+/* On a phone, a line of its own under the rule, right-aligned on the diamond. */
+@media (width < 40rem) {
+  .fold-cue {
+    order: 1;
+    flex-basis: 100%;
+    text-align: right;
+  }
 }
 
 /* Mirrors the section rule link's hover. */
@@ -60,12 +63,4 @@
   color: #f0c493;
   text-decoration: underline;
   text-underline-offset: 4px;
-}
-
-.fold-cue svg {
-  transition: rotate 0.25s var(--ease-out-quart);
-}
-
-.fold[open] .fold-cue svg {
-  rotate: 180deg;
 }

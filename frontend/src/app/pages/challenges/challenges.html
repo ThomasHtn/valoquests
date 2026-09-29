@@ -82,21 +82,18 @@
             </h2>
             <span
               aria-hidden="true"
-              class="h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent"
+              class="h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent max-sm:basis-4"
             ></span>
-            <!-- Same cue as a section rule's link, with a chevron since it unfolds in place. -->
-            <span class="ml-auto flex items-center gap-x-4">
-              <span
-                class="fold-cue tracking-label font-mono text-xs font-medium text-brand-400 uppercase transition-colors"
-              >
-                {{
-                  (catalogueOpen() ? 'challenges.catalogue.hide' : 'challenges.catalogue.show')
-                    | translate
-                }}
-                <svg aria-hidden="true" class="size-3.5" lucideChevronDown></svg>
-              </span>
-              <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
+            <!-- Same cue as a section rule's link: before the diamond, under the rule on a phone. -->
+            <span
+              class="fold-cue tracking-label font-mono text-xs font-medium text-brand-400 uppercase transition-colors"
+            >
+              {{
+                (catalogueOpen() ? 'challenges.catalogue.hide' : 'challenges.catalogue.show')
+                  | translate
+              }}
             </span>
+            <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
           </summary>
           @if (catalogueOpen()) {
             <app-resource-state

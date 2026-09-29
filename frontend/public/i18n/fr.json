@@ -689,27 +689,22 @@
     },
     "mission": {
       "title": "Mission de la semaine : {{planet}}",
-      "link": "Le règlement",
       "planet": "Planète {{index}} sur {{weeks}} · {{category}}",
       "planetAria": "{{planet}}, la planète de la semaine {{week}}. Des marques ambre à sa surface tiennent lieu des {{wounded}} blessés, et la percée dans ses lignes atteint {{percent}} %."
     },
     "tabs": {
       "aria": "Sections de la vue d'ensemble",
       "challenges": {
-        "label": "Défis",
-        "badge": "{{done}}/{{total}} aujourd'hui"
+        "label": "Défis"
       },
       "contributions": {
-        "label": "Contributions",
-        "badge": "{{active}}/{{total}} actifs"
+        "label": "Contributions"
       },
       "matches": {
-        "label": "Parties",
-        "badge": "{{count}} aujourd'hui"
+        "label": "Parties"
       },
       "campaign": {
-        "label": "Campagne",
-        "badge": "étage {{done}}/{{total}}"
+        "label": "Campagne"
       }
     },
     "report": {
@@ -764,7 +759,6 @@
       "aboardTooltip": "Le plus petit des trois plafonds voisins, multiplié par la percée, plus les blessés déjà acquis par les défis validés : ce qui reviendra dimanche soir."
     },
     "orders": {
-      "link": "Les défis",
       "daily": "Défi du jour",
       "noDaily": "Aucun défi tiré pour aujourd'hui.",
       "tally": "Ce que la journée a donné",
@@ -784,7 +778,6 @@
       "of": "sur {{count}}"
     },
     "squad": {
-      "link": "Tout le classement",
       "operator": "Opérateur",
       "operatorTooltip": "Le pseudo de l'opérateur, avec son titre s'il en détient un : Champion pour le premier de la semaine passée, sinon Assidu, Éclaireur, Intendant ou Mécano.",
       "streak": "Assiduité",

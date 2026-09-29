@@ -293,7 +293,7 @@ button.week {
     gap: 4.5rem;
   }
 
-  .scan > div:first-of-type {
+  .orbit {
     align-self: center;
   }
 }
@@ -314,7 +314,8 @@ button.week {
 /* The orbit is a decoration on a phone: the report beside it is the reading a thumb scrolls to
    next, and the planet only pushed it further down. */
 @media (width < 40rem) {
-  [data-planet] {
+  /* The slot goes too, or the grid's gap would still open above the report. */
+  .orbit {
     display: none;
   }
 }

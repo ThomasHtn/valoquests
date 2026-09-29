@@ -72,23 +72,24 @@
 
                Wraps rather than truncates: this is the hero the page opens on, and a name cut
                short would be the one thing the screen exists to name. -->
-            <h1
-              [class.text-accent-gold]="isChampion()"
-              [class.text-text-primary]="!isChampion()"
-              class="font-display flex min-w-0 flex-wrap items-center gap-2 text-2xl leading-tight font-bold uppercase sm:text-3xl"
-            >
-              <span class="min-w-0 break-words">{{ playerDetails.displayName }}</span>
-            </h1>
-            <p class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-              @if (tag()) {
-                <span class="font-mono text-2xs text-text-muted">#{{ tag() }}</span>
-              }
+            <!-- The title beside the name, outside the heading, dropping under only when too narrow. -->
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <h1
+                [class.text-accent-gold]="isChampion()"
+                [class.text-text-primary]="!isChampion()"
+                class="font-display flex min-w-0 flex-wrap items-center gap-2 text-2xl leading-tight font-bold uppercase sm:text-3xl"
+              >
+                <span class="min-w-0 break-words">{{ playerDetails.displayName }}</span>
+              </h1>
               @if (isChampion()) {
                 <app-champion-badge size="md" />
               } @else if (title(); as playerTitle) {
                 <app-title-badge [title]="playerTitle.key" size="md" />
               }
-            </p>
+            </div>
+            @if (tag()) {
+              <p class="mt-2.5 font-mono text-2xs text-text-muted">#{{ tag() }}</p>
+            }
           </div>
         </div>
 

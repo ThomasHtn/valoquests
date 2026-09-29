@@ -350,6 +350,11 @@
 /* On a phone the key sits as one line above the figure, both flush left: a centred key over a
    left-aligned figure read as two blocks, and the reference drifted to the right edge. */
 @media (width < 40rem) {
+  /* The clock keeps its own height, or it opens a gap under the section title. */
+  .report:has(> .rep-clock) {
+    grid-template-rows: auto;
+  }
+
   .rep-clock {
     padding-inline: 1.25rem;
   }
