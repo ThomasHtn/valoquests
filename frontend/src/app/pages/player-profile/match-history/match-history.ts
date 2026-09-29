@@ -30,15 +30,18 @@ import {
 } from '@core/players/player-format.utils';
 import { resolveKdVisual } from '@core/players/player-stats.utils';
 import { Breakpoint } from '@core/viewport/breakpoint';
+import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
+import { Avatar } from '@shared/avatar/avatar';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { MatchDay } from '../match-day.model';
+import { HistoryMatch, MatchDay } from '../match-day.model';
 import { MediaThumbnail } from '../media-thumbnail/media-thumbnail';
 import { MATCH_ROW_GRID_CLASS } from '../player-profile.constants';
 
 /**
- * A player's match history, grouped by day: a grid on large viewports, cards below.
+ * A match history, grouped by day: a grid on large viewports, cards below. Serves a player's own
+ * history and the squad's shared one, whose rows lead with the player instead of the map.
  *
  * Presentational: the page owns the paging and the filters, this component only renders what it
  * is given and asks for the next page once its trailing sentinel scrolls into view.
@@ -50,6 +53,7 @@ import { MATCH_ROW_GRID_CLASS } from '../player-profile.constants';
     RouterLink,
     MediaThumbnail,
     ResourceState,
+    Avatar,
     Tooltip,
     LucideArrowDown,
     LucideLoaderCircle,
@@ -59,14 +63,21 @@ import { MATCH_ROW_GRID_CLASS } from '../player-profile.constants';
 })
 export class MatchHistory {
   /**
-   * Player whose history this is, for the links out to each match.
+   * Player whose history this is, for the links out to each match; `null` on the squad's history,
+   * where each row names its own player.
    */
-  public readonly playerId = input.required<number>();
+  public readonly playerId = input<number | null>(null);
 
   /**
    * Every match fetched so far, grouped into the days they were played on.
    */
-  public readonly days = input.required<readonly MatchDay[]>();
+  public readonly days = input.required<readonly MatchDay<HistoryMatch>[]>();
+
+  /**
+   * Empty state drawn as a plate, for a history that waits on matches rather than on a filter to
+   * clear; `null` keeps the profile's filter message.
+   */
+  public readonly emptyPlate = input<EmptyPlate | null>(null);
 
   /**
    * Whether no match matched the filters.
@@ -164,6 +175,13 @@ export class MatchHistory {
       observer.observe(element);
       onCleanup(() => observer.disconnect());
     });
+  }
+
+  /**
+   * Route to a match's detail, under the player who played it.
+   */
+  protected matchLink(row: HistoryMatch): readonly (string | number)[] {
+    return ['/players', row.player?.id ?? this.playerId() ?? '', 'matches', row.id];
   }
 
   /**

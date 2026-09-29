@@ -6,7 +6,7 @@ import {
   model,
   viewChildren,
 } from '@angular/core';
-import { LucideMap, LucideRadio, LucideTarget, LucideUserPen } from '@lucide/angular';
+import { LucideMap, LucideRadio, LucideSunrise, LucideUserPen } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { OverviewTab, OverviewTabKey } from '../overview.model';
@@ -18,7 +18,7 @@ import { OverviewTab, OverviewTabKey } from '../overview.model';
  */
 @Component({
   selector: 'app-overview-tabs',
-  imports: [TranslatePipe, LucideMap, LucideRadio, LucideTarget, LucideUserPen],
+  imports: [TranslatePipe, LucideMap, LucideRadio, LucideSunrise, LucideUserPen],
   templateUrl: './overview-tabs.html',
   styleUrl: './overview-tabs.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

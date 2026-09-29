@@ -8,11 +8,20 @@
         <p class="gauge-head">
           <span class="gauge-name">{{ 'overview.capacity.carry' | translate }}</span>
         </p>
-        <span
+        <button
           [appTooltip]="carryTooltip()"
-          [appTooltipDelay]="tooltipDelay"
+          [attr.aria-label]="
+            'overview.capacity.info' | translate: { name: 'overview.capacity.carry' | translate }
+          "
           appTooltipPosition="below"
           appTooltipSize="md"
+          appTooltipTrigger="click"
+          class="info focus-ring"
+          type="button"
+        >
+          <svg aria-hidden="true" class="size-4" lucideInfo></svg>
+        </button>
+        <span
           [attr.aria-label]="
             'overview.capacity.carryAria'
               | translate
@@ -24,9 +33,8 @@
           "
           [style.--pct]="capacity.carry.fraction"
           appInView
-          class="gauge focus-ring cursor-help"
+          class="gauge"
           role="img"
-          tabindex="0"
         >
           <svg aria-hidden="true" viewBox="0 0 100 100">
             <circle class="g-track" cx="50" cy="50" r="43" />
@@ -65,11 +73,20 @@
         <p class="gauge-head">
           <span class="gauge-name">{{ 'overview.capacity.shelter' | translate }}</span>
         </p>
-        <span
+        <button
           [appTooltip]="shelterTooltip()"
-          [appTooltipDelay]="tooltipDelay"
+          [attr.aria-label]="
+            'overview.capacity.info' | translate: { name: 'overview.capacity.shelter' | translate }
+          "
           appTooltipPosition="below"
           appTooltipSize="md"
+          appTooltipTrigger="click"
+          class="info focus-ring"
+          type="button"
+        >
+          <svg aria-hidden="true" class="size-4" lucideInfo></svg>
+        </button>
+        <span
           [attr.aria-label]="
             'overview.capacity.shelterAria'
               | translate
@@ -81,9 +98,8 @@
           "
           [style.--pct]="capacity.shelter.fraction"
           appInView
-          class="gauge focus-ring cursor-help"
+          class="gauge"
           role="img"
-          tabindex="0"
         >
           <svg aria-hidden="true" viewBox="0 0 100 100">
             <circle class="g-track" cx="50" cy="50" r="43" />
@@ -122,20 +138,28 @@
         <p class="gauge-head">
           <span class="gauge-name">{{ 'overview.capacity.breach' | translate }}</span>
         </p>
-        <span
+        <button
           [appTooltip]="breachTooltip()"
-          [appTooltipDelay]="tooltipDelay"
+          [attr.aria-label]="
+            'overview.capacity.info' | translate: { name: 'overview.capacity.breach' | translate }
+          "
           appTooltipPosition="below"
           appTooltipSize="md"
+          appTooltipTrigger="click"
+          class="info focus-ring"
+          type="button"
+        >
+          <svg aria-hidden="true" class="size-4" lucideInfo></svg>
+        </button>
+        <span
           [attr.aria-label]="
             'overview.capacity.breachAria'
               | translate: { boss: bossLabel(), percent: capacity.breach.value }
           "
           [style.--pct]="capacity.breach.fraction"
           appInView
-          class="gauge focus-ring cursor-help"
+          class="gauge"
           role="img"
-          tabindex="0"
         >
           <svg aria-hidden="true" viewBox="0 0 100 100">
             <circle class="g-track" cx="50" cy="50" r="43" />
@@ -180,11 +204,20 @@
             'overview.capacity.aboard' | translate
           }}</span>
         </p>
-        <span
+        <button
           [appTooltip]="aboardTooltip()"
-          [appTooltipDelay]="tooltipDelay"
+          [attr.aria-label]="
+            'overview.capacity.info' | translate: { name: 'overview.capacity.aboard' | translate }
+          "
           appTooltipPosition="below"
           appTooltipSize="md"
+          appTooltipTrigger="click"
+          class="info focus-ring"
+          type="button"
+        >
+          <svg aria-hidden="true" class="size-4" lucideInfo></svg>
+        </button>
+        <span
           [attr.aria-label]="
             'overview.capacity.aboardAria'
               | translate
@@ -198,9 +231,8 @@
           "
           [style.--pct]="capacity.aboardFraction"
           appInView
-          class="gauge focus-ring cursor-help"
+          class="gauge"
           role="img"
-          tabindex="0"
         >
           <svg aria-hidden="true" viewBox="0 0 100 100">
             <circle class="g-track" cx="50" cy="50" r="43" />

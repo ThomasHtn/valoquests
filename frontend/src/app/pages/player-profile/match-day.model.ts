@@ -1,12 +1,43 @@
 import { Match } from '@core/matches/match.model';
 
 /**
- * One day of a player's match history, with the day's own record.
+ * The player a history row belongs to, shown on the squad's shared history only: a player's own
+ * history never names them on every row.
+ */
+export interface MatchOwner {
+  /**
+   * Internal identifier of the player, for the link out to the match.
+   */
+  readonly id: number;
+
+  /**
+   * Name shown across the application.
+   */
+  readonly name: string;
+
+  /**
+   * Resolved avatar URL, or `null` for the placeholder icon.
+   */
+  readonly portrait: string | null;
+}
+
+/**
+ * One row of a match history: the match, named after its player on the squad's shared history.
+ */
+export interface HistoryMatch extends Match {
+  /**
+   * Who played the match, absent on a player's own history.
+   */
+  readonly player?: MatchOwner;
+}
+
+/**
+ * One day of a match history, with the day's own record.
  *
  * The history is read as a series of sessions rather than as a flat list: grouping by day is what
  * lets a reader recognize an evening of play and relate it to the week of challenges in progress.
  */
-export interface MatchDay {
+export interface MatchDay<T extends Match = Match> {
   /**
    * Calendar day the matches were played on, as `YYYY-MM-DD` in the reader's timezone. Used as the
    * group's tracking key.
@@ -31,7 +62,7 @@ export interface MatchDay {
   /**
    * The day's matches, in the order the API returned them.
    */
-  readonly matches: readonly Match[];
+  readonly matches: readonly T[];
 
   /**
    * Average K/D ratio across the day's matches.

@@ -4,7 +4,8 @@ import { API_ENDPOINTS } from '@core/http/api-endpoints';
 import { PageResponse } from '@core/http/page-response.model';
 import { GameMode } from './game-mode.model';
 import { Match, MatchDetail } from './match.model';
-import { MATCH_HISTORY_PAGE_SIZE } from './matches-api.constants';
+import { MATCH_HISTORY_PAGE_SIZE, SQUAD_MATCH_PAGE_SIZE } from './matches-api.constants';
+import { SquadMatch } from './squad-match.model';
 
 /**
  * Data-access service for tracked players' match history.
@@ -46,6 +47,21 @@ export class MatchesApi {
         },
       };
     });
+  }
+
+  /**
+   * Paginated matches of the day for the campaign roster, newest first.
+   *
+   * Created per caller, like {@link history}: parameterized by the requested page.
+   *
+   * @param page - Reactive zero-based page index.
+   * @returns The reactive resource fetching the requested page of the squad's matches.
+   */
+  public squad(page: Signal<number>): HttpResourceRef<PageResponse<SquadMatch> | undefined> {
+    return httpResource<PageResponse<SquadMatch>>(() => ({
+      url: API_ENDPOINTS.squadMatches,
+      params: { page: page(), size: SQUAD_MATCH_PAGE_SIZE },
+    }));
   }
 
   /**

@@ -8,8 +8,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import io.github.thomashtn.valoquests.campaign.entity.Campaign;
+import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.match.dto.MatchDetailResponse;
 import io.github.thomashtn.valoquests.match.dto.MatchResponse;
+import io.github.thomashtn.valoquests.match.dto.SquadMatchResponse;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.match.exception.MatchNotFoundException;
@@ -20,6 +23,7 @@ import io.github.thomashtn.valoquests.match.repository.PlayerMatchHistoryCriteri
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
+import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.model.ValuedMatch;
@@ -30,6 +34,7 @@ import io.github.thomashtn.valoquests.week.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,6 +61,11 @@ class DefaultMatchQueryServiceTest {
     private static final long PLAYER_ID = 1L;
 
     /**
+     * Identifier of the campaign whose roster the squad history lists.
+     */
+    private static final long CAMPAIGN_ID = 5L;
+
+    /**
      * Monday the fixture matches belong to.
      */
     private static final LocalDate FIXTURE_WEEK_START = LocalDate.of(2026, 7, 13);
@@ -72,12 +82,15 @@ class DefaultMatchQueryServiceTest {
     @Mock
     private DailyOutputReader dailyOutputReader;
 
+    @Mock
+    private CampaignRepository campaignRepository;
+
     private DefaultMatchQueryService service;
 
     @BeforeEach
     void setUp() {
         service = new DefaultMatchQueryService(
-            playerRepository, playerMatchRepository, weekCalendar, dailyOutputReader
+            playerRepository, playerMatchRepository, weekCalendar, dailyOutputReader, campaignRepository
         );
     }
 
@@ -436,6 +449,88 @@ class DefaultMatchQueryServiceTest {
 
         assertThatThrownBy(() -> service.findDetail(PLAYER_ID, 999L))
             .isInstanceOf(MatchNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("names each squad match after its player and prices it with the rest of the squad")
+    void shouldNameEachSquadMatchAfterItsPlayerAndPriceIt() {
+        PlayerMatch own = match(20, 10, 5, 0, 0, 0, "Blue");
+        PlayerMatch ally = match(12, 14, 8, 0, 0, 0, "Blue");
+        ally.setId(101L);
+        Player allyPlayer = new Player();
+        allyPlayer.setId(2L);
+        allyPlayer.setDisplayName("teammate");
+        allyPlayer.setPortrait("Sova");
+        ally.setPlayer(allyPlayer);
+        givenCampaign();
+        when(playerMatchRepository.findSquadHistory(any(), any(), any(), any(), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(own, ally), PageRequest.of(0, 10), 2));
+        when(weekCalendar.dayOf(any(Instant.class))).thenReturn(FIXTURE_WEEK_START);
+        when(dailyOutputReader.read(any(), eq(FIXTURE_WEEK_START), eq(FIXTURE_WEEK_START)))
+            .thenReturn(outputOf(valued(101L, FIXTURE_WEEK_START, 250, 50, 0, 80, 170)));
+
+        PageResponse<SquadMatchResponse> page = service.findSquad(0, 10);
+
+        assertThat(page.content()).extracting(SquadMatchResponse::playerId).containsExactly(PLAYER_ID, 2L);
+        assertThat(page.content().get(1).displayName()).isEqualTo("teammate");
+        assertThat(page.content().get(1).portrait()).isEqualTo("Sova");
+        assertThat(page.content().get(1).match().valoquestsDamage()).isEqualTo(250);
+        assertThat(page.content().get(0).match().valoquestsDamage()).isZero();
+        assertThat(page.totalElements()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("lists today's matches of the campaign roster, archived players left out")
+    void shouldListTodaysMatchesOfTheCampaignRoster() {
+        Instant dayStart = Instant.parse("2026-07-14T22:00:00Z");
+        Instant dayEnd = Instant.parse("2026-07-15T22:00:00Z");
+        givenCampaign();
+        when(weekCalendar.startOfDay(FIXTURE_WEEK_START)).thenReturn(dayStart);
+        when(weekCalendar.endOfDay(FIXTURE_WEEK_START)).thenReturn(dayEnd);
+        when(playerMatchRepository.findSquadHistory(any(), any(), any(), any(), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+
+        PageResponse<SquadMatchResponse> page = service.findSquad(0, 10);
+
+        assertThat(page.content()).isEmpty();
+        verify(playerMatchRepository).findSquadHistory(
+            eq(CAMPAIGN_ID),
+            eq(EnumSet.of(PlayerStatus.ACTIVE, PlayerStatus.INACTIVE)),
+            eq(dayStart),
+            eq(dayEnd),
+            any(Pageable.class)
+        );
+        verifyNoInteractions(dailyOutputReader);
+    }
+
+    @Test
+    @DisplayName("answers an empty squad history when no campaign was ever opened")
+    void shouldAnswerAnEmptySquadHistoryWithoutACampaign() {
+        when(campaignRepository.findFirstByOrderByNumberDesc()).thenReturn(Optional.empty());
+
+        PageResponse<SquadMatchResponse> page = service.findSquad(0, 10);
+
+        assertThat(page.content()).isEmpty();
+        assertThat(page.totalPages()).isZero();
+        verifyNoInteractions(playerMatchRepository);
+    }
+
+    @Test
+    @DisplayName("rejects a squad page outside the public contract before touching the database")
+    void shouldRejectAnInvalidSquadPage() {
+        assertThatThrownBy(() -> service.findSquad(-1, 10))
+            .isInstanceOf(InvalidRequestException.class);
+        verifyNoInteractions(campaignRepository, playerMatchRepository);
+    }
+
+    /**
+     * Makes a campaign exist, with today falling on the fixture week's Monday.
+     */
+    private void givenCampaign() {
+        Campaign campaign = new Campaign();
+        campaign.setId(CAMPAIGN_ID);
+        when(campaignRepository.findFirstByOrderByNumberDesc()).thenReturn(Optional.of(campaign));
+        when(weekCalendar.today()).thenReturn(FIXTURE_WEEK_START);
     }
 
     private PlayerMatch match(

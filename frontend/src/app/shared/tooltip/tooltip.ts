@@ -6,11 +6,12 @@ import {
   TOOLTIP_PORTRAIT_FALLBACK_CLASS,
   TOOLTIP_SURFACE_CLASS,
 } from './tooltip.constants';
-import { TooltipPosition } from './tooltip.model';
+import { TooltipPosition, TooltipTrigger } from './tooltip.model';
 import { nextInstanceId } from '@core/dom/instance-id.utils';
 
 /**
- * Shows a short text bubble describing its host on hover and on keyboard focus.
+ * Shows a short text bubble describing its host on hover and on keyboard focus, or, for a
+ * dedicated info button, on mouse hover and on tap or keyboard activation.
  *
  * Replaces Angular Material's `matTooltip`, which pulled `@angular/material` and `@angular/cdk`
  * into the initial bundle for this single feature. Every tooltip in this application supplements
@@ -28,8 +29,11 @@ import { nextInstanceId } from '@core/dom/instance-id.utils';
 @Directive({
   selector: '[appTooltip]',
   host: {
-    '(mouseenter)': 'scheduleShow()',
-    '(mouseleave)': 'hide()',
+    '(mouseenter)': 'onPointerEnter()',
+    '(mouseleave)': 'onPointerLeave()',
+    '(pointerenter)': 'onMouseOver($event)',
+    '(pointerleave)': 'onMouseOut($event)',
+    '(click)': 'toggle($event)',
     // Focus opens the bubble at once: the delay exists to keep a pointer crossing the host from
     // flashing it, and a keyboard user does not cross anything.
     '(focusin)': 'showOnHostFocus($event)',
@@ -77,6 +81,12 @@ export class Tooltip implements OnDestroy {
   public readonly appTooltipDelay = input(0);
 
   /**
+   * `click` hands the bubble to a dedicated info button: a mouse opens it on hover, a tap or the
+   * keyboard toggles it, and an outside tap, Escape or leaving focus closes it.
+   */
+  public readonly appTooltipTrigger = input<TooltipTrigger>('hover');
+
+  /**
    * Portrait drawn before the text, for a tooltip naming a player: a URL, `null` for the generic
    * fallback disc, or `undefined` (the default) for a text-only bubble.
    */
@@ -108,6 +118,11 @@ export class Tooltip implements OnDestroy {
   private escapeListener: (() => void) | null = null;
 
   /**
+   * Removes the document-level outside-click listener of a click tooltip, or `null` while hidden.
+   */
+  private outsideListener: (() => void) | null = null;
+
+  /**
    * Pending {@link appTooltipDelay} timer, or `null` while none is armed.
    */
   private showTimer: ReturnType<typeof setTimeout> | null = null;
@@ -133,11 +148,62 @@ export class Tooltip implements OnDestroy {
    * @param event - The focus event that reached the host.
    */
   protected showOnHostFocus(event: FocusEvent): void {
-    if (event.target !== this.host.nativeElement) {
+    if (this.isClickTriggered() || event.target !== this.host.nativeElement) {
       return;
     }
 
     this.show();
+  }
+
+  protected onPointerEnter(): void {
+    if (!this.isClickTriggered()) {
+      this.scheduleShow();
+    }
+  }
+
+  protected onPointerLeave(): void {
+    if (!this.isClickTriggered()) {
+      this.hide();
+    }
+  }
+
+  /**
+   * Opens a click tooltip under a real mouse; touch sends pointer events too and must go on tapping.
+   */
+  protected onMouseOver(event: PointerEvent): void {
+    if (this.isClickTriggered() && event.pointerType === 'mouse') {
+      this.show();
+    }
+  }
+
+  protected onMouseOut(event: PointerEvent): void {
+    if (this.isClickTriggered() && event.pointerType === 'mouse') {
+      this.hide();
+    }
+  }
+
+  /**
+   * Opens or closes a click tooltip on tap or keyboard; a mouse click is left to hover, so it does
+   * not close the bubble the pointer just opened. Ignored by hover tooltips.
+   */
+  protected toggle(event: MouseEvent): void {
+    if (!this.isClickTriggered()) {
+      return;
+    }
+
+    if (event instanceof PointerEvent && event.pointerType === 'mouse') {
+      return;
+    }
+
+    if (this.bubble()) {
+      this.hide();
+    } else {
+      this.show();
+    }
+  }
+
+  private isClickTriggered(): boolean {
+    return this.appTooltipTrigger() === 'click';
   }
 
   /**
@@ -201,6 +267,9 @@ export class Tooltip implements OnDestroy {
     this.renderer.setAttribute(this.host.nativeElement, 'aria-describedby', this.tooltipId);
     this.bubble.set(bubble);
     this.listenForEscape();
+    if (this.isClickTriggered()) {
+      this.listenForOutsideClick();
+    }
   }
 
   /**
@@ -282,6 +351,8 @@ export class Tooltip implements OnDestroy {
 
     this.escapeListener?.();
     this.escapeListener = null;
+    this.outsideListener?.();
+    this.outsideListener = null;
 
     this.renderer.removeAttribute(this.host.nativeElement, 'aria-describedby');
     this.togglePopover(bubble, false);
@@ -382,6 +453,21 @@ export class Tooltip implements OnDestroy {
       'keydown',
       (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
+          this.hide();
+        }
+      },
+    );
+  }
+
+  /**
+   * Closes a click tooltip when the pointer goes down anywhere outside its host.
+   */
+  private listenForOutsideClick(): void {
+    this.outsideListener = this.renderer.listen(
+      this.document(),
+      'pointerdown',
+      (event: PointerEvent) => {
+        if (!this.host.nativeElement.contains(event.target as Node)) {
           this.hide();
         }
       },

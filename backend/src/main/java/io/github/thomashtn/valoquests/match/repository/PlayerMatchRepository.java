@@ -146,6 +146,43 @@ public interface PlayerMatchRepository
     );
 
     /**
+     * Returns a page of the matches a campaign's roster played over a half-open period.
+     *
+     * <p>Backs the squad's shared history, so the player is fetched with each row: every entry is
+     * named after who played it. The roster is the one frozen at the campaign's opening, further
+     * narrowed to the statuses the caller lists.
+     *
+     * @param campaignId  campaign whose roster the players must belong to
+     * @param statuses    statuses a player may hold for their matches to be returned
+     * @param periodStart inclusive beginning of the period
+     * @param periodEnd   exclusive end of the period
+     * @param pageable    pagination and sort parameters
+     * @return the requested page of matches
+     */
+    @EntityGraph(attributePaths = {"player", "match", "match.season"})
+    @Query(
+        """
+            SELECT playerMatch
+            FROM PlayerMatch playerMatch
+            WHERE playerMatch.player.status IN :statuses
+              AND playerMatch.player.id IN (
+                SELECT rosterEntry.player.id
+                FROM CampaignPlayer rosterEntry
+                WHERE rosterEntry.campaign.id = :campaignId
+              )
+              AND playerMatch.match.startedAt >= :periodStart
+              AND playerMatch.match.startedAt < :periodEnd
+            """
+    )
+    Page<PlayerMatch> findSquadHistory(
+        @Param("campaignId") Long campaignId,
+        @Param("statuses") Collection<PlayerStatus> statuses,
+        @Param("periodStart") Instant periodStart,
+        @Param("periodEnd") Instant periodEnd,
+        Pageable pageable
+    );
+
+    /**
      * Returns all matches required to calculate one player's profile statistics.
      *
      * @param playerId internal player identifier

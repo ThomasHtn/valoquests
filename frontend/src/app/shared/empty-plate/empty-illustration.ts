@@ -20,7 +20,7 @@ import { EmptyIllustration as EmptyIllustrationKind } from './empty-plate.model'
 })
 export class EmptyIllustration {
   /**
-   * Which of the four drawings to render.
+   * Which of the drawings to render.
    */
   public readonly kind = input.required<EmptyIllustrationKind>();
 }

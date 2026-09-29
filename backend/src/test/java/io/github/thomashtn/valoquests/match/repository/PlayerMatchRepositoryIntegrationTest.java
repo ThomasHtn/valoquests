@@ -2,6 +2,12 @@ package io.github.thomashtn.valoquests.match.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.thomashtn.valoquests.campaign.entity.Campaign;
+import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayer;
+import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
+import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerRepository;
+import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
+import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.integration.PostgreSqlIntegrationTest;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.Season;
@@ -13,11 +19,15 @@ import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.EnumSet;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -50,6 +60,12 @@ class PlayerMatchRepositoryIntegrationTest
 
     @Autowired
     private PlayerMatchRepository playerMatchRepository;
+
+    @Autowired
+    private CampaignRepository campaignRepository;
+
+    @Autowired
+    private CampaignPlayerRepository campaignPlayerRepository;
 
     /**
      * Ensures the {@code map}/{@code agent} filters accept {@code null} without a type-resolution
@@ -214,6 +230,69 @@ class PlayerMatchRepositoryIntegrationTest
         assertThat(unbounded).hasSize(1);
         assertThat(insideWeek).hasSize(1);
         assertThat(outsideWeek).isEmpty();
+    }
+
+    /**
+     * Ensures the squad history keeps the campaign roster's matches of the period only, archived
+     * members left out, sorted on the Valorant match's start as the service asks for.
+     */
+    @Test
+    void shouldListSquadHistoryForTheCampaignRosterOverThePeriod() {
+        Player member = createPlayer();
+        Player archivedMember = createPlayer("archived", PlayerStatus.ARCHIVED);
+        Player outsider = createPlayer("outsider", PlayerStatus.ACTIVE);
+        ValorantMatch match = createMatch(createSeason());
+        playerMatchRepository.save(createPlayerMatch(member, match));
+        playerMatchRepository.save(createPlayerMatch(archivedMember, match));
+        playerMatchRepository.save(createPlayerMatch(outsider, match));
+        Campaign campaign = new Campaign();
+        campaign.setNumber(1);
+        campaign.setStatus(CampaignStatus.RUNNING);
+        campaign.setOpenedAt(Instant.parse("2026-07-10T10:00:00Z"));
+        campaign.setFirstWeekStart(LocalDate.of(2026, 7, 13));
+        campaign.setLastWeekStart(LocalDate.of(2026, 9, 14));
+        campaign.setRosterSize(2);
+        campaign.setDifficulty(CampaignDifficulty.AMATEUR);
+        campaign = campaignRepository.save(campaign);
+        for (Player player : List.of(member, archivedMember)) {
+            CampaignPlayer rosterEntry = new CampaignPlayer();
+            rosterEntry.setCampaign(campaign);
+            rosterEntry.setPlayer(player);
+            campaignPlayerRepository.save(rosterEntry);
+        }
+        Sort newestFirst = Sort.by(Sort.Direction.DESC, "match.startedAt", "id");
+
+        Page<PlayerMatch> sameDay = playerMatchRepository.findSquadHistory(
+            campaign.getId(),
+            EnumSet.of(PlayerStatus.ACTIVE, PlayerStatus.INACTIVE),
+            Instant.parse("2026-07-20T00:00:00Z"),
+            Instant.parse("2026-07-21T00:00:00Z"),
+            PageRequest.of(0, 10, newestFirst)
+        );
+        Page<PlayerMatch> nextDay = playerMatchRepository.findSquadHistory(
+            campaign.getId(),
+            EnumSet.of(PlayerStatus.ACTIVE, PlayerStatus.INACTIVE),
+            Instant.parse("2026-07-21T00:00:00Z"),
+            Instant.parse("2026-07-22T00:00:00Z"),
+            PageRequest.of(0, 10, newestFirst)
+        );
+
+        assertThat(sameDay.getContent())
+            .extracting(playerMatch -> playerMatch.getPlayer().getId())
+            .containsExactly(member.getId());
+        assertThat(nextDay).isEmpty();
+    }
+
+    private Player createPlayer(String name, PlayerStatus status) {
+        Player player = new Player();
+
+        player.setRiotPuuid("player-match-repository-test-" + name + "-puuid");
+        player.setGameName(name);
+        player.setTagLine("TEST");
+        player.setDisplayName(name + "#TEST");
+        player.setStatus(status);
+
+        return playerRepository.save(player);
     }
 
     private Player createPlayer() {

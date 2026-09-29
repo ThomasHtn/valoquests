@@ -193,9 +193,9 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 2px;
-  translate: -1px 0;
-  background: var(--color-surface-950);
+  width: 1px;
+  translate: -0.5px 0;
+  background: color-mix(in srgb, var(--color-surface-950) 55%, transparent);
 }
 
 .val {

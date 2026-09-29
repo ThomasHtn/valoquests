@@ -695,7 +695,7 @@
     "tabs": {
       "aria": "Overview sections",
       "challenges": {
-        "label": "Challenges"
+        "label": "Day"
       },
       "contributions": {
         "label": "Contributions"
@@ -734,6 +734,7 @@
       }
     },
     "capacity": {
+      "info": "How it works: {{name}}",
       "title": "Extraction capacity",
       "carry": "Carrying capacity",
       "carryAria": "Components can carry {{count}} wounded out of the {{wounded}} spotted, {{percent}}%.",
@@ -861,6 +862,12 @@
       "nextLabel": "Next target:",
       "nextSub": "{{hp}} HP to take down, {{wounded}} wounded to extract.",
       "continue": "Continue"
+    },
+    "matches": {
+      "empty": {
+        "title": "No match today",
+        "text": "Matches from the campaign's players appear here as soon as they are imported, every 30 minutes."
+      }
     }
   },
   "pageHeader": {

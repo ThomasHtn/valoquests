@@ -695,7 +695,7 @@
     "tabs": {
       "aria": "Sections de la vue d'ensemble",
       "challenges": {
-        "label": "Défis"
+        "label": "Journée"
       },
       "contributions": {
         "label": "Contributions"
@@ -734,6 +734,7 @@
       }
     },
     "capacity": {
+      "info": "Comment se calcule : {{name}}",
       "title": "Capacité d'extraction",
       "carry": "Capacité d'emport",
       "carryAria": "Les composants permettent d'emporter {{count}} blessés sur les {{wounded}} repérés, soit {{percent}} %.",
@@ -861,6 +862,12 @@
       "nextLabel": "Prochaine cible :",
       "nextSub": "{{hp}} PV à abattre, {{wounded}} blessés à extraire.",
       "continue": "Continuer"
+    },
+    "matches": {
+      "empty": {
+        "title": "Aucune partie aujourd'hui",
+        "text": "Les parties des joueurs de la campagne apparaissent ici dès leur import, toutes les 30 minutes."
+      }
     }
   },
   "pageHeader": {

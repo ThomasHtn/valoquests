@@ -1,8 +1,11 @@
 package io.github.thomashtn.valoquests.match.service;
 
+import io.github.thomashtn.valoquests.campaign.entity.Campaign;
+import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.match.dto.MatchDetailResponse;
 import io.github.thomashtn.valoquests.match.dto.MatchResponse;
 import io.github.thomashtn.valoquests.match.dto.MatchTeammateResponse;
+import io.github.thomashtn.valoquests.match.dto.SquadMatchResponse;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.exception.MatchNotFoundException;
 import io.github.thomashtn.valoquests.match.model.GameMode;
@@ -11,6 +14,7 @@ import io.github.thomashtn.valoquests.match.model.MatchResult;
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchHistoryCriteria;
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
+import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.model.ValuedMatch;
@@ -24,9 +28,13 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
@@ -41,6 +49,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class DefaultMatchQueryService implements MatchQueryService {
+
+    /**
+     * Roster players the squad history lists: every public listing leaves archived players out.
+     */
+    private static final Set<PlayerStatus> SQUAD_STATUSES =
+        EnumSet.complementOf(EnumSet.of(PlayerStatus.ARCHIVED));
+
+    /**
+     * Newest first, the identifier breaking ties between rows of one shared match.
+     */
+    private static final Sort NEWEST_FIRST = Sort.by(Sort.Direction.DESC, "match.startedAt", "id");
 
     /**
      * Repository used to load tracked players.
@@ -58,6 +77,11 @@ public class DefaultMatchQueryService implements MatchQueryService {
     private final WeekCalendar weekCalendar;
 
     /**
+     * Resolves the campaign whose roster the squad history lists.
+     */
+    private final CampaignRepository campaignRepository;
+
+    /**
      * Prices each match with both multipliers, so the history can say what a game was worth to the
      * squad and not only how it went.
      */
@@ -70,17 +94,20 @@ public class DefaultMatchQueryService implements MatchQueryService {
      * @param playerMatchRepository repository used to query persisted player matches
      * @param weekCalendar          calendar resolving a week's instant bounds
      * @param dailyOutputReader     reader pricing each match with both multipliers
+     * @param campaignRepository    repository resolving the campaign the site shows
      */
     public DefaultMatchQueryService(
         PlayerRepository playerRepository,
         PlayerMatchRepository playerMatchRepository,
         WeekCalendar weekCalendar,
-        DailyOutputReader dailyOutputReader
+        DailyOutputReader dailyOutputReader,
+        CampaignRepository campaignRepository
     ) {
         this.playerRepository = playerRepository;
         this.playerMatchRepository = playerMatchRepository;
         this.weekCalendar = weekCalendar;
         this.dailyOutputReader = dailyOutputReader;
+        this.campaignRepository = campaignRepository;
     }
 
     /**
@@ -121,13 +148,63 @@ public class DefaultMatchQueryService implements MatchQueryService {
         Page<PlayerMatch> matches = playerMatchRepository.findHistory(
             playerId,
             criteria,
-            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "match.startedAt", "id"))
+            PageRequest.of(page, size, NEWEST_FIRST)
         );
         List<PlayerMatch> pageMatches = matches.getContent();
-        Map<Long, ValuedMatch> valuedByPlayerMatchId = value(playerId, pageMatches);
+        Map<Long, ValuedMatch> valuedByPlayerMatchId = value(
+            pageMatches,
+            (firstDay, lastDay) -> dailyOutputReader.readPlayer(playerId, firstDay, lastDay)
+        );
         return new PageResponse<>(
             pageMatches.stream()
                 .map(playerMatch -> toResponse(playerMatch, valuedByPlayerMatchId))
+                .toList(),
+            matches.getNumber(),
+            matches.getSize(),
+            matches.getTotalElements(),
+            matches.getTotalPages()
+        );
+    }
+
+    /**
+     * Returns one page of the squad's matches of the day.
+     *
+     * <p>The roster is the latest campaign's: the live one when it exists, since a campaign can only
+     * open once the previous one closed, else the last closed one the site still shows.
+     *
+     * @param page zero-based page index
+     * @param size requested page size
+     * @return requested page of the squad's matches
+     */
+    @Override
+    public PageResponse<SquadMatchResponse> findSquad(int page, int size) {
+        PaginationGuard.assertValidPageRequest(page, size);
+        Optional<Campaign> campaign = campaignRepository.findFirstByOrderByNumberDesc();
+        if (campaign.isEmpty()) {
+            return new PageResponse<>(List.of(), page, size, 0, 0);
+        }
+        LocalDate today = weekCalendar.today();
+        Page<PlayerMatch> matches = playerMatchRepository.findSquadHistory(
+            campaign.get().getId(),
+            SQUAD_STATUSES,
+            weekCalendar.startOfDay(today),
+            weekCalendar.endOfDay(today),
+            PageRequest.of(page, size, NEWEST_FIRST)
+        );
+        List<PlayerMatch> pageMatches = matches.getContent();
+        // Priced through the same reader as each player's own history, so both show one amount.
+        Map<Long, ValuedMatch> valuedByPlayerMatchId = value(
+            pageMatches,
+            (firstDay, lastDay) -> dailyOutputReader.read(SQUAD_STATUSES, firstDay, lastDay)
+        );
+        return new PageResponse<>(
+            pageMatches.stream()
+                .map(playerMatch -> new SquadMatchResponse(
+                    playerMatch.getPlayer().getId(),
+                    playerMatch.getPlayer().getDisplayName(),
+                    playerMatch.getPlayer().getPortrait(),
+                    toResponse(playerMatch, valuedByPlayerMatchId)
+                ))
                 .toList(),
             matches.getNumber(),
             matches.getSize(),
@@ -144,11 +221,14 @@ public class DefaultMatchQueryService implements MatchQueryService {
      * The whole span of days the page touches is therefore read through the same reader the ranking
      * and the campaign use, which is what keeps them from disagreeing. One extra query per page.
      *
-     * @param playerId    internal player identifier
      * @param pageMatches the matches the page is about to return
+     * @param reader      reads the output of an inclusive range of days
      * @return valued matches indexed by player-match identifier, unvalued matches absent
      */
-    private Map<Long, ValuedMatch> value(long playerId, List<PlayerMatch> pageMatches) {
+    private Map<Long, ValuedMatch> value(
+        List<PlayerMatch> pageMatches,
+        BiFunction<LocalDate, LocalDate, DailyOutput> reader
+    ) {
         if (pageMatches.isEmpty()) {
             return Map.of();
         }
@@ -161,7 +241,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
             lastDay = lastDay == null || day.isAfter(lastDay) ? day : lastDay;
         }
 
-        DailyOutput output = dailyOutputReader.readPlayer(playerId, firstDay, lastDay);
+        DailyOutput output = reader.apply(firstDay, lastDay);
 
         return output.valuedMatches().stream()
             .collect(Collectors.toMap(ValuedMatch::playerMatchId, Function.identity()));
@@ -219,7 +299,10 @@ public class DefaultMatchQueryService implements MatchQueryService {
             .findByIdAndPlayerId(playerMatchId, playerId)
             .orElseThrow(() -> new MatchNotFoundException(playerMatchId));
 
-        ValuedMatch valued = value(playerId, List.of(playerMatch)).get(playerMatch.getId());
+        ValuedMatch valued = value(
+            List.of(playerMatch),
+            (firstDay, lastDay) -> dailyOutputReader.readPlayer(playerId, firstDay, lastDay)
+        ).get(playerMatch.getId());
 
         List<MatchTeammateResponse> teammates = playerMatchRepository
             .findByMatchIdAndPlayerIdNot(playerMatch.getMatch().getId(), playerId)

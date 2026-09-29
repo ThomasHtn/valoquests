@@ -41,6 +41,11 @@ export const API_ENDPOINTS = {
     `${environment.apiBaseUrl}/players/${playerId}/matches/${matchId}`,
 
   /**
+   * `GET` the campaign roster's paginated matches of the day.
+   */
+  squadMatches: `${environment.apiBaseUrl}/matches`,
+
+  /**
    * `GET` the analytics behind one tracked player's progression view.
    *
    * @param playerId - Internal player identifier.

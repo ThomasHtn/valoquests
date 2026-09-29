@@ -57,6 +57,7 @@ import {
 } from './overview.utils';
 import { PlanetFigure } from './planet-figure/planet-figure';
 import { ScanWires } from './scan-wires';
+import { SquadMatches } from './squad-matches/squad-matches';
 import { SquadSheet } from './squad-sheet/squad-sheet';
 import { FULL_CAMPAIGN_POPULATION } from './overview.constants';
 import { readSeenReport, writeSeenReport } from './overview.utils';
@@ -87,6 +88,7 @@ import { readSeenReport, writeSeenReport } from './overview.utils';
     OverviewTabs,
     DayOrders,
     SquadSheet,
+    SquadMatches,
     CampaignPanel,
   ],
   templateUrl: './overview.html',

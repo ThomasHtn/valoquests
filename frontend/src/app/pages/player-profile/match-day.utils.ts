@@ -10,8 +10,8 @@ import { MatchDay } from './match-day.model';
  * {@link withDayAverages} rather than kept incrementally in sync on every match folded into the
  * group.
  */
-type MatchDayGroup = Omit<
-  MatchDay,
+type MatchDayGroup<T extends Match> = Omit<
+  MatchDay<T>,
   | 'avgAcs'
   | 'avgAdr'
   | 'avgHeadshotPercentage'
@@ -33,11 +33,11 @@ type MatchDayGroup = Omit<
  * @param language - The app language {@link MatchDay.dateLabel} is spelled out in.
  * @returns One group per day, each carrying the day's win/loss record and stat averages.
  */
-export function groupMatchesByDay(
-  matches: readonly Match[],
+export function groupMatchesByDay<T extends Match>(
+  matches: readonly T[],
   language: 'fr' | 'en',
-): readonly MatchDay[] {
-  const days: MatchDayGroup[] = [];
+): readonly MatchDay<T>[] {
+  const days: MatchDayGroup<T>[] = [];
 
   for (const match of matches) {
     const dayKey = toCampaignDayKey(match.startedAt);
@@ -71,7 +71,7 @@ export function groupMatchesByDay(
  * @param day - The grouped day, with its matches already collected.
  * @returns The day, with its averages and totals filled in.
  */
-function withDayAverages(day: MatchDayGroup): MatchDay {
+function withDayAverages<T extends Match>(day: MatchDayGroup<T>): MatchDay<T> {
   const count = day.matches.length;
   const sum = (selector: (match: Match) => number): number =>
     day.matches.reduce((total, match) => total + selector(match), 0);

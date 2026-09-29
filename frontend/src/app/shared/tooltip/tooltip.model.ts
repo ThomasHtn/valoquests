@@ -17,3 +17,8 @@ export interface TooltipIconNode {
    */
   readonly attributes: Readonly<Record<string, string>>;
 }
+
+/**
+ * What opens the tooltip: resting on or focusing the host, or mouse hover plus tap for an info button.
+ */
+export type TooltipTrigger = 'hover' | 'click';

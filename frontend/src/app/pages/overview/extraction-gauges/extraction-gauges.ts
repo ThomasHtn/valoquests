@@ -2,6 +2,7 @@ import { LowerCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import {
   LucideBuilding2,
+  LucideInfo,
   LucideRocket,
   LucideSkull,
   LucideSwords,
@@ -15,7 +16,6 @@ import { Translation } from '@core/i18n/translation';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
-import { BLOCK_TOOLTIP_DELAY_MS } from '@shared/tooltip/tooltip.constants';
 import { Capacity } from '../overview.model';
 import { CARRY_MODES, SHELTER_MODES } from './extraction-gauges.constants';
 
@@ -32,6 +32,7 @@ import { CARRY_MODES, SHELTER_MODES } from './extraction-gauges.constants';
     LowerCasePipe,
     TranslatePipe,
     LucideBuilding2,
+    LucideInfo,
     LucideRocket,
     LucideSkull,
     LucideSwords,
@@ -74,14 +75,7 @@ export class ExtractionGauges {
   );
 
   /**
-   * What the tooltip hung off each ring waits before opening: the ring sits inside a card a reader
-   * scans past, so it gets the same grace period as the other whole-block tooltips rather than
-   * flashing on every pass.
-   */
-  protected readonly tooltipDelay = BLOCK_TOOLTIP_DELAY_MS;
-
-  /**
-   * How the "capacité d'emport" dial is worked out, read on hover: the mechanic a raw percentage
+   * How the "capacité d'emport" dial is worked out, read from the dial's info button: the mechanic a raw percentage
    * cannot carry on its own.
    */
   protected readonly carryTooltip = computed(() =>

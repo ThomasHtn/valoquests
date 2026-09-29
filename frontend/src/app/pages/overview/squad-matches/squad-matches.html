@@ -1,0 +1,11 @@
+<app-match-history
+  (loadMore)="loadMore()"
+  (retry)="resource.reload()"
+  [days]="days()"
+  [emptyPlate]="emptyPlate()"
+  [hasMore]="hasMore()"
+  [isEmpty]="matches().length === 0"
+  [isError]="!!resource.error() && matches().length === 0"
+  [isLoadingMore]="isLoadingMore()"
+  [isLoading]="resource.isLoading() && matches().length === 0"
+/>

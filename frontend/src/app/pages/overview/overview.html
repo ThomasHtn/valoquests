@@ -195,11 +195,11 @@
       }
 
       <!-- The tabs stand as the heading of what follows them, in place of a section rule. -->
-      <div class="flex flex-col gap-7">
+      <div class="tab-deck flex flex-col gap-7">
         <app-overview-tabs [(selected)]="selectedTab" [tabs]="tabs()" panelId="overview-panel" />
 
-        <!-- The challenges tab is the day's recap: its challenge and its gains. The matches tab has
-             no content yet. -->
+        <!-- The challenges tab is the day's recap: its challenge and its gains. The matches tab lists
+             the roster's matches of the day, fetched only once opened. -->
         <div
           [attr.aria-labelledby]="'overview-tab-' + selectedTab()"
           id="overview-panel"
@@ -212,6 +212,9 @@
             }
             @case ('contributions') {
               <app-squad-sheet [rosterCount]="rosterCount()" [rows]="squad()" />
+            }
+            @case ('matches') {
+              <app-squad-matches />
             }
             @case ('campaign') {
               <app-campaign-panel [campaign]="campaign()" />

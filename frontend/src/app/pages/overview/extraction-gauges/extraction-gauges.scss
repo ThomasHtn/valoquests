@@ -28,6 +28,7 @@
   --tone: var(--color-text-muted);
   --pad: 1.25rem;
 
+  position: relative;
   display: grid;
   grid-row: span 4;
   grid-template-rows: subgrid;
@@ -51,6 +52,26 @@
 
 .gauge-cell--out .split {
   flex: 1;
+}
+
+/* Out of the grid flow, so the four names stay centred and aligned. */
+.info {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 150ms;
+}
+
+.info:hover,
+.info[aria-describedby] {
+  color: var(--tone);
 }
 
 .gauge {

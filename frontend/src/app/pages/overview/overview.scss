@@ -319,3 +319,12 @@ button.week {
     display: none;
   }
 }
+
+/* ---------- The tabbed panel ---------- */
+
+/* At least one scroll viewport tall, minus the header bar (4rem + its rule) and the paddings under
+   it (main's 6rem, page-body's 1.5rem): a short panel can still scroll its tabs up to the top edge,
+   so switching tabs never clamps the scroll and drags the page down under the reader. */
+.tab-deck {
+  min-height: calc(100dvh - 4rem - 1px - 7.5rem);
+}

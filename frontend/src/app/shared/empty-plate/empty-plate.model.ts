@@ -4,8 +4,9 @@
  * - `radar` — a scan with nothing on it yet: the overview before a campaign exists.
  * - `podium` — three empty steps: a week nobody is ranked in.
  * - `draw` — a target and the five weekly slots: a week whose draw has not run.
+ * - `matches` — a day's header over match rows still to be played: a day nobody has played yet.
  */
-export type EmptyIllustration = 'radar' | 'podium' | 'draw';
+export type EmptyIllustration = 'radar' | 'podium' | 'draw' | 'matches';
 
 /**
  * How a readout's dot reads: `live` is running now, `todo` waits on someone, `info` is a plain fact.
