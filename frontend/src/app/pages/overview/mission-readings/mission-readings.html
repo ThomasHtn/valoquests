@@ -43,13 +43,16 @@
       @if (breach() > 0) {
         <span class="duel-front">
           @for (strike of strikes(); track strike.playerId) {
-            <i
+            <!-- Click trigger: a mouse still opens it on hover, a tap toggles it on a phone. -->
+            <button
               [appTooltipTemplate]="tip"
               [appTooltip]="strike.summary"
+              [attr.aria-label]="strike.summary"
               [style.--w]="strike.damage"
+              appTooltipTrigger="click"
               class="focus-ring"
-              tabindex="0"
-            ></i>
+              type="button"
+            ></button>
             <ng-template #tip><app-contribution-tip [strike]="strike" /></ng-template>
           } @empty {
             <i aria-hidden="true"></i>

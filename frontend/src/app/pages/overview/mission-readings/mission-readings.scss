@@ -133,21 +133,26 @@
   animation: duel-fill var(--duration-gauge-long) var(--ease-gauge) both;
 }
 
-.duel-front > i {
+/* Operators' segments are buttons, reset to bare strips; the empty track keeps a plain `i`. */
+.duel-front > * {
   display: block;
   flex: var(--w, 1) 1 0;
   min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
   background: color-mix(in srgb, var(--squad) 42%, var(--color-surface-950));
   cursor: help;
   transition: filter var(--duration-fast) var(--ease-out-quart);
 }
 
-.duel-front > i:nth-child(even) {
+.duel-front > :nth-child(even) {
   background: color-mix(in srgb, var(--squad) 34%, var(--color-surface-950));
 }
 
-.duel-front > i:hover,
-.duel-front > i:focus-visible {
+.duel-front > button:hover,
+.duel-front > button:focus-visible,
+.duel-front > button[aria-describedby] {
   filter: brightness(1.3);
 }
 
@@ -380,7 +385,7 @@
     animation: none;
   }
 
-  .duel-front > i,
+  .duel-front > *,
   .duel-post {
     transition: none;
   }
