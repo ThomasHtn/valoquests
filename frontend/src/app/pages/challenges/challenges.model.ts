@@ -250,3 +250,180 @@ export interface CatalogueGroup {
    */
   readonly entries: readonly ChallengeCatalogueEntry[];
 }
+
+/**
+ * Where one operator stands on one row of the board: a ring on the table, a line on a phone.
+ */
+export interface BoardMark extends ChallengeRung {
+  /**
+   * Worded progress, operator named, for the tooltip and assistive tech.
+   */
+  readonly tip: string;
+
+  /**
+   * The ring's figure without its compact unit (`12,7`).
+   */
+  readonly figure: string;
+
+  /**
+   * Compact unit following the figure (`k`), set a step smaller; empty below a thousand.
+   */
+  readonly unit: string;
+
+  /**
+   * One flag per unit, lit once reached, when the target counts few enough of them; empty when
+   * the phone line runs continuous.
+   */
+  readonly segments: readonly boolean[];
+
+  /**
+   * The exact figures the hover bubble lays out.
+   */
+  readonly detail: MarkDetail;
+}
+
+/**
+ * Where an operator stands, as a progress bubble reads it.
+ */
+export type MarkState = 'idle' | 'open' | 'done';
+
+/**
+ * What separates the value from the target: what remains, what exceeds it, or nothing.
+ */
+export type MarkGap = 'remaining' | 'surplus' | 'none';
+
+/**
+ * One operator's progress on one challenge, laid out for its hover bubble.
+ */
+export interface MarkDetail {
+  /**
+   * Operator name.
+   */
+  readonly name: string;
+
+  /**
+   * Accent colour of the challenge, carried because the bubble renders outside the row.
+   */
+  readonly tone: string;
+
+  /**
+   * Where the operator stands.
+   */
+  readonly state: MarkState;
+
+  /**
+   * Progress so far, exact and formatted, uncapped past the target.
+   */
+  readonly value: string;
+
+  /**
+   * Value to reach, formatted, or empty for an open-ended challenge.
+   */
+  readonly target: string;
+
+  /**
+   * Kind of gap between the value and the target.
+   */
+  readonly gap: MarkGap;
+
+  /**
+   * The gap, formatted, signed when it exceeds the target; empty when there is none.
+   */
+  readonly gapLabel: string;
+
+  /**
+   * The gap, unformatted, which picks the plural of its caption.
+   */
+  readonly gapCount: number;
+
+  /**
+   * Share of the gauge filled up to the target, in percent.
+   */
+  readonly fill: number;
+
+  /**
+   * Share of the gauge past the target, in percent; zero unless the target is exceeded.
+   */
+  readonly over: number;
+
+  /**
+   * Where the target sits along the gauge, in percent.
+   */
+  readonly targetAt: number;
+}
+
+/**
+ * One challenge as the board lays it out: a table row, or a card on a phone.
+ */
+export interface BoardRow extends ChallengeCard {
+  /**
+   * Identity of the drawn challenge, for tracking.
+   */
+  readonly key: string;
+
+  /**
+   * Whether it is a day's challenge, which carries the week's tally.
+   */
+  readonly daily: boolean;
+
+  /**
+   * When the day's challenge closes, in epoch milliseconds; `null` for a weekly one or a closed day.
+   */
+  readonly closesAt: number | null;
+
+  /**
+   * One mark per operator, in the board's operator order.
+   */
+  readonly marks: readonly BoardMark[];
+}
+
+/**
+ * One operator as the board lines them up: a column on the table, a button on a phone's squad bar.
+ */
+export interface BoardOperator extends ChallengeOperator {
+  /**
+   * Weekly challenges validated.
+   */
+  readonly weeklyDone: number;
+
+  /**
+   * Weekly challenges drawn.
+   */
+  readonly weeklyTotal: number;
+
+  /**
+   * What the operator's validations earned this week, dailies included: wounded while a campaign
+   * runs, ranking points otherwise.
+   */
+  readonly reward: number;
+
+  /**
+   * Whether the reader pinned them first.
+   */
+  readonly pinned: boolean;
+
+  /**
+   * The sentence the footer's figures abbreviate.
+   */
+  readonly summary: string;
+}
+
+/**
+ * One weekly challenge on an operator's footer shelf: a hexagon lit in its colour once validated.
+ */
+export interface ShelfSlot {
+  /**
+   * Identity of the challenge's row, for tracking.
+   */
+  readonly key: string;
+
+  /**
+   * Accent colour of the challenge.
+   */
+  readonly tone: string;
+
+  /**
+   * Whether the operator validated it.
+   */
+  readonly done: boolean;
+}

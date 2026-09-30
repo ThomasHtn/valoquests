@@ -14,12 +14,13 @@ import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
 import { Countdown } from '@shared/countdown/countdown';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { ChallengeCardView } from '../../challenges/challenge-card/challenge-card';
-import { DailyOrder, DayTally } from '../overview.model';
+import { BoardRow } from '../../challenges/challenges.model';
+import { DeckCard } from '../../challenges/deck-card/deck-card';
+import { DayTally } from '../overview.model';
 
 /**
- * The orders of the day, in two equal columns: on the left the day's challenge card, on the right
- * what the day has already given, as a haul of tiles.
+ * The orders of the day, in two equal columns: on the left the day's challenge as the challenges
+ * page's phone deck draws it, on the right what the day has already given, as a haul of tiles.
  */
 @Component({
   selector: 'app-day-orders',
@@ -34,7 +35,7 @@ import { DailyOrder, DayTally } from '../overview.model';
     LucideUsers,
     LucideWheat,
     LucideWrench,
-    ChallengeCardView,
+    DeckCard,
   ],
   templateUrl: './day-orders.html',
   styleUrl: './day-orders.scss',
@@ -44,7 +45,7 @@ export class DayOrders {
   /**
    * The day's challenge, or `null` when none was drawn.
    */
-  public readonly order = input.required<DailyOrder | null>();
+  public readonly daily = input.required<BoardRow | null>();
 
   /**
    * What the day has given, or `null` outside a week in progress.

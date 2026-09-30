@@ -2,7 +2,7 @@
  * The tabs are the heading of their panel, so they take a section rule's place and look: sitting
  * on its hairline, sharing the column's full width in equal parts, the one on screen lit in amber
  * and underlined. Only that one carries colour, so amber always means the selection. A star at the
- * tab's trailing end pins the one the page opens on.
+ * tab's trailing end pins the one the page opens on, and moves it to the front of the bar.
  */
 
 :host {
@@ -22,6 +22,11 @@
   flex: 1 0 0;
   min-width: max-content;
   display: flex;
+}
+
+/* The tab on screen rides above its neighbours while the bar reorders around the pinned one. */
+.slot--on {
+  z-index: 1;
 }
 
 /* Both inline paddings leave room for the star, so the label stays centred whether it shows or not. */

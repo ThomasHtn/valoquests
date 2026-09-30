@@ -12,11 +12,12 @@ import { PlayerSummary } from '@core/players/player-summary.model';
 import {
   buildCapacity,
   buildContribution,
-  buildDailyOrder,
+  buildDailyRow,
   buildFrieze,
   buildMission,
   buildMissionReport,
   buildSquad,
+  buildTabs,
   buildTally,
   Translate,
 } from './overview.utils';
@@ -513,7 +514,7 @@ describe('buildContribution', () => {
   });
 });
 
-describe('buildDailyOrder', () => {
+describe('buildDailyRow', () => {
   const challenges: CurrentChallenges = {
     weekStart: '2026-01-05',
     weekEnd: '2026-01-11',
@@ -545,15 +546,17 @@ describe('buildDailyOrder', () => {
   };
 
   it('returns null without a challenge draw', () => {
-    expect(buildDailyOrder(null, false, '', String)).toBeNull();
+    expect(buildDailyRow(null, false, '', String, 'en', translate)).toBeNull();
   });
 
   it('returns null when today has no daily challenge', () => {
-    expect(buildDailyOrder({ ...challenges, dailies: [] }, false, '', String)).toBeNull();
+    expect(
+      buildDailyRow({ ...challenges, dailies: [] }, false, '', String, 'en', translate),
+    ).toBeNull();
   });
 
-  it('draws one band per roster operator, the validated first', () => {
-    const order = buildDailyOrder(
+  it('draws one line per roster operator, the validated first', () => {
+    const row = buildDailyRow(
       {
         ...challenges,
         roster: [
@@ -573,14 +576,19 @@ describe('buildDailyOrder', () => {
       true,
       'Daily challenge',
       String,
+      'en',
+      translate,
     );
 
-    expect(order?.card.doneCount).toBe(1);
-    expect(order?.card.rescueActive).toBe(true);
-    expect(order?.card.rungs.map((rung) => [rung.name, rung.fraction])).toEqual([
+    expect(row?.doneCount).toBe(1);
+    expect(row?.rescueActive).toBe(true);
+    expect(row?.daily).toBe(true);
+    expect(row?.marks.map((mark) => [mark.name, mark.fraction])).toEqual([
       ['Operator 2', 1],
       ['Operator 1', 0.4],
     ]);
+    // Ten units: one segment each, the first four lit for the operator at four.
+    expect(row?.marks[1].segments.filter(Boolean)).toHaveLength(4);
   });
 });
 
@@ -791,4 +799,24 @@ describe('buildSquad', () => {
       damageVariation: 100,
     };
   }
+});
+
+describe('buildTabs', () => {
+  it('keeps the default order when no tab is pinned', () => {
+    expect(buildTabs(translate).map((tab) => tab.key)).toEqual([
+      'challenges',
+      'contributions',
+      'matches',
+      'campaign',
+    ]);
+  });
+
+  it('moves the pinned tab to the front, the others keeping their order', () => {
+    expect(buildTabs(translate, 'matches').map((tab) => tab.key)).toEqual([
+      'matches',
+      'challenges',
+      'contributions',
+      'campaign',
+    ]);
+  });
 });

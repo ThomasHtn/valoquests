@@ -1,0 +1,35 @@
+@let d = detail();
+
+<span class="name">{{ d.name }}</span>
+
+<span class="figures tabular-nums">
+  <b [class.value--idle]="d.state === 'idle'" class="value">{{ d.value }}</b>
+  @if (d.target) {
+    <span class="target">/ {{ d.target }}</span>
+  }
+</span>
+
+@if (d.target) {
+  <span class="gauge">
+    <span [style.width.%]="d.fill" class="fill"></span>
+    @if (d.over > 0) {
+      <span [style.left.%]="d.targetAt" [style.width.%]="d.over" class="over"></span>
+      <i [style.left.%]="d.targetAt" class="tick"></i>
+    }
+  </span>
+}
+
+<span class="status">
+  <span [class]="'state state--' + d.state">
+    @if (d.state === 'done') {
+      <svg class="state-icon" lucideCheck></svg>
+    }
+    {{ 'challenges.board.markDetail.' + d.state | translate }}
+  </span>
+  @if (d.gap !== 'none') {
+    <span [class]="'gap gap--' + d.gap">
+      <b class="tabular-nums">{{ d.gapLabel }}</b>
+      {{ 'challenges.board.markDetail.' + d.gap | translate: { count: d.gapCount } }}
+    </span>
+  }
+</span>

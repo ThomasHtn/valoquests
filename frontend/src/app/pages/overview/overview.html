@@ -214,7 +214,7 @@
         >
           @switch (selectedTab()) {
             @case ('challenges') {
-              <app-day-orders [order]="dailyOrder()" [tally]="tally()" />
+              <app-day-orders [daily]="dailyRow()" [tally]="tally()" />
             }
             @case ('contributions') {
               <app-squad-sheet [rosterCount]="rosterCount()" [rows]="squad()" />

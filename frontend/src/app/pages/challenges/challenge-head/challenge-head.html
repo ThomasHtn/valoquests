@@ -1,0 +1,51 @@
+@let row = this.row();
+
+<span aria-hidden="true" class="hex-mark clip-hex">
+  <span class="clip-hex">
+    @if (row.mark === 'D') {
+      <svg class="glyph" lucideZap></svg>
+    } @else {
+      {{ row.mark }}
+    }
+  </span>
+</span>
+
+<!-- Paragraphs rather than a heading: the table's row header cannot hold one. -->
+<div class="title">
+  <p class="key-line">
+    <span class="key label-caption text-2xs">{{ row.kind }}</span>
+    @if (row.daily && clock()) {
+      @if (row.closesAt !== null) {
+        <app-daily-clock [deadline]="row.closesAt" />
+      } @else {
+        <span class="closed">{{ 'challenges.daily.closedDay' | translate }}</span>
+      }
+    }
+  </p>
+  <p class="name">{{ row.name }}</p>
+</div>
+
+<p class="pay">
+  @if (row.rescueActive) {
+    <span
+      [appTooltip]="'challenges.card.woundedTooltip' | translate: { count: row.survivors }"
+      class="pay-figure focus-ring"
+      tabindex="0"
+    >
+      <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+      <b class="tabular-nums">+{{ row.survivors }}</b>
+    </span>
+    <span>{{ 'challenges.card.perOperator' | translate }}</span>
+  } @else {
+    <span
+      [appTooltip]="'challenges.card.pointsTooltip' | translate: { count: row.rankingPoints }"
+      class="pay-figure focus-ring"
+      tabindex="0"
+    >
+      <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+      <b class="tabular-nums">+{{ row.rankingPoints }}</b>
+    </span>
+  }
+</p>
+
+<p class="desc">{{ row.description }}</p>

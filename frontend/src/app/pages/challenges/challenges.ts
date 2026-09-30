@@ -25,33 +25,40 @@ import { resolveLocale } from '@core/i18n/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PageHeader } from '@layout/page-header/page-header';
-import { Countdown } from '@shared/countdown/countdown';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { SectionRule } from '@shared/section-rule/section-rule';
 import { WeekCountdown } from '@shared/week-countdown/week-countdown';
 import { formatFigure } from '../leaderboard/leaderboard-board.utils';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
-import { ChallengeCardView } from './challenge-card/challenge-card';
+import { ChallengeBoard } from './challenge-board/challenge-board';
 import { ChallengeCatalogueView } from './challenge-catalogue/challenge-catalogue';
+import { ChallengeDeck } from './challenge-deck/challenge-deck';
 import { DAILY_TONE } from './challenges.constants';
 import {
+  BoardOperator,
+  BoardRow,
   CatalogueGroup,
-  ChallengeCard,
   ChallengeLook,
   ChallengeOperator,
   DayCell,
   DayState,
 } from './challenges.model';
-import { buildChallengeCard, shiftDay, toOperators } from './challenges.utils';
-import { DailyWeek } from './daily-week/daily-week';
+import {
+  buildChallengeCard,
+  orderOperators,
+  readPinnedPlayer,
+  shiftDay,
+  toBoardRow,
+  toOperators,
+  writePinnedPlayer,
+} from './challenges.utils';
 
 /**
- * The week's challenges: the day's one beside the seven days of the week, the week's five, and the
- * catalogue they were drawn from.
+ * The week's challenges on one board, the day's first, the squad beside them, and the catalogue
+ * they were drawn from.
  *
- * Every card lists the squad operator by operator, each on a band closing toward the target, so
- * the page reads who is close as much as who is done.
+ * A table from a wide column, a card per challenge below it: both read the same rows, operator
+ * order and picked day, so switching width never changes what is on screen.
  */
 @Component({
   selector: 'app-challenges',
@@ -59,11 +66,9 @@ import { DailyWeek } from './daily-week/daily-week';
     TranslatePipe,
     PageHeader,
     ResourceState,
-    SectionRule,
     WeekCountdown,
-    Countdown,
-    DailyWeek,
-    ChallengeCardView,
+    ChallengeBoard,
+    ChallengeDeck,
     ChallengeCatalogueView,
   ],
   templateUrl: './challenges.html',
@@ -119,6 +124,20 @@ export class Challenges {
   protected readonly remaining = computed<RemainingTime | null>(() => {
     const current = this.current();
     return current ? remainingWeekTime(current.weekEnd, new Date(this.now())) : null;
+  });
+
+  /**
+   * The week's first and last days, spelled out for the board's heading; empty while loading.
+   */
+  protected readonly period = computed(() => {
+    const current = this.current();
+    if (!current) {
+      return '';
+    }
+    return this.translation.translate('challenges.board.period', {
+      start: this.dayMonthLong(current.weekStart),
+      end: this.dayMonthLong(shiftDay(current.weekStart, WEEK_DAYS - 1)),
+    });
   });
 
   /**
@@ -185,11 +204,14 @@ export class Challenges {
   });
 
   /**
-   * Index of the day whose challenge the card shows. Follows today until the reader picks another
-   * day on the strip, and again once the week rolls.
+   * Index of the day whose challenge the daily row shows. Follows today until the reader picks
+   * another day on the tally, and again once the week rolls; before today's draw, the last drawn day.
    */
   protected readonly pickedDay = linkedSignal<number | null>(
-    () => this.days().find((day) => day.state === 'now')?.index ?? null,
+    () =>
+      this.days()
+        .filter((day) => day.drawn && day.state !== 'ahead')
+        .at(-1)?.index ?? null,
   );
 
   /**
@@ -200,9 +222,9 @@ export class Challenges {
   );
 
   /**
-   * The picked day's challenge, or `null` while today's is not drawn yet.
+   * The picked day's challenge, or `null` while none is drawn.
    */
-  protected readonly dailyCard = computed<ChallengeCard | null>(() => {
+  private readonly dailyRow = computed<BoardRow | null>(() => {
     const current = this.current();
     const index = this.pickedDay();
     if (!current || index === null) {
@@ -220,21 +242,73 @@ export class Challenges {
             weekday: this.weekday(isoDate, 'long'),
             date: this.dayMonth(isoDate),
           });
-    return this.card(daily, { tone: DAILY_TONE, mark: 'D', kind });
+    const closesAt = this.showingToday() ? this.dailyDeadline() : null;
+    return this.row(daily, { tone: DAILY_TONE, mark: 'D', kind }, closesAt);
   });
 
-  protected readonly weeklyCards = computed<readonly ChallengeCard[]>(() =>
+  private readonly weeklyRows = computed<readonly BoardRow[]>(() =>
     (this.current()?.challenges ?? []).map((challenge) => {
       const visual = resolveDifficultyVisual(challenge.difficulty);
-      return this.card(challenge, {
-        tone: visual.tierColor,
-        mark: visual.tier,
-        kind: this.translation.translate(
-          `common.challengeDifficulty.${challenge.difficulty ?? 'EASY'}`,
-        ),
-      });
+      const kind = this.translation.translate(
+        `common.challengeDifficulty.${challenge.difficulty ?? 'EASY'}`,
+      );
+      return this.row(challenge, { tone: visual.tierColor, mark: visual.tier, kind }, null);
     }),
   );
+
+  /**
+   * The operator the reader pinned first, remembered across visits.
+   */
+  private readonly pinned = signal<number | null>(readPinnedPlayer());
+
+  /**
+   * The squad in board order: the pinned operator, then the furthest along this week.
+   */
+  private readonly boardOrder = computed<readonly ChallengeOperator[]>(() =>
+    orderOperators(this.operators(), this.current()?.challenges ?? [], this.pinned()),
+  );
+
+  protected readonly boardOperators = computed<readonly BoardOperator[]>(() => {
+    const current = this.current();
+    if (!current) {
+      return [];
+    }
+    const rescue = this.rescueActive();
+    const drawn = [...current.challenges, ...current.dailies];
+    return this.boardOrder().map((operator) => {
+      const validated = (challenge: ChallengeProgress): boolean =>
+        challenge.players.some((line) => line.playerId === operator.playerId && line.completed);
+      const weeklyDone = current.challenges.filter(validated).length;
+      const reward = drawn
+        .filter(validated)
+        .reduce(
+          (sum, challenge) => sum + (rescue ? challenge.survivors : challenge.rankingPoints),
+          0,
+        );
+      const t = (key: string, params: Record<string, string | number>): string =>
+        this.translation.translate(`challenges.board.summary.${key}`, params);
+      const summary = [
+        t('done', { name: operator.name, count: weeklyDone, total: current.challenges.length }),
+        t(rescue ? 'wounded' : 'points', { count: reward }),
+      ].join(', ');
+      return {
+        ...operator,
+        weeklyDone,
+        weeklyTotal: current.challenges.length,
+        reward,
+        pinned: operator.playerId === this.pinned(),
+        summary,
+      };
+    });
+  });
+
+  /**
+   * The board's rows: the picked day's challenge, then the week's five.
+   */
+  protected readonly boardRows = computed<readonly BoardRow[]>(() => {
+    const daily = this.dailyRow();
+    return daily ? [daily, ...this.weeklyRows()] : this.weeklyRows();
+  });
 
   protected readonly catalogueGroups = computed<readonly CatalogueGroup[]>(() => {
     const catalogue: ChallengeCatalogue | null =
@@ -288,9 +362,40 @@ export class Challenges {
     }
   }
 
-  private card(challenge: ChallengeProgress, look: ChallengeLook): ChallengeCard {
-    return buildChallengeCard(challenge, look, this.operators(), this.rescueActive(), (amount) =>
-      formatFigure(amount, this.locale(), amount >= 1_000),
+  /**
+   * Pins an operator first on the board, or unpins them when already pinned.
+   */
+  protected togglePin(playerId: number): void {
+    const next = this.pinned() === playerId ? null : playerId;
+    this.pinned.set(next);
+    writePinnedPlayer(next);
+  }
+
+  /**
+   * One board row: the challenge as a card shows it, then one mark per operator in board order.
+   *
+   * @param challenge - The drawn challenge and each operator's progress on it.
+   * @param look - Tone, mark and key line of the row.
+   * @param closesAt - When a running day's challenge closes; `null` for a weekly one or a closed day.
+   * @returns The row.
+   */
+  private row(
+    challenge: ChallengeProgress,
+    look: ChallengeLook,
+    closesAt: number | null,
+  ): BoardRow {
+    const locale = this.locale();
+    const card = buildChallengeCard(
+      challenge,
+      look,
+      this.operators(),
+      this.rescueActive(),
+      (amount) => formatFigure(amount, locale, amount >= 1_000),
+    );
+    const rungs = new Map(card.rungs.map((rung) => [rung.playerId, rung]));
+    const ordered = this.boardOrder().flatMap((operator) => rungs.get(operator.playerId) ?? []);
+    return toBoardRow(challenge, card, ordered, closesAt, locale, (key, params) =>
+      this.translation.translate(key, params),
     );
   }
 
@@ -323,6 +428,12 @@ export class Challenges {
     return width === 'short'
       ? label.replace('.', '').charAt(0).toUpperCase() + label.replace('.', '').slice(1)
       : label;
+  }
+
+  private dayMonthLong(isoDate: string): string {
+    return new Intl.DateTimeFormat(this.locale(), { day: 'numeric', month: 'long' }).format(
+      localMidnight(isoDate),
+    );
   }
 
   private dayMonth(isoDate: string): string {

@@ -1,4 +1,16 @@
-import { Directive, ElementRef, OnDestroy, Renderer2, inject, input, signal } from '@angular/core';
+import {
+  ApplicationRef,
+  Directive,
+  ElementRef,
+  EmbeddedViewRef,
+  Injector,
+  OnDestroy,
+  Renderer2,
+  TemplateRef,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import {
   OFFSET,
   TOOLTIP_FALLBACK_ICON,
@@ -93,6 +105,12 @@ export class Tooltip implements OnDestroy {
   public readonly appTooltipPortrait = input<string | null | undefined>(undefined);
 
   /**
+   * Structured content rendered in place of the text, for a bubble that lays figures out rather
+   * than words them. The text stays required: it is what assistive tech and blank checks read.
+   */
+  public readonly appTooltipTemplate = input<TemplateRef<unknown> | null>(null);
+
+  /**
    * Host element the bubble is positioned against and described by.
    */
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -101,6 +119,21 @@ export class Tooltip implements OnDestroy {
    * Renderer used to create and mutate the bubble outside the component template.
    */
   private readonly renderer = inject(Renderer2);
+
+  /**
+   * Application the template's view is attached to, so it keeps change detection while shown.
+   */
+  private readonly appRef = inject(ApplicationRef);
+
+  /**
+   * Injector the template's view resolves its dependencies from.
+   */
+  private readonly injector = inject(Injector);
+
+  /**
+   * View rendered from {@link appTooltipTemplate}, or `null` while hidden or text-only.
+   */
+  private contentView: EmbeddedViewRef<unknown> | null = null;
 
   /**
    * Unique identifier linking the host to its bubble through `aria-describedby`.
@@ -243,11 +276,15 @@ export class Tooltip implements OnDestroy {
     this.renderer.setAttribute(bubble, 'role', 'tooltip');
     this.renderer.setAttribute(bubble, 'popover', 'manual');
     const portrait = this.appTooltipPortrait();
+    const template = this.appTooltipTemplate();
     let sizeClass =
       this.appTooltipSize() === 'md'
         ? 'max-w-80 px-4 py-3 text-base'
         : 'max-w-72 px-3 py-2 text-sm';
-    if (portrait === undefined) {
+    if (template) {
+      this.fillWithTemplate(bubble, template);
+      sizeClass = 'max-w-72 px-3 py-2.5 text-sm';
+    } else if (portrait === undefined) {
       this.renderer.setProperty(bubble, 'textContent', this.appTooltip());
     } else {
       this.fillWithPortrait(bubble, portrait);
@@ -270,6 +307,22 @@ export class Tooltip implements OnDestroy {
     if (this.isClickTriggered()) {
       this.listenForOutsideClick();
     }
+  }
+
+  /**
+   * Renders the template into the bubble, checked once so the bubble has its size before placement.
+   *
+   * @param bubble - The bubble being built.
+   * @param template - Structured content to render.
+   */
+  private fillWithTemplate(bubble: HTMLElement, template: TemplateRef<unknown>): void {
+    const view = template.createEmbeddedView({}, this.injector);
+    this.appRef.attachView(view);
+    view.detectChanges();
+    for (const node of view.rootNodes) {
+      this.renderer.appendChild(bubble, node);
+    }
+    this.contentView = view;
   }
 
   /**
@@ -353,6 +406,9 @@ export class Tooltip implements OnDestroy {
     this.escapeListener = null;
     this.outsideListener?.();
     this.outsideListener = null;
+
+    this.contentView?.destroy();
+    this.contentView = null;
 
     this.renderer.removeAttribute(this.host.nativeElement, 'aria-describedby');
     this.togglePopover(bubble, false);

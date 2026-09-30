@@ -370,8 +370,47 @@
         "text": "Les cinq défis de la semaine sont tirés le lundi, un par difficulté. Le défi du jour est retiré chaque matin."
       }
     },
+    "board": {
+      "title": "Les défis et l'escouade",
+      "region": "Défis et progression de l'escouade",
+      "challenge": "Défi",
+      "period": "Du {{start}} au {{end}}",
+      "totals": "Validés",
+      "totalsTooltip": "Défis de la semaine validés et gain de la semaine, défis du jour compris",
+      "pin": "Épingler {{name}} en premier",
+      "unpin": "Ne plus épingler {{name}}",
+      "pinHint": "Touchez un joueur pour l'afficher en premier dans chaque défi.",
+      "squad": "L'escouade",
+      "markTip": "{{name}} : {{tip}}",
+      "markDetail": {
+        "idle": "Pas commencé",
+        "open": "En cours",
+        "done": "Validé",
+        "remaining": {
+          "one": "restant",
+          "other": "restants"
+        },
+        "surplus": "au-delà"
+      },
+      "summary": {
+        "done": {
+          "one": "{{name}} : {{count}} défi de la semaine validé sur {{total}}",
+          "other": "{{name}} : {{count}} défis de la semaine validés sur {{total}}"
+        },
+        "wounded": {
+          "one": "{{count}} blessé ramené cette semaine",
+          "other": "{{count}} blessés ramenés cette semaine"
+        },
+        "points": {
+          "one": "{{count}} point de classement cette semaine",
+          "other": "{{count}} points de classement cette semaine"
+        }
+      },
+      "range": "{{from}}-{{to}} / {{total}}",
+      "previous": "Joueurs précédents",
+      "next": "Joueurs suivants"
+    },
     "daily": {
-      "title": "Le défi du jour",
       "strip": "Les sept jours de la semaine",
       "key": "Défi du jour",
       "keyOn": "Défi du {{weekday}} {{date}}",
@@ -379,7 +418,6 @@
       "closedDay": "Journée close",
       "countdownAria": "Temps restant avant minuit",
       "tipUnavailable": "Défi indisponible",
-      "tipNotYet": "Le défi du jour n'est pas encore tiré.",
       "tipNamed": "{{name}} : {{tip}}",
       "tipNone": "0 sur {{total}} validé",
       "tipDone": {
@@ -410,11 +448,6 @@
         "openEndedDone": "{{value}} - validé"
       },
       "squadAria": "{{done}} opérateurs sur {{total}} ont validé ce défi."
-    },
-    "weekly": {
-      "title": "Les défis de la semaine",
-      "list": "Les cinq défis de la semaine",
-      "none": "Les cinq défis de la semaine ne sont pas encore tirés."
     },
     "catalogue": {
       "title": "Le catalogue des défis",

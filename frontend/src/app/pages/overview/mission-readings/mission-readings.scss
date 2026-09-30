@@ -364,9 +364,25 @@
     padding-inline: 1.15rem 1.25rem;
   }
 
+  /* Each figure may drop its unit under the number rather than push the row past the screen. */
   .vs-line {
     gap: 0.5rem;
+  }
+
+  .vs-line > .rep-fig {
+    flex-wrap: wrap;
+    row-gap: 0.2rem;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .vs-line > .rep-fig > * {
     white-space: nowrap;
+  }
+
+  .vs-line > .vs-foe {
+    justify-content: flex-end;
+    text-align: right;
   }
 
   .rep-key {

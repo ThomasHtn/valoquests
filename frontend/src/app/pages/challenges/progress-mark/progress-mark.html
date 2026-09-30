@@ -1,0 +1,38 @@
+@let mark = this.mark();
+
+<!-- The bubble lays out the exact figures the tank rounds; assistive tech reads them from the
+     sr-only span instead. -->
+<span [appTooltipTemplate]="tip" [appTooltip]="mark.tip" aria-hidden="true" class="cell">
+  @if (mark.done) {
+    <!-- A full tank: the same tint, topped out without a level line. -->
+    <span appInView class="tank tank--done" style="--level: 1">
+      <span class="fill fill--full fx-rise"></span>
+      <svg class="check" lucideCheck></svg>
+      @for (piece of confetti; track $index) {
+        <span
+          [class.piece--pale]="piece.pale"
+          [class.piece--strip]="piece.strip"
+          [style.--angle.deg]="piece.angle"
+          [style.--reach.rem]="piece.distance"
+          [style.--spin.deg]="piece.spin"
+          class="piece"
+        ></span>
+      }
+    </span>
+  } @else if (mark.idle) {
+    <span class="dash">—</span>
+  } @else {
+    <span [style.--level]="mark.fraction" appInView class="tank">
+      <span class="fill fx-rise"></span>
+      <span [class.label--long]="mark.unit !== '' || mark.figure.length > 3" class="label tabular-nums"
+        >{{ mark.figure }}
+        @if (mark.unit) {
+          <span class="unit">{{ mark.unit }}</span>
+        }
+      </span>
+    </span>
+  }
+</span>
+<span class="sr-only">{{ mark.tip }}</span>
+
+<ng-template #tip><app-progress-tip [detail]="mark.detail" /></ng-template>

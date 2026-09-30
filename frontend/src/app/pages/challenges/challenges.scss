@@ -1,33 +1,19 @@
-/* The day's countdown, at the start of its card's last line. */
-.ends {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9375rem;
-  color: var(--color-text-muted);
+/* The page column, not the viewport, decides: the sidebar takes its share on a desktop. */
+.board {
+  container-type: inline-size;
 }
 
-/* A card fills its grid cell, so the two of a row share one height. */
-.weekly > li {
-  display: flex;
+.board-deck {
+  display: none;
 }
 
-.weekly app-challenge-card {
-  flex: 1 1 auto;
-  min-width: 0;
-}
+@container (width < 60rem) {
+  .board-table {
+    display: none;
+  }
 
-/* Five, one per difficulty, on two columns. */
-.weekly {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.75rem;
-}
-
-@media (width >= 64rem) {
-  .weekly {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .board-deck {
+    display: flex;
   }
 }
 

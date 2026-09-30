@@ -28,7 +28,17 @@
   color: var(--color-text-muted);
 }
 
-/* The day's countdown, at the start of its card's last line, as on the challenges page. */
+/* The card's last line: the day's countdown, then how many operators finished. Pinned to the
+   bottom when the tally beside it stretches the card. */
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
 .ends {
   display: inline-flex;
   flex-wrap: wrap;
@@ -36,6 +46,33 @@
   gap: 0.5rem;
   font-size: 0.9375rem;
   color: var(--color-text-muted);
+}
+
+.count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.count b {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  color: var(--tone);
+}
+
+.count b span {
+  color: var(--color-text-muted);
+}
+
+.count em {
+  font-size: 0.9375rem;
+  font-style: normal;
+  color: var(--color-text-secondary);
 }
 
 /* ---------- The tally, as a haul ---------- */
@@ -186,9 +223,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem 1rem;
-  /* Tall enough to centre its line on the challenge card's last one beside it: the card's 1.35rem
-     bottom padding plus half its 1.625rem countdown line, twice. Faces or not, the height holds. */
-  min-height: 4.325rem;
   padding: 0.8rem 1.1rem;
   background: rgb(236 232 225 / 4%);
   box-shadow: inset 3px 0 0 var(--tone);

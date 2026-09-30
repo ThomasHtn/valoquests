@@ -15,56 +15,26 @@
       emptyKind="waiting"
       padding="px-4 py-10 sm:px-6"
     >
-      <div class="flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)]">
-        <section aria-labelledby="daily-title">
-          <app-section-rule
-            [heading]="'challenges.daily.title' | translate"
-            [wrapSide]="true"
-            headingId="daily-title"
-          >
-            <app-daily-week [(selected)]="pickedDay" [days]="days()" />
-          </app-section-rule>
-          @if (dailyCard(); as card) {
-            <app-challenge-card [card]="card" [wide]="true">
-              @if (showingToday()) {
-                <p cardFoot class="ends">
-                  {{ 'challenges.daily.endsIn' | translate }}
-                  <app-countdown
-                    [deadline]="dailyDeadline()"
-                    [label]="'challenges.daily.countdownAria' | translate"
-                    [withDays]="false"
-                    size="sm"
-                  />
-                </p>
-              } @else {
-                <p cardFoot class="ends">{{ 'challenges.daily.closedDay' | translate }}</p>
-              }
-            </app-challenge-card>
-          } @else {
-            <p class="text-lead text-text-secondary">
-              {{ 'challenges.daily.tipNotYet' | translate }}
-            </p>
-          }
-        </section>
-
-        <section aria-labelledby="weekly-title">
-          <app-section-rule
-            [heading]="'challenges.weekly.title' | translate"
-            headingId="weekly-title"
-          />
-          @if (weeklyCards().length > 0) {
-            <ol [attr.aria-label]="'challenges.weekly.list' | translate" class="weekly">
-              @for (card of weeklyCards(); track card.name) {
-                <li>
-                  <app-challenge-card [card]="card" />
-                </li>
-              }
-            </ol>
-          } @else {
-            <p class="text-lead text-text-secondary">{{ 'challenges.weekly.none' | translate }}</p>
-          }
-        </section>
-      </div>
+      <!-- One board, two layouts: the table from a wide column, a card per challenge below it. -->
+      <section [attr.aria-label]="'challenges.board.title' | translate" class="board">
+        <app-challenge-board
+          (pin)="togglePin($event)"
+          [(pickedDay)]="pickedDay"
+          [days]="days()"
+          [operators]="boardOperators()"
+          [period]="period()"
+          [rows]="boardRows()"
+          class="board-table"
+        />
+        <app-challenge-deck
+          (pin)="togglePin($event)"
+          [(pickedDay)]="pickedDay"
+          [days]="days()"
+          [operators]="boardOperators()"
+          [rows]="boardRows()"
+          class="board-deck"
+        />
+      </section>
     </app-resource-state>
 
     <!-- Outside the state above: the catalogue stays readable while no campaign has drawn anything. -->

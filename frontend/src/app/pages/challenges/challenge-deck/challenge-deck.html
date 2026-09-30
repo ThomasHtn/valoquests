@@ -1,0 +1,38 @@
+<div class="squad">
+  <p class="squad-hint">{{ 'challenges.board.pinHint' | translate }}</p>
+  <div [attr.aria-label]="'challenges.board.squad' | translate" class="squad-row" role="group">
+    @for (operator of operators(); track operator.playerId) {
+      <button
+        (click)="pin.emit(operator.playerId)"
+        [appTooltip]="operator.summary"
+        [attr.aria-label]="
+          ((operator.pinned ? 'challenges.board.unpin' : 'challenges.board.pin')
+            | translate: { name: operator.name }) +
+          '. ' +
+          operator.summary
+        "
+        [attr.aria-pressed]="operator.pinned"
+        appTooltipPosition="below"
+        class="sq focus-ring"
+        type="button"
+      >
+        <app-avatar [src]="operator.portrait" size="sm" />
+        <span aria-hidden="true" class="sq-name">{{ operator.name }}</span>
+        <b aria-hidden="true" class="sq-done tabular-nums"
+          >{{ operator.weeklyDone }}<span>/{{ operator.weeklyTotal }}</span></b
+        >
+        @if (operator.pinned) {
+          <svg aria-hidden="true" class="sq-star" lucideStar></svg>
+        }
+      </button>
+    }
+  </div>
+</div>
+
+@for (row of rows(); track row.key) {
+  <app-deck-card [row]="row">
+    @if (row.daily) {
+      <app-daily-week [(selected)]="pickedDay" [days]="days()" [initials]="true" class="tally" />
+    }
+  </app-deck-card>
+}

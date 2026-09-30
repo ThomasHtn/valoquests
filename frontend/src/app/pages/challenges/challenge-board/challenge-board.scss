@@ -1,0 +1,296 @@
+/* The squad page's fills: rows at 4%, header and footer bands at 8%. One gap, the rows' own,
+   sets every column apart. */
+:host {
+  --cell: rgb(236 232 225 / 4%);
+  --head: rgb(236 232 225 / 8%);
+  --gap: 0.375rem;
+  display: block;
+  /* The operator columns that do not fit run past the right edge: clipped, not scrolled. */
+  overflow-x: clip;
+}
+
+.board {
+  width: 100%;
+  margin-block: calc(-1 * var(--gap));
+  border-collapse: separate;
+  border-spacing: 0 var(--gap);
+  table-layout: fixed;
+}
+
+.col-op {
+  width: var(--col);
+}
+
+th,
+td {
+  padding: 0;
+  background-color: var(--cell);
+  font-weight: inherit;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Every operator column opens on a transparent border as wide as the row gap, which the column
+   widths already count: the first one sets the challenge column apart, and a column slid in
+   brings its own gap. */
+.slide {
+  position: relative;
+  border-left: var(--gap) solid transparent;
+  background-clip: padding-box;
+}
+
+/* Not sticky: its fill is translucent, and six operators fit without scrolling. */
+.lead {
+  text-align: left;
+}
+
+tbody .lead {
+  padding: 1.25rem 1.5rem 1.25rem 1.35rem;
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--tone) 75%, transparent);
+}
+
+/* Every weekly row takes the room of a two-line rule; a longer one still grows its row. */
+.row--weekly > .lead {
+  height: 8.5rem;
+}
+
+/* The day's tally is the bottom band of its cell, flush left and bottom. */
+.tally {
+  margin: 1.1rem -1.5rem -1.25rem -1.35rem;
+}
+
+/* ---------- Header and footer bands ---------- */
+
+/* Header and footer bands at 8%, as on the squad page. The longhand keeps the lead's clip. */
+thead th,
+tfoot th,
+tfoot td {
+  background-color: var(--head);
+}
+
+/* Inset like the rows' leads, so the heading lines up with their emblems. */
+thead .lead {
+  padding: 0.6rem 1.5rem 0.6rem 1.35rem;
+}
+
+/* Set like the challenge titles below it, in sentence case, so the column opens on a heading. */
+.period {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--color-text-primary);
+}
+
+/* Positioned so the star sits in its corner. */
+.op {
+  position: relative;
+  padding: 0.7rem 0.35rem 0.6rem;
+}
+
+.op-in {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.op-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The star, as the overview tabs pin their default one: faint until hovered, filled once pinned. */
+.star {
+  position: absolute;
+  top: 0.1rem;
+  right: 0.1rem;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0;
+  background: none;
+  color: var(--color-brand-400);
+  opacity: 0.4;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    scale 0.15s;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-pressed='true'] {
+    opacity: 1;
+  }
+
+  &:active {
+    scale: 0.88;
+  }
+}
+
+.star-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.star[aria-pressed='true'] .star-icon {
+  fill: currentColor;
+}
+
+tfoot .lead {
+  padding: 0.9rem 1.25rem;
+  color: var(--color-text-muted);
+}
+
+tfoot td {
+  padding: 0.8rem 0.25rem;
+}
+
+.sum {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: help;
+}
+
+/* One hexagon per weekly challenge: a neutral rim, rimmed and filled in the challenge's colour
+   once validated. Drawn in SVG so the empty one stays hollow over the cell's fill. */
+.shelf {
+  display: flex;
+  gap: 3px;
+}
+
+.hex {
+  width: 0.875rem;
+  height: 1rem;
+  fill: transparent;
+  stroke: var(--color-edge-strong);
+  stroke-width: 1.5;
+}
+
+.hex--done {
+  fill: var(--tone);
+  stroke: var(--tone);
+}
+
+/* Filled once the last row's tanks have risen. */
+@media (prefers-reduced-motion: no-preference) {
+  .hex--done {
+    animation: hex-lit 0.3s ease both;
+    animation-delay: calc(var(--fx-delay, 0ms) + var(--duration-gauge-long));
+  }
+}
+
+@keyframes hex-lit {
+  from {
+    fill: transparent;
+    stroke: var(--color-edge-strong);
+  }
+}
+
+.sum-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9375rem;
+  color: var(--color-brand-400);
+}
+
+.sum-reward b {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+/* Nothing validated yet: the figures fade back, as a not-started cell does. */
+.sum--idle {
+  opacity: 0.4;
+}
+
+/* ---------- Sliding operator columns ---------- */
+
+/* Registered so the slide itself animates: transform and clip then read the same value each frame,
+   and the cut stays pinned to the challenge column instead of drifting across the cells. */
+@property --shift {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+/* Every operator cell slides left by the same amount, and is cut one gap past the challenge
+   column, so nothing ever passes under that column's translucent fill and a column halfway in
+   still keeps its gap. */
+/* Only while columns are off the board: a still table keeps its cells untransformed. */
+:host(.board--sliding) .slide {
+  transform: translateX(calc(-1 * var(--shift, 0px)));
+  clip-path: inset(
+    0 0 0 clamp(0px, calc(var(--shift, 0px) - var(--i) * var(--col) + var(--gap)), 100%)
+  );
+}
+
+:host(.board--sliding) .slide {
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+:host(.board--dragging) .slide {
+  cursor: grabbing;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host(.board--sliding:not(.board--dragging)) .board {
+    transition: --shift 0.3s var(--ease-out-quart);
+  }
+}
+
+/* The arrows, above the table's right end, over the operator columns they slide. */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.nav-range {
+  margin-right: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+.nav-btn {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--color-edge);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--color-brand-500) 60%, transparent);
+    background: rgb(217 149 74 / 12%);
+    color: var(--color-brand-400);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}

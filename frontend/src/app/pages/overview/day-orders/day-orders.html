@@ -2,20 +2,36 @@
      right what the day has already given. -->
 <div>
   <div class="day">
-    <!-- The challenges page's own card: the same object on both pages, today's countdown on its
-         last line. -->
-    @if (order(); as order) {
-      <app-challenge-card [card]="order.card">
-        <p cardFoot class="ends">
-          {{ 'challenges.daily.endsIn' | translate }}
-          <app-countdown
-            [deadline]="order.deadline"
-            [label]="'challenges.daily.countdownAria' | translate"
-            [withDays]="false"
-            size="sm"
-          />
-        </p>
-      </app-challenge-card>
+    <!-- The challenges page's phone card, its last line holding today's countdown and how many
+         operators finished. -->
+    @if (daily(); as daily) {
+      <app-deck-card [clock]="false" [idleFigures]="true" [roomy]="true" [row]="daily">
+        <div class="foot">
+          <p class="ends">
+            {{ 'challenges.daily.endsIn' | translate }}
+            @if (daily.closesAt !== null) {
+              <app-countdown
+                [deadline]="daily.closesAt"
+                [label]="'challenges.daily.countdownAria' | translate"
+                [withDays]="false"
+                size="sm"
+              />
+            }
+          </p>
+          <p
+            [attr.aria-label]="
+              'challenges.card.squadAria'
+                | translate: { done: daily.doneCount, total: daily.marks.length }
+            "
+            class="count"
+          >
+            <b aria-hidden="true" class="tabular-nums"
+              >{{ daily.doneCount }}<span>/{{ daily.marks.length }}</span></b
+            >
+            <em aria-hidden="true">{{ 'challenges.card.finished' | translate }}</em>
+          </p>
+        </div>
+      </app-deck-card>
     } @else {
       <div class="day-col">
         <p class="day-cap label-caption text-2xs">

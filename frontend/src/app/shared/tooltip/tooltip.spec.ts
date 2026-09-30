@@ -25,6 +25,33 @@ class TooltipHost {
   public readonly disabled = signal(false);
 }
 
+/**
+ * Host rendering structured content in place of the text.
+ */
+@Component({
+  imports: [Tooltip],
+  template: `
+    <button [appTooltipTemplate]="tip" appTooltip="4 of 3" type="button">Anchor</button>
+    <ng-template #tip><b class="figure">4</b> / 3</ng-template>
+  `,
+})
+class TemplateTooltipHost {}
+
+describe('Tooltip with a template', () => {
+  it('renders the template instead of the text, and drops it on hide', () => {
+    const fixture = TestBed.createComponent(TemplateTooltipHost);
+    fixture.detectChanges();
+    const anchor: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+
+    anchor.dispatchEvent(new MouseEvent('mouseenter'));
+    const bubble = document.body.querySelector('[role="tooltip"]');
+    expect(bubble?.querySelector('.figure')?.textContent).toBe('4');
+
+    anchor.dispatchEvent(new MouseEvent('mouseleave'));
+    expect(document.body.querySelector('.figure')).toBeNull();
+  });
+});
+
 describe('Tooltip', () => {
   let fixture: ComponentFixture<TooltipHost>;
   let anchor: HTMLButtonElement;

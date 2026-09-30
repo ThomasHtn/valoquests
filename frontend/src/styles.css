@@ -92,18 +92,6 @@
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
-/* The disc a completed `app-progress-circle` encloses: the ring itself is drawn by that component,
-   this is only the attenuated ground inside it, so a full-strength arc and a tinted centre read as
-   ring-then-core rather than one filled badge. The tint is a Tailwind utility off the challenge
-   palette, set by the call site.
-
-   The inset clears the ring's stroke (4 in 44 ≈ 9%) plus two points of clear ground. Both are shares
-   of the box, so they hold at any size the caller picks. */
-@utility progress-ring-core {
-  border-radius: 50%;
-  inset: 11%;
-}
-
 /* An outlined hexagon — the campaign map's terrain tile — drawn as one element rather than a
    surface nested in an outline. The map lays out over a hundred and fifty of these purely
    decorative tiles, and the nested markup made each one cost three nodes: the field alone was

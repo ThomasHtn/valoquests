@@ -8,11 +8,16 @@
       [class.day--picked]="selected() === day.index"
       [class]="'day day--' + day.state"
       [disabled]="!day.drawn"
-      appTooltipPosition="below"
-      class="focus-ring"
+      class="focus-ring-inset"
       type="button"
     >
-      <span aria-hidden="true" class="day-name">{{ day.weekday }} {{ day.date }}</span>
+      <span aria-hidden="true" class="day-name">
+        @if (initials()) {
+          {{ day.weekday.charAt(0) }}
+        } @else {
+          {{ day.weekday }} {{ day.date }}
+        }
+      </span>
       <span aria-hidden="true" class="day-score tabular-nums">
         @if (day.drawn) {
           {{ day.doneCount }}/{{ day.total }}

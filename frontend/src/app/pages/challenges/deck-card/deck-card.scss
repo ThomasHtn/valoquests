@@ -1,0 +1,131 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  padding: 1.15rem 1rem 1.1rem 1.15rem;
+  background: rgb(236 232 225 / 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
+:host(.deck-card--roomy) {
+  padding: 1.4rem 1.5rem 1.35rem 1.35rem;
+}
+
+@media (width < 40rem) {
+  :host(.deck-card--roomy) {
+    padding: 1.2rem 1.15rem 1.15rem 1.1rem;
+  }
+}
+
+.rule {
+  height: 1px;
+  margin: 0.9rem 0 0.75rem;
+  border: 0;
+  background: var(--color-edge);
+}
+
+/* One line per operator: portrait, name, a thin line closing toward the target, the figures. */
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 1.5rem 5.75rem minmax(0, 1fr) 4.25rem;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.4rem 0.35rem 0.4rem 0.25rem;
+}
+
+.face {
+  display: flex;
+  border-radius: 9999px;
+}
+
+.who {
+  overflow: hidden;
+  font-size: 0.9375rem;
+  line-height: 1.1;
+  color: var(--color-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track {
+  display: flex;
+  gap: 2px;
+  height: 4px;
+}
+
+.track i {
+  flex: 1;
+  background: var(--color-edge);
+}
+
+.track i.lit {
+  background: var(--tone);
+}
+
+.run {
+  position: relative;
+  flex: 1;
+  background: var(--color-edge);
+}
+
+.run b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--tone);
+}
+
+.figures {
+  display: inline-flex;
+  align-items: baseline;
+  justify-self: end;
+  gap: 0.15rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.figures b {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--tone);
+}
+
+.check {
+  align-self: center;
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 3;
+  color: var(--tone);
+}
+
+.dash {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-surface-600);
+}
+
+.line--done .who {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Not started: the portrait greys out, the name and any figure step back. */
+.line--idle .who {
+  color: var(--color-text-muted);
+}
+
+.line--idle .face {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.line--idle .figures b {
+  color: var(--color-text-muted);
+}

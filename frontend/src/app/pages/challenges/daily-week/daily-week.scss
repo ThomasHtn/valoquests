@@ -1,32 +1,25 @@
-/* On a phone the strip takes the line under its heading (see the section rule's `wrapSide`). */
 :host {
   display: block;
 }
 
-@media (width < 40rem) {
-  :host {
-    order: 1;
-    flex-basis: 100%;
-  }
-}
-
-/* Seven small cells in a line: a day gone by in plain text with its count in green, today in the
-   daily's cyan, the day on screen tinted and underlined, the days ahead stepped back. */
+/* Seven cells split by hairlines under one rule: a day gone by in plain text with its count in
+   green, today in the daily's cyan, the day on screen tinted and underlined, the days ahead faded. */
 .week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 3px;
+  border-top: 1px solid var(--rule, var(--color-edge));
 }
 
 .day {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  min-width: 3.1rem;
-  padding: 0.3rem 0.35rem 0.35rem;
+  gap: 0.1rem;
+  min-width: 0;
+  padding: 0.35rem 0.1rem 0.4rem;
   border: 0;
-  background: rgb(236 232 225 / 4%);
+  border-left: 1px solid var(--rule, var(--color-edge));
+  background: transparent;
   font: inherit;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -35,8 +28,12 @@
     color 0.2s;
 }
 
+.day:first-child {
+  border-left: 0;
+}
+
 .day:not(:disabled):hover {
-  background: rgb(236 232 225 / 9%);
+  background: rgb(236 232 225 / 6%);
   color: var(--color-text-primary);
 }
 
@@ -47,17 +44,17 @@
 /* Oswald capitals with French accents: line height stays above 1 so no accent is clipped. */
 .day-name {
   font-family: var(--font-display);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.1;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
 .day-score {
   font-family: var(--font-mono);
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
 }
 
 .day--closed {
@@ -87,17 +84,4 @@
 
 .day--ahead {
   opacity: 0.55;
-}
-
-/* On a phone the seven cells share the whole line. */
-@media (width < 40rem) {
-  .day {
-    min-width: 0;
-    padding: 0.4rem 0.15rem 0.45rem;
-  }
-
-  .day-name {
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-  }
 }

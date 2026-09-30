@@ -2,7 +2,13 @@
 <div [attr.aria-label]="'overview.tabs.aria' | translate" class="bar" role="tablist">
   @for (tab of tabs(); track tab.key; let index = $index) {
     <!-- The star sits beside the tab, never inside it: a button cannot hold another. -->
-    <div [class.slot--on]="selected() === tab.key" class="slot" role="presentation">
+    <div
+      #slot
+      [attr.data-tab]="tab.key"
+      [class.slot--on]="selected() === tab.key"
+      class="slot"
+      role="presentation"
+    >
       <button
         #tab
         (click)="select(tab.key)"

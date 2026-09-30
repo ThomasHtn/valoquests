@@ -1,0 +1,138 @@
+<!-- Only when the squad outgrows the board: which operators are shown, and arrows to bring the
+     others in, above the table's right end. -->
+@if (slidable()) {
+  @let shown = range();
+  <div class="nav">
+    <span class="nav-range tabular-nums">
+      {{ 'challenges.board.range' | translate: shown }}
+    </span>
+    <button
+      (click)="step(-1)"
+      [attr.aria-label]="'challenges.board.previous' | translate"
+      [attr.title]="'challenges.board.previous' | translate"
+      [disabled]="shown.from === 1"
+      class="nav-btn focus-ring"
+      type="button"
+    >
+      <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
+    </button>
+    <button
+      (click)="step(1)"
+      [attr.aria-label]="'challenges.board.next' | translate"
+      [attr.title]="'challenges.board.next' | translate"
+      [disabled]="shown.to === shown.total"
+      class="nav-btn focus-ring"
+      type="button"
+    >
+      <svg aria-hidden="true" class="size-4" lucideChevronRight></svg>
+    </button>
+  </div>
+}
+
+<table
+  [attr.aria-label]="'challenges.board.region' | translate"
+  [style.--shift.px]="offset()"
+  [style.width.px]="tableWidth()"
+  class="board"
+>
+  <colgroup>
+    <col [style.width.px]="leadWidth()" />
+    @for (operator of operators(); track operator.playerId) {
+      <col class="col-op" />
+    }
+  </colgroup>
+
+  <thead>
+    <tr>
+      <th class="lead" scope="col">
+        <!-- The column is still named for assistive tech; the eye gets the week it covers. -->
+        <span class="sr-only">{{ 'challenges.board.challenge' | translate }}</span>
+        <span aria-hidden="true" class="period">{{ period() }}</span>
+      </th>
+      @for (operator of operators(); track operator.playerId; let i = $index) {
+        @let label =
+          (operator.pinned ? 'challenges.board.unpin' : 'challenges.board.pin')
+            | translate: { name: operator.name };
+        <th [attr.data-column]="i" [style.--i]="i" class="op slide" scope="col">
+          <span class="op-in">
+            <app-avatar [src]="operator.portrait" size="sm" />
+            <span class="op-name">{{ operator.name }}</span>
+          </span>
+          <button
+            (click)="pinOperator(operator.playerId)"
+            [attr.aria-label]="label"
+            [attr.aria-pressed]="operator.pinned"
+            [attr.title]="label"
+            class="star focus-ring"
+            type="button"
+          >
+            <svg aria-hidden="true" class="star-icon" lucideStar></svg>
+          </button>
+        </th>
+      }
+    </tr>
+  </thead>
+
+  <tbody>
+    @for (row of rows(); track row.key; let r = $index) {
+      <tr
+        [class.row--weekly]="!row.daily"
+        [style.--fx-delay.ms]="r * rowStagger"
+        [style.--tone]="row.tone"
+      >
+        <th class="lead" scope="row">
+          <app-challenge-head [class.head--even]="!row.daily" [row]="row" />
+          @if (row.daily) {
+            <app-daily-week [(selected)]="pickedDay" [days]="days()" class="tally" />
+          }
+        </th>
+        @for (mark of row.marks; track mark.playerId; let i = $index) {
+          <td [style.--i]="i" class="slide"><app-progress-mark [mark]="mark" /></td>
+        }
+      </tr>
+    }
+  </tbody>
+
+  <tfoot>
+    <tr [style.--fx-delay.ms]="rows().length * rowStagger">
+      <th class="lead" scope="row">
+        <span
+          [appTooltip]="'challenges.board.totalsTooltip' | translate"
+          class="label-caption text-2xs focus-ring"
+          tabindex="0"
+          >{{ 'challenges.board.totals' | translate }}</span
+        >
+      </th>
+      @for (operator of operators(); track operator.playerId; let i = $index) {
+        <td [style.--i]="i" class="slide">
+          <span
+            [appTooltip]="operator.summary"
+            [class.sum--idle]="operator.weeklyDone === 0 && operator.reward === 0"
+            aria-hidden="true"
+            class="sum"
+          >
+            <span class="shelf">
+              @for (slot of shelves()[i]; track slot.key) {
+                <svg
+                  [class.hex--done]="slot.done"
+                  [style.--tone]="slot.tone"
+                  class="hex"
+                  viewBox="0 0 14 16"
+                >
+                  <polygon
+                    points="7,0.75 13.25,4.375 13.25,11.625 7,15.25 0.75,11.625 0.75,4.375"
+                  />
+                </svg>
+              }
+            </span>
+            <span class="sum-reward">
+              <svg class="size-3.5" lucideUsers></svg>
+              <b class="tabular-nums">+{{ operator.reward }}</b>
+            </span>
+          </span>
+          <span class="sr-only">{{ operator.summary }}</span>
+        </td>
+      }
+    </tr>
+  </tfoot>
+</table>

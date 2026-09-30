@@ -90,7 +90,7 @@ Chaque ajout se justifie dans le message de commit.
 |---|---|
 | `@lucide/angular` | le jeu d'icônes, source unique |
 | `chart.js` | les vrais graphiques multi-séries, chargé en lazy sur `/players/:id` seulement |
-| _(aucune pour les jauges radiales)_ | `shared/progress-circle` dessine l'anneau lui-même : deux cercles SVG et un `stroke-dashoffset`, la bibliothèque `angular-svg-round-progressbar` a été retirée le 05/09/2026 |
+| _(aucune pour les jauges radiales)_ | chaque jauge dessine son anneau elle-même : deux cercles SVG et un `stroke-dashoffset`, la bibliothèque `angular-svg-round-progressbar` a été retirée le 05/09/2026. Le tableau des défis n'utilise plus d'anneaux : ses cellules se remplissent du bas vers le haut (`progress-mark`) |
 
 **À ajouter, justifié**
 

@@ -23,6 +23,7 @@ import { CountUp } from '@shared/count-up/count-up';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionRule } from '@shared/section-rule/section-rule';
+import { BoardRow } from '../challenges/challenges.model';
 import { formatFigure } from '../leaderboard/leaderboard-board.utils';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { BaseScene } from './base-scene/base-scene';
@@ -35,7 +36,6 @@ import { OverviewTabs } from './overview-tabs/overview-tabs';
 import {
   Capacity,
   Contribution,
-  DailyOrder,
   DayTally,
   FriezeWeek,
   Mission,
@@ -47,7 +47,7 @@ import {
 import {
   buildCapacity,
   buildContribution,
-  buildDailyOrder,
+  buildDailyRow,
   buildFrieze,
   buildMission,
   buildMissionReport,
@@ -236,14 +236,17 @@ export class Overview {
     buildContribution(resourceValue(this.rankingResource, null) ?? null, this.currentWeek()),
   );
 
-  protected readonly dailyOrder = computed<DailyOrder | null>(() =>
-    buildDailyOrder(
+  protected readonly dailyRow = computed<BoardRow | null>(() => {
+    const locale = resolveLocale(this.translation.language());
+    return buildDailyRow(
       resourceValue(this.challengesResource, null) ?? null,
       this.campaign()?.status === 'RUNNING',
       this.translation.translate('challenges.daily.key'),
-      (amount) => formatFigure(amount, resolveLocale(this.translation.language()), amount >= 1_000),
-    ),
-  );
+      (amount) => formatFigure(amount, locale, amount >= 1_000),
+      locale,
+      (key, params) => this.translation.translate(key, params),
+    );
+  });
 
   protected readonly tally = computed<DayTally | null>(() =>
     buildTally(
@@ -273,7 +276,7 @@ export class Overview {
   protected readonly selectedTab = signal<OverviewTabKey>(this.favoriteTab() ?? 'challenges');
 
   protected readonly tabs = computed<readonly OverviewTab[]>(() =>
-    buildTabs((key, params) => this.translation.translate(key, params)),
+    buildTabs((key, params) => this.translation.translate(key, params), this.favoriteTab()),
   );
 
   protected readonly rosterCount = computed(

@@ -19,7 +19,6 @@ import {
   Capacity,
   Contribution,
   ContributionShare,
-  DailyOrder,
   DayTally,
   FriezeWeek,
   Mission,
@@ -32,7 +31,8 @@ import {
 } from './overview.model';
 import { streakBonusOf, streakWeekOf } from '@shared/streak-gauge/streak-gauge.utils';
 import { DAILY_TONE } from '../challenges/challenges.constants';
-import { buildChallengeCard, toOperators } from '../challenges/challenges.utils';
+import { BoardRow } from '../challenges/challenges.model';
+import { buildChallengeCard, toBoardRow, toOperators } from '../challenges/challenges.utils';
 import { FAVORITE_TAB_KEY, OVERVIEW_TABS, SEEN_REPORT_KEY } from './overview.constants';
 
 /**
@@ -393,20 +393,24 @@ export function buildContribution(
 }
 
 /**
- * Builds the day's challenge card and when it closes.
+ * Builds the day's challenge as the challenges page's phone card draws it, closing at midnight.
  *
  * @param challenges - Today's challenge draw, or `null` while unresolved.
  * @param rescueActive - Whether a running campaign turns validations into wounded brought home.
  * @param kind - Key line above the challenge's name.
- * @param format - Formats a figure for the bands' labels.
- * @returns The order, or `null` when there is no daily to show.
+ * @param format - Formats a figure for the lines' labels.
+ * @param locale - `Intl` locale the tooltips' figures are written in.
+ * @param translate - Resolves the tooltips' keys.
+ * @returns The row, its lines the furthest along first, or `null` when there is no daily to show.
  */
-export function buildDailyOrder(
+export function buildDailyRow(
   challenges: CurrentChallenges | null,
   rescueActive: boolean,
   kind: string,
   format: (amount: number) => string,
-): DailyOrder | null {
+  locale: string,
+  translate: Translate,
+): BoardRow | null {
   if (!challenges) {
     return null;
   }
@@ -414,16 +418,15 @@ export function buildDailyOrder(
   if (!daily) {
     return null;
   }
-  return {
-    card: buildChallengeCard(
-      daily,
-      { tone: DAILY_TONE, mark: 'D', kind },
-      toOperators(challenges.roster),
-      rescueActive,
-      format,
-    ),
-    deadline: campaignMidnight(challenges.today, 1).getTime(),
-  };
+  const card = buildChallengeCard(
+    daily,
+    { tone: DAILY_TONE, mark: 'D', kind },
+    toOperators(challenges.roster),
+    rescueActive,
+    format,
+  );
+  const closesAt = campaignMidnight(challenges.today, 1).getTime();
+  return toBoardRow(daily, card, card.rungs, closesAt, locale, translate);
 }
 
 /**
@@ -563,11 +566,18 @@ export function writeFavoriteTab(key: OverviewTabKey | null): void {
 }
 
 /**
- * Builds the overview's tab bar: each tab's name.
+ * Builds the overview's tab bar: each tab's name, the pinned one leading the bar.
  *
  * @param translate - Resolves a translation key.
+ * @param favorite - The pinned tab, or `null` to keep the default order.
  * @returns The tabs in bar order.
  */
-export function buildTabs(translate: Translate): readonly OverviewTab[] {
-  return OVERVIEW_TABS.map((key) => ({ key, label: translate(`overview.tabs.${key}.label`) }));
+export function buildTabs(
+  translate: Translate,
+  favorite: OverviewTabKey | null = null,
+): readonly OverviewTab[] {
+  const keys = favorite
+    ? [favorite, ...OVERVIEW_TABS.filter((key) => key !== favorite)]
+    : OVERVIEW_TABS;
+  return keys.map((key) => ({ key, label: translate(`overview.tabs.${key}.label`) }));
 }

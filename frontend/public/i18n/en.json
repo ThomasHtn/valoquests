@@ -370,8 +370,47 @@
         "text": "The week's five challenges are drawn on Monday, one per difficulty. The daily challenge is redrawn every morning."
       }
     },
+    "board": {
+      "title": "Challenges and squad",
+      "region": "Challenges and squad progress",
+      "challenge": "Challenge",
+      "period": "{{start}} to {{end}}",
+      "totals": "Validated",
+      "totalsTooltip": "Weekly challenges validated and the week's gain, daily challenges included",
+      "pin": "Pin {{name}} first",
+      "unpin": "Unpin {{name}}",
+      "pinHint": "Tap a player to show them first in every challenge.",
+      "squad": "The squad",
+      "markTip": "{{name}}: {{tip}}",
+      "markDetail": {
+        "idle": "Not started",
+        "open": "Under way",
+        "done": "Validated",
+        "remaining": {
+          "one": "to go",
+          "other": "to go"
+        },
+        "surplus": "over"
+      },
+      "summary": {
+        "done": {
+          "one": "{{name}}: {{count}} of {{total}} weekly challenges validated",
+          "other": "{{name}}: {{count}} of {{total}} weekly challenges validated"
+        },
+        "wounded": {
+          "one": "{{count}} wounded brought back this week",
+          "other": "{{count}} wounded brought back this week"
+        },
+        "points": {
+          "one": "{{count}} ranking point this week",
+          "other": "{{count}} ranking points this week"
+        }
+      },
+      "range": "{{from}}-{{to}} / {{total}}",
+      "previous": "Previous players",
+      "next": "Next players"
+    },
     "daily": {
-      "title": "The daily challenge",
       "strip": "The seven days of the week",
       "key": "Daily challenge",
       "keyOn": "{{weekday}} {{date}} challenge",
@@ -379,7 +418,6 @@
       "closedDay": "Day closed",
       "countdownAria": "Time left before midnight",
       "tipUnavailable": "Challenge unavailable",
-      "tipNotYet": "Today's challenge is not drawn yet.",
       "tipNamed": "{{name}}: {{tip}}",
       "tipNone": "0 of {{total}} validated",
       "tipDone": {
@@ -410,11 +448,6 @@
         "openEndedDone": "{{value}} - validated"
       },
       "squadAria": "{{done}} operators out of {{total}} validated this challenge."
-    },
-    "weekly": {
-      "title": "The week's challenges",
-      "list": "The week's five challenges",
-      "none": "The week's five challenges are not drawn yet."
     },
     "catalogue": {
       "title": "The challenge catalogue",

@@ -1,6 +1,5 @@
 import { ExtractionLimiter, GuardianCategory, WeeklyTitle } from '@core/campaign/campaign.model';
 import { TitleVisual } from '@core/campaign/campaign-visual.utils';
-import { ChallengeCard } from '../challenges/challenges.model';
 import { StreakPip } from '@shared/streak-gauge/streak-gauge.model';
 
 /**
@@ -477,21 +476,6 @@ export interface Capacity {
    * Hit points one percent of breakthrough costs.
    */
   readonly hitPointsPerPercent: number;
-}
-
-/**
- * The day's challenge, drawn as the challenges page draws it, and when it closes.
- */
-export interface DailyOrder {
-  /**
-   * The card, one band per operator.
-   */
-  readonly card: ChallengeCard;
-
-  /**
-   * Midnight tonight in the campaign time zone, in epoch milliseconds.
-   */
-  readonly deadline: number;
 }
 
 /**

@@ -480,6 +480,18 @@
     animation: fx-arc var(--duration-gauge-long) var(--ease-gauge) both;
     animation-delay: var(--fx-delay, 0ms);
   }
+
+  /* A level rising from the floor to its inline height. */
+  .fx-rise {
+    animation: fx-grow-h var(--duration-gauge-long) var(--ease-gauge) both;
+    animation-delay: var(--fx-delay, 0ms);
+  }
+}
+
+@keyframes fx-grow-h {
+  from {
+    height: 0;
+  }
 }
 
 @keyframes fx-grow-w {
