@@ -1,13 +1,17 @@
 /*
  * Three readings, in the order the week is played: the clock, the squad against the guardian, what
- * comes home. No header and no prose — each row is a figure, a reference and one bar.
+ * Sunday midnight decides. No prose: plates, figures and one full-bleed track.
  *
  * The clock spans the block and centres: it is the only value here that moves on its own.
  */
-/* Equal rows on an auto height: the clock and both readings share the tallest one's height. */
 .report {
+  --squad: var(--color-accent-violet);
+  --squad-light: color-mix(in srgb, var(--color-accent-violet) 45%, white);
+  --foe: var(--color-accent-red);
+  --foe-light: color-mix(in srgb, var(--color-accent-red) 40%, white);
+
   display: grid;
-  grid-auto-rows: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .rep-clock {
@@ -20,418 +24,417 @@
   background: rgb(4 10 15 / 52%);
 }
 
-.rep-row {
-  --tone: var(--color-text-muted);
+/* ---------- The duel ---------- */
 
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: center;
-  gap: 0.6rem 1.25rem;
-  padding: 1.25rem 1.5rem 1.35rem;
-  box-shadow: inset 3px 0 0 var(--tone);
-}
-
-.rep-clock + .rep-row,
-.rep-row + .rep-row {
+/* The block is the gauge: its whole ground is the shared track, the camps read on top of it. */
+.duel {
+  position: relative;
+  overflow: hidden;
   border-top: 1px solid var(--color-edge);
 }
 
-.rep-row--aboard {
-  --tone: var(--color-brand-400);
+.duel-camps {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 1.75rem;
+  pointer-events: none;
 }
 
-.rep-key {
-  display: flex;
-  flex-direction: column;
+.camp {
+  --tone: var(--squad);
+  --fig: var(--squad-light);
+
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.camp--foe {
+  --tone: var(--foe);
+  --fig: var(--foe-light);
+
+  justify-items: end;
+  text-align: right;
+}
+
+/* Each camp's name on a flat plate of its own colour, dark lettering. */
+.plate {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  align-self: center;
-  color: var(--tone);
+  gap: 0.45rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--tone);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: var(--tracking-label);
+  color: var(--color-surface-950);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-@media (width >= 40rem) {
-  .rep-row {
-    grid-template-columns: 5.5rem minmax(0, 1fr);
-  }
+.plate-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  stroke-width: 2.25;
 }
 
-/* The plate the daily challenge already carries, so both read as one family. */
-.rep-mark {
-  display: grid;
-  place-items: center;
-  width: 2.6rem;
-  height: 2.95rem;
-  background: color-mix(in srgb, var(--tone) 55%, transparent);
-}
-
-.rep-mark > span {
-  display: grid;
-  place-items: center;
-  width: calc(100% - 3px);
-  height: calc(100% - 3px);
-  background: var(--color-surface-950);
-  color: var(--tone);
-}
-
-.rep-body {
+/* Figure over unit, mirrored on both sides: the two numbers hold the block's outer edges. */
+.camp-fig {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-
-.rep-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.3rem 1rem;
-}
-
-.rep-fig {
-  display: flex;
-  align-items: baseline;
-  gap: 0.45rem;
+  gap: 0.3rem;
   font-family: var(--font-display);
-  font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.25rem);
+  font-size: clamp(2.25rem, 1.5rem + 2.4vw, 3.25rem);
   font-weight: 600;
-  line-height: 1;
-  color: var(--tone);
+  line-height: 0.95;
+  color: var(--fig);
+  white-space: nowrap;
 }
 
-.rep-fig small {
+.camp--squad .camp-fig {
+  align-items: flex-start;
+}
+
+.camp--foe .camp-fig {
+  align-items: flex-end;
+}
+
+.camp-fig small {
   font-family: var(--font-sans);
   font-size: 1rem;
   font-weight: 500;
-  color: var(--color-text-muted);
+  line-height: 1.2;
+  color: var(--color-text-secondary);
 }
 
-/* The scale each figure is read against, in the row's own colour: a bar without it is a
-   decoration. */
-.rep-side {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  margin-left: auto;
-  color: var(--color-text-muted);
-}
-
-.rep-side b {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0.01em;
-  color: var(--tone);
-}
-
-/*
- * The squad against the guardian, on the aboard row's grid. The key is the guardian's red rather
- * than a camp's colour, so it never reads as the inhabitants' amber below it; the two figures take
- * their own camp's colour at each end of the track they share.
- */
-.rep-row--vs {
-  --tone: var(--color-accent-red);
-  --squad: var(--color-accent-violet);
-  --foe: var(--color-accent-red);
-}
-
-.vs-squad {
-  --tone: var(--squad);
-}
-
-.vs-foe {
-  --tone: var(--foe);
-}
-
-.vs-line,
-.vs-names {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-/* One step above the other captions: the two camps are what the row is about. */
-.vs-names {
-  font-size: 0.8125rem;
-}
-
-.vs-names > span {
-  color: var(--tone);
-}
-
-.rep-vs--down .vs-foe .rep-fig {
-  opacity: 0.5;
-}
-
-.vs-bar {
-  position: relative;
-  height: 30px;
-  overflow: hidden;
+/* The shared track, under the whole block: violet segments per operator, muted red hatch standing,
+   both kept dark enough for the camps' figures to read on either side. */
+.duel-track {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   background:
-    repeating-linear-gradient(-45deg, rgb(4 10 15 / 22%) 0 6px, transparent 6px 12px),
-    var(--color-boss-hp);
-  box-shadow: inset -3px 0 0 var(--color-boss-hp-edge);
+    repeating-linear-gradient(-45deg, rgb(4 10 15 / 18%) 0 7px, transparent 7px 14px),
+    color-mix(in srgb, var(--color-boss-hp) 30%, var(--color-surface-950));
 }
 
-/* The squad's segments: two steps of the same violet in turn, so the reader counts operators
-   rather than reading a gradient. */
-.vs-front {
+.duel-front {
   position: absolute;
   inset: 0 auto 0 0;
   display: flex;
   width: var(--breach);
-  animation: overview-fill var(--duration-gauge-long) var(--ease-gauge) both;
+  animation: duel-fill var(--duration-gauge-long) var(--ease-gauge) both;
 }
 
-.vs-front > i {
+.duel-front > i {
   display: block;
   flex: var(--w, 1) 1 0;
   min-width: 0;
-  background: var(--squad);
+  background: color-mix(in srgb, var(--squad) 42%, var(--color-surface-950));
   cursor: help;
   transition: filter var(--duration-fast) var(--ease-out-quart);
 }
 
-.vs-front > i:nth-child(even) {
-  background: color-mix(in srgb, var(--squad) 62%, #0a151d);
+.duel-front > i:nth-child(even) {
+  background: color-mix(in srgb, var(--squad) 34%, var(--color-surface-950));
 }
 
-.vs-front > i + i {
-  box-shadow: inset 2px 0 0 rgb(4 10 15 / 70%);
+.duel-front > i:hover,
+.duel-front > i:focus-visible {
+  filter: brightness(1.3);
 }
 
-.vs-front > i:hover,
-.vs-front > i:focus-visible {
-  filter: brightness(1.25);
-}
-
-/* The breakthrough itself: a gold post the full height of the track, ringed dark so it stands out
-   of both fills. Its percentage lives in the tooltip, so the post is the hover target. */
-.vs-cursor {
+/* The breakthrough: a gold post on the seam, thickened while its hover zone is pointed at. */
+.duel-post {
   position: absolute;
   inset-block: 0;
-  left: clamp(0px, calc(var(--breach) - 2px), calc(100% - 4px));
-  width: 4px;
+  left: clamp(0px, var(--breach), calc(100% - 3px));
+  width: 3px;
   background: var(--color-accent-gold);
-  box-shadow:
-    -2px 0 0 var(--color-surface-950),
-    2px 0 0 var(--color-surface-950);
-  cursor: help;
-  transition:
-    background-color var(--duration-fast) var(--ease-out-quart),
-    transform var(--duration-fast) var(--ease-out-quart);
-  animation: vs-cursor-in var(--duration-gauge-long) var(--ease-gauge) both;
+  pointer-events: none;
+  transition: width var(--duration-fast) var(--ease-out-quart);
+  animation: duel-post var(--duration-gauge-long) var(--ease-gauge) both;
 }
 
-/* A four-pixel post is too thin to aim at: the pointer catches it a few pixels either side. */
-.vs-cursor::after {
+/* A three-pixel post is too thin to aim at: the pointer catches it a few pixels either side. */
+.duel-seam {
   position: absolute;
   inset-block: 0;
-  inset-inline: -6px;
-  content: '';
-}
-
-.vs-cursor:hover,
-.vs-cursor:focus-visible {
-  background: var(--color-brand-400);
-  transform: scaleX(1.75);
-}
-
-/* The guardian's standing hit points, laid over the red so it answers the pointer. */
-.vs-rest {
-  position: absolute;
-  inset-block: 0;
-  right: 0;
-  left: var(--breach);
+  left: clamp(0px, calc(var(--breach) - 5px), calc(100% - 14px));
+  width: 14px;
   cursor: help;
-  transition:
-    background-color var(--duration-fast) var(--ease-out-quart),
-    box-shadow var(--duration-fast) var(--ease-out-quart);
 }
 
-.vs-rest:hover,
-.vs-rest:focus-visible {
-  background: rgb(236 232 225 / 10%);
-  box-shadow: inset 0 0 0 1px rgb(236 232 225 / 60%);
+.duel-track:has(.duel-seam:hover, .duel-seam:focus-visible) .duel-post {
+  width: 6px;
 }
 
-/* The fatal blow, written across the emptied track on the guardian's side. */
-.vs-down {
+/* ---------- Guardian down ---------- */
+
+.duel--down .camp--foe .plate,
+.duel--down .camp--foe .camp-fig {
+  opacity: 0.5;
+}
+
+/* Between the track and the camps; lets the pointer through to the operators' segments. */
+.duel-won {
   position: absolute;
-  top: 50%;
-  right: 0.5rem;
-  max-width: calc(100% - 1rem);
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
   overflow: hidden;
-  padding: 0.15rem 0.4rem;
-  background: var(--color-surface-950);
-  box-shadow: inset 0 0 0 1px var(--foe);
-  color: var(--color-text-primary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transform: translateY(-50%);
+  pointer-events: none;
 }
 
-@keyframes vs-cursor-in {
-  from {
-    left: 0;
+.won-fill {
+  position: absolute;
+  inset: auto 0 0;
+  height: 100%;
+  background: color-mix(in srgb, var(--squad) 14%, transparent);
+  animation: won-rise var(--duration-gauge-long) var(--ease-gauge) both;
+}
+
+.won-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: var(--squad-light);
+}
+
+.won-check {
+  width: 3.5rem;
+  height: 3.5rem;
+  stroke-width: 3;
+}
+
+/* Only drawn where it can move: still, the burst would be litter around the check. */
+.piece {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .duel-won {
+    --pop-at: calc(var(--duration-gauge-long) * 0.8);
+  }
+
+  .won-check {
+    animation: check-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: var(--pop-at);
+  }
+
+  .piece {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin: -0.25rem 0 0 -0.25rem;
+    background: var(--squad);
+    opacity: 0;
+    pointer-events: none;
+    animation:
+      confetti 0.9s cubic-bezier(0.16, 1, 0.3, 1) both,
+      confetti-fall 0.9s cubic-bezier(0.55, 0, 1, 0.45) both;
+    animation-delay: calc(var(--pop-at) + 0.08s);
+  }
+
+  .piece--strip {
+    width: 0.35rem;
+    height: 1rem;
+    margin: -0.5rem 0 0 -0.175rem;
+  }
+
+  .piece--pale {
+    background: var(--squad-light);
   }
 }
 
-/* The aboard track, quartered so a fill can be read at a glance. */
-.rep-bar {
-  position: relative;
-  display: flex;
-  height: 22px;
-  background:
-    linear-gradient(
-        to right,
-        transparent calc(25% - 1px),
-        rgb(4 10 15 / 70%) calc(25% - 1px) 25%,
-        transparent 25%
-      )
-      0 0 / 25% 100%,
-    rgb(4 10 15 / 60%);
-  box-shadow: inset 0 1px 0 rgb(0 0 0 / 45%);
+/* ---------- Sunday's stakes ---------- */
+
+/* On the clock's sunken ground: the two outcomes the countdown ends on. */
+.stakes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: rgb(4 10 15 / 52%);
 }
 
-.rep-bar > i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: var(--lvl);
-}
+.stake {
+  --tone: var(--color-brand-400);
 
-.rep-bar--aboard > i {
-  background: var(--color-brand-500);
-  box-shadow: inset -3px 0 0 var(--color-brand-400);
-  animation: overview-fill var(--duration-gauge) var(--ease-gauge) both;
-}
-
-/* Hovered, the track takes a hard brand ring and its fill a brighter lead edge, as the challenge
-   bands do. */
-.rep-bar--aboard {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  padding: 1.1rem 1.5rem 1.2rem;
   cursor: help;
-  transition: box-shadow var(--duration-fast) var(--ease-out-quart);
 }
 
-.rep-bar--aboard > i {
-  transition:
-    background-color var(--duration-fast) var(--ease-out-quart),
-    box-shadow var(--duration-fast) var(--ease-out-quart);
+.stake--loss {
+  --tone: var(--foe-light);
+
+  justify-items: end;
+  text-align: right;
+  box-shadow: inset 1px 0 0 var(--color-edge);
 }
 
-.rep-bar--aboard:hover {
-  box-shadow: 0 0 0 1px var(--color-brand-400);
+.stake-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-text-secondary);
 }
 
-.rep-bar--aboard:hover > i {
-  background: var(--color-brand-400);
-  box-shadow: inset -3px 0 0 var(--color-text-primary);
+.stake-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--tone);
 }
 
-@keyframes overview-fill {
+.stake-fig {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 1.3rem + 1.4vw, 2.25rem);
+  font-weight: 600;
+  line-height: 0.95;
+  color: var(--tone);
+  white-space: nowrap;
+}
+
+.stake--loss .stake-fig {
+  flex-direction: row-reverse;
+}
+
+.stake-fig small {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+@keyframes duel-fill {
   from {
     width: 0;
   }
 }
 
+@keyframes duel-post {
+  from {
+    left: 0;
+  }
+}
+
+@keyframes won-rise {
+  from {
+    height: 0;
+  }
+}
+
+@keyframes check-pop {
+  from {
+    opacity: 0;
+    scale: 0.3;
+  }
+}
+
+/* Out along its angle, turning on itself, gone by the end; reach scaled up for the larger check. */
+@keyframes confetti {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(0.75rem) rotate(0deg) scale(1);
+  }
+  8%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(calc(var(--reach) * 1.6)) rotate(var(--spin))
+      scale(0.6);
+  }
+}
+
+/* Gravity, eased in so it only bends the tail. */
+@keyframes confetti-fall {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 1.2rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rep-bar > i,
-  .vs-front,
-  .vs-cursor {
+  .duel-front,
+  .duel-post,
+  .won-fill {
     animation: none;
   }
 
-  .rep-bar--aboard,
-  .rep-bar--aboard > i {
+  .duel-front > i,
+  .duel-post {
     transition: none;
   }
 }
 
-/* On a phone the key sits as one line above the figure, both flush left: a centred key over a
-   left-aligned figure read as two blocks, and the reference drifted to the right edge. */
 @media (width < 40rem) {
   /* The clock keeps its own height, or it opens a gap under the section title. */
-  .report:has(> .rep-clock) {
-    grid-template-rows: auto;
-  }
-
   .rep-clock {
     padding-inline: 1.25rem;
   }
 
-  /* A touch less on the left, where the row's 3px edge already sits. */
-  .rep-row {
-    padding-inline: 1.15rem 1.25rem;
+  .duel-camps {
+    padding: 1.1rem 1.1rem 1rem;
   }
 
-  /* Each figure may drop its unit under the number rather than push the row past the screen. */
-  .vs-line {
-    gap: 0.5rem;
+  .plate {
+    font-size: 0.625rem;
+    letter-spacing: 0.14em;
   }
 
-  .vs-line > .rep-fig {
-    flex-wrap: wrap;
-    row-gap: 0.2rem;
-    min-width: 0;
-    white-space: normal;
-  }
-
-  .vs-line > .rep-fig > * {
-    white-space: nowrap;
-  }
-
-  .vs-line > .vs-foe {
-    justify-content: flex-end;
-    text-align: right;
-  }
-
-  .rep-key {
-    flex-direction: row;
-    align-items: center;
-    align-self: start;
-    gap: 0.75rem;
-  }
-
-  .rep-mark {
-    width: 2.2rem;
+  .won-check {
+    width: 2.5rem;
     height: 2.5rem;
   }
 
-  /* One line above each bar: figure and unit left, reference right, sized so the boss line
-     fits 360px. */
-  .rep-side {
-    flex: none;
+  .stake {
+    padding: 1rem 1.1rem;
+  }
+
+  .stake-fig,
+  .stake--loss .stake-fig {
+    flex-direction: column;
     gap: 0.25rem;
-    margin-left: auto;
-    font-size: 0.5rem;
-    letter-spacing: 0.04em;
+  }
+
+  .stake--gain .stake-fig {
+    align-items: flex-start;
+  }
+
+  .stake--loss .stake-fig {
+    align-items: flex-end;
+  }
+
+  /* Literal `text-3xs`: Tailwind only emits theme variables a utility uses, and none uses this one. */
+  .stake-key {
+    font-size: 0.5625rem;
+    letter-spacing: 0.12em;
     white-space: nowrap;
-  }
-
-  .rep-line {
-    flex-wrap: nowrap;
-    gap: 0.5rem;
-    min-width: 0;
-  }
-
-  .rep-fig {
-    gap: 0.3rem;
-    font-size: 1.375rem;
-    white-space: nowrap;
-  }
-
-  .rep-fig small {
-    font-size: 0.75rem;
-  }
-
-  .rep-side b {
-    font-size: 0.9375rem;
   }
 
   /* One step below `text-2xs`: at the caption's own size the deadline line wrapped in two under
      the clock, the only reference here not paired with a figure that could give up space to it. */
   .rep-when {
-    font-size: var(--text-3xs);
+    font-size: 0.5625rem;
     white-space: nowrap;
   }
 }

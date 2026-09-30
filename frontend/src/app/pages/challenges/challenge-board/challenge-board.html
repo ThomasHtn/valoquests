@@ -96,12 +96,29 @@
   <tfoot>
     <tr [style.--fx-delay.ms]="rows().length * rowStagger">
       <th class="lead" scope="row">
-        <span
-          [appTooltip]="'challenges.board.totalsTooltip' | translate"
-          class="label-caption text-2xs focus-ring"
-          tabindex="0"
-          >{{ 'challenges.board.totals' | translate }}</span
-        >
+        <span class="totals">
+          <span
+            [appTooltip]="'challenges.board.totalsTooltip' | translate"
+            class="totals-title focus-ring"
+            tabindex="0"
+            >{{ 'challenges.board.totals' | translate }}</span
+          >
+          <!-- Reads the operator cells' two lines, in their order. -->
+          <span aria-hidden="true" class="totals-key">
+            <span class="totals-key-line">
+              <svg class="totals-hex" viewBox="0 0 14 16">
+                <polygon
+                  points="7,0.75 13.25,4.375 13.25,11.625 7,15.25 0.75,11.625 0.75,4.375"
+                />
+              </svg>
+              {{ 'challenges.board.totalsKey.weekly' | translate }}
+            </span>
+            <span class="totals-key-line">
+              <svg class="size-3.5 text-brand-400" lucideUsers></svg>
+              {{ 'challenges.board.totalsKey.wounded' | translate }}
+            </span>
+          </span>
+        </span>
       </th>
       @for (operator of operators(); track operator.playerId; let i = $index) {
         <td [style.--i]="i" class="slide">

@@ -2,7 +2,7 @@ import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { ChallengeOperator } from '@pages/challenges/challenges.model';
 import { BoardRow } from '@pages/leaderboard/leaderboard.model';
-import { Capacity, Contribution, Mission } from '@pages/overview/overview.model';
+import { Capacity, Contribution, Mission, SundayStakes } from '@pages/overview/overview.model';
 
 import { TourSampleChallenge, TourSampleMatch } from './tour.model';
 
@@ -166,6 +166,15 @@ export const TOUR_SAMPLE_CAPACITY: Capacity = {
   componentsPerRescue: 14,
   foodPerRescue: 12,
   hitPointsPerPercent: 960,
+};
+
+/**
+ * The sample week's Sunday: the food-capped 380 reachable minus the 232 already forecast, and the
+ * base's 12 480 inhabitants struck at 61 % breakthrough.
+ */
+export const TOUR_SAMPLE_STAKES: SundayStakes = {
+  gain: 148,
+  loss: 664,
 };
 
 /**

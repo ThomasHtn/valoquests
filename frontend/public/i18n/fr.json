@@ -377,6 +377,10 @@
       "period": "Du {{start}} au {{end}}",
       "totals": "Validés",
       "totalsTooltip": "Défis de la semaine validés et gain de la semaine, défis du jour compris",
+      "totalsKey": {
+        "weekly": "Défis de la semaine",
+        "wounded": "Blessés ramenés"
+      },
       "pin": "Épingler {{name}} en premier",
       "unpin": "Ne plus épingler {{name}}",
       "pinHint": "Touchez un joueur pour l'afficher en premier dans chaque défi.",
@@ -749,26 +753,38 @@
       "countdownAria": "Temps restant avant l'extraction de dimanche",
       "hp": "PV",
       "deadline": "avant l'extraction de dimanche à minuit",
-      "aboard": "À bord",
-      "aboardUnit": "blessés récupérés",
-      "aboardTooltip": {
-        "one": "{{aboard}} sur {{wounded}} - {{left}} restant",
-        "other": "{{aboard}} sur {{wounded}} - {{left}} restants"
-      },
       "boss": "Boss {{index}}",
       "hpDealt": "PV infligés",
       "hpLeft": "PV restants",
       "down": "Vaincu {{weekday}} à {{time}}",
       "downBy": "Vaincu {{weekday}} à {{time}} par {{name}}",
       "squad": "Escouade",
-      "contributionTooltip": "{{name}} : {{damage}} PV, {{points}} pts de défis - {{percent}} % de l’escouade",
-      "versus": "VS",
-      "of": "parmi",
-      "spotted": "repérés sur {{planet}}",
       "breachTooltip": "Percée : {{percent}} %",
-      "hpTooltip": {
-        "one": "{{dealt}} sur {{total}} PV - {{left}} restant",
-        "other": "{{dealt}} sur {{total}} PV - {{left}} restants"
+      "strike": {
+        "share": "{{percent}} % de l’escouade",
+        "points": {
+          "one": "pt de défis",
+          "other": "pts de défis"
+        },
+        "summary": "{{name}} : {{damage}} PV, {{percent}} % de l’escouade, {{points}} pts de défis"
+      },
+      "stakes": {
+        "gainKey": "Gardien vaincu",
+        "gainUnit": {
+          "one": "blessé sauvé en plus",
+          "other": "blessés sauvés en plus"
+        },
+        "gainTooltip": {
+          "one": "Si le gardien tombe avant dimanche minuit, le vaisseau ramène {{count}} blessé de plus que prévu.",
+          "other": "Si le gardien tombe avant dimanche minuit, le vaisseau ramène {{count}} blessés de plus que prévu."
+        },
+        "lossKey": "Gardien resté debout",
+        "lossKeyShort": "Gardien debout",
+        "lossUnit": {
+          "one": "habitant perdu",
+          "other": "habitants perdus"
+        },
+        "lossTooltip": "Sa riposte à la percée actuelle de {{percent}} %. Rater de peu ne coûte presque rien, ne rien faire coûte cher."
       }
     },
     "capacity": {
@@ -782,7 +798,7 @@
       "breachAria": "La percée dans les lignes de {{boss}} atteint {{percent}} % : il ne laisse partir que cette part de ce qui est prêt à embarquer.",
       "aboard": "À bord",
       "aboardAria": "{{count}} blessés seraient à bord dimanche sur les {{wounded}} repérés, soit {{percent}} % : {{extraction}} par l'extraction et {{challenges}} déjà acquis par les défis.",
-      "of": "sur {{count}} repérés",
+      "spotted": "habitants repérés",
       "lever": "Obtention",
       "allModes": "Tous les modes",
       "hpStanding": "PV restants",
@@ -1479,6 +1495,7 @@
     },
     "lastSync": {
       "error": "Indisponible",
+      "inProgress": "En cours",
       "label": "Synchronisation",
       "loading": "Chargement…",
       "status": {

@@ -22,6 +22,16 @@ public interface SynchronizationRepository
     Optional<Synchronization> findFirstByOrderByStartedAtDescIdDesc();
 
     /**
+     * Returns the execution holding one of the supplied statuses that finished last.
+     *
+     * @param statuses statuses to look for
+     * @return the latest finished execution, or empty when none matches
+     */
+    Optional<Synchronization> findFirstByStatusInAndFinishedAtNotNullOrderByFinishedAtDescIdDesc(
+        Collection<SynchronizationStatus> statuses
+    );
+
+    /**
      * Determines whether an execution currently holds one of the supplied statuses.
      *
      * <p>This is what makes a synchronization request exclusive: a run is dispatched to a

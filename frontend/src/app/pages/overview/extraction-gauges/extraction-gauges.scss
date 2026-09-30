@@ -129,6 +129,60 @@
   color: var(--tone);
 }
 
+/* The aboard dial: a rocket instead of a ring, filled like a tank of the challenges board. */
+.gauge--hull {
+  width: 6.25rem;
+  height: auto;
+  aspect-ratio: 100 / 140;
+}
+
+.hull {
+  position: absolute;
+  inset: 0;
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+}
+
+/* Clamped so a crew past the wounded count stays full. */
+.hull-fill {
+  position: absolute;
+  inset: auto 0 0;
+  height: calc(clamp(0, var(--pct), 1) * 100%);
+  background: color-mix(in srgb, var(--tone) 22%, transparent);
+  border-top: 2px solid var(--tone);
+  transition: height var(--duration-gauge-long) var(--ease-gauge);
+}
+
+.hull-fill--full {
+  border-top: none;
+}
+
+.gauge > svg.hull-line {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  rotate: none;
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+/* Centred on the porthole and on the hull's straight section, both taken from the viewbox. */
+.hull-port,
+.hull-figure {
+  inset: auto 0;
+  translate: 0 -50%;
+}
+
+.hull-port {
+  top: calc(44 / 140 * 100%);
+}
+
+.hull-figure {
+  top: calc(84 / 140 * 100%);
+}
+
 .gauge-head {
   display: flex;
   flex-direction: column;
@@ -240,7 +294,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .g-arc {
+  .g-arc,
+  .hull-fill {
     transition: none;
   }
 }

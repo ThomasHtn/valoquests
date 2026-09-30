@@ -27,7 +27,13 @@ export class ScanWires {
       const draw = (): void => this.draw();
       draw();
       this.observer = new ResizeObserver(draw);
-      this.observer.observe(this.host.nativeElement);
+      // The planet usually sets the host's height, so the report can change height (data landing,
+      // a row appearing) without resizing the host: each child is watched too.
+      const host = this.host.nativeElement;
+      this.observer.observe(host);
+      for (const child of Array.from(host.children)) {
+        this.observer.observe(child);
+      }
       void document.fonts.ready.then(draw);
     });
     inject(DestroyRef).onDestroy(() => this.observer?.disconnect());

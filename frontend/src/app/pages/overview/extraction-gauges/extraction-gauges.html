@@ -195,10 +195,7 @@
       <!-- The result, adding two contributions nothing else brings together: what the
            extraction wrests from the guardian, and what the challenges already put
            aboard, acquired whatever happens. -->
-      <div
-        class="gauge-cell gauge-cell--out"
-        style="--tone: var(--color-brand-400); --size: 10.5rem; --ring: 9; --fig: 2.75rem"
-      >
+      <div class="gauge-cell gauge-cell--out" style="--tone: var(--color-brand-400)">
         <p class="gauge-head">
           <span class="gauge-name text-brand-400">{{
             'overview.capacity.aboard' | translate
@@ -231,21 +228,33 @@
           "
           [style.--pct]="capacity.aboardFraction"
           appInView
-          class="gauge"
+          class="gauge gauge--hull"
           role="img"
         >
-          <svg aria-hidden="true" viewBox="0 0 100 100">
-            <circle class="g-track" cx="50" cy="50" r="43" />
-            <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
+          <!-- The challenges board's tank, poured into the rocket: the mask keeps the level
+               inside the outline. -->
+          <span [style.mask-image]="hullMask" class="hull">
+            <span
+              [class.hull-fill--full]="capacity.aboardFraction >= 1"
+              class="hull-fill fx-rise"
+            ></span>
+          </span>
+          <svg [attr.viewBox]="hullViewBox" aria-hidden="true" class="hull-line">
+            <path [attr.d]="hullPath" />
+            <circle cx="50" cy="44" r="11" />
           </svg>
-          <span class="gauge-mid">
-            <svg aria-hidden="true" class="size-5" lucideUsers></svg>
+          <span class="gauge-mid hull-port">
+            <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+          </span>
+          <span class="gauge-mid hull-figure">
             <b [appCountUp]="capacity.aboard" class="tabular-nums"></b>
           </span>
         </span>
-        <span class="gauge-stock label-caption text-2xs">{{
-          'overview.capacity.of' | translate: { count: format(capacity.wounded) }
-        }}</span>
+        <span class="gauge-stock label-caption text-2xs"
+          ><svg aria-hidden="true" class="size-3.5" lucideUsers></svg
+          ><b class="tabular-nums">{{ format(capacity.wounded) }}</b>
+          {{ 'overview.capacity.spotted' | translate }}</span
+        >
         <div class="gauge-foot">
           <p class="split">
             <span class="split-row" style="--tone: var(--color-brand-400)">

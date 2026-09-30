@@ -43,10 +43,12 @@ import {
   OverviewTab,
   OverviewTabKey,
   SquadRow,
+  SundayStakes,
 } from './overview.model';
 import {
   buildCapacity,
   buildContribution,
+  buildSundayStakes,
   buildDailyRow,
   buildFrieze,
   buildMission,
@@ -227,6 +229,13 @@ export class Overview {
 
   protected readonly capacity = computed<Capacity | null>(() =>
     buildCapacity(this.campaign(), this.currentWeek()),
+  );
+
+  /**
+   * What Sunday midnight can still add or take, `null` once the guardian is down.
+   */
+  protected readonly stakes = computed<SundayStakes | null>(() =>
+    buildSundayStakes(this.campaign(), this.currentWeek()),
   );
 
   /**

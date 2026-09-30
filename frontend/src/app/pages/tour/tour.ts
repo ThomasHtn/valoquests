@@ -39,6 +39,7 @@ import {
   TOUR_SAMPLE_POPULATION,
   TOUR_SAMPLE_POPULATION_CHANGE,
   TOUR_SAMPLE_STAGES_DONE,
+  TOUR_SAMPLE_STAKES,
 } from './tour-samples.constants';
 import { TourTracker } from './tour-tracker/tour-tracker';
 
@@ -142,6 +143,8 @@ export class Tour {
   protected readonly sampleCapacity = TOUR_SAMPLE_CAPACITY;
 
   protected readonly sampleContribution = TOUR_SAMPLE_CONTRIBUTION;
+
+  protected readonly sampleStakes = TOUR_SAMPLE_STAKES;
 
   protected readonly samplePodium = TOUR_SAMPLE_PODIUM;
 

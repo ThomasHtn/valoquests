@@ -1,4 +1,4 @@
 /**
- * One day of the week in a streak gauge: played, skipped, today not yet played, or to come.
+ * One day of the week in a streak gauge: played, not played, or to come.
  */
-export type StreakPip = 'played' | 'missed' | 'today' | 'ahead';
+export type StreakPip = 'played' | 'missed' | 'ahead';

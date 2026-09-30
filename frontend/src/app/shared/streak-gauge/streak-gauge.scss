@@ -39,11 +39,6 @@
   background: var(--color-brand-500);
 }
 
-/* Today, still open: tinted so the next pip to light stands out from the days already gone. */
-.streak-week .pip--today {
-  background: rgb(217 149 74 / 32%);
-}
-
 .streak-week .pip--ahead {
   background: rgb(236 232 225 / 4%);
 }

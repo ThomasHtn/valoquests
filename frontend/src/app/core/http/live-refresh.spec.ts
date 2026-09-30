@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, it, vi } from 'vitest';
 
 import { API_ENDPOINTS } from './api-endpoints';
 import { LiveRefresh } from './live-refresh';
-import { LIVE_REFRESH_POLL_MS, LIVE_REFRESH_SETTLE_MS } from './live-refresh.constants';
+import { LIVE_REFRESH_POLL_MS } from './live-refresh.constants';
 
 /**
  * The resources the service reloads, by the URL each one requests.
@@ -19,8 +19,8 @@ const REFRESHED_URLS = [
   API_ENDPOINTS.currentChallenges,
 ];
 
-function roster(lastSuccessfulSynchronizationAt: string): unknown[] {
-  return [{ id: 1, displayName: 'Op', lastSuccessfulSynchronizationAt }];
+function status(lastCompletedAt: string, inProgress = false): object {
+  return { inProgress, lastCompletedAt };
 }
 
 describe('LiveRefresh', () => {
@@ -52,67 +52,58 @@ describe('LiveRefresh', () => {
   }
 
   /**
-   * Answers every request the shared resources fired on creation, and the roster with `syncedAt`.
+   * Answers every request the shared resources fired on creation, the status finished at `at`.
    */
-  async function settleInitialLoad(syncedAt: string): Promise<void> {
-    httpMock.expectOne(API_ENDPOINTS.players).flush(roster(syncedAt));
+  async function settleInitialLoad(at: string): Promise<void> {
+    httpMock.expectOne(API_ENDPOINTS.synchronizationStatus).flush(status(at));
     httpMock.match(() => true).forEach((request) => request.flush({}));
     await settle();
   }
 
-  async function pollRoster(syncedAt: string): Promise<void> {
+  async function pollStatus(at: string, inProgress = false): Promise<void> {
     await vi.advanceTimersByTimeAsync(LIVE_REFRESH_POLL_MS);
     TestBed.tick();
-    httpMock.expectOne(API_ENDPOINTS.players).flush(roster(syncedAt));
-    await settle();
-  }
-
-  /**
-   * Waits out the quiet time, answering the polls it spans with an unchanged roster.
-   */
-  async function letTheReloadSettle(syncedAt: string): Promise<void> {
-    await vi.advanceTimersByTimeAsync(LIVE_REFRESH_SETTLE_MS);
-    TestBed.tick();
-    httpMock.match(API_ENDPOINTS.players).forEach((request) => request.flush(roster(syncedAt)));
+    httpMock.expectOne(API_ENDPOINTS.synchronizationStatus).flush(status(at, inProgress));
     await settle();
   }
 
   function expectScreensReloaded(): void {
     REFRESHED_URLS.forEach((url) => httpMock.expectOne(url));
     httpMock
-      .match((request) => request.url === API_ENDPOINTS.rankingHistory)
+      .match((request) =>
+        (
+          [
+            API_ENDPOINTS.rankingHistory,
+            API_ENDPOINTS.players,
+            API_ENDPOINTS.synchronizationStatus,
+          ] as string[]
+        ).includes(request.url),
+      )
       .forEach((request) => request.flush({}));
     httpMock.verify();
   }
 
-  it('reloads the screens once a later synchronization shows up on the roster', async () => {
+  it('reloads the screens as soon as a later synchronization has finished', async () => {
     await settleInitialLoad('2026-09-07T10:00:00Z');
 
-    await pollRoster('2026-09-07T10:30:00Z');
-    httpMock.expectNone(API_ENDPOINTS.campaign);
-
-    await letTheReloadSettle('2026-09-07T10:30:00Z');
+    await pollStatus('2026-09-07T10:30:00Z');
 
     expectScreensReloaded();
   });
 
-  it('reloads the screens once for a batch spanning several polls', async () => {
+  it('leaves the screens alone while a synchronization is still running', async () => {
     await settleInitialLoad('2026-09-07T10:00:00Z');
 
-    await pollRoster('2026-09-07T10:30:10Z');
-    await pollRoster('2026-09-07T10:31:05Z');
-    httpMock.expectNone(API_ENDPOINTS.campaign);
+    await pollStatus('2026-09-07T10:00:00Z', true);
+    await pollStatus('2026-09-07T10:00:00Z', true);
 
-    await letTheReloadSettle('2026-09-07T10:31:05Z');
-
-    expectScreensReloaded();
+    httpMock.verify();
   });
 
-  it('leaves the screens alone while the roster reports the same synchronization', async () => {
+  it('leaves the screens alone while the status reports the same synchronization', async () => {
     await settleInitialLoad('2026-09-07T10:00:00Z');
 
-    await pollRoster('2026-09-07T10:00:00Z');
-    await letTheReloadSettle('2026-09-07T10:00:00Z');
+    await pollStatus('2026-09-07T10:00:00Z');
 
     httpMock.verify();
   });
@@ -121,19 +112,18 @@ describe('LiveRefresh', () => {
     await settleInitialLoad('2026-09-07T10:00:00Z');
 
     vi.setSystemTime(new Date(2026, 8, 8, 0, 20, 0));
-    await pollRoster('2026-09-07T10:00:00Z');
-    await letTheReloadSettle('2026-09-07T10:00:00Z');
+    await pollStatus('2026-09-07T10:00:00Z');
 
     expectScreensReloaded();
   });
 
-  it('polls the roster at once when the tab comes back to the foreground', async () => {
+  it('polls the status at once when the tab comes back to the foreground', async () => {
     await settleInitialLoad('2026-09-07T10:00:00Z');
 
     document.dispatchEvent(new Event('visibilitychange'));
     await settle();
 
-    httpMock.expectOne(API_ENDPOINTS.players).flush(roster('2026-09-07T10:00:00Z'));
+    httpMock.expectOne(API_ENDPOINTS.synchronizationStatus).flush(status('2026-09-07T10:00:00Z'));
     httpMock.verify();
   });
 });

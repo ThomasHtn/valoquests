@@ -32,8 +32,8 @@ import { AdminSession } from '@core/admin/admin-session';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Language } from '@core/i18n/translation.model';
-import { PlayersApi } from '@core/players/players-api';
-import { resolveLatestSynchronization } from '@core/players/player-summary.utils';
+import { resourceValue } from '@core/http/resource-state.utils';
+import { SynchronizationApi } from '@core/synchronization/synchronization-api';
 import { NavigationPanel } from '@layout/navigation-panel';
 import {
   LANGUAGE_MENU_OPEN_CLASS,
@@ -91,10 +91,9 @@ import { formatSynchronizationTimestamp, isNavItemActive } from './sidebar.utils
 })
 export class Sidebar {
   /**
-   * Data-access service backing the shared players resource, used to resolve the latest
-   * synchronization timestamp shown in the footer.
+   * Data-access service backing the shared synchronization status shown in the footer.
    */
-  private readonly playersApi = inject(PlayersApi);
+  private readonly synchronizationApi = inject(SynchronizationApi);
 
   /**
    * i18n service used to translate the footer's loading, error and unknown fallback labels.
@@ -205,37 +204,42 @@ export class Sidebar {
   private readonly closeMenuButton = viewChild<ElementRef<HTMLButtonElement>>('closeMenuButton');
 
   /**
-   * Reactive resource fetching every tracked player's synchronization status.
+   * Reactive resource polling whether a synchronization runs and when the last one finished.
    */
-  private readonly playersResource = this.playersApi.players;
+  private readonly statusResource = this.synchronizationApi.status;
 
   /**
-   * Timestamp of the last player synchronization, shown in the footer.
+   * "In progress" while a synchronization runs, else the instant the last one finished, shown in
+   * the footer.
    *
    * Resolves to a translated loading, error or unknown fallback while the backing resource is not
-   * ready or no player has been synchronized successfully yet.
+   * ready or no synchronization has finished successfully yet. The minute poll keeps the previous
+   * value on screen rather than flashing the loading label.
    */
   protected readonly lastSyncLabel = computed(() => {
-    if (this.playersResource.isLoading()) {
-      return this.translation.translate('sidebar.lastSync.loading');
+    const status = resourceValue(this.statusResource, null);
+
+    if (!status) {
+      return this.translation.translate(
+        this.statusResource.error() ? 'sidebar.lastSync.error' : 'sidebar.lastSync.loading',
+      );
     }
 
-    if (this.playersResource.error()) {
-      return this.translation.translate('sidebar.lastSync.error');
+    if (status.inProgress) {
+      return this.translation.translate('sidebar.lastSync.inProgress');
     }
 
-    const latest = resolveLatestSynchronization(this.playersResource.value() ?? []);
-    return latest
-      ? formatSynchronizationTimestamp(latest)
+    return status.lastCompletedAt
+      ? formatSynchronizationTimestamp(status.lastCompletedAt)
       : this.translation.translate('sidebar.lastSync.unknown');
   });
 
   /**
-   * Availability of the backend API, inferred from the shared players resource used to resolve
+   * Availability of the backend API, inferred from the shared status resource used to resolve
    * {@link lastSyncLabel}.
    */
   protected readonly apiStatus = computed<'online' | 'offline'>(() =>
-    this.playersResource.error() ? 'offline' : 'online',
+    this.statusResource.error() ? 'offline' : 'online',
   );
 
   /**

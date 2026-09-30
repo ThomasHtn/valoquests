@@ -60,6 +60,11 @@ export const API_ENDPOINTS = {
   seasons: `${environment.apiBaseUrl}/seasons`,
 
   /**
+   * `GET` whether a synchronization is running and when the last one finished.
+   */
+  synchronizationStatus: `${environment.apiBaseUrl}/synchronization/status`,
+
+  /**
    * `GET` the challenges selected for the active calendar week.
    */
   currentChallenges: `${environment.apiBaseUrl}/challenges/current`,

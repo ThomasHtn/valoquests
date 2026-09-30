@@ -42,6 +42,9 @@ import org.springframework.stereotype.Service;
  * derived from the stored matches and stay stale until they are rebuilt. Every execution that
  * actually imported something therefore ends with a challenge recalculation, which is what keeps the
  * ranking live between two scheduled runs.</p>
+ *
+ * <p>An execution is only marked finished once that recalculation and the campaign replay are done:
+ * the public synchronization status reads a finished execution as "the screens are up to date".</p>
  */
 @Service
 public class DefaultSynchronizationCommandService
@@ -141,6 +144,7 @@ public class DefaultSynchronizationCommandService
             summary = synchronizeOnePlayer(synchronization, player, summary).summary();
         }
 
+        refreshChallengeProgress(summary.matchesImported());
         completeBatchSynchronization(
             synchronization,
             players.size(),
@@ -153,8 +157,6 @@ public class DefaultSynchronizationCommandService
             synchronization.getFailureCount(),
             synchronization.getMatchesImported()
         );
-
-        refreshChallengeProgress(summary.matchesImported());
 
         return SynchronizationResponse.from(
             synchronization,
@@ -200,8 +202,8 @@ public class DefaultSynchronizationCommandService
             SynchronizationBatchSummary.empty()
         );
 
-        completeBatchSynchronization(synchronization, 1, outcome.summary());
         refreshChallengeProgress(outcome.summary().matchesImported());
+        completeBatchSynchronization(synchronization, 1, outcome.summary());
 
         if (outcome.failure() != null) {
             throw outcome.failure();

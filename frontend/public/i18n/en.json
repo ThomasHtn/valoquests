@@ -377,6 +377,10 @@
       "period": "{{start}} to {{end}}",
       "totals": "Validated",
       "totalsTooltip": "Weekly challenges validated and the week's gain, daily challenges included",
+      "totalsKey": {
+        "weekly": "Weekly challenges",
+        "wounded": "Wounded brought back"
+      },
       "pin": "Pin {{name}} first",
       "unpin": "Unpin {{name}}",
       "pinHint": "Tap a player to show them first in every challenge.",
@@ -749,26 +753,38 @@
       "countdownAria": "Time left before Sunday's extraction",
       "hp": "HP",
       "deadline": "before Sunday's extraction at midnight",
-      "aboard": "Aboard",
-      "aboardUnit": "wounded recovered",
-      "aboardTooltip": {
-        "one": "{{aboard}} of {{wounded}} - {{left}} left",
-        "other": "{{aboard}} of {{wounded}} - {{left}} left"
-      },
       "boss": "Boss {{index}}",
       "hpDealt": "HP dealt",
       "hpLeft": "HP left",
       "down": "Defeated {{weekday}} at {{time}}",
       "downBy": "Defeated {{weekday}} at {{time}} by {{name}}",
       "squad": "Squad",
-      "contributionTooltip": "{{name}}: {{damage}} HP, {{points}} challenge pts - {{percent}}% of the squad",
-      "versus": "VS",
-      "of": "of",
-      "spotted": "spotted on {{planet}}",
       "breachTooltip": "Breakthrough: {{percent}}%",
-      "hpTooltip": {
-        "one": "{{dealt}} of {{total}} HP - {{left}} left",
-        "other": "{{dealt}} of {{total}} HP - {{left}} left"
+      "strike": {
+        "share": "{{percent}}% of the squad",
+        "points": {
+          "one": "challenge pt",
+          "other": "challenge pts"
+        },
+        "summary": "{{name}}: {{damage}} HP, {{percent}}% of the squad, {{points}} challenge pts"
+      },
+      "stakes": {
+        "gainKey": "Guardian defeated",
+        "gainUnit": {
+          "one": "more wounded saved",
+          "other": "more wounded saved"
+        },
+        "gainTooltip": {
+          "one": "If the guardian falls before Sunday midnight, the ship brings home {{count}} more wounded than forecast.",
+          "other": "If the guardian falls before Sunday midnight, the ship brings home {{count}} more wounded than forecast."
+        },
+        "lossKey": "Guardian still standing",
+        "lossKeyShort": "Guardian standing",
+        "lossUnit": {
+          "one": "inhabitant lost",
+          "other": "inhabitants lost"
+        },
+        "lossTooltip": "Its counterattack at the current {{percent}}% breakthrough. Falling just short costs almost nothing; doing nothing costs a lot."
       }
     },
     "capacity": {
@@ -782,7 +798,7 @@
       "breachAria": "The breakthrough in {{boss}}'s lines reaches {{percent}}%: only that share of what is ready to board gets away.",
       "aboard": "Aboard",
       "aboardAria": "{{count}} wounded would be aboard on Sunday out of the {{wounded}} spotted, {{percent}}%: {{extraction}} by the extraction and {{challenges}} already secured by the challenges.",
-      "of": "of {{count}} spotted",
+      "spotted": "inhabitants spotted",
       "lever": "Source",
       "allModes": "Every mode",
       "hpStanding": "HP remaining",
@@ -1479,6 +1495,7 @@
     },
     "lastSync": {
       "error": "Unavailable",
+      "inProgress": "In progress",
       "label": "Synchronization",
       "loading": "Loading…",
       "status": {

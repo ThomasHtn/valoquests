@@ -11,6 +11,7 @@ import io.github.thomashtn.valoquests.shared.exception.InvalidRequestException;
 import io.github.thomashtn.valoquests.shared.exception.ResourceNotFoundException;
 import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationDetailsResponse;
 import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationResponse;
+import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationStatusResponse;
 import io.github.thomashtn.valoquests.synchronization.entity.Synchronization;
 import io.github.thomashtn.valoquests.synchronization.entity.SynchronizationPlayerResult;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationStatus;
@@ -144,6 +145,38 @@ class SynchronizationQueryServiceTest {
         assertThatThrownBy(() -> service.findById(99L))
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessage("Synchronization not found: 99");
+    }
+
+    /** Reports a running execution and the end of the last successful one. */
+    @Test
+    void shouldReturnStatusFromTheExecutions() {
+        when(synchronizationRepository
+            .findFirstByStatusInAndFinishedAtNotNullOrderByFinishedAtDescIdDesc(
+                List.of(SynchronizationStatus.COMPLETED, SynchronizationStatus.PARTIAL)
+            ))
+            .thenReturn(Optional.of(synchronization(12L)));
+        when(synchronizationRepository.existsByStatusIn(
+            List.of(SynchronizationStatus.PENDING, SynchronizationStatus.RUNNING)
+        ))
+            .thenReturn(true);
+
+        SynchronizationStatusResponse response = service.findStatus();
+
+        assertThat(response.inProgress()).isTrue();
+        assertThat(response.lastCompletedAt()).isEqualTo(FINISHED_AT);
+    }
+
+    /** Reports no completion instant when no execution ever succeeded. */
+    @Test
+    void shouldReturnNoCompletionWhenNoExecutionSucceeded() {
+        when(synchronizationRepository
+            .findFirstByStatusInAndFinishedAtNotNullOrderByFinishedAtDescIdDesc(any()))
+            .thenReturn(Optional.empty());
+
+        SynchronizationStatusResponse response = service.findStatus();
+
+        assertThat(response.inProgress()).isFalse();
+        assertThat(response.lastCompletedAt()).isNull();
     }
 
     /** Creates a complete synchronization entity for query tests. */

@@ -1,6 +1,4 @@
 import { toCampaignDayKey } from '@core/date/campaign-time-zone.utils';
-import { PlayerSummary } from '@core/players/player-summary.model';
-import { resolveLatestSynchronization } from '@core/players/player-summary.utils';
 
 /**
  * How long after midnight in the campaign time zone the day is considered to have turned.
@@ -14,15 +12,15 @@ export const DAY_TURN_GRACE_MS = 15 * 60_000;
 /**
  * Summarizes everything that makes the backend's public data change, as one comparable string.
  *
- * Two things move the data: a synchronization, which every player's last successful
- * synchronization instant reveals, and the day turning, which the nightly tick acts on with no
- * synchronization involved. A stamp that differs from the previous one means the screens are stale.
+ * Two things move the data: a synchronization finishing, which only happens once challenges and
+ * campaign are rebuilt, and the day turning, which the nightly tick acts on with no synchronization
+ * involved. A stamp that differs from the previous one means the screens are stale.
  *
- * @param players - The roster as last fetched.
+ * @param lastCompletedAt - End of the last successful synchronization, or `null` when none did.
  * @param now - The current instant.
  * @returns The stamp.
  */
-export function liveRefreshStamp(players: readonly PlayerSummary[], now: Date): string {
+export function liveRefreshStamp(lastCompletedAt: string | null, now: Date): string {
   const day = toCampaignDayKey(new Date(now.getTime() - DAY_TURN_GRACE_MS).toISOString());
-  return `${resolveLatestSynchronization(players) ?? ''}|${day}`;
+  return `${lastCompletedAt ?? ''}|${day}`;
 }

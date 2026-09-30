@@ -146,9 +146,50 @@ thead .lead {
   fill: currentColor;
 }
 
+/* Ruled in brand like the challenge rows in their tone, so the tally reads as the board's last row. */
 tfoot .lead {
-  padding: 0.9rem 1.25rem;
-  color: var(--color-text-muted);
+  padding: 0.9rem 1.5rem 0.9rem 1.35rem;
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--color-brand-400) 75%, transparent);
+}
+
+.totals {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Set like the week heading above, one step down. */
+.totals-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--color-text-primary);
+  cursor: help;
+}
+
+/* Right-aligned, next to the cells it reads, with the same gap between its two lines. */
+.totals-key {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  color: var(--color-text-secondary);
+}
+
+.totals-key-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.totals-hex {
+  width: 0.75rem;
+  height: 0.875rem;
+  fill: var(--color-brand-400);
 }
 
 tfoot td {

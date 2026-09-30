@@ -479,6 +479,21 @@ export interface Capacity {
 }
 
 /**
+ * What Sunday midnight can still change, measured against the current forecast.
+ */
+export interface SundayStakes {
+  /**
+   * Wounded the ship would bring home on top of the forecast if the guardian fell.
+   */
+  readonly gain: number;
+
+  /**
+   * Inhabitants the guardian would kill if it held at the current breakthrough.
+   */
+  readonly loss: number;
+}
+
+/**
  * What the day has given, line by line.
  */
 export interface DayTally {

@@ -1,0 +1,56 @@
+/* Same rhythm as the challenges board's progress bubble, in the squad's violet. */
+:host {
+  --tone: var(--color-accent-violet);
+
+  display: grid;
+  gap: 0.375rem;
+  min-width: 10.5rem;
+}
+
+.name {
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--color-text-secondary);
+}
+
+.figures {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-family: var(--font-display);
+  line-height: 1;
+}
+
+.value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--tone) 55%, white);
+}
+
+.unit {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+}
+
+.status {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.share {
+  color: var(--color-text-secondary);
+}
+
+.points {
+  color: var(--color-text-muted);
+}
+
+.points b {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-brand-400);
+}

@@ -6,7 +6,9 @@ import io.github.thomashtn.valoquests.shared.exception.ResourceNotFoundException
 import io.github.thomashtn.valoquests.shared.util.PaginationGuard;
 import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationDetailsResponse;
 import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationResponse;
+import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationStatusResponse;
 import io.github.thomashtn.valoquests.synchronization.entity.Synchronization;
+import io.github.thomashtn.valoquests.synchronization.model.SynchronizationStatus;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationPlayerResultRepository;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationRepository;
 import java.time.Instant;
@@ -23,6 +25,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class SynchronizationQueryService {
+
+    /**
+     * Statuses meaning an execution has not finished rebuilding the public data yet.
+     */
+    private static final List<SynchronizationStatus> IN_PROGRESS_STATUSES =
+        List.of(SynchronizationStatus.PENDING, SynchronizationStatus.RUNNING);
+
+    /**
+     * Statuses of an execution that synchronized at least one player.
+     */
+    private static final List<SynchronizationStatus> SUCCEEDED_STATUSES =
+        List.of(SynchronizationStatus.COMPLETED, SynchronizationStatus.PARTIAL);
 
     /**
      * Repository used to persist synchronization executions.
@@ -73,6 +87,26 @@ public class SynchronizationQueryService {
         return toResponse(
             synchronization,
             findLatestSuccessfulPlayerSynchronizationAt()
+        );
+    }
+
+    /**
+     * Returns whether a synchronization is in progress and when the last one finished.
+     *
+     * <p>Read from the executions rather than from the players: a player's own timestamp moves
+     * mid-batch, well before the challenges and the campaign are rebuilt.
+     *
+     * @return the public synchronization status
+     */
+    public SynchronizationStatusResponse findStatus() {
+        Instant lastCompletedAt = synchronizationRepository
+            .findFirstByStatusInAndFinishedAtNotNullOrderByFinishedAtDescIdDesc(SUCCEEDED_STATUSES)
+            .map(Synchronization::getFinishedAt)
+            .orElse(null);
+
+        return new SynchronizationStatusResponse(
+            synchronizationRepository.existsByStatusIn(IN_PROGRESS_STATUSES),
+            lastCompletedAt
         );
     }
 

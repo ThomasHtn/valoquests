@@ -1,28 +1,44 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { LucideSwords, LucideUsers } from '@lucide/angular';
+import { LucideCheck, LucideSkull, LucideSwords, LucideUsers } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { CONFETTI } from '@pages/challenges/progress-mark/progress-mark.constants';
 import { Countdown } from '@shared/countdown/countdown';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
-import { Capacity, Contribution, Mission } from '../overview.model';
+import { Contribution, Mission, SundayStakes } from '../overview.model';
+import { ContributionTip } from './contribution-tip/contribution-tip';
+import { Strike } from './mission-readings.model';
 
 /**
- * The week's mission, in three readings: the clock, the squad against the guardian, what comes home.
+ * The week's mission: the clock, the squad against the guardian, then what Sunday midnight can
+ * still add or take.
  *
- * The squad and the guardian share one track, split at the breakthrough: the violet the squad has
- * taken on the left, the red still standing on the right, a cursor on the seam. The squad's side is cut into one segment
- * per operator, weighted by the damage each dealt, so the seam always sits on the real hit points.
+ * The duel's whole ground is the track the two camps share: violet up to the breakthrough, cut into
+ * one segment per operator and weighted by the damage each dealt, then the guardian's red. Once the
+ * guardian is down, a check lands between the camps as a validated challenge's does, and the
+ * figures and segments stay readable under it.
  *
- * The fight and "aboard" rows carry a `data-card` anchor: `ScanWires` measures them to land its
+ * The duel and the stakes carry a `data-card` anchor: `ScanWires` measures them to land its
  * callout wires from the planet beside them.
  */
 @Component({
   selector: 'app-mission-readings',
-  imports: [TranslatePipe, Countdown, CountUp, InView, Tooltip, LucideSwords, LucideUsers],
+  imports: [
+    TranslatePipe,
+    Countdown,
+    CountUp,
+    InView,
+    Tooltip,
+    ContributionTip,
+    LucideCheck,
+    LucideSkull,
+    LucideSwords,
+    LucideUsers,
+  ],
   templateUrl: './mission-readings.html',
   styleUrl: './mission-readings.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,14 +50,14 @@ export class MissionReadings {
   public readonly mission = input.required<Mission>();
 
   /**
-   * The extraction's four dials, `null` while the forecast is unresolved.
-   */
-  public readonly capacity = input.required<Capacity | null>();
-
-  /**
    * What the squad has put into the week, `null` before its first match.
    */
   public readonly contribution = input.required<Contribution | null>();
+
+  /**
+   * Sunday's two outcomes, `null` once the guardian is down or while the forecast is unresolved.
+   */
+  public readonly stakes = input<SundayStakes | null>(null);
 
   /**
    * Whether to open on the week's clock. The tour drops it on a phone, where the two other
@@ -69,21 +85,41 @@ export class MissionReadings {
 
   /**
    * The operators who hit the guardian, heaviest first: challenge points never touch its hit points,
-   * so they stay in the tooltip rather than widening a segment.
+   * so they stay in the bubble rather than widening a segment.
    */
-  protected readonly strikes = computed(() =>
-    (this.contribution()?.shares ?? [])
-      .filter((share) => share.damage > 0)
-      .sort((left, right) => right.damage - left.damage),
-  );
+  protected readonly strikes = computed<readonly Strike[]>(() => {
+    const hits = (this.contribution()?.shares ?? []).filter((share) => share.damage > 0);
+    const dealt = hits.reduce((sum, share) => sum + share.damage, 0);
+    return hits
+      .map((share) => {
+        const percent = Math.round((share.damage / dealt) * 100);
+        const damageLabel = this.format(share.damage);
+        return {
+          playerId: share.playerId,
+          name: share.name,
+          damage: share.damage,
+          damageLabel,
+          percent,
+          challengePoints: share.challengePoints,
+          summary: this.translation.translate('overview.report.strike.summary', {
+            name: share.name,
+            damage: damageLabel,
+            percent,
+            points: share.challengePoints,
+          }),
+        };
+      })
+      .sort((left, right) => right.damage - left.damage);
+  });
+
+  /**
+   * The check's burst, the challenges board's own pieces thrown further for the larger mark.
+   */
+  protected readonly confetti = CONFETTI;
 
   private readonly translation = inject(Translation);
 
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());
-  }
-
-  protected percent(fraction: number): number {
-    return Math.round(fraction * 100);
   }
 }

@@ -464,6 +464,48 @@ class DefaultSynchronizationCommandServiceTest {
     }
 
     /**
+     * Verifies that an execution is only marked finished once the campaign has been replayed.
+     *
+     * <p>The public status reads a finished execution as up-to-date screens, so completing it
+     * before the replay would announce challenges that are not rebuilt yet.
+     */
+    @Test
+    void shouldCompleteTheExecutionAfterTheCampaignReplay() {
+        Player firstPlayer = player(1L);
+
+        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
+            .thenReturn(List.of(firstPlayer));
+
+        when(playerSynchronizationService.synchronize(1L))
+            .thenReturn(result(firstPlayer, 3, PLAYER_ONE_COMPLETED_AT));
+
+        service.synchronizeAllPlayers();
+
+        InOrder ordered = inOrder(challengeRecalculationService, campaignReplayService, synchronizationRepository);
+        ordered.verify(challengeRecalculationService).recalculateCurrentWeekProgress();
+        ordered.verify(campaignReplayService).replayRunningCampaign();
+        ordered.verify(synchronizationRepository).save(any(Synchronization.class));
+    }
+
+    /**
+     * Verifies that a single-player execution is also marked finished after the campaign replay.
+     */
+    @Test
+    void shouldCompleteTheSinglePlayerExecutionAfterTheCampaignReplay() {
+        Player firstPlayer = player(1L);
+
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(firstPlayer));
+        when(playerSynchronizationService.synchronize(1L))
+            .thenReturn(result(firstPlayer, 3, PLAYER_ONE_COMPLETED_AT));
+
+        service.synchronizePlayer(1L);
+
+        InOrder ordered = inOrder(campaignReplayService, synchronizationRepository);
+        ordered.verify(campaignReplayService).replayRunningCampaign();
+        ordered.verify(synchronizationRepository).save(any(Synchronization.class));
+    }
+
+    /**
      * Verifies that a run importing nothing leaves challenge progress untouched.
      *
      * <p>Progress depends only on stored matches, so recalculating without a new one would burn a

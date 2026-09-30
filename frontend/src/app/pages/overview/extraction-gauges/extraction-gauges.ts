@@ -17,7 +17,13 @@ import { Tooltip } from '@shared/tooltip/tooltip';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
 import { Capacity } from '../overview.model';
-import { CARRY_MODES, SHELTER_MODES } from './extraction-gauges.constants';
+import {
+  CARRY_MODES,
+  HULL_MASK,
+  HULL_PATH,
+  HULL_VIEWBOX,
+  SHELTER_MODES,
+} from './extraction-gauges.constants';
 
 /**
  * What would come home on Sunday, and the three things that bound it: four dials on the same
@@ -62,6 +68,12 @@ export class ExtractionGauges {
   protected readonly carryModes = CARRY_MODES;
 
   protected readonly shelterModes = SHELTER_MODES;
+
+  protected readonly hullViewBox = HULL_VIEWBOX;
+
+  protected readonly hullPath = HULL_PATH;
+
+  protected readonly hullMask = HULL_MASK;
 
   private readonly translation = inject(Translation);
 

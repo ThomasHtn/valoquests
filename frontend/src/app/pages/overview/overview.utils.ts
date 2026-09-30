@@ -28,6 +28,7 @@ import {
   OverviewTab,
   OverviewTabKey,
   SquadRow,
+  SundayStakes,
 } from './overview.model';
 import { streakBonusOf, streakWeekOf } from '@shared/streak-gauge/streak-gauge.utils';
 import { DAILY_TONE } from '../challenges/challenges.constants';
@@ -351,6 +352,33 @@ export function buildCapacity(
     componentsPerRescue: base.componentsPerRescue,
     foodPerRescue: base.foodPerRescue,
     hitPointsPerPercent: Math.round(week.guardianHitPoints / 100),
+  };
+}
+
+/**
+ * Builds Sunday's two outcomes, as gaps from the forecast: the wounded a fallen guardian would add,
+ * the inhabitants a standing one would kill. Mirrors the backend's `ExtractionEstimate` and the
+ * replay's strike, so the figures match what the settlement delivers.
+ *
+ * @param campaign - The campaign, or `null` outside one.
+ * @param week - The week in progress, or `null` outside one.
+ * @returns The stakes, or `null` outside a running week with a forecast or once the guardian is down.
+ */
+export function buildSundayStakes(
+  campaign: Campaign | null,
+  week: CampaignWeek | null,
+): SundayStakes | null {
+  const base = campaign?.base;
+  const forecast = campaign?.forecast;
+  if (!base || !forecast || !week || week.defeated) {
+    return null;
+  }
+  const remainingGroup = forecast.woundedCount - forecast.challengeRescued;
+  const reachable = Math.min(remainingGroup, base.rescuesByComponents, base.rescuesByFood);
+  const standing = 1 - week.progressPercent / 100;
+  return {
+    gain: Math.max(0, reachable - forecast.extractionRescued),
+    loss: Math.round(base.population * standing * standing * (base.guardianLossPercent / 100)),
   };
 }
 

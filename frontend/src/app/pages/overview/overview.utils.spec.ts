@@ -17,6 +17,7 @@ import {
   buildMission,
   buildMissionReport,
   buildSquad,
+  buildSundayStakes,
   buildTabs,
   buildTally,
   Translate,
@@ -449,6 +450,57 @@ describe('buildCapacity', () => {
   });
 });
 
+describe('buildSundayStakes', () => {
+  const forecast = {
+    weekIndex: 1,
+    woundedCount: 100,
+    challengeRescued: 10,
+    extractionRescued: 12,
+    rescued: 22,
+    leftBehind: 78,
+    limiter: 'FOOD' as const,
+  };
+
+  it('returns null once the guardian is down', () => {
+    expect(buildSundayStakes(campaign({ forecast }), week({ defeated: true }))).toBeNull();
+  });
+
+  it('returns null without a forecast', () => {
+    expect(buildSundayStakes(campaign({ forecast: null }), week())).toBeNull();
+  });
+
+  it('measures both outcomes against the forecast', () => {
+    const stakes = buildSundayStakes(
+      campaign({
+        base: base({
+          population: 2000,
+          rescuesByComponents: 60,
+          rescuesByFood: 40,
+          guardianLossPercent: 35,
+        }),
+        forecast,
+      }),
+      week({ progressPercent: 30, defeated: false }),
+    );
+
+    // Food caps the reach at 40, 12 already forecast; the base loses 2000 x 0.7² x 35 %.
+    expect(stakes).toEqual({ gain: 28, loss: 343 });
+  });
+
+  it('caps the reach at the group the challenges left', () => {
+    const stakes = buildSundayStakes(
+      campaign({
+        base: base({ rescuesByComponents: 500, rescuesByFood: 500 }),
+        forecast: { ...forecast, extractionRescued: 90 },
+      }),
+      week({ progressPercent: 100, defeated: false }),
+    );
+
+    expect(stakes?.gain).toBe(0);
+    expect(stakes?.loss).toBe(0);
+  });
+});
+
 describe('buildContribution', () => {
   function entry(id: number, damage: number, points: number): RankingEntry {
     return {
@@ -735,7 +787,7 @@ describe('buildSquad', () => {
     expect(row.streakBonusPercent).toBe(2);
     expect(row.streakWeek).toEqual([
       'played',
-      'today',
+      'missed',
       'ahead',
       'ahead',
       'ahead',

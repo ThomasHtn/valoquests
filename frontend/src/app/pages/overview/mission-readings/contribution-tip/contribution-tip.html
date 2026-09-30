@@ -1,0 +1,20 @@
+@let s = strike();
+
+<span class="name">{{ s.name }}</span>
+
+<span class="figures tabular-nums">
+  <b class="value">{{ s.damageLabel }}</b>
+  <span class="unit">{{ 'overview.report.hp' | translate }}</span>
+</span>
+
+<span class="status">
+  <span class="share">{{
+    'overview.report.strike.share' | translate: { percent: s.percent }
+  }}</span>
+  @if (s.challengePoints > 0) {
+    <span class="points">
+      <b class="tabular-nums">+{{ s.challengePoints }}</b>
+      {{ 'overview.report.strike.points' | translate: { count: s.challengePoints } }}
+    </span>
+  }
+</span>

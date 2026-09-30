@@ -1,4 +1,4 @@
-<!-- Three readings in the order the week is played: the clock, the fight, what comes home. The
+<!-- Three readings in the order the week is played: the clock, the fight, what Sunday decides. The
      clock leads because it is the only thing here that moves on its own. -->
 <div class="report bg-text-primary/4">
   @if (showClock()) {
@@ -13,132 +13,126 @@
     </div>
   }
 
-  <!-- The squad against the guardian, on the aboard row's own grid: the key column carries the
-       fight's glyph, the body the two figures and the one track they share. -->
-  <div [class.rep-vs--down]="mission().defeated" class="rep-row rep-row--vs" data-card="guardian">
-    <p class="rep-key label-caption text-2xs">
-      <span aria-hidden="true" class="rep-mark clip-hex"
-        ><span class="clip-hex"><svg class="size-4" lucideSwords></svg></span
-      ></span>
-      {{ 'overview.report.versus' | translate }}
-    </p>
-    <div class="rep-body">
-      <p class="vs-names label-caption">
-        <span class="vs-squad">{{ 'overview.report.squad' | translate }}</span>
-        <span class="vs-foe">{{ 'overview.report.boss' | translate: { index: bossIndex() } }}</span>
-      </p>
-      <p class="vs-line">
-        <span class="rep-fig vs-squad tabular-nums"
-          ><span [appCountUp]="hitPointsDealt()"></span>
-          <small>{{ 'overview.report.hpDealt' | translate }}</small></span
-        >
-        <span class="rep-fig vs-foe tabular-nums"
-          ><span [appCountUp]="mission().hitPointsLeft"></span>
-          <small>{{ 'overview.report.hpLeft' | translate }}</small></span
-        >
-      </p>
-
-      <div [style.--breach]="breach() * 100 + '%'" appInView class="vs-bar">
-        @if (breach() > 0) {
-          <span class="vs-front">
-            @for (share of strikes(); track share.playerId) {
-              <i
-                [appTooltip]="
-                  'overview.report.contributionTooltip'
-                    | translate
-                      : {
-                          name: share.name,
-                          damage: format(share.damage),
-                          points: format(share.challengePoints),
-                          percent: share.sharePercent,
-                        }
-                "
-                [style.--w]="share.damage"
-                class="focus-ring"
-                tabindex="0"
-              ></i>
-            } @empty {
-              <i aria-hidden="true"></i>
-            }
-          </span>
-        }
-
-        <!-- Once down, the breakthrough reads 100 % and says nothing: the fatal blow replaces it. -->
-        @if (mission().defeated; as blow) {
-          <p class="vs-down label-caption text-2xs">
-            {{
-              (blow.by ? 'overview.report.downBy' : 'overview.report.down')
-                | translate: { weekday: blow.weekday, time: blow.time, name: blow.by ?? '' }
-            }}
-          </p>
-        } @else {
-          <!-- What still stands, as its own hover target so the total is one pointer away. -->
-          <span
-            [appTooltip]="
-              'overview.report.hpTooltip'
-                | translate
-                  : {
-                      dealt: format(hitPointsDealt()),
-                      total: format(mission().hitPoints),
-                      left: format(mission().hitPointsLeft),
-                      count: mission().hitPointsLeft,
-                    }
-            "
-            class="vs-rest focus-ring"
-            tabindex="0"
-          ></span>
-          <span
-            [appTooltip]="
-              'overview.report.breachTooltip' | translate: { percent: mission().breachPercent }
-            "
-            class="vs-cursor focus-ring"
-            tabindex="0"
-          ></span>
-        }
+  <!-- The squad against the guardian: both camps mirrored over the track they share, which fills
+       the whole block. -->
+  <div [class.duel--down]="mission().defeated" class="duel" data-card="guardian">
+    <div class="duel-camps">
+      <div class="camp camp--squad">
+        <p class="plate">
+          <svg aria-hidden="true" class="plate-icon" lucideSwords></svg>
+          {{ 'overview.report.squad' | translate }}
+        </p>
+        <p class="camp-fig tabular-nums">
+          <span [appCountUp]="hitPointsDealt()"></span>
+          <small>{{ 'overview.report.hpDealt' | translate }}</small>
+        </p>
+      </div>
+      <div class="camp camp--foe">
+        <p class="plate">
+          {{ 'overview.report.boss' | translate: { index: bossIndex() } }}
+          <svg aria-hidden="true" class="plate-icon" lucideSkull></svg>
+        </p>
+        <p class="camp-fig tabular-nums">
+          <span [appCountUp]="mission().hitPointsLeft"></span>
+          <small>{{ 'overview.report.hpLeft' | translate }}</small>
+        </p>
       </div>
     </div>
-  </div>
 
-  @if (capacity(); as capacity) {
-    <div class="rep-row rep-row--aboard" data-card="ground">
-      <p class="rep-key label-caption text-2xs">
-        <span aria-hidden="true" class="rep-mark clip-hex"
-          ><span class="clip-hex"><svg class="size-4" lucideUsers></svg></span
-        ></span>
-        {{ 'overview.report.aboard' | translate }}
-      </p>
-      <div class="rep-body">
-        <p class="rep-line">
-          <span class="rep-fig tabular-nums"
-            ><span [appCountUp]="capacity.aboard"></span>
-            <small>{{ 'overview.report.aboardUnit' | translate }}</small></span
-          >
-          <span class="rep-side label-caption text-2xs">
-            <span>{{ 'overview.report.of' | translate }}</span>
-            <b class="tabular-nums">{{ format(mission().wounded) }}</b>
-            <span>{{
-              'overview.report.spotted' | translate: { planet: mission().planetName }
-            }}</span>
-          </span>
-        </p>
-        <!-- The figures above already read the same values; the bubble only spells out the rest. -->
+    <div [style.--breach]="breach() * 100 + '%'" appInView class="duel-track">
+      @if (breach() > 0) {
+        <span class="duel-front">
+          @for (strike of strikes(); track strike.playerId) {
+            <i
+              [appTooltipTemplate]="tip"
+              [appTooltip]="strike.summary"
+              [style.--w]="strike.damage"
+              class="focus-ring"
+              tabindex="0"
+            ></i>
+            <ng-template #tip><app-contribution-tip [strike]="strike" /></ng-template>
+          } @empty {
+            <i aria-hidden="true"></i>
+          }
+        </span>
+      }
+
+      <!-- The breakthrough post: its percentage only shows on hover, the figures above already
+           tell the fight. Down, the check says it instead. -->
+      @if (!mission().defeated) {
+        <span class="duel-post" aria-hidden="true"></span>
         <span
           [appTooltip]="
-            'overview.report.aboardTooltip'
-              | translate
-                : {
-                    aboard: format(capacity.aboard),
-                    wounded: format(mission().wounded),
-                    left: format(capacity.leftBehind),
-                    count: capacity.leftBehind,
-                  }
+            'overview.report.breachTooltip' | translate: { percent: mission().breachPercent }
           "
-          [style.--lvl]="percent(capacity.aboardFraction) + '%'"
-          appInView
-          aria-hidden="true"
-          class="rep-bar rep-bar--aboard"
-          ><i></i
+          class="duel-seam focus-ring"
+          tabindex="0"
         ></span>
+      }
+    </div>
+
+    <!-- Guardian down: the squad's tint rises behind the camps and a check lands between them, as
+         on a validated challenge; the fatal blow stays readable to assistive technology. -->
+    @if (mission().defeated; as blow) {
+      <div
+        [attr.aria-label]="
+          (blow.by ? 'overview.report.downBy' : 'overview.report.down')
+            | translate: { weekday: blow.weekday, time: blow.time, name: blow.by ?? '' }
+        "
+        appInView
+        class="duel-won"
+        role="img"
+      >
+        <span class="won-fill"></span>
+        <span class="won-mark">
+          <svg aria-hidden="true" class="won-check" lucideCheck></svg>
+          @for (piece of confetti; track $index) {
+            <span
+              [class.piece--pale]="piece.pale"
+              [class.piece--strip]="piece.strip"
+              [style.--angle.deg]="piece.angle"
+              [style.--reach.rem]="piece.distance"
+              [style.--spin.deg]="piece.spin"
+              aria-hidden="true"
+              class="piece"
+            ></span>
+          }
+        </span>
+      </div>
+    }
+  </div>
+
+  <!-- What Sunday midnight can still change, as gaps from the forecast the dials below show. -->
+  @if (stakes(); as stakes) {
+    <div class="stakes" data-card="stakes">
+      <div
+        [appTooltip]="'overview.report.stakes.gainTooltip' | translate: { count: stakes.gain }"
+        class="stake stake--gain"
+      >
+        <p class="stake-key label-caption">
+          <svg aria-hidden="true" class="stake-icon" lucideUsers></svg>
+          {{ 'overview.report.stakes.gainKey' | translate }}
+        </p>
+        <p class="stake-fig tabular-nums">
+          <span>+{{ format(stakes.gain) }}</span>
+          <small>{{ 'overview.report.stakes.gainUnit' | translate: { count: stakes.gain } }}</small>
+        </p>
+      </div>
+      <div
+        [appTooltip]="
+          'overview.report.stakes.lossTooltip' | translate: { percent: mission().breachPercent }
+        "
+        class="stake stake--loss"
+      >
+        <p class="stake-key label-caption">
+          <span class="max-sm:hidden">{{ 'overview.report.stakes.lossKey' | translate }}</span>
+          <span class="sm:hidden">{{ 'overview.report.stakes.lossKeyShort' | translate }}</span>
+          <svg aria-hidden="true" class="stake-icon" lucideSkull></svg>
+        </p>
+        <p class="stake-fig tabular-nums">
+          <span>−{{ format(stakes.loss) }}</span>
+          <small>{{ 'overview.report.stakes.lossUnit' | translate: { count: stakes.loss } }}</small>
+        </p>
       </div>
     </div>
   }

@@ -5,10 +5,11 @@ import { CampaignApi } from '@core/campaign/campaign-api';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
+import { SynchronizationApi } from '@core/synchronization/synchronization-api';
 import { Connectivity } from './connectivity';
 import { liveRefreshStamp } from './live-refresh.utils';
 import { reloadAll, resourceValue } from './resource-state.utils';
-import { LIVE_REFRESH_POLL_MS, LIVE_REFRESH_SETTLE_MS } from './live-refresh.constants';
+import { LIVE_REFRESH_POLL_MS } from './live-refresh.constants';
 
 /**
  * Keeps every screen current without a page refresh.
@@ -17,7 +18,7 @@ import { LIVE_REFRESH_POLL_MS, LIVE_REFRESH_SETTLE_MS } from './live-refresh.con
  * the nightly tick at 00:10 and the Monday rollover. The shared `httpResource`s were fetched once
  * and never asked again, so a tab left open showed the squad's evening as it stood at load time.
  *
- * Polls the roster every minute (the sidebar's last-sync label already needed it), compares the
+ * Polls the synchronization status every minute (the sidebar's label reads it too), compares the
  * {@link liveRefreshStamp} to the previous one and, on a change, reloads the campaign, ranking and
  * challenge resources. A tab coming back to the foreground polls at once instead of waiting.
  *
@@ -26,6 +27,7 @@ import { LIVE_REFRESH_POLL_MS, LIVE_REFRESH_SETTLE_MS } from './live-refresh.con
 @Service()
 export class LiveRefresh {
   private readonly document = inject(DOCUMENT);
+  private readonly synchronizationApi = inject(SynchronizationApi);
   private readonly playersApi = inject(PlayersApi);
   private readonly campaignApi = inject(CampaignApi);
   private readonly rankingApi = inject(RankingApi);
@@ -38,14 +40,9 @@ export class LiveRefresh {
   private wasOnline = true;
 
   /**
-   * Stamp of the roster as last read; `null` until the first read has settled.
+   * Stamp of the synchronization status as last read; `null` until the first read has settled.
    */
   private stamp: string | null = null;
-
-  /**
-   * Pending reload, pushed back by every new change so a whole batch reloads once.
-   */
-  private pending: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     // Polling offline would only turn every screen into an error state until the network returns.
@@ -54,7 +51,7 @@ export class LiveRefresh {
         filter(() => this.connectivity.online()),
         takeUntilDestroyed(),
       )
-      .subscribe(() => this.playersApi.players.reload());
+      .subscribe(() => this.synchronizationApi.status.reload());
 
     // Back online: whatever failed meanwhile is read again, without asking the reader to retry.
     effect(() => {
@@ -70,40 +67,33 @@ export class LiveRefresh {
         filter(() => this.document.visibilityState === 'visible'),
         takeUntilDestroyed(),
       )
-      .subscribe(() => this.playersApi.players.reload());
+      .subscribe(() => this.synchronizationApi.status.reload());
 
     effect(() => {
       // While loading, the value is either the default or the previous read: neither says anything
       // about the backend now, so the comparison waits for the read to settle.
-      if (this.playersApi.players.isLoading()) {
+      if (this.synchronizationApi.status.isLoading()) {
         return;
       }
 
-      const players = resourceValue(this.playersApi.players, null);
-      if (players === null) {
+      const status = resourceValue(this.synchronizationApi.status, null);
+      if (!status) {
         return;
       }
 
-      const stamp = liveRefreshStamp(players, new Date());
+      // The completion instant only moves once challenges and campaign are rebuilt, so the
+      // screens can reload at once.
+      const stamp = liveRefreshStamp(status.lastCompletedAt, new Date());
       if (this.stamp !== null && stamp !== this.stamp) {
-        this.scheduleReload();
+        this.reloadEverything();
       }
       this.stamp = stamp;
     });
   }
 
-  private scheduleReload(): void {
-    if (this.pending !== null) {
-      clearTimeout(this.pending);
-    }
-    this.pending = setTimeout(() => {
-      this.pending = null;
-      this.reloadEverything();
-    }, LIVE_REFRESH_SETTLE_MS);
-  }
-
   private reloadEverything(): void {
     reloadAll(
+      this.synchronizationApi.status,
       this.playersApi.players,
       this.campaignApi.campaign,
       this.campaignApi.today,

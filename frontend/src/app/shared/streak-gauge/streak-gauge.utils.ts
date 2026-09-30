@@ -21,10 +21,8 @@ export function streakWeekOf(day: string, playedDays: readonly string[]): readon
     if (played.has(index)) {
       return 'played';
     }
-    if (index === todayIndex) {
-      return 'today';
-    }
-    return index < todayIndex ? 'missed' : 'ahead';
+    // Today reads as played or not, never as pending.
+    return index <= todayIndex ? 'missed' : 'ahead';
   });
 }
 
