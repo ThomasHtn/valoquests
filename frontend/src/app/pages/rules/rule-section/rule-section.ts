@@ -31,9 +31,10 @@ export class RuleSection {
   public readonly statement = input.required<string>();
 
   /**
-   * Already-translated section description. May carry icon tokens, see `app-rule-text`.
+   * Already-translated section description, omitted when the figures speak for themselves. May
+   * carry icon tokens, see `app-rule-text`.
    */
-  public readonly description = input.required<string>();
+  public readonly description = input('');
 
   /**
    * Whether the section opens with a top hairline, off only for the first one since there is

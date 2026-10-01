@@ -18,6 +18,32 @@
       <span class="truncate">{{ playerDetails.displayName }}</span>
     </span>
   }
+
+  <!-- The season scope, in the bar's trailing slot like the leaderboard's week picker: it frames
+       everything the page below shows, whichever view is open. One season at a time for the
+       matches; several for progression, whose charts compare them. A block of its own, apart from
+       the one above: a projected block must keep a single root for `[backAside]` to match it. -->
+  @if (details()) {
+    @if (viewMode() === 'MATCHES') {
+      <app-season-picker
+        (selectionChange)="onSeasonFilterChange($event[0] ?? null)"
+        [ariaLabel]="'playerProfile.filters.seasonLabel' | translate"
+        [seasons]="seasons()"
+        [selection]="seasonSelection()"
+      />
+    } @else {
+      <app-season-picker
+        [(selection)]="progressionSeasonIds"
+        [ariaLabel]="'playerProfile.filters.seasonsLabel' | translate"
+        [maxSelectionNote]="
+          'playerProfile.filters.seasonLimit' | translate: { count: maxProgressionSeasons }
+        "
+        [maxSelection]="maxProgressionSeasons"
+        [multiple]="true"
+        [seasons]="seasons()"
+      />
+    }
+  }
 </app-page-header>
 
 <div class="page-body">
@@ -113,7 +139,8 @@
         }
       </section>
 
-      <!-- Filter bar. Every control scoping the page — mode, season, period — is its own block,
+      <!-- Filter bar. Every control narrowing the view is its own block (the season scope lives in
+         the page header above, since it frames both views),
          each wearing the identity banner's surface rather than sharing one continuous band with hairline rules: a group reads as one instrument, not as a stretch of
          a longer one. The display switch is a block of its own too, pushed to the trailing edge
          since it governs what the page shows, not what it counts.
@@ -183,19 +210,6 @@
             </div>
           </div>
 
-          <div
-            [attr.aria-label]="'playerProfile.filters.seasonLabel' | translate"
-            class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 max-sm:flex-1"
-            role="group"
-          >
-            <app-select
-              [ariaLabel]="'playerProfile.filters.seasonLabel' | translate"
-              [options]="seasonFilterOptions()"
-              [value]="seasonId()"
-              (valueChange)="onSeasonFilterChange($event)"
-            />
-          </div>
-
           @if (hasActiveFilters()) {
             <button
               (click)="resetFilters()"
@@ -205,27 +219,6 @@
               {{ 'playerProfile.filters.reset' | translate }}
             </button>
           }
-        } @else {
-          <!-- Progression scopes on seasons alone, several at a time: its charts compare one season
-             against another, and its figures are competitive-only by definition, so there is no
-             mode left to pick. One control instead of two, and the row stays as quiet as the view
-             it drives. -->
-          <div
-            [attr.aria-label]="'playerProfile.filters.seasonsLabel' | translate"
-            class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 max-sm:w-full"
-            role="group"
-          >
-            <app-multi-select
-              [(value)]="progressionSeasonIds"
-              [ariaLabel]="'playerProfile.filters.seasonsLabel' | translate"
-              [maxSelection]="maxProgressionSeasons"
-              [maxSelectionNote]="
-                'playerProfile.filters.seasonLimit' | translate: { count: maxProgressionSeasons }
-              "
-              [options]="progressionSeasonOptions()"
-              [triggerLabel]="progressionSeasonLabel()"
-            />
-          </div>
         }
 
         <!-- Display switch, pushed to the trailing edge: it governs what the page shows, not what

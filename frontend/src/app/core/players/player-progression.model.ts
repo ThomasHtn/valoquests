@@ -1,3 +1,4 @@
+import { MatchResult } from '@core/matches/match-result.model';
 import { CompetitiveTier } from './competitive-tier.model';
 
 /**
@@ -338,6 +339,143 @@ export interface AgentStatistics extends ProgressionEntityStatistics {
 }
 
 /**
+ * Where one season left a player on the competitive ladder.
+ */
+export interface SeasonRank {
+  /**
+   * Identifier of the season.
+   */
+  readonly seasonId: number;
+
+  /**
+   * Raw season code, e.g. `e9a2`.
+   */
+  readonly seasonName: string;
+
+  /**
+   * Whether this is the season in progress.
+   */
+  readonly active: boolean;
+
+  /**
+   * Rank held after the season's last ranked match.
+   */
+  readonly finalTier: CompetitiveTier;
+
+  /**
+   * Highest rank held during the season.
+   */
+  readonly highestTier: CompetitiveTier;
+
+  /**
+   * Lowest rank held during the season, placements excluded.
+   */
+  readonly lowestTier: CompetitiveTier;
+
+  /**
+   * Competitive matches of the season, placements included.
+   */
+  readonly matchesPlayed: number;
+
+  /**
+   * Competitive matches of the season won.
+   */
+  readonly wins: number;
+
+  /**
+   * Rank held after each ranked match of the season, oldest first.
+   */
+  readonly rankedTiers: readonly CompetitiveTier[];
+}
+
+/**
+ * One match plotted on the consistency chart.
+ */
+export interface ConsistencyMatch {
+  /**
+   * Start instant, as an ISO-8601 string.
+   */
+  readonly startedAt: string;
+
+  /**
+   * Average combat score of the match.
+   */
+  readonly acs: number;
+
+  /**
+   * Outcome for the player's team.
+   */
+  readonly result: MatchResult;
+
+  /**
+   * Rounds won by the player's team, or `null` when unreported.
+   */
+  readonly allyScore: number | null;
+
+  /**
+   * Rounds won by the opposing team, or `null` when unreported.
+   */
+  readonly enemyScore: number | null;
+
+  /**
+   * Name of the map.
+   */
+  readonly mapName: string;
+
+  /**
+   * Agent played.
+   */
+  readonly agentName: string;
+}
+
+/**
+ * How steady the combat score was over the selected seasons: the middle half of the matches
+ * between a floor and a ceiling.
+ */
+export interface ConsistencySummary {
+  /**
+   * First quartile of the combat scores.
+   */
+  readonly floor: number;
+
+  /**
+   * Median combat score.
+   */
+  readonly median: number;
+
+  /**
+   * Third quartile of the combat scores.
+   */
+  readonly ceiling: number;
+
+  /**
+   * Gap between ceiling and floor.
+   */
+  readonly spread: number;
+
+  /**
+   * Seasons the matches come from.
+   */
+  readonly seasonCount: number;
+
+  /**
+   * For a single-season selection, raw code of the previous season holding enough matches;
+   * `null` otherwise.
+   */
+  readonly previousSeasonName: string | null;
+
+  /**
+   * That previous season's spread, or `null`.
+   */
+  readonly previousSpread: number | null;
+
+  /**
+   * Every match with a combat score, oldest first.
+   */
+  readonly matches: readonly ConsistencyMatch[];
+}
+
+/**
  * Everything the profile's progression view renders, for one player and one season selection.
  *
  * Every figure is scoped to competitive matches — the only queue whose combat score, damage per
@@ -379,4 +517,14 @@ export interface PlayerProgression {
    * Per-agent statistics, most played first.
    */
   readonly agents: readonly AgentStatistics[];
+
+  /**
+   * Where every selected season ended on the ladder, oldest first.
+   */
+  readonly rankJourney: readonly SeasonRank[];
+
+  /**
+   * Combat-score spread over the selection, or `null` when it holds too few matches.
+   */
+  readonly consistency: ConsistencySummary | null;
 }

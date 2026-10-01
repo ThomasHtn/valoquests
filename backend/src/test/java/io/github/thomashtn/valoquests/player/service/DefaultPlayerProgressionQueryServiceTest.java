@@ -371,6 +371,141 @@ class DefaultPlayerProgressionQueryServiceTest {
      *
      * @param matches the player's whole stored history, most recent first
      */
+    @Test
+    @DisplayName("traces the rank journey over the selected seasons, match by match within each")
+    void shouldTraceTheRankJourneyOverTheSelectedSeasons() {
+        givenHistory(
+            ranked(competitive(1L, MONDAY + "T10:00:00Z", MatchResult.WIN), CompetitiveTier.GOLD_3),
+            ranked(competitive(2L, "2026-11-02T10:00:00Z", MatchResult.WIN), CompetitiveTier.PLATINUM_3),
+            ranked(competitive(2L, "2026-11-03T10:00:00Z", MatchResult.LOSS), CompetitiveTier.UNRANKED),
+            ranked(competitive(2L, "2026-11-04T10:00:00Z", MatchResult.LOSS), CompetitiveTier.DIAMOND_1),
+            ranked(competitive(2L, "2026-11-05T10:00:00Z", MatchResult.LOSS), CompetitiveTier.PLATINUM_2)
+        );
+
+        PlayerProgressionResponse response = service.findByPlayerId(PLAYER_ID, List.of(2L));
+
+        assertThat(response.rankJourney()).singleElement().satisfies(season -> {
+            assertThat(season.seasonId()).isEqualTo(2L);
+            assertThat(season.finalTier()).isEqualTo(CompetitiveTier.PLATINUM_2);
+            assertThat(season.highestTier()).isEqualTo(CompetitiveTier.DIAMOND_1);
+            assertThat(season.lowestTier()).isEqualTo(CompetitiveTier.PLATINUM_2);
+            assertThat(season.matchesPlayed()).isEqualTo(4);
+            assertThat(season.wins()).isEqualTo(1);
+            assertThat(season.rankedTiers()).containsExactly(
+                CompetitiveTier.PLATINUM_3, CompetitiveTier.DIAMOND_1, CompetitiveTier.PLATINUM_2
+            );
+        });
+    }
+
+    @Test
+    @DisplayName("leaves out of the rank journey a season holding only placements")
+    void shouldSkipPlacementOnlySeasonsInTheRankJourney() {
+        givenHistory(
+            ranked(competitive(1L, MONDAY + "T10:00:00Z", MatchResult.WIN), CompetitiveTier.UNRANKED),
+            ranked(competitive(2L, "2026-11-02T10:00:00Z", MatchResult.WIN), CompetitiveTier.GOLD_1)
+        );
+
+        PlayerProgressionResponse response = service.findByPlayerId(PLAYER_ID, null);
+
+        assertThat(response.rankJourney())
+            .extracting(PlayerProgressionResponse.SeasonRank::seasonId)
+            .containsExactly(2L);
+    }
+
+    @Test
+    @DisplayName("bounds the middle half of the selection's combat scores between its floor and ceiling")
+    void shouldBoundTheMiddleHalfOfTheCombatScores() {
+        givenHistory(scoredSeason(1L, 100, 200, 300, 400, 500, 600, 700, 800).toArray(PlayerMatch[]::new));
+
+        PlayerProgressionResponse response = service.findByPlayerId(PLAYER_ID, null);
+
+        assertThat(response.consistency()).satisfies(consistency -> {
+            assertThat(consistency.floor()).isEqualByComparingTo("275");
+            assertThat(consistency.median()).isEqualByComparingTo("450");
+            assertThat(consistency.ceiling()).isEqualByComparingTo("625");
+            assertThat(consistency.spread()).isEqualByComparingTo("350");
+            assertThat(consistency.seasonCount()).isEqualTo(1);
+            assertThat(consistency.previousSpread()).isNull();
+            assertThat(consistency.matches()).hasSize(8);
+        });
+    }
+
+    @Test
+    @DisplayName("compares a single selected season with the previous one, outside the selection")
+    void shouldCompareASingleSeasonWithThePreviousOne() {
+        List<PlayerMatch> history = new ArrayList<>(scoredSeason(1L, 100, 200, 300, 400, 500, 600, 700, 800));
+        history.addAll(scoredSeason(2L, 200, 210, 220, 230, 240, 250, 260, 270));
+        givenHistory(history.toArray(PlayerMatch[]::new));
+
+        PlayerProgressionResponse response = service.findByPlayerId(PLAYER_ID, List.of(2L));
+
+        assertThat(response.consistency()).satisfies(consistency -> {
+            assertThat(consistency.spread()).isEqualByComparingTo("35");
+            assertThat(consistency.previousSeasonName()).isEqualTo("Episode 1");
+            assertThat(consistency.previousSpread()).isEqualByComparingTo("350");
+        });
+    }
+
+    @Test
+    @DisplayName("skips a previous season with too few scored matches to have a spread")
+    void shouldSkipAPreviousSeasonWithTooFewScoredMatches() {
+        List<PlayerMatch> history = new ArrayList<>(scoredSeason(1L, 100, 200, 300, 400, 500, 600, 700));
+        history.addAll(scoredSeason(2L, 200, 210, 220, 230, 240, 250, 260, 270));
+        givenHistory(history.toArray(PlayerMatch[]::new));
+
+        PlayerProgressionResponse response = service.findByPlayerId(PLAYER_ID, List.of(2L));
+
+        assertThat(response.consistency().previousSpread()).isNull();
+    }
+
+    @Test
+    @DisplayName("pools a multi-season selection, with no previous season to compare with")
+    void shouldPoolAMultiSeasonSelection() {
+        List<PlayerMatch> history = new ArrayList<>(scoredSeason(1L, 100, 200, 300, 400));
+        history.addAll(scoredSeason(2L, 500, 600, 700, 800));
+        givenHistory(history.toArray(PlayerMatch[]::new));
+
+        PlayerProgressionResponse response = service.findByPlayerId(PLAYER_ID, null);
+
+        assertThat(response.consistency()).satisfies(consistency -> {
+            assertThat(consistency.floor()).isEqualByComparingTo("275");
+            assertThat(consistency.ceiling()).isEqualByComparingTo("625");
+            assertThat(consistency.seasonCount()).isEqualTo(2);
+            assertThat(consistency.previousSpread()).isNull();
+        });
+    }
+
+    @Test
+    @DisplayName("has no spread for a selection with too few scored matches")
+    void shouldHaveNoSpreadForTooFewMatches() {
+        givenHistory(scoredSeason(1L, 100, 200, 300, 400, 500, 600, 700).toArray(PlayerMatch[]::new));
+
+        PlayerProgressionResponse response = service.findByPlayerId(PLAYER_ID, null);
+
+        assertThat(response.consistency()).isNull();
+    }
+
+    @Test
+    @DisplayName("reads each plotted match's score from the player's own side")
+    void shouldReadTheScoreFromThePlayersSide() {
+        List<PlayerMatch> history = scoredSeason(1L, 100, 200, 300, 400, 500, 600, 700, 800);
+        history.forEach(match -> {
+            match.setTeamId("Red");
+            match.getMatch().setRedScore(13);
+            match.getMatch().setBlueScore(9);
+        });
+        givenHistory(history.toArray(PlayerMatch[]::new));
+
+        PlayerProgressionResponse response = service.findByPlayerId(PLAYER_ID, null);
+
+        assertThat(response.consistency().matches().getFirst()).satisfies(match -> {
+            assertThat(match.allyScore()).isEqualTo(13);
+            assertThat(match.enemyScore()).isEqualTo(9);
+            assertThat(match.mapName()).isEqualTo("Ascent");
+            assertThat(match.agentName()).isEqualTo("Jett");
+        });
+    }
+
     private void givenHistory(PlayerMatch... matches) {
         List<PlayerMatch> history = List.of(matches);
 
@@ -420,5 +555,24 @@ class DefaultPlayerProgressionQueryServiceTest {
         playerMatch.setAcs(BigDecimal.valueOf(230));
         playerMatch.setAdr(BigDecimal.valueOf(150));
         return playerMatch;
+    }
+
+    private PlayerMatch ranked(PlayerMatch match, CompetitiveTier tier) {
+        match.setCompetitiveTier(tier);
+        return match;
+    }
+
+    private List<PlayerMatch> scoredSeason(long seasonId, int... combatScores) {
+        List<PlayerMatch> matches = new ArrayList<>();
+        for (int index = 0; index < combatScores.length; index++) {
+            PlayerMatch match = competitive(
+                seasonId,
+                Instant.parse(MONDAY + "T10:00:00Z").plusSeconds(seasonId * 1_000_000 + index * 3600L).toString(),
+                MatchResult.WIN
+            );
+            match.setAcs(BigDecimal.valueOf(combatScores[index]));
+            matches.add(match);
+        }
+        return matches;
     }
 }

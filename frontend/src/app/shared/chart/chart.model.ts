@@ -92,3 +92,53 @@ export interface ChartBar {
    */
   readonly muted: boolean;
 }
+
+/**
+ * Where the mark under the pointer sits, for a tooltip drawn in HTML beside the canvas.
+ */
+export interface ChartTooltipAnchor {
+  /**
+   * Index of the hovered data point in the first dataset.
+   */
+  readonly index: number;
+
+  /**
+   * Horizontal position of the mark, in CSS pixels from the canvas' left edge.
+   */
+  readonly x: number;
+
+  /**
+   * Vertical position of the mark, in CSS pixels from the canvas' top edge.
+   */
+  readonly y: number;
+
+  /**
+   * Width of the canvas, in CSS pixels.
+   */
+  readonly chartWidth: number;
+
+  /**
+   * Height of the canvas, in CSS pixels.
+   */
+  readonly chartHeight: number;
+}
+
+/**
+ * Resolved position of an HTML chart tooltip inside the canvas' box.
+ */
+export interface ChartTooltipPlacement {
+  /**
+   * Left offset of the anchor point, in CSS pixels.
+   */
+  readonly left: number;
+
+  /**
+   * Top offset of the anchor point, in CSS pixels.
+   */
+  readonly top: number;
+
+  /**
+   * CSS transform moving the bubble off the anchor point and away from the mark.
+   */
+  readonly transform: string;
+}

@@ -1,0 +1,65 @@
+<div class="flex flex-col gap-4">
+  <h3 class="label-caption text-sm text-text-primary">
+    <span [appTooltip]="keys + '.tooltip' | translate" class="focus-ring" tabindex="0">{{
+      keys + '.title' | translate
+    }}</span>
+  </h3>
+
+  @if (consistency()) {
+    <div class="relative h-64 w-full sm:h-72">
+      <canvas
+        #canvas
+        [attr.aria-label]="keys + '.title' | translate"
+        class="absolute inset-0 block"
+        role="img"
+      ></canvas>
+
+      <app-chart-tooltip [anchor]="hovered()">
+        @if (tooltip(); as tip) {
+          <div class="flex items-baseline gap-2">
+            <span class="font-display text-3xl leading-none font-bold tabular-nums">{{
+              tip.acs
+            }}</span>
+            <span class="text-sm text-text-muted">ACS</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5 text-sm font-semibold">
+            <span [class]="tip.resultClass" class="px-2 py-0.5">{{ tip.result }}</span>
+            <span
+              [class]="
+                tip.zone === 'inside'
+                  ? 'bg-brand-500/14 text-brand-500'
+                  : 'bg-text-primary/4 text-text-secondary'
+              "
+              class="px-2 py-0.5"
+              >{{ tip.zoneLabel }}</span
+            >
+          </div>
+          <ul class="flex flex-col gap-1.5 border-t border-edge pt-2.5 text-sm text-text-muted">
+            <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
+              <svg aria-hidden="true" class="size-4" lucideMap></svg>
+              <span>{{ keys + '.tip.map' | translate }}</span>
+              <b class="text-right font-semibold text-text-primary">{{ tip.mapName }}</b>
+            </li>
+            <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
+              <svg aria-hidden="true" class="size-4" lucideUser></svg>
+              <span>{{ keys + '.tip.agent' | translate }}</span>
+              <b class="text-right font-semibold text-text-primary">{{ tip.agentName }}</b>
+            </li>
+            <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
+              <svg aria-hidden="true" class="size-4" lucideCalendar></svg>
+              <span>{{ keys + '.tip.date' | translate }}</span>
+              <b class="text-right font-semibold text-text-primary">{{ tip.date }}</b>
+            </li>
+          </ul>
+        }
+      </app-chart-tooltip>
+    </div>
+    <p class="sr-only">{{ summary() }}</p>
+
+    <app-key-figures [figures]="figures()" />
+  } @else {
+    <p class="text-sm text-text-secondary">
+      {{ keys + '.empty' | translate: { count: minimumSample } }}
+    </p>
+  }
+</div>

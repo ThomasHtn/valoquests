@@ -10,11 +10,13 @@ import {
 import { PlayersApi } from '@core/players/players-api';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
+import { Consistency } from './consistency/consistency';
 import { EntityStats } from './entity-stats/entity-stats';
 import { EntityStatsRow } from './entity-stats/entity-stats.model';
 import { EvolutionChart } from './evolution-chart/evolution-chart';
 import { PersonalRecords } from './personal-records/personal-records';
 import { PlayStyle } from './play-style/play-style';
+import { RankJourney } from './rank-journey/rank-journey';
 import { SchedulePerformance } from './schedule-performance/schedule-performance';
 
 /**
@@ -34,6 +36,8 @@ import { SchedulePerformance } from './schedule-performance/schedule-performance
     SchedulePerformance,
     PersonalRecords,
     EntityStats,
+    RankJourney,
+    Consistency,
   ],
   templateUrl: './progression.html',
 })

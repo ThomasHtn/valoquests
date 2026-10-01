@@ -21,7 +21,6 @@ import { parseRouteId } from '@core/http/route-id.utils';
 import { FILTERABLE_GAME_MODES, GameMode } from '@core/matches/game-mode.model';
 import { Match } from '@core/matches/match.model';
 import { MatchesApi } from '@core/matches/matches-api';
-import { formatSeasonName } from '@core/matches/season-name.utils';
 import { Season } from '@core/matches/season.model';
 import { SeasonsApi } from '@core/matches/seasons-api';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -50,7 +49,6 @@ import { PageHeader } from '@layout/page-header/page-header';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { MultiSelect } from '@shared/multi-select/multi-select';
 import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
 import { StatTile } from '@shared/stat-tile/stat-tile';
@@ -71,6 +69,7 @@ import {
   resolveYieldToneClass,
 } from './player-profile.utils';
 import { Progression } from './progression/progression';
+import { SeasonPicker } from './season-picker/season-picker';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 
 /**
@@ -90,7 +89,7 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
     MatchHistory,
     RankIconView,
     ResourceState,
-    MultiSelect,
+    SeasonPicker,
     Progression,
     Select,
     TitleBadge,
@@ -370,48 +369,17 @@ export class PlayerProfile {
   protected readonly seasonOrder = computed(() => this.seasons().map((season) => season.id));
 
   /**
-   * Options offered by the progression view's multi-season filter.
-   *
-   * No "all seasons" entry, unlike {@link seasonFilterOptions}: here the seasons are what the
-   * chart's curves *are*, so "all of them" is a selection the reader makes, not a value.
-   */
-  protected readonly progressionSeasonOptions = computed<readonly SelectOption<number>[]>(() =>
-    this.seasons().map((season) => ({ value: season.id, label: this.seasonName(season) })),
-  );
-
-  /**
-   * Summary of the progression view's season selection, shown on its trigger.
-   */
-  protected readonly progressionSeasonLabel = computed(() => {
-    const selected = this.progressionSeasonIds();
-    if (selected.length === 0) {
-      return this.translation.translate('playerProfile.filters.allSeasons');
-    }
-    if (selected.length === 1) {
-      const season = this.seasons().find((entry) => entry.id === selected[0]);
-      return season
-        ? this.seasonName(season)
-        : this.translation.translate('playerProfile.filters.seasonLabel');
-    }
-    return this.translation.translate('playerProfile.filters.seasonCount', {
-      count: selected.length,
-    });
-  });
-
-  /**
    * Largest number of seasons the progression view charts at once, exposed to the template.
    */
   protected readonly maxProgressionSeasons = MAX_PROGRESSION_SEASONS;
 
   /**
-   * Options offered by the season filter, including the "all seasons" entry.
+   * The matches view's season, as the picker's selection: empty for every season.
    */
-  protected readonly seasonFilterOptions = computed<readonly SelectOption<number | null>[]>(() => [
-    { value: null, label: this.translation.translate('playerProfile.filters.allSeasons') },
-    // Bare season name rather than "Saison {name}": the filter is captioned "Saison" right beside
-    // the trigger, so spelling it again on every option only widens the row.
-    ...this.seasons().map((season) => ({ value: season.id, label: this.seasonName(season) })),
-  ]);
+  protected readonly seasonSelection = computed<readonly number[]>(() => {
+    const seasonId = this.seasonId();
+    return seasonId === null ? [] : [seasonId];
+  });
 
   /**
    * Every match fetched so far, grouped into the days they were played on.
@@ -650,15 +618,5 @@ export class PlayerProfile {
   private restartMatchHistory(): void {
     this.matches.set([]);
     this.page.set(0);
-  }
-
-  /**
-   * Spells a season's raw code out in the active language.
-   *
-   * @param season - The season to label.
-   * @returns The label to show in the filters.
-   */
-  private seasonName(season: Season): string {
-    return formatSeasonName(season.name, (key, params) => this.translation.translate(key, params));
   }
 }

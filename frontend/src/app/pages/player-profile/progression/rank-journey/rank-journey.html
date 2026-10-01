@@ -1,0 +1,116 @@
+<div class="flex flex-col gap-4">
+  <h3 class="label-caption text-sm text-text-primary">
+    <span [appTooltip]="keys + '.tooltip' | translate" class="focus-ring" tabindex="0">{{
+      keys + '.title' | translate
+    }}</span>
+  </h3>
+
+  @if (journey().length > 0) {
+    <!-- The tooltip shares the canvas' box, so the anchor Chart.js reports needs no conversion. -->
+    <div class="relative h-64 w-full sm:h-72">
+      <canvas
+        #canvas
+        [attr.aria-label]="keys + '.title' | translate"
+        class="absolute inset-0 block"
+        role="img"
+      ></canvas>
+
+      <app-chart-tooltip [anchor]="hovered()">
+        @if (tooltip(); as tip) {
+          <span class="text-sm text-text-muted">{{ tip.heading }}</span>
+          <div class="flex items-center gap-2.5">
+            @if (tip.tier.iconUrl) {
+              <img [ngSrc]="tip.tier.iconUrl" alt="" class="size-10" height="40" width="40" />
+            }
+            <span class="flex flex-col gap-0.5">
+              <strong
+                [class]="tip.tierClass"
+                class="font-display text-xl leading-tight font-semibold"
+                >{{ tip.tier.label }}</strong
+              >
+              <span class="text-sm text-text-muted">{{ tip.caption }}</span>
+            </span>
+          </div>
+
+          <ul class="flex flex-col gap-1.5 border-t border-edge pt-2.5 text-sm text-text-muted">
+            @if (tip.delta; as delta) {
+              <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
+                @switch (delta.icon) {
+                  @case ('trendUp') {
+                    <svg aria-hidden="true" class="size-4" lucideTrendingUp></svg>
+                  }
+                  @case ('trendDown') {
+                    <svg aria-hidden="true" class="size-4" lucideTrendingDown></svg>
+                  }
+                  @default {
+                    <svg aria-hidden="true" class="size-4" lucideMinus></svg>
+                  }
+                }
+                <span>{{ tip.deltaCaption }}</span>
+                <b
+                  [class.text-danger]="delta.tone === 'bad'"
+                  [class.text-success]="delta.tone === 'good'"
+                  [class.text-text-primary]="delta.tone === 'neutral'"
+                  class="text-right font-semibold"
+                  >{{ delta.label }}</b
+                >
+              </li>
+            }
+            @if (tip.lowest && tip.highest) {
+              <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
+                <svg aria-hidden="true" class="size-4" lucideArrowDownUp></svg>
+                <span>{{ keys + '.tip.range' | translate }}</span>
+                <b class="flex items-center justify-end gap-1 font-semibold text-text-primary">
+                  @if (tip.lowest.iconUrl) {
+                    <img
+                      [ngSrc]="tip.lowest.iconUrl"
+                      alt=""
+                      class="size-4.5"
+                      height="18"
+                      width="18"
+                    />
+                  }
+                  {{ tip.lowest.label }}
+                  <span class="font-normal text-text-muted">{{
+                    keys + '.tip.to' | translate
+                  }}</span>
+                  @if (tip.highest.iconUrl) {
+                    <img
+                      [ngSrc]="tip.highest.iconUrl"
+                      alt=""
+                      class="size-4.5"
+                      height="18"
+                      width="18"
+                    />
+                  }
+                  {{ tip.highest.label }}
+                </b>
+              </li>
+            }
+            @if (tip.matchesPlayed !== null && tip.wins !== null) {
+              <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
+                <svg aria-hidden="true" class="size-4" lucideSwords></svg>
+                <span>{{ keys + '.tip.matches' | translate }}</span>
+                <b class="text-right font-semibold text-text-primary tabular-nums">{{
+                  tip.matchesPlayed
+                }}</b>
+              </li>
+              <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
+                <svg aria-hidden="true" class="size-4" lucideTrophy></svg>
+                <span>{{ keys + '.tip.wins' | translate }}</span>
+                <b class="text-right font-semibold text-text-primary tabular-nums">{{
+                  tip.wins
+                }}</b>
+              </li>
+            }
+          </ul>
+        }
+      </app-chart-tooltip>
+    </div>
+    <p class="sr-only">{{ summary() }}</p>
+
+    <app-key-figures [figures]="figures()" />
+  } @else {
+    <p class="text-sm text-text-secondary">{{ keys + '.empty' | translate }}</p>
+  }
+</div>

@@ -23,7 +23,9 @@
     <p class="font-display text-lg leading-snug font-medium text-balance text-brand-400">
       {{ statement() }}
     </p>
-    <app-rule-text [text]="description()" class="block text-prose text-text-secondary" />
+    @if (description()) {
+      <app-rule-text [text]="description()" class="block text-prose text-text-secondary" />
+    }
   </div>
 
   <ng-content />

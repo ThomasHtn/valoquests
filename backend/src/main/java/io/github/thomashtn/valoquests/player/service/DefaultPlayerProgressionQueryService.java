@@ -27,9 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Implements the progression analytics from persisted match data.
  *
- * <p>Loads a player's whole stored history once and narrows it in memory rather than issuing one
- * query per section. The history of a tracked player is a few thousand rows at most - this
- * application follows a fixed group of seven - and a single load is what lets the day-streak
+ * <p>Loads the selected seasons once and narrows them in memory rather than issuing one query per
+ * section, plus the whole career when a selection is set, for the consistency comparison with the
+ * season before the selected one. The history of a tracked player is a few thousand rows at most -
+ * this application follows a fixed group of seven - and a single load is what lets the day-streak
  * record span every game mode while every other figure stays scoped to competitive play.
  */
 @Service
@@ -100,11 +101,15 @@ public class DefaultPlayerProgressionQueryService implements PlayerProgressionQu
             throw new PlayerNotFoundException(playerId);
         }
 
+        boolean everySeason = seasonIds == null || seasonIds.isEmpty();
         List<PlayerMatch> inScope = findInSelectedSeasons(playerId, seasonIds);
-        List<PlayerMatch> competitive = inScope.stream()
-            .filter(match -> match.getMatch().getGameMode() == GameMode.COMPETITIVE)
-            .sorted(Comparator.comparing(match -> match.getMatch().getStartedAt()))
-            .toList();
+        List<PlayerMatch> competitive = competitiveOldestFirst(inScope);
+        // The previous-season comparison reads beyond the selection.
+        List<PlayerMatch> career = everySeason
+            ? competitive
+            : competitiveOldestFirst(
+                playerMatchRepository.findAllByPlayerIdOrderByMatchStartedAtDesc(playerId)
+            );
 
         return new PlayerProgressionResponse(
             evolution(competitive),
@@ -113,8 +118,23 @@ public class DefaultPlayerProgressionQueryService implements PlayerProgressionQu
             hourSlots(competitive),
             PlayerRecordsCalculator.records(competitive, inScope, weekCalendar.zone()),
             mapStatistics(competitive),
-            agentStatistics(competitive)
+            agentStatistics(competitive),
+            RankJourneyCalculator.journey(competitive),
+            ConsistencyCalculator.consistency(competitive, career)
         );
+    }
+
+    /**
+     * Keeps the competitive matches, oldest first.
+     *
+     * @param matches matches in any game mode and order
+     * @return the competitive ones, oldest first
+     */
+    private static List<PlayerMatch> competitiveOldestFirst(List<PlayerMatch> matches) {
+        return matches.stream()
+            .filter(match -> match.getMatch().getGameMode() == GameMode.COMPETITIVE)
+            .sorted(Comparator.comparing(match -> match.getMatch().getStartedAt()))
+            .toList();
     }
 
     /**
@@ -147,13 +167,7 @@ public class DefaultPlayerProgressionQueryService implements PlayerProgressionQu
      * @return one entry per season the player actually played in scope
      */
     private List<PlayerProgressionResponse.SeasonEvolution> evolution(List<PlayerMatch> matches) {
-        return matches.stream()
-            .collect(Collectors.groupingBy(
-                match -> match.getMatch().getSeason().getId(),
-                LinkedHashMap::new,
-                Collectors.toList()
-            ))
-            .values().stream()
+        return SeasonGrouping.bySeason(matches).values().stream()
             .map(this::toSeasonEvolution)
             .toList();
     }

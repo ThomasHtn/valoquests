@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { LucideRocket } from '@lucide/angular';
 
@@ -14,7 +15,7 @@ import { buildTourTrack } from './tour-campaign-track.utils';
  */
 @Component({
   selector: 'app-tour-campaign-track',
-  imports: [TranslatePipe, LucideRocket],
+  imports: [NgOptimizedImage, TranslatePipe, LucideRocket],
   templateUrl: './tour-campaign-track.html',
   styleUrl: './tour-campaign-track.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

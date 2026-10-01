@@ -1,0 +1,115 @@
+<!-- Same anatomy as the leaderboard's week picker: arrows around the trigger, which carries a badge
+     (the episode) and a label (the act). The arrows step one act at a time, so they only work on a
+     single act. -->
+<button
+  (click)="step(1)"
+  [attr.aria-label]="'playerProfile.seasonPicker.previous' | translate"
+  [disabled]="!canGoBack()"
+  class="step focus-ring-inset"
+  type="button"
+>
+  <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
+</button>
+
+<button
+  (click)="toggle()"
+  [attr.aria-controls]="listboxId"
+  [attr.aria-expanded]="isOpen()"
+  [attr.aria-label]="ariaLabel()"
+  aria-haspopup="listbox"
+  class="trigger notch-tr focus-ring-inset [--notch:0.5rem]"
+  type="button"
+>
+  @if (current(); as current) {
+    @if (current.mark) {
+      <span aria-hidden="true" class="mark">{{ current.mark }}</span>
+    }
+    <span class="trigger-span">{{ current.label }}</span>
+    <span class="sr-only">{{ current.fullName }}</span>
+  } @else {
+    <span aria-hidden="true" class="mark mark--none">—</span>
+    <span class="trigger-span">{{ summary() }}</span>
+  }
+  <svg
+    [class.rotate-180]="isOpen()"
+    aria-hidden="true"
+    class="size-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none"
+    lucideChevronDown
+  ></svg>
+</button>
+
+<button
+  (click)="step(-1)"
+  [attr.aria-label]="'playerProfile.seasonPicker.next' | translate"
+  [disabled]="!canGoForward()"
+  class="step focus-ring-inset"
+  type="button"
+>
+  <svg aria-hidden="true" class="size-4" lucideChevronRight></svg>
+</button>
+
+<!-- Every act, newest first, ruled off by episode: the badge names the episode, the label the act. -->
+<div
+  [attr.aria-label]="ariaLabel()"
+  [attr.aria-multiselectable]="multiple() || null"
+  [hidden]="!isOpen()"
+  [id]="listboxId"
+  class="menu-panel listbox"
+  role="listbox"
+>
+  <div class="panel-scroll">
+    @if (!multiple()) {
+      <button
+        (click)="selectAll()"
+        [attr.aria-selected]="selection().length === 0"
+        class="menu-option listbox-option option"
+        role="option"
+        tabindex="-1"
+        type="button"
+      >
+        <span aria-hidden="true" class="mark mark--none">—</span>
+        <span class="option-span">{{ 'playerProfile.filters.allSeasons' | translate }}</span>
+        <span></span>
+      </button>
+      <hr aria-hidden="true" class="rule" />
+    }
+    @for (option of options(); track option.id) {
+      @if (startsGroup($index)) {
+        <hr aria-hidden="true" class="rule" />
+      }
+      <button
+        (click)="select(option)"
+        [attr.aria-label]="option.fullName"
+        [attr.aria-selected]="isSelected(option)"
+        [disabled]="isAtLimit() && !isSelected(option)"
+        class="menu-option listbox-option option disabled:pointer-events-none disabled:opacity-40"
+        role="option"
+        tabindex="-1"
+        type="button"
+      >
+        @if (option.mark) {
+          <span aria-hidden="true" class="mark">{{ option.mark }}</span>
+        } @else {
+          <span aria-hidden="true" class="mark mark--none">—</span>
+        }
+        <span class="option-span">{{ option.label }}</span>
+        <!-- Ticked acts, in multiple mode: the same filled square as the shared multi-select. -->
+        @if (multiple()) {
+          <span
+            [class]="isSelected(option) ? 'bg-brand-500' : 'border border-text-muted/50'"
+            aria-hidden="true"
+            class="size-3 justify-self-end"
+          ></span>
+        } @else {
+          <span></span>
+        }
+      </button>
+    }
+  </div>
+
+  @if (maxSelectionNote() && isAtLimit()) {
+    <p class="border-t border-edge px-4 py-2.5 text-xs text-text-muted">
+      {{ maxSelectionNote() }}
+    </p>
+  }
+</div>

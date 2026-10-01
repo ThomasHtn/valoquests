@@ -2,17 +2,20 @@ import { AfterViewInit, Component, computed, DestroyRef, ElementRef, inject } fr
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
+  LucideBed,
+  LucideCrown,
   LucideFlame,
   LucideHeartPulse,
   LucidePlay,
+  LucideRefreshCw,
   LucideSkull,
   LucideTarget,
+  LucideUsers,
   LucideWheat,
   LucideWrench,
   LucideZap,
 } from '@lucide/angular';
 
-import { WEEKLY_TITLES } from '@core/campaign/campaign.model';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
 import { resolveDifficultyVisual } from '@core/challenges/challenge-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
@@ -26,7 +29,6 @@ import {
   CALIBRATION_FACT_KEYS,
   CAMPAIGN_WEEKS,
   CHALLENGE_WORTH,
-  CONSTANT_KEYS,
   DECAY_LADDER,
   EXAMPLE_OPERATORS,
   EXAMPLE_REFERENCE,
@@ -40,6 +42,8 @@ import {
   SUNDAY_EXAMPLE,
   SUNDAY_TERM_KEYS,
   DIFFICULTY_BANDS,
+  RULE_CONSTANTS,
+  RULE_TITLES,
   WEEK_STEP_KEYS,
 } from './rules.constants';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
@@ -57,11 +61,15 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
   imports: [
     TranslatePipe,
     RouterLink,
+    LucideBed,
+    LucideCrown,
     LucideFlame,
     LucideHeartPulse,
     LucidePlay,
+    LucideRefreshCw,
     LucideSkull,
     LucideTarget,
+    LucideUsers,
     LucideWheat,
     LucideWrench,
     LucideZap,
@@ -108,12 +116,12 @@ export class Rules implements AfterViewInit {
 
   protected readonly calibrationFactKeys = CALIBRATION_FACT_KEYS;
 
-  protected readonly constantKeys = CONSTANT_KEYS;
+  protected readonly constants = RULE_CONSTANTS;
 
   /**
-   * The four titles with their icon and colour, the ranking's own.
+   * The champion and the four weekly titles, with their icon and colour, the ranking's own.
    */
-  protected readonly titles = WEEKLY_TITLES.map((key) => ({ key, ...resolveTitleVisual(key) }));
+  protected readonly titles = RULE_TITLES.map((key) => ({ key, ...resolveTitleVisual(key) }));
 
   /**
    * What each challenge is worth, with the tier's own colour and numeral.

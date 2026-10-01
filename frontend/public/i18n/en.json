@@ -1059,6 +1059,41 @@
         "title": "Best agents",
         "tooltip": "Win rate, ACS and match count for every agent played in competitive over the selected seasons, most played first."
       },
+      "consistency": {
+        "ceilingRule": "Ceiling {{value}}",
+        "empty": "Not enough matches yet: the selection needs at least {{count}} matches with an ACS to measure consistency.",
+        "figures": {
+          "ceiling": "Ceiling",
+          "ceilingDetail": "1 match in 4 above",
+          "floor": "Floor",
+          "floorDetail": "1 match in 4 below",
+          "looser": "Less consistent",
+          "matches": "Matches",
+          "matchesDetail": "across {{count}} acts",
+          "matchesDetailOne": "in 1 act",
+          "median": "Median",
+          "medianDetail": "their typical match",
+          "steady": "As consistent",
+          "tighter": "More consistent",
+          "trend": "Consistency",
+          "trendDetail": "spread {{spread}}, against {{previous}} in {{season}}"
+        },
+        "floorRule": "Floor {{value}}",
+        "tip": {
+          "agent": "Agent",
+          "date": "Date",
+          "map": "Map"
+        },
+        "title": "Consistency",
+        "tooltip": "Each dot is a match from the seasons picked at the top of the page, stacked in its ACS bracket. The orange dots are the middle half of the matches: they fall between the floor and the ceiling. The narrower that zone, the more consistent the player. Across several acts the spread is naturally wider, since ACS moves with lobby level from one act to the next.",
+        "xAxis": "Match ACS",
+        "yAxis": "Matches",
+        "zone": {
+          "above": "Above the ceiling",
+          "below": "Below the floor",
+          "inside": "In their zone"
+        }
+      },
       "empty": "No competitive match over the selected seasons.",
       "error": "Could not load this operator's progression.",
       "evolution": {
@@ -1100,6 +1135,38 @@
           "legs": "Legs"
         },
         "zoneSummary": "{{zone}}: {{value}}."
+      },
+      "rankJourney": {
+        "axisAct": "Act {{act}}",
+        "axisActShort": "A{{act}}",
+        "axisMatch": "Match",
+        "division": "{{sign}}{{count}} division",
+        "divisions": "{{sign}}{{count}} divisions",
+        "empty": "No ranked match in the selection: the journey appears once a first rank is earned.",
+        "figures": {
+          "evolution": "Progress",
+          "final": "Final rank",
+          "lastSeason": "Last act",
+          "peak": "Peak",
+          "since": "since {{season}}",
+          "sinceStart": "since the start of the act"
+        },
+        "peak": "Peak",
+        "stable": "Steady",
+        "tip": {
+          "afterMatch": "Rank after this match",
+          "delta": "Vs previous act",
+          "deltaMatch": "Vs previous match",
+          "finalTier": "Rank at act end",
+          "match": "Match {{index}} of {{total}}",
+          "matches": "Matches",
+          "range": "Range",
+          "to": "to",
+          "wins": "Wins",
+          "winsValue": "{{wins}} ({{rate}})"
+        },
+        "title": "Rank journey",
+        "tooltip": "Rank over the seasons picked at the top of the page. Across several acts each point is the rank an act ended on, and the grey bar behind it spans the lowest to the highest rank held during the act. On a single act the line follows the rank match by match."
       },
       "records": {
         "empty": "No record to show yet.",
@@ -1183,6 +1250,10 @@
       "title": "Operator not found",
       "text": "No squad operator carries this identifier. The link may be incomplete, or the operator is no longer part of the expedition.",
       "back": "Back to the squad"
+    },
+    "seasonPicker": {
+      "previous": "Previous act",
+      "next": "Next act"
     }
   },
   "players": {
@@ -1422,84 +1493,36 @@
           "formula": "1 point per wounded brought home",
           "text": "The weekly ranking {points} adds up guardian damage {damage}, multipliers included, and the wounded of validated challenges. Against 5,300 damage, challenges break ties, they do not make the ranking."
         },
-        "titlesLabel": "Four titles every week, honorary, never on a tie"
+        "titlesLabel": "The week's titles",
+        "titlesNote": "Honorary. One title per operator, none on a tie. The champion only exists during a campaign."
       },
       "constants": {
         "title": "The constants",
-        "statement": "Every value of the game, in one table",
-        "description": "As the code applies them. Checked by simulation: a squad calibrated on itself beats 8 guardians out of 10, and the result per operator is identical from 2 to 20 operators.",
+        "statement": "The game values, at a glance",
         "items": {
+          "syncInterval": {
+            "label": "Matches read",
+            "value": "every 30 min"
+          },
           "growth": {
-            "label": "Damage for 1 inhabitant",
-            "value": "28"
+            "label": "Base growth",
+            "value": "28 damage = 1 inhabitant"
           },
           "upkeep": {
-            "label": "Food eaten per inhabitant per day",
-            "value": "0.008"
-          },
-          "famine": {
-            "label": "Daily loss under famine",
-            "value": "5 % of the unfed share, only if the reserve is empty"
-          },
-          "guardianSize": {
-            "label": "Guardian size",
-            "value": "reference × weight × 0.78 × active operators"
-          },
-          "groupSize": {
-            "label": "Group size",
-            "value": "reference × weight × 0.050 × active operators × progression"
-          },
-          "progression": {
-            "label": "Reward progression",
-            "value": "+4 % per week, linear"
-          },
-          "challengePoints": {
-            "label": "Ranking points of a challenge",
-            "value": "1 per wounded brought home"
+            "label": "Meals",
+            "value": "0.008 food per inhabitant per evening"
           },
           "componentsPerRescue": {
-            "label": "Components to reach 1 wounded",
-            "value": "14, spent only on the wounded extracted"
+            "label": "Seat aboard",
+            "value": "14 components per wounded brought home"
           },
           "foodPerRescue": {
-            "label": "Food to settle 1 wounded",
-            "value": "12, spent only on the wounded extracted"
+            "label": "Bed at the base",
+            "value": "12 food per wounded brought home"
           },
-          "protectedFood": {
-            "label": "Protected food reserve",
-            "value": "7 evenings of meals"
-          },
-          "challengeWounded": {
-            "label": "Challenges' wounded",
-            "value": "taken from the group, leave first, no resources nor breach"
-          },
-          "challengeDamage": {
-            "label": "Damage of a challenge to the guardian",
-            "value": "none"
-          },
-          "guardianLoss": {
-            "label": "Base losses if the guardian survives",
-            "value": "base × (1 − breach)² × 35 %"
-          },
-          "challengeSurvivors": {
-            "label": "Wounded brought home by a challenge",
-            "value": "reference × weight ÷ 1,000, per operator who validates"
-          },
-          "syncInterval": {
-            "label": "Synchronization interval",
-            "value": "30 minutes"
-          },
-          "calibrationWindow": {
-            "label": "Calibration window",
-            "value": "3 months, shrunk one month at a time while an operator is not covered"
-          },
-          "reference": {
-            "label": "Reference",
-            "value": "mean of weekly means per active operator, empty weeks at zero, floor 2,000"
-          },
-          "duration": {
-            "label": "Campaign duration",
-            "value": "10 weeks"
+          "famine": {
+            "label": "Famine, empty reserve",
+            "value": "5 % of the unfed per evening"
           }
         }
       }
@@ -1510,7 +1533,10 @@
   },
   "scrollTop": "Back to the top of the page",
   "seasons": {
+    "actOnly": "Act {{act}}",
     "episode": "Ep. {{episode}} · Act {{act}}",
+    "episodeMark": "E{{episode}}",
+    "episodeOnly": "Ep. {{episode}}",
     "year": "{{year}} · Act {{act}}"
   },
   "sidebar": {

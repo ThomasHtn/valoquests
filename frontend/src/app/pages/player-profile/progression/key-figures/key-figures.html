@@ -1,0 +1,57 @@
+<!-- One column on a phone, as many as fit from there: four figures stay on one row on a desktop. -->
+<ul
+  class="grid grid-cols-1 gap-x-6 gap-y-4 border-t border-edge pt-4 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]"
+>
+  @for (figure of figures(); track figure.caption) {
+    <li class="flex min-w-0 items-center gap-3">
+      @if (figure.rankIconUrl) {
+        <img [ngSrc]="figure.rankIconUrl" alt="" class="size-10 shrink-0" height="40" width="40" />
+      } @else {
+        <span
+          [class]="toneClasses[figure.tone ?? 'brand']"
+          aria-hidden="true"
+          class="grid size-10 shrink-0 place-items-center"
+        >
+          @switch (figure.icon) {
+            @case ('trendUp') {
+              <svg class="size-5" lucideTrendingUp></svg>
+            }
+            @case ('trendDown') {
+              <svg class="size-5" lucideTrendingDown></svg>
+            }
+            @case ('floor') {
+              <svg class="size-5" lucideArrowDownToLine></svg>
+            }
+            @case ('median') {
+              <svg class="size-5" lucideGitCommitHorizontal></svg>
+            }
+            @case ('ceiling') {
+              <svg class="size-5" lucideArrowUpToLine></svg>
+            }
+            @case ('tighter') {
+              <svg class="size-5" lucideChevronsDownUp></svg>
+            }
+            @case ('looser') {
+              <svg class="size-5" lucideChevronsUpDown></svg>
+            }
+            @case ('matches') {
+              <svg class="size-5" lucideSwords></svg>
+            }
+            @default {
+              <svg class="size-5" lucideMinus></svg>
+            }
+          }
+        </span>
+      }
+      <span class="flex min-w-0 flex-col gap-1">
+        <span class="label-caption text-2xs text-text-muted">{{ figure.caption }}</span>
+        <span
+          [class]="figure.valueClass ?? 'text-text-primary'"
+          class="font-display text-lg leading-none font-semibold tabular-nums"
+          >{{ figure.value }}</span
+        >
+        <span class="text-sm leading-tight text-text-muted">{{ figure.detail }}</span>
+      </span>
+    </li>
+  }
+</ul>

@@ -22,6 +22,7 @@ import {
   resolveCssColor,
 } from './chart-theme.utils';
 import { ChartTheme } from './chart-theme.model';
+import { createCrosshairPlugin } from './chart-plugins.utils';
 import { ChartSeries } from './chart.model';
 
 /**
@@ -261,7 +262,7 @@ export class LineChart {
           },
         },
       },
-      plugins: [LineChart.crosshair(theme), this.peakMarker(theme)],
+      plugins: [createCrosshairPlugin(theme), this.peakMarker(theme)],
     };
   }
 
@@ -318,37 +319,6 @@ export class LineChart {
         ctx.textAlign = 'left';
         ctx.textBaseline = 'bottom';
         ctx.fillText(label, chartArea.left + 4, Math.max(chartArea.top + 12, point.y - 4));
-        ctx.restore();
-      },
-    };
-  }
-
-  /**
-   * Builds the vertical rule following the pointer.
-   *
-   * Chart.js has no crosshair of its own, and an indexed tooltip without one leaves the reader
-   * guessing which abscissa the figures belong to on a chart hundreds of points wide.
-   *
-   * @param theme resolved chart palette
-   * @returns the crosshair plugin, scoped to one chart instance
-   */
-  private static crosshair(theme: ChartTheme): Plugin<'line'> {
-    return {
-      id: 'crosshair',
-      afterDatasetsDraw(chart) {
-        const active = chart.tooltip?.getActiveElements() ?? [];
-        if (active.length === 0) {
-          return;
-        }
-
-        const { ctx, chartArea } = chart;
-        ctx.save();
-        ctx.beginPath();
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = theme.grid;
-        ctx.moveTo(active[0].element.x, chartArea.top);
-        ctx.lineTo(active[0].element.x, chartArea.bottom);
-        ctx.stroke();
         ctx.restore();
       },
     };

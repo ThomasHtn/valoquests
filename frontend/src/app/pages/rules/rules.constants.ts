@@ -1,5 +1,11 @@
-import { CampaignDifficulty, GuardianCategory } from '@core/campaign/campaign.model';
+import {
+  CampaignDifficulty,
+  GuardianCategory,
+  TitleKey,
+  WEEKLY_TITLES,
+} from '@core/campaign/campaign.model';
 import { ChallengeDifficulty } from '@core/challenges/challenge.model';
+import { RuleConstant } from './rules.model';
 
 /**
  * The figures the rules page quotes, copied from `docs/GAMEPLAY.md`.
@@ -242,25 +248,19 @@ export const CHALLENGE_WORTH: readonly ChallengeWorth[] = [
 ];
 
 /**
- * The closing table, one key per constant of the document.
+ * The titles a week hands out, the champion first since it outranks the four others.
  */
-export const CONSTANT_KEYS: readonly string[] = [
-  'growth',
-  'upkeep',
-  'famine',
-  'guardianSize',
-  'groupSize',
-  'progression',
-  'challengePoints',
-  'componentsPerRescue',
-  'foodPerRescue',
-  'protectedFood',
-  'challengeWounded',
-  'challengeDamage',
-  'guardianLoss',
-  'challengeSurvivors',
-  'syncInterval',
-  'calibrationWindow',
-  'reference',
-  'duration',
+export const RULE_TITLES: readonly TitleKey[] = ['CHAMPION', ...WEEKLY_TITLES];
+
+/**
+ * The closing sheet: the constants a player can picture, in reading order. The formulas behind
+ * the guardian, the groups and the challenges stay in their own sections.
+ */
+export const RULE_CONSTANTS: readonly RuleConstant[] = [
+  { key: 'syncInterval', icon: 'sync', tone: 'text-brand-500' },
+  { key: 'growth', icon: 'base', tone: 'text-brand-500' },
+  { key: 'upkeep', icon: 'food', tone: 'text-accent-green' },
+  { key: 'componentsPerRescue', icon: 'components', tone: 'text-accent-cyan' },
+  { key: 'foodPerRescue', icon: 'bed', tone: 'text-accent-green' },
+  { key: 'famine', icon: 'food', tone: 'text-accent-green' },
 ];

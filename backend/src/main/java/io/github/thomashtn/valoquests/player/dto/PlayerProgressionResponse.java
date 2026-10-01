@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.player.dto;
 
+import io.github.thomashtn.valoquests.match.model.MatchResult;
 import io.github.thomashtn.valoquests.player.model.CompetitiveTier;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
@@ -25,6 +26,9 @@ import java.util.List;
  * @param records   the player's personal bests over the filtered set
  * @param maps      aggregated statistics per map, most-played first
  * @param agents    aggregated statistics per agent, most-played first
+ * @param rankJourney  how every selected season ended on the ladder, oldest first
+ * @param consistency  how steady the combat score was over the selection, or {@code null} when it
+ *     holds too few matches
  */
 @Schema(description = "Aggregated analytics backing the player profile's progression view.")
 public record PlayerProgressionResponse(
@@ -35,7 +39,9 @@ public record PlayerProgressionResponse(
     List<HourSlotPerformance> hourSlots,
     PersonalRecords records,
     List<MapStatisticsResponse> maps,
-    List<AgentStatisticsResponse> agents
+    List<AgentStatisticsResponse> agents,
+    List<SeasonRank> rankJourney,
+    Consistency consistency
 ) {
 
     /**
@@ -214,6 +220,99 @@ public record PlayerProgressionResponse(
     }
 
     /**
+     * Exposes where one season left the player on the competitive ladder.
+     *
+     * @param seasonId      internal season identifier
+     * @param seasonName    human-readable season name
+     * @param active        whether this is the season currently in progress
+     * @param finalTier     rank held after the season's last ranked match
+     * @param highestTier   highest rank held during the season
+     * @param lowestTier    lowest rank held during the season, placements excluded
+     * @param matchesPlayed competitive matches of the season, placements included
+     * @param wins          competitive matches of the season won
+     * @param rankedTiers   rank held after each ranked match of the season, oldest first, so a
+     *     single-season selection can still be drawn match by match
+     */
+    public record SeasonRank(
+
+        Long seasonId,
+        String seasonName,
+        boolean active,
+        CompetitiveTier finalTier,
+        CompetitiveTier highestTier,
+        CompetitiveTier lowestTier,
+        long matchesPlayed,
+        long wins,
+        List<CompetitiveTier> rankedTiers
+    ) {
+        /**
+         * Creates an immutable season-rank entry.
+         */
+        public SeasonRank {
+            rankedTiers = List.copyOf(rankedTiers);
+        }
+    }
+
+    /**
+     * Exposes how steady the combat score was over the selected seasons.
+     *
+     * <p>The floor and the ceiling bound the middle half of the matches, so their gap is a spread a
+     * single freak match cannot stretch. Pooling several seasons widens it as a rule: lobbies change
+     * with the rank, and the combat score moves with them from one act to the next.
+     *
+     * @param floor              first quartile of the combat scores
+     * @param median             median combat score
+     * @param ceiling            third quartile of the combat scores
+     * @param spread             gap between ceiling and floor
+     * @param seasonCount        seasons the matches come from
+     * @param previousSeasonName for a single-season selection, the previous season holding enough
+     *     matches; {@code null} otherwise
+     * @param previousSpread     that season's spread, or {@code null}
+     * @param matches            every match with a reported combat score, oldest first
+     */
+    public record Consistency(
+
+        BigDecimal floor,
+        BigDecimal median,
+        BigDecimal ceiling,
+        BigDecimal spread,
+        int seasonCount,
+        String previousSeasonName,
+        BigDecimal previousSpread,
+        List<ConsistencyMatch> matches
+    ) {
+        /**
+         * Creates an immutable consistency entry.
+         */
+        public Consistency {
+            matches = List.copyOf(matches);
+        }
+    }
+
+    /**
+     * Exposes one match plotted on the consistency chart.
+     *
+     * @param startedAt  when the match started, in UTC
+     * @param acs        that match's average combat score
+     * @param result     outcome for the player's team
+     * @param allyScore  rounds won by the player's team, or {@code null} when unreported
+     * @param enemyScore rounds won by the opposing team, or {@code null} when unreported
+     * @param mapName    map the match was played on
+     * @param agentName  agent the player picked
+     */
+    public record ConsistencyMatch(
+
+        Instant startedAt,
+        BigDecimal acs,
+        MatchResult result,
+        Integer allyScore,
+        Integer enemyScore,
+        String mapName,
+        String agentName
+    ) {
+    }
+
+    /**
      * Creates an immutable progression response.
      */
     public PlayerProgressionResponse {
@@ -222,5 +321,6 @@ public record PlayerProgressionResponse(
         hourSlots = List.copyOf(hourSlots);
         maps = List.copyOf(maps);
         agents = List.copyOf(agents);
+        rankJourney = List.copyOf(rankJourney);
     }
 }

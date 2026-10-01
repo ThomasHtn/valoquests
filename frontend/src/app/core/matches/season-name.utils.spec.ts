@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatSeasonName } from './season-name.utils';
+import { formatSeasonName, splitSeasonName } from './season-name.utils';
 
 /**
  * Stands in for the translation service, echoing the key and its parameters so the assertions read
@@ -23,5 +23,23 @@ describe('formatSeasonName', () => {
 
   it('returns an unrecognized code untouched', () => {
     expect(formatSeasonName('closed-beta', translate)).toBe('closed-beta');
+  });
+});
+
+describe('splitSeasonName', () => {
+  it('splits an episode-era code into its episode and act', () => {
+    expect(splitSeasonName('e11a3', translate)).toEqual({
+      era: 'seasons.episodeOnly(episode=11)',
+      eraMark: 'seasons.episodeMark(episode=11)',
+      act: 3,
+    });
+  });
+
+  it('splits a year-era code into its year and act', () => {
+    expect(splitSeasonName('v26a1', translate)).toEqual({ era: '2026', eraMark: '2026', act: 1 });
+  });
+
+  it('returns null for an unrecognized code', () => {
+    expect(splitSeasonName('closed-beta', translate)).toBeNull();
   });
 });

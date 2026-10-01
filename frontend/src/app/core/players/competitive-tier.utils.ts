@@ -149,3 +149,30 @@ export function resolveCompetitiveTierIconUrl(tier: CompetitiveTier): string | n
   const filename = group.number ? `${group.key}-${group.number}` : group.key;
   return `/ranks/${filename}.svg`;
 }
+
+/**
+ * Resolves the CSS custom property holding a tier's colour, for drawings that cannot take a
+ * Tailwind class, such as a chart canvas.
+ *
+ * Derived from the same class map as {@link resolveCompetitiveTierVisual}, so a rank reads in one
+ * colour on a badge and on a chart.
+ *
+ * @param tier - The competitive tier.
+ * @returns The custom property name, e.g. `--color-accent-gold`.
+ */
+export function resolveCompetitiveTierColorVariable(tier: CompetitiveTier): string {
+  const group = COMPETITIVE_TIER_GROUPS[tier];
+  const colorClass =
+    TIER_GROUP_COLOR_CLASSES[group?.key ?? 'unranked'] ?? TIER_GROUP_COLOR_CLASSES['unranked'];
+  return `--color-${colorClass.replace(/^text-/, '')}`;
+}
+
+/**
+ * Resolves the tier at a position of the ladder, the inverse of {@link resolveTierOrdinal}.
+ *
+ * @param ordinal - 0-based position, from lowest to highest.
+ * @returns The tier, or `null` past either end of the ladder.
+ */
+export function resolveTierFromOrdinal(ordinal: number): CompetitiveTier | null {
+  return COMPETITIVE_TIER_ORDER[ordinal] ?? null;
+}

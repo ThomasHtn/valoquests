@@ -10,6 +10,7 @@ import {
   LineController,
   LineElement,
   PointElement,
+  ScatterController,
   Tooltip,
   TooltipOptions,
 } from 'chart.js';
@@ -42,6 +43,7 @@ export function registerChartComponents(): void {
     LineController,
     BarController,
     DoughnutController,
+    ScatterController,
     LineElement,
     PointElement,
     BarElement,

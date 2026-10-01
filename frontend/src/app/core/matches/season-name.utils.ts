@@ -1,3 +1,5 @@
+import { SeasonParts } from './season-name.model';
+
 /**
  * Riot's episode-era season code, such as `e10a3` (episode 10, act 3).
  */
@@ -34,4 +36,33 @@ export function formatSeasonName(
   }
 
   return name;
+}
+
+/**
+ * Splits a raw season code into its era and its act, for labels too narrow for the full name.
+ *
+ * @param name - The raw season name, as returned by the API.
+ * @param translate - Dictionary lookup, taken as a parameter so this stays a pure function.
+ * @returns The era and act, or `null` when the code matches no known era.
+ */
+export function splitSeasonName(
+  name: string,
+  translate: (key: string, params?: Readonly<Record<string, string | number>>) => string,
+): SeasonParts | null {
+  const episode = EPISODE_SEASON_PATTERN.exec(name);
+  if (episode) {
+    return {
+      era: translate('seasons.episodeOnly', { episode: Number(episode[1]) }),
+      eraMark: translate('seasons.episodeMark', { episode: Number(episode[1]) }),
+      act: Number(episode[2]),
+    };
+  }
+
+  const year = YEAR_SEASON_PATTERN.exec(name);
+  if (year) {
+    const era = String(2000 + Number(year[1]));
+    return { era, eraMark: era, act: Number(year[2]) };
+  }
+
+  return null;
 }
