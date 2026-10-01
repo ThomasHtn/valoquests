@@ -380,7 +380,6 @@
       "pin": "Star {{name}}",
       "unpin": "Unstar {{name}}",
       "pinHint": "Tap a player to star them: they show first in every challenge.",
-      "pinLead": "Star: click a player",
       "squad": "The squad",
       "markTip": "{{name}}: {{tip}}",
       "markDetail": {

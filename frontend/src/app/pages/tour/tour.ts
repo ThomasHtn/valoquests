@@ -53,7 +53,7 @@ import { buildTourDailyRow, buildTourWeek, endOfDay, startOfWeek } from './tour.
  * the reference for the numbers, and the closing step points there.
  *
  * Like `Landing`, it renders outside `Shell`: navigation chrome would invite the visitor to
- * wander off mid-briefing. `tourEntryGuard` keeps it to a single showing, with the `?replay`
+ * wander off mid-briefing. `tourEntryGuard` keeps it to a single showing, with the replay
  * escape hatch behind the rules page's replay link.
  *
  * The illustrations are the pages' own components, fed a fixed sample campaign: the live one is

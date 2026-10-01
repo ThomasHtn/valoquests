@@ -380,7 +380,6 @@
       "pin": "Mettre {{name}} en favori",
       "unpin": "Retirer {{name}} des favoris",
       "pinHint": "Touchez un joueur pour le mettre en favori : il passe en premier dans chaque défi.",
-      "pinLead": "Favori : cliquez sur un joueur",
       "squad": "L'escouade",
       "markTip": "{{name}} : {{tip}}",
       "markDetail": {

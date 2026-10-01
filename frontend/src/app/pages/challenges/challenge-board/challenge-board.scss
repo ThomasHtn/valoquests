@@ -83,18 +83,6 @@ thead .lead {
   color: var(--color-text-muted);
 }
 
-/* How to star, on one line under the week: the operator headers show their star on hover only. */
-.pin-hint {
-  display: block;
-  margin-top: 0.25rem;
-  overflow: hidden;
-  font-size: 0.8125rem;
-  line-height: 1.3;
-  color: var(--color-text-muted);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* The tile lights as a whole on hover, whatever height the row gives it. */
 thead .op:hover {
   background-color: rgb(236 232 225 / 12%);

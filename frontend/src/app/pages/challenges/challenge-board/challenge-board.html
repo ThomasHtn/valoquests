@@ -48,23 +48,18 @@
         <!-- The column is still named for assistive tech; the eye gets the week it covers. -->
         <span class="sr-only">{{ 'challenges.board.challenge' | translate }}</span>
         <span aria-hidden="true" class="period">{{ period() }}</span>
-        <span aria-hidden="true" class="pin-hint" id="board-pin-hint">{{
-          'challenges.board.pinLead' | translate
-        }}</span>
       </th>
       @for (operator of operators(); track operator.playerId; let i = $index) {
         @let label =
           (operator.pinned ? 'challenges.board.unpin' : 'challenges.board.pin')
             | translate: { name: operator.name };
         <!-- The whole tile stars the operator: the star shows on hover and stays filled once starred.
-             The name stays the button's, and the column's, accessible name; the lead's hint
-             describes the press. -->
+             The name stays the button's, and the column's, accessible name; the title describes the press. -->
         <th [attr.data-column]="i" [style.--i]="i" class="op slide" scope="col">
           <button
             (click)="pinOperator(operator.playerId)"
             [attr.aria-pressed]="operator.pinned"
             [attr.title]="label"
-            aria-describedby="board-pin-hint"
             class="op-btn"
             type="button"
           >

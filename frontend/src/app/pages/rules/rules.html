@@ -1,10 +1,10 @@
 <!-- Context bar: the trailing edge carries the way back into the guided tour, this page's one
-     action. The replay query parameter is what lets the tour through `tourEntryGuard`. Icon-only
+     action. The replay navigation state is what lets the tour through `tourEntryGuard`. Icon-only
      below `sm`. -->
 <app-page-header [heading]="'rules.header.heading' | translate">
   <a
     [attr.aria-label]="'rules.replayTour' | translate"
-    [queryParams]="{ replay: '' }"
+    [state]="{ replay: true }"
     class="focus-ring label-caption flex h-10 shrink-0 cursor-pointer items-center gap-2 px-2 text-text-secondary transition-colors hover:text-text-primary motion-safe:active:scale-[0.96]"
     routerLink="/tour"
   >
