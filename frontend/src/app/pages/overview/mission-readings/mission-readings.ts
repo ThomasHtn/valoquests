@@ -11,11 +11,13 @@ import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
 import { Contribution, Mission, SundayStakes } from '../overview.model';
 import { ContributionTip } from './contribution-tip/contribution-tip';
+import { FallForecast } from './fall-forecast/fall-forecast';
+import { GuardianFall } from './fall-forecast/fall-forecast.model';
 import { Strike } from './mission-readings.model';
 
 /**
- * The week's mission: the clock, the squad against the guardian, then what Sunday midnight can
- * still add or take.
+ * The week's mission: the clock, the squad against the guardian, what Sunday midnight can still
+ * add or take, then when the guardian falls.
  *
  * The duel's whole ground is the track the two camps share: violet up to the breakthrough, cut into
  * one segment per operator and weighted by the damage each dealt, then the guardian's red. Once the
@@ -34,6 +36,7 @@ import { Strike } from './mission-readings.model';
     InView,
     Tooltip,
     ContributionTip,
+    FallForecast,
     LucideCheck,
     LucideSkull,
     LucideSwords,
@@ -58,6 +61,11 @@ export class MissionReadings {
    * Sunday's two outcomes, `null` once the guardian is down or while the forecast is unresolved.
    */
   public readonly stakes = input<SundayStakes | null>(null);
+
+  /**
+   * The guardian's descent and where the pace takes it, `null` before the first hit.
+   */
+  public readonly fall = input<GuardianFall | null>(null);
 
   /**
    * Whether to open on the week's clock. The tour drops it on a phone, where the two other

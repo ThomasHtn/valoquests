@@ -1,0 +1,340 @@
+/*
+ * The fold row sits on the stakes' sunken ground; the chart under it runs edge to edge on its own
+ * tinted columns, its ticks back on the row's ground, in the manner of the patch notes'
+ * performance chart: flat tints, each curve in its column's colour, one white pin, three ticks.
+ */
+.fall {
+  --squad: var(--color-accent-violet);
+  --squad-light: color-mix(in srgb, var(--color-accent-violet) 45%, white);
+  --foe: var(--color-accent-red);
+  --foe-light: color-mix(in srgb, var(--color-accent-red) 40%, white);
+  --past: var(--color-accent-blue);
+  --past-light: color-mix(in srgb, var(--color-accent-blue) 70%, white);
+  --tone: var(--squad-light);
+
+  display: block;
+  border-top: 1px solid var(--color-edge);
+  background: rgb(4 10 15 / 52%);
+}
+
+.fall[data-outcome='short'] {
+  --tone: var(--foe-light);
+}
+
+/* ---------- The fold row ---------- */
+
+.fall-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.5rem 1.05rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out-quart);
+}
+
+.fall-head:hover {
+  background: rgb(236 232 225 / 3%);
+}
+
+.fall-text {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.fall-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-text-secondary);
+}
+
+.fall-key-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--color-brand-400);
+}
+
+.fall-verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.6rem;
+}
+
+.fall-verdict b {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--tone);
+}
+
+.fall-verdict span {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.fall-chevron {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--color-edge-strong);
+  color: var(--color-text-secondary);
+  transition:
+    border-color var(--duration-fast) var(--ease-out-quart),
+    color var(--duration-fast) var(--ease-out-quart);
+}
+
+.fall-head:hover .fall-chevron {
+  border-color: var(--color-brand-500);
+  color: var(--color-brand-400);
+}
+
+.fall-chevron-icon {
+  width: 1rem;
+  height: 1rem;
+  transition: rotate 0.3s var(--ease-out-quart);
+}
+
+.fall-head[aria-expanded='true'] .fall-chevron-icon {
+  rotate: 180deg;
+}
+
+/* ---------- The unfolded chart ---------- */
+
+.fall-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s var(--ease-out-quart);
+}
+
+.fall-body.is-open {
+  grid-template-rows: 1fr;
+}
+
+.fall-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fall-panel {
+  position: relative;
+  padding-bottom: 0.8rem;
+}
+
+.fall-svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.fall-svg text {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  fill: var(--color-text-muted);
+}
+
+.fall-zone--past {
+  fill: color-mix(in srgb, var(--past) 8%, var(--color-surface-950));
+}
+
+.fall-zone--ahead {
+  fill: color-mix(in srgb, var(--squad) 12%, var(--color-surface-950));
+}
+
+.fall-zone--short {
+  fill: color-mix(in srgb, var(--foe) 9%, var(--color-surface-950));
+}
+
+.fall-zone--spare {
+  fill: color-mix(in srgb, var(--color-accent-gold) 10%, var(--color-surface-950));
+}
+
+.fall-area--past {
+  fill: color-mix(in srgb, var(--past) 24%, var(--color-surface-950));
+}
+
+.fall-area--ahead {
+  fill: color-mix(in srgb, var(--squad) 26%, var(--color-surface-950));
+}
+
+.fall-area--short {
+  fill: color-mix(in srgb, var(--foe) 20%, var(--color-surface-950));
+}
+
+.fall-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fall-line--past {
+  stroke: var(--past-light);
+}
+
+.fall-line--dashed {
+  stroke-dasharray: 6 5;
+}
+
+.fall-line--ahead {
+  stroke: var(--squad-light);
+}
+
+.fall-line--short {
+  stroke: var(--foe-light);
+}
+
+.fall-post {
+  stroke: var(--color-text-secondary);
+  stroke-width: 1;
+  stroke-dasharray: 5 5;
+}
+
+.fall-stem {
+  stroke: var(--color-text-primary);
+  stroke-width: 1.5;
+  opacity: 0.45;
+}
+
+.fall-pin {
+  fill: var(--color-text-primary);
+  stroke: var(--color-surface-950);
+  stroke-width: 2;
+}
+
+.fall-diamond,
+.fall-kill {
+  fill: var(--color-brand-400);
+  stroke: var(--color-surface-950);
+  stroke-width: 2;
+}
+
+.fall-kill-check {
+  fill: none;
+  stroke: var(--color-surface-950);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fall-svg .fall-value {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  fill: var(--color-text-primary);
+}
+
+.fall-svg .fall-value--short {
+  fill: var(--foe-light);
+}
+
+.fall-svg .fall-mark {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--color-brand-400);
+}
+
+.fall-svg .fall-tick {
+  font-size: 13px;
+  fill: var(--color-text-secondary);
+}
+
+.fall-cross {
+  stroke: var(--color-text-secondary);
+  stroke-width: 1;
+}
+
+.fall-hit {
+  fill: transparent;
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+/* Beside the crosshair, flipped to its left past the middle so it never leaves the panel. */
+.fall-tip {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--color-edge-strong);
+  background: var(--color-surface-sunken);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+  transform: translate(var(--tip-x, 12px), var(--tip-y, calc(-100% - 8px)));
+}
+
+.fall-tip--left {
+  --tip-x: calc(-100% - 12px);
+}
+
+/* Near the top it would be clipped by the fold: it drops under the pointer instead. */
+.fall-tip--below {
+  --tip-y: 12px;
+}
+
+.fall-tip b {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Unfolding draws the played curve, then lets the projection in. */
+@media (prefers-reduced-motion: no-preference) {
+  .fall-body.is-open .fall-line--past {
+    stroke-dasharray: 1;
+    animation: fall-draw 0.7s var(--ease-out-quart) 0.1s both;
+  }
+
+  .fall-body.is-open .fall-projection {
+    animation: fall-fade 0.45s ease-out 0.6s both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fall-head,
+  .fall-chevron,
+  .fall-chevron-icon,
+  .fall-body {
+    transition: none;
+  }
+}
+
+@media (width < 40rem) {
+  .fall-head {
+    padding: 1rem 1.1rem;
+  }
+
+  /* Literal size, as the stakes' keys: Tailwind only emits theme variables a utility uses. */
+  .fall-key {
+    font-size: 0.5625rem;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+}
+
+@keyframes fall-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes fall-fade {
+  from {
+    opacity: 0;
+  }
+}

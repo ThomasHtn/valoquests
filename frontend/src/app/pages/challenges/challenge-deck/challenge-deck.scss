@@ -53,18 +53,6 @@
   white-space: nowrap;
 }
 
-.sq-done {
-  font-family: var(--font-display);
-  font-size: 0.9375rem;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--color-text-primary);
-}
-
-.sq-done span {
-  color: var(--color-text-muted);
-}
-
 /* The pinned operator only moves first; this small star is its one mark. */
 .sq-star {
   position: absolute;

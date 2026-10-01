@@ -335,21 +335,6 @@ export interface MarkDetail {
    * The gap, unformatted, which picks the plural of its caption.
    */
   readonly gapCount: number;
-
-  /**
-   * Share of the gauge filled up to the target, in percent.
-   */
-  readonly fill: number;
-
-  /**
-   * Share of the gauge past the target, in percent; zero unless the target is exceeded.
-   */
-  readonly over: number;
-
-  /**
-   * Where the target sits along the gauge, in percent.
-   */
-  readonly targetAt: number;
 }
 
 /**
@@ -382,16 +367,6 @@ export interface BoardRow extends ChallengeCard {
  */
 export interface BoardOperator extends ChallengeOperator {
   /**
-   * Weekly challenges validated.
-   */
-  readonly weeklyDone: number;
-
-  /**
-   * Weekly challenges drawn.
-   */
-  readonly weeklyTotal: number;
-
-  /**
    * What the operator's validations earned this week, dailies included: wounded while a campaign
    * runs, ranking points otherwise.
    */
@@ -409,21 +384,16 @@ export interface BoardOperator extends ChallengeOperator {
 }
 
 /**
- * One weekly challenge on an operator's footer shelf: a hexagon lit in its colour once validated.
+ * One stretch of a challenge's rule: plain words, or a number ("3", "25 000").
  */
-export interface ShelfSlot {
+export interface RulePart {
   /**
-   * Identity of the challenge's row, for tracking.
+   * The text of the stretch, as written.
    */
-  readonly key: string;
+  readonly text: string;
 
   /**
-   * Accent colour of the challenge.
+   * Whether the stretch is a number, which the board sets in bold.
    */
-  readonly tone: string;
-
-  /**
-   * Whether the operator validated it.
-   */
-  readonly done: boolean;
+  readonly number: boolean;
 }

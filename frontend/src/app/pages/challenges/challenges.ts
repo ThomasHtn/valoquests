@@ -293,8 +293,6 @@ export class Challenges {
       ].join(', ');
       return {
         ...operator,
-        weeklyDone,
-        weeklyTotal: current.challenges.length,
         reward,
         pinned: operator.playerId === this.pinned(),
         summary,

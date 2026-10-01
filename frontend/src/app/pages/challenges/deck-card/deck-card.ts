@@ -30,11 +30,6 @@ export class DeckCard {
   public readonly row = input.required<BoardRow>();
 
   /**
-   * Whether a daily shows its countdown on the key line.
-   */
-  public readonly clock = input(true);
-
-  /**
    * Whether a line not started shows its figures (`0/3`) rather than a dash.
    */
   public readonly idleFigures = input(false);

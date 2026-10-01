@@ -300,6 +300,11 @@ export interface CampaignWeek {
   readonly damageDealt: number;
 
   /**
+   * Damage dealt each replayed day of the week, Monday first; shorter while the week is played.
+   */
+  readonly dailyDamage: readonly number[];
+
+  /**
    * Damage dealt over hit points, capped at 100.
    */
   readonly progressPercent: number;

@@ -18,9 +18,6 @@
       >
         <app-avatar [src]="operator.portrait" size="sm" />
         <span aria-hidden="true" class="sq-name">{{ operator.name }}</span>
-        <b aria-hidden="true" class="sq-done tabular-nums"
-          >{{ operator.weeklyDone }}<span>/{{ operator.weeklyTotal }}</span></b
-        >
         @if (operator.pinned) {
           <svg aria-hidden="true" class="sq-star" lucideStar></svg>
         }

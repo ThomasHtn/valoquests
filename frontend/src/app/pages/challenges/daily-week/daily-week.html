@@ -5,6 +5,7 @@
       [appTooltip]="day.tip"
       [attr.aria-label]="day.weekday + ' ' + day.date + ', ' + day.tip"
       [attr.aria-pressed]="day.drawn ? selected() === day.index : null"
+      [class.day--hit]="day.drawn && day.doneCount > 0"
       [class.day--picked]="selected() === day.index"
       [class]="'day day--' + day.state"
       [disabled]="!day.drawn"
@@ -12,19 +13,21 @@
       type="button"
     >
       <span aria-hidden="true" class="day-name">
-        @if (initials()) {
+        @if (initials() || slim()) {
           {{ day.weekday.charAt(0) }}
         } @else {
           {{ day.weekday }} {{ day.date }}
         }
       </span>
-      <span aria-hidden="true" class="day-score tabular-nums">
-        @if (day.drawn) {
-          {{ day.doneCount }}/{{ day.total }}
-        } @else {
-          —
-        }
-      </span>
+      @if (!slim()) {
+        <span aria-hidden="true" class="day-score tabular-nums">
+          @if (day.drawn) {
+            {{ day.doneCount }}/{{ day.total }}
+          } @else {
+            —
+          }
+        </span>
+      }
     </button>
   }
 </div>

@@ -135,6 +135,31 @@ class DefaultCampaignQueryServiceTest {
     }
 
     @Test
+    @DisplayName("Lists each week's damage day by day, only over the days the replay reached")
+    void shouldListEachWeekDamageDayByDay() {
+        live();
+        CampaignWeek first = CampaignFixtures.week(campaign, 1, 1_000, 50);
+        CampaignWeek second = CampaignFixtures.week(campaign, 2, 1_000, 50);
+        CampaignWeek third = CampaignFixtures.week(campaign, 3, 1_000, 50);
+        CampaignDailySnapshot sunday = snapshot(first.settlementDay(), 500, 100, 40);
+        sunday.setDamage(700);
+        CampaignDailySnapshot monday = snapshot(second.getWeekStart(), 500, 100, 40);
+        monday.setDamage(300);
+        CampaignDailySnapshot tuesday = snapshot(second.getWeekStart().plusDays(1), 500, 100, 40);
+        CampaignDailySnapshot wednesday = snapshot(TODAY, 1_000, 2_000, 1_400);
+        wednesday.setDamage(450);
+        when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L)).thenReturn(List.of(first, second, third));
+        when(snapshotRepository.findAllByCampaignIdOrderByDayAsc(1L))
+            .thenReturn(List.of(sunday, monday, tuesday, wednesday));
+
+        CampaignResponse response = service.currentCampaign();
+
+        assertThat(response.weeks().getFirst().dailyDamage()).containsExactly(700);
+        assertThat(response.weeks().get(1).dailyDamage()).containsExactly(300, 0, 450);
+        assertThat(response.weeks().get(2).dailyDamage()).isEmpty();
+    }
+
+    @Test
     @DisplayName("Forecasts the Sunday of the week in progress from the base as it stands")
     void shouldForecastTheWeekInProgress() {
         live();

@@ -16,7 +16,7 @@ import { LucideChevronLeft, LucideChevronRight, LucideStar, LucideUsers } from '
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { ChallengeHead } from '../challenge-head/challenge-head';
+import { BoardHead } from '../board-head/board-head';
 import {
   BOARD_COLUMN_REM,
   BOARD_DRAG_THRESHOLD_PX,
@@ -27,15 +27,14 @@ import {
 } from '../challenges.constants';
 import { BoardOperator, BoardRow, DayCell } from '../challenges.model';
 import { DailyWeek } from '../daily-week/daily-week';
-import { toShelves } from '../challenges.utils';
 import { ProgressMark } from '../progress-mark/progress-mark';
 
 /**
  * The week on one table, as the old ranking board drew it: a row per challenge, the day's first,
- * a column per operator with a dash, a ring or a check, and a footer of what each validated.
- * The rings close row after row on arrival, the checks and the footer's hexagons landing last.
+ * a column per operator with a dash, a ring or a check, and a footer of what each brought back.
+ * The rings close row after row on arrival, the checks landing last.
  *
- * A star on each operator's header pins them first; the pinned column is not otherwise marked.
+ * Pressing an operator's header stars them: their column moves first, the star filled in its corner.
  * When the squad outgrows the page, the challenge column stays put and the operator columns slide
  * under it: dragged, stepped with the header's arrows, or swiped sideways on a trackpad.
  */
@@ -45,7 +44,7 @@ import { ProgressMark } from '../progress-mark/progress-mark';
     TranslatePipe,
     Tooltip,
     Avatar,
-    ChallengeHead,
+    BoardHead,
     DailyWeek,
     ProgressMark,
     LucideChevronLeft,
@@ -96,16 +95,11 @@ export class ChallengeBoard {
   public readonly pickedDay = model<number | null>(null);
 
   /**
-   * Emits the operator whose star was pressed.
+   * Emits the operator whose header was pressed.
    */
   public readonly pin = output<number>();
 
   protected readonly rowStagger = BOARD_ROW_STAGGER_MS;
-
-  /**
-   * Each operator's footer shelf, in column order.
-   */
-  protected readonly shelves = computed(() => toShelves(this.rows(), this.operators().length));
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -135,7 +129,7 @@ export class ChallengeBoard {
   private press: { pointerId: number; x: number; shift: number } | null = null;
 
   /**
-   * Set by a drag so the click closing it does not also press a star.
+   * Set by a drag so the click closing it does not also pin an operator.
    */
   private swallowClick = false;
 

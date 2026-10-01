@@ -5,8 +5,8 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { MarkDetail } from '../challenges.model';
 
 /**
- * The content of a progress bubble: operator, exact figures over the target, a gauge that runs
- * past the target when it is exceeded, then the state and what remains or exceeds.
+ * The content of a progress bubble: operator, exact figures over the target, then the state and
+ * what remains or exceeds. No gauge: the ring or line it opens from already draws one.
  */
 @Component({
   selector: 'app-progress-tip',

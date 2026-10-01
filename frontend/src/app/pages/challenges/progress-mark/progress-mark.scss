@@ -1,4 +1,4 @@
-/* Covers its whole board cell, whose height the challenge column sets. */
+/* Covers its whole board cell, whose height the challenge column sets; the ring sits centred. */
 :host {
   position: absolute;
   inset: 0;
@@ -21,33 +21,54 @@
   color: var(--head);
 }
 
-.tank {
+/* Named `dial`, not `ring`: Tailwind would add its ring utility to the latter. */
+.dial {
   position: relative;
   display: grid;
   place-items: center;
+  width: 3.15rem;
+  height: 3.15rem;
+}
+
+/* The sweep starts at noon: a dial is read from the top. */
+.dial-face {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  overflow: visible;
+  rotate: -90deg;
 }
 
-/* A soft tint of the row's tone under a hard level line; above it the cell keeps its own fill.
-   Clamped so a value past the range stays full. */
-.fill {
-  position: absolute;
-  inset: auto 0 0;
-  height: calc(clamp(0, var(--level), 1) * 100%);
-  background: color-mix(in srgb, var(--tone) 10%, transparent);
-  border-top: 2px solid var(--tone);
+.track {
+  fill: none;
+  stroke: var(--color-edge-strong);
+  stroke-width: 3;
 }
 
-.fill--full {
-  border-top: none;
+/* Clamped so a value past the target closes the ring without wrapping. 131.95 is 2 pi r, r = 21. */
+.arc {
+  --arc-empty: 131.95;
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 131.95;
+  stroke-dashoffset: calc(131.95 * (1 - clamp(0, var(--level), 1)));
+}
+
+.disc {
+  fill: var(--tone);
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .check {
   position: relative;
-  width: 1.75rem;
-  height: 1.75rem;
-  stroke-width: 3;
+  width: 1.4rem;
+  height: 1.4rem;
+  stroke-width: 3.25;
+  color: var(--color-surface-950);
 }
 
 /* Only drawn where it can move: still, the burst would be litter around the check. */
@@ -55,13 +76,18 @@
   display: none;
 }
 
-/* Pops once its row's tank has filled, and throws a burst of confetti in the row's tone. */
+/* Pops once its row's ring has closed, and throws a burst of confetti in the row's tone, kept
+   inside the cell. */
 @media (prefers-reduced-motion: no-preference) {
-  .tank--done {
-    --pop-at: calc(var(--fx-delay, 0ms) + var(--duration-gauge-long) * 0.8);
+  .cell:has(.dial--done) {
     overflow: hidden;
   }
 
+  .dial--done {
+    --pop-at: calc(var(--fx-delay, 0ms) + var(--duration-gauge-long) * 0.8);
+  }
+
+  .disc,
   .check {
     animation: check-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     animation-delay: var(--pop-at);
@@ -132,18 +158,19 @@
 .label {
   position: relative;
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1;
+  color: var(--tone);
 }
 
-/* A long figure or a compact one ("12,7k") tightens to fit the column. */
+/* A long figure or a compact one ("12,7k") tightens to fit inside the ring. */
 .label--long {
-  font-size: 1.125rem;
+  font-size: 0.8125rem;
   letter-spacing: -0.02em;
 }
 
 .unit {
-  margin-left: 0.08em;
+  margin-left: 0.05em;
   font-size: 0.8em;
 }

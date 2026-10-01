@@ -14,12 +14,8 @@
 <div class="title">
   <p class="key-line">
     <span class="key label-caption text-2xs">{{ row.kind }}</span>
-    @if (row.daily && clock()) {
-      @if (row.closesAt !== null) {
-        <app-daily-clock [deadline]="row.closesAt" />
-      } @else {
-        <span class="closed">{{ 'challenges.daily.closedDay' | translate }}</span>
-      }
+    @if (row.daily && row.closesAt === null) {
+      <span class="closed">{{ 'challenges.daily.closedDay' | translate }}</span>
     }
   </p>
   <p class="name">{{ row.name }}</p>
@@ -35,7 +31,6 @@
       <svg aria-hidden="true" class="size-4" lucideUsers></svg>
       <b class="tabular-nums">+{{ row.survivors }}</b>
     </span>
-    <span>{{ 'challenges.card.perOperator' | translate }}</span>
   } @else {
     <span
       [appTooltip]="'challenges.card.pointsTooltip' | translate: { count: row.rankingPoints }"

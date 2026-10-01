@@ -4,6 +4,7 @@ import io.github.thomashtn.valoquests.campaign.model.ExtractionLimiter;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * One week of the campaign's map: its planet, its guardian and how its Sunday went.
@@ -20,6 +21,8 @@ import java.time.LocalDate;
  * @param guardianDescription guardian's one-line description, {@code null} until its week is reached
  * @param guardianHitPoints  hit points the guardian opened the week with
  * @param damageDealt        damage the roster dealt over the week
+ * @param dailyDamage        damage dealt each replayed day of the week, Monday first, shorter while
+ *                           the week is being played
  * @param progressPercent    share of the guardian's hit points removed, capped at a hundred
  * @param defeated           whether the guardian fell
  * @param defeatedAt         start instant of the match that landed the finishing blow
@@ -44,6 +47,7 @@ public record CampaignWeekResponse(
     String guardianDescription,
     int guardianHitPoints,
     int damageDealt,
+    List<Integer> dailyDamage,
     int progressPercent,
     boolean defeated,
     Instant defeatedAt,
@@ -59,4 +63,11 @@ public record CampaignWeekResponse(
     boolean settled,
     CampaignWeekBaseResponse base
 ) {
+
+    /**
+     * Creates the response, copying the daily damage.
+     */
+    public CampaignWeekResponse {
+        dailyDamage = List.copyOf(dailyDamage);
+    }
 }

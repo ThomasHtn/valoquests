@@ -375,15 +375,12 @@
       "region": "Challenges and squad progress",
       "challenge": "Challenge",
       "period": "{{start}} to {{end}}",
-      "totals": "Validated",
-      "totalsTooltip": "Weekly challenges validated and the week's gain, daily challenges included",
-      "totalsKey": {
-        "weekly": "Weekly challenges",
-        "wounded": "Wounded brought back"
-      },
-      "pin": "Pin {{name}} first",
-      "unpin": "Unpin {{name}}",
-      "pinHint": "Tap a player to show them first in every challenge.",
+      "totals": "Wounded brought back",
+      "totalsTooltip": "What each operator brought back this week, daily challenges included",
+      "pin": "Star {{name}}",
+      "unpin": "Unstar {{name}}",
+      "pinHint": "Tap a player to star them: they show first in every challenge.",
+      "pinLead": "Star: click a player",
       "squad": "The squad",
       "markTip": "{{name}}: {{tip}}",
       "markDetail": {
@@ -785,6 +782,31 @@
           "other": "inhabitants lost"
         },
         "lossTooltip": "Its counterattack at the current {{percent}}% breakthrough. Falling just short costs almost nothing; doing nothing costs a lot."
+      },
+      "forecast": {
+        "key": "Guardian's estimated fall",
+        "keyDown": "Guardian's fall",
+        "ahead": "{{weekday}} around {{hour}}",
+        "aheadMargin": "{{span}} ahead at the current pace",
+        "short": "Not before Sunday midnight",
+        "shortMargin": "{{hp}} HP would be left",
+        "down": "Fell {{weekday}} at {{time}}",
+        "downMargin": "{{span}} before the extraction",
+        "spanDays": "{{days}} d {{hours}} h",
+        "spanHours": "{{hours}} h",
+        "fallMark": "{{weekday}} around {{hour}}",
+        "deadline": "Sun midnight",
+        "leftAtDeadline": "{{hp}} HP",
+        "tipStart": "Start of the week",
+        "tipDayEnd": "End of {{weekday}}",
+        "tipNow": "Now",
+        "tipLeft": "{{hp}} HP left",
+        "tipEstimate": "≈ {{hp}} HP left",
+        "tipZero": "Guardian down (estimate)",
+        "tipDown": "Guardian down",
+        "ariaAhead": "Guardian's hit points: {{hp}} now, down to zero {{weekday}} around {{hour}} at the current pace.",
+        "ariaShort": "Guardian's hit points: {{hp}} now, still {{left}} at Sunday midnight at the current pace.",
+        "ariaDown": "Guardian's hit points: down to zero {{weekday}} at {{time}}."
       }
     },
     "capacity": {

@@ -8,8 +8,9 @@ import { ProgressTip } from '../progress-tip/progress-tip';
 import { CONFETTI } from './progress-mark.constants';
 
 /**
- * One operator's cell on the board: a dash before they start, the whole cell filling from the floor
- * with their figure while they progress, a check once they validate. Drawn in the row's `--tone`.
+ * One operator's cell on the board: a dash before they start, a ring closing toward the target
+ * around their figure while they progress, a filled disc and a check once they validate. Drawn in
+ * the row's `--tone`.
  */
 @Component({
   selector: 'app-progress-mark',

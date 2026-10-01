@@ -36,6 +36,7 @@ function week(overrides: Partial<CampaignWeek> = {}): CampaignWeek {
     guardianDescription: null,
     guardianHitPoints: 1000,
     damageDealt: 0,
+    dailyDamage: [],
     progressPercent: 0,
     defeated: false,
     defeatedAt: null,

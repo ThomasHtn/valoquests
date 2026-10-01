@@ -1,5 +1,5 @@
-<!-- Three readings in the order the week is played: the clock, the fight, what Sunday decides. The
-     clock leads because it is the only thing here that moves on its own. -->
+<!-- Readings in the order the week is played: the clock, the fight, what Sunday decides, then when
+     the guardian falls. The clock leads because it is the only thing here that moves on its own. -->
 <div class="report bg-text-primary/4">
   @if (showClock()) {
     <div class="rep-clock">
@@ -138,5 +138,10 @@
         </p>
       </div>
     </div>
+  }
+
+  <!-- When the guardian falls at the pace held since Monday, folded under the stakes. -->
+  @if (fall(); as fall) {
+    <app-fall-forecast [fall]="fall" />
   }
 </div>

@@ -1,0 +1,40 @@
+@let row = this.row();
+@let gain = row.rescueActive ? row.survivors : row.rankingPoints;
+
+<span aria-hidden="true" class="hex-mark clip-hex">
+  <span class="clip-hex">
+    @if (row.mark === 'D') {
+      <svg class="glyph" lucideZap></svg>
+    } @else {
+      {{ row.mark }}
+    }
+  </span>
+</span>
+
+<!-- Paragraphs rather than a heading: the table's row header cannot hold one. -->
+<div class="title">
+  <p class="key-line">
+    <span class="key label-caption text-2xs">{{ row.kind }}</span>
+    @if (row.daily && row.closesAt === null) {
+      <span class="closed">{{ 'challenges.daily.closedDay' | translate }}</span>
+    }
+  </p>
+  <p class="name">{{ row.name }}</p>
+</div>
+
+<!-- The gain per operator sits in the tile's top-right corner. -->
+<span
+  [appTooltip]="
+    (row.rescueActive ? 'challenges.card.woundedTooltip' : 'challenges.card.pointsTooltip')
+      | translate: { count: gain }
+  "
+  class="pay focus-ring"
+  tabindex="0"
+>
+  <svg aria-hidden="true" class="size-3.5" lucideUsers></svg>
+  <b class="tabular-nums">+{{ gain }}</b>
+</span>
+
+<!-- Kept on one line: any line break between the stretches would render as a space. -->
+<!-- prettier-ignore -->
+<p class="rule">@for (part of ruleParts(); track $index) {@if (part.number) {<b>{{ part.text }}</b>} @else {{{ part.text }}}}</p>

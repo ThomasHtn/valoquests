@@ -9,7 +9,8 @@ import { DayCell } from '../challenges.model';
  * challenge shows how many operators finished it, and opens it in place. Today is in the daily's
  * cyan; the day on screen is tinted and underlined. The days ahead have nothing to open.
  *
- * Laid flush by its caller, which knows the padding to cancel.
+ * Laid flush by its caller, which knows the padding to cancel; slim, it is a row of initials
+ * under the rule instead.
  */
 @Component({
   selector: 'app-daily-week',
@@ -17,6 +18,9 @@ import { DayCell } from '../challenges.model';
   templateUrl: './daily-week.html',
   styleUrl: './daily-week.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[class.daily-week--slim]': 'slim()',
+  },
 })
 export class DailyWeek {
   /**
@@ -28,6 +32,11 @@ export class DailyWeek {
    * Whether each day is labelled by its initial alone, where seven full labels would crowd.
    */
   public readonly initials = input(false);
+
+  /**
+   * Whether the strip shrinks to a row of underlined initials, the scores left to each tooltip.
+   */
+  public readonly slim = input(false);
 
   /**
    * Index of the day whose challenge is on screen.

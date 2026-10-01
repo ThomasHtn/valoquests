@@ -85,3 +85,40 @@
 .day--ahead {
   opacity: 0.55;
 }
+
+/* Slim: one underlined initial per day. A day someone validated is underlined in cyan, the day on
+   screen in the primary text colour. */
+:host(.daily-week--slim) .week {
+  display: flex;
+  gap: 0.3rem;
+  border-top: 0;
+}
+
+:host(.daily-week--slim) .day {
+  flex: none;
+  width: 1.4rem;
+  padding: 0 0 0.1rem;
+  border-left: 0;
+  border-bottom: 2px solid var(--color-edge);
+}
+
+:host(.daily-week--slim) .day-name {
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+:host(.daily-week--slim) .day:not(:disabled):hover {
+  background: none;
+}
+
+:host(.daily-week--slim) .day--hit {
+  border-bottom-color: var(--color-accent-cyan);
+}
+
+:host(.daily-week--slim) .day--picked,
+:host(.daily-week--slim) .day--picked:not(:disabled):hover {
+  background: none;
+  box-shadow: none;
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-text-primary);
+}

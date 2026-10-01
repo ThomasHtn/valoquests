@@ -6,7 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
+import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
 import { LucideFileText } from '@lucide/angular';
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT, CampaignWeek } from '@core/campaign/campaign.model';
@@ -61,6 +61,8 @@ import { PlanetFigure } from './planet-figure/planet-figure';
 import { ScanWires } from './scan-wires';
 import { SquadMatches } from './squad-matches/squad-matches';
 import { SquadSheet } from './squad-sheet/squad-sheet';
+import { GuardianFall } from './mission-readings/fall-forecast/fall-forecast.model';
+import { buildGuardianFall } from './mission-readings/fall-forecast/fall-forecast.utils';
 import { FULL_CAMPAIGN_POPULATION } from './overview.constants';
 import {
   readFavoriteTab,
@@ -80,6 +82,7 @@ import {
   selector: 'app-overview',
   imports: [
     LucideFileText,
+    NgOptimizedImage,
     NgTemplateOutlet,
     TranslatePipe,
     PageHeader,
@@ -236,6 +239,13 @@ export class Overview {
    */
   protected readonly stakes = computed<SundayStakes | null>(() =>
     buildSundayStakes(this.campaign(), this.currentWeek()),
+  );
+
+  /**
+   * The guardian's descent over the week and its projected fall, read when the campaign is.
+   */
+  protected readonly fall = computed<GuardianFall | null>(() =>
+    buildGuardianFall(this.currentWeek(), Date.now()),
   );
 
   /**

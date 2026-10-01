@@ -1,18 +1,12 @@
 import { ChallengeProgress } from '@core/challenges/challenge.model';
-import {
-  BoardMark,
-  BoardRow,
-  ChallengeOperator,
-  ChallengeRung,
-  MarkDetail,
-} from './challenges.model';
+import { ChallengeOperator, ChallengeRung, MarkDetail } from './challenges.model';
 import {
   describeRung,
   orderOperators,
   splitCompactFigure,
   toBoardMark,
   toMarkDetail,
-  toShelves,
+  toRuleParts,
 } from './challenges.utils';
 
 const rung = (value: number, done: boolean): ChallengeRung => ({
@@ -54,24 +48,22 @@ describe('toMarkDetail', () => {
   it('keeps the value uncapped and measures the surplus past the target', () => {
     const detail = toMarkDetail(rung(200, true), 100, 'red', 'en-US');
     expect(detail).toMatchObject({ state: 'done', value: '200', target: '100', gap: 'surplus' });
-    expect(detail).toMatchObject({ gapLabel: '+100', fill: 50, over: 50, targetAt: 50 });
+    expect(detail).toMatchObject({ gapLabel: '+100', gapCount: 100 });
   });
 
   it('measures what remains while under way', () => {
     const detail = toMarkDetail(rung(40, false), 100, 'red', 'en-US');
     expect(detail).toMatchObject({ state: 'open', gap: 'remaining', gapLabel: '60', gapCount: 60 });
-    expect(detail).toMatchObject({ fill: 40, over: 0, targetAt: 100 });
   });
 
   it('shows no gap once validated exactly on target', () => {
     expect(toMarkDetail(rung(100, true), 100, 'red', 'en-US')).toMatchObject({
       gap: 'none',
       gapLabel: '',
-      fill: 100,
     });
   });
 
-  it('drops the target and gauge on an open-ended challenge', () => {
+  it('drops the target on an open-ended challenge', () => {
     expect(toMarkDetail(rung(0, false), null, 'red', 'en-US')).toMatchObject({
       state: 'idle',
       target: '',
@@ -135,34 +127,28 @@ describe('toBoardMark', () => {
   });
 });
 
-describe('toShelves', () => {
-  // Only what the shelves read; the rest of a row does not matter here.
-  const row = (key: string, daily: boolean, done: readonly boolean[]) =>
-    ({
-      key,
-      daily,
-      tone: `tone-${key}`,
-      marks: done.map((d) => ({ done: d }) as BoardMark),
-    }) as unknown as BoardRow;
+describe('toRuleParts', () => {
+  it('sets apart each number', () => {
+    expect(toRuleParts('Terminer 3 parties avec au moins 8 headshots.')).toEqual([
+      { text: 'Terminer ', number: false },
+      { text: '3', number: true },
+      { text: ' parties avec au moins ', number: false },
+      { text: '8', number: true },
+      { text: ' headshots.', number: false },
+    ]);
+  });
 
-  it('gives each operator one slot per weekly challenge, the day left out', () => {
-    const shelves = toShelves(
-      [
-        row('d', true, [true, true]),
-        row('w1', false, [true, false]),
-        row('w2', false, [false, true]),
-      ],
-      2,
-    );
-    expect(shelves).toEqual([
-      [
-        { key: 'w1', tone: 'tone-w1', done: true },
-        { key: 'w2', tone: 'tone-w2', done: false },
-      ],
-      [
-        { key: 'w1', tone: 'tone-w1', done: false },
-        { key: 'w2', tone: 'tone-w2', done: true },
-      ],
+  it('keeps a spaced thousand whole', () => {
+    expect(toRuleParts('Cumuler 25\u202f000 dégâts.')).toEqual([
+      { text: 'Cumuler ', number: false },
+      { text: '25\u202f000', number: true },
+      { text: ' dégâts.', number: false },
+    ]);
+  });
+
+  it('returns a rule without numbers as one plain stretch', () => {
+    expect(toRuleParts('Gagner une partie.')).toEqual([
+      { text: 'Gagner une partie.', number: false },
     ]);
   });
 });

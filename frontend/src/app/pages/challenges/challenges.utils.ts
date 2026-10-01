@@ -2,7 +2,7 @@ import { ChallengeProgress, RosterPlayer } from '@core/challenges/challenge.mode
 import { localMidnight } from '@core/date/date-time.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
 import { formatFigure } from '../leaderboard/leaderboard-board.utils';
-import { MAX_SEGMENTED_TARGET, PINNED_PLAYER_KEY } from './challenges.constants';
+import { MAX_SEGMENTED_TARGET, PINNED_PLAYER_KEY, RULE_NUMBER } from './challenges.constants';
 import {
   BoardMark,
   BoardRow,
@@ -12,7 +12,7 @@ import {
   ChallengeRung,
   MarkDetail,
   OperatorProgress,
-  ShelfSlot,
+  RulePart,
 } from './challenges.model';
 
 /**
@@ -103,8 +103,7 @@ export function describeRung(
 }
 
 /**
- * An operator's progress laid out for its hover bubble. The gauge scales to the larger of value and
- * target, so a value past the target shows how far past it went.
+ * An operator's progress laid out for its hover bubble: exact figures and what remains or exceeds.
  *
  * @param rung - The operator's line.
  * @param target - Value to reach, or `null` for an open-ended challenge.
@@ -127,13 +126,8 @@ export function toMarkDetail(
       gap: 'none',
       gapLabel: '',
       gapCount: 0,
-      fill: 0,
-      over: 0,
-      targetAt: 0,
     };
   }
-  const scale = Math.max(rung.value, target);
-  const reached = rung.done ? target : Math.min(rung.value, target);
   const surplus = rung.value - target;
   const gap = surplus > 0 ? 'surplus' : rung.done ? 'none' : 'remaining';
   const gapCount = gap === 'surplus' ? surplus : gap === 'remaining' ? target - rung.value : 0;
@@ -144,9 +138,6 @@ export function toMarkDetail(
     gapLabel:
       gap === 'none' ? '' : `${gap === 'surplus' ? '+' : ''}${formatFigure(gapCount, locale)}`,
     gapCount,
-    fill: (reached / scale) * 100,
-    over: surplus > 0 ? (surplus / scale) * 100 : 0,
-    targetAt: (target / scale) * 100,
   };
 }
 
@@ -312,17 +303,25 @@ export function toBoardRow(
 }
 
 /**
- * Each operator's footer shelf: one slot per weekly challenge, in row order.
+ * Cuts a rule into plain words and the numbers it holds.
  *
- * @param rows - The board's rows; the day's is left out.
- * @param operatorCount - Operators on the board, in the marks' order.
- * @returns One shelf per operator column.
+ * @param rule - The translated rule of a challenge.
+ * @returns The rule's stretches, in order; joined back they give the rule unchanged.
  */
-export function toShelves(rows: readonly BoardRow[], operatorCount: number): ShelfSlot[][] {
-  const weekly = rows.filter((row) => !row.daily);
-  return Array.from({ length: operatorCount }, (_, column) =>
-    weekly.map((row) => ({ key: row.key, tone: row.tone, done: row.marks[column]?.done ?? false })),
-  );
+export function toRuleParts(rule: string): RulePart[] {
+  const parts: RulePart[] = [];
+  let last = 0;
+  for (const match of rule.matchAll(RULE_NUMBER)) {
+    if (match.index > last) {
+      parts.push({ text: rule.slice(last, match.index), number: false });
+    }
+    parts.push({ text: match[0], number: true });
+    last = match.index + match[0].length;
+  }
+  if (last < rule.length) {
+    parts.push({ text: rule.slice(last), number: false });
+  }
+  return parts;
 }
 
 /**

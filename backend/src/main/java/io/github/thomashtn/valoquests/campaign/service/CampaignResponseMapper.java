@@ -118,7 +118,7 @@ final class CampaignResponseMapper {
 
         for (CampaignWeek week : weeks) {
             CampaignWeekBaseResponse base = weekBase(week, days, previousPopulation);
-            responses.add(week(week, base, week.getWeekIndex() <= revealedUpTo));
+            responses.add(week(week, base, dailyDamage(week, days), week.getWeekIndex() <= revealedUpTo));
             if (base != null) {
                 previousPopulation = base.population();
             }
@@ -189,9 +189,24 @@ final class CampaignResponseMapper {
     }
 
     /**
+     * Damage of each replayed day of one week, Monday first: the guardian's descent, day by day.
+     */
+    private static List<Integer> dailyDamage(CampaignWeek week, List<CampaignDailySnapshot> days) {
+        return days.stream()
+            .filter(day -> !day.getDay().isBefore(week.getWeekStart()) && !day.getDay().isAfter(week.settlementDay()))
+            .map(CampaignDailySnapshot::getDamage)
+            .toList();
+    }
+
+    /**
      * Maps one week, hiding the guardian while it is not revealed.
      */
-    private static CampaignWeekResponse week(CampaignWeek week, CampaignWeekBaseResponse base, boolean revealed) {
+    private static CampaignWeekResponse week(
+        CampaignWeek week,
+        CampaignWeekBaseResponse base,
+        List<Integer> dailyDamage,
+        boolean revealed
+    ) {
         return new CampaignWeekResponse(
             week.getWeekIndex(),
             week.getWeekStart(),
@@ -201,6 +216,7 @@ final class CampaignResponseMapper {
             revealed ? week.getGuardian().getDescription() : null,
             week.getGuardianHitPoints(),
             week.getDamageDealt(),
+            dailyDamage,
             progressPercent(week),
             week.isDefeated(),
             week.getDefeatedAt(),

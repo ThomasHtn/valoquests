@@ -375,15 +375,12 @@
       "region": "Défis et progression de l'escouade",
       "challenge": "Défi",
       "period": "Du {{start}} au {{end}}",
-      "totals": "Validés",
-      "totalsTooltip": "Défis de la semaine validés et gain de la semaine, défis du jour compris",
-      "totalsKey": {
-        "weekly": "Défis de la semaine",
-        "wounded": "Blessés ramenés"
-      },
-      "pin": "Épingler {{name}} en premier",
-      "unpin": "Ne plus épingler {{name}}",
-      "pinHint": "Touchez un joueur pour l'afficher en premier dans chaque défi.",
+      "totals": "Blessés ramenés",
+      "totalsTooltip": "Ce que chaque opérateur a ramené cette semaine, défis du jour compris",
+      "pin": "Mettre {{name}} en favori",
+      "unpin": "Retirer {{name}} des favoris",
+      "pinHint": "Touchez un joueur pour le mettre en favori : il passe en premier dans chaque défi.",
+      "pinLead": "Favori : cliquez sur un joueur",
       "squad": "L'escouade",
       "markTip": "{{name}} : {{tip}}",
       "markDetail": {
@@ -785,6 +782,31 @@
           "other": "habitants perdus"
         },
         "lossTooltip": "Sa riposte à la percée actuelle de {{percent}} %. Rater de peu ne coûte presque rien, ne rien faire coûte cher."
+      },
+      "forecast": {
+        "key": "Chute estimée du gardien",
+        "keyDown": "Chute du gardien",
+        "ahead": "{{weekday}} vers {{hour}}",
+        "aheadMargin": "{{span}} d'avance au rythme actuel",
+        "short": "Pas avant dimanche minuit",
+        "shortMargin": "il lui resterait {{hp}} PV",
+        "down": "Tombé {{weekday}} à {{time}}",
+        "downMargin": "{{span}} avant l'extraction",
+        "spanDays": "{{days}} j {{hours}} h",
+        "spanHours": "{{hours}} h",
+        "fallMark": "{{weekday}} vers {{hour}}",
+        "deadline": "dim. minuit",
+        "leftAtDeadline": "{{hp}} PV",
+        "tipStart": "Début de la semaine",
+        "tipDayEnd": "Fin de {{weekday}}",
+        "tipNow": "Maintenant",
+        "tipLeft": "{{hp}} PV restants",
+        "tipEstimate": "≈ {{hp}} PV restants",
+        "tipZero": "Gardien à terre (estimé)",
+        "tipDown": "Gardien tombé",
+        "ariaAhead": "PV restants du gardien : {{hp}} maintenant, à zéro {{weekday}} vers {{hour}} au rythme actuel.",
+        "ariaShort": "PV restants du gardien : {{hp}} maintenant, encore {{left}} dimanche à minuit au rythme actuel.",
+        "ariaDown": "PV restants du gardien : à zéro {{weekday}} à {{time}}."
       }
     },
     "capacity": {

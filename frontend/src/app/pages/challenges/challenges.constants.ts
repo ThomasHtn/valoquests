@@ -53,3 +53,9 @@ export const BOARD_DRAG_THRESHOLD_PX = 4;
  * Delay between two board rows as their rings close on arrival, in milliseconds.
  */
 export const BOARD_ROW_STAGGER_MS = 90;
+
+/**
+ * A number in a rule ("3", "25 000"); thousands may be split by any space, the narrow no-break one
+ * included.
+ */
+export const RULE_NUMBER = /\d(?:[\d\s]*\d)?/g;

@@ -5,7 +5,7 @@
     <!-- The challenges page's phone card, its last line holding today's countdown and how many
          operators finished. -->
     @if (daily(); as daily) {
-      <app-deck-card [clock]="false" [idleFigures]="true" [roomy]="true" [row]="daily">
+      <app-deck-card [idleFigures]="true" [roomy]="true" [row]="daily">
         <div class="foot">
           <p class="ends">
             {{ 'challenges.daily.endsIn' | translate }}

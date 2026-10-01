@@ -1,11 +1,6 @@
 @let row = this.row();
 
-<app-challenge-head
-  [class.head--aligned]="roomy()"
-  [clock]="clock()"
-  [row]="row"
-  class="head--compact"
-/>
+<app-challenge-head [class.head--aligned]="roomy()" [row]="row" class="head--compact" />
 <hr aria-hidden="true" class="rule" />
 <ul [attr.aria-label]="'challenges.card.progress' | translate" class="lines">
   @for (mark of row.marks; track mark.playerId) {

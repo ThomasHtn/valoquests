@@ -1,0 +1,192 @@
+<!-- The whole line toggles the chart; it already states the answer when folded. -->
+<div [attr.data-outcome]="fall().outcome" class="fall">
+  <button
+    (click)="toggle()"
+    [attr.aria-expanded]="open()"
+    aria-controls="fall-forecast-body"
+    class="fall-head focus-ring"
+    type="button"
+  >
+    <span class="fall-text">
+      <span class="fall-key label-caption">
+        <svg aria-hidden="true" class="fall-key-icon" lucideHourglass></svg>
+        {{ heading() }}
+      </span>
+      <span class="fall-verdict">
+        <b>{{ verdict() }}</b>
+        <span>{{ margin() }}</span>
+      </span>
+    </span>
+    <span aria-hidden="true" class="fall-chevron">
+      <svg class="fall-chevron-icon" lucideChevronDown></svg>
+    </span>
+  </button>
+
+  <div [class.is-open]="open()" [inert]="!open()" class="fall-body" id="fall-forecast-body">
+    <div class="fall-inner">
+      <!-- Edge to edge on its own lighter ground; only the first and last ticks keep a gutter. -->
+      <div #panel class="fall-panel">
+        @if (chart(); as chart) {
+          <svg
+            [attr.aria-label]="summary()"
+            [attr.height]="chart.height"
+            [attr.viewBox]="'0 0 ' + chart.width + ' ' + chart.height"
+            class="fall-svg"
+            role="img"
+          >
+            @for (zone of chart.zones; track zone.kind) {
+              <rect
+                [attr.height]="chart.plotHeight"
+                [attr.width]="zone.width"
+                [attr.x]="zone.x"
+                [class]="'fall-zone fall-zone--' + zone.kind"
+                y="0"
+              />
+            }
+
+            <path [attr.d]="chart.pastArea" class="fall-area fall-area--past" />
+            @if (chart.projectionArea && chart.projectionLine) {
+              <path
+                [attr.d]="chart.projectionArea"
+                [class]="'fall-area fall-projection fall-area--' + fall().outcome"
+              />
+              <path
+                [attr.d]="chart.projectionLine"
+                [class]="'fall-line fall-line--dashed fall-projection fall-line--' + fall().outcome"
+              />
+            }
+            <path [attr.d]="chart.pastLine" class="fall-line fall-line--past" pathLength="1" />
+
+            <!-- The fall: a dashed post across the plot, its moment written at the top. -->
+            @if (chart.fall; as mark) {
+              <line
+                [attr.x1]="mark.x"
+                [attr.x2]="mark.x"
+                [attr.y2]="chart.plotHeight"
+                class="fall-post"
+                y1="22"
+              />
+              <text
+                [attr.text-anchor]="chart.fallAnchor"
+                [attr.x]="mark.x"
+                class="fall-mark"
+                y="16"
+              >
+                {{ fallLabel() }}
+              </text>
+              @if (fall().outcome === 'down') {
+                <circle [attr.cx]="mark.x" [attr.cy]="mark.y" class="fall-kill" r="9" />
+                <path
+                  [attr.d]="'M' + (mark.x - 4) + ',' + mark.y + ' l3,3 l5,-6'"
+                  class="fall-kill-check"
+                />
+              } @else {
+                <rect
+                  [attr.transform]="'rotate(45 ' + mark.x + ' ' + mark.y + ')'"
+                  [attr.x]="mark.x - 6"
+                  [attr.y]="mark.y - 6"
+                  class="fall-diamond"
+                  height="12"
+                  width="12"
+                />
+              }
+            }
+
+            <!-- What Sunday midnight would still leave him, under the projection's end. -->
+            @if (chart.end; as end) {
+              <line
+                [attr.x1]="end.x"
+                [attr.x2]="end.x"
+                [attr.y1]="end.y"
+                [attr.y2]="chart.plotHeight"
+                class="fall-stem"
+              />
+              <circle [attr.cx]="end.x" [attr.cy]="end.y" class="fall-pin" r="5" />
+              <text
+                [attr.x]="end.x - 10"
+                [attr.y]="end.y + 24"
+                class="fall-value fall-value--short"
+                text-anchor="end"
+              >
+                {{ endValue() }}
+              </text>
+            }
+
+            <!-- Now: the value above the pin, a stem down to the floor. -->
+            @if (chart.now; as now) {
+              <line
+                [attr.x1]="now.x"
+                [attr.x2]="now.x"
+                [attr.y1]="now.y"
+                [attr.y2]="chart.plotHeight"
+                class="fall-stem"
+              />
+              <circle [attr.cx]="now.x" [attr.cy]="now.y" class="fall-pin" r="5.5" />
+              <text [attr.x]="now.x" [attr.y]="now.y - 12" class="fall-value" text-anchor="middle">
+                {{ nowValue() }}
+              </text>
+            }
+
+            <text [attr.x]="chart.gutter" [attr.y]="chart.height - 6" class="fall-tick">
+              {{ ticks().start }}
+            </text>
+            @if (chart.now; as now) {
+              <text
+                [attr.x]="now.x"
+                [attr.y]="chart.height - 6"
+                class="fall-tick"
+                text-anchor="middle"
+              >
+                {{ ticks().now }}
+              </text>
+            }
+            <text
+              [attr.x]="chart.width - chart.gutter"
+              [attr.y]="chart.height - 6"
+              class="fall-tick"
+              text-anchor="end"
+            >
+              {{ ticks().end }}
+            </text>
+
+            @if (hover(); as hover) {
+              <line
+                [attr.x1]="hover.x"
+                [attr.x2]="hover.x"
+                [attr.y2]="chart.plotHeight"
+                class="fall-cross"
+                y1="0"
+              />
+              <circle [attr.cx]="hover.x" [attr.cy]="hover.y" class="fall-pin" r="4" />
+            }
+
+            <rect
+              (pointerdown)="point($event)"
+              (pointerleave)="leave()"
+              (pointermove)="point($event)"
+              [attr.height]="chart.plotHeight"
+              [attr.width]="chart.width"
+              class="fall-hit"
+              x="0"
+              y="0"
+            />
+          </svg>
+
+          @if (hover(); as hover) {
+            <div
+              [class.fall-tip--left]="hover.x > chart.width / 2"
+              [class.fall-tip--below]="hover.y < 64"
+              [style.left.px]="hover.x"
+              [style.top.px]="hover.y"
+              aria-hidden="true"
+              class="fall-tip"
+            >
+              <span>{{ hover.when }}</span>
+              <b class="tabular-nums">{{ hover.value }}</b>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+</div>
