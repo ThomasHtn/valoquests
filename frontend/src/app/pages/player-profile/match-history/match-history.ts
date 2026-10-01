@@ -18,6 +18,7 @@ import { Translation } from '@core/i18n/translation';
 import {
   resolveAgentImageUrl,
   resolveAgentInitial,
+  resolveDamageHintKey,
   resolveMapImageUrl,
   resolveMatchScore,
 } from '@core/matches/match-format.utils';
@@ -28,7 +29,7 @@ import {
   formatKda,
   formatScore,
 } from '@core/players/player-format.utils';
-import { resolveKdVisual } from '@core/players/player-stats.utils';
+import { resolveKdVisual, resolveStatTextClass } from '@core/players/player-stats.utils';
 import { Breakpoint } from '@core/viewport/breakpoint';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
@@ -151,6 +152,8 @@ export class MatchHistory {
 
   protected readonly kdVisual = resolveKdVisual;
 
+  protected readonly statTextClass = resolveStatTextClass;
+
   private readonly translation = inject(Translation);
 
   /**
@@ -192,17 +195,12 @@ export class MatchHistory {
   }
 
   /**
-   * Explains the amount a match was worth: which coefficient the day's ladder applied to it, or
-   * why it was worth nothing at all. Two identical wins on one evening routinely carry different
-   * amounts, and the ladder is the only thing that tells them apart.
+   * Explains the amount a match was worth, one sentence per case the cell can show: worth nothing,
+   * full value, or reduced by the day's ladder (the down arrow).
    */
   protected damageExplanation(match: Match): string {
-    return this.translation.translate(
-      match.damageCoefficientPercent === 0
-        ? 'playerProfile.matches.damage.unvalued'
-        : 'playerProfile.matches.damage.coefficient',
-      { percent: match.damageCoefficientPercent },
-    );
+    const percent = match.damageCoefficientPercent;
+    return this.translation.translate(resolveDamageHintKey(percent), { percent });
   }
 
   /**

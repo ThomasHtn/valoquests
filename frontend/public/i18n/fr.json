@@ -427,7 +427,6 @@
       }
     },
     "card": {
-      "perOperator": "/ Opé.",
       "competitiveOnly": "Compétitif uniquement",
       "woundedTooltip": {
         "one": "{{count}} blessé ramené par validation",
@@ -467,9 +466,6 @@
     "week": {
       "timeLabel": "Clôture dans",
       "timeRemaining": "{{days}}j {{hours}}h"
-    },
-    "challenge": {
-      "completed": "Défi validé"
     },
     "title": {
       "CHAMPION": "Champion",
@@ -983,9 +979,10 @@
     "loading": "Chargement du profil de l'opérateur…",
     "matches": {
       "damage": {
-        "coefficient": "Dégâts infligés au gardien de la semaine. Ce match a conservé {{percent}} % de sa valeur de base : les meilleures parties d'une journée comptent en entier, les suivantes de moins en moins.",
+        "full": "Compte en entier : une des 5 meilleures parties du jour.",
+        "reduced": "Réduit à {{percent}} % : au-delà des 5 meilleures parties du jour, la valeur baisse.",
         "share": "{{percent}} % de la valeur",
-        "unvalued": "Ce match ne compte pas pour ValoQuests : le barème ne valorise ni ce mode ni ce type de partie."
+        "unvalued": "Ne compte pas : ce mode n'est pas valorisé."
       },
       "columns": {
         "acs": "ACS",
@@ -1046,6 +1043,14 @@
         "REMAKE": "Annulé",
         "UNKNOWN": "Inconnu",
         "WIN": "Victoire"
+      },
+      "columnHints": {
+        "kda": "Éliminations / morts / assistances.",
+        "kd": "Éliminations divisées par les morts. Au-dessus de 1, plus d'éliminations que de morts.",
+        "headshotPercentage": "Part des tirs touchés qui ont atteint la tête.",
+        "adr": "Dégâts moyens infligés par manche.",
+        "acs": "Score de combat moyen par manche : éliminations, dégâts et assistances réunis.",
+        "damage": "Dégâts infligés au gardien de la semaine."
       }
     },
     "progression": {
@@ -1155,7 +1160,22 @@
       }
     },
     "stats": {
+      "acs": "ACS",
+      "adr": "ADR",
+      "headshotPercentage": "HS%",
+      "kda": "KDA",
       "losses": "{{count}} D",
+      "matchesPlayed": "Matchs",
+      "record": "{{wins}} V / {{losses}} D",
+      "tooltip": {
+        "winRate": "Part des matchs gagnés.",
+        "kda": "(Éliminations + assistances) divisées par les morts.",
+        "headshotPercentage": "Part des tirs touchés qui ont atteint la tête.",
+        "adr": "Dégâts moyens infligés par manche.",
+        "acs": "Score de combat moyen par manche : éliminations, dégâts et assistances réunis.",
+        "matchesPlayed": "Matchs joués avec les filtres actuels."
+      },
+      "winRate": "Winrate",
       "wins": "{{count}} V"
     },
     "title": "Profil de l'opérateur",
@@ -1579,88 +1599,62 @@
       "base": {
         "eyebrow": "L'objectif",
         "title": "La base est le score",
-        "claim": "Tout ce qui est joué la fait grandir, quel que soit le mode. *Sa taille en fin de campagne*, c'est le score.",
+        "claim": "Vos parties infligent des dégâts au gardien et collectent des ressources qui améliorent la fusée et font grandir votre base. *Votre score grimpe avec elle.*",
         "spec1": {
-          "value": "28",
-          "label": "dégâts = 1 habitant"
+          "value": "1",
+          "label": "base partagée par toute l'escouade"
         },
         "spec2": {
-          "value": "0,008",
-          "label": "nourriture par habitant et par jour"
+          "value": "10",
+          "label": "étages de fusée, un par gardien vaincu"
         },
         "spec3": {
-          "value": "10",
-          "label": "étages de fusée à gagner"
+          "value": "5 %",
+          "label": "d'habitants perdus par soir de famine"
         }
       },
       "week": {
         "eyebrow": "La semaine",
         "title": "Une planète, un gardien, sept jours",
-        "claim": "Toute partie de n'importe quel opérateur frappe le gardien. *Percez ses lignes* et le vaisseau ramène les blessés le dimanche.",
+        "claim": "Toute partie de n'importe quel opérateur frappe le gardien. *Percer ses lignes* permet de ramener davantage de blessés le dimanche.",
         "spec1": {
-          "value": "30 min",
-          "label": "entre la partie et la barre"
+          "value": "10",
+          "label": "gardiens à abattre, un par semaine"
         },
         "spec2": {
-          "value": "35 %",
-          "label": "de la base s'il survit"
+          "value": "100 %",
+          "label": "des blessés extraits s'il tombe"
         },
         "spec3": {
-          "value": "7",
-          "label": "repas toujours protégés"
+          "value": "1",
+          "label": "coup fatal, retenu au nom de son auteur"
         }
       },
       "resources": {
         "eyebrow": "Les ressources",
         "title": "Nourriture et composants",
-        "claim": "Chaque partie produit les deux à la fois, selon le mode. *Ce sont de vrais stocks* : rien n'est remis à zéro le lundi.",
-        "spec1": {
-          "value": "70 %",
-          "label": "de composants en Compétitif"
-        },
-        "spec2": {
-          "value": "14",
-          "label": "composants par blessé atteint"
-        },
-        "spec3": {
-          "value": "12",
-          "label": "nourriture par blessé installé"
-        }
+        "claim": "Les composants agrandissent la fusée et la nourriture permet d'accueillir plus d'habitants dans la base. *Chaque partie octroie des ressources*, avec un gain plus important en fonction du mode joué."
       },
       "challenges": {
         "eyebrow": "Les défis",
         "title": "Un défi du jour, cinq de la semaine",
-        "claim": "Ils ramènent des blessés *acquis quoi qu'il arrive*, sans dépenser une ressource, et départagent le classement.",
-        "spec1": {
-          "value": "28",
-          "label": "défis du jour au catalogue"
-        },
-        "spec2": {
-          "value": "100",
-          "label": "défis hebdomadaires"
-        },
-        "spec3": {
-          "value": "12",
-          "label": "défis à valider par semaine"
-        }
+        "claim": "Ils ramènent des blessés *acquis quoi qu'il arrive*, sans dépenser une ressource, et alimentent le classement individuel."
       },
       "ranking": {
         "eyebrow": "Le classement",
-        "title": "Qui a porté la semaine",
-        "claim": "Dégâts au gardien plus blessés ramenés, remis à zéro le lundi. *Quatre titres* saluent le reste, et les règles disent tout.",
-        "spec1": {
-          "value": "4",
-          "label": "titres par semaine"
-        },
-        "spec2": {
-          "value": "+10 %",
-          "label": "six jours joués dans la semaine"
-        },
-        "spec3": {
-          "value": "1",
-          "label": "champion par semaine"
-        }
+        "title": "Contribution de la semaine",
+        "claim": "Le résumé de la contribution des joueurs durant la semaine. *Des titres sont attribués* afin de saluer l'effort."
       }
+    },
+    "preview": {
+      "population": "Habitants",
+      "stages": "Étages de fusée",
+      "stagesValue": "{{done}} sur {{total}}"
+    },
+    "track": {
+      "week": "Semaine",
+      "total": "sur {{total}}",
+      "stages": "{{done}} étages de fusée sur {{total}}"
     },
     "source": "Page {{page}}, données d'exemple",
     "samples": {
@@ -1668,17 +1662,9 @@
         "day": "Vendredi"
       },
       "challenges": {
-        "sharpSight": {
-          "name": "Viseur réglé",
-          "description": "Cumuler 50 headshots en Compétitif ou Non classé sur la semaine"
-        },
-        "fullWeek": {
-          "name": "Semaine pleine",
-          "description": "Jouer 5 parties en Compétitif ou Non classé sur la semaine"
-        },
-        "insatiable": {
-          "name": "Insatiable",
-          "description": "Jouer 28 parties, tous modes confondus, sur la semaine"
+        "session": {
+          "name": "Session du jour",
+          "description": "Jouer 3 parties, tous modes confondus, dans la journée."
         }
       }
     }

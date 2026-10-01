@@ -70,7 +70,11 @@
               <div></div>
               <div></div>
               <p class="px-2 text-center">
-                <span class="label-caption block truncate text-text-muted">
+                <span
+                  [appTooltip]="'playerProfile.matches.columnHints.kda' | translate"
+                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
+                  tabindex="0"
+                >
                   {{ 'playerProfile.matches.columns.kda' | translate }}
                 </span>
                 <span
@@ -80,41 +84,61 @@
                 </span>
               </p>
               <p class="px-2 text-center">
-                <span class="label-caption block truncate text-text-muted">
+                <span
+                  [appTooltip]="'playerProfile.matches.columnHints.kd' | translate"
+                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
+                  tabindex="0"
+                >
                   {{ 'playerProfile.matches.columns.kd' | translate }}
                 </span>
                 <span
-                  class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                  [class]="statTextClass(day.avgKd)"
+                  class="font-display mt-1.5 block text-sm leading-none font-semibold tabular-nums"
                 >
                   {{ formatKda(day.avgKd) }}
                 </span>
               </p>
               <p class="px-2 text-center">
-                <span class="label-caption block truncate text-text-muted">
+                <span
+                  [appTooltip]="'playerProfile.matches.columnHints.headshotPercentage' | translate"
+                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
+                  tabindex="0"
+                >
                   {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
                 </span>
                 <span
-                  class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                  [class]="statTextClass(day.avgHeadshotPercentage)"
+                  class="font-display mt-1.5 block text-sm leading-none font-semibold tabular-nums"
                 >
                   {{ formatHeadshotPercentage(day.avgHeadshotPercentage) }}
                 </span>
               </p>
               <p class="px-2 text-center">
-                <span class="label-caption block truncate text-text-muted">
+                <span
+                  [appTooltip]="'playerProfile.matches.columnHints.adr' | translate"
+                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
+                  tabindex="0"
+                >
                   {{ 'playerProfile.matches.columns.adr' | translate }}
                 </span>
                 <span
-                  class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                  [class]="statTextClass(day.avgAdr)"
+                  class="font-display mt-1.5 block text-sm leading-none font-semibold tabular-nums"
                 >
                   {{ formatScore(day.avgAdr) }}
                 </span>
               </p>
               <p class="px-2 text-center">
-                <span class="label-caption block truncate text-text-muted">
+                <span
+                  [appTooltip]="'playerProfile.matches.columnHints.acs' | translate"
+                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
+                  tabindex="0"
+                >
                   {{ 'playerProfile.matches.columns.acs' | translate }}
                 </span>
                 <span
-                  class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
+                  [class]="statTextClass(day.avgAcs)"
+                  class="font-display mt-1.5 block text-sm leading-none font-semibold tabular-nums"
                 >
                   {{ formatScore(day.avgAcs) }}
                 </span>
@@ -123,7 +147,11 @@
                    scale the ruleset's diminishing returns work on, so this is exactly what
                    the evening was worth to the week's boss. -->
               <p class="px-2 text-center">
-                <span class="label-caption block truncate text-text-muted">
+                <span
+                  [appTooltip]="'playerProfile.matches.columnHints.damage' | translate"
+                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
+                  tabindex="0"
+                >
                   {{ 'playerProfile.matches.columns.damage' | translate }}
                 </span>
                 <span
@@ -192,7 +220,10 @@
                 </div>
 
                 <p class="px-2 text-center">
-                  <span class="label-caption block text-text-muted">
+                  <span
+                    [appTooltip]="'playerProfile.matches.columnHints.kda' | translate"
+                    class="label-caption block text-text-muted cursor-help"
+                  >
                     {{ 'playerProfile.matches.columns.kda' | translate }}
                   </span>
                   <span
@@ -203,11 +234,14 @@
                 </p>
 
                 <p class="px-2 text-center">
-                  <span class="label-caption block text-text-muted">
+                  <span
+                    [appTooltip]="'playerProfile.matches.columnHints.kd' | translate"
+                    class="label-caption block text-text-muted cursor-help"
+                  >
                     {{ 'playerProfile.matches.columns.kd' | translate }}
                   </span>
                   <span
-                    [class]="kdVisual(row.kd).textClass"
+                    [class]="statTextClass(row.kd, kdVisual(row.kd).textClass)"
                     class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
                   >
                     {{ formatKda(row.kd) }}
@@ -215,33 +249,47 @@
                 </p>
 
                 <p class="px-2 text-center">
-                  <span class="label-caption block text-text-muted">
+                  <span
+                    [appTooltip]="
+                      'playerProfile.matches.columnHints.headshotPercentage' | translate
+                    "
+                    class="label-caption block text-text-muted cursor-help"
+                  >
                     {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
                   </span>
                   <span
-                    class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
+                    [class]="statTextClass(row.headshotPercentage)"
+                    class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
                   >
                     {{ formatHeadshotPercentage(row.headshotPercentage) }}
                   </span>
                 </p>
 
                 <p class="px-2 text-center">
-                  <span class="label-caption block text-text-muted">
+                  <span
+                    [appTooltip]="'playerProfile.matches.columnHints.adr' | translate"
+                    class="label-caption block text-text-muted cursor-help"
+                  >
                     {{ 'playerProfile.matches.columns.adr' | translate }}
                   </span>
                   <span
-                    class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
+                    [class]="statTextClass(row.adr)"
+                    class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
                   >
                     {{ formatScore(row.adr) }}
                   </span>
                 </p>
 
                 <p class="px-2 text-center">
-                  <span class="label-caption block text-text-muted">
+                  <span
+                    [appTooltip]="'playerProfile.matches.columnHints.acs' | translate"
+                    class="label-caption block text-text-muted cursor-help"
+                  >
                     {{ 'playerProfile.matches.columns.acs' | translate }}
                   </span>
                   <span
-                    class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
+                    [class]="statTextClass(row.acs)"
+                    class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
                   >
                     {{ formatScore(row.acs) }}
                   </span>
@@ -302,7 +350,11 @@
               <!-- What the evening was worth, beside how it went: the day is the scale the
                    ruleset's diminishing returns work on, so this is the figure that reached
                    the week's boss. -->
-              <span class="label-caption text-brand-500 tabular-nums">
+              <span
+                [appTooltip]="'playerProfile.matches.columnHints.damage' | translate"
+                class="label-caption text-brand-500 tabular-nums cursor-help focus-ring"
+                tabindex="0"
+              >
                 {{ 'playerProfile.matches.columns.damage' | translate }}
                 {{ formatDamageAmount(day.totalValoquestsDamage) }}
               </span>
@@ -373,7 +425,10 @@
                       class="grid grid-cols-3 gap-3 border-t border-text-primary/10 pt-4 sm:grid-cols-6"
                     >
                       <div>
-                        <dt class="label-caption text-text-muted">
+                        <dt
+                          [appTooltip]="'playerProfile.matches.columnHints.kda' | translate"
+                          class="label-caption text-text-muted cursor-help"
+                        >
                           {{ 'playerProfile.matches.columns.kda' | translate }}
                         </dt>
                         <dd
@@ -383,42 +438,59 @@
                         </dd>
                       </div>
                       <div>
-                        <dt class="label-caption text-text-muted">
+                        <dt
+                          [appTooltip]="'playerProfile.matches.columnHints.kd' | translate"
+                          class="label-caption text-text-muted cursor-help"
+                        >
                           {{ 'playerProfile.matches.columns.kd' | translate }}
                         </dt>
                         <dd
-                          [class]="kdVisual(row.kd).textClass"
+                          [class]="statTextClass(row.kd, kdVisual(row.kd).textClass)"
                           class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
                         >
                           {{ formatKda(row.kd) }}
                         </dd>
                       </div>
                       <div>
-                        <dt class="label-caption text-text-muted">
+                        <dt
+                          [appTooltip]="
+                            'playerProfile.matches.columnHints.headshotPercentage' | translate
+                          "
+                          class="label-caption text-text-muted cursor-help"
+                        >
                           {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
                         </dt>
                         <dd
-                          class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                          [class]="statTextClass(row.headshotPercentage)"
+                          class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
                         >
                           {{ formatHeadshotPercentage(row.headshotPercentage) }}
                         </dd>
                       </div>
                       <div>
-                        <dt class="label-caption text-text-muted">
+                        <dt
+                          [appTooltip]="'playerProfile.matches.columnHints.adr' | translate"
+                          class="label-caption text-text-muted cursor-help"
+                        >
                           {{ 'playerProfile.matches.columns.adr' | translate }}
                         </dt>
                         <dd
-                          class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                          [class]="statTextClass(row.adr)"
+                          class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
                         >
                           {{ formatScore(row.adr) }}
                         </dd>
                       </div>
                       <div>
-                        <dt class="label-caption text-text-muted">
+                        <dt
+                          [appTooltip]="'playerProfile.matches.columnHints.acs' | translate"
+                          class="label-caption text-text-muted cursor-help"
+                        >
                           {{ 'playerProfile.matches.columns.acs' | translate }}
                         </dt>
                         <dd
-                          class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
+                          [class]="statTextClass(row.acs)"
+                          class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
                         >
                           {{ formatScore(row.acs) }}
                         </dd>
@@ -426,7 +498,10 @@
                       <!-- Same arrow as the grid; the tooltip only helps a pointer, so the
                          reduced share stays readable to assistive tech through `sr-only`. -->
                       <div>
-                        <dt class="label-caption text-text-muted">
+                        <dt
+                          [appTooltip]="'playerProfile.matches.columnHints.damage' | translate"
+                          class="label-caption text-text-muted cursor-help"
+                        >
                           {{ 'playerProfile.matches.columns.damage' | translate }}
                         </dt>
                         <dd

@@ -6,6 +6,7 @@
     [appTooltipDisabled]="!tooltip()"
     [appTooltip]="tooltip()"
     [attr.tabindex]="tooltip() ? 0 : null"
+    [class.cursor-help]="tooltip()"
     class="focus-ring"
     >{{ label() }}</span
   >

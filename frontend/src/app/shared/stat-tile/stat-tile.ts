@@ -16,7 +16,7 @@ import { Tooltip } from '@shared/tooltip/tooltip';
   selector: 'app-stat-tile',
   imports: [Tooltip],
   templateUrl: './stat-tile.html',
-  host: { class: 'block border-t-2 border-brand-500/40 bg-text-primary/4 px-4 py-3.5' },
+  host: { class: 'block border-t-2 border-brand-500 bg-text-primary/4 px-4 py-3.5' },
 })
 export class StatTile {
   /**

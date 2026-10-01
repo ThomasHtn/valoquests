@@ -268,6 +268,107 @@
       </div>
 
       @if (viewMode() === 'MATCHES') {
+        <!-- Stat strip, for one mode at a time: an every-mode aggregate would mix incomparable
+           queues, so it is dropped while "all" is selected. The win rate leads with the wide tile,
+           the bar and the win/loss split; the rest stay uniform. -->
+        @if (gameModeFilter() !== null) {
+          @if (statistics(); as stats) {
+            <section [class]="statStripGridClass" animate.enter="fx-swap-in">
+              <!-- With nothing in scope every figure is a zero the backend had to send, not a
+                 record: judged as `null` so the strip greys out rather than reading "needs work". -->
+              @let hasSample = stats.matchesPlayed > 0;
+              @let winRate = winRateVisual(hasSample ? stats.winRate : null);
+              <!-- `border-current`, driven by the tile's text colour: `StatVisual` has no border
+                 utility. -->
+              <div
+                [class]="winRate.textClass"
+                class="col-span-2 border-t-2 border-current bg-text-primary/4 px-4 py-3.5 sm:col-span-3 lg:col-span-1"
+              >
+                <p class="label-caption flex items-center gap-2">
+                  <span
+                    [class]="winRate.barClass"
+                    aria-hidden="true"
+                    class="size-1.5 shrink-0 rotate-45"
+                  ></span>
+                  <span
+                    [appTooltip]="'playerProfile.stats.tooltip.winRate' | translate"
+                    class="focus-ring cursor-help text-text-muted"
+                    tabindex="0"
+                    >{{ 'playerProfile.stats.winRate' | translate }}</span
+                  >
+                </p>
+                <p class="mt-2.5 flex items-baseline gap-2.5">
+                  <span
+                    [class]="winRate.textClass"
+                    class="font-display text-2xl leading-none font-bold"
+                  >
+                    {{ formatWinRate(stats.winRate) }}
+                  </span>
+                  <span class="text-sm text-text-muted tabular-nums">
+                    {{
+                      'playerProfile.stats.record'
+                        | translate: { wins: stats.wins, losses: stats.losses }
+                    }}
+                  </span>
+                </p>
+                <app-progress-bar
+                  class="mt-3 w-full"
+                  heightClass="h-1.5"
+                  [colorClass]="winRate.barClass"
+                  [percentage]="stats.winRate"
+                />
+              </div>
+
+              <app-stat-tile
+                [label]="'playerProfile.stats.kda' | translate"
+                [tooltip]="'playerProfile.stats.tooltip.kda' | translate"
+                [value]="formatKda(stats.kda)"
+                [valueClass]="kdaVisual(hasSample ? stats.kda : null).textClass"
+              />
+
+              <app-stat-tile
+                [label]="'playerProfile.stats.headshotPercentage' | translate"
+                [tooltip]="'playerProfile.stats.tooltip.headshotPercentage' | translate"
+                [value]="formatHeadshotPercentage(stats.headshotPercentage)"
+              />
+
+              <app-stat-tile
+                [label]="'playerProfile.stats.adr' | translate"
+                [tooltip]="'playerProfile.stats.tooltip.adr' | translate"
+                [value]="formatScore(stats.adr)"
+              />
+
+              <app-stat-tile
+                [label]="'playerProfile.stats.acs' | translate"
+                [tooltip]="'playerProfile.stats.tooltip.acs' | translate"
+                [value]="formatScore(stats.acs)"
+              />
+
+              <!-- Spans the trailing gap on the two- and three-column grids, where it would
+                 otherwise sit alone against an empty cell. -->
+              <app-stat-tile
+                [label]="'playerProfile.stats.matchesPlayed' | translate"
+                [tooltip]="'playerProfile.stats.tooltip.matchesPlayed' | translate"
+                [value]="stats.matchesPlayed"
+                class="col-span-2 lg:col-span-1"
+              />
+            </section>
+          } @else if (scopedDetailsResource.isLoading()) {
+            <!-- Same silhouette as the strip, so the figures arriving do not shift the history. -->
+            <div [class]="statStripGridClass" aria-hidden="true">
+              @for (span of statSkeletonTileSpans; track $index) {
+                <div
+                  [class]="span"
+                  class="border-t-2 border-surface-700 bg-text-primary/4 px-4 py-3.5"
+                >
+                  <span class="mb-3 block h-2.5 w-14 bg-surface-700"></span>
+                  <span class="block h-6 w-12 bg-surface-700"></span>
+                </div>
+              }
+            </div>
+          }
+        }
+
         <!-- Where today stands on the diminishing-returns ladder, above the matches it prices.
              The rule was only ever legible after the fact, in a tooltip on a match already played;
              said here it can still change what the next one is. Dropped once the day is untouched

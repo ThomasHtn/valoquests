@@ -32,7 +32,14 @@ import {
   resolveCompetitiveTierVisual,
 } from '@core/players/competitive-tier.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
-import { extractRiotTag } from '@core/players/player-format.utils';
+import {
+  extractRiotTag,
+  formatHeadshotPercentage,
+  formatKda,
+  formatScore,
+  formatWinRate,
+} from '@core/players/player-format.utils';
+import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/player-stats.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
@@ -40,16 +47,24 @@ import { Avatar } from '@shared/avatar/avatar';
 import { Button } from '@shared/button/button';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { PageHeader } from '@layout/page-header/page-header';
+import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { MultiSelect } from '@shared/multi-select/multi-select';
 import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
+import { StatTile } from '@shared/stat-tile/stat-tile';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { MatchDay } from './match-day.model';
 import { groupMatchesByDay } from './match-day.utils';
 import { MatchHistory } from './match-history/match-history';
-import { GAME_MODE_BUTTON_COUNTS, MAX_PROGRESSION_SEASONS } from './player-profile.constants';
+import {
+  GAME_MODE_BUTTON_COUNTS,
+  MAX_PROGRESSION_SEASONS,
+  STAT_SKELETON_TILE_SPANS,
+  STAT_STRIP_GRID_CLASS,
+} from './player-profile.constants';
 import {
   buildNotFoundPlate,
   resolveCurrentSeasonId,
@@ -61,7 +76,8 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
 /**
  * Player-profile page.
  *
- * Displays one tracked player's identity, current competitive rank and filterable match history, loaded a page at a time as the user scrolls toward the end of the
+ * Displays one tracked player's identity, current competitive rank, the statistics of the filtered
+ * game mode and filterable match history, loaded a page at a time as the user scrolls toward the end of the
  * list.
  */
 @Component({
@@ -81,6 +97,9 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
     PageHeader,
     LucideChevronLeft,
     Button,
+    ProgressBar,
+    StatTile,
+    Tooltip,
   ],
   templateUrl: './player-profile.html',
   host: { class: PAGE_LAYOUT_CLASS },
@@ -216,6 +235,23 @@ export class PlayerProfile {
    */
   protected readonly details = computed(() =>
     this.detailsResource.hasValue() ? this.detailsResource.value() : null,
+  );
+
+  /**
+   * Reactive resource fetching the statistics of the filtered matches, idle while every mode is
+   * shown.
+   */
+  protected readonly scopedDetailsResource = this.playersApi.scopedDetails(
+    this.playerId,
+    this.gameModeFilter,
+    this.seasonId,
+  );
+
+  /**
+   * Statistics of the filtered matches, or `null` while every mode is shown, loading or on error.
+   */
+  protected readonly statistics = computed(
+    () => resourceValue(this.scopedDetailsResource, undefined)?.statistics ?? null,
   );
 
   /**
@@ -487,6 +523,28 @@ export class PlayerProfile {
    * Colour of the share the next match keeps, exposed to the template.
    */
   protected readonly yieldToneClass = resolveYieldToneClass;
+
+  /**
+   * Formatters and colours of the stat strip, exposed to the template.
+   */
+  protected readonly formatWinRate = formatWinRate;
+
+  protected readonly formatKda = formatKda;
+
+  protected readonly formatHeadshotPercentage = formatHeadshotPercentage;
+
+  protected readonly formatScore = formatScore;
+
+  protected readonly winRateVisual = resolveWinRateVisual;
+
+  protected readonly kdaVisual = resolveKdaVisual;
+
+  /**
+   * Grid of the stat strip and the spans of its skeleton tiles, exposed to the template.
+   */
+  protected readonly statStripGridClass = STAT_STRIP_GRID_CLASS;
+
+  protected readonly statSkeletonTileSpans = STAT_SKELETON_TILE_SPANS;
 
   constructor() {
     // An after-render effect: the filter bar only exists once the player's details have rendered.

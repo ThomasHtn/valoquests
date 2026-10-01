@@ -7,6 +7,7 @@ import { Translation } from '@core/i18n/translation';
 import {
   resolveAgentImageUrl,
   resolveAgentInitial,
+  resolveDamageHintKey,
   resolveMapImageUrl,
 } from '@core/matches/match-format.utils';
 import { resolveResultAccentClass, resolveResultTextClass } from '@core/matches/match-visual.utils';
@@ -55,6 +56,8 @@ export class TourTracker {
   protected readonly mapImageUrl = resolveMapImageUrl;
 
   protected readonly agentImageUrl = resolveAgentImageUrl;
+
+  protected readonly damageHintKey = resolveDamageHintKey;
 
   private readonly translation = inject(Translation);
 

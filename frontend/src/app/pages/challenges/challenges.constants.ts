@@ -4,16 +4,6 @@
 export const DAILY_TONE = 'var(--color-accent-cyan)';
 
 /**
- * Largest target a band is cut into units for: past it, the notches would crowd the band.
- */
-export const MAX_NOTCHED_TARGET = 12;
-
-/**
- * Largest target a band keeps its notches for on a phone, where the band is narrower.
- */
-export const MAX_NOTCHED_TARGET_PHONE = 6;
-
-/**
  * Largest target a phone line is cut into one segment per unit for: past it, a continuous line.
  */
 export const MAX_SEGMENTED_TARGET = 12;

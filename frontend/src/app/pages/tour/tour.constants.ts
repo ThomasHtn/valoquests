@@ -24,6 +24,15 @@ export const TOUR_STEPS: readonly TourStepId[] = [
 export const TOUR_SPEC_KEYS: readonly string[] = ['spec1', 'spec2', 'spec3'];
 
 /**
+ * Steps that close on their claim alone: their screen already says it, and figures only cloud it.
+ */
+export const TOUR_STEPS_WITHOUT_SPECS: readonly TourStepId[] = [
+  'resources',
+  'challenges',
+  'ranking',
+];
+
+/**
  * Marker wrapping the words a step's claim sets in relief, as `*so*`. In the dictionary rather
  * than in markup: the emphasis falls on different words in French and in English.
  */

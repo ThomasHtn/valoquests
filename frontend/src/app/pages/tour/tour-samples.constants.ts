@@ -4,7 +4,7 @@ import { ChallengeOperator } from '@pages/challenges/challenges.model';
 import { BoardRow } from '@pages/leaderboard/leaderboard.model';
 import { Capacity, Contribution, Mission, SundayStakes } from '@pages/overview/overview.model';
 
-import { TourSampleChallenge, TourSampleMatch } from './tour.model';
+import { TourSampleDaily, TourSampleMatch } from './tour.model';
 
 /*
  * The tour's illustrations run on this fixed sample campaign rather than on the live one: between
@@ -74,11 +74,6 @@ export const TOUR_SAMPLE_MATCHES: readonly TourSampleMatch[] = [
  * Inhabitants of the sample base.
  */
 export const TOUR_SAMPLE_POPULATION = 12_480;
-
-/**
- * Inhabitants the sample base gained today.
- */
-export const TOUR_SAMPLE_POPULATION_CHANGE = 214;
 
 /**
  * Guardians the sample squad defeated so far, one rocket stage each.
@@ -178,13 +173,19 @@ export const TOUR_SAMPLE_STAKES: SundayStakes = {
 };
 
 /**
- * Three of the sample week's five challenges, one tier apart.
+ * The sample Friday's challenge, worded so a non-player reads it at once.
  */
-export const TOUR_SAMPLE_CHALLENGES: readonly TourSampleChallenge[] = [
-  { key: 'sharpSight', difficulty: 'NORMAL', survivors: 9, target: 50, progress: [50, 50, 31, 50] },
-  { key: 'fullWeek', difficulty: 'MEDIUM', survivors: 14, target: 5, progress: [5, 3, 5, 2] },
-  { key: 'insatiable', difficulty: 'HARD', survivors: 21, target: 28, progress: [19, 11, 28, 7] },
-];
+export const TOUR_SAMPLE_DAILY: TourSampleDaily = {
+  key: 'session',
+  target: 3,
+  survivors: 6,
+  progress: [3, 2, 3, 0],
+};
+
+/**
+ * Operators who validated each day's challenge before the sample Friday, Monday first.
+ */
+export const TOUR_SAMPLE_DAILY_TALLY: readonly number[] = [4, 2, 3, 4];
 
 /**
  * The sample week's three leaders, the champion on top.

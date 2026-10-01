@@ -11,6 +11,7 @@ import { parseRouteId } from '@core/http/route-id.utils';
 import {
   resolveAgentImageUrl,
   resolveAgentInitial,
+  resolveDamageHintKey,
   resolveMapImageUrl,
   resolveMatchScore,
 } from '@core/matches/match-format.utils';
@@ -267,12 +268,9 @@ export class MatchDetail {
    * @returns The explanatory sentence.
    */
   protected damageExplanation(coefficientPercent: number): string {
-    return this.translation.translate(
-      coefficientPercent === 0
-        ? 'playerProfile.matches.damage.unvalued'
-        : 'playerProfile.matches.damage.coefficient',
-      { percent: coefficientPercent },
-    );
+    return this.translation.translate(resolveDamageHintKey(coefficientPercent), {
+      percent: coefficientPercent,
+    });
   }
 
   /**

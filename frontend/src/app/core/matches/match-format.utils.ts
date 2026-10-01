@@ -143,3 +143,19 @@ export function resolveMatchScore(
     ? { ally: allyScore as number, enemy: enemyScore as number }
     : null;
 }
+
+/**
+ * Picks the sentence explaining a match's ValoQuests damage, so the tooltip matches what the cell
+ * shows: no value at all, the full value, or a reduced one flagged by a down arrow.
+ *
+ * @param coefficientPercent - Share of its base damage the match kept on the day's ladder.
+ * @returns The translation key of the matching explanation.
+ */
+export function resolveDamageHintKey(coefficientPercent: number): string {
+  if (coefficientPercent <= 0) {
+    return 'playerProfile.matches.damage.unvalued';
+  }
+  return coefficientPercent >= 100
+    ? 'playerProfile.matches.damage.full'
+    : 'playerProfile.matches.damage.reduced';
+}

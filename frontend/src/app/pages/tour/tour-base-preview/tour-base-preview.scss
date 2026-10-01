@@ -1,0 +1,71 @@
+/*
+ * Colours spelled out: a component stylesheet is compiled outside the Tailwind theme context.
+ *   brand-400 #e8ab6b · brand-500 #d9954a · surface-700 #253645 · sunken #0a151d
+ */
+
+/* The overview's scrim under the population figure: dark, not a light wash. */
+.preview-wash {
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgb(4 10 17 / 92%) 0%,
+    rgb(4 10 17 / 42%) 30%,
+    transparent 58%
+  );
+}
+
+/* The overview's population figure, a size down for the narrower column, and without its halo. */
+.preview-pop {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 1.75rem + 3vw, 4.25rem);
+  font-weight: 600;
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+  color: #e8ab6b;
+}
+
+/* A flat track filled in amber up to the value, with a hard stop, and a square amber thumb. */
+.preview-slider {
+  --track: 6px;
+  width: 100%;
+  height: 1.25rem;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+}
+
+.preview-slider::-webkit-slider-runnable-track {
+  height: var(--track);
+  background: linear-gradient(to right, #d9954a var(--fill), #253645 var(--fill));
+}
+
+.preview-slider::-moz-range-track {
+  height: var(--track);
+  background: linear-gradient(to right, #d9954a var(--fill), #253645 var(--fill));
+}
+
+.preview-slider::-webkit-slider-thumb {
+  width: 1rem;
+  height: 1rem;
+  margin-top: calc((var(--track) - 1rem) / 2);
+  border: 0;
+  border-radius: 0;
+  background: #e8ab6b;
+  box-shadow: 0 0 0 2px #0a151d;
+  appearance: none;
+}
+
+.preview-slider::-moz-range-thumb {
+  width: 1rem;
+  height: 1rem;
+  border: 0;
+  border-radius: 0;
+  background: #e8ab6b;
+  box-shadow: 0 0 0 2px #0a151d;
+}
+
+.preview-slider:focus-visible {
+  outline: 2px solid #e8ab6b;
+  outline-offset: 4px;
+}

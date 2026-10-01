@@ -2,22 +2,21 @@ import { Component, computed, ElementRef, inject, signal, viewChild } from '@ang
 import { Router } from '@angular/router';
 import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
-import { resolveDifficultyVisual } from '@core/challenges/challenge-visual.utils';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { resolveLocale } from '@core/i18n/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { TourVisit } from '@core/tour/tour-visit';
 import { Breakpoint } from '@core/viewport/breakpoint';
-import { ChallengeCardView } from '@pages/challenges/challenge-card/challenge-card';
-import { ChallengeCard } from '@pages/challenges/challenges.model';
-import { buildRungs } from '@pages/challenges/challenges.utils';
+import { BoardRow, DayCell } from '@pages/challenges/challenges.model';
+import { DailyWeek } from '@pages/challenges/daily-week/daily-week';
+import { DeckCard } from '@pages/challenges/deck-card/deck-card';
 import { Podium } from '@pages/leaderboard/podium/podium';
-import { BaseScene } from '@pages/overview/base-scene/base-scene';
 import { MissionReadings } from '@pages/overview/mission-readings/mission-readings';
 import { Mission } from '@pages/overview/overview.model';
-import { CountUp } from '@shared/count-up/count-up';
 import { NavChip } from '@shared/nav-chip/nav-chip';
 
+import { TourBasePreview } from './tour-base-preview/tour-base-preview';
+import { TourCampaignTrack } from './tour-campaign-track/tour-campaign-track';
 import { TourCapacity } from './tour-capacity/tour-capacity';
 import {
   FULL_CAMPAIGN_POPULATION,
@@ -25,23 +24,25 @@ import {
   TOUR_SPEC_KEYS,
   TOUR_STEP_SOURCES,
   TOUR_STEPS,
+  TOUR_STEPS_WITHOUT_SPECS,
 } from './tour.constants';
 import { TourStepId } from './tour.model';
 import {
   TOUR_SAMPLE_CAPACITY,
-  TOUR_SAMPLE_CHALLENGES,
   TOUR_SAMPLE_CONTRIBUTION,
+  TOUR_SAMPLE_DAILY,
+  TOUR_SAMPLE_DAILY_TALLY,
   TOUR_SAMPLE_DEADLINE_IN_MS,
   TOUR_SAMPLE_MATCHES,
   TOUR_SAMPLE_MISSION,
   TOUR_SAMPLE_OPERATORS,
   TOUR_SAMPLE_PODIUM,
   TOUR_SAMPLE_POPULATION,
-  TOUR_SAMPLE_POPULATION_CHANGE,
   TOUR_SAMPLE_STAGES_DONE,
   TOUR_SAMPLE_STAKES,
 } from './tour-samples.constants';
 import { TourTracker } from './tour-tracker/tour-tracker';
+import { buildTourDailyRow, buildTourWeek, endOfDay, startOfWeek } from './tour.utils';
 
 /**
  * Guided tour.
@@ -64,14 +65,15 @@ import { TourTracker } from './tour-tracker/tour-tracker';
     TranslatePipe,
     LucideChevronLeft,
     LucideChevronRight,
-    BaseScene,
     MissionReadings,
-    ChallengeCardView,
+    DeckCard,
+    DailyWeek,
     Podium,
-    CountUp,
     NavChip,
     TourTracker,
     TourCapacity,
+    TourBasePreview,
+    TourCampaignTrack,
   ],
   templateUrl: './tour.html',
   styleUrl: './tour.scss',
@@ -99,6 +101,8 @@ export class Tour {
   protected readonly steps = TOUR_STEPS;
 
   protected readonly specKeys = TOUR_SPEC_KEYS;
+
+  protected readonly stepsWithoutSpecs = TOUR_STEPS_WITHOUT_SPECS;
 
   protected readonly sources = TOUR_STEP_SOURCES;
 
@@ -136,8 +140,6 @@ export class Tour {
 
   protected readonly samplePopulation = TOUR_SAMPLE_POPULATION;
 
-  protected readonly samplePopulationChange = TOUR_SAMPLE_POPULATION_CHANGE;
-
   protected readonly sampleStagesDone = TOUR_SAMPLE_STAGES_DONE;
 
   protected readonly sampleCapacity = TOUR_SAMPLE_CAPACITY;
@@ -157,37 +159,37 @@ export class Tour {
   };
 
   /**
-   * The sample week's challenges, worded as the challenges page words its own.
+   * The sample day's challenge, laid out as the challenges page lays it out on a phone. Still
+   * running: it closes at the end of the visitor's day.
    */
-  protected readonly sampleChallenges = computed<readonly ChallengeCard[]>(() =>
-    TOUR_SAMPLE_CHALLENGES.map((challenge) => {
-      const visual = resolveDifficultyVisual(challenge.difficulty);
-      const rungs = buildRungs(
-        TOUR_SAMPLE_OPERATORS,
-        challenge.target,
-        (playerId) => {
-          const value = challenge.progress[playerId - 1] ?? 0;
-          return { value, done: value >= challenge.target };
-        },
-        (amount) => String(amount),
-      );
-      return {
-        tone: visual.tierColor,
-        mark: visual.tier,
-        kind: this.translation.translate(`common.challengeDifficulty.${challenge.difficulty}`),
-        name: this.translation.translate(`tour.samples.challenges.${challenge.key}.name`),
-        description: this.translation.translate(
-          `tour.samples.challenges.${challenge.key}.description`,
-        ),
-        survivors: challenge.survivors,
-        rankingPoints: 0,
-        rescueActive: true,
-        target: challenge.target,
-        rungs,
-        doneCount: rungs.filter((rung) => rung.done).length,
-      };
-    }),
+  protected readonly sampleDailyRow = computed<BoardRow>(() => {
+    return buildTourDailyRow(
+      TOUR_SAMPLE_DAILY,
+      TOUR_SAMPLE_OPERATORS,
+      endOfDay(Date.now()),
+      resolveLocale(this.translation.language()),
+      (key, params) => this.translation.translate(key, params),
+    );
+  });
+
+  /**
+   * The sample week's seven days, today on the sample Friday.
+   */
+  protected readonly sampleDays = computed<readonly DayCell[]>(() =>
+    buildTourWeek(
+      TOUR_SAMPLE_DAILY_TALLY,
+      this.sampleDailyRow().doneCount,
+      TOUR_SAMPLE_OPERATORS.length,
+      startOfWeek(Date.now()),
+      resolveLocale(this.translation.language()),
+      (key, params) => this.translation.translate(key, params),
+    ),
   );
+
+  /**
+   * The day the strip picks: today, the one after the tallied days.
+   */
+  protected readonly sampleToday = TOUR_SAMPLE_DAILY_TALLY.length;
 
   /**
    * Splits a step's translated claim into plain and emphasized runs, marked `*so*` in the
@@ -201,15 +203,6 @@ export class Tour {
       .split(TOUR_EMPHASIS_MARKER)
       .map((text, index) => ({ text, strong: index % 2 === 1 }))
       .filter((run) => run.text.length > 0);
-  }
-
-  protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
-  }
-
-  protected signed(amount: number): string {
-    const sign = amount > 0 ? '+' : amount < 0 ? '−' : '';
-    return `${sign}${this.format(Math.abs(amount))}`;
   }
 
   protected next(): void {
@@ -241,12 +234,18 @@ export class Tour {
 
   /**
    * Keyboard shortcuts covering the on-screen controls: the arrow keys walk the tour, `Escape`
-   * leaves it. Ignored while a modifier is held, so browser and OS shortcuts keep their meaning.
+   * leaves it. Ignored while a modifier is held, so browser and OS shortcuts keep their meaning,
+   * and while a field has focus, so the base's sliders keep their arrows.
    *
    * @param event - The keyboard event to interpret.
    */
   protected onKeydown(event: KeyboardEvent): void {
-    if (event.altKey || event.ctrlKey || event.metaKey) {
+    if (
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.target instanceof HTMLInputElement
+    ) {
       return;
     }
 

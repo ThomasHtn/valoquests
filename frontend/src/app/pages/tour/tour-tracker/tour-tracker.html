@@ -74,7 +74,7 @@
       <!-- The column the whole game reads from: what the match was worth to the week's boss. -->
       <p
         [appTooltip]="
-          'playerProfile.matches.damage.coefficient' | translate: { percent: match.damagePercent }
+          damageHintKey(match.damagePercent) | translate: { percent: match.damagePercent }
         "
         appTooltipPosition="above"
         class="stat cursor-help"

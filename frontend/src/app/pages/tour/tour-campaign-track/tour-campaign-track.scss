@@ -1,0 +1,102 @@
+/*
+ * Colours spelled out: a component stylesheet is compiled outside the Tailwind theme context.
+ *   brand-500 #d9954a · sunken #0a151d · muted #868b8d · edge-strong rgb(236 232 225 / 20%)
+ */
+
+.track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+/* The road behind the planets: dashed ahead, solid amber over the evacuated stretch. */
+.track::before,
+.track::after {
+  content: '';
+  position: absolute;
+  left: 5%;
+  top: 1.375rem;
+}
+
+.track::before {
+  right: 5%;
+  border-top: 1px dashed rgb(236 232 225 / 20%);
+}
+
+.track::after {
+  width: var(--done);
+  border-top: 2px solid #d9954a;
+  transform: translateY(-0.5px);
+}
+
+.track-cell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.track-orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, 2.75rem);
+  aspect-ratio: 1;
+}
+
+.track-cell--now .track-orb {
+  width: min(100%, 4rem);
+  margin-block: -0.625rem;
+}
+
+.track-cell--now .track-orb::after {
+  content: '';
+  position: absolute;
+  inset: 9%;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #d9954a;
+}
+
+.track-cell--ahead img {
+  opacity: 0.28;
+  filter: grayscale(0.6);
+}
+
+/* An evacuated week carries a tick, the same mark a validated challenge gets. */
+.track-cell--done .track-orb::after {
+  content: '';
+  position: absolute;
+  right: 2%;
+  bottom: 8%;
+  width: 32%;
+  height: 32%;
+  border-radius: 50%;
+  background: #d9954a
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a151d' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    center / 62% no-repeat;
+}
+
+.track-label {
+  margin-top: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #868b8d;
+}
+
+.track-cell--now .track-label {
+  color: #d9954a;
+}
+
+/* On a phone only the current planet keeps its name, at the orb's own size: ten labels do not fit. */
+@media (width < 40rem) {
+  .track-cell:not(.track-cell--now) .track-label {
+    visibility: hidden;
+  }
+
+  .track-cell--now .track-orb {
+    margin-block: 0;
+  }
+}

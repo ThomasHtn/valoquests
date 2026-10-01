@@ -94,3 +94,18 @@ export function resolveKdaVisual(kda: number | null): StatVisual {
 export function resolveKdVisual(kd: number | null): StatVisual {
   return resolveStatVisual(kd, KD_GOOD_THRESHOLD);
 }
+
+/**
+ * Text colour of a stat cell: the given colour when the stat was reported, muted otherwise, so the
+ * em dash standing in for a missing value recedes like the score's does.
+ *
+ * @param value - The stat, when reported; absent from the payload on modes that do not report it.
+ * @param reportedClass - Colour applied when the stat was reported.
+ * @returns The Tailwind text-colour utility to apply.
+ */
+export function resolveStatTextClass(
+  value: number | null | undefined,
+  reportedClass = 'text-text-primary',
+): string {
+  return Number.isFinite(value) ? reportedClass : 'text-text-muted';
+}

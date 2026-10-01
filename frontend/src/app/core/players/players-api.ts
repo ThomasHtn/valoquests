@@ -2,6 +2,7 @@ import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal } from '@angular/core';
 
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
+import { GameMode } from '@core/matches/game-mode.model';
 
 import { PlayerDetails } from './player-details.model';
 import { PlayerProgression } from './player-progression.model';
@@ -35,6 +36,44 @@ export class PlayersApi {
     return httpResource<PlayerDetails>(() => {
       const playerId = id();
       return playerId === null ? undefined : API_ENDPOINTS.playerDetails(playerId);
+    });
+  }
+
+  /**
+   * Same profile as {@link details}, with its statistics scoped to one game mode and, optionally,
+   * one season.
+   *
+   * Kept apart from {@link details} so a filter change only refetches the figures, never the
+   * identity banner.
+   *
+   * @param id - Reactive internal player identifier, or `null` when the route names none.
+   * @param gameMode - Reactive game mode the statistics are scoped to, or `null` to leave the
+   *   resource idle: an every-mode aggregate would mix incomparable queues.
+   * @param seasonId - Reactive season filter, or `null` to include every season.
+   * @returns The reactive resource fetching the scoped profile.
+   */
+  public scopedDetails(
+    id: Signal<number | null>,
+    gameMode: Signal<GameMode | null>,
+    seasonId: Signal<number | null>,
+  ): HttpResourceRef<PlayerDetails | undefined> {
+    return httpResource<PlayerDetails>(() => {
+      const playerId = id();
+      const selectedGameMode = gameMode();
+
+      if (playerId === null || selectedGameMode === null) {
+        return undefined;
+      }
+
+      const selectedSeasonId = seasonId();
+
+      return {
+        url: API_ENDPOINTS.playerDetails(playerId),
+        params: {
+          gameMode: selectedGameMode,
+          ...(selectedSeasonId !== null ? { seasonId: selectedSeasonId } : {}),
+        },
+      };
     });
   }
 

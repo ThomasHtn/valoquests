@@ -427,7 +427,6 @@
       }
     },
     "card": {
-      "perOperator": "/ op.",
       "competitiveOnly": "Competitive only",
       "woundedTooltip": {
         "one": "{{count}} wounded brought home per validation",
@@ -467,9 +466,6 @@
     "week": {
       "timeLabel": "Closes in",
       "timeRemaining": "{{days}}d {{hours}}h"
-    },
-    "challenge": {
-      "completed": "Challenge validated"
     },
     "title": {
       "CHAMPION": "Champion",
@@ -983,9 +979,10 @@
     "loading": "Loading player profile…",
     "matches": {
       "damage": {
-        "coefficient": "Damage dealt to the week's guardian. This match kept {{percent}}% of its base value: a day's best games count in full, and the ones after them count for less and less.",
+        "full": "Counts in full: one of the day's 5 best games.",
+        "reduced": "Cut to {{percent}}%: past the day's 5 best games, value drops.",
         "share": "{{percent}}% of value",
-        "unvalued": "This match does not count for ValoQuests: the ruleset values neither this mode nor this kind of game."
+        "unvalued": "Doesn't count: this mode isn't valued."
       },
       "columns": {
         "acs": "ACS",
@@ -1046,6 +1043,14 @@
         "REMAKE": "Remake",
         "UNKNOWN": "Unknown",
         "WIN": "Win"
+      },
+      "columnHints": {
+        "kda": "Kills / deaths / assists.",
+        "kd": "Kills divided by deaths. Above 1, more kills than deaths.",
+        "headshotPercentage": "Share of landed shots that hit the head.",
+        "adr": "Average damage dealt per round.",
+        "acs": "Average combat score per round: kills, damage and assists combined.",
+        "damage": "Damage dealt to the week's guardian."
       }
     },
     "progression": {
@@ -1155,7 +1160,22 @@
       }
     },
     "stats": {
+      "acs": "ACS",
+      "adr": "ADR",
+      "headshotPercentage": "HS%",
+      "kda": "KDA",
       "losses": "{{count}} L",
+      "matchesPlayed": "Matches",
+      "record": "{{wins}} W / {{losses}} L",
+      "tooltip": {
+        "winRate": "Share of matches won.",
+        "kda": "(Kills + assists) divided by deaths.",
+        "headshotPercentage": "Share of landed shots that hit the head.",
+        "adr": "Average damage dealt per round.",
+        "acs": "Average combat score per round: kills, damage and assists combined.",
+        "matchesPlayed": "Matches played under the current filters."
+      },
+      "winRate": "Win rate",
       "wins": "{{count}} W"
     },
     "title": "Operator profile",
@@ -1579,88 +1599,62 @@
       "base": {
         "eyebrow": "The goal",
         "title": "The base is the score",
-        "claim": "Everything played grows it, whatever the mode. *Its size at the end of the campaign* is the score.",
+        "claim": "Your matches deal damage to the guardian and collect resources that upgrade the rocket and grow your base. *Your score climbs with it.*",
         "spec1": {
-          "value": "28",
-          "label": "damage = 1 inhabitant"
+          "value": "1",
+          "label": "base shared by the whole squad"
         },
         "spec2": {
-          "value": "0.008",
-          "label": "food per inhabitant per day"
+          "value": "10",
+          "label": "rocket stages, one per guardian defeated"
         },
         "spec3": {
-          "value": "10",
-          "label": "rocket stages to earn"
+          "value": "5 %",
+          "label": "of inhabitants lost per night of famine"
         }
       },
       "week": {
         "eyebrow": "The week",
         "title": "One planet, one guardian, seven days",
-        "claim": "Every match by any operator hits the guardian. *Break through its lines* and the ship brings the wounded home on Sunday.",
+        "claim": "Every match by any operator hits the guardian. *Breaking through its lines* brings more wounded home on Sunday.",
         "spec1": {
-          "value": "30 min",
-          "label": "from the match to the bar"
+          "value": "10",
+          "label": "guardians to bring down, one a week"
         },
         "spec2": {
-          "value": "35 %",
-          "label": "of the base if it survives"
+          "value": "100 %",
+          "label": "of the wounded extracted if it falls"
         },
         "spec3": {
-          "value": "7",
-          "label": "meals always protected"
+          "value": "1",
+          "label": "killing blow, credited to whoever lands it"
         }
       },
       "resources": {
         "eyebrow": "The resources",
         "title": "Food and components",
-        "claim": "Every match produces both at once, by mode. *These are real stocks*: nothing is reset on Monday.",
-        "spec1": {
-          "value": "70 %",
-          "label": "components in Competitive"
-        },
-        "spec2": {
-          "value": "14",
-          "label": "components per wounded reached"
-        },
-        "spec3": {
-          "value": "12",
-          "label": "food per wounded settled"
-        }
+        "claim": "Components make the rocket bigger and food lets the base take in more inhabitants. *Every match grants resources*, with a bigger gain depending on the mode played."
       },
       "challenges": {
         "eyebrow": "The challenges",
         "title": "One a day, five a week",
-        "claim": "They bring back wounded *earned whatever happens*, spending no resource, and settle the ranking's ties.",
-        "spec1": {
-          "value": "28",
-          "label": "daily challenges in the catalogue"
-        },
-        "spec2": {
-          "value": "100",
-          "label": "weekly challenges"
-        },
-        "spec3": {
-          "value": "12",
-          "label": "challenges to validate each week"
-        }
+        "claim": "They bring back wounded *earned whatever happens*, spending no resource, and feed the individual ranking."
       },
       "ranking": {
         "eyebrow": "The ranking",
-        "title": "Who carried the week",
-        "claim": "Guardian damage plus wounded brought home, reset on Monday. *Four titles* honour the rest, and the rules say it all.",
-        "spec1": {
-          "value": "4",
-          "label": "titles per week"
-        },
-        "spec2": {
-          "value": "+10 %",
-          "label": "six days played in the week"
-        },
-        "spec3": {
-          "value": "1",
-          "label": "champion per week"
-        }
+        "title": "The week's contribution",
+        "claim": "A summary of each player's contribution over the week. *Titles are awarded* to honour the effort."
       }
+    },
+    "preview": {
+      "population": "Inhabitants",
+      "stages": "Rocket stages",
+      "stagesValue": "{{done}} of {{total}}"
+    },
+    "track": {
+      "week": "Week",
+      "total": "of {{total}}",
+      "stages": "{{done}} of {{total}} rocket stages"
     },
     "source": "{{page}} page, sample data",
     "samples": {
@@ -1668,17 +1662,9 @@
         "day": "Friday"
       },
       "challenges": {
-        "sharpSight": {
-          "name": "Dialled in",
-          "description": "Land 50 headshots in Competitive or Unrated over the week"
-        },
-        "fullWeek": {
-          "name": "Full week",
-          "description": "Play 5 matches in Competitive or Unrated over the week"
-        },
-        "insatiable": {
-          "name": "Insatiable",
-          "description": "Play 28 matches, any mode, over the week"
+        "session": {
+          "name": "Daily session",
+          "description": "Play 3 matches, any mode, during the day."
         }
       }
     }

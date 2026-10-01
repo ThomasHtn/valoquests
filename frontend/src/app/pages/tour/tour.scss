@@ -51,39 +51,15 @@
   }
 }
 
-/* The overview's scrim under the population figure: dark, not a light wash. */
-.tour-scene-wash {
-  pointer-events: none;
-  background: linear-gradient(
-    to top,
-    rgb(4 10 17 / 92%) 0%,
-    rgb(4 10 17 / 42%) 30%,
-    transparent 58%
-  );
+/* The day's challenge at a phone's width, as the challenges page shows it there; flush left with
+   the caption under it. */
+.tour-phone-card {
+  max-width: 24rem;
 }
 
-/* The overview's population figure, a size down for the narrower column, and without its halo. */
-.tour-pop {
-  font-family: var(--font-display);
-  font-size: clamp(2.5rem, 1.75rem + 3vw, 4.25rem);
-  font-weight: 600;
-  line-height: 0.86;
-  letter-spacing: -0.02em;
-  color: #e8ab6b;
-}
-
-/* The weekly challenges shown are the ones there is room for: three from the tablet up, two on a
-   phone, one on a short phone. */
-@media (width < 40rem) {
-  .tour-extra {
-    display: none;
-  }
-}
-
-@media (width < 40rem) and (height < 720px) {
-  .tour-extra-short {
-    display: none;
-  }
+/* The week's strip flush with the card's edges, cancelling its padding as the page's deck does. */
+.tour-tally {
+  margin: 1rem -1rem -1.1rem -1.15rem;
 }
 
 /* The words a claim turns on. Weight and value only: the eyebrow and the figures spend the accent. */

@@ -34,3 +34,23 @@ export const MAX_PROGRESSION_SEASONS = 5;
  */
 export const MATCH_ROW_GRID_CLASS =
   'grid grid-cols-[minmax(0,2fr)_repeat(8,minmax(0,1fr))] items-center';
+
+/**
+ * Column grid of the stat strip, shared with its skeleton so both keep the same silhouette. The
+ * win rate leads with the wide column.
+ */
+export const STAT_STRIP_GRID_CLASS =
+  'grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(0,1fr))]';
+
+/**
+ * Span of each placeholder tile in the stat strip's skeleton, mirroring the loaded tiles: the win
+ * rate spans the row below `lg`, the match count fills the trailing gap.
+ */
+export const STAT_SKELETON_TILE_SPANS: readonly string[] = [
+  'col-span-2 sm:col-span-3 lg:col-span-1',
+  '',
+  '',
+  '',
+  '',
+  'col-span-2 lg:col-span-1',
+];

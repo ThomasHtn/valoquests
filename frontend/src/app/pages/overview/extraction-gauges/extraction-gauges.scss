@@ -4,7 +4,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
-  margin-top: 1.75rem;
+  margin-top: 2.5rem;
 }
 
 /* One dial a row on a phone, two on a tablet, the four side by side from the desktop. */
@@ -246,11 +246,14 @@
   color: var(--tone);
 }
 
+/* Pinned to the bottom of the base: a third row of mode tags or the aboard split pushed it a few
+   pixels lower than its neighbours. */
 .gauge-rate {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
+  margin-top: auto;
   line-height: 1.5;
   color: var(--color-text-secondary);
 }
@@ -265,23 +268,23 @@
   white-space: nowrap;
 }
 
+/* Two columns shared by both rows: figures right-aligned on one edge, labels left-aligned on the
+   other, so the numbers line up whatever their width. */
 .split {
-  display: flex;
-  flex-direction: column;
-  align-content: center;
-  justify-content: center;
-  gap: 0.35rem;
+  display: grid;
+  grid-template-columns: auto auto;
+  place-content: center;
+  align-items: baseline;
+  gap: 0.35rem 0.45rem;
   min-height: 3.95rem;
 }
 
 .split-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.45rem;
+  display: contents;
 }
 
 .split-row b {
+  justify-self: end;
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 600;
@@ -290,6 +293,8 @@
 }
 
 .split-row .label-caption {
+  justify-self: start;
+  text-align: left;
   color: var(--color-text-secondary);
 }
 

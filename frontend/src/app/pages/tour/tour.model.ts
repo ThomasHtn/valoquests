@@ -1,4 +1,3 @@
-import { ChallengeDifficulty } from '@core/challenges/challenge.model';
 import { MatchResult } from '@core/matches/match-result.model';
 
 /**
@@ -75,28 +74,23 @@ export interface TourSampleMatch {
 }
 
 /**
- * One weekly challenge of the fifth step, before translation.
+ * The day's challenge of the fifth step, before translation.
  */
-export interface TourSampleChallenge {
+export interface TourSampleDaily {
   /**
    * Translation key of the challenge's name and description (`tour.samples.challenges.<key>`).
    */
   readonly key: string;
 
   /**
-   * Difficulty, which picks the tier numeral and the accent.
+   * Value to reach, in the challenge's own unit.
    */
-  readonly difficulty: ChallengeDifficulty;
+  readonly target: number;
 
   /**
    * Wounded one operator brings back by validating it.
    */
   readonly survivors: number;
-
-  /**
-   * Value to reach, in the challenge's own unit.
-   */
-  readonly target: number;
 
   /**
    * Each operator's progress, in roster order.

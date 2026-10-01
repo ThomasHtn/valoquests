@@ -1,0 +1,24 @@
+<div class="flex items-baseline justify-between gap-4">
+  <p class="font-display text-[1.0625rem] font-semibold tracking-[0.02em] uppercase">
+    {{ 'tour.track.week' | translate }}
+    <span class="text-brand-500 tabular-nums">{{ weekIndex() }}</span>
+    {{ 'tour.track.total' | translate: { total: weekCount } }}
+  </p>
+  <p class="flex items-center gap-1.5 text-sm text-text-secondary">
+    <svg class="block h-4 w-4 shrink-0 text-brand-500" lucideRocket></svg>
+    {{ 'tour.track.stages' | translate: { done: stagesDone(), total: stageCount } }}
+  </p>
+</div>
+
+<!-- One cell per week; the line behind runs from the first planet to the last, solid up to the
+     current one. -->
+<ol [style.--done]="doneWidth()" class="track mt-3">
+  @for (planet of planets(); track planet.weekIndex) {
+    <li [class]="'track-cell track-cell--' + planet.state">
+      <span class="track-orb">
+        <img [src]="planet.art" alt="" class="block h-full w-full" />
+      </span>
+      <span class="track-label">{{ planet.label }}</span>
+    </li>
+  }
+</ol>

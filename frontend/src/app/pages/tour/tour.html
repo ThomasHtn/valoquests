@@ -75,68 +75,57 @@
 
           <!-- The step's screen, the page's own components fed the sample campaign. Hidden from
                assistive technology and inert: its figures are examples, and nothing in it leads
-               anywhere from here. -->
+               anywhere from here. The base is the exception, driven live by its sliders. -->
           <figure
             class="tour-figure flex min-w-0 flex-col gap-2.5 motion-safe:animate-step-in-late"
           >
-            <div aria-hidden="true" class="min-w-0" inert>
-              @switch (step) {
-                @case ('intro') {
-                  <app-tour-tracker [matches]="sampleMatches" />
-                }
-                @case ('base') {
-                  <div class="relative overflow-hidden bg-[#040a11]">
-                    <app-base-scene
-                      [fullCampaignPopulation]="fullCampaignPopulation"
-                      [population]="samplePopulation"
+            @if (step === 'base') {
+              <!-- The one live screen: the visitor drives the base with the sliders. -->
+              <app-tour-base-preview
+                [fullCampaignPopulation]="fullCampaignPopulation"
+                [population]="samplePopulation"
+                [stagesDone]="sampleStagesDone"
+              />
+            } @else {
+              <div aria-hidden="true" class="min-w-0" inert>
+                @switch (step) {
+                  @case ('intro') {
+                    <app-tour-tracker [matches]="sampleMatches" />
+                    <app-tour-campaign-track
+                      [planetName]="sampleMission.planetName"
                       [stagesDone]="sampleStagesDone"
-                      class="block"
+                      [weekIndex]="sampleMission.weekIndex"
+                      class="mt-6 block"
                     />
-                    <div class="tour-scene-wash absolute inset-0"></div>
-                    <div class="absolute inset-x-0 bottom-0 px-4 pb-4 sm:px-6 sm:pb-5">
-                      <p class="tour-pop flex items-baseline gap-3">
-                        <span [appCountUp]="samplePopulation" class="tabular-nums"></span>
-                        <span
-                          class="font-display text-sm font-medium tracking-[0.16em] text-text-secondary uppercase sm:text-lg"
-                          >{{ 'overview.scene.unit' | translate }}</span
-                        >
-                      </p>
-                      <p
-                        class="mt-2.5 inline-flex items-center gap-1.5 border border-accent-green/45 px-2.5 py-1 font-display text-base font-semibold tracking-[0.04em] text-accent-green sm:mt-3.5 sm:py-1.5 sm:text-[1.0625rem]"
-                      >
-                        {{ signed(samplePopulationChange) }}
-                        <small class="font-sans font-medium text-text-secondary">{{
-                          'overview.scene.delta' | translate
-                        }}</small>
-                      </p>
-                    </div>
-                  </div>
+                  }
+                  @case ('week') {
+                    <app-mission-readings
+                      [contribution]="sampleContribution"
+                      [mission]="sampleMission"
+                      [showClock]="isMedium()"
+                      [stakes]="sampleStakes"
+                    />
+                  }
+                  @case ('resources') {
+                    <app-tour-capacity [capacity]="sampleCapacity" />
+                  }
+                  @case ('challenges') {
+                    <!-- The challenges page's phone card, kept at a phone's width on every screen. -->
+                    <app-deck-card [row]="sampleDailyRow()" class="tour-phone-card">
+                      <app-daily-week
+                        [days]="sampleDays()"
+                        [initials]="true"
+                        [selected]="sampleToday"
+                        class="tour-tally"
+                      />
+                    </app-deck-card>
+                  }
+                  @case ('ranking') {
+                    <app-podium [rows]="samplePodium" />
+                  }
                 }
-                @case ('week') {
-                  <app-mission-readings
-                    [contribution]="sampleContribution"
-                    [mission]="sampleMission"
-                    [showClock]="isMedium()"
-                    [stakes]="sampleStakes"
-                  />
-                }
-                @case ('resources') {
-                  <app-tour-capacity [capacity]="sampleCapacity" />
-                }
-                @case ('challenges') {
-                  <ol class="flex flex-col gap-3">
-                    @for (card of sampleChallenges(); track card.name) {
-                      <li [class.tour-extra]="$last" [class.tour-extra-short]="$index === 1">
-                        <app-challenge-card [card]="card" />
-                      </li>
-                    }
-                  </ol>
-                }
-                @case ('ranking') {
-                  <app-podium [rows]="samplePodium" />
-                }
-              }
-            </div>
+              </div>
+            }
             <figcaption class="text-xs text-text-muted sm:text-sm">
               {{ 'tour.source' | translate: { page: (sources[step] | translate) } }}
             </figcaption>
@@ -144,19 +133,21 @@
 
           <!-- The spec sheet: three fixed rules of the game a reader takes in without a sentence.
              Under the copy on a wide screen, under the illustration on a phone: the headline
-             and the screen come first, the figures are the footnote. -->
-          <dl class="tour-specs motion-safe:animate-step-in">
-            @for (spec of specKeys; track spec) {
-              <div class="tour-spec">
-                <dt class="font-display text-figure-sm font-bold text-brand-500 tabular-nums">
-                  {{ 'tour.steps.' + step + '.' + spec + '.value' | translate }}
-                </dt>
-                <dd class="tour-spec-label">
-                  {{ 'tour.steps.' + step + '.' + spec + '.label' | translate }}
-                </dd>
-              </div>
-            }
-          </dl>
+             and the screen come first, the figures are the footnote. Some steps go without. -->
+          @if (!stepsWithoutSpecs.includes(step)) {
+            <dl class="tour-specs motion-safe:animate-step-in">
+              @for (spec of specKeys; track spec) {
+                <div class="tour-spec">
+                  <dt class="font-display text-figure-sm font-bold text-brand-500 tabular-nums">
+                    {{ 'tour.steps.' + step + '.' + spec + '.value' | translate }}
+                  </dt>
+                  <dd class="tour-spec-label">
+                    {{ 'tour.steps.' + step + '.' + spec + '.label' | translate }}
+                  </dd>
+                </div>
+              }
+            </dl>
+          }
         </div>
       }
     </div>

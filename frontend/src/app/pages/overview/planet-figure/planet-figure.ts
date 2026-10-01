@@ -136,7 +136,7 @@ export class PlanetFigure {
 
   /**
    * The breakthrough. One segment per share of the hit points: those left are standing, in red;
-   * the others drift outward, extinguished. The same value as the bar under the planet, said in
+   * the others stay in place, extinguished. The same value as the bar under the planet, said in
    * an image.
    */
   private buildRing(guardianLeft: number): SVGGElement {
@@ -145,8 +145,8 @@ export class PlanetFigure {
     for (let i = 0; i < RING_SEGMENTS; i++) {
       const angle = (-90 + (i * 360) / RING_SEGMENTS) * (Math.PI / 180);
       const alive = i < held;
-      const drift = alive ? 0 : 9 + ((i * 37) % 11);
-      const r0 = RING_INNER_RADIUS + drift;
+      // Extinguished segments stay on the same circle, centred in the standing ones' band.
+      const r0 = RING_INNER_RADIUS + (alive ? 0 : 3.5);
       const r1 = r0 + (alive ? 13 : 6);
       const segment = el('line', {
         x1: (PLANET_CX + Math.cos(angle) * r0).toFixed(1),
