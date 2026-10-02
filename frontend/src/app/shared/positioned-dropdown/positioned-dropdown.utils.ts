@@ -4,6 +4,7 @@ import {
   PositionedDropdownRefs,
   PositionedDropdown,
 } from './positioned-dropdown.model';
+import { DROPDOWN_ROOM_PX } from './positioned-dropdown.constants';
 
 /**
  * Wires the behaviour shared by every fixed-position, portalled dropdown panel in the design
@@ -33,7 +34,12 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
   const destroyRef = inject(DestroyRef);
 
   const isOpen = signal(false);
-  const panelPosition = signal<DropdownPanelPosition>({ top: 0, right: 0, minWidth: 0 });
+  const panelPosition = signal<DropdownPanelPosition>({
+    top: 0,
+    bottom: null,
+    right: 0,
+    minWidth: 0,
+  });
 
   afterNextRender(() => {
     const panelHost = host.nativeElement.closest('dialog') ?? document.body;
@@ -73,8 +79,12 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
 
   function open(): void {
     const rect = trigger().nativeElement.getBoundingClientRect();
+    const below = window.innerHeight - rect.bottom;
+    // Upwards when the list would not fit below the trigger but has more room above it.
+    const upwards = below < DROPDOWN_ROOM_PX && rect.top > below;
     panelPosition.set({
-      top: rect.bottom + 8,
+      top: upwards ? null : rect.bottom + 8,
+      bottom: upwards ? window.innerHeight - rect.top + 8 : null,
       right: window.innerWidth - rect.right,
       minWidth: rect.width,
     });

@@ -1,3 +1,6 @@
+import { formatDecimal, formatPercent } from '@core/i18n/number-format.utils';
+import { Language } from '@core/i18n/translation.model';
+
 /**
  * Extracts the tag segment of a Riot ID (e.g. `"EUW"` from `"Kenshiro#EUW"`).
  *
@@ -13,20 +16,22 @@ export function extractRiotTag(riotId: string): string | null {
  * Formats a win rate percentage for display, rounded to the nearest whole percent.
  *
  * @param winRate - The player's win rate percentage, or `null` when not yet synchronized.
+ * @param language - The active language, which decides the notation.
  * @returns The formatted percentage, or an em dash when not yet synchronized.
  */
-export function formatWinRate(winRate: number | null): string {
-  return winRate === null ? '—' : `${Math.round(winRate)}%`;
+export function formatWinRate(winRate: number | null, language: Language): string {
+  return winRate === null ? '—' : formatPercent(winRate, language);
 }
 
 /**
  * Formats a KDA ratio for display with two decimals.
  *
  * @param kda - The player's KDA ratio, or `null` when not yet synchronized.
+ * @param language - The active language, which decides the decimal separator.
  * @returns The formatted ratio, or an em dash when not yet synchronized.
  */
-export function formatKda(kda: number | null): string {
-  return kda === null ? '—' : kda.toFixed(2);
+export function formatKda(kda: number | null, language: Language): string {
+  return kda === null || !Number.isFinite(kda) ? '—' : formatDecimal(kda, language, 2);
 }
 
 /**
@@ -34,10 +39,14 @@ export function formatKda(kda: number | null): string {
  *
  * @param headshotPercentage - The player's headshot rate percentage, or `null` when not yet
  * synchronized.
+ * @param language - The active language, which decides the notation.
  * @returns The formatted percentage, or an em dash when not yet synchronized.
  */
-export function formatHeadshotPercentage(headshotPercentage: number | null): string {
-  return headshotPercentage === null ? '—' : `${headshotPercentage.toFixed(1)}%`;
+export function formatHeadshotPercentage(
+  headshotPercentage: number | null,
+  language: Language,
+): string {
+  return headshotPercentage === null ? '—' : formatPercent(headshotPercentage, language, 1);
 }
 
 /**

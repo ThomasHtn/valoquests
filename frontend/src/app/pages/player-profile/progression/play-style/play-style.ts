@@ -49,7 +49,7 @@ export class PlayStyle {
     return shares.map((share) => ({
       key: share.key,
       percentage: share.percentage,
-      label: formatHeadshotPercentage(share.percentage),
+      label: formatHeadshotPercentage(share.percentage, this.translation.language()),
       opacity:
         strongest === 0
           ? MINIMUM_OPACITY

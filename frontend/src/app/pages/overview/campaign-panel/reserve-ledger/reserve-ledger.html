@@ -34,9 +34,9 @@
             <span aria-hidden="true" class="hex-mark clip-hex"
               ><span class="clip-hex">
                 @if (row.key === 'food') {
-                  <svg class="size-4" lucideWheat></svg>
+                  <svg class="size-4" [lucideIcon]="concepts.food"></svg>
                 } @else {
-                  <svg class="size-4" lucideWrench></svg>
+                  <svg class="size-4" [lucideIcon]="concepts.components"></svg>
                 }</span
             ></span>
             <span class="label-caption text-2xs text-text-secondary">{{
@@ -52,7 +52,47 @@
           </div>
 
           @for (cell of row.cells; track cell.index) {
-            <app-ledger-cell [cell]="cell" [label]="cellLabel(row, cell)" [row]="row" />
+            <!-- The shared tooltip, as everywhere else: it follows a tap on a phone and flips at an edge. -->
+            <app-ledger-cell
+              [appTooltipDisabled]="cell.kind === 'ahead'"
+              [appTooltipTemplate]="tip"
+              [appTooltip]="cellLabel(row, cell)"
+              [cell]="cell"
+              [label]="cellLabel(row, cell)"
+              [row]="row"
+            />
+            <ng-template #tip>
+              <span class="block text-left text-[0.9375rem] leading-snug text-text-secondary">
+                <b
+                  class="mb-1 block font-display text-[1.0625rem] font-semibold tracking-[0.03em] text-text-primary uppercase"
+                  >{{
+                    'campaign.ledger.tip'
+                      | translate: { index: cell.index, planet: cell.planetName }
+                  }}</b
+                >
+                @if (cell.kind === 'now') {
+                  {{
+                    'campaign.ledger.tipCarriedIn' | translate: { count: format(cell.carriedIn) }
+                  }}
+                  <br />
+                  {{ 'campaign.ledger.tipSince' | translate: { count: format(cell.got) } }}
+                  <br />
+                  {{
+                    'campaign.ledger.tipStock'
+                      | translate: { count: format(cell.stock), rescues: format(cell.stockRescues) }
+                  }}
+                } @else {
+                  {{
+                    'campaign.ledger.tipGot'
+                      | translate: { count: format(cell.got), rescues: format(cell.rescues) }
+                  }}
+                  <br />
+                  {{ 'campaign.ledger.tipSpent' | translate: { count: format(cell.spent) } }}
+                  <br />
+                  {{ 'campaign.ledger.tipCarry' | translate: { count: format(cell.carry) } }}
+                }
+              </span>
+            </ng-template>
           }
         }
       </div>

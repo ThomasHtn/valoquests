@@ -39,7 +39,7 @@ export class TextField {
   selector: 'input[appTextFieldInput]',
   host: {
     class:
-      'h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none',
+      'h-full min-w-0 flex-1 bg-transparent px-3 text-base text-text-primary placeholder:text-text-muted focus:outline-none sm:text-sm',
   },
 })
 export class TextFieldInput {}

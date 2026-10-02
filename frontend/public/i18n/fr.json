@@ -9,12 +9,12 @@
       "liveLabel": "Campagne en cours",
       "loading": "Chargement de la campagne…",
       "error": "Impossible de charger les campagnes.",
-      "none": "Aucune campagne ouverte ni en cours. Vérifie la calibration ci-dessous, importe l'historique si la fenêtre est courte, puis ouvre la campagne : elle démarrera le lundi suivant.",
+      "none": "Aucune campagne ouverte ni en cours. Vérifiez la calibration ci-dessous, importez l'historique si la fenêtre est courte, puis ouvrez la campagne : elle démarrera le lundi suivant.",
       "live": {
         "number": "Campagne {{number}}",
         "startsOn": "Départ le {{date}}. Le roster et la référence sont déjà figés ; s'il y a une erreur, supprime la campagne et rouvre-la.",
         "reference": "Référence {{reference}}",
-        "roster": "Opérateurs",
+        "roster": "Joueurs",
         "frozen": "Roster gelé",
         "week": "Semaine",
         "day": "Jour",
@@ -27,12 +27,12 @@
       "commandsLabel": "Commandes",
       "open": {
         "heading": "Ouvrir la campagne",
-        "description": "Gèle le roster actif et tire les dix gardiens. Choisis la difficulté, qui décide de la taille des gardiens, des groupes de blessés et des objectifs des défis, puis le lundi de départ. Refusé tant qu'une campagne est ouverte ou en cours.",
+        "description": "Gèle le roster actif et tire les dix boss. Choisissez la difficulté, qui décide de la taille des boss, des groupes de blessés et des objectifs des défis, puis le lundi de départ. Refusé tant qu'une campagne est ouverte ou en cours.",
         "action": "Ouvrir",
         "confirm": "Ouvrir la campagne",
         "confirmBody": {
           "CURRENT_WEEK": "La campagne démarre au lundi de la semaine en cours : elle est immédiatement en cours et les jours déjà joués sont recalculés à partir des matchs importés. La difficulté est figée à cet instant et ne pourra plus être changée.",
-          "NEXT_WEEK": "La campagne démarre au lundi suivant. La difficulté est figée à cet instant et ne pourra plus être changée : elle décide de la taille des dix gardiens."
+          "NEXT_WEEK": "La campagne démarre au lundi suivant. La difficulté est figée à cet instant et ne pourra plus être changée : elle décide de la taille des dix boss."
         },
         "done": "Campagne {{number}} ouverte, départ le {{date}}.",
         "startLabel": "Départ",
@@ -54,14 +54,14 @@
         "heading": "Supprimer la campagne",
         "action": "Supprimer",
         "confirm": "Supprimer",
-        "confirmBodyOpened": "La campagne {{number}} n'a pas commencé : la supprimer efface son roster gelé et ses dix gardiens, rien d'autre. Tu pourras en rouvrir une aussitôt.",
-        "confirmBody": "La campagne {{number}} sera effacée avec ses semaines, ses journées et son roster. Les parties, les défis et les classements sont conservés. Cette action est irréversible.",
+        "confirmBodyOpened": "La campagne {{number}} n'a pas commencé : la supprimer efface son roster gelé et ses dix boss, rien d'autre. Vous pourrez en rouvrir une aussitôt.",
+        "confirmBody": "La campagne {{number}} sera effacée avec ses semaines, ses journées et son roster. Les matchs, les défis et les classements sont conservés. Cette action est irréversible.",
         "done": "Campagne supprimée."
       },
       "pastLabel": "Campagnes closes",
       "pastEmpty": "Aucune campagne close.",
       "past": {
-        "guardians": "{{count}}/{{total}} gardiens",
+        "guardians": "{{count}}/{{total}} boss",
         "stopped": "arrêtée le {{date}}"
       }
     },
@@ -70,7 +70,7 @@
       "eyebrow": "Administration de l'escouade",
       "heading": "Poste de commandement",
       "hideKey": "Masquer la clé",
-      "keyHint": "La clé ouvre la synchronisation, la gestion des opérateurs et le pilotage de la campagne.",
+      "keyHint": "La clé ouvre la synchronisation, la gestion des joueurs et le pilotage de la campagne.",
       "keyLabel": "Clé d'administration",
       "rejected": "Clé refusée par le serveur.",
       "showKey": "Afficher la clé",
@@ -91,10 +91,10 @@
         "empty": "Aucune synchronisation passée.",
         "error": "Impossible de charger l'historique.",
         "loading": "Chargement de l'historique…",
-        "loadingPlayers": "Chargement des opérateurs…",
+        "loadingPlayers": "Chargement des joueurs…",
         "playersProcessed": {
-          "one": "{{count}} opérateur traité",
-          "other": "{{count}} opérateurs traités"
+          "one": "{{count}} joueur traité",
+          "other": "{{count}} joueurs traités"
         },
         "matchesImported": {
           "one": "{{count}} match importé",
@@ -111,13 +111,13 @@
       },
       "lastRun": "Dernière synchronisation",
       "matchesImported": "Matchs importés",
-      "playersProcessed": "Opérateurs traités",
+      "playersProcessed": "Joueurs traités",
       "redraw": {
         "heading": "Retirer les défis",
         "description": "Jette les cinq défis de la semaine en cours et en tire cinq nouveaux dans le catalogue actuel, puis recalcule la progression et le classement. À utiliser quand le tirage lui-même est devenu faux : un défi désactivé ou supprimé du catalogue après l'ouverture de la semaine.",
         "action": "Retirer",
         "confirm": "Retirer les défis",
-        "confirmBody": "La progression enregistrée sur les défis jetés est supprimée avec eux : un opérateur qui en avait validé un perd cette validation, ses points et les blessés qu'elle promettait. Seule la semaine en cours est touchée. Rejoue la campagne ensuite.",
+        "confirmBody": "La progression enregistrée sur les défis jetés est supprimée avec eux : un joueur qui en avait validé un perd cette validation, ses points et les blessés qu'elle promettait. Seule la semaine en cours est touchée. Rejoue la campagne ensuite.",
         "done": "Nouveaux défis tirés, progression recalculée."
       },
       "rollover": {
@@ -139,18 +139,18 @@
       "statusLabel": "État",
       "syncAll": {
         "heading": "Synchroniser l'escouade",
-        "description": "Importe les parties récentes de tous les opérateurs suivis, puis recalcule progression, classement et campagne. Plusieurs minutes selon le quota Riot.",
+        "description": "Importe les matchs récents de tous les joueurs suivis, puis recalcule progression, classement et campagne. Plusieurs minutes selon le quota Riot.",
         "action": "Synchroniser",
-        "accepted": "Synchronisation lancée. Suis son avancement dans l'encart ci-dessus."
+        "accepted": "Synchronisation lancée. Suivez son avancement dans l'encart ci-dessus."
       },
       "syncPlayer": {
-        "heading": "Synchroniser un opérateur",
-        "description": "Rattrape un seul opérateur, sans rejouer les autres. Utile après un échec isolé lors d'une exécution planifiée.",
+        "heading": "Synchroniser un joueur",
+        "description": "Rattrape un seul joueur, sans rejouer les autres. Utile après un échec isolé lors d'une exécution planifiée.",
         "action": "Synchroniser",
-        "accepted": "Synchronisation de l'opérateur lancée.",
-        "pickerLabel": "Opérateur à synchroniser",
-        "placeholder": "Choisir un opérateur",
-        "noneSelected": "Choisis d'abord un opérateur."
+        "accepted": "Synchronisation du joueur lancée.",
+        "pickerLabel": "Joueur à synchroniser",
+        "placeholder": "Choisir un joueur",
+        "noneSelected": "Choisissez d'abord un joueur."
       },
       "dailyTick": {
         "heading": "Relancer le tick quotidien",
@@ -162,44 +162,44 @@
     },
     "players": {
       "activate": "Activer",
-      "addPlayer": "Ajouter un opérateur",
-      "archived": "Opérateur archivé : une campagne le compte dans son roster. Il reste restaurable.",
+      "addPlayer": "Ajouter un joueur",
+      "archived": "Joueur archivé : une campagne le compte dans son roster. Il reste restaurable.",
       "columns": {
         "lastSync": "Dernière synchro"
       },
-      "created": "Opérateur ajouté à l'effectif.",
+      "created": "Joueur ajouté à l'effectif.",
       "deactivate": "Désactiver",
-      "deleted": "Opérateur supprimé définitivement.",
+      "deleted": "Joueur supprimé définitivement.",
       "edit": "Modifier",
-      "empty": "Aucun opérateur suivi.",
+      "empty": "Aucun joueur suivi.",
       "error": "Impossible de charger l'effectif.",
       "form": {
-        "createHeading": "Nouvel opérateur",
-        "editHeading": "Modifier l'opérateur",
+        "createHeading": "Nouvel joueur",
+        "editHeading": "Modifier le joueur",
         "gameName": "Nom Riot",
         "tagLine": "Tag (sans #)",
         "portrait": "Avatar",
         "portraitNone": "Aucun avatar",
         "status": "Statut initial"
       },
-      "frozenRoster": "La campagne {{run}} tourne sur un roster gelé à {{roster}} opérateurs. Le statut de ses membres est figé jusqu'à la fin, et personne ne peut être activé d'ici là.",
+      "frozenRoster": "La campagne {{run}} tourne sur un roster gelé à {{roster}} joueurs. Le statut de ses membres est figé jusqu'à la fin, et personne ne peut être activé d'ici là.",
       "gettingStarted": {
-        "addPlayers": "Ajoutez chaque opérateur avec son Riot ID complet, au format pseudo#tag.",
+        "addPlayers": "Ajoutez chaque joueur avec son Riot ID complet, au format pseudo#tag.",
         "operationsLink": "Aller aux opérations",
         "share": "Partagez l'adresse de l'application avec l'équipe. Le tour d'accueil se lance tout seul à la première visite : personne n'a besoin d'expliquer le fonctionnement.",
         "synchronize": "Lancez une première synchronisation pour récupérer leur historique de matchs. Le classement et la campagne se remplissent ensuite tout seuls chaque semaine.",
         "title": "Démarrage"
       },
       "heading": "Escouade",
-      "idle": "Aucun match depuis quatorze jours. Un opérateur actif qui ne joue plus grossit le gardien et le groupe de blessés sans y contribuer.",
+      "idle": "Aucun match depuis quatorze jours. Un joueur actif qui ne joue plus grossit le boss et le groupe de blessés sans y contribuer.",
       "loading": "Chargement de l'effectif…",
       "neverSynchronized": "Jamais synchronisé",
       "remove": {
         "action": "Retirer",
         "heading": "Retirer du roster",
         "confirm": "Retirer",
-        "archiveBody": "Cet opérateur a participé à une campagne : il sera archivé, pas supprimé. Il disparaît de l'application publique et n'est plus synchronisé, mais les campagnes qui le citent restent lisibles. Tu pourras le restaurer.",
-        "deleteBody": "Cet opérateur n'a participé à aucune campagne : il sera supprimé définitivement, avec ses matchs et ses traces de synchronisation. Cette action est irréversible."
+        "archiveBody": "Ce joueur a participé à une campagne : il sera archivé, pas supprimé. Il disparaît de l'application publique et n'est plus synchronisé, mais les campagnes qui le citent restent lisibles. Vous pourrez le restaurer.",
+        "deleteBody": "Ce joueur n'a participé à aucune campagne : il sera supprimé définitivement, avec ses matchs et ses traces de synchronisation. Cette action est irréversible."
       },
       "restore": "Restaurer",
       "rosterSection": "Effectif",
@@ -209,8 +209,8 @@
         "ARCHIVED": "Archivé"
       },
       "statusChanged": "Statut mis à jour.",
-      "title": "Opérateurs",
-      "updated": "Opérateur mis à jour."
+      "title": "Joueurs",
+      "updated": "Joueur mis à jour."
     },
     "maintenance": {
       "title": "Maintenance",
@@ -229,17 +229,17 @@
           "synchronizations": "L'historique des synchronisations"
         },
         "kept": {
-          "players": "L'effectif et les statuts des opérateurs",
+          "players": "L'effectif et les statuts des joueurs",
           "challengeCatalogue": "Le catalogue de défis",
-          "guardianCatalogue": "Le catalogue de gardiens"
+          "guardianCatalogue": "Le catalogue de boss"
         },
         "action": "Supprimer et recommencer",
         "confirm": "Tout effacer",
         "confirmBody": "Cette action est irréversible. Tous les matchs, défis, classements et campagnes seront effacés. L'effectif et les catalogues sont conservés.",
         "phrase": "EFFACER",
         "phraseHint": "Tape {{phrase}} pour confirmer",
-        "blockedBySync": "Une synchronisation est en cours. Attends qu'elle se termine : elle écrirait des matchs dans la base en train d'être vidée.",
-        "done": "Données réinitialisées. Lance une synchronisation pour réimporter l'historique."
+        "blockedBySync": "Une synchronisation est en cours. Attendez qu'elle se termine : elle écrirait des matchs dans la base en train d'être vidée.",
+        "done": "Données réinitialisées. Lancez une synchronisation pour réimporter l'historique."
       }
     }
   },
@@ -256,11 +256,11 @@
       "rescued": "Blessés ramenés depuis le début",
       "spotted": "sur {{count}} repérés",
       "byExtraction": "par extraction",
-      "byChallenges": "grâce aux défis, soit {{percent}} %",
+      "byChallenges": "grâce aux défis, soit {{percent}} %",
       "leftBehind": "restés au sol",
       "guardians": {
-        "one": "{{count}} gardien vaincu",
-        "other": "{{count}} gardiens vaincus"
+        "one": "{{count}} boss vaincu",
+        "other": "{{count}} boss vaincus"
       },
       "weeksPlayed": {
         "one": "sur la semaine jouée",
@@ -320,11 +320,11 @@
       "partsAria": "Les dix pièces de la fusée",
       "part": "Pièce {{index}} sur {{total}} · montée en semaine {{week}}",
       "built": "Montée en semaine {{week}}",
-      "next": "Au prochain gardien vaincu",
-      "locked": "Gardien {{index}} à vaincre",
+      "next": "Au prochain boss vaincu",
+      "locked": "Boss {{index}} à vaincre",
       "viewerAria": "La fusée sur son plan, {{built}} pièces montées sur {{total}}, avec le contour du lanceur complet en pointillé.",
       "viewerEmpty": "Rien de monté",
-      "viewerEmptyText": "La première pièce se monte au premier gardien vaincu",
+      "viewerEmptyText": "La première pièce se monte au premier boss vaincu",
       "cartoucheTitle": "Vaisseau · campagne {{number}}",
       "cartouchePart": "{{name}} · pièce {{index}}",
       "cartoucheEmpty": "Aucune pièce montée",
@@ -345,7 +345,7 @@
       "tableAria": "Le classement des campagnes",
       "colCampaign": "Campagne",
       "colTier": "Palier",
-      "colGuardians": "Gardiens",
+      "colGuardians": "Boss",
       "of": "sur {{count}}",
       "inProgress": "En cours · semaine {{week}} sur {{weeks}}",
       "stopped": "{{season}} · arrêtée",
@@ -367,7 +367,7 @@
       "error": "Les défis n'ont pas pu être chargés.",
       "empty": {
         "title": "Aucun défi tiré cette semaine",
-        "text": "Les cinq défis de la semaine sont tirés le lundi, un par difficulté. Le défi du jour est retiré chaque matin."
+        "text": "Les cinq défis de la semaine sont tirés le lundi, un par difficulté. Le défi du jour est tiré chaque nuit à 00 h 10."
       }
     },
     "board": {
@@ -376,7 +376,9 @@
       "challenge": "Défi",
       "period": "Du {{start}} au {{end}}",
       "totals": "Blessés ramenés",
-      "totalsTooltip": "Ce que chaque opérateur a ramené cette semaine, défis du jour compris",
+      "totalsTooltip": "Ce que chaque joueur a ramené cette semaine, défis du jour compris",
+      "totalsPoints": "Points gagnés",
+      "totalsPointsTooltip": "Les points de classement que chaque joueur a gagnés cette semaine avec ses défis, défis du jour compris. Aucune campagne en cours : aucun blessé à ramener.",
       "pin": "Mettre {{name}} en favori",
       "unpin": "Retirer {{name}} des favoris",
       "pinHint": "Touchez un joueur pour le mettre en favori : il passe en premier dans chaque défi.",
@@ -418,6 +420,7 @@
       "closedDay": "Journée close",
       "countdownAria": "Temps restant avant minuit",
       "tipUnavailable": "Défi indisponible",
+      "tipAhead": "Tiré ce jour-là à 00 h 10",
       "tipNamed": "{{name}} : {{tip}}",
       "tipNone": "0 sur {{total}} validé",
       "tipDone": {
@@ -436,7 +439,7 @@
         "other": "{{count}} points de classement par validation"
       },
       "finished": "terminé",
-      "progress": "Progression de chaque opérateur",
+      "progress": "Progression de chaque joueur",
       "bandTooltip": {
         "open": {
           "one": "{{value}} sur {{target}} - {{remaining}} restant",
@@ -446,7 +449,7 @@
         "openEnded": "{{value}} - pas encore validé",
         "openEndedDone": "{{value}} - validé"
       },
-      "squadAria": "{{done}} opérateurs sur {{total}} ont validé ce défi."
+      "squadAria": "{{done}} joueurs sur {{total}} ont validé ce défi."
     },
     "catalogue": {
       "title": "Le catalogue des défis",
@@ -462,6 +465,7 @@
     }
   },
   "common": {
+    "columnLegend": "Comment lire ces chiffres",
     "week": {
       "timeLabel": "Clôture dans",
       "timeRemaining": "{{days}}j {{hours}}h"
@@ -481,7 +485,7 @@
       "SCOUT": "Le plus de défis validés"
     },
     "metric": {
-      "MATCHES_PLAYED": "Parties",
+      "MATCHES_PLAYED": "Matchs",
       "MATCHES_WON": "Victoires",
       "KILLS": "Éliminations",
       "ASSISTS": "Assistances",
@@ -533,16 +537,16 @@
       "components": "Composants",
       "wounded": "Blessés",
       "population": "Habitants",
-      "matches": "Parties",
+      "matches": "Matchs",
       "days": "Jours",
       "streak": "Série",
       "points": "Points",
-      "guardian": "Gardien",
+      "guardian": "Boss",
       "base": "Base"
     },
     "operator": {
-      "one": "{{count}} opérateur",
-      "other": "{{count}} opérateurs"
+      "one": "{{count}} joueur",
+      "other": "{{count}} joueurs"
     },
     "gameMode": {
       "COMPETITIVE": "Compétitif",
@@ -557,7 +561,7 @@
     },
     "streak": {
       "value": "+{{percent}} %",
-      "aria": "{{days}} jours joués sur 7 cette semaine, bonus de +{{percent}} %"
+      "aria": "{{days}} jours joués sur 7 cette semaine, bonus de +{{percent}} %"
     }
   },
   "connectivity": {
@@ -567,11 +571,11 @@
   "landing": {
     "title": "Mission de sauvetage",
     "accroche": {
-      "lead": "Vos parties ne s'arrêtent plus",
+      "lead": "Vos matchs ne s'arrêtent plus",
       "highlight": "à l'écran de fin."
     },
     "body": {
-      "lead": "Elles nourrissent une base, percent les lignes d'un gardien et ramènent des blessés,",
+      "lead": "Elles nourrissent une base, percent les lignes d'un boss et ramènent des blessés,",
       "emphasis": "match après match."
     },
     "compass": {
@@ -606,8 +610,8 @@
       "error": "Le classement n'a pas pu être chargé.",
       "empty": {
         "eyebrow": "Classement",
-        "title": "Aucun classement pour l’instant",
-        "text": "Le classement est calculé à la première synchronisation de la semaine. Dès qu'un opérateur joue, sa ligne apparaît ici."
+        "title": "Aucun classement pour l'instant",
+        "text": "Le classement est calculé à la première synchronisation de la semaine. Dès qu'un joueur joue, sa ligne apparaît ici."
       }
     },
     "nav": {
@@ -615,19 +619,21 @@
       "next": "Semaine suivante",
       "live": "En cours",
       "choose": "Choisir la semaine",
-      "weekIndex": "Semaine {{week}}"
+      "weekIndex": "Semaine {{week}}",
+      "weekShort": "S{{week}}"
     },
     "board": {
       "label": "Le classement",
-      "operator": "Opérateur",
+      "operator": "Joueur",
       "score": "Score",
-      "scoreHelp": "Les dégâts au gardien plus les blessés ramenés par les défis validés, un point par blessé. Le score repart de zéro chaque lundi.",
+      "scoreHelp": "Les dégâts au boss plus les blessés ramenés par les défis validés, un point par blessé. Le score repart de zéro chaque lundi.",
       "damage": "Dégâts",
       "points": "Blessés",
-      "damageHelp": "Les points de vie retirés au gardien de la planète par les parties de la semaine.",
+      "pointsOff": "Points",
+      "damageHelp": "Les points de vie retirés au boss de la planète par les matchs de la semaine.",
       "pointsHelp": "Les blessés ramenés à la base par les défis validés, un point par blessé.",
-      "scoreHelpOff": "La valeur des parties de la semaine plus les points des défis validés. Aucune campagne en cours : rien n'est retiré à un gardien. Le score repart de zéro chaque lundi.",
-      "damageHelpOff": "La valeur des parties de la semaine, comptée comme des dégâts. Aucune campagne en cours : aucun gardien ne les encaisse.",
+      "scoreHelpOff": "La valeur des matchs de la semaine plus les points des défis validés. Aucune campagne en cours : rien n'est retiré à un boss. Le score repart de zéro chaque lundi.",
+      "damageHelpOff": "La valeur des matchs de la semaine, comptée comme des dégâts. Aucune campagne en cours : aucun boss ne les encaisse.",
       "pointsHelpOff": "Les points des défis validés, un point par blessé qu'ils ramèneraient en campagne.",
       "challenges": "Défis",
       "challengesHelp": "Les défis validés cette semaine sur ceux qu'elle propose : les hebdomadaires plus un quotidien chaque jour.",
@@ -635,10 +641,10 @@
         "one": "{{count}} défi validé sur {{max}}",
         "other": "{{count}} défis validés sur {{max}}"
       },
-      "matches": "Parties",
-      "matchesHelp": "Les parties jouées cette semaine, toutes comptées, y compris celles dont le rendement est réduit.",
+      "matches": "Matchs",
+      "matchesHelp": "Les matchs joués cette semaine, tous comptés, y compris ceux dont le rendement est réduit.",
       "streak": "Assiduité",
-      "streakHelp": "Jours joués cette semaine. Chaque jour après le premier ajoute +2 % aux gains du jour, jusqu'à +10 %. Sur une semaine close, seul le nombre de jours est conservé.",
+      "streakHelp": "Jours joués cette semaine. Chaque jour après le premier ajoute +2 % aux gains du jour, jusqu'à +10 %. Sur une semaine close, seul le nombre de jours est conservé.",
       "measure": {
         "MECHANIC": "{{value}} composants",
         "QUARTERMASTER": "{{value}} nourriture",
@@ -657,7 +663,7 @@
       },
       "nobody": {
         "title": "Personne n'est encore classé",
-        "text": "Le classement se calcule à la première synchronisation de la semaine : dès qu'un opérateur joue, sa ligne apparaît ici avec ses dégâts au gardien et ses blessés ramenés.",
+        "text": "Le classement se calcule à la première synchronisation de la semaine : dès qu'un joueur joue, sa ligne apparaît ici avec ses dégâts au boss et ses blessés ramenés.",
         "day": "Jour",
         "dayValue": "{{day}} sur {{days}}",
         "reset": "Remise à zéro",
@@ -667,6 +673,7 @@
     },
     "podium": {
       "label": "Le podium de la semaine",
+      "tied": "Ex æquo",
       "rank": {
         "1": "Première place",
         "2": "Deuxième place",
@@ -691,19 +698,20 @@
       "section": "La ville de nuit et la fusée en construction",
       "aria": "La base, {{population}} habitants. Au centre, la fusée montée à {{stages}} étages sur {{weeks}}.",
       "unit": "habitants",
-      "delta": "aujourd’hui · provisoire"
+      "sinceVisit": "{{count}} habitants depuis votre dernière visite",
+      "delta": "aujourd'hui · provisoire"
     },
     "frieze": {
       "aria": "Les dix semaines de la campagne",
-      "won": "Gardien vaincu",
-      "lost": "Gardien resté debout avec {{percent}} % de ses PV",
-      "now": "Percée à {{percent}} %",
+      "won": "Boss vaincu",
+      "lost": "Boss resté debout, percée à {{percent}} %",
+      "now": "Percée à {{percent}} %",
       "ahead": "À venir",
       "unplayed": "Non jouée",
       "status": {
         "won": "Vaincu",
-        "lost": "Survécu {{percent}} %",
-        "now": "Percée {{percent}} %",
+        "lost": "Percée {{percent}} %",
+        "now": "Percée {{percent}} %",
         "ahead": "À venir",
         "final": "Grand final",
         "unplayed": "Non jouée"
@@ -719,7 +727,7 @@
     "mission": {
       "title": "Mission de la semaine : {{planet}}",
       "planet": "Planète {{index}} sur {{weeks}} · {{category}}",
-      "planetAria": "{{planet}}, la planète de la semaine {{week}}. Des marques ambre à sa surface tiennent lieu des {{wounded}} blessés, et la percée dans ses lignes atteint {{percent}} %."
+      "planetAria": "{{planet}}, la planète de la semaine {{week}}. Des marques ambre à sa surface tiennent lieu des {{wounded}} blessés, et la percée dans ses lignes atteint {{percent}} %."
     },
     "tabs": {
       "aria": "Sections de la vue d'ensemble",
@@ -735,7 +743,7 @@
         "label": "Contributions"
       },
       "matches": {
-        "label": "Parties"
+        "label": "Matchs"
       },
       "campaign": {
         "label": "Campagne"
@@ -751,36 +759,36 @@
       "down": "Vaincu {{weekday}} à {{time}}",
       "downBy": "Vaincu {{weekday}} à {{time}} par {{name}}",
       "squad": "Escouade",
-      "breachTooltip": "Percée : {{percent}} %",
+      "breachTooltip": "Percée : {{percent}} %",
       "strike": {
-        "share": "{{percent}} % de l’escouade",
+        "share": "{{percent}} % de l'escouade",
         "points": {
           "one": "pt de défis",
           "other": "pts de défis"
         },
-        "summary": "{{name}} : {{damage}} PV, {{percent}} % de l’escouade, {{points}} pts de défis"
+        "summary": "{{name}} : {{damage}} PV, {{percent}} % de l'escouade, {{points}} pts de défis"
       },
       "stakes": {
-        "gainKey": "Gardien vaincu",
+        "gainKey": "Boss vaincu",
         "gainUnit": {
           "one": "blessé sauvé en plus",
           "other": "blessés sauvés en plus"
         },
         "gainTooltip": {
-          "one": "Si le gardien tombe avant dimanche minuit, le vaisseau ramène {{count}} blessé de plus que prévu.",
-          "other": "Si le gardien tombe avant dimanche minuit, le vaisseau ramène {{count}} blessés de plus que prévu."
+          "one": "Si le boss tombe avant dimanche minuit, le vaisseau ramène {{count}} blessé de plus que prévu.",
+          "other": "Si le boss tombe avant dimanche minuit, le vaisseau ramène {{count}} blessés de plus que prévu."
         },
-        "lossKey": "Gardien resté debout",
-        "lossKeyShort": "Gardien debout",
+        "lossKey": "Boss resté debout",
+        "lossKeyShort": "Boss debout",
         "lossUnit": {
           "one": "habitant perdu",
           "other": "habitants perdus"
         },
-        "lossTooltip": "Sa riposte à la percée actuelle de {{percent}} %. Rater de peu ne coûte presque rien, ne rien faire coûte cher."
+        "lossTooltip": "Sa riposte à la percée actuelle de {{percent}} %. Rater de peu ne coûte presque rien, ne rien faire coûte cher."
       },
       "forecast": {
-        "key": "Chute estimée du gardien",
-        "keyDown": "Chute du gardien",
+        "key": "Chute estimée du boss",
+        "keyDown": "Chute du boss",
         "ahead": "{{weekday}} vers {{hour}}",
         "aheadMargin": "{{span}} d'avance au rythme actuel",
         "short": "Pas avant dimanche minuit",
@@ -797,37 +805,37 @@
         "tipNow": "Maintenant",
         "tipLeft": "{{hp}} PV restants",
         "tipEstimate": "≈ {{hp}} PV restants",
-        "tipZero": "Gardien à terre (estimé)",
-        "tipDown": "Gardien tombé",
-        "ariaAhead": "PV restants du gardien : {{hp}} maintenant, à zéro {{weekday}} vers {{hour}} au rythme actuel.",
-        "ariaShort": "PV restants du gardien : {{hp}} maintenant, encore {{left}} dimanche à minuit au rythme actuel.",
-        "ariaDown": "PV restants du gardien : à zéro {{weekday}} à {{time}}."
+        "tipZero": "Boss à terre (estimé)",
+        "tipDown": "Boss tombé",
+        "ariaAhead": "PV restants du boss : {{hp}} maintenant, à zéro {{weekday}} vers {{hour}} au rythme actuel.",
+        "ariaShort": "PV restants du boss : {{hp}} maintenant, encore {{left}} dimanche à minuit au rythme actuel.",
+        "ariaDown": "PV restants du boss : à zéro {{weekday}} à {{time}}."
       }
     },
     "capacity": {
       "info": "Comment se calcule : {{name}}",
       "title": "Capacité d'extraction",
       "carry": "Capacité d'emport",
-      "carryAria": "Les composants permettent d'emporter {{count}} blessés sur les {{wounded}} repérés, soit {{percent}} %.",
+      "carryAria": "Les composants permettent d'emporter {{count}} blessés sur les {{wounded}} repérés, soit {{percent}} %.",
       "shelter": "Capacité d'accueil",
-      "shelterAria": "La nourriture permet d'accueillir {{count}} blessés sur les {{wounded}} repérés, soit {{percent}} %.",
+      "shelterAria": "La nourriture permet d'accueillir {{count}} blessés sur les {{wounded}} repérés, soit {{percent}} %.",
       "breach": "La percée",
-      "breachAria": "La percée dans les lignes de {{boss}} atteint {{percent}} % : il ne laisse partir que cette part de ce qui est prêt à embarquer.",
+      "breachAria": "La percée dans les lignes de {{boss}} atteint {{percent}} % : il ne laisse partir que cette part de ce qui est prêt à embarquer.",
       "aboard": "À bord",
-      "aboardAria": "{{count}} blessés seraient à bord dimanche sur les {{wounded}} repérés, soit {{percent}} % : {{extraction}} par l'extraction et {{challenges}} déjà acquis par les défis.",
-      "spotted": "habitants repérés",
+      "aboardAria": "{{count}} blessés seraient à bord dimanche sur les {{wounded}} repérés, soit {{percent}} % : {{extraction}} par l'extraction et {{challenges}} déjà acquis par les défis.",
+      "spotted": "blessés repérés",
       "lever": "Obtention",
       "allModes": "Tous les modes",
       "hpStanding": "PV restants",
       "carryRate": "composants = 1 blessé",
       "shelterRate": "nourriture = 1 blessé",
-      "breachRate": "PV = 1 % de percée",
+      "breachRate": "PV = 1 % de percée",
       "fromGuardian": "secourus",
       "fromChallenges": "acquis par les défis",
       "leftBehind": "resteraient au sol",
-      "carryTooltip": "Le stock de composants divisé par {{rate}} : autant de blessés que le vaisseau peut aller chercher. Le classé (Compétitif, Premier, Non classé) en rapporte le plus.",
-      "shelterTooltip": "La nourriture en réserve, une fois les sept prochains repas mis de côté, divisée par {{rate}} : autant de blessés que la base peut loger. Le décontracté (Deathmatch, Spike Rush, Team Deathmatch, Skirmish, Swiftplay, Escalade) en rapporte le plus.",
-      "breachTooltip": "La part des points de vie déjà retirés au gardien. Elle plafonne l'extraction : un gardien repoussé à 70 % ne laisse partir que 70 % de ce qui est prêt à embarquer. Toute partie y contribue, quel que soit le mode.",
+      "carryTooltip": "Le stock de composants divisé par {{rate}} : autant de blessés que le vaisseau peut aller chercher. Les matchs en Compétitif, Premier ou Non classé en rapportent le plus.",
+      "shelterTooltip": "La nourriture en réserve, une fois les sept prochains repas mis de côté, divisée par {{rate}} : autant de blessés que la base peut loger. Les matchs en Deathmatch, Spike Rush, Team Deathmatch, Skirmish, Swiftplay ou Escalade en rapportent le plus.",
+      "breachTooltip": "La part des points de vie déjà retirés au boss. Elle plafonne l'extraction : un boss repoussé à 70 % ne laisse partir que 70 % de ce qui est prêt à embarquer. Tout match y contribue, quel que soit le mode.",
       "aboardTooltip": "Le plus petit des trois plafonds voisins, multiplié par la percée, plus les blessés déjà acquis par les défis validés : ce qui reviendra dimanche soir."
     },
     "orders": {
@@ -835,41 +843,41 @@
       "noDaily": "Aucun défi tiré pour aujourd'hui.",
       "tally": "Ce que la journée a donné",
       "damageCaption": "Dégâts infligés aujourd'hui",
-      "damageTooltip": "Dégâts infligés au gardien de la semaine par toutes les parties jouées aujourd'hui, après rendements décroissants et bonus de série de chaque opérateur.",
+      "damageTooltip": "Dégâts infligés au boss de la semaine par tous les matchs joués aujourd'hui, après rendements décroissants et bonus de série de chaque joueur.",
       "carryGain": "+{{count}} d'emport",
-      "componentsTooltip": "Composants produits aujourd'hui par l'escouade, selon le mode et l'issue de chaque partie, après rendements décroissants et bonus de série.",
+      "componentsTooltip": "Composants produits aujourd'hui par l'escouade, selon le mode et l'issue de chaque match, après rendements décroissants et bonus de série.",
       "shelterGain": "+{{count}} d'accueil",
-      "foodTooltip": "Nourriture produite aujourd'hui par l'escouade, selon le mode et l'issue de chaque partie, après rendements décroissants et bonus de série.",
+      "foodTooltip": "Nourriture produite aujourd'hui par l'escouade, selon le mode et l'issue de chaque match, après rendements décroissants et bonus de série.",
       "ate": "La base a mangé",
-      "ateTooltip": "Chaque habitant mange 0,008 nourriture ce soir. Si le stock ne suffit pas, 5 % des habitants non nourris meurent de famine.",
+      "ateTooltip": "Chaque habitant mange 0,008 nourriture ce soir. Si le stock ne suffit pas, 5 % des habitants non nourris meurent de famine.",
       "inhabitants": "{{count}} habitants",
       "population": "Habitants",
-      "populationTooltip": "28 dégâts infligés au gardien font naître 1 habitant. Une éventuelle perte par famine s'y soustrait.",
+      "populationTooltip": "28 dégâts infligés au boss font naître 1 habitant. Une éventuelle perte par famine s'y soustrait.",
       "tonight": "{{count}} ce soir",
       "food": "nourriture",
-      "squad": "Opérateurs actifs",
-      "squadTooltip": "Opérateurs du roster ayant joué au moins une partie valorisée aujourd'hui.",
-      "presenceAria": "{{present}} opérateurs sur {{roster}} ont joué aujourd'hui.",
+      "squad": "Joueurs actifs",
+      "squadTooltip": "Joueurs du roster ayant joué au moins un match valorisé aujourd'hui.",
+      "presenceAria": "{{present}} joueurs sur {{roster}} ont joué aujourd'hui.",
       "of": "sur {{count}}"
     },
     "squad": {
-      "operator": "Opérateur",
-      "operatorTooltip": "Le pseudo de l'opérateur, avec son titre s'il en détient un : Champion pour le premier de la semaine passée, sinon Assidu, Éclaireur, Intendant ou Mécano.",
+      "operator": "Joueur",
+      "operatorTooltip": "Le pseudo du joueur, avec son titre s'il en détient un : Champion pour le premier de la semaine passée, sinon Assidu, Éclaireur, Intendant ou Mécano.",
       "streak": "Assiduité",
-      "streakTooltip": "Jours joués cette semaine. Chaque jour après le premier ajoute +2 % aux gains du jour, jusqu'à +10 %. Remis à zéro le lundi.",
-      "damage": "Dégâts au gardien",
-      "damageTooltip": "Dégâts infligés au gardien de la semaine par l'opérateur aujourd'hui, après rendements décroissants et bonus de série.",
-      "componentsTooltip": "Composants produits aujourd'hui par l'opérateur, selon le mode et l'issue de chaque partie, après rendements décroissants et bonus de série.",
-      "foodTooltip": "Nourriture produite aujourd'hui par l'opérateur, selon le mode et l'issue de chaque partie, après rendements décroissants et bonus de série.",
+      "streakTooltip": "Jours joués cette semaine. Chaque jour après le premier ajoute +2 % aux gains du jour, jusqu'à +10 %. Remis à zéro le lundi.",
+      "damage": "Dégâts au boss",
+      "damageTooltip": "Dégâts infligés au boss de la semaine par le joueur aujourd'hui, après rendements décroissants et bonus de série.",
+      "componentsTooltip": "Composants produits aujourd'hui par le joueur, selon le mode et l'issue de chaque match, après rendements décroissants et bonus de série.",
+      "foodTooltip": "Nourriture produite aujourd'hui par le joueur, selon le mode et l'issue de chaque match, après rendements décroissants et bonus de série.",
       "days": "{{count}} j",
       "toPlay": "à jouer aujourd'hui",
       "matches": {
-        "one": "{{count}} partie",
-        "other": "{{count}} parties"
+        "one": "{{count}} match",
+        "other": "{{count}} matchs"
       },
-      "reduced": "{{count}} à 50 %",
+      "reduced": "{{count}} à valeur réduite",
       "notPlayed": "pas encore joué aujourd'hui",
-      "footer": "Rendements décroissants : à partir de la 6e partie du jour, une partie vaut 50 % ; à partir de la 10e, 25 %."
+      "footer": "Rendements décroissants : à partir du 6e match du jour, un match vaut 50 % ; à partir du 10e, 25 %."
     },
     "state": {
       "loading": "Lecture de la campagne…",
@@ -886,7 +894,7 @@
       "opened": {
         "eyebrow": "Départ lundi",
         "title": "La campagne est ouverte",
-        "text": "La mission démarre lundi. Les compteurs de la base partiront avec les premières parties de la semaine."
+        "text": "La mission démarre lundi. Les compteurs de la base partiront avec les premiers matchs de la semaine."
       },
       "closed": {
         "eyebrow": "Campagne close",
@@ -904,14 +912,14 @@
       "title": "Rapport de mission",
       "week": "Semaine {{index}} sur {{total}}",
       "close": "Fermer le rapport",
-      "won": "Le gardien est tombé",
-      "held": "Le gardien a survécu",
+      "won": "Le boss est tombé",
+      "held": "Le boss a survécu",
       "blow": "Coup de grâce porté {{weekday}} à {{time}}",
       "blowBy": "par",
       "blowWhere": ", sur {{map}} en {{mode}}",
       "blowScore": " ({{ally}} à {{enemy}})",
-      "heldLine": "Percée stoppée à {{percent}} %. Sa riposte de dimanche minuit a coûté {{count}} habitants à la base.",
-      "heldNoLoss": "Percée stoppée à {{percent}} %. La base a tenu sans une seule perte.",
+      "heldLine": "Percée stoppée à {{percent}} %. Sa riposte de dimanche minuit a coûté {{count}} habitants à la base.",
+      "heldNoLoss": "Percée stoppée à {{percent}} %. La base a tenu sans une seule perte.",
       "loot": "Butin de la semaine",
       "rescued": "blessés extraits sur {{spotted}}",
       "rescuedSplit": "{{challenges}} sauvés par les défis, {{ship}} par le vaisseau.",
@@ -936,8 +944,8 @@
     },
     "matches": {
       "empty": {
-        "title": "Aucune partie aujourd'hui",
-        "text": "Les parties des joueurs de la campagne apparaissent ici dès leur import, toutes les 30 minutes."
+        "title": "Aucun match aujourd'hui",
+        "text": "Les matchs des joueurs de la campagne apparaissent ici dès leur import, toutes les 30 minutes."
       }
     }
   },
@@ -949,12 +957,12 @@
       "players": "Escouade"
     },
     "dailyYield": {
-      "drops": "À partir du {{rank}}ᵉ, {{percent}} %.",
+      "drops": "À partir du {{rank}}ᵉ, {{percent}} %.",
       "link": "Le rendement du jour",
-      "next": "Le suivant en garde {{percent}} %.",
+      "next": "Le suivant en garde {{percent}} %.",
       "played": {
-        "one": "match joué aujourd’hui.",
-        "other": "matchs joués aujourd’hui."
+        "one": "match joué aujourd'hui.",
+        "other": "matchs joués aujourd'hui."
       },
       "title": "Rendement"
     },
@@ -963,7 +971,7 @@
       "matches": "Matchs",
       "progress": "Progression"
     },
-    "error": "Impossible de charger le profil de cet opérateur.",
+    "error": "Impossible de charger le profil de ce joueur.",
     "filters": {
       "allModes": "Tous",
       "allSeasons": "Toutes les saisons",
@@ -975,12 +983,12 @@
       "seasonLimit": "{{count}} saisons au maximum, pour que chaque courbe garde une couleur lisible.",
       "seasonsLabel": "Filtrer par saisons"
     },
-    "loading": "Chargement du profil de l'opérateur…",
+    "loading": "Chargement du profil du joueur…",
     "matches": {
       "damage": {
-        "full": "Compte en entier : une des 5 meilleures parties du jour.",
-        "reduced": "Réduit à {{percent}} % : au-delà des 5 meilleures parties du jour, la valeur baisse.",
-        "share": "{{percent}} % de la valeur",
+        "full": "Compte en entier : un des 5 meilleurs matchs du jour.",
+        "reduced": "Réduit à {{percent}} % : au-delà des 5 meilleurs matchs du jour, la valeur baisse.",
+        "share": "{{percent}} % de la valeur",
         "unvalued": "Ne compte pas : ce mode n'est pas valorisé."
       },
       "columns": {
@@ -990,7 +998,7 @@
         "headshotPercentage": "HS%",
         "kd": "K/D",
         "kda": "K/D/A",
-        "map": "Map",
+        "map": "Carte",
         "match": "Match",
         "score": "Score"
       },
@@ -1001,7 +1009,7 @@
         "duration": "{{minutes}} min",
         "mvp": "MVP du match",
         "damageDealt": "Dégâts infligés",
-        "roundsPlayed": "Rounds joués",
+        "roundsPlayed": "Manches jouées",
         "shotsHeading": "Répartition des tirs",
         "headshots": "Tête",
         "bodyshots": "Corps",
@@ -1014,7 +1022,7 @@
         "back": "Profil du joueur",
         "notFound": {
           "title": "Match introuvable",
-          "text": "Ce match ne figure pas dans l'historique de cet opérateur. Le lien est peut-être incomplet.",
+          "text": "Ce match ne figure pas dans l'historique de ce joueur. Le lien est peut-être incomplet.",
           "back": "Retour au profil"
         }
       },
@@ -1031,11 +1039,12 @@
         "SKIRMISH": "Skirmish 2v2",
         "SPIKE_RUSH": "Spike Rush",
         "SWIFTPLAY": "Swiftplay",
-        "TEAM_DEATHMATCH": "Deathmatch par équipe",
+        "TEAM_DEATHMATCH": "Team Deathmatch",
         "UNRATED": "Non classé"
       },
       "loading": "Chargement de l'historique des matchs…",
       "loadingMore": "Chargement d'autres matchs…",
+      "loadMoreError": "Les matchs suivants n'ont pas pu être chargés.",
       "result": {
         "DRAW": "Nul",
         "LOSS": "Défaite",
@@ -1049,13 +1058,13 @@
         "headshotPercentage": "Part des tirs touchés qui ont atteint la tête.",
         "adr": "Dégâts moyens infligés par manche.",
         "acs": "Score de combat moyen par manche : éliminations, dégâts et assistances réunis.",
-        "damage": "Dégâts infligés au gardien de la semaine."
+        "damage": "Dégâts infligés au boss de la semaine."
       }
     },
     "progression": {
       "agents": {
         "entity": "Agent",
-        "title": "Meilleurs agents",
+        "title": "Agents les plus joués",
         "tooltip": "Winrate, ACS et nombre de matchs pour chaque agent joué en compétitif sur les saisons sélectionnées, du plus joué au moins joué."
       },
       "consistency": {
@@ -1084,7 +1093,7 @@
           "map": "Carte"
         },
         "title": "Régularité",
-        "tooltip": "Chaque rond est un match des saisons choisies en haut de page, empilé dans sa tranche d'ACS. Les ronds orange forment la moitié centrale des matchs : ils tombent entre le plancher et le plafond. Plus cette zone est étroite, plus le joueur est régulier. Sur plusieurs actes, l'écart est naturellement plus large : l'ACS bouge avec le niveau des parties d'un acte à l'autre.",
+        "tooltip": "Chaque rond est un match des saisons choisies en haut de page, empilé dans sa tranche d'ACS. Les ronds orange forment la moitié centrale des matchs : ils tombent entre le plancher et le plafond. Plus cette zone est étroite, plus le joueur est régulier. Sur plusieurs actes, l'écart est naturellement plus large : l'ACS bouge avec le niveau des matchs d'un acte à l'autre.",
         "xAxis": "ACS du match",
         "yAxis": "Matchs",
         "zone": {
@@ -1094,7 +1103,7 @@
         }
       },
       "empty": "Aucun match compétitif sur les saisons sélectionnées.",
-      "error": "Impossible de charger la progression de cet opérateur.",
+      "error": "Impossible de charger la progression de ce joueur.",
       "evolution": {
         "alignmentNote": "Les saisons les plus courtes démarrent plus loin sur l'axe : toutes les courbes se terminent au même endroit, pour comparer les fins de saison.",
         "axis": {
@@ -1120,7 +1129,7 @@
       "loading": "Chargement de la progression…",
       "maps": {
         "entity": "Carte",
-        "title": "Meilleures cartes",
+        "title": "Cartes les plus jouées",
         "tooltip": "Winrate, ACS et nombre de matchs pour chaque carte jouée en compétitif sur les saisons sélectionnées, de la plus jouée à la moins jouée."
       },
       "playStyle": {
@@ -1178,7 +1187,7 @@
           "mostDamage": "Dégâts max",
           "mostKills": "Éliminations max",
           "mvps": "MVP",
-          "peakTier": "Pic de rang"
+          "peakTier": "Sommet"
         },
         "title": "Records personnels",
         "tooltip": {
@@ -1189,7 +1198,7 @@
           "longestWinStreak": "Plus longue suite de victoires compétitives consécutives. Les matchs annulés ne cassent pas la série.",
           "mostDamage": "Plus grand total de dégâts infligés sur un match. Réalisé sur {{map}} avec {{agent}}, le {{date}}.",
           "mostKills": "Plus grand nombre d'éliminations sur un match. Réalisé sur {{map}} avec {{agent}}, le {{date}}.",
-          "mvps": "Nombre de matchs terminés avec le meilleur score de la partie.",
+          "mvps": "Nombre de matchs terminés avec le meilleur score du match.",
           "peakTier": "Rang compétitif le plus haut atteint sur les saisons sélectionnées."
         },
         "tooltipSection": "Meilleures performances sur les saisons sélectionnées. Uniquement des records : rien n'est affiché tant qu'aucun match ne l'a établi."
@@ -1213,7 +1222,20 @@
           "TUESDAY": "Mar",
           "WEDNESDAY": "Mer"
         },
-        "sample": "{{count}} matchs",
+        "dayLong": {
+          "FRIDAY": "vendredi",
+          "MONDAY": "lundi",
+          "SATURDAY": "samedi",
+          "SUNDAY": "dimanche",
+          "THURSDAY": "jeudi",
+          "TUESDAY": "mardi",
+          "WEDNESDAY": "mercredi"
+        },
+        "midnight": "minuit",
+        "sample": {
+          "one": "{{count}} match",
+          "other": "{{count}} matchs"
+        },
         "threshold": "Les créneaux comptant moins de {{count}} matchs sont grisés : l'échantillon est trop faible pour en tirer une conclusion.",
         "title": "Performance selon les horaires",
         "tooltip": "Winrate des matchs compétitifs regroupés par jour de la semaine et par tranche de 3 heures, selon l'heure de début du match."
@@ -1244,10 +1266,10 @@
       "winRate": "Winrate",
       "wins": "{{count}} V"
     },
-    "title": "Profil de l'opérateur",
+    "title": "Profil du joueur",
     "notFound": {
-      "title": "Opérateur introuvable",
-      "text": "Aucun opérateur de l'escouade ne porte cet identifiant. Le lien est peut-être incomplet, ou l'opérateur ne fait plus partie de l'expédition.",
+      "title": "Joueur introuvable",
+      "text": "Aucun joueur de l'escouade ne porte cet identifiant. Le lien est peut-être incomplet, ou le joueur ne fait plus partie de l'expédition.",
       "back": "Retour à l'escouade"
     },
     "seasonPicker": {
@@ -1256,25 +1278,41 @@
     }
   },
   "players": {
+    "sort": {
+      "label": "Trier par",
+      "ascending": "Ordre croissant",
+      "descending": "Ordre décroissant",
+      "reverse": "{{order}}. Inverser l'ordre",
+      "order": {
+        "az": "A-Z",
+        "za": "Z-A",
+        "best": "Meilleurs d'abord",
+        "worst": "Derniers d'abord",
+        "high": "Plus haut d'abord",
+        "low": "Plus bas d'abord"
+      }
+    },
     "columns": {
       "headshotPercentage": "HS%",
       "kda": "KDA",
       "matchesPlayed": "Matchs",
-      "player": "Opérateur",
+      "player": "Joueur",
       "rank": "Rang",
+      "matchesHelp": "Les matchs joués en Compétitif sur la saison en cours, la base de toutes les statistiques de cette page.",
+      "rankHelp": "Le rang compétitif actuel dans Valorant, et les points de classement (RR, de 0 à 100) gagnés dans ce rang : à 100, le joueur monte au rang suivant.",
       "winRate": "Winrate"
     },
-    "empty": "Aucun opérateur suivi pour le moment.",
-    "error": "Impossible de charger les opérateurs.",
+    "empty": "Aucun joueur suivi pour le moment.",
+    "error": "Impossible de charger les joueurs.",
     "heading": "Escouade",
     "inCampaign": {
-      "title": "Opérateurs actifs",
+      "title": "Joueurs actifs",
       "count": {
-        "one": "{{count}} opérateur",
-        "other": "{{count}} opérateurs"
+        "one": "{{count}} joueur",
+        "other": "{{count}} joueurs"
       }
     },
-    "loading": "Chargement des opérateurs…",
+    "loading": "Chargement des joueurs…",
     "outOfCampaign": {
       "title": "En attente de la prochaine campagne"
     },
@@ -1288,11 +1326,11 @@
       "platinum": "Platine",
       "radiant": "Radiant",
       "silver": "Argent",
-      "unranked": "Non classé"
+      "unranked": "Sans rang"
     },
     "title": "Escouade",
     "header": {
-      "heading": "L’escouade"
+      "heading": "L'escouade"
     }
   },
   "resourceState": {
@@ -1305,21 +1343,21 @@
     "replayTour": "Revoir la visite guidée",
     "sections": {
       "match": {
-        "title": "La partie",
-        "statement": "Chaque partie jouée dans Valorant alimente la base",
-        "description": "Une partie vaut des points selon le mode et le résultat. Ces points font *trois choses à la fois* : ils frappent le gardien {guardian} de la semaine en entier, et ils se répartissent en nourriture {food} et en composants {components}. Les valeurs sont calées pour qu'une *heure de jeu rapporte à peu près pareil* dans tous les modes.",
+        "title": "Le match",
+        "statement": "Chaque match joué dans Valorant alimente la base",
+        "description": "Un match vaut des points selon le mode et le résultat. Ces points font *trois choses à la fois* : ils frappent le boss {guardian} de la semaine en entier, et ils se répartissent en nourriture {food} et en composants {components}. Les valeurs sont calées pour qu'une *heure de jeu rapporte à peu près pareil* dans tous les modes.",
         "modeLabel": "Mode de jeu",
         "loss": "Défaite",
         "draw": "Nul",
         "win": "Victoire",
         "groups": {
-          "long": "Modes longs",
-          "short": "Modes courts",
+          "long": "Compétitif, Premier, Non classé",
+          "short": "Deathmatch et modes rapides",
           "none": "Sans valeur"
         },
-        "noneModes": "New Map, parties personnalisées",
-        "foodShare": "{{percent}} % nourriture",
-        "componentsShare": "{{percent}} % composants",
+        "noneModes": "New Map, matchs personnalisés",
+        "foodShare": "{{percent}} % nourriture",
+        "componentsShare": "{{percent}} % composants",
         "modes": {
           "competitive": "Compétitif, Premier",
           "unrated": "Non classé",
@@ -1335,58 +1373,58 @@
       },
       "multipliers": {
         "title": "Les multiplicateurs",
-        "statement": "Le farm rapporte moins, la régularité rapporte plus",
-        "description": "Deux coefficients modifient la *valeur de chaque partie*, donc à la fois ses dégâts {damage}, sa nourriture {food} et ses composants {components}. Le premier baisse avec le nombre de parties dans la journée. Le second monte avec le nombre de jours joués dans la semaine {streak}. Aucun des deux ne touche les défis.",
-        "decayLabel": "Rendement, par rang de la partie dans la journée",
+        "statement": "Enchaîner les matchs rapporte moins, la régularité rapporte plus",
+        "description": "Deux coefficients modifient la *valeur de chaque match*, donc à la fois ses dégâts {damage}, sa nourriture {food} et ses composants {components}. Le premier baisse avec le nombre de matchs dans la journée. Le second monte avec le nombre de jours joués dans la semaine {streak}. Aucun des deux ne touche les défis.",
+        "decayLabel": "Rendement, par rang du match dans la journée",
         "decayRanks": {
-          "first": "Parties 1 à 5",
-          "next": "Parties 6 à 9",
+          "first": "Matchs 1 à 5",
+          "next": "Matchs 6 à 9",
           "rest": "10 et plus"
         },
-        "decayNote": "Les parties du jour sont classées de la plus forte à la plus faible : les cinq meilleures comptent en entier, quel que soit l'ordre où elles ont été jouées.",
-        "streakLabel": "Jours joués dans la semaine {streak}, toutes les parties du jour valent",
+        "decayNote": "Les matchs du jour sont classés du plus fort au plus faible : les cinq meilleurs comptent en entier, quel que soit l'ordre où ils ont été joués.",
+        "streakLabel": "Jours joués dans la semaine {streak}, tous les matchs du jour valent",
         "streakDays": {
           "one": "{{count}} jour",
           "other": "{{count}} jours"
         },
         "streakDaysMore": "{{count}} jours et plus",
-        "streakNote": "Une journée compte si l'opérateur y a joué au moins une partie valorisée. La série est individuelle : une journée sautée ne fait rien perdre, et le compteur repart à zéro chaque lundi.",
+        "streakNote": "Une journée compte si le joueur y a joué au moins un match valorisé. La série est individuelle : une journée sautée ne fait rien perdre, et le compteur repart de zéro chaque lundi.",
         "exampleLabel": "Exemple",
-        "example": "Compétitif gagné, sixième partie du jour, quatrième jour joué de la semaine : *500 × 50 % × 1,06 = 265* dégâts {damage}, répartis en 80 nourriture {food} et 185 composants {components}."
+        "example": "Compétitif gagné, sixième match du jour, quatrième jour joué de la semaine : *500 × 50 % × 1,06 = 265* dégâts {damage}, répartis en 80 nourriture {food} et 185 composants {components}."
       },
       "week": {
         "title": "La semaine",
-        "statement": "Un gardien par semaine, et chaque partie de l'escouade le frappe",
-        "description": "Chaque lundi, une nouvelle planète : un gardien {guardian} avec ses points de vie, et un groupe de blessés {wounded} qu'il retient au sol. Toute partie de tout opérateur actif lui inflige ses dégâts dès qu'elle remonte. Il peut tomber le mardi comme le dimanche ; la semaine continue de remplir les réserves.",
+        "statement": "Un boss par semaine, et chaque match de l'escouade le frappe",
+        "description": "Chaque lundi, une nouvelle planète : un boss {guardian} avec ses points de vie, et un groupe de blessés {wounded} qu'il retient au sol. Tout match de tout joueur actif lui inflige ses dégâts dès qu'il remonte. Il peut tomber le mardi comme le dimanche ; la semaine continue de remplir les réserves.",
         "steps": {
           "sync": {
-            "title": "Les parties remontent",
+            "title": "Les matchs remontent",
             "when": "toutes les 30 min",
-            "text": "Le gardien encaisse, les réserves montent, et la base grandit : *28 dégâts font un habitant* {base}."
+            "text": "Le boss encaisse, les réserves montent, et la base grandit : *28 dégâts font un habitant* {base}."
           },
           "midnight": {
             "title": "La base mange",
             "when": "à minuit",
-            "text": "Chaque habitant consomme *0,008 nourriture* {food}. Le défi du jour se résout, un nouveau est tiré. La série {streak} avance si l'opérateur a joué."
+            "text": "Chaque habitant consomme *0,008 nourriture* {food}. Le défi du jour se résout, un nouveau est tiré. La série {streak} avance si le joueur a joué."
           },
           "sunday": {
             "title": "Le règlement",
             "when": "dimanche soir",
-            "text": "Dans cet ordre : le dernier défi du jour, l'attaque du gardien s'il est encore debout, puis le retour du vaisseau {rocket} avec les sauvés."
+            "text": "Dans cet ordre : le dernier défi du jour, l'attaque du boss s'il est encore debout, puis le retour du vaisseau {rocket} avec les sauvés."
           },
           "monday": {
             "title": "Nouvelle planète",
             "when": "lundi",
-            "text": "Nouveau gardien, nouveau groupe, réserves conservées : *une mauvaise semaine ne se paie jamais la suivante*."
+            "text": "Nouveau boss, nouveau groupe, réserves conservées : *une mauvaise semaine ne se paie jamais la suivante*."
           }
         },
-        "guardianNote": "*Points de vie du gardien* : référence × poids de la semaine × 0,78 × opérateurs actifs. Seuls les opérateurs actifs au lundi d'ouverture comptent ; un inactif reste suivi, mais n'apporte ni ne coûte rien.",
-        "famineNote": "*La famine* n'existe qu'une fois la réserve vide, soit après plus d'une semaine sans aucune partie : chaque soir, 5 % des habitants non nourris meurent."
+        "guardianNote": "*Points de vie du boss* : référence × poids de la semaine × {{factor}} × joueurs actifs. Seuls les joueurs actifs au lundi d'ouverture comptent ; un inactif reste suivi, mais n'apporte ni ne coûte rien.",
+        "famineNote": "*La famine* n'existe qu'une fois la réserve vide, soit après plus d'une semaine sans aucun match : chaque soir, 5 % des habitants non nourris meurent."
       },
       "sunday": {
         "title": "Le dimanche",
         "statement": "On ramène le plus petit de trois nombres, jamais plus que le groupe",
-        "description": "Un blessé {wounded} ne rentre que s'il a une *place à bord*, un *lit à la base*, et que le blocus est *ouvert d'autant*. Les blessés des défis ne suivent pas cette règle : ils partent les premiers, sans rien dépenser.",
+        "description": "Un blessé {wounded} ne rentre que s'il a une *place à bord*, un *lit à la base*, et que la *percée* le permet. Les blessés des défis ne suivent pas cette règle : ils partent les premiers, sans rien dépenser.",
         "settlementLabel": "Le règlement du dimanche",
         "terms": {
           "seats": {
@@ -1398,12 +1436,12 @@
             "value": "*12 nourriture* {food} par blessé, une fois les sept prochains repas de la base mis de côté. Le vaisseau n'y touche jamais."
           },
           "breach": {
-            "term": "Brèche",
-            "value": "La part des points de vie retirés au gardien {guardian}. Elle multiplie l'extraction : 100 % s'il est tombé."
+            "term": "Percée",
+            "value": "La part des points de vie retirés au boss {guardian}. Elle multiplie l'extraction : 100 % s'il est tombé."
           },
           "rescued": {
             "term": "Sauvés",
-            "value": "blessés des défis {challenge} + min( reste du groupe, places, lits ) × brèche"
+            "value": "blessés des défis {challenge} + min( reste du groupe, places, lits ) × percée"
           }
         },
         "exampleLabel": "Exemple, un groupe de 40 blessés",
@@ -1412,95 +1450,95 @@
           "remaining": "Reste du groupe",
           "seats": "Places à bord : 420 composants {components} ÷ 14",
           "beds": "Lits : 240 nourriture libre {food} ÷ 12",
-          "extraction": "Extraction : le plus petit des trois, 20, × brèche 75 %",
+          "extraction": "Extraction : le plus petit des trois, 20, × percée 75 %",
           "rescued": "Sauvés"
         },
         "exampleNote": "Seuls les 15 extraits coûtent quelque chose : 210 composants et 180 nourriture. Le reste des réserves est conservé.",
-        "lossLabel": "Si le gardien survit : habitants perdus, selon la brèche atteinte",
-        "lossNote": "Le gardien attaque la base {base} : base × (1 − brèche)² × 35 %. Rater de peu ne coûte presque rien, ne rien faire coûte cher."
+        "lossLabel": "Si le boss survit : habitants perdus, selon la percée atteinte",
+        "lossNote": "Le boss attaque la base {base} : base × (1 − percée)² × 35 %. Rater de peu ne coûte presque rien, ne rien faire coûte cher."
       },
       "campaign": {
         "title": "La campagne",
-        "statement": "Dix semaines, dix planètes, et un gardien dont on connaît la taille d'avance",
-        "description": "Une campagne dure dix semaines. Chaque semaine, une planète : un gardien {guardian} avec un nombre de points de vie fixé, et un groupe de blessés {wounded} d'une taille fixée. Ces deux nombres sont calculés à l'ouverture à partir de la référence de l'escouade, voir la section 06. Le score final est la *population de la base* {base}.",
+        "statement": "Dix semaines, dix planètes, et un boss dont on connaît la taille d'avance",
+        "description": "Une campagne dure dix semaines. Chaque semaine, une planète : un boss {guardian} avec un nombre de points de vie fixé, et un groupe de blessés {wounded} d'une taille fixée. Ces deux nombres sont calculés à l'ouverture à partir de la référence de l'escouade, voir la section 06. Le score final est la *population de la base* {base}.",
         "weekLabel": "Sem.",
-        "guardianLabel": "Gardien",
+        "guardianLabel": "Boss",
         "hpLabel": "Points de vie",
         "woundedLabel": "Blessés",
         "howLabel": "Comment ça se joue",
         "how": {
-          "1": "Mise en route : gardien faible, groupe modeste.",
+          "1": "Mise en route : boss faible, groupe modeste.",
           "5": "Le premier mur.",
-          "6": "Gros groupe, gardien faible : une course au ravitaillement.",
-          "7": "Petit groupe, gardien coriace : un siège.",
-          "10": "Le plus gros groupe derrière le plus gros gardien."
+          "6": "Gros groupe, boss faible : une course au ravitaillement.",
+          "7": "Petit groupe, boss coriace : un siège.",
+          "10": "Le plus gros groupe derrière le plus gros boss."
         },
-        "exampleNote": "Exemple pour une escouade de {{operators}} opérateurs actifs à {{reference}} de référence, soit {{weekly}} dégâts par semaine ordinaire : un gardien Mineur tombe en trois jours, un Élite demande plus qu'une semaine. Les groupes grossissent de 4 % par semaine, la campagne se durcit et paie mieux à mesure.",
+        "exampleNote": "Exemple pour une escouade de {{operators}} joueurs actifs à {{reference}} de référence, soit {{weekly}} dégâts par semaine ordinaire : un boss Mineur tombe en moins de cinq jours, un Élite demande près d'une semaine et demie. Les groupes grossissent de 4 % par semaine, la campagne se durcit et paie mieux à mesure.",
         "lifecycle": {
           "open": {
             "title": "Ouverture",
-            "text": "Depuis le backoffice. Le roster est gelé et les dix gardiens sont dimensionnés, une fois pour toutes."
+            "text": "Depuis le backoffice. Le roster est gelé et les dix boss sont dimensionnés, une fois pour toutes."
           },
           "start": {
-            "title": "Le lundi suivant",
-            "text": "La semaine 1 commence. Chaque dimanche soir règle sa semaine, chaque lundi ouvre la suivante."
+            "title": "Le premier lundi",
+            "text": "La semaine 1 commence le lundi qui suit l'ouverture, ou celui de la semaine en cours si l'administrateur le choisit : les matchs déjà joués comptent alors. Chaque dimanche soir règle sa semaine, chaque lundi ouvre la suivante."
           },
           "close": {
             "title": "Dixième dimanche",
-            "text": "La campagne se clôt. La population de la base {base} est son score ; la fusée {rocket} affiche un état par gardien vaincu."
+            "text": "La campagne se clôt. La population de la base {base} est son score ; la fusée {rocket} affiche un état par boss vaincu."
           },
           "between": {
             "title": "Entre deux campagnes",
-            "text": "Ni gardien, ni base, ni réserves : seul le classement de la semaine {points} continue de tourner. Chaque campagne repart de zéro."
+            "text": "Ni boss, ni base, ni réserves : seul le classement de la semaine {points} continue de tourner. Chaque campagne repart de zéro."
           }
         }
       },
       "calibration": {
         "title": "La difficulté",
         "statement": "Une seule molette, choisie à l'ouverture",
-        "description": "La difficulté est choisie par l'administrateur au lancement et figée pour les dix semaines. Elle porte la *référence*, le nombre dont tout le reste est un multiple : gardiens, groupes de blessés et récompenses des défis, *par opérateur actif*. Le jeu est donc le même à 2 comme à 20. Rien n'est déduit de l'historique des parties.",
-        "referenceLabel": "Référence par opérateur",
+        "description": "La difficulté est choisie par l'administrateur au lancement et figée pour les dix semaines. Elle porte la *référence*, le nombre dont tout le reste est un multiple : boss, groupes de blessés et récompenses des défis, *par joueur actif*. Le jeu est donc le même à 2 comme à 20. Rien n'est déduit de l'historique des matchs.",
+        "referenceLabel": "Référence par joueur",
         "exampleLabel": "Ce que ça demande",
         "examples": {
           "AMATEUR": "Une escouade qui joue régulièrement",
-          "PRO": "Deux fois plus de gardien, et les objectifs de défis les plus durs"
+          "PRO": "Un boss deux fois plus gros, deux fois plus de blessés, et les objectifs de défis les plus durs"
         },
         "facts": {
           "chosen": "*Choisie à l'ouverture* par l'administrateur, jamais mesurée. Amateur ou Pro, et c'est figé pour toute la campagne.",
-          "perOperator": "La référence vaut *par opérateur actif*. Le gardien d'une escouade de deux est deux fois plus petit que celui d'une escouade de quatre.",
+          "perOperator": "La référence vaut *par joueur actif*. Le boss d'une escouade de deux est deux fois plus petit que celui d'une escouade de quatre.",
           "grid": "Elle décide aussi *quelle grille du catalogue* est jouée : chaque défi porte deux objectifs écrits, un pour Amateur, un pour Pro.",
-          "once": "Le *poids de la semaine* s'applique par-dessus : la première planète vaut 0,60 référence, la dixième 1,35."
+          "once": "Le *poids de la semaine* s'applique par-dessus : la première planète vaut 0,60 référence, la dixième 1,35, et le boss est encore multiplié par {{factor}}."
         },
         "difficultyLabel": "Difficulté"
       },
       "challenges": {
         "title": "Les défis et le classement",
         "statement": "Un défi ramène des blessés quoi qu'il arrive, et chaque blessé vaut un point",
-        "description": "Un *défi du jour* {challenge}, commun à l'escouade, tiré chaque matin parmi 28 et résolu le soir même. *Cinq défis de la semaine*, un par difficulté, tirés le lundi parmi 100. Leurs blessés {wounded} sont acquis quoi qu'il arrive, mais aucun défi ne touche le gardien.",
+        "description": "Un *défi du jour* {challenge}, commun à l'escouade, tiré chaque matin parmi 28 et résolu le soir même. *Cinq défis de la semaine*, un par difficulté, tirés le lundi parmi 100. Leurs blessés {wounded} sont acquis quoi qu'il arrive, mais aucun défi ne touche le boss.",
         "challengeLabel": "Défi",
         "weightLabel": "Poids",
         "woundedLabel": "Blessés",
         "daily": "Défi du jour",
-        "worthNote": "Blessés par opérateur qui valide, pour une référence de {{reference}}. Une semaine parfaite, sept défis du jour et les cinq de la semaine, vaut 120 blessés par opérateur.",
+        "worthNote": "Blessés par joueur qui valide, pour une référence de {{reference}}. Une semaine parfaite, sept défis du jour et les cinq de la semaine, vaut 120 blessés par joueur.",
         "survivorsFormula": {
           "title": "Blessés ramenés",
           "formula": "référence × poids ÷ 1 000",
-          "text": "Par opérateur qui valide, versés le dimanche {wounded}. Le même poids relatif pour des amateurs et pour des pros."
+          "text": "Par joueur qui valide, versés le dimanche {wounded}. Le même poids relatif pour des amateurs et pour des pros."
         },
         "pointsFormula": {
           "title": "Points au classement",
           "formula": "1 point par blessé ramené",
-          "text": "Le classement de la semaine {points} additionne les dégâts au gardien {damage}, multiplicateurs compris, et les blessés des défis validés. Face à 5 300 de dégâts, les défis départagent, ils ne font pas le classement."
+          "text": "Le classement de la semaine {points} additionne les dégâts au boss {damage}, multiplicateurs compris, et les blessés des défis validés. Face à 5 300 de dégâts, les défis départagent, ils ne font pas le classement."
         },
         "titlesLabel": "Les titres de la semaine",
-        "titlesNote": "Honorifiques. Un seul titre par opérateur, aucun en cas d'égalité. Le champion n'existe qu'en campagne."
+        "titlesNote": "Honorifiques. Un seul titre par joueur, aucun en cas d'égalité. Le champion n'existe qu'en campagne."
       },
       "constants": {
         "title": "Les constantes",
         "statement": "Les valeurs du jeu, en un coup d'œil",
         "items": {
           "syncInterval": {
-            "label": "Lecture des parties",
+            "label": "Lecture des matchs",
             "value": "toutes les 30 min"
           },
           "growth": {
@@ -1521,7 +1559,7 @@
           },
           "famine": {
             "label": "Famine, réserve vide",
-            "value": "5 % des non nourris par soir"
+            "value": "5 % des non nourris par soir"
           }
         }
       }
@@ -1550,7 +1588,7 @@
       "admin": "Administration",
       "expedition": "Expédition",
       "help": "Aide",
-      "operators": "Opérateurs"
+      "operators": "Joueurs"
     },
     "label": "Barre latérale",
     "language": {
@@ -1561,6 +1599,8 @@
       }
     },
     "lastSync": {
+      "at": "Dernière synchronisation : {{date}}.",
+      "stale": "En retard : elle tourne normalement toutes les 30 minutes.",
       "error": "Indisponible",
       "inProgress": "En cours",
       "label": "Synchronisation",
@@ -1569,14 +1609,14 @@
         "offline": "API indisponible",
         "online": "API disponible"
       },
-      "tooltip": "Toutes les 30 minutes, les parties terminées de l'escouade sont importées puis la campagne est recalculée : ressources, dégâts au gardien et progression des défis.",
+      "tooltip": "Toutes les 30 minutes, les matchs terminés de l'escouade sont importés puis la campagne est recalculée : ressources, dégâts au boss et progression des défis.",
       "unknown": "Jamais synchronisé"
     },
     "nav": {
       "adminCampaigns": "Campagnes",
       "adminMaintenance": "Maintenance",
       "adminOperations": "Opérations",
-      "adminPlayers": "Opérateurs",
+      "adminPlayers": "Joueurs",
       "challenges": "Défis",
       "leaderboard": "Classement",
       "overview": "Vue d'ensemble",
@@ -1606,7 +1646,7 @@
     "steps": {
       "intro": {
         "eyebrow": "ValoQuests",
-        "title": "Vos parties sauvent des vies",
+        "title": "Vos matchs sauvent des vies",
         "claim": "Chaque match est lu automatiquement et alimente une *mission de sauvetage* que toute l'escouade partage.",
         "spec1": {
           "value": "10",
@@ -1624,30 +1664,30 @@
       "base": {
         "eyebrow": "L'objectif",
         "title": "La base est le score",
-        "claim": "Vos parties infligent des dégâts au gardien et collectent des ressources qui améliorent la fusée et font grandir votre base. *Votre score grimpe avec elle.*",
+        "claim": "Vos matchs infligent des dégâts au boss et collectent des ressources qui améliorent la fusée et font grandir votre base. *Votre score grimpe avec elle.*",
         "spec1": {
           "value": "1",
           "label": "base partagée par toute l'escouade"
         },
         "spec2": {
           "value": "10",
-          "label": "étages de fusée, un par gardien vaincu"
+          "label": "étages de fusée, un par boss vaincu"
         },
         "spec3": {
-          "value": "5 %",
+          "value": "5 %",
           "label": "d'habitants perdus par soir de famine"
         }
       },
       "week": {
         "eyebrow": "La semaine",
-        "title": "Une planète, un gardien, sept jours",
-        "claim": "Toute partie de n'importe quel opérateur frappe le gardien. *Percer ses lignes* permet de ramener davantage de blessés le dimanche.",
+        "title": "Une planète, un boss, sept jours",
+        "claim": "Tout match de n'importe quel joueur frappe le boss. *Percer ses lignes* permet de ramener davantage de blessés le dimanche.",
         "spec1": {
           "value": "10",
-          "label": "gardiens à abattre, un par semaine"
+          "label": "boss à abattre, un par semaine"
         },
         "spec2": {
-          "value": "100 %",
+          "value": "100 %",
           "label": "des blessés extraits s'il tombe"
         },
         "spec3": {
@@ -1658,7 +1698,7 @@
       "resources": {
         "eyebrow": "Les ressources",
         "title": "Nourriture et composants",
-        "claim": "Les composants agrandissent la fusée et la nourriture permet d'accueillir plus d'habitants dans la base. *Chaque partie octroie des ressources*, avec un gain plus important en fonction du mode joué."
+        "claim": "Les composants agrandissent la fusée et la nourriture permet d'accueillir plus d'habitants dans la base. *Chaque match octroie des ressources*, avec un gain plus important en fonction du mode joué."
       },
       "challenges": {
         "eyebrow": "Les défis",
@@ -1689,7 +1729,7 @@
       "challenges": {
         "session": {
           "name": "Session du jour",
-          "description": "Jouer 3 parties, tous modes confondus, dans la journée."
+          "description": "Jouer 3 matchs, tous modes confondus, dans la journée."
         }
       }
     }

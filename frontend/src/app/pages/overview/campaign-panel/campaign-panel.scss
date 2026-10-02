@@ -59,3 +59,13 @@ section + .fold {
   padding: 0 1.25rem 1.25rem;
   animation: campaign-open 0.3s var(--ease-out-quart) both;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .fold-body {
+    animation: none;
+  }
+
+  .fold-chev {
+    transition: none;
+  }
+}

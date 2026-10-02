@@ -40,5 +40,11 @@ export class TitleBadge {
    */
   public readonly size = input<'sm' | 'md'>('sm');
 
+  /**
+   * Whether the badge sits inside a link: it then takes no tab stop of its own, since a focusable
+   * element nested in a link is invalid and a tap on it would follow the link anyway.
+   */
+  public readonly inLink = input(false);
+
   protected readonly visual = computed(() => resolveTitleVisual(this.title()));
 }

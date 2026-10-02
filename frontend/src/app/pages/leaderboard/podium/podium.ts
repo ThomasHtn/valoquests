@@ -7,6 +7,7 @@ import {
   input,
   viewChild,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { createSeededRandom } from '@core/random/seeded-random.utils';
@@ -15,6 +16,7 @@ import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 import { svgElement as el } from '@core/svg/svg-element.utils';
 import { BoardRow } from '../leaderboard.model';
+import { groupPodium } from './podium.utils';
 import { WIDTH, HEIGHT, STAR_COUNT, STAR, EMBER, SKY_SEED } from './podium.constants';
 
 /**
@@ -28,7 +30,7 @@ import { WIDTH, HEIGHT, STAR_COUNT, STAR, EMBER, SKY_SEED } from './podium.const
  */
 @Component({
   selector: 'app-podium',
-  imports: [RouterLink, TranslatePipe, Avatar, ChampionBadge, TitleBadge],
+  imports: [NgTemplateOutlet, RouterLink, TranslatePipe, Avatar, ChampionBadge, TitleBadge],
   templateUrl: './podium.html',
   styleUrl: './podium.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,9 +42,10 @@ export class Podium {
    */
   public readonly rows = input.required<readonly BoardRow[]>();
 
-  protected readonly top = computed(() =>
-    this.rows().filter((row) => row.position !== null && row.position <= 3),
-  );
+  /**
+   * The occupied plinths, ties sharing theirs.
+   */
+  protected readonly places = computed(() => groupPodium(this.rows()));
 
   private readonly sky = viewChild.required<ElementRef<SVGSVGElement>>('sky');
 

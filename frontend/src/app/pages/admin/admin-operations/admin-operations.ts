@@ -189,7 +189,7 @@ export class AdminOperations {
   protected readonly startedLabel = computed(() => {
     const startedAt = this.synchronization()?.startedAt;
 
-    return startedAt ? formatSynchronizationTimestamp(startedAt) : '';
+    return startedAt ? formatSynchronizationTimestamp(startedAt, this.translation.language()) : '';
   });
 
   /**
@@ -241,7 +241,8 @@ export class AdminOperations {
   /**
    * Formats a synchronization's start timestamp, exposed to the template.
    */
-  protected readonly formatTimestamp = formatSynchronizationTimestamp;
+  protected readonly formatTimestamp = (instant: string): string =>
+    formatSynchronizationTimestamp(instant, this.translation.language());
 
   /**
    * Polls the running synchronization until it settles.

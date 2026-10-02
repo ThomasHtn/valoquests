@@ -98,12 +98,24 @@
     <tr [style.--fx-delay.ms]="rows().length * rowStagger">
       <th class="lead" scope="row">
         <span
-          [appTooltip]="'challenges.board.totalsTooltip' | translate"
+          [appTooltip]="
+            (rescueActive()
+              ? 'challenges.board.totalsTooltip'
+              : 'challenges.board.totalsPointsTooltip'
+            ) | translate
+          "
           class="totals focus-ring"
           tabindex="0"
         >
-          <svg aria-hidden="true" class="size-4" lucideUsers></svg>
-          {{ 'challenges.board.totals' | translate }}
+          @if (rescueActive()) {
+            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.wounded"></svg>
+          } @else {
+            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.points"></svg>
+          }
+          {{
+            (rescueActive() ? 'challenges.board.totals' : 'challenges.board.totalsPoints')
+              | translate
+          }}
         </span>
       </th>
       @for (operator of operators(); track operator.playerId; let i = $index) {
@@ -112,8 +124,12 @@
             @if (operator.reward === 0) {
               <span class="sum-dash">—</span>
             } @else {
-              <svg class="size-3.5" lucideUsers></svg>
-              <b class="tabular-nums">+{{ operator.reward }}</b>
+              @if (rescueActive()) {
+                <svg class="size-3.5" [lucideIcon]="concepts.wounded"></svg>
+              } @else {
+                <svg class="size-3.5" [lucideIcon]="concepts.points"></svg>
+              }
+              <b class="tabular-nums">+{{ operator.reward | figure }}</b>
             }
           </span>
           <span class="sr-only">{{ operator.summary }}</span>

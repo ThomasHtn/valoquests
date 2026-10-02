@@ -1,4 +1,5 @@
 import {
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -7,6 +8,7 @@ import {
   input,
   model,
   signal,
+  viewChild,
 } from '@angular/core';
 import { LucideChevronDown, LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
@@ -23,6 +25,11 @@ import { buildSeasonPickerOptions } from './season-picker.utils';
  *
  * Picks one season, or every season through an empty selection, by default; several at once in
  * `multiple` mode, where the list stays open while the reader ticks acts and never empties.
+ *
+ * Follows the same select-only combobox pattern as the shared `Select`: the trigger keeps DOM focus
+ * and points at the highlighted row through `aria-activedescendant`, so the list is operable with
+ * arrows, Home/End, Enter, Space, Escape and Tab. In `multiple` mode Enter and Space tick the
+ * highlighted act and leave the list open.
  */
 @Component({
   selector: 'app-season-picker',
@@ -88,6 +95,22 @@ export class SeasonPicker {
   protected readonly isOpen = signal(false);
 
   /**
+   * Index of the keyboard-highlighted row, or `-1` when none is. Counts the "every season" row
+   * first in single mode (see {@link optionOffset}).
+   */
+  protected readonly activeIndex = signal(-1);
+
+  /**
+   * Trigger button, which keeps focus while the list is browsed by keyboard.
+   */
+  private readonly triggerButton = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
+
+  /**
+   * The list, scrolled to keep the highlighted row in view.
+   */
+  private readonly panelElement = viewChild.required<ElementRef<HTMLElement>>('panel');
+
+  /**
    * Every season as the picker lists it, newest first.
    */
   protected readonly options = computed(() => {
@@ -147,17 +170,60 @@ export class SeasonPicker {
   });
 
   /**
-   * Opens or closes the list.
+   * Rows ahead of the seasons in the list: the "every season" row of single mode, none otherwise.
    */
-  protected toggle(): void {
-    this.isOpen.update((open) => !open);
+  protected readonly optionOffset = computed(() => (this.multiple() ? 0 : 1));
+
+  /**
+   * Id of the highlighted row, or `null` when the list is closed or nothing is highlighted.
+   */
+  protected readonly activeOptionId = computed(() => {
+    const index = this.activeIndex();
+    return this.isOpen() && index >= 0 ? this.optionId(index) : null;
+  });
+
+  /**
+   * Registers the effect keeping the highlighted row visible: focus never leaves the trigger, so
+   * nothing else scrolls the list. After render, since the list cannot be measured while hidden.
+   */
+  constructor() {
+    afterRenderEffect(() => {
+      const index = this.activeIndex();
+      if (!this.isOpen() || index < 0) {
+        return;
+      }
+      const panel: HTMLElement = this.panelElement().nativeElement;
+      panel.querySelector(`#${this.optionId(index)}`)?.scrollIntoView({ block: 'nearest' });
+    });
   }
 
   /**
-   * Closes the list.
+   * Builds the element id of the row at `index`.
+   *
+   * @param index - Position in the list, the "every season" row included.
+   * @returns The row's unique element id.
+   */
+  protected optionId(index: number): string {
+    return `${this.listboxId}-option-${index}`;
+  }
+
+  /**
+   * Opens or closes the list.
+   */
+  protected toggle(): void {
+    if (this.isOpen()) {
+      this.close();
+    } else {
+      this.open();
+    }
+  }
+
+  /**
+   * Closes the list and clears the keyboard highlight.
    */
   protected close(): void {
     this.isOpen.set(false);
+    this.activeIndex.set(-1);
   }
 
   /**
@@ -177,7 +243,7 @@ export class SeasonPicker {
    */
   protected selectAll(): void {
     this.selection.set([]);
-    this.close();
+    this.closeAndRefocus();
   }
 
   /**
@@ -189,9 +255,14 @@ export class SeasonPicker {
   protected select(option: SeasonPickerOption): void {
     if (!this.multiple()) {
       this.selection.set([option.id]);
-      this.close();
+      this.closeAndRefocus();
       return;
     }
+
+    // The list stays open: the highlight follows the ticked act and focus returns to the trigger,
+    // which a tap or a click on the row may have taken.
+    this.activeIndex.set(this.options().indexOf(option) + this.optionOffset());
+    this.triggerButton().nativeElement.focus();
 
     const selection = this.selection();
     if (!selection.includes(option.id)) {
@@ -227,6 +298,69 @@ export class SeasonPicker {
   }
 
   /**
+   * Drives the list from the keyboard, following the ARIA select-only combobox pattern. Bound on
+   * the trigger and the list rather than the host, so the step arrows keep their native keys.
+   *
+   * @param event - The keyboard event.
+   */
+  protected onKeydown(event: KeyboardEvent): void {
+    const lastIndex = this.options().length + this.optionOffset() - 1;
+
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'ArrowUp': {
+        event.preventDefault();
+        if (!this.isOpen()) {
+          this.open();
+          return;
+        }
+        const delta = event.key === 'ArrowDown' ? 1 : -1;
+        this.activeIndex.update((index) => Math.min(lastIndex, Math.max(0, index + delta)));
+        return;
+      }
+
+      case 'Home':
+      case 'End': {
+        if (!this.isOpen()) {
+          return;
+        }
+        event.preventDefault();
+        this.activeIndex.set(event.key === 'Home' ? 0 : lastIndex);
+        return;
+      }
+
+      case 'Enter':
+      case ' ': {
+        // Keeps the browser from also firing the trigger's native click for these keys.
+        event.preventDefault();
+        if (!this.isOpen()) {
+          this.open();
+          return;
+        }
+        this.pickActive();
+        return;
+      }
+
+      case 'Escape': {
+        if (this.isOpen()) {
+          event.preventDefault();
+          this.closeAndRefocus();
+        }
+        return;
+      }
+
+      case 'Tab': {
+        // Focus leaves naturally, but never past a list left open behind it.
+        this.close();
+        return;
+      }
+
+      default:
+        return;
+    }
+  }
+
+  /**
    * Closes the list on a click outside the control.
    *
    * @param event - The document click.
@@ -235,5 +369,39 @@ export class SeasonPicker {
     if (!this.host.nativeElement.contains(event.target as Node)) {
       this.close();
     }
+  }
+
+  /**
+   * Opens the list on the row held, so the arrows start from it: "every season" for an empty
+   * selection in single mode, the first ticked act otherwise.
+   */
+  private open(): void {
+    const held = this.options().findIndex((option) => this.isSelected(option));
+    this.isOpen.set(true);
+    this.activeIndex.set(held >= 0 ? held + this.optionOffset() : 0);
+  }
+
+  /**
+   * Picks the highlighted row: every season, or one act. A season the limit greys out is left
+   * alone, as its disabled row would be under the pointer.
+   */
+  private pickActive(): void {
+    const index = this.activeIndex();
+    if (this.optionOffset() === 1 && index === 0) {
+      this.selectAll();
+      return;
+    }
+    const option = this.options()[index - this.optionOffset()];
+    if (option) {
+      this.select(option);
+    }
+  }
+
+  /**
+   * Closes the list and returns focus to the trigger.
+   */
+  private closeAndRefocus(): void {
+    this.close();
+    this.triggerButton().nativeElement.focus();
   }
 }

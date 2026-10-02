@@ -2,7 +2,7 @@
   "id": "/",
   "name": "ValoQuests",
   "short_name": "ValoQuests",
-  "description": "Les parties Valorant de l'escouade, transformées en campagne coopérative de dix semaines.",
+  "description": "Les matchs Valorant de l'escouade, transformés en campagne coopérative de dix semaines.",
   "lang": "fr",
   "start_url": "/",
   "scope": "/",
@@ -10,13 +10,61 @@
   "background_color": "#0a151d",
   "theme_color": "#0a151d",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Défis de la semaine",
+      "short_name": "Défis",
+      "url": "/challenges",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Classement",
+      "short_name": "Classement",
+      "url": "/leaderboard",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "La base",
+      "short_name": "Base",
+      "url": "/overview",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

@@ -8,39 +8,76 @@
   ></svg>
 
   <!-- 1st rendered larger and centred via `order`, so the DOM keeps its reading order (1st, 2nd,
-       3rd) for assistive technology while the layout reads as a podium. -->
+       3rd) for assistive technology while the layout reads as a podium. Tied operators share the
+       plinth of their place. -->
   <ol [attr.aria-label]="'leaderboard.podium.label' | translate" class="plinths">
-    <!-- Keyed on the place too: NgOptimizedImage throws when a moved player's avatar resizes. -->
-    @for (row of top(); track row.playerId + ':' + row.position) {
-      <li [class]="'place place--' + row.position">
-        <a [routerLink]="['/players', row.playerId]" class="focus-ring link">
-          <app-avatar
-            [champion]="row.isChampion"
-            [priority]="row.position === 1"
-            [size]="row.position === 1 ? 'md' : 'sm'"
-            [src]="row.portrait"
-          />
-
-          <!-- The title rides beside the name, dropping under only when the plinth is too narrow. -->
-          <span class="identity">
-            <span class="name">
-              {{ row.name }}
-            </span>
-            @if (row.isChampion) {
-              <app-champion-badge />
-            } @else if (row.title; as title) {
-              <app-title-badge [title]="title.key" />
+    @for (place of places(); track place.position) {
+      <li [class.place--tied]="place.rows.length > 1" [class]="'place place--' + place.position">
+        @if (place.rows.length === 1) {
+          <!-- One holder: the whole column, plinth included, is the link and rises on hover. -->
+          @let row = place.rows[0];
+          <a [routerLink]="['/players', row.playerId]" class="focus-ring link">
+            <ng-container
+              [ngTemplateOutletContext]="{ $implicit: row, place: place }"
+              [ngTemplateOutlet]="holder"
+            />
+            <ng-container
+              [ngTemplateOutletContext]="{ $implicit: place }"
+              [ngTemplateOutlet]="plinth"
+            />
+          </a>
+        } @else {
+          <!-- A tie: one link per holder over a shared plinth; the column still rises as a whole. -->
+          <div class="holders">
+            <!-- Keyed on the place too: NgOptimizedImage throws when a moved player's avatar resizes. -->
+            @for (row of place.rows; track row.playerId + ':' + row.position) {
+              <a [routerLink]="['/players', row.playerId]" class="focus-ring holder-link">
+                <ng-container
+                  [ngTemplateOutletContext]="{ $implicit: row, place: place }"
+                  [ngTemplateOutlet]="holder"
+                />
+              </a>
             }
-          </span>
-
-          <span class="plinth">
-            <span aria-hidden="true" class="plate tabular-nums">{{ row.position }}</span>
-            <span class="sr-only">
-              {{ 'leaderboard.podium.rank.' + row.position | translate }}
-            </span>
-          </span>
-        </a>
+          </div>
+          <ng-container
+            [ngTemplateOutletContext]="{ $implicit: place }"
+            [ngTemplateOutlet]="plinth"
+          />
+        }
       </li>
     }
   </ol>
 </div>
+
+<ng-template #holder let-row let-place="place">
+  <app-avatar
+    [champion]="row.isChampion"
+    [priority]="place.position === 1"
+    [size]="place.position === 1 && place.rows.length === 1 ? 'md' : 'sm'"
+    [src]="row.portrait"
+  />
+
+  <!-- The title rides beside the name, dropping under only when the plinth is too narrow. -->
+  <span class="identity">
+    <span class="name">
+      {{ row.name }}
+    </span>
+    @if (row.isChampion) {
+      <app-champion-badge [inLink]="true" />
+    } @else if (row.title; as title) {
+      <app-title-badge [inLink]="true" [title]="title.key" />
+    }
+  </span>
+</ng-template>
+
+<ng-template #plinth let-place>
+  <span class="plinth">
+    <span aria-hidden="true" class="plate tabular-nums">{{ place.position }}</span>
+    @if (place.rows.length > 1) {
+      <span class="tied label-caption">{{ 'leaderboard.podium.tied' | translate }}</span>
+    }
+    <span class="sr-only">
+      {{ 'leaderboard.podium.rank.' + place.position | translate }}
+    </span>
+  </span>
+</ng-template>

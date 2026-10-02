@@ -156,6 +156,11 @@ export class Tooltip implements OnDestroy {
   private outsideListener: (() => void) | null = null;
 
   /**
+   * Removes the scroll and resize listeners that close a shown bubble, or `null` while hidden.
+   */
+  private movementListener: (() => void) | null = null;
+
+  /**
    * Pending {@link appTooltipDelay} timer, or `null` while none is armed.
    */
   private showTimer: ReturnType<typeof setTimeout> | null = null;
@@ -304,6 +309,7 @@ export class Tooltip implements OnDestroy {
     this.renderer.setAttribute(this.host.nativeElement, 'aria-describedby', this.tooltipId);
     this.bubble.set(bubble);
     this.listenForEscape();
+    this.listenForMovement();
     if (this.isClickTriggered()) {
       this.listenForOutsideClick();
     }
@@ -406,6 +412,8 @@ export class Tooltip implements OnDestroy {
     this.escapeListener = null;
     this.outsideListener?.();
     this.outsideListener = null;
+    this.movementListener?.();
+    this.movementListener = null;
 
     this.contentView?.destroy();
     this.contentView = null;
@@ -500,19 +508,52 @@ export class Tooltip implements OnDestroy {
   /**
    * Closes the tooltip on Escape, as WAI-ARIA requires of every tooltip.
    *
-   * Bound on the document because the host is not necessarily focused: a tooltip opened by hovering
-   * would otherwise never receive the key event.
+   * Bound on the window in the capture phase because the host is not necessarily focused: a
+   * tooltip opened by hovering would otherwise never receive the key event. The key is consumed
+   * there, so the same press does not also close the dialog, drawer or tour underneath.
    */
   private listenForEscape(): void {
-    this.escapeListener = this.renderer.listen(
-      this.document(),
-      'keydown',
-      (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          this.hide();
-        }
-      },
-    );
+    const view = this.document().defaultView;
+    if (!view) {
+      return;
+    }
+    const onKeydown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        this.hide();
+      }
+    };
+    view.addEventListener('keydown', onKeydown, { capture: true });
+    this.escapeListener = () => view.removeEventListener('keydown', onKeydown, { capture: true });
+  }
+
+  /**
+   * Keeps the bubble on its anchor when anything scrolls or the viewport resizes, and closes it once
+   * the anchor leaves the screen: the bubble is fixed in place, and on a touch screen no pointer
+   * leave ever comes to take it away.
+   */
+  private listenForMovement(): void {
+    const view = this.document().defaultView;
+    if (!view) {
+      return;
+    }
+    const follow = (): void => {
+      const bubble = this.bubble();
+      const rect = this.host.nativeElement.getBoundingClientRect();
+      const offScreen = rect.bottom < 0 || rect.top > view.innerHeight;
+      if (!bubble || offScreen) {
+        this.hide();
+        return;
+      }
+      this.position(bubble);
+    };
+    view.addEventListener('scroll', follow, { capture: true, passive: true });
+    view.addEventListener('resize', follow, { passive: true });
+    this.movementListener = () => {
+      view.removeEventListener('scroll', follow, { capture: true });
+      view.removeEventListener('resize', follow);
+    };
   }
 
   /**

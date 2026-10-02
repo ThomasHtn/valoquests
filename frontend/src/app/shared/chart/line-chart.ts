@@ -11,6 +11,10 @@ import {
 } from '@angular/core';
 import { Chart, ChartConfiguration, Plugin } from 'chart.js';
 
+import { resolveLocale } from '@core/i18n/locale.utils';
+import { formatNumber } from '@core/i18n/number-format.utils';
+import { Translation } from '@core/i18n/translation';
+
 import { AXIS_TICK_FONT } from './chart-theme.constants';
 import {
   axisTitleOptions,
@@ -23,7 +27,7 @@ import {
 } from './chart-theme.utils';
 import { ChartTheme } from './chart-theme.model';
 import { createCrosshairPlugin } from './chart-plugins.utils';
-import { ChartSeries } from './chart.model';
+import { ChartSeries, ChartValueFormatter } from './chart.model';
 
 /**
  * Plots one or more series against a shared, index-based axis.
@@ -59,9 +63,12 @@ export class LineChart {
   public readonly summary = input('');
 
   /**
-   * Unit appended to every value in the tooltip, such as a percent sign. Empty for bare numbers.
+   * Formats a value for the tooltip, unit included. Defaults to the number in the reader's
+   * notation, rounded to one decimal.
    */
-  public readonly valueSuffix = input('');
+  public readonly valueFormatter = input<ChartValueFormatter | null>(null);
+
+  private readonly translation = inject(Translation);
 
   /**
    * Already-translated name of the x axis unit, used as the tooltip's title.
@@ -221,6 +228,7 @@ export class LineChart {
       type: 'line',
       data: { labels: this.labels(), datasets: this.datasets() },
       options: {
+        locale: resolveLocale(this.translation.language()),
         responsive: true,
         maintainAspectRatio: false,
         devicePixelRatio: chartPixelRatio(),
@@ -257,7 +265,7 @@ export class LineChart {
             ...chartTooltipOptions(theme),
             callbacks: {
               title: (items) => `${this.pointLabel()} ${items[0]?.label ?? ''}`.trim(),
-              label: (item) => `${item.dataset.label}: ${item.formattedValue}${this.valueSuffix()}`,
+              label: (item) => `${item.dataset.label}: ${this.formatValue(item.parsed.y ?? 0)}`,
             },
           },
         },
@@ -322,5 +330,17 @@ export class LineChart {
         ctx.restore();
       },
     };
+  }
+
+  /**
+   * A plotted value as the tooltip writes it.
+   */
+  private formatValue(value: number): string {
+    const formatter = this.valueFormatter();
+    return formatter
+      ? formatter(value)
+      : formatNumber(value, resolveLocale(this.translation.language()), {
+          maximumFractionDigits: 1,
+        });
   }
 }

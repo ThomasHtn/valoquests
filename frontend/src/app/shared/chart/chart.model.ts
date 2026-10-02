@@ -70,7 +70,7 @@ export interface ChartBar {
   /**
    * Already-formatted value written above the bar, when one is drawn.
    *
-   * Optional, falling back to the raw {@link value}. Supplied wherever the figure is not a bare
+   * Optional, falling back to the chart's value formatter. Supplied wherever the figure is not a bare
    * count: printing the number itself put an English decimal point on a French page, right beside
    * tiles spelling the same quantity with a comma.
    */
@@ -142,3 +142,8 @@ export interface ChartTooltipPlacement {
    */
   readonly transform: string;
 }
+
+/**
+ * Writes a plotted value for a tooltip, unit included (`23,4 %`).
+ */
+export type ChartValueFormatter = (value: number) => string;

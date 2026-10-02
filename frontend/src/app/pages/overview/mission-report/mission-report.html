@@ -12,6 +12,7 @@
 
   <div
     #panel
+    appFocusTrap
     animate.enter="fx-modal-in"
     animate.leave="fx-modal-out"
     [class.rep--held]="!report.defeated"
@@ -83,7 +84,7 @@
       <section [attr.aria-label]="'overview.missionReport.loot' | translate" class="rep-loot">
         <div class="rep-main">
           <span aria-hidden="true" class="rep-hex rep-hex--lg clip-hex text-brand-400"
-            ><span class="clip-hex"><svg lucideUsers></svg></span
+            ><span class="clip-hex"><svg [lucideIcon]="concepts.wounded"></svg></span
           ></span>
           <div class="min-w-0">
             <p class="rep-main-fig">
@@ -116,14 +117,14 @@
           <ul class="rep-gains">
             <li class="rep-gain text-accent-green" style="--i: 0">
               <span aria-hidden="true" class="rep-hex clip-hex"
-                ><span class="clip-hex"><svg lucideWheat></svg></span
+                ><span class="clip-hex"><svg [lucideIcon]="concepts.food"></svg></span
               ></span>
               <strong>+<span [appCountUp]="base.foodGained"></span></strong>
               <span>{{ 'overview.missionReport.food' | translate }}</span>
             </li>
             <li class="rep-gain text-accent-cyan" style="--i: 1">
               <span aria-hidden="true" class="rep-hex clip-hex"
-                ><span class="clip-hex"><svg lucideWrench></svg></span
+                ><span class="clip-hex"><svg [lucideIcon]="concepts.components"></svg></span
               ></span>
               <strong>+<span [appCountUp]="base.componentsGained"></span></strong>
               <span>{{ 'overview.missionReport.components' | translate }}</span>
@@ -135,7 +136,7 @@
               style="--i: 2"
             >
               <span aria-hidden="true" class="rep-hex clip-hex"
-                ><span class="clip-hex"><svg lucideBuilding2></svg></span
+                ><span class="clip-hex"><svg [lucideIcon]="concepts.base"></svg></span
               ></span>
               <strong
                 >{{ base.populationChange > 0 ? '+' : ''
@@ -187,10 +188,10 @@
                   <span class="clip-hex">
                     @switch (title.icon) {
                       @case ('wrench') {
-                        <svg lucideWrench></svg>
+                        <svg [lucideIcon]="concepts.components"></svg>
                       }
                       @case ('wheat') {
-                        <svg lucideWheat></svg>
+                        <svg [lucideIcon]="concepts.food"></svg>
                       }
                       @case ('flame') {
                         <svg lucideFlame></svg>

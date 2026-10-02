@@ -10,15 +10,12 @@ import {
   viewChild,
 } from '@angular/core';
 import {
-  LucideBuilding2,
   LucideCrown,
   LucideFileText,
   LucideFlame,
   LucideTarget,
-  LucideUsers,
-  LucideWheat,
-  LucideWrench,
   LucideX,
+  LucideDynamicIcon,
 } from '@lucide/angular';
 
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.model';
@@ -30,6 +27,8 @@ import { Button } from '@shared/button/button';
 import { CountUp } from '@shared/count-up/count-up';
 import { MissionReport as MissionReportView } from '../overview.model';
 import { RESCUE_SEGMENT_COUNT } from './mission-report.constants';
+import { FocusTrap } from '@shared/focus-trap/focus-trap';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * The Monday report: what Sunday settled, told as a game's end-of-mission screen over the overview.
@@ -40,18 +39,16 @@ import { RESCUE_SEGMENT_COUNT } from './mission-report.constants';
 @Component({
   selector: 'app-mission-report',
   imports: [
+    LucideDynamicIcon,
+    FocusTrap,
     TranslatePipe,
     Avatar,
     Button,
     CountUp,
-    LucideBuilding2,
     LucideCrown,
     LucideFileText,
     LucideFlame,
     LucideTarget,
-    LucideUsers,
-    LucideWheat,
-    LucideWrench,
     LucideX,
   ],
   templateUrl: './mission-report.html',
@@ -63,6 +60,11 @@ import { RESCUE_SEGMENT_COUNT } from './mission-report.constants';
   },
 })
 export class MissionReport {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   public readonly report = input.required<MissionReportView>();
 
   public readonly open = input.required<boolean>();

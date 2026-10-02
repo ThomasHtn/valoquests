@@ -169,11 +169,17 @@
     padding-inline: 0.375rem 1.625rem;
   }
 
-  /* The smallest touch target that keeps every label whole on a phone. */
+  /* Drawn small so every label stays whole on a phone, tapped through a 44px zone around it. */
   .star {
     right: 0.125rem;
     width: 1.5rem;
     height: 1.5rem;
+  }
+
+  .star::before {
+    content: '';
+    position: absolute;
+    inset: -0.625rem;
   }
 
   .tab-label {

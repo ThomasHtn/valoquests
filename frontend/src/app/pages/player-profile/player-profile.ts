@@ -11,7 +11,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideChevronLeft } from '@lucide/angular';
 
 import { primaryTitle } from '@core/campaign/campaign-title.utils';
@@ -63,10 +63,14 @@ import {
   STAT_SKELETON_TILE_SPANS,
   STAT_STRIP_GRID_CLASS,
 } from './player-profile.constants';
+import { ProfileView } from './player-profile.model';
 import {
   buildNotFoundPlate,
+  readProfileQuery,
   resolveCurrentSeasonId,
+  resolveRequestedSeasonId,
   resolveYieldToneClass,
+  writeProfileQuery,
 } from './player-profile.utils';
 import { Progression } from './progression/progression';
 import { SeasonPicker } from './season-picker/season-picker';
@@ -140,9 +144,19 @@ export class PlayerProfile {
   private readonly translation = inject(Translation);
 
   /**
-   * Router, read for the address echoed by the not-found plate.
+   * Router, read for the address echoed by the not-found plate and writing the state back to it.
    */
   private readonly router = inject(Router);
+
+  /**
+   * The active route, whose query parameters hold the view, mode and season on screen.
+   */
+  private readonly route = inject(ActivatedRoute);
+
+  /**
+   * The state the address asked for on arrival, so a reload or a step back reopens it.
+   */
+  private readonly requested = readProfileQuery(this.route.snapshot.queryParamMap);
 
   /**
    * Numeric form of {@link id}, or `null` when the route does not name a valid player.
@@ -164,7 +178,7 @@ export class PlayerProfile {
    * the progression view compares several seasons of competitive play. So the filter bar swaps
    * with the view rather than trying to drive both.
    */
-  protected readonly viewMode = signal<'MATCHES' | 'PROGRESS'>('MATCHES');
+  protected readonly viewMode = signal<ProfileView>(this.requested.view);
 
   /**
    * Every match fetched so far for the current filters, oldest fetch first.
@@ -180,7 +194,7 @@ export class PlayerProfile {
    * Selected game-mode filter, or `null` for every mode - the default, so the page opens on the
    * latest matches whatever their queue.
    */
-  protected readonly gameModeFilter = signal<GameMode | null>(null);
+  protected readonly gameModeFilter = signal<GameMode | null>(this.requested.mode);
 
   /**
    * Reactive resource fetching every known season, used by the season filter.
@@ -215,7 +229,9 @@ export class PlayerProfile {
   protected readonly seasonId = linkedSignal<readonly Season[], number | null>({
     source: this.seasons,
     computation: (seasons, previous) =>
-      previous && previous.source.length > 0 ? previous.value : resolveCurrentSeasonId(seasons),
+      previous && previous.source.length > 0
+        ? previous.value
+        : resolveRequestedSeasonId(seasons, this.requested.season),
   });
 
   /**
@@ -495,11 +511,14 @@ export class PlayerProfile {
   /**
    * Formatters and colours of the stat strip, exposed to the template.
    */
-  protected readonly formatWinRate = formatWinRate;
+  protected readonly formatWinRate = (winRate: number | null): string =>
+    formatWinRate(winRate, this.translation.language());
 
-  protected readonly formatKda = formatKda;
+  protected readonly formatKda = (kda: number | null): string =>
+    formatKda(kda, this.translation.language());
 
-  protected readonly formatHeadshotPercentage = formatHeadshotPercentage;
+  protected readonly formatHeadshotPercentage = (percentage: number | null): string =>
+    formatHeadshotPercentage(percentage, this.translation.language());
 
   protected readonly formatScore = formatScore;
 
@@ -533,6 +552,33 @@ export class PlayerProfile {
     // load). Reads `page` with `untracked`: this effect must only react to the resource actually
     // settling, not to `page` changing the instant a load starts, when `matchesResource.value()`
     // still holds the *previous* page's content.
+    // Keeps the address in step with the view, mode and season, replacing the entry so filtering
+    // never adds steps to the back button. Waits for the seasons, without which the default
+    // season cannot be told from a chosen one.
+    effect(() => {
+      const seasons = this.seasons();
+      if (seasons.length === 0) {
+        return;
+      }
+      const seasonId = this.seasonId();
+      const queryParams = writeProfileQuery(
+        {
+          view: this.viewMode(),
+          mode: this.gameModeFilter(),
+          season: seasonId === null ? 'ALL' : seasonId,
+        },
+        resolveCurrentSeasonId(seasons),
+      );
+      untracked(() =>
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams,
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        }),
+      );
+    });
+
     effect(() => {
       if (this.matchesResource.isLoading() || !this.matchesResource.hasValue()) {
         return;
@@ -595,7 +641,7 @@ export class PlayerProfile {
    *
    * @param viewMode - The newly selected view.
    */
-  protected onViewModeChange(viewMode: 'MATCHES' | 'PROGRESS'): void {
+  protected onViewModeChange(viewMode: ProfileView): void {
     this.viewMode.set(viewMode);
   }
 

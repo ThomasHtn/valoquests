@@ -28,7 +28,7 @@ import { PageHeader } from '@layout/page-header/page-header';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { WeekCountdown } from '@shared/week-countdown/week-countdown';
-import { formatFigure } from '../leaderboard/leaderboard-board.utils';
+import { formatFigure } from '@core/i18n/number-format.utils';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { ChallengeBoard } from './challenge-board/challenge-board';
 import { ChallengeCatalogueView } from './challenge-catalogue/challenge-catalogue';
@@ -41,17 +41,18 @@ import {
   ChallengeLook,
   ChallengeOperator,
   DayCell,
+  DayPickSource,
   DayState,
 } from './challenges.model';
 import {
   buildChallengeCard,
   orderOperators,
-  readPinnedPlayer,
+  resolvePickedDay,
   shiftDay,
   toBoardRow,
   toOperators,
-  writePinnedPlayer,
 } from './challenges.utils';
+import { readPinnedPlayer, writePinnedPlayer } from '@core/players/pinned-player.utils';
 
 /**
  * The week's challenges on one board, the day's first, the squad beside them, and the catalogue
@@ -91,7 +92,7 @@ export class Challenges {
 
   protected readonly isLoading = anyLoading(this.challengesResource, this.campaignResource);
 
-  protected readonly isError = anyError(this.challengesResource);
+  protected readonly isError = anyError(this.challengesResource, this.campaignResource);
 
   protected readonly catalogueLoading = anyLoading(this.catalogueResource);
 
@@ -187,7 +188,7 @@ export class Challenges {
       const doneCount = daily
         ? current.roster.filter((operator) => daily.completedPlayerIds.includes(operator.id)).length
         : 0;
-      const tip = this.tip(daily !== null, doneCount, current.roster.length);
+      const tip = this.tip(daily !== null, state, doneCount, current.roster.length);
       return {
         index,
         state,
@@ -206,13 +207,12 @@ export class Challenges {
   /**
    * Index of the day whose challenge the daily row shows. Follows today until the reader picks
    * another day on the tally, and again once the week rolls; before today's draw, the last drawn day.
+   * A background reload keeps the pick.
    */
-  protected readonly pickedDay = linkedSignal<number | null>(
-    () =>
-      this.days()
-        .filter((day) => day.drawn && day.state !== 'ahead')
-        .at(-1)?.index ?? null,
-  );
+  protected readonly pickedDay = linkedSignal<DayPickSource, number | null>({
+    source: () => ({ weekStart: this.current()?.weekStart ?? null, days: this.days() }),
+    computation: (source, previous) => resolvePickedDay(source, previous),
+  });
 
   /**
    * Whether the card shows today's challenge, which still runs, rather than a closed day's.
@@ -405,12 +405,12 @@ export class Challenges {
     return Math.min(WEEK_DAYS - 1, Math.max(0, offset));
   }
 
-  private tip(drawn: boolean, count: number, total: number): string {
+  private tip(drawn: boolean, state: DayState, count: number, total: number): string {
     const t = (key: string, params?: Record<string, string | number>): string =>
       this.translation.translate(`challenges.daily.${key}`, params);
-    // A day ahead, a day the tick missed and today before its draw all read the same.
+    // A day ahead says when it opens; a day the tick missed and today before its draw are unavailable.
     if (!drawn) {
-      return t('tipUnavailable');
+      return t(state === 'ahead' ? 'tipAhead' : 'tipUnavailable');
     }
     return count === 0 ? t('tipNone', { total }) : t('tipDone', { count, total });
   }

@@ -1,6 +1,7 @@
 import { Service } from '@angular/core';
 
 import { STORAGE_KEY } from './landing-visit.constants';
+import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
 
 /**
  * Tracks whether the visitor has already entered the application through the landing page.
@@ -17,13 +18,13 @@ export class LandingVisit {
    * @returns Whether the entry has been recorded.
    */
   public hasEntered(): boolean {
-    return localStorage.getItem(STORAGE_KEY) !== null;
+    return readStorage(STORAGE_KEY) !== null;
   }
 
   /**
    * Records that the visitor has entered the application, so subsequent visits skip the landing.
    */
   public markEntered(): void {
-    localStorage.setItem(STORAGE_KEY, 'true');
+    writeStorage(STORAGE_KEY, 'true');
   }
 }

@@ -3,7 +3,7 @@ import { WEEK_DAYS } from '@core/date/date-time.constants';
 import { DAILY_TONE } from '@pages/challenges/challenges.constants';
 import { BoardRow, ChallengeOperator, DayCell, DayState } from '@pages/challenges/challenges.model';
 import { buildChallengeCard, toBoardRow } from '@pages/challenges/challenges.utils';
-import { formatFigure } from '@pages/leaderboard/leaderboard-board.utils';
+import { formatFigure } from '@core/i18n/number-format.utils';
 
 import { TourSampleDaily } from './tour.model';
 

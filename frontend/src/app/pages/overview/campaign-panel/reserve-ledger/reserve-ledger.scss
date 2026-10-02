@@ -212,3 +212,13 @@
   font-weight: 600;
   color: var(--color-text-secondary);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .fold-body {
+    animation: none;
+  }
+
+  .fold-chev {
+    transition: none;
+  }
+}

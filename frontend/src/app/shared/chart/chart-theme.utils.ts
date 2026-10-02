@@ -103,7 +103,7 @@ export function resolveCssColor(expression: string): string {
 export function resolveChartTheme(): ChartTheme {
   return {
     grid: 'rgb(236 232 225 / 0.08)',
-    tick: token('--color-text-muted', '#868b8d'),
+    tick: token('--color-text-muted', '#8f9496'),
     tooltipSurface: token('--color-surface-sunken', '#0a151d'),
     tooltipBorder: 'rgb(217 149 74 / 0.5)',
     tooltipText: token('--color-text-primary', '#ece8e1'),

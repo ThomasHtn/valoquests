@@ -130,7 +130,13 @@
               </p>
               @if (playerDetails.rankRating !== null) {
                 <p class="mt-2 font-mono text-sm text-text-muted tabular-nums">
-                  {{ playerDetails.rankRating }} RR
+                  {{ playerDetails.rankRating }}
+                  <span
+                    [appTooltip]="'players.columns.rankHelp' | translate"
+                    class="focus-ring cursor-help underline decoration-dotted underline-offset-2"
+                    tabindex="0"
+                    >RR</span
+                  >
                 </p>
               }
             </div>
@@ -295,7 +301,7 @@
                     [class]="winRate.textClass"
                     class="font-display text-2xl leading-none font-bold"
                   >
-                    {{ formatWinRate(stats.winRate) }}
+                    {{ formatWinRate(hasSample ? stats.winRate : null) }}
                   </span>
                   <span class="text-sm text-text-muted tabular-nums">
                     {{
@@ -315,26 +321,26 @@
               <app-stat-tile
                 [label]="'playerProfile.stats.kda' | translate"
                 [tooltip]="'playerProfile.stats.tooltip.kda' | translate"
-                [value]="formatKda(stats.kda)"
+                [value]="formatKda(hasSample ? stats.kda : null)"
                 [valueClass]="kdaVisual(hasSample ? stats.kda : null).textClass"
               />
 
               <app-stat-tile
                 [label]="'playerProfile.stats.headshotPercentage' | translate"
                 [tooltip]="'playerProfile.stats.tooltip.headshotPercentage' | translate"
-                [value]="formatHeadshotPercentage(stats.headshotPercentage)"
+                [value]="formatHeadshotPercentage(hasSample ? stats.headshotPercentage : null)"
               />
 
               <app-stat-tile
                 [label]="'playerProfile.stats.adr' | translate"
                 [tooltip]="'playerProfile.stats.tooltip.adr' | translate"
-                [value]="formatScore(stats.adr)"
+                [value]="formatScore(hasSample ? stats.adr : null)"
               />
 
               <app-stat-tile
                 [label]="'playerProfile.stats.acs' | translate"
                 [tooltip]="'playerProfile.stats.tooltip.acs' | translate"
-                [value]="formatScore(stats.acs)"
+                [value]="formatScore(hasSample ? stats.acs : null)"
               />
 
               <!-- Spans the trailing gap on the two- and three-column grids, where it would
@@ -414,10 +420,11 @@
           [playerId]="playerDetails.id"
           [days]="matchDays()"
           [isEmpty]="matches().length === 0"
-          [isError]="!!matchesResource.error()"
+          [isError]="!!matchesResource.error() && matches().length === 0"
           [isLoading]="matchesResource.isLoading() && matches().length === 0"
           [hasMore]="hasMoreMatches()"
           [isLoadingMore]="isLoadingMoreMatches()"
+          [loadMoreFailed]="!!matchesResource.error() && matches().length > 0"
           (retry)="matchesResource.reload()"
           (loadMore)="loadMoreMatches()"
         />

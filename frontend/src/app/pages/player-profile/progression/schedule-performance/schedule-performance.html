@@ -16,10 +16,10 @@
       <app-bar-chart
         [ariaLabel]="'playerProfile.progression.schedule.byWeekday' | translate"
         [bars]="weekdayBars()"
-        [summary]="'playerProfile.progression.schedule.byWeekday' | translate"
+        [summary]="weekdaySummary()"
         [xAxisLabel]="'playerProfile.progression.schedule.axis.weekday' | translate"
         [yAxisLabel]="'playerProfile.progression.schedule.axis.winRate' | translate"
-        valueSuffix="%"
+        [valueFormatter]="formatRate"
       />
       <!-- The claim in words, not only in colour: the highlighted bar is green, but green alone is
            not something every reader can act on. -->
@@ -38,10 +38,10 @@
       <app-bar-chart
         [ariaLabel]="'playerProfile.progression.schedule.byHour' | translate"
         [bars]="hourSlotBars()"
-        [summary]="'playerProfile.progression.schedule.byHour' | translate"
+        [summary]="hourSlotSummary()"
         [xAxisLabel]="'playerProfile.progression.schedule.axis.hour' | translate"
         [yAxisLabel]="'playerProfile.progression.schedule.axis.winRate' | translate"
-        valueSuffix="%"
+        [valueFormatter]="formatRate"
       />
       @if (bestHourSlot()) {
         <p class="flex items-center gap-2 text-sm text-text-secondary">

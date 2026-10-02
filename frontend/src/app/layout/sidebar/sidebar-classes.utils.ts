@@ -114,8 +114,7 @@ export function resolveDrawerClasses(open: boolean): DrawerClasses {
 /**
  * Utilities layered onto the active navigation entry.
  */
-export const NAV_ACTIVE_CLASS =
-  ' bg-linear-to-r from-brand-500/20 to-transparent text-brand-500 before:bg-brand-500';
+export const NAV_ACTIVE_CLASS = ' bg-brand-500/12 text-brand-500 before:bg-brand-500';
 
 /**
  * Utilities of the open language trigger: the hover tint with gold text on top, so the open state

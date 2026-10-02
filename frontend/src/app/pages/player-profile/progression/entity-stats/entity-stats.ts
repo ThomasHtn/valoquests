@@ -1,5 +1,6 @@
-import { Component, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
 import { formatScore, formatWinRate } from '@core/players/player-format.utils';
 import { resolveWinRateVisual } from '@core/players/player-stats.utils';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
@@ -42,10 +43,13 @@ export class EntityStats {
    */
   public readonly rows = input.required<readonly EntityStatsRow[]>();
 
+  private readonly translation = inject(Translation);
+
   /**
    * Formats a win rate, exposed to the template.
    */
-  protected readonly formatWinRate = formatWinRate;
+  protected readonly formatWinRate = (winRate: number | null): string =>
+    formatWinRate(winRate, this.translation.language());
 
   /**
    * Formats an average combat score, exposed to the template.

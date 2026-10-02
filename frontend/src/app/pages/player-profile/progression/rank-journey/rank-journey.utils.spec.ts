@@ -138,14 +138,14 @@ describe('buildRankJourneyTooltip', () => {
   const series = buildRankJourneySeries(JOURNEY, false, translate);
 
   it('shows the range only for a season that left its rank', () => {
-    expect(buildRankJourneyTooltip(JOURNEY, series, 1, translate)?.lowest).toBeNull();
-    expect(buildRankJourneyTooltip(JOURNEY, series, 3, translate)?.highest?.iconUrl).toBe(
+    expect(buildRankJourneyTooltip(JOURNEY, series, 1, translate, 'fr')?.lowest).toBeNull();
+    expect(buildRankJourneyTooltip(JOURNEY, series, 3, translate, 'fr')?.highest?.iconUrl).toBe(
       '/ranks/diamond-1.svg',
     );
   });
 
   it('has no move for the first point', () => {
-    expect(buildRankJourneyTooltip(JOURNEY, series, 0, translate)?.delta).toBeNull();
+    expect(buildRankJourneyTooltip(JOURNEY, series, 0, translate, 'fr')?.delta).toBeNull();
   });
 
   it('describes a match by its position and leaves the season record out', () => {
@@ -157,6 +157,7 @@ describe('buildRankJourneyTooltip', () => {
       buildRankJourneySeries(single, false, translate),
       1,
       translate,
+      'fr',
     );
 
     expect(tip?.heading).toBe('playerProfile.progression.rankJourney.tip.match(index=2,total=3)');
@@ -165,6 +166,6 @@ describe('buildRankJourneyTooltip', () => {
   });
 
   it('returns null past the last point', () => {
-    expect(buildRankJourneyTooltip(JOURNEY, series, 9, translate)).toBeNull();
+    expect(buildRankJourneyTooltip(JOURNEY, series, 9, translate, 'fr')).toBeNull();
   });
 });

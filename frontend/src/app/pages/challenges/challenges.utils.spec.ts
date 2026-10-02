@@ -111,7 +111,7 @@ describe('orderOperators', () => {
 
 describe('splitCompactFigure', () => {
   it('splits the compact unit from the figure', () => {
-    expect(splitCompactFigure('12,7k')).toEqual({ figure: '12,7', unit: 'k' });
+    expect(splitCompactFigure('12.7k')).toEqual({ figure: '12.7', unit: 'k' });
     expect(splitCompactFigure('450')).toEqual({ figure: '450', unit: '' });
   });
 });

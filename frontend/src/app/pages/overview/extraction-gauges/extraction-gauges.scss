@@ -69,6 +69,13 @@
   transition: color 150ms;
 }
 
+/* The disc stays small; the tap zone around it reaches the 44px a thumb needs. */
+.info::before {
+  content: '';
+  position: absolute;
+  inset: -0.5rem;
+}
+
 .info:hover,
 .info[aria-describedby] {
   color: var(--tone);

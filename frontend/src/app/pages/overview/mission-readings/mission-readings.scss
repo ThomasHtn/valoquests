@@ -133,7 +133,8 @@
   animation: duel-fill var(--duration-gauge-long) var(--ease-gauge) both;
 }
 
-/* Operators' segments are buttons, reset to bare strips; the empty track keeps a plain `i`. */
+/* Operators' segments are buttons, reset to bare strips; the empty track keeps a plain `i`. A
+   small contributor keeps a sliver wide enough to tap. */
 .duel-front > * {
   display: block;
   flex: var(--w, 1) 1 0;
@@ -144,6 +145,10 @@
   background: color-mix(in srgb, var(--squad) 42%, var(--color-surface-950));
   cursor: help;
   transition: filter var(--duration-fast) var(--ease-out-quart);
+}
+
+.duel-front > button {
+  min-width: 0.75rem;
 }
 
 .duel-front > :nth-child(even) {
@@ -168,12 +173,12 @@
   animation: duel-post var(--duration-gauge-long) var(--ease-gauge) both;
 }
 
-/* A three-pixel post is too thin to aim at: the pointer catches it a few pixels either side. */
+/* A three-pixel post is too thin to aim at: the pointer and the thumb catch it 24px wide. */
 .duel-seam {
   position: absolute;
   inset-block: 0;
-  left: clamp(0px, calc(var(--breach) - 5px), calc(100% - 14px));
-  width: 14px;
+  left: clamp(0px, calc(var(--breach) - 10px), calc(100% - 24px));
+  width: 24px;
   cursor: help;
 }
 

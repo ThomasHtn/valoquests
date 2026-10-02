@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { LucideChevronDown, LucideTrendingUp, LucideWheat, LucideWrench } from '@lucide/angular';
+import { LucideChevronDown, LucideTrendingUp, LucideDynamicIcon } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { Translation } from '@core/i18n/translation';
 import { LedgerCell, LedgerColumn, LedgerRow } from '../campaign-panel.model';
 import { LedgerCellView } from './ledger-cell';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * The reserves, week after week: a column per planet, a row per resource.
@@ -17,18 +19,23 @@ import { LedgerCellView } from './ledger-cell';
 @Component({
   selector: 'app-reserve-ledger',
   imports: [
+    LucideDynamicIcon,
+    Tooltip,
     TranslatePipe,
     LedgerCellView,
     LucideChevronDown,
     LucideTrendingUp,
-    LucideWheat,
-    LucideWrench,
   ],
   templateUrl: './reserve-ledger.html',
   styleUrl: './reserve-ledger.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReserveLedger {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   public readonly columns = input.required<readonly LedgerColumn[]>();
 
   public readonly rows = input.required<readonly LedgerRow[]>();

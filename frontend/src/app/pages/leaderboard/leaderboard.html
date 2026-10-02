@@ -81,7 +81,10 @@
                 "
                 class="head-fig label-caption cursor-help text-text-muted"
               >
-                {{ 'leaderboard.board.points' | translate }}
+                {{
+                  (rescueActive() ? 'leaderboard.board.points' : 'leaderboard.board.pointsOff')
+                    | translate
+                }}
               </span>
               <span
                 [appTooltip]="'leaderboard.board.challengesHelp' | translate"
@@ -147,10 +150,12 @@
       class="row-link focus-ring-inset border-l-2 border-edge"
     >
       <span class="cell-pos">
-        @if (row.position === null) {
-          <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
-        }
-        <app-position-badge [position]="row.position" />
+        <span>
+          @if (row.position === null) {
+            <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
+          }
+          <app-position-badge [position]="row.position" />
+        </span>
         @if (row.variation > 0) {
           <span class="variation text-accent-green">
             <svg aria-hidden="true" class="size-3" lucideChevronUp></svg>
@@ -185,11 +190,11 @@
           <!-- The one title held, beside the name, dropping under only when the column is too narrow. -->
           @if (row.isChampion) {
             <span class="who-titles">
-              <app-champion-badge />
+              <app-champion-badge [inLink]="true" />
             </span>
           } @else if (row.title; as title) {
             <span class="who-titles">
-              <app-title-badge [measure]="title.measure" [title]="title.key" />
+              <app-title-badge [inLink]="true" [measure]="title.measure" [title]="title.key" />
             </span>
           }
         </span>
@@ -199,26 +204,65 @@
            colours. An unranked operator scores nothing by definition: dashes, not zeroes. -->
       <span class="cell-figs">
         <span class="cell-fig">
-          <span class="cap label-caption">{{ 'leaderboard.board.score' | translate }}</span>
+          <span class="cap label-caption"
+            ><svg
+              aria-hidden="true"
+              class="mr-1 inline-block size-3.5 -translate-y-px"
+              lucideTrophy
+            ></svg
+            >{{ 'leaderboard.board.score' | translate }}</span
+          >
           <span class="fig text-accent-gold">{{
             row.position === null ? '—' : format(row.total)
           }}</span>
         </span>
         <span class="cell-fig">
-          <span class="cap label-caption">{{ 'leaderboard.board.damage' | translate }}</span>
+          <span class="cap label-caption"
+            ><svg
+              aria-hidden="true"
+              class="mr-1 inline-block size-3.5 -translate-y-px"
+              [lucideIcon]="concepts.damage"
+            ></svg
+            >{{ 'leaderboard.board.damage' | translate }}</span
+          >
           <span class="fig text-boss-hp-edge">{{
             row.position === null ? '—' : format(row.damage)
           }}</span>
         </span>
         <span class="cell-fig">
-          <span class="cap label-caption">{{ 'leaderboard.board.points' | translate }}</span>
+          <span class="cap label-caption">
+            @if (rescueActive()) {
+              <svg
+                aria-hidden="true"
+                class="inline-block size-3.5 -translate-y-px"
+                [lucideIcon]="concepts.wounded"
+              ></svg>
+            } @else {
+              <svg
+                aria-hidden="true"
+                class="inline-block size-3.5 -translate-y-px"
+                [lucideIcon]="concepts.points"
+              ></svg>
+            }
+            {{
+              (rescueActive() ? 'leaderboard.board.points' : 'leaderboard.board.pointsOff')
+                | translate
+            }}</span
+          >
           <span class="fig text-brand-400">{{
             row.position === null ? '—' : format(row.challengePoints)
           }}</span>
         </span>
         <!-- Counted for everyone, ranked or not: validating a challenge does not need a place. -->
         <span class="cell-fig">
-          <span class="cap label-caption">{{ 'leaderboard.board.challenges' | translate }}</span>
+          <span class="cap label-caption"
+            ><svg
+              aria-hidden="true"
+              class="mr-1 inline-block size-3.5 -translate-y-px"
+              [lucideIcon]="concepts.challenge"
+            ></svg
+            >{{ 'leaderboard.board.challenges' | translate }}</span
+          >
           <span class="fig">
             <span
               aria-hidden="true"
@@ -235,12 +279,26 @@
           </span>
         </span>
         <span class="cell-fig">
-          <span class="cap label-caption">{{ 'leaderboard.board.matches' | translate }}</span>
+          <span class="cap label-caption"
+            ><svg
+              aria-hidden="true"
+              class="mr-1 inline-block size-3.5 -translate-y-px"
+              [lucideIcon]="concepts.matches"
+            ></svg
+            >{{ 'leaderboard.board.matches' | translate }}</span
+          >
           <span class="fig text-text-primary">{{ row.matchCount }}</span>
         </span>
         <!-- The contribution sheet's gauge, so attendance reads the same on both boards. -->
         <span class="cell-fig cell-fig--start">
-          <span class="cap label-caption">{{ 'leaderboard.board.streak' | translate }}</span>
+          <span class="cap label-caption"
+            ><svg
+              aria-hidden="true"
+              class="mr-1 inline-block size-3.5 -translate-y-px"
+              [lucideIcon]="concepts.streak"
+            ></svg
+            >{{ 'leaderboard.board.streak' | translate }}</span
+          >
           <app-streak-gauge
             [bonusPercent]="row.streak.bonusPercent"
             [days]="row.streak.days"

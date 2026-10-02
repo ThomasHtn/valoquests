@@ -195,7 +195,7 @@ export class AdminPlayers {
    */
   protected formatLastSync(instant: string | null): string {
     return instant
-      ? formatSynchronizationTimestamp(instant)
+      ? formatSynchronizationTimestamp(instant, this.translation.language())
       : this.translation.translate('admin.players.neverSynchronized');
   }
 

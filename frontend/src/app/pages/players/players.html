@@ -32,6 +32,49 @@
       }
     </div>
 
+    <!-- On a phone the header is hidden: its sort folds into a picker. The caption gives way on the
+         narrowest screens, the picker naming itself to assistive technology. -->
+    <div class="flex items-center justify-end gap-2 lg:hidden">
+      <span class="label-caption whitespace-nowrap text-text-muted max-[22.5rem]:hidden">{{
+        'players.sort.label' | translate
+      }}</span>
+      <app-select
+        [ariaLabel]="'players.sort.label' | translate"
+        [options]="sortOptions()"
+        [value]="sortKey()"
+        (valueChange)="pickSort($event!)"
+      />
+      <!-- Says the order in words rather than with a bare chevron; a tap reverses it. -->
+      <button
+        (click)="toggleSortDirection()"
+        [attr.aria-label]="
+          'players.sort.reverse'
+            | translate: { order: 'players.sort.order.' + sortOrder() | translate }
+        "
+        class="focus-ring flex min-h-11 shrink-0 items-center gap-2 border-l-2 border-brand-500 bg-text-primary/6 px-3 text-sm font-semibold whitespace-nowrap text-text-primary transition-colors hover:bg-brand-500/12 motion-safe:active:scale-[0.96]"
+        type="button"
+      >
+        @switch (sortOrder()) {
+          @case ('az') {
+            <svg aria-hidden="true" class="size-4 text-brand-400" lucideArrowDownAZ></svg>
+          }
+          @case ('za') {
+            <svg aria-hidden="true" class="size-4 text-brand-400" lucideArrowDownZA></svg>
+          }
+          @case ('low') {
+            <svg aria-hidden="true" class="size-4 text-brand-400" lucideArrowDownNarrowWide></svg>
+          }
+          @case ('worst') {
+            <svg aria-hidden="true" class="size-4 text-brand-400" lucideArrowDownNarrowWide></svg>
+          }
+          @default {
+            <svg aria-hidden="true" class="size-4 text-brand-400" lucideArrowDownWideNarrow></svg>
+          }
+        }
+        {{ 'players.sort.order.' + sortOrder() | translate }}
+      </button>
+    </div>
+
     <!-- Column header, from `lg` up — where the rows are wide enough to align into columns. Each
        label is a sort button, and the whole row is exposed to assistive technology now that it is
        actionable rather than decorative. -->
@@ -41,6 +84,7 @@
       @for (column of sortColumns; track column.key) {
         <button
           (click)="setSort(column.key)"
+          [appTooltip]="column.helpKey ? (column.helpKey | translate) : ''"
           [class.justify-end]="column.align === 'right'"
           class="label-caption focus-ring flex cursor-pointer items-center gap-1 text-text-muted transition-colors hover:text-text-primary"
           type="button"
@@ -48,10 +92,14 @@
           {{ column.labelKey | translate }}
           @if (sortKey() === column.key) {
             @if (sortDirection() === 1) {
-              <svg class="size-3" lucideChevronUp></svg>
+              <svg aria-hidden="true" class="size-3" lucideChevronUp></svg>
             } @else {
-              <svg class="size-3" lucideChevronDown></svg>
+              <svg aria-hidden="true" class="size-3" lucideChevronDown></svg>
             }
+            <span class="sr-only">{{
+              (sortDirection() === 1 ? 'players.sort.ascending' : 'players.sort.descending')
+                | translate
+            }}</span>
           }
         </button>
       }
@@ -99,13 +147,15 @@
 <ng-template #playerRow let-row>
   <a
     [routerLink]="['/players', row.id]"
-    class="group focus-ring-inset grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4 border-l-2 border-text-primary/15 bg-text-primary/4 px-4 py-4.5 transition-colors hover:border-brand-500/60 hover:bg-brand-500/12 lg:grid-cols-[minmax(0,1fr)_13rem_13rem_6rem_6.5rem_6rem_4.5rem] lg:gap-x-[clamp(0.875rem,4vw-2.325rem,2rem)] lg:gap-y-0 lg:px-5"
+    class="group focus-ring-inset grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4 border-l-2 border-text-primary/15 bg-text-primary/4 px-5 py-4.5 transition-colors hover:border-brand-500/60 hover:bg-brand-500/12 lg:grid-cols-[minmax(0,1fr)_13rem_13rem_6rem_6.5rem_6rem_4.5rem] lg:gap-x-[clamp(0.875rem,4vw-2.325rem,2rem)] lg:gap-y-0"
   >
     <span class="flex min-w-0 items-center gap-3">
       <app-avatar [champion]="row.isChampion" [src]="row.avatarUrl" size="sm" />
       <span class="min-w-0">
-        <!-- The title beside the name, dropping under only when the column is too narrow. -->
-        <span class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+        <!-- The title under the name on a phone, beside it from `lg`. -->
+        <span
+          class="flex flex-col items-start gap-1.5 lg:flex-row lg:flex-wrap lg:items-center lg:gap-x-2.5"
+        >
           <span
             [class.text-accent-gold]="row.isChampion"
             [class.text-text-primary]="!row.isChampion"
@@ -114,9 +164,9 @@
             {{ row.displayName }}
           </span>
           @if (row.isChampion) {
-            <app-champion-badge />
+            <app-champion-badge [inLink]="true" />
           } @else if (row.title; as title) {
-            <app-title-badge [title]="title.key" />
+            <app-title-badge [inLink]="true" [title]="title.key" />
           }
         </span>
         @if (row.tag) {
@@ -163,13 +213,16 @@
         >
           {{ formatWinRate(row.winRate) }}
         </span>
-        <app-progress-bar
-          class="notch-tr w-full [--notch:0.1875rem] lg:w-28"
-          heightClass="h-2.5"
-          [colorClass]="winRateVisual(row.winRate).barClass"
-          [edgeMarker]="true"
-          [percentage]="row.winRate ?? 0"
-        />
+        <!-- Desktop only: on a phone the rate stands alone, like the three figures beside it. -->
+        <span class="hidden lg:block">
+          <app-progress-bar
+            class="notch-tr w-28 [--notch:0.1875rem]"
+            heightClass="h-2.5"
+            [colorClass]="winRateVisual(row.winRate).barClass"
+            [edgeMarker]="true"
+            [percentage]="row.winRate ?? 0"
+          />
+        </span>
       </span>
 
       <span class="flex flex-col gap-2 lg:items-end">

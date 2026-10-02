@@ -1,8 +1,6 @@
 /*
  * The tour is otherwise pure utility classes; this file holds what they cannot express: the
  * framing of the sample screens, and the spec strip's dividers.
- * Colours spelled out: a component stylesheet is compiled outside the Tailwind theme context.
- *   brand-400 #e8ab6b · brand-500 #d9954a · text-primary #ece8e1 · edge rgb(236 232 225 / 14%)
  */
 
 /* A step: the copy, the sample screen, the spec strip. Stacked in that order on a phone; from the
@@ -65,7 +63,7 @@
 /* The words a claim turns on. Weight and value only: the eyebrow and the figures spend the accent. */
 .tour-em {
   font-weight: 600;
-  color: #ece8e1;
+  color: var(--color-text-primary);
 }
 
 /* The spec strip: three columns whatever the viewport, the figures are short. Left-aligned with the
@@ -75,12 +73,12 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   max-width: 30rem;
   padding-top: 20px;
-  border-top: 1px solid rgb(236 232 225 / 14%);
+  border-top: 1px solid var(--color-edge);
 }
 
 .tour-spec {
   padding-inline: 12px;
-  border-left: 1px solid rgb(236 232 225 / 14%);
+  border-left: 1px solid var(--color-edge);
 }
 
 .tour-spec:first-child {
@@ -97,7 +95,7 @@
   line-height: 1.45;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: #868b8d;
+  color: var(--color-text-muted);
 }
 
 @media (width < 40rem) {

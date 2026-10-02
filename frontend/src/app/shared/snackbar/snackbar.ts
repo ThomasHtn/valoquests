@@ -3,7 +3,10 @@ import { LucideCircleCheck, LucideTriangleAlert, LucideX } from '@lucide/angular
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { SnackbarService } from '@core/snackbar/snackbar';
-import { SNACKBAR_DURATION_MS } from '@core/snackbar/snackbar.constants';
+import {
+  SNACKBAR_DURATION_MS,
+  SNACKBAR_ERROR_DURATION_MS,
+} from '@core/snackbar/snackbar.constants';
 
 /**
  * Application-wide snackbar, mounted once at the root so every page shares the same single slot.
@@ -28,4 +31,6 @@ export class Snackbar {
    * Duration the timebar animation must match exactly, in milliseconds.
    */
   protected readonly snackbarDurationMs = SNACKBAR_DURATION_MS;
+
+  protected readonly errorDurationMs = SNACKBAR_ERROR_DURATION_MS;
 }

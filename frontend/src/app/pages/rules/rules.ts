@@ -20,6 +20,8 @@ import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
 import { resolveDifficultyVisual } from '@core/challenges/challenge-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { resolveLocale } from '@core/i18n/locale.utils';
+import { formatNumber } from '@core/i18n/number-format.utils';
 import { Translation } from '@core/i18n/translation';
 import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
 import { PageHeader } from '@layout/page-header/page-header';
@@ -155,8 +157,14 @@ export class Rules implements AfterViewInit {
     ELITE: 'text-boss-hp-edge',
   };
 
-  private readonly locale = computed(() =>
-    this.translation.language() === 'fr' ? 'fr-FR' : 'en-GB',
+  private readonly locale = computed(() => resolveLocale(this.translation.language()));
+
+  /**
+   * The guardian's hit-point factor in the reader's notation, quoted rather than copied in the
+   * dictionaries so the text cannot drift from the table again.
+   */
+  protected readonly guardianFactor = computed(() =>
+    formatNumber(GUARDIAN_FACTOR, this.locale(), { minimumFractionDigits: 2 }),
   );
 
   /**
@@ -170,27 +178,30 @@ export class Rules implements AfterViewInit {
   }
 
   /**
-   * Formats a percentage that may carry decimals, `0,004 %` as well as `35 %`.
+   * Formats a percentage that may carry decimals, `0.004 %` as well as `35 %`, spaced as the
+   * reader's language spaces it.
    *
-   * @param value - The percentage.
+   * @param value - The percentage, 0 to 100.
    * @returns The formatted percentage, sign included.
    */
   protected percent(value: number): string {
-    const digits = new Intl.NumberFormat(this.locale(), { maximumFractionDigits: 3 }).format(value);
-    return `${digits} %`;
+    return formatNumber(value / 100, this.locale(), {
+      style: 'percent',
+      maximumFractionDigits: 3,
+    });
   }
 
   /**
-   * Formats a challenge's weight, `× 1,7`.
+   * Formats a challenge's weight, `× 1.7`.
    *
    * @param value - The multiplier.
    * @returns The formatted multiplier.
    */
   protected times(value: number): string {
-    const formatted = new Intl.NumberFormat(this.locale(), {
+    const formatted = formatNumber(value, this.locale(), {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
-    }).format(value);
+    });
     return `× ${formatted}`;
   }
 

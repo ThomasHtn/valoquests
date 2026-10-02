@@ -34,3 +34,19 @@ export const HULL_MASK = `url("data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${HULL_VIEWBOX}" preserveAspectRatio="none">` +
     `<path d="${HULL_PATH}"/></svg>`,
 )}")`;
+
+/**
+ * Font size of the aboard figure by digit count, so it stays inside the rocket's 54-unit hull: past
+ * three digits the 2rem default runs over the outline.
+ */
+export const HULL_FIGURE_SIZES: readonly { readonly maxDigits: number; readonly size: string }[] = [
+  { maxDigits: 2, size: '2rem' },
+  { maxDigits: 3, size: '1.875rem' },
+  { maxDigits: 4, size: '1.25rem' },
+  { maxDigits: 5, size: '1.0625rem' },
+];
+
+/**
+ * Font size of the aboard figure beyond {@link HULL_FIGURE_SIZES}.
+ */
+export const HULL_FIGURE_MIN_SIZE = '0.875rem';

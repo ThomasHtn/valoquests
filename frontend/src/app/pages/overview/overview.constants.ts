@@ -27,3 +27,8 @@ export const OVERVIEW_TABS: readonly OverviewTabKey[] = [
   'matches',
   'campaign',
 ];
+
+/**
+ * Query parameter naming the open tab (`/overview?tab=campaign`).
+ */
+export const OVERVIEW_TAB_PARAM = 'tab';

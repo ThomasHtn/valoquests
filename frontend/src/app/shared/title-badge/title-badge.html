@@ -2,8 +2,8 @@
 <span
   [appTooltip]="('common.titleHint.' + title() | translate) + (measure() ? ' · ' + measure() : '')"
   [class]="'title-badge title-badge--' + size() + ' ' + look.colorClass"
+  [attr.tabindex]="inLink() ? null : 0"
   class="focus-ring"
-  tabindex="0"
 >
   @switch (look.icon) {
     @case ('crown') {

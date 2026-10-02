@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { DEFAULT_LANGUAGE, STORAGE_KEY, SUPPORTED_LANGUAGES } from './translation.constants';
 import { Language, TranslationDictionary } from './translation.model';
+import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
 
 /**
  * Application-wide i18n service.
@@ -65,7 +66,7 @@ export class Translation {
       return;
     }
 
-    localStorage.setItem(STORAGE_KEY, language);
+    writeStorage(STORAGE_KEY, language);
     this.language.set(language);
     await this.load(language);
   }
@@ -214,7 +215,7 @@ export class Translation {
    * @returns The language to use on startup.
    */
   private detectInitialLanguage(): Language {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = readStorage(STORAGE_KEY);
     if (this.isSupportedLanguage(stored)) {
       return stored;
     }

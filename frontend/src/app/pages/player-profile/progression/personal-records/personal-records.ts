@@ -2,13 +2,13 @@ import { Component, computed, inject, input } from '@angular/core';
 import {
   LucideCalendarCheck,
   LucideCrosshair,
-  LucideFlame,
   LucideShieldCheck,
   LucideStar,
-  LucideSwords,
-  LucideTarget,
   LucideTrendingUp,
-  LucideZap,
+  LucideGauge,
+  LucideBomb,
+  LucideMedal,
+  LucideLocateFixed,
 } from '@lucide/angular';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalDayMonth } from '@core/date/date-time.utils';
@@ -41,14 +41,14 @@ import { RecordKey, RecordTile } from './personal-records.model';
 @Component({
   selector: 'app-personal-records',
   imports: [
+    LucideLocateFixed,
+    LucideMedal,
+    LucideBomb,
+    LucideGauge,
     TranslatePipe,
     Tooltip,
     RankIconView,
     LucideCrosshair,
-    LucideZap,
-    LucideFlame,
-    LucideSwords,
-    LucideTarget,
     LucideTrendingUp,
     LucideCalendarCheck,
     LucideStar,
@@ -97,12 +97,9 @@ export class PersonalRecords {
     this.pushMatchRecord(tiles, 'mostKills', records.mostKills, (value) => String(value));
     this.pushMatchRecord(tiles, 'bestAcs', records.bestAcs, formatScore);
     this.pushMatchRecord(tiles, 'mostDamage', records.mostDamage, groupedScore);
-    this.pushMatchRecord(tiles, 'bestKda', records.bestKda, formatKda);
-    this.pushMatchRecord(
-      tiles,
-      'bestHeadshotPercentage',
-      records.bestHeadshotPercentage,
-      formatHeadshotPercentage,
+    this.pushMatchRecord(tiles, 'bestKda', records.bestKda, (value) => formatKda(value, language));
+    this.pushMatchRecord(tiles, 'bestHeadshotPercentage', records.bestHeadshotPercentage, (value) =>
+      formatHeadshotPercentage(value, language),
     );
 
     if (records.longestWinStreak > 0) {

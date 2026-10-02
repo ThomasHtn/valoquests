@@ -46,7 +46,7 @@
 
 /* Mirrors the section rule link's hover. */
 .fold-bar:hover .fold-cue {
-  color: #f0c493;
+  color: var(--color-brand-300);
   text-decoration: underline;
   text-underline-offset: 4px;
 }

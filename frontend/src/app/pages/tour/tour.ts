@@ -268,7 +268,7 @@ export class Tour {
 
   private finish(): void {
     this.tourVisit.markCompleted();
-    void this.router.navigate(['/overview']);
+    void this.router.navigate(['/overview'], { replaceUrl: true });
   }
 
   private resetScroll(): void {

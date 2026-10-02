@@ -11,8 +11,14 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { LucideChevronLeft, LucideChevronRight, LucideStar, LucideUsers } from '@lucide/angular';
+import {
+  LucideChevronLeft,
+  LucideChevronRight,
+  LucideStar,
+  LucideDynamicIcon,
+} from '@lucide/angular';
 
+import { FigurePipe } from '@core/i18n/figure-pipe';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
 import { Tooltip } from '@shared/tooltip/tooltip';
@@ -28,6 +34,7 @@ import {
 import { BoardOperator, BoardRow, DayCell } from '../challenges.model';
 import { DailyWeek } from '../daily-week/daily-week';
 import { ProgressMark } from '../progress-mark/progress-mark';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * The week on one table, as the old ranking board drew it: a row per challenge, the day's first,
@@ -41,6 +48,8 @@ import { ProgressMark } from '../progress-mark/progress-mark';
 @Component({
   selector: 'app-challenge-board',
   imports: [
+    LucideDynamicIcon,
+    FigurePipe,
     TranslatePipe,
     Tooltip,
     Avatar,
@@ -50,7 +59,6 @@ import { ProgressMark } from '../progress-mark/progress-mark';
     LucideChevronLeft,
     LucideChevronRight,
     LucideStar,
-    LucideUsers,
   ],
   templateUrl: './challenge-board.html',
   styleUrl: './challenge-board.scss',
@@ -70,6 +78,11 @@ import { ProgressMark } from '../progress-mark/progress-mark';
 })
 export class ChallengeBoard {
   /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
+  /**
    * The squad, in board order.
    */
   public readonly operators = input.required<readonly BoardOperator[]>();
@@ -88,6 +101,11 @@ export class ChallengeBoard {
    * The week's span, shown over the challenge column (e.g. "Du 28 septembre au 4 octobre").
    */
   public readonly period = input.required<string>();
+
+  /**
+   * Whether a running campaign turns validations into wounded; outside one they earn points.
+   */
+  public readonly rescueActive = input.required<boolean>();
 
   /**
    * Index of the day whose challenge the daily row shows.

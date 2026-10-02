@@ -19,7 +19,7 @@
     <div class="duel-camps">
       <div class="camp camp--squad">
         <p class="plate">
-          <svg aria-hidden="true" class="plate-icon" lucideSwords></svg>
+          <svg aria-hidden="true" class="plate-icon" [lucideIcon]="concepts.damage"></svg>
           {{ 'overview.report.squad' | translate }}
         </p>
         <p class="camp-fig tabular-nums">
@@ -30,7 +30,7 @@
       <div class="camp camp--foe">
         <p class="plate">
           {{ 'overview.report.boss' | translate: { index: bossIndex() } }}
-          <svg aria-hidden="true" class="plate-icon" lucideSkull></svg>
+          <svg aria-hidden="true" class="plate-icon" [lucideIcon]="concepts.guardian"></svg>
         </p>
         <p class="camp-fig tabular-nums">
           <span [appCountUp]="mission().hitPointsLeft"></span>
@@ -110,10 +110,11 @@
     <div class="stakes" data-card="stakes">
       <div
         [appTooltip]="'overview.report.stakes.gainTooltip' | translate: { count: stakes.gain }"
-        class="stake stake--gain"
+        class="stake stake--gain focus-ring"
+        tabindex="0"
       >
         <p class="stake-key label-caption">
-          <svg aria-hidden="true" class="stake-icon" lucideUsers></svg>
+          <svg aria-hidden="true" class="stake-icon" [lucideIcon]="concepts.wounded"></svg>
           {{ 'overview.report.stakes.gainKey' | translate }}
         </p>
         <p class="stake-fig tabular-nums">
@@ -125,12 +126,13 @@
         [appTooltip]="
           'overview.report.stakes.lossTooltip' | translate: { percent: mission().breachPercent }
         "
-        class="stake stake--loss"
+        class="stake stake--loss focus-ring"
+        tabindex="0"
       >
         <p class="stake-key label-caption">
           <span class="max-sm:hidden">{{ 'overview.report.stakes.lossKey' | translate }}</span>
           <span class="sm:hidden">{{ 'overview.report.stakes.lossKeyShort' | translate }}</span>
-          <svg aria-hidden="true" class="stake-icon" lucideSkull></svg>
+          <svg aria-hidden="true" class="stake-icon" [lucideIcon]="concepts.base"></svg>
         </p>
         <p class="stake-fig tabular-nums">
           <span>−{{ format(stakes.loss) }}</span>

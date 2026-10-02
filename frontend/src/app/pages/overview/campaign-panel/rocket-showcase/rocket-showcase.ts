@@ -167,7 +167,7 @@ export class RocketShowcase {
       }),
     );
     put(this.stroke(x, x + 200, y + 20, y + 20, 'rgb(127 182 216 / 35%)', 1));
-    const mono = { fill: '#868b8d', 'font-size': 9, 'letter-spacing': 2, style: MONO_FONT };
+    const mono = { fill: '#8f9496', 'font-size': 9, 'letter-spacing': 2, style: MONO_FONT };
     const t = (key: string, params?: Record<string, string | number>): string =>
       this.translation.translate(`campaign.rocket.${key}`, params).toUpperCase();
     put(this.text(x + 10, y + 14, t('cartoucheTitle', { number: this.campaignNumber() }), mono));

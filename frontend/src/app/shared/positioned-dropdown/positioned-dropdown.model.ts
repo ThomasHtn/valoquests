@@ -5,9 +5,14 @@ import { ElementRef, Signal } from '@angular/core';
  */
 export interface DropdownPanelPosition {
   /**
-   * Distance from the viewport top, in pixels.
+   * Distance from the viewport top, in pixels, or `null` when the panel opens upwards.
    */
-  top: number;
+  top: number | null;
+
+  /**
+   * Distance from the viewport bottom, in pixels, set only when the panel opens upwards.
+   */
+  bottom: number | null;
 
   /**
    * Distance from the viewport right edge, in pixels.

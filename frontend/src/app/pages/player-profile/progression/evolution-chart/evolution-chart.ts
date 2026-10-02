@@ -82,11 +82,9 @@ export class EvolutionChart {
   );
 
   /**
-   * Unit appended to the plotted values in the tooltip.
+   * Writes a plotted value in the tooltip as the profile's tiles do, unit included.
    */
-  protected readonly valueSuffix = computed(() =>
-    this.metric() === 'headshotPercentage' ? '%' : '',
-  );
+  protected readonly valueFormatter = (value: number): string => this.format(value);
 
   /**
    * Name of the y axis: whichever metric is currently plotted, since the axis changes meaning with
@@ -133,9 +131,9 @@ export class EvolutionChart {
   protected format(value: number): string {
     switch (this.metric()) {
       case 'headshotPercentage':
-        return formatHeadshotPercentage(value);
+        return formatHeadshotPercentage(value, this.translation.language());
       case 'kda':
-        return formatKda(value);
+        return formatKda(value, this.translation.language());
       default:
         return formatScore(value);
     }

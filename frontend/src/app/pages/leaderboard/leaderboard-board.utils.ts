@@ -53,15 +53,21 @@ export function placeWeekInCampaign(
 }
 
 /**
- * A figure in the reader's locale; abbreviated (`27k`) on request, for the ring's own fallback
- * once the exact figure runs wider than its disc.
+ * Keeps the week the reader picked across a background reload; a new live week resets to it.
+ *
+ * @param weekStarts - Mondays the page can show, the live week first.
+ * @param previous - The previous list and pick, absent on the first resolution.
+ * @returns The Monday on screen.
  */
-export function formatFigure(amount: number, locale: string, compact = false): string {
-  const label = new Intl.NumberFormat(locale, {
-    notation: compact ? 'compact' : 'standard',
-    maximumFractionDigits: compact ? 1 : 2,
-  }).format(amount);
-  return compact ? label.replace(/[\s\u00a0\u202f]+/g, '') : label;
+export function resolveSelectedWeek(
+  weekStarts: readonly string[],
+  previous?: { readonly source: readonly string[]; readonly value: string | null },
+): string | null {
+  const live = weekStarts[0] ?? null;
+  if (!previous || previous.source[0] !== live) {
+    return live;
+  }
+  return previous.value !== null && weekStarts.includes(previous.value) ? previous.value : live;
 }
 
 /**

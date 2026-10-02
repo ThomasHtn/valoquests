@@ -1,6 +1,6 @@
 import { Service, signal } from '@angular/core';
 import { SnackbarMessage } from './snackbar.model';
-import { SNACKBAR_DURATION_MS } from './snackbar.constants';
+import { SNACKBAR_DURATION_MS, SNACKBAR_ERROR_DURATION_MS } from './snackbar.constants';
 
 /**
  * Queues and exposes the application's snackbars.
@@ -29,6 +29,16 @@ export class SnackbarService {
    * Handle of the timer currently counting down {@link current}, if any.
    */
   private dismissTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /**
+   * Time left before the current message goes, kept while the reader holds it open.
+   */
+  private remainingMs = 0;
+
+  /**
+   * When the running timer started, to know how much of {@link remainingMs} it consumed.
+   */
+  private startedAt = 0;
 
   /**
    * Snackbar currently on screen, or `null` when none is.
@@ -69,7 +79,34 @@ export class SnackbarService {
    *
    * @param message - The message to queue.
    */
+  /**
+   * Holds the current message on screen while the reader points at it or focuses it.
+   */
+  public pause(): void {
+    if (this.current() === null || this.dismissTimer === undefined) {
+      return;
+    }
+    clearTimeout(this.dismissTimer);
+    this.dismissTimer = undefined;
+    this.remainingMs = Math.max(0, this.remainingMs - (Date.now() - this.startedAt));
+  }
+
+  /**
+   * Lets the current message run out the time it had left.
+   */
+  public resume(): void {
+    if (this.current() === null || this.dismissTimer !== undefined) {
+      return;
+    }
+    this.arm(this.remainingMs);
+  }
+
   private enqueue(message: SnackbarMessage): void {
+    // The same text already showing or queued, as a flapping connection repeats it, is dropped.
+    const last = this.pending.at(-1) ?? this.current();
+    if (last?.text === message.text && last.type === message.type) {
+      return;
+    }
     this.pending.push(message);
 
     if (this.current() === null) {
@@ -86,7 +123,16 @@ export class SnackbarService {
     this.current.set(message);
 
     if (message !== null) {
-      this.dismissTimer = setTimeout(() => this.showNext(), SNACKBAR_DURATION_MS);
+      this.arm(message.type === 'error' ? SNACKBAR_ERROR_DURATION_MS : SNACKBAR_DURATION_MS);
     }
+  }
+
+  private arm(durationMs: number): void {
+    this.remainingMs = durationMs;
+    this.startedAt = Date.now();
+    this.dismissTimer = setTimeout(() => {
+      this.dismissTimer = undefined;
+      this.showNext();
+    }, durationMs);
   }
 }

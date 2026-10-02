@@ -17,6 +17,21 @@
     <!-- Installable app: `start_url` is the root, so a home-screen launch never depends on the page
          it was added from. -->
     <link href="manifest.webmanifest" rel="manifest" />
+    <!-- What a shared link shows in Discord, WhatsApp or a search result. Crawlers resolve the image
+         against the page; replace it with an absolute URL once the public domain is final. -->
+    <meta
+      content="Les matchs Valorant de l'escouade, transformés en campagne coopérative de dix semaines."
+      name="description"
+    />
+    <meta content="website" property="og:type" />
+    <meta content="ValoQuests" property="og:site_name" />
+    <meta content="ValoQuests" property="og:title" />
+    <meta
+      content="Les matchs Valorant de l'escouade, transformés en campagne coopérative de dix semaines."
+      property="og:description"
+    />
+    <meta content="/icons/icon-512.png" property="og:image" />
+    <meta content="summary" name="twitter:card" />
     <!-- Typefaces of the "Expédition" direction: Oswald for headings and the wordmark, Barlow
          Condensed for body copy. Both are self-hosted and declared in `styles/typography.css`;
          the two the first screen always sets are preloaded so they are fetched alongside the

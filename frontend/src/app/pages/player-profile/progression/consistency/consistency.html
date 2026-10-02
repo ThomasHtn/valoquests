@@ -20,7 +20,9 @@
             <span class="font-display text-3xl leading-none font-bold tabular-nums">{{
               tip.acs
             }}</span>
-            <span class="text-sm text-text-muted">ACS</span>
+            <span class="text-sm text-text-muted">{{
+              'playerProfile.matches.columns.acs' | translate
+            }}</span>
           </div>
           <div class="flex flex-wrap gap-1.5 text-sm font-semibold">
             <span [class]="tip.resultClass" class="px-2 py-0.5">{{ tip.result }}</span>

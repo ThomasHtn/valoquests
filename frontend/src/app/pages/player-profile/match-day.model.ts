@@ -65,7 +65,7 @@ export interface MatchDay<T extends Match = Match> {
   readonly matches: readonly T[];
 
   /**
-   * Average K/D ratio across the day's matches.
+   * K/D ratio of the day: its kills over its deaths, so it matches the K/D/A beside it.
    */
   readonly avgKd: number;
 
@@ -75,14 +75,14 @@ export interface MatchDay<T extends Match = Match> {
   readonly avgHeadshotPercentage: number | null;
 
   /**
-   * Average damage per round across the day's matches.
+   * Average damage per round across the day's matches that report one, `null` when none does.
    */
-  readonly avgAdr: number;
+  readonly avgAdr: number | null;
 
   /**
-   * Average combat score across the day's matches.
+   * Average combat score across the day's matches that report one, `null` when none does.
    */
-  readonly avgAcs: number;
+  readonly avgAcs: number | null;
 
   /**
    * Kills summed across the day's matches.

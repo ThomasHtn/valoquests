@@ -6,6 +6,7 @@ import {
   inject,
   signal,
   viewChild,
+  DestroyRef,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Tooltip } from '@shared/tooltip/tooltip';
@@ -43,7 +44,14 @@ import {
 } from './sidebar-classes.utils';
 import { ADMIN_NAV_GROUPS, NAV_GROUPS } from './sidebar.constants';
 import { NavItem } from './sidebar.model';
-import { formatSynchronizationTimestamp, isNavItemActive } from './sidebar.utils';
+import { formatElapsed } from '@core/date/relative-time.utils';
+import {
+  formatSynchronizationTimestamp,
+  isNavItemActive,
+  isSynchronizationStale,
+} from './sidebar.utils';
+import { SIDEBAR_CLOCK_MS } from './sidebar.constants';
+import { FocusTrap } from '@shared/focus-trap/focus-trap';
 
 /**
  * Persistent navigation sidebar.
@@ -69,6 +77,7 @@ import { formatSynchronizationTimestamp, isNavItemActive } from './sidebar.utils
     '(document:keydown)': 'onDocumentKeydown($event)',
   },
   imports: [
+    FocusTrap,
     RouterLink,
     LucideBookOpen,
     LucideDatabaseBackup,
@@ -230,8 +239,44 @@ export class Sidebar {
     }
 
     return status.lastCompletedAt
-      ? formatSynchronizationTimestamp(status.lastCompletedAt)
+      ? formatElapsed(status.lastCompletedAt, this.now(), this.translation.language())
       : this.translation.translate('sidebar.lastSync.unknown');
+  });
+
+  /**
+   * The clock the elapsed time reads, ticking every half minute.
+   */
+  private readonly now = signal(Date.now());
+
+  /**
+   * Whether the last synchronization is older than the 30-minute cadence allows, while none runs.
+   */
+  protected readonly syncStale = computed(() => {
+    const status = resourceValue(this.statusResource, null);
+    return (
+      !!status?.lastCompletedAt &&
+      !status.inProgress &&
+      isSynchronizationStale(status.lastCompletedAt, this.now())
+    );
+  });
+
+  /**
+   * The exact time behind the elapsed one, then what a synchronization does, and why it is late.
+   */
+  protected readonly lastSyncTooltip = computed(() => {
+    const t = (key: string, params?: Record<string, string>): string =>
+      this.translation.translate(`sidebar.lastSync.${key}`, params);
+    const lastCompletedAt = resourceValue(this.statusResource, null)?.lastCompletedAt;
+    const parts = [
+      lastCompletedAt
+        ? t('at', {
+            date: formatSynchronizationTimestamp(lastCompletedAt, this.translation.language()),
+          })
+        : null,
+      this.syncStale() ? t('stale') : null,
+      t('tooltip'),
+    ];
+    return parts.filter((part) => part !== null).join(' ');
   });
 
   /**
@@ -251,6 +296,9 @@ export class Sidebar {
   );
 
   constructor() {
+    const clock = setInterval(() => this.now.set(Date.now()), SIDEBAR_CLOCK_MS);
+    inject(DestroyRef).onDestroy(() => clearInterval(clock));
+
     // Moves focus into the drawer as it opens, so keyboard and screen-reader users land inside the
     // panel they just summoned rather than back at the top of the document.
     //
@@ -410,6 +458,8 @@ export class Sidebar {
 
     if (this.languageMenuOpen()) {
       this.languageMenuOpen.set(false);
+      // Back to the trigger, or focus would fall to the document once the panel disappears.
+      this.languageMenuElement()?.nativeElement.querySelector<HTMLElement>('button')?.focus();
       return;
     }
 

@@ -1,5 +1,6 @@
 @if (position() !== null) {
-  <span [class]="colorClass()" class="shrink-0 text-sm font-bold tabular-nums">
-    #{{ position() }}
-  </span>
+  <!-- No whitespace around the figure: it would widen the badge beside the move that follows it. -->
+  <span [class]="colorClass()" class="shrink-0 text-sm font-bold tabular-nums"
+    >#{{ position() }}</span
+  >
 }

@@ -54,7 +54,8 @@
 
         <div class="hit" style="--tone: var(--color-boss-hp-edge)">
           <span aria-hidden="true" class="hit-mark clip-hex"
-            ><span class="clip-hex"><svg class="size-5" lucideSkull></svg></span
+            ><span class="clip-hex"
+              ><svg class="size-5" [lucideIcon]="concepts.guardian"></svg></span
           ></span>
           <p class="hit-key">
             <span
@@ -66,7 +67,7 @@
             <span class="hit-caption">{{ 'overview.orders.damageCaption' | translate }}</span>
           </p>
           <p class="hit-val">
-            <b class="hit-fig tabular-nums">{{ signed(-tally.damage) }}</b>
+            <b class="hit-fig tabular-nums">{{ format(tally.damage) }}</b>
             <small>{{ 'overview.report.hp' | translate }}</small>
           </p>
         </div>
@@ -74,7 +75,7 @@
         <div class="loot">
           <div class="tile" style="--tone: var(--color-accent-cyan)">
             <p class="tile-key">
-              <svg aria-hidden="true" class="size-4" lucideWrench></svg>
+              <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.components"></svg>
               <span
                 [appTooltip]="'overview.orders.componentsTooltip' | translate"
                 class="focus-ring"
@@ -92,7 +93,7 @@
 
           <div class="tile" style="--tone: var(--color-accent-green)">
             <p class="tile-key">
-              <svg aria-hidden="true" class="size-4" lucideWheat></svg>
+              <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.food"></svg>
               <span
                 [appTooltip]="'overview.orders.foodTooltip' | translate"
                 class="focus-ring"
@@ -108,9 +109,15 @@
             </p>
           </div>
 
-          <div class="tile" style="--tone: var(--color-brand-400)">
+          <!-- Amber while the base grows, red the day it shrinks, as the scene's own delta. -->
+          <div
+            [style.--tone]="
+              tally.populationChange < 0 ? 'var(--color-boss-hp-edge)' : 'var(--color-brand-400)'
+            "
+            class="tile"
+          >
             <p class="tile-key">
-              <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+              <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.base"></svg>
               <span
                 [appTooltip]="'overview.orders.populationTooltip' | translate"
                 class="focus-ring"
@@ -128,7 +135,7 @@
 
           <div class="tile tile--cost" style="--tone: var(--color-text-muted)">
             <p class="tile-key">
-              <svg aria-hidden="true" class="size-4" lucideBuilding2></svg>
+              <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.food"></svg>
               <span
                 [appTooltip]="'overview.orders.ateTooltip' | translate"
                 class="focus-ring"
@@ -159,14 +166,15 @@
                 | translate: { present: tally.presence, roster: tally.roster }
             "
             class="faces"
-            role="img"
+            role="group"
           >
             @for (pip of tally.pips; track $index) {
               @if (pip.on) {
                 <span
                   [appTooltipPortrait]="pip.portrait"
                   [appTooltip]="pip.name ?? ''"
-                  class="face"
+                  class="face focus-ring"
+                  tabindex="0"
                 >
                   <app-avatar [src]="pip.portrait" size="sm" />
                 </span>

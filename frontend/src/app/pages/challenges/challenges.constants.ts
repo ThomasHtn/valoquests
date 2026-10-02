@@ -9,11 +9,6 @@ export const DAILY_TONE = 'var(--color-accent-cyan)';
 export const MAX_SEGMENTED_TARGET = 12;
 
 /**
- * Storage key of the operator the reader pinned first on the board.
- */
-export const PINNED_PLAYER_KEY = 'valoquests.challenges.pinnedPlayer';
-
-/**
  * Width of one operator column on the board, in rem.
  */
 export const BOARD_COLUMN_REM = 5.25;

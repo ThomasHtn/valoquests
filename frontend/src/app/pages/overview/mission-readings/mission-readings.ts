@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { LucideCheck, LucideSkull, LucideSwords, LucideUsers } from '@lucide/angular';
+import { LucideCheck, LucideDynamicIcon } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -14,6 +14,7 @@ import { ContributionTip } from './contribution-tip/contribution-tip';
 import { FallForecast } from './fall-forecast/fall-forecast';
 import { GuardianFall } from './fall-forecast/fall-forecast.model';
 import { Strike } from './mission-readings.model';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * The week's mission: the clock, the squad against the guardian, what Sunday midnight can still
@@ -30,6 +31,7 @@ import { Strike } from './mission-readings.model';
 @Component({
   selector: 'app-mission-readings',
   imports: [
+    LucideDynamicIcon,
     TranslatePipe,
     Countdown,
     CountUp,
@@ -38,15 +40,17 @@ import { Strike } from './mission-readings.model';
     ContributionTip,
     FallForecast,
     LucideCheck,
-    LucideSkull,
-    LucideSwords,
-    LucideUsers,
   ],
   templateUrl: './mission-readings.html',
   styleUrl: './mission-readings.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MissionReadings {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   /**
    * The week in progress.
    */

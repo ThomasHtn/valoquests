@@ -27,7 +27,7 @@ export const EXAMPLE_OPERATORS = 7;
 /**
  * Share of the squad's weekly reference a guardian's hit points are set at.
  */
-export const GUARDIAN_FACTOR = 0.78;
+export const GUARDIAN_FACTOR = 1.1;
 
 /**
  * Share of the squad's weekly reference a week's group of wounded is set at.

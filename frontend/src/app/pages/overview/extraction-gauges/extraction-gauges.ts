@@ -1,15 +1,6 @@
 import { LowerCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import {
-  LucideBuilding2,
-  LucideInfo,
-  LucideRocket,
-  LucideSkull,
-  LucideSwords,
-  LucideUsers,
-  LucideWheat,
-  LucideWrench,
-} from '@lucide/angular';
+import { LucideBuilding2, LucideInfo, LucideDynamicIcon } from '@lucide/angular';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -24,6 +15,8 @@ import {
   HULL_VIEWBOX,
   SHELTER_MODES,
 } from './extraction-gauges.constants';
+import { hullFigureSize } from './extraction-gauges.utils';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * What would come home on Sunday, and the three things that bound it: four dials on the same
@@ -35,16 +28,11 @@ import {
 @Component({
   selector: 'app-extraction-gauges',
   imports: [
+    LucideDynamicIcon,
     LowerCasePipe,
     TranslatePipe,
     LucideBuilding2,
     LucideInfo,
-    LucideRocket,
-    LucideSkull,
-    LucideSwords,
-    LucideUsers,
-    LucideWheat,
-    LucideWrench,
     Tooltip,
     CountUp,
     InView,
@@ -54,6 +42,11 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExtractionGauges {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   /**
    * The four dials, or `null` outside a week in progress.
    */
@@ -74,6 +67,8 @@ export class ExtractionGauges {
   protected readonly hullPath = HULL_PATH;
 
   protected readonly hullMask = HULL_MASK;
+
+  protected readonly hullFigureSize = hullFigureSize;
 
   private readonly translation = inject(Translation);
 

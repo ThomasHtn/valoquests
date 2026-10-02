@@ -10,6 +10,10 @@ import {
 } from '@angular/core';
 import { Chart, ChartConfiguration, Plugin } from 'chart.js';
 
+import { resolveLocale } from '@core/i18n/locale.utils';
+import { formatNumber } from '@core/i18n/number-format.utils';
+import { Translation } from '@core/i18n/translation';
+
 import { AXIS_TICK_FONT } from './chart-theme.constants';
 import {
   axisTitleOptions,
@@ -19,7 +23,7 @@ import {
   registerChartComponents,
   resolveChartTheme,
 } from './chart-theme.utils';
-import { ChartBar } from './chart.model';
+import { ChartBar, ChartValueFormatter } from './chart.model';
 
 /**
  * Plots one categorical series as bars.
@@ -50,9 +54,12 @@ export class BarChart {
   public readonly summary = input('');
 
   /**
-   * Unit appended to every value, such as a percent sign. Empty for bare numbers.
+   * Formats a value for the tooltip, unit included. Defaults to the number in the reader's
+   * notation, rounded to one decimal.
    */
-  public readonly valueSuffix = input('');
+  public readonly valueFormatter = input<ChartValueFormatter | null>(null);
+
+  private readonly translation = inject(Translation);
 
   /**
    * Already-translated name of the x axis. Empty leaves the axis unnamed.
@@ -167,6 +174,7 @@ export class BarChart {
       type: 'bar',
       data: { labels: this.bars().map((bar) => bar.label), datasets: this.datasets() },
       options: {
+        locale: resolveLocale(this.translation.language()),
         responsive: true,
         maintainAspectRatio: false,
         devicePixelRatio: chartPixelRatio(),
@@ -202,7 +210,7 @@ export class BarChart {
           tooltip: {
             ...chartTooltipOptions(theme),
             callbacks: {
-              label: (item) => `${item.formattedValue}${this.valueSuffix()}`,
+              label: (item) => this.formatValue(item.parsed.y ?? 0),
               afterLabel: (item) => this.bars()[item.dataIndex]?.detail ?? '',
             },
           },
@@ -225,7 +233,7 @@ export class BarChart {
    */
   private highlightLabel(): Plugin<'bar'> {
     const bars = (): readonly ChartBar[] => this.bars();
-    const suffix = (): string => this.valueSuffix();
+    const format = (value: number): string => this.formatValue(value);
     const showAll = (): boolean => this.showAllValues();
     const theme = this.theme;
 
@@ -250,11 +258,23 @@ export class BarChart {
           }
 
           ctx.fillStyle = bar.highlighted ? theme.highlight : theme.tick;
-          ctx.fillText(`${bar.valueLabel ?? bar.value}${suffix()}`, element.x, element.y - 6);
+          ctx.fillText(bar.valueLabel ?? format(bar.value), element.x, element.y - 6);
         });
 
         ctx.restore();
       },
     };
+  }
+
+  /**
+   * A plotted value as the tooltip writes it.
+   */
+  private formatValue(value: number): string {
+    const formatter = this.valueFormatter();
+    return formatter
+      ? formatter(value)
+      : formatNumber(value, resolveLocale(this.translation.language()), {
+          maximumFractionDigits: 1,
+        });
   }
 }

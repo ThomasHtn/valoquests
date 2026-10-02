@@ -1,7 +1,15 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { LucideChevronDown, LucideChevronRight, LucideChevronUp } from '@lucide/angular';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import {
+  LucideArrowDownAZ,
+  LucideArrowDownNarrowWide,
+  LucideArrowDownWideNarrow,
+  LucideArrowDownZA,
+  LucideChevronDown,
+  LucideChevronRight,
+  LucideChevronUp,
+} from '@lucide/angular';
 
 import { primaryTitle } from '@core/campaign/campaign-title.utils';
 import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
@@ -32,8 +40,17 @@ import { PageHeader } from '@layout/page-header/page-header';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
+import { Select } from '@shared/select/select';
+import { Tooltip } from '@shared/tooltip/tooltip';
+import { SelectOption } from '@shared/select/select.model';
 import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
 import { PLAYER_SORT_COLUMNS, PlayerRow, PlayerSortKey } from './players.model';
+import {
+  defaultSortDirection,
+  readPlayerSort,
+  toPlayerSortOrder,
+  writePlayerSort,
+} from './players.utils';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 
@@ -48,9 +65,15 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
 @Component({
   selector: 'app-players',
   imports: [
+    Tooltip,
+    Select,
     TranslatePipe,
     NgTemplateOutlet,
     RouterLink,
+    LucideArrowDownAZ,
+    LucideArrowDownNarrowWide,
+    LucideArrowDownWideNarrow,
+    LucideArrowDownZA,
     LucideChevronDown,
     LucideChevronRight,
     LucideChevronUp,
@@ -124,16 +147,42 @@ export class Players {
   protected readonly sortColumns = PLAYER_SORT_COLUMNS;
 
   /**
+   * The sortable columns as the phone's sort picker lists them, where the header row is hidden.
+   */
+  protected readonly sortOptions = computed<readonly SelectOption<PlayerSortKey>[]>(() =>
+    PLAYER_SORT_COLUMNS.map((column) => ({
+      value: column.key,
+      label: this.translation.translate(column.labelKey),
+    })),
+  );
+
+  private readonly router = inject(Router);
+
+  private readonly route = inject(ActivatedRoute);
+
+  /**
+   * The sort the address asked for on arrival, so a link or a step back keeps it.
+   */
+  private readonly requestedSort = readPlayerSort(this.route.snapshot.queryParamMap);
+
+  /**
    * Column the table is sorted on. Defaults to rank, the table's original (and only) order.
    */
-  protected readonly sortKey = signal<PlayerSortKey>('rank');
+  protected readonly sortKey = signal<PlayerSortKey>(this.requestedSort.key);
 
   /**
    * `1` for ascending, `-1` for descending. Rank and win rate/KDA/HS%/matches all default to
    * descending (best first); name defaults to ascending (A→Z) — set the first time each key is
    * picked, in {@link setSort}.
    */
-  protected readonly sortDirection = signal<1 | -1>(-1);
+  protected readonly sortDirection = signal<1 | -1>(this.requestedSort.direction);
+
+  /**
+   * The current order, as the phone's toggle words it.
+   */
+  protected readonly sortOrder = computed(() =>
+    toPlayerSortOrder(this.sortKey(), this.sortDirection()),
+  );
 
   /**
    * Every tracked player mapped to a display-ready row, unsorted — {@link inCampaignRows} and
@@ -178,17 +227,20 @@ export class Players {
   /**
    * Formats a row's win rate, exposed to the template.
    */
-  protected readonly formatWinRate = formatWinRate;
+  protected readonly formatWinRate = (winRate: number | null): string =>
+    formatWinRate(winRate, this.translation.language());
 
   /**
    * Formats a row's KDA, exposed to the template.
    */
-  protected readonly formatKda = formatKda;
+  protected readonly formatKda = (kda: number | null): string =>
+    formatKda(kda, this.translation.language());
 
   /**
    * Formats a row's headshot rate, exposed to the template.
    */
-  protected readonly formatHeadshotPercentage = formatHeadshotPercentage;
+  protected readonly formatHeadshotPercentage = (percentage: number | null): string =>
+    formatHeadshotPercentage(percentage, this.translation.language());
 
   /**
    * Maps a tracked player's summary to a display-ready row, resolving its avatar, rank icon,
@@ -267,6 +319,38 @@ export class Players {
    *
    * @param key - The column clicked.
    */
+  constructor() {
+    // The sort rides in the address, replacing the entry so sorting never adds back steps.
+    effect(() => {
+      const queryParams = writePlayerSort(this.sortKey(), this.sortDirection());
+      untracked(() =>
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams,
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        }),
+      );
+    });
+  }
+
+  /**
+   * Sorts on the column picked on a phone, on that column's own natural direction.
+   *
+   * @param key - The column picked.
+   */
+  protected pickSort(key: PlayerSortKey): void {
+    this.sortKey.set(key);
+    this.sortDirection.set(defaultSortDirection(key));
+  }
+
+  /**
+   * Reverses the order on the current column.
+   */
+  protected toggleSortDirection(): void {
+    this.sortDirection.update((direction) => (direction === 1 ? -1 : 1));
+  }
+
   protected setSort(key: PlayerSortKey): void {
     if (this.sortKey() === key) {
       this.sortDirection.update((direction) => (direction === 1 ? -1 : 1));
@@ -274,6 +358,6 @@ export class Players {
     }
 
     this.sortKey.set(key);
-    this.sortDirection.set(key === 'name' ? 1 : -1);
+    this.sortDirection.set(defaultSortDirection(key));
   }
 }

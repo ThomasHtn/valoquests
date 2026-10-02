@@ -49,3 +49,13 @@ export const ADMIN_NAV_GROUPS: readonly NavGroup[] = [
     ],
   },
 ];
+
+/**
+ * Age past which the last synchronization reads as late: the 30-minute cadence plus a run's margin.
+ */
+export const SYNC_STALE_AFTER_MS = 40 * 60_000;
+
+/**
+ * How often the sidebar's elapsed synchronization time is refreshed.
+ */
+export const SIDEBAR_CLOCK_MS = 30_000;

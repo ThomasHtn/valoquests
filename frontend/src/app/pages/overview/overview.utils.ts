@@ -1,3 +1,4 @@
+import { CAMPAIGN_TIME_ZONE } from '@core/date/date-time.constants';
 import {
   Campaign,
   CAMPAIGN_WEEK_COUNT,
@@ -85,16 +86,16 @@ function toFriezeWeek(week: CampaignWeek, campaign: Campaign, translate: Transla
       title: title(translate('overview.frieze.won')),
     };
   }
-  // The guardian's hit points left, the reading the ring shows: a guardian that held with 22 %
-  // reads 22, not the 78 % of breakthrough.
+  // The ring drains with the hit points left; the figure is the breakthrough, the one reading the
+  // gauges and the report quote, for a week in progress as for a week the guardian survived.
   const left = 100 - week.progressPercent;
   if (week.settled) {
     return {
       ...planet,
       state: 'lost',
       standing: left / 100,
-      status: translate('overview.frieze.status.lost', { percent: left }),
-      title: title(translate('overview.frieze.lost', { percent: left })),
+      status: translate('overview.frieze.status.lost', { percent: week.progressPercent }),
+      title: title(translate('overview.frieze.lost', { percent: week.progressPercent })),
     };
   }
   if (isCurrent) {
@@ -137,8 +138,16 @@ function fatalBlow(
   }
   const at = new Date(week.defeatedAt);
   return {
-    weekday: new Intl.DateTimeFormat(language, { weekday: 'long' }).format(at),
-    time: new Intl.DateTimeFormat(language, { hour: '2-digit', minute: '2-digit' }).format(at),
+    // Paris time, like the forecast that quotes the same instant.
+    weekday: new Intl.DateTimeFormat(language, {
+      weekday: 'long',
+      timeZone: CAMPAIGN_TIME_ZONE,
+    }).format(at),
+    time: new Intl.DateTimeFormat(language, {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: CAMPAIGN_TIME_ZONE,
+    }).format(at),
     by: players.find((player) => player.id === week.defeatedByPlayerId)?.displayName ?? null,
   };
 }
@@ -279,13 +288,16 @@ export function buildMissionReport(
         })
       : null,
     champion: frozen ? championOf(frozen, portraitOf) : null,
-    next: next
-      ? {
-          planetName: next.planetName,
-          hitPoints: next.guardianHitPoints,
-          wounded: next.woundedCount,
-        }
-      : null,
+    // Only while that week is still ahead: an older report opened from the frieze names a target
+    // the squad has already played.
+    next:
+      next && !next.settled
+        ? {
+            planetName: next.planetName,
+            hitPoints: next.guardianHitPoints,
+            wounded: next.woundedCount,
+          }
+        : null,
   };
 }
 
@@ -568,6 +580,16 @@ export function writeSeenReport(weekStart: string): void {
 
 /**
  * The tab the reader pinned as default, or `null`; an unknown value or a storage failure reads as none.
+ */
+/**
+ * A tab named in the address (`?tab=campaign`), or `null` for anything else.
+ */
+export function parseOverviewTab(value: string | null): OverviewTabKey | null {
+  return OVERVIEW_TABS.find((key) => key === value) ?? null;
+}
+
+/**
+ * The reader's default tab, or `null` when none was pinned.
  */
 export function readFavoriteTab(): OverviewTabKey | null {
   try {

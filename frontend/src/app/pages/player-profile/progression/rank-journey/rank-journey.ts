@@ -14,10 +14,10 @@ import {
 import {
   LucideArrowDownUp,
   LucideMinus,
-  LucideSwords,
   LucideTrendingDown,
   LucideTrendingUp,
   LucideTrophy,
+  LucideDynamicIcon,
 } from '@lucide/angular';
 import { Chart } from 'chart.js';
 
@@ -61,6 +61,7 @@ import {
   loadRankBadge,
   resolveRankColor,
 } from './rank-journey.utils';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * Where the selected seasons left a player on the ladder: one rank badge per season, or, for a
@@ -72,6 +73,7 @@ import {
 @Component({
   selector: 'app-rank-journey',
   imports: [
+    LucideDynamicIcon,
     NgOptimizedImage,
     TranslatePipe,
     Tooltip,
@@ -79,7 +81,6 @@ import {
     KeyFigures,
     LucideArrowDownUp,
     LucideMinus,
-    LucideSwords,
     LucideTrendingDown,
     LucideTrendingUp,
     LucideTrophy,
@@ -87,6 +88,11 @@ import {
   templateUrl: './rank-journey.html',
 })
 export class RankJourney {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   /**
    * Selected seasons, oldest first.
    */
@@ -142,7 +148,13 @@ export class RankJourney {
     const anchor = this.hovered();
     const series = this.series();
     return anchor && series
-      ? buildRankJourneyTooltip(this.journey(), series, anchor.index, this.translator())
+      ? buildRankJourneyTooltip(
+          this.journey(),
+          series,
+          anchor.index,
+          this.translator(),
+          this.translation.language(),
+        )
       : null;
   });
 

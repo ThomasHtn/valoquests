@@ -13,6 +13,8 @@
   /* Brand (Expédition amber). */
   --color-brand-500: #d9954a;
   --color-brand-400: #e8ab6b;
+  /* Hover step of a brand-400 link, never a fill. */
+  --color-brand-300: #f0c493;
 
   /*
    * Surfaces (dark teal-navy scale, darkest to lightest). `surface-950` is the direction's page
@@ -46,11 +48,12 @@
    * Text. The direction's cream, plus its 55% and 45% body opacities — but lifted rather than
    * flattened literally onto `surface-950`: a straight flatten lands `text-muted` near 3.9:1,
    * under the 4.5:1 AA floor for body copy. These values keep the direction's warm grey cast and
-   * clear it (~7:1 and ~4.9:1).
+   * clear it (~7:1 and ~5.6:1). `text-muted` was lifted once more so it also clears AA on the
+   * `surface-800` panels (4.7:1), where it used to fall to 4.1:1.
    */
   --color-text-primary: #ece8e1;
   --color-text-secondary: #a4a7a6;
-  --color-text-muted: #868b8d;
+  --color-text-muted: #8f9496;
 
   /*
    * Category accents (challenges, stats, ranking rows). `accent-red` stays red on purpose: it

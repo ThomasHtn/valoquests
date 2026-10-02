@@ -1,6 +1,6 @@
 import { Plugin } from 'chart.js';
 
-import { TranslateFn } from '@core/i18n/translation.model';
+import { Language, TranslateFn } from '@core/i18n/translation.model';
 import { formatSeasonName, splitSeasonName } from '@core/matches/season-name.utils';
 import { CompetitiveTier } from '@core/players/competitive-tier.model';
 import {
@@ -201,6 +201,7 @@ export function buildRankJourneyFigures(
  * @param series - The plotted line.
  * @param index - Index of the hovered point.
  * @param translate - Dictionary lookup.
+ * @param language - The active language, for the win rate's notation.
  * @returns The tooltip content, or `null` when the index is out of range.
  */
 export function buildRankJourneyTooltip(
@@ -208,6 +209,7 @@ export function buildRankJourneyTooltip(
   series: RankJourneySeries,
   index: number,
   translate: TranslateFn,
+  language: Language,
 ): RankJourneyTooltip | null {
   const tier = series.tiers[index];
   if (!tier) {
@@ -248,6 +250,7 @@ export function buildRankJourneyTooltip(
       wins: season.wins,
       rate: formatWinRate(
         season.matchesPlayed > 0 ? (season.wins / season.matchesPlayed) * 100 : null,
+        language,
       ),
     }),
   };

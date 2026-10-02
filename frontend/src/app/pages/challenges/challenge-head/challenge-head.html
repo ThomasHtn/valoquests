@@ -3,7 +3,7 @@
 <span aria-hidden="true" class="hex-mark clip-hex">
   <span class="clip-hex">
     @if (row.mark === 'D') {
-      <svg class="glyph" lucideZap></svg>
+      <svg class="glyph" [lucideIcon]="concepts.points"></svg>
     } @else {
       {{ row.mark }}
     }
@@ -28,8 +28,8 @@
       class="pay-figure focus-ring"
       tabindex="0"
     >
-      <svg aria-hidden="true" class="size-4" lucideUsers></svg>
-      <b class="tabular-nums">+{{ row.survivors }}</b>
+      <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.wounded"></svg>
+      <b class="tabular-nums">+{{ row.survivors | figure }}</b>
     </span>
   } @else {
     <span
@@ -37,8 +37,8 @@
       class="pay-figure focus-ring"
       tabindex="0"
     >
-      <svg aria-hidden="true" class="size-4" lucideUsers></svg>
-      <b class="tabular-nums">+{{ row.rankingPoints }}</b>
+      <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.points"></svg>
+      <b class="tabular-nums">+{{ row.rankingPoints | figure }}</b>
     </span>
   }
 </p>

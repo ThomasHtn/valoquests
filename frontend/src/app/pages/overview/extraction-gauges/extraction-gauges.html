@@ -41,12 +41,12 @@
             <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
           </svg>
           <span class="gauge-mid">
-            <svg aria-hidden="true" class="size-5" lucideRocket></svg>
+            <svg aria-hidden="true" class="size-5" [lucideIcon]="concepts.rocket"></svg>
             <b [appCountUp]="capacity.carry.value" class="tabular-nums"></b>
           </span>
         </span>
         <span class="gauge-stock label-caption text-2xs"
-          ><svg aria-hidden="true" class="size-3.5" lucideWrench></svg
+          ><svg aria-hidden="true" class="size-3.5" [lucideIcon]="concepts.components"></svg
           ><b class="tabular-nums">{{ format(capacity.carry.stock) }}</b>
           {{ 'common.resource.components' | translate | lowercase }}</span
         >
@@ -62,7 +62,7 @@
             }
           </p>
           <p class="gauge-rate label-caption text-2xs">
-            <svg aria-hidden="true" class="size-4" lucideWrench></svg>
+            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.components"></svg>
             <b class="tabular-nums">{{ capacity.componentsPerRescue }}</b>
             {{ 'overview.capacity.carryRate' | translate }}
           </p>
@@ -111,7 +111,7 @@
           </span>
         </span>
         <span class="gauge-stock label-caption text-2xs"
-          ><svg aria-hidden="true" class="size-3.5" lucideWheat></svg
+          ><svg aria-hidden="true" class="size-3.5" [lucideIcon]="concepts.food"></svg
           ><b class="tabular-nums">{{ format(capacity.shelter.stock) }}</b>
           {{ 'common.resource.food' | translate | lowercase }}</span
         >
@@ -127,14 +127,14 @@
             }
           </p>
           <p class="gauge-rate label-caption text-2xs">
-            <svg aria-hidden="true" class="size-4" lucideWheat></svg>
+            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.food"></svg>
             <b class="tabular-nums">{{ capacity.foodPerRescue }}</b>
             {{ 'overview.capacity.shelterRate' | translate }}
           </p>
         </div>
       </div>
 
-      <div class="gauge-cell" style="--tone: #ff8a94">
+      <div class="gauge-cell" style="--tone: var(--color-boss-hp-edge)">
         <p class="gauge-head">
           <span class="gauge-name">{{ 'overview.capacity.breach' | translate }}</span>
         </p>
@@ -166,12 +166,12 @@
             <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
           </svg>
           <span class="gauge-mid">
-            <svg aria-hidden="true" class="size-5" lucideSwords></svg>
+            <svg aria-hidden="true" class="size-5" [lucideIcon]="concepts.damage"></svg>
             <b class="tabular-nums"><span [appCountUp]="capacity.breach.value"></span> %</b>
           </span>
         </span>
         <span class="gauge-stock label-caption text-2xs"
-          ><svg aria-hidden="true" class="size-3.5" lucideSkull></svg
+          ><svg aria-hidden="true" class="size-3.5" [lucideIcon]="concepts.guardian"></svg
           ><b class="tabular-nums">{{ format(capacity.breach.stock) }}</b>
           {{ 'overview.capacity.hpStanding' | translate }}</span
         >
@@ -185,7 +185,7 @@
             }}</span>
           </p>
           <p class="gauge-rate label-caption text-2xs">
-            <svg aria-hidden="true" class="size-4" lucideSkull></svg>
+            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.guardian"></svg>
             <b class="tabular-nums">{{ format(capacity.hitPointsPerPercent) }}</b>
             {{ 'overview.capacity.breachRate' | translate }}
           </p>
@@ -244,14 +244,15 @@
             <circle cx="50" cy="44" r="11" />
           </svg>
           <span class="gauge-mid hull-port">
-            <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.wounded"></svg>
           </span>
-          <span class="gauge-mid hull-figure">
+          <!-- Sized on the final figure, not the counting one, so it never jumps mid-count. -->
+          <span [style.--fig]="hullFigureSize(capacity.aboard)" class="gauge-mid hull-figure">
             <b [appCountUp]="capacity.aboard" class="tabular-nums"></b>
           </span>
         </span>
         <span class="gauge-stock label-caption text-2xs"
-          ><svg aria-hidden="true" class="size-3.5" lucideUsers></svg
+          ><svg aria-hidden="true" class="size-3.5" [lucideIcon]="concepts.wounded"></svg
           ><b class="tabular-nums">{{ format(capacity.wounded) }}</b>
           {{ 'overview.capacity.spotted' | translate }}</span
         >
@@ -263,7 +264,7 @@
                 'overview.capacity.fromGuardian' | translate
               }}</span>
             </span>
-            <span class="split-row" style="--tone: #7fb6d8">
+            <span class="split-row" style="--tone: var(--color-accent-blue)">
               <b class="tabular-nums">{{ format(capacity.fromChallenges) }}</b>
               <span class="label-caption text-2xs">{{
                 'overview.capacity.fromChallenges' | translate
@@ -271,7 +272,7 @@
             </span>
           </p>
           <p class="gauge-rate label-caption text-2xs">
-            <svg aria-hidden="true" class="size-4" lucideUsers></svg>
+            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.wounded"></svg>
             <b class="tabular-nums">{{ format(capacity.leftBehind) }}</b>
             {{ 'overview.capacity.leftBehind' | translate }}
           </p>

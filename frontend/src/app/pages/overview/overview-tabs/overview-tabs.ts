@@ -12,6 +12,7 @@ import {
 import { LucideMap, LucideRadio, LucideStar, LucideSunrise, LucideUserPen } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Tooltip } from '@shared/tooltip/tooltip';
 import { OverviewTab, OverviewTabKey } from '../overview.model';
 import { TAB_SLIDE_EASING, TAB_SLIDE_MS } from './overview-tabs.constants';
 
@@ -24,7 +25,15 @@ import { TAB_SLIDE_EASING, TAB_SLIDE_MS } from './overview-tabs.constants';
  */
 @Component({
   selector: 'app-overview-tabs',
-  imports: [TranslatePipe, LucideMap, LucideRadio, LucideStar, LucideSunrise, LucideUserPen],
+  imports: [
+    Tooltip,
+    TranslatePipe,
+    LucideMap,
+    LucideRadio,
+    LucideStar,
+    LucideSunrise,
+    LucideUserPen,
+  ],
   templateUrl: './overview-tabs.html',
   styleUrl: './overview-tabs.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

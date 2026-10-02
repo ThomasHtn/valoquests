@@ -9,7 +9,8 @@ import { TourSampleDaily, TourSampleMatch } from './tour.model';
 /*
  * The tour's illustrations run on this fixed sample campaign rather than on the live one: between
  * two campaigns, or on a Monday morning, the live screens have nothing to show yet. The figures are
- * kept consistent with each other and with the rules, so the excerpts read like the real screens.
+ * computed from the rules for week 4 of an Amateur campaign with 4 operators on a five-day streak
+ * (+8 %), so the excerpts read like the real screens: 19 822 HP, 1 306 wounded, 7 survivors a daily.
  */
 
 /**
@@ -37,7 +38,7 @@ export const TOUR_SAMPLE_MATCHES: readonly TourSampleMatch[] = [
     kills: 22,
     deaths: 14,
     assists: 5,
-    damage: 312,
+    damage: 540,
     damagePercent: 100,
   },
   {
@@ -51,7 +52,7 @@ export const TOUR_SAMPLE_MATCHES: readonly TourSampleMatch[] = [
     kills: 15,
     deaths: 16,
     assists: 8,
-    damage: 248,
+    damage: 346,
     damagePercent: 100,
   },
   {
@@ -65,15 +66,15 @@ export const TOUR_SAMPLE_MATCHES: readonly TourSampleMatch[] = [
     kills: 14,
     deaths: 9,
     assists: 3,
-    damage: 96,
-    damagePercent: 60,
+    damage: 248,
+    damagePercent: 100,
   },
 ];
 
 /**
  * Inhabitants of the sample base.
  */
-export const TOUR_SAMPLE_POPULATION = 12_480;
+export const TOUR_SAMPLE_POPULATION = 3_480;
 
 /**
  * Guardians the sample squad defeated so far, one rocket stage each.
@@ -93,12 +94,12 @@ export const TOUR_SAMPLE_MISSION: Omit<Mission, 'extractionDeadline'> = {
   planetName: 'Hollin',
   category: 'STANDARD',
   dayOfWeek: 5,
-  hitPointsLeft: 37_440,
-  hitPoints: 96_000,
+  hitPointsLeft: 7_732,
+  hitPoints: 19_822,
   breachPercent: 61,
   guardianLeft: 0.39,
   defeated: null,
-  wounded: 640,
+  wounded: 1_306,
   crew: 4,
 };
 
@@ -106,39 +107,39 @@ export const TOUR_SAMPLE_MISSION: Omit<Mission, 'extractionDeadline'> = {
  * What the sample squad put into the week: the damage adds up to the hit points taken above.
  */
 export const TOUR_SAMPLE_CONTRIBUTION: Contribution = {
-  total: 58_560,
-  hitPoints: 96_000,
+  total: 12_090,
+  hitPoints: 19_822,
   shares: [
     {
       playerId: 1,
       name: 'Kairo',
-      damage: 21_400,
-      challengePoints: 180,
-      total: 21_580,
+      damage: 4_380,
+      challengePoints: 50,
+      total: 4_430,
       sharePercent: 36,
     },
     {
       playerId: 2,
       name: 'Sable',
-      damage: 17_300,
-      challengePoints: 150,
-      total: 17_450,
+      damage: 3_600,
+      challengePoints: 44,
+      total: 3_644,
       sharePercent: 30,
     },
     {
       playerId: 3,
       name: 'Nova',
-      damage: 12_100,
-      challengePoints: 120,
-      total: 12_220,
+      damage: 2_520,
+      challengePoints: 31,
+      total: 2_551,
       sharePercent: 21,
     },
     {
       playerId: 4,
       name: 'Vex',
-      damage: 7_760,
-      challengePoints: 60,
-      total: 7_820,
+      damage: 1_590,
+      challengePoints: 20,
+      total: 1_610,
       sharePercent: 13,
     },
   ],
@@ -148,28 +149,28 @@ export const TOUR_SAMPLE_CONTRIBUTION: Contribution = {
  * The sample week's four dials: food is the tightest stock, so it caps the extraction.
  */
 export const TOUR_SAMPLE_CAPACITY: Capacity = {
-  wounded: 640,
-  carry: { value: 410, fraction: 0.64, stock: 5_740 },
-  shelter: { value: 380, fraction: 0.59, stock: 4_560 },
-  breach: { value: 61, fraction: 0.61, stock: 37_440 },
-  aboard: 328,
-  aboardFraction: 0.51,
-  fromGuardian: 232,
-  fromChallenges: 96,
-  leftBehind: 312,
+  wounded: 1_306,
+  carry: { value: 990, fraction: 0.76, stock: 13_860 },
+  shelter: { value: 840, fraction: 0.64, stock: 10_275 },
+  breach: { value: 61, fraction: 0.61, stock: 7_732 },
+  aboard: 657,
+  aboardFraction: 0.5,
+  fromGuardian: 512,
+  fromChallenges: 145,
+  leftBehind: 649,
   limiter: 'FOOD',
   componentsPerRescue: 14,
   foodPerRescue: 12,
-  hitPointsPerPercent: 960,
+  hitPointsPerPercent: 198,
 };
 
 /**
- * The sample week's Sunday: the food-capped 380 reachable minus the 232 already forecast, and the
- * base's 12 480 inhabitants struck at 61 % breakthrough.
+ * The sample week's Sunday: the food-capped 840 reachable minus the 512 already forecast, and the
+ * base's 3 480 inhabitants struck at 61 % breakthrough.
  */
 export const TOUR_SAMPLE_STAKES: SundayStakes = {
-  gain: 148,
-  loss: 664,
+  gain: 328,
+  loss: 185,
 };
 
 /**
@@ -178,7 +179,7 @@ export const TOUR_SAMPLE_STAKES: SundayStakes = {
 export const TOUR_SAMPLE_DAILY: TourSampleDaily = {
   key: 'session',
   target: 3,
-  survivors: 6,
+  survivors: 7,
   progress: [3, 2, 3, 0],
 };
 
@@ -198,11 +199,11 @@ export const TOUR_SAMPLE_PODIUM: readonly BoardRow[] = [
     position: 1,
     variation: 0,
     isChampion: true,
-    total: 21_580,
-    damage: 21_400,
-    challengePoints: 180,
+    total: 4_430,
+    damage: 4_380,
+    challengePoints: 50,
     title: null,
-    challengesCompleted: 9,
+    challengesCompleted: 6,
     challengesMax: 12,
     matchCount: 14,
     streak: { week: null, days: 5, bonusPercent: 8 },
@@ -214,11 +215,11 @@ export const TOUR_SAMPLE_PODIUM: readonly BoardRow[] = [
     position: 2,
     variation: 0,
     isChampion: false,
-    total: 17_450,
-    damage: 17_300,
-    challengePoints: 150,
+    total: 3_644,
+    damage: 3_600,
+    challengePoints: 44,
     title: { key: 'MECHANIC', measure: null, ...resolveTitleVisual('MECHANIC') },
-    challengesCompleted: 7,
+    challengesCompleted: 6,
     challengesMax: 12,
     matchCount: 11,
     streak: { week: null, days: 4, bonusPercent: 6 },
@@ -230,11 +231,11 @@ export const TOUR_SAMPLE_PODIUM: readonly BoardRow[] = [
     position: 3,
     variation: 0,
     isChampion: false,
-    total: 12_220,
-    damage: 12_100,
-    challengePoints: 120,
+    total: 2_551,
+    damage: 2_520,
+    challengePoints: 31,
     title: { key: 'REGULAR', measure: null, ...resolveTitleVisual('REGULAR') },
-    challengesCompleted: 8,
+    challengesCompleted: 4,
     challengesMax: 12,
     matchCount: 9,
     streak: { week: null, days: 4, bonusPercent: 6 },

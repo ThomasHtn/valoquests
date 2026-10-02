@@ -39,6 +39,6 @@ export class Landing {
    */
   protected enter(): void {
     this.landingVisit.markEntered();
-    void this.router.navigate(['/tour']);
+    void this.router.navigate(['/tour'], { replaceUrl: true });
   }
 }

@@ -46,7 +46,12 @@
             <p class="pop-figure flex items-baseline gap-3">
               <span [appCountUp]="population()" class="tabular-nums"></span>
               <span
-                class="font-display text-lg font-medium tracking-[0.16em] text-text-secondary uppercase"
+                class="inline-flex items-center gap-2 font-display text-lg font-medium tracking-[0.16em] text-text-secondary uppercase"
+                ><svg
+                  aria-hidden="true"
+                  class="size-5 shrink-0 text-brand-400"
+                  [lucideIcon]="concepts.base"
+                ></svg
                 >{{ 'overview.scene.unit' | translate }}</span
               >
             </p>
@@ -62,6 +67,12 @@
                 <small class="font-sans font-medium text-text-secondary">{{
                   'overview.scene.delta' | translate
                 }}</small>
+              </p>
+            }
+            <!-- What changed while the reader was away, the day's delta aside. -->
+            @if (sinceLastVisit() !== 0) {
+              <p class="mt-2 text-sm text-text-secondary">
+                {{ 'overview.scene.sinceVisit' | translate: { count: signed(sinceLastVisit()) } }}
               </p>
             }
           </div>
@@ -231,4 +242,12 @@
       </div>
     </main>
   </app-resource-state>
+
+  <!-- A settled or closed campaign has no mission left, but its result does: the rocket, the
+       reserves and the history stay readable under the plate that says why. -->
+  @if (!isRunning() && hasBase() && !isLoading() && !isError()) {
+    <section [attr.aria-label]="'overview.tabs.campaign.label' | translate" class="pb-24">
+      <app-campaign-panel [campaign]="campaign()" />
+    </section>
+  }
 </div>

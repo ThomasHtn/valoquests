@@ -59,7 +59,7 @@
 }
 
 .part--built {
-  --tone: #e8ab6b;
+  --tone: var(--color-brand-400);
   cursor: pointer;
 }
 

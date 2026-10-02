@@ -89,7 +89,7 @@
             }
             @if (tip.matchesPlayed !== null && tip.wins !== null) {
               <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
-                <svg aria-hidden="true" class="size-4" lucideSwords></svg>
+                <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.matches"></svg>
                 <span>{{ keys + '.tip.matches' | translate }}</span>
                 <b class="text-right font-semibold text-text-primary tabular-nums">{{
                   tip.matchesPlayed

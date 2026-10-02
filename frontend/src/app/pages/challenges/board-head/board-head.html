@@ -4,7 +4,7 @@
 <span aria-hidden="true" class="hex-mark clip-hex">
   <span class="clip-hex">
     @if (row.mark === 'D') {
-      <svg class="glyph" lucideZap></svg>
+      <svg class="glyph" [lucideIcon]="concepts.points"></svg>
     } @else {
       {{ row.mark }}
     }
@@ -31,8 +31,8 @@
   class="pay focus-ring"
   tabindex="0"
 >
-  <svg aria-hidden="true" class="size-3.5" lucideUsers></svg>
-  <b class="tabular-nums">+{{ gain }}</b>
+  <svg aria-hidden="true" class="size-3.5" [lucideIcon]="concepts.wounded"></svg>
+  <b class="tabular-nums">+{{ gain | figure }}</b>
 </span>
 
 <!-- Kept on one line: any line break between the stretches would render as a space. -->

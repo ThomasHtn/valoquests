@@ -153,7 +153,7 @@ describe('buildFrieze', () => {
     });
   });
 
-  it('marks a settled but undefeated week as lost, with the hit points it kept', () => {
+  it('marks a settled but undefeated week as lost, quoting the breakthrough reached', () => {
     const [entry] = buildFrieze(
       campaign({ weeks: [week({ settled: true, progressPercent: 78 })] }),
       translate,
@@ -162,8 +162,8 @@ describe('buildFrieze', () => {
     expect(entry).toMatchObject({
       state: 'lost',
       standing: 0.22,
-      status: 'overview.frieze.status.lost(22)',
-      title: 'overview.frieze.title(common.guardianCategory.STANDARD,overview.frieze.lost(22))',
+      status: 'overview.frieze.status.lost(78)',
+      title: 'overview.frieze.title(common.guardianCategory.STANDARD,overview.frieze.lost(78))',
     });
   });
 

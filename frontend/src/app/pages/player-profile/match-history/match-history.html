@@ -155,8 +155,13 @@
                   {{ 'playerProfile.matches.columns.damage' | translate }}
                 </span>
                 <span
-                  class="font-display mt-1.5 block text-sm leading-none font-semibold text-brand-500 tabular-nums"
+                  class="font-display mt-1.5 flex items-center justify-center gap-1 text-sm leading-none font-semibold text-brand-500 tabular-nums"
                 >
+                  <svg
+                    aria-hidden="true"
+                    class="size-3.5 shrink-0"
+                    [lucideIcon]="concepts.damage"
+                  ></svg>
                   {{ formatDamageAmount(day.totalValoquestsDamage) }}
                 </span>
               </p>
@@ -312,6 +317,11 @@
                     [class.text-text-muted]="row.valoquestsDamage === 0"
                     class="font-display mt-2 flex items-center justify-center gap-1 text-base leading-none font-semibold tabular-nums"
                   >
+                    <svg
+                      aria-hidden="true"
+                      class="size-3.5 shrink-0"
+                      [lucideIcon]="concepts.damage"
+                    ></svg>
                     {{ formatDamageAmount(row.valoquestsDamage) }}
                     @if (damageShareLabel(row); as share) {
                       <svg
@@ -356,6 +366,11 @@
                 tabindex="0"
               >
                 {{ 'playerProfile.matches.columns.damage' | translate }}
+                <svg
+                  aria-hidden="true"
+                  class="inline-block size-3.5 -translate-y-px"
+                  [lucideIcon]="concepts.damage"
+                ></svg>
                 {{ formatDamageAmount(day.totalValoquestsDamage) }}
               </span>
               <span class="ml-auto text-sm font-semibold tabular-nums">
@@ -425,10 +440,7 @@
                       class="grid grid-cols-3 gap-3 border-t border-text-primary/10 pt-4 sm:grid-cols-6"
                     >
                       <div>
-                        <dt
-                          [appTooltip]="'playerProfile.matches.columnHints.kda' | translate"
-                          class="label-caption text-text-muted cursor-help"
-                        >
+                        <dt class="label-caption text-text-muted">
                           {{ 'playerProfile.matches.columns.kda' | translate }}
                         </dt>
                         <dd
@@ -438,10 +450,7 @@
                         </dd>
                       </div>
                       <div>
-                        <dt
-                          [appTooltip]="'playerProfile.matches.columnHints.kd' | translate"
-                          class="label-caption text-text-muted cursor-help"
-                        >
+                        <dt class="label-caption text-text-muted">
                           {{ 'playerProfile.matches.columns.kd' | translate }}
                         </dt>
                         <dd
@@ -452,12 +461,7 @@
                         </dd>
                       </div>
                       <div>
-                        <dt
-                          [appTooltip]="
-                            'playerProfile.matches.columnHints.headshotPercentage' | translate
-                          "
-                          class="label-caption text-text-muted cursor-help"
-                        >
+                        <dt class="label-caption text-text-muted">
                           {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
                         </dt>
                         <dd
@@ -468,10 +472,7 @@
                         </dd>
                       </div>
                       <div>
-                        <dt
-                          [appTooltip]="'playerProfile.matches.columnHints.adr' | translate"
-                          class="label-caption text-text-muted cursor-help"
-                        >
+                        <dt class="label-caption text-text-muted">
                           {{ 'playerProfile.matches.columns.adr' | translate }}
                         </dt>
                         <dd
@@ -482,10 +483,7 @@
                         </dd>
                       </div>
                       <div>
-                        <dt
-                          [appTooltip]="'playerProfile.matches.columnHints.acs' | translate"
-                          class="label-caption text-text-muted cursor-help"
-                        >
+                        <dt class="label-caption text-text-muted">
                           {{ 'playerProfile.matches.columns.acs' | translate }}
                         </dt>
                         <dd
@@ -495,22 +493,22 @@
                           {{ formatScore(row.acs) }}
                         </dd>
                       </div>
-                      <!-- Same arrow as the grid; the tooltip only helps a pointer, so the
-                         reduced share stays readable to assistive tech through `sr-only`. -->
+                      <!-- Same arrow as the grid, with the kept share written out: a tooltip inside
+                         the card's link would only ever navigate on a tap. -->
                       <div>
-                        <dt
-                          [appTooltip]="'playerProfile.matches.columnHints.damage' | translate"
-                          class="label-caption text-text-muted cursor-help"
-                        >
+                        <dt class="label-caption text-text-muted">
                           {{ 'playerProfile.matches.columns.damage' | translate }}
                         </dt>
                         <dd
-                          [appTooltip]="damageExplanation(row)"
                           [class.text-brand-500]="row.valoquestsDamage > 0"
                           [class.text-text-muted]="row.valoquestsDamage === 0"
-                          appTooltipPosition="above"
                           class="font-display mt-2 flex items-center gap-1 text-base leading-none font-semibold tabular-nums"
                         >
+                          <svg
+                            aria-hidden="true"
+                            class="size-3.5 shrink-0"
+                            [lucideIcon]="concepts.damage"
+                          ></svg>
                           {{ formatDamageAmount(row.valoquestsDamage) }}
                           @if (damageShareLabel(row); as share) {
                             <svg
@@ -518,6 +516,11 @@
                               class="size-3.5 shrink-0 text-danger"
                               lucideArrowDown
                             ></svg>
+                            <span
+                              aria-hidden="true"
+                              class="font-sans text-xs font-medium text-danger"
+                              >{{ formatShare(row.damageCoefficientPercent) }}</span
+                            >
                             <span class="sr-only">{{ share }}</span>
                           }
                         </dd>
@@ -547,6 +550,22 @@
       >
         <svg aria-hidden="true" class="size-3.5 animate-spin" lucideLoaderCircle></svg>
         {{ 'playerProfile.matches.loadingMore' | translate }}
+      </div>
+    }
+
+    @if (loadMoreFailed()) {
+      <div
+        class="flex flex-wrap items-center justify-center gap-3 pt-4 text-sm text-text-secondary"
+        role="alert"
+      >
+        {{ 'playerProfile.matches.loadMoreError' | translate }}
+        <button
+          (click)="retry.emit()"
+          class="focus-ring min-h-11 px-3 font-semibold text-brand-400 transition-colors hover:text-brand-300"
+          type="button"
+        >
+          {{ 'retry' | translate }}
+        </button>
       </div>
     }
   </app-resource-state>

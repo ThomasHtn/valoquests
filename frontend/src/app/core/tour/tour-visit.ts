@@ -1,6 +1,7 @@
 import { Service } from '@angular/core';
 
 import { STORAGE_KEY } from './tour-visit.constants';
+import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
 
 /**
  * Tracks whether the visitor has already been through the guided tour.
@@ -17,13 +18,13 @@ export class TourVisit {
    * @returns Whether the completion has been recorded.
    */
   public hasCompleted(): boolean {
-    return localStorage.getItem(STORAGE_KEY) !== null;
+    return readStorage(STORAGE_KEY) !== null;
   }
 
   /**
    * Records that the visitor has been through the guided tour, so subsequent visits skip it.
    */
   public markCompleted(): void {
-    localStorage.setItem(STORAGE_KEY, 'true');
+    writeStorage(STORAGE_KEY, 'true');
   }
 }

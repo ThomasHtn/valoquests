@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Service, signal } from '@angular/core';
 
 /**
  * Open state of the navigation drawer, shared between the panel itself and the control that
@@ -11,7 +11,7 @@ import { Injectable, signal } from '@angular/core';
  * The trigger element itself is held here too, so closing can return focus to the control that
  * opened the drawer without the sidebar needing a reference to a button it does not render.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class NavigationPanel {
   /**
    * Id of the drawer panel, referenced by the trigger's `aria-controls`.

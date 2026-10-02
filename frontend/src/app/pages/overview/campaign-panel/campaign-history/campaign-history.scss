@@ -150,7 +150,7 @@
 }
 
 .past-table tr:first-child .past-rank {
-  color: #e8ab6b;
+  color: var(--color-brand-400);
 }
 
 /* The squad's tier during that campaign: the same badge as in the page header. */
@@ -166,7 +166,7 @@
 
 .tier--AMATEUR {
   background: rgb(217 149 74 / 16%);
-  color: #e8ab6b;
+  color: var(--color-brand-400);
 }
 
 .tier--PRO {
@@ -181,5 +181,5 @@
 }
 
 .past-row--now td.tabular-nums {
-  color: #e8ab6b;
+  color: var(--color-brand-400);
 }

@@ -2,7 +2,7 @@ import { NgOptimizedImage } from '@angular/common';
 import { Component, input } from '@angular/core';
 
 /**
- * Square, notched thumbnail for a match's map or agent: the resolved portrait when one exists,
+ * Square thumbnail, notched by default, for a match's map or agent: the resolved portrait when one exists,
  * a monogram fallback otherwise. Written out identically in both the table and the card layout
  * of the match history, so it is kept in one place instead of twice.
  *
@@ -33,4 +33,9 @@ export class MediaThumbnail {
    * Accessible name for the thumbnail, or `null` when it is purely decorative.
    */
   public readonly accessibleName = input<string | null>(null);
+
+  /**
+   * Whether the top-right corner is cut; the match detail shows plain squares.
+   */
+  public readonly notched = input(true);
 }

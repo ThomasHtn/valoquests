@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { LucideHeartPulse, LucideSkull, LucideUsers } from '@lucide/angular';
+import { LucideDynamicIcon } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.model';
@@ -7,6 +7,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { LineChart } from '@shared/chart/line-chart';
 import { HistoryCurve, HistoryRow } from '../campaign-panel.model';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * The base week after week, the current campaign against the closed ones, and the ranking of
@@ -14,12 +15,17 @@ import { HistoryCurve, HistoryRow } from '../campaign-panel.model';
  */
 @Component({
   selector: 'app-campaign-history',
-  imports: [TranslatePipe, LineChart, LucideHeartPulse, LucideSkull, LucideUsers],
+  imports: [LucideDynamicIcon, TranslatePipe, LineChart],
   templateUrl: './campaign-history.html',
   styleUrl: './campaign-history.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CampaignHistoryView {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   public readonly curves = input.required<readonly HistoryCurve[]>();
   public readonly rows = input.required<readonly HistoryRow[]>();
 

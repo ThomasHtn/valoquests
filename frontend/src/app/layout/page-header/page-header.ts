@@ -1,9 +1,14 @@
-import { Component, ElementRef, inject, input, viewChild } from '@angular/core';
+import { Location, NgTemplateOutlet } from '@angular/common';
+import { Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideChevronLeft, LucideMenu } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
+import { NavigationHistory } from '@core/navigation/navigation-history';
+import { resolveBackLabelKey } from '@core/navigation/navigation-history.utils';
 import { NavigationPanel } from '@layout/navigation-panel';
+import { BackTarget } from './page-header.model';
 
 /**
  * The application's context bar: one compact row pinned to the top of the routed content, on every
@@ -37,7 +42,7 @@ import { NavigationPanel } from '@layout/navigation-panel';
  */
 @Component({
   selector: 'app-page-header',
-  imports: [RouterLink, TranslatePipe, LucideChevronLeft, LucideMenu],
+  imports: [NgTemplateOutlet, RouterLink, TranslatePipe, LucideChevronLeft, LucideMenu],
   templateUrl: './page-header.html',
   // `shrink-0`: a flex item of `page-stack` (see the template) alongside the page's `page-body`,
   // which is the one that should give up height if the two ever compete for it.
@@ -51,7 +56,8 @@ export class PageHeader {
   public readonly heading = input('');
 
   /**
-   * Route of the page this one was reached from. The bar then shows the way back to it.
+   * Parent route the bar leads back to when the reader did not arrive from a page it can name
+   * (a shared link, a reload). Otherwise the way back is the page they came from.
    */
   public readonly backLink = input<string | null>(null);
 
@@ -71,9 +77,40 @@ export class PageHeader {
    */
   private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
 
+  private readonly history = inject(NavigationHistory);
+
+  private readonly location = inject(Location);
+
+  private readonly translation = inject(Translation);
+
+  /**
+   * The way back: the page the reader came from when it can be named, the static parent otherwise.
+   */
+  protected readonly back = computed<BackTarget | null>(() => {
+    const parent = this.backLink();
+    if (parent === null) {
+      return null;
+    }
+    const previous = this.history.previousUrl();
+    const key = previous === null ? null : resolveBackLabelKey(previous);
+    if (previous !== null && key !== null) {
+      return { link: previous, label: this.translation.translate(key), viaHistory: true };
+    }
+    return { link: parent, label: this.backLabel(), viaHistory: false };
+  });
+
   /**
    * Opens the navigation drawer, remembering the burger as the control to focus on close.
    */
+  protected goBack(event: MouseEvent): void {
+    // Modified clicks keep the link's own behaviour (new tab, new window).
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    event.preventDefault();
+    this.location.back();
+  }
+
   protected openNavigation(): void {
     const trigger = this.menuButton()?.nativeElement;
 

@@ -11,13 +11,19 @@
   <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
 </button>
 
+<!-- A select-only combobox, like the shared select: focus stays here while the arrows move the
+     highlight through the list, which `aria-activedescendant` points at. -->
 <button
+  #trigger
   (click)="toggle()"
+  (keydown)="onKeydown($event)"
+  [attr.aria-activedescendant]="activeOptionId()"
   [attr.aria-controls]="listboxId"
   [attr.aria-expanded]="isOpen()"
   [attr.aria-label]="ariaLabel()"
   aria-haspopup="listbox"
   class="trigger notch-tr focus-ring-inset [--notch:0.5rem]"
+  role="combobox"
   type="button"
 >
   @if (current(); as current) {
@@ -49,7 +55,11 @@
 </button>
 
 <!-- Every act, newest first, ruled off by episode: the badge names the episode, the label the act. -->
+<!-- Rows stay out of the tab order and carry the keyboard highlight as `data-active`, which
+     `listbox-option` paints like the pointer's hover. -->
 <div
+  #panel
+  (keydown)="onKeydown($event)"
   [attr.aria-label]="ariaLabel()"
   [attr.aria-multiselectable]="multiple() || null"
   [hidden]="!isOpen()"
@@ -62,7 +72,9 @@
       <button
         (click)="selectAll()"
         [attr.aria-selected]="selection().length === 0"
-        class="menu-option listbox-option option"
+        [attr.data-active]="activeIndex() === 0 || null"
+        [id]="optionId(0)"
+        class="menu-option listbox-option option focus-ring-inset"
         role="option"
         tabindex="-1"
         type="button"
@@ -81,8 +93,10 @@
         (click)="select(option)"
         [attr.aria-label]="option.fullName"
         [attr.aria-selected]="isSelected(option)"
+        [attr.data-active]="$index + optionOffset() === activeIndex() || null"
         [disabled]="isAtLimit() && !isSelected(option)"
-        class="menu-option listbox-option option disabled:pointer-events-none disabled:opacity-40"
+        [id]="optionId($index + optionOffset())"
+        class="menu-option listbox-option option focus-ring-inset disabled:pointer-events-none disabled:opacity-40"
         role="option"
         tabindex="-1"
         type="button"

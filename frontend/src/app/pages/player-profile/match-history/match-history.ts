@@ -9,7 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideArrowDown, LucideLoaderCircle } from '@lucide/angular';
+import { LucideArrowDown, LucideLoaderCircle, LucideDynamicIcon } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { formatLocalTime } from '@core/date/date-time.utils';
@@ -39,6 +39,8 @@ import { Tooltip } from '@shared/tooltip/tooltip';
 import { HistoryMatch, MatchDay } from '../match-day.model';
 import { MediaThumbnail } from '../media-thumbnail/media-thumbnail';
 import { MATCH_ROW_GRID_CLASS } from '../player-profile.constants';
+import { formatPercent } from '@core/i18n/number-format.utils';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * A match history, grouped by day: a grid on large viewports, cards below. Serves a player's own
@@ -50,6 +52,7 @@ import { MATCH_ROW_GRID_CLASS } from '../player-profile.constants';
 @Component({
   selector: 'app-match-history',
   imports: [
+    LucideDynamicIcon,
     TranslatePipe,
     RouterLink,
     MediaThumbnail,
@@ -63,6 +66,11 @@ import { MATCH_ROW_GRID_CLASS } from '../player-profile.constants';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MatchHistory {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   /**
    * Player whose history this is, for the links out to each match; `null` on the squad's history,
    * where each row names its own player.
@@ -106,6 +114,12 @@ export class MatchHistory {
   public readonly isLoadingMore = input.required<boolean>();
 
   /**
+   * Whether the last page past the first failed: the matches already shown stay, with a retry row
+   * under them.
+   */
+  public readonly loadMoreFailed = input(false);
+
+  /**
    * Emitted when the reader asks to retry after an error.
    */
   public readonly retry = output<void>();
@@ -142,9 +156,11 @@ export class MatchHistory {
 
   protected readonly agentImageUrl = resolveAgentImageUrl;
 
-  protected readonly formatKda = formatKda;
+  protected readonly formatKda = (kda: number | null): string =>
+    formatKda(kda, this.translation.language());
 
-  protected readonly formatHeadshotPercentage = formatHeadshotPercentage;
+  protected readonly formatHeadshotPercentage = (percentage: number | null): string =>
+    formatHeadshotPercentage(percentage, this.translation.language());
 
   protected readonly formatScore = formatScore;
 
@@ -207,6 +223,13 @@ export class MatchHistory {
    * The reduced share a match kept, read out behind the down arrow, or `null` when the match kept
    * its full value (or none) and the arrow stays hidden.
    */
+  /**
+   * The kept share as the card writes it beside the arrow (`50 %`).
+   */
+  protected formatShare(percent: number): string {
+    return formatPercent(percent, this.translation.language());
+  }
+
   protected damageShareLabel(match: Match): string | null {
     const percent = match.damageCoefficientPercent;
     return percent <= 0 || percent >= 100

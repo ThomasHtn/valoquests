@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { Campaign, CampaignHistory } from '@core/campaign/campaign.model';
+import { formatFigure } from '@core/i18n/number-format.utils';
 import {
-  formatFigure,
   formatWeekSpan,
   placeWeekInCampaign,
   weekChallengeCeiling,

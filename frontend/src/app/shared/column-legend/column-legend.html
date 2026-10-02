@@ -1,0 +1,15 @@
+<details class="legend">
+  <summary class="legend-bar focus-ring label-caption">
+    <svg aria-hidden="true" class="size-4 shrink-0" lucideInfo></svg>
+    {{ 'common.columnLegend' | translate }}
+    <svg aria-hidden="true" class="legend-chev size-4 shrink-0" lucideChevronDown></svg>
+  </summary>
+  <dl class="legend-list">
+    @for (entry of entries(); track entry.label) {
+      <div>
+        <dt class="label-caption text-text-primary">{{ entry.label }}</dt>
+        <dd class="text-sm text-text-secondary">{{ entry.help }}</dd>
+      </div>
+    }
+  </dl>
+</details>

@@ -177,6 +177,21 @@ export interface ChallengeCard {
 export type DayState = 'closed' | 'now' | 'ahead';
 
 /**
+ * What the picked day is resolved from: the week on screen and its seven cells.
+ */
+export interface DayPickSource {
+  /**
+   * Monday of the week on screen, `null` outside one.
+   */
+  readonly weekStart: string | null;
+
+  /**
+   * The week's seven cells.
+   */
+  readonly days: readonly DayCell[];
+}
+
+/**
  * One cell of the seven-day strip.
  */
 export interface DayCell {

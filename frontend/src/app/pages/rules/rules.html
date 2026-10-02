@@ -153,7 +153,7 @@
                 <span
                   class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
                 >
-                  {{ step.percent }} %
+                  {{ percent(step.percent) }}
                 </span>
               </li>
             }
@@ -183,7 +183,7 @@
                 <span
                   class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
                 >
-                  +{{ step.percent }} %
+                  +{{ percent(step.percent) }}
                 </span>
               </li>
             }
@@ -244,7 +244,7 @@
 
         <div class="grid gap-3 sm:grid-cols-2">
           <app-rule-text
-            [text]="'rules.sections.week.guardianNote' | translate"
+            [text]="'rules.sections.week.guardianNote' | translate: { factor: guardianFactor() }"
             class="rule-note block border-l-2 border-edge-strong text-prose text-text-secondary"
           />
           <app-rule-text
@@ -324,7 +324,7 @@
             @for (step of guardianLossLadder; track step.breach) {
               <li class="rule-tile rule-tile--danger">
                 <span class="font-mono text-2xs font-semibold text-text-secondary tabular-nums">
-                  {{ step.breach }} %
+                  {{ percent(step.breach) }}
                 </span>
                 <span
                   class="font-display text-sm leading-none font-bold text-boss-hp-edge tabular-nums sm:text-base"
@@ -510,7 +510,10 @@
                 0{{ index + 1 }}
               </span>
               <app-rule-text
-                [text]="'rules.sections.calibration.facts.' + fact | translate"
+                [text]="
+                  'rules.sections.calibration.facts.' + fact
+                    | translate: { factor: guardianFactor() }
+                "
                 class="block text-prose text-text-secondary"
               />
             </li>

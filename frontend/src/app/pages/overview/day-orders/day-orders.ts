@@ -1,12 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import {
-  LucideBuilding2,
-  LucideSkull,
-  LucideUserCheck,
-  LucideUsers,
-  LucideWheat,
-  LucideWrench,
-} from '@lucide/angular';
+import { LucideUserCheck, LucideDynamicIcon } from '@lucide/angular';
 
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -17,6 +10,7 @@ import { Tooltip } from '@shared/tooltip/tooltip';
 import { BoardRow } from '../../challenges/challenges.model';
 import { DeckCard } from '../../challenges/deck-card/deck-card';
 import { DayTally } from '../overview.model';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * The orders of the day, in two equal columns: on the left the day's challenge as the challenges
@@ -25,16 +19,12 @@ import { DayTally } from '../overview.model';
 @Component({
   selector: 'app-day-orders',
   imports: [
+    LucideDynamicIcon,
     TranslatePipe,
     Avatar,
     Countdown,
     Tooltip,
-    LucideBuilding2,
-    LucideSkull,
     LucideUserCheck,
-    LucideUsers,
-    LucideWheat,
-    LucideWrench,
     DeckCard,
   ],
   templateUrl: './day-orders.html',
@@ -42,6 +32,11 @@ import { DayTally } from '../overview.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DayOrders {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   /**
    * The day's challenge, or `null` when none was drawn.
    */

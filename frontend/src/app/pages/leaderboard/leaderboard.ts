@@ -1,7 +1,12 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideChevronDown, LucideChevronUp } from '@lucide/angular';
+import {
+  LucideChevronDown,
+  LucideChevronUp,
+  LucideTrophy,
+  LucideDynamicIcon,
+} from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT, CampaignHistory, WeeklyTitle } from '@core/campaign/campaign.model';
@@ -42,12 +47,14 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import {
   formatWeekSpan,
   placeWeekInCampaign,
+  resolveSelectedWeek,
   resolveTitleMeasures,
   weekChallengeCeiling,
 } from './leaderboard-board.utils';
 import { BoardRow, BoardStreak, BoardTitle, BoardWeek, WeekOption } from './leaderboard.model';
 import { Podium } from './podium/podium';
 import { WeekPicker } from './week-picker/week-picker';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * The week's ranking: who stands where, on what, and how many of the week's challenges each
@@ -59,6 +66,8 @@ import { WeekPicker } from './week-picker/week-picker';
 @Component({
   selector: 'app-leaderboard',
   imports: [
+    LucideDynamicIcon,
+    LucideTrophy,
     TranslatePipe,
     NgTemplateOutlet,
     RouterLink,
@@ -82,6 +91,11 @@ import { WeekPicker } from './week-picker/week-picker';
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Leaderboard {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   private readonly rankingApi = inject(RankingApi);
 
   private readonly campaignApi = inject(CampaignApi);
@@ -100,7 +114,7 @@ export class Leaderboard {
 
   protected readonly isLoading = anyLoading(this.currentResource, this.campaignResource);
 
-  protected readonly isError = anyError(this.currentResource);
+  protected readonly isError = anyError(this.currentResource, this.campaignResource);
 
   private readonly current = computed(() => resourceValue(this.currentResource, null) ?? null);
 
@@ -145,11 +159,12 @@ export class Leaderboard {
   });
 
   /**
-   * The Monday on screen: the live week by default, changed from the picker.
+   * The Monday on screen: the live week by default, changed from the picker, kept across reloads.
    */
-  protected readonly selectedWeekStart = linkedSignal<string | null>(
-    () => this.weekStarts()[0] ?? null,
-  );
+  protected readonly selectedWeekStart = linkedSignal<readonly string[], string | null>({
+    source: () => this.weekStarts(),
+    computation: (weekStarts, previous) => resolveSelectedWeek(weekStarts, previous),
+  });
 
   /**
    * Whoever finished first on the last closed week: the reigning champion, decorated on the live

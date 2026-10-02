@@ -72,7 +72,6 @@ export function groupMatchesByDay<T extends Match>(
  * @returns The day, with its averages and totals filled in.
  */
 function withDayAverages<T extends Match>(day: MatchDayGroup<T>): MatchDay<T> {
-  const count = day.matches.length;
   const sum = (selector: (match: Match) => number): number =>
     day.matches.reduce((total, match) => total + selector(match), 0);
 
@@ -81,16 +80,30 @@ function withDayAverages<T extends Match>(day: MatchDayGroup<T>): MatchDay<T> {
     .map((match) => match.headshotPercentage)
     .filter((percentage) => percentage !== null);
 
+  // Same for scores: deathmatch and escalation report none, the field is absent from the payload.
+  const average = (selector: (match: Match) => number): number | null => {
+    const values = day.matches.map(selector).filter((value) => Number.isFinite(value));
+    return values.length === 0
+      ? null
+      : values.reduce((total, value) => total + value, 0) / values.length;
+  };
+
   return {
     ...day,
-    avgKd: sum((match) => match.kd) / count,
+    // From the day's totals, so it agrees with the K/D/A printed beside it.
+    avgKd:
+      sum((match) => match.kills) /
+      Math.max(
+        1,
+        sum((match) => match.deaths),
+      ),
     avgHeadshotPercentage:
       headshotPercentages.length === 0
         ? null
         : headshotPercentages.reduce((total, percentage) => total + percentage, 0) /
           headshotPercentages.length,
-    avgAdr: sum((match) => match.adr) / count,
-    avgAcs: sum((match) => match.acs) / count,
+    avgAdr: average((match) => match.adr),
+    avgAcs: average((match) => match.acs),
     totalKills: sum((match) => match.kills),
     totalDeaths: sum((match) => match.deaths),
     totalAssists: sum((match) => match.assists),

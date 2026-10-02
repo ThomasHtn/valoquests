@@ -19,4 +19,9 @@ export class ChampionBadge {
    * Icon size: `sm` in dense rows, `md` next to a heading.
    */
   public readonly size = input<'sm' | 'md'>('sm');
+
+  /**
+   * Whether the badge sits inside a link, passed to the title badge it wraps.
+   */
+  public readonly inLink = input(false);
 }

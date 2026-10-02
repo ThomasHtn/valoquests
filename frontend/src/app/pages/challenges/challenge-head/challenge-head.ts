@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { LucideUsers, LucideZap } from '@lucide/angular';
+import { LucideDynamicIcon } from '@lucide/angular';
 
+import { FigurePipe } from '@core/i18n/figure-pipe';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { BoardRow } from '../challenges.model';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * What a challenge is, as the board's first column and a phone card both open on it: the hexagon,
@@ -11,11 +13,16 @@ import { BoardRow } from '../challenges.model';
  */
 @Component({
   selector: 'app-challenge-head',
-  imports: [TranslatePipe, Tooltip, LucideUsers, LucideZap],
+  imports: [LucideDynamicIcon, FigurePipe, TranslatePipe, Tooltip],
   templateUrl: './challenge-head.html',
   styleUrl: './challenge-head.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChallengeHead {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   public readonly row = input.required<BoardRow>();
 }

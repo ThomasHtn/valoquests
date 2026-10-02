@@ -93,6 +93,12 @@ export type PlayerSortKey =
   'name' | 'rank' | 'winRate' | 'kda' | 'headshotPercentage' | 'matchesPlayed';
 
 /**
+ * The squad's order as the phone's toggle words it: alphabetical for the name, best or worst
+ * first for the rank, highest or lowest first for a statistic.
+ */
+export type PlayerSortOrder = 'az' | 'za' | 'best' | 'worst' | 'high' | 'low';
+
+/**
  * One sortable header of the table: a column paired with its translation key and text alignment.
  */
 export interface PlayerSortColumn {
@@ -110,16 +116,47 @@ export interface PlayerSortColumn {
    * Text alignment of the column.
    */
   readonly align: 'left' | 'right';
+
+  /**
+   * Translation key of what the column measures, for its tooltip and the phone legend; `null` for
+   * a column that needs none.
+   */
+  readonly helpKey: string | null;
 }
 
 /**
  * The table's sortable columns, in display order.
  */
 export const PLAYER_SORT_COLUMNS: readonly PlayerSortColumn[] = [
-  { key: 'name', labelKey: 'players.columns.player', align: 'left' },
-  { key: 'rank', labelKey: 'players.columns.rank', align: 'left' },
-  { key: 'winRate', labelKey: 'players.columns.winRate', align: 'left' },
-  { key: 'kda', labelKey: 'players.columns.kda', align: 'right' },
-  { key: 'headshotPercentage', labelKey: 'players.columns.headshotPercentage', align: 'right' },
-  { key: 'matchesPlayed', labelKey: 'players.columns.matchesPlayed', align: 'right' },
+  { key: 'name', labelKey: 'players.columns.player', align: 'left', helpKey: null },
+  {
+    key: 'rank',
+    labelKey: 'players.columns.rank',
+    align: 'left',
+    helpKey: 'players.columns.rankHelp',
+  },
+  {
+    key: 'winRate',
+    labelKey: 'players.columns.winRate',
+    align: 'left',
+    helpKey: 'playerProfile.stats.tooltip.winRate',
+  },
+  {
+    key: 'kda',
+    labelKey: 'players.columns.kda',
+    align: 'right',
+    helpKey: 'playerProfile.stats.tooltip.kda',
+  },
+  {
+    key: 'headshotPercentage',
+    labelKey: 'players.columns.headshotPercentage',
+    align: 'right',
+    helpKey: 'playerProfile.stats.tooltip.headshotPercentage',
+  },
+  {
+    key: 'matchesPlayed',
+    labelKey: 'players.columns.matchesPlayed',
+    align: 'right',
+    helpKey: 'players.columns.matchesHelp',
+  },
 ];

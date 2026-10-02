@@ -1,4 +1,4 @@
-import { DestroyRef, Injectable, inject, signal, Signal } from '@angular/core';
+import { DestroyRef, Service, inject, signal, Signal } from '@angular/core';
 import { MD_BREAKPOINT_PX, LG_BREAKPOINT_PX, XL_BREAKPOINT_PX } from './breakpoint.constants';
 
 /**
@@ -11,7 +11,7 @@ import { MD_BREAKPOINT_PX, LG_BREAKPOINT_PX, XL_BREAKPOINT_PX } from './breakpoi
  * on this signal with `@if` keeps a single layout in the DOM, and `matchMedia` re-renders the other
  * one when the window crosses the breakpoint.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class Breakpoint {
   private readonly destroyRef = inject(DestroyRef);
 

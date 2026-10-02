@@ -203,12 +203,14 @@ export class MatchDetail {
   /**
    * Formats a KDA ratio, exposed to the template.
    */
-  protected readonly formatKda = formatKda;
+  protected readonly formatKda = (kda: number | null): string =>
+    formatKda(kda, this.translation.language());
 
   /**
    * Formats a headshot percentage, exposed to the template.
    */
-  protected readonly formatHeadshotPercentage = formatHeadshotPercentage;
+  protected readonly formatHeadshotPercentage = (percentage: number | null): string =>
+    formatHeadshotPercentage(percentage, this.translation.language());
 
   /**
    * Formats a combat or damage score, exposed to the template.

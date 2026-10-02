@@ -14,6 +14,7 @@
        It takes focus only to pull it inside the dialog, so it draws no focus ring. -->
   <div
     #panel
+    appFocusTrap
     animate.enter="fx-modal-in"
     animate.leave="fx-modal-out"
     [attr.aria-label]="heading()"

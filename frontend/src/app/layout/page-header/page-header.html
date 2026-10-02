@@ -22,22 +22,30 @@
     </button>
 
     <div class="flex min-w-0 flex-1 items-center">
-      @if (backLink(); as parentRoute) {
+      @if (back(); as target) {
         <!-- The way back, on a page whose subject is already named by the block right under the
-             bar: restating that name here would only be a second source of the same fact. -->
+             bar: restating that name here would only be a second source of the same fact. A
+             history step when the reader came from a page it can name, so filters and scroll
+             come back too; the static parent otherwise. -->
         <div class="flex min-w-0 flex-1 items-center gap-2">
-          <a
-            [attr.aria-label]="'pageHeader.back' | translate: { name: backLabel() }"
-            [routerLink]="parentRoute"
-            class="group/back focus-ring tracking-label -mx-1 inline-flex h-11 max-w-full shrink-0 items-center gap-1.5 px-1 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:text-text-primary"
-          >
-            <svg
-              aria-hidden="true"
-              class="size-3.5 shrink-0 transition-transform duration-(--duration-base) group-hover/back:-translate-x-0.5"
-              lucideChevronLeft
-            ></svg>
-            <span class="truncate">{{ backLabel() }}</span>
-          </a>
+          @if (target.viaHistory) {
+            <a
+              (click)="goBack($event)"
+              [attr.aria-label]="'pageHeader.back' | translate: { name: target.label }"
+              [href]="target.link"
+              class="group/back focus-ring tracking-label -mx-1 inline-flex h-11 max-w-full shrink-0 items-center gap-1.5 px-1 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:text-text-primary"
+            >
+              <ng-container *ngTemplateOutlet="backContent; context: { $implicit: target }" />
+            </a>
+          } @else {
+            <a
+              [attr.aria-label]="'pageHeader.back' | translate: { name: target.label }"
+              [routerLink]="target.link"
+              class="group/back focus-ring tracking-label -mx-1 inline-flex h-11 max-w-full shrink-0 items-center gap-1.5 px-1 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:text-text-primary"
+            >
+              <ng-container *ngTemplateOutlet="backContent; context: { $implicit: target }" />
+            </a>
+          }
           <ng-content select="[backAside]" />
         </div>
       } @else if (heading()) {
@@ -57,3 +65,12 @@
     </div>
   </div>
 </header>
+
+<ng-template #backContent let-target>
+  <svg
+    aria-hidden="true"
+    class="size-3.5 shrink-0 transition-transform duration-(--duration-base) group-hover/back:-translate-x-0.5"
+    lucideChevronLeft
+  ></svg>
+  <span class="truncate">{{ target.label }}</span>
+</ng-template>

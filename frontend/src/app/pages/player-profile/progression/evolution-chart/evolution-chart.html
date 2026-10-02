@@ -19,6 +19,7 @@
       @for (option of metrics; track option) {
         <button
           (click)="onMetricChange(option)"
+          [appTooltip]="'playerProfile.stats.tooltip.' + option | translate"
           [attr.aria-pressed]="metric() === option"
           [class]="
             metric() === option
@@ -39,7 +40,7 @@
     [pointLabel]="'playerProfile.progression.evolution.pointLabel' | translate"
     [series]="series()"
     [summary]="summary()"
-    [valueSuffix]="valueSuffix()"
+    [valueFormatter]="valueFormatter"
     [xAxisLabel]="'playerProfile.progression.evolution.xAxis' | translate"
     [yAxisLabel]="yAxisLabel()"
   />

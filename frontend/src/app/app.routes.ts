@@ -110,10 +110,10 @@ export const routes: Routes = [
           import('@pages/player-profile/match-detail/match-detail').then((m) => m.MatchDetail),
       },
       {
-        // The campaign page was folded into the overview's campaign tab; its old addresses stay
-        // valid rather than breaking every link that already points at them.
+        // The campaign page was folded into the overview's campaign tab; its old address opens that
+        // tab rather than breaking every link that already points at it.
         path: 'campaign',
-        redirectTo: 'overview',
+        redirectTo: '/overview?tab=campaign',
         pathMatch: 'full',
       },
       {

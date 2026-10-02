@@ -1,12 +1,4 @@
-/**
- * Pads a number to two digits, as calendar and clock fields are always written.
- *
- * @param value - The value to pad.
- * @returns The value as a two-digit string.
- */
-function padToTwoDigits(value: number): string {
-  return `${value}`.padStart(2, '0');
-}
+import { CAMPAIGN_CLOCK, CAMPAIGN_TIME_ZONE } from './date-time.constants';
 
 /**
  * Milliseconds in a day.
@@ -57,14 +49,15 @@ const MONTH_NAME_LOCALES: Record<'fr' | 'en', string> = { fr: 'fr-FR', en: 'en-U
  * @param language - The app language whose month names and date order to use.
  * @param month - `'short'` abbreviates the month (`"7 août"` stays, `"7 sept."`, `"Sep 7"`) for a
  *   label that must fit a narrow column instead of truncating to an ellipsis.
- * @param timeZone - Time zone to read the day in, the reader's own when omitted.
+ * @param timeZone - Time zone to read the day in, the campaign's own when omitted: every day the
+ *   application groups or settles is a Paris day.
  * @returns The formatted date.
  */
 export function formatLocalDayMonth(
   instant: string,
   language: 'fr' | 'en',
   month: 'long' | 'short' = 'long',
-  timeZone?: string,
+  timeZone: string = CAMPAIGN_TIME_ZONE,
 ): string {
   return new Intl.DateTimeFormat(MONTH_NAME_LOCALES[language], {
     day: 'numeric',
@@ -96,12 +89,12 @@ export function formatWeekdayDayMonth(isoDate: string, language: 'fr' | 'en'): s
 }
 
 /**
- * Formats the time of day of an ISO-8601 instant as `HH:MM` in the reader's timezone.
+ * Formats the time of day of an ISO-8601 instant as `HH:MM` in the campaign's timezone, the one the
+ * match days are grouped in, so a match never sits under a day its clock contradicts.
  *
  * @param instant - The instant to format, as an ISO-8601 instant.
  * @returns The formatted time of day.
  */
 export function formatLocalTime(instant: string): string {
-  const date = new Date(instant);
-  return `${padToTwoDigits(date.getHours())}:${padToTwoDigits(date.getMinutes())}`;
+  return CAMPAIGN_CLOCK.format(new Date(instant));
 }

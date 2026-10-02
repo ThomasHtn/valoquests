@@ -5,9 +5,11 @@ import {
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
-import { LucideFileText } from '@lucide/angular';
+import { LucideFileText, LucideDynamicIcon } from '@lucide/angular';
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT, CampaignWeek } from '@core/campaign/campaign.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
@@ -24,7 +26,7 @@ import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionRule } from '@shared/section-rule/section-rule';
 import { BoardRow } from '../challenges/challenges.model';
-import { formatFigure } from '../leaderboard/leaderboard-board.utils';
+import { formatFigure } from '@core/i18n/number-format.utils';
 import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
 import { BaseScene } from './base-scene/base-scene';
 import { CampaignPanel } from './campaign-panel/campaign-panel';
@@ -63,13 +65,16 @@ import { SquadMatches } from './squad-matches/squad-matches';
 import { SquadSheet } from './squad-sheet/squad-sheet';
 import { GuardianFall } from './mission-readings/fall-forecast/fall-forecast.model';
 import { buildGuardianFall } from './mission-readings/fall-forecast/fall-forecast.utils';
-import { FULL_CAMPAIGN_POPULATION } from './overview.constants';
+import { FULL_CAMPAIGN_POPULATION, OVERVIEW_TAB_PARAM } from './overview.constants';
 import {
+  parseOverviewTab,
   readFavoriteTab,
   readSeenReport,
   writeFavoriteTab,
   writeSeenReport,
 } from './overview.utils';
+import { readSeenPopulation } from './base-scene/seen-population.utils';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * The state of the campaign, at a glance: the base and its rocket, the ten weeks, the mission of
@@ -81,6 +86,7 @@ import {
 @Component({
   selector: 'app-overview',
   imports: [
+    LucideDynamicIcon,
     LucideFileText,
     NgOptimizedImage,
     NgTemplateOutlet,
@@ -107,6 +113,11 @@ import {
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Overview {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   protected readonly fullCampaignPopulation = FULL_CAMPAIGN_POPULATION;
 
   private readonly campaignApi = inject(CampaignApi);
@@ -172,6 +183,19 @@ export class Overview {
   );
 
   protected readonly population = computed(() => this.campaign()?.base?.population ?? 0);
+
+  /**
+   * The population this browser last saw, read before the scene records today's.
+   */
+  private readonly seenPopulation = readSeenPopulation();
+
+  /**
+   * Inhabitants gained or lost since the reader's last visit, `0` on a first visit or none.
+   */
+  protected readonly sinceLastVisit = computed(() => {
+    const population = this.population();
+    return this.seenPopulation === null || population === 0 ? 0 : population - this.seenPopulation;
+  });
 
   protected readonly populationChange = computed(
     () => this.campaign()?.base?.populationChange ?? 0,
@@ -287,12 +311,20 @@ export class Overview {
   /**
    * The tab the reader pinned to open the page on, or `null` for the first one.
    */
+  private readonly router = inject(Router);
+
+  private readonly route = inject(ActivatedRoute);
+
   protected readonly favoriteTab = signal<OverviewTabKey | null>(readFavoriteTab());
 
   /**
    * The tab whose panel is on screen under the mission.
    */
-  protected readonly selectedTab = signal<OverviewTabKey>(this.favoriteTab() ?? 'challenges');
+  protected readonly selectedTab = signal<OverviewTabKey>(
+    parseOverviewTab(this.route.snapshot.queryParamMap.get(OVERVIEW_TAB_PARAM)) ??
+      this.favoriteTab() ??
+      'challenges',
+  );
 
   protected readonly tabs = computed<readonly OverviewTab[]>(() =>
     buildTabs((key, params) => this.translation.translate(key, params), this.favoriteTab()),
@@ -351,6 +383,20 @@ export class Overview {
   });
 
   constructor() {
+    // The open tab rides in the address, so a link or a step back reopens it; replacing the entry
+    // keeps tab switches off the back button.
+    effect(() => {
+      const tab = this.selectedTab();
+      untracked(() =>
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { [OVERVIEW_TAB_PARAM]: tab },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        }),
+      );
+    });
+
     // The report opens on its own once per settled week, the first time the page is opened after
     // Sunday; the context bar's button brings it back afterwards.
     effect(() => {

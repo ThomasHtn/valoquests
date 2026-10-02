@@ -1,8 +1,8 @@
 import { ChallengeProgress, RosterPlayer } from '@core/challenges/challenge.model';
 import { localMidnight } from '@core/date/date-time.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
-import { formatFigure } from '../leaderboard/leaderboard-board.utils';
-import { MAX_SEGMENTED_TARGET, PINNED_PLAYER_KEY, RULE_NUMBER } from './challenges.constants';
+import { formatFigure } from '@core/i18n/number-format.utils';
+import { MAX_SEGMENTED_TARGET, RULE_NUMBER } from './challenges.constants';
 import {
   BoardMark,
   BoardRow,
@@ -10,10 +10,48 @@ import {
   ChallengeLook,
   ChallengeOperator,
   ChallengeRung,
+  DayCell,
+  DayPickSource,
   MarkDetail,
   OperatorProgress,
   RulePart,
 } from './challenges.model';
+
+/**
+ * The day the daily row follows by default: the last drawn day that is not ahead.
+ *
+ * @param days - The week's seven cells.
+ * @returns The day's index, or `null` before the first draw.
+ */
+export function defaultPickedDay(days: readonly DayCell[]): number | null {
+  return days.filter((day) => day.drawn && day.state !== 'ahead').at(-1)?.index ?? null;
+}
+
+/**
+ * Keeps the day the reader picked across a background reload, and follows the default otherwise.
+ *
+ * A reload rebuilds the cells without changing the week; only a new week or a pick that no longer
+ * points at a drawn day sends the row back to the default.
+ *
+ * @param source - The week on screen and its cells.
+ * @param previous - The previous source and pick, absent on the first resolution.
+ * @returns The day to show.
+ */
+export function resolvePickedDay(
+  source: DayPickSource,
+  previous?: { readonly source: DayPickSource; readonly value: number | null },
+): number | null {
+  const fallback = defaultPickedDay(source.days);
+  if (!previous || previous.source.weekStart !== source.weekStart) {
+    return fallback;
+  }
+  const picked = previous.value;
+  const wasFollowing = picked === defaultPickedDay(previous.source.days);
+  const stillDrawn = source.days.some(
+    (day) => day.index === picked && day.drawn && day.state !== 'ahead',
+  );
+  return !wasFollowing && stillDrawn ? picked : fallback;
+}
 
 /**
  * The ISO date `offset` days after another.
@@ -322,31 +360,4 @@ export function toRuleParts(rule: string): RulePart[] {
     parts.push({ text: rule.slice(last), number: false });
   }
   return parts;
-}
-
-/**
- * The operator the reader pinned first, or `null`; a malformed value or a storage failure reads as none.
- */
-export function readPinnedPlayer(): number | null {
-  try {
-    const stored = Number(localStorage.getItem(PINNED_PLAYER_KEY));
-    return Number.isInteger(stored) && stored > 0 ? stored : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Remembers the pinned operator, or forgets it on `null`; storage failures are ignored.
- */
-export function writePinnedPlayer(playerId: number | null): void {
-  try {
-    if (playerId === null) {
-      localStorage.removeItem(PINNED_PLAYER_KEY);
-    } else {
-      localStorage.setItem(PINNED_PLAYER_KEY, String(playerId));
-    }
-  } catch {
-    // Nothing to do: the board opens in its own order next time.
-  }
 }

@@ -1,6 +1,8 @@
 .sky {
   position: relative;
-  height: 17.5rem;
+  display: flex;
+  align-items: flex-end;
+  min-height: 17.5rem;
   overflow: hidden;
 }
 
@@ -18,8 +20,7 @@
 .plinths {
   --base: clamp(4rem, 6vh, 5rem);
 
-  position: absolute;
-  inset: auto 0 0 0;
+  position: relative;
   margin: 0 auto;
   width: 100%;
   max-width: 48rem;
@@ -47,15 +48,36 @@
   order: 3;
 }
 
-.link {
+.place {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Ties stand side by side on one plinth, wrapping when the column runs out. */
+.holders {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+}
+
+.link,
+.holder-link {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+}
+
+.link,
+.place--tied {
   transition: translate 0.2s ease-out;
 }
 
-.link:hover {
+.link:hover,
+.place--tied:hover {
   translate: 0 -0.25rem;
 }
 
@@ -86,8 +108,10 @@
 
 .plinth {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.25rem;
   width: 100%;
   margin-top: 0.75rem;
   padding: 0.75rem 0.5rem;
@@ -98,19 +122,22 @@
   height: calc(var(--base) * 1.4);
   border-color: var(--color-brand-500);
   background: rgb(217 149 74 / 18%);
-  box-shadow: 0 -1px 18px rgb(217 149 74 / 25%);
 }
 
 .place--2 .plinth {
   height: calc(var(--base) * 1.15);
-  border-color: rgb(236 232 225 / 50%);
+  border-color: var(--color-podium-silver);
   background: rgb(236 232 225 / 8%);
 }
 
 .place--3 .plinth {
   height: var(--base);
-  border-color: rgb(160 120 80 / 80%);
+  border-color: var(--color-podium-bronze);
   background: rgb(236 232 225 / 6%);
+}
+
+.tied {
+  color: var(--medal);
 }
 
 .plate {
@@ -135,7 +162,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .link {
+  .link,
+  .place--tied {
     transition: none;
   }
 }

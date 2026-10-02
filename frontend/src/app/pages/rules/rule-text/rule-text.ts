@@ -1,17 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import {
-  LucideCalendar,
-  LucideFlame,
-  LucideHeartPulse,
-  LucideRocket,
-  LucideSkull,
-  LucideSwords,
-  LucideTarget,
-  LucideUsers,
-  LucideWheat,
-  LucideWrench,
-  LucideZap,
-} from '@lucide/angular';
+import { LucideDynamicIcon } from '@lucide/angular';
+
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { RULE_ICONS, ICON_TONES, TOKEN } from './rule-text.constants';
 import { RuleIcon, RuleRun } from './rule-text.model';
 
@@ -24,23 +14,16 @@ import { RuleIcon, RuleRun } from './rule-text.model';
  */
 @Component({
   selector: 'app-rule-text',
-  imports: [
-    LucideCalendar,
-    LucideFlame,
-    LucideHeartPulse,
-    LucideRocket,
-    LucideSkull,
-    LucideSwords,
-    LucideTarget,
-    LucideUsers,
-    LucideWheat,
-    LucideWrench,
-    LucideZap,
-  ],
+  imports: [LucideDynamicIcon],
   templateUrl: './rule-text.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RuleText {
+  /**
+   * The one icon of each concept; a rule token names a concept.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   /**
    * Already-translated sentence, with `{icon}` and `*emphasis*` tokens.
    */

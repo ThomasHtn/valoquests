@@ -20,6 +20,7 @@
   [attr.aria-label]="'sidebar.label' | translate"
   [class]="rail().width + ' ' + drawer().panel + ' ' + rail().cursor"
   [attr.data-open]="navigationPanel.isOpen() ? '' : null"
+  [appFocusTrap]="navigationPanel.isOpen()"
   [id]="navigationPanel.panelId"
   class="sidebar group scroll-subtle fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] shrink-0 flex-col justify-between overflow-y-auto border-r border-brand-500/35 bg-surface-sunken pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] motion-reduce:transition-none lg:visible lg:static lg:h-full lg:max-w-none lg:translate-x-0 lg:overflow-y-visible lg:py-6 lg:transition-[width] lg:duration-200 motion-reduce:lg:transition-none"
 >
@@ -249,7 +250,8 @@
         </p>
         <p class="mt-2 flex min-w-0 items-center gap-2 text-sm text-text-secondary">
           <span
-            [class.bg-success]="apiStatus() === 'online'"
+            [class.bg-brand-500]="apiStatus() === 'online' && syncStale()"
+            [class.bg-success]="apiStatus() === 'online' && !syncStale()"
             [class.bg-danger]="apiStatus() === 'offline'"
             [appTooltip]="apiStatusLabel()"
             class="h-1.5 w-1.5 shrink-0 rounded-full"
@@ -259,7 +261,7 @@
             <span class="sr-only">{{ apiStatusLabel() }}</span>
           </span>
           <span
-            [appTooltip]="'sidebar.lastSync.tooltip' | translate"
+            [appTooltip]="lastSyncTooltip()"
             appTooltipPosition="above"
             class="cursor-help truncate"
             >{{ lastSyncLabel() }}</span

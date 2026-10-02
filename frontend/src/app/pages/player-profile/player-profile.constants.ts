@@ -54,3 +54,18 @@ export const STAT_SKELETON_TILE_SPANS: readonly string[] = [
   '',
   'col-span-2 lg:col-span-1',
 ];
+
+/**
+ * Query parameters the profile keeps its state in.
+ */
+export const PROFILE_QUERY_KEYS = { view: 'view', mode: 'mode', season: 'season' } as const;
+
+/**
+ * Value of the `view` parameter for the progression view; the history is the default.
+ */
+export const PROGRESS_VIEW_PARAM = 'progress';
+
+/**
+ * Value of the `season` parameter for every season; no parameter means the current one.
+ */
+export const ALL_SEASONS_PARAM = 'all';

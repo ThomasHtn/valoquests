@@ -7,13 +7,14 @@ import {
   LucideChevronsUpDown,
   LucideGitCommitHorizontal,
   LucideMinus,
-  LucideSwords,
   LucideTrendingDown,
   LucideTrendingUp,
+  LucideDynamicIcon,
 } from '@lucide/angular';
 
 import { KEY_FIGURE_TONE_CLASSES } from './key-figures.constants';
 import { KeyFigure } from './key-figures.model';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * Strip of key figures closing a progression chart: an icon, a caption, the value and one line
@@ -22,6 +23,7 @@ import { KeyFigure } from './key-figures.model';
 @Component({
   selector: 'app-key-figures',
   imports: [
+    LucideDynamicIcon,
     NgOptimizedImage,
     LucideArrowDownToLine,
     LucideArrowUpToLine,
@@ -29,13 +31,17 @@ import { KeyFigure } from './key-figures.model';
     LucideChevronsUpDown,
     LucideGitCommitHorizontal,
     LucideMinus,
-    LucideSwords,
     LucideTrendingDown,
     LucideTrendingUp,
   ],
   templateUrl: './key-figures.html',
 })
 export class KeyFigures {
+  /**
+   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   */
+  protected readonly concepts = CONCEPT_ICONS;
+
   /**
    * Figures to show, in reading order.
    */

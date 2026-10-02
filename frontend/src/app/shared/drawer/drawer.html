@@ -20,7 +20,9 @@
   [class.drawer--closing]="closing()"
   class="drawer bg-surface-sunken p-0 text-text-primary backdrop:bg-surface-sunken/75"
 >
-  <div class="flex h-full flex-col gap-6 overflow-y-auto p-5 sm:p-7">
+  <div
+    class="flex h-full flex-col gap-6 overflow-y-auto p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-7 sm:pb-[max(1.75rem,env(safe-area-inset-bottom))]"
+  >
     <!-- Header row: whatever the drawer leads with, and the one framed control of the panel.
          Spaced apart rather than pushing the button with an auto margin, so a leading block
          that grows (a long title) still stops short of it. -->
@@ -30,7 +32,7 @@
       <button
         (click)="close()"
         [attr.aria-label]="closeLabel()"
-        class="focus-ring-inset flex size-9 shrink-0 cursor-pointer items-center justify-center border border-edge text-text-secondary transition-colors hover:bg-text-primary/10 hover:text-text-primary"
+        class="focus-ring-inset flex size-11 shrink-0 cursor-pointer items-center justify-center border border-edge text-text-secondary transition-colors hover:bg-text-primary/10 hover:text-text-primary"
         type="button"
       >
         <svg aria-hidden="true" class="size-4" lucideX></svg>

@@ -1,5 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { formatPercent } from '@core/i18n/number-format.utils';
 import { Translation } from '@core/i18n/translation';
 import { HourSlotPerformance, WeekdayPerformance } from '@core/players/player-progression.model';
 import { BarChart } from '@shared/chart/bar-chart';
@@ -45,6 +46,22 @@ export class SchedulePerformance {
   protected readonly minimumSample = MINIMUM_SAMPLE;
 
   /**
+   * Writes a win rate in the tooltip, in the reader's notation.
+   */
+  protected readonly formatRate = (value: number): string =>
+    formatPercent(value, this.translation.language());
+
+  /**
+   * The weekday chart read out as text, since a screen reader cannot see the bars.
+   */
+  protected readonly weekdaySummary = computed(() => this.describe(this.weekdayBars()));
+
+  /**
+   * The time-slot chart read out as text.
+   */
+  protected readonly hourSlotSummary = computed(() => this.describe(this.hourSlotBars()));
+
+  /**
    * Weekday bars, in display order.
    */
   protected readonly weekdayBars = computed<readonly ChartBar[]>(() =>
@@ -73,9 +90,12 @@ export class SchedulePerformance {
   /**
    * Name of the strongest weekday, or an empty string when none qualifies.
    */
-  protected readonly bestWeekday = computed(
-    () => this.weekdayBars().find((bar) => bar.highlighted)?.label ?? '',
-  );
+  protected readonly bestWeekday = computed(() => {
+    const best = this.weekdays().find((day) => day.best);
+    return best
+      ? this.translation.translate(`playerProfile.progression.schedule.dayLong.${best.day}`)
+      : '';
+  });
 
   /**
    * Label of the strongest time slot, or an empty string when none qualifies.
@@ -101,9 +121,23 @@ export class SchedulePerformance {
    * Spells a slot out as the hours it covers.
    *
    * @param startHour - The slot's first hour.
-   * @returns The range, e.g. `21h – 24h`.
+   * @returns The range, e.g. `18h – 21h`, the last one ending at midnight.
    */
   protected slotRange(startHour: number): string {
-    return `${String(startHour).padStart(2, '0')}h – ${String(startHour + 3).padStart(2, '0')}h`;
+    const end = startHour + 3;
+    const endLabel =
+      end === 24
+        ? this.translation.translate('playerProfile.progression.schedule.midnight')
+        : `${String(end).padStart(2, '0')}h`;
+    return `${String(startHour).padStart(2, '0')}h – ${endLabel}`;
+  }
+
+  /**
+   * Each bar as `label rate (sample)`, joined into one sentence.
+   */
+  private describe(bars: readonly ChartBar[]): string {
+    return bars
+      .map((bar) => `${bar.label} ${this.formatRate(bar.value)} (${bar.detail})`)
+      .join('; ');
   }
 }

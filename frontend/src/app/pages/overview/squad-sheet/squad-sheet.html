@@ -55,18 +55,23 @@
           <span class="min-w-0">
             <span class="ros-name">{{ row.name }}</span>
             @if (row.champion) {
-              <span class="ros-title"><app-champion-badge /></span>
+              <span class="ros-title"><app-champion-badge [inLink]="true" /></span>
             } @else if (row.title; as title) {
-              <span class="ros-title"><app-title-badge [title]="title.key" /></span>
+              <span class="ros-title"><app-title-badge [inLink]="true" [title]="title.key" /></span>
             }
           </span>
         </span>
 
         <span class="ros-cells">
           <span class="ros-cell">
-            <span class="ros-cap label-caption text-2xs">{{
-              'overview.squad.damage' | translate
-            }}</span>
+            <span class="ros-cap label-caption text-2xs"
+              ><svg
+                aria-hidden="true"
+                class="mr-1 inline-block size-3.5 -translate-y-px"
+                [lucideIcon]="concepts.damage"
+              ></svg
+              >{{ 'overview.squad.damage' | translate }}</span
+            >
             @if (row.played) {
               <span class="ros-val tabular-nums" style="--cell: var(--color-boss-hp-edge)"
                 >{{ format(row.damage)
@@ -87,9 +92,14 @@
             }
           </span>
           <span class="ros-cell">
-            <span class="ros-cap label-caption text-2xs">{{
-              'common.resource.components' | translate
-            }}</span>
+            <span class="ros-cap label-caption text-2xs"
+              ><svg
+                aria-hidden="true"
+                class="mr-1 inline-block size-3.5 -translate-y-px"
+                [lucideIcon]="concepts.components"
+              ></svg
+              >{{ 'common.resource.components' | translate }}</span
+            >
             @if (row.played) {
               <span class="ros-val tabular-nums" style="--cell: var(--color-accent-cyan)">{{
                 format(row.components)
@@ -103,9 +113,14 @@
             }
           </span>
           <span class="ros-cell">
-            <span class="ros-cap label-caption text-2xs">{{
-              'common.resource.food' | translate
-            }}</span>
+            <span class="ros-cap label-caption text-2xs"
+              ><svg
+                aria-hidden="true"
+                class="mr-1 inline-block size-3.5 -translate-y-px"
+                [lucideIcon]="concepts.food"
+              ></svg
+              >{{ 'common.resource.food' | translate }}</span
+            >
             @if (row.played) {
               <span class="ros-val tabular-nums" style="--cell: var(--color-accent-green)">{{
                 format(row.food)
@@ -119,9 +134,14 @@
             }
           </span>
           <span class="ros-cell">
-            <span class="ros-cap label-caption text-2xs">{{
-              'overview.squad.streak' | translate
-            }}</span>
+            <span class="ros-cap label-caption text-2xs"
+              ><svg
+                aria-hidden="true"
+                class="mr-1 inline-block size-3.5 -translate-y-px"
+                [lucideIcon]="concepts.streak"
+              ></svg
+              >{{ 'overview.squad.streak' | translate }}</span
+            >
             <app-streak-gauge
               [bonusPercent]="row.streakBonusPercent"
               [days]="row.streakDays"

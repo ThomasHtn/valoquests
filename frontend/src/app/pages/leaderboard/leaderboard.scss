@@ -5,6 +5,11 @@
   gap: 0.25rem;
 }
 
+/* The page column, not the viewport, decides: the sidebar takes its share on a desktop. */
+.board {
+  container-type: inline-size;
+}
+
 /* Column names exist only from the width where a row really holds columns; below it the cells
    each keep their own caption. */
 .head {
@@ -14,7 +19,7 @@
 /* The squad page's row height, so the two boards read as one system. */
 .row-link {
   display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1fr);
+  grid-template-columns: 3.5rem minmax(0, 1fr);
   gap: 1rem;
   align-items: center;
   min-height: 5.0625rem;
@@ -36,19 +41,27 @@
   background: rgb(217 149 74 / 18%);
 }
 
+/* The place and its move side by side, on a shared baseline. */
 .cell-pos {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.25rem;
+  white-space: nowrap;
 }
 
+/* Inline rather than flex: a flex box takes its baseline from the chevron, whose bottom edge sat
+   the figure above the place's own baseline. */
 .variation {
-  display: inline-flex;
-  align-items: center;
+  display: inline;
   font-family: var(--font-mono);
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   line-height: 1;
   font-weight: 700;
+}
+
+.variation svg {
+  display: inline-block;
+  vertical-align: -0.05em;
 }
 
 .cell-who {
@@ -143,8 +156,27 @@
   font-weight: 600;
 }
 
+/* Until the header's columns open, the operator leads the card and the place closes it on the
+   right, as the squad's rows put the rank. */
+@container (width < 59rem) {
+  .row-link {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .cell-who {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .cell-pos {
+    grid-row: 1;
+    grid-column: 2;
+    justify-self: end;
+  }
+}
+
 /* Wide enough for the six figures on one line. */
-@media (width >= 40rem) {
+@container (width >= 36rem) {
   .cell-figs {
     grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
   }
@@ -154,8 +186,9 @@
   }
 }
 
-/* Opens once the name keeps room beside the six figures, like the contribution sheet. */
-@media (width >= 72rem) {
+/* Opens once the name keeps room beside the six figures: the fixed tracks, seven gaps and the
+   padding need about 58rem of board at the widest gap this width brings. */
+@container (width >= 59rem) {
   .head,
   .row-link {
     display: grid;
@@ -177,13 +210,27 @@
     padding: 0.6rem 1.25rem;
   }
 
-  /* Centered on the position column below it, whose badge reads the same way. */
+  /* Centered on the position column below it, whose place reads the same way. */
   .bar-count {
     justify-self: center;
   }
 
+  /* The place centred under the count's glyph, its move hung in the free track on its right, so
+     a move never pushes the place off the column's axis. */
   .cell-pos {
-    justify-content: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: baseline;
+  }
+
+  .cell-pos > :first-child {
+    grid-column: 2;
+  }
+
+  .variation {
+    grid-column: 3;
+    justify-self: start;
+    margin-left: 0.25rem;
   }
 
   .head-fig {

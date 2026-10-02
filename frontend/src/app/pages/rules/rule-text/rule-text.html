@@ -7,41 +7,7 @@
       aria-hidden="true"
       class="inline-block size-[1em] translate-y-[0.15em]"
     >
-      @switch (run.icon) {
-        @case ('food') {
-          <svg class="size-full" lucideWheat></svg>
-        }
-        @case ('components') {
-          <svg class="size-full" lucideWrench></svg>
-        }
-        @case ('damage') {
-          <svg class="size-full" lucideSwords></svg>
-        }
-        @case ('guardian') {
-          <svg class="size-full" lucideSkull></svg>
-        }
-        @case ('wounded') {
-          <svg class="size-full" lucideHeartPulse></svg>
-        }
-        @case ('base') {
-          <svg class="size-full" lucideUsers></svg>
-        }
-        @case ('challenge') {
-          <svg class="size-full" lucideTarget></svg>
-        }
-        @case ('streak') {
-          <svg class="size-full" lucideFlame></svg>
-        }
-        @case ('points') {
-          <svg class="size-full" lucideZap></svg>
-        }
-        @case ('rocket') {
-          <svg class="size-full" lucideRocket></svg>
-        }
-        @case ('day') {
-          <svg class="size-full" lucideCalendar></svg>
-        }
-      }
+      <svg [lucideIcon]="concepts[run.icon]" class="size-full"></svg>
     </span>
   } @else {
     <!-- One element per run, on one line: Angular drops whitespace-only nodes between elements,

@@ -1,14 +1,14 @@
 <div [attr.aria-label]="'challenges.daily.strip' | translate" class="week" role="group">
   @for (day of days(); track day.index) {
     <button
-      (click)="selected.set(day.index)"
+      (click)="day.drawn && selected.set(day.index)"
       [appTooltip]="day.tip"
       [attr.aria-label]="day.weekday + ' ' + day.date + ', ' + day.tip"
       [attr.aria-pressed]="day.drawn ? selected() === day.index : null"
       [class.day--hit]="day.drawn && day.doneCount > 0"
       [class.day--picked]="selected() === day.index"
       [class]="'day day--' + day.state"
-      [disabled]="!day.drawn"
+      [attr.aria-disabled]="day.drawn ? null : true"
       class="focus-ring-inset"
       type="button"
     >
