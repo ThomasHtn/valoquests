@@ -6,10 +6,10 @@ import {
   resolveAgentImageUrl,
   resolveAgentInitial,
   resolveMapImageUrl,
-} from '@core/matches/match-format.utils';
+} from '@core/matches/display/match-format.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
+import { SKELETON_ROWS } from '@shared/resource-state/resource-state-skeleton.constants';
 import { Consistency } from './consistency/consistency';
 import { EntityStats } from './entity-stats/entity-stats';
 import { EntityStatsRow } from './entity-stats/entity-stats.model';
@@ -20,11 +20,7 @@ import { RankJourney } from './rank-journey/rank-journey';
 import { SchedulePerformance } from './schedule-performance/schedule-performance';
 
 /**
- * The player profile's progression view: how one player has been trending across the seasons they
- * selected, rather than what they did in their last ten matches.
- *
- * Fetches one payload for the whole view. Every section reads the same filtered set of matches, so
- * six endpoints would mean six round trips and six re-aggregations of the same history.
+ * Progression view: one player's trends across the selected seasons, from a single payload.
  */
 @Component({
   selector: 'app-progression',
@@ -43,32 +39,32 @@ import { SchedulePerformance } from './schedule-performance/schedule-performance
 })
 export class Progression {
   /**
-   * Internal identifier of the player being profiled.
+   * Profiled player id.
    */
   public readonly playerId = input.required<number>();
 
   /**
-   * Seasons the analytics are scoped to; empty covers every season.
+   * Seasons in scope; empty covers every season.
    */
   public readonly seasonIds = input.required<readonly number[]>();
 
   /**
-   * Every known season's identifier, newest first, backing the stable per-season colors.
+   * Every season id, newest first, for stable per-season colours.
    */
   public readonly seasonOrder = input.required<readonly number[]>();
 
   /**
-   * Data-access service backing the progression resource.
+   * Progression data access.
    */
   private readonly playersApi = inject(PlayersApi);
 
   /**
-   * i18n service, used for the tooltips captioning each table.
+   * Translates the table tooltips.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Reactive resource fetching the analytics for the current player and season selection.
+   * Analytics of the current player and seasons.
    */
   protected readonly progressionResource = this.playersApi.progression(
     this.playerId,
@@ -76,18 +72,14 @@ export class Progression {
   );
 
   /**
-   * The analytics, or `null` while loading or on error.
-   *
-   * Guarded by `hasValue`: reading `value()` while the resource is in an error state throws, so it
-   * must never be called unconditionally.
+   * Analytics, `null` while loading or on error (`value()` throws on error).
    */
   protected readonly progression = computed(() =>
     this.progressionResource.hasValue() ? this.progressionResource.value() : null,
   );
 
   /**
-   * Whether the selection holds no competitive match at all, in which case every section below
-   * would be an empty frame and the view says so once instead.
+   * Whether the selection holds no competitive match, shown once instead of empty sections.
    */
   protected readonly isEmpty = computed(() => {
     const progression = this.progression();
@@ -95,7 +87,7 @@ export class Progression {
   });
 
   /**
-   * Map rows, most-played first, with their images resolved.
+   * Map rows, most played first, with their images.
    */
   protected readonly mapRows = computed<readonly EntityStatsRow[]>(
     () =>
@@ -110,7 +102,7 @@ export class Progression {
   );
 
   /**
-   * Agent rows, most-played first, with their portraits resolved.
+   * Agent rows, most played first, with their portraits.
    */
   protected readonly agentRows = computed<readonly EntityStatsRow[]>(
     () =>
@@ -125,15 +117,12 @@ export class Progression {
   );
 
   /**
-   * Placeholder line widths driving the loading skeleton.
+   * Placeholder line widths of the loading skeleton.
    */
   protected readonly skeletonRows = SKELETON_ROWS;
 
   /**
-   * Resolves a translation, exposed to the template for the tables' already-translated inputs.
-   *
-   * @param key - Translation key.
-   * @returns The translated string.
+   * Translates a key for the tables' translated inputs.
    */
   protected translate(key: string): string {
     return this.translation.translate(key);

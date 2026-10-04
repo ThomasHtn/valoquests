@@ -1,0 +1,51 @@
+/* Bar above the scroller: a native scrollbar paints over a sticky child whatever its `z-index`. */
+@utility page-stack {
+  @apply flex h-full w-full flex-col;
+}
+
+/* Scrolling body; gutter and width cap sit on children to align with the bar. */
+@utility page-body {
+  @apply flex w-full flex-1 flex-col gap-6 overflow-y-auto pt-10 pb-6;
+
+  /* Its bounce must not chain to the shell and drag the header. */
+  overscroll-behavior-y: contain;
+  /* Clears the home indicator on notched phones; `pb-6` stays the floor. */
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  scroll-padding-top: 1.5rem;
+  /* Route transitions animate this column only; one `page-body` is mounted at a time. */
+  view-transition-name: page-body;
+  /* `scrollbar-color` for Chrome and Firefox, the track rule for Safari. */
+  scrollbar-color: var(--color-surface-600) var(--color-surface-sunken);
+
+  &::-webkit-scrollbar-track {
+    background-color: var(--color-surface-sunken);
+  }
+
+  & > * {
+    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6;
+  }
+}
+
+/* Media query, not `motion-safe:`: no class reaches view-transition pseudo-elements. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(page-body) {
+    animation: page-body-out 110ms ease-in both;
+  }
+
+  ::view-transition-new(page-body) {
+    animation: page-body-in 220ms var(--ease-out-quart) both;
+  }
+}
+
+@keyframes page-body-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-body-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

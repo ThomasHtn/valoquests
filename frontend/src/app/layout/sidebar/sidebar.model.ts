@@ -1,8 +1,5 @@
 /**
- * Pictogram identifying a navigation entry.
- *
- * Modelled as a closed union rather than a free-form Lucide name so the template's `@switch` is
- * exhaustive: an entry can only ask for an icon the sidebar actually imports.
+ * Navigation pictogram, a closed union so the template's `@switch` covers every imported icon.
  */
 export type NavIcon =
   | 'layout-dashboard'
@@ -17,16 +14,16 @@ export type NavIcon =
   | 'flag';
 
 /**
- * Chapter of the navigation: a caption over the entries it gathers.
+ * Navigation chapter: a caption over its entries.
  */
 export interface NavGroup {
   /**
-   * Suffix appended to `sidebar.group.` to resolve the caption.
+   * Suffix of the `sidebar.group.` caption key.
    */
   readonly labelKey: string;
 
   /**
-   * Entries of the chapter, in display order.
+   * Entries, in display order.
    */
   readonly items: readonly NavItem[];
 }
@@ -36,36 +33,100 @@ export interface NavGroup {
  */
 export interface NavItem {
   /**
-   * Suffix appended to `sidebar.nav.` to resolve this section's label.
+   * Suffix of the `sidebar.nav.` label key.
    */
   readonly labelKey: string;
 
   /**
-   * Pictogram shown ahead of the label, and the only thing identifying the entry on the collapsed
-   * icon-only rail.
+   * Pictogram, the only identifier on the collapsed rail.
    */
   readonly icon: NavIcon;
 
   /**
-   * Route to navigate to. Omitted for sections without an implemented page
-   * yet, which render as inert entries.
+   * Target route; omitted entries render inert.
    */
   readonly routerLink?: string;
 
   /**
-   * Extra URL prefixes that also count as this entry being active, beyond {@link routerLink}
-   * itself. Reserved for a section that owns a second page reached from within the first rather
-   * than from the sidebar, such as the campaign's battle history — the sidebar still has only one
-   * entry for the whole section, but that entry stays highlighted on both.
+   * Extra URL prefixes that also activate the entry, for a section's second page.
    */
   readonly activeRoutes?: readonly string[];
 
   /**
-   * Whether the entry is highlighted only on an exact URL match.
-   *
-   * Reserved for the root route, which every other URL starts with. Every
-   * other section owns its whole subtree, so its entry must stay highlighted
-   * on child routes such as a player's profile under `/players`.
+   * Whether only an exact URL match activates the entry, for a route others start with.
    */
   readonly exactMatch?: boolean;
+}
+
+/**
+ * Resolved in code: an Angular class binding cannot express a Tailwind `lg:` variant.
+ */
+
+/**
+ * Utilities driven by the rail's collapsed state (`lg` and up only).
+ */
+export interface RailClasses {
+  /**
+   * Rail width.
+   */
+  readonly width: string;
+  /**
+   * Cursor over empty collapsed rail space, which expands it on click.
+   */
+  readonly cursor: string;
+  /**
+   * Wordmark block, replaced by the "V" mark when collapsed.
+   */
+  readonly brandBlock: string;
+  /**
+   * Last-synchronization block, hidden when collapsed.
+   */
+  readonly syncBlock: string;
+  /**
+   * Navigation entry alignment.
+   */
+  readonly navItem: string;
+  /**
+   * Navigation label, hidden rather than removed so the drawer shares the markup.
+   */
+  readonly navLabel: string;
+  /**
+   * Chapter caption, replaced by a hairline when collapsed.
+   */
+  readonly navGroupLabel: string;
+  /**
+   * Hairline between chapters, shown only when collapsed.
+   */
+  readonly navGroupRule: string;
+  /**
+   * Footer layout: stacked when collapsed, a row otherwise.
+   */
+  readonly footerContent: string;
+  /**
+   * Language trigger size.
+   */
+  readonly languageButton: string;
+  /**
+   * Language code beside the trigger icon, hidden when collapsed.
+   */
+  readonly languageCode: string;
+  /**
+   * Language panel position: opens into the content when collapsed.
+   */
+  readonly languagePanel: string;
+}
+
+/**
+ * Utilities driven by the drawer's open state, below `lg`.
+ */
+export interface DrawerClasses {
+  /**
+   * Drawer position and visibility; `visibility` flips at once on open (to take focus) and only
+   * after the slide on close.
+   */
+  readonly panel: string;
+  /**
+   * Scrim behind the drawer, timed the same way.
+   */
+  readonly scrim: string;
 }

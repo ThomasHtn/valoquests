@@ -1,16 +1,16 @@
 import { Plugin } from 'chart.js';
 
 import { Language, TranslateFn } from '@core/i18n/translation.model';
-import { formatSeasonName, splitSeasonName } from '@core/matches/season-name.utils';
-import { CompetitiveTier } from '@core/players/competitive-tier.model';
+import { formatSeasonName, splitSeasonName } from '@core/seasons/season-name.utils';
+import { CompetitiveTier } from '@core/players/competitive-tier/player-competitive-tier.model';
 import {
   resolveCompetitiveTierColorVariable,
   resolveCompetitiveTierIconUrl,
   resolveCompetitiveTierVisual,
   resolveTierOrdinal,
-} from '@core/players/competitive-tier.utils';
+} from '@core/players/competitive-tier/player-competitive-tier.utils';
 import { formatWinRate } from '@core/players/player-format.utils';
-import { SeasonRank } from '@core/players/player-progression.model';
+import { SeasonRank } from '@core/players/progression/player-progression.model';
 import { AXIS_TICK_FONT } from '@shared/chart/chart-theme.constants';
 import { ChartTheme } from '@shared/chart/chart-theme.model';
 import { token } from '@shared/chart/chart-theme.utils';
@@ -29,10 +29,7 @@ import {
 } from './rank-journey.model';
 
 /**
- * Index of the season holding the career peak: the first one to reach the highest rank.
- *
- * @param journey - Seasons, oldest first, never empty.
- * @returns Index of the peak season.
+ * Index of the career peak season, the first to reach the highest rank (`journey` never empty).
  */
 export function findPeakSeasonIndex(journey: readonly SeasonRank[]): number {
   let peak = 0;
@@ -45,12 +42,7 @@ export function findPeakSeasonIndex(journey: readonly SeasonRank[]): number {
 }
 
 /**
- * Formats the move between two ranks, counted in divisions.
- *
- * @param from - Rank moved from.
- * @param to - Rank moved to.
- * @param translate - Dictionary lookup.
- * @returns The move with its arrow and tone.
+ * Move between two ranks, counted in divisions, with its arrow and tone.
  */
 export function describeRankDelta(
   from: CompetitiveTier,
@@ -73,13 +65,7 @@ export function describeRankDelta(
 }
 
 /**
- * Builds the axis label of every season: its act, with the era underneath the first act of each
- * era only, so a row of eight acts does not repeat the same episode eight times.
- *
- * @param journey - Seasons, oldest first.
- * @param compact - Whether to use the short act label of the phone layout.
- * @param translate - Dictionary lookup.
- * @returns One two-line label per season.
+ * Axis label per season: the act, with the era only under each era's first act.
  */
 export function buildRankJourneyAxisLabels(
   journey: readonly SeasonRank[],
@@ -102,13 +88,7 @@ export function buildRankJourneyAxisLabels(
 }
 
 /**
- * Builds the plotted line: one point per season for a multi-season selection, one point per
- * ranked match when the selection is a single season, where a point per season would be a lone dot.
- *
- * @param journey - Selected seasons, oldest first, never empty.
- * @param compact - Whether to use the short act labels of the phone layout.
- * @param translate - Dictionary lookup.
- * @returns The line to plot.
+ * Plotted line: a point per season, or per ranked match for a single season (else a lone dot).
  */
 export function buildRankJourneySeries(
   journey: readonly SeasonRank[],
@@ -146,12 +126,7 @@ export function buildRankJourneySeries(
 }
 
 /**
- * Builds the strip of figures under the chart: the peak, where the selection ended, and the climb
- * since its start.
- *
- * @param journey - Selected seasons, oldest first, never empty.
- * @param translate - Dictionary lookup.
- * @returns The key figures, in reading order.
+ * Figures under the chart: the peak, where the selection ended, and the climb since its start.
  */
 export function buildRankJourneyFigures(
   journey: readonly SeasonRank[],
@@ -194,15 +169,7 @@ export function buildRankJourneyFigures(
 }
 
 /**
- * Builds the tooltip of one point: a season with its range and record, or a match with the rank
- * it left the player on.
- *
- * @param journey - Selected seasons, oldest first.
- * @param series - The plotted line.
- * @param index - Index of the hovered point.
- * @param translate - Dictionary lookup.
- * @param language - The active language, for the win rate's notation.
- * @returns The tooltip content, or `null` when the index is out of range.
+ * Tooltip of one point (a season with its range and record, or a match); `null` out of range.
  */
 export function buildRankJourneyTooltip(
   journey: readonly SeasonRank[],
@@ -257,12 +224,7 @@ export function buildRankJourneyTooltip(
 }
 
 /**
- * Builds the plugin drawing, behind the line, each season's rail from its lowest to its highest
- * rank.
- *
- * @param journey - Seasons, oldest first.
- * @param sizes - Breakpoint sizes, read for the rail width.
- * @returns The rail plugin.
+ * Plugin drawing each season's rail from its lowest to its highest rank, behind the line.
  */
 export function createRankRailPlugin(
   journey: readonly SeasonRank[],
@@ -292,14 +254,7 @@ export function createRankRailPlugin(
 }
 
 /**
- * Builds the plugin drawing the peak: its badge enlarged on the point that reached it, with the
- * rank named beside it in the rank's own colour.
- *
- * @param series - The plotted line.
- * @param icon - Loaded badge of the peak rank.
- * @param labels - Peak rank name, its colour and the caption under it.
- * @param theme - Resolved chart palette.
- * @returns The peak plugin.
+ * Plugin drawing the peak badge enlarged on its point, with the rank named in its colour.
  */
 export function createRankPeakPlugin(
   series: RankJourneySeries,
@@ -335,11 +290,7 @@ export function createRankPeakPlugin(
 }
 
 /**
- * Names a rank with its badge.
- *
- * @param tier - The rank.
- * @param translate - Dictionary lookup.
- * @returns The rank's label and badge.
+ * Rank label and badge.
  */
 function rankLabel(tier: CompetitiveTier, translate: TranslateFn): RankLabel {
   return {
@@ -349,22 +300,14 @@ function rankLabel(tier: CompetitiveTier, translate: TranslateFn): RankLabel {
 }
 
 /**
- * Spells a season's raw code out.
- *
- * @param name - Raw season code.
- * @param translate - Dictionary lookup.
- * @returns The season's full name.
+ * Full name of a raw season code.
  */
 function seasonLabel(name: string, translate: TranslateFn): string {
   return formatSeasonName(name, translate);
 }
 
 /**
- * Starts loading a rank badge at the size it is drawn on the canvas.
- *
- * @param tier - Rank whose badge to load.
- * @param size - Edge of the drawn badge, in pixels.
- * @returns The image, loading.
+ * Starts loading a rank badge at its drawn size, in pixels.
  */
 export function loadRankBadge(tier: CompetitiveTier, size: number): HTMLImageElement {
   const image = new Image(size, size);
@@ -373,10 +316,7 @@ export function loadRankBadge(tier: CompetitiveTier, size: number): HTMLImageEle
 }
 
 /**
- * Resolves the colour a rank is written in on the canvas, the same one its badge text uses.
- *
- * @param tier - The rank, or `null` past either end of the axis.
- * @returns A CSS colour.
+ * Canvas colour of a rank, as its badge text; transparent past either end of the axis.
  */
 export function resolveRankColor(tier: CompetitiveTier | null): string {
   return tier ? token(resolveCompetitiveTierColorVariable(tier), '#868b8d') : 'transparent';

@@ -1,0 +1,18 @@
+/* Folds grow to their natural height where `::details-content` is supported; others snap. */
+
+@media (prefers-reduced-motion: no-preference) {
+  details::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    opacity: 0;
+    transition:
+      block-size 380ms var(--ease-out-expo),
+      opacity 260ms ease-out,
+      content-visibility 380ms allow-discrete;
+  }
+
+  details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}

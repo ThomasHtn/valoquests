@@ -1,0 +1,30 @@
+/* App ground (glows and faint rings) on `fixed` pseudo-elements: no markup, still on scroll. */
+
+@utility ambient-field {
+  /* Keeps the `z-index: -1` layers above the background but below descendants. */
+  isolation: isolate;
+
+  &::before,
+  &::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  &::before {
+    background:
+      radial-gradient(circle at 58% 46%, --alpha(var(--color-brand-500) / 14%), transparent 45%),
+      radial-gradient(circle at 58% 46%, --alpha(var(--color-accent-blue) / 10%), transparent 65%);
+  }
+
+  &::after {
+    opacity: 0.45;
+    background: repeating-radial-gradient(
+      circle at 58% 46%,
+      transparent 0 80px,
+      --alpha(var(--color-text-primary) / 4%) 80px 81px
+    );
+  }
+}

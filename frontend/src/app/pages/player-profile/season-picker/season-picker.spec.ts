@@ -4,7 +4,7 @@ import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { Season } from '@core/matches/season.model';
+import { Season } from '@core/seasons/season.model';
 import { SeasonPicker } from './season-picker';
 
 /**
@@ -17,7 +17,7 @@ const SEASONS: readonly Season[] = [
 ];
 
 /**
- * Host binding one single-select and one multi-select picker, like the profile's two views.
+ * Hosts a single-select and a multi-select picker, like the profile's two views.
  */
 @Component({
   imports: [SeasonPicker],

@@ -5,13 +5,7 @@ import { TourVisit } from './tour-visit';
 import { REPLAY_STATE_KEY } from './tour-visit.constants';
 
 /**
- * Keeps the guided tour as a one-time briefing.
- *
- * Lets the tour render for a visitor who has never been through it, and redirects everyone else
- * straight to the overview. The replay escape hatch is the {@link REPLAY_STATE_KEY} navigation
- * state set by the "replay the tour" link on the rules page, never a URL parameter.
- *
- * @returns `true` to render the tour, or a redirect to the overview.
+ * Shows the tour once, or on replay via the {@link REPLAY_STATE_KEY} state; else the overview.
  */
 export const tourEntryGuard: CanActivateFn = () => {
   const router = inject(Router);

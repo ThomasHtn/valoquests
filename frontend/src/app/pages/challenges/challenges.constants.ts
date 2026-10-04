@@ -1,14 +1,4 @@
 /**
- * Accent colour of the daily challenge.
- */
-export const DAILY_TONE = 'var(--color-accent-cyan)';
-
-/**
- * Largest target a phone line is cut into one segment per unit for: past it, a continuous line.
- */
-export const MAX_SEGMENTED_TARGET = 12;
-
-/**
  * Width of one operator column on the board, in rem.
  */
 export const BOARD_COLUMN_REM = 5.25;
@@ -19,8 +9,7 @@ export const BOARD_COLUMN_REM = 5.25;
 export const BOARD_LEAD_MIN_REM = 30;
 
 /**
- * Widest the board's challenge column gets when the whole squad fits: past it, the operator
- * columns widen instead, in rem.
+ * Widest the challenge column gets before operator columns widen instead, in rem.
  */
 export const BOARD_LEAD_MAX_REM = 34;
 
@@ -40,7 +29,6 @@ export const BOARD_DRAG_THRESHOLD_PX = 4;
 export const BOARD_ROW_STAGGER_MS = 90;
 
 /**
- * A number in a rule ("3", "25 000"); thousands may be split by any space, the narrow no-break one
- * included.
+ * A number in a rule ("3", "25 000"), thousands split by any space.
  */
 export const RULE_NUMBER = /\d(?:[\d\s]*\d)?/g;

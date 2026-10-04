@@ -3,54 +3,29 @@
  */
 export interface ChartSeries {
   /**
-   * Already-translated name of the entity the curve stands for.
+   * Translated name of the entity the curve stands for.
    */
   readonly label: string;
 
   /**
-   * The curve's color, taken from the validated series palette by the entity's own stable rank.
+   * Curve color, from the series palette by the entity's stable rank.
    */
   readonly color: string;
 
   /**
-   * The curve's values, one per position on the shared axis.
-   *
-   * Leading `null`s are how a shorter series is pushed to the right so every curve ends on the
-   * same abscissa; Chart.js draws nothing for them.
+   * Values per axis position; leading `null`s right-align a shorter series.
    */
   readonly points: readonly (number | null)[];
 
   /**
-   * Shades the area under this curve alone, whatever the chart's own `filled` setting.
+   * Shades this curve's area, overriding the chart's `filled`.
    */
   readonly filled?: boolean;
 
   /**
-   * Draws this curve dashed, so two neighbours of close colour stay apart.
+   * Dashed, so two neighbors of close color stay apart.
    */
   readonly dashed?: boolean;
-}
-
-/**
- * One arc of a half-donut gauge.
- */
-export interface ChartGaugeSegment {
-  /**
-   * The arc's own weight, out of the sum of every segment's weight. Equal across every segment for
-   * a gauge whose slots must all read the same size regardless of what they hold (the food ring's
-   * days); a fill/track pair for a gauge reading a single percentage instead (attractivity).
-   */
-  readonly value: number;
-
-  /**
-   * The arc's fill.
-   */
-  readonly color: string;
-
-  /**
-   * Already-translated label, shown in the arc's own tooltip.
-   */
-  readonly label: string;
 }
 
 /**
@@ -58,7 +33,7 @@ export interface ChartGaugeSegment {
  */
 export interface ChartBar {
   /**
-   * Already-translated category name, shown on the axis.
+   * Translated category name, shown on the axis.
    */
   readonly label: string;
 
@@ -68,27 +43,22 @@ export interface ChartBar {
   readonly value: number;
 
   /**
-   * Already-formatted value written above the bar, when one is drawn.
-   *
-   * Optional, falling back to the chart's value formatter. Supplied wherever the figure is not a bare
-   * count: printing the number itself put an English decimal point on a French page, right beside
-   * tiles spelling the same quantity with a comma.
+   * Formatted value printed above the bar, defaults to the chart's value formatter.
    */
   readonly valueLabel?: string;
 
   /**
-   * Already-translated secondary line for the tooltip, typically the sample the value rests on.
+   * Translated tooltip second line, typically the sample size.
    */
   readonly detail: string;
 
   /**
-   * Whether this bar is the highlighted one, drawn in the "good" state color.
+   * Highlighted bar, drawn in the "good" state color.
    */
   readonly highlighted: boolean;
 
   /**
-   * Whether the bar's sample is too small to be judged, drawn recessive so it cannot be misread as
-   * a result.
+   * Sample too small to judge: drawn recessive so it is not misread as a result.
    */
   readonly muted: boolean;
 }
@@ -103,12 +73,12 @@ export interface ChartTooltipAnchor {
   readonly index: number;
 
   /**
-   * Horizontal position of the mark, in CSS pixels from the canvas' left edge.
+   * Mark x, in CSS pixels from the canvas' left edge.
    */
   readonly x: number;
 
   /**
-   * Vertical position of the mark, in CSS pixels from the canvas' top edge.
+   * Mark y, in CSS pixels from the canvas' top edge.
    */
   readonly y: number;
 
@@ -138,7 +108,7 @@ export interface ChartTooltipPlacement {
   readonly top: number;
 
   /**
-   * CSS transform moving the bubble off the anchor point and away from the mark.
+   * CSS transform moving the bubble off the mark.
    */
   readonly transform: string;
 }

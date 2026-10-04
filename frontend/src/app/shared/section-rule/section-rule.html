@@ -1,8 +1,5 @@
-<!-- One line wherever it fits. On a phone the hairline always runs to the diamond, save beside a
-     caption, the title wrapping rather than pushing them to a line of their own, and both sit on
-     its last line (0.9375rem is half a phone title's line); the right-hand group dissolves into
-     the row so its parts can be laid out apart: the link and the projected content (`wrapSide`)
-     take the next line. -->
+<!-- On a phone the hairline and diamond sit on the title's last line (0.9375rem = half a line);
+     the link and `wrapSide` content take the next line. -->
 <div class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
   <h2
     #title
@@ -37,7 +34,7 @@
         >{{ caption }}</span
       >
     }
-    <!-- Anything richer than a caption a section needs beside its heading, the week's days for one. -->
+    <!-- Richer side content, such as the week's days. -->
     <ng-content />
     @if (link(); as route) {
       <a
@@ -48,7 +45,7 @@
         {{ linkLabel() }}
       </a>
     }
-    <!-- Dropped on a phone when a wrapped caption is all it would close: it would sit alone on a line. -->
+    <!-- Hidden on a phone beside a lone caption, where it would sit alone on a line. -->
     <span
       [class]="
         side() && !link()

@@ -18,9 +18,7 @@ import { ROCKET_PART_COUNT } from '@shared/rocket/rocket-drawing.constants';
 import { PREVIEW_MIN_POPULATION, PREVIEW_POPULATION_STEP } from './tour-base-preview.constants';
 
 /**
- * The overview's base, with two sliders under it: the visitor drags the population and the rocket's
- * stages and watches the city grow and the launcher rise, which says "the base is the score" better
- * than any sentence. The scene is the overview's own drawing; only the sliders are the tour's.
+ * The overview's base scene with population and rocket sliders the visitor drags.
  */
 @Component({
   selector: 'app-tour-base-preview',
@@ -41,20 +39,38 @@ export class TourBasePreview {
   public readonly stagesDone = input.required<number>();
 
   /**
-   * Population a full campaign is expected to reach: the scale of the city and the slider's end.
+   * Population of a full campaign: the city's scale and the slider's end.
    */
   public readonly fullCampaignPopulation = input.required<number>();
 
+  /**
+   * Translation, to format the population in the current language.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * Population at the start of the slider.
+   */
   protected readonly minPopulation = PREVIEW_MIN_POPULATION;
 
+  /**
+   * Population added by one slider notch.
+   */
   protected readonly populationStep = PREVIEW_POPULATION_STEP;
 
+  /**
+   * Rocket stages in total, the end of the rocket slider.
+   */
   protected readonly stageCount = ROCKET_PART_COUNT;
 
+  /**
+   * Population the visitor dragged to, reset when the input changes.
+   */
   protected readonly shownPopulation = linkedSignal(() => this.population());
 
+  /**
+   * Rocket stages the visitor dragged to, reset when the input changes.
+   */
   protected readonly shownStages = linkedSignal(() => this.stagesDone());
 
   /**
@@ -65,18 +81,30 @@ export class TourBasePreview {
       `${((this.shownPopulation() - this.minPopulation) / (this.fullCampaignPopulation() - this.minPopulation)) * 100}%`,
   );
 
+  /**
+   * Filled share of the rocket slider's track, as a CSS length.
+   */
   protected readonly stagesFill = computed(
     () => `${(this.shownStages() / this.stageCount) * 100}%`,
   );
 
+  /**
+   * Formats a population in the current language.
+   */
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());
   }
 
+  /**
+   * Follows the population slider.
+   */
   protected onPopulation(event: Event): void {
     this.shownPopulation.set((event.target as HTMLInputElement).valueAsNumber);
   }
 
+  /**
+   * Follows the rocket slider.
+   */
   protected onStages(event: Event): void {
     this.shownStages.set((event.target as HTMLInputElement).valueAsNumber);
   }

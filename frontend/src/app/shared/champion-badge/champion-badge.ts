@@ -3,10 +3,7 @@ import { Component, input } from '@angular/core';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 
 /**
- * Title tag marking the player who topped the most recently finalized week's ranking.
- *
- * Shown beside the player's name everywhere it appears across the app, paired with
- * `app-avatar`'s own `champion` input drawing a matching gold ring around their portrait.
+ * Title of the last finalized week's winner, paired with the avatar's `champion` ring.
  */
 @Component({
   selector: 'app-champion-badge',
@@ -16,12 +13,12 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
 })
 export class ChampionBadge {
   /**
-   * Icon size: `sm` in dense rows, `md` next to a heading.
+   * `sm` in dense rows, `md` next to a heading.
    */
   public readonly size = input<'sm' | 'md'>('sm');
 
   /**
-   * Whether the badge sits inside a link, passed to the title badge it wraps.
+   * Inside a link, forwarded to the title badge.
    */
   public readonly inLink = input(false);
 }

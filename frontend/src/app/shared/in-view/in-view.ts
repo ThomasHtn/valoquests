@@ -3,12 +3,8 @@ import { DestroyRef, Directive, ElementRef, inject, signal } from '@angular/core
 import { IN_VIEW_ROOT_MARGIN } from './in-view.constants';
 
 /**
- * Holds every CSS animation of its host, and of what the host contains, until the host first
- * scrolls into view (see `.fx-await` in `styles/animations.css`).
- *
- * A gauge filling or a ring closing is the moment a figure is read; played below the fold at page
- * load, it has already finished by the time anyone reaches it. Seen once, the host stays released:
- * scrolling back up does not replay anything.
+ * Holds the host's CSS animations until it first scrolls into view (`.fx-await`), never replayed.
+ * Otherwise gauges below the fold finish before anyone reaches them.
  */
 @Directive({
   selector: '[appInView]',
@@ -16,7 +12,7 @@ import { IN_VIEW_ROOT_MARGIN } from './in-view.constants';
 })
 export class InView {
   /**
-   * Whether the host has been on screen at least once.
+   * Whether the host has been on screen once.
    */
   protected readonly seen = signal(typeof IntersectionObserver === 'undefined');
 

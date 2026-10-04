@@ -1,5 +1,4 @@
-<!-- Scrim behind the drawer. Decorative — the drawer is dismissed from its own close button and
-     from Escape too, so this is a convenience, not the only way out. -->
+<!-- Decorative scrim: the close button and Escape also dismiss the drawer. -->
 <div
   (click)="closeMobileMenu()"
   [class]="drawer().scrim"
@@ -7,14 +6,9 @@
   class="fixed inset-0 z-30 bg-surface-950/70 transition-[opacity,visibility] duration-300 ease-out motion-reduce:transition-none lg:hidden"
 ></div>
 
-<!-- Navigation rail on `lg` and above, drawer sliding in from the left below it. The two
-     presentations share one markup: only the panel's positioning, its padding and the visibility of
-     the rail-only affordances differ, so the nav order and the active-route wiring are written
-     once. -->
+<!-- Rail from `lg` up, drawer below it, sharing one markup. -->
 <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus --
-     Click-to-expand on empty rail space is a mouse-only convenience, same rationale as the drawer's
-     scrim: the dedicated collapse/expand buttons below already give keyboard and AT users the same
-     outcome, so this handler doesn't need to be independently focusable/keyboard-operable. -->
+     Mouse-only shortcut: the expand button covers keyboard users. -->
 <aside
   (click)="onRailClick($event)"
   [attr.aria-label]="'sidebar.label' | translate"
@@ -27,10 +21,7 @@
   <div>
     <div class="mb-7 px-5">
       @if (collapsed()) {
-        <!-- Collapsed rail: the "V" mark doubles as the expand trigger, swapping to a chevron
-             when hovering anywhere over the rail — not just the mark itself — via the `group`
-             on the `<aside>`, so the affordance stays discoverable across the whole collapsed
-             rail rather than only its top corner. Rail only: the drawer is never collapsed. -->
+        <!-- The "V" mark expands the rail; hovering anywhere on the rail reveals the icon. -->
         <div class="hidden justify-center lg:flex">
           <button
             (click)="toggleCollapsed()"
@@ -50,10 +41,7 @@
         </div>
       }
 
-      <!-- The wordmark, with the panel's own dismissal alongside it: the collapse trigger on the
-           rail, the drawer's close on mobile. Rendered through a class rather than an `@else` so
-           the drawer keeps showing it while the rail is collapsed — collapsing is a rail-only
-           affordance and must not leak across the breakpoint. -->
+      <!-- A class, not `@else`, so the drawer keeps the wordmark on a collapsed rail. -->
       <div [class]="rail().brandBlock" class="flex items-start justify-between gap-2">
         <div class="min-w-0 flex-1">
           <div class="font-display text-3xl leading-[0.88] font-bold uppercase">
@@ -83,19 +71,11 @@
       </div>
     </div>
 
-    <!-- Primary navigation. Each link shows a CDK/Material tooltip for its label so the collapsed
-         (icon-only) rail stays usable; the drawer always shows its labels instead. Entries without
-         a routerLink have no page yet and render as inert. Activating one dismisses the drawer,
-         which would otherwise stay open over the page it just navigated to.
-
-         The active entry is marked by a brand bar along its left edge, drawn as a `::before` so the
-         indicator needs no extra element and never affects the entry's own layout. Only its color
-         is bound to the active state; its geometry is static. -->
+    <!-- Tooltips only on the collapsed rail; the active bar is a `::before`. -->
     <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex flex-col gap-5">
       @for (group of navGroups(); track group.labelKey) {
         <div class="flex flex-col">
-          <!-- Chapter caption, replaced by a hairline on the collapsed rail: the icons there have
-               no room for a word, but the break between chapters still reads. -->
+          <!-- Caption, replaced by a hairline on the collapsed rail. -->
           @if (!$first) {
             <span
               [class]="rail().navGroupRule"
@@ -123,10 +103,7 @@
               appTooltipPosition="right"
               appTooltipSize="md"
             >
-              <!-- Per-section pictogram. It distinguishes the entries instead of repeating the same
-               shape, and it is the only thing identifying them on the collapsed rail. Inherits the
-               link's text color and turns brand once active, keyed off `aria-current` which
-               `isNavItemActive` sets, so the active state needs no second source of truth. -->
+              <!-- Active tint keyed off `aria-current`, the single source of truth. -->
               <span
                 aria-hidden="true"
                 class="block h-5 w-5 shrink-0 group-aria-[current=page]:text-brand-500"
@@ -177,15 +154,10 @@
     </nav>
   </div>
 
-  <!-- Footer: last synchronization time and the language switch. Both are needed on a phone too —
-       without them it would have no way to change language and no sign of whether the data on
-       screen is fresh — so the drawer carries the same block as the rail, only with its own
-       padding. -->
+  <!-- Footer: sync status and language switch, on the drawer too. -->
   <div class="flex flex-col gap-6 px-6 pt-6 lg:pt-4">
     @if (adminMode()) {
-      <!-- The way back to the public site, without giving up the session. An operator spends their
-           time checking what their commands did on the pages players see, and the only exit used to
-           be the one that signs them out — so looking was indistinguishable from leaving. -->
+      <!-- Back to the public site while keeping the session. -->
       <a
         (click)="onNavItemActivated()"
         [appTooltip]="'sidebar.admin.viewSite' | translate"
@@ -196,18 +168,14 @@
         appTooltipSize="md"
         class="focus-ring-inset -mx-6 flex min-h-11 cursor-pointer items-center gap-3.5 px-6 py-2 text-start text-sm font-medium text-text-secondary transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
       >
-        <!-- The overview's own pictogram, already on the rail: the link goes exactly there, and
-             a glyph imported for this one row would have cost the initial bundle for nothing. -->
+        <!-- Reuses the overview icon rather than importing a new glyph. -->
         <svg aria-hidden="true" class="block h-5 w-5 shrink-0" lucideLayoutDashboard></svg>
         <span [class]="rail().navLabel" class="tracking-label font-display uppercase">
           {{ 'sidebar.admin.viewSite' | translate }}
         </span>
       </a>
 
-      <!-- The only way out of the backoffice. Nothing in the application links into it, so nothing
-           would link out of it either: without this control, leaving would mean typing a URL.
-           Styled in danger tones like every other control that discards state, and sitting above
-           the divider so it reads as part of the navigation rather than of the footer's status. -->
+      <!-- The only way out of the backoffice, in danger tones since it discards the session. -->
       <button
         (click)="signOutOfAdmin()"
         [appTooltip]="'sidebar.admin.signOut' | translate"
@@ -226,20 +194,17 @@
     }
 
     @if (!collapsed()) {
-      <!-- Hairline fading out at both ends, the direction's divider, rather than a full-width
-           border: it separates the footer from the nav without closing the panel off. -->
+      <!-- Divider fading at both ends. -->
       <span
         aria-hidden="true"
         class="block h-px bg-linear-to-r from-transparent via-brand-500/50 to-transparent"
       ></span>
     }
 
-    <!-- Sync status and language switcher share one row: a left/right pair everywhere, collapsing
-         to a centered stack only on the icon-only rail, too narrow to hold both side by side. -->
+    <!-- One row, stacked only on the collapsed rail. -->
     <div [class]="rail().footerContent" class="flex items-center justify-between gap-3">
       <div [class]="rail().syncBlock" class="min-w-0">
-        <!-- The explanation hangs off the label and the time, not the whole block: the status dot
-             between them carries its own tooltip and nested hosts would open both bubbles. -->
+        <!-- Tooltips on label and time, not the block: nesting with the dot's would open both. -->
         <p
           [appTooltip]="'sidebar.lastSync.tooltip' | translate"
           appTooltipPosition="above"
@@ -269,10 +234,7 @@
         </p>
       </div>
 
-      <!-- Language switcher: a discreet icon+code trigger opening a panel above it, rather than a
-           segmented pair, so the footer row stays as compact as the mockup calls for. The panel
-           stays in the DOM and is hidden with the `hidden` attribute when closed, so
-           `aria-controls` always resolves to a real element. -->
+      <!-- Panel hidden, not removed, so `aria-controls` always resolves. -->
       <div #languageMenu class="relative shrink-0">
         <button
           (click)="toggleLanguageMenu()"

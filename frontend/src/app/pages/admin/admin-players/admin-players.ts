@@ -10,45 +10,31 @@ import {
   LucideTriangleAlert,
 } from '@lucide/angular';
 
-import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
+import { AdminActionState } from '@core/admin/commands/admin-action.model';
+import { IDLE_ACTION } from '@core/admin/commands/admin-action.constants';
 import { AdminApi } from '@core/admin/admin-api';
-import { AdminCommandRunner } from '@core/admin/admin-command-runner';
-import { AdminPlayer, AdminPlayerStatus } from '@core/admin/admin.model';
+import { AdminCommandRunner } from '@core/admin/commands/admin-command-runner';
+import { AdminPlayer, AdminPlayerStatus } from '@core/admin/players/admin-player.model';
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
 import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
-import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { PageHeader } from '@layout/page-header/page-header';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionLabel } from '@shared/section-label/section-label';
-import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
+import { SKELETON_ROWS } from '@shared/resource-state/resource-state-skeleton.constants';
 import { StatusBadge } from '@shared/status-badge/status-badge';
 import { StatusBadgeTone } from '@shared/status-badge/status-badge.model';
 import { PlayerFormPanel } from './player-form-panel/player-form-panel';
 import { PlayerFormResult } from './player-form-panel/player-form-panel.model';
 
 /**
- * Backoffice roster screen.
- *
- * Adds, edits, activates, deactivates and removes tracked players. Removing is the one operation
- * whose result the screen cannot predict: a player that took part in the campaign is archived
- * instead of deleted, so that finalized weeks crediting it with a boss kill stay readable. The
- * table says which fate awaits each player before the operator asks, and the confirmation says
- * which one actually happened.
- *
- * It is also where the campaign's roster is kept honest, which is a real part of playing rather than
- * housekeeping: the roster size drives the turnout denominator, the opening housing and both sides
- * of the weekly fight at once, so an account left active and away widens the town without feeding
- * it. Two lines carry that here — a warning on any active player who has not played in a fortnight,
- * and a notice saying that editing the roster only takes effect on the next run, since the current
- * one froze its size when it opened.
- *
- * It opens on the three steps that turn a fresh install into a live tracker, since this is the first
- * backoffice screen a manager lands on and nothing else in the product ever said how to start.
+ * Backoffice roster: add, edit, (de)activate and remove players.
+ * Removal archives a player who took part in the campaign, so finalized weeks stay readable.
  */
 @Component({
   selector: 'app-admin-players',
@@ -75,47 +61,42 @@ import { PlayerFormResult } from './player-form-panel/player-form-panel.model';
 })
 export class AdminPlayers {
   /**
-   * Data-access service backing the campaign, read for the size the live one froze its roster at.
+   * Campaign, read for the roster size the live run froze.
    */
   private readonly campaignApi = inject(CampaignApi);
 
   /**
-   * Data-access service backing the roster resource and every command.
+   * Backoffice API, for the roster and its commands.
    */
   private readonly adminApi = inject(AdminApi);
 
   /**
-   * i18n service used to resolve outcome messages built outside templates.
+   * Translation, for notices, timestamps and feedback messages.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Runs each roster command below and reports its running/done/error outcome.
+   * Runs each roster command, tracking its state and reporting the outcome.
    */
   private readonly commandRunner = inject(AdminCommandRunner);
 
   /**
-   * Resource holding every player, archived ones included.
+   * Every player, archived ones included.
    */
   protected readonly playersResource = this.adminApi.players;
 
   /**
-   * Placeholder line widths of the loading skeleton.
+   * Placeholder widths of the loading skeleton.
    */
   protected readonly skeletonRows = SKELETON_ROWS;
 
   /**
-   * Every player, ordered as the backend returns them.
+   * Players in backend order.
    */
   protected readonly players = computed(() => resourceValue(this.playersResource, []));
 
   /**
-   * What the run in progress froze its roster at, and the reminder that the backend refuses any
-   * status change on it until the run ends.
-   *
-   * Empty while the campaign has not resolved, or between two campaigns: this screen must keep
-   * working when the campaign endpoint does not, since the roster is what an operator comes here to
-   * repair.
+   * Frozen roster notice of the live run, empty otherwise (the page must work without it).
    */
   protected readonly frozenRosterLabel = computed<string>(() => {
     const campaign = resourceValue(this.campaignApi.campaign, null) ?? null;
@@ -130,33 +111,32 @@ export class AdminPlayers {
   });
 
   /**
-   * Player currently being edited, or `null` when the form is adding a new one.
+   * Edited player, `null` when adding.
    */
   protected readonly editedPlayer = signal<AdminPlayer | null>(null);
 
   /**
-   * Whether the roster form panel is on screen.
+   * Whether the form panel is open.
    */
   protected readonly formOpen = signal(false);
 
   /**
-   * State of the last roster command, reported above the table.
+   * State of the last roster command.
    */
   protected readonly commandState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
-   * Player the removal dialog is asking about, or `null` when it is closed.
+   * Player the removal dialog is about, `null` while closed.
    */
   protected readonly playerPendingRemoval = signal<AdminPlayer | null>(null);
 
   /**
-   * Whether a command is currently running, which locks the form and the dialog.
+   * Whether a command is running, which locks the form and dialog.
    */
   protected readonly busy = signal(false);
 
   /**
-   * Already-translated body of the removal dialog, which states which of the two outcomes the
-   * confirmation will produce.
+   * Removal dialog body, stating whether the player is archived or deleted.
    */
   protected readonly removalBody = computed(() => {
     const player = this.playerPendingRemoval();
@@ -173,25 +153,14 @@ export class AdminPlayers {
   });
 
   /**
-   * Tone `app-status-badge` renders a roster status with: the brand tint for a player still being
-   * tracked, neutral for one paused, danger for one archived out of the roster.
-   *
-   * @param status - The status to map.
-   * @returns The badge tone for that status.
+   * Badge tone of a roster status.
    */
   protected statusTone(status: AdminPlayerStatus): StatusBadgeTone {
     return status === 'ACTIVE' ? 'brand' : status === 'INACTIVE' ? 'neutral' : 'danger';
   }
 
   /**
-   * Formats a player's last successful synchronization.
-   *
-   * Tests the value for emptiness rather than for `null`: the backend leaves null properties out
-   * of its payloads entirely, so a player that was never synchronized arrives with the field
-   * missing, and a `=== null` check would hand `undefined` to the formatter and render `NaN`.
-   *
-   * @param instant - The ISO-8601 instant, absent when never synchronized.
-   * @returns The formatted timestamp, or the translated "never" label.
+   * Last successful sync, or "never"; tested for emptiness since the backend omits null fields.
    */
   protected formatLastSync(instant: string | null): string {
     return instant
@@ -208,9 +177,7 @@ export class AdminPlayers {
   }
 
   /**
-   * Opens the panel on an existing player.
-   *
-   * @param player - The player to edit.
+   * Opens the panel on `player`.
    */
   protected startEditing(player: AdminPlayer): void {
     this.editedPlayer.set(player);
@@ -226,12 +193,7 @@ export class AdminPlayers {
   }
 
   /**
-   * Creates or updates the player the panel submitted.
-   *
-   * The display name is not exposed there, so it is carried over unchanged from the edited player,
-   * or defaulted to the Riot name on creation.
-   *
-   * @param result - The identity the panel submitted.
+   * Creates or updates the player; the display name is kept, or defaults to the Riot name.
    */
   protected async savePlayer(result: PlayerFormResult): Promise<void> {
     if (this.busy()) {
@@ -269,10 +231,7 @@ export class AdminPlayers {
   }
 
   /**
-   * Moves a player to another lifecycle status, which is also how an archived one is restored.
-   *
-   * @param player - The player to move.
-   * @param status - The status to apply.
+   * Changes a player's status, which also restores an archived one.
    */
   protected async changeStatus(player: AdminPlayer, status: AdminPlayerStatus): Promise<void> {
     await this.commandRunner.run(() => this.adminApi.changePlayerStatus(player.id, status), {
@@ -283,23 +242,21 @@ export class AdminPlayers {
   }
 
   /**
-   * Opens the removal dialog for a player.
-   *
-   * @param player - The player to remove.
+   * Opens the removal dialog for `player`.
    */
   protected askForRemoval(player: AdminPlayer): void {
     this.playerPendingRemoval.set(player);
   }
 
   /**
-   * Closes the removal dialog without removing anything.
+   * Closes the removal dialog without removing.
    */
   protected dismissRemoval(): void {
     this.playerPendingRemoval.set(null);
   }
 
   /**
-   * Removes the player the dialog is asking about, and reports what actually happened to it.
+   * Removes the pending player and reports whether it was archived or deleted.
    */
   protected async confirmRemoval(): Promise<void> {
     const player = this.playerPendingRemoval();

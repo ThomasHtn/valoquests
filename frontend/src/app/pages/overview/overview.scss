@@ -1,8 +1,4 @@
-/*
- * Everything under the frieze is one object: a report sheet. No card, no panel, no gauge laid on
- * a background — lines separated by a rule, each opened by its key in the same gutter. What tells
- * one line from another is its key and the colour of its figure, never a frame around it.
- */
+/* Under the frieze, one report sheet: lines split by rules, never framed cards. */
 
 .scene-wash {
   pointer-events: none;
@@ -26,7 +22,7 @@
 
 /* ---------- The ten-week frieze ---------- */
 
-/* Sized on the bar itself, not the viewport: the sidebar takes a varying share of the screen. */
+/* Container query: the sidebar takes a varying share of the viewport. */
 .frieze-bar {
   container-type: inline-size;
 }
@@ -37,7 +33,7 @@
   display: flex;
 }
 
-/* Below 70rem a cell is too narrow for the name: the planet stands over its number. */
+/* Below 70rem the planet stands over its number, without the name. */
 .week {
   position: relative;
   width: 100%;
@@ -49,9 +45,7 @@
   padding: 0.625rem 0.125rem 0.5rem;
 }
 
-/* The ring is the guardian's hit points left, not only the issue: losses are quadratic and without
-   threshold, so a guardian left at 16 % cost almost nothing and one left at 80 % costs a fifth of
-   the base. A bare cross confuses the two. */
+/* Ring shows hit points left, not just the outcome: losses grow quadratically with them. */
 .orb {
   --tone: var(--color-text-muted);
 
@@ -84,7 +78,7 @@
   stroke: rgb(236 232 225 / 9%);
 }
 
-/* `--arc-full` is the whole ring on the `pathLength` scale, where the drain starts from. */
+/* `--arc-full`: the whole ring on the `pathLength` scale, where the drain starts. */
 .orb-arc {
   --arc-full: 100;
 
@@ -123,7 +117,7 @@
   display: none;
 }
 
-/* The level is abbreviated so level and status hold on one line; screen readers hear it in full. */
+/* Abbreviated level keeps one line; screen readers hear it in full. */
 .week-line {
   font-size: 0.8125rem;
   font-weight: 500;
@@ -152,8 +146,7 @@
     display: inline;
   }
 
-  /* The corner icon only where the cell has room for it beside the planet. Qualified so it outranks
-     the hidden default declared further down with the rest of the report's styles. */
+  /* Qualified to outrank the hidden default declared further down. */
   .week--settled .week-report {
     display: block;
   }
@@ -176,8 +169,7 @@
   }
 }
 
-/* A settled week is a button onto its mission report: reset to the cell's own look, then lit on
-   hover with the report's icon in the corner and the planet drawn a little closer. */
+/* A settled week is a button onto its report, reset to the cell's look. */
 button.week {
   margin: 0;
   border: 0;
@@ -225,7 +217,7 @@ button.week {
   }
 }
 
-/* Weeks still ahead: the planet is on the map but not reached, a silhouette without colour. */
+/* Weeks ahead: a colourless silhouette. */
 .week--ahead .orb-art {
   filter: grayscale(1);
   opacity: 0.38;
@@ -235,7 +227,7 @@ button.week {
   --tone: var(--color-brand-500);
 }
 
-/* The guardian is down, its ring empty: the track itself turns amber so the week reads as won. */
+/* Empty ring when won: the track turns amber instead. */
 .week--won .orb-track {
   stroke: rgb(217 149 74 / 45%);
 }
@@ -249,8 +241,7 @@ button.week {
   color: var(--color-brand-400);
 }
 
-/* Muted rather than bright red: on this teal ground, bright red became the loudest cell of the
-   frieze. */
+/* Muted red: bright red was the loudest cell on this teal ground. */
 .week--lost .orb {
   --tone: var(--color-boss-hp-edge);
 }
@@ -259,8 +250,7 @@ button.week {
   color: var(--color-boss-hp-edge);
 }
 
-/* The week being played: a flat gold surface, no frame. Its ring is the guardian's hit points
-   draining, in the same red as the boss gauges. */
+/* Current week: flat gold surface, ring in the boss gauges' red. */
 .week--now {
   background: rgb(217 149 74 / 12%);
 }
@@ -311,10 +301,9 @@ button.week {
   }
 }
 
-/* The orbit is a decoration on a phone: the report beside it is the reading a thumb scrolls to
-   next, and the planet only pushed it further down. */
+/* On a phone the orbit is decoration that pushes the report down. */
 @media (width < 40rem) {
-  /* The slot goes too, or the grid's gap would still open above the report. */
+  /* Hide the slot too, or the grid gap stays above the report. */
   .orbit {
     display: none;
   }
@@ -322,9 +311,7 @@ button.week {
 
 /* ---------- The tabbed panel ---------- */
 
-/* At least one scroll viewport tall, minus the header bar (4rem + its rule) and the paddings under
-   it (main's 6rem, page-body's 1.5rem): a short panel can still scroll its tabs up to the top edge,
-   so switching tabs never clamps the scroll and drags the page down under the reader. */
+/* Viewport minus header and paddings, so tab switches never clamp the scroll. */
 .tab-deck {
   min-height: calc(100dvh - 4rem - 1px - 7.5rem);
 }

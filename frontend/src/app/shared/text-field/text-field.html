@@ -1,6 +1,4 @@
-<!-- The control is associated by being wrapped, which is what the platform asks for and what
-     every call site relies on. The rule below cannot see it: the input arrives through
-     projection, so there is nothing inside this label at compile time to check against. -->
+<!-- The projected input is associated by wrapping, which the lint rule cannot see. -->
 <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -->
 <label class="block">
   <span class="label-caption block text-text-muted">{{ label() }}</span>

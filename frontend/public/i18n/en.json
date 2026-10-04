@@ -465,7 +465,6 @@
     }
   },
   "common": {
-    "columnLegend": "How to read these figures",
     "week": {
       "timeLabel": "Closes in",
       "timeRemaining": "{{days}}d {{hours}}h"

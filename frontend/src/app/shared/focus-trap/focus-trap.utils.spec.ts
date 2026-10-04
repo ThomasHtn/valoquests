@@ -12,7 +12,7 @@ describe('focusableWithin', () => {
       <span tabindex="0" id="d">D</span>
       <span tabindex="-1">E</span>`;
     document.body.append(root);
-    // jsdom lays nothing out, so every element reports no box: stub one for the visible ones.
+    // jsdom has no layout: stub a box for the visible ones.
     for (const element of root.querySelectorAll<HTMLElement>('#a, #d')) {
       element.getClientRects = () => [{}] as unknown as DOMRectList;
     }

@@ -16,9 +16,9 @@ import { Chart, ScriptableContext } from 'chart.js';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { TranslateFn } from '@core/i18n/translation.model';
-import { ConsistencySummary } from '@core/players/player-progression.model';
-import { ChartTooltip } from '@shared/chart/chart-tooltip';
-import { trackChartTooltip } from '@shared/chart/chart-tooltip.utils';
+import { ConsistencySummary } from '@core/players/progression/player-progression.model';
+import { ChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip';
+import { trackChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip.utils';
 import { AXIS_TICK_FONT } from '@shared/chart/chart-theme.constants';
 import {
   axisTitleOptions,
@@ -50,9 +50,7 @@ import {
 } from './consistency.utils';
 
 /**
- * How steady a player's combat score is over the seasons picked at the top of the page: one dot
- * per match, stacked in its score column, with the middle half of the matches between a floor and
- * a ceiling.
+ * Combat score steadiness: one dot per match in its score column, middle half between rules.
  */
 @Component({
   selector: 'app-consistency',
@@ -74,7 +72,7 @@ export class Consistency {
   public readonly consistency = input.required<ConsistencySummary | null>();
 
   /**
-   * i18n service, used for the labels drawn on the canvas.
+   * Translates the labels drawn on the canvas.
    */
   private readonly translation = inject(Translation);
 
@@ -148,8 +146,7 @@ export class Consistency {
   );
 
   /**
-   * Draws the chart once the canvas exists, and again whenever the selection or the language
-   * changes.
+   * Redraws when the canvas, selection or language change.
    */
   constructor() {
     registerChartComponents();
@@ -168,11 +165,7 @@ export class Consistency {
   }
 
   /**
-   * Builds the chart in place of the previous one.
-   *
-   * @param canvas - Canvas to paint on.
-   * @param consistency - Spread to draw.
-   * @param axis - Axis of the chart.
+   * Replaces the chart.
    */
   private draw(
     canvas: HTMLCanvasElement,
@@ -257,10 +250,7 @@ export class Consistency {
   }
 
   /**
-   * Colours each dot: amber inside the floor-to-ceiling zone, a quiet grey outside it.
-   *
-   * @param dots - Dots of the season shown.
-   * @returns One fill per dot.
+   * Dot fills: amber inside the floor-to-ceiling zone, quiet grey outside.
    */
   private dotColors(dots: readonly ConsistencyDot[]): string[] {
     const amber = resolveSeriesColor(0);
@@ -268,10 +258,7 @@ export class Consistency {
   }
 
   /**
-   * Sizes a dot to the room its column and its stack level get, so neighbours never touch.
-   *
-   * @param context - Chart.js scripting context of the dot.
-   * @returns The dot radius, in pixels.
+   * Dot radius in pixels, fitted to its column and level so neighbours never touch.
    */
   private dotRadius(context: ScriptableContext<'line'>): number {
     const { chartArea, scales } = context.chart;
@@ -289,9 +276,7 @@ export class Consistency {
   }
 
   /**
-   * Dictionary lookup bound to the translation service.
-   *
-   * @returns The lookup handed to the pure helpers.
+   * Translation lookup handed to the pure helpers; tracks the language.
    */
   private translator(): TranslateFn {
     this.translation.language();

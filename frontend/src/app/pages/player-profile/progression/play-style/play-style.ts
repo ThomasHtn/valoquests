@@ -2,21 +2,14 @@ import { Component, computed, inject, input } from '@angular/core';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { formatHeadshotPercentage } from '@core/players/player-format.utils';
-import { AimBreakdown } from '@core/players/player-progression.model';
+import { AimBreakdown } from '@core/players/progression/player-progression.model';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { AimZone } from './play-style.model';
 import { MINIMUM_OPACITY } from './play-style.constants';
 
 /**
- * Where a player's shots land, drawn on a range-target dummy.
- *
- * The silhouette is the profile's one loud element and everything around it stays quiet. It is
- * treated as a shooting-range target sheet — corner ticks, hairline callouts, figures set as
- * survey dimensions — because that is the vernacular this measurement actually comes from.
- *
- * One hue, not three. The split between head, body and legs is a magnitude: three separate colors
- * would say these are three unrelated things being compared, when what the reader needs to see is
- * which zone is heaviest. So every zone is the brand amber, and only its strength varies.
+ * Where shots land, drawn on a range-target dummy.
+ * One amber hue at varying strength: the split is a magnitude, not three unrelated things.
  */
 @Component({
   selector: 'app-play-style',
@@ -25,17 +18,17 @@ import { MINIMUM_OPACITY } from './play-style.constants';
 })
 export class PlayStyle {
   /**
-   * Where the player's registered hits landed, as the API returned it.
+   * Hit breakdown from the API.
    */
   public readonly aim = input.required<AimBreakdown>();
 
   /**
-   * i18n service, used to build the figure's accessible description.
+   * Builds the figure's accessible description.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * The three zones, head first, each carrying its share and its drawn strength.
+   * The three zones, head first, with their share and drawn strength.
    */
   protected readonly zones = computed<readonly AimZone[]>(() => {
     const aim = this.aim();
@@ -73,15 +66,12 @@ export class PlayStyle {
   protected readonly legsOpacity = computed(() => this.zones()[2].opacity);
 
   /**
-   * Whether any hit was registered at all.
-   *
-   * With nothing in scope every share is a zero the backend had to send, not a measurement, and
-   * colouring the figure from it would claim the player never aims anywhere.
+   * Whether any hit was registered; without one, colouring the zeros would mislead.
    */
   protected readonly hasSample = computed(() => this.aim().totalShots > 0);
 
   /**
-   * Accessible description of the figure, since a silhouette is one opaque image to a reader.
+   * Accessible description, since the silhouette is one opaque image.
    */
   protected readonly description = computed(() =>
     this.zones()

@@ -1,9 +1,5 @@
 /**
- * One stage of the rocket: half-width and height of the hull, fins, booster height, nose shape,
- * engines, gantry, portholes and marking bands.
- *
- * Ten states, and each guardian defeated adds a real part: the rocket of state ten is not the one
- * of state one scaled up.
+ * One rocket stage; each defeated guardian adds a real part, not a scale-up.
  */
 export interface ShipStage {
   /**

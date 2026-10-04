@@ -1,83 +1,22 @@
+import { CampaignWeek, ExtractionLimiter } from './campaign-week.model';
+
 /**
- * Lifecycle state of a rescue campaign. Mirrors the backend `CampaignStatus` enum.
- *
- * `OPENED` is a campaign waiting for its first Monday; `RUNNING` is the ten weeks being played;
- * `CLOSED` is frozen, whether it went the distance or was stopped early.
+ * Mirrors the backend `CampaignStatus`; `OPENED` awaits its first Monday, `CLOSED` is frozen.
  */
 export type CampaignStatus = 'OPENED' | 'RUNNING' | 'CLOSED';
 
 /**
- * Difficulty a campaign is played at, chosen at opening. Mirrors the backend `CampaignDifficulty`.
- *
- * The single dial: it carries the reference the guardians, the groups of wounded and the challenge
- * rewards are multiples of, and decides which of a challenge's two written grids is played. Nothing
- * is derived from match history any more.
+ * Difficulty chosen at opening, setting the reference and challenge grid; mirrors the backend.
  */
 export type CampaignDifficulty = 'AMATEUR' | 'PRO';
 
 /**
- * The two difficulties, from the one a squad playing regularly is asked to the harder one.
- */
-export const CAMPAIGN_DIFFICULTIES: readonly CampaignDifficulty[] = ['AMATEUR', 'PRO'];
-
-/**
- * Which Monday a campaign is opened on. Mirrors the backend `CampaignStartWeek`.
- *
- * `CURRENT_WEEK` is retroactive: the campaign starts on the Monday of the week in progress, so the
- * days already played count and it is running the moment it is opened.
+ * Start Monday; mirrors the backend. `CURRENT_WEEK` is retroactive, past days count.
  */
 export type CampaignStartWeek = 'CURRENT_WEEK' | 'NEXT_WEEK';
 
 /**
- * The two start weeks, in the order the backoffice offers them.
- */
-export const CAMPAIGN_START_WEEKS: readonly CampaignStartWeek[] = ['CURRENT_WEEK', 'NEXT_WEEK'];
-
-/**
- * Weight class of a week's guardian. Mirrors the backend `GuardianCategory`.
- */
-export type GuardianCategory = 'MINOR' | 'STANDARD' | 'ELITE';
-
-/**
- * What capped Sunday's extraction. Mirrors the backend `ExtractionLimiter`.
- *
- * `NONE` means the whole group came home; `GROUP` means there was nobody left to rescue; the
- * two resources name the stock that ran out first.
- */
-export type ExtractionLimiter = 'NONE' | 'GROUP' | 'FOOD' | 'COMPONENTS';
-
-/**
- * Honorary title handed out on the week's ranking. Mirrors the backend `WeeklyTitle`.
- *
- * Regular for the most days played, Scout for the most validated challenges, Quartermaster for
- * the most food, Mechanic for the most components. Ties award nothing.
- */
-export type WeeklyTitle = 'REGULAR' | 'SCOUT' | 'QUARTERMASTER' | 'MECHANIC';
-
-/**
- * Any title a name can wear: the reigning Champion or one of the four weekly titles.
- */
-export type TitleKey = 'CHAMPION' | WeeklyTitle;
-
-/**
- * The four titles, in award order: the backend hands them out in this sequence.
- */
-export const WEEKLY_TITLES: readonly WeeklyTitle[] = [
-  'REGULAR',
-  'SCOUT',
-  'QUARTERMASTER',
-  'MECHANIC',
-];
-
-/**
- * Number of weeks a campaign lasts. Mirrors the backend `CampaignSchedule.WEEK_COUNT`.
- */
-export const CAMPAIGN_WEEK_COUNT = 10;
-
-/**
- * The base as it stands on the last replayed day.
- *
- * Mirrors the backend `CampaignBaseResponse`.
+ * Base on the last replayed day; mirrors the backend `CampaignBaseResponse`.
  */
 export interface CampaignBase {
   /**
@@ -101,17 +40,17 @@ export interface CampaignBase {
   readonly dailyUpkeep: number;
 
   /**
-   * Food kept back from Sunday's extraction: a week of upkeep, never spent on a rescue.
+   * Food kept from Sunday's extraction: a week of upkeep.
    */
   readonly protectedFood: number;
 
   /**
-   * How many survivors the components in stock could bring home on their own.
+   * Survivors the components in stock alone could bring home.
    */
   readonly rescuesByComponents: number;
 
   /**
-   * How many survivors the spendable food could bring home on its own.
+   * Survivors the spendable food alone could bring home.
    */
   readonly rescuesByFood: number;
 
@@ -131,53 +70,13 @@ export interface CampaignBase {
   readonly foodPerRescue: number;
 
   /**
-   * Share of the base a guardian left standing at zero breakthrough would kill, in percent.
+   * Percent of the base killed by a guardian left at zero breakthrough.
    */
   readonly guardianLossPercent: number;
 }
 
 /**
- * The base at the close of one week, and what the week added to its stocks.
- *
- * Mirrors the backend `CampaignWeekBaseResponse`. For the week in progress the figures stop at
- * the last replayed day.
- */
-export interface CampaignWeekBase {
-  /**
-   * Inhabitants of the base.
-   */
-  readonly population: number;
-
-  /**
-   * Inhabitants gained or lost since the previous week's close.
-   */
-  readonly populationChange: number;
-
-  /**
-   * Food in stock.
-   */
-  readonly foodStock: number;
-
-  /**
-   * Components in stock.
-   */
-  readonly componentsStock: number;
-
-  /**
-   * Food gained.
-   */
-  readonly foodGained: number;
-
-  /**
-   * Components gained.
-   */
-  readonly componentsGained: number;
-}
-
-/**
- * What Sunday would bring home if the week in progress ended on the base as it stands.
- *
- * Mirrors the backend `CampaignForecastResponse`.
+ * Sunday outcome if the week ended now; mirrors the backend `CampaignForecastResponse`.
  */
 export interface CampaignForecast {
   /**
@@ -191,7 +90,7 @@ export interface CampaignForecast {
   readonly woundedCount: number;
 
   /**
-   * Wounded the challenges have already brought home, acquired whatever the guardian does.
+   * Wounded already rescued by challenges, kept whatever the guardian does.
    */
   readonly challengeRescued: number;
 
@@ -217,168 +116,7 @@ export interface CampaignForecast {
 }
 
 /**
- * The match that brought a week's guardian down, as the mission report names it. Scores are
- * `null` for a mode that keeps none.
- */
-export interface FatalBlow {
-  /**
-   * Name of the map.
-   */
-  readonly mapName: string | null;
-
-  /**
-   * Queue of the match, or `null`.
-   */
-  readonly gameMode: string | null;
-
-  /**
-   * Outcome of the match for the operator, or `null`.
-   */
-  readonly result: string | null;
-
-  /**
-   * Rounds won by the player’s team, or `null` for a mode without a round score.
-   */
-  readonly allyScore: number | null;
-
-  /**
-   * Rounds won by the opposing team, or `null` for a mode without a round score.
-   */
-  readonly enemyScore: number | null;
-
-  /**
-   * Agent played.
-   */
-  readonly agentName: string | null;
-}
-
-/**
- * One of the campaign's ten weeks: its planet, its guardian, and how Sunday settled it.
- *
- * Mirrors the backend `CampaignWeekResponse`. The guardian's name and description are only
- * revealed up to the current week; later ones are `null`.
- */
-export interface CampaignWeek {
-  /**
-   * One-based index of the week in the campaign.
-   */
-  readonly weekIndex: number;
-
-  /**
-   * Monday identifying the week, as an ISO-8601 date (`YYYY-MM-DD`).
-   */
-  readonly weekStart: string;
-
-  /**
-   * Name of the planet.
-   */
-  readonly planetName: string;
-
-  /**
-   * Weight class of the guardian.
-   */
-  readonly category: GuardianCategory;
-
-  /**
-   * Name of the guardian, or `null` while still hidden.
-   */
-  readonly guardianName: string | null;
-
-  /**
-   * Description of the guardian, or `null` while still hidden.
-   */
-  readonly guardianDescription: string | null;
-
-  /**
-   * Hit points the guardian started the week with.
-   */
-  readonly guardianHitPoints: number;
-
-  /**
-   * Raw in-game damage dealt.
-   */
-  readonly damageDealt: number;
-
-  /**
-   * Damage dealt each replayed day of the week, Monday first; shorter while the week is played.
-   */
-  readonly dailyDamage: readonly number[];
-
-  /**
-   * Damage dealt over hit points, capped at 100.
-   */
-  readonly progressPercent: number;
-
-  /**
-   * Whether the guardian was defeated.
-   */
-  readonly defeated: boolean;
-
-  /**
-   * Instant of the match that dealt the finishing blow, or `null` while the guardian stands.
-   */
-  readonly defeatedAt: string | null;
-
-  /**
-   * Player who dealt the fatal blow, or `null` when the guardian stands.
-   */
-  readonly defeatedByPlayerId: number | null;
-
-  /**
-   * The match that dealt the finishing blow, or `null` while the guardian stands.
-   */
-  readonly fatalBlow: FatalBlow | null;
-
-  /**
-   * Survivors stranded on the planet, the most the week can bring home.
-   */
-  readonly woundedCount: number;
-
-  /**
-   * Wounded rescued through validated challenges.
-   */
-  readonly challengeRescued: number;
-
-  /**
-   * Wounded rescued by the Sunday extraction.
-   */
-  readonly extractionRescued: number;
-
-  /**
-   * Food the extraction consumed.
-   */
-  readonly foodSpent: number;
-
-  /**
-   * Components the extraction consumed.
-   */
-  readonly componentsSpent: number;
-
-  /**
-   * What capped the extraction, once settled.
-   */
-  readonly limiter: ExtractionLimiter;
-
-  /**
-   * Inhabitants lost to a guardian left standing.
-   */
-  readonly baseLoss: number;
-
-  /**
-   * Whether the week’s Sunday has been settled.
-   */
-  readonly settled: boolean;
-
-  /**
-   * The base at the week's close, `null` before its first replayed day.
-   */
-  readonly base: CampaignWeekBase | null;
-}
-
-/**
- * Running totals over the settled weeks.
- *
- * Mirrors the backend `CampaignTotalsResponse`.
+ * Totals over the settled weeks; mirrors the backend `CampaignTotalsResponse`.
  */
 export interface CampaignTotals {
   /**
@@ -423,14 +161,11 @@ export interface CampaignTotals {
 }
 
 /**
- * The campaign the site shows, as returned by `GET /api/campaign`.
- *
- * Every campaign-scoped field is `null` on a database that never had one; `today` and `weeks`
- * (then empty) are the only fields always set. The status tells which case the page is in.
+ * Campaign of `GET /api/campaign`; without any campaign, only `today` and `weeks` are set.
  */
 export interface Campaign {
   /**
-   * Internal identifier, `null` between two campaigns. What the backoffice deletes by.
+   * Internal identifier, `null` when no campaign exists.
    */
   readonly id: number | null;
 
@@ -498,188 +233,4 @@ export interface Campaign {
    * Campaign totals, or `null` before the first replayed day.
    */
   readonly totals: CampaignTotals | null;
-}
-
-/**
- * What one operator brought in on the day.
- *
- * Mirrors the backend `CampaignPlayerDayResponse`.
- */
-export interface CampaignPlayerDay {
-  /**
-   * Internal identifier of the player.
-   */
-  readonly playerId: number;
-
-  /**
-   * Riot ID game name, before the `#`.
-   */
-  readonly gameName: string;
-
-  /**
-   * Riot ID tag line, after the `#`.
-   */
-  readonly tagLine: string;
-
-  /**
-   * Guardian damage dealt.
-   */
-  readonly damage: number;
-
-  /**
-   * Food.
-   */
-  readonly food: number;
-
-  /**
-   * Components.
-   */
-  readonly components: number;
-
-  /**
-   * Matches played.
-   */
-  readonly matchCount: number;
-
-  /**
-   * Matches priced below their full value by the day's diminishing returns.
-   */
-  readonly reducedMatchCount: number;
-
-  /**
-   * Days of the week played up to this day.
-   */
-  readonly streakDays: number;
-
-  /**
-   * Bonus the streak grants, in percent.
-   */
-  readonly streakBonusPercent: number;
-}
-
-/**
- * The day in progress, as returned by `GET /api/campaign/today`.
- *
- * Empty (zeros, no operator) between campaigns and before the running one starts.
- */
-export interface CampaignToday {
-  /**
-   * The day, as an ISO-8601 date (`YYYY-MM-DD`).
-   */
-  readonly day: string;
-
-  /**
-   * Guardian damage dealt.
-   */
-  readonly damage: number;
-
-  /**
-   * Food.
-   */
-  readonly food: number;
-
-  /**
-   * Components.
-   */
-  readonly components: number;
-
-  /**
-   * Operators who played today, over {@link rosterSize}.
-   */
-  readonly presenceCount: number;
-
-  /**
-   * Players on the roster.
-   */
-  readonly rosterSize: number;
-
-  /**
-   * Food the base eats per day.
-   */
-  readonly dailyUpkeep: number;
-
-  /**
-   * Wounded today's components add to what the ship can carry.
-   */
-  readonly carryGained: number;
-
-  /**
-   * Wounded today's food adds to what the base can settle.
-   */
-  readonly shelterGained: number;
-
-  /**
-   * One line per player, best day first.
-   */
-  readonly players: readonly CampaignPlayerDay[];
-
-  /**
-   * Who holds each of the week's titles so far, by player id. A title nobody holds is absent.
-   */
-  readonly titles: Partial<Record<WeeklyTitle, number>>;
-}
-
-/**
- * One closed campaign and how it ended, as returned by `GET /api/campaign/history`.
- */
-export interface CampaignHistory {
-  /**
-   * Internal identifier.
-   */
-  readonly id: number;
-
-  /**
-   * Ordinal of the campaign, first one being 1.
-   */
-  readonly number: number;
-
-  /**
-   * Difficulty the campaign was played at.
-   */
-  readonly difficulty: CampaignDifficulty;
-
-  /**
-   * Reference figure the squad was calibrated on.
-   */
-  readonly reference: number;
-
-  /**
-   * Players on the roster.
-   */
-  readonly rosterSize: number;
-
-  /**
-   * Monday of the first week, ISO date.
-   */
-  readonly firstWeekStart: string;
-
-  /**
-   * Monday of the last week, ISO date.
-   */
-  readonly lastWeekStart: string;
-
-  /**
-   * Day the campaign was frozen on when stopped early, or `null` when it went the distance.
-   */
-  readonly stoppedOn: string | null;
-
-  /**
-   * Guardians defeated so far.
-   */
-  readonly guardiansDefeated: number;
-
-  /**
-   * Final population of the base: the campaign's score.
-   */
-  readonly population: number;
-
-  /**
-   * Wounded brought home over the campaign.
-   */
-  readonly rescued: number;
-
-  /**
-   * Population at the end of each settled week, in week order.
-   */
-  readonly weeklyPopulation: readonly number[];
 }

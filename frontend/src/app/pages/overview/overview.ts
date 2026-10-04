@@ -11,11 +11,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
 import { LucideFileText, LucideDynamicIcon } from '@lucide/angular';
 import { CampaignApi } from '@core/campaign/campaign-api';
-import { CAMPAIGN_WEEK_COUNT, CampaignWeek } from '@core/campaign/campaign.model';
+import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
+import { CampaignWeek } from '@core/campaign/campaign-week.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
-import { resolveLocale } from '@core/i18n/locale.utils';
+import { resolveLocale } from '@core/i18n/format/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PlayersApi } from '@core/players/players-api';
@@ -25,9 +26,9 @@ import { CountUp } from '@shared/count-up/count-up';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionRule } from '@shared/section-rule/section-rule';
-import { BoardRow } from '../challenges/challenges.model';
-import { formatFigure } from '@core/i18n/number-format.utils';
-import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { BaseScene } from './base-scene/base-scene';
 import { CampaignPanel } from './campaign-panel/campaign-panel';
 import { DayOrders } from './day-orders/day-orders';
@@ -35,53 +36,45 @@ import { ExtractionGauges } from './extraction-gauges/extraction-gauges';
 import { MissionReadings } from './mission-readings/mission-readings';
 import { MissionReport } from './mission-report/mission-report';
 import { OverviewTabs } from './overview-tabs/overview-tabs';
+import { Capacity } from './extraction-gauges/extraction-gauges.model';
+import { Contribution, Mission, SundayStakes } from './mission-readings/mission-readings.model';
+import { DayTally } from './day-orders/day-orders.model';
+import { FriezeWeek } from './overview.model';
+import { MissionReport as MissionReportView } from './mission-report/mission-report.model';
+import { OverviewTab, OverviewTabKey } from './overview-tabs/overview-tabs.model';
+import { SquadRow } from './squad-sheet/squad-sheet.model';
+import { buildCapacity } from './extraction-gauges/extraction-gauges.utils';
 import {
-  Capacity,
-  Contribution,
-  DayTally,
-  FriezeWeek,
-  Mission,
-  MissionReport as MissionReportView,
-  OverviewTab,
-  OverviewTabKey,
-  SquadRow,
-  SundayStakes,
-} from './overview.model';
-import {
-  buildCapacity,
   buildContribution,
   buildSundayStakes,
-  buildDailyRow,
-  buildFrieze,
   buildMission,
+} from './mission-readings/mission-readings.utils';
+import { buildDailyRow, buildTally } from './day-orders/day-orders.utils';
+import { buildFrieze } from './overview.utils';
+import {
   buildMissionReport,
-  buildSquad,
+  readSeenReport,
+  writeSeenReport,
+} from './mission-report/mission-report.utils';
+import { buildSquad } from './squad-sheet/squad-sheet.utils';
+import {
   buildTabs,
-  buildTally,
-} from './overview.utils';
+  parseOverviewTab,
+  readFavoriteTab,
+  writeFavoriteTab,
+} from './overview-tabs/overview-tabs.utils';
 import { PlanetFigure } from './planet-figure/planet-figure';
-import { ScanWires } from './scan-wires';
+import { ScanWires } from './scan-wires/scan-wires';
 import { SquadMatches } from './squad-matches/squad-matches';
 import { SquadSheet } from './squad-sheet/squad-sheet';
 import { GuardianFall } from './mission-readings/fall-forecast/fall-forecast.model';
 import { buildGuardianFall } from './mission-readings/fall-forecast/fall-forecast.utils';
 import { FULL_CAMPAIGN_POPULATION, OVERVIEW_TAB_PARAM } from './overview.constants';
-import {
-  parseOverviewTab,
-  readFavoriteTab,
-  readSeenReport,
-  writeFavoriteTab,
-  writeSeenReport,
-} from './overview.utils';
-import { readSeenPopulation } from './base-scene/seen-population.utils';
+import { readSeenPopulation } from './base-scene/base-scene.utils';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
- * The state of the campaign, at a glance: the base and its rocket, the ten weeks, the mission of
- * the week, the orders of the day and what each operator brought in today.
- *
- * A screen of states, never of advice: each figure is doubled by what it pays for in people, and
- * the rule of Sunday's settlement belongs to the rules page.
+ * Campaign at a glance: base, frieze, mission, day orders and squad. States, never advice.
  */
 @Component({
   selector: 'app-overview',
@@ -114,38 +107,73 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 })
 export class Overview {
   /**
-   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   * Icon of each concept, for the template's `svg[lucideIcon]`.
    */
   protected readonly concepts = CONCEPT_ICONS;
 
+  /**
+   * Population of a full skyline, the scale the base scene grows on.
+   */
   protected readonly fullCampaignPopulation = FULL_CAMPAIGN_POPULATION;
 
+  /**
+   * Campaign source, for the campaign and today's haul.
+   */
   private readonly campaignApi = inject(CampaignApi);
 
+  /**
+   * Challenge source, for the daily challenge card.
+   */
   private readonly challengesApi = inject(ChallengesApi);
 
+  /**
+   * Ranking source, for the squad's contribution, standings and report honours.
+   */
   private readonly rankingApi = inject(RankingApi);
 
+  /**
+   * Player source, to name and portray operators.
+   */
   private readonly playersApi = inject(PlayersApi);
 
+  /**
+   * Translation service, for labels built in code and figure formatting.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * Campaign with its weeks, base and forecast, the page's backbone.
+   */
   protected readonly campaignResource = this.campaignApi.campaign;
 
+  /**
+   * Today's haul, operator by operator.
+   */
   protected readonly todayResource = this.campaignApi.today;
 
+  /**
+   * Week's challenges, the source of the daily card.
+   */
   protected readonly challengesResource = this.challengesApi.current;
 
+  /**
+   * Weekly ranking, the source of the squad's contribution.
+   */
   protected readonly rankingResource = this.rankingApi.current;
 
+  /**
+   * Today's ranking, the source of the squad sheet.
+   */
   protected readonly dailyResource = this.rankingApi.daily;
 
   /**
-   * The frozen weeks, for the report's titles and ranking. Never awaited: the report reads what
-   * it finds.
+   * Frozen weeks for the report's titles and ranking; never awaited.
    */
   private readonly historyResource = this.rankingApi.history;
 
+  /**
+   * Whether any awaited resource is still loading.
+   */
   protected readonly isLoading = anyLoading(
     this.campaignResource,
     this.todayResource,
@@ -154,6 +182,9 @@ export class Overview {
     this.dailyResource,
   );
 
+  /**
+   * Whether any awaited resource failed, to offer a retry.
+   */
   protected readonly isError = anyError(
     this.campaignResource,
     this.todayResource,
@@ -162,10 +193,13 @@ export class Overview {
     this.dailyResource,
   );
 
+  /**
+   * Campaign, `null` while loading, on error or before the first one.
+   */
   protected readonly campaign = computed(() => resourceValue(this.campaignResource, null) ?? null);
 
   /**
-   * The week in progress, or `null` outside a running campaign's ten weeks.
+   * Week in progress, `null` outside a running campaign's ten weeks.
    */
   protected readonly currentWeek = computed<CampaignWeek | null>(() => {
     const campaign = this.campaign();
@@ -176,33 +210,45 @@ export class Overview {
   });
 
   /**
-   * Whether the page can show a mission: a running campaign, inside its weeks, with a forecast.
+   * Whether a mission can show: running campaign, inside its weeks, with a forecast.
    */
   protected readonly isRunning = computed(
     () => this.currentWeek() !== null && this.campaign()?.forecast !== null,
   );
 
+  /**
+   * Base inhabitants, `0` before a base exists.
+   */
   protected readonly population = computed(() => this.campaign()?.base?.population ?? 0);
 
   /**
-   * The population this browser last saw, read before the scene records today's.
+   * Population this browser last saw, read before the scene records today's.
    */
   private readonly seenPopulation = readSeenPopulation();
 
   /**
-   * Inhabitants gained or lost since the reader's last visit, `0` on a first visit or none.
+   * Inhabitants gained or lost since the last visit, `0` on a first visit.
    */
   protected readonly sinceLastVisit = computed(() => {
     const population = this.population();
     return this.seenPopulation === null || population === 0 ? 0 : population - this.seenPopulation;
   });
 
+  /**
+   * Inhabitants gained or lost over the last replayed day.
+   */
   protected readonly populationChange = computed(
     () => this.campaign()?.base?.populationChange ?? 0,
   );
 
+  /**
+   * Guardians defeated, one rocket stage each on the scene.
+   */
   protected readonly stagesDone = computed(() => this.campaign()?.totals?.guardiansDefeated ?? 0);
 
+  /**
+   * Accessible description of the base scene.
+   */
   protected readonly sceneLabel = computed(() =>
     this.translation.translate('overview.scene.aria', {
       population: this.format(this.population()),
@@ -211,10 +257,16 @@ export class Overview {
     }),
   );
 
+  /**
+   * Ten-planet frieze, one cell per campaign week.
+   */
   protected readonly frieze = computed<readonly FriezeWeek[]>(() =>
     buildFrieze(this.campaign(), (key, params) => this.translation.translate(key, params)),
   );
 
+  /**
+   * Week in progress as the mission block shows it, `null` outside one.
+   */
   protected readonly mission = computed<Mission | null>(() =>
     buildMission(
       this.campaign(),
@@ -230,19 +282,19 @@ export class Overview {
   protected readonly reportOpen = signal(false);
 
   /**
-   * The settled week the report shows: `null` for the last one, or a week picked on the frieze.
+   * Settled week the report shows, `null` for the last one.
    */
   private readonly reportWeek = signal<number | null>(null);
 
   /**
-   * The last settled week, told as the Monday report; `null` before the first Sunday.
+   * Last settled week's Monday report, `null` before the first Sunday.
    */
   protected readonly missionReport = computed<MissionReportView | null>(() =>
     this.buildReport(null),
   );
 
   /**
-   * The report on screen: the last settled week's, or the one picked on the frieze.
+   * Report on screen: the last one or the week picked on the frieze.
    */
   protected readonly shownReport = computed<MissionReportView | null>(() => {
     const week = this.reportWeek();
@@ -250,10 +302,13 @@ export class Overview {
   });
 
   /**
-   * What had focus when the report opened, to hand it back on close.
+   * Element focused when the report opened, refocused on close.
    */
   private reportOpener: HTMLElement | null = null;
 
+  /**
+   * Sunday's extraction dials, `null` outside a week in progress.
+   */
   protected readonly capacity = computed<Capacity | null>(() =>
     buildCapacity(this.campaign(), this.currentWeek()),
   );
@@ -266,19 +321,22 @@ export class Overview {
   );
 
   /**
-   * The guardian's descent over the week and its projected fall, read when the campaign is.
+   * Guardian's descent over the week and its projected fall.
    */
   protected readonly fall = computed<GuardianFall | null>(() =>
     buildGuardianFall(this.currentWeek(), Date.now()),
   );
 
   /**
-   * What the squad has put into the week, one segment per operator.
+   * Squad's input into the week, one segment per operator.
    */
   protected readonly contribution = computed<Contribution | null>(() =>
     buildContribution(resourceValue(this.rankingResource, null) ?? null, this.currentWeek()),
   );
 
+  /**
+   * Daily challenge card, `null` when none was drawn.
+   */
   protected readonly dailyRow = computed<BoardRow | null>(() => {
     const locale = resolveLocale(this.translation.language());
     return buildDailyRow(
@@ -291,6 +349,9 @@ export class Overview {
     );
   });
 
+  /**
+   * Day's haul, `null` outside a week in progress.
+   */
   protected readonly tally = computed<DayTally | null>(() =>
     buildTally(
       resourceValue(this.todayResource, null) ?? null,
@@ -300,6 +361,9 @@ export class Overview {
     ),
   );
 
+  /**
+   * Squad sheet rows, with last week's winner flagged.
+   */
   protected readonly squad = computed<readonly SquadRow[]>(() =>
     buildSquad(
       resourceValue(this.dailyResource, null) ?? null,
@@ -309,16 +373,22 @@ export class Overview {
   );
 
   /**
-   * The tab the reader pinned to open the page on, or `null` for the first one.
+   * Router, to keep the selected tab in the URL.
    */
   private readonly router = inject(Router);
 
+  /**
+   * Current route, to read and merge the tab query parameter.
+   */
   private readonly route = inject(ActivatedRoute);
 
+  /**
+   * Tab the reader pinned to open the page on, `null` for the default.
+   */
   protected readonly favoriteTab = signal<OverviewTabKey | null>(readFavoriteTab());
 
   /**
-   * The tab whose panel is on screen under the mission.
+   * Tab whose panel shows under the mission.
    */
   protected readonly selectedTab = signal<OverviewTabKey>(
     parseOverviewTab(this.route.snapshot.queryParamMap.get(OVERVIEW_TAB_PARAM)) ??
@@ -326,21 +396,22 @@ export class Overview {
       'challenges',
   );
 
+  /**
+   * Tab bar entries, the pinned one leading.
+   */
   protected readonly tabs = computed<readonly OverviewTab[]>(() =>
     buildTabs((key, params) => this.translation.translate(key, params), this.favoriteTab()),
   );
 
+  /**
+   * Players on the roster, the squad sheet's denominator.
+   */
   protected readonly rosterCount = computed(
     () => resourceValue(this.dailyResource, null)?.rosterPlayerCount ?? 0,
   );
 
-  protected readonly playerCount = computed(
-    () => resourceValue(this.dailyResource, null)?.ranking.length ?? 0,
-  );
-
   /**
-   * Whether a base exists to be counted: only a running or closed campaign has one. Before that,
-   * the scene stays but the figure is hidden rather than reading a population of zero.
+   * Whether a base exists (running or closed campaign); otherwise the figure hides, not a zero.
    */
   protected readonly hasBase = computed(() => {
     const key = this.stateKey();
@@ -348,7 +419,7 @@ export class Overview {
   });
 
   /**
-   * What the empty state says when there is no mission to show.
+   * Empty state key when there is no mission to show.
    */
   protected readonly stateKey = computed(() => {
     const campaign = this.campaign();
@@ -362,7 +433,7 @@ export class Overview {
   });
 
   /**
-   * The empty state, by campaign state: what the squad waits on, and that the ranking already runs.
+   * Empty state by campaign state.
    */
   protected readonly emptyPlate = computed<EmptyPlate>(() => {
     const key = this.stateKey();
@@ -383,8 +454,7 @@ export class Overview {
   });
 
   constructor() {
-    // The open tab rides in the address, so a link or a step back reopens it; replacing the entry
-    // keeps tab switches off the back button.
+    // Tab in the URL so links reopen it; `replaceUrl` keeps switches off the back button.
     effect(() => {
       const tab = this.selectedTab();
       untracked(() =>
@@ -397,8 +467,7 @@ export class Overview {
       );
     });
 
-    // The report opens on its own once per settled week, the first time the page is opened after
-    // Sunday; the context bar's button brings it back afterwards.
+    // Auto-opens once per settled week; the context bar's button reopens it.
     effect(() => {
       const report = this.missionReport();
       if (report && readSeenReport() !== report.weekStart) {
@@ -407,6 +476,9 @@ export class Overview {
     });
   }
 
+  /**
+   * Reloads every awaited resource after a failure.
+   */
   protected retry(): void {
     reloadAll(
       this.campaignResource,
@@ -417,21 +489,23 @@ export class Overview {
     );
   }
 
+  /**
+   * Formats an amount in the active language.
+   */
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());
   }
 
+  /**
+   * Formats a gain or loss with its sign, a true minus for losses.
+   */
   protected signed(amount: number): string {
     const sign = amount > 0 ? '+' : amount < 0 ? '−' : '';
     return `${sign}${this.format(Math.abs(amount))}`;
   }
 
-  protected percent(fraction: number): number {
-    return Math.round(fraction * 100);
-  }
-
   /**
-   * Opens a settled week's report: the last one from the context bar, any one from the frieze.
+   * Opens a settled week's report, the last one when `weekIndex` is `null`.
    */
   protected openReport(weekIndex: number | null = null): void {
     this.reportOpener =
@@ -441,7 +515,7 @@ export class Overview {
   }
 
   /**
-   * Closes the report. Only the last week's counts as seen: an older one read again changes nothing.
+   * Closes the report; only the last week's counts as seen.
    */
   protected closeReport(): void {
     const report = this.missionReport();
@@ -453,11 +527,17 @@ export class Overview {
     this.reportOpener = null;
   }
 
+  /**
+   * Pins the tab the page opens on and remembers it in this browser.
+   */
   protected pinTab(key: OverviewTabKey | null): void {
     this.favoriteTab.set(key);
     writeFavoriteTab(key);
   }
 
+  /**
+   * Builds a settled week's report, the last one when `weekIndex` is `null`.
+   */
   private buildReport(weekIndex: number | null): MissionReportView | null {
     return buildMissionReport(
       this.campaign(),

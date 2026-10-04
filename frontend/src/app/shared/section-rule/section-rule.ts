@@ -12,11 +12,7 @@ import { RouterLink } from '@angular/router';
 import { fitToLines } from './section-rule.utils';
 
 /**
- * Heading of a page section: the title, a fading rule, an optional link to the page that owns
- * the subject in full, and the diamond that closes the line.
- *
- * Declared once so the sections of a screen read as one document rather than as a stack of
- * blocks each with its own idea of a title.
+ * Section heading: title, fading rule, optional link and closing diamond.
  */
 @Component({
   selector: 'app-section-rule',
@@ -31,12 +27,12 @@ export class SectionRule {
   public readonly heading = input.required<string>();
 
   /**
-   * Id the title carries, so the section can be labelled by it.
+   * Title `id`, so the section can be labelled by it.
    */
   public readonly headingId = input.required<string>();
 
   /**
-   * Label of the link on the right, omitted when there is nowhere to go.
+   * Label of the right-hand link.
    */
   public readonly linkLabel = input('');
 
@@ -46,38 +42,37 @@ export class SectionRule {
   public readonly link = input<string | null>(null);
 
   /**
-   * Fragment of the linked page to land on, a section of the rules for one.
+   * Fragment of the linked page to land on.
    */
   public readonly linkFragment = input<string | undefined>(undefined);
 
   /**
-   * Caption on the right, for a section whose heading needs a count beside it.
+   * Caption on the right, such as a count.
    */
   public readonly side = input('');
 
   /**
-   * Whether, on a phone, the projected content drops to a line of its own under the heading while
-   * the hairline stays between the heading and the diamond. The projected element takes that line
-   * itself (`order` and a full `flex-basis` below `sm`).
+   * Whether projected content takes its own line on a phone (it sets its own `order`/basis).
    */
   public readonly wrapSide = input(false);
 
   /**
-   * Whether the hairline stays on a phone: only a caption, which keeps the title's line, needs its
-   * room.
+   * Whether the hairline stays on a phone; a caption needs its room.
    */
   protected readonly keepsLine = computed(() => this.wrapSide() || !this.side());
 
   /**
-   * Whether, on a phone, the right-hand group dissolves into the row so the link or the projected
-   * content can take a line of their own.
+   * Whether the right-hand group dissolves on a phone so its parts can wrap apart.
    */
   protected readonly dissolves = computed(() => this.wrapSide() || !!this.link());
 
+  /**
+   * Heading element, narrowed to its widest wrapped line.
+   */
   private readonly title = viewChild.required<ElementRef<HTMLHeadingElement>>('title');
 
   constructor() {
-    // A title wrapped on a phone hugs its text, so the hairline starts where the words end.
+    // A wrapped title hugs its text so the hairline starts where the words end.
     afterRenderEffect((onCleanup) => {
       this.heading();
       const title = this.title().nativeElement;

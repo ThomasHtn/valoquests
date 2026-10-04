@@ -14,9 +14,7 @@
   height: 100%;
 }
 
-/* `--base` is the one measure the plinths are built from: 3rd stands exactly that tall, 2nd and
-   1st scale off it. It tracks the viewport so the block fills the screen it is on, with a floor
-   and a ceiling so it reads as a podium on every display. */
+/* `--base` is the 3rd plinth height, the others scale off it. */
 .plinths {
   --base: clamp(4rem, 6vh, 5rem);
 
@@ -54,7 +52,6 @@
   align-items: stretch;
 }
 
-/* Ties stand side by side on one plinth, wrapping when the column runs out. */
 .holders {
   display: flex;
   flex-wrap: wrap;

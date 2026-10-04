@@ -11,14 +11,13 @@ import {
 import { Translation } from '@core/i18n/translation';
 import { MatchesApi } from '@core/matches/matches-api';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
-import { HistoryMatch, MatchDay } from '../../player-profile/match-day.model';
-import { groupMatchesByDay } from '../../player-profile/match-day.utils';
-import { MatchHistory } from '../../player-profile/match-history/match-history';
+import { HistoryMatch, MatchDay } from '@core/matches/day/match-day.model';
+import { groupMatchesByDay } from '@core/matches/day/match-day.utils';
+import { MatchHistory } from '@shared/match-history/match-history';
 import { toHistoryMatch } from './squad-matches.utils';
 
 /**
- * The overview's matches tab: the day's matches of the campaign roster, newest first, drawn like a
- * profile's history with each row led by its player. Loaded a page at a time as the reader scrolls.
+ * Matches tab: the roster's matches of the day, newest first, paged on scroll.
  */
 @Component({
   selector: 'app-squad-matches',
@@ -27,6 +26,9 @@ import { toHistoryMatch } from './squad-matches.utils';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SquadMatches {
+  /**
+   * Translation service, for the empty state and day headings.
+   */
   private readonly translation = inject(Translation);
 
   /**
@@ -34,17 +36,26 @@ export class SquadMatches {
    */
   private readonly page = signal(0);
 
+  /**
+   * Current page of the roster's matches, refetched when the page moves.
+   */
   protected readonly resource = inject(MatchesApi).squad(this.page);
 
   /**
-   * Every match fetched so far; the resource only ever holds one page.
+   * Every match fetched so far; the resource holds one page.
    */
   protected readonly matches = signal<readonly HistoryMatch[]>([]);
 
+  /**
+   * Fetched matches grouped by day, for the history list.
+   */
   protected readonly days = computed<readonly MatchDay<HistoryMatch>[]>(() =>
     groupMatchesByDay(this.matches(), this.translation.language()),
   );
 
+  /**
+   * Empty state shown while the roster has no match today.
+   */
   protected readonly emptyPlate = computed<EmptyPlate>(() => ({
     illustration: 'matches',
     title: this.translation.translate('overview.matches.empty.title'),
@@ -52,15 +63,20 @@ export class SquadMatches {
     readouts: [],
   }));
 
+  /**
+   * Whether another page remains to fetch.
+   */
   protected readonly hasMore = computed(() =>
     this.resource.hasValue() ? this.page() + 1 < this.resource.value().totalPages : false,
   );
 
+  /**
+   * Whether a further page is loading, as opposed to the first one.
+   */
   protected readonly isLoadingMore = computed(() => this.resource.isLoading() && this.page() > 0);
 
   constructor() {
-    // Appends each settled page; `page` is read untracked so a load starting does not re-append
-    // the previous page.
+    // Untracked `page`, so a load starting does not re-append the previous page.
     effect(() => {
       if (this.resource.isLoading() || !this.resource.hasValue()) {
         return;
@@ -74,6 +90,9 @@ export class SquadMatches {
     });
   }
 
+  /**
+   * Requests the next page, unless none is left or one is already loading.
+   */
   protected loadMore(): void {
     if (!this.hasMore() || this.resource.isLoading()) {
       return;

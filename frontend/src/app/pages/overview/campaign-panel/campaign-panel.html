@@ -1,5 +1,4 @@
-<!-- No section titles: the tab heads the panel, and each block names itself. The rocket leads,
-     since it is what the tab's badge counts. -->
+<!-- No section titles; the rocket leads since the tab's badge counts it. -->
 <div class="flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)]">
   <section [attr.aria-label]="'campaign.rocket.title' | translate">
     @defer (on viewport; prefetch on idle) {
@@ -23,8 +22,7 @@
       </section>
     }
 
-    <!-- Folded on the same bar as the ledger above: a comparison to consult, not part of the
-         week's loop. Nothing of it exists before it opens. -->
+    <!-- Folded like the ledger; nothing renders before it opens. -->
     <details (toggle)="toggleHistory($event)" class="fold">
       <summary class="fold-sum focus-ring">
         <b class="fold-title">
@@ -46,7 +44,7 @@
             [loadingText]="'campaign.history.loading' | translate"
             padding="py-8"
           >
-            <!-- Deferred so chart.js stays out of the overview's bundle until the fold opens. -->
+            <!-- Deferred to keep chart.js out of the overview bundle. -->
             @defer (on immediate) {
               <app-campaign-history [curves]="curves()" [rows]="historyRows()" />
             } @placeholder {

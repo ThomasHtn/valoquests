@@ -1,6 +1,4 @@
-<!-- The tooltip hangs off a `<span>` rather than the whole line so its bubble points at the words
-     themselves, and the span is focusable only when there is something to describe: a tab stop
-     that opens nothing is a dead end for a keyboard reader. -->
+<!-- Tooltip on the words, focusable only when it has something to show. -->
 <p class="label-caption text-text-muted">
   <span
     [appTooltipDisabled]="!tooltip()"

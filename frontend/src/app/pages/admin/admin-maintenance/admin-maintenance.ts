@@ -1,12 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
+import { AdminActionState } from '@core/admin/commands/admin-action.model';
+import { IDLE_ACTION } from '@core/admin/commands/admin-action.constants';
 import { AdminApi } from '@core/admin/admin-api';
-import { AdminCommandRunner } from '@core/admin/admin-command-runner';
-import { IN_FLIGHT_SYNCHRONIZATION_STATUSES } from '@core/admin/admin.model';
+import { AdminCommandRunner } from '@core/admin/commands/admin-command-runner';
+import { IN_FLIGHT_SYNCHRONIZATION_STATUSES } from '@core/admin/synchronization/admin-synchronization.constants';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
-import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { InlineMessage } from '@shared/inline-message/inline-message';
@@ -15,12 +16,7 @@ import { SectionLabel } from '@shared/section-label/section-label';
 import { CLEARED_DATA_KEYS, KEPT_DATA_KEYS } from './admin-maintenance.constants';
 
 /**
- * Backoffice maintenance screen.
- *
- * Holds the one operation that destroys data the API cannot give back: clearing every record
- * derived from match history so a new campaign starts from an empty base. It is deliberately alone
- * on its own page, behind a typed confirmation, rather than sitting among the repair commands where
- * it could be reached by habit.
+ * Campaign reset, alone on its page behind a typed confirmation so it is never hit by habit.
  */
 @Component({
   selector: 'app-admin-maintenance',
@@ -30,27 +26,27 @@ import { CLEARED_DATA_KEYS, KEPT_DATA_KEYS } from './admin-maintenance.constants
 })
 export class AdminMaintenance {
   /**
-   * Data-access service backing the reset command and the synchronization resource.
+   * Backoffice API, for the reset and the latest synchronization.
    */
   private readonly adminApi = inject(AdminApi);
 
   /**
-   * i18n service used to resolve the confirmation phrase and the outcome messages.
+   * Translation, for the confirmation phrase and the success message.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Runs the reset command below and reports its running/done/error outcome.
+   * Runs the reset, tracking its state and reporting the outcome.
    */
   private readonly commandRunner = inject(AdminCommandRunner);
 
   /**
-   * Translation keys of the data the reset clears.
+   * Translation keys of the cleared data.
    */
   protected readonly clearedDataKeys = CLEARED_DATA_KEYS;
 
   /**
-   * Translation keys of the data the reset keeps.
+   * Translation keys of the kept data.
    */
   protected readonly keptDataKeys = KEPT_DATA_KEYS;
 
@@ -60,20 +56,17 @@ export class AdminMaintenance {
   protected readonly resetState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
-   * Whether the confirmation dialog is on screen.
+   * Whether the confirmation dialog is open.
    */
   protected readonly dialogOpen = signal(false);
 
   /**
-   * Whether the reset is currently running.
+   * Whether the reset is running.
    */
   protected readonly busy = signal(false);
 
   /**
-   * Whether a synchronization is in flight, which the backend refuses to reset over.
-   *
-   * Reported here rather than left to the 409: the operator would otherwise read the refusal as the
-   * reset being broken instead of as something being in the way.
+   * Whether a synchronization is in flight, shown upfront rather than left to the 409.
    */
   protected readonly synchronizing = computed(() => {
     const execution = resourceValue(this.adminApi.latestSynchronization, undefined);
@@ -82,10 +75,7 @@ export class AdminMaintenance {
   });
 
   /**
-   * Phrase the operator must type to confirm the reset.
-   *
-   * Translated, so it stays a word the operator is actually reading rather than one they copy
-   * without understanding.
+   * Translated phrase the operator must type to confirm.
    */
   protected readonly confirmationPhrase = computed(() =>
     this.translation.translate('admin.maintenance.reset.phrase'),
@@ -99,7 +89,7 @@ export class AdminMaintenance {
   }
 
   /**
-   * Closes the confirmation dialog without resetting anything.
+   * Closes the confirmation dialog without resetting.
    */
   protected dismissReset(): void {
     this.dialogOpen.set(false);
@@ -113,8 +103,7 @@ export class AdminMaintenance {
       return;
     }
 
-    // onSuccess only fires once the reset has actually cleared something, so the dialog stays open
-    // on failure and the operator is still deciding.
+    // The dialog stays open on failure.
     await this.commandRunner.run(() => this.adminApi.resetCampaign(), {
       state: this.resetState,
       busy: this.busy,

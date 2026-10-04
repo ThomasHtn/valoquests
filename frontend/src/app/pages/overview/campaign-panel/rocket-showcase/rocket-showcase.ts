@@ -27,11 +27,7 @@ import {
 } from './rocket-showcase.constants';
 
 /**
- * The rocket on its blueprint, part by part.
- *
- * The finished launcher stays as a dotted outline; the ship built so far is drawn over it at the
- * stage chosen in the parts list. A fitted part can be selected to see the ship as it was then;
- * a coming part waits for the guardian it asks for.
+ * Rocket blueprint: the built ship over the finished outline, at the selected part's stage.
  */
 @Component({
   selector: 'app-rocket-showcase',
@@ -41,23 +37,46 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RocketShowcase {
+  /**
+   * Rocket parts listed beside the blueprint, with their build state.
+   */
   public readonly parts = input.required<readonly RocketPart[]>();
+
+  /**
+   * Campaign the blueprint belongs to, named in the cartouche.
+   */
   public readonly campaignNumber = input.required<number>();
 
+  /**
+   * Translation service, to word the cartouche drawn in the SVG.
+   */
   private readonly translation = inject(Translation);
+
+  /**
+   * SVG element the blueprint is drawn into.
+   */
   private readonly viewer = viewChild.required<ElementRef<SVGSVGElement>>('viewer');
 
+  /**
+   * Part count of the finished rocket, for the viewer's label.
+   */
   protected readonly total = ROCKET_PART_COUNT;
 
+  /**
+   * Parts already fitted, the default stage on display.
+   */
   protected readonly builtCount = computed(
     () => this.parts().filter((part) => part.state === 'built').length,
   );
 
   /**
-   * Stage on display: the latest fitted part until one is chosen, and back to it on new data.
+   * Stage on display: the latest fitted part until one is chosen, reset on new data.
    */
   protected readonly shown = linkedSignal(() => this.builtCount());
 
+  /**
+   * Part on display, named in the cartouche.
+   */
   protected readonly shownPart = computed<RocketPart | null>(() => {
     const index = this.shown();
     return this.parts().find((part) => part.index === index) ?? null;
@@ -69,12 +88,18 @@ export class RocketShowcase {
     });
   }
 
+  /**
+   * Shows a built part's stage; parts still to build are not selectable.
+   */
   protected select(part: RocketPart): void {
     if (part.state === 'built') {
       this.shown.set(part.index);
     }
   }
 
+  /**
+   * Redraws the whole blueprint at the given stage.
+   */
   private render(svg: SVGSVGElement, stage: number): void {
     svg.replaceChildren();
     const frame = document.createDocumentFragment();
@@ -88,7 +113,6 @@ export class RocketShowcase {
       put(this.stroke(x, x - 8, BASE_Y, BASE_Y + 8, 'rgb(127 182 216 / 35%)', 1));
     }
 
-    // The finished launcher as a template, then the ship built so far over it.
     const upright = `translate(${CENTER_X} ${BASE_Y}) scale(1 -1)`;
     const ghost = el('g', { transform: upright });
     ghost.appendChild(
@@ -112,7 +136,7 @@ export class RocketShowcase {
   }
 
   /**
-   * Height dimension: what stands, measured against the finished launcher.
+   * Height dimension of the built ship against the finished launcher.
    */
   private drawDimension(put: (node: SVGElement) => void, stage: number): void {
     const full = SHIP[ROCKET_PART_COUNT];
@@ -150,7 +174,7 @@ export class RocketShowcase {
   }
 
   /**
-   * The plan's cartouche, top left.
+   * Plan cartouche, top left.
    */
   private drawCartouche(put: (node: SVGElement) => void): void {
     const x = 14;
@@ -190,6 +214,9 @@ export class RocketShowcase {
     }
   }
 
+  /**
+   * Builds a straight line, the blueprint's basic mark.
+   */
   private stroke(
     x1: number,
     x2: number,
@@ -201,6 +228,9 @@ export class RocketShowcase {
     return el('line', { x1, x2, y1, y2, stroke, 'stroke-width': width });
   }
 
+  /**
+   * Builds an SVG text label with the given styling.
+   */
   private text(
     x: number,
     y: number,

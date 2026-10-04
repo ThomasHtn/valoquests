@@ -14,23 +14,24 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideChevronLeft } from '@lucide/angular';
 
-import { primaryTitle } from '@core/campaign/campaign-title.utils';
-import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
+import { primaryTitle } from '@core/campaign/titles/campaign-title.utils';
+import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
 import { isNotFound, resourceValue } from '@core/http/resource-state.utils';
-import { parseRouteId } from '@core/http/route-id.utils';
-import { FILTERABLE_GAME_MODES, GameMode } from '@core/matches/game-mode.model';
+import { parseRouteId } from '@core/navigation/navigation-route-id.utils';
+import { FILTERABLE_GAME_MODES } from '@core/matches/game-mode/match-game-mode.constants';
+import { GameMode } from '@core/matches/game-mode/match-game-mode.model';
 import { Match } from '@core/matches/match.model';
 import { MatchesApi } from '@core/matches/matches-api';
-import { Season } from '@core/matches/season.model';
-import { SeasonsApi } from '@core/matches/seasons-api';
+import { Season } from '@core/seasons/season.model';
+import { SeasonsApi } from '@core/seasons/seasons-api';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
 import { Translation } from '@core/i18n/translation';
 import {
   resolveCompetitiveTierIconUrl,
   resolveCompetitiveTierVisual,
-} from '@core/players/competitive-tier.utils';
-import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
+} from '@core/players/competitive-tier/player-competitive-tier.utils';
+import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import {
   extractRiotTag,
   formatHeadshotPercentage,
@@ -38,7 +39,7 @@ import {
   formatScore,
   formatWinRate,
 } from '@core/players/player-format.utils';
-import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/player-stats.utils';
+import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/stats/player-stats.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
@@ -53,10 +54,10 @@ import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
 import { StatTile } from '@shared/stat-tile/stat-tile';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
-import { MatchDay } from './match-day.model';
-import { groupMatchesByDay } from './match-day.utils';
-import { MatchHistory } from './match-history/match-history';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
+import { MatchDay } from '@core/matches/day/match-day.model';
+import { groupMatchesByDay } from '@core/matches/day/match-day.utils';
+import { MatchHistory } from '@shared/match-history/match-history';
 import {
   GAME_MODE_BUTTON_COUNTS,
   MAX_PROGRESSION_SEASONS,
@@ -77,11 +78,7 @@ import { SeasonPicker } from './season-picker/season-picker';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 
 /**
- * Player-profile page.
- *
- * Displays one tracked player's identity, current competitive rank, the statistics of the filtered
- * game mode and filterable match history, loaded a page at a time as the user scrolls toward the end of the
- * list.
+ * Player profile: identity, rank, filtered stats and a match history loaded on scroll.
  */
 @Component({
   selector: 'app-player-profile',
@@ -109,122 +106,95 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
 })
 export class PlayerProfile {
   /**
-   * Named rulebook fragments, for the link out of the daily-yield band.
+   * Rulebook anchors, for the daily-yield band's link.
    */
   protected readonly ruleAnchor = RULE_ANCHOR;
 
   /**
-   * Internal player identifier, bound from the `:id` route parameter.
+   * Player id from the `:id` route parameter.
    */
   public readonly id = input.required<string>();
 
   /**
-   * Data-access service backing the player-details resource.
+   * Player details data access.
    */
   private readonly playersApi = inject(PlayersApi);
 
   /**
-   * Data-access service backing the match-history resource.
+   * Match history data access.
    */
   private readonly matchesApi = inject(MatchesApi);
 
   /**
-   * Data-access service backing the shared seasons resource, used by the season filter.
+   * Seasons data access, for the season filter.
    */
   private readonly seasonsApi = inject(SeasonsApi);
 
   /**
-   * Data-access service backing the reigning-champion lookup.
+   * Ranking data access, for the champion and title.
    */
   private readonly rankingApi = inject(RankingApi);
 
   /**
-   * i18n service used to resolve the player's translated rank label.
+   * Translates the rank label and mode options.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Router, read for the address echoed by the not-found plate and writing the state back to it.
+   * Gives the not-found plate its address and writes the state back to it.
    */
   private readonly router = inject(Router);
 
   /**
-   * The active route, whose query parameters hold the view, mode and season on screen.
+   * Route whose query parameters hold the view, mode and season.
    */
   private readonly route = inject(ActivatedRoute);
 
   /**
-   * The state the address asked for on arrival, so a reload or a step back reopens it.
+   * State read from the address on arrival, so a reload or a step back reopens it.
    */
   private readonly requested = readProfileQuery(this.route.snapshot.queryParamMap);
 
   /**
-   * Numeric form of {@link id}, or `null` when the route does not name a valid player.
+   * Numeric `id`, `null` when the route names no valid player.
    */
   protected readonly playerId = computed(() => parseRouteId(this.id()));
 
   /**
-   * Zero-based index of the last requested page of match history.
-   *
-   * Advanced by {@link loadMoreMatches} as the user scrolls, rather than by explicit pagination
-   * controls; {@link matches} accumulates every page fetched so far.
+   * Zero-based index of the last requested history page, advanced on scroll.
    */
   protected readonly page = signal(0);
 
   /**
-   * Which of the profile's two views is on screen.
-   *
-   * The two do not share a scope: the match history is one mode and one season at a time, while
-   * the progression view compares several seasons of competitive play. So the filter bar swaps
-   * with the view rather than trying to drive both.
+   * View on screen; the filter bar swaps with it since the two views have different scopes.
    */
   protected readonly viewMode = signal<ProfileView>(this.requested.view);
 
   /**
-   * Every match fetched so far for the current filters, oldest fetch first.
-   *
-   * Populated by the constructor's effect as {@link matchesResource} settles: reset to the fetched
-   * page's content on page zero (a fresh query, following a filter change), appended to on every
-   * later page (a scroll-triggered load). Kept as a plain signal, rather than derived straight from
-   * {@link matchesResource}, since that resource only ever holds one page at a time.
+   * Matches fetched so far for the current filters; the resource holds one page at a time.
    */
   protected readonly matches = signal<readonly Match[]>([]);
 
   /**
-   * Selected game-mode filter, or `null` for every mode - the default, so the page opens on the
-   * latest matches whatever their queue.
+   * Game mode filter, `null` (the default) for every mode.
    */
   protected readonly gameModeFilter = signal<GameMode | null>(this.requested.mode);
 
   /**
-   * Reactive resource fetching every known season, used by the season filter.
+   * Every known season.
    */
   protected readonly seasonsResource = this.seasonsApi.seasons;
 
   /**
-   * Known seasons for the season filter, or an empty list while loading or on error.
-   *
-   * Guarded by {@link HttpResourceRef.hasValue}: reading `value()` while the resource is in an
-   * error state throws, so it must never be called unconditionally.
+   * Known seasons, empty while loading or on error (`value()` throws on error).
    */
   protected readonly seasons = computed(() =>
     this.seasonsResource.hasValue() ? this.seasonsResource.value() : [],
   );
 
   /**
-   * Selected season filter, or `null` to include every season.
-   *
-   * Defaults to the current season - the one {@link Season.active} entry, falling back to
-   * {@link seasons}'s first (most-recent) entry if none is flagged active - once it loads.
-   * Implemented as a `linkedSignal` rather than a plain signal seeded from an effect: the default
-   * is (re)computed from {@link seasons}, but an explicit user selection - including "all seasons"
-   * (`null`) - is preserved across re-renders instead of being overwritten back to the computed
-   * default.
-   *
-   * The `previous.source.length > 0` guard distinguishes "seasons have not loaded yet" (recompute
-   * the default once they do) from "seasons already loaded, and this may be a deliberate user
-   * choice" (keep it) - `previous` itself is already truthy on that first, pre-load computation,
-   * so checking its mere presence would freeze the default at `null` forever.
+   * Season filter, `null` for every season; defaults to the current one once seasons load.
+   * A `linkedSignal` keeps a user choice; `previous.source.length` tells "not loaded yet" apart.
    */
   protected readonly seasonId = linkedSignal<readonly Season[], number | null>({
     source: this.seasons,
@@ -235,26 +205,19 @@ export class PlayerProfile {
   });
 
   /**
-   * Reactive resource fetching the requested player's detailed profile.
-   *
-   * Not scoped to the filters: nothing it carries depends on them, and reloading it would put the
-   * whole page back behind its skeleton on every filter change.
+   * Player details, unscoped so a filter change never brings back the skeleton.
    */
   protected readonly detailsResource = this.playersApi.details(this.playerId);
 
   /**
-   * Requested player's detailed profile, or `null` while loading or on error.
-   *
-   * Guarded by {@link HttpResourceRef.hasValue}: reading `value()` while the resource is in an
-   * error state throws, so it must never be called unconditionally.
+   * Player details, `null` while loading or on error (`value()` throws on error).
    */
   protected readonly details = computed(() =>
     this.detailsResource.hasValue() ? this.detailsResource.value() : null,
   );
 
   /**
-   * Reactive resource fetching the statistics of the filtered matches, idle while every mode is
-   * shown.
+   * Statistics of the filtered matches, idle while every mode is shown.
    */
   protected readonly scopedDetailsResource = this.playersApi.scopedDetails(
     this.playerId,
@@ -263,21 +226,21 @@ export class PlayerProfile {
   );
 
   /**
-   * Statistics of the filtered matches, or `null` while every mode is shown, loading or on error.
+   * Filtered statistics, `null` for every mode, while loading or on error.
    */
   protected readonly statistics = computed(
     () => resourceValue(this.scopedDetailsResource, undefined)?.statistics ?? null,
   );
 
   /**
-   * Whether the route names no known player: an invalid identifier or a 404 from the backend.
+   * Whether the route names no known player: invalid id or backend 404.
    */
   protected readonly notFound = computed(
     () => this.playerId() === null || isNotFound(this.detailsResource),
   );
 
   /**
-   * Plate shown instead of the profile when {@link notFound}.
+   * Plate shown instead of the profile when not found.
    */
   protected readonly notFoundPlate = computed(() =>
     buildNotFoundPlate(
@@ -288,7 +251,7 @@ export class PlayerProfile {
   );
 
   /**
-   * Reactive resource fetching the requested page of match history.
+   * Requested page of match history.
    */
   protected readonly matchesResource = this.matchesApi.history(
     this.playerId,
@@ -298,12 +261,7 @@ export class PlayerProfile {
   );
 
   /**
-   * Options offered by the game-mode filter.
-   *
-   * Restricted to {@link FILTERABLE_GAME_MODES} rather than every mode the backend enum declares.
-   * Every one of them is offered rather than only those the player has played, since narrowing the
-   * list further would require an extra endpoint; a mode with no match simply yields the empty
-   * state.
+   * Every filterable mode; one never played just shows the empty state.
    */
   protected readonly gameModeFilterOptions = computed<readonly SelectOption<GameMode>[]>(() =>
     FILTERABLE_GAME_MODES.map((mode) => ({
@@ -313,21 +271,17 @@ export class PlayerProfile {
   );
 
   /**
-   * Filter bar, whose width decides how many game modes get their own button.
+   * Filter bar, whose width decides how many game modes get a button.
    */
   private readonly filterRow = viewChild<ElementRef<HTMLElement>>('filterRow');
 
   /**
-   * Current width of {@link filterRow}, kept up to date by a resize observer.
-   *
-   * Measured on the row rather than read from the viewport: the sidebar takes a column from `lg`
-   * up, so the room left for the filters does not grow with the viewport.
+   * Filter bar width; measured on the row since the `lg` sidebar takes part of the viewport.
    */
   private readonly filterRowWidth = signal(0);
 
   /**
-   * Game modes rendered as their own button in the game-mode filter's button group: the most
-   * important ones, as many as the viewport has room for.
+   * Game modes given their own button, as many as the bar fits.
    */
   protected readonly primaryGameModes = computed<readonly GameMode[]>(() => {
     const width = this.filterRowWidth();
@@ -337,8 +291,7 @@ export class PlayerProfile {
   });
 
   /**
-   * {@link gameModeFilterOptions}, narrowed to the modes not offered their own button - i.e. those
-   * reachable only through the game-mode filter's overflow menu.
+   * Game mode options left to the overflow menu.
    */
   protected readonly overflowGameModeOptions = computed<readonly SelectOption<GameMode>[]>(() =>
     this.gameModeFilterOptions().filter(
@@ -347,23 +300,15 @@ export class PlayerProfile {
   );
 
   /**
-   * Whether the selected game mode is one of {@link overflowGameModeOptions}, i.e. one the
-   * segmented control does not render a button for.
-   *
-   * Drives the brand tint on that dropdown's trigger: without it, picking a mode from the list
-   * would leave the whole control unmarked, since the three segments beside it are all inactive.
+   * Whether the selected mode is in the overflow, to tint its trigger.
    */
   protected readonly isOverflowGameModeActive = computed(() =>
     this.overflowGameModeOptions().some((option) => option.value === this.gameModeFilter()),
   );
 
   /**
-   * Seasons the progression view charts, defaulting to the current one.
-   *
-   * Kept apart from {@link seasonId}: the two views ask different questions of the same list, and
-   * folding a multi-season selection back into the history's single-season filter would silently
-   * change what the reader was looking at when they switch tabs. Same `linkedSignal` shape as
-   * {@link seasonId}, so it seeds itself once the seasons load without overwriting a real choice.
+   * Seasons the progression charts, defaulting to the current one.
+   * Kept apart from `seasonId` so switching views never changes what the reader was looking at.
    */
   protected readonly progressionSeasonIds = linkedSignal<readonly Season[], readonly number[]>({
     source: this.seasons,
@@ -377,20 +322,17 @@ export class PlayerProfile {
   });
 
   /**
-   * Every known season's identifier, in the order the API returned them (newest first).
-   *
-   * Handed to the progression view as the source of each season's colour: taken from this list
-   * rather than from the selection, a curve keeps its colour when another season is unticked.
+   * Every season id, newest first; colours come from this order so a curve keeps its colour.
    */
   protected readonly seasonOrder = computed(() => this.seasons().map((season) => season.id));
 
   /**
-   * Largest number of seasons the progression view charts at once, exposed to the template.
+   * Most seasons the progression charts at once.
    */
   protected readonly maxProgressionSeasons = MAX_PROGRESSION_SEASONS;
 
   /**
-   * The matches view's season, as the picker's selection: empty for every season.
+   * History season as the picker's selection, empty for every season.
    */
   protected readonly seasonSelection = computed<readonly number[]>(() => {
     const seasonId = this.seasonId();
@@ -398,21 +340,14 @@ export class PlayerProfile {
   });
 
   /**
-   * Every match fetched so far, grouped into the days they were played on.
-   *
-   * Drives both the table and the card list, so a day's record is computed once. Recomputed on a
-   * language switch too, since each day's label is spelled out in the active language.
+   * Fetched matches grouped by day; depends on the language for the day labels.
    */
   protected readonly matchDays = computed<readonly MatchDay[]>(() =>
     groupMatchesByDay(this.matches(), this.translation.language()),
   );
 
   /**
-   * Whether a page of match history past the last fetched one still exists.
-   *
-   * Guards both {@link loadMoreMatches} and the sentinel element the intersection observer
-   * watches: without it, scrolling to the end of a fully-loaded list would keep firing requests
-   * for a page past the last one.
+   * Whether a later history page exists; stops the sentinel from requesting past the end.
    */
   protected readonly hasMoreMatches = computed(() =>
     this.matchesResource.hasValue()
@@ -421,18 +356,14 @@ export class PlayerProfile {
   );
 
   /**
-   * Whether a page beyond the first is currently being fetched.
-   *
-   * Distinct from {@link matchesResource}'s own `isLoading`, which also covers the very first
-   * page: that one is reported through {@link ResourceState}'s full-page skeleton, while this one
-   * drives the small loading row appended under the already-visible matches.
+   * Whether a page past the first is loading; the first one shows the full-page skeleton.
    */
   protected readonly isLoadingMoreMatches = computed(
     () => this.matchesResource.isLoading() && this.page() > 0,
   );
 
   /**
-   * Whether the filters differ from their default: every mode of the current season.
+   * Whether the filters differ from every mode of the current season.
    */
   protected readonly hasActiveFilters = computed(
     () =>
@@ -440,7 +371,7 @@ export class PlayerProfile {
   );
 
   /**
-   * Tag segment of the player's Riot ID, or `null` when absent or not yet loaded.
+   * Riot ID tag, `null` when absent or not loaded.
    */
   protected readonly tag = computed(() => {
     const details = this.details();
@@ -448,15 +379,14 @@ export class PlayerProfile {
   });
 
   /**
-   * Resolved avatar URL for the player's associated agent, or `null` when unavailable.
+   * Avatar URL, `null` when unavailable.
    */
   protected readonly avatarUrl = computed(() =>
     resolvePlayerAvatarUrl(this.details()?.portrait ?? null),
   );
 
   /**
-   * Whether this player holds the reigning weekly "Champion" title, earned by finishing 1st in
-   * the most recently finalized week.
+   * Whether the player won the last finalized week.
    */
   protected readonly isChampion = computed(() => {
     const championPlayerId = resolveChampionPlayerId(
@@ -466,8 +396,7 @@ export class PlayerProfile {
   });
 
   /**
-   * The one weekly title this player is decorated with this week, or `null` when they hold none
-   * or their details have not loaded yet.
+   * Weekly title held this week, `null` when none or not loaded.
    */
   protected readonly title = computed(() => {
     const playerId = this.details()?.id;
@@ -481,8 +410,7 @@ export class PlayerProfile {
   });
 
   /**
-   * Translated label and color class for the player's current competitive rank, or `null` while
-   * loading.
+   * Rank label and colour class, `null` while loading.
    */
   protected readonly tier = computed(() => {
     const details = this.details();
@@ -496,7 +424,7 @@ export class PlayerProfile {
   });
 
   /**
-   * SVG icon path for the player's current competitive rank, or `null` if unavailable.
+   * Rank icon path, `null` when unavailable.
    */
   protected readonly rankIconUrl = computed(() => {
     const details = this.details();
@@ -504,37 +432,121 @@ export class PlayerProfile {
   });
 
   /**
-   * Colour of the share the next match keeps, exposed to the template.
+   * Colour of the next match's share.
    */
   protected readonly yieldToneClass = resolveYieldToneClass;
 
   /**
-   * Formatters and colours of the stat strip, exposed to the template.
+   * Formats the damage and combat score averages of the stat strip.
+   */
+  protected readonly formatScore = formatScore;
+
+  /**
+   * Win rate colours of the stat strip.
+   */
+  protected readonly winRateVisual = resolveWinRateVisual;
+
+  /**
+   * KDA colours of the stat strip.
+   */
+  protected readonly kdaVisual = resolveKdaVisual;
+
+  /**
+   * Grid classes of the stat strip.
+   */
+  protected readonly statStripGridClass = STAT_STRIP_GRID_CLASS;
+
+  /**
+   * Skeleton tile spans, mirroring the loaded stat tiles.
+   */
+  protected readonly statSkeletonTileSpans = STAT_SKELETON_TILE_SPANS;
+
+  constructor() {
+    this.trackFilterRowWidth();
+    this.syncAddressWithFilters();
+    this.foldMatchPages();
+  }
+
+  /**
+   * Formats the stat strip's win rate in the reader's notation.
    */
   protected readonly formatWinRate = (winRate: number | null): string =>
     formatWinRate(winRate, this.translation.language());
 
+  /**
+   * Formats the stat strip's KDA in the reader's notation.
+   */
   protected readonly formatKda = (kda: number | null): string =>
     formatKda(kda, this.translation.language());
 
+  /**
+   * Formats the stat strip's headshot rate in the reader's notation.
+   */
   protected readonly formatHeadshotPercentage = (percentage: number | null): string =>
     formatHeadshotPercentage(percentage, this.translation.language());
 
-  protected readonly formatScore = formatScore;
-
-  protected readonly winRateVisual = resolveWinRateVisual;
-
-  protected readonly kdaVisual = resolveKdaVisual;
+  /**
+   * Requests the next history page unless it is the last or one is in flight.
+   */
+  protected loadMoreMatches(): void {
+    if (!this.hasMoreMatches() || this.matchesResource.isLoading()) {
+      return;
+    }
+    this.page.update((page) => page + 1);
+  }
 
   /**
-   * Grid of the stat strip and the spans of its skeleton tiles, exposed to the template.
+   * Applies a game mode filter (`null` for every mode) and restarts the history.
    */
-  protected readonly statStripGridClass = STAT_STRIP_GRID_CLASS;
+  protected onGameModeFilterChange(gameMode: GameMode | null): void {
+    // Same value: the resource would not refetch, leaving the cleared history empty.
+    if (gameMode === this.gameModeFilter()) {
+      return;
+    }
+    this.gameModeFilter.set(gameMode);
+    this.restartMatchHistory();
+  }
 
-  protected readonly statSkeletonTileSpans = STAT_SKELETON_TILE_SPANS;
+  /**
+   * Applies a season filter (`null` for every season) and restarts the history.
+   */
+  protected onSeasonFilterChange(seasonId: number | null): void {
+    if (seasonId === this.seasonId()) {
+      return;
+    }
+    this.seasonId.set(seasonId);
+    this.restartMatchHistory();
+  }
 
-  constructor() {
-    // An after-render effect: the filter bar only exists once the player's details have rendered.
+  /**
+   * Switches between the match history and the progression view.
+   */
+  protected onViewModeChange(viewMode: ProfileView): void {
+    this.viewMode.set(viewMode);
+  }
+
+  /**
+   * Restores every mode of the current season and restarts the history.
+   */
+  protected resetFilters(): void {
+    this.gameModeFilter.set(null);
+    this.seasonId.set(resolveCurrentSeasonId(this.seasons()));
+    this.restartMatchHistory();
+  }
+
+  /**
+   * Clears the history so the previous filters' matches never show while the new query loads.
+   */
+  private restartMatchHistory(): void {
+    this.matches.set([]);
+    this.page.set(0);
+  }
+
+  /**
+   * Measures the filter bar so the mode buttons that do not fit move to the overflow.
+   */
+  private trackFilterRowWidth(): void {
+    // After render: the filter bar only exists once the details have rendered.
     afterRenderEffect((onCleanup) => {
       const element = this.filterRow()?.nativeElement;
       if (!element) {
@@ -546,16 +558,14 @@ export class PlayerProfile {
       observer.observe(element);
       onCleanup(() => observer.disconnect());
     });
+  }
 
-    // Folds each settled page of `matchesResource` into `matches`, replacing it on page zero (a
-    // fresh query following a filter change) and appending on every later page (a scroll-triggered
-    // load). Reads `page` with `untracked`: this effect must only react to the resource actually
-    // settling, not to `page` changing the instant a load starts, when `matchesResource.value()`
-    // still holds the *previous* page's content.
-    // Keeps the address in step with the view, mode and season, replacing the entry so filtering
-    // never adds steps to the back button. Waits for the seasons, without which the default
-    // season cannot be told from a chosen one.
+  /**
+   * Keeps the address in step with the state, replacing the entry to stay out of the history.
+   */
+  private syncAddressWithFilters(): void {
     effect(() => {
+      // Without the seasons, the default season cannot be told from a chosen one.
       const seasons = this.seasons();
       if (seasons.length === 0) {
         return;
@@ -578,91 +588,23 @@ export class PlayerProfile {
         }),
       );
     });
+  }
 
+  /**
+   * Folds each settled page into `matches`: page zero replaces the list, later pages append.
+   */
+  private foldMatchPages(): void {
     effect(() => {
       if (this.matchesResource.isLoading() || !this.matchesResource.hasValue()) {
         return;
       }
-
       const content = this.matchesResource.value().content;
+      // Untracked: react to the resource settling, not to `page` changing.
       if (untracked(this.page) === 0) {
         this.matches.set(content);
       } else {
         this.matches.update((matches) => [...matches, ...content]);
       }
     });
-  }
-
-  /**
-   * Requests the next page of match history, appending it to {@link matches} once it settles.
-   *
-   * Called when the history's trailing sentinel scrolls into view. Guarded against firing
-   * past the last page or while a page is already in flight - the observer can otherwise fire
-   * again before the previous request settles, e.g. while the page is still short enough that the
-   * trigger element stays on screen after a page loads.
-   */
-  protected loadMoreMatches(): void {
-    if (!this.hasMoreMatches() || this.matchesResource.isLoading()) {
-      return;
-    }
-    this.page.update((page) => page + 1);
-  }
-
-  /**
-   * Applies the selected game-mode filter and restarts the match history from its first page.
-   * Called directly by the button group's own buttons and by {@link selectOverflowGameMode}.
-   *
-   * @param gameMode - The newly selected game mode, or `null` for every mode.
-   */
-  protected onGameModeFilterChange(gameMode: GameMode | null): void {
-    // Same value: the resource would not refetch, leaving the cleared history empty.
-    if (gameMode === this.gameModeFilter()) {
-      return;
-    }
-    this.gameModeFilter.set(gameMode);
-    this.restartMatchHistory();
-  }
-
-  /**
-   * Applies the selected season filter and restarts the match history from its first page.
-   *
-   * @param seasonId - The newly selected season id, or `null` for every season.
-   */
-  protected onSeasonFilterChange(seasonId: number | null): void {
-    if (seasonId === this.seasonId()) {
-      return;
-    }
-    this.seasonId.set(seasonId);
-    this.restartMatchHistory();
-  }
-
-  /**
-   * Switches between the match history and the progression view.
-   *
-   * @param viewMode - The newly selected view.
-   */
-  protected onViewModeChange(viewMode: ProfileView): void {
-    this.viewMode.set(viewMode);
-  }
-
-  /**
-   * Restores the default filters - every mode of the current season - and restarts the match
-   * history from its first page.
-   */
-  protected resetFilters(): void {
-    this.gameModeFilter.set(null);
-    this.seasonId.set(resolveCurrentSeasonId(this.seasons()));
-    this.restartMatchHistory();
-  }
-
-  /**
-   * Clears the accumulated match history and returns to its first page.
-   *
-   * Called on every filter change so the constructor's effect does not briefly show the previous
-   * filters' matches while the new query is still loading.
-   */
-  private restartMatchHistory(): void {
-    this.matches.set([]);
-    this.page.set(0);
   }
 }

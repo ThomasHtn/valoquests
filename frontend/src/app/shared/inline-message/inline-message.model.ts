@@ -1,4 +1,4 @@
 /**
- * What an inline message reports, each mapped to one rule color below.
+ * Kind of inline message, each mapped to one rule color.
  */
 export type InlineMessageTone = 'info' | 'success' | 'danger';

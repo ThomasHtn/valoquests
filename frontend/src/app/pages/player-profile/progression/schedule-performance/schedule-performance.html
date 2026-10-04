@@ -21,8 +21,7 @@
         [yAxisLabel]="'playerProfile.progression.schedule.axis.winRate' | translate"
         [valueFormatter]="formatRate"
       />
-      <!-- The claim in words, not only in colour: the highlighted bar is green, but green alone is
-           not something every reader can act on. -->
+      <!-- The claim in words, since colour alone is not readable by everyone. -->
       @if (bestWeekday()) {
         <p class="flex items-center gap-2 text-sm text-text-secondary">
           <span aria-hidden="true" class="size-2 shrink-0 rotate-45 bg-accent-green"></span>
@@ -52,8 +51,7 @@
     </div>
   </div>
 
-  <!-- `mt-auto` sinks the reading note to the floor of the card: it qualifies everything above it,
-       so it belongs at the end of the block rather than crowding the charts it comments on. -->
+  <!-- `mt-auto` sinks the note to the card's floor: it qualifies everything above it. -->
   <p class="mt-auto text-base text-text-muted">
     {{ 'playerProfile.progression.schedule.threshold' | translate: { count: minimumSample } }}
   </p>

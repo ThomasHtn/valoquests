@@ -1,17 +1,16 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { LucideChevronDown, LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
-import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
+import { AdminActionState } from '@core/admin/commands/admin-action.model';
+import { IDLE_ACTION } from '@core/admin/commands/admin-action.constants';
 import { AdminApi } from '@core/admin/admin-api';
-import { AdminCommandRunner } from '@core/admin/admin-command-runner';
-import {
-  IN_FLIGHT_SYNCHRONIZATION_STATUSES,
-  SynchronizationExecution,
-} from '@core/admin/admin.model';
+import { AdminCommandRunner } from '@core/admin/commands/admin-command-runner';
+import { IN_FLIGHT_SYNCHRONIZATION_STATUSES } from '@core/admin/synchronization/admin-synchronization.constants';
+import { SynchronizationExecution } from '@core/admin/synchronization/admin-synchronization.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
 import { SnackbarService } from '@core/snackbar/snackbar';
-import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { InlineMessage } from '@shared/inline-message/inline-message';
@@ -26,20 +25,8 @@ import { AdminActionCard } from '../admin-action-card/admin-action-card';
 import { SYNCHRONIZATION_POLL_INTERVAL_MS } from './admin-operations.constants';
 
 /**
- * Backoffice operations screen.
- *
- * Gathers every command that repairs or refreshes the tracker: synchronizing the squad or one
- * player, running the nightly tick or the Monday rollover by hand when either did not fire, and
- * throwing the week's challenge pack away for a new one.
- *
- * Each card triggers a whole scheduled job rather than one of its steps. The steps used to be
- * offered on their own — recalculate, draw the day, replay, open the week — and every one of them
- * was already run by the job above it, so an operator had to know the chain to pick the right one.
- *
- * A synchronization runs in the background and outlives the request that started it, so the page
- * opens on the state of the latest run and polls it while it is in flight. That poll is the only
- * feedback the operator gets: the command itself answers `202` and says nothing about how the walk
- * went.
+ * Backoffice operations: each card triggers a whole scheduled job.
+ * A synchronization answers `202`, so the page polls the latest run while it is in flight.
  */
 @Component({
   selector: 'app-admin-operations',
@@ -62,50 +49,44 @@ import { SYNCHRONIZATION_POLL_INTERVAL_MS } from './admin-operations.constants';
 })
 export class AdminOperations {
   /**
-   * Data-access service backing every command and the synchronization resource.
+   * Backoffice API, for the jobs and the synchronization runs.
    */
   private readonly adminApi = inject(AdminApi);
 
   /**
-   * i18n service used to resolve outcome messages, which are built here rather than in templates.
+   * Translation, for labels, statuses and feedback messages.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Runs each command below and reports its running/done/error outcome in the card that triggered
-   * it.
+   * Runs each job, tracking its state and reporting the outcome.
    */
   private readonly commandRunner = inject(AdminCommandRunner);
 
   /**
-   * Queues the "no player selected" snackbar, the one outcome on this page the shared runner never
-   * sees since it is rejected before any command runs.
+   * Reports "no player selected", which never reaches the runner.
    */
   private readonly snackbar = inject(SnackbarService);
 
   /**
-   * Resource holding every tracked player, backing the per-player synchronization picker.
+   * Tracked players, for the per-player picker.
    */
   protected readonly playersResource = this.adminApi.players;
 
   /**
-   * Resource holding the most recent synchronization execution.
+   * Latest synchronization execution.
    */
   protected readonly synchronizationResource = this.adminApi.latestSynchronization;
 
   /**
-   * Latest synchronization execution, or `null` when none has ever run.
+   * Latest execution, `undefined` when none ever ran.
    */
   protected readonly synchronization = computed(() =>
     resourceValue(this.synchronizationResource, undefined),
   );
 
   /**
-   * Whether a synchronization is currently in flight.
-   *
-   * Also what disables both synchronization buttons: the backend refuses a concurrent run with a
-   * 409, and letting the operator trigger one only to be told no is a worse answer than the button
-   * being visibly unavailable.
+   * Whether a synchronization runs; disables both sync buttons rather than meet a 409.
    */
   protected readonly synchronizing = computed(() => {
     const execution = this.synchronization();
@@ -114,15 +95,12 @@ export class AdminOperations {
   });
 
   /**
-   * Player the per-player synchronization targets, or `null` while none is chosen.
+   * Player to synchronize, `null` while none is chosen.
    */
   protected readonly selectedPlayerId = signal<number | null>(null);
 
   /**
-   * Options offered by the per-player synchronization picker.
-   *
-   * Archived players are left out: they are off the roster and the backend does not synchronize
-   * them, so offering one would promise a run that imports nothing.
+   * Picker options, archived players left out since the backend skips them.
    */
   protected readonly playerOptions = computed<readonly SelectOption<number | null>[]>(() => [
     { value: null, label: this.translation.translate('admin.operations.syncPlayer.placeholder') },
@@ -135,42 +113,42 @@ export class AdminOperations {
   ]);
 
   /**
-   * State of the squad-wide synchronization command.
+   * State of the squad-wide synchronization.
    */
   protected readonly syncAllState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
-   * State of the per-player synchronization command.
+   * State of the per-player synchronization.
    */
   protected readonly syncPlayerState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
-   * State of the challenge redraw command.
+   * State of the challenge redraw.
    */
   protected readonly redrawState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
-   * Whether the redraw confirmation dialog is on screen.
+   * Whether the redraw dialog is open.
    */
   protected readonly redrawDialogOpen = signal(false);
 
   /**
-   * Whether the redraw is currently running, which locks the dialog's buttons.
+   * Whether the redraw is running, which locks the dialog.
    */
   protected readonly redrawing = signal(false);
 
   /**
-   * State of the daily tick command.
+   * State of the daily tick.
    */
   protected readonly dailyTickState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
-   * State of the weekly rollover command.
+   * State of the weekly rollover.
    */
   protected readonly rolloverState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
-   * Translated label of the latest execution's status.
+   * Translated status of the latest execution.
    */
   protected readonly statusLabel = computed(() => {
     const execution = this.synchronization();
@@ -181,10 +159,7 @@ export class AdminOperations {
   });
 
   /**
-   * Timestamp the latest execution started at, or `''` when unknown.
-   *
-   * Tested for emptiness rather than for `null`: the backend leaves null properties out of its
-   * payloads, so an execution that never started arrives with the field missing rather than null.
+   * Start time of the latest execution, `''` when absent (the backend omits null fields).
    */
   protected readonly startedLabel = computed(() => {
     const startedAt = this.synchronization()?.startedAt;
@@ -193,24 +168,24 @@ export class AdminOperations {
   });
 
   /**
-   * Zero-based page of the synchronization history on screen.
+   * Zero-based history page on screen.
    */
   protected readonly historyPage = signal(0);
 
   /**
-   * Reactive resource fetching the requested page of synchronization history.
+   * Requested history page.
    */
   protected readonly historyResource = this.adminApi.synchronizationHistory(this.historyPage);
 
   /**
-   * The page's executions, most recent first, or `[]` while loading.
+   * Executions of the page, most recent first.
    */
   protected readonly historyRows = computed(
     () => resourceValue(this.historyResource, undefined)?.content ?? [],
   );
 
   /**
-   * Whether a page past the one on screen exists.
+   * Whether an older page exists.
    */
   protected readonly hasNextHistoryPage = computed(() => {
     const page = resourceValue(this.historyResource, undefined);
@@ -219,37 +194,26 @@ export class AdminOperations {
   });
 
   /**
-   * Identifier of the execution whose per-player results are open, or `null` while none is.
+   * Execution whose per-player results are open, `null` when none.
    */
   protected readonly expandedExecutionId = signal<number | null>(null);
 
   /**
-   * Reactive resource fetching {@link expandedExecutionId}'s per-player results, fetched only
-   * once a reader actually opens a row.
+   * Per-player results of {@link expandedExecutionId}, fetched on expand.
    */
   protected readonly executionDetailsResource = this.adminApi.synchronizationDetails(
     this.expandedExecutionId,
   );
 
   /**
-   * {@link expandedExecutionId}'s per-player results, or `[]` while collapsed or loading.
+   * Per-player results, `[]` while collapsed or loading.
    */
   protected readonly executionDetailsPlayers = computed(
     () => resourceValue(this.executionDetailsResource, undefined)?.players ?? [],
   );
 
   /**
-   * Formats a synchronization's start timestamp, exposed to the template.
-   */
-  protected readonly formatTimestamp = (instant: string): string =>
-    formatSynchronizationTimestamp(instant, this.translation.language());
-
-  /**
-   * Polls the running synchronization until it settles.
-   *
-   * The interval is created and torn down by the same effect, so it only exists while there is
-   * something to watch: a finished run stops the poll rather than leaving it turning against a
-   * status that can no longer change.
+   * Polls the running synchronization; the interval only lives while one is in flight.
    */
   constructor() {
     effect((onCleanup) => {
@@ -267,10 +231,13 @@ export class AdminOperations {
   }
 
   /**
-   * Resolves a history row's status badge tone.
-   *
-   * @param status - The execution's own status.
-   * @returns The tone to render the badge in.
+   * Formats a start timestamp for the template.
+   */
+  protected readonly formatTimestamp = (instant: string): string =>
+    formatSynchronizationTimestamp(instant, this.translation.language());
+
+  /**
+   * Badge tone of a history status.
    */
   protected historyStatusTone(status: SynchronizationExecution['status']): StatusBadgeTone {
     if (IN_FLIGHT_SYNCHRONIZATION_STATUSES.includes(status)) {
@@ -281,16 +248,14 @@ export class AdminOperations {
   }
 
   /**
-   * Opens one execution's per-player results, or closes it if it is already open.
-   *
-   * @param executionId - The execution's own identifier.
+   * Toggles an execution's per-player results.
    */
   protected toggleExecution(executionId: number): void {
     this.expandedExecutionId.update((current) => (current === executionId ? null : executionId));
   }
 
   /**
-   * Steps the history to the next, older page.
+   * Steps to the next, older page.
    */
   protected loadNextHistoryPage(): void {
     if (this.hasNextHistoryPage()) {
@@ -299,7 +264,7 @@ export class AdminOperations {
   }
 
   /**
-   * Steps the history back to the previous, more recent page.
+   * Steps back to the previous, more recent page.
    */
   protected loadPreviousHistoryPage(): void {
     this.historyPage.update((page) => Math.max(0, page - 1));
@@ -337,24 +302,21 @@ export class AdminOperations {
   }
 
   /**
-   * Opens the redraw confirmation dialog.
-   *
-   * The one command on this page that destroys data rather than rebuilding it, so it is the one
-   * asked for twice: the progress recorded against the discarded challenges goes with them.
+   * Opens the redraw dialog: the discarded challenges take their progress with them.
    */
   protected askForRedraw(): void {
     this.redrawDialogOpen.set(true);
   }
 
   /**
-   * Closes the redraw confirmation dialog without drawing anything.
+   * Closes the redraw dialog without drawing.
    */
   protected dismissRedraw(): void {
     this.redrawDialogOpen.set(false);
   }
 
   /**
-   * Discards the current week's challenge pack and draws a new one in its place.
+   * Replaces the current week's challenge pack with a new draw.
    */
   protected async confirmRedraw(): Promise<void> {
     if (this.redrawing()) {
@@ -370,8 +332,7 @@ export class AdminOperations {
   }
 
   /**
-   * Runs the nightly tick now: the day's challenge, the week's progress and ranking, a due campaign
-   * started, and the campaign replayed.
+   * Runs the nightly tick now.
    */
   protected async runDailyTick(): Promise<void> {
     await this.commandRunner.run(() => this.adminApi.runDailyTick(), {
@@ -381,7 +342,7 @@ export class AdminOperations {
   }
 
   /**
-   * Runs the weekly rollover now, closing every past week the Monday job left open.
+   * Runs the weekly rollover now, closing every past week left open.
    */
   protected async runWeeklyRollover(): Promise<void> {
     await this.commandRunner.run(() => this.adminApi.runWeeklyRollover(), {

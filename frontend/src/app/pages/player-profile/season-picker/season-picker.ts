@@ -15,21 +15,14 @@ import { LucideChevronDown, LucideChevronLeft, LucideChevronRight } from '@lucid
 import { nextInstanceId } from '@core/dom/instance-id.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { Season } from '@core/matches/season.model';
+import { Season } from '@core/seasons/season.model';
+import { handleListboxKeydown } from '@shared/listbox/listbox-keyboard.utils';
 import { SeasonPickerOption } from './season-picker.model';
 import { buildSeasonPickerOptions } from './season-picker.utils';
 
 /**
- * The profile's season scope, styled after the leaderboard's week picker: arrows stepping one act
- * at a time around a badge naming the act, and a list of every act ruled off by episode.
- *
- * Picks one season, or every season through an empty selection, by default; several at once in
- * `multiple` mode, where the list stays open while the reader ticks acts and never empties.
- *
- * Follows the same select-only combobox pattern as the shared `Select`: the trigger keeps DOM focus
- * and points at the highlighted row through `aria-activedescendant`, so the list is operable with
- * arrows, Home/End, Enter, Space, Escape and Tab. In `multiple` mode Enter and Space tick the
- * highlighted act and leave the list open.
+ * Profile season scope styled after the week picker: one or every season, several in `multiple`.
+ * Select-only combobox like `Select`: focus stays on the trigger, using `aria-activedescendant`.
  */
 @Component({
   selector: 'app-season-picker',
@@ -50,7 +43,7 @@ export class SeasonPicker {
   public readonly seasons = input.required<readonly Season[]>();
 
   /**
-   * Selected season identifiers; empty means every season outside `multiple` mode.
+   * Selected season ids; empty means every season outside `multiple` mode.
    */
   public readonly selection = model<readonly number[]>([]);
 
@@ -60,12 +53,12 @@ export class SeasonPicker {
   public readonly multiple = input(false);
 
   /**
-   * Largest number of seasons held at once in `multiple` mode, or zero for no limit.
+   * Most seasons held at once in `multiple` mode, zero for no limit.
    */
   public readonly maxSelection = input(0);
 
   /**
-   * Already-translated note explaining the limit, shown once it is reached.
+   * Translated note shown once the limit is reached.
    */
   public readonly maxSelectionNote = input('');
 
@@ -75,17 +68,17 @@ export class SeasonPicker {
   public readonly ariaLabel = input.required<string>();
 
   /**
-   * i18n service, used to spell the seasons out.
+   * Spells the seasons out.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Host element, used to detect clicks outside the open list.
+   * Host element, to detect clicks outside the open list.
    */
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /**
-   * Id of the list, referenced by the trigger's `aria-controls`.
+   * List id, for the trigger's `aria-controls`.
    */
   protected readonly listboxId = nextInstanceId('season-picker');
 
@@ -95,8 +88,7 @@ export class SeasonPicker {
   protected readonly isOpen = signal(false);
 
   /**
-   * Index of the keyboard-highlighted row, or `-1` when none is. Counts the "every season" row
-   * first in single mode (see {@link optionOffset}).
+   * Keyboard-highlighted row, `-1` for none; counts the "every season" row in single mode.
    */
   protected readonly activeIndex = signal(-1);
 
@@ -111,7 +103,7 @@ export class SeasonPicker {
   private readonly panelElement = viewChild.required<ElementRef<HTMLElement>>('panel');
 
   /**
-   * Every season as the picker lists it, newest first.
+   * Seasons as the picker lists them, newest first.
    */
   protected readonly options = computed(() => {
     this.translation.language();
@@ -121,7 +113,7 @@ export class SeasonPicker {
   });
 
   /**
-   * The single season held, or `null` when none or several are.
+   * Single season held, `null` when none or several are.
    */
   protected readonly current = computed<SeasonPickerOption | null>(() => {
     const selection = this.selection();
@@ -131,7 +123,7 @@ export class SeasonPicker {
   });
 
   /**
-   * Trigger label when no single season is held: every season, or how many are.
+   * Trigger label when no single season is held: every season, or how many.
    */
   protected readonly summary = computed(() => {
     this.translation.language();
@@ -142,7 +134,7 @@ export class SeasonPicker {
   });
 
   /**
-   * Position of the single season held in the list, or -1.
+   * Index of the single season held, `-1` otherwise.
    */
   private readonly currentIndex = computed(() => {
     const current = this.current();
@@ -162,7 +154,7 @@ export class SeasonPicker {
   protected readonly canGoForward = computed(() => this.currentIndex() > 0);
 
   /**
-   * Whether the selection has reached {@link maxSelection}.
+   * Whether the selection has reached `maxSelection`.
    */
   protected readonly isAtLimit = computed(() => {
     const limit = this.maxSelection();
@@ -170,12 +162,12 @@ export class SeasonPicker {
   });
 
   /**
-   * Rows ahead of the seasons in the list: the "every season" row of single mode, none otherwise.
+   * Rows before the seasons: the "every season" row in single mode.
    */
   protected readonly optionOffset = computed(() => (this.multiple() ? 0 : 1));
 
   /**
-   * Id of the highlighted row, or `null` when the list is closed or nothing is highlighted.
+   * Id of the highlighted row, `null` when closed or none.
    */
   protected readonly activeOptionId = computed(() => {
     const index = this.activeIndex();
@@ -183,8 +175,7 @@ export class SeasonPicker {
   });
 
   /**
-   * Registers the effect keeping the highlighted row visible: focus never leaves the trigger, so
-   * nothing else scrolls the list. After render, since the list cannot be measured while hidden.
+   * Keeps the highlighted row visible after render, since focus never leaves the trigger.
    */
   constructor() {
     afterRenderEffect(() => {
@@ -198,10 +189,7 @@ export class SeasonPicker {
   }
 
   /**
-   * Builds the element id of the row at `index`.
-   *
-   * @param index - Position in the list, the "every season" row included.
-   * @returns The row's unique element id.
+   * Element id of the row at `index`, the "every season" row included.
    */
   protected optionId(index: number): string {
     return `${this.listboxId}-option-${index}`;
@@ -219,7 +207,7 @@ export class SeasonPicker {
   }
 
   /**
-   * Closes the list and clears the keyboard highlight.
+   * Closes the list and clears the highlight.
    */
   protected close(): void {
     this.isOpen.set(false);
@@ -227,9 +215,7 @@ export class SeasonPicker {
   }
 
   /**
-   * Steps the single season held to its neighbour.
-   *
-   * @param offset - 1 for the older season, -1 for the newer one.
+   * Steps the single season held: `1` to the older one, `-1` to the newer.
    */
   protected step(offset: number): void {
     const target = this.options()[this.currentIndex() + offset];
@@ -247,10 +233,7 @@ export class SeasonPicker {
   }
 
   /**
-   * Picks a season: replaces the selection in single mode, toggles it in `multiple` mode, where
-   * the last season held cannot be dropped.
-   *
-   * @param option - The season picked.
+   * Replaces the selection in single mode, toggles in `multiple` where the last one stays.
    */
   protected select(option: SeasonPickerOption): void {
     if (!this.multiple()) {
@@ -259,8 +242,7 @@ export class SeasonPicker {
       return;
     }
 
-    // The list stays open: the highlight follows the ticked act and focus returns to the trigger,
-    // which a tap or a click on the row may have taken.
+    // The list stays open; focus returns to the trigger a tap on the row may have taken.
     this.activeIndex.set(this.options().indexOf(option) + this.optionOffset());
     this.triggerButton().nativeElement.focus();
 
@@ -277,20 +259,14 @@ export class SeasonPicker {
   }
 
   /**
-   * Whether a season is held.
-   *
-   * @param option - The season.
-   * @returns Whether it is part of the selection.
+   * Whether a season is selected.
    */
   protected isSelected(option: SeasonPickerOption): boolean {
     return this.selection().includes(option.id);
   }
 
   /**
-   * Whether the list rules a season off from the one above it: the first act of each episode.
-   *
-   * @param index - Position of the season in the list.
-   * @returns Whether a rule goes above it.
+   * Whether a rule goes above the season: the first act of each episode.
    */
   protected startsGroup(index: number): boolean {
     const options = this.options();
@@ -298,72 +274,23 @@ export class SeasonPicker {
   }
 
   /**
-   * Drives the list from the keyboard, following the ARIA select-only combobox pattern. Bound on
-   * the trigger and the list rather than the host, so the step arrows keep their native keys.
-   *
-   * @param event - The keyboard event.
+   * Keyboard handler, bound on the trigger and list so the step arrows keep their native keys.
    */
   protected onKeydown(event: KeyboardEvent): void {
-    const lastIndex = this.options().length + this.optionOffset() - 1;
-
-    switch (event.key) {
-      case 'ArrowDown':
-      case 'ArrowUp': {
-        event.preventDefault();
-        if (!this.isOpen()) {
-          this.open();
-          return;
-        }
-        const delta = event.key === 'ArrowDown' ? 1 : -1;
-        this.activeIndex.update((index) => Math.min(lastIndex, Math.max(0, index + delta)));
-        return;
-      }
-
-      case 'Home':
-      case 'End': {
-        if (!this.isOpen()) {
-          return;
-        }
-        event.preventDefault();
-        this.activeIndex.set(event.key === 'Home' ? 0 : lastIndex);
-        return;
-      }
-
-      case 'Enter':
-      case ' ': {
-        // Keeps the browser from also firing the trigger's native click for these keys.
-        event.preventDefault();
-        if (!this.isOpen()) {
-          this.open();
-          return;
-        }
-        this.pickActive();
-        return;
-      }
-
-      case 'Escape': {
-        if (this.isOpen()) {
-          event.preventDefault();
-          this.closeAndRefocus();
-        }
-        return;
-      }
-
-      case 'Tab': {
-        // Focus leaves naturally, but never past a list left open behind it.
-        this.close();
-        return;
-      }
-
-      default:
-        return;
-    }
+    handleListboxKeydown(event, {
+      isOpen: this.isOpen,
+      activeIndex: this.activeIndex,
+      // The "every season" row of single mode is a row too.
+      optionCount: this.options().length + this.optionOffset(),
+      open: () => this.open(),
+      close: () => this.close(),
+      closeAndRefocus: () => this.closeAndRefocus(),
+      pick: () => this.pickActive(),
+    });
   }
 
   /**
    * Closes the list on a click outside the control.
-   *
-   * @param event - The document click.
    */
   protected onDocumentClick(event: MouseEvent): void {
     if (!this.host.nativeElement.contains(event.target as Node)) {
@@ -372,8 +299,7 @@ export class SeasonPicker {
   }
 
   /**
-   * Opens the list on the row held, so the arrows start from it: "every season" for an empty
-   * selection in single mode, the first ticked act otherwise.
+   * Opens the list on the held row ("every season" when empty), so the arrows start there.
    */
   private open(): void {
     const held = this.options().findIndex((option) => this.isSelected(option));
@@ -382,8 +308,7 @@ export class SeasonPicker {
   }
 
   /**
-   * Picks the highlighted row: every season, or one act. A season the limit greys out is left
-   * alone, as its disabled row would be under the pointer.
+   * Picks the highlighted row; a season greyed out by the limit is left alone.
    */
   private pickActive(): void {
     const index = this.activeIndex();

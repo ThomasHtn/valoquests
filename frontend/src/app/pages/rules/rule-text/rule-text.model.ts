@@ -24,7 +24,7 @@ export interface RuleRun {
    */
   readonly icon: RuleIcon | null;
   /**
-   * Text colour of the icon: the resource's own everywhere else in the app, brand otherwise.
+   * Icon text colour: the resource's own, brand otherwise.
    */
   readonly tone: string;
 }

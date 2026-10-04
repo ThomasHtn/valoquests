@@ -1,28 +1,22 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { formatSeasonName } from '@core/matches/season-name.utils';
+import { formatSeasonName } from '@core/seasons/season-name.utils';
 import {
   formatHeadshotPercentage,
   formatKda,
   formatScore,
 } from '@core/players/player-format.utils';
-import { SeasonEvolution } from '@core/players/player-progression.model';
-import { LineChart } from '@shared/chart/line-chart';
+import { SeasonEvolution } from '@core/players/progression/player-progression.model';
+import { LineChart } from '@shared/chart/line-chart/line-chart';
 import { resolveSeriesColor } from '@shared/chart/chart-theme.utils';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import {
-  buildEvolutionSeries,
-  EVOLUTION_METRICS,
-  EvolutionMetric,
-} from '../evolution-series.utils';
-import { EvolutionLegendEntry } from './evolution-chart.model';
+import { buildEvolutionSeries } from './evolution-chart-series.utils';
+import { EVOLUTION_METRICS } from './evolution-chart.constants';
+import { EvolutionMetric, EvolutionLegendEntry } from './evolution-chart.model';
 
 /**
- * Match-by-match evolution of one metric, across the selected seasons.
- *
- * One chart area, four metrics, swapped by the buttons above it — rather than four charts stacked
- * down the page, which would leave the reader scrolling to compare a season against itself.
+ * Match-by-match evolution of one metric across the selected seasons, swapped by buttons.
  */
 @Component({
   selector: 'app-evolution-chart',
@@ -36,15 +30,12 @@ export class EvolutionChart {
   public readonly evolution = input.required<readonly SeasonEvolution[]>();
 
   /**
-   * Every known season's identifier, newest first.
-   *
-   * The source of a season's color: taking it from the position in this list rather than in the
-   * current selection is what stops a curve changing color when the reader unticks another season.
+   * Every season id, newest first; colours come from this order so a curve keeps its colour.
    */
   public readonly seasonOrder = input.required<readonly number[]>();
 
   /**
-   * i18n service, used for the labels the chart hands to the canvas.
+   * Translates the labels handed to the canvas.
    */
   private readonly translation = inject(Translation);
 
@@ -68,10 +59,7 @@ export class EvolutionChart {
   );
 
   /**
-   * Legend rows, one per plotted season.
-   *
-   * Rendered in HTML rather than on the canvas so each row can carry the season's average, which
-   * is the figure that makes two curves comparable at all.
+   * Legend rows in HTML, so each carries the season average that makes curves comparable.
    */
   protected readonly legend = computed<readonly EvolutionLegendEntry[]>(() =>
     this.evolution().map((season, index) => ({
@@ -82,13 +70,7 @@ export class EvolutionChart {
   );
 
   /**
-   * Writes a plotted value in the tooltip as the profile's tiles do, unit included.
-   */
-  protected readonly valueFormatter = (value: number): string => this.format(value);
-
-  /**
-   * Name of the y axis: whichever metric is currently plotted, since the axis changes meaning with
-   * every swap and an unnamed one would leave the reader guessing what 230 stands for.
+   * Y axis name: the plotted metric, since the axis changes meaning with every swap.
    */
   protected readonly yAxisLabel = computed(() =>
     this.translation.translate(`playerProfile.progression.evolution.axis.${this.metric()}`),
@@ -109,24 +91,24 @@ export class EvolutionChart {
   );
 
   /**
-   * Whether more than one season is plotted, and the front-padding is therefore in play.
+   * Whether several seasons are plotted, so the front padding is in play.
    */
   protected readonly isComparing = computed(() => this.evolution().length > 1);
 
   /**
+   * Formats a tooltip value like the profile's tiles, unit included.
+   */
+  protected readonly valueFormatter = (value: number): string => this.format(value);
+
+  /**
    * Switches the plotted metric.
-   *
-   * @param metric - The newly selected metric.
    */
   protected onMetricChange(metric: EvolutionMetric): void {
     this.metric.set(metric);
   }
 
   /**
-   * Formats a value of the plotted metric, in the same shape the profile's tiles use.
-   *
-   * @param value - The value to format.
-   * @returns The formatted value.
+   * Formats a value of the plotted metric like the profile's tiles.
    */
   protected format(value: number): string {
     switch (this.metric()) {
@@ -140,10 +122,7 @@ export class EvolutionChart {
   }
 
   /**
-   * Spells a season's raw code out in the active language.
-   *
-   * @param name - The raw season name, as returned by the API.
-   * @returns The label shown in the legend, on the curves and in the tooltip.
+   * Season name in the active language, for the legend, curves and tooltip.
    */
   private seasonLabel(name: string): string {
     return formatSeasonName(name, (key, params) => this.translation.translate(key, params));

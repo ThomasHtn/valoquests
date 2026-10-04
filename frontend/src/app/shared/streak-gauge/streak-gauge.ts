@@ -6,7 +6,7 @@ import { StreakPip } from './streak-gauge.model';
 import { weekdayInitials } from './streak-gauge.utils';
 
 /**
- * The week's attendance: seven hexagons from Monday to Sunday, then the bonus the streak earns.
+ * Week attendance as seven pips, Monday first, then the streak bonus.
  */
 @Component({
   selector: 'app-streak-gauge',
@@ -17,7 +17,7 @@ import { weekdayInitials } from './streak-gauge.utils';
 })
 export class StreakGauge {
   /**
-   * The week from Monday to Sunday, one pip per day, or `null` when only the count is known.
+   * One pip per day from Monday, `null` when only the count is known.
    */
   public readonly week = input.required<readonly StreakPip[] | null>();
 
@@ -31,15 +31,18 @@ export class StreakGauge {
    */
   public readonly bonusPercent = input.required<number>();
 
+  /**
+   * Translation service, whose language picks the weekday initials.
+   */
   private readonly translation = inject(Translation);
 
   /**
-   * Initials written above the seven pips, Monday first.
+   * Weekday initials above the pips, Monday first.
    */
   protected readonly weekdays = computed(() => weekdayInitials(this.translation.language()));
 
   /**
-   * The pips drawn: the week itself, or the count lit from the left when the days are unknown.
+   * The week, or the count lit from the left when the days are unknown.
    */
   protected readonly pips = computed<readonly StreakPip[]>(
     () =>

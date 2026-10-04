@@ -1,6 +1,4 @@
-<!-- What would come home, and the three things that bound it. Four dials on the same
-     scale, the wounded spotted: the three limits, then what gets through. Untitled: it is the
-     breakdown of the mission's aboard row, so it sits under it at the scan's own spacing. -->
+<!-- Untitled: it breaks down the mission's aboard row just above. -->
 @if (capacity(); as capacity) {
   <div [attr.aria-label]="'overview.capacity.title' | translate" class="cap mt-8" role="group">
     <div class="gauges">
@@ -192,9 +190,7 @@
         </div>
       </div>
 
-      <!-- The result, adding two contributions nothing else brings together: what the
-           extraction wrests from the guardian, and what the challenges already put
-           aboard, acquired whatever happens. -->
+      <!-- Result: extraction rescues plus challenge rescues, the latter acquired regardless. -->
       <div class="gauge-cell gauge-cell--out" style="--tone: var(--color-brand-400)">
         <p class="gauge-head">
           <span class="gauge-name text-brand-400">{{
@@ -231,8 +227,7 @@
           class="gauge gauge--hull"
           role="img"
         >
-          <!-- The challenges board's tank, poured into the rocket: the mask keeps the level
-               inside the outline. -->
+          <!-- Challenges board tank; the mask keeps the level inside the outline. -->
           <span [style.mask-image]="hullMask" class="hull">
             <span
               [class.hull-fill--full]="capacity.aboardFraction >= 1"
@@ -246,7 +241,7 @@
           <span class="gauge-mid hull-port">
             <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.wounded"></svg>
           </span>
-          <!-- Sized on the final figure, not the counting one, so it never jumps mid-count. -->
+          <!-- Sized on the final figure so it never jumps mid-count. -->
           <span [style.--fig]="hullFigureSize(capacity.aboard)" class="gauge-mid hull-figure">
             <b [appCountUp]="capacity.aboard" class="tabular-nums"></b>
           </span>

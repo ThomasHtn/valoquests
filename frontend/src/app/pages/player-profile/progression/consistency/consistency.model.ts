@@ -1,9 +1,14 @@
-import { ConsistencyMatch } from '@core/players/player-progression.model';
+import { ConsistencyMatch } from '@core/players/progression/player-progression.model';
 
 /**
  * Where a match falls against its season's floor and ceiling.
  */
 export type ConsistencyZone = 'below' | 'inside' | 'above';
+
+/**
+ * How a season's spread compares with the previous one: narrower, wider, or about the same.
+ */
+export type ConsistencyTrend = 'tighter' | 'looser' | 'steady';
 
 /**
  * Combat-score axis of the chart, with the grid of columns the dots stack in.

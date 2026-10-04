@@ -1,11 +1,11 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal } from '@angular/core';
 
-import { API_ENDPOINTS } from '@core/http/api-endpoints';
-import { GameMode } from '@core/matches/game-mode.model';
+import { API_ENDPOINTS } from '@core/http/api-endpoints.constants';
+import { GameMode } from '@core/matches/game-mode/match-game-mode.model';
 
 import { PlayerDetails } from './player-details.model';
-import { PlayerProgression } from './player-progression.model';
+import { PlayerProgression } from './progression/player-progression.model';
 import { PlayerSummary } from './player-summary.model';
 
 /**
@@ -14,23 +14,14 @@ import { PlayerSummary } from './player-summary.model';
 @Service()
 export class PlayersApi {
   /**
-   * Every tracked player's compact summary.
-   *
-   * Shared as a single reactive resource so every consumer reads the same in-flight request
-   * instead of triggering its own call to `GET /api/players`.
+   * Every tracked player's summary, shared so consumers reuse one request.
    */
   public readonly players = httpResource<readonly PlayerSummary[]>(() => API_ENDPOINTS.players, {
     defaultValue: [],
   });
 
   /**
-   * Detailed profile of one tracked player, with statistics over every mode and season.
-   *
-   * Created per caller, unlike {@link players}, since it is parameterized by the requested player.
-   *
-   * @param id - Reactive internal player identifier, or `null` when the route names none, which
-   *   leaves the resource idle.
-   * @returns The reactive resource fetching the requested player's detailed profile.
+   * Player profile over every mode and season, idle while `id` is `null`.
    */
   public details(id: Signal<number | null>): HttpResourceRef<PlayerDetails | undefined> {
     return httpResource<PlayerDetails>(() => {
@@ -40,17 +31,8 @@ export class PlayersApi {
   }
 
   /**
-   * Same profile as {@link details}, with its statistics scoped to one game mode and, optionally,
-   * one season.
-   *
-   * Kept apart from {@link details} so a filter change only refetches the figures, never the
-   * identity banner.
-   *
-   * @param id - Reactive internal player identifier, or `null` when the route names none.
-   * @param gameMode - Reactive game mode the statistics are scoped to, or `null` to leave the
-   *   resource idle: an every-mode aggregate would mix incomparable queues.
-   * @param seasonId - Reactive season filter, or `null` to include every season.
-   * @returns The reactive resource fetching the scoped profile.
+   * Profile scoped to one mode and optional season, apart so filters never refetch the banner.
+   * Idle without a mode: an every-mode aggregate would mix incomparable queues.
    */
   public scopedDetails(
     id: Signal<number | null>,
@@ -78,12 +60,7 @@ export class PlayersApi {
   }
 
   /**
-   * Analytics behind one tracked player's progression view, scoped to a set of seasons.
-   *
-   * @param id - Reactive internal player identifier, or `null` while the player to load is not
-   *   known yet, which leaves the resource idle instead of requesting an invalid identifier.
-   * @param seasonIds - Reactive season selection; an empty list covers every season.
-   * @returns The reactive resource fetching the requested player's progression analytics.
+   * Progression analytics over `seasonIds` (empty for all), idle while `id` is `null`.
    */
   public progression(
     id: Signal<number | null>,
@@ -100,8 +77,7 @@ export class PlayersApi {
 
       return {
         url: API_ENDPOINTS.playerProgression(playerId),
-        // Repeated rather than comma-joined, which is how Spring binds a `List<Long>` parameter.
-        // Omitted entirely when empty, which the backend reads as "every season".
+        // Repeated params bind to Spring's `List<Long>`; omitted when empty, meaning every season.
         params: { ...(selectedSeasonIds.length > 0 ? { seasonIds: [...selectedSeasonIds] } : {}) },
       };
     });

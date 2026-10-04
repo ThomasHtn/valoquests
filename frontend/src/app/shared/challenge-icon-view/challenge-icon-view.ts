@@ -13,14 +13,10 @@ import {
   LucideUsers,
 } from '@lucide/angular';
 
-import { ChallengeIcon } from '@core/challenges/challenge-visual.model';
+import { ChallengeIcon } from '@core/challenges/visual/challenge-visual.model';
 
 /**
- * Renders the Lucide icon matching a challenge's resolved {@link ChallengeIcon} key.
- *
- * Shared by the weekly challenges card and the weekly ranking table so both widgets render the
- * exact same icon for a given challenge. Consumers size and color the icon with Tailwind utility
- * classes (e.g. `h-5 w-5`, `text-accent-green`) applied directly on the host element.
+ * Lucide icon of a {@link ChallengeIcon} key; size and color it with classes on the host.
  */
 @Component({
   selector: 'app-challenge-icon-view',
@@ -42,7 +38,7 @@ import { ChallengeIcon } from '@core/challenges/challenge-visual.model';
 })
 export class ChallengeIconView {
   /**
-   * Icon key to render, resolved from a challenge's metric and difficulty.
+   * Icon key, resolved from the challenge's metric and difficulty.
    */
   public readonly icon = input.required<ChallengeIcon>();
 }

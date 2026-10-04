@@ -34,9 +34,10 @@ graphify-out/
 graph.json
 
 # -----------------------------------------------------------------------------
-# Visual Studio Code
+# Visual Studio Code (shared settings only)
 # -----------------------------------------------------------------------------
-.vscode/
+.vscode/*
+!.vscode/settings.json
 
 # -----------------------------------------------------------------------------
 # Eclipse and Spring Tool Suite

@@ -1,10 +1,5 @@
-<!-- The anchor decides the geometry and nothing else. `end`: the margin utilities override the
-     user-agent's centering (`margin: auto` on all four sides) to pin the panel to the viewport's
-     trailing edge at full height, and `max-h-dvh` overrides the default
-     `max-height: calc(100% - 6px - 2em)` that would otherwise leave it floating short of the top and
-     bottom. `center`: `m-auto` restores the centering the user agent gives a `<dialog>` and the CSS
-     reset takes away, the panel takes its content's height up to a ceiling, and it rises into place
-     rather than sliding in from an edge it no longer touches. -->
+<!-- `end` overrides the user-agent margins and max-height to fill the trailing edge; `center`
+     restores the `m-auto` centering the CSS reset removes. -->
 <dialog
   #dialog
   (cancel)="onCancel($event)"
@@ -23,9 +18,7 @@
   <div
     class="flex h-full flex-col gap-6 overflow-y-auto p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-7 sm:pb-[max(1.75rem,env(safe-area-inset-bottom))]"
   >
-    <!-- Header row: whatever the drawer leads with, and the one framed control of the panel.
-         Spaced apart rather than pushing the button with an auto margin, so a leading block
-         that grows (a long title) still stops short of it. -->
+    <!-- `justify-between`, not an auto margin, so a long title stops short of the button. -->
     <div class="flex items-center justify-between gap-2">
       <ng-content select="[drawerLeading]" />
 

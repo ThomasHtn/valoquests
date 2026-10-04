@@ -1,0 +1,48 @@
+/* Angular silhouettes; clipping cuts outer outlines, so notched controls use `focus-ring-inset`. */
+
+@utility clip-hex {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+/* Panel cut at its top-right corner, `--notch` deep. */
+@utility notch-tr {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--notch, 1.5rem)) 0,
+    100% var(--notch, 1.5rem),
+    100% 100%,
+    0 100%
+  );
+}
+
+/* Diagonal border of a bordered `notch-tr` panel; set `--notch-border-width` when not 1px. */
+@utility notch-tr-edge {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: calc(-1 * var(--notch-border-width, 1px));
+    right: calc(-1 * var(--notch-border-width, 1px));
+    /* √2 times `--notch`. */
+    width: calc(var(--notch, 1.5rem) * 1.4142);
+    border-top: var(--notch-border-width, 1px) solid;
+    border-color: inherit;
+    border-top-style: inherit;
+    /* The inherited color already follows the border; a transition would lag. */
+    transition: none;
+    /* Pivot on the corner and lay along the diagonal, inside the clip. */
+    transform-origin: 100% 0;
+    transform: translateY(var(--notch, 1.5rem)) rotate(45deg);
+  }
+}
+
+/* Sheared segment leaning right (progress bar slots). */
+@utility clip-shear {
+  clip-path: polygon(
+    var(--notch, 0.375rem) 0,
+    100% 0,
+    calc(100% - var(--notch, 0.375rem)) 100%,
+    0 100%
+  );
+}

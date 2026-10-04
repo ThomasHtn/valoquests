@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { SeasonRank } from '@core/players/player-progression.model';
+import { SeasonRank } from '@core/players/progression/player-progression.model';
 import {
   buildRankJourneyAxisLabels,
   buildRankJourneyFigures,
@@ -11,7 +11,7 @@ import {
 } from './rank-journey.utils';
 
 /**
- * Stands in for the translation service, echoing the key and its parameters.
+ * Fake translation echoing the key and its parameters.
  */
 function translate(key: string, params?: Readonly<Record<string, string | number>>): string {
   const suffix = Object.entries(params ?? {})

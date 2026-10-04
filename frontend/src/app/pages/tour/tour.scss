@@ -1,10 +1,4 @@
-/*
- * The tour is otherwise pure utility classes; this file holds what they cannot express: the
- * framing of the sample screens, and the spec strip's dividers.
- */
-
-/* A step: the copy, the sample screen, the spec strip. Stacked in that order on a phone; from the
-   desktop up, the copy and the strip form one block beside the screen, centred on it. */
+/* Copy, screen and specs stack on a phone; on desktop the copy and specs flank the screen. */
 .tour-step {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -49,25 +43,23 @@
   }
 }
 
-/* The day's challenge at a phone's width, as the challenges page shows it there; flush left with
-   the caption under it. */
+/* The daily card at a phone's width, flush left with its caption. */
 .tour-phone-card {
   max-width: 24rem;
 }
 
-/* The week's strip flush with the card's edges, cancelling its padding as the page's deck does. */
+/* Week strip flush with the card's edges, cancelling its padding. */
 .tour-tally {
   margin: 1rem -1rem -1.1rem -1.15rem;
 }
 
-/* The words a claim turns on. Weight and value only: the eyebrow and the figures spend the accent. */
+/* Claim emphasis without the accent, which the eyebrow and figures already use. */
 .tour-em {
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-/* The spec strip: three columns whatever the viewport, the figures are short. Left-aligned with the
-   copy above it. */
+/* Spec strip: three columns at every width, the figures are short. */
 .tour-specs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -86,7 +78,7 @@
   border-left: 0;
 }
 
-/* Not `label-caption`: its tracking is built for one line, and these run to two. */
+/* Not `label-caption`: its tracking suits one line, these run to two. */
 .tour-spec-label {
   margin-top: 6px;
   font-weight: 500;

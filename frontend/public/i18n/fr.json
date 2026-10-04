@@ -465,7 +465,6 @@
     }
   },
   "common": {
-    "columnLegend": "Comment lire ces chiffres",
     "week": {
       "timeLabel": "Clôture dans",
       "timeRemaining": "{{days}}j {{hours}}h"

@@ -5,8 +5,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { CatalogueGroup } from '../challenges.model';
 
 /**
- * Everything the draws can still hand out, grouped by what fixes the reward: the daily pool,
- * then the five difficulties.
+ * Everything the draws can hand out: the daily pool, then the five difficulties.
  */
 @Component({
   selector: 'app-challenge-catalogue',
@@ -16,5 +15,8 @@ import { CatalogueGroup } from '../challenges.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChallengeCatalogueView {
+  /**
+   * The draw pools to list, the daily one first.
+   */
   public readonly groups = input.required<readonly CatalogueGroup[]>();
 }

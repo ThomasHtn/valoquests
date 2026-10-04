@@ -1,5 +1,4 @@
-/* A match row: map and mode, score, then the stats. The agent and the K/D/A drop on a phone, the
-   damage stays: it is the column the step is about. */
+/* Phones drop the agent and K/D/A; the damage stays, it is what the step is about. */
 .row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto 4.75rem;

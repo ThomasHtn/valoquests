@@ -1,0 +1,51 @@
+/* Scrollbars; defaults stay in `@layer base` so utilities always win. */
+
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-surface-600) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-surface-600);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-brand-500);
+  }
+}
+
+/* Thumb shown on hover or focus only; no reserved gutter. */
+@utility scroll-subtle {
+  scrollbar-color: transparent transparent;
+
+  &:hover,
+  &:focus-within {
+    scrollbar-color: var(--color-surface-600) transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent;
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &:focus-within::-webkit-scrollbar-thumb {
+    background-color: var(--color-surface-600);
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-brand-500);
+  }
+}

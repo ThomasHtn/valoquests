@@ -1,9 +1,4 @@
-/*
- * Three readings, in the order the week is played: the clock, the squad against the guardian, what
- * Sunday midnight decides. No prose: plates, figures and one full-bleed track.
- *
- * The clock spans the block and centres: it is the only value here that moves on its own.
- */
+/* Clock, duel, then stakes: the order the week is played. */
 .report {
   --squad: var(--color-accent-violet);
   --squad-light: color-mix(in srgb, var(--color-accent-violet) 45%, white);
@@ -26,7 +21,7 @@
 
 /* ---------- The duel ---------- */
 
-/* The block is the gauge: its whole ground is the shared track, the camps read on top of it. */
+/* The whole block is the gauge: the camps read on top of the shared track. */
 .duel {
   position: relative;
   overflow: hidden;
@@ -62,7 +57,7 @@
   text-align: right;
 }
 
-/* Each camp's name on a flat plate of its own colour, dark lettering. */
+/* Camp name on a flat plate of its colour. */
 .plate {
   display: inline-flex;
   align-items: center;
@@ -85,7 +80,7 @@
   stroke-width: 2.25;
 }
 
-/* Figure over unit, mirrored on both sides: the two numbers hold the block's outer edges. */
+/* Figure over unit, mirrored on both sides. */
 .camp-fig {
   display: flex;
   flex-direction: column;
@@ -114,8 +109,7 @@
   color: var(--color-text-secondary);
 }
 
-/* The shared track, under the whole block: violet segments per operator, muted red hatch standing,
-   both kept dark enough for the camps' figures to read on either side. */
+/* Kept dark so the camps' figures stay readable on top. */
 .duel-track {
   position: absolute;
   inset: 0;
@@ -133,8 +127,7 @@
   animation: duel-fill var(--duration-gauge-long) var(--ease-gauge) both;
 }
 
-/* Operators' segments are buttons, reset to bare strips; the empty track keeps a plain `i`. A
-   small contributor keeps a sliver wide enough to tap. */
+/* Segments are bare buttons; a small contributor keeps a sliver wide enough to tap. */
 .duel-front > * {
   display: block;
   flex: var(--w, 1) 1 0;
@@ -161,7 +154,7 @@
   filter: brightness(1.3);
 }
 
-/* The breakthrough: a gold post on the seam, thickened while its hover zone is pointed at. */
+/* Breakthrough post, thickened while its hover zone is pointed at. */
 .duel-post {
   position: absolute;
   inset-block: 0;
@@ -173,7 +166,7 @@
   animation: duel-post var(--duration-gauge-long) var(--ease-gauge) both;
 }
 
-/* A three-pixel post is too thin to aim at: the pointer and the thumb catch it 24px wide. */
+/* 24px hit zone: the 3px post is too thin to aim at. */
 .duel-seam {
   position: absolute;
   inset-block: 0;
@@ -193,7 +186,7 @@
   opacity: 0.5;
 }
 
-/* Between the track and the camps; lets the pointer through to the operators' segments. */
+/* Lets the pointer through to the operators' segments. */
 .duel-won {
   position: absolute;
   inset: 0;
@@ -225,7 +218,7 @@
   stroke-width: 3;
 }
 
-/* Only drawn where it can move: still, the burst would be litter around the check. */
+/* Hidden without motion: a still burst reads as litter. */
 .piece {
   display: none;
 }
@@ -270,7 +263,7 @@
 
 /* ---------- Sunday's stakes ---------- */
 
-/* On the clock's sunken ground: the two outcomes the countdown ends on. */
+/* Same sunken ground as the clock. */
 .stakes {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -356,7 +349,7 @@
   }
 }
 
-/* Out along its angle, turning on itself, gone by the end; reach scaled up for the larger check. */
+/* Reach scaled up for the larger check. */
 @keyframes confetti {
   0% {
     opacity: 0;
@@ -397,7 +390,7 @@
 }
 
 @media (width < 40rem) {
-  /* The clock keeps its own height, or it opens a gap under the section title. */
+  /* Keep the clock's height, or a gap opens under the section title. */
   .rep-clock {
     padding-inline: 1.25rem;
   }
@@ -434,15 +427,14 @@
     align-items: flex-end;
   }
 
-  /* Literal `text-3xs`: Tailwind only emits theme variables a utility uses, and none uses this one. */
+  /* Literal `text-3xs`: Tailwind drops theme variables no utility uses. */
   .stake-key {
     font-size: 0.5625rem;
     letter-spacing: 0.12em;
     white-space: nowrap;
   }
 
-  /* One step below `text-2xs`: at the caption's own size the deadline line wrapped in two under
-     the clock, the only reference here not paired with a figure that could give up space to it. */
+  /* One step below `text-2xs`, or the deadline line wraps under the clock. */
   .rep-when {
     font-size: 0.5625rem;
     white-space: nowrap;

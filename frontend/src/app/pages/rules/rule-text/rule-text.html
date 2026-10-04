@@ -1,7 +1,6 @@
 @for (run of runs(); track $index) {
   @if (run.icon) {
-    <!-- The icon is a word: it sits in the line at the text's own size, on its baseline, and the
-         word it stands for is written right next to it in the dictionary. -->
+    <!-- Icon at text size on the baseline; the dictionary writes its word next to it. -->
     <span
       [class]="run.tone"
       aria-hidden="true"
@@ -10,8 +9,7 @@
       <svg [lucideIcon]="concepts[run.icon]" class="size-full"></svg>
     </span>
   } @else {
-    <!-- One element per run, on one line: Angular drops whitespace-only nodes between elements,
-         so the spacing a reader sees is the sentence's own, never the template's indentation. -->
+    <!-- One line per run: spacing comes from the sentence, never the template indentation. -->
     <span [class.font-semibold]="run.strong" [class.text-text-primary]="run.strong">{{
       run.text
     }}</span>

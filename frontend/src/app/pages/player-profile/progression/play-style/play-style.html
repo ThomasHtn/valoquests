@@ -9,10 +9,7 @@
   </h3>
 
   @if (hasSample()) {
-    <!-- Target sheet: the figure on the left, its dimensions called out on the right, centered as
-         one group so a wide column leaves no dead space on the right. The four corner ticks are the
-         whole of the framing — a full frame around the silhouette would box it in and turn the one
-         loud element on this page into another card. -->
+    <!-- Target sheet centred as one group; corner ticks only, as a full frame reads as a card. -->
     <div class="relative flex items-stretch justify-center gap-4 py-4 sm:gap-6">
       <span
         aria-hidden="true"
@@ -31,8 +28,7 @@
         class="absolute right-0 bottom-0 size-3 border-r border-b border-brand-500/30"
       ></span>
 
-      <!-- The silhouette from `pictures/accuracy_dummy.svg`, at the size this section can afford:
-           the original is a 22×56 thumbnail, and it is the anchor of the block here. -->
+      <!-- Silhouette from `pictures/accuracy_dummy.svg`, enlarged as the block's anchor. -->
       <svg
         [attr.aria-label]="description()"
         class="h-64 w-auto shrink-0 text-brand-500 sm:h-80"
@@ -63,8 +59,7 @@
         />
       </svg>
 
-      <!-- Callouts. The three rows grow in the proportions of the zones they name, so each one
-           lands beside its own part of the figure without a single hard-coded offset. -->
+      <!-- Rows grow in the zones' proportions so each callout lands beside its part. -->
       <ul class="flex min-w-0 flex-col">
         @for (zone of zones(); track zone.key; let index = $index) {
           <li

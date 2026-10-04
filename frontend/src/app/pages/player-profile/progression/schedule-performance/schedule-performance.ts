@@ -1,27 +1,25 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { formatPercent } from '@core/i18n/number-format.utils';
+import { formatPercent } from '@core/i18n/format/number-format.utils';
 import { Translation } from '@core/i18n/translation';
-import { HourSlotPerformance, WeekdayPerformance } from '@core/players/player-progression.model';
-import { BarChart } from '@shared/chart/bar-chart';
+import {
+  HourSlotPerformance,
+  WeekdayPerformance,
+} from '@core/players/progression/player-progression.model';
+import { BarChart } from '@shared/chart/bar-chart/bar-chart';
 import { ChartBar } from '@shared/chart/chart.model';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { MINIMUM_SAMPLE } from './schedule-performance.constants';
 
 /**
- * When a player wins, by day of the week and by time of day.
- *
- * Bars carry the win rate, not the number of matches: the question this section answers is "when
- * am I good", and a volume chart answers "when do I play" instead. Volume still decides what may
- * be *called* a best — a lone lucky Tuesday morning is not a strength — so slots under the sample
- * floor are drawn recessive and can never win.
+ * Win rate by weekday and time of day ("when am I good", not "when do I play").
+ * Slots under the sample floor are drawn recessive and can never be the best.
  */
 @Component({
   selector: 'app-schedule-performance',
   imports: [TranslatePipe, BarChart, Tooltip],
   templateUrl: './schedule-performance.html',
-  // Fills the card it sits in, so the reading note at the bottom of the template can be pushed to
-  // the bottom of the card rather than to the bottom of the charts.
+  // Fills its card so the reading note can sink to the card's bottom.
   host: { class: 'block h-full' },
 })
 export class SchedulePerformance {
@@ -36,28 +34,22 @@ export class SchedulePerformance {
   public readonly hourSlots = input.required<readonly HourSlotPerformance[]>();
 
   /**
-   * i18n service, used for axis labels and tooltip details.
+   * Translates axis labels and tooltip details.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Sample a slot needs before it can be highlighted, surfaced to the template.
+   * Sample a slot needs before it can be highlighted.
    */
   protected readonly minimumSample = MINIMUM_SAMPLE;
 
   /**
-   * Writes a win rate in the tooltip, in the reader's notation.
-   */
-  protected readonly formatRate = (value: number): string =>
-    formatPercent(value, this.translation.language());
-
-  /**
-   * The weekday chart read out as text, since a screen reader cannot see the bars.
+   * Weekday chart as text for screen readers.
    */
   protected readonly weekdaySummary = computed(() => this.describe(this.weekdayBars()));
 
   /**
-   * The time-slot chart read out as text.
+   * Time-slot chart as text for screen readers.
    */
   protected readonly hourSlotSummary = computed(() => this.describe(this.hourSlotBars()));
 
@@ -88,7 +80,7 @@ export class SchedulePerformance {
   );
 
   /**
-   * Name of the strongest weekday, or an empty string when none qualifies.
+   * Strongest weekday name, empty when none qualifies.
    */
   protected readonly bestWeekday = computed(() => {
     const best = this.weekdays().find((day) => day.best);
@@ -98,7 +90,7 @@ export class SchedulePerformance {
   });
 
   /**
-   * Label of the strongest time slot, or an empty string when none qualifies.
+   * Strongest time slot label, empty when none qualifies.
    */
   protected readonly bestHourSlot = computed(() => {
     const slot = this.hourSlots().find((entry) => entry.best);
@@ -106,10 +98,13 @@ export class SchedulePerformance {
   });
 
   /**
-   * Formats a slot's sample for its tooltip.
-   *
-   * @param matchesPlayed - Matches played in that slot.
-   * @returns The already-translated detail line.
+   * Formats a tooltip win rate in the reader's notation.
+   */
+  protected readonly formatRate = (value: number): string =>
+    formatPercent(value, this.translation.language());
+
+  /**
+   * Translated sample line of a slot's tooltip.
    */
   private sampleLabel(matchesPlayed: number): string {
     return this.translation.translate('playerProfile.progression.schedule.sample', {
@@ -118,10 +113,7 @@ export class SchedulePerformance {
   }
 
   /**
-   * Spells a slot out as the hours it covers.
-   *
-   * @param startHour - The slot's first hour.
-   * @returns The range, e.g. `18h – 21h`, the last one ending at midnight.
+   * Hours a slot covers, e.g. `18h – 21h`, the last one ending at midnight.
    */
   protected slotRange(startHour: number): string {
     const end = startHour + 3;

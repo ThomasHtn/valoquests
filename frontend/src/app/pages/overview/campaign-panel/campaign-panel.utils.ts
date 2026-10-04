@@ -1,15 +1,14 @@
+import { CampaignWeek, ExtractionLimiter } from '@core/campaign/campaign-week.model';
+import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
+import { Campaign } from '@core/campaign/campaign.model';
 import {
-  Campaign,
-  CAMPAIGN_WEEK_COUNT,
-  CampaignWeek,
-  ExtractionLimiter,
-} from '@core/campaign/campaign.model';
-import { LedgerCell, LedgerColumn, LedgerRow, PlanetState, Reserves } from './campaign-panel.model';
-
-/**
- * Pure builders of the campaign tab: the base's reserves, the reserve ledger and the campaigns'
- * history, out of the campaign the API returned.
- */
+  LedgerCell,
+  LedgerColumn,
+  LedgerKey,
+  LedgerRow,
+  PlanetState,
+  Reserves,
+} from './campaign-panel.model';
 
 /**
  * Where a week stands: won, lost, the one being played, or still ahead.
@@ -48,7 +47,7 @@ export function resolveSeasonKey(date: Date): 'winter' | 'spring' | 'summer' | '
 }
 
 /**
- * The base's stocks, what they can carry, and the campaign's rescue totals so far.
+ * Base stocks, what they pay for, and the campaign's rescue totals.
  */
 export function buildReserves(
   campaign: Campaign | null,
@@ -56,7 +55,7 @@ export function buildReserves(
 ): Reserves | null {
   const base = campaign?.base;
   const totals = campaign?.totals;
-  // An opened campaign has no replayed day yet: nothing to read, so nothing shown.
+  // An opened campaign has no replayed day yet.
   if (!campaign || !base || !totals || campaign.status === 'OPENED') {
     return null;
   }
@@ -101,13 +100,7 @@ export function buildReserves(
 }
 
 /**
- * Resource a ledger row tracks.
- */
-type LedgerKey = LedgerRow['key'];
-
-/**
- * Both rows of the ledger, scaled together so a food bar and a components bar of the same height
- * mean the same quantity. Empty until a week has been replayed.
+ * Both ledger rows on one shared scale; empty until a week has been replayed.
  */
 export function buildLedger(
   campaign: Campaign | null,
@@ -139,7 +132,7 @@ export function buildLedger(
 }
 
 /**
- * One cell per week for one resource; the stock a settled week leaves is carried into the next.
+ * One cell per week; a settled week's stock carries into the next.
  */
 function buildLedgerCells(
   campaign: Campaign,

@@ -1,7 +1,7 @@
-<!-- The tabs share the hairline a section rule would draw, splitting the full width between them. -->
+<!-- The tabs share a section rule's hairline across the full width. -->
 <div [attr.aria-label]="'overview.tabs.aria' | translate" class="bar" role="tablist">
   @for (tab of tabs(); track tab.key; let index = $index) {
-    <!-- The star sits beside the tab, never inside it: a button cannot hold another. -->
+    <!-- Star beside the tab, not inside: a button cannot hold another. -->
     <div
       #slot
       [attr.data-tab]="tab.key"
@@ -42,7 +42,7 @@
         }
       </button>
 
-      <!-- Only the tab on screen can be pinned; the pinned one keeps its star as a mark. -->
+      <!-- Only the selected tab can be pinned; the pinned one keeps its star as a mark. -->
       @if (selected() === tab.key) {
         @let pinned = favorite() === tab.key;
         <button

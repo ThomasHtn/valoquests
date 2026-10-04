@@ -1,11 +1,7 @@
 import { RuleIcon } from './rule-text.model';
 
 /**
- * Icons a rule may name inline, by the token written in the dictionary (`{food}`, `{guardian}`).
- *
- * The same vocabulary as the rest of the gameplay pages: a wheat ear is food everywhere, a skull is
- * the guardian everywhere. A token outside this list is rendered as its own text, so a typo in a
- * dictionary shows up on screen rather than vanishing.
+ * Inline icon tokens (`{food}`); an unknown token renders as text so typos stay visible.
  */
 export const RULE_ICONS = [
   'food',

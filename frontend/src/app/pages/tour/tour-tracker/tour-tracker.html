@@ -1,6 +1,5 @@
 <div class="flex flex-col gap-2">
-  <!-- The day header of the profile's card list: count, date, record, and what the evening was
-       worth to the guardian. -->
+  <!-- Day header of the profile's match list. -->
   <div
     class="flex flex-wrap items-center gap-x-4 gap-y-2 border-l-2 border-brand-500 bg-text-primary/8 px-4 py-2.5"
   >
@@ -71,7 +70,7 @@
         </span>
       </p>
 
-      <!-- The column the whole game reads from: what the match was worth to the week's boss. -->
+      <!-- Damage to the week's boss, the column the step is about. -->
       <p
         [appTooltip]="
           damageHintKey(match.damagePercent) | translate: { percent: match.damagePercent }

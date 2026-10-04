@@ -9,18 +9,17 @@ import {
   resolveAgentInitial,
   resolveDamageHintKey,
   resolveMapImageUrl,
-} from '@core/matches/match-format.utils';
-import { resolveResultAccentClass, resolveResultTextClass } from '@core/matches/match-visual.utils';
-import { MediaThumbnail } from '@pages/player-profile/media-thumbnail/media-thumbnail';
+} from '@core/matches/display/match-format.utils';
+import {
+  resolveResultAccentClass,
+  resolveResultTextClass,
+} from '@core/matches/display/match-visual.utils';
+import { MediaThumbnail } from '@shared/media-thumbnail/media-thumbnail';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { TourSampleMatch } from '../tour.model';
 
 /**
- * One evening of the profile's match history, cut down to what the first step turns on: every
- * match lands there on its own, and each one carries the damage it dealt to the week's guardian.
- *
- * Built from the history's own pieces (day header, rows, result edge, thumbnails) rather
- * than the component itself, which pages, links out and switches layout at `lg`.
+ * One evening of match history, built from its pieces since the real one pages and links out.
  */
 @Component({
   selector: 'app-tour-tracker',
@@ -35,32 +34,65 @@ export class TourTracker {
    */
   public readonly matches = input.required<readonly TourSampleMatch[]>();
 
+  /**
+   * Wins of the evening, for the summary line.
+   */
   protected readonly wins = computed(
     () => this.matches().filter((match) => match.result === 'WIN').length,
   );
 
+  /**
+   * Losses of the evening, for the summary line.
+   */
   protected readonly losses = computed(
     () => this.matches().filter((match) => match.result === 'LOSS').length,
   );
 
+  /**
+   * Damage of the whole evening, shown in the header.
+   */
   protected readonly totalDamage = computed(() =>
     this.matches().reduce((sum, match) => sum + match.damage, 0),
   );
 
+  /**
+   * Accent stripe class of a match result.
+   */
   protected readonly resultAccentClass = resolveResultAccentClass;
 
+  /**
+   * Text color class of a match result.
+   */
   protected readonly resultTextClass = resolveResultTextClass;
 
+  /**
+   * Monogram shown when an agent portrait is missing.
+   */
   protected readonly agentInitial = resolveAgentInitial;
 
+  /**
+   * Map thumbnail URL of a match.
+   */
   protected readonly mapImageUrl = resolveMapImageUrl;
 
+  /**
+   * Agent portrait URL of a match.
+   */
   protected readonly agentImageUrl = resolveAgentImageUrl;
 
+  /**
+   * Tooltip key explaining how much of a match's damage counted.
+   */
   protected readonly damageHintKey = resolveDamageHintKey;
 
+  /**
+   * Translation, to format damage in the current language.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * Formats a damage amount in the current language.
+   */
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());
   }

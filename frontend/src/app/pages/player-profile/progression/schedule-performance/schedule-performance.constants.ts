@@ -1,5 +1,4 @@
 /**
- * Matches a slot needs before it can be called a best. Mirrors the backend's own floor, and is
- * shown to the reader so a greyed-out bar explains itself.
+ * Matches a slot needs to be called a best; mirrors the backend floor, shown to the reader.
  */
 export const MINIMUM_SAMPLE = 5;

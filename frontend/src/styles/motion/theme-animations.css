@@ -1,0 +1,86 @@
+/* Use as `motion-safe:animate-*`; looping ones also need their resting value as a plain class. */
+
+@theme {
+  /* Landing compass. */
+  --animate-compass-spin: compass-spin 26s linear infinite;
+  --animate-compass-spin-reverse: compass-spin-reverse 40s linear infinite;
+  --animate-compass-core: compass-core 2.4s ease-in-out infinite;
+  --animate-compass-ripple: compass-ripple 3s ease-out infinite;
+
+  /* Tour steps: the copy lands first, the illustration a beat later. */
+  --animate-step-in: step-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-step-in-late: step-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+
+  /* Tour fixed bands, faded in once on arrival. */
+  --animate-chrome-in: chrome-in 0.6s ease-out both;
+
+  /* Outer bezel, drifting clockwise. */
+  @keyframes compass-spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Inner bezel, counter-rotating so the rings never look locked. */
+  @keyframes compass-spin-reverse {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+
+  /* Core disc breathing. */
+  @keyframes compass-core {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  /* Sonar ring out of the core. */
+  @keyframes compass-ripple {
+    from {
+      opacity: 0.7;
+      transform: scale(0.72);
+    }
+
+    to {
+      opacity: 0;
+      transform: scale(1.5);
+    }
+  }
+
+  @keyframes step-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Opacity only: sliding viewport-pinned bands reads as a glitch. */
+  @keyframes chrome-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+}

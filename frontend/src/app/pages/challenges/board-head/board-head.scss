@@ -1,5 +1,4 @@
-/* The hexagon beside the key line and the name, the gain in the top-right corner, the rule below,
-   aligned on the name. */
+/* Hexagon, title and gain on one row; the rule below, aligned on the name. */
 :host {
   display: grid;
   grid-template-columns: 2.6rem minmax(0, 1fr) auto;
@@ -85,13 +84,13 @@
   text-wrap: pretty;
 }
 
-/* The numbers the rule asks for, in the row's tone so the target stands out. */
+/* The rule's numbers, in the row's tone. */
 .rule b {
   font-weight: 600;
   color: var(--tone);
 }
 
-/* A weekly row keeps room for two lines of rule, so every row reads alike. */
+/* Weekly rows keep room for two lines of rule so they read alike. */
 :host(.head--even) .rule {
   min-height: 3em;
 }

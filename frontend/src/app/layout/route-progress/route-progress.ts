@@ -11,21 +11,28 @@ import { ROUTE_PROGRESS_DELAY_MS, ROUTE_PROGRESS_SETTLE_MS } from './route-progr
 import { RouteProgressPhase } from './route-progress.model';
 
 /**
- * Thin amber rail along the top of the content column while a route resolves.
- *
- * Most pages are eager and swap instantly, but the profile, the match detail and the rules are
- * lazy chunks: on a phone over mobile data, the tap used to be followed by nothing at all until
- * the chunk landed. The bar answers the tap without covering the page being left.
+ * Thin rail atop the content while a route resolves, for lazy chunks on slow networks.
  */
 @Component({
   selector: 'app-route-progress',
   templateUrl: './route-progress.html',
+  styleUrl: './route-progress.scss',
   host: { class: 'pointer-events-none absolute inset-x-0 top-0 z-40 block h-0.5' },
 })
 export class RouteProgress {
+  /**
+   * Current state of the rail, driving its animation.
+   */
   protected readonly phase = signal<RouteProgressPhase>('idle');
 
+  /**
+   * Delay before the rail shows, so fast navigations never flash it.
+   */
   private showTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /**
+   * Delay before the completed rail resets to idle.
+   */
   private hideTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
@@ -48,12 +55,18 @@ export class RouteProgress {
     });
   }
 
+  /**
+   * Schedules the rail to show if the navigation outlasts the delay.
+   */
   private start(): void {
     clearTimeout(this.showTimer);
     clearTimeout(this.hideTimer);
     this.showTimer = setTimeout(() => this.phase.set('running'), ROUTE_PROGRESS_DELAY_MS);
   }
 
+  /**
+   * Cancels a pending rail, or completes a running one and hides it after it settles.
+   */
   private finish(): void {
     clearTimeout(this.showTimer);
     if (this.phase() !== 'running') {

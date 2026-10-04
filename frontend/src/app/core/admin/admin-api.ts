@@ -5,67 +5,57 @@ import { CampaignApi } from '@core/campaign/campaign-api';
 import { CampaignDifficulty, CampaignStartWeek } from '@core/campaign/campaign.model';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { PageResponse } from '@core/http/page-response.model';
-import { API_ENDPOINTS } from '@core/http/api-endpoints';
+import { API_ENDPOINTS } from '@core/http/api-endpoints.constants';
 import { RankingApi } from '@core/ranking/ranking-api';
-import { ADMIN_KEY_HEADER } from './admin-session.constants';
-import { AdminSession } from './admin-session';
+import { ADMIN_KEY_HEADER } from './session/admin-session.constants';
+import { AdminSession } from './session/admin-session';
 import {
   AdminPlayer,
   AdminPlayerCreateRequest,
   AdminPlayerDeletionResult,
   AdminPlayerStatus,
   AdminPlayerUpdateRequest,
-  CampaignAdmin,
+} from './players/admin-player.model';
+import { CampaignAdmin } from './campaigns/admin-campaign.model';
+import {
   SynchronizationDetails,
   SynchronizationExecution,
-} from './admin.model';
+} from './synchronization/admin-synchronization.model';
 import { SYNCHRONIZATION_HISTORY_PAGE_SIZE } from './admin-api.constants';
 
 /**
- * Data-access service for the administration API.
- *
- * Reads go through `httpResource`, like every other screen of the application. Commands go through
- * `HttpClient` instead: `httpResource` describes a value the UI observes, which a one-shot
- * destructive action is not.
+ * Administration API: reads through `httpResource`, one-shot commands through `HttpClient`.
  */
 @Service()
 export class AdminApi {
   /**
-   * HTTP client used by the command operations.
+   * HTTP client for commands.
    */
   private readonly http = inject(HttpClient);
 
   /**
-   * Session deciding whether the reactive resources may fetch at all.
+   * Session gating every resource fetch.
    */
   private readonly session = inject(AdminSession);
 
   /**
-   * The public campaign resources, refreshed with the administration ones: the backoffice reads
-   * the live campaign and the closed ones from the same endpoints the site does, and a lifecycle
-   * command moves both.
+   * Public campaign resources, refreshed with the admin ones.
    */
   private readonly campaignApi = inject(CampaignApi);
 
   /**
-   * The public challenge resources, refreshed with the administration ones: a recalculation or a
-   * redraw changes what `GET /api/challenges/current` answers.
+   * Public challenge resources, refreshed with the admin ones.
    */
   private readonly challengesApi = inject(ChallengesApi);
 
   /**
-   * The public ranking resources, refreshed with the administration ones: a recalculation, a
-   * redraw, a rollover or a replay all change what the current, daily and finalized rankings
-   * answer.
+   * Public ranking resources, refreshed with the admin ones.
    */
   private readonly rankingApi = inject(RankingApi);
 
   /**
    * Every tracked player, archived ones included.
-   *
-   * Held back until a session is open. The sign-in screen injects this service to verify a key, and
-   * a resource fetching on construction would fire an unauthenticated request whose 401 the
-   * interceptor would answer by ending a session that had not started.
+   * Gated on the session: an early 401 would make the interceptor end a session not yet started.
    */
   public readonly players = httpResource<readonly AdminPlayer[]>(
     () => (this.session.isAuthenticated() ? API_ENDPOINTS.admin.players : undefined),
@@ -73,24 +63,14 @@ export class AdminApi {
   );
 
   /**
-   * Most recent synchronization execution, or `undefined` when none has ever run.
-   *
-   * Reloaded by {@link refresh} while a run is in flight, which is the only way the backoffice can
-   * follow a walk that outlives the request that started it. Gated on the session like
-   * {@link players}.
+   * Latest synchronization, `undefined` if none ran; polled by `refresh` while in flight.
    */
   public readonly latestSynchronization = httpResource<SynchronizationExecution>(() =>
     this.session.isAuthenticated() ? API_ENDPOINTS.admin.latestSynchronization : undefined,
   );
 
   /**
-   * A page of past synchronization executions, most recent first.
-   *
-   * Created per caller since it is parameterized by the requested page — the same arrangement
-   * `MatchesApi.history` uses for a player's own match history.
-   *
-   * @param page - Reactive zero-based page index.
-   * @returns The reactive resource fetching the requested page of synchronization history.
+   * Page of past synchronizations, most recent first (`page` is zero-based).
    */
   public synchronizationHistory(
     page: Signal<number>,
@@ -106,14 +86,7 @@ export class AdminApi {
   }
 
   /**
-   * One synchronization execution with its per-player outcomes.
-   *
-   * Created per caller, like {@link synchronizationHistory}: a history row expanded to read what
-   * happened to each player, fetched only once a reader actually opens it.
-   *
-   * @param synchronizationId - Reactive internal synchronization identifier, or `null` while
-   * nothing is open.
-   * @returns The reactive resource fetching the requested execution's details.
+   * One synchronization with its per-player outcomes, idle while the id is `null`.
    */
   public synchronizationDetails(
     synchronizationId: Signal<number | null>,
@@ -128,14 +101,8 @@ export class AdminApi {
   }
 
   /**
-   * Verifies an administrator key against the backend.
-   *
-   * The key is sent explicitly rather than through the session, since the whole point is to test
-   * one the session does not hold yet. `adminKeyInterceptor` leaves requests carrying the header
-   * alone, so a rejection surfaces here instead of ending a session that never opened.
-   *
-   * @param key - The administrator key to verify.
-   * @returns A promise that resolves when the key is accepted, and rejects otherwise.
+   * Verifies a key not yet in the session; rejects when the backend refuses it.
+   * The explicit header makes `adminKeyInterceptor` leave the request alone.
    */
   public async verifyKey(key: string): Promise<void> {
     await firstValueFrom(
@@ -148,8 +115,6 @@ export class AdminApi {
 
   /**
    * Starts a background synchronization of every tracked player.
-   *
-   * @returns A promise that resolves once the run has been accepted.
    */
   public async synchronizeAllPlayers(): Promise<void> {
     await this.mutate(this.http.post(API_ENDPOINTS.admin.synchronizations, null));
@@ -157,50 +122,34 @@ export class AdminApi {
 
   /**
    * Starts a background synchronization of one tracked player.
-   *
-   * @param playerId - Internal player identifier.
-   * @returns A promise that resolves once the run has been accepted.
    */
   public async synchronizePlayer(playerId: number): Promise<void> {
     await this.mutate(this.http.post(API_ENDPOINTS.admin.playerSynchronization(playerId), null));
   }
 
   /**
-   * Throws away the current week's challenge pack, draws a new one, and rebuilds progress against
-   * it.
-   *
-   * Destructive: the progress recorded against the discarded challenges is deleted with them.
-   *
-   * @returns A promise that resolves once the new pack has been drawn.
+   * Redraws the current week's challenges; destructive, their progress is deleted.
    */
   public async redrawCurrentChallenges(): Promise<void> {
     await this.mutate(this.http.post(API_ENDPOINTS.admin.challengeRedraw, null));
   }
 
   /**
-   * Rebuilds the current weekly ranking alone, without touching challenge progress.
-   *
-   * @returns A promise that resolves once the rebuild has completed.
+   * Rebuilds the current weekly ranking without touching challenge progress.
    */
   public async recalculateRanking(): Promise<void> {
     await this.mutate(this.http.post(API_ENDPOINTS.admin.rankingRecalculation, null));
   }
 
   /**
-   * Runs the whole weekly rollover now: finalizes every past week left open, settles the boss
-   * fights they never resolved, and opens the week in progress.
-   *
-   * @returns A promise that resolves once the rollover has completed.
+   * Runs the weekly rollover now.
    */
   public async runWeeklyRollover(): Promise<void> {
     await this.mutate(this.http.post(API_ENDPOINTS.admin.weeklyRollover, null));
   }
 
   /**
-   * Runs the nightly tick now: the day's challenge, the week's progress and ranking, a due campaign
-   * started, and the campaign replayed from its first day.
-   *
-   * @returns A promise that resolves once the tick has completed.
+   * Runs the daily tick now.
    */
   public async runDailyTick(): Promise<void> {
     await this.mutate(this.http.post(API_ENDPOINTS.admin.campaignTick, null));
@@ -208,20 +157,13 @@ export class AdminApi {
 
   /**
    * Adds a player to the tracked roster.
-   *
-   * @param request - The player's identity.
-   * @returns A promise that resolves with the created player.
    */
   public async createPlayer(request: AdminPlayerCreateRequest): Promise<AdminPlayer> {
     return this.mutate(this.http.post<AdminPlayer>(API_ENDPOINTS.admin.players, request));
   }
 
   /**
-   * Updates the identity of a tracked player.
-   *
-   * @param playerId - Internal player identifier.
-   * @param request - The new identity.
-   * @returns A promise that resolves with the updated player.
+   * Updates a tracked player's identity.
    */
   public async updatePlayer(
     playerId: number,
@@ -231,12 +173,7 @@ export class AdminApi {
   }
 
   /**
-   * Moves a tracked player to another lifecycle status, which is also how an archived player is
-   * restored.
-   *
-   * @param playerId - Internal player identifier.
-   * @param status - The status to apply.
-   * @returns A promise that resolves with the updated player.
+   * Changes a player's lifecycle status (also restores an archived one).
    */
   public async changePlayerStatus(
     playerId: number,
@@ -248,10 +185,7 @@ export class AdminApi {
   }
 
   /**
-   * Removes a player from the roster, by deletion or by archiving.
-   *
-   * @param playerId - Internal player identifier.
-   * @returns A promise that resolves with what the request actually did.
+   * Removes a player by deletion or archiving; resolves with what was done.
    */
   public async removePlayer(playerId: number): Promise<AdminPlayerDeletionResult> {
     return this.mutate(
@@ -261,19 +195,13 @@ export class AdminApi {
 
   /**
    * Irreversibly clears every record derived from match history.
-   *
-   * @returns A promise that resolves once the reset has completed.
    */
   public async resetCampaign(): Promise<void> {
     await this.mutate(this.http.post(API_ENDPOINTS.admin.campaignReset, null));
   }
 
   /**
-   * Opens a campaign at the chosen difficulty, on the chosen Monday, on the active roster.
-   *
-   * @param difficulty - Difficulty the campaign is played at.
-   * @param startWeek - Week the campaign starts on.
-   * @returns A promise that resolves with the opened campaign.
+   * Opens a campaign on the active roster at the given difficulty and start week.
    */
   public async openCampaign(
     difficulty: CampaignDifficulty,
@@ -287,31 +215,21 @@ export class AdminApi {
   }
 
   /**
-   * Stops the live campaign now, frozen at yesterday's base.
-   *
-   * @returns A promise that resolves with the stopped campaign.
+   * Stops the live campaign, frozen at yesterday's base.
    */
   public async stopCampaign(): Promise<CampaignAdmin> {
     return this.mutate(this.http.post<CampaignAdmin>(API_ENDPOINTS.admin.campaignStop, null));
   }
 
   /**
-   * Deletes one campaign with its weeks, roster and snapshots.
-   *
-   * @param campaignId - Internal campaign identifier.
-   * @returns A promise that resolves once the campaign is gone.
+   * Deletes a campaign with its weeks, roster and snapshots.
    */
   public async deleteCampaign(campaignId: number): Promise<void> {
     await this.mutate(this.http.delete<void>(API_ENDPOINTS.admin.campaign(campaignId)));
   }
 
   /**
-   * Refetches every administration resource.
-   *
-   * A command is a `POST`/`PUT`/`PATCH`/`DELETE` sent beside the resources, so nothing they depend
-   * on changes and they would otherwise keep describing the state from before it. This is also the
-   * polling step: a run in flight is followed by calling this on an interval, since the backend has
-   * no way to push its progress.
+   * Refetches every admin resource; also the polling step, the backend cannot push progress.
    */
   public refresh(): void {
     this.players.reload();
@@ -327,15 +245,7 @@ export class AdminApi {
   }
 
   /**
-   * Sends one command and refreshes every administration resource once it settles successfully.
-   *
-   * This is the whole cache-invalidation strategy: every command method above goes through this
-   * helper instead of calling {@link refresh} itself, so a future command cannot be added while
-   * forgetting to invalidate — it would have to skip this helper entirely to do so. A failed request
-   * rejects before the refresh, leaving the resources describing the state that is still accurate.
-   *
-   * @param request$ - The mutating request to send.
-   * @returns A promise that resolves with the request's response.
+   * Sends a command then refreshes every resource; the single cache-invalidation point.
    */
   private async mutate<T>(request$: Observable<T>): Promise<T> {
     const result = await firstValueFrom(request$);

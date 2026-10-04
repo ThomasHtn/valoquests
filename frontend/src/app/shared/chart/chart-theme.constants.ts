@@ -1,19 +1,11 @@
 /**
- * Number of series the validated palette covers.
- *
- * A caller with more entities than this folds the extras away rather than generating a sixth hue:
- * see {@link SERIES_COLOR_VARIABLES}.
+ * Series the validated palette covers; extras are folded away, never given a new hue.
  */
 export const SERIES_COLOR_COUNT = 5;
 
 /**
- * Theme variables holding the chart series palette, in the order they must be assigned.
- *
- * The order is not cosmetic. The palette was validated as an ordered set against the dark page
- * surface — lightness band, chroma floor, colorblind separation between *adjacent* slots, contrast
- * — and permuting it drops the worst deuteranopia pair from ΔE 9.9 to 3.9, which is two curves a
- * colorblind reader cannot tell apart. Assign slots in sequence and re-run the data-viz validator
- * before touching either this list or the values behind it in `styles/colors.css`.
+ * Series palette variables, assigned in this order: it was validated for colorblind separation of
+ * adjacent slots, so re-run the data-viz validator before changing it or `styles/colors.css`.
  */
 export const SERIES_COLOR_VARIABLES = [
   '--color-series-1',
@@ -24,8 +16,7 @@ export const SERIES_COLOR_VARIABLES = [
 ] as const;
 
 /**
- * Font of an axis title. Larger than a tick label, since it names the whole axis rather than one
- * value on it.
+ * Font of an axis title.
  */
 export const AXIS_TITLE_FONT = {
   family: 'Barlow Condensed, sans-serif',

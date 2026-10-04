@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { Shell } from '@layout/shell/shell';
-import { adminGuard } from '@core/admin/admin.guard';
+import { adminGuard } from '@core/admin/session/admin.guard';
 import { landingEntryGuard } from '@core/landing/landing-entry.guard';
 import { tourEntryGuard } from '@core/tour/tour-entry.guard';
 import { Challenges } from '@pages/challenges/challenges';
@@ -12,35 +12,8 @@ import { Overview } from '@pages/overview/overview';
 import { Players } from '@pages/players/players';
 
 /**
- * Application routes.
- *
- * The public pages are referenced eagerly, the backoffice and the two pages that read a player's
- * progression through `loadComponent`. Route-level splitting used to be the rule here, but a
- * bundler chunk is emitted for every module two lazy pages share: the public site ended up pulling
- * around twenty-five sub-kilobyte chunks — one per shared primitive — on every screen. Request count
- * is the second heaviest term of the page's environmental footprint, so the public pages, which
- * together weigh less than the shared chunks they were dragging in, now ride in the initial bundle.
- * The exceptions carry weight nothing else needs: the profile and the two-player comparison both
- * own `chart.js` through `EvolutionChart`, the tour and the rules are read once, and the
- * backoffice is reachable by URL only.
- *
- * A route's `title` is a translation key rather than a literal; it is resolved against the active
- * dictionary by `TranslatedTitleStrategy`.
- *
- * Two routes share the empty path. The first matches the root URL exactly (`pathMatch: 'full'`)
- * and serves the landing page, a full-bleed doorway with no navigation chrome. Every other URL
- * falls through to the second, which activates `Shell` — the sidebar layout — and resolves the
- * page among its children. The wildcard route is one of those children on purpose, so a wrong URL
- * still lands on a page the visitor can navigate away from.
- *
- * The guided tour sits between the two, and must stay declared *before* the `Shell` route: it is
- * the landing page's continuation and renders chrome-free like it, so being resolved as one of
- * `Shell`'s children would both wrap it in the sidebar and, failing that, hand it to the wildcard.
- * The backoffice's sign-in screen is declared there for the same reason.
- *
- * The backoffice itself is reachable by URL only — nothing in the application links to it — and its
- * pages are ordinary `Shell` children: signing in swaps the sidebar's entries rather than replacing
- * the layout, so the coach stays in the same application rather than crossing into a second one.
+ * Application routes, mostly eager: lazy pages emitted one tiny shared chunk per primitive.
+ * Chrome-free routes (landing, tour, sign-in) must stay before `Shell`, whose wildcard catches all.
  */
 export const routes: Routes = [
   {
@@ -51,8 +24,7 @@ export const routes: Routes = [
     component: Landing,
   },
   {
-    // Lazy, unlike the other public pages: a one-time briefing that draws the base scene and the
-    // planet, neither of which the initial bundle needs on every visit.
+    // Lazy: a one-time briefing whose scene the initial bundle does not need.
     path: 'tour',
     title: 'tour.title',
     canActivate: [tourEntryGuard],
@@ -65,9 +37,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    // Imported eagerly, unlike the pages it hosts: every URL but the landing page, the tour and the
-    // sign-in screen activates it, so splitting it out only bought a second round trip before
-    // anything could render — and its own chunk dragged a dozen sub-kilobyte shared chunks with it.
+    // Eager: almost every URL needs it, so a split only adds a round trip.
     component: Shell,
     children: [
       {
@@ -81,8 +51,7 @@ export const routes: Routes = [
         component: Challenges,
       },
       {
-        // The challenge board lived at `/week` while it shared the page with the boss; the old
-        // address stays valid rather than breaking every link that already points at it.
+        // Old address of the challenge board, kept for existing links.
         path: 'week',
         redirectTo: 'challenges',
         pathMatch: 'full',
@@ -110,8 +79,7 @@ export const routes: Routes = [
           import('@pages/player-profile/match-detail/match-detail').then((m) => m.MatchDetail),
       },
       {
-        // The campaign page was folded into the overview's campaign tab; its old address opens that
-        // tab rather than breaking every link that already points at it.
+        // Old campaign page address, kept for existing links.
         path: 'campaign',
         redirectTo: '/overview?tab=campaign',
         pathMatch: 'full',
@@ -122,7 +90,7 @@ export const routes: Routes = [
         pathMatch: 'full',
       },
       {
-        // Lazy for the same reason as the tour: a reference read once, not a screen of the loop.
+        // Lazy: a reference read once.
         path: 'rules',
         title: 'rules.title',
         loadComponent: () => import('@pages/rules/rules').then((m) => m.Rules),

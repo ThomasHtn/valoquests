@@ -1,7 +1,7 @@
-import { AdminPlayerStatus } from '@core/admin/admin.model';
+import { AdminPlayerStatus } from '@core/admin/players/admin-player.model';
 
 /**
- * Identity the operator submitted, before it is turned into a create or update request.
+ * Identity submitted by the player form.
  */
 export interface PlayerFormResult {
   /**
@@ -15,7 +15,7 @@ export interface PlayerFormResult {
   readonly tagLine: string;
 
   /**
-   * Agent name backing the bundled avatar, or `null` when none was chosen.
+   * Agent name of the bundled avatar, `null` for none.
    */
   readonly portrait: string | null;
 

@@ -17,8 +17,7 @@ import { KeyFigure } from './key-figures.model';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
- * Strip of key figures closing a progression chart: an icon, a caption, the value and one line
- * qualifying it, so the chart's answer reads without hovering anything.
+ * Key figures closing a progression chart, so its answer reads without hovering.
  */
 @Component({
   selector: 'app-key-figures',
@@ -38,7 +37,7 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 })
 export class KeyFigures {
   /**
-   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   * Concept icons, for the template's `svg[lucideIcon]`.
    */
   protected readonly concepts = CONCEPT_ICONS;
 

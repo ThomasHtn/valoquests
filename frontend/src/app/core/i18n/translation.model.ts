@@ -1,17 +1,20 @@
 /**
- * Language a translation dictionary can be loaded for.
+ * Supported language.
  */
 export type Language = 'fr' | 'en';
 
 /**
- * Recursive dictionary of translated strings, keyed by nested dot-separated paths.
+ * Nested dictionary of translated strings.
  */
 export interface TranslationDictionary {
+  /**
+   * Translated string, or a nested group of entries (plural branches included).
+   */
   readonly [key: string]: string | TranslationDictionary;
 }
 
 /**
- * Dictionary lookup handed to pure helpers, so they translate without injecting the service.
+ * Lookup handed to pure helpers so they translate without injecting the service.
  */
 export type TranslateFn = (
   key: string,

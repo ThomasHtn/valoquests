@@ -1,0 +1,143 @@
+/* Classes for `animate.enter` / `animate.leave`; without animation Angular removes at once. */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Scrim behind a modal. */
+  .fx-scrim-in {
+    animation: fx-fade-in 260ms ease-out both;
+  }
+
+  .fx-scrim-out {
+    animation: fx-fade-out 200ms ease-in both;
+  }
+
+  /* Modal panel. */
+  .fx-modal-in {
+    animation: fx-modal-in 420ms var(--ease-out-expo) both;
+  }
+
+  .fx-modal-out {
+    animation: fx-modal-out 180ms var(--ease-in-quick) both;
+  }
+
+  /* Panel pinned to the trailing edge. */
+  .fx-sheet-in {
+    animation: fx-sheet-in 380ms var(--ease-out-expo) both;
+  }
+
+  .fx-sheet-out {
+    animation: fx-sheet-out 220ms var(--ease-in-quick) both;
+  }
+
+  /* Content replaced in place; enter only, so old and new never stack. */
+  .fx-swap-in {
+    animation: fx-swap-in 340ms var(--ease-out-expo) both;
+  }
+
+  /* `shared/drawer` backdrop, fading with its panel. */
+  .drawer::backdrop {
+    animation: fx-fade-in 260ms ease-out both;
+  }
+
+  .drawer--closing::backdrop {
+    animation: fx-fade-out 200ms ease-in both;
+  }
+
+  /* Snackbar. */
+  .fx-snack-in {
+    animation: fx-snack-in 420ms var(--ease-out-expo) both;
+  }
+
+  .fx-snack-out {
+    animation: fx-snack-out 200ms var(--ease-in-quick) both;
+  }
+
+  /* Tooltip bubble. */
+  .fx-tip-in {
+    animation: fx-tip-in 180ms var(--ease-out-expo) both;
+  }
+}
+
+@keyframes fx-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fx-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fx-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem) scale(0.96);
+  }
+}
+
+@keyframes fx-modal-out {
+  to {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.98);
+  }
+}
+
+/* Phones: the modal travels from the bottom edge; must follow the defaults above. */
+@media (width < 40rem) {
+  @keyframes fx-modal-in {
+    from {
+      opacity: 0;
+      transform: translateY(3rem);
+    }
+  }
+
+  @keyframes fx-modal-out {
+    to {
+      opacity: 0;
+      transform: translateY(2rem);
+    }
+  }
+}
+
+@keyframes fx-sheet-in {
+  from {
+    opacity: 0.4;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fx-sheet-out {
+  to {
+    opacity: 0.4;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fx-swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+@keyframes fx-snack-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem) scale(0.96);
+  }
+}
+
+@keyframes fx-snack-out {
+  to {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+}
+
+@keyframes fx-tip-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem) scale(0.97);
+  }
+}

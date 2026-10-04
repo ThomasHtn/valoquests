@@ -1,5 +1,4 @@
-/* The overview's gauge cells, two side by side at every width. Same tint, same leading edge, same
-   ring; the ring and the base shrink on a phone so the pair still fits the screen. */
+/* The overview's gauge cells, two side by side at every width, shrunk on a phone to fit. */
 .tiles {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -64,7 +63,7 @@
   }
 }
 
-/* The sweep starts at noon: a dial is read from the top. */
+/* The sweep starts at noon. */
 .gauge > svg {
   display: block;
   width: 100%;
@@ -134,7 +133,7 @@
   color: var(--color-text-secondary);
 }
 
-/* The base touches both edges of its tile, as on the overview. */
+/* The base touches both edges of its tile. */
 .foot {
   display: flex;
   flex-direction: column;
@@ -174,7 +173,7 @@
   }
 }
 
-/* Six casual modes do not fit a half-width tile on a phone: the rate is kept, the tags are dropped. */
+/* Phones: six mode tags do not fit a half-width tile, only the rate stays. */
 @media (width < 40rem) {
   .lever,
   .modes {

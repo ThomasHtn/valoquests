@@ -1,16 +1,16 @@
 import { Language } from './translation.model';
 
 /**
- * Languages the application can be translated into.
+ * Supported languages.
  */
 export const SUPPORTED_LANGUAGES: readonly Language[] = ['fr', 'en'];
 
 /**
- * Language used when neither a stored choice nor the browser language is supported.
+ * Fallback when neither the stored choice nor the browser language is supported.
  */
 export const DEFAULT_LANGUAGE: Language = 'fr';
 
 /**
- * `localStorage` key under which the active language choice is persisted.
+ * `localStorage` key of the language choice.
  */
 export const STORAGE_KEY = 'valo-quests.language';

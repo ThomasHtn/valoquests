@@ -3,15 +3,7 @@ import { InlineMessageTone } from './inline-message.model';
 import { TONE_CLASS } from './inline-message.constants';
 
 /**
- * A line of feedback attached to the block it concerns: the outcome of a backoffice command, the
- * reason a control is locked, the error a run reported.
- *
- * Marked by a colored rule down its leading edge rather than boxed in a tinted panel — a panel
- * that size reads as a section of its own, when this is a remark about the section above it.
- *
- * The three call sites this replaces had each picked their own text size for the same kind of
- * remark; the one kept is `text-prose`, the step the type scale reserves for runs of prose meant
- * to be read rather than scanned.
+ * Feedback line under the block it concerns, marked by a leading rule rather than a panel.
  */
 @Component({
   selector: 'app-inline-message',
@@ -24,12 +16,12 @@ import { TONE_CLASS } from './inline-message.constants';
 })
 export class InlineMessage {
   /**
-   * Which treatment this message renders.
+   * Tone of the message.
    */
   public readonly tone = input<InlineMessageTone>('info');
 
   /**
-   * Resolved Tailwind classes for the current tone.
+   * Tailwind classes of the current tone.
    */
   protected readonly toneClass = computed(() => TONE_CLASS[this.tone()]);
 }

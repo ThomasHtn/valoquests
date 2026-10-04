@@ -11,14 +11,10 @@ import {
   CARRY_MODES,
   SHELTER_MODES,
 } from '@pages/overview/extraction-gauges/extraction-gauges.constants';
-import { Capacity } from '@pages/overview/overview.model';
+import { Capacity } from '@pages/overview/extraction-gauges/extraction-gauges.model';
 
 /**
- * The two resource tiles of the overview's extraction capacity, and nothing else: components carry
- * the wounded, food shelters them, and each tile names the modes that fill it.
- *
- * Drawn after `ExtractionGauges` rather than reusing it: the tour needs the two stock dials side by
- * side on a phone, where the overview stacks all four.
+ * The overview's two resource dials, kept side by side on a phone unlike `ExtractionGauges`.
  */
 @Component({
   selector: 'app-tour-capacity',
@@ -42,12 +38,24 @@ export class TourCapacity {
    */
   public readonly capacity = input.required<Capacity>();
 
+  /**
+   * Game modes listed under the components dial.
+   */
   protected readonly carryModes = CARRY_MODES;
 
+  /**
+   * Game modes listed under the food dial.
+   */
   protected readonly shelterModes = SHELTER_MODES;
 
+  /**
+   * Translation, to format the stocks in the current language.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * Formats a stock in the current language.
+   */
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());
   }

@@ -1,4 +1,4 @@
-/* The page column, not the viewport, decides: the sidebar takes its share on a desktop. */
+/* Container query: the sidebar takes its share of the viewport on a desktop. */
 .board {
   container-type: inline-size;
 }
@@ -17,7 +17,7 @@
   }
 }
 
-/* The fold's bar is the section title itself: that is what is clicked to unfold. */
+/* The fold's bar is the section title itself. */
 .fold-bar {
   display: flex;
   flex-wrap: wrap;
@@ -35,7 +35,7 @@
   margin-bottom: 1.5rem;
 }
 
-/* On a phone, a line of its own under the rule, right-aligned on the diamond. */
+/* Phones: a line of its own, right-aligned on the diamond. */
 @media (width < 40rem) {
   .fold-cue {
     order: 1;

@@ -7,8 +7,14 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { PLANET_ART_DISC_RATIO, PLANET_ART_LIT_FACE } from '@core/campaign/planet-art.constants';
-import { isRingedPlanet, resolvePlanetArtUrl } from '@core/campaign/planet-art.utils';
+import {
+  PLANET_ART_DISC_RATIO,
+  PLANET_ART_LIT_FACE,
+} from '@core/campaign/planets/campaign-planet-art.constants';
+import {
+  isRingedPlanet,
+  resolvePlanetArtUrl,
+} from '@core/campaign/planets/campaign-planet-art.utils';
 import { createSeededRandom } from '@core/random/seeded-random.utils';
 import { svgElement as el } from '@core/svg/svg-element.utils';
 import {
@@ -25,12 +31,7 @@ import {
 } from './planet-figure.constants';
 
 /**
- * The planet of the week: the wounded on its lit face, and the guardian's lines around it.
- *
- * What the page has to make understood in one image: the wounded are out there, and something
- * keeps them from leaving. Hence the two objects — the amber marks on the ground, which are the
- * wounded, and the breakthrough ring around, each destroyed segment a piece of the guardian's hit
- * points. When the ring is empty, the planet is open.
+ * Planet of the week: wounded marks on its lit face, the guardian's ring around it.
  */
 @Component({
   selector: 'app-planet-figure',
@@ -40,12 +41,12 @@ import {
 })
 export class PlanetFigure {
   /**
-   * Share of the guardian's hit points still standing, in [0, 1].
+   * Share of the guardian's hit points left, in [0, 1].
    */
   public readonly guardianLeft = input.required<number>();
 
   /**
-   * One-based week of the planet, which picks its drawing: the same one as on the frieze.
+   * One-based week, which picks the same drawing as on the frieze.
    */
   public readonly weekIndex = input.required<number>();
 
@@ -54,8 +55,14 @@ export class PlanetFigure {
    */
   public readonly label = input('');
 
+  /**
+   * Square drawing frame the planet and its ring are laid out in.
+   */
   protected readonly viewBox = `0 0 ${PLANET_VIEW_SIZE} ${PLANET_VIEW_SIZE}`;
 
+  /**
+   * SVG element the planet is drawn into.
+   */
   private readonly planet = viewChild.required<ElementRef<SVGSVGElement>>('planet');
 
   constructor() {
@@ -65,12 +72,12 @@ export class PlanetFigure {
   }
 
   /**
-   * Rebuilds the whole drawing: the planet, the wounded marks, then the ring.
+   * Rebuilds the planet, the wounded marks, then the ring.
    */
   private draw(svg: SVGSVGElement, weekIndex: number, guardianLeft: number): void {
     const rn = createSeededRandom(PLANET_SEED);
     const frag = document.createDocumentFragment();
-    // A ringed planet keeps room for its rings; a bare globe grows up close to the guardian's ring.
+    // A ringed planet keeps room for its rings; a bare globe grows close to the guardian's ring.
     const side = isRingedPlanet(weekIndex) ? RINGED_PLANET_ART_SIDE : PLANET_ART_SIDE;
 
     frag.append(
@@ -89,8 +96,7 @@ export class PlanetFigure {
   }
 
   /**
-   * The wounded: marks laid on the lit face, breathing. They do not count the wounded one by one
-   * — the figure is written beside — they say there are people there.
+   * Breathing marks on the lit face, a texture rather than a count.
    */
   private buildWoundedMarks(rn: () => number, discRadius: number): SVGGElement {
     const marks = el('g');
@@ -135,9 +141,7 @@ export class PlanetFigure {
   }
 
   /**
-   * The breakthrough. One segment per share of the hit points: those left are standing, in red;
-   * the others stay in place, extinguished. The same value as the bar under the planet, said in
-   * an image.
+   * Breakthrough ring: standing segments in red, the others extinguished in place.
    */
   private buildRing(guardianLeft: number): SVGGElement {
     const ring = el('g');
@@ -145,7 +149,7 @@ export class PlanetFigure {
     for (let i = 0; i < RING_SEGMENTS; i++) {
       const angle = (-90 + (i * 360) / RING_SEGMENTS) * (Math.PI / 180);
       const alive = i < held;
-      // Extinguished segments stay on the same circle, centred in the standing ones' band.
+      // Extinguished segments stay centred in the standing ones' band.
       const r0 = RING_INNER_RADIUS + (alive ? 0 : 3.5);
       const r1 = r0 + (alive ? 13 : 6);
       const segment = el('line', {

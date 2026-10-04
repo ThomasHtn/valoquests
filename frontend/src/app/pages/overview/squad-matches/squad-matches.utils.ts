@@ -1,12 +1,9 @@
-import { SquadMatch } from '@core/matches/squad-match.model';
-import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
-import { HistoryMatch } from '../../player-profile/match-day.model';
+import { SquadMatch } from '@core/matches/match-squad.model';
+import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
+import { HistoryMatch } from '@core/matches/day/match-day.model';
 
 /**
- * Turns a squad history entry into a history row named after its player.
- *
- * @param entry - The entry, as the API returns it.
- * @returns The player's match, carrying who played it.
+ * History row of a squad entry, carrying who played it.
  */
 export function toHistoryMatch(entry: SquadMatch): HistoryMatch {
   return {

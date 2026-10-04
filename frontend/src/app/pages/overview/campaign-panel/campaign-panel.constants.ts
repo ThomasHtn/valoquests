@@ -1,5 +1,5 @@
 /**
- * Colour of the live campaign's curve: always amber.
+ * Colour of the live campaign's curve.
  */
 export const CURRENT_CURVE_COLOR = '#e8ab6b';
 

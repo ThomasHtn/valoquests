@@ -18,7 +18,7 @@ import {
   LucideDynamicIcon,
 } from '@lucide/angular';
 
-import { FigurePipe } from '@core/i18n/figure-pipe';
+import { FigurePipe } from '@core/i18n/format/figure-pipe';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
 import { Tooltip } from '@shared/tooltip/tooltip';
@@ -31,19 +31,14 @@ import {
   BOARD_PAGE_SIZE,
   BOARD_ROW_STAGGER_MS,
 } from '../challenges.constants';
-import { BoardOperator, BoardRow, DayCell } from '../challenges.model';
+import { BoardOperator, DayCell } from '../challenges.model';
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { DailyWeek } from '../daily-week/daily-week';
-import { ProgressMark } from '../progress-mark/progress-mark';
+import { ProgressMark } from '@shared/progress-mark/progress-mark';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
- * The week on one table, as the old ranking board drew it: a row per challenge, the day's first,
- * a column per operator with a dash, a ring or a check, and a footer of what each brought back.
- * The rings close row after row on arrival, the checks landing last.
- *
- * Pressing an operator's header stars them: their column moves first, the star filled in its corner.
- * When the squad outgrows the page, the challenge column stays put and the operator columns slide
- * under it: dragged, stepped with the header's arrows, or swiped sideways on a trackpad.
+ * The week as a table; operator columns slide under the challenge column when they overflow.
  */
 @Component({
   selector: 'app-challenge-board',
@@ -78,7 +73,7 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 })
 export class ChallengeBoard {
   /**
-   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   * The one icon of each concept.
    */
   protected readonly concepts = CONCEPT_ICONS;
 
@@ -98,12 +93,12 @@ export class ChallengeBoard {
   public readonly days = input.required<readonly DayCell[]>();
 
   /**
-   * The week's span, shown over the challenge column (e.g. "Du 28 septembre au 4 octobre").
+   * The week's span over the challenge column ("Du 28 septembre au 4 octobre").
    */
   public readonly period = input.required<string>();
 
   /**
-   * Whether a running campaign turns validations into wounded; outside one they earn points.
+   * Whether validations earn wounded (running campaign) rather than points.
    */
   public readonly rescueActive = input.required<boolean>();
 
@@ -117,22 +112,28 @@ export class ChallengeBoard {
    */
   public readonly pin = output<number>();
 
+  /**
+   * Delay between rows entering, so the table cascades in.
+   */
   protected readonly rowStagger = BOARD_ROW_STAGGER_MS;
 
+  /**
+   * Host element, measured for the column widths and capturing drags.
+   */
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /**
-   * Width of the board, measured; zero until laid out, or while the page shows the cards instead.
+   * Measured board width; zero until laid out or while the cards are shown.
    */
   private readonly width = signal(0);
 
   /**
-   * Root font size, in pixels, which the column widths are written in.
+   * Root font size in pixels, the unit of the column widths.
    */
   private readonly rem = signal(16);
 
   /**
-   * How far the operator columns slid left, in pixels, before clamping.
+   * Leftward slide of the operator columns in pixels, before clamping.
    */
   private readonly shift = signal(0);
 
@@ -142,20 +143,22 @@ export class ChallengeBoard {
   protected readonly dragging = signal(false);
 
   /**
-   * The press being tracked: where it started, and the slide it started from.
+   * Tracked press: its start and the slide it started from.
    */
   private press: { pointerId: number; x: number; shift: number } | null = null;
 
   /**
-   * Set by a drag so the click closing it does not also pin an operator.
+   * Set by a drag so its closing click does not pin an operator.
    */
   private swallowClick = false;
 
+  /**
+   * Pending snap once a trackpad swipe goes quiet.
+   */
   private wheelSnap: ReturnType<typeof setTimeout> | undefined;
 
   /**
-   * Operator columns shown at once: a page of them, fewer when the squad is smaller or the board
-   * too narrow to keep the challenge column at its narrowest beside them.
+   * Operator columns shown: a page, fewer if the squad is small or the board narrow.
    */
   protected readonly visibleCount = computed(() => {
     const count = this.operators().length;
@@ -168,8 +171,7 @@ export class ChallengeBoard {
   });
 
   /**
-   * Width the challenge column asks for: whatever the shown operator columns leave at their base
-   * width, capped so spare room widens those columns instead; `null` before the board is measured.
+   * Challenge column's capped share, spare room going to operators; `null` until measured.
    */
   private readonly leadShare = computed(() => {
     const width = this.width();
@@ -181,8 +183,7 @@ export class ChallengeBoard {
   });
 
   /**
-   * Width of one operator column, in whole pixels so every hairline lands on a pixel, handed to
-   * the stylesheet as `--col`: the shown columns share whatever the challenge column leaves.
+   * Operator column width (`--col`), in whole pixels so hairlines land on a pixel.
    */
   protected readonly columnPx = computed(() => {
     const lead = this.leadShare();
@@ -192,15 +193,20 @@ export class ChallengeBoard {
   });
 
   /**
-   * Width of the challenge column, which takes back the pixels the rounded columns leave;
-   * `null` before the board is measured.
+   * Challenge column width, absorbing rounding leftovers; `null` until measured.
    */
   protected readonly leadWidth = computed(() =>
     this.leadShare() === null ? null : this.width() - this.visibleCount() * this.columnPx(),
   );
 
+  /**
+   * Minimum operator column width in pixels, before spare room is shared out.
+   */
   private readonly baseColumnPx = computed(() => BOARD_COLUMN_REM * this.rem());
 
+  /**
+   * Farthest slide, the one that shows the last operator columns.
+   */
   private readonly maxShift = computed(
     () => (this.operators().length - this.visibleCount()) * this.columnPx(),
   );
@@ -211,12 +217,12 @@ export class ChallengeBoard {
   protected readonly slidable = computed(() => this.maxShift() > 0);
 
   /**
-   * The slide actually drawn, kept within the columns there are.
+   * The slide drawn, clamped to the columns there are.
    */
   protected readonly offset = computed(() => Math.min(this.maxShift(), Math.max(0, this.shift())));
 
   /**
-   * Width of the whole table, the hidden columns included, or `null` before the board is measured.
+   * Whole table width, hidden columns included; `null` until measured.
    */
   protected readonly tableWidth = computed(() => {
     const lead = this.leadWidth();
@@ -224,7 +230,7 @@ export class ChallengeBoard {
   });
 
   /**
-   * First and last operator shown, counted from one, and the squad's size, for the arrows' caption.
+   * One-based range of operators shown, and the squad size, for the arrows' caption.
    */
   protected readonly range = computed(() => {
     const from = Math.round(this.offset() / this.columnPx()) + 1;
@@ -248,7 +254,7 @@ export class ChallengeBoard {
   }
 
   /**
-   * Pins an operator first; the columns slide back to the start so they are on screen.
+   * Pins an operator first and slides back to the start so they are on screen.
    */
   protected pinOperator(playerId: number): void {
     this.shift.set(0);
@@ -256,13 +262,16 @@ export class ChallengeBoard {
   }
 
   /**
-   * Turns to the previous (`-1`) or next (`1`) page of operators; the last page ends on the last one.
+   * Turns to the previous (`-1`) or next (`1`) page of operators.
    */
   protected step(direction: -1 | 1): void {
     const page = this.visibleCount() * this.columnPx();
     this.shift.set(this.snapped(this.offset()) + direction * page);
   }
 
+  /**
+   * Arms a possible drag when the operator columns are pressed.
+   */
   protected pressStart(event: PointerEvent): void {
     const target = event.target as HTMLElement;
     // Only the operator columns drag; a button keeps its own press.
@@ -277,6 +286,9 @@ export class ChallengeBoard {
     this.press = { pointerId: event.pointerId, x: event.clientX, shift: this.offset() };
   }
 
+  /**
+   * Slides the columns with the pointer once it has travelled past the drag threshold.
+   */
   protected pressMove(event: PointerEvent): void {
     if (!this.press || event.pointerId !== this.press.pointerId) {
       return;
@@ -292,17 +304,23 @@ export class ChallengeBoard {
     this.shift.set(this.press.shift - travel);
   }
 
+  /**
+   * Ends the press, snapping a drag to whole columns.
+   */
   protected pressEnd(): void {
     if (this.dragging()) {
       this.shift.set(this.snapped(this.offset()));
       this.dragging.set(false);
       this.swallowClick = true;
-      // The click, if any, fires right after the release; past it, clicks work again.
+      // The release's click fires right after; clicks work again past it.
       setTimeout(() => (this.swallowClick = false));
     }
     this.press = null;
   }
 
+  /**
+   * Cancels the click a drag release fires, so it does not pin an operator.
+   */
   protected swallowDragClick(event: MouseEvent): void {
     if (this.swallowClick) {
       event.preventDefault();
@@ -311,7 +329,7 @@ export class ChallengeBoard {
   }
 
   /**
-   * A sideways trackpad swipe slides the columns, then settles on a whole column.
+   * A sideways trackpad swipe slides the columns, then snaps to a whole column.
    */
   protected wheel(event: WheelEvent): void {
     if (!this.slidable() || Math.abs(event.deltaX) <= Math.abs(event.deltaY)) {
@@ -328,7 +346,7 @@ export class ChallengeBoard {
   }
 
   /**
-   * Keyboard focus landing on a hidden operator's star slides their column into view.
+   * Focus on a hidden operator's star slides their column into view.
    */
   protected reveal(event: FocusEvent): void {
     const cell = (event.target as HTMLElement).closest<HTMLElement>('[data-column]');

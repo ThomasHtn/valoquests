@@ -1,0 +1,26 @@
+/* Mobile drawer chapters cascade in; replays whenever `data-open` comes back. */
+
+@media (prefers-reduced-motion: no-preference) and (width < 64rem) {
+  .sidebar[data-open] nav > div {
+    animation: fx-nav-in 460ms var(--ease-out-expo) both;
+  }
+
+  .sidebar[data-open] nav > div:nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  .sidebar[data-open] nav > div:nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .sidebar[data-open] nav > div:nth-child(n + 4) {
+    animation-delay: 180ms;
+  }
+}
+
+@keyframes fx-nav-in {
+  from {
+    opacity: 0;
+    transform: translateX(-1.25rem);
+  }
+}

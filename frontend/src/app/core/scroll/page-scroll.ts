@@ -9,35 +9,37 @@ import {
 } from './page-scroll.constants';
 
 /**
- * Scroll behaviour of the routed page's body, which the router's own scroll restoration cannot see
- * since it only knows the window.
- *
- * Remembers each URL's offset so the back button lands where the reader left (a profile opened
- * from the squad list returns to the same row), and exposes whether the reader is deep enough in a
- * page to be offered the way back to the top.
+ * Per-URL scroll restoration of the page body, which the router's (window-only) one cannot see.
  */
 @Service()
 export class PageScroll {
+  /**
+   * Document the page body is looked up and listened to in.
+   */
   private readonly document = inject(DOCUMENT);
+
+  /**
+   * Router, to key offsets by URL and detect back or forward navigations.
+   */
   private readonly router = inject(Router);
 
   /**
-   * Last known offset of every visited URL.
+   * Last offset of every visited URL.
    */
   private readonly offsets = new Map<string, number>();
 
   /**
-   * Whether the navigation in flight was triggered by the browser's back or forward buttons.
+   * Whether the navigation in flight is a browser back or forward.
    */
   private restoring = false;
 
   /**
-   * Whether the current page is scrolled far enough to offer a way back to the top.
+   * Whether the page is scrolled deep enough to offer back-to-top.
    */
   public readonly deep = signal(false);
 
   constructor() {
-    // Scroll events do not bubble, so the capture phase is the only place to hear every page body.
+    // Scroll events do not bubble, so listen in the capture phase.
     this.document.addEventListener('scroll', (event) => this.onScroll(event), {
       capture: true,
       passive: true,
@@ -56,13 +58,16 @@ export class PageScroll {
   }
 
   /**
-   * Scrolls the current page back to its top, smoothly unless the reader asked for less motion.
+   * Scrolls to the top, smoothly unless reduced motion is asked.
    */
   public toTop(): void {
     const reduced = this.document.defaultView?.matchMedia('(prefers-reduced-motion: reduce)');
     this.body()?.scrollTo({ top: 0, behavior: reduced?.matches ? 'auto' : 'smooth' });
   }
 
+  /**
+   * Records the page body's offset for the current URL and updates the back-to-top state.
+   */
   private onScroll(event: Event): void {
     const target = event.target;
     if (!(target instanceof HTMLElement) || !target.matches(PAGE_BODY_SELECTOR)) {
@@ -73,8 +78,7 @@ export class PageScroll {
   }
 
   /**
-   * Restores an offset once the page is tall enough to hold it: content fed by shared resources
-   * renders within a frame or two, but a lazy route may take a few more.
+   * Restores an offset once the page is tall enough, which a lazy route may take frames to be.
    */
   private restore(offset: number, frame = 0): void {
     if (offset <= 0) {
@@ -86,10 +90,13 @@ export class PageScroll {
       body.scrollTop = offset;
       return;
     }
-    // A timer rather than `requestAnimationFrame`, which a backgrounded tab stops firing altogether.
+    // Not `requestAnimationFrame`, which a background tab stops firing.
     setTimeout(() => this.restore(offset, frame + 1), SCROLL_RESTORE_STEP_MS);
   }
 
+  /**
+   * Scrolling page body of the current route, `null` when none is rendered.
+   */
   private body(): HTMLElement | null {
     return this.document.querySelector<HTMLElement>(PAGE_BODY_SELECTOR);
   }

@@ -4,34 +4,33 @@ import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { sameRoutePath } from './navigation-history.utils';
 
 /**
- * The in-app history the browser keeps but does not expose: which page the reader came from.
- *
- * Lets a back link return where the reader really was (a profile opened from the leaderboard goes
- * back to the leaderboard, filters and scroll intact) instead of to a fixed parent. Popstates are
- * matched against the stack; a forward jump it cannot follow resets it, so a back link then falls
- * back to its static parent rather than to a wrong page.
+ * In-app history, so a back link returns where the reader came from.
+ * A forward jump it cannot follow resets it, so a back link falls back to its static parent.
  */
 @Service()
 export class NavigationHistory {
+  /**
+   * Router whose navigation events feed the history.
+   */
   private readonly router = inject(Router);
 
   /**
-   * URLs of the in-app entries up to the current one, oldest first.
+   * In-app URLs up to the current one, oldest first.
    */
   private readonly stack: string[] = [];
 
   /**
-   * Whether the navigation in flight comes from the browser's back or forward buttons.
+   * Whether the navigation in flight is a browser back or forward.
    */
   private popping = false;
 
   /**
-   * Whether the navigation in flight replaces the current entry rather than adding one.
+   * Whether the navigation in flight replaces the current entry.
    */
   private replacing = false;
 
   /**
-   * The URL of the in-app page before the current one, or `null` on the first page of the visit.
+   * URL of the previous in-app page, `null` on the first page.
    */
   public readonly previousUrl = signal<string | null>(null);
 
@@ -46,6 +45,9 @@ export class NavigationHistory {
     });
   }
 
+  /**
+   * Updates the stack after a navigation: pops on back or forward, rewrites on a replace, pushes otherwise.
+   */
   private record(url: string): void {
     const top = this.stack.at(-1);
     if (this.popping) {
@@ -54,7 +56,7 @@ export class NavigationHistory {
         this.stack.splice(0, this.stack.length, url);
       }
     } else if (top !== undefined && (this.replacing || sameRoutePath(top, url))) {
-      // A query-only change (a filter kept in the address) rewrites the entry rather than adding one.
+      // A query-only change (a filter in the address) rewrites the entry.
       this.stack[this.stack.length - 1] = url;
     } else {
       this.stack.push(url);

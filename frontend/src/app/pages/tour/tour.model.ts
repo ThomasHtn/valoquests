@@ -1,10 +1,7 @@
 import { MatchResult } from '@core/matches/match-result.model';
 
 /**
- * Identifier of a guided-tour step.
- *
- * Doubles as the step's translation namespace (`tour.steps.<id>.*`) and as the discriminant the
- * template switches on to render the matching illustration.
+ * Tour step id, also its translation namespace (`tour.steps.<id>.*`).
  */
 export type TourStepId = 'intro' | 'base' | 'week' | 'resources' | 'challenges' | 'ranking';
 

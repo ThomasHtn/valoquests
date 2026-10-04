@@ -1,37 +1,15 @@
 /**
- * Difficulty tier of a weekly challenge, controlling its weight. Mirrors the backend
- * `ChallengeDifficulty`. A daily challenge has none.
+ * Weekly challenge tier, setting its weight; mirrors the backend `ChallengeDifficulty`.
  */
 export type ChallengeDifficulty = 'EASY' | 'NORMAL' | 'MEDIUM' | 'HARD' | 'VERY_HARD';
 
 /**
- * The five tiers from easiest to hardest — the order any list of difficulties is ordered by.
- *
- * Declared here rather than relied on through the key order of a lookup record: the ladder is a
- * domain fact, and object key order is not a contract.
- */
-export const CHALLENGE_DIFFICULTIES: readonly ChallengeDifficulty[] = [
-  'EASY',
-  'NORMAL',
-  'MEDIUM',
-  'HARD',
-  'VERY_HARD',
-];
-
-/**
- * How often a challenge is drawn. Mirrors the backend `ChallengeCadence`.
- *
- * `WEEKLY` is one of the five drawn on Monday, decided over the week; `DAILY` is the one drawn
- * every morning, decided inside its own day.
+ * Draw cadence (five weekly on Monday, one daily each morning); mirrors `ChallengeCadence`.
  */
 export type ChallengeCadence = 'WEEKLY' | 'DAILY';
 
 /**
- * What every challenge carries, whether drawn or read from the catalogue.
- *
- * Targets come already resolved: the backend scales them at the draw from the campaign's own
- * measure of the squad. The description keeps the catalogue's base wording and is what the
- * screens show; {@link targetValue} is the figure progress is measured against.
+ * Fields shared by drawn and catalogue challenges; targets come scaled by the backend.
  */
 export interface ChallengeIdentity {
   /**
@@ -40,81 +18,77 @@ export interface ChallengeIdentity {
   readonly id: number;
 
   /**
-   * Stable catalogue code (`EASY_DM_HEADSHOTS`), the key to any per-challenge visual.
+   * Stable catalogue code (`EASY_DM_HEADSHOTS`), the key to per-challenge visuals.
    */
   readonly code: string;
 
   /**
-   * Translated name of the challenge.
+   * Translated name.
    */
   readonly name: string;
 
   /**
-   * What has to be done, translated.
+   * Translated description, in the catalogue's base wording.
    */
   readonly description: string;
 
   /**
-   * Whether the challenge is daily or weekly.
+   * Daily or weekly.
    */
   readonly cadence: ChallengeCadence;
 
   /**
-   * Difficulty of a weekly challenge, `null` for a daily one.
+   * Weekly difficulty, `null` for a daily.
    */
   readonly difficulty: ChallengeDifficulty | null;
 
   /**
-   * Whether only competitive matches count toward it.
+   * Whether only competitive matches count.
    */
   readonly competitiveOnly: boolean;
 
   /**
-   * Metric(s) evaluated, joined with `" + "` for composite challenges (`"KILLS + MATCHES_PLAYED"`).
+   * Metric(s), joined with `" + "` when composite (`"KILLS + MATCHES_PLAYED"`).
    */
   readonly metric: string;
 
   /**
-   * Resolved target, or `null` for a composite challenge with no single stored target.
+   * Resolved target progress is measured against, `null` for a composite challenge.
    */
   readonly targetValue: number | null;
 
   /**
-   * Survivors one operator rescues by validating it, at the week it was drawn for.
+   * Survivors one operator rescues by validating it, at its draw week.
    */
   readonly survivors: number;
 
   /**
-   * Points it adds to the weekly ranking once validated.
+   * Weekly ranking points once validated.
    */
   readonly rankingPoints: number;
 }
 
 /**
- * Collective progress of a challenge drawn for the current week or day.
- *
- * Mirrors `CurrentChallengesResponse.ChallengeProgressResponse` from the backend. Progress is
- * collective (across the squad): individual progress is only available from the ranking.
+ * Squad progress on a drawn challenge; mirrors `ChallengeProgressResponse`.
  */
 export interface ChallengeProgress extends ChallengeIdentity {
   /**
-   * Day a daily challenge is decided on, as an ISO-8601 date (`YYYY-MM-DD`); `null` for a weekly.
+   * Decision day of a daily (`YYYY-MM-DD`), `null` for a weekly.
    */
   readonly day: string | null;
 
   /**
-   * Players who validated the challenge.
+   * Players who validated it.
    */
   readonly completedPlayers: number;
 
   /**
-   * Players on the roster.
+   * Roster size.
    */
   readonly totalPlayers: number;
 
   /**
-   * Identifiers of the active operators who validated it, matched against
-   * {@link CurrentChallenges.roster}.
+   * Ids of the active operators who validated it, matched against the roster.
    */
   readonly completedPlayerIds: readonly number[];
 
@@ -124,24 +98,22 @@ export interface ChallengeProgress extends ChallengeIdentity {
   readonly completionPercentage: number;
 
   /**
-   * Each active operator's progress, in roster order, past days' challenges included.
+   * Each active operator's progress, in roster order.
    */
   readonly players: readonly PlayerChallengeProgress[];
 }
 
 /**
- * Where one active operator stands on one challenge.
- *
- * Mirrors `CurrentChallengesResponse.PlayerProgressResponse` from the backend.
+ * One active operator on one challenge; mirrors `PlayerProgressResponse`.
  */
 export interface PlayerChallengeProgress {
   /**
-   * Internal identifier of the player, one of {@link CurrentChallenges.roster}.
+   * Player id, one of the roster.
    */
   readonly playerId: number;
 
   /**
-   * Progress so far, zero while the player has not been evaluated on it.
+   * Progress, zero until evaluated.
    */
   readonly currentValue: number;
 
@@ -152,9 +124,7 @@ export interface PlayerChallengeProgress {
 }
 
 /**
- * One active operator, the unit every completion count is read against.
- *
- * Mirrors `CurrentChallengesResponse.RosterPlayerResponse` from the backend.
+ * One active operator, the unit completions count; mirrors `RosterPlayerResponse`.
  */
 export interface RosterPlayer {
   /**
@@ -163,45 +133,42 @@ export interface RosterPlayer {
   readonly id: number;
 
   /**
-   * Name shown across the application.
+   * Display name.
    */
   readonly displayName: string;
 
   /**
-   * Agent portrait chosen by the player, or `null` when none was chosen.
+   * Chosen agent portrait, `null` when none.
    */
   readonly portrait: string | null;
 }
 
 /**
- * Challenges drawn for the active calendar week, with their collective completion progress.
- *
- * Mirrors the backend `CurrentChallengesResponse` returned by `GET /api/challenges/current`.
+ * Active week's draws with progress; mirrors `CurrentChallengesResponse`.
  */
 export interface CurrentChallenges {
   /**
-   * Monday identifying the active week, as an ISO-8601 date (`YYYY-MM-DD`).
+   * Monday of the active week (`YYYY-MM-DD`).
    */
   readonly weekStart: string;
 
   /**
-   * Sunday identifying the active week, as an ISO-8601 date (`YYYY-MM-DD`).
+   * Sunday of the active week (`YYYY-MM-DD`).
    */
   readonly weekEnd: string;
 
   /**
-   * The day in progress, as an ISO-8601 date (`YYYY-MM-DD`).
+   * Current day (`YYYY-MM-DD`).
    */
   readonly today: string;
 
   /**
-   * Most recent successful player synchronization, as an ISO-8601 instant, or `null` when none
-   * completed yet.
+   * Last successful player sync (ISO-8601 instant), `null` when none yet.
    */
   readonly lastSuccessfulSynchronizationAt: string | null;
 
   /**
-   * The active operators every challenge applies to, in roster order.
+   * Active operators every challenge applies to, in roster order.
    */
   readonly roster: readonly RosterPlayer[];
 
@@ -211,29 +178,22 @@ export interface CurrentChallenges {
   readonly challenges: readonly ChallengeProgress[];
 
   /**
-   * The week's daily challenges drawn so far, oldest first. Today's is the last one.
+   * The week's dailies so far, oldest first (today's last).
    */
   readonly dailies: readonly ChallengeProgress[];
 }
 
 /**
- * One challenge of the catalogue, outside of any one week's draw — what it is worth rather than
- * how far the squad has got with it.
- *
- * Mirrors the backend `ChallengeCatalogueResponse.ChallengeCatalogueEntry` returned by
- * `GET /api/challenges/catalogue`.
+ * One catalogue challenge outside any draw; mirrors `ChallengeCatalogueEntry`.
  */
 export type ChallengeCatalogueEntry = ChallengeIdentity;
 
 /**
- * The full catalogue of challenges the draws pick from, priced at the reference in force.
- *
- * Mirrors the backend `ChallengeCatalogueResponse` returned by `GET /api/challenges/catalogue`.
+ * Full catalogue at the reference in force; mirrors `ChallengeCatalogueResponse`.
  */
 export interface ChallengeCatalogue {
   /**
-   * Weekly reference the targets and rewards are resolved at: the live campaign's, else the last
-   * closed one's, else the floor.
+   * Weekly reference: the live campaign's, else the last closed one's, else the floor.
    */
   readonly reference: number;
 

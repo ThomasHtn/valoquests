@@ -6,11 +6,7 @@ import { RULE_ICONS, ICON_TONES, TOKEN } from './rule-text.constants';
 import { RuleIcon, RuleRun } from './rule-text.model';
 
 /**
- * A sentence of the rulebook with its icons and emphasis in place.
- *
- * The dictionary writes `{food}` where the wheat ear goes and `*so*` around the words to set in
- * relief; the component turns that into text runs and inline icons. Parsed into runs rather than
- * bound as HTML, so nothing from the dictionary ever reaches `innerHTML`.
+ * Rulebook sentence with `{icon}` and `*relief*` tokens, parsed so nothing reaches `innerHTML`.
  */
 @Component({
   selector: 'app-rule-text',
@@ -29,6 +25,9 @@ export class RuleText {
    */
   public readonly text = input.required<string>();
 
+  /**
+   * Sentence split into plain, emphasized and icon runs for the template.
+   */
   protected readonly runs = computed<readonly RuleRun[]>(() =>
     this.text()
       .split(TOKEN)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CampaignWeek } from '@core/campaign/campaign.model';
+import { CampaignWeek } from '@core/campaign/campaign-week.model';
 import { DAY_MS, HOUR_MS } from './fall-forecast.constants';
 import {
   buildGuardianFall,

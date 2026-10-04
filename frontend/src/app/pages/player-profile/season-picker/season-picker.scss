@@ -1,4 +1,4 @@
-/* Styles mirrored from the leaderboard's week picker, so both scopes in the bar look alike. */
+/* Mirrors the leaderboard's week picker so both scopes in the bar look alike. */
 
 .step {
   display: grid;
@@ -66,9 +66,7 @@
   color: var(--color-text-muted);
 }
 
-/* Under the trigger, flush with its trailing edge: the arrow beside it is the offset. Not
-   named `panel`: that is a global utility, and it painted its translucent wash over the menu's
-   own ground. */
+/* Flush with the trigger's trailing edge; not `panel`, a global utility that painted over it. */
 .listbox {
   position: absolute;
   top: calc(100% + 0.375rem);
@@ -92,7 +90,7 @@
   background: var(--color-edge);
 }
 
-/* Three columns down the whole list — badge, episode, tick — so nothing zigzags. */
+/* Three columns down the list (badge, episode, tick) so nothing zigzags. */
 .option {
   display: grid;
   grid-template-columns: 2.25rem minmax(0, 1fr) 0.75rem;
@@ -106,8 +104,7 @@
   letter-spacing: 0.02em;
 }
 
-/* On a phone the bar has no room for the arrows beside the way back: the list alone steps through
-   the acts. */
+/* No room for the arrows on a phone: the list alone steps through the acts. */
 @media (width < 40rem) {
   .step {
     display: none;

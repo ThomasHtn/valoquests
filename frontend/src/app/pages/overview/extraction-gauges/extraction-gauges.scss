@@ -1,5 +1,3 @@
-/* ---------- The extraction capacity ---------- */
-
 .gauges {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -7,7 +5,7 @@
   margin-top: 2.5rem;
 }
 
-/* One dial a row on a phone, two on a tablet, the four side by side from the desktop. */
+/* One dial per row on a phone, two on a tablet, four on desktop. */
 @media (width >= 40rem) {
   .gauges {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -21,9 +19,7 @@
   }
 }
 
-/* Four rows shared by the four dials: the name, the ring, the stock, the base. The fourth dial is
-   larger and has no mode badges; without a shared grid its title dropped by thirty pixels and the
-   four names no longer lined up. */
+/* Shared rows (name, ring, stock, base) keep the larger fourth dial's name aligned. */
 .gauge-cell {
   --tone: var(--color-text-muted);
   --pad: 1.25rem;
@@ -69,7 +65,7 @@
   transition: color 150ms;
 }
 
-/* The disc stays small; the tap zone around it reaches the 44px a thumb needs. */
+/* Small disc with a 44px tap zone. */
 .info::before {
   content: '';
   position: absolute;
@@ -90,7 +86,7 @@
   max-width: 100%;
 }
 
-/* The sweep starts at noon and not at three: a dial is read from the top. */
+/* The sweep starts at noon: a dial is read from the top. */
 .gauge > svg {
   display: block;
   width: 100%;
@@ -136,7 +132,7 @@
   color: var(--tone);
 }
 
-/* The aboard dial: a rocket instead of a ring, filled like a tank of the challenges board. */
+/* Aboard dial: a rocket filled like a challenges board tank. */
 .gauge--hull {
   width: 6.25rem;
   height: auto;
@@ -175,7 +171,7 @@
   stroke-linejoin: round;
 }
 
-/* Centred on the porthole and on the hull's straight section, both taken from the viewbox. */
+/* Centred on the porthole and the hull's straight section, from the viewbox. */
 .hull-port,
 .hull-figure {
   inset: auto 0;
@@ -222,8 +218,7 @@
   color: var(--color-text-secondary);
 }
 
-/* The base overflows its block to touch both edges: that is what makes it read as a base and not
-   as one more card laid inside. */
+/* Overflows to both edges so it reads as a base, not another card. */
 .gauge-foot {
   display: flex;
   flex-direction: column;
@@ -235,8 +230,7 @@
   background: rgb(4 10 15 / 45%);
 }
 
-/* Two rows reserved by default: "Team Deathmatch" takes two where "Compétitif, Premier, Non
-   classé" takes one, and without that reserve the four bases did not start at the same height. */
+/* Two rows reserved so the four bases start at the same height whatever the mode names. */
 .modes {
   display: flex;
   flex-wrap: wrap;
@@ -253,8 +247,7 @@
   color: var(--tone);
 }
 
-/* Pinned to the bottom of the base: a third row of mode tags or the aboard split pushed it a few
-   pixels lower than its neighbours. */
+/* Pinned to the bottom so extra rows above never push it out of line. */
 .gauge-rate {
   display: flex;
   align-items: center;
@@ -275,8 +268,7 @@
   white-space: nowrap;
 }
 
-/* Two columns shared by both rows: figures right-aligned on one edge, labels left-aligned on the
-   other, so the numbers line up whatever their width. */
+/* Shared columns so the figures line up whatever their width. */
 .split {
   display: grid;
   grid-template-columns: auto auto;
@@ -312,7 +304,7 @@
   }
 }
 
-/* The four dials close one after the other, left to right, as a single reading. */
+/* The dials close one after another, left to right. */
 .gauge-cell:nth-child(2) {
   --fx-delay: 120ms;
 }

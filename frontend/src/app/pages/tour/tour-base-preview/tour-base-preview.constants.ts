@@ -1,6 +1,5 @@
 /**
- * Smallest population the preview's slider reaches: a founding camp, never an empty plot (an empty
- * base reads as the campaign still loading).
+ * Slider minimum: a founding camp, since an empty base reads as still loading.
  */
 export const PREVIEW_MIN_POPULATION = 500;
 

@@ -1,5 +1,5 @@
 /**
- * Every record the section can show, in display order. Doubles as the translation key suffix.
+ * Records in display order; also the translation key suffix.
  */
 export type RecordKey =
   | 'mostKills'
@@ -17,22 +17,22 @@ export type RecordKey =
  */
 export interface RecordTile {
   /**
-   * Which record this is; picks both the icon and the label.
+   * Which record this is; picks the icon and the label.
    */
   readonly key: RecordKey;
 
   /**
-   * The record itself, already formatted.
+   * Formatted record.
    */
   readonly value: string;
 
   /**
-   * Already-translated explanation shown on the label, carrying where and when it was set.
+   * Translated tooltip saying where and when it was set.
    */
   readonly tooltip: string;
 
   /**
-   * Rank badge shown in place of the record's icon, or `null` for records without one.
+   * Rank badge replacing the icon, `null` for other records.
    */
   readonly rankIcon: RecordRankIcon | null;
 }
@@ -47,7 +47,7 @@ export interface RecordRankIcon {
   readonly src: string | null;
 
   /**
-   * Translated tier name, used as the badge's alt text.
+   * Translated tier name, the badge's alt text.
    */
   readonly label: string;
 }

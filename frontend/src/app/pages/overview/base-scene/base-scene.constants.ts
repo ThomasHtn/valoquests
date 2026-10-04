@@ -1,11 +1,9 @@
 /**
- * Sky kept above the drawing, in viewBox units: on a phone the frame is cropped to its height, and
- * without it the rocket's tip went under the context bar.
+ * Sky above the drawing (viewBox units) so the rocket tip clears the context bar on phones.
  */
 export const SCENE_HEADROOM = 14;
 
 /**
- * `localStorage` key holding the population the overview last showed, so the buildings grown since
- * then rise on the next visit.
+ * `localStorage` key of the population last shown, so new buildings rise on the next visit.
  */
 export const SEEN_POPULATION_KEY = 'valo-quests.base-seen-population';

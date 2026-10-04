@@ -1,6 +1,5 @@
 <div class="flex flex-col gap-4">
-  <!-- Header: the metric switch, in the same segmented shape the page's filters use, so a control
-       that changes what is plotted looks like a control and not like a set of tabs. -->
+  <!-- Metric switch, segmented like the page's filters so it reads as a control, not tabs. -->
   <div class="flex flex-wrap items-center justify-between gap-3">
     <h3 class="label-caption text-sm text-text-primary">
       <span
@@ -45,9 +44,7 @@
     [yAxisLabel]="yAxisLabel()"
   />
 
-  <!-- Legend. Always present with more than one curve, and it carries each season's average rather
-       than only its name: the average is what says which curve sits higher overall, which a reader
-       cannot get from two lines crossing each other two hundred times. -->
+  <!-- Legend with each season's average, which says which curve sits higher overall. -->
   @if (legend().length > 1) {
     <ul class="flex flex-wrap items-center gap-x-6 gap-y-2">
       @for (entry of legend(); track entry.label) {

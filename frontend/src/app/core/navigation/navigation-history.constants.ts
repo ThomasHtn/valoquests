@@ -1,6 +1,5 @@
 /**
- * Pages a back link can name, by path pattern, with the translation key of their name. A page left
- * out here is never offered as a way back: the link keeps its static parent instead.
+ * Pages a back link can name, by path pattern; any other keeps its static parent.
  */
 export const BACK_LABEL_KEYS: readonly { readonly pattern: RegExp; readonly key: string }[] = [
   { pattern: /^\/overview$/, key: 'sidebar.nav.overview' },

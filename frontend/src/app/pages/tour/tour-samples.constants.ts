@@ -1,20 +1,22 @@
-import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
-import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
-import { ChallengeOperator } from '@pages/challenges/challenges.model';
+import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
+import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
+import { ChallengeOperator } from '@core/challenges/card/challenge-card.model';
 import { BoardRow } from '@pages/leaderboard/leaderboard.model';
-import { Capacity, Contribution, Mission, SundayStakes } from '@pages/overview/overview.model';
+import { Capacity } from '@pages/overview/extraction-gauges/extraction-gauges.model';
+import {
+  Contribution,
+  Mission,
+  SundayStakes,
+} from '@pages/overview/mission-readings/mission-readings.model';
 
 import { TourSampleDaily, TourSampleMatch } from './tour.model';
 
-/*
- * The tour's illustrations run on this fixed sample campaign rather than on the live one: between
- * two campaigns, or on a Monday morning, the live screens have nothing to show yet. The figures are
- * computed from the rules for week 4 of an Amateur campaign with 4 operators on a five-day streak
- * (+8 %), so the excerpts read like the real screens: 19 822 HP, 1 306 wounded, 7 survivors a daily.
+/**
+ * Sample campaign computed from the rules: week 4, Amateur, 4 operators on a five-day streak.
  */
 
 /**
- * The sample squad, in the order the challenge cards list them before sorting by progress.
+ * The sample squad, in roster order.
  */
 export const TOUR_SAMPLE_OPERATORS: readonly ChallengeOperator[] = [
   { playerId: 1, name: 'Kairo', portrait: resolvePlayerAvatarUrl('Neon') },
@@ -24,7 +26,7 @@ export const TOUR_SAMPLE_OPERATORS: readonly ChallengeOperator[] = [
 ];
 
 /**
- * One evening of one operator, newest first, as the profile's match history lists it.
+ * One operator's evening, newest first.
  */
 export const TOUR_SAMPLE_MATCHES: readonly TourSampleMatch[] = [
   {
@@ -82,12 +84,12 @@ export const TOUR_SAMPLE_POPULATION = 3_480;
 export const TOUR_SAMPLE_STAGES_DONE = 3;
 
 /**
- * Time left before the sample week's extraction, so the countdown reads as a Friday evening.
+ * Time left before extraction, so the countdown reads as a Friday evening.
  */
 export const TOUR_SAMPLE_DEADLINE_IN_MS = (2 * 24 + 5) * 3_600_000 + 42 * 60_000;
 
 /**
- * The sample week, fourth of the campaign, without its deadline: that one is set from the clock.
+ * The sample week, fourth of the campaign; its deadline is set from the clock.
  */
 export const TOUR_SAMPLE_MISSION: Omit<Mission, 'extractionDeadline'> = {
   weekIndex: 4,
@@ -104,7 +106,7 @@ export const TOUR_SAMPLE_MISSION: Omit<Mission, 'extractionDeadline'> = {
 };
 
 /**
- * What the sample squad put into the week: the damage adds up to the hit points taken above.
+ * The squad's week; damage adds up to the hit points taken above.
  */
 export const TOUR_SAMPLE_CONTRIBUTION: Contribution = {
   total: 12_090,
@@ -146,7 +148,7 @@ export const TOUR_SAMPLE_CONTRIBUTION: Contribution = {
 };
 
 /**
- * The sample week's four dials: food is the tightest stock, so it caps the extraction.
+ * The sample week's dials; food is the tightest stock, so it caps the extraction.
  */
 export const TOUR_SAMPLE_CAPACITY: Capacity = {
   wounded: 1_306,
@@ -165,8 +167,7 @@ export const TOUR_SAMPLE_CAPACITY: Capacity = {
 };
 
 /**
- * The sample week's Sunday: the food-capped 840 reachable minus the 512 already forecast, and the
- * base's 3 480 inhabitants struck at 61 % breakthrough.
+ * The sample Sunday: food-capped 840 minus the forecast 512, and losses at 61 % breakthrough.
  */
 export const TOUR_SAMPLE_STAKES: SundayStakes = {
   gain: 328,

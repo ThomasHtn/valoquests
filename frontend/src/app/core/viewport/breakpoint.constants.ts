@@ -1,6 +1,5 @@
 /**
- * Tailwind's default `md`, `lg` and `xl` breakpoints, in pixels — the widths at which the screens
- * holding two distinct layouts switch from the narrow one to the wide one.
+ * Tailwind's default `md` breakpoint, in pixels.
  */
 export const MD_BREAKPOINT_PX = 768;
 

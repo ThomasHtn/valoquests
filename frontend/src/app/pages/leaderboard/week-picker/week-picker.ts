@@ -15,20 +15,13 @@ import { LucideChevronDown, LucideChevronLeft, LucideChevronRight } from '@lucid
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
+import { handleListboxKeydown } from '@shared/listbox/listbox-keyboard.utils';
 import { WeekOption } from '../leaderboard.model';
 import { nextInstanceId } from '@core/dom/instance-id.utils';
 
 /**
- * The week the board shows, and the way to any other: arrows to step through them one at a time,
- * and a listbox naming every week at once — its place in its campaign, its dates, who won it.
- *
- * A listbox rather than a date picker: the board only ever shows a Monday it has a ranking for,
- * so the choice is one of a short list, never a free date.
- *
- * Follows the same select-only combobox pattern as the shared `Select`: the trigger keeps DOM focus
- * and points at the highlighted week through `aria-activedescendant`, so the list is operable with
- * arrows, Home/End, Enter, Space, Escape and Tab. That matters on a phone, where the step arrows
- * are hidden and the list is the only way to another week.
+ * Week stepper plus a listbox of every ranked week.
+ * Select-only combobox like `Select`; on a phone the list is the only way to another week.
  */
 @Component({
   selector: 'app-week-picker',
@@ -51,7 +44,7 @@ import { nextInstanceId } from '@core/dom/instance-id.utils';
 })
 export class WeekPicker {
   /**
-   * Every week the board can show, newest first.
+   * Every week on offer, newest first.
    */
   public readonly options = input.required<readonly WeekOption[]>();
 
@@ -61,12 +54,12 @@ export class WeekPicker {
   public readonly selected = input.required<string | null>();
 
   /**
-   * Emits the Monday of the week the reader picked.
+   * Emits the picked Monday.
    */
   public readonly selectedChange = output<string>();
 
   /**
-   * Id of the list, referenced by the trigger's `aria-controls`.
+   * List id, for the trigger's `aria-controls`.
    */
   protected readonly listboxId = nextInstanceId('week-picker');
 
@@ -76,42 +69,53 @@ export class WeekPicker {
   protected readonly isOpen = signal(false);
 
   /**
-   * Index of the keyboard-highlighted week, or `-1` when none is; distinct from the selected one
-   * so arrowing through the list commits nothing until the reader confirms.
+   * Keyboard-highlighted index, `-1` for none; nothing is committed until confirmed.
    */
   protected readonly activeIndex = signal(-1);
 
   /**
-   * Host element, used to detect clicks outside the open list.
+   * Host, to detect outside clicks.
    */
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /**
-   * Trigger button, which keeps focus while the list is browsed by keyboard.
+   * Trigger, which keeps focus while browsing.
    */
   private readonly triggerButton = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
 
   /**
-   * The list, scrolled to keep the highlighted week in view.
+   * List, scrolled to keep the highlight in view.
    */
   private readonly panelElement = viewChild.required<ElementRef<HTMLElement>>('panel');
 
+  /**
+   * The option on screen, shown on the trigger.
+   */
   protected readonly current = computed(
     () => this.options().find((option) => option.weekStart === this.selected()) ?? null,
   );
 
+  /**
+   * Position of the week on screen in the list, `-1` when absent.
+   */
   private readonly selectedIndex = computed(() =>
     this.options().findIndex((option) => option.weekStart === this.selected()),
   );
 
+  /**
+   * Whether an older week exists to step back to.
+   */
   protected readonly canGoBack = computed(
     () => this.selectedIndex() >= 0 && this.selectedIndex() < this.options().length - 1,
   );
 
+  /**
+   * Whether a newer week exists to step forward to.
+   */
   protected readonly canGoForward = computed(() => this.selectedIndex() > 0);
 
   /**
-   * Id of the highlighted week, or `null` when the list is closed or nothing is highlighted.
+   * Highlighted option id, `null` when closed or none.
    */
   protected readonly activeOptionId = computed(() => {
     const index = this.activeIndex();
@@ -119,8 +123,7 @@ export class WeekPicker {
   });
 
   /**
-   * Registers the effect keeping the highlighted week visible: focus never leaves the trigger, so
-   * nothing else scrolls the list. After render, since the list cannot be measured while hidden.
+   * Keeps the highlight in view after render: focus never leaves the trigger.
    */
   constructor() {
     afterRenderEffect(() => {
@@ -134,17 +137,14 @@ export class WeekPicker {
   }
 
   /**
-   * Builds the element id of the week at `index`.
-   *
-   * @param index - Zero-based position in the list.
-   * @returns The option's unique element id.
+   * Element id of the option at `index`.
    */
   protected optionId(index: number): string {
     return `${this.listboxId}-option-${index}`;
   }
 
   /**
-   * Opens or closes the list.
+   * Toggles the list.
    */
   protected toggle(): void {
     if (this.isOpen()) {
@@ -155,7 +155,7 @@ export class WeekPicker {
   }
 
   /**
-   * Closes the list and clears the keyboard highlight.
+   * Closes the list and clears the highlight.
    */
   protected close(): void {
     this.isOpen.set(false);
@@ -163,10 +163,7 @@ export class WeekPicker {
   }
 
   /**
-   * Steps to the neighbouring week. Out-of-range steps are ignored rather than clamped, since the
-   * arrows are already disabled at both ends.
-   *
-   * @param offset - `1` to go one week further back, `-1` to come one week forward.
+   * Steps `1` week back or `-1` forward; out of range is ignored.
    */
   protected step(offset: number): void {
     const target = this.options()[this.selectedIndex() + offset];
@@ -176,10 +173,7 @@ export class WeekPicker {
   }
 
   /**
-   * Shows the picked week, closes the list and hands focus back to the trigger, which a tap or a
-   * click on an option may have taken.
-   *
-   * @param option - The week picked.
+   * Picks a week, closing the list and refocusing the trigger.
    */
   protected select(option: WeekOption): void {
     this.closeAndRefocus();
@@ -187,83 +181,34 @@ export class WeekPicker {
   }
 
   /**
-   * Drives the list from the keyboard, following the ARIA select-only combobox pattern. Bound on
-   * the trigger and the list rather than the host, so the step arrows keep their native keys.
-   *
-   * @param event - The keyboard event.
+   * Keyboard handling, bound on trigger and list so the step arrows keep native keys.
    */
   protected onKeydown(event: KeyboardEvent): void {
-    const lastIndex = this.options().length - 1;
-
-    switch (event.key) {
-      case 'ArrowDown':
-      case 'ArrowUp': {
-        event.preventDefault();
-        if (!this.isOpen()) {
-          this.open();
-          return;
-        }
-        const delta = event.key === 'ArrowDown' ? 1 : -1;
-        this.activeIndex.update((index) => Math.min(lastIndex, Math.max(0, index + delta)));
-        return;
-      }
-
-      case 'Home':
-      case 'End': {
-        if (!this.isOpen()) {
-          return;
-        }
-        event.preventDefault();
-        this.activeIndex.set(event.key === 'Home' ? 0 : lastIndex);
-        return;
-      }
-
-      case 'Enter':
-      case ' ': {
-        // Keeps the browser from also firing the trigger's native click for these keys.
-        event.preventDefault();
-        if (!this.isOpen()) {
-          this.open();
-          return;
-        }
-        const option = this.options()[this.activeIndex()];
+    handleListboxKeydown(event, {
+      isOpen: this.isOpen,
+      activeIndex: this.activeIndex,
+      optionCount: this.options().length,
+      open: () => this.open(),
+      close: () => this.close(),
+      closeAndRefocus: () => this.closeAndRefocus(),
+      pick: (index) => {
+        const option = this.options()[index];
         if (option) {
           this.select(option);
         }
-        return;
-      }
-
-      case 'Escape': {
-        if (this.isOpen()) {
-          event.preventDefault();
-          this.closeAndRefocus();
-        }
-        return;
-      }
-
-      case 'Tab': {
-        // Focus leaves naturally, but never past a list left open behind it.
-        this.close();
-        return;
-      }
-
-      default:
-        return;
-    }
+      },
+    });
   }
 
   /**
-   * Whether a rule separates this option from the one above it: the two belong to different
-   * runs of weeks — one campaign, then none, then an older campaign.
+   * Whether the option starts a new run of weeks (campaign or none).
    */
   protected startsGroup(index: number): boolean {
     return index > 0 && this.options()[index - 1].group !== this.options()[index].group;
   }
 
   /**
-   * Closes the list on a click outside the control.
-   *
-   * @param event - The document click.
+   * Closes the list on an outside click.
    */
   protected onDocumentClick(event: MouseEvent): void {
     if (this.isOpen() && !this.host.nativeElement.contains(event.target as Node)) {
@@ -272,7 +217,7 @@ export class WeekPicker {
   }
 
   /**
-   * Opens the list on the week on screen, so the arrows start from it.
+   * Opens the list highlighting the week on screen.
    */
   private open(): void {
     this.isOpen.set(true);
@@ -280,7 +225,7 @@ export class WeekPicker {
   }
 
   /**
-   * Closes the list and returns focus to the trigger.
+   * Closes the list and refocuses the trigger.
    */
   private closeAndRefocus(): void {
     this.close();

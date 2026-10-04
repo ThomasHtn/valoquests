@@ -1,6 +1,5 @@
 /**
- * Narrows a wrapped block to its longest line. A wrapped block otherwise keeps the full width it
- * was allowed, leaving a gap between its text and whatever follows it on the row.
+ * Narrows a wrapped block to its longest line, which CSS alone cannot do.
  */
 export function fitToLines(element: HTMLElement): void {
   element.style.width = '';

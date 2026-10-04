@@ -13,7 +13,7 @@ export type KeyFigureIcon =
   | 'matches';
 
 /**
- * What a key figure's pictogram says: the section's own amber, a gain, a loss, or nothing either way.
+ * Pictogram tone: the section's amber, a gain, a loss, or neutral.
  */
 export type KeyFigureTone = 'brand' | 'good' | 'bad' | 'neutral';
 

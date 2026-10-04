@@ -9,18 +9,20 @@ import {
 } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
-import { CAMPAIGN_WEEK_COUNT, CampaignHistory, WeeklyTitle } from '@core/campaign/campaign.model';
-import { primaryTitle } from '@core/campaign/campaign-title.utils';
-import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
+import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
+import { CampaignHistory } from '@core/campaign/campaign-history.model';
+import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
+import { primaryTitle } from '@core/campaign/titles/campaign-title.utils';
+import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
-import { CHALLENGE_DIFFICULTIES } from '@core/challenges/challenge.model';
-import { WEEK_DAYS } from '@core/date/date-time.constants';
-import { daysBetween } from '@core/date/date-time.utils';
+import { CHALLENGE_DIFFICULTIES } from '@core/challenges/challenge.constants';
+import { WEEK_DAYS } from '@core/date/date.constants';
+import { daysBetween } from '@core/date/date.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
-import { resolveLocale } from '@core/i18n/locale.utils';
+import { resolveLocale } from '@core/i18n/format/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
+import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import {
@@ -43,7 +45,7 @@ import { StreakGauge } from '@shared/streak-gauge/streak-gauge';
 import { streakBonusOf, streakWeekOf } from '@shared/streak-gauge/streak-gauge.utils';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import {
   formatWeekSpan,
   placeWeekInCampaign,
@@ -57,11 +59,8 @@ import { WeekPicker } from './week-picker/week-picker';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
- * The week's ranking: who stands where, on what, and how many of the week's challenges each
- * operator validated. Closed weeks are browsed back to from the same page, frozen as they
- * ended.
- *
- * The board is the backend's own order; nothing is re-sorted here.
+ * Weekly ranking, live or a closed week browsed back to.
+ * Rows keep the backend's order; nothing is re-sorted here.
  */
 @Component({
   selector: 'app-leaderboard',
@@ -92,55 +91,91 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 })
 export class Leaderboard {
   /**
-   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   * Concept icons for the template.
    */
   protected readonly concepts = CONCEPT_ICONS;
 
+  /**
+   * Ranking feed: live week, closed weeks and today's board.
+   */
   private readonly rankingApi = inject(RankingApi);
 
+  /**
+   * Campaign feed, to place each week in its campaign.
+   */
   private readonly campaignApi = inject(CampaignApi);
 
+  /**
+   * Players feed, for the portraits closed weeks lack.
+   */
   private readonly playersApi = inject(PlayersApi);
 
+  /**
+   * Translation service, for the labels built in code.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * The live week's ranking.
+   */
   protected readonly currentResource = this.rankingApi.current;
 
+  /**
+   * Closed weeks' rankings, offered in the week picker.
+   */
   protected readonly historyResource = this.rankingApi.history;
 
+  /**
+   * The running campaign, for its weeks and difficulty.
+   */
   private readonly campaignResource = this.campaignApi.campaign;
 
+  /**
+   * Closed campaigns, to place their weeks.
+   */
   private readonly campaignHistoryResource = this.campaignApi.history;
 
+  /**
+   * Whether the live ranking or the campaign is still loading.
+   */
   protected readonly isLoading = anyLoading(this.currentResource, this.campaignResource);
 
+  /**
+   * Whether the live ranking or the campaign failed to load.
+   */
   protected readonly isError = anyError(this.currentResource, this.campaignResource);
 
+  /**
+   * The live week's ranking, or `null` until loaded.
+   */
   private readonly current = computed(() => resourceValue(this.currentResource, null) ?? null);
 
+  /**
+   * The running campaign, or `null` until loaded.
+   */
   private readonly campaign = computed(() => resourceValue(this.campaignResource, null) ?? null);
 
   /**
-   * Every closed campaign, so a week of one can still be placed in it after it ended.
+   * Closed campaigns, to place their weeks after they ended.
    */
   private readonly campaignHistory = computed<readonly CampaignHistory[]>(() =>
     resourceValue(this.campaignHistoryResource, []),
   );
 
   /**
-   * Every closed week, newest first. Empty while it loads: the live week never waits for it.
+   * Closed weeks, newest first; empty while loading so the live week never waits.
    */
   private readonly history = computed<readonly RankingHistoryWeek[]>(
     () => resourceValue(this.historyResource, null)?.content ?? [],
   );
 
   /**
-   * Today's line of every operator, the only board that knows which days each one played.
+   * Today's board, the only one that knows the days each operator played.
    */
   private readonly daily = computed(() => resourceValue(this.rankingApi.daily, null) ?? null);
 
   /**
-   * Portraits by operator: a closed week names its operators but carries no portrait.
+   * Portraits by player id: closed weeks carry none.
    */
   private readonly portraits = computed(() => {
     const byId = new Map<number, string | null>();
@@ -151,7 +186,7 @@ export class Leaderboard {
   });
 
   /**
-   * Mondays the page can show, newest first: the live week, then every closed one.
+   * Mondays on offer, newest first: the live week, then closed ones.
    */
   private readonly weekStarts = computed<readonly string[]>(() => {
     const live = this.current()?.weekStart;
@@ -159,7 +194,7 @@ export class Leaderboard {
   });
 
   /**
-   * The Monday on screen: the live week by default, changed from the picker, kept across reloads.
+   * Monday on screen, the live week by default, kept across reloads.
    */
   protected readonly selectedWeekStart = linkedSignal<readonly string[], string | null>({
     source: () => this.weekStarts(),
@@ -167,11 +202,13 @@ export class Leaderboard {
   });
 
   /**
-   * Whoever finished first on the last closed week: the reigning champion, decorated on the live
-   * board. A closed week decorates its own winner instead.
+   * Last closed week's winner, decorated as champion on the live board.
    */
   private readonly championId = computed(() => this.history()[0]?.winnerPlayerId ?? null);
 
+  /**
+   * The selected week's board, live or closed; `null` while nothing is loaded.
+   */
   protected readonly board = computed<BoardWeek | null>(() => {
     const weekStart = this.selectedWeekStart();
     const current = this.current();
@@ -186,15 +223,14 @@ export class Leaderboard {
   });
 
   /**
-   * A week nobody has played yet still ranks the whole field, all on zero. The podium would crown
-   * three names on nothing, so it waits for the first figure.
+   * Whether anyone scored: an all-zero week shows no podium.
    */
   protected readonly hasActivity = computed(
     () => this.board()?.ranked.some((row) => row.total > 0) ?? false,
   );
 
   /**
-   * Every week the picker offers, newest first, each placed in its campaign when it has one.
+   * Picker weeks, newest first, placed in their campaign.
    */
   protected readonly weekOptions = computed<readonly WeekOption[]>(() => {
     const current = this.current();
@@ -230,13 +266,12 @@ export class Leaderboard {
   });
 
   /**
-   * Whether the week on screen belongs to a campaign: its figures are then guardian damage and
-   * wounded brought home, otherwise ranking points with no guardian nor base behind them.
+   * Whether the week belongs to a campaign (damage and wounded) rather than plain points.
    */
   protected readonly rescueActive = computed(() => this.board()?.weekIndex != null);
 
   /**
-   * The week, then the campaign's difficulty when the week belongs to one.
+   * Eyebrow: the week, then the campaign difficulty.
    */
   protected readonly headerEyebrow = computed(() => {
     const board = this.board();
@@ -244,8 +279,7 @@ export class Leaderboard {
     if (!board) {
       return this.translation.translate('leaderboard.title');
     }
-    // Outside a campaign the picker beside the bar already names the week's dates; the eyebrow
-    // then states the one thing the picker does not, and stays short enough for a phone.
+    // Outside a campaign the picker already shows the dates.
     const week =
       board.weekIndex !== null
         ? this.translation.translate('leaderboard.header.week', {
@@ -263,7 +297,7 @@ export class Leaderboard {
   });
 
   /**
-   * The empty state when no board exists yet: the first synchronization of the week has not run.
+   * Empty state before the week's first synchronization.
    */
   protected readonly emptyPlate = computed<EmptyPlateContent>(() => {
     const t = (suffix: string) => this.translation.translate(`leaderboard.state.empty.${suffix}`);
@@ -277,8 +311,7 @@ export class Leaderboard {
   });
 
   /**
-   * The empty state inside a board nobody is ranked in: the day for a live week, nothing more for
-   * a closed one — it ended that way.
+   * Empty state of a board with nobody ranked, with the day on a live week.
    */
   protected readonly nobodyPlate = computed<EmptyPlateContent>(() => {
     const board = this.board();
@@ -307,22 +340,34 @@ export class Leaderboard {
     };
   });
 
+  /**
+   * Reloads the live ranking and the campaign after a failure.
+   */
   protected retry(): void {
     reloadAll(this.currentResource, this.campaignResource);
   }
 
+  /**
+   * Shows the week picked in the picker.
+   */
   protected selectWeek(weekStart: string): void {
     this.selectedWeekStart.set(weekStart);
   }
 
+  /**
+   * Formats a score in the reader's language.
+   */
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());
   }
 
+  /**
+   * Live week board, with titles measured and streaks read from today's board.
+   */
   private liveBoard(entries: readonly RankingEntry[], weekStart: string): BoardWeek {
     const champion = this.championId();
     const daily = this.daily();
-    // Yesterday's board still answers in the minutes around the Monday rollover: ignore it then.
+    // Yesterday's board still answers around the Monday rollover: ignore it.
     const offset = daily ? daysBetween(weekStart, daily.day) : -1;
     const today = daily && offset >= 0 && offset < WEEK_DAYS ? daily : null;
     const days = new Map(today?.ranking.map((line) => [line.playerId, line]) ?? []);
@@ -345,12 +390,18 @@ export class Leaderboard {
     return this.split(rows, weekStart, true);
   }
 
+  /**
+   * The figure that earned a title, worded for its badge.
+   */
   private measure(key: WeeklyTitle, value: number): string {
     return this.translation.translate(`leaderboard.board.measure.${key}`, {
       value: this.format(value),
     });
   }
 
+  /**
+   * Closed week board, rebuilt from the archived ranking.
+   */
   private closedBoard(week: RankingHistoryWeek): BoardWeek {
     const portraits = this.portraits();
     const rows = week.ranking.map((entry: RankingHistoryEntry): BoardRow => ({
@@ -368,7 +419,7 @@ export class Leaderboard {
         SCOUT: entry.completedChallenges + entry.completedDailyChallenges,
       }),
       challengesCompleted: entry.completedChallenges + entry.completedDailyChallenges,
-      // A closed week keeps no draw size: the selection always holds one challenge per tier.
+      // A closed week keeps no draw size: one challenge per tier.
       challengesMax: weekChallengeCeiling(CHALLENGE_DIFFICULTIES.length),
       matchCount: entry.matchCount,
       streak: { week: null, days: entry.streakDays, bonusPercent: streakBonusOf(entry.streakDays) },
@@ -377,8 +428,7 @@ export class Leaderboard {
   }
 
   /**
-   * The contribution sheet's reading of the streak: the days laid out around today, and the bonus
-   * of today's matches, or the one playing would earn while the operator has not played yet.
+   * Live streak: days around today, and today's bonus or the one playing would earn.
    */
   private liveStreak(
     entry: RankingEntry,
@@ -396,6 +446,9 @@ export class Leaderboard {
     };
   }
 
+  /**
+   * Splits rows into ranked and unranked, placing the week in its campaign.
+   */
   private split(rows: readonly BoardRow[], weekStart: string, live: boolean): BoardWeek {
     return {
       weekStart,
@@ -406,13 +459,15 @@ export class Leaderboard {
     };
   }
 
+  /**
+   * The week's index and campaign group, for the picker and the header.
+   */
   private placeWeek(weekStart: string): Pick<WeekOption, 'index' | 'group'> {
     return placeWeekInCampaign(weekStart, this.campaign(), this.campaignHistory());
   }
 
   /**
-   * The single title an operator is decorated with: the highest-priority one they hold, or `null`
-   * when they hold none.
+   * Highest-priority title held, `null` when none.
    */
   private title(
     keys: readonly BoardTitle['key'][],
@@ -430,10 +485,16 @@ export class Leaderboard {
     };
   }
 
+  /**
+   * Locale of the chosen language, for date formats.
+   */
   private locale(): string {
     return resolveLocale(this.translation.language());
   }
 
+  /**
+   * The week's first and last days, as the picker labels it.
+   */
   private weekSpan(weekStart: string): string {
     return formatWeekSpan(weekStart, this.locale());
   }

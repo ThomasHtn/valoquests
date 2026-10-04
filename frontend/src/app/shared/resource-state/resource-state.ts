@@ -14,15 +14,7 @@ import { EmptyPlate } from '@shared/empty-plate/empty-plate';
 import { EmptyPlate as EmptyPlateContent } from '@shared/empty-plate/empty-plate.model';
 
 /**
- * Loading / error / empty / content switch for a resource-backed view.
- *
- * Shared by every screen fetching a resource so they all render the exact same loading, error and
- * empty states, differing only by their (already-translated) text. Renders its content through
- * `<ng-content>` once the resource has loaded successfully and is non-empty.
- *
- * Call sites should project a loading placeholder through the `skeleton` attribute, shaped like
- * the content it stands in for. Without one the loading state is visually blank, though it stays
- * announced to assistive technology.
+ * Loading, error, empty or content switch for a resource view; project a `[skeleton]`.
  */
 @Component({
   selector: 'app-resource-state',
@@ -36,26 +28,17 @@ import { EmptyPlate as EmptyPlateContent } from '@shared/empty-plate/empty-plate
     LucideTriangleAlert,
   ],
   templateUrl: './resource-state.html',
-  // A column rather than `display: contents`. The host used to generate no box at all so that a
-  // screen projecting several blocks through it kept them as items of the page's own stack; it
-  // then also escaped the gutter that stack gives its blocks, and the content came out flush
-  // against the column's edges. `gap: inherit` keeps the original behaviour where it mattered — it
-  // resolves to the page stack's own gap, so those blocks stay spaced exactly as if they were
-  // still its direct children.
+  // A column, not `contents`, to keep the page gutter; `gap: inherit` spaces blocks like the stack.
   host: { class: 'flex flex-col [gap:inherit]', '[class.grow]': 'grow()' },
 })
 export class ResourceState {
   /**
-   * i18n service used to resolve the retry label.
-   *
-   * Unlike the state messages, which describe the specific resource and are therefore passed in
-   * already translated, the retry label is identical on every screen and so belongs here rather
-   * than being repeated at each call site.
+   * Resolves the retry label, identical on every screen.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Network status of the device, which decides the error hint.
+   * Device network status, which decides the error hint.
    */
   private readonly connectivity = inject(Connectivity);
 
@@ -75,81 +58,53 @@ export class ResourceState {
   public readonly isEmpty = input(false);
 
   /**
-   * Already-translated text shown while loading.
+   * Translated text shown while loading.
    */
   public readonly loadingText = input.required<string>();
 
   /**
-   * Already-translated text shown on error.
+   * Translated text shown on error.
    */
   public readonly errorText = input.required<string>();
 
   /**
-   * Already-translated text shown when the resource is empty, if {@link isEmpty} can be `true`.
+   * Translated text shown when {@link isEmpty}.
    */
   public readonly emptyText = input('');
 
   /**
-   * The empty state as a mission plate — drawing, eyebrow, title, text, readouts — for the screens
-   * whose emptiness is the mission's own state (no campaign yet, nobody ranked, no draw). When set
-   * it replaces {@link emptyText} and the hexagon; the `emptyKind` still decides the register.
+   * Empty state as a mission plate, replacing {@link emptyText} and the hexagon.
    */
   public readonly emptyPlate = input<EmptyPlateContent | null>(null);
 
   /**
-   * Tailwind padding utility applied to the error and empty states, so this component fits both
-   * bare-page usages and usages nested in a bordered card.
+   * Tailwind padding of the error and empty states.
    */
   public readonly padding = input('px-5 py-6');
 
   /**
-   * Which kind of nothing this is, which decides the glyph and the tone of the empty state.
-   *
-   * Every empty screen in the application used to render the same neutral inbox, so "the week has
-   * just opened", "your filter matches nothing", "no campaign exists yet" and "the Monday draw did
-   * not run" all read as the same shrug. They are four different situations and only one of them is
-   * a problem:
-   *
-   * - `waiting` — the data will arrive on its own, nothing is wrong and nothing is asked.
-   * - `filter` — the reader narrowed the view themselves; reversible, so name the filter to clear.
-   * - `creation` — nothing exists yet and someone has to make it. Project the action.
-   * - `anomaly` — something that should have happened did not. Announced as an alert.
-   *
-   * Defaults to `filter`, the commonest of the four and the only one that is always harmless.
+   * Kind of emptiness, deciding glyph and tone: `waiting` (data will come), `filter` (clear it),
+   * `creation` (project the action), `anomaly` (something failed, announced as an alert).
    */
   public readonly emptyKind = input<'waiting' | 'filter' | 'creation' | 'anomaly'>('filter');
 
   /**
-   * Whether this box stretches to the height its parent flex container offers.
-   *
-   * Off by default: a state switch is as tall as whatever it currently renders. It used to stretch
-   * unconditionally, which on a page whose stack is shorter than the viewport pushed everything
-   * below it to the bottom edge — the backoffice's campaign list, one row tall, left a screen of
-   * void before its action cards.
-   *
-   * Turn it on only where a *projected* block carries its own `flex-1` and needs a stretched box to
-   * grow into — a list meant to reach the height of the panel beside it.
+   * Stretches to the parent's height; only for a projected `flex-1` block that must grow.
    */
   public readonly grow = input(false);
 
   /**
-   * Emitted when the user asks to load the resource again from the error state.
-   *
-   * Call sites are expected to wire this to their resource's `reload()`.
+   * Emitted on retry from the error state; wire it to the resource's `reload()`.
    */
   public readonly retry = output<void>();
 
   /**
-   * Translated label of the retry button.
-   *
-   * Computed rather than read once, since `translate` resolves against a signal that changes when
-   * the dictionary is swapped on a language switch.
+   * Translated retry label, computed to follow language switches.
    */
   protected readonly retryLabel = computed(() => this.translation.translate('retry'));
 
   /**
-   * Translated line under the error message, telling the reader what to do about it: whether the
-   * device is offline decides whether the fix is on their side or on the server's.
+   * Translated error hint, which depends on whether the device is offline.
    */
   protected readonly errorHint = computed(() =>
     this.translation.translate(
@@ -158,11 +113,7 @@ export class ResourceState {
   );
 
   /**
-   * Tint of the empty state's hexagon, by {@link emptyKind}.
-   *
-   * Only `anomaly` leaves the neutral surface: it is the one kind that reports something wrong, and
-   * it borrows the error state's danger tint so the two read as the same register. `waiting` takes
-   * the brand amber — the week is about to start, which is the invitation, not a fault.
+   * Hexagon tint by {@link emptyKind}: danger for `anomaly`, amber for `waiting`.
    */
   protected readonly emptyGlyphClass = computed(() => {
     switch (this.emptyKind()) {

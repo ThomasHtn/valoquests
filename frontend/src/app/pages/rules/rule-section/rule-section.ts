@@ -3,15 +3,13 @@ import { Component, input } from '@angular/core';
 import { RuleText } from '../rule-text/rule-text';
 
 /**
- * Shell shared by the numbered sections of the rules page: a marker, a title, the rule stated in
- * one sentence and a description on the left, the section's own figures projected on the right.
+ * Numbered rules section: title and statement on the left, projected figures on the right.
  */
 @Component({
   selector: 'app-rule-section',
   imports: [RuleText],
   templateUrl: './rule-section.html',
-  // A box rather than `display: contents`: the section is this component's only child, so the box
-  // costs nothing, and without one the page stack's gutter would not reach it.
+  // A box, not `display: contents`, so the page stack's gutter reaches it.
   host: { class: 'block' },
 })
 export class RuleSection {
@@ -31,20 +29,17 @@ export class RuleSection {
   public readonly statement = input.required<string>();
 
   /**
-   * Already-translated section description, omitted when the figures speak for themselves. May
-   * carry icon tokens, see `app-rule-text`.
+   * Translated description with `app-rule-text` tokens, empty when the figures suffice.
    */
   public readonly description = input('');
 
   /**
-   * Whether the section opens with a top hairline, off only for the first one since there is
-   * nothing above it to separate from.
+   * Whether the section opens with a top hairline (off for the first one).
    */
   public readonly bordered = input(true);
 
   /**
-   * Fragment identifying this section, from `RULE_ANCHOR`: the `id` a deep link from another
-   * screen targets.
+   * Deep-link fragment from `RULE_ANCHOR`, used as the section `id`.
    */
   public readonly anchor = input.required<string>();
 }

@@ -13,15 +13,11 @@ import { LucideMap, LucideRadio, LucideStar, LucideSunrise, LucideUserPen } from
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { OverviewTab, OverviewTabKey } from '../overview.model';
+import { OverviewTab, OverviewTabKey } from './overview-tabs.model';
 import { TAB_SLIDE_EASING, TAB_SLIDE_MS } from './overview-tabs.constants';
 
 /**
- * The overview's tab bar, under the mission. It stands as the heading of its panel, in place of a
- * section rule, its tabs sharing the rule's hairline across the full width.
- * Follows the WAI-ARIA tabs pattern, arrows and Home/End moving the selection along the bar.
- * The tab on screen carries a star that pins it as the one the page opens on; the pinned tab
- * leads the bar, and the tabs slide to their new places when it changes.
+ * Overview tab bar (WAI-ARIA tabs pattern); a star pins the default tab, which leads the bar.
  */
 @Component({
   selector: 'app-overview-tabs',
@@ -40,17 +36,17 @@ import { TAB_SLIDE_EASING, TAB_SLIDE_MS } from './overview-tabs.constants';
 })
 export class OverviewTabs {
   /**
-   * The tabs, in bar order.
+   * Tabs in bar order.
    */
   public readonly tabs = input.required<readonly OverviewTab[]>();
 
   /**
-   * The tab whose panel is on screen.
+   * Tab whose panel is on screen.
    */
   public readonly selected = model.required<OverviewTabKey>();
 
   /**
-   * The tab the page opens on, or `null` when none is pinned.
+   * Tab the page opens on, `null` when none is pinned.
    */
   public readonly favorite = model<OverviewTabKey | null>(null);
 
@@ -59,16 +55,31 @@ export class OverviewTabs {
    */
   public readonly panelId = input.required<string>();
 
+  /**
+   * Tab buttons, to move the focus on arrow keys.
+   */
   private readonly buttons = viewChildren<ElementRef<HTMLButtonElement>>('tab');
 
+  /**
+   * Tab slots, measured to slide them when the pinned tab reorders the bar.
+   */
   private readonly slots = viewChildren<ElementRef<HTMLElement>>('slot');
 
+  /**
+   * Injector for the after-render hook that slides the slots.
+   */
   private readonly injector = inject(Injector);
 
+  /**
+   * Stable DOM id of a tab, referenced by its panel's `aria-labelledby`.
+   */
   protected tabId(key: OverviewTabKey): string {
     return `overview-tab-${key}`;
   }
 
+  /**
+   * Shows the tab's panel.
+   */
   protected select(key: OverviewTabKey): void {
     this.selected.set(key);
   }
@@ -92,6 +103,9 @@ export class OverviewTabs {
     );
   }
 
+  /**
+   * Records each slot's place before a reorder, keyed by tab.
+   */
   private slotPositions(): Map<string, DOMRect> {
     return new Map(
       this.slots().map(({ nativeElement }) => [
@@ -102,7 +116,7 @@ export class OverviewTabs {
   }
 
   /**
-   * Plays each moved slot from its former place to its new one (FLIP).
+   * Slides each moved slot from its former place (FLIP).
    */
   private slide(before: Map<string, DOMRect>): void {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -126,6 +140,9 @@ export class OverviewTabs {
     }
   }
 
+  /**
+   * Arrow, Home and End keys select and focus another tab, as the tabs pattern expects.
+   */
   protected onKeydown(event: KeyboardEvent, index: number): void {
     const count = this.tabs().length;
     const target =

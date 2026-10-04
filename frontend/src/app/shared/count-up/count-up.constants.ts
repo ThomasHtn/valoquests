@@ -1,13 +1,9 @@
 /**
- * How long a figure takes to reach its value, in milliseconds.
- *
- * Long enough to be read as a climb rather than a flicker, short enough that nobody waits on it. The
- * figure is legible throughout — this is not a loading state.
+ * Climb duration in ms: reads as a climb, not a flicker, yet nobody waits on it.
  */
 export const DURATION_MS = 800;
 
 /**
- * Share of a figure that must be on screen before its first climb starts, so a number below the
- * fold does not finish counting before anyone scrolls to it.
+ * Visible share needed before the first climb, so a figure below the fold waits for the reader.
  */
 export const VISIBILITY_THRESHOLD = 0.35;

@@ -10,7 +10,7 @@
   gap: 0.75rem;
 }
 
-/* The group's header is a plate: it is what opens the difficulty, not a mere title. */
+/* The group's header is a plate, not a mere title. */
 .cgroup-head {
   display: grid;
   grid-template-columns: 3rem minmax(0, 1fr) auto;
@@ -42,7 +42,7 @@
   text-align: right;
 }
 
-/* Two columns: beyond that the rows get too dense to scan. */
+/* Two columns at most: more is too dense to scan. */
 .cgrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -64,7 +64,6 @@
   box-shadow: inset 3px 0 0 var(--tone);
 }
 
-/* The hovered row takes a tinted ground and brighter text. */
 .crow:hover {
   color: var(--color-text-primary);
   background: color-mix(in srgb, var(--tone) 10%, transparent);

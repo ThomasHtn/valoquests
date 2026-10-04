@@ -16,8 +16,7 @@ export const RANK_JOURNEY_COMPACT_SIZES: RankJourneyIconSizes = { point: 26, pea
 export const RANK_JOURNEY_WIDE_SIZES: RankJourneyIconSizes = { point: 34, peak: 56, rail: 14 };
 
 /**
- * How far a rail reaches past the rank it starts or ends on, in divisions, so a season spent on a
- * single rank still shows a short pill rather than nothing.
+ * Rail overhang past its end ranks, in divisions, so a single-rank season still shows a pill.
  */
 export const RANK_JOURNEY_RAIL_OVERHANG = 0.3;
 

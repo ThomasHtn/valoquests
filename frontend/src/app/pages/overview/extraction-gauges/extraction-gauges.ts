@@ -7,7 +7,7 @@ import { Translation } from '@core/i18n/translation';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
-import { Capacity } from '../overview.model';
+import { Capacity } from './extraction-gauges.model';
 import {
   CARRY_MODES,
   HULL_MASK,
@@ -19,11 +19,8 @@ import { hullFigureSize } from './extraction-gauges.utils';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
- * What would come home on Sunday, and the three things that bound it: four dials on the same
- * scale, the wounded spotted — the three limits, then what gets through.
- *
- * Under each name, the raw quantity that produces the dial: a player who only sees the conversion
- * cannot decide to save up, which is the one decision the game asks of them.
+ * Sunday's extraction: three limiting dials, then what gets through, over the wounded spotted.
+ * Each dial shows its raw stock, so the player can decide to save up.
  */
 @Component({
   selector: 'app-extraction-gauges',
@@ -43,37 +40,57 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 })
 export class ExtractionGauges {
   /**
-   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   * Icon of each concept, for the template's `svg[lucideIcon]`.
    */
   protected readonly concepts = CONCEPT_ICONS;
 
   /**
-   * The four dials, or `null` outside a week in progress.
+   * Four dials, `null` outside a week in progress.
    */
   public readonly capacity = input.required<Capacity | null>();
 
   /**
-   * The week's number, worded into the breakthrough dial as `Boss 04` rather than the
-   * guardian's own name.
+   * Week number, shown on the breakthrough dial as `Boss 04`.
    */
   public readonly weekIndex = input.required<number>();
 
+  /**
+   * Game modes listed under the carry dial as its main sources.
+   */
   protected readonly carryModes = CARRY_MODES;
 
+  /**
+   * Game modes listed under the shelter dial as its main sources.
+   */
   protected readonly shelterModes = SHELTER_MODES;
 
+  /**
+   * Frame of the aboard dial's rocket outline.
+   */
   protected readonly hullViewBox = HULL_VIEWBOX;
 
+  /**
+   * Rocket outline drawn around the aboard dial.
+   */
   protected readonly hullPath = HULL_PATH;
 
+  /**
+   * Rocket mask that keeps the aboard level inside the hull.
+   */
   protected readonly hullMask = HULL_MASK;
 
+  /**
+   * Shrinks the aboard figure as its digits grow, to fit the hull.
+   */
   protected readonly hullFigureSize = hullFigureSize;
 
+  /**
+   * Translation service, to word the tooltips and format figures.
+   */
   private readonly translation = inject(Translation);
 
   /**
-   * `Boss 04`, padded like the frieze's own week labels.
+   * `Boss 04`, padded like the frieze's week labels.
    */
   protected readonly bossLabel = computed(() =>
     this.translation.translate('overview.report.boss', {
@@ -82,8 +99,7 @@ export class ExtractionGauges {
   );
 
   /**
-   * How the "capacité d'emport" dial is worked out, read from the dial's info button: the mechanic a raw percentage
-   * cannot carry on its own.
+   * Info button text explaining how the carry dial is worked out.
    */
   protected readonly carryTooltip = computed(() =>
     this.translation.translate('overview.capacity.carryTooltip', {
@@ -91,24 +107,39 @@ export class ExtractionGauges {
     }),
   );
 
+  /**
+   * Info button text explaining how the shelter dial is worked out.
+   */
   protected readonly shelterTooltip = computed(() =>
     this.translation.translate('overview.capacity.shelterTooltip', {
       rate: this.capacity()?.foodPerRescue ?? 0,
     }),
   );
 
+  /**
+   * Info button text explaining the breakthrough dial.
+   */
   protected readonly breachTooltip = computed(() =>
     this.translation.translate('overview.capacity.breachTooltip'),
   );
 
+  /**
+   * Info button text explaining who gets aboard on Sunday.
+   */
   protected readonly aboardTooltip = computed(() =>
     this.translation.translate('overview.capacity.aboardTooltip'),
   );
 
+  /**
+   * Formats an amount in the active language for the dial figures.
+   */
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());
   }
 
+  /**
+   * Turns a dial fraction into a whole percentage for its label.
+   */
   protected percent(fraction: number): number {
     return Math.round(fraction * 100);
   }

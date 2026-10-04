@@ -24,7 +24,7 @@
   gap: 1rem;
 }
 
-/* The chart sinks into the ground, like the data cells. */
+/* Sunk like the data cells. */
 .chart-box {
   display: flex;
   flex-direction: column;
@@ -47,7 +47,7 @@
   color: var(--color-text-muted);
 }
 
-/* The legend lives in the chart's hollow: its top edge then lines up with the table's. */
+/* In the chart's hollow so its top lines up with the table. */
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -153,7 +153,7 @@
   color: var(--color-brand-400);
 }
 
-/* The squad's tier during that campaign: the same badge as in the page header. */
+/* Same tier badge as the page header. */
 .tier {
   display: inline-flex;
   padding: 0.3rem 0.5rem;
@@ -174,7 +174,7 @@
   color: var(--color-boss-hp-edge);
 }
 
-/* The running campaign keeps the page's warmth; the past ones stay at rest. */
+/* The running campaign stays warm. */
 .past-row--now {
   background: rgb(217 149 74 / 9%);
   box-shadow: inset 3px 0 0 var(--color-accent-gold);

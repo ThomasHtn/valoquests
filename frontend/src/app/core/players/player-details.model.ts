@@ -1,12 +1,7 @@
-import { CompetitiveTier } from './competitive-tier.model';
+import { CompetitiveTier } from './competitive-tier/player-competitive-tier.model';
 
 /**
- * Aggregated performance statistics computed from a player's entire match history, as exposed by
- * `GET /api/players/{id}`.
- *
- * Mirrors the backend `PlayerDetailsResponse.PlayerStatistics` record. Unlike {@link PlayerSummary},
- * these are always numeric (defaulting to `0` when the player has no recorded match) since they are
- * recomputed from match history rather than read from a cached, possibly-unset field.
+ * Statistics over the whole match history, `0` without matches; mirrors `PlayerStatistics`.
  */
 export interface PlayerStatistics {
   /**
@@ -60,7 +55,7 @@ export interface PlayerStatistics {
   readonly wins: number;
 
   /**
-   * Loss examples at a few breakthrough levels.
+   * Matches lost.
    */
   readonly losses: number;
 
@@ -71,10 +66,7 @@ export interface PlayerStatistics {
 }
 
 /**
- * Detailed tracked-player profile, as exposed by `GET /api/players/{id}`.
- *
- * Mirrors the backend `PlayerDetailsResponse`. Consumed by the player-profile screen for identity,
- * rank and aggregated statistics.
+ * Player profile of `GET /api/players/{id}`; mirrors the backend `PlayerDetailsResponse`.
  */
 export interface PlayerDetails {
   /**
@@ -93,8 +85,7 @@ export interface PlayerDetails {
   readonly displayName: string;
 
   /**
-   * Name of the player's associated agent, used to resolve a bundled avatar, or `null` when not
-   * yet synchronized.
+   * Agent name resolving a bundled avatar, `null` when not synchronized.
    */
   readonly portrait: string | null;
 
@@ -104,7 +95,7 @@ export interface PlayerDetails {
   readonly competitiveTier: CompetitiveTier;
 
   /**
-   * Rank rating within the player's current tier, or `null` when not yet synchronized.
+   * Rank rating within the tier, `null` when not synchronized.
    */
   readonly rankRating: number | null;
 
@@ -120,11 +111,7 @@ export interface PlayerDetails {
 }
 
 /**
- * Where a player stands on today's diminishing-returns ladder, before their next match.
- *
- * Mirrors the backend `PlayerDetailsResponse.DailyYield`. The rule that turns "play more" into "play
- * more often" was only ever stated after the fact — a match carried the share it had already kept —
- * so a player learned it by losing value to it. This is the same rule read forwards.
+ * Today's diminishing-returns ladder before the next match; mirrors the backend `DailyYield`.
  */
 export interface DailyYield {
   /**
@@ -138,8 +125,7 @@ export interface DailyYield {
   readonly nextMatchPercent: number;
 
   /**
-   * Rank at which the share falls further, or `null` once the ladder has bottomed out and nothing
-   * falls again.
+   * Rank at which the share falls further, `null` at the floor.
    */
   readonly dropsAtRank: number | null;
 

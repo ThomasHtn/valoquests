@@ -7,27 +7,9 @@ import {
 import { DROPDOWN_ROOM_PX } from './positioned-dropdown.constants';
 
 /**
- * Wires the behaviour shared by every fixed-position, portalled dropdown panel in the design
- * system: pinning the panel under its trigger, reparenting it past any clip-path/overflow
- * ancestor, and closing it on an outside click, a window resize or a scroll — every one of which
- * invalidates the pinned coordinates.
- *
- * `position: fixed` alone only escapes an ancestor's `overflow: hidden` — it does not escape a
- * `clip-path` (e.g. a `notch-tr` card), which clips its whole painted subtree regardless of how a
- * descendant is positioned. Moving the panel node itself out of the host sidesteps that. It moves
- * to the nearest enclosing modal `<dialog>` when there is one, and to `document.body` otherwise: a
- * modal dialog paints in the top layer and renders the rest of the document inert, so a panel
- * parked on the body would sit behind the backdrop and take no clicks.
- *
- * Deliberately silent on what the caller highlights or selects: this module only owns whether the
- * panel is open and where it sits, so a combobox's own keyboard navigation and selection state stay
- * with the caller.
- *
- * Must be called from a component's constructor or a field initializer, since it relies on the
- * injection context to register its listeners' cleanup.
- *
- * @param refs - The trigger, panel and host refs to pin, reparent and watch.
- * @returns The dropdown's open state, position and controls.
+ * Pins a fixed dropdown panel under its trigger, closing it on outside click, resize or scroll.
+ * Needs an injection context. The panel moves out of the host since `fixed` cannot escape a
+ * `clip-path`, into the enclosing modal `<dialog>` if any, which would otherwise make it inert.
  */
 export function createPositionedDropdown(refs: PositionedDropdownRefs): PositionedDropdown {
   const { host, trigger, panel } = refs;
@@ -63,13 +45,9 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
   window.addEventListener('resize', close);
   destroyRef.onDestroy(() => window.removeEventListener('resize', close));
 
-  // `scroll` doesn't bubble, so a window-level listener would miss scrolling that happens inside a
-  // container (e.g. the app's own scrollable `<main>`) rather than the window itself. Listening on
-  // the capture phase still sees it, wherever it happens, since capture fires while the event
-  // travels down toward its target. Closing rather than repositioning keeps this simple and avoids
-  // the panel trailing a stale position for a frame.
+  // Capture phase: `scroll` does not bubble, and inner containers like `<main>` scroll too.
   const onScroll = (event: Event): void => {
-    // Scrolling the panel's own list leaves its pinned coordinates valid.
+    // Scrolling the panel's own list keeps its position valid.
     if (isOpen() && !panel().nativeElement.contains(event.target as Node)) {
       close();
     }
@@ -80,7 +58,7 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
   function open(): void {
     const rect = trigger().nativeElement.getBoundingClientRect();
     const below = window.innerHeight - rect.bottom;
-    // Upwards when the list would not fit below the trigger but has more room above it.
+    // Upwards when the list does not fit below but has more room above.
     const upwards = below < DROPDOWN_ROOM_PX && rect.top > below;
     panelPosition.set({
       top: upwards ? null : rect.bottom + 8,

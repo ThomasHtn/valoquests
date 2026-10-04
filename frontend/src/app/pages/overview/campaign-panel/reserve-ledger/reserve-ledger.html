@@ -52,7 +52,7 @@
           </div>
 
           @for (cell of row.cells; track cell.index) {
-            <!-- The shared tooltip, as everywhere else: it follows a tap on a phone and flips at an edge. -->
+            <!-- Shared tooltip: works on tap and flips at an edge. -->
             <app-ledger-cell
               [appTooltipDisabled]="cell.kind === 'ahead'"
               [appTooltipTemplate]="tip"

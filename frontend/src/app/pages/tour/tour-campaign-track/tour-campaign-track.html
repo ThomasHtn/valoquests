@@ -10,8 +10,7 @@
   </p>
 </div>
 
-<!-- One cell per week; the line behind runs from the first planet to the last, solid up to the
-     current one. -->
+<!-- The line behind is solid up to the current planet. -->
 <ol [style.--done]="doneWidth()" class="track mt-3">
   @for (planet of planets(); track planet.weekIndex) {
     <li [class]="'track-cell track-cell--' + planet.state">

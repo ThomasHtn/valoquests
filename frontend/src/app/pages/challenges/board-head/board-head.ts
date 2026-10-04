@@ -1,16 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { LucideDynamicIcon } from '@lucide/angular';
 
-import { FigurePipe } from '@core/i18n/figure-pipe';
+import { FigurePipe } from '@core/i18n/format/figure-pipe';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { BoardRow } from '../challenges.model';
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { toRuleParts } from '../challenges.utils';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
- * A challenge as the board's first column opens on it: the hexagon beside the difficulty and the
- * name, the gain per operator in the corner, then the rule with its numbers in bold.
+ * The board's challenge cell: hexagon, difficulty and name, gain, then the rule.
  */
 @Component({
   selector: 'app-board-head',
@@ -21,14 +20,17 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 })
 export class BoardHead {
   /**
-   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   * The one icon of each concept.
    */
   protected readonly concepts = CONCEPT_ICONS;
 
+  /**
+   * The challenge this cell describes.
+   */
   public readonly row = input.required<BoardRow>();
 
   /**
-   * The rule cut into plain words and the numbers it holds.
+   * The rule cut into words and numbers.
    */
   protected readonly ruleParts = computed(() => toRuleParts(this.row().description));
 }

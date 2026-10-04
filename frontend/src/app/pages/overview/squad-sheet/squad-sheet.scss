@@ -1,5 +1,3 @@
-/* ---------- The squad today ---------- */
-
 .roster {
   display: flex;
   flex-direction: column;
@@ -26,7 +24,7 @@
   border-left-color: rgb(217 149 74 / 60%);
 }
 
-/* Below the column grid the rank sits on the right of the name, not in a column of its own. */
+/* Below the column grid the rank sits right of the name. */
 .ros-pos {
   grid-column: 2;
   grid-row: 1;
@@ -35,12 +33,11 @@
 .ros-who {
   grid-column: 1;
   grid-row: 1;
-  /* Same inset as the figures below, so avatar and first column share one left edge. */
+  /* Same inset as the figures, so avatar and first column share a left edge. */
   padding-inline: 0.5rem;
 }
 
-/* Below the column grid the figures take the row's whole width, with a small inset on each side:
-   indented under the name they lost the position column for nothing. */
+/* Below the column grid the figures take the row's full width. */
 .ros-cells {
   grid-column: 1 / -1;
   padding-top: 0.75rem;
@@ -48,16 +45,14 @@
   border-top: 1px solid var(--color-edge);
 }
 
-/* Below the column grid the four figures sit two by two, each in its own half: a wrapping row
-   broke at a different place on every operator. */
+/* Below the column grid, figures two by two: wrapping broke differently per row. */
 .ros-cells {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem 1rem;
 }
 
-/* Column names live in the header bar, on the rows' grid. They only exist from the point where
-   that grid really holds columns; below it, the cells each take back their own. */
+/* Column names in the header only once the grid holds columns; below, each cell has its own. */
 @media (width >= 72rem) {
   .ros,
   .bar-head--cols {
@@ -74,7 +69,7 @@
     padding: 0.55rem 1rem 0.55rem 0.625rem;
   }
 
-  /* Centered on the rank column below it, whose numbers read the same way. */
+  /* Centred on the rank column below. */
   .bar-count {
     justify-self: center;
   }
@@ -131,8 +126,7 @@
   letter-spacing: 0.02em;
 }
 
-/* The badge sits beside the name and drops under only when the column is too narrow; the
-   minimum height keeps a wrapped row as tall as the others. */
+/* Min height keeps a row with a wrapped badge as tall as the others. */
 .ros-who > .min-w-0 {
   display: flex;
   flex-wrap: wrap;
@@ -192,9 +186,7 @@
   --tone: var(--color-podium-bronze);
 }
 
-/* By the day a row can be empty: whoever has not played yet is not last, they have no rank. The
-   row keeps its place and loses its figures — a dash per column, never a zero, which would read
-   as a result. Only the streak stays: it runs until midnight. */
+/* Not played yet: no rank, a dash per figure (never a zero); the streak stays. */
 .ros--idle {
   background: rgb(236 232 225 / 2%);
 }
@@ -204,7 +196,7 @@
   color: var(--color-text-muted);
 }
 
-/* Stacked layout: a lone dot at the row's trailing edge reads as a stray mark, not as "unranked". */
+/* Stacked layout: a lone trailing dot reads as a stray mark, not "unranked". */
 @media (width < 72rem) {
   .ros--idle .ros-pos {
     visibility: hidden;
@@ -226,7 +218,7 @@
     gap: 0.7rem 0.5rem;
   }
 
-  /* Tighter tracking so "Dégâts au gardien" holds one line in half a phone. */
+  /* Tighter tracking so "Dégâts au gardien" fits one line in half a phone. */
   .ros-cap {
     letter-spacing: 0.06em;
   }

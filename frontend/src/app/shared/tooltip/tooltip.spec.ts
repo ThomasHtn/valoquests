@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { Tooltip } from './tooltip';
 
 /**
- * Host exercising the directive through the same bindings the application uses.
+ * Host using the directive's real bindings.
  */
 @Component({
   imports: [Tooltip],
@@ -26,7 +26,7 @@ class TooltipHost {
 }
 
 /**
- * Host rendering structured content in place of the text.
+ * Host rendering a template instead of the text.
  */
 @Component({
   imports: [Tooltip],
@@ -57,7 +57,7 @@ describe('Tooltip', () => {
   let anchor: HTMLButtonElement;
 
   /**
-   * Returns the bubble currently attached to the document, if any.
+   * Bubble attached to the document, if any.
    */
   const bubble = (): HTMLElement | null => document.body.querySelector('[role="tooltip"]');
 

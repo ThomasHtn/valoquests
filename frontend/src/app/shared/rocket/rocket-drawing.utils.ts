@@ -1,16 +1,16 @@
 import { svgElement } from '@core/svg/svg-element.utils';
-import { ROCKET_PALETTE, SHIP, SKIRT } from './rocket-drawing.constants';
+import {
+  GANTRY_ARM_HEIGHTS,
+  GANTRY_BRACE_STEP,
+  GANTRY_GAP,
+  ROCKET_PALETTE,
+  SHIP,
+  SKIRT,
+} from './rocket-drawing.constants';
 import { ShipStage } from './rocket-drawing.model';
 
 /**
- * The rocket, part by part.
- *
- * Ten states, and each guardian defeated adds a real part: the rocket of state ten is not the one
- * of state one scaled up. Shared by the base scene of the overview and the blueprint of the
- * campaign page, so the two pages draw the same ship.
- *
- * Pure DOM construction with no Angular dependency. The frame is the caller's: the drawing stands
- * on `y = 0` and builds upward, so it is placed under a `scale(1 -1)` transform.
+ * Drawn upward from `y = 0`: the caller places it under a `scale(1 -1)` transform.
  */
 
 /**
@@ -36,38 +36,84 @@ export function shipHalf(stage: ShipStage): number {
  * Outer profile alone, for the dotted template of what remains to be built.
  */
 export function outline(stage: ShipStage): string {
-  const top = SKIRT + stage.h;
-  const nh = noseHeight(stage);
-  const w = stage.w;
-  const parts = [
-    `M${-w} ${SKIRT} L${-w * 1.1} 0 L${w * 1.1} 0 L${w} ${SKIRT} L${w} ${top}` +
-      (stage.nose === 'dome'
-        ? ` Q${w} ${top + nh} 0 ${top + nh} Q${-w} ${top + nh} ${-w} ${top}`
-        : ` L0 ${top + nh} L${-w} ${top}`) +
-      ' Z',
-  ];
+  const parts = [hullOutline(stage)];
   if (stage.fins) {
-    const fh = Math.max(14, stage.h * 0.26);
-    parts.push(`M${-w} ${SKIRT} L${-w * 1.9} ${SKIRT - 2} L${-w} ${SKIRT + fh} Z`);
-    parts.push(`M${w} ${SKIRT} L${w * 1.9} ${SKIRT - 2} L${w} ${SKIRT + fh} Z`);
+    parts.push(finOutline(stage, -1), finOutline(stage, 1));
   }
   if (stage.boost) {
-    const bw = w * 0.42;
-    for (const dir of [-1, 1]) {
-      const cx = dir * (w + bw);
-      parts.push(
-        `M${cx - bw} 4 L${cx - bw} ${4 + stage.boost} L${cx} ${4 + stage.boost + bw * 2}` +
-          ` L${cx + bw} ${4 + stage.boost} L${cx + bw} 4 Z`,
-      );
-    }
+    parts.push(boosterOutline(stage, -1), boosterOutline(stage, 1));
   }
   if (stage.nose === 'capsule') {
-    const capBase = top + nh;
-    parts.push(
-      `M-1.6 ${capBase} L-1.6 ${capBase + w * 2.2} L1.6 ${capBase + w * 2.2} L1.6 ${capBase} Z`,
-    );
+    parts.push(towerOutline(stage));
   }
   return parts.join(' ');
+}
+
+/**
+ * Skirt, hull sides and nose as one closed path.
+ */
+function hullOutline(stage: ShipStage): string {
+  const top = hullTop(stage);
+  const tip = top + noseHeight(stage);
+  const w = stage.w;
+  const body = `M${-w} ${SKIRT} L${-w * 1.1} 0 L${w * 1.1} 0 L${w} ${SKIRT} L${w} ${top}`;
+  const nose =
+    stage.nose === 'dome'
+      ? ` Q${w} ${tip} 0 ${tip} Q${-w} ${tip} ${-w} ${top}`
+      : ` L0 ${tip} L${-w} ${top}`;
+  return `${body}${nose} Z`;
+}
+
+/**
+ * One fin, on the left (`dir = -1`) or right (`dir = 1`) side.
+ */
+function finOutline(stage: ShipStage, dir: number): string {
+  const root = dir * stage.w;
+  const tip = dir * stage.w * 1.9;
+  return `M${root} ${SKIRT} L${tip} ${SKIRT - 2} L${root} ${SKIRT + finHeight(stage)} Z`;
+}
+
+/**
+ * One booster with its pointed cap, on the left (`dir = -1`) or right (`dir = 1`) side.
+ */
+function boosterOutline(stage: ShipStage, dir: number): string {
+  const bw = stage.w * 0.42;
+  const cx = dir * (stage.w + bw);
+  const capBase = 4 + stage.boost;
+  return (
+    `M${cx - bw} 4 L${cx - bw} ${capBase} L${cx} ${capBase + bw * 2}` +
+    ` L${cx + bw} ${capBase} L${cx + bw} 4 Z`
+  );
+}
+
+/**
+ * The escape tower above the capsule, as a thin rectangle.
+ */
+function towerOutline(stage: ShipStage): string {
+  const base = noseTip(stage);
+  const towerTop = base + stage.w * 2.2;
+  return `M-1.6 ${base} L-1.6 ${towerTop} L1.6 ${towerTop} L1.6 ${base} Z`;
+}
+
+/**
+ * Altitude where the hull ends and the nose starts.
+ */
+function hullTop(stage: ShipStage): number {
+  return SKIRT + stage.h;
+}
+
+/**
+ * Altitude of the tip of the nose.
+ */
+function noseTip(stage: ShipStage): number {
+  return hullTop(stage) + noseHeight(stage);
+}
+
+/**
+ * Height of a fin along the hull, never too short to read on a small ship.
+ */
+function finHeight(stage: ShipStage): number {
+  return Math.max(14, stage.h * 0.26);
 }
 
 /**
@@ -84,11 +130,7 @@ export function animate(values: string, dur: string, begin?: string): SVGAnimate
 }
 
 /**
- * The complete drawing, part by part.
- *
- * A painted launcher rather than a steel silhouette: an ivory hull shaded in flat bands so it reads
- * as a cylinder, the roll pattern of the great launchers at its foot, an amber tip. It has to
- * stand out against a night sky and a day sky alike.
+ * Complete ship of a stage, painted ivory and amber to stand out on night and day skies.
  */
 export function drawShip(stageIndex: number): SVGGElement {
   const stage = SHIP[stageIndex];
@@ -97,38 +139,66 @@ export function drawShip(stageIndex: number): SVGGElement {
     return g;
   }
 
-  const top = SKIRT + stage.h;
-  const nh = noseHeight(stage);
-  const w = stage.w;
-
+  // Back to front: what stands behind the hull is drawn first.
   if (stage.gantry) {
     appendGantry(g, stage);
   }
   if (stage.boost) {
-    for (const dir of [-1, 1]) {
-      appendBooster(g, dir * (w + w * 0.42), w * 0.42, stage.boost);
-    }
+    appendBoosters(g, stage);
   }
-
-  // Fins in ink, their outer edge in amber.
   if (stage.fins) {
-    const fh = Math.max(14, stage.h * 0.26);
-    for (const dir of [-1, 1]) {
-      g.append(
-        svgElement('path', {
-          d: `M${dir * w} ${SKIRT} L${dir * w * 1.9} ${SKIRT - 2} L${dir * w} ${SKIRT + fh} Z`,
-          fill: ROCKET_PALETTE.ink,
-        }),
-        svgElement('path', {
-          d: `M${dir * w * 1.9} ${SKIRT - 2} L${dir * w} ${SKIRT + fh}`,
-          stroke: ROCKET_PALETTE.brand,
-          'stroke-width': 1.6,
-        }),
-      );
-    }
+    appendFins(g, stage);
   }
+  appendSkirt(g, stage);
+  appendHull(g, stage, stageIndex);
+  if (stage.nose === 'dome') {
+    appendDomeNose(g, stage);
+  } else {
+    appendConeNose(g, stage);
+  }
+  if (stage.nose === 'capsule') {
+    appendEscapeTower(g, stage);
+  }
+  return g;
+}
 
-  // Skirt and engine bells.
+/**
+ * Two strap-on boosters, one on each side of the hull.
+ */
+function appendBoosters(g: SVGGElement, stage: ShipStage): void {
+  const w = stage.w;
+  for (const dir of [-1, 1]) {
+    appendBooster(g, dir * (w + w * 0.42), w * 0.42, stage.boost);
+  }
+}
+
+/**
+ * Fins in ink, their outer edge in amber.
+ */
+function appendFins(g: SVGGElement, stage: ShipStage): void {
+  const fh = finHeight(stage);
+  for (const dir of [-1, 1]) {
+    const root = dir * stage.w;
+    const tip = dir * stage.w * 1.9;
+    g.append(
+      svgElement('path', {
+        d: `M${root} ${SKIRT} L${tip} ${SKIRT - 2} L${root} ${SKIRT + fh} Z`,
+        fill: ROCKET_PALETTE.ink,
+      }),
+      svgElement('path', {
+        d: `M${tip} ${SKIRT - 2} L${root} ${SKIRT + fh}`,
+        stroke: ROCKET_PALETTE.brand,
+        'stroke-width': 1.6,
+      }),
+    );
+  }
+}
+
+/**
+ * Skirt under the hull and its engine bells: one large bell, or three smaller ones.
+ */
+function appendSkirt(g: SVGGElement, stage: ShipStage): void {
+  const w = stage.w;
   g.append(
     svgElement('path', {
       d: `M${-w} ${SKIRT} L${-w * 1.12} 0 L${w * 1.12} 0 L${w} ${SKIRT} Z`,
@@ -137,9 +207,10 @@ export function drawShip(stageIndex: number): SVGGElement {
       'stroke-width': 1,
     }),
   );
-  const spread = stage.eng === 1 ? [0] : [-w * 0.55, 0, w * 0.55];
-  for (const ex of spread) {
-    const r = stage.eng === 1 ? w * 0.5 : w * 0.3;
+  const singleEngine = stage.eng === 1;
+  const bellCentres = singleEngine ? [0] : [-w * 0.55, 0, w * 0.55];
+  const r = singleEngine ? w * 0.5 : w * 0.3;
+  for (const ex of bellCentres) {
     g.append(
       svgElement('path', {
         d: `M${ex - r * 0.6} 11 L${ex - r} 1 L${ex + r} 1 L${ex + r * 0.6} 11 Z`,
@@ -149,8 +220,13 @@ export function drawShip(stageIndex: number): SVGGElement {
       }),
     );
   }
+}
 
-  // The hull, one ring per guardian defeated, the seams visible.
+/**
+ * The hull and everything painted on it, then its cylinder shading.
+ */
+function appendHull(g: SVGGElement, stage: ShipStage, stageIndex: number): void {
+  const w = stage.w;
   g.append(
     svgElement('rect', {
       x: -w,
@@ -160,26 +236,49 @@ export function drawShip(stageIndex: number): SVGGElement {
       fill: ROCKET_PALETTE.hull,
     }),
   );
-
-  // Roll pattern at the foot: black and white quarters, the mark of the great launchers.
   if (stage.fins) {
-    const cellH = Math.min(9, stage.h * 0.07);
-    for (let row = 0; row < 2; row++) {
-      for (let col = 0; col < 4; col++) {
-        if ((row + col) % 2 === 0) {
-          g.append(
-            svgElement('rect', {
-              x: -w + (col * w) / 2,
-              y: SKIRT + 3 + row * cellH,
-              width: w / 2,
-              height: cellH,
-              fill: ROCKET_PALETTE.ink,
-            }),
-          );
-        }
+    appendRollPattern(g, stage);
+  }
+  appendSeams(g, stage, stageIndex);
+  if (stage.bands) {
+    appendLivery(g, stage);
+  }
+  if (stage.ports) {
+    appendPortholes(g, stage);
+  }
+  appendShade(g, -w, w, SKIRT, hullTop(stage));
+}
+
+/**
+ * Roll pattern at the foot: black and white quarters, the mark of the great launchers.
+ */
+function appendRollPattern(g: SVGGElement, stage: ShipStage): void {
+  const w = stage.w;
+  const cellH = Math.min(9, stage.h * 0.07);
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 4; col++) {
+      const isInkCell = (row + col) % 2 === 0;
+      if (!isInkCell) {
+        continue;
       }
+      g.append(
+        svgElement('rect', {
+          x: -w + (col * w) / 2,
+          y: SKIRT + 3 + row * cellH,
+          width: w / 2,
+          height: cellH,
+          fill: ROCKET_PALETTE.ink,
+        }),
+      );
     }
   }
+}
+
+/**
+ * One ring per guardian defeated, the seams between them visible.
+ */
+function appendSeams(g: SVGGElement, stage: ShipStage, stageIndex: number): void {
+  const w = stage.w;
   for (let ring = 1; ring < stageIndex; ring++) {
     const y = SKIRT + (stage.h / stageIndex) * ring;
     g.append(
@@ -193,115 +292,141 @@ export function drawShip(stageIndex: number): SVGGElement {
       }),
     );
   }
-
-  // Livery, from the sixth stage: an ink interstage and the amber band of the base.
-  if (stage.bands) {
-    g.append(
-      svgElement('rect', {
-        x: -w,
-        y: SKIRT + stage.h * 0.34,
-        width: w * 2,
-        height: 6,
-        fill: ROCKET_PALETTE.ink,
-      }),
-      svgElement('rect', {
-        x: -w,
-        y: SKIRT + stage.h * 0.62,
-        width: w * 2,
-        height: 8,
-        fill: ROCKET_PALETTE.brand,
-      }),
-    );
-  }
-
-  // Portholes: life aboard, amber like everywhere else.
-  if (stage.ports) {
-    const rows = stage.ports * 2;
-    for (let r = 0; r < rows; r++) {
-      const y = SKIRT + stage.h * (0.3 + (r / rows) * 0.6);
-      const port = svgElement('circle', {
-        cx: -w * 0.2,
-        cy: y,
-        r: Math.max(1.4, w * 0.11),
-        fill: ROCKET_PALETTE.warm,
-        stroke: ROCKET_PALETTE.ink,
-        'stroke-width': 0.8,
-      });
-      port.append(animate('0.95;0.6;0.95', `${(3 + r * 0.4).toFixed(1)}s`));
-      g.append(port);
-    }
-  }
-  appendShade(g, -w, w, SKIRT, top);
-
-  // The nose, its tip in amber, shaded like the hull.
-  if (stage.nose === 'dome') {
-    g.append(
-      svgElement('path', {
-        d: `M${-w} ${top} Q${-w} ${top + nh} 0 ${top + nh} Q${w} ${top + nh} ${w} ${top} Z`,
-        fill: ROCKET_PALETTE.brand,
-      }),
-      svgElement('path', {
-        d: `M0 ${top} L0 ${top + nh} Q${w} ${top + nh} ${w} ${top} Z`,
-        fill: ROCKET_PALETTE.shade,
-        opacity: 0.28,
-      }),
-    );
-  } else {
-    const tip = top + nh * 0.62;
-    g.append(
-      svgElement('path', {
-        d: `M${-w} ${top} L0 ${top + nh} L${w} ${top} Z`,
-        fill: ROCKET_PALETTE.hull,
-      }),
-      svgElement('path', {
-        d: `M${-w * 0.38} ${tip} L0 ${top + nh} L${w * 0.38} ${tip} Z`,
-        fill: ROCKET_PALETTE.brand,
-      }),
-      svgElement('path', {
-        d: `M0 ${top} L0 ${top + nh} L${w} ${top} Z`,
-        fill: ROCKET_PALETTE.shade,
-        opacity: 0.3,
-      }),
-    );
-  }
-
-  // Escape tower, the last part fitted: a lattice mast and its motor.
-  if (stage.nose === 'capsule') {
-    const base = top + nh;
-    const mast = w * 1.6;
-    const rails = `M-3 ${base} L-1.2 ${base + mast} M3 ${base} L1.2 ${base + mast}`;
-    let braces = '';
-    for (let k = 0; k < 4; k++) {
-      const y0 = base + (mast / 4) * k;
-      const y1 = y0 + mast / 4;
-      braces += ` M${-3 + 0.45 * k} ${y0} L${2.55 - 0.45 * k} ${y1}`;
-    }
-    g.append(
-      svgElement('path', {
-        d: rails + braces,
-        stroke: ROCKET_PALETTE.ink,
-        'stroke-width': 1.1,
-        fill: 'none',
-      }),
-      svgElement('rect', {
-        x: -2,
-        y: base + mast,
-        width: 4,
-        height: w * 0.3,
-        fill: ROCKET_PALETTE.ink,
-      }),
-      svgElement('path', {
-        d: `M-2 ${base + mast + w * 0.3} L0 ${base + w * 2.2} L2 ${base + mast + w * 0.3} Z`,
-        fill: ROCKET_PALETTE.brand,
-      }),
-    );
-  }
-
-  return g;
 }
 
 /**
- * Flat cylinder shading over a vertical body: a lit strip on the left, two shade steps on the right.
+ * Livery, from the sixth stage: an ink interstage and the amber band of the base.
+ */
+function appendLivery(g: SVGGElement, stage: ShipStage): void {
+  const w = stage.w;
+  g.append(
+    svgElement('rect', {
+      x: -w,
+      y: SKIRT + stage.h * 0.34,
+      width: w * 2,
+      height: 6,
+      fill: ROCKET_PALETTE.ink,
+    }),
+    svgElement('rect', {
+      x: -w,
+      y: SKIRT + stage.h * 0.62,
+      width: w * 2,
+      height: 8,
+      fill: ROCKET_PALETTE.brand,
+    }),
+  );
+}
+
+/**
+ * Portholes: life aboard, amber like everywhere else, each glowing at its own pace.
+ */
+function appendPortholes(g: SVGGElement, stage: ShipStage): void {
+  const w = stage.w;
+  const rows = stage.ports * 2;
+  for (let r = 0; r < rows; r++) {
+    const port = svgElement('circle', {
+      cx: -w * 0.2,
+      cy: SKIRT + stage.h * (0.3 + (r / rows) * 0.6),
+      r: Math.max(1.4, w * 0.11),
+      fill: ROCKET_PALETTE.warm,
+      stroke: ROCKET_PALETTE.ink,
+      'stroke-width': 0.8,
+    });
+    port.append(animate('0.95;0.6;0.95', `${(3 + r * 0.4).toFixed(1)}s`));
+    g.append(port);
+  }
+}
+
+/**
+ * Rounded nose of the first stages, all in amber, its right half shaded.
+ */
+function appendDomeNose(g: SVGGElement, stage: ShipStage): void {
+  const w = stage.w;
+  const top = hullTop(stage);
+  const tip = noseTip(stage);
+  g.append(
+    svgElement('path', {
+      d: `M${-w} ${top} Q${-w} ${tip} 0 ${tip} Q${w} ${tip} ${w} ${top} Z`,
+      fill: ROCKET_PALETTE.brand,
+    }),
+    svgElement('path', {
+      d: `M0 ${top} L0 ${tip} Q${w} ${tip} ${w} ${top} Z`,
+      fill: ROCKET_PALETTE.shade,
+      opacity: 0.28,
+    }),
+  );
+}
+
+/**
+ * Pointed nose in ivory with an amber tip, its right half shaded like the hull.
+ */
+function appendConeNose(g: SVGGElement, stage: ShipStage): void {
+  const w = stage.w;
+  const top = hullTop(stage);
+  const tip = noseTip(stage);
+  const amberFrom = top + noseHeight(stage) * 0.62;
+  g.append(
+    svgElement('path', {
+      d: `M${-w} ${top} L0 ${tip} L${w} ${top} Z`,
+      fill: ROCKET_PALETTE.hull,
+    }),
+    svgElement('path', {
+      d: `M${-w * 0.38} ${amberFrom} L0 ${tip} L${w * 0.38} ${amberFrom} Z`,
+      fill: ROCKET_PALETTE.brand,
+    }),
+    svgElement('path', {
+      d: `M0 ${top} L0 ${tip} L${w} ${top} Z`,
+      fill: ROCKET_PALETTE.shade,
+      opacity: 0.3,
+    }),
+  );
+}
+
+/**
+ * Escape tower, the last part fitted: a lattice mast and its motor on top of the nose.
+ */
+function appendEscapeTower(g: SVGGElement, stage: ShipStage): void {
+  const w = stage.w;
+  const base = noseTip(stage);
+  const mast = w * 1.6;
+  const motorTop = base + mast + w * 0.3;
+  g.append(
+    svgElement('path', {
+      d: towerLattice(base, mast),
+      stroke: ROCKET_PALETTE.ink,
+      'stroke-width': 1.1,
+      fill: 'none',
+    }),
+    svgElement('rect', {
+      x: -2,
+      y: base + mast,
+      width: 4,
+      height: w * 0.3,
+      fill: ROCKET_PALETTE.ink,
+    }),
+    svgElement('path', {
+      d: `M-2 ${motorTop} L0 ${base + w * 2.2} L2 ${motorTop} Z`,
+      fill: ROCKET_PALETTE.brand,
+    }),
+  );
+}
+
+/**
+ * Two converging rails joined by four diagonal braces.
+ */
+function towerLattice(base: number, mast: number): string {
+  const rails = `M-3 ${base} L-1.2 ${base + mast} M3 ${base} L1.2 ${base + mast}`;
+  let braces = '';
+  for (let k = 0; k < 4; k++) {
+    const y0 = base + (mast / 4) * k;
+    const y1 = y0 + mast / 4;
+    braces += ` M${-3 + 0.45 * k} ${y0} L${2.55 - 0.45 * k} ${y1}`;
+  }
+  return rails + braces;
+}
+
+/**
+ * Flat cylinder shading: a lit strip on the left, two shade steps on the right.
  */
 function appendShade(g: SVGGElement, x0: number, x1: number, y0: number, y1: number): void {
   const w = x1 - x0;
@@ -357,18 +482,38 @@ function appendBooster(g: SVGGElement, cx: number, bw: number, height: number): 
 }
 
 /**
- * Service gantry on one side only: two masts either side make a cage the rocket vanishes into.
- * A lattice tower with cross braces, arms reaching the hull, and a hammerhead jib once complete.
+ * Service gantry on one side only: masts on both sides would cage the rocket.
  */
 function appendGantry(g: SVGGElement, stage: ShipStage): void {
-  const half = shipHalf(stage);
-  const gx = -(half + 22);
-  const gh = stage.h * (stage.gantry === 2 ? 0.86 : 0.7);
+  const complete = stage.gantry === 2;
+  const gx = -(shipHalf(stage) + GANTRY_GAP);
+  const gh = stage.h * (complete ? 0.86 : 0.7);
   const left = gx - 5;
   const right = gx + 11;
-  let lattice = `M${left} 0 V${gh} M${right} 0 V${gh}`;
-  for (let y = 0; y + 14 <= gh; y += 14) {
-    lattice += ` M${left} ${y} H${right} M${left} ${y} L${right} ${y + 14} M${right} ${y} L${left} ${y + 14}`;
+
+  appendGantryTower(g, left, right, gh);
+  appendGantryArms(g, stage, right, gh);
+  if (complete) {
+    appendGantryJib(g, stage, gx, left, gh);
+  }
+  const beacon = svgElement('circle', {
+    cx: gx + 3,
+    cy: gh + (complete ? 14 : 4),
+    r: 2.6,
+    fill: ROCKET_PALETTE.red,
+  });
+  beacon.append(animate('1;0.15;1', '2.6s'));
+  g.append(beacon);
+}
+
+/**
+ * The gantry's lattice tower: two masts from `left` to `right`, cross-braced up to `height`.
+ */
+function appendGantryTower(g: SVGGElement, left: number, right: number, height: number): void {
+  const step = GANTRY_BRACE_STEP;
+  let lattice = `M${left} 0 V${height} M${right} 0 V${height}`;
+  for (let y = 0; y + step <= height; y += step) {
+    lattice += ` M${left} ${y} H${right} M${left} ${y} L${right} ${y + step} M${right} ${y} L${left} ${y + step}`;
   }
   g.append(
     svgElement('path', {
@@ -379,13 +524,17 @@ function appendGantry(g: SVGGElement, stage: ShipStage): void {
     }),
   );
   g.append(
-    svgElement('rect', { x: left - 1, y: 0, width: 2.5, height: gh, fill: ROCKET_PALETTE.mast }),
-    svgElement('rect', { x: right - 1.5, y: 0, width: 2.5, height: gh, fill: ROCKET_PALETTE.mast }),
+    svgElement('rect', { x: left - 1, y: 0, width: 2.5, height, fill: ROCKET_PALETTE.mast }),
+    svgElement('rect', { x: right - 1.5, y: 0, width: 2.5, height, fill: ROCKET_PALETTE.mast }),
   );
+}
 
-  const arms = stage.gantry === 2 ? [26, 74, 122, 170] : [26, 78];
-  for (const ay of arms) {
-    if (ay > gh) {
+/**
+ * Service arms from the tower to the hull, only those under the tower's top.
+ */
+function appendGantryArms(g: SVGGElement, stage: ShipStage, right: number, height: number): void {
+  for (const ay of GANTRY_ARM_HEIGHTS[stage.gantry]) {
+    if (ay > height) {
       continue;
     }
     g.append(
@@ -398,34 +547,33 @@ function appendGantry(g: SVGGElement, stage: ShipStage): void {
       }),
     );
   }
+}
 
-  // The jib reaches over the rocket; its counterweight hangs on the far side.
-  if (stage.gantry === 2) {
-    g.append(
-      svgElement('rect', {
-        x: left - 16,
-        y: gh + 4,
-        width: -left + 16 - stage.w * 0.4,
-        height: 3,
-        fill: ROCKET_PALETTE.mast,
-      }),
-      svgElement('rect', {
-        x: left - 16,
-        y: gh - 4,
-        width: 9,
-        height: 8,
-        fill: ROCKET_PALETTE.mast,
-      }),
-      svgElement('rect', { x: gx + 1, y: gh, width: 3, height: 12, fill: ROCKET_PALETTE.mast }),
-    );
-  }
-
-  const beacon = svgElement('circle', {
-    cx: gx + 3,
-    cy: gh + (stage.gantry === 2 ? 14 : 4),
-    r: 2.6,
-    fill: ROCKET_PALETTE.red,
-  });
-  beacon.append(animate('1;0.15;1', '2.6s'));
-  g.append(beacon);
+/**
+ * Hammerhead jib of a complete gantry, its counterweight on the far side.
+ */
+function appendGantryJib(
+  g: SVGGElement,
+  stage: ShipStage,
+  gx: number,
+  left: number,
+  height: number,
+): void {
+  g.append(
+    svgElement('rect', {
+      x: left - 16,
+      y: height + 4,
+      width: -left + 16 - stage.w * 0.4,
+      height: 3,
+      fill: ROCKET_PALETTE.mast,
+    }),
+    svgElement('rect', {
+      x: left - 16,
+      y: height - 4,
+      width: 9,
+      height: 8,
+      fill: ROCKET_PALETTE.mast,
+    }),
+    svgElement('rect', { x: gx + 1, y: height, width: 3, height: 12, fill: ROCKET_PALETTE.mast }),
+  );
 }

@@ -1,0 +1,82 @@
+/* Gauge arrivals as keyframes, so `.fx-await` can hold them until the gauge is on screen. */
+
+.fx-await:not(.in-view),
+.fx-await:not(.in-view) *,
+.fx-await:not(.in-view) *::before,
+.fx-await:not(.in-view) *::after {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Bar filling to its inline width. */
+  .fx-grow {
+    animation: fx-grow-w var(--duration-gauge) var(--ease-gauge) both;
+    animation-delay: var(--fx-delay, 0ms);
+  }
+
+  /* Ring arc closing; `--arc-empty` is its circumference. */
+  .fx-arc {
+    animation: fx-arc var(--duration-gauge-long) var(--ease-gauge) both;
+    animation-delay: var(--fx-delay, 0ms);
+  }
+
+  /* Level rising to its inline height. */
+  .fx-rise {
+    animation: fx-grow-h var(--duration-gauge-long) var(--ease-gauge) both;
+    animation-delay: var(--fx-delay, 0ms);
+  }
+
+  /* Guardian ring draining from full; `--arc-full` is its circumference. */
+  .fx-arc-drain {
+    animation: fx-arc-drain var(--duration-gauge-long) var(--ease-gauge) both;
+    animation-delay: var(--fx-delay, 0ms);
+  }
+
+  /* Second band of a two-band bar. */
+  .fx-grow-in-place {
+    animation: fx-grow-in-place var(--duration-gauge) var(--ease-gauge) both;
+  }
+
+  /* Leading-edge marker of a fill. */
+  .fx-edge {
+    animation: fx-edge var(--duration-gauge) var(--ease-gauge) both;
+  }
+}
+
+@keyframes fx-grow-w {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes fx-arc {
+  from {
+    stroke-dashoffset: var(--arc-empty);
+  }
+}
+
+@keyframes fx-grow-h {
+  from {
+    height: 0;
+  }
+}
+
+@keyframes fx-arc-drain {
+  from {
+    stroke-dasharray: var(--arc-full) var(--arc-full);
+  }
+}
+
+@keyframes fx-grow-in-place {
+  from {
+    left: 0;
+    width: 0;
+  }
+}
+
+@keyframes fx-edge {
+  from {
+    left: 0;
+    opacity: 0;
+  }
+}

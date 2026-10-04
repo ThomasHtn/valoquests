@@ -1,16 +1,14 @@
 /**
- * Generic, immutable representation of a paginated API result.
- *
- * Mirrors the backend `PageResponse<T>`.
+ * Paginated API result, mirrors the backend `PageResponse<T>`.
  */
 export interface PageResponse<T> {
   /**
-   * Entries of the requested page.
+   * Entries of the page.
    */
   readonly content: readonly T[];
 
   /**
-   * Zero-based index of the page.
+   * Zero-based page index.
    */
   readonly page: number;
 

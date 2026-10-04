@@ -1,4 +1,4 @@
-<!-- The whole line toggles the chart; it already states the answer when folded. -->
+<!-- The whole line toggles the chart. -->
 <div [attr.data-outcome]="fall().outcome" class="fall">
   <button
     (click)="toggle()"
@@ -24,7 +24,7 @@
 
   <div [class.is-open]="open()" [inert]="!open()" class="fall-body" id="fall-forecast-body">
     <div class="fall-inner">
-      <!-- Edge to edge on its own lighter ground; only the first and last ticks keep a gutter. -->
+      <!-- Edge to edge; only the edge ticks keep a gutter. -->
       <div #panel class="fall-panel">
         @if (chart(); as chart) {
           <svg
@@ -57,7 +57,7 @@
             }
             <path [attr.d]="chart.pastLine" class="fall-line fall-line--past" pathLength="1" />
 
-            <!-- The fall: a dashed post across the plot, its moment written at the top. -->
+            <!-- The fall: a dashed post, its moment at the top. -->
             @if (chart.fall; as mark) {
               <line
                 [attr.x1]="mark.x"
@@ -92,7 +92,7 @@
               }
             }
 
-            <!-- What Sunday midnight would still leave him, under the projection's end. -->
+            <!-- What would still stand at Sunday midnight. -->
             @if (chart.end; as end) {
               <line
                 [attr.x1]="end.x"
@@ -112,7 +112,7 @@
               </text>
             }
 
-            <!-- Now: the value above the pin, a stem down to the floor. -->
+            <!-- Now: value above the pin, stem to the floor. -->
             @if (chart.now; as now) {
               <line
                 [attr.x1]="now.x"

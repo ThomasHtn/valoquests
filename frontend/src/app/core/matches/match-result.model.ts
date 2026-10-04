@@ -1,7 +1,4 @@
 /**
- * Outcome of one tracked player's match.
- *
- * Mirrors the backend `MatchResult` enum. `UNKNOWN` is used when Henrik does not expose a reliable
- * team result for the mode.
+ * Match outcome; `UNKNOWN` when Henrik has no reliable team result. Mirrors the backend enum.
  */
 export type MatchResult = 'WIN' | 'LOSS' | 'DRAW' | 'REMAKE' | 'UNKNOWN';

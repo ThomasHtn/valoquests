@@ -1,0 +1,29 @@
+/* Listbox menus toggled by `hidden`; `allow-discrete` keeps `display` until the fold-out ends. */
+
+@media (prefers-reduced-motion: no-preference) {
+  .menu-panel[role='listbox'] {
+    transform-origin: top;
+    transition:
+      opacity 200ms var(--ease-out-expo),
+      transform 240ms var(--ease-out-expo),
+      display 200ms allow-discrete,
+      overlay 200ms allow-discrete;
+
+    @starting-style {
+      opacity: 0;
+      transform: translateY(-0.375rem) scaleY(0.96);
+    }
+  }
+
+  .menu-panel[role='listbox'][hidden] {
+    opacity: 0;
+    transform: translateY(-0.25rem) scaleY(0.98);
+    transition-duration: 120ms;
+    transition-timing-function: var(--ease-in-quick);
+  }
+
+  /* A menu opening upwards unrolls from its bottom. */
+  .menu-panel[role='listbox'].bottom-full {
+    transform-origin: bottom;
+  }
+}

@@ -1,16 +1,14 @@
 import { httpResource } from '@angular/common/http';
 import { Service } from '@angular/core';
 
-import { API_ENDPOINTS } from '@core/http/api-endpoints';
+import { API_ENDPOINTS } from '@core/http/api-endpoints.constants';
 
-import { Campaign, CampaignHistory, CampaignToday } from './campaign.model';
+import { Campaign } from './campaign.model';
+import { CampaignHistory } from './campaign-history.model';
+import { CampaignToday } from './campaign-today.model';
 
 /**
- * Data-access service for the rescue campaign.
- *
- * All three resources are shared at service level: none takes a parameter — the campaign the
- * site shows is one object, today is one day, the history is every closed campaign — so every
- * consumer reads the same in-flight request.
+ * Campaign resources, parameterless so every consumer shares the same request.
  */
 @Service()
 export class CampaignApi {

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { ConsistencyMatch, ConsistencySummary } from '@core/players/player-progression.model';
+import {
+  ConsistencyMatch,
+  ConsistencySummary,
+} from '@core/players/progression/player-progression.model';
 import {
   buildConsistencyAxis,
   buildConsistencyFigures,
@@ -10,7 +13,7 @@ import {
 } from './consistency.utils';
 
 /**
- * Stands in for the translation service, echoing the key and its parameters.
+ * Fake translation echoing the key and its parameters.
  */
 function translate(key: string, params?: Readonly<Record<string, string | number>>): string {
   const suffix = Object.entries(params ?? {})

@@ -6,15 +6,11 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { Translation } from '@core/i18n/translation';
 import { LedgerCell, LedgerColumn, LedgerRow } from '../campaign-panel.model';
-import { LedgerCellView } from './ledger-cell';
+import { LedgerCellView } from './ledger-cell/ledger-cell';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
- * The reserves, week after week: a column per planet, a row per resource.
- *
- * Above the ground, what the week brought in; below, hatched, what Sunday's rescue spent; the
- * dashed level crossing into the next column is what was carried over — the stocks never start
- * from zero. Folded at rest onto its title bar.
+ * Reserves per week: gained above the ground, spent below, carry-over dashed.
  */
 @Component({
   selector: 'app-reserve-ledger',
@@ -32,22 +28,34 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 })
 export class ReserveLedger {
   /**
-   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   * Concept icons for the template.
    */
   protected readonly concepts = CONCEPT_ICONS;
 
+  /**
+   * Campaign weeks heading the ledger, one per planet.
+   */
   public readonly columns = input.required<readonly LedgerColumn[]>();
 
+  /**
+   * One row per resource, with its weekly cells and totals.
+   */
   public readonly rows = input.required<readonly LedgerRow[]>();
 
+  /**
+   * Translation service, to format figures and word the cell labels.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * Formats an amount in the active language for the totals and tooltips.
+   */
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());
   }
 
   /**
-   * What the cell says to a reader who cannot see the bars.
+   * Accessible label of a cell.
    */
   protected cellLabel(row: LedgerRow, cell: LedgerCell): string {
     const unit = this.translation.translate(`common.resource.${row.key}`).toLowerCase();

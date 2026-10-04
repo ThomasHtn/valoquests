@@ -1,5 +1,5 @@
 /**
- * How the week's fight ends: already won, won before Sunday at the current pace, or not in time.
+ * How the fight ends: already won, won in time at the current pace, or not in time.
  */
 export type FallOutcome = 'down' | 'ahead' | 'short';
 
@@ -43,18 +43,17 @@ export interface GuardianFall {
   readonly hitPoints: number;
 
   /**
-   * Monday 00:00 in the campaign time zone, in epoch milliseconds.
+   * Monday 00:00 Paris time, in epoch milliseconds.
    */
   readonly weekStart: number;
 
   /**
-   * Sunday midnight in the campaign time zone, the extraction, in epoch milliseconds.
+   * Sunday midnight Paris time (the extraction), in epoch milliseconds.
    */
   readonly deadline: number;
 
   /**
-   * Known readings, oldest first: Monday's full pool, each finished day's close, then now or the
-   * fatal blow.
+   * Known readings, oldest first: Monday's pool, each day's close, then now or the fatal blow.
    */
   readonly readings: readonly FallReading[];
 
@@ -64,12 +63,12 @@ export interface GuardianFall {
   readonly pace: number;
 
   /**
-   * Instant the guardian falls, real or estimated, `null` when the pace does not get there.
+   * Fall instant, real or estimated, `null` when the pace does not get there.
    */
   readonly fallAt: number | null;
 
   /**
-   * Hit points left at Sunday midnight at the current pace, zero once the guardian falls.
+   * Hit points left at Sunday midnight at the current pace.
    */
   readonly leftAtDeadline: number;
 }
@@ -79,8 +78,7 @@ export interface GuardianFall {
  */
 export interface FallZone {
   /**
-   * What the column covers: the played part, the projection, the projection that falls short,
-   * or the spare time after the fall.
+   * Played part, projection, short projection, or spare time after the fall.
    */
   readonly kind: 'past' | 'ahead' | 'short' | 'spare';
 
@@ -135,42 +133,42 @@ export interface FallChart {
   readonly zones: readonly FallZone[];
 
   /**
-   * The played part's curve, as an SVG path.
+   * Played part's curve, as an SVG path.
    */
   readonly pastLine: string;
 
   /**
-   * The area under the played part's curve, as an SVG path.
+   * Area under the played part's curve, as an SVG path.
    */
   readonly pastArea: string;
 
   /**
-   * The projection's line, `null` once the guardian is down.
+   * Projection line, `null` once the guardian is down.
    */
   readonly projectionLine: string | null;
 
   /**
-   * The area under the projection, `null` once the guardian is down.
+   * Area under the projection, `null` once the guardian is down.
    */
   readonly projectionArea: string | null;
 
   /**
-   * The current reading, pinned with its value, `null` once the guardian is down.
+   * Current reading, `null` once the guardian is down.
    */
   readonly now: FallChartPoint | null;
 
   /**
-   * Where the projection stands at Sunday midnight when it falls short, otherwise `null`.
+   * Projection at Sunday midnight when it falls short, otherwise `null`.
    */
   readonly end: FallChartPoint | null;
 
   /**
-   * The fall on the floor of the chart, real or estimated, `null` when it does not come in time.
+   * Fall point on the chart floor, `null` when it does not come in time.
    */
   readonly fall: FallChartPoint | null;
 
   /**
-   * Text anchor of the fall's label, kept inside the drawing near its edges.
+   * Text anchor keeping the fall's label inside the drawing.
    */
   readonly fallAnchor: 'start' | 'middle' | 'end';
 
@@ -185,12 +183,12 @@ export interface FallChart {
  */
 export interface FallPointer {
   /**
-   * A known reading, a projected one, the projection at zero, or a moment after the fall.
+   * Known reading, projection, projection at zero, or a moment after the fall.
    */
   readonly kind: FallReadingKind | 'estimate' | 'zero' | 'after';
 
   /**
-   * Instant of the reading, snapped to a known one over the played part, in epoch milliseconds.
+   * Instant in epoch milliseconds, snapped to a known reading over the played part.
    */
   readonly time: number;
 
@@ -205,7 +203,7 @@ export interface FallPointer {
  */
 export interface FallHover {
   /**
-   * Horizontal position of the crosshair, snapped to a known reading in the played part.
+   * Crosshair x, snapped to a known reading in the played part.
    */
   readonly x: number;
 
@@ -215,12 +213,17 @@ export interface FallHover {
   readonly y: number;
 
   /**
-   * When the reading is, already translated.
+   * Translated time of the reading.
    */
   readonly when: string;
 
   /**
-   * What the reading says, already translated.
+   * Translated value of the reading.
    */
   readonly value: string;
 }
+
+/**
+ * The guardian's pool and the week's span a descent is measured against.
+ */
+export type FallBounds = Pick<GuardianFall, 'hitPoints' | 'weekStart' | 'deadline'>;

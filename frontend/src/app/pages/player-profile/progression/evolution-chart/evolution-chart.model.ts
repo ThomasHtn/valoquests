@@ -1,5 +1,5 @@
 /**
- * One row of the chart's legend: a season, its color, and the average it held over that season.
+ * Legend row: a season, its colour and its season average.
  */
 export interface EvolutionLegendEntry {
   /**
@@ -13,7 +13,12 @@ export interface EvolutionLegendEntry {
   readonly color: string;
 
   /**
-   * Season average, formatted.
+   * Formatted season average.
    */
   readonly average: string;
 }
+
+/**
+ * Plottable metric; swapped rather than stacked since their units differ (no second y axis).
+ */
+export type EvolutionMetric = 'headshotPercentage' | 'kda' | 'acs' | 'adr';

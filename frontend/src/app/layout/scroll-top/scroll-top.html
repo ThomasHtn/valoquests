@@ -1,5 +1,4 @@
-<!-- Kept in the DOM and toggled by `inert` so the fade-out plays and focus can never land on it
-     while it is hidden. -->
+<!-- Toggled by `inert`, not removed, so the fade-out plays and hidden focus is impossible. -->
 <button
   (click)="pageScroll.toTop()"
   [attr.aria-label]="'scrollTop' | translate"

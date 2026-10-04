@@ -1,11 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 
 /**
- * A deadline counted down second by second: days when there are any, hours, minutes, seconds.
- *
- * A deadline written as a date is a date; the same one going down every second is the end of a
- * mission, which is what the page wants a reader to feel. Reduced motion keeps the countdown — it
- * is content, not decoration — and only loses the beating diamond, which lives in the stylesheet.
+ * Deadline counted down every second; reduced motion only stops the beating diamond.
  */
 @Component({
   selector: 'app-countdown',
@@ -16,22 +12,22 @@ import { ChangeDetectionStrategy, Component, computed, effect, input, signal } f
 })
 export class Countdown {
   /**
-   * Instant the countdown ends at, in epoch milliseconds.
+   * End instant, in epoch milliseconds.
    */
   public readonly deadline = input.required<number>();
 
   /**
-   * `md` for the extraction, `sm` for the daily challenge: two deadlines, one vocabulary.
+   * `md` for the extraction, `sm` for the daily challenge.
    */
   public readonly size = input<'md' | 'sm'>('md');
 
   /**
-   * Whether to show a days slot. Without one the hours absorb the days rather than losing them.
+   * Whether to show a days slot; without it the hours absorb the days.
    */
   public readonly withDays = input(true);
 
   /**
-   * Accessible name of the whole countdown, read in place of the four figures.
+   * Accessible name read in place of the figures.
    */
   public readonly label = input('');
 
@@ -40,6 +36,9 @@ export class Countdown {
    */
   private readonly secondsLeft = signal(0);
 
+  /**
+   * Days, then zero-padded hours, minutes and seconds, as the slots show them.
+   */
   protected readonly parts = computed(() => {
     const left = this.secondsLeft();
     const days = Math.floor(left / 86_400);
@@ -54,8 +53,7 @@ export class Countdown {
   });
 
   constructor() {
-    // An effect rather than a plain interval: the deadline is a required input, unreadable until
-    // the first binding, and a new deadline restarts the clock rather than racing the old one.
+    // Effect: the input is unreadable before binding, and a new deadline restarts the clock.
     effect((onCleanup) => {
       const deadline = this.deadline();
       const beat = (): void => {

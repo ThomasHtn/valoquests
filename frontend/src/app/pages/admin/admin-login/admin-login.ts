@@ -10,8 +10,8 @@ import {
 
 import { AdminApi } from '@core/admin/admin-api';
 import { resolveAdminErrorMessage } from '@core/admin/admin-error.utils';
-import { ADMIN_HOME_ROUTE } from '@core/admin/admin-session.constants';
-import { AdminSession } from '@core/admin/admin-session';
+import { ADMIN_HOME_ROUTE } from '@core/admin/session/admin-session.constants';
+import { AdminSession } from '@core/admin/session/admin-session';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { SnackbarService } from '@core/snackbar/snackbar';
@@ -19,15 +19,8 @@ import { Button } from '@shared/button/button';
 import { TextField, TextFieldInput } from '@shared/text-field/text-field';
 
 /**
- * Backoffice sign-in screen.
- *
- * Reached by URL only — nothing in the application links here — and rendered chrome-free like the
- * landing page, since a sidebar offering the public navigation would contradict what this screen
- * is for.
- *
- * The key is verified against `GET /api/admin/session` before the session opens. That route does
- * nothing but answer, so a wrong key costs a rejected request rather than a half-applied operation,
- * and the session never holds a key the backend would refuse on the first real command.
+ * Chrome-free backoffice sign-in, reached by URL only.
+ * The key is checked against `GET /api/admin/session` first, so the session never holds a bad key.
  */
 @Component({
   selector: 'app-admin-login',
@@ -44,12 +37,7 @@ import { TextField, TextFieldInput } from '@shared/text-field/text-field';
     LucideLockKeyhole,
   ],
   templateUrl: './admin-login.html',
-  // Diverges from `PAGE_LAYOUT_CLASS`: this is a single centred composition filling the viewport,
-  // not a stack of blocks inside the application shell.
-  //
-  // On the application's own ground and ambient field rather than the flat sunken slab it used to
-  // sit on. This is the first screen a club's coach ever sees, and it carried no mark of the
-  // product at all — no wordmark, no atmosphere, a panel floating on an empty rectangle.
+  // Not `PAGE_LAYOUT_CLASS`: one centred composition outside the shell.
   host: {
     class:
       'ambient-field flex min-h-dvh flex-col items-center justify-center bg-surface-950 px-4 py-10',
@@ -57,32 +45,32 @@ import { TextField, TextFieldInput } from '@shared/text-field/text-field';
 })
 export class AdminLogin {
   /**
-   * Data-access service used to verify the key.
+   * Backoffice API, to check the key before it is stored.
    */
   private readonly adminApi = inject(AdminApi);
 
   /**
-   * Session opened once the backend accepts the key.
+   * Admin session, which keeps the accepted key.
    */
   private readonly session = inject(AdminSession);
 
   /**
-   * Router used to enter the backoffice on success.
+   * Router, to enter the backoffice once signed in.
    */
   private readonly router = inject(Router);
 
   /**
-   * i18n service used to resolve the fallback failure message.
+   * Translation, for the fallback rejection message.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Queues the rejection snackbar.
+   * Snackbar, echoing a rejection outside the form.
    */
   private readonly snackbar = inject(SnackbarService);
 
   /**
-   * Key currently typed in the field.
+   * Typed key.
    */
   protected readonly key = signal('');
 
@@ -92,19 +80,17 @@ export class AdminLogin {
   protected readonly verifying = signal(false);
 
   /**
-   * Already-translated failure message, or `''` when nothing has failed yet.
+   * Translated failure message, `''` when none.
    */
   protected readonly error = signal('');
 
   /**
-   * Whether the key field currently reveals its typed value in plain text.
+   * Whether the key is shown in plain text.
    */
   protected readonly showKey = signal(false);
 
   /**
-   * Records what the operator typed into the key field.
-   *
-   * @param event - The input event carrying the field's current value.
+   * Records the typed key and clears the error.
    */
   protected onKeyInput(event: Event): void {
     this.key.set((event.target as HTMLInputElement).value);
@@ -112,16 +98,14 @@ export class AdminLogin {
   }
 
   /**
-   * Toggles whether the key field reveals its typed value.
+   * Toggles key visibility.
    */
   protected toggleShowKey(): void {
     this.showKey.update((current) => !current);
   }
 
   /**
-   * Verifies the typed key and enters the backoffice when the backend accepts it.
-   *
-   * @param event - The form submission, whose default navigation is prevented.
+   * Verifies the key and enters the backoffice when the backend accepts it.
    */
   protected async submit(event: Event): Promise<void> {
     event.preventDefault();

@@ -11,24 +11,24 @@ import {
   LucideChevronUp,
 } from '@lucide/angular';
 
-import { primaryTitle } from '@core/campaign/campaign-title.utils';
-import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
-import { WeeklyTitle } from '@core/campaign/campaign.model';
+import { primaryTitle } from '@core/campaign/titles/campaign-title.utils';
+import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
+import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import {
   resolveCompetitiveTierIconUrl,
   resolveCompetitiveTierVisual,
   resolveTierOrdinal,
-} from '@core/players/competitive-tier.utils';
-import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
+} from '@core/players/competitive-tier/player-competitive-tier.utils';
+import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import {
   extractRiotTag,
   formatHeadshotPercentage,
   formatKda,
   formatWinRate,
 } from '@core/players/player-format.utils';
-import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/player-stats.utils';
+import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/stats/player-stats.utils';
 import { anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { PlayerSummary } from '@core/players/player-summary.model';
 import { PlayersApi } from '@core/players/players-api';
@@ -43,24 +43,20 @@ import { ResourceState } from '@shared/resource-state/resource-state';
 import { Select } from '@shared/select/select';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { SelectOption } from '@shared/select/select.model';
-import { SKELETON_ROWS } from '@shared/resource-state/skeleton.constants';
-import { PLAYER_SORT_COLUMNS, PlayerRow, PlayerSortKey } from './players.model';
+import { SKELETON_ROWS } from '@shared/resource-state/resource-state-skeleton.constants';
+import { PLAYER_SORT_COLUMNS } from './players.constants';
+import { PlayerRow, PlayerSortKey } from './players.model';
 import {
   defaultSortDirection,
   readPlayerSort,
   toPlayerSortOrder,
   writePlayerSort,
 } from './players.utils';
-import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 
 /**
- * Players list page — "Escouade".
- *
- * Displays every tracked player's identity, rank and statistics, split into two groups (root
- * `CLAUDE.md`, `PlayerStatus`): the roster currently in the campaign, and — separately, not faded
- * — those out of it. Sortable by any column; defaults to competitive rank so the strongest
- * players surface first, same as before this lot.
+ * "Escouade" page: every tracked player, in-campaign roster and out-of-campaign group apart.
  */
 @Component({
   selector: 'app-players',
@@ -90,30 +86,29 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
 })
 export class Players {
   /**
-   * Data-access service backing the shared players resource.
+   * Players data access.
    */
   private readonly playersApi = inject(PlayersApi);
 
   /**
-   * Data-access service backing the reigning-champion lookup.
+   * Ranking data access, for the champion and titles.
    */
   private readonly rankingApi = inject(RankingApi);
 
   /**
-   * i18n service used to resolve each row's translated rank label.
+   * Translates rank labels and sort options.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Id of the reigning weekly "Champion", or `null` while unknown or before any week has been
-   * finalized.
+   * Id of the reigning weekly champion, `null` before any finalized week.
    */
   private readonly championPlayerId = computed(() =>
     resolveChampionPlayerId(resourceValue(this.rankingApi.latestFinalizedWeek, null)),
   );
 
   /**
-   * The current week's title, if any, held by each player id.
+   * Current week's title held by each player id.
    */
   private readonly titlesByPlayer = computed(() => {
     const byPlayer = new Map<number, WeeklyTitle>();
@@ -127,7 +122,7 @@ export class Players {
   });
 
   /**
-   * Reactive resource fetching every tracked player's summary.
+   * Every tracked player's summary.
    */
   protected readonly playersResource = this.playersApi.players;
 
@@ -137,17 +132,17 @@ export class Players {
   protected readonly isLoading = anyLoading(this.playersResource);
 
   /**
-   * Placeholder line widths driving the loading skeleton.
+   * Placeholder line widths of the loading skeleton.
    */
   protected readonly skeletonRows = SKELETON_ROWS;
 
   /**
-   * The table's sortable columns, exposed for the header row.
+   * Sortable columns of the header row.
    */
   protected readonly sortColumns = PLAYER_SORT_COLUMNS;
 
   /**
-   * The sortable columns as the phone's sort picker lists them, where the header row is hidden.
+   * Sort picker options, shown on phones where the header row is hidden.
    */
   protected readonly sortOptions = computed<readonly SelectOption<PlayerSortKey>[]>(() =>
     PLAYER_SORT_COLUMNS.map((column) => ({
@@ -156,98 +151,109 @@ export class Players {
     })),
   );
 
+  /**
+   * Router, to write the sort into the address.
+   */
   private readonly router = inject(Router);
 
+  /**
+   * Active route, whose query parameters carry the sort.
+   */
   private readonly route = inject(ActivatedRoute);
 
   /**
-   * The sort the address asked for on arrival, so a link or a step back keeps it.
+   * Sort read from the address on arrival, so a link or a step back keeps it.
    */
   private readonly requestedSort = readPlayerSort(this.route.snapshot.queryParamMap);
 
   /**
-   * Column the table is sorted on. Defaults to rank, the table's original (and only) order.
+   * Column the table is sorted on.
    */
   protected readonly sortKey = signal<PlayerSortKey>(this.requestedSort.key);
 
   /**
-   * `1` for ascending, `-1` for descending. Rank and win rate/KDA/HS%/matches all default to
-   * descending (best first); name defaults to ascending (A→Z) — set the first time each key is
-   * picked, in {@link setSort}.
+   * `1` ascending, `-1` descending.
    */
   protected readonly sortDirection = signal<1 | -1>(this.requestedSort.direction);
 
   /**
-   * The current order, as the phone's toggle words it.
+   * Current order, as the phone's toggle words it.
    */
   protected readonly sortOrder = computed(() =>
     toPlayerSortOrder(this.sortKey(), this.sortDirection()),
   );
 
   /**
-   * Every tracked player mapped to a display-ready row, unsorted — {@link inCampaignRows} and
-   * {@link outOfCampaignRows} each sort their own slice, so a change of sort key never moves a row
-   * between the two groups.
+   * Unsorted rows; each group sorts its own slice so a sort never moves a row across groups.
    */
   private readonly allRows = computed<readonly PlayerRow[]>(() =>
     resourceValue(this.playersResource, []).map((player) => this.toRow(player)),
   );
 
   /**
-   * Rows of players currently in the campaign, sorted on {@link sortKey}.
+   * Sorted rows of players in the campaign.
    */
   protected readonly inCampaignRows = computed(() =>
     this.sortRows(this.allRows().filter((row) => row.inCampaign)),
   );
 
   /**
-   * Rows of players out of the campaign — a group of their own rather than a fade on the same list
-   * (design-review.md §A8): they still play and clear challenges individually.
+   * Sorted rows of players out of the campaign, a group of their own rather than faded.
    */
   protected readonly outOfCampaignRows = computed(() =>
     this.sortRows(this.allRows().filter((row) => !row.inCampaign)),
   );
 
   /**
-   * Every row, both groups combined — only for the empty/loading states, which do not care which
-   * group a row belongs to.
+   * Both groups combined, for the empty and loading states.
    */
   protected readonly rows = computed<readonly PlayerRow[]>(() => this.allRows());
 
   /**
-   * Resolves the text and bar colors for a row's win rate, exposed to the template.
+   * Win rate text and bar colors.
    */
   protected readonly winRateVisual = resolveWinRateVisual;
 
   /**
-   * Resolves the text color for a row's KDA, exposed to the template.
+   * KDA text color.
    */
   protected readonly kdaVisual = resolveKdaVisual;
 
+  constructor() {
+    // The sort lives in the address; replacing the entry keeps sorting out of the history.
+    effect(() => {
+      const queryParams = writePlayerSort(this.sortKey(), this.sortDirection());
+      untracked(() =>
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams,
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        }),
+      );
+    });
+  }
+
   /**
-   * Formats a row's win rate, exposed to the template.
+   * Formats a win rate.
    */
   protected readonly formatWinRate = (winRate: number | null): string =>
     formatWinRate(winRate, this.translation.language());
 
   /**
-   * Formats a row's KDA, exposed to the template.
+   * Formats a KDA.
    */
   protected readonly formatKda = (kda: number | null): string =>
     formatKda(kda, this.translation.language());
 
   /**
-   * Formats a row's headshot rate, exposed to the template.
+   * Formats a headshot rate.
    */
   protected readonly formatHeadshotPercentage = (percentage: number | null): string =>
     formatHeadshotPercentage(percentage, this.translation.language());
 
   /**
-   * Maps a tracked player's summary to a display-ready row, resolving its avatar, rank icon,
-   * and translated rank label.
-   *
-   * @param player - The tracked player's summary.
-   * @returns The corresponding display-ready row.
+   * Maps a player summary to a display-ready row.
    */
   private toRow(player: PlayerSummary): PlayerRow {
     const title = this.titlesByPlayer().get(player.id) ?? null;
@@ -273,12 +279,7 @@ export class Players {
   }
 
   /**
-   * Sorts a slice of rows on {@link sortKey}/{@link sortDirection}. `null` values (not yet
-   * synchronized) always sort last regardless of direction — a missing statistic is not the same
-   * as the worst one.
-   *
-   * @param rows - The rows to sort, in place order preserved for ties.
-   * @returns The sorted rows, as a new array.
+   * Sorts rows on the current sort; `null` stats always sort last, missing is not worst.
    */
   private sortRows(rows: readonly PlayerRow[]): readonly PlayerRow[] {
     const key = this.sortKey();
@@ -314,30 +315,7 @@ export class Players {
   }
 
   /**
-   * Sorts on a column, toggling direction when it is already the active one and picking the
-   * column's own natural default otherwise (best-first for every statistic, A→Z for the name).
-   *
-   * @param key - The column clicked.
-   */
-  constructor() {
-    // The sort rides in the address, replacing the entry so sorting never adds back steps.
-    effect(() => {
-      const queryParams = writePlayerSort(this.sortKey(), this.sortDirection());
-      untracked(() =>
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams,
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        }),
-      );
-    });
-  }
-
-  /**
-   * Sorts on the column picked on a phone, on that column's own natural direction.
-   *
-   * @param key - The column picked.
+   * Sorts on the column picked on a phone, in its natural direction.
    */
   protected pickSort(key: PlayerSortKey): void {
     this.sortKey.set(key);
@@ -351,6 +329,9 @@ export class Players {
     this.sortDirection.update((direction) => (direction === 1 ? -1 : 1));
   }
 
+  /**
+   * Sorts on a header: toggles the direction if active, else starts in its natural direction.
+   */
   protected setSort(key: PlayerSortKey): void {
     if (this.sortKey() === key) {
       this.sortDirection.update((direction) => (direction === 1 ? -1 : 1));

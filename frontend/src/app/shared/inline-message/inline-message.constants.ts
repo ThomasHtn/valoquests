@@ -1,7 +1,7 @@
 import { InlineMessageTone } from './inline-message.model';
 
 /**
- * Rule colour and text colour of each tone.
+ * Rule and text colour of each tone.
  */
 export const TONE_CLASS: Record<InlineMessageTone, string> = {
   info: 'border-brand-500/60 text-text-secondary',

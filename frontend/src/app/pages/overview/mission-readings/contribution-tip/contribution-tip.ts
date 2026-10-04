@@ -4,8 +4,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Strike } from '../mission-readings.model';
 
 /**
- * The content of an operator's bubble on the duel track, laid out like the challenges board's
- * progress bubble: operator, damage, then their share of the squad and their challenge points.
+ * Operator bubble on the duel track, laid out like the challenges board's progress bubble.
  */
 @Component({
   selector: 'app-contribution-tip',
@@ -15,5 +14,8 @@ import { Strike } from '../mission-readings.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ContributionTip {
+  /**
+   * Operator's share of the week's damage, shown in the bubble.
+   */
   public readonly strike = input.required<Strike>();
 }

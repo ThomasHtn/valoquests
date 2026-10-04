@@ -1,27 +1,4 @@
-import { AvatarSize } from './avatar.model';
-
-/**
- * Rendering metrics for one {@link AvatarSize}.
- */
-interface AvatarSizeMetrics {
-  /**
-   * Tailwind classes sizing the avatar container.
-   */
-  readonly containerClass: string;
-
-  /**
-   * Tailwind classes sizing the fallback icon.
-   */
-  readonly iconClass: string;
-
-  /**
-   * Rendered size in CSS pixels, matching {@link containerClass}.
-   *
-   * Declared explicitly because `NgOptimizedImage` requires intrinsic dimensions to reserve
-   * layout space, which avoids a layout shift while the portrait loads.
-   */
-  readonly pixels: number;
-}
+import { AvatarSize, AvatarSizeMetrics } from './avatar.model';
 
 /**
  * Rendering metrics for each {@link AvatarSize}.

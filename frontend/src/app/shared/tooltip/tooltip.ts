@@ -22,21 +22,8 @@ import { TooltipPosition, TooltipTrigger } from './tooltip.model';
 import { nextInstanceId } from '@core/dom/instance-id.utils';
 
 /**
- * Shows a short text bubble describing its host on hover and on keyboard focus, or, for a
- * dedicated info button, on mouse hover and on tap or keyboard activation.
- *
- * Replaces Angular Material's `matTooltip`, which pulled `@angular/material` and `@angular/cdk`
- * into the initial bundle for this single feature. Every tooltip in this application supplements
- * information already available elsewhere (a visible label, an `aria-label` or an `sr-only` span),
- * so the bubble is an enhancement rather than the only way to read the interface.
- *
- * The bubble is a native popover, which renders in the browser's top layer. That is what makes it
- * immune to being clipped by a scrolling or `overflow: hidden` ancestor, such as the collapsed
- * sidebar rail, and it is the reason an absolutely positioned element is not enough here.
- *
- * Accessibility: the bubble carries `role="tooltip"` and is referenced by `aria-describedby` while
- * visible, it opens on focus as well as on hover so it is reachable without a pointer, and it
- * closes on Escape as WAI-ARIA requires.
+ * Text bubble shown on hover and focus (or tap for an info button), closed on Escape.
+ * A native popover in the top layer, so no `overflow: hidden` ancestor can clip it.
  */
 @Directive({
   selector: '[appTooltip]',
@@ -46,144 +33,116 @@ import { nextInstanceId } from '@core/dom/instance-id.utils';
     '(pointerenter)': 'onMouseOver($event)',
     '(pointerleave)': 'onMouseOut($event)',
     '(click)': 'toggle($event)',
-    // Focus opens the bubble at once: the delay exists to keep a pointer crossing the host from
-    // flashing it, and a keyboard user does not cross anything.
+    // Focus skips the delay, which only guards against a pointer crossing the host.
     '(focusin)': 'showOnHostFocus($event)',
     '(focusout)': 'hide()',
   },
 })
 export class Tooltip implements OnDestroy {
   /**
-   * Already-translated text rendered inside the bubble.
+   * Translated text of the bubble.
    */
   public readonly appTooltip = input.required<string>();
 
   /**
-   * Side of the host the bubble is rendered on.
+   * Side of the host the bubble sits on.
    */
   public readonly appTooltipPosition = input<TooltipPosition>('above');
 
   /**
-   * Suppresses the tooltip without removing the directive.
-   *
-   * Used by the sidebar, whose navigation entries only need a tooltip while the rail is collapsed
-   * and hides their labels.
+   * Suppresses the tooltip, e.g. sidebar entries while the rail is expanded.
    */
   public readonly appTooltipDisabled = input(false);
 
   /**
-   * Bubble size. `md` is used by the sidebar's navigation entries, whose tooltip is the only way to
-   * read the entry's label while the rail is collapsed and therefore needs to read comfortably at a
-   * glance; every other tooltip stays at the default `sm`.
-   *
-   * Both steps sit a size above the surrounding micro-labels rather than below them: a bubble
-   * explaining how a figure is worked out is a sentence to be read, not a caption to be scanned,
-   * and at the caption's own size it was the hardest text on the page to make out.
+   * Bubble size: `md` for the collapsed sidebar's labels, `sm` elsewhere.
    */
   public readonly appTooltipSize = input<'sm' | 'md'>('sm');
 
   /**
-   * How long the pointer must rest on the host before the bubble opens, in milliseconds.
-   *
-   * Zero by default, which is what a tooltip hanging off a small target wants: the reader aimed at
-   * that word or that figure, so the answer is owed immediately. A host covering a whole block is
-   * the opposite case — the pointer crosses it on the way to anything else, and without a delay the
-   * bubble flashes over content the reader was heading for.
+   * Hover delay in ms before opening, for large hosts the pointer merely crosses.
    */
   public readonly appTooltipDelay = input(0);
 
   /**
-   * `click` hands the bubble to a dedicated info button: a mouse opens it on hover, a tap or the
-   * keyboard toggles it, and an outside tap, Escape or leaving focus closes it.
+   * `click` for an info button: mouse hover opens it, tap or keyboard toggles it.
    */
   public readonly appTooltipTrigger = input<TooltipTrigger>('hover');
 
   /**
-   * Portrait drawn before the text, for a tooltip naming a player: a URL, `null` for the generic
-   * fallback disc, or `undefined` (the default) for a text-only bubble.
+   * Player portrait before the text: URL, `null` for the fallback disc, `undefined` for none.
    */
   public readonly appTooltipPortrait = input<string | null | undefined>(undefined);
 
   /**
-   * Structured content rendered in place of the text, for a bubble that lays figures out rather
-   * than words them. The text stays required: it is what assistive tech and blank checks read.
+   * Rich content shown instead of the text; the text stays required for assistive tech.
    */
   public readonly appTooltipTemplate = input<TemplateRef<unknown> | null>(null);
 
   /**
-   * Host element the bubble is positioned against and described by.
+   * Host the bubble is placed against and describes.
    */
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /**
-   * Renderer used to create and mutate the bubble outside the component template.
+   * Builds the bubble outside any template.
    */
   private readonly renderer = inject(Renderer2);
 
   /**
-   * Application the template's view is attached to, so it keeps change detection while shown.
+   * Keeps the template's view under change detection while shown.
    */
   private readonly appRef = inject(ApplicationRef);
 
   /**
-   * Injector the template's view resolves its dependencies from.
+   * Injector of the template's view.
    */
   private readonly injector = inject(Injector);
 
   /**
-   * View rendered from {@link appTooltipTemplate}, or `null` while hidden or text-only.
+   * View of {@link appTooltipTemplate}, `null` while hidden or text-only.
    */
   private contentView: EmbeddedViewRef<unknown> | null = null;
 
   /**
-   * Unique identifier linking the host to its bubble through `aria-describedby`.
+   * Bubble id referenced by the host's `aria-describedby`.
    */
   private readonly tooltipId = nextInstanceId('app-tooltip');
 
   /**
-   * Bubble currently attached to the document, or `null` while hidden.
+   * Bubble in the document, `null` while hidden.
    */
   private readonly bubble = signal<HTMLElement | null>(null);
 
   /**
-   * Removes the document-level Escape listener, or `null` while hidden.
+   * Removes the Escape listener, `null` while hidden.
    */
   private escapeListener: (() => void) | null = null;
 
   /**
-   * Removes the document-level outside-click listener of a click tooltip, or `null` while hidden.
+   * Removes the outside-click listener, `null` while hidden.
    */
   private outsideListener: (() => void) | null = null;
 
   /**
-   * Removes the scroll and resize listeners that close a shown bubble, or `null` while hidden.
+   * Removes the scroll and resize listeners, `null` while hidden.
    */
   private movementListener: (() => void) | null = null;
 
   /**
-   * Pending {@link appTooltipDelay} timer, or `null` while none is armed.
+   * Pending {@link appTooltipDelay} timer, `null` when none.
    */
   private showTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
-   * Removes the bubble when the host is destroyed while its tooltip is visible.
-   *
-   * A popover lives in the top layer attached to the document body, so it would otherwise outlive
-   * the element it describes, for instance when a route change removes the host under the pointer.
+   * The popover lives on the body, so it would otherwise outlive its host.
    */
   public ngOnDestroy(): void {
     this.hide();
   }
 
   /**
-   * Opens the bubble when the host itself takes focus, ignoring focus landing on a descendant.
-   *
-   * `focusin` bubbles, unlike `mouseenter`, so a host wrapping its own interactive content — the
-   * podium, whose every row is a link to a player — would otherwise open its bubble on each of
-   * them in turn while the reader tabs through. The bubble describes the host, so only the host
-   * taking focus is a reason to show it.
-   *
-   * @param event - The focus event that reached the host.
+   * Opens on focus of the host itself: `focusin` also bubbles up from focusable descendants.
    */
   protected showOnHostFocus(event: FocusEvent): void {
     if (this.isClickTriggered() || event.target !== this.host.nativeElement) {
@@ -193,12 +152,18 @@ export class Tooltip implements OnDestroy {
     this.show();
   }
 
+  /**
+   * Opens a hover tooltip, after its delay, when the mouse enters the host.
+   */
   protected onPointerEnter(): void {
     if (!this.isClickTriggered()) {
       this.scheduleShow();
     }
   }
 
+  /**
+   * Closes a hover tooltip when the mouse leaves the host.
+   */
   protected onPointerLeave(): void {
     if (!this.isClickTriggered()) {
       this.hide();
@@ -206,7 +171,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Opens a click tooltip under a real mouse; touch sends pointer events too and must go on tapping.
+   * Opens a click tooltip under a real mouse only; touch must go on tapping.
    */
   protected onMouseOver(event: PointerEvent): void {
     if (this.isClickTriggered() && event.pointerType === 'mouse') {
@@ -214,6 +179,9 @@ export class Tooltip implements OnDestroy {
     }
   }
 
+  /**
+   * Closes a click tooltip that mouse hover opened, once the mouse leaves.
+   */
   protected onMouseOut(event: PointerEvent): void {
     if (this.isClickTriggered() && event.pointerType === 'mouse') {
       this.hide();
@@ -221,8 +189,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Opens or closes a click tooltip on tap or keyboard; a mouse click is left to hover, so it does
-   * not close the bubble the pointer just opened. Ignored by hover tooltips.
+   * Toggles a click tooltip on tap or keyboard; a mouse click must not close what hover opened.
    */
   protected toggle(event: MouseEvent): void {
     if (!this.isClickTriggered()) {
@@ -240,15 +207,15 @@ export class Tooltip implements OnDestroy {
     }
   }
 
+  /**
+   * Whether the tooltip is an info button's, opened by tap rather than hover.
+   */
   private isClickTriggered(): boolean {
     return this.appTooltipTrigger() === 'click';
   }
 
   /**
-   * Opens the bubble once the pointer has rested on the host for {@link appTooltipDelay}.
-   *
-   * Falls through to {@link show} with no timer at all when no delay is configured, so the default
-   * call site keeps its immediate bubble and gains no scheduling.
+   * Opens after {@link appTooltipDelay}, at once without a timer when the delay is zero.
    */
   protected scheduleShow(): void {
     const delay = this.appTooltipDelay();
@@ -266,10 +233,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Creates, positions and reveals the bubble.
-   *
-   * Does nothing when the tooltip is disabled, when its text is blank or when a bubble is already
-   * visible, so repeated pointer and focus events cannot stack several bubbles.
+   * Builds and places the bubble; a no-op when disabled, blank or already shown.
    */
   protected show(): void {
     if (this.appTooltipDisabled() || !this.appTooltip().trim() || this.bubble()) {
@@ -316,10 +280,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Renders the template into the bubble, checked once so the bubble has its size before placement.
-   *
-   * @param bubble - The bubble being built.
-   * @param template - Structured content to render.
+   * Renders the template, checked once so the bubble is sized before placement.
    */
   private fillWithTemplate(bubble: HTMLElement, template: TemplateRef<unknown>): void {
     const view = template.createEmbeddedView({}, this.injector);
@@ -332,10 +293,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Fills the bubble with a portrait disc followed by the text.
-   *
-   * @param bubble - The bubble being built.
-   * @param portrait - Portrait URL, or `null` for the fallback disc.
+   * Fills the bubble with a portrait disc (fallback when `null`) then the text.
    */
   private fillWithPortrait(bubble: HTMLElement, portrait: string | null): void {
     const frame = portrait ? this.portraitImage(portrait) : this.portraitFallback();
@@ -346,10 +304,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Builds the portrait image. Decorative: the player's name follows it as text.
-   *
-   * @param portrait - Portrait URL.
-   * @returns The image element.
+   * Decorative portrait image: the player's name follows as text.
    */
   private portraitImage(portrait: string): HTMLElement {
     const image = this.renderer.createElement('img') as HTMLElement;
@@ -362,9 +317,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Builds the generic disc shown for a player without a portrait.
-   *
-   * @returns The disc, carrying Lucide's `user` glyph.
+   * Fallback disc with Lucide's `user` glyph.
    */
   private portraitFallback(): HTMLElement {
     const svgNamespace = 'svg';
@@ -395,10 +348,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Removes the bubble and every reference to it.
-   *
-   * Disarms any pending delay first, and before the early return: a pointer that leaves the host
-   * before the timer fires must not have a bubble open behind it.
+   * Removes the bubble; disarms the delay first so a pending one cannot open after leaving.
    */
   protected hide(): void {
     this.cancelScheduledShow();
@@ -425,7 +375,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Disarms the pending delay timer, if any.
+   * Disarms the pending delay timer.
    */
   private cancelScheduledShow(): void {
     if (this.showTimer === null) {
@@ -437,14 +387,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Promotes the bubble to the top layer, or leaves it in flow where popovers are unavailable.
-   *
-   * The bubble is already `position: fixed` and appended to the body, so without the top layer it
-   * still renders in the right place. It only loses its immunity to a clipping ancestor, which is
-   * a visual degradation rather than a failure, and calling the method blindly would instead throw.
-   *
-   * @param bubble bubble to toggle
-   * @param visible whether the bubble must be shown
+   * Toggles the popover; skipped where unsupported, the fixed bubble still renders.
    */
   private togglePopover(bubble: HTMLElement, visible: boolean): void {
     const toggle = visible ? bubble.showPopover : bubble.hidePopover;
@@ -456,13 +399,11 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Places the bubble beside the host, keeping it inside the viewport.
-   *
-   * Measured after the popover is shown, since a hidden popover has no size to center against.
+   * Places the bubble beside the host in the viewport; call once shown so it has a size.
    */
   private position(bubble: HTMLElement): void {
     const anchor = this.host.nativeElement.getBoundingClientRect();
-    // Layout size, not the painted box: the entrance animation scales the bubble on its first frame.
+    // Layout size: the entrance animation scales the painted box on its first frame.
     const size = { width: bubble.offsetWidth, height: bubble.offsetHeight };
     const view = this.document().defaultView;
     const viewportWidth = view?.innerWidth ?? 0;
@@ -495,22 +436,15 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Keeps a coordinate within the viewport, never returning a negative offset.
-   *
-   * @param value preferred coordinate
-   * @param maximum largest coordinate keeping the bubble fully visible
-   * @return clamped coordinate
+   * Clamps a coordinate between `OFFSET` and `maximum - OFFSET`.
    */
   private clamp(value: number, maximum: number): number {
     return Math.max(OFFSET, Math.min(value, maximum - OFFSET));
   }
 
   /**
-   * Closes the tooltip on Escape, as WAI-ARIA requires of every tooltip.
-   *
-   * Bound on the window in the capture phase because the host is not necessarily focused: a
-   * tooltip opened by hovering would otherwise never receive the key event. The key is consumed
-   * there, so the same press does not also close the dialog, drawer or tour underneath.
+   * Closes on Escape, captured on the window since a hovered host has no focus.
+   * The key is consumed so it does not also close the dialog or drawer underneath.
    */
   private listenForEscape(): void {
     const view = this.document().defaultView;
@@ -529,9 +463,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Keeps the bubble on its anchor when anything scrolls or the viewport resizes, and closes it once
-   * the anchor leaves the screen: the bubble is fixed in place, and on a touch screen no pointer
-   * leave ever comes to take it away.
+   * Follows the host on scroll and resize, closing once it is off screen (touch never leaves).
    */
   private listenForMovement(): void {
     const view = this.document().defaultView;
@@ -557,7 +489,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Closes a click tooltip when the pointer goes down anywhere outside its host.
+   * Closes a click tooltip on a pointer down outside its host.
    */
   private listenForOutsideClick(): void {
     this.outsideListener = this.renderer.listen(
@@ -572,10 +504,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Returns the document owning the host element.
-   *
-   * Read from the host rather than injected as a global so the directive keeps working in a
-   * server-rendered or test document.
+   * Host's own document, so the directive works in a server or test document.
    */
   private document(): Document {
     return this.host.nativeElement.ownerDocument;

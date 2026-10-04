@@ -1,0 +1,120 @@
+/* Loading states, opacity only; global because `.resource-loading` styles projected skeletons. */
+
+/* Breathing placeholder; `--skeleton-delay` staggers siblings. */
+@utility skeleton {
+  background-color: --alpha(var(--color-text-primary) / 7%);
+  animation: skeleton-breathe 1.6s ease-in-out var(--skeleton-delay, 0s) infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes skeleton-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Projected skeletons breathe row by row, so call sites keep static markup. */
+.resource-loading [skeleton] > * {
+  animation: skeleton-breathe 1.6s ease-in-out var(--skeleton-delay, 0s) infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.resource-loading [skeleton] > :nth-child(2) {
+  --skeleton-delay: 90ms;
+}
+
+.resource-loading [skeleton] > :nth-child(3) {
+  --skeleton-delay: 180ms;
+}
+
+.resource-loading [skeleton] > :nth-child(4) {
+  --skeleton-delay: 270ms;
+}
+
+.resource-loading [skeleton] > :nth-child(n + 5) {
+  --skeleton-delay: 360ms;
+}
+
+/* A single-block skeleton (a banner) breathes as a whole. */
+.resource-loading > [skeleton]:not(:has(> * + *)) {
+  animation: skeleton-breathe 1.6s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* Generic silhouette, hidden once a call site projects its own skeleton. */
+.resource-loading-fallback {
+  display: flex;
+}
+
+.resource-loading:has(> [skeleton]) .resource-loading-fallback {
+  display: none;
+}
+
+/* The loading mark: a hexagon filling and emptying. */
+.loader-hex {
+  @apply relative inline-block h-3.5 w-3 shrink-0 bg-brand-500/20;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-brand-500);
+    transform-origin: bottom;
+    animation: loader-hex-fill 1.2s var(--ease-out-quart) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+      transform: scaleY(0.5);
+    }
+  }
+}
+
+@keyframes loader-hex-fill {
+  0% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+
+  50% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+
+  50.01% {
+    transform-origin: top;
+  }
+
+  100% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+}
+
+/* Content replacing a loader or an error fades in instead of snapping. */
+@media (prefers-reduced-motion: no-preference) {
+  .resource-settle {
+    animation: resource-settle 260ms var(--ease-out-quart) both;
+  }
+}
+
+@keyframes resource-settle {
+  from {
+    opacity: 0;
+  }
+}

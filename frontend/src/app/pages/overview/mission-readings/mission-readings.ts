@@ -4,29 +4,20 @@ import { LucideCheck, LucideDynamicIcon } from '@lucide/angular';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { CONFETTI } from '@pages/challenges/progress-mark/progress-mark.constants';
+import { CONFETTI } from '@shared/progress-mark/progress-mark.constants';
 import { Countdown } from '@shared/countdown/countdown';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
-import { Contribution, Mission, SundayStakes } from '../overview.model';
+import { Contribution, Mission, SundayStakes, Strike } from './mission-readings.model';
 import { ContributionTip } from './contribution-tip/contribution-tip';
 import { FallForecast } from './fall-forecast/fall-forecast';
 import { GuardianFall } from './fall-forecast/fall-forecast.model';
-import { Strike } from './mission-readings.model';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
- * The week's mission: the clock, the squad against the guardian, what Sunday midnight can still
- * add or take, then when the guardian falls.
- *
- * The duel's whole ground is the track the two camps share: violet up to the breakthrough, cut into
- * one segment per operator and weighted by the damage each dealt, then the guardian's red. Once the
- * guardian is down, a check lands between the camps as a validated challenge's does, and the
- * figures and segments stay readable under it.
- *
- * The duel and the stakes carry a `data-card` anchor: `ScanWires` measures them to land its
- * callout wires from the planet beside them.
+ * The week's mission: clock, squad-versus-guardian duel, Sunday stakes and the guardian's fall.
+ * The duel and the stakes carry `data-card` anchors that `ScanWires` measures.
  */
 @Component({
   selector: 'app-mission-readings',
@@ -47,7 +38,7 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 })
 export class MissionReadings {
   /**
-   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   * Icon of each concept.
    */
   protected readonly concepts = CONCEPT_ICONS;
 
@@ -57,34 +48,32 @@ export class MissionReadings {
   public readonly mission = input.required<Mission>();
 
   /**
-   * What the squad has put into the week, `null` before its first match.
+   * Squad contribution, `null` before the first match.
    */
   public readonly contribution = input.required<Contribution | null>();
 
   /**
-   * Sunday's two outcomes, `null` once the guardian is down or while the forecast is unresolved.
+   * Sunday's two outcomes, `null` once the guardian is down or without a forecast.
    */
   public readonly stakes = input<SundayStakes | null>(null);
 
   /**
-   * The guardian's descent and where the pace takes it, `null` before the first hit.
+   * The guardian's descent and projection, `null` before the first hit.
    */
   public readonly fall = input<GuardianFall | null>(null);
 
   /**
-   * Whether to open on the week's clock. The tour drops it on a phone, where the two other
-   * readings already fill the screen.
+   * Whether to show the week's clock; the tour hides it on a phone.
    */
   public readonly showClock = input(true);
 
   /**
-   * The guardian's number, padded like the frieze's own week labels so `Boss 04` and the frieze's
-   * `04` are read as the same thing.
+   * Guardian number, padded like the frieze's week labels.
    */
   protected readonly bossIndex = computed(() => String(this.mission().weekIndex).padStart(2, '0'));
 
   /**
-   * Hit points taken from the guardian, capped at its pool like the figure on the other side.
+   * Hit points taken from the guardian.
    */
   protected readonly hitPointsDealt = computed(
     () => this.mission().hitPoints - this.mission().hitPointsLeft,
@@ -96,8 +85,7 @@ export class MissionReadings {
   protected readonly breach = computed(() => 1 - this.mission().guardianLeft);
 
   /**
-   * The operators who hit the guardian, heaviest first: challenge points never touch its hit points,
-   * so they stay in the bubble rather than widening a segment.
+   * Operators who hit the guardian, heaviest first; challenge points never widen a segment.
    */
   protected readonly strikes = computed<readonly Strike[]>(() => {
     const hits = (this.contribution()?.shares ?? []).filter((share) => share.damage > 0);
@@ -125,12 +113,18 @@ export class MissionReadings {
   });
 
   /**
-   * The check's burst, the challenges board's own pieces thrown further for the larger mark.
+   * Confetti burst of the defeat check.
    */
   protected readonly confetti = CONFETTI;
 
+  /**
+   * Translation service, to format damage and word the strike summaries.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * Formats an amount in the active language for the strikes and stakes.
+   */
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());
   }

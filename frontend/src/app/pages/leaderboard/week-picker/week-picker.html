@@ -8,10 +8,7 @@
   <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
 </button>
 
-<!-- The week on screen, and the handle to every other. The badge carries its place in the
-     campaign; a week outside one wears a dash instead. -->
-<!-- A select-only combobox, like the shared select: focus stays here while the arrows move the
-     highlight through the list, which `aria-activedescendant` points at. -->
+<!-- Select-only combobox: focus stays here, `aria-activedescendant` tracks the highlight. -->
 <button
   #trigger
   (click)="toggle()"
@@ -53,8 +50,7 @@
   <svg aria-hidden="true" class="size-4" lucideChevronRight></svg>
 </button>
 
-<!-- Every week at once, newest first. Runs of weeks are ruled off from each other rather than
-     named: the badge already says whether a week belongs to a campaign. -->
+<!-- Runs of weeks are ruled off, not named: the badge says the campaign. -->
 <div
   #panel
   (keydown)="onKeydown($event)"
@@ -63,14 +59,14 @@
   [id]="listboxId"
   class="menu-panel listbox"
   role="listbox"
+  tabindex="-1"
 >
   <div class="panel-scroll">
     @for (option of options(); track option.weekStart) {
       @if (startsGroup($index)) {
         <hr aria-hidden="true" class="rule" />
       }
-      <!-- The keyboard highlight (`data-active`) wears the pointer's hover tint. Options stay out
-           of the tab order: focus remains on the trigger. -->
+      <!-- Keyboard highlight wears the hover tint; options stay out of the tab order. -->
       <button
         (click)="select(option)"
         [attr.aria-selected]="option.weekStart === selected()"
@@ -87,7 +83,7 @@
           [ngTemplateOutletContext]="{ $implicit: option }"
         />
         <span class="option-span">{{ option.label }}</span>
-        <!-- Who won it, on a column of its own so portraits and names line up down the list. -->
+        <!-- Winner in its own column so portraits line up. -->
         <span class="option-winner">
           @if (option.live) {
             <span class="live label-caption text-2xs">{{

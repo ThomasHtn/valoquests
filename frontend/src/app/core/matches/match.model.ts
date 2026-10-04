@@ -1,12 +1,9 @@
-import { CompetitiveTier } from '@core/players/competitive-tier.model';
-import { GameMode } from './game-mode.model';
+import { CompetitiveTier } from '@core/players/competitive-tier/player-competitive-tier.model';
+import { GameMode } from './game-mode/match-game-mode.model';
 import { MatchResult } from './match-result.model';
 
 /**
- * One entry of a tracked player's paginated match history, as exposed by
- * `GET /api/players/{id}/matches`.
- *
- * Mirrors the backend `MatchResponse`.
+ * One entry of a player's match history. Mirrors the backend `MatchResponse`.
  */
 export interface Match {
   /**
@@ -15,12 +12,12 @@ export interface Match {
   readonly id: number;
 
   /**
-   * Start instant, as an ISO-8601 string.
+   * Start instant, ISO-8601.
    */
   readonly startedAt: string;
 
   /**
-   * Name of the map.
+   * Map name.
    */
   readonly mapName: string;
 
@@ -40,12 +37,12 @@ export interface Match {
   readonly result: MatchResult;
 
   /**
-   * Rounds won by the player's team, or `null` when not reported for the mode.
+   * Rounds won by the player's team, `null` when the mode reports none.
    */
   readonly allyScore: number | null;
 
   /**
-   * Rounds won by the opposing team, or `null` when not reported for the mode.
+   * Rounds won by the opposing team, `null` when the mode reports none.
    */
   readonly enemyScore: number | null;
 
@@ -65,7 +62,7 @@ export interface Match {
   readonly assists: number;
 
   /**
-   * Ratio of kills to deaths, the kill total when deathless, as K/D challenges read it.
+   * Kills per death, the kill total when deathless (as K/D challenges read it).
    */
   readonly kd: number;
 
@@ -80,7 +77,7 @@ export interface Match {
   readonly adr: number;
 
   /**
-   * Share of hits that landed on the head, in percent, or `null` when Henrik reported no shot data.
+   * Headshot share in percent, `null` when Henrik reported no shot data.
    */
   readonly headshotPercentage: number | null;
 
@@ -90,47 +87,37 @@ export interface Match {
   readonly competitiveTier: CompetitiveTier;
 
   /**
-   * Rank rating within the player's tier at the time of the match, or `null` when not available.
+   * Rank rating within the tier at match time, `null` when unavailable.
    */
   readonly rankRating: number | null;
 
   /**
-   * Damage this match dealt to its week's boss, after the day's diminishing returns. `0` for a
-   * match the ruleset does not value, such as a remake.
-   *
-   * The one figure tying a game to the ranking and the colony it fed; every other statistic here is
-   * Valorant's own.
+   * Boss damage after the day's diminishing returns, `0` for an unvalued match (remake).
    */
   readonly valoquestsDamage: number;
 
   /**
-   * Share of its base damage the match kept: `100` for a day's best games, less once the day's
-   * ladder starts reducing them, and `0` for a match that never entered that ladder.
+   * Share of base damage kept, in percent: `0` for a match outside the day's ladder.
    */
   readonly damageCoefficientPercent: number;
 }
 
 /**
- * Another tracked player's line in a match both of them played, as exposed within
- * `GET /api/players/{id}/matches/{matchId}`.
- *
- * The squad is small enough that two tracked players routinely land in the same lobby.
- *
- * Mirrors the backend `MatchTeammateResponse`.
+ * Another tracked player in the same match. Mirrors the backend `MatchTeammateResponse`.
  */
 export interface MatchTeammate {
   /**
-   * Internal identifier of the player.
+   * Player identifier.
    */
   readonly playerId: number;
 
   /**
-   * Name shown across the application.
+   * Display name.
    */
   readonly displayName: string;
 
   /**
-   * Agent name backing the other player's bundled avatar, or `null` when never synchronized.
+   * Agent name backing the bundled avatar, `null` when never synchronized.
    */
   readonly portrait: string | null;
 
@@ -140,12 +127,12 @@ export interface MatchTeammate {
   readonly agentName: string;
 
   /**
-   * Whether the other player shared the requesting player's team.
+   * Whether they shared the requesting player's team.
    */
   readonly sameTeam: boolean;
 
   /**
-   * Outcome for the teammate, always the same as the player’s.
+   * Outcome for the teammate.
    */
   readonly result: MatchResult;
 
@@ -171,14 +158,7 @@ export interface MatchTeammate {
 }
 
 /**
- * Full detail of one tracked player's match, as exposed by
- * `GET /api/players/{id}/matches/{matchId}`.
- *
- * A superset of {@link Match}: same identifier and figures the history list already shows, plus the
- * shot-type breakdown behind the headshot rate, the raw damage and round count, the match's
- * duration, and every other tracked player found in the same lobby.
- *
- * Mirrors the backend `MatchDetailResponse`.
+ * Full detail of one match, superset of `Match`. Mirrors the backend `MatchDetailResponse`.
  */
 export interface MatchDetail {
   /**
@@ -187,17 +167,17 @@ export interface MatchDetail {
   readonly id: number;
 
   /**
-   * Start instant, as an ISO-8601 string.
+   * Start instant, ISO-8601.
    */
   readonly startedAt: string;
 
   /**
-   * Match duration in seconds, or `null` when Henrik did not report it.
+   * Duration in seconds, `null` when Henrik did not report it.
    */
   readonly durationSeconds: number | null;
 
   /**
-   * Name of the map.
+   * Map name.
    */
   readonly mapName: string;
 
@@ -212,17 +192,17 @@ export interface MatchDetail {
   readonly agentName: string;
 
   /**
-   * Outcome of the match for the player.
+   * Outcome for the player.
    */
   readonly result: MatchResult;
 
   /**
-   * Rounds won by the player’s team, or `null` for a mode without a round score.
+   * Rounds won by the player's team, `null` when the mode has no round score.
    */
   readonly allyScore: number | null;
 
   /**
-   * Rounds won by the opposing team, or `null` for a mode without a round score.
+   * Rounds won by the opposing team, `null` when the mode has no round score.
    */
   readonly enemyScore: number | null;
 
@@ -242,7 +222,7 @@ export interface MatchDetail {
   readonly assists: number;
 
   /**
-   * Ratio of kills to deaths, the kill total when deathless, as K/D challenges read it.
+   * Kills per death, the kill total when deathless (as K/D challenges read it).
    */
   readonly kd: number;
 
@@ -272,7 +252,7 @@ export interface MatchDetail {
   readonly legshots: number;
 
   /**
-   * Share of hits that landed on the head, in percent, or `null` when Henrik reported no shot data.
+   * Headshot share in percent, `null` when Henrik reported no shot data.
    */
   readonly headshotPercentage: number | null;
 
@@ -282,7 +262,7 @@ export interface MatchDetail {
   readonly damageDealt: number;
 
   /**
-   * Rounds the match lasted.
+   * Rounds played.
    */
   readonly roundsPlayed: number;
 
@@ -297,7 +277,7 @@ export interface MatchDetail {
   readonly competitiveTier: CompetitiveTier;
 
   /**
-   * Guardian damage the match was worth once the day’s ladder applied.
+   * Guardian damage after the day's ladder.
    */
   readonly valoquestsDamage: number;
 
@@ -307,7 +287,22 @@ export interface MatchDetail {
   readonly damageCoefficientPercent: number;
 
   /**
-   * Every other tracked player found in the same match, on either team.
+   * Other tracked players in the match, either team.
    */
   readonly teammates: readonly MatchTeammate[];
+}
+
+/**
+ * A match's round score, split so each side gets its own styling.
+ */
+export interface MatchScore {
+  /**
+   * Rounds won by the player's team.
+   */
+  readonly ally: number;
+
+  /**
+   * Rounds won by the opposing team.
+   */
+  readonly enemy: number;
 }

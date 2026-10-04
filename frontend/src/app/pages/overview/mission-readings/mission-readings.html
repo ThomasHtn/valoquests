@@ -1,5 +1,3 @@
-<!-- Readings in the order the week is played: the clock, the fight, what Sunday decides, then when
-     the guardian falls. The clock leads because it is the only thing here that moves on its own. -->
 <div class="report bg-text-primary/4">
   @if (showClock()) {
     <div class="rep-clock">
@@ -13,8 +11,7 @@
     </div>
   }
 
-  <!-- The squad against the guardian: both camps mirrored over the track they share, which fills
-       the whole block. -->
+  <!-- Squad versus guardian, mirrored over their shared track. -->
   <div [class.duel--down]="mission().defeated" class="duel" data-card="guardian">
     <div class="duel-camps">
       <div class="camp camp--squad">
@@ -43,7 +40,7 @@
       @if (breach() > 0) {
         <span class="duel-front">
           @for (strike of strikes(); track strike.playerId) {
-            <!-- Click trigger: a mouse still opens it on hover, a tap toggles it on a phone. -->
+            <!-- Click trigger: hover still opens it, a tap toggles it on a phone. -->
             <button
               [appTooltipTemplate]="tip"
               [appTooltip]="strike.summary"
@@ -60,8 +57,7 @@
         </span>
       }
 
-      <!-- The breakthrough post: its percentage only shows on hover, the figures above already
-           tell the fight. Down, the check says it instead. -->
+      <!-- Breakthrough percentage on hover only; the check replaces it once down. -->
       @if (!mission().defeated) {
         <span class="duel-post" aria-hidden="true"></span>
         <span
@@ -74,8 +70,7 @@
       }
     </div>
 
-    <!-- Guardian down: the squad's tint rises behind the camps and a check lands between them, as
-         on a validated challenge; the fatal blow stays readable to assistive technology. -->
+    <!-- Guardian down: the fatal blow stays readable to screen readers. -->
     @if (mission().defeated; as blow) {
       <div
         [attr.aria-label]="
@@ -105,7 +100,7 @@
     }
   </div>
 
-  <!-- What Sunday midnight can still change, as gaps from the forecast the dials below show. -->
+  <!-- What Sunday midnight can still change, as gaps from the forecast. -->
   @if (stakes(); as stakes) {
     <div class="stakes" data-card="stakes">
       <div
@@ -142,7 +137,6 @@
     </div>
   }
 
-  <!-- When the guardian falls at the pace held since Monday, folded under the stakes. -->
   @if (fall(); as fall) {
     <app-fall-forecast [fall]="fall" />
   }

@@ -1,24 +1,27 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { LucideTrash2 } from '@lucide/angular';
-import { AdminActionState, IDLE_ACTION } from '@core/admin/admin-action.model';
+import { AdminActionState } from '@core/admin/commands/admin-action.model';
+import { IDLE_ACTION } from '@core/admin/commands/admin-action.constants';
 import { AdminApi } from '@core/admin/admin-api';
-import { AdminCommandRunner } from '@core/admin/admin-command-runner';
+import { AdminCommandRunner } from '@core/admin/commands/admin-command-runner';
 import { CampaignApi } from '@core/campaign/campaign-api';
 import {
   CAMPAIGN_DIFFICULTIES,
   CAMPAIGN_START_WEEKS,
   CAMPAIGN_WEEK_COUNT,
+} from '@core/campaign/campaign.constants';
+import {
   CampaignDifficulty,
   CampaignStartWeek,
   CampaignStatus,
 } from '@core/campaign/campaign.model';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
-import { daysBetween } from '@core/date/date-time.utils';
-import { addDays, formatDateRange, formatDayMonth } from '@core/date/week-period.utils';
+import { daysBetween, addDays } from '@core/date/date.utils';
+import { formatDateRange, formatDayMonth } from '@core/date/date-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
-import { PAGE_LAYOUT_CLASS } from '@pages/page-layout.constants';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { PageHeader } from '@layout/page-header/page-header';
 import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
@@ -32,13 +35,7 @@ import { CAMPAIGN_DAYS } from './admin-campaigns.constants';
 import { LiveCampaign } from './admin-campaigns.model';
 
 /**
- * Backoffice campaign lifecycle screen.
- *
- * The one place a campaign is opened, and the only moment its difficulty is decided: the choice is
- * frozen for the whole run and sizes the guardians, the groups of wounded and the challenge
- * rewards. Then two commands on the live campaign: stop it, or delete it. A campaign opened by
- * mistake before its first Monday is deleted rather than stopped, since stopping it would leave an
- * empty campaign in the history.
+ * Backoffice campaign lifecycle: open (difficulty frozen for the run), stop or delete.
  */
 @Component({
   selector: 'app-admin-campaigns',
@@ -58,44 +55,58 @@ import { LiveCampaign } from './admin-campaigns.model';
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class AdminCampaigns {
+  /**
+   * Backoffice API, to open, stop and delete campaigns.
+   */
   private readonly adminApi = inject(AdminApi);
 
+  /**
+   * Campaign API, read for the live campaign and the closed ones.
+   */
   private readonly campaignApi = inject(CampaignApi);
 
+  /**
+   * Translation, for the feedback messages and the formatted amounts.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * Runs each command, tracking its state and reporting the outcome.
+   */
   private readonly commandRunner = inject(AdminCommandRunner);
 
   /**
-   * Difficulty the next opening plays at.
+   * Difficulty of the next opening.
    */
   protected readonly difficulty = signal<CampaignDifficulty>('AMATEUR');
 
   /**
-   * The two difficulties, in ladder order, for the selector.
+   * Difficulties in ladder order.
    */
   protected readonly difficulties = CAMPAIGN_DIFFICULTIES;
 
   /**
-   * Monday the next opening starts on.
-   *
-   * Defaults to the next week: opening on the current one is retroactive, and an operator who did
-   * not choose must not start a campaign on days that are already played.
+   * Start week of the next opening, next week by default since the current one is retroactive.
    */
   protected readonly startWeek = signal<CampaignStartWeek>('NEXT_WEEK');
 
   /**
-   * The two start weeks, for the selector.
+   * Start week options.
    */
   protected readonly startWeeks = CAMPAIGN_START_WEEKS;
 
+  /**
+   * Current campaign, the source of the live block.
+   */
   protected readonly campaignResource = this.campaignApi.campaign;
 
+  /**
+   * Closed campaigns, listed under the live one.
+   */
   protected readonly historyResource = this.campaignApi.history;
 
   /**
-   * The campaign opened or running, resolved into the figures an operator decides against, or
-   * `null` between two campaigns.
+   * Opened or running campaign, `null` between campaigns.
    */
   protected readonly live = computed<LiveCampaign | null>(() => {
     const campaign = resourceValue(this.campaignResource, null);
@@ -110,8 +121,7 @@ export class AdminCampaigns {
       return null;
     }
 
-    // Clamped at both ends: before the first Monday the campaign is on its zeroth day, and past
-    // its last Sunday it is on its last one, never beyond.
+    // Clamped: day zero before the first Monday, never past the last day.
     const dayIndex = Math.min(
       CAMPAIGN_DAYS,
       Math.max(0, daysBetween(campaign.firstWeekStart, campaign.today) + 1),
@@ -132,20 +142,38 @@ export class AdminCampaigns {
     };
   });
 
+  /**
+   * Closed campaigns, empty while the history loads or fails.
+   */
   protected readonly closed = computed(() => resourceValue(this.historyResource, []));
 
+  /**
+   * State of the open command.
+   */
   protected readonly openState = signal<AdminActionState>(IDLE_ACTION);
 
+  /**
+   * State of the stop command.
+   */
   protected readonly stopState = signal<AdminActionState>(IDLE_ACTION);
 
+  /**
+   * State of the delete command.
+   */
   protected readonly deleteState = signal<AdminActionState>(IDLE_ACTION);
 
+  /**
+   * Whether the open confirmation dialog is shown.
+   */
   protected readonly openDialogOpen = signal(false);
 
+  /**
+   * Whether the stop confirmation dialog is shown.
+   */
   protected readonly stopDialogOpen = signal(false);
 
   /**
-   * The campaign the delete dialog is asking about, or `null` while it is closed.
+   * Campaign the delete dialog is about, `null` while closed.
    */
   protected readonly pendingDeletion = signal<{
     id: number;
@@ -153,11 +181,13 @@ export class AdminCampaigns {
     opened: boolean;
   } | null>(null);
 
+  /**
+   * Whether a deletion runs, so a second confirm is ignored.
+   */
   protected readonly deleting = signal(false);
 
   /**
-   * What the delete dialog says: an opened campaign has nothing but a roster and ten guardians to
-   * lose, a started one has its days and its weeks.
+   * Delete dialog body, which differs for a campaign not started yet.
    */
   protected readonly deletionBody = computed(() => {
     const pending = this.pendingDeletion();
@@ -172,43 +202,73 @@ export class AdminCampaigns {
     );
   });
 
+  /**
+   * Weeks in a campaign, the denominator of the week and guardian counters.
+   */
   protected readonly weekCount = CAMPAIGN_WEEK_COUNT;
 
+  /**
+   * Days in a campaign, the denominator of the day counter.
+   */
   protected readonly campaignDays = CAMPAIGN_DAYS;
 
+  /**
+   * Date formatter, exposed to the template for the stop date.
+   */
   protected readonly formatDayMonth = formatDayMonth;
 
+  /**
+   * Badge tone, highlighting a running campaign over an opened one.
+   */
   protected statusTone(status: CampaignStatus): StatusBadgeTone {
     return status === 'RUNNING' ? 'brand' : 'neutral';
   }
 
+  /**
+   * Formats a reference or a population in the current language.
+   */
   protected amount(value: number): string {
     return formatDamage(value, this.translation.language());
   }
 
   /**
-   * Formats a closed campaign's span, its last Sunday included.
+   * Closed campaign's span, its last Sunday included.
    */
   protected range(firstWeekStart: string, lastWeekStart: string): string {
     return formatDateRange(firstWeekStart, addDays(lastWeekStart, 6));
   }
 
+  /**
+   * Shows the open confirmation dialog.
+   */
   protected askToOpen(): void {
     this.openDialogOpen.set(true);
   }
 
+  /**
+   * Hides the open confirmation dialog without opening anything.
+   */
   protected dismissOpen(): void {
     this.openDialogOpen.set(false);
   }
 
+  /**
+   * Records the difficulty picked for the next opening.
+   */
   protected chooseDifficulty(difficulty: CampaignDifficulty): void {
     this.difficulty.set(difficulty);
   }
 
+  /**
+   * Records the start week picked for the next opening.
+   */
   protected chooseStartWeek(startWeek: CampaignStartWeek): void {
     this.startWeek.set(startWeek);
   }
 
+  /**
+   * Opens a campaign with the picked difficulty and start week, then closes the dialog.
+   */
   protected async confirmOpen(): Promise<void> {
     await this.commandRunner.run(
       () => this.adminApi.openCampaign(this.difficulty(), this.startWeek()),
@@ -224,14 +284,23 @@ export class AdminCampaigns {
     );
   }
 
+  /**
+   * Shows the stop confirmation dialog.
+   */
   protected askToStop(): void {
     this.stopDialogOpen.set(true);
   }
 
+  /**
+   * Hides the stop confirmation dialog without stopping anything.
+   */
   protected dismissStop(): void {
     this.stopDialogOpen.set(false);
   }
 
+  /**
+   * Stops the running campaign, then closes the dialog.
+   */
   protected async confirmStop(): Promise<void> {
     await this.commandRunner.run(() => this.adminApi.stopCampaign(), {
       state: this.stopState,
@@ -240,14 +309,23 @@ export class AdminCampaigns {
     });
   }
 
+  /**
+   * Opens the delete dialog for one campaign.
+   */
   protected askForDeletion(id: number, number: number, opened: boolean): void {
     this.pendingDeletion.set({ id, number, opened });
   }
 
+  /**
+   * Closes the delete dialog without deleting anything.
+   */
   protected dismissDeletion(): void {
     this.pendingDeletion.set(null);
   }
 
+  /**
+   * Deletes the pending campaign, once even if confirmed twice.
+   */
   protected async confirmDeletion(): Promise<void> {
     const pending = this.pendingDeletion();
     if (pending === null || this.deleting()) {

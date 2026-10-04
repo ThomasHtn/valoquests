@@ -1,9 +1,26 @@
+import { OverviewTabKey } from './overview-tabs.model';
+
 /**
- * How long a tab takes to slide to its new place when the pinned tab changes, in milliseconds.
+ * Tab slide duration when the pinned tab changes, in ms.
  */
 export const TAB_SLIDE_MS = 280;
 
 /**
- * Easing of that slide: a quick start that settles, so the move reads as an answer to the click.
+ * Easing of the tab slide: quick start, soft settle.
  */
 export const TAB_SLIDE_EASING = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+
+/**
+ * Local storage key of the pinned default tab.
+ */
+export const FAVORITE_TAB_KEY = 'valoquests.overview.favoriteTab';
+
+/**
+ * Overview tabs in default bar order.
+ */
+export const OVERVIEW_TABS: readonly OverviewTabKey[] = [
+  'challenges',
+  'contributions',
+  'matches',
+  'campaign',
+];

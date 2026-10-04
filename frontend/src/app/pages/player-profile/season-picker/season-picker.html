@@ -1,6 +1,4 @@
-<!-- Same anatomy as the leaderboard's week picker: arrows around the trigger, which carries a badge
-     (the episode) and a label (the act). The arrows step one act at a time, so they only work on a
-     single act. -->
+<!-- Same anatomy as the week picker; the arrows step one act, so only on a single act. -->
 <button
   (click)="step(1)"
   [attr.aria-label]="'playerProfile.seasonPicker.previous' | translate"
@@ -11,8 +9,7 @@
   <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
 </button>
 
-<!-- A select-only combobox, like the shared select: focus stays here while the arrows move the
-     highlight through the list, which `aria-activedescendant` points at. -->
+<!-- Select-only combobox: focus stays here, `aria-activedescendant` points at the highlight. -->
 <button
   #trigger
   (click)="toggle()"
@@ -54,9 +51,7 @@
   <svg aria-hidden="true" class="size-4" lucideChevronRight></svg>
 </button>
 
-<!-- Every act, newest first, ruled off by episode: the badge names the episode, the label the act. -->
-<!-- Rows stay out of the tab order and carry the keyboard highlight as `data-active`, which
-     `listbox-option` paints like the pointer's hover. -->
+<!-- Acts newest first, ruled off by episode; rows stay out of the tab order (`data-active`). -->
 <div
   #panel
   (keydown)="onKeydown($event)"
@@ -66,6 +61,7 @@
   [id]="listboxId"
   class="menu-panel listbox"
   role="listbox"
+  tabindex="-1"
 >
   <div class="panel-scroll">
     @if (!multiple()) {
@@ -107,7 +103,7 @@
           <span aria-hidden="true" class="mark mark--none">—</span>
         }
         <span class="option-span">{{ option.label }}</span>
-        <!-- Ticked acts, in multiple mode: the same filled square as the shared multi-select. -->
+        <!-- Multiple mode tick: the same filled square as the shared multi-select. -->
         @if (multiple()) {
           <span
             [class]="isSelected(option) ? 'bg-brand-500' : 'border border-text-muted/50'"

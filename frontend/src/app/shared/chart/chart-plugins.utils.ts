@@ -3,13 +3,7 @@ import { ChartType, Plugin } from 'chart.js';
 import { ChartTheme } from './chart-theme.model';
 
 /**
- * Builds the vertical rule following the pointer.
- *
- * Chart.js has no crosshair of its own, and an indexed tooltip without one leaves the reader
- * guessing which abscissa the figures belong to on a chart hundreds of points wide.
- *
- * @param theme - Resolved chart palette.
- * @returns The crosshair plugin, scoped to one chart instance.
+ * Vertical rule following the pointer, which Chart.js lacks.
  */
 export function createCrosshairPlugin<T extends ChartType>(theme: ChartTheme): Plugin<T> {
   return {

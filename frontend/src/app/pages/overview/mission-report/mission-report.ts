@@ -18,23 +18,20 @@ import {
   LucideDynamicIcon,
 } from '@lucide/angular';
 
-import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.model';
+import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
 import { Button } from '@shared/button/button';
 import { CountUp } from '@shared/count-up/count-up';
-import { MissionReport as MissionReportView } from '../overview.model';
+import { MissionReport as MissionReportView } from './mission-report.model';
 import { RESCUE_SEGMENT_COUNT } from './mission-report.constants';
 import { FocusTrap } from '@shared/focus-trap/focus-trap';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
- * The Monday report: what Sunday settled, told as a game's end-of-mission screen over the overview.
- *
- * Three beats, revealed once in sequence: the verdict, the loot brought home, the honours. Opens on
- * its own the first time a settled week is seen, and again from the context bar's button.
+ * Monday report dialog: verdict, loot and honours of what Sunday settled.
  */
 @Component({
   selector: 'app-mission-report',
@@ -61,20 +58,32 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 })
 export class MissionReport {
   /**
-   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   * Icon of each concept, for the template's `svg[lucideIcon]`.
    */
   protected readonly concepts = CONCEPT_ICONS;
 
+  /**
+   * Settled week the dialog reports on.
+   */
   public readonly report = input.required<MissionReportView>();
 
+  /**
+   * Whether the dialog is shown.
+   */
   public readonly open = input.required<boolean>();
 
+  /**
+   * Emitted when the player dismisses the dialog.
+   */
   public readonly closed = output<void>();
 
+  /**
+   * Campaign length, for the "week 4 of 10" heading.
+   */
   protected readonly weekCount = CAMPAIGN_WEEK_COUNT;
 
   /**
-   * The rescue gauge's segments, lit up to the share of wounded brought home.
+   * Rescue gauge segments, lit up to the share of wounded brought home.
    */
   protected readonly segments = computed(() => {
     const lit = Math.round(this.report().rescuedShare * RESCUE_SEGMENT_COUNT);
@@ -82,7 +91,7 @@ export class MissionReport {
   });
 
   /**
-   * Why the rest of the wounded stayed behind: a stock ran short, or the breach fell short.
+   * Why the other wounded stayed behind: a stock or the breach fell short.
    */
   protected readonly leftBehindKey = computed(() => {
     const limiter = this.report().limiter;
@@ -90,8 +99,14 @@ export class MissionReport {
     return `overview.missionReport.leftBehind.${cause}`;
   });
 
+  /**
+   * Active language, to format the report figures.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * Dialog panel, focused on opening so keyboard users land inside it.
+   */
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
 
   constructor() {
@@ -102,10 +117,16 @@ export class MissionReport {
     });
   }
 
+  /**
+   * Formats an amount in the active language for the loot figures.
+   */
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());
   }
 
+  /**
+   * Closes the dialog on Escape, only while it is open.
+   */
   protected onEscape(): void {
     if (this.open()) {
       this.closed.emit();

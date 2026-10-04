@@ -1,21 +1,17 @@
 import { ParamMap } from '@angular/router';
 
-import { PLAYER_SORT_PARAMS } from './players.constants';
-import { PLAYER_SORT_COLUMNS, PlayerSortKey, PlayerSortOrder } from './players.model';
+import { PLAYER_SORT_PARAMS, PLAYER_SORT_COLUMNS } from './players.constants';
+import { PlayerSortKey, PlayerSortOrder } from './players.model';
 
 /**
- * The column a sort key naturally starts on: A to Z for the name, best first for a statistic.
+ * Natural direction of a column: A to Z for the name, best first otherwise.
  */
 export function defaultSortDirection(key: PlayerSortKey): 1 | -1 {
   return key === 'name' ? 1 : -1;
 }
 
 /**
- * Names the order a column and direction produce, in the words the phone's toggle shows.
- *
- * @param key - The sorted column.
- * @param direction - `1` ascending, `-1` descending, as the comparator reads it.
- * @returns The order.
+ * Order produced by a column and direction (`1` ascending), as the phone's toggle words it.
  */
 export function toPlayerSortOrder(key: PlayerSortKey, direction: 1 | -1): PlayerSortOrder {
   const natural = direction === defaultSortDirection(key);
@@ -29,10 +25,7 @@ export function toPlayerSortOrder(key: PlayerSortKey, direction: 1 | -1): Player
 }
 
 /**
- * Reads the squad's sort from the address, falling back to rank, best first.
- *
- * @param params - The route's query parameters.
- * @returns The column and direction to sort on.
+ * Reads the sort from the query parameters, defaulting to rank, best first.
  */
 export function readPlayerSort(params: ParamMap): { key: PlayerSortKey; direction: 1 | -1 } {
   const key =
@@ -46,11 +39,7 @@ export function readPlayerSort(params: ParamMap): { key: PlayerSortKey; directio
 }
 
 /**
- * Writes the squad's sort as query parameters, leaving out the default so the address stays plain.
- *
- * @param key - The column sorted on.
- * @param direction - The direction.
- * @returns The query parameters, `null` for those to remove.
+ * Sort as query parameters; the default maps to `null` so the address stays plain.
  */
 export function writePlayerSort(
   key: PlayerSortKey,

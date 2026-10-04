@@ -7,8 +7,7 @@
   [loadingText]="'playerProfile.progression.loading' | translate"
   (retry)="progressionResource.reload()"
 >
-  <!-- Skeleton shaped like the loaded view — a chart band, then a grid of tiles — so the sections
-       arriving do not shift the page under the reader. -->
+  <!-- Same silhouette as the loaded view so arriving sections do not shift the page. -->
   <div class="flex flex-col gap-6" skeleton>
     <div class="bg-text-primary/4 p-5">
       <span class="mb-4 block h-2.5 w-32 bg-surface-700"></span>
@@ -25,8 +24,7 @@
   </div>
 
   @if (progression(); as data) {
-    <!-- Every section is a flat block on the same tinted ground, separated by the page stack's own
-         rhythm rather than by cards: the eight of them are one report, not eight widgets. -->
+    <!-- Flat blocks on one tinted ground, not cards: the sections read as one report. -->
     <div class="flex flex-col gap-6">
       <section class="bg-text-primary/4 p-5 sm:p-6">
         <app-evolution-chart [evolution]="data.evolution" [seasonOrder]="seasonOrder()" />

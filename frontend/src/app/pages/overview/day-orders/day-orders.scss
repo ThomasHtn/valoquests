@@ -1,5 +1,3 @@
-/* ---------- The orders of the day ---------- */
-
 .day {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -28,8 +26,7 @@
   color: var(--color-text-muted);
 }
 
-/* The card's last line: the day's countdown, then how many operators finished. Pinned to the
-   bottom when the tally beside it stretches the card. */
+/* Pinned to the bottom when the tally beside it stretches the card. */
 .foot {
   display: flex;
   flex-wrap: wrap;
@@ -75,9 +72,9 @@
   color: var(--color-text-secondary);
 }
 
-/* ---------- The tally, as a haul ---------- */
+/* ---------- Tally ---------- */
 
-/* The blow to the guardian, across the column: the day's headline. */
+/* Guardian damage, the day's headline. */
 .hit {
   display: flex;
   align-items: center;
@@ -87,7 +84,7 @@
   box-shadow: inset 3px 0 0 var(--tone);
 }
 
-/* The mission readings' hexagonal mark, one size up. */
+/* The mission readings' hex mark, one size up. */
 .hit-mark {
   display: grid;
   flex: none;
@@ -151,8 +148,7 @@
   color: var(--color-text-muted);
 }
 
-/* The base's four flows, on the challenge card's ground: a faint neutral fill held by a rule in
-   the resource's colour. */
+/* Base flows on the challenge card's ground, ruled in the resource's colour. */
 .loot {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -181,7 +177,6 @@
   color: var(--tone);
 }
 
-/* The figure and what it bought share one line. */
 .tile-val {
   display: flex;
   flex-wrap: wrap;
@@ -197,7 +192,7 @@
   color: var(--tone);
 }
 
-/* Capacity bought by the figure beside it, tinted in its resource. */
+/* Capacity bought by the figure, tinted in its resource. */
 .gain {
   align-self: center;
   padding: 0.3rem 0.65rem 0.3rem 0.55rem;
@@ -212,12 +207,12 @@
   --notch: 0.3rem;
 }
 
-/* A cost reads as a loss, not a gain: rule and figure in grey. The sign does the rest. */
+/* A cost reads as a loss: grey rule and figure. */
 .tile--cost .tile-fig {
   color: var(--color-text-secondary);
 }
 
-/* The squad: one face per operator who played today, absentees left out. */
+/* One face per operator who played today. */
 .crew {
   display: flex;
   flex-wrap: wrap;
@@ -251,8 +246,7 @@
   font-size: 1.5rem;
 }
 
-/* Phone layout: one tile per row, so a figure and its gain keep their line; the faces give way
-   to the count beside them, their hover names being unreachable on touch. */
+/* Phone: one tile per row; faces give way to the count, hover names being unreachable. */
 @media (width < 40rem) {
   .loot {
     grid-template-columns: minmax(0, 1fr);

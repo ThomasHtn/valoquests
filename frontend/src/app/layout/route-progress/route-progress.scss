@@ -1,0 +1,27 @@
+/* Scale only, no layout. */
+
+.route-progress {
+  transform: scaleX(0.85);
+  animation: route-progress-creep 8s cubic-bezier(0.1, 0.7, 0.2, 1) both;
+}
+
+.route-progress--done {
+  transform: scaleX(1);
+  opacity: 0;
+  animation: none;
+  transition:
+    transform 180ms var(--ease-out-quart),
+    opacity 200ms ease-out 80ms;
+}
+
+@keyframes route-progress-creep {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-progress {
+    animation: none;
+  }
+}

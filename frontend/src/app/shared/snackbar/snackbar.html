@@ -1,5 +1,4 @@
-<!-- Live regions present from the start, so screen readers announce the text when it lands in
-     them; a region created together with its text is often missed. -->
+<!-- Present from the start: screen readers often miss a region created with its text. -->
 <div aria-live="polite" class="sr-only" role="status">
   {{ snackbar.current()?.type === 'success' ? snackbar.current()?.text : '' }}
 </div>
@@ -12,11 +11,9 @@
     animate.leave="fx-snack-out"
     class="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:justify-end sm:pr-6"
   >
-    <!-- Keyed by `message.id` via `@for` over a single-element array rather than a plain `@if`: the
-         enter and timebar animations must restart even when the same text is queued twice in a
-         row, which they only do if Angular actually recreates the element. -->
+    <!-- Keyed by id so animations restart when the same text is queued twice. -->
     @for (item of [message]; track item.id) {
-      <!-- Held open while pointed at or focused; the announcement lives in the regions below. -->
+      <!-- Paused while hovered or focused. -->
       <div
         (focusin)="snackbar.pause()"
         (focusout)="snackbar.resume()"
@@ -46,8 +43,7 @@
           <svg aria-hidden="true" class="size-3.5" lucideX></svg>
         </button>
 
-        <!-- Timebar: an inline `animation-duration` rather than a Tailwind utility, since it must
-             match `SNACKBAR_DURATION_MS` exactly instead of one of the scale's fixed steps. -->
+        <!-- Inline duration: it must match the snackbar duration exactly. -->
         <div
           [class]="message.type === 'error' ? 'bg-danger' : 'bg-success'"
           [style.animation-duration.ms]="

@@ -8,14 +8,14 @@ import { WeekOption } from '../leaderboard.model';
 import { WeekPicker } from './week-picker';
 
 /**
- * Builds a week outside any campaign, enough for the list to render.
+ * Week outside any campaign, enough for the list to render.
  */
 function week(weekStart: string): WeekOption {
   return { weekStart, label: weekStart, index: null, group: null, live: false, winner: null };
 }
 
 /**
- * Host binding the picker the way the leaderboard does.
+ * Host binding the picker like the leaderboard.
  */
 @Component({
   imports: [WeekPicker],
@@ -42,7 +42,7 @@ describe('WeekPicker', () => {
     Array.from(fixture.nativeElement.querySelectorAll('[role="option"]'));
 
   /**
-   * Presses a key on the trigger and lets the view catch up.
+   * Presses a key on the trigger and detects changes.
    */
   const press = (key: string): KeyboardEvent => {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });

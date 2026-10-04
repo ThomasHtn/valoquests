@@ -1,13 +1,7 @@
 import { NavGroup } from './sidebar.model';
 
 /**
- * Primary navigation, in display order, chaptered the way the game reads: the expedition (the
- * week's home and its challenges), then the squad (who is winning, who is in it), then help. On
- * the collapsed rail the captions have nothing to render: a hairline stands in for each break.
- *
- * Kept as data rather than repeated markup so the shared layout and long Tailwind class list are
- * written once and iterated with `@for`. Entries without a `routerLink` have no page yet and
- * render as inert.
+ * Primary navigation chapters, in display order.
  */
 export const NAV_GROUPS: readonly NavGroup[] = [
   {
@@ -31,12 +25,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
 ];
 
 /**
- * Navigation shown instead of {@link NAV_GROUPS} while a backoffice session is open.
- *
- * The backoffice replaces the navigation rather than adding to it: the coach signing in is there to
- * operate the tracker, not to browse it, and the two sets of destinations have nothing to do with
- * one another. The public pages stay reachable by URL throughout — the swap is about what the
- * sidebar offers, not about locking anything away.
+ * Navigation replacing {@link NAV_GROUPS} while a backoffice session is open.
  */
 export const ADMIN_NAV_GROUPS: readonly NavGroup[] = [
   {
@@ -51,11 +40,21 @@ export const ADMIN_NAV_GROUPS: readonly NavGroup[] = [
 ];
 
 /**
- * Age past which the last synchronization reads as late: the 30-minute cadence plus a run's margin.
+ * Age past which the last synchronization reads as late: 30-minute cadence plus a margin.
  */
 export const SYNC_STALE_AFTER_MS = 40 * 60_000;
 
 /**
- * How often the sidebar's elapsed synchronization time is refreshed.
+ * Refresh period of the elapsed synchronization time.
  */
 export const SIDEBAR_CLOCK_MS = 30_000;
+
+/**
+ * Utilities of the active navigation entry.
+ */
+export const NAV_ACTIVE_CLASS = ' bg-brand-500/12 text-brand-500 before:bg-brand-500';
+
+/**
+ * Utilities of the open language trigger: a stronger hover state.
+ */
+export const LANGUAGE_MENU_OPEN_CLASS = 'bg-brand-500/8 text-brand-500';

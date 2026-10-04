@@ -29,45 +29,33 @@ import {
   LucideX,
 } from '@lucide/angular';
 
-import { AdminSession } from '@core/admin/admin-session';
+import { AdminSession } from '@core/admin/session/admin-session';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Language } from '@core/i18n/translation.model';
 import { resourceValue } from '@core/http/resource-state.utils';
 import { SynchronizationApi } from '@core/synchronization/synchronization-api';
-import { NavigationPanel } from '@layout/navigation-panel';
+import { NavigationPanel } from '@layout/navigation-panel/navigation-panel';
 import {
   LANGUAGE_MENU_OPEN_CLASS,
   NAV_ACTIVE_CLASS,
-  resolveDrawerClasses,
-  resolveRailClasses,
-} from './sidebar-classes.utils';
-import { ADMIN_NAV_GROUPS, NAV_GROUPS } from './sidebar.constants';
+  ADMIN_NAV_GROUPS,
+  NAV_GROUPS,
+  SIDEBAR_CLOCK_MS,
+} from './sidebar.constants';
+import { resolveDrawerClasses, resolveRailClasses } from './sidebar-classes.utils';
 import { NavItem } from './sidebar.model';
-import { formatElapsed } from '@core/date/relative-time.utils';
+import { formatElapsed } from '@core/date/date-format.utils';
 import {
   formatSynchronizationTimestamp,
   isNavItemActive,
   isSynchronizationStale,
 } from './sidebar.utils';
-import { SIDEBAR_CLOCK_MS } from './sidebar.constants';
 import { FocusTrap } from '@shared/focus-trap/focus-trap';
 
 /**
- * Persistent navigation sidebar.
- *
- * Displays the primary navigation, the last synchronization time and the language switch. Renders
- * as a vertical rail on `lg` and above, where it can be collapsed to icons only. Below that
- * breakpoint the same panel becomes a drawer sliding in from the left, so a phone keeps the full
- * labelled navigation instead of a truncated tab bar.
- *
- * The drawer's trigger is not here: below `lg` it is the burger of the routed page's context bar
- * (`layout/page-header/`), so the application shows one bar at the top of the page rather than a
- * navigation bar stacked over a page header. The open state the two share lives in
- * {@link NavigationPanel}.
- *
- * The host is `display: contents` so the `<aside>` is itself a flex item of the application shell,
- * sitting beside the routed content once the shell switches to a row on `lg`.
+ * Navigation rail from `lg` up (collapsible), drawer below it opened by the page header's burger.
+ * The open state lives in {@link NavigationPanel}.
  */
 @Component({
   selector: 'app-sidebar',
@@ -100,37 +88,32 @@ import { FocusTrap } from '@shared/focus-trap/focus-trap';
 })
 export class Sidebar {
   /**
-   * Data-access service backing the shared synchronization status shown in the footer.
+   * Synchronization API, whose status feeds the last synchronization readout.
    */
   private readonly synchronizationApi = inject(SynchronizationApi);
 
   /**
-   * i18n service used to translate the footer's loading, error and unknown fallback labels.
+   * Translation service, for the labels and the language switcher.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Router used to track the active route for {@link isNavItemActive}.
+   * Router, to track the current URL and leave the backoffice on sign-out.
    */
   private readonly router = inject(Router);
 
   /**
-   * Backoffice session, which decides which set of navigation entries the rail offers.
+   * Backoffice session, to switch the navigation and sign out.
    */
   private readonly adminSession = inject(AdminSession);
 
   /**
-   * Shared open state of the drawer, whose trigger lives in the routed page's context bar.
+   * Drawer state, shared with the page header's burger.
    */
   protected readonly navigationPanel = inject(NavigationPanel);
 
   /**
-   * URL of the currently active route, refreshed on every navigation.
-   *
-   * Backs {@link isNavItemActive}: a nav entry can stay highlighted across more than the one route
-   * its own `routerLink` points to (see `NavItem.activeRoutes`), which the declarative
-   * `routerLinkActive` directive cannot express on its own, so active-state matching is done here
-   * instead.
+   * Current URL, matched by hand since `routerLinkActive` cannot express `activeRoutes`.
    */
   private readonly currentUrl = toSignal(
     this.router.events.pipe(
@@ -141,23 +124,17 @@ export class Sidebar {
   );
 
   /**
-   * Whether the sidebar is rendered as an icon-only collapsed rail.
+   * Whether the rail is collapsed to icons.
    */
   protected readonly collapsed = signal(false);
 
   /**
    * Whether a backoffice session is open.
-   *
-   * Also gates the sign-out control in the footer, which is the only way back out of the
-   * backoffice: nothing in the application links into it, so nothing links out of it either.
    */
   protected readonly adminMode = computed(() => this.adminSession.isAuthenticated());
 
   /**
-   * Navigation chapters currently on offer.
-   *
-   * The backoffice replaces the public entries rather than adding to them — see
-   * {@link ADMIN_NAV_GROUPS}.
+   * Navigation chapters on offer, the backoffice ones replacing the public ones.
    */
   protected readonly navGroups = computed(() => (this.adminMode() ? ADMIN_NAV_GROUPS : NAV_GROUPS));
 
@@ -167,23 +144,22 @@ export class Sidebar {
   protected readonly supportedLanguages = this.translation.supportedLanguages;
 
   /**
-   * Currently active language, marking the pressed button of the switcher.
+   * Active language.
    */
   protected readonly language = this.translation.language;
 
   /**
-   * Tailwind utilities driven by the collapsed state, resolved once per change. See
-   * `sidebar-classes.utils.ts` for why they are resolved in code rather than bound per class.
+   * Utilities driven by the collapsed state.
    */
   protected readonly rail = computed(() => resolveRailClasses(this.collapsed()));
 
   /**
-   * Tailwind utilities driven by the drawer's open state, below `lg`.
+   * Utilities driven by the drawer's open state.
    */
   protected readonly drawer = computed(() => resolveDrawerClasses(this.navigationPanel.isOpen()));
 
   /**
-   * Language trigger utilities: its collapsed-rail size plus its own open state.
+   * Language trigger utilities: collapsed-rail size plus open state.
    */
   protected readonly languageButtonClass = computed(() => {
     const stateClass = this.languageMenuOpen() ? LANGUAGE_MENU_OPEN_CLASS : '';
@@ -191,39 +167,32 @@ export class Sidebar {
   });
 
   /**
-   * Whether the language switcher's panel is open.
+   * Whether the language panel is open.
    */
   protected readonly languageMenuOpen = signal(false);
 
   /**
-   * Id of the language switcher's panel, referenced by the trigger's `aria-controls`.
+   * Language panel id, for the trigger's `aria-controls`.
    */
   protected readonly languageMenuId = 'sidebar-language-menu';
 
   /**
-   * Host element of the language switcher (trigger + panel), used to detect clicks landing outside
-   * it so the panel closes without needing a backdrop.
+   * Language switcher host, to close the panel on outside clicks.
    */
   private readonly languageMenuElement = viewChild<ElementRef<HTMLElement>>('languageMenu');
 
   /**
-   * Drawer's close button, focused when the drawer opens so keyboard and screen-reader users land
-   * inside the panel they just summoned.
+   * Drawer close button, focused when the drawer opens.
    */
   private readonly closeMenuButton = viewChild<ElementRef<HTMLButtonElement>>('closeMenuButton');
 
   /**
-   * Reactive resource polling whether a synchronization runs and when the last one finished.
+   * Synchronization status, behind the last synchronization label and the status dot.
    */
   private readonly statusResource = this.synchronizationApi.status;
 
   /**
-   * "In progress" while a synchronization runs, else the instant the last one finished, shown in
-   * the footer.
-   *
-   * Resolves to a translated loading, error or unknown fallback while the backing resource is not
-   * ready or no synchronization has finished successfully yet. The minute poll keeps the previous
-   * value on screen rather than flashing the loading label.
+   * "In progress", the time since the last synchronization, or a loading/error fallback.
    */
   protected readonly lastSyncLabel = computed(() => {
     const status = resourceValue(this.statusResource, null);
@@ -244,12 +213,12 @@ export class Sidebar {
   });
 
   /**
-   * The clock the elapsed time reads, ticking every half minute.
+   * Clock of the elapsed time, ticking every half minute.
    */
   private readonly now = signal(Date.now());
 
   /**
-   * Whether the last synchronization is older than the 30-minute cadence allows, while none runs.
+   * Whether the last synchronization is late while none runs.
    */
   protected readonly syncStale = computed(() => {
     const status = resourceValue(this.statusResource, null);
@@ -261,7 +230,7 @@ export class Sidebar {
   });
 
   /**
-   * The exact time behind the elapsed one, then what a synchronization does, and why it is late.
+   * Exact time, lateness warning, then what a synchronization does.
    */
   protected readonly lastSyncTooltip = computed(() => {
     const t = (key: string, params?: Record<string, string>): string =>
@@ -280,16 +249,14 @@ export class Sidebar {
   });
 
   /**
-   * Availability of the backend API, inferred from the shared status resource used to resolve
-   * {@link lastSyncLabel}.
+   * Backend availability, inferred from the status resource.
    */
   protected readonly apiStatus = computed<'online' | 'offline'>(() =>
     this.statusResource.error() ? 'offline' : 'online',
   );
 
   /**
-   * Translated label describing the current {@link apiStatus}, used as the status dot's
-   * accessible name and tooltip.
+   * Status dot's accessible name and tooltip.
    */
   protected readonly apiStatusLabel = computed(() =>
     this.translation.translate(`sidebar.lastSync.status.${this.apiStatus()}`),
@@ -299,14 +266,7 @@ export class Sidebar {
     const clock = setInterval(() => this.now.set(Date.now()), SIDEBAR_CLOCK_MS);
     inject(DestroyRef).onDestroy(() => clearInterval(clock));
 
-    // Moves focus into the drawer as it opens, so keyboard and screen-reader users land inside the
-    // panel they just summoned rather than back at the top of the document.
-    //
-    // An after-render effect rather than a plain one: while closed the panel is
-    // `visibility: hidden`, which makes its controls unfocusable, and the class driving that only
-    // lands once the state change has been rendered. It reacts to the shared state rather than
-    // sitting in an open handler, since the control that opens the drawer belongs to the routed
-    // page's context bar, not to this component.
+    // After render: the closed panel is `visibility: hidden`, so its button is focusable only then.
     afterRenderEffect(() => {
       if (this.navigationPanel.isOpen()) {
         this.closeMenuButton()?.nativeElement.focus();
@@ -315,41 +275,28 @@ export class Sidebar {
   }
 
   /**
-   * Whether `item` should render as the active navigation entry for the current route. See
-   * {@link isNavItemActive} in `sidebar.utils.ts` for the matching rule.
-   *
-   * @param item - The navigation entry to check.
-   * @returns Whether the entry is active for the current route.
+   * Whether `item` is active for the current route.
    */
   protected isNavItemActive(item: NavItem): boolean {
     return isNavItemActive(this.currentUrl(), item);
   }
 
   /**
-   * Utilities layered onto an active entry on top of the rail's `navItem` class, empty otherwise.
-   *
-   * @param item - The navigation entry to check.
-   * @returns The active-state utilities, or the empty string.
+   * Active-state utilities of `item`, empty when inactive.
    */
   protected navActiveClass(item: NavItem): string {
     return this.isNavItemActive(item) ? NAV_ACTIVE_CLASS : '';
   }
 
   /**
-   * Toggles the sidebar between its expanded and icon-only collapsed state.
+   * Toggles the collapsed rail.
    */
   protected toggleCollapsed(): void {
     this.collapsed.update((collapsed) => !collapsed);
   }
 
   /**
-   * Expands the rail when a click lands on empty space while it is collapsed, mirroring
-   * the rail's cursor affordance.
-   *
-   * Ignores clicks landing inside a button or link — those already carry their own behaviour (the
-   * collapse toggle, navigation) and must not also re-expand the rail from underneath them.
-   *
-   * @param event - The click event bubbling up from the rail.
+   * Expands the collapsed rail on a click outside any button or link.
    */
   protected onRailClick(event: MouseEvent): void {
     if (!this.collapsed()) {
@@ -364,24 +311,14 @@ export class Sidebar {
   }
 
   /**
-   * Closes the drawer, returning focus to the control that opened it.
-   *
-   * Safe to call from the rail too, where there is no drawer to close: the shared state guards on
-   * its own open state.
+   * Closes the drawer, returning focus to its opener; a no-op on the rail.
    */
   protected closeMobileMenu(): void {
     this.navigationPanel.close();
   }
 
   /**
-   * Dismisses the drawer once a navigation entry has been activated, and hands focus to the page
-   * that entry just opened.
-   *
-   * Focus cannot go back to the burger the way it does on a plain dismissal: the routed page owns
-   * it, so the one that opened the drawer is destroyed by this very navigation. The routed content
-   * is the right landing point anyway — it is what the visitor asked for, and it is already the
-   * skip link's target, so it is focusable. It is also the shell's own element rather than the
-   * page's, so it outlives the navigation and can be focused straight away.
+   * Closes the drawer after navigating and focuses the content, since the burger is destroyed.
    */
   protected onNavItemActivated(): void {
     if (!this.navigationPanel.isOpen()) {
@@ -393,14 +330,7 @@ export class Sidebar {
   }
 
   /**
-   * Switches the application to `language` and closes the switcher's panel.
-   *
-   * The returned promise is deliberately not awaited: the switch is already reflected by the
-   * `language` signal the moment it is set, and the dictionary it then loads swaps in on its own
-   * through {@link TranslatePipe}. Failures are handled inside the service, which falls back to
-   * rendering raw keys rather than rejecting.
-   *
-   * @param language - The language to switch to.
+   * Switches language without awaiting: the dictionary swaps in on its own.
    */
   protected switchLanguage(language: Language): void {
     void this.translation.setLanguage(language);
@@ -408,17 +338,14 @@ export class Sidebar {
   }
 
   /**
-   * Opens or closes the language switcher's panel.
+   * Toggles the language panel.
    */
   protected toggleLanguageMenu(): void {
     this.languageMenuOpen.update((open) => !open);
   }
 
   /**
-   * Closes the backoffice session and returns to the public application.
-   *
-   * Navigating away is part of the action rather than left to the visitor: the pages the session
-   * was on are guarded, so staying on one would only bounce back to the sign-in screen.
+   * Signs out and leaves the guarded backoffice pages for the overview.
    */
   protected signOutOfAdmin(): void {
     this.adminSession.signOut();
@@ -427,12 +354,7 @@ export class Sidebar {
   }
 
   /**
-   * Closes the language switcher's panel when a click lands outside it.
-   *
-   * Bound to the whole document rather than a host listener since the switcher is one control
-   * among several in this component, not the whole component.
-   *
-   * @param event - The document-wide click event.
+   * Closes the language panel on a click outside it.
    */
   protected onDocumentClick(event: MouseEvent): void {
     if (!this.languageMenuOpen()) {
@@ -446,10 +368,7 @@ export class Sidebar {
   }
 
   /**
-   * Dismisses the innermost open layer on Escape, matching the ARIA disclosure pattern: the
-   * language panel first, since it is stacked on top of the drawer, then the drawer itself.
-   *
-   * @param event - The document-wide keydown event.
+   * Escape closes the innermost layer: the language panel, then the drawer.
    */
   protected onDocumentKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Escape') {
@@ -458,7 +377,7 @@ export class Sidebar {
 
     if (this.languageMenuOpen()) {
       this.languageMenuOpen.set(false);
-      // Back to the trigger, or focus would fall to the document once the panel disappears.
+      // Back to the trigger, or focus would fall to the document.
       this.languageMenuElement()?.nativeElement.querySelector<HTMLElement>('button')?.focus();
       return;
     }

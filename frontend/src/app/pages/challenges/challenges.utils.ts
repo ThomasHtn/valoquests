@@ -1,41 +1,19 @@
-import { ChallengeProgress, RosterPlayer } from '@core/challenges/challenge.model';
-import { localMidnight } from '@core/date/date-time.utils';
-import { resolvePlayerAvatarUrl } from '@core/players/player-avatar.utils';
-import { formatFigure } from '@core/i18n/number-format.utils';
-import { MAX_SEGMENTED_TARGET, RULE_NUMBER } from './challenges.constants';
-import {
-  BoardMark,
-  BoardRow,
-  ChallengeCard,
-  ChallengeLook,
-  ChallengeOperator,
-  ChallengeRung,
-  DayCell,
-  DayPickSource,
-  MarkDetail,
-  OperatorProgress,
-  RulePart,
-} from './challenges.model';
+import { ChallengeProgress } from '@core/challenges/challenge.model';
+import { ChallengeOperator } from '@core/challenges/card/challenge-card.model';
+import { progressFraction } from '@core/challenges/card/challenge-card.utils';
+import { localMidnight } from '@core/date/date.utils';
+import { RULE_NUMBER } from './challenges.constants';
+import { DayCell, DayPickSource, RulePart } from './challenges.model';
 
 /**
- * The day the daily row follows by default: the last drawn day that is not ahead.
- *
- * @param days - The week's seven cells.
- * @returns The day's index, or `null` before the first draw.
+ * Default picked day: the last drawn day not ahead, `null` before the first draw.
  */
 export function defaultPickedDay(days: readonly DayCell[]): number | null {
   return days.filter((day) => day.drawn && day.state !== 'ahead').at(-1)?.index ?? null;
 }
 
 /**
- * Keeps the day the reader picked across a background reload, and follows the default otherwise.
- *
- * A reload rebuilds the cells without changing the week; only a new week or a pick that no longer
- * points at a drawn day sends the row back to the default.
- *
- * @param source - The week on screen and its cells.
- * @param previous - The previous source and pick, absent on the first resolution.
- * @returns The day to show.
+ * Keeps the reader's pick across a reload; a new week or an undrawn pick falls back to default.
  */
 export function resolvePickedDay(
   source: DayPickSource,
@@ -64,179 +42,7 @@ export function shiftDay(isoDate: string, offset: number): string {
 }
 
 /**
- * Share of the target one operator reached, in [0, 1]; an open-ended challenge is empty or full.
- */
-function progressFraction(target: number | null, value: number, done: boolean): number {
-  if (done) {
-    return 1;
-  }
-  return target !== null && target > 0 ? Math.min(1, value / target) : 0;
-}
-
-/**
- * One line per operator on a challenge card, the furthest along first.
- *
- * @param operators - The roster, in its own order, which settles ties.
- * @param target - Value to reach, or `null` for an open-ended challenge.
- * @param progressOf - Where one operator stands on the challenge.
- * @param format - Formats a figure for the band's labels.
- * @returns The card's lines.
- */
-export function buildRungs(
-  operators: readonly ChallengeOperator[],
-  target: number | null,
-  progressOf: (playerId: number) => OperatorProgress,
-  format: (amount: number) => string,
-): ChallengeRung[] {
-  return operators
-    .map((operator, index) => {
-      const { value, done } = progressOf(operator.playerId);
-      const rung: ChallengeRung = {
-        playerId: operator.playerId,
-        name: operator.name,
-        portrait: operator.portrait,
-        fraction: progressFraction(target, value, done),
-        value,
-        valueLabel: format(value),
-        targetLabel: target === null ? '' : format(target),
-        done,
-        idle: !done && value === 0,
-      };
-      return { rung, index };
-    })
-    .sort((left, right) => right.rung.fraction - left.rung.fraction || left.index - right.index)
-    .map(({ rung }) => rung);
-}
-
-/**
- * The line a band's tooltip reads: the exact figures its compact labels round, and what remains.
- *
- * @param rung - The operator's line.
- * @param target - Value to reach, or `null` for an open-ended challenge.
- * @param locale - `Intl` locale the figures are written in.
- * @param translate - Resolves a `challenges.card.bandTooltip` key with its parameters.
- * @returns The worded line.
- */
-export function describeRung(
-  rung: ChallengeRung,
-  target: number | null,
-  locale: string,
-  translate: (key: string, params: Record<string, string | number>) => string,
-): string {
-  const value = formatFigure(rung.value, locale);
-  if (target === null || target <= 0) {
-    return translate(rung.done ? 'openEndedDone' : 'openEnded', { value });
-  }
-  const params = { value, target: formatFigure(target, locale) };
-  if (rung.done) {
-    return translate('done', params);
-  }
-  const remaining = Math.max(0, target - rung.value);
-  // `count` picks the plural branch of the remaining units.
-  return translate('open', {
-    ...params,
-    remaining: formatFigure(remaining, locale),
-    count: remaining,
-  });
-}
-
-/**
- * An operator's progress laid out for its hover bubble: exact figures and what remains or exceeds.
- *
- * @param rung - The operator's line.
- * @param target - Value to reach, or `null` for an open-ended challenge.
- * @param tone - Accent colour of the challenge.
- * @param locale - `Intl` locale the figures are written in.
- * @returns The bubble's content.
- */
-export function toMarkDetail(
-  rung: ChallengeRung,
-  target: number | null,
-  tone: string,
-  locale: string,
-): MarkDetail {
-  const state = rung.done ? 'done' : rung.idle ? 'idle' : 'open';
-  const base = { name: rung.name, tone, state, value: formatFigure(rung.value, locale) } as const;
-  if (target === null || target <= 0) {
-    return {
-      ...base,
-      target: '',
-      gap: 'none',
-      gapLabel: '',
-      gapCount: 0,
-    };
-  }
-  const surplus = rung.value - target;
-  const gap = surplus > 0 ? 'surplus' : rung.done ? 'none' : 'remaining';
-  const gapCount = gap === 'surplus' ? surplus : gap === 'remaining' ? target - rung.value : 0;
-  return {
-    ...base,
-    target: formatFigure(target, locale),
-    gap,
-    gapLabel:
-      gap === 'none' ? '' : `${gap === 'surplus' ? '+' : ''}${formatFigure(gapCount, locale)}`,
-    gapCount,
-  };
-}
-
-/**
- * The roster as the cards line it up.
- */
-export function toOperators(roster: readonly RosterPlayer[]): ChallengeOperator[] {
-  return roster.map((operator) => ({
-    playerId: operator.id,
-    name: operator.displayName,
-    portrait: resolvePlayerAvatarUrl(operator.portrait),
-  }));
-}
-
-/**
- * A challenge as one card shows it, whichever page draws it.
- *
- * @param challenge - The drawn challenge and each operator's progress on it.
- * @param look - Tone, mark and key line of the card.
- * @param operators - The roster, in its own order.
- * @param rescueActive - Whether a running campaign turns validations into wounded brought home.
- * @param format - Formats a figure for the band's labels.
- * @returns The card.
- */
-export function buildChallengeCard(
-  challenge: ChallengeProgress,
-  look: ChallengeLook,
-  operators: readonly ChallengeOperator[],
-  rescueActive: boolean,
-  format: (amount: number) => string,
-): ChallengeCard {
-  const rungs = buildRungs(
-    operators,
-    challenge.targetValue,
-    (playerId) => {
-      const progress = challenge.players.find((line) => line.playerId === playerId);
-      return { value: progress?.currentValue ?? 0, done: progress?.completed ?? false };
-    },
-    format,
-  );
-  return {
-    ...look,
-    name: challenge.name,
-    description: challenge.description,
-    survivors: challenge.survivors,
-    rankingPoints: challenge.rankingPoints,
-    rescueActive,
-    target: challenge.targetValue,
-    rungs,
-    doneCount: rungs.filter((rung) => rung.done).length,
-  };
-}
-
-/**
- * The board's operator order: the pinned one first, then by weekly challenges validated, then by
- * weekly progress, the roster's order settling ties.
- *
- * @param operators - The roster, in its own order.
- * @param weekly - The week's challenges and each operator's progress on them.
- * @param pinnedId - The operator the reader pinned, or `null`.
- * @returns The operators in board order.
+ * Board order: pinned first, then validated count, then progress, roster order on ties.
  */
 export function orderOperators(
   operators: readonly ChallengeOperator[],
@@ -266,85 +72,7 @@ export function orderOperators(
 }
 
 /**
- * A compact figure split from its unit (`12,7k` into `12,7` and `k`), so the unit can be set smaller.
- */
-export function splitCompactFigure(label: string): { figure: string; unit: string } {
-  const match = /^(.*\d)(\D*)$/.exec(label);
-  return match ? { figure: match[1], unit: match[2] } : { figure: label, unit: '' };
-}
-
-/**
- * One operator's mark on a board row.
- *
- * @param rung - The operator's line on the challenge.
- * @param target - Value to reach, or `null` for an open-ended challenge.
- * @param tip - Worded progress, operator named.
- * @param detail - The exact figures the hover bubble lays out.
- * @returns The mark.
- */
-export function toBoardMark(
-  rung: ChallengeRung,
-  target: number | null,
-  tip: string,
-  detail: MarkDetail,
-): BoardMark {
-  const segmented = target !== null && target >= 1 && target <= MAX_SEGMENTED_TARGET;
-  return {
-    ...rung,
-    ...splitCompactFigure(rung.valueLabel),
-    tip,
-    detail,
-    segments: segmented
-      ? Array.from({ length: target }, (_, index) => rung.done || index < Math.floor(rung.value))
-      : [],
-  };
-}
-
-/**
- * A challenge card as the board lays it out, one mark per operator in the given order.
- *
- * @param challenge - The drawn challenge, which keys the row.
- * @param card - The challenge as one card shows it.
- * @param rungs - The card's lines, in the order the marks follow.
- * @param closesAt - When a running day's challenge closes; `null` for a weekly one or a closed day.
- * @param locale - `Intl` locale the figures are written in.
- * @param translate - Resolves a full translation key with its parameters.
- * @returns The row.
- */
-export function toBoardRow(
-  challenge: ChallengeProgress,
-  card: ChallengeCard,
-  rungs: readonly ChallengeRung[],
-  closesAt: number | null,
-  locale: string,
-  translate: (key: string, params: Record<string, string | number>) => string,
-): BoardRow {
-  const marks = rungs.map((rung) => {
-    const tip = describeRung(rung, card.target, locale, (key, params) =>
-      translate(`challenges.card.bandTooltip.${key}`, params),
-    );
-    const named = translate('challenges.board.markTip', { name: rung.name, tip });
-    return toBoardMark(
-      rung,
-      card.target,
-      named,
-      toMarkDetail(rung, card.target, card.tone, locale),
-    );
-  });
-  return {
-    ...card,
-    key: `${challenge.cadence}-${challenge.id}-${challenge.day ?? ''}`,
-    daily: challenge.cadence === 'DAILY',
-    closesAt,
-    marks,
-  };
-}
-
-/**
- * Cuts a rule into plain words and the numbers it holds.
- *
- * @param rule - The translated rule of a challenge.
- * @returns The rule's stretches, in order; joined back they give the rule unchanged.
+ * Cuts a rule into words and numbers; joined back they give the rule unchanged.
  */
 export function toRuleParts(rule: string): RulePart[] {
   const parts: RulePart[] = [];

@@ -2,14 +2,7 @@ import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { computed, Resource, ResourceRef, Signal } from '@angular/core';
 
 /**
- * Combines the loading state of several resources a single view depends on.
- *
- * A reload over a successful value keeps that value on screen until the new one lands: swapping the
- * view for its skeleton on every background refresh would collapse the page and lose the reader's
- * scroll. A retry after an error still counts as loading.
- *
- * @param resources - The resources backing the view.
- * @returns Whether at least one of them is loading with nothing valid to show meanwhile.
+ * Whether any resource loads with nothing to show; a reload over a value keeps the page.
  */
 export function anyLoading(...resources: readonly Resource<unknown>[]): Signal<boolean> {
   return computed(() =>
@@ -22,54 +15,29 @@ export function anyLoading(...resources: readonly Resource<unknown>[]): Signal<b
 }
 
 /**
- * Combines the error state of several resources a single view depends on.
- *
- * A view is only as healthy as its least healthy dependency, so one failed request is enough to
- * show the error state rather than a partially populated screen.
- *
- * @param resources - The resources backing the view.
- * @returns Whether at least one of them failed to load.
+ * Whether any resource failed, so the view shows its error rather than a partial screen.
  */
 export function anyError(...resources: readonly Resource<unknown>[]): Signal<boolean> {
   return computed(() => resources.some((resource) => resource.error() !== undefined));
 }
 
 /**
- * Reloads every resource a single view depends on.
- *
- * Counterpart to {@link anyLoading} and {@link anyError}: a view that reports the combined state of
- * several resources must also retry all of them, since it cannot tell which one failed.
- *
- * @param resources - The resources backing the view.
+ * Reloads every resource of a view, which cannot tell which one failed.
  */
 export function reloadAll(...resources: readonly ResourceRef<unknown>[]): void {
   resources.forEach((resource) => resource.reload());
 }
 
 /**
- * Reads a resource's current value, without throwing while it is loading or has failed.
- *
- * `Resource.value()` throws once a resource settles into an error state (e.g. the backend is
- * unreachable), even for resources declared with a `defaultValue`. Every computed or template
- * expression that derives from a resource's value must go through this guard instead of calling
- * `value()` directly, so a failed request degrades to `fallback` rather than breaking navigation.
- *
- * @param resource - The resource to read.
- * @param fallback - The value to use while the resource has no defined value yet.
- * @returns The resource's current value, or `fallback`.
+ * Resource value, or `fallback` while it has none.
+ * Always read through this: `value()` throws on error even with a `defaultValue`.
  */
 export function resourceValue<T, F>(resource: Resource<T>, fallback: F): T | F {
   return resource.hasValue() ? resource.value() : fallback;
 }
 
 /**
- * Whether a resource failed because the backend does not know what it asked for (HTTP 404).
- *
- * Told apart from other failures so the view can say the record does not exist, which no retry
- * would fix, rather than blame the server.
- *
- * @param resource - The resource to inspect.
- * @returns Whether its error is a 404 response.
+ * Whether a resource failed with a 404, which no retry would fix.
  */
 export function isNotFound(resource: Resource<unknown>): boolean {
   const error = resource.error();

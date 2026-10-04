@@ -1,7 +1,7 @@
 @if (open()) {
   @let report = this.report();
 
-  <!-- Scrim. Decorative: the dialog closes from its own buttons and from Escape too. -->
+  <!-- Decorative scrim: the dialog also closes from its buttons and Escape. -->
   <div
     (click)="closed.emit()"
     animate.enter="fx-scrim-in"
@@ -22,7 +22,7 @@
     role="dialog"
     tabindex="-1"
   >
-    <!-- Fixed header: the report's title and the week it covers, with the one framed exit. -->
+    <!-- Fixed header: title, week and the framed exit. -->
     <header class="rep-head">
       <span aria-hidden="true" class="rep-head-icon">
         <svg class="size-4" lucideFileText></svg>
@@ -49,7 +49,6 @@
     </header>
 
     <div class="rep-scroll">
-      <!-- The verdict, as a game's end screen says it. -->
       <div class="rep-banner">
         <p class="rep-verdict" id="mission-report-verdict">
           {{
@@ -80,7 +79,6 @@
         </p>
       </div>
 
-      <!-- The loot: the wounded first, the week's harvest after. -->
       <section [attr.aria-label]="'overview.missionReport.loot' | translate" class="rep-loot">
         <div class="rep-main">
           <span aria-hidden="true" class="rep-hex rep-hex--lg clip-hex text-brand-400"
@@ -150,7 +148,6 @@
         }
       </section>
 
-      <!-- The honours: the champion crowned, the four titles handed out as medals. -->
       @if (report.titles; as titles) {
         <section
           [attr.aria-label]="'overview.missionReport.honours' | translate"

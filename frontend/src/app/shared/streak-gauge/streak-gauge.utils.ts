@@ -1,18 +1,16 @@
-import { daysBetween, localMidnight } from '@core/date/date-time.utils';
+import { daysBetween, localMidnight } from '@core/date/date.utils';
 import { Language } from '@core/i18n/translation.model';
 import { StreakPip } from './streak-gauge.model';
 
 /**
- * Bonus a streak of that many days pays: nothing on the first day, two percent per day after,
- * capped at ten — the barème's ladder, restated for an operator who has not played yet and whose
- * streak the daily board therefore does not price.
+ * Streak bonus in percent (0 on day one, +2 per day, max 10) for operators not yet priced.
  */
 export function streakBonusOf(streakDays: number): number {
   return Math.max(0, Math.min(10, (streakDays - 1) * 2));
 }
 
 /**
- * Lays out the week from Monday to Sunday around a day, marking the days an operator played.
+ * Week around `day`, Monday first, marking the days played.
  */
 export function streakWeekOf(day: string, playedDays: readonly string[]): readonly StreakPip[] {
   const todayIndex = (localMidnight(day).getDay() + 6) % 7;
@@ -27,10 +25,7 @@ export function streakWeekOf(day: string, playedDays: readonly string[]): readon
 }
 
 /**
- * Initials of the days of the week, Monday first (`L M M J V S D`, `M T W T F S S`).
- *
- * @param language - The reader's language.
- * @returns Seven single-letter labels.
+ * Weekday initials, Monday first (`L M M J V S D`).
  */
 export function weekdayInitials(language: Language): readonly string[] {
   const format = new Intl.DateTimeFormat(language, { weekday: 'narrow', timeZone: 'UTC' });

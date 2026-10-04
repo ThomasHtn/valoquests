@@ -28,10 +28,10 @@ import {
   resolveCompetitiveTierVisual,
   resolveTierFromOrdinal,
   resolveTierOrdinal,
-} from '@core/players/competitive-tier.utils';
-import { SeasonRank } from '@core/players/player-progression.model';
-import { ChartTooltip } from '@shared/chart/chart-tooltip';
-import { trackChartTooltip } from '@shared/chart/chart-tooltip.utils';
+} from '@core/players/competitive-tier/player-competitive-tier.utils';
+import { SeasonRank } from '@core/players/progression/player-progression.model';
+import { ChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip';
+import { trackChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip.utils';
 import { createCrosshairPlugin } from '@shared/chart/chart-plugins.utils';
 import { AXIS_TICK_FONT } from '@shared/chart/chart-theme.constants';
 import {
@@ -64,11 +64,8 @@ import {
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
- * Where the selected seasons left a player on the ladder: one rank badge per season, or, for a
- * single season, the rank match by match.
- *
- * Read per season when there are several: a match-by-match line across many acts spends most of
- * its width bouncing between two divisions, while the season's final rank is the one Riot keeps.
+ * Rank per selected season, or match by match for a single season.
+ * Per season when several: a match line across acts mostly bounces between two divisions.
  */
 @Component({
   selector: 'app-rank-journey',
@@ -89,7 +86,7 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 })
 export class RankJourney {
   /**
-   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   * Concept icons, for the template's `svg[lucideIcon]`.
    */
   protected readonly concepts = CONCEPT_ICONS;
 
@@ -99,7 +96,7 @@ export class RankJourney {
   public readonly journey = input.required<readonly SeasonRank[]>();
 
   /**
-   * i18n service, used for the labels drawn on the canvas.
+   * Translates the labels drawn on the canvas.
    */
   private readonly translation = inject(Translation);
 
@@ -114,8 +111,7 @@ export class RankJourney {
   private chart: Chart<'line'> | null = null;
 
   /**
-   * Increases with every draw request, so a draw still waiting for its badges to load gives way
-   * to a newer one.
+   * Draw request counter, so a draw still loading its badges gives way to a newer one.
    */
   private drawRequest = 0;
 
@@ -168,7 +164,7 @@ export class RankJourney {
   );
 
   /**
-   * Draws the chart once the canvas exists, and again whenever the seasons or the language change.
+   * Redraws when the canvas, seasons or language change.
    */
   constructor() {
     registerChartComponents();
@@ -186,10 +182,7 @@ export class RankJourney {
   }
 
   /**
-   * Loads the rank badges, then builds the chart in place of the previous one.
-   *
-   * @param canvas - Canvas to paint on.
-   * @param journey - Seasons to plot, never empty.
+   * Loads the rank badges, then replaces the chart.
    */
   private async draw(canvas: HTMLCanvasElement, journey: readonly SeasonRank[]): Promise<void> {
     const request = ++this.drawRequest;
@@ -307,9 +300,7 @@ export class RankJourney {
   }
 
   /**
-   * Dictionary lookup bound to the translation service.
-   *
-   * @returns The lookup handed to the pure helpers.
+   * Translation lookup handed to the pure helpers; tracks the language.
    */
   private translator(): TranslateFn {
     this.translation.language();

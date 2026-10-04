@@ -9,11 +9,14 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { buildTownScene } from './town-scene.utils';
-import { CLOCK_TICK_MS, TOWN_HEIGHT, TOWN_WIDTH } from './town-scene.constants';
+import { buildTownScene } from './town/town-scene.utils';
+import { CLOCK_TICK_MS, TOWN_HEIGHT, TOWN_WIDTH } from './town/town-scene.constants';
 import { SCENE_HEADROOM } from './base-scene.constants';
-import { readSeenPopulation, writeSeenPopulation } from './seen-population.utils';
+import { readSeenPopulation, writeSeenPopulation } from './base-scene.utils';
 
+/**
+ * Colony town drawn as an SVG skyline that grows with the population.
+ */
 @Component({
   selector: 'app-base-scene',
   templateUrl: './base-scene.html',
@@ -27,12 +30,12 @@ export class BaseScene {
   public readonly population = input.required<number>();
 
   /**
-   * Guardians defeated so far, one stage of the rocket each.
+   * Guardians defeated so far, one rocket stage each.
    */
   public readonly stagesDone = input.required<number>();
 
   /**
-   * Population a full campaign is expected to reach, the scale the city grows on.
+   * Population a full campaign should reach: the scale the city grows on.
    */
   public readonly fullCampaignPopulation = input.required<number>();
 
@@ -42,19 +45,28 @@ export class BaseScene {
   public readonly label = input('');
 
   /**
-   * Whether to remember the population between visits, so the buildings grown since the last one
-   * rise on arrival. Only the overview does: the tour shows the base, it does not follow it.
+   * Remembers the population between visits so new buildings rise (overview only).
    */
   public readonly trackVisits = input(false);
 
+  /**
+   * Drawing frame, raised by the headroom so tall buildings are not clipped.
+   */
   protected readonly viewBox = `0 -${SCENE_HEADROOM} ${TOWN_WIDTH} ${TOWN_HEIGHT + SCENE_HEADROOM}`;
 
+  /**
+   * SVG element the town scene is drawn into.
+   */
   private readonly town = viewChild.required<ElementRef<SVGSVGElement>>('town');
 
-  // The light follows the viewer's clock; a few minutes between two redraws is invisible in a sky.
+  /**
+   * Viewer's clock driving the daylight, refreshed every few minutes.
+   */
   private readonly now = signal(Date.now());
 
-  // Population of the previous drawing, null until one has been made with a known population.
+  /**
+   * Population of the previous drawing, null until a known one was drawn.
+   */
   private drawnPopulation: number | null = null;
 
   constructor() {
@@ -75,7 +87,7 @@ export class BaseScene {
         reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
       });
 
-      // Zero is the campaign still loading, not a base: keeping it would raise the whole city next.
+      // Zero means still loading: keeping it would raise the whole city next time.
       if (population > 0) {
         this.drawnPopulation = population;
         if (this.trackVisits()) {

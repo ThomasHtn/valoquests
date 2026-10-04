@@ -1,10 +1,10 @@
 import {
   PLANET_ART_DISC_RATIO,
   PLANET_ART_EXTENT_RATIO,
-} from '@core/campaign/planet-art.constants';
+} from '@core/campaign/planets/campaign-planet-art.constants';
 
 /**
- * Geometry and palette of the planet of the week, in the SVG viewBox's own units.
+ * Lengths in SVG viewBox units.
  */
 
 /**
@@ -13,7 +13,7 @@ import {
 export const PLANET_VIEW_SIZE = 360;
 
 /**
- * Centre of the globe.
+ * Horizontal centre of the globe.
  */
 export const PLANET_CX = 180;
 
@@ -33,7 +33,7 @@ export const PLANET_RADIUS = 104;
 export const RING_INNER_RADIUS = PLANET_RADIUS + 20;
 
 /**
- * Side of a ringed planet's drawing, sized so its rings stop short of the guardian's ring.
+ * Side of a ringed planet's drawing, so its rings stop short of the guardian's.
  */
 export const RINGED_PLANET_ART_SIDE = Math.floor((PLANET_RADIUS + 14) / PLANET_ART_EXTENT_RATIO);
 
@@ -43,8 +43,7 @@ export const RINGED_PLANET_ART_SIDE = Math.floor((PLANET_RADIUS + 14) / PLANET_A
 export const PLANET_RING_GAP = 22;
 
 /**
- * Side of a bare planet's drawing: nothing reaches past its globe, so the globe grows up to
- * {@link PLANET_RING_GAP} short of the guardian's ring.
+ * Side of a bare planet's drawing: the globe grows to {@link PLANET_RING_GAP} from the ring.
  */
 export const PLANET_ART_SIDE = Math.floor(
   (RING_INNER_RADIUS - PLANET_RING_GAP) / PLANET_ART_DISC_RATIO,
@@ -56,17 +55,17 @@ export const PLANET_ART_SIDE = Math.floor(
 export const PLANET_SEED = 815239;
 
 /**
- * Amber marks laid on the lit face: the wounded, as a texture rather than a count.
+ * Amber marks on the lit face: the wounded as a texture, not a count.
  */
 export const WOUNDED_MARKS = 26;
 
 /**
- * Segments of the breakthrough ring, one per share of the guardian's hit points.
+ * Segments of the breakthrough ring.
  */
 export const RING_SEGMENTS = 26;
 
 /**
- * Colours, aligned on the site palette.
+ * Colours aligned on the site palette.
  */
 export const PLANET_COLORS = {
   warm: '#ffc477',

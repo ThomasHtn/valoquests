@@ -1,0 +1,12 @@
+<!-- Chart.js sizes the canvas from this box (`maintainAspectRatio: false`). -->
+<div [class]="heightClass()" class="relative">
+  <canvas
+    #canvas
+    [attr.aria-label]="ariaLabel()"
+    class="absolute inset-0 block"
+    role="img"
+  ></canvas>
+</div>
+
+<!-- A canvas is opaque to screen readers: this spells out what it shows. -->
+<p class="sr-only">{{ summary() }}</p>

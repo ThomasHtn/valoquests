@@ -1,7 +1,6 @@
 <app-page-header [heading]="'admin.campaigns.heading' | translate" />
 
 <div class="page-body">
-  <!-- The campaign the operator is about to act on, as figures rather than as a row of a list. -->
   <app-section-label [label]="'admin.campaigns.liveLabel' | translate" />
 
   @if (live(); as live) {
@@ -40,7 +39,7 @@
           </dd>
         </div>
         <div>
-          <!-- Frozen, and said so: activating somebody today does not change this number. -->
+          <!-- Frozen at opening: activating a player today does not change it. -->
           <dt class="label-caption text-text-muted">
             {{ 'admin.campaigns.live.roster' | translate }}
           </dt>
@@ -86,8 +85,7 @@
             {{ 'admin.campaigns.stop.action' | translate }}
           </button>
         }
-        <!-- Deleting rather than stopping, for a campaign opened by mistake: stopping it before its
-             first Monday would leave an empty campaign in the history. -->
+        <!-- Delete, not stop, a campaign opened by mistake, or history keeps an empty one. -->
         <button
           appButton="danger-outline"
           (click)="askForDeletion(live.id, live.number, live.status === 'OPENED')"
@@ -119,8 +117,7 @@
       [heading]="'admin.campaigns.open.heading' | translate"
       [state]="openState()"
     >
-      <!-- The difficulty carries the reference the whole campaign is sized on, so it is picked
-           here and frozen at opening. -->
+      <!-- Difficulty sizes the whole campaign and is frozen at opening. -->
       <div>
         <span class="label-caption text-text-muted">
           {{ 'admin.campaigns.open.difficultyLabel' | translate }}
@@ -139,8 +136,7 @@
         </div>
       </div>
 
-      <!-- The first Monday is picked before opening, never after: the ten weeks are drawn around
-           it and a campaign is never rescheduled. -->
+      <!-- First Monday, fixed at opening: a campaign is never rescheduled. -->
       <div>
         <span class="label-caption text-text-muted">
           {{ 'admin.campaigns.open.startLabel' | translate }}
@@ -161,7 +157,7 @@
     </app-admin-action-card>
   </div>
 
-  <!-- The archive, last: an operator opens this page to act on the live campaign. -->
+  <!-- Archive last: the page is for acting on the live campaign. -->
   <app-section-label [label]="'admin.campaigns.pastLabel' | translate" class="mt-12" />
 
   <app-resource-state

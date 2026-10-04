@@ -202,7 +202,7 @@
   --tone: var(--color-accent-cyan);
 }
 
-/* Same amber as the mission's aboard row: the wounded brought home. */
+/* Same amber as the mission's aboard row. */
 .limit-item--group {
   --tone: var(--color-brand-400);
 }
@@ -225,7 +225,7 @@
   color: var(--color-text-secondary);
 }
 
-/* The tanks fill and the rescue bar builds up, share by share, once they are on screen. */
+/* Tanks and rescue bar fill once on screen. */
 @media (prefers-reduced-motion: no-preference) {
   .tank-bar > i,
   .stackbar > span {

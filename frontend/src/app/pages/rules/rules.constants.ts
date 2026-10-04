@@ -1,21 +1,23 @@
+import { TitleKey } from '@core/campaign/titles/campaign-title.model';
+import { WEEKLY_TITLES } from '@core/campaign/campaign.constants';
 import {
-  CampaignDifficulty,
-  GuardianCategory,
-  TitleKey,
-  WEEKLY_TITLES,
-} from '@core/campaign/campaign.model';
-import { ChallengeDifficulty } from '@core/challenges/challenge.model';
-import { RuleConstant } from './rules.model';
+  CampaignWeekShape,
+  ChallengeWorth,
+  DifficultyBand,
+  LadderStep,
+  LossStep,
+  ModeGroup,
+  RuleConstant,
+  StreakStep,
+  SundayExampleRow,
+} from './rules.model';
 
 /**
- * The figures the rules page quotes, copied from `docs/GAMEPLAY.md`.
- *
- * Static on purpose: the page explains the game as it is written, not as a given campaign happens
- * to be sized. The worked examples are computed on the squad the document itself uses.
+ * Figures copied from `docs/GAMEPLAY.md`; static because the page explains the game as written.
  */
 
 /**
- * Reference the worked examples are computed on, the document's own.
+ * Reference the worked examples use, the document's own.
  */
 export const EXAMPLE_REFERENCE = 5_300;
 
@@ -38,26 +40,6 @@ export const GROUP_FACTOR = 0.05;
  * Linear growth of groups and challenge rewards, per campaign week past the first.
  */
 export const PROGRESSION_PER_WEEK = 0.04;
-
-/**
- * What a match is worth by mode and outcome.
- */
-export interface MatchDamageRow {
-  readonly key: string;
-  readonly loss: number;
-  readonly draw: number | null;
-  readonly win: number;
-}
-
-/**
- * The modes, grouped by how their value splits into food and components: the split is the group's,
- * not the mode's, so it is stated once per group.
- */
-export interface ModeGroup {
-  readonly key: string;
-  readonly foodPercent: number;
-  readonly modes: readonly MatchDamageRow[];
-}
 
 /**
  * Game modes grouped by the share of a match going to food.
@@ -86,14 +68,6 @@ export const MODE_GROUPS: readonly ModeGroup[] = [
 ];
 
 /**
- * A step of a ladder: a label key and the percentage it applies.
- */
-export interface LadderStep {
-  readonly key: string;
-  readonly percent: number;
-}
-
-/**
  * Daily diminishing returns, by rank of the match in the day.
  */
 export const DECAY_LADDER: readonly LadderStep[] = [
@@ -101,15 +75,6 @@ export const DECAY_LADDER: readonly LadderStep[] = [
   { key: 'next', percent: 50 },
   { key: 'rest', percent: 25 },
 ];
-
-/**
- * Streak bonus, by days played in the week; the last step is open-ended.
- */
-export interface StreakStep {
-  readonly days: number;
-  readonly percent: number;
-  readonly open: boolean;
-}
 
 /**
  * Bonus per day played in the week, capped at the last step.
@@ -134,15 +99,6 @@ export const WEEK_STEP_KEYS: readonly string[] = ['sync', 'midnight', 'sunday', 
 export const SUNDAY_TERM_KEYS: readonly string[] = ['seats', 'beds', 'breach', 'rescued'];
 
 /**
- * Sunday's worked example, one line per figure, on a group of forty wounded.
- */
-export interface SundayExampleRow {
-  readonly key: string;
-  readonly value: string;
-  readonly emphasised: boolean;
-}
-
-/**
  * Worked example of one Sunday settlement, line by line.
  */
 export const SUNDAY_EXAMPLE: readonly SundayExampleRow[] = [
@@ -155,14 +111,6 @@ export const SUNDAY_EXAMPLE: readonly SundayExampleRow[] = [
 ];
 
 /**
- * What a surviving guardian takes from the base, by breach reached.
- */
-export interface LossStep {
-  readonly breach: number;
-  readonly percent: number;
-}
-
-/**
  * Share of the base lost, per breakthrough level, when the guardian stands.
  */
 export const GUARDIAN_LOSS_LADDER: readonly LossStep[] = [
@@ -172,17 +120,6 @@ export const GUARDIAN_LOSS_LADDER: readonly LossStep[] = [
   { breach: 20, percent: 22 },
   { breach: 0, percent: 35 },
 ];
-
-/**
- * The ten weeks of a campaign: the guardian's category and the two weights, in shares of the
- * squad's reference. `how` names the weeks whose shape is worth a word.
- */
-export interface CampaignWeekShape {
-  readonly category: GuardianCategory;
-  readonly guardian: number;
-  readonly group: number;
-  readonly how: boolean;
-}
 
 /**
  * The ten weeks: guardian class, hit points and group size.
@@ -206,14 +143,6 @@ export const CAMPAIGN_WEEKS: readonly CampaignWeekShape[] = [
 export const LIFECYCLE_KEYS: readonly string[] = ['open', 'start', 'close', 'between'];
 
 /**
- * One difficulty, with the reference it carries.
- */
-export interface DifficultyBand {
-  readonly key: CampaignDifficulty;
-  readonly reference: number;
-}
-
-/**
  * The two difficulties and their references. Mirrors the backend `CampaignDifficulty`.
  */
 export const DIFFICULTY_BANDS: readonly DifficultyBand[] = [
@@ -225,15 +154,6 @@ export const DIFFICULTY_BANDS: readonly DifficultyBand[] = [
  * How the difficulty is decided, in the order the document states it.
  */
 export const CALIBRATION_FACT_KEYS: readonly string[] = ['chosen', 'perOperator', 'grid', 'once'];
-
-/**
- * What a challenge is worth, by cadence and difficulty, at the example reference.
- */
-export interface ChallengeWorth {
-  readonly difficulty: ChallengeDifficulty | null;
-  readonly weight: number;
-  readonly survivors: number;
-}
 
 /**
  * Points and survivors a challenge is worth, per difficulty.
@@ -253,8 +173,7 @@ export const CHALLENGE_WORTH: readonly ChallengeWorth[] = [
 export const RULE_TITLES: readonly TitleKey[] = ['CHAMPION', ...WEEKLY_TITLES];
 
 /**
- * The closing sheet: the constants a player can picture, in reading order. The formulas behind
- * the guardian, the groups and the challenges stay in their own sections.
+ * Closing sheet: the constants a player can picture, in reading order.
  */
 export const RULE_CONSTANTS: readonly RuleConstant[] = [
   { key: 'syncInterval', icon: 'sync', tone: 'text-brand-500' },

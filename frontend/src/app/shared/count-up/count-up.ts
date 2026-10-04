@@ -4,17 +4,21 @@ import { Translation } from '@core/i18n/translation';
 import { DURATION_MS, VISIBILITY_THRESHOLD } from './count-up.constants';
 
 /**
- * Counts a figure up to its value instead of printing it: from zero the first time it scrolls into
- * view, then from its previous value whenever it changes.
- *
- * Writes the text itself, so the host must be empty, with the application's grouping
- * (`formatDamage`).
+ * Counts a figure up to its value: from zero when first seen, then from its previous value.
+ * Writes the text itself (grouped by `formatDamage`), so the host must be empty.
  */
 @Directive({
   selector: '[appCountUp]',
 })
 export class CountUp {
+  /**
+   * Host element, watched for visibility and given the figure as text.
+   */
   private readonly host = inject(ElementRef<HTMLElement>);
+
+  /**
+   * Translation service, whose language groups the figure's digits.
+   */
   private readonly translation = inject(Translation);
 
   /**
@@ -23,15 +27,18 @@ export class CountUp {
   public readonly appCountUp = input.required<number>();
 
   /**
-   * Value currently on screen, where the next climb starts from.
+   * Value on screen, where the next climb starts.
    */
   private shown = 0;
 
   /**
-   * Whether the host has been seen yet; the first climb waits for it.
+   * Whether the host has been seen; the first climb waits for it.
    */
   private seen = false;
 
+  /**
+   * Pending animation frame, cancelled when a new climb starts or the host is destroyed.
+   */
   private frame: number | null = null;
 
   constructor() {
@@ -57,7 +64,7 @@ export class CountUp {
 
     effect(() => {
       const target = this.appCountUp();
-      // Read so the figure is re-grouped when the dictionary is swapped on a language switch.
+      // Tracked so the figure is re-grouped on a language switch.
       this.translation.language();
       if (this.seen) {
         this.run(this.shown, target);
@@ -74,6 +81,9 @@ export class CountUp {
     });
   }
 
+  /**
+   * Animates the figure between two values, jumping straight there under reduced motion.
+   */
   private run(from: number, to: number): void {
     if (this.frame !== null) {
       cancelAnimationFrame(this.frame);
@@ -88,7 +98,7 @@ export class CountUp {
     const start = performance.now();
     const step = (now: number): void => {
       const progress = Math.min(1, (now - start) / DURATION_MS);
-      // Ease-in-out quadratic, the curve the gauges ride, so a figure and its bar arrive together.
+      // Same ease-in-out as the gauges, so a figure and its bar arrive together.
       const eased =
         progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(2 - 2 * progress, 2) / 2;
       this.write(from + (to - from) * eased);
@@ -99,14 +109,16 @@ export class CountUp {
       }
 
       this.frame = null;
-      // The exact target, never the last interpolation: a figure the page reports must not be off
-      // by one because a frame landed early.
+      // Exact target, so an early frame never leaves the figure off by one.
       this.write(to);
     };
 
     this.frame = requestAnimationFrame(step);
   }
 
+  /**
+   * Prints a rounded, grouped value and remembers it as the next climb's start.
+   */
   private write(value: number): void {
     this.shown = value;
     this.host.nativeElement.textContent = formatDamage(

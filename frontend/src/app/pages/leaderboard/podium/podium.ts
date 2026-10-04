@@ -20,13 +20,8 @@ import { groupPodium } from './podium.utils';
 import { WIDTH, HEIGHT, STAR_COUNT, STAR, EMBER, SKY_SEED } from './podium.constants';
 
 /**
- * The week's three leaders on their plinths, under the same sky as the campaign's road. Each
- * stands under the same round portrait the board uses, larger for 1st.
- *
- * Stars only, on the page's own ground: the podium is a block of the board's page, not a scene,
- * so it takes no night plate of its own. The plinths keep their heights from the first podium —
- * 1st a step above 2nd, 2nd a step above 3rd — and the ground rule under them is the board's top
- * edge, which is why this component draws none of its own.
+ * The week's top three on plinths under a star field.
+ * Draws no ground rule: the board's top edge serves as one.
  */
 @Component({
   selector: 'app-podium',
@@ -38,15 +33,18 @@ import { WIDTH, HEIGHT, STAR_COUNT, STAR, EMBER, SKY_SEED } from './podium.const
 })
 export class Podium {
   /**
-   * The ranked rows, in order; only the places one to three are drawn, ties included.
+   * Ranked rows in order; only places one to three are drawn, ties included.
    */
   public readonly rows = input.required<readonly BoardRow[]>();
 
   /**
-   * The occupied plinths, ties sharing theirs.
+   * Occupied plinths, ties sharing theirs.
    */
   protected readonly places = computed(() => groupPodium(this.rows()));
 
+  /**
+   * Star field canvas, filled once after the first render.
+   */
   private readonly sky = viewChild.required<ElementRef<SVGSVGElement>>('sky');
 
   constructor() {
@@ -54,8 +52,7 @@ export class Podium {
   }
 
   /**
-   * The same seeded field as the campaign's sky, thinned and settling toward the horizon: the
-   * squared draw on `cy` piles most stars low, where the plinths stand, and leaves the top sparse.
+   * Seeded star field; squaring `cy` piles stars low near the plinths.
    */
   private draw(svg: SVGSVGElement): void {
     const random = createSeededRandom(SKY_SEED);

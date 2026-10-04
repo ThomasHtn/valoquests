@@ -7,59 +7,46 @@ import { Language, TranslationDictionary } from './translation.model';
 import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
 
 /**
- * Application-wide i18n service.
- *
- * Owns the active language, persists it to `localStorage`, and loads the
- * matching JSON dictionary used by {@link TranslatePipe} for lookups.
+ * Active language, its persisted choice and its loaded dictionary.
  */
 @Service()
 export class Translation {
   /**
-   * Currently active language.
+   * Active language.
    */
   public readonly language = signal<Language>(this.detectInitialLanguage());
 
   /**
-   * Languages the application can be translated into.
+   * Supported languages.
    */
   public readonly supportedLanguages = SUPPORTED_LANGUAGES;
 
   /**
-   * HTTP client used to fetch language dictionaries.
+   * HTTP client that fetches the dictionary files.
    */
   private readonly http = inject(HttpClient);
 
   /**
-   * Currently loaded translation dictionary, keyed by nested dot-separated paths.
+   * Loaded dictionary of the active language, empty until the first load.
    */
   private readonly dictionary = signal<TranslationDictionary>({});
 
-  /**
-   * Keeps the `<html lang>` attribute in sync with the active language,
-   * so assistive technologies and browser features stay correct.
-   */
   constructor() {
+    // `<html lang>` follows the language, for assistive technologies.
     effect(() => {
       document.documentElement.lang = this.language();
     });
   }
 
   /**
-   * Loads the initial language dictionary.
-   *
-   * Awaited by an app initializer so the UI never flashes raw translation keys.
-   *
-   * @returns A promise that resolves once the dictionary has been loaded.
+   * Loads the initial dictionary; awaited by an app initializer so no raw key flashes.
    */
   public initialize(): Promise<void> {
     return this.load(this.language());
   }
 
   /**
-   * Switches the active language, persists the choice and loads its dictionary.
-   *
-   * @param language - The language to switch to.
-   * @returns A promise that resolves once the new dictionary has been loaded.
+   * Switches the language, persists it and loads its dictionary.
    */
   public async setLanguage(language: Language): Promise<void> {
     if (language === this.language()) {
@@ -72,17 +59,7 @@ export class Translation {
   }
 
   /**
-   * Resolves `key` against the currently loaded dictionary.
-   *
-   * An entry may be a plain string, or — when the sentence changes with a quantity — an object of
-   * `one` and `other` branches picked from a numeric `count` parameter (see
-   * {@link resolvePluralBranch}). That is what keeps the interface off `"{{count}} joueur(s)"`,
-   * which reads as an unfinished string rather than as a sentence.
-   *
-   * @param key - Dot-separated dictionary path (e.g. `sidebar.nav.overview`).
-   * @param params - Optional placeholder values substituted into the translated string. A numeric
-   * `count` additionally selects the plural branch of a pluralized entry.
-   * @returns The translated string, or `key` itself when no translation is found.
+   * Translated string, or `key` when missing; a numeric `count` picks the `one`/`other` branch.
    */
   public translate(key: string, params?: Readonly<Record<string, string | number>>): string {
     const entry: unknown = key
@@ -111,18 +88,7 @@ export class Translation {
   }
 
   /**
-   * Every translated string under `key`, flattened and lower-cased into one searchable blob.
-   *
-   * The rules page searches its own content, which is entirely dictionary text: rather than
-   * duplicating that prose into a keyword list that would drift from it on the first edit, the
-   * search reads the same entries the page renders. Placeholders are left as they are — nobody
-   * searches for `{{count}}`, and stripping them would cost a pass for nothing.
-   *
-   * Returns `''` for an unknown key, so a caller can index a section that has no prose without
-   * branching.
-   *
-   * @param key - Dot-separated path of the subtree to flatten (e.g. `rules.sections.boss`).
-   * @returns The subtree's strings joined by a space, lower-cased.
+   * Every string under `key`, lower-cased into one searchable blob (`''` for an unknown key).
    */
   public searchText(key: string): string {
     const entry: unknown = key
@@ -149,15 +115,7 @@ export class Translation {
   }
 
   /**
-   * Narrows a dictionary entry to the single string to render.
-   *
-   * A pluralized entry carries `one` and `other` branches; which one applies depends on the active
-   * language, not only on the count. French treats 0 as singular ("0 joueur"), English does not
-   * ("0 players") — hence the rule below rather than a shared `count === 1`.
-   *
-   * @param entry - The raw dictionary entry, of unknown shape.
-   * @param count - The `count` parameter passed to {@link translate}, if any.
-   * @returns The string to render, or `null` when the entry is not renderable.
+   * String to render, `null` if none; French treats 0 as singular, English does not.
    */
   private resolvePluralBranch(entry: unknown, count: string | number | undefined): string | null {
     if (typeof entry === 'string') {
@@ -176,19 +134,8 @@ export class Translation {
   }
 
   /**
-   * Fetches the dictionary for `language` from `public/i18n` and stores it.
-   *
-   * Resolved against `document.baseURI` rather than requested relatively: a relative path is
-   * resolved against the *current route*, so entering the application on a nested URL
-   * (`/players/12`, `/admin/operations`) asked for `/players/i18n/fr.json` and every screen
-   * rendered raw keys. An absolute `/i18n/…` would fix that but break a deployment under a
-   * sub-path, which the `<base href>` is what tracks.
-   *
-   * Errors are caught rather than rethrown: {@link initialize} is awaited by an
-   * app initializer, so a failed request would otherwise block bootstrap and
-   * leave the application on a blank page instead of degrading to raw keys.
-   *
-   * @param language - The language whose dictionary should be loaded.
+   * Fetches a dictionary against `document.baseURI`, so nested URLs and sub-path deployments work.
+   * Errors are swallowed: a rethrow would block bootstrap instead of degrading to raw keys.
    */
   private async load(language: Language): Promise<void> {
     try {
@@ -197,7 +144,7 @@ export class Translation {
           new URL(`i18n/${language}.json`, document.baseURI).href,
         ),
       );
-      // A quicker toggle back may have superseded this request while it was in flight.
+      // A quicker toggle back may have superseded this request.
       if (language === this.language()) {
         this.dictionary.set(dictionary);
       }
@@ -207,12 +154,7 @@ export class Translation {
   }
 
   /**
-   * Determines the language to use on startup.
-   *
-   * Prefers a previously stored choice, falls back to the browser language,
-   * and defaults to {@link DEFAULT_LANGUAGE} when neither is supported.
-   *
-   * @returns The language to use on startup.
+   * Startup language: stored choice, else browser language, else {@link DEFAULT_LANGUAGE}.
    */
   private detectInitialLanguage(): Language {
     const stored = readStorage(STORAGE_KEY);
@@ -225,10 +167,7 @@ export class Translation {
   }
 
   /**
-   * Type guard checking whether `value` is one of {@link SUPPORTED_LANGUAGES}.
-   *
-   * @param value - The candidate value to check.
-   * @returns Whether `value` is a supported {@link Language}.
+   * Whether `value` is a supported language.
    */
   private isSupportedLanguage(value: string | null): value is Language {
     return value !== null && (SUPPORTED_LANGUAGES as readonly string[]).includes(value);

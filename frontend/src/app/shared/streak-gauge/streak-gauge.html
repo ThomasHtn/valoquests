@@ -6,7 +6,7 @@
   <span aria-hidden="true" class="streak-week">
     @for (pip of pips(); track $index) {
       <span class="streak-day">
-        <!-- Kept without the days so the gauge holds its height: a count names no weekday. -->
+        <!-- Hidden, not removed, so the gauge keeps its height. -->
         <b [class.invisible]="week() === null">{{ weekdays()[$index] }}</b>
         <i [class]="'pip--' + pip"></i>
       </span>

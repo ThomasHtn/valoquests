@@ -8,17 +8,17 @@ export interface AimZone {
   readonly key: 'head' | 'body' | 'legs';
 
   /**
-   * Share of registered hits that landed there, as a percentage.
+   * Share of registered hits that landed there, in percent.
    */
   readonly percentage: number;
 
   /**
-   * The share, formatted for display.
+   * Formatted share.
    */
   readonly label: string;
 
   /**
-   * Fill opacity of the zone on the silhouette, between the faintest tint and a full flat.
+   * Fill opacity on the silhouette, from the faintest tint to full.
    */
   readonly opacity: number;
 }

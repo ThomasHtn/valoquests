@@ -8,58 +8,57 @@ import {
   signal,
 } from '@angular/core';
 import { CampaignApi } from '@core/campaign/campaign-api';
+import { CHALLENGE_DIFFICULTIES } from '@core/challenges/challenge.constants';
 import {
-  CHALLENGE_DIFFICULTIES,
   ChallengeCatalogue,
   ChallengeProgress,
   CurrentChallenges,
 } from '@core/challenges/challenge.model';
-import { resolveDifficultyVisual } from '@core/challenges/challenge-visual.utils';
+import { resolveDifficultyVisual } from '@core/challenges/visual/challenge-visual.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
-import { campaignMidnight } from '@core/date/campaign-time-zone.utils';
-import { WEEK_DAYS } from '@core/date/date-time.constants';
-import { localMidnight } from '@core/date/date-time.utils';
-import { RemainingTime, remainingWeekTime } from '@core/date/week-period.utils';
+import {
+  campaignMidnight,
+  remainingWeekTime,
+} from '@core/campaign/calendar/campaign-calendar.utils';
+import { WEEK_DAYS } from '@core/date/date.constants';
+import { localMidnight } from '@core/date/date.utils';
+import { RemainingTime } from '@core/date/date.model';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
-import { resolveLocale } from '@core/i18n/locale.utils';
+import { resolveLocale } from '@core/i18n/format/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PageHeader } from '@layout/page-header/page-header';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { WeekCountdown } from '@shared/week-countdown/week-countdown';
-import { formatFigure } from '@core/i18n/number-format.utils';
-import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { ChallengeBoard } from './challenge-board/challenge-board';
 import { ChallengeCatalogueView } from './challenge-catalogue/challenge-catalogue';
 import { ChallengeDeck } from './challenge-deck/challenge-deck';
-import { DAILY_TONE } from './challenges.constants';
+import { DAILY_TONE } from '@core/challenges/card/challenge-card.constants';
 import {
   BoardOperator,
-  BoardRow,
   CatalogueGroup,
-  ChallengeLook,
-  ChallengeOperator,
   DayCell,
   DayPickSource,
   DayState,
 } from './challenges.model';
 import {
+  BoardRow,
+  ChallengeLook,
+  ChallengeOperator,
+} from '@core/challenges/card/challenge-card.model';
+import {
   buildChallengeCard,
-  orderOperators,
-  resolvePickedDay,
-  shiftDay,
   toBoardRow,
   toOperators,
-} from './challenges.utils';
-import { readPinnedPlayer, writePinnedPlayer } from '@core/players/pinned-player.utils';
+} from '@core/challenges/card/challenge-card.utils';
+import { orderOperators, resolvePickedDay, shiftDay } from './challenges.utils';
+import { readPinnedPlayer, writePinnedPlayer } from '@core/players/pin/player-pin.utils';
 
 /**
- * The week's challenges on one board, the day's first, the squad beside them, and the catalogue
- * they were drawn from.
- *
- * A table from a wide column, a card per challenge below it: both read the same rows, operator
- * order and picked day, so switching width never changes what is on screen.
+ * Challenges page: table when wide, cards below, both fed the same rows and picks.
  */
 @Component({
   selector: 'app-challenges',
@@ -78,30 +77,66 @@ import { readPinnedPlayer, writePinnedPlayer } from '@core/players/pinned-player
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Challenges {
+  /**
+   * Challenges feed, for the week's draws and the catalogue.
+   */
   private readonly challengesApi = inject(ChallengesApi);
 
+  /**
+   * Campaign feed, to know whether validations bring wounded home.
+   */
   private readonly campaignApi = inject(CampaignApi);
 
+  /**
+   * Translation service, for the labels built in code.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * The week's challenges and dailies with everyone's progress.
+   */
   protected readonly challengesResource = this.challengesApi.current;
 
+  /**
+   * The campaign, read for its status.
+   */
   protected readonly campaignResource = this.campaignApi.campaign;
 
+  /**
+   * Every challenge the draws can hand out, fetched once the fold opens.
+   */
   protected readonly catalogueResource = this.challengesApi.catalogue;
 
+  /**
+   * Whether the board still waits on the challenges or the campaign.
+   */
   protected readonly isLoading = anyLoading(this.challengesResource, this.campaignResource);
 
+  /**
+   * Whether the challenges or the campaign failed to load.
+   */
   protected readonly isError = anyError(this.challengesResource, this.campaignResource);
 
+  /**
+   * Whether the catalogue is still loading, kept apart so the board shows meanwhile.
+   */
   protected readonly catalogueLoading = anyLoading(this.catalogueResource);
 
+  /**
+   * Whether the catalogue failed, retried on its own.
+   */
   protected readonly catalogueError = anyError(this.catalogueResource);
 
+  /**
+   * The week's challenges, or `null` until loaded.
+   */
   protected readonly current = computed<CurrentChallenges | null>(
     () => resourceValue(this.challengesResource, null) ?? null,
   );
 
+  /**
+   * The campaign, or `null` until loaded.
+   */
   private readonly campaign = computed(() => resourceValue(this.campaignResource, null) ?? null);
 
   /**
@@ -110,10 +145,13 @@ export class Challenges {
   private readonly now = signal(Date.now());
 
   /**
-   * Whether validated challenges bring wounded home right now: only a running campaign has a base.
+   * Whether challenges bring wounded home: only a running campaign has a base.
    */
   protected readonly rescueActive = computed(() => this.campaign()?.status === 'RUNNING');
 
+  /**
+   * Whether anything is drawn yet, else the empty state shows.
+   */
   protected readonly hasChallenges = computed(() => {
     const current = this.current();
     return (current?.challenges.length ?? 0) + (current?.dailies.length ?? 0) > 0;
@@ -128,7 +166,7 @@ export class Challenges {
   });
 
   /**
-   * The week's first and last days, spelled out for the board's heading; empty while loading.
+   * The week's first and last days for the heading, empty while loading.
    */
   protected readonly period = computed(() => {
     const current = this.current();
@@ -150,12 +188,12 @@ export class Challenges {
   });
 
   /**
-   * Whether the reader unfolded the catalogue: nothing of it is fetched or rendered before.
+   * Whether the catalogue is unfolded; nothing of it is fetched or rendered before.
    */
   protected readonly catalogueOpen = signal(false);
 
   /**
-   * The empty state: the two draws that have not run, and when they do.
+   * Empty state before the draws.
    */
   protected readonly emptyPlate = computed<EmptyPlate>(() => {
     const t = (suffix: string) => this.translation.translate(`challenges.state.empty.${suffix}`);
@@ -174,6 +212,9 @@ export class Challenges {
     toOperators(this.current()?.roster ?? []),
   );
 
+  /**
+   * The week's seven days for the daily row, with their state and tally.
+   */
   protected readonly days = computed<readonly DayCell[]>(() => {
     const current = this.current();
     if (!current) {
@@ -205,9 +246,7 @@ export class Challenges {
   });
 
   /**
-   * Index of the day whose challenge the daily row shows. Follows today until the reader picks
-   * another day on the tally, and again once the week rolls; before today's draw, the last drawn day.
-   * A background reload keeps the pick.
+   * Day the daily row shows: today until the reader picks another; a reload keeps the pick.
    */
   protected readonly pickedDay = linkedSignal<DayPickSource, number | null>({
     source: () => ({ weekStart: this.current()?.weekStart ?? null, days: this.days() }),
@@ -215,7 +254,7 @@ export class Challenges {
   });
 
   /**
-   * Whether the card shows today's challenge, which still runs, rather than a closed day's.
+   * Whether the card shows today's still-running challenge.
    */
   protected readonly showingToday = computed(
     () => this.days().find((day) => day.index === this.pickedDay())?.state === 'now',
@@ -246,6 +285,9 @@ export class Challenges {
     return this.row(daily, { tone: DAILY_TONE, mark: 'D', kind }, closesAt);
   });
 
+  /**
+   * The week's challenges as board rows, shown under the daily one.
+   */
   private readonly weeklyRows = computed<readonly BoardRow[]>(() =>
     (this.current()?.challenges ?? []).map((challenge) => {
       const visual = resolveDifficultyVisual(challenge.difficulty);
@@ -257,17 +299,20 @@ export class Challenges {
   );
 
   /**
-   * The operator the reader pinned first, remembered across visits.
+   * Operator pinned first, remembered across visits.
    */
   private readonly pinned = signal<number | null>(readPinnedPlayer());
 
   /**
-   * The squad in board order: the pinned operator, then the furthest along this week.
+   * Board order: the pinned operator, then the furthest along.
    */
   private readonly boardOrder = computed<readonly ChallengeOperator[]>(() =>
     orderOperators(this.operators(), this.current()?.challenges ?? [], this.pinned()),
   );
 
+  /**
+   * Board columns: operators in board order with their reward and tooltip summary.
+   */
   protected readonly boardOperators = computed<readonly BoardOperator[]>(() => {
     const current = this.current();
     if (!current) {
@@ -301,13 +346,16 @@ export class Challenges {
   });
 
   /**
-   * The board's rows: the picked day's challenge, then the week's five.
+   * The picked day's challenge, then the week's five.
    */
   protected readonly boardRows = computed<readonly BoardRow[]>(() => {
     const daily = this.dailyRow();
     return daily ? [daily, ...this.weeklyRows()] : this.weeklyRows();
   });
 
+  /**
+   * The catalogue split into the daily pool and the five difficulties, empty ones dropped.
+   */
   protected readonly catalogueGroups = computed<readonly CatalogueGroup[]>(() => {
     const catalogue: ChallengeCatalogue | null =
       resourceValue(this.catalogueResource, null) ?? null;
@@ -341,16 +389,22 @@ export class Challenges {
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
   }
 
+  /**
+   * Reloads the board after a failure.
+   */
   protected retry(): void {
     reloadAll(this.challengesResource, this.campaignResource);
   }
 
+  /**
+   * Reloads the catalogue after a failure.
+   */
   protected retryCatalogue(): void {
     reloadAll(this.catalogueResource);
   }
 
   /**
-   * Follows the native fold: the catalogue is asked for the first time it opens.
+   * Requests the catalogue the first time the fold opens.
    */
   protected toggleCatalogue(event: Event): void {
     const open = (event.target as HTMLDetailsElement).open;
@@ -370,12 +424,7 @@ export class Challenges {
   }
 
   /**
-   * One board row: the challenge as a card shows it, then one mark per operator in board order.
-   *
-   * @param challenge - The drawn challenge and each operator's progress on it.
-   * @param look - Tone, mark and key line of the row.
-   * @param closesAt - When a running day's challenge closes; `null` for a weekly one or a closed day.
-   * @returns The row.
+   * Board row with marks in board order; `closesAt` is `null` unless the day still runs.
    */
   private row(
     challenge: ChallengeProgress,
@@ -397,6 +446,9 @@ export class Challenges {
     );
   }
 
+  /**
+   * Today's position in the week, clamped to its seven days.
+   */
   private dayIndex(current: CurrentChallenges): number {
     const offset = Math.round(
       (localMidnight(current.today).getTime() - localMidnight(current.weekStart).getTime()) /
@@ -405,20 +457,29 @@ export class Challenges {
     return Math.min(WEEK_DAYS - 1, Math.max(0, offset));
   }
 
+  /**
+   * Hover text of a day cell: who validated its challenge, or why there is none.
+   */
   private tip(drawn: boolean, state: DayState, count: number, total: number): string {
     const t = (key: string, params?: Record<string, string | number>): string =>
       this.translation.translate(`challenges.daily.${key}`, params);
-    // A day ahead says when it opens; a day the tick missed and today before its draw are unavailable.
+    // Undrawn: a day ahead says when it opens, any other day is unavailable.
     if (!drawn) {
       return t(state === 'ahead' ? 'tipAhead' : 'tipUnavailable');
     }
     return count === 0 ? t('tipNone', { total }) : t('tipDone', { count, total });
   }
 
+  /**
+   * Locale of the chosen language, for date formats.
+   */
   private locale(): string {
     return resolveLocale(this.translation.language());
   }
 
+  /**
+   * Day name, capitalised and without the trailing dot when short.
+   */
   private weekday(isoDate: string, width: 'short' | 'long'): string {
     const label = new Intl.DateTimeFormat(this.locale(), { weekday: width }).format(
       localMidnight(isoDate),
@@ -428,12 +489,18 @@ export class Challenges {
       : label;
   }
 
+  /**
+   * Day and spelled-out month, for the week's span.
+   */
   private dayMonthLong(isoDate: string): string {
     return new Intl.DateTimeFormat(this.locale(), { day: 'numeric', month: 'long' }).format(
       localMidnight(isoDate),
     );
   }
 
+  /**
+   * Day of the month alone, under a day cell's weekday.
+   */
   private dayMonth(isoDate: string): string {
     return new Intl.DateTimeFormat(this.locale(), { day: 'numeric' }).format(
       localMidnight(isoDate),

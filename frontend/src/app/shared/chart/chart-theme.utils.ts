@@ -22,18 +22,12 @@ import {
 import { ChartTheme } from './chart-theme.model';
 
 /**
- * Whether the Chart.js controllers, scales and elements this application uses are registered.
- *
- * Chart.js ships nothing by default so the unused half of the library tree-shakes away; the
- * registry is global, so registering once for the whole application is enough.
+ * Chart.js registry is global, so registering once is enough.
  */
 let registered = false;
 
 /**
- * Registers the Chart.js pieces this application draws with.
- *
- * The legend plugin is deliberately left out: every chart here that needs one renders it in HTML,
- * so it can carry each series' average beside its name and stay readable by a screen reader.
+ * Registers the Chart.js pieces the app uses; no legend plugin, legends are HTML.
  */
 export function registerChartComponents(): void {
   if (registered) {
@@ -57,14 +51,7 @@ export function registerChartComponents(): void {
 }
 
 /**
- * Reads a design token off the document root.
- *
- * Charts paint onto a canvas, which no stylesheet reaches, so the tokens have to be resolved in
- * script and handed to Chart.js as plain values.
- *
- * @param variable custom property to read, including its leading dashes
- * @param fallback value to use when the property is missing, as in a test document
- * @returns the token's computed value
+ * Design token read off the root (canvas is unreachable by CSS), `fallback` when missing.
  */
 export function token(variable: string, fallback: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -72,18 +59,7 @@ export function token(variable: string, fallback: string): string {
 }
 
 /**
- * Resolves any CSS colour expression — a custom property, a `color-mix()`, anything the cascade
- * understands — into the literal value the browser computed for it.
- *
- * `token()` above only reads a bare custom property; this is the general form, for a caller
- * handing Chart.js a whole expression such as `color-mix(in oklab, var(--color-brand-500) 15%,
- * transparent)`. Canvas's `fillStyle` cannot resolve `var()` or an unresolved `color-mix()` itself
- * — it wants a value already computed, which is why every colour this app hands to Chart.js has to
- * pass through here first rather than being written straight into a dataset.
- *
- * @param expression - Any valid CSS colour, as a string.
- * @returns The resolved literal colour, in the form `getComputedStyle` reports it (`rgb(...)` /
- *   `rgba(...)`).
+ * Any CSS color expression as a computed `rgb()` literal, since canvas cannot resolve `var()`.
  */
 export function resolveCssColor(expression: string): string {
   const probe = document.createElement('span');
@@ -96,9 +72,7 @@ export function resolveCssColor(expression: string): string {
 }
 
 /**
- * Resolves the chart palette from the design tokens currently in force.
- *
- * @returns the colors charts draw their furniture with
+ * Chart palette from the current design tokens.
  */
 export function resolveChartTheme(): ChartTheme {
   return {
@@ -113,26 +87,15 @@ export function resolveChartTheme(): ChartTheme {
 }
 
 /**
- * Backing-store scale the canvas is drawn at.
- *
- * Deliberately not the raw device pixel ratio. A chart sitting in a fractional grid column gets a
- * fractional CSS width (437.5px, say), and Chart.js floors the backing store to whole pixels — at
- * ratio 1 the browser then stretches 437 device pixels over 437.5 CSS pixels and every tick label
- * smears. Rounding the ratio up and never going below 2 makes that rounding error invisible and
- * supersamples the text, which is what keeps the bars and their labels sharp.
- *
- * @returns the ratio to render at
+ * Canvas backing-store scale, at least 2: at ratio 1 a fractional CSS width smears the labels
+ * because Chart.js floors the backing store to whole pixels.
  */
 export function chartPixelRatio(): number {
   return Math.max(Math.ceil(window.devicePixelRatio || 1), 2);
 }
 
 /**
- * Builds an axis title, hidden when the caller has nothing to name the axis with.
- *
- * @param theme resolved chart palette
- * @param text already-translated axis name, possibly empty
- * @returns the scale title options
+ * Axis title options, hidden when `text` is empty.
  */
 export function axisTitleOptions(
   theme: ChartTheme,
@@ -142,11 +105,7 @@ export function axisTitleOptions(
 }
 
 /**
- * Resolves the color of one series.
- *
- * @param index zero-based slot, assigned by the entity's own stable rank rather than by its
- *     position in the current selection, so filtering one series out never repaints the others
- * @returns the slot's color
+ * Series color of a slot; pass a stable rank so filtering never repaints the others.
  */
 export function resolveSeriesColor(index: number): string {
   const variable = SERIES_COLOR_VARIABLES[index % SERIES_COLOR_COUNT];
@@ -155,19 +114,13 @@ export function resolveSeriesColor(index: number): string {
 
 /**
  * Whether the reader asked for reduced motion.
- *
- * @returns `true` when animations must be suppressed
  */
 export function prefersReducedMotion(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 }
 
 /**
- * Builds the tooltip styling shared by every chart, in the direction's notched, square-cornered
- * idiom rather than Chart.js' rounded default.
- *
- * @param theme resolved chart palette
- * @returns tooltip options to spread into a chart configuration
+ * Square-cornered tooltip styling shared by every chart.
  */
 export function chartTooltipOptions(theme: ChartTheme): Partial<TooltipOptions> {
   return {

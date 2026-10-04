@@ -4,25 +4,19 @@ import { STORAGE_KEY } from './landing-visit.constants';
 import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
 
 /**
- * Tracks whether the visitor has already entered the application through the landing page.
- *
- * The landing page is a one-time doorway: once crossed, the root route redirects straight to the
- * overview instead of asking the visitor to click the compass again on every visit. This service is
- * the only place that reads or writes the flag, so the storage key never leaks into components.
+ * Sole owner of the flag recording that the visitor crossed the one-time landing page.
  */
 @Service()
 export class LandingVisit {
   /**
-   * Whether the visitor has already entered the application through the landing page.
-   *
-   * @returns Whether the entry has been recorded.
+   * Whether the entry through the landing page is recorded.
    */
   public hasEntered(): boolean {
     return readStorage(STORAGE_KEY) !== null;
   }
 
   /**
-   * Records that the visitor has entered the application, so subsequent visits skip the landing.
+   * Records the entry, so later visits skip the landing.
    */
   public markEntered(): void {
     writeStorage(STORAGE_KEY, 'true');

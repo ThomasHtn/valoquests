@@ -1,12 +1,8 @@
-<!-- `h-dvh` rather than `h-full`, same reason as the landing page: this renders straight under the
-     root outlet. The two bands are fixed (progress on top, controls at the bottom) and only the
-     middle one scrolls, so the way out is always on screen. Each step is sized to fit a phone
-     without scrolling; the scroll is only the fallback of the smallest screens. -->
+<!-- `h-dvh`: no sized ancestor. Only the middle scrolls, so the way out stays on screen. -->
 <main
   [attr.aria-label]="'tour.ariaLabel' | translate"
   class="ambient-field flex h-dvh flex-col overflow-hidden bg-surface-950 text-text-primary"
 >
-  <!-- One row at every width: the counter, the segments taking what is left, the way out. -->
   <header
     class="flex shrink-0 items-center gap-4 border-b border-brand-500/20 bg-surface-sunken/80 px-4 py-3 motion-safe:animate-chrome-in sm:gap-6 sm:px-8 sm:py-3.5"
   >
@@ -23,8 +19,7 @@
       </span>
     </p>
 
-    <!-- One sheared segment per step, hidden from assistive technology since the counter states
-         the same position. -->
+    <!-- Hidden: the counter already states the position. -->
     <div aria-hidden="true" class="flex min-w-0 flex-1 gap-1.5 sm:gap-2">
       @for (filled of segments(); track $index) {
         <span class="clip-shear relative h-2.5 flex-1 bg-accent-gold/60 sm:h-3 sm:max-w-28">
@@ -47,8 +42,7 @@
     #content
     class="scroll-subtle flex flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-8 sm:py-10"
   >
-    <!-- Announced on every step change: only this region swaps. Centered through `m-auto` rather
-         than `justify-center`, which would push a tall step's top above the scroll origin. -->
+    <!-- `m-auto`, not `justify-center`, which would push a tall step above the scroll origin. -->
     <div aria-live="polite" class="m-auto w-full max-w-6xl">
       @for (step of stepFrames(); track step) {
         <div class="tour-step">
@@ -63,7 +57,6 @@
               {{ 'tour.steps.' + step + '.title' | translate }}
             </h1>
 
-            <!-- One sentence, with the two or three words that carry it set in relief. -->
             <p
               class="mt-2.5 max-w-[30rem] text-pretty text-[0.9375rem]/[1.55] text-text-secondary sm:mt-5 sm:text-xl/relaxed"
             >
@@ -73,14 +66,11 @@
             </p>
           </div>
 
-          <!-- The step's screen, the page's own components fed the sample campaign. Hidden from
-               assistive technology and inert: its figures are examples, and nothing in it leads
-               anywhere from here. The base is the exception, driven live by its sliders. -->
+          <!-- Sample screens are hidden and inert; only the base stays live for its sliders. -->
           <figure
             class="tour-figure flex min-w-0 flex-col gap-2.5 motion-safe:animate-step-in-late"
           >
             @if (step === 'base') {
-              <!-- The one live screen: the visitor drives the base with the sliders. -->
               <app-tour-base-preview
                 [fullCampaignPopulation]="fullCampaignPopulation"
                 [population]="samplePopulation"
@@ -110,7 +100,7 @@
                     <app-tour-capacity [capacity]="sampleCapacity" />
                   }
                   @case ('challenges') {
-                    <!-- The challenges page's phone card, kept at a phone's width on every screen. -->
+                    <!-- Phone card, kept at a phone's width on every screen. -->
                     <app-deck-card [row]="sampleDailyRow()" class="tour-phone-card">
                       <app-daily-week
                         [days]="sampleDays()"
@@ -131,9 +121,7 @@
             </figcaption>
           </figure>
 
-          <!-- The spec sheet: three fixed rules of the game a reader takes in without a sentence.
-             Under the copy on a wide screen, under the illustration on a phone: the headline
-             and the screen come first, the figures are the footnote. Some steps go without. -->
+          <!-- Spec sheet: under the copy when wide, under the illustration on a phone. -->
           @if (!stepsWithoutSpecs.includes(step)) {
             <dl class="tour-specs motion-safe:animate-step-in">
               @for (spec of specKeys; track spec) {
@@ -153,7 +141,7 @@
     </div>
   </div>
 
-  <!-- "Back" keeps its slot on the first step, so the buttons never shift between steps. -->
+  <!-- "Back" keeps its slot on the first step so the buttons never shift. -->
   <footer
     class="flex shrink-0 items-center justify-between gap-4 border-t border-brand-500/20 bg-surface-sunken/80 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] motion-safe:animate-chrome-in sm:px-8 sm:pt-3.5 sm:pb-[max(0.875rem,env(safe-area-inset-bottom))]"
   >

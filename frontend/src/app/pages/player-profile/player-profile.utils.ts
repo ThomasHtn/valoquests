@@ -1,7 +1,7 @@
 import { ParamMap } from '@angular/router';
 
-import { FILTERABLE_GAME_MODES } from '@core/matches/game-mode.model';
-import { Season } from '@core/matches/season.model';
+import { FILTERABLE_GAME_MODES } from '@core/matches/game-mode/match-game-mode.constants';
+import { Season } from '@core/seasons/season.model';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import {
   ALL_SEASONS_PARAM,
@@ -11,32 +11,21 @@ import {
 import { ProfileQuery, SeasonParam } from './player-profile.model';
 
 /**
- * Pure helpers of the player-profile page.
- */
-
-/**
- * Resolves the id of the current season - the one flagged `active` - or the first (most-recent)
- * known season if none is active, or `null` if none are known yet.
+ * Id of the active season, else the most recent one, `null` when none is known.
  */
 export function resolveCurrentSeasonId(seasons: readonly Season[]): number | null {
   return (seasons.find((season) => season.active) ?? seasons[0])?.id ?? null;
 }
 
 /**
- * Colour of the share the next match keeps: amber at full value, muted once the ladder has
- * started taking a cut. A red would overstate a rule that still pays half.
+ * Colour of the next match's share: amber at full value, muted once cut (red would overstate).
  */
 export function resolveYieldToneClass(percent: number): string {
   return percent >= 100 ? 'text-brand-500' : 'text-text-secondary';
 }
 
 /**
- * Builds the plate shown when the route names a player or match the backend does not know.
- *
- * @param translate - Resolves a translation key.
- * @param keyPrefix - i18n prefix holding the plate's `title` and `text`.
- * @param address - The URL that led here, echoed like the generic not-found page does.
- * @returns The plate, already translated.
+ * Translated not-found plate for an unknown player or match, echoing the `address`.
  */
 export function buildNotFoundPlate(
   translate: (key: string) => string,
@@ -53,10 +42,7 @@ export function buildNotFoundPlate(
 }
 
 /**
- * Reads the profile's state from the address, ignoring anything it does not recognise.
- *
- * @param params - The route's query parameters.
- * @returns The view, mode and season the address asks for.
+ * Reads the profile state from the query parameters, ignoring unknown values.
  */
 export function readProfileQuery(params: ParamMap): ProfileQuery {
   const mode = params.get(PROFILE_QUERY_KEYS.mode);
@@ -75,12 +61,7 @@ export function readProfileQuery(params: ParamMap): ProfileQuery {
 }
 
 /**
- * Writes the profile's state as query parameters, leaving out every default so a plain profile
- * keeps a plain address.
- *
- * @param query - The view, mode and season on screen.
- * @param currentSeasonId - The season the history opens on by default.
- * @returns The query parameters, `null` for those to remove.
+ * Profile state as query parameters; defaults map to `null` to keep the address plain.
  */
 export function writeProfileQuery(
   query: ProfileQuery,
@@ -100,11 +81,7 @@ export function writeProfileQuery(
 }
 
 /**
- * The season the history opens on, from the address when it names one that exists.
- *
- * @param seasons - Every known season.
- * @param requested - The season scope read from the address.
- * @returns The season id, or `null` for every season.
+ * Season the history opens on: the address's when it exists, `null` for every season.
  */
 export function resolveRequestedSeasonId(
   seasons: readonly Season[],

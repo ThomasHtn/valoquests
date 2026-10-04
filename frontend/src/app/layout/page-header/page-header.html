@@ -1,14 +1,7 @@
-<!-- The bar spans the content column from edge to edge, so its rule reads as the boundary between
-     the chrome and the page; the row inside is capped and gutted exactly like every block of the
-     page below it, so the title lines up with the content it names.
-
-     No pinning needed here: the host sits outside `page-body`, the page's own scroll container
-     (see `page-header.ts` and `styles.css`), so it never scrolls out of view in the first place. -->
+<!-- Outside `page-body`, the scroll container, so it stays put without `sticky`. -->
 <header class="border-b border-brand-500/50 bg-surface-sunken">
   <div class="mx-auto flex min-h-16 w-full items-center gap-3 px-4 sm:gap-4 sm:px-6">
-    <!-- The only piece of global navigation on a phone, since the rail is a drawer below `lg` and
-         no longer carries a bar of its own. Pulled left by a negative margin so the icon lines up
-         optically with the content below while the button keeps its full 44px touch target. -->
+    <!-- Only way into the navigation below `lg`; the margin keeps the 44px target aligned. -->
     <button
       #menuButton
       (click)="openNavigation()"
@@ -23,10 +16,7 @@
 
     <div class="flex min-w-0 flex-1 items-center">
       @if (back(); as target) {
-        <!-- The way back, on a page whose subject is already named by the block right under the
-             bar: restating that name here would only be a second source of the same fact. A
-             history step when the reader came from a page it can name, so filters and scroll
-             come back too; the static parent otherwise. -->
+        <!-- History step when the previous page is nameable, else the parent. -->
         <div class="flex min-w-0 flex-1 items-center gap-2">
           @if (target.viaHistory) {
             <a
@@ -58,8 +48,7 @@
       }
     </div>
 
-    <!-- Whatever this page offers from its chrome: a countdown, its primary action, a view
-         toggle. Never shrinks — a long title truncates instead. -->
+    <!-- Page actions; never shrinks, a long title truncates instead. -->
     <div class="flex shrink-0 items-center gap-2">
       <ng-content />
     </div>

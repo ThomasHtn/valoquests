@@ -16,12 +16,12 @@ import {
   LucideZap,
 } from '@lucide/angular';
 
-import { resolveTitleVisual } from '@core/campaign/campaign-visual.utils';
-import { resolveDifficultyVisual } from '@core/challenges/challenge-visual.utils';
+import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
+import { resolveDifficultyVisual } from '@core/challenges/visual/challenge-visual.utils';
 import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { resolveLocale } from '@core/i18n/locale.utils';
-import { formatNumber } from '@core/i18n/number-format.utils';
+import { resolveLocale } from '@core/i18n/format/locale.utils';
+import { formatNumber } from '@core/i18n/format/number-format.utils';
 import { Translation } from '@core/i18n/translation';
 import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
 import { PageHeader } from '@layout/page-header/page-header';
@@ -48,15 +48,10 @@ import {
   RULE_TITLES,
   WEEK_STEP_KEYS,
 } from './rules.constants';
-import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 
 /**
- * Rules page.
- *
- * `docs/GAMEPLAY.md` in eight numbered sections, each stating its rule in one sentence and
- * pairing a short description with the figures behind it, for anyone landing on the tracker
- * without prior context. The figures are the document's, not a campaign's: the page explains the
- * game as written, and its worked examples are sized on the squad the document itself uses.
+ * Rules page: `docs/GAMEPLAY.md` in eight sections, with the document's own figures.
  */
 @Component({
   selector: 'app-rules',
@@ -84,44 +79,98 @@ import { PAGE_LAYOUT_CLASS } from '../page-layout.constants';
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Rules implements AfterViewInit {
+  /**
+   * Translation service, whose language picks the number notation.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * Page element, searched for the section a fragment names.
+   */
   private readonly host = inject(ElementRef<HTMLElement>);
 
+  /**
+   * Active route, whose fragment names the section to scroll to.
+   */
   private readonly route = inject(ActivatedRoute);
 
+  /**
+   * Destroy hook, to stop following the fragment.
+   */
   private readonly destroyRef = inject(DestroyRef);
 
+  /**
+   * Section ids, shared with the links other pages point at.
+   */
   protected readonly anchor = RULE_ANCHOR;
 
+  /**
+   * Reference the worked examples use.
+   */
   protected readonly exampleReference = EXAMPLE_REFERENCE;
 
+  /**
+   * Active operators of the squad the campaign example is sized for.
+   */
   protected readonly exampleOperators = EXAMPLE_OPERATORS;
 
+  /**
+   * Game modes grouped by the share of a match going to food.
+   */
   protected readonly modeGroups = MODE_GROUPS;
 
+  /**
+   * Daily diminishing returns, by rank of the match in the day.
+   */
   protected readonly decayLadder = DECAY_LADDER;
 
+  /**
+   * Bonus per day played in the week.
+   */
   protected readonly streakLadder = STREAK_LADDER;
 
+  /**
+   * What a day of the week does, in order.
+   */
   protected readonly weekStepKeys = WEEK_STEP_KEYS;
 
+  /**
+   * Limits of Sunday's extraction, then what they add up to.
+   */
   protected readonly sundayTermKeys = SUNDAY_TERM_KEYS;
 
+  /**
+   * Worked example of one Sunday settlement, line by line.
+   */
   protected readonly sundayExample = SUNDAY_EXAMPLE;
 
+  /**
+   * Share of the base lost per breakthrough level when the guardian stands.
+   */
   protected readonly guardianLossLadder = GUARDIAN_LOSS_LADDER;
 
+  /**
+   * The campaign's life, in order.
+   */
   protected readonly lifecycleKeys = LIFECYCLE_KEYS;
 
+  /**
+   * The two difficulties and their references.
+   */
   protected readonly difficultyBands = DIFFICULTY_BANDS;
 
+  /**
+   * How the difficulty is decided, in the document's order.
+   */
   protected readonly calibrationFactKeys = CALIBRATION_FACT_KEYS;
 
+  /**
+   * Closing sheet of the constants a player can picture.
+   */
   protected readonly constants = RULE_CONSTANTS;
 
   /**
-   * The champion and the four weekly titles, with their icon and colour, the ranking's own.
+   * The champion and the four weekly titles, with the ranking's icons and colours.
    */
   protected readonly titles = RULE_TITLES.map((key) => ({ key, ...resolveTitleVisual(key) }));
 
@@ -134,8 +183,7 @@ export class Rules implements AfterViewInit {
   }));
 
   /**
-   * The ten weeks sized for the example squad: the document's two weights turned into the hit
-   * points and the wounded a reader can picture, rounded to the hundred and to the ten.
+   * The ten weeks sized for the example squad, hit points and wounded rounded.
    */
   protected readonly campaignWeeks = CAMPAIGN_WEEKS.map((week, index) => {
     const weekly = EXAMPLE_REFERENCE * EXAMPLE_OPERATORS;
@@ -157,32 +205,27 @@ export class Rules implements AfterViewInit {
     ELITE: 'text-boss-hp-edge',
   };
 
+  /**
+   * Locale of the active language, for the number formats.
+   */
   private readonly locale = computed(() => resolveLocale(this.translation.language()));
 
   /**
-   * The guardian's hit-point factor in the reader's notation, quoted rather than copied in the
-   * dictionaries so the text cannot drift from the table again.
+   * Guardian factor in the reader's notation, quoted so the text cannot drift from the table.
    */
   protected readonly guardianFactor = computed(() =>
     formatNumber(GUARDIAN_FACTOR, this.locale(), { minimumFractionDigits: 2 }),
   );
 
   /**
-   * Groups an amount in the reader's own notation, as every other screen quoting the rulebook.
-   *
-   * @param value - The raw amount.
-   * @returns The grouped amount.
+   * Groups an amount in the reader's notation.
    */
   protected amount(value: number): string {
     return formatDamage(value, this.translation.language());
   }
 
   /**
-   * Formats a percentage that may carry decimals, `0.004 %` as well as `35 %`, spaced as the
-   * reader's language spaces it.
-   *
-   * @param value - The percentage, 0 to 100.
-   * @returns The formatted percentage, sign included.
+   * Formats a 0 to 100 percentage, decimals kept (`0.004 %`), in the reader's notation.
    */
   protected percent(value: number): string {
     return formatNumber(value / 100, this.locale(), {
@@ -193,9 +236,6 @@ export class Rules implements AfterViewInit {
 
   /**
    * Formats a challenge's weight, `× 1.7`.
-   *
-   * @param value - The multiplier.
-   * @returns The formatted multiplier.
    */
   protected times(value: number): string {
     const formatted = formatNumber(value, this.locale(), {
@@ -206,10 +246,7 @@ export class Rules implements AfterViewInit {
   }
 
   /**
-   * Honours the fragment the reader arrived on.
-   *
-   * Scrolled by hand rather than through the router's `anchorScrolling`, which scrolls the
-   * document: this application's document never scrolls, every page's own `page-body` does.
+   * Scrolls to the fragment by hand: `anchorScrolling` scrolls the document, not `page-body`.
    */
   public ngAfterViewInit(): void {
     this.route.fragment.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((fragment) => {
@@ -219,6 +256,9 @@ export class Rules implements AfterViewInit {
     });
   }
 
+  /**
+   * Smoothly scrolls the section with id `anchor` into view.
+   */
   private scrollTo(anchor: string): void {
     const target = this.host.nativeElement.querySelector(`#${CSS.escape(anchor)}`);
     target?.scrollIntoView({ behavior: 'smooth', block: 'start' });

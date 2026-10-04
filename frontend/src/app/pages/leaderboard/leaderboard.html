@@ -1,5 +1,4 @@
 <app-page-header [heading]="'leaderboard.header.heading' | translate">
-  <!-- The week on screen and the way to any other, in the bar's trailing slot. -->
   @if (weekOptions().length > 0) {
     <app-week-picker
       (selectedChange)="selectWeek($event)"
@@ -23,9 +22,7 @@
   >
     @if (board(); as board) {
       <main class="flex flex-col gap-6 pb-20">
-        <!-- Dropped on a week nobody has played yet: the board below says the true thing on its
-             own. The rule closing the podium spans the page, so it lands on the board's edges and
-             reads as its top edge rather than as a floating bar. -->
+        <!-- No podium on an all-zero week; its rule doubles as the board's top edge. -->
         @if (hasActivity()) {
           <section aria-labelledby="podium-title" class="-mt-4">
             <h2 class="sr-only" id="podium-title">{{ 'leaderboard.podium.label' | translate }}</h2>
@@ -37,9 +34,7 @@
         <section aria-labelledby="board-title" class="board">
           <h2 class="sr-only" id="board-title">{{ 'leaderboard.board.label' | translate }}</h2>
 
-          <!-- Column header, from the width where a row really holds columns. Hidden from
-               assistive technology because it labels nothing: the rows are a list of links, not
-               table cells, so each value carries its own caption instead. -->
+          <!-- Column header, hidden from AT: each row value carries its own caption. -->
           @if (board.ranked.length > 0) {
             <div aria-hidden="true" class="bar-head head">
               <span class="bar-count clip-hex"
@@ -140,8 +135,7 @@
   </app-resource-state>
 </div>
 
-<!-- One row of the board, entirely a link to the operator's profile. Below the wide breakpoint the
-     figures keep their own captions; from it they dissolve into the header's columns. -->
+<!-- Row linking to the profile; captions dissolve into the header columns when wide. -->
 <ng-template #boardRow let-row>
   <li>
     <a
@@ -187,7 +181,6 @@
               {{ row.name }}
             </span>
           </span>
-          <!-- The one title held, beside the name, dropping under only when the column is too narrow. -->
           @if (row.isChampion) {
             <span class="who-titles">
               <app-champion-badge [inLink]="true" />
@@ -200,8 +193,7 @@
         </span>
       </span>
 
-      <!-- The figure a place is made of, then the two halves it adds, in the contribution sheet's
-           colours. An unranked operator scores nothing by definition: dashes, not zeroes. -->
+      <!-- Unranked operators score nothing: dashes, not zeroes. -->
       <span class="cell-figs">
         <span class="cell-fig">
           <span class="cap label-caption"
@@ -253,7 +245,7 @@
             row.position === null ? '—' : format(row.challengePoints)
           }}</span>
         </span>
-        <!-- Counted for everyone, ranked or not: validating a challenge does not need a place. -->
+        <!-- Counted for everyone: validating a challenge needs no place. -->
         <span class="cell-fig">
           <span class="cap label-caption"
             ><svg
@@ -289,7 +281,7 @@
           >
           <span class="fig text-text-primary">{{ row.matchCount }}</span>
         </span>
-        <!-- The contribution sheet's gauge, so attendance reads the same on both boards. -->
+        <!-- Same gauge as the contribution sheet. -->
         <span class="cell-fig cell-fig--start">
           <span class="cap label-caption"
             ><svg

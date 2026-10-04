@@ -58,7 +58,7 @@
   filter: grayscale(0.6);
 }
 
-/* An evacuated week carries a tick, the same mark a validated challenge gets. */
+/* Evacuated week: the tick a validated challenge gets. */
 .track-cell--done .track-orb::after {
   content: '';
   position: absolute;
@@ -85,7 +85,7 @@
   color: var(--color-brand-500);
 }
 
-/* On a phone only the current planet keeps its name, at the orb's own size: ten labels do not fit. */
+/* Phones: only the current planet keeps its name, ten labels do not fit. */
 @media (width < 40rem) {
   .track-cell:not(.track-cell--now) .track-label {
     visibility: hidden;

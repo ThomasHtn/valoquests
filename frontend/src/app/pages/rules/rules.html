@@ -1,6 +1,4 @@
-<!-- Context bar: the trailing edge carries the way back into the guided tour, this page's one
-     action. The replay navigation state is what lets the tour through `tourEntryGuard`. Icon-only
-     below `sm`. -->
+<!-- Tour replay link; the `replay` state lets it through `tourEntryGuard`. -->
 <app-page-header [heading]="'rules.header.heading' | translate">
   <a
     [attr.aria-label]="'rules.replayTour' | translate"
@@ -42,7 +40,7 @@
               {{ 'rules.sections.match.win' | translate }}
             </span>
           </div>
-          <!-- The split is the group's, stated once on its line rather than under every mode. -->
+          <!-- The split belongs to the group, so it is stated once per group. -->
           @for (group of modeGroups; track group.key) {
             <div class="rule-table-group">
               <span class="label-caption text-text-secondary">
@@ -352,8 +350,7 @@
     >
       <div class="flex flex-col gap-6">
         <div>
-          <!-- The "how it plays" column only exists from `sm`: on a phone the four figures
-               already take the width. -->
+          <!-- The "how it plays" column only exists from `sm`. -->
           <div
             class="rule-table-head grid grid-cols-[2.5rem_5.5rem_5.5rem_5rem] gap-x-3 sm:grid-cols-[2.5rem_6rem_9rem_5.5rem_minmax(0,1fr)]"
           >
@@ -621,7 +618,7 @@
           </div>
         </div>
 
-        <!-- One tile per title, the champion first: it outranks the four weekly ones. -->
+        <!-- Champion first: it outranks the four weekly titles. -->
         <div>
           <p class="label-caption text-text-muted">
             {{ 'rules.sections.challenges.titlesLabel' | translate }}
@@ -667,7 +664,7 @@
       </div>
     </app-rule-section>
 
-    <!-- 08 · The constants a player can picture, as a sheet of labelled values. -->
+    <!-- 08 · The constants. -->
     <app-rule-section
       [anchor]="anchor.constants"
       [heading]="'rules.sections.constants.title' | translate"

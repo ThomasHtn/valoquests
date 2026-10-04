@@ -1,34 +1,23 @@
+import { TranslateFn } from '@core/i18n/translation.model';
 import { ChallengeProgress } from '@core/challenges/challenge.model';
-import { WEEK_DAYS } from '@core/date/date-time.constants';
-import { DAILY_TONE } from '@pages/challenges/challenges.constants';
-import { BoardRow, ChallengeOperator, DayCell, DayState } from '@pages/challenges/challenges.model';
-import { buildChallengeCard, toBoardRow } from '@pages/challenges/challenges.utils';
-import { formatFigure } from '@core/i18n/number-format.utils';
+import { WEEK_DAYS } from '@core/date/date.constants';
+import { DAILY_TONE } from '@core/challenges/card/challenge-card.constants';
+import { BoardRow, ChallengeOperator } from '@core/challenges/card/challenge-card.model';
+import { DayCell, DayState } from '@pages/challenges/challenges.model';
+import { buildChallengeCard, toBoardRow } from '@core/challenges/card/challenge-card.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 
 import { TourSampleDaily } from './tour.model';
 
 /**
- * Resolves a full translation key with its parameters.
- */
-type Translate = (key: string, params?: Record<string, string | number>) => string;
-
-/**
- * The sample day's challenge as the challenges page lays it out on a phone, through the page's own
- * builders so the card reads exactly like the real one.
- *
- * @param daily - The sample challenge.
- * @param operators - The sample squad, in roster order.
- * @param closesAt - When the day closes, in epoch milliseconds.
- * @param locale - `Intl` locale the figures are written in.
- * @param translate - Resolves a full translation key with its parameters.
- * @returns The board row the deck card renders.
+ * Sample daily challenge built with the page's own builders; `closesAt` in epoch ms.
  */
 export function buildTourDailyRow(
   daily: TourSampleDaily,
   operators: readonly ChallengeOperator[],
   closesAt: number,
   locale: string,
-  translate: Translate,
+  translate: TranslateFn,
 ): BoardRow {
   const players = operators.map((operator, index) => {
     const value = daily.progress[index] ?? 0;
@@ -62,16 +51,7 @@ export function buildTourDailyRow(
 }
 
 /**
- * The sample week's seven-day strip: the days before today closed with their tallies, today
- * running, the rest ahead.
- *
- * @param tally - Operators who validated each closed day's challenge, Monday first.
- * @param todayDone - Operators who validated today's challenge so far.
- * @param total - Operators on the roster.
- * @param weekStart - Local midnight of the week's Monday.
- * @param locale - `Intl` locale the weekdays are written in.
- * @param translate - Resolves a full translation key with its parameters.
- * @returns One cell per day, Monday first.
+ * Sample week strip, Monday first; `tally` holds each closed day's count, today comes next.
  */
 export function buildTourWeek(
   tally: readonly number[],
@@ -79,7 +59,7 @@ export function buildTourWeek(
   total: number,
   weekStart: Date,
   locale: string,
-  translate: Translate,
+  translate: TranslateFn,
 ): DayCell[] {
   const todayIndex = tally.length;
   return Array.from({ length: WEEK_DAYS }, (_, index) => {
@@ -113,10 +93,7 @@ export function buildTourWeek(
 }
 
 /**
- * Local midnight of the Monday of the week holding a moment.
- *
- * @param now - The moment, in epoch milliseconds.
- * @returns The week's Monday at local midnight.
+ * Local midnight of the Monday of the week holding `now` (epoch ms).
  */
 export function startOfWeek(now: number): Date {
   const date = new Date(now);
@@ -126,10 +103,7 @@ export function startOfWeek(now: number): Date {
 }
 
 /**
- * Next local midnight after a moment, when that day's challenge closes.
- *
- * @param now - The moment, in epoch milliseconds.
- * @returns The next local midnight, in epoch milliseconds.
+ * Next local midnight after `now`, in epoch ms.
  */
 export function endOfDay(now: number): number {
   const date = new Date(now);

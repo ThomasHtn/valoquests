@@ -2,8 +2,7 @@
   display: block;
 }
 
-/* Seven cells split by hairlines under one rule: a day gone by in plain text with its count in
-   green, today in the daily's cyan, the day on screen tinted and underlined, the days ahead faded. */
+/* Seven cells under one rule: past counts green, today cyan, the picked day tinted, ahead faded. */
 .week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -42,7 +41,7 @@
   cursor: default;
 }
 
-/* Oswald capitals with French accents: line height stays above 1 so no accent is clipped. */
+/* Line height above 1 so Oswald's accented capitals are not clipped. */
 .day-name {
   font-family: var(--font-display);
   font-size: 0.75rem;
@@ -87,8 +86,7 @@
   opacity: 0.55;
 }
 
-/* Slim: one underlined initial per day. A day someone validated is underlined in cyan, the day on
-   screen in the primary text colour. */
+/* Slim: one underlined initial per day, cyan when validated, primary when picked. */
 :host(.daily-week--slim) .week {
   display: flex;
   gap: 0.3rem;

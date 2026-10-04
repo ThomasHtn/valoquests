@@ -9,11 +9,7 @@ import {
 } from '@core/snackbar/snackbar.constants';
 
 /**
- * Application-wide snackbar, mounted once at the root so every page shares the same single slot.
- *
- * Bottom-anchored and self-dismissing with a timebar, replacing what used to be a per-page inline
- * success/error line: an operator no longer has to look back at the control they clicked to learn
- * what happened, and the message no longer competes for space with the rest of the page.
+ * Application-wide snackbar, mounted once at the root; self-dismissing with a timebar.
  */
 @Component({
   selector: 'app-snackbar',
@@ -23,14 +19,17 @@ import {
 })
 export class Snackbar {
   /**
-   * Service holding the current and queued snackbars.
+   * Current and queued snackbars.
    */
   protected readonly snackbar = inject(SnackbarService);
 
   /**
-   * Duration the timebar animation must match exactly, in milliseconds.
+   * Timebar duration in ms, matching the service exactly.
    */
   protected readonly snackbarDurationMs = SNACKBAR_DURATION_MS;
 
+  /**
+   * Timebar duration of an error in ms, longer so it can be read.
+   */
   protected readonly errorDurationMs = SNACKBAR_ERROR_DURATION_MS;
 }

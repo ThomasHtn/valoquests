@@ -3,9 +3,7 @@ import { Directive, ElementRef, inject, input } from '@angular/core';
 import { focusableWithin } from './focus-trap.utils';
 
 /**
- * Keeps Tab and Shift+Tab inside a modal layer while it is active, as `aria-modal` promises: from
- * the last control focus wraps to the first, and back. A layer with nothing focusable keeps focus
- * on itself.
+ * Wraps Tab inside a modal layer, as `aria-modal` promises; an empty layer keeps focus itself.
  */
 @Directive({
   selector: '[appFocusTrap]',
@@ -13,14 +11,20 @@ import { focusableWithin } from './focus-trap.utils';
 })
 export class FocusTrap {
   /**
-   * Whether the trap holds, for a layer that stays in the DOM while closed (the mobile drawer).
+   * Whether the trap holds, for layers kept in the DOM while closed.
    */
   public readonly appFocusTrap = input(true, {
     transform: (value: boolean | '') => value !== false,
   });
 
+  /**
+   * Layer element, whose focusables the trap cycles through.
+   */
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
+  /**
+   * Wraps Tab and Shift+Tab around the first and last focusables.
+   */
   protected onKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Tab' || !this.appFocusTrap()) {
       return;

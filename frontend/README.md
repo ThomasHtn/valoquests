@@ -30,7 +30,7 @@ npm start        # dev server on :4200, proxies /api to localhost:8080
 ```bash
 npm start                                                        # dev server
 npm test -- --watch=false                                        # the suite CI runs
-npm test -- --include=src/app/core/admin/admin-session.spec.ts   # a single spec
+npm test -- --include=src/app/core/admin/session/admin-session.spec.ts   # a single spec
 npm run lint
 npm run format                                                   # format:check is the CI gate
 npm run build                                                    # production bundle in dist/
@@ -46,14 +46,14 @@ Path aliases: `@core/*`, `@shared/*`, `@layout/*`, `@pages/*`, `@env/*`.
 | `pages/` | Routed screens with their own sub-components |
 | `layout/` | The `Shell` (sidebar) and the page header |
 | `shared/` | Presentational primitives: gauges, tiles, drawers, empty states, the rocket, the charts |
-| `styles/` | `colors.css`, `typography.css`, `elevation.css`, `animations.css` |
+| `styles/` | design tokens (`colors.css`, `typography.css`, `elevation.css`), one file per theme of shared utilities, `motion/` for animations, `components/` for plain classes shared by several components |
 
 A screen is `x.ts` + `x.html` + `x.css`, plus `x.model.ts` for its view models.
 
 ## Data access
 
 - `@Service()` from `@angular/core`, not `@Injectable`.
-- Every backend URL is declared once in `core/http/api-endpoints.ts`. Components never build URLs.
+- Every backend URL is declared once in `core/http/api-endpoints.constants.ts`. Components never build URLs.
 - `*-api.ts` services expose `httpResource<T>()` as fields, so every consumer shares one in-flight
   request instead of triggering its own call.
 - **Always read a resource through `resourceValue(resource, fallback)`.** `value()` throws once the

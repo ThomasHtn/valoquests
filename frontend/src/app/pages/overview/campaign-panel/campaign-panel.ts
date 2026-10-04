@@ -2,13 +2,11 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { LucideChevronDown, LucideHistory } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
-import {
-  Campaign,
-  CAMPAIGN_WEEK_COUNT,
-  CampaignHistory,
-  CampaignWeek,
-} from '@core/campaign/campaign.model';
-import { localMidnight } from '@core/date/date-time.utils';
+import { Campaign } from '@core/campaign/campaign.model';
+import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
+import { CampaignHistory } from '@core/campaign/campaign-history.model';
+import { CampaignWeek } from '@core/campaign/campaign-week.model';
+import { localMidnight } from '@core/date/date.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -36,8 +34,7 @@ import { ReserveLedger } from './reserve-ledger/reserve-ledger';
 import { RocketShowcase } from './rocket-showcase/rocket-showcase';
 
 /**
- * The overview's campaign tab: the rocket being built, the base's reserves and their week-by-week
- * ledger, and the campaigns before this one, folded.
+ * Overview campaign tab: rocket, base reserves, ledger and folded campaign history.
  */
 @Component({
   selector: 'app-campaign-panel',
@@ -57,16 +54,28 @@ import { RocketShowcase } from './rocket-showcase/rocket-showcase';
 })
 export class CampaignPanel {
   /**
-   * The campaign the overview already holds.
+   * Campaign held by the overview.
    */
   public readonly campaign = input.required<Campaign | null>();
 
+  /**
+   * Translation service, to name rocket parts, curves and seasons.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * Closed campaigns shared with the API service, behind the history fold.
+   */
   protected readonly historyResource = inject(CampaignApi).history;
 
+  /**
+   * Whether the history is still loading, for its loading state.
+   */
   protected readonly historyLoading = anyLoading(this.historyResource);
 
+  /**
+   * Whether the history failed, to offer a retry.
+   */
   protected readonly historyError = anyError(this.historyResource);
 
   /**
@@ -74,12 +83,15 @@ export class CampaignPanel {
    */
   protected readonly historyOpen = signal(false);
 
+  /**
+   * Past campaigns, empty while loading or on error.
+   */
   private readonly history = computed<readonly CampaignHistory[]>(() =>
     resourceValue(this.historyResource, []),
   );
 
   /**
-   * The week in progress, or `null` once it is settled or outside the ten weeks.
+   * Week in progress, `null` once settled or outside the ten weeks.
    */
   private readonly currentWeek = computed<CampaignWeek | null>(() => {
     const campaign = this.campaign();
@@ -90,10 +102,16 @@ export class CampaignPanel {
     return week?.settled ? null : week;
   });
 
+  /**
+   * Base stocks and rescue totals, `null` without a campaign.
+   */
   protected readonly reserves = computed<Reserves | null>(() =>
     buildReserves(this.campaign(), this.currentWeek()),
   );
 
+  /**
+   * One ledger column per campaign week, with its planet state.
+   */
   protected readonly ledgerColumns = computed<readonly LedgerColumn[]>(() => {
     const campaign = this.campaign();
     if (!campaign) {
@@ -106,10 +124,16 @@ export class CampaignPanel {
     }));
   });
 
+  /**
+   * Ledger rows tracing each resource across the weeks.
+   */
   protected readonly ledger = computed<readonly LedgerRow[]>(() =>
     buildLedger(this.campaign(), this.ledgerColumns()),
   );
 
+  /**
+   * Rocket parts with their build state, one fitted per defeated guardian.
+   */
   protected readonly rocketParts = computed<readonly RocketPart[]>(() => {
     const campaign = this.campaign();
     if (!campaign) {
@@ -133,6 +157,9 @@ export class CampaignPanel {
     });
   });
 
+  /**
+   * Population curves of the current campaign and the past ones.
+   */
   protected readonly curves = computed<readonly HistoryCurve[]>(() => {
     const campaign = this.campaign();
     const curves: HistoryCurve[] = [];
@@ -166,6 +193,9 @@ export class CampaignPanel {
     return curves;
   });
 
+  /**
+   * Past and current campaigns ranked by final population.
+   */
   protected readonly historyRows = computed<readonly HistoryRow[]>(() => {
     const campaign = this.campaign();
     const rows: HistoryRow[] = this.history().map((past) => ({
@@ -213,14 +243,23 @@ export class CampaignPanel {
       .map((row, position) => ({ ...row, rank: position + 1 }));
   });
 
+  /**
+   * Mirrors the fold state so the history renders only once opened.
+   */
   protected toggleHistory(event: Event): void {
     this.historyOpen.set((event.target as HTMLDetailsElement).open);
   }
 
+  /**
+   * Reloads the history after a failure.
+   */
   protected retryHistory(): void {
     reloadAll(this.historyResource);
   }
 
+  /**
+   * Names the season a campaign started in, as its table subtitle.
+   */
   private season(isoDate: string): string {
     const date = localMidnight(isoDate);
     return this.translation.translate(`campaign.history.season.${resolveSeasonKey(date)}`, {

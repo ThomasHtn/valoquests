@@ -4,7 +4,7 @@
   gap: 0.75rem;
 }
 
-/* ---------- Squad bar: who is who, their weekly count, and the way to pin one first ---------- */
+/* ---------- Squad bar ---------- */
 
 .squad {
   display: flex;
@@ -53,7 +53,7 @@
   white-space: nowrap;
 }
 
-/* The pinned operator only moves first; this small star is its one mark. */
+/* The pinned operator's only mark besides moving first. */
 .sq-star {
   position: absolute;
   top: 0.25rem;
@@ -66,7 +66,7 @@
 
 /* ---------- One card per challenge ---------- */
 
-/* Flush with the card's edges: cancels its padding. */
+/* Cancels the card's padding to sit flush with its edges. */
 .tally {
   margin: 1rem -1rem -1.1rem -1.15rem;
 }

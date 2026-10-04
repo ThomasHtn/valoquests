@@ -131,7 +131,7 @@ export interface LedgerColumn {
   readonly name: string;
 
   /**
-   * Current state.
+   * Week state.
    */
   readonly state: PlanetState;
 }
@@ -191,7 +191,7 @@ export interface LedgerCell {
   readonly stockRescues: number;
 
   /**
-   * The three bars, as shares of the ledger's scale in [0, 1].
+   * Gained units as a share of the tallest bar, in [0, 1].
    */
   readonly gotShare: number;
 
@@ -330,3 +330,8 @@ export interface HistoryCurve {
    */
   readonly current: boolean;
 }
+
+/**
+ * Resource a ledger row tracks.
+ */
+export type LedgerKey = LedgerRow['key'];

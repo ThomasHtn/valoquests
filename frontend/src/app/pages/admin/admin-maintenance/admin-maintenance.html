@@ -3,9 +3,7 @@
 <div class="page-body">
   <app-section-label [label]="'admin.maintenance.dangerSection' | translate" />
 
-  <!-- Danger tones on the panel itself, not just on its button: this is the only screen in the
-     application where a click destroys data, and the surface should say so before the pointer
-     reaches the control. -->
+  <!-- Danger tones on the whole panel: the only screen where a click destroys data. -->
   <div
     class="notch-tr notch-tr-edge border border-danger/40 bg-danger/5 p-5 [--notch:0.875rem] sm:p-6"
   >

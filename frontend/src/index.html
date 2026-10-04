@@ -2,23 +2,19 @@
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <!-- Shown until the first route resolves, after which `TranslatedTitleStrategy` takes over.
-         Must match its `APPLICATION_NAME`, which is what every resolved title is suffixed with. -->
+    <!-- Until the first route resolves; must match the title strategy's `APPLICATION_NAME`. -->
     <title>ValoQuests</title>
     <base href="/" />
-    <!-- `viewport-fit=cover` lets the dark ground run under a notch; `page-body` pads the home
-         indicator back out with `env(safe-area-inset-bottom)`. -->
+    <!-- Ground runs under a notch; `page-body` pads the safe area back. -->
     <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport" />
-    <!-- Mobile browser chrome painted in the rail's colour, and native controls drawn dark. -->
+    <!-- Mobile browser chrome in the rail's colour, native controls dark. -->
     <meta content="#0a151d" name="theme-color" />
     <meta content="dark" name="color-scheme" />
     <link href="favicon.svg" rel="icon" type="image/svg+xml" />
     <link href="favicon.ico" rel="icon" type="image/x-icon" />
-    <!-- Installable app: `start_url` is the root, so a home-screen launch never depends on the page
-         it was added from. -->
+    <!-- Installable app; `start_url` is the root, whatever page it was added from. -->
     <link href="manifest.webmanifest" rel="manifest" />
-    <!-- What a shared link shows in Discord, WhatsApp or a search result. Crawlers resolve the image
-         against the page; replace it with an absolute URL once the public domain is final. -->
+    <!-- Link previews; make the image URL absolute once the public domain is final. -->
     <meta
       content="Les matchs Valorant de l'escouade, transformés en campagne coopérative de dix semaines."
       name="description"
@@ -32,10 +28,7 @@
     />
     <meta content="/icons/icon-512.png" property="og:image" />
     <meta content="summary" name="twitter:card" />
-    <!-- Typefaces of the "Expédition" direction: Oswald for headings and the wordmark, Barlow
-         Condensed for body copy. Both are self-hosted and declared in `styles/typography.css`;
-         the two the first screen always sets are preloaded so they are fetched alongside the
-         stylesheet rather than after it. -->
+    <!-- First screen's fonts (see `styles/typography.css`), fetched with the stylesheet. -->
     <link
       as="font"
       crossorigin

@@ -3,71 +3,56 @@ import { SnackbarMessage } from './snackbar.model';
 import { SNACKBAR_DURATION_MS, SNACKBAR_ERROR_DURATION_MS } from './snackbar.constants';
 
 /**
- * Queues and exposes the application's snackbars.
- *
- * Global rather than per-page: outcomes used to be reported inline, next to whatever triggered
- * them, but a fixed bottom-anchored snackbar has only one slot on screen. Messages are queued
- * rather than overwritten so that two commands run back to back — the backoffice's operations
- * screen runs several in sequence — each still get their own turn instead of the second erasing
- * the first before it was read.
+ * Global snackbar queue: one slot on screen, so back-to-back messages each get their turn.
  */
 @Service()
 export class SnackbarService {
   /**
-   * Messages waiting to be shown, in arrival order. The one currently on screen is not in this
-   * queue — it lives in {@link current}.
+   * Waiting messages in arrival order, excluding {@link current}.
    */
   private readonly pending: SnackbarMessage[] = [];
 
   /**
-   * Identity of the next queued message, incremented on every push so the display component can
-   * key its timebar animation on it and have the animation restart every time.
+   * Id of the next message.
    */
   private nextId = 0;
 
   /**
-   * Handle of the timer currently counting down {@link current}, if any.
+   * Timer counting down {@link current}, if any.
    */
   private dismissTimer: ReturnType<typeof setTimeout> | undefined;
 
   /**
-   * Time left before the current message goes, kept while the reader holds it open.
+   * Time left for the current message, kept while the reader holds it.
    */
   private remainingMs = 0;
 
   /**
-   * When the running timer started, to know how much of {@link remainingMs} it consumed.
+   * Start of the running timer, to know how much of {@link remainingMs} it used.
    */
   private startedAt = 0;
 
   /**
-   * Snackbar currently on screen, or `null` when none is.
+   * Snackbar on screen, `null` when none.
    */
   public readonly current = signal<SnackbarMessage | null>(null);
 
   /**
-   * Queues a success snackbar.
-   *
-   * @param text - Already-translated message.
+   * Queues a success snackbar with translated text.
    */
   public success(text: string): void {
     this.enqueue({ id: this.nextId++, type: 'success', text });
   }
 
   /**
-   * Queues an error snackbar.
-   *
-   * @param text - Already-translated message.
+   * Queues an error snackbar with translated text.
    */
   public error(text: string): void {
     this.enqueue({ id: this.nextId++, type: 'error', text });
   }
 
   /**
-   * Dismisses whichever snackbar is on screen and shows the next queued one, if any.
-   *
-   * Public so the display component can call it early — on a manual close — rather than only ever
-   * waiting out the timer.
+   * Dismisses the current snackbar early (manual close) and shows the next one.
    */
   public dismiss(): void {
     clearTimeout(this.dismissTimer);
@@ -75,12 +60,7 @@ export class SnackbarService {
   }
 
   /**
-   * Queues a message and starts showing it right away if none is currently on screen.
-   *
-   * @param message - The message to queue.
-   */
-  /**
-   * Holds the current message on screen while the reader points at it or focuses it.
+   * Holds the current message while the reader points at or focuses it.
    */
   public pause(): void {
     if (this.current() === null || this.dismissTimer === undefined) {
@@ -92,7 +72,7 @@ export class SnackbarService {
   }
 
   /**
-   * Lets the current message run out the time it had left.
+   * Lets the current message run out its remaining time.
    */
   public resume(): void {
     if (this.current() === null || this.dismissTimer !== undefined) {
@@ -101,8 +81,11 @@ export class SnackbarService {
     this.arm(this.remainingMs);
   }
 
+  /**
+   * Queues a message, dropping a repeat of the last one, and shows it if the slot is free.
+   */
   private enqueue(message: SnackbarMessage): void {
-    // The same text already showing or queued, as a flapping connection repeats it, is dropped.
+    // Drop a repeat of the last message, as a flapping connection sends.
     const last = this.pending.at(-1) ?? this.current();
     if (last?.text === message.text && last.type === message.type) {
       return;
@@ -115,7 +98,7 @@ export class SnackbarService {
   }
 
   /**
-   * Pulls the next queued message onto screen, if any, and arms its auto-dismiss timer.
+   * Shows the next queued message, if any, and arms its timer.
    */
   private showNext(): void {
     const message = this.pending.shift() ?? null;
@@ -127,6 +110,9 @@ export class SnackbarService {
     }
   }
 
+  /**
+   * Starts the countdown that dismisses the current message after `durationMs`.
+   */
   private arm(durationMs: number): void {
     this.remainingMs = durationMs;
     this.startedAt = Date.now();

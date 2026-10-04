@@ -4,13 +4,13 @@ import { LucideStar } from '@lucide/angular';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { BoardOperator, BoardRow, DayCell } from '../challenges.model';
+import { BoardOperator, DayCell } from '../challenges.model';
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { DailyWeek } from '../daily-week/daily-week';
-import { DeckCard } from '../deck-card/deck-card';
+import { DeckCard } from '@shared/deck-card/deck-card';
 
 /**
- * The board where a table would not fit: the squad bar to pin an operator first, then one card per
- * challenge, the day's first, with a line per operator closing toward the target.
+ * The board where a table would not fit: a squad bar to pin with, then one card per challenge.
  */
 @Component({
   selector: 'app-challenge-deck',

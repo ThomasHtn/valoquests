@@ -15,7 +15,6 @@
       emptyKind="waiting"
       padding="px-4 py-10 sm:px-6"
     >
-      <!-- One board, two layouts: the table from a wide column, a card per challenge below it. -->
       <section [attr.aria-label]="'challenges.board.title' | translate" class="board">
         <app-challenge-board
           (pin)="togglePin($event)"
@@ -38,10 +37,9 @@
       </section>
     </app-resource-state>
 
-    <!-- Outside the state above: the catalogue stays readable while no campaign has drawn anything. -->
+    <!-- Outside the state above, so it stays readable before any draw. -->
     @if (!isLoading()) {
-      <!-- The catalogue is folded: a reserve to consult, not an entry point. Its bar is the
-           section's own title, and nothing of the hundred-odd rows exists before it opens. -->
+      <!-- Folded: none of its rows exist before it opens. -->
       <section aria-labelledby="catalogue-title">
         <details (toggle)="toggleCatalogue($event)" class="fold">
           <summary class="fold-bar focus-ring">
@@ -55,7 +53,7 @@
               aria-hidden="true"
               class="h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent max-sm:basis-4"
             ></span>
-            <!-- Same cue as a section rule's link: before the diamond, under the rule on a phone. -->
+            <!-- Same cue as a section rule's link. -->
             <span
               class="fold-cue tracking-label font-mono text-xs font-medium text-brand-400 uppercase transition-colors"
             >

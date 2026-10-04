@@ -51,6 +51,38 @@ module.exports = defineConfig([
       'no-console': ['error', { allow: ['error', 'warn'] }],
     },
   },
+  // Layering, see frontend/CLAUDE.md: core <- shared <- layout <- pages, and no page imports another.
+  ...[
+    ['src/app/core/**/*.ts', ['@shared/*', '@layout/*', '@pages/*']],
+    ['src/app/shared/**/*.ts', ['@layout/*', '@pages/*']],
+    ['src/app/layout/**/*.ts', ['@pages/*']],
+  ].map(([files, group]) => ({
+    files: [files],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: [{ group, message: 'A layer never imports a layer above it.' }] },
+      ],
+    },
+  })),
+  {
+    // The tour is the one page allowed to showcase other pages' components.
+    files: ['src/app/pages/**/*.ts'],
+    ignores: ['src/app/pages/tour/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@pages/*'],
+              message: 'A page never imports another page: move shared code to core/ or shared/.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],

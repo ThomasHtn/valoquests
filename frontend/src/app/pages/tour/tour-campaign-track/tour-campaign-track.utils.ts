@@ -1,14 +1,10 @@
-import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.model';
-import { resolvePlanetArtUrl } from '@core/campaign/planet-art.utils';
+import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
+import { resolvePlanetArtUrl } from '@core/campaign/planets/campaign-planet-art.utils';
 
 import { TourTrackPlanet, TourTrackState } from './tour-campaign-track.model';
 
 /**
- * Lays the campaign's planets out in order, the weeks before the current one evacuated.
- *
- * @param weekIndex - One-based index of the current week.
- * @param planetName - Name of the current week's planet.
- * @returns One planet per week of the campaign.
+ * One planet per campaign week, those before the one-based `weekIndex` evacuated.
  */
 export function buildTourTrack(weekIndex: number, planetName: string): readonly TourTrackPlanet[] {
   return Array.from({ length: CAMPAIGN_WEEK_COUNT }, (_, offset) => {

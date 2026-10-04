@@ -3,28 +3,18 @@ import { Component, output } from '@angular/core';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 
 /**
- * Compass call to action of the landing page.
- *
- * The landing page's only affordance, so it is a real `<button>` rather than a clickable box:
- * pointer and keyboard activation, focus ring and accessible name all come for free that way. Its
- * accessible name is its own visible wording, as WCAG 2.5.3 requires; every ring, tick, needle and
- * ripple around it is decoration and is hidden from assistive technologies.
- *
- * Split out of the page for the same reason the overview splits its own sections: this is forty
- * nodes of pure ornament that would otherwise bury the page's actual content.
+ * Landing call to action: a real button named by its visible label (WCAG 2.5.3).
  */
 @Component({
   selector: 'app-compass',
   imports: [TranslatePipe],
   templateUrl: './compass.html',
-  // Every ring is a fraction of `--compass-size`, so the two sizes this instrument has are two
-  // values rather than the six pairs of `h-[…] w-[…] sm:h-[…] sm:w-[…]` they used to be, and the
-  // ratios between the bezels can no longer drift apart when one of them is edited.
+  // Every ring is a fraction of `--compass-size`, so the bezel ratios cannot drift.
   host: { class: 'block [--compass-size:210px] sm:[--compass-size:300px]' },
 })
 export class Compass {
   /**
-   * Emitted when the visitor activates the compass, by pointer or by keyboard.
+   * Emitted when the visitor activates the compass.
    */
   public readonly entered = output<void>();
 }

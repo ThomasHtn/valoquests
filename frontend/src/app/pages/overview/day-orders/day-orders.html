@@ -1,9 +1,5 @@
-<!-- The orders of the day, in two equal columns: on the left what there is to do, on the
-     right what the day has already given. -->
 <div>
   <div class="day">
-    <!-- The challenges page's phone card, its last line holding today's countdown and how many
-         operators finished. -->
     @if (daily(); as daily) {
       <app-deck-card [idleFigures]="true" [roomy]="true" [row]="daily">
         <div class="foot">
@@ -43,9 +39,7 @@
       </div>
     }
 
-    <!-- The tally, as a haul: the blow to the guardian across the column, the base's four flows
-         as tiles, the squad as a row of faces for those who played. The last tile is the one the page lacked: a base
-         eats every day, and it is the only thing in the game that punishes stopping. -->
+    <!-- The upkeep tile shows the one thing that punishes stopping: the base eats daily. -->
     @if (tally(); as tally) {
       <div class="day-col">
         <p class="day-cap label-caption text-2xs">
@@ -109,7 +103,7 @@
             </p>
           </div>
 
-          <!-- Amber while the base grows, red the day it shrinks, as the scene's own delta. -->
+          <!-- Amber while the base grows, red when it shrinks, like the scene's delta. -->
           <div
             [style.--tone]="
               tally.populationChange < 0 ? 'var(--color-boss-hp-edge)' : 'var(--color-brand-400)'

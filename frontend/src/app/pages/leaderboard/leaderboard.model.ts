@@ -1,49 +1,48 @@
-import { WeeklyTitle } from '@core/campaign/campaign.model';
-import { TitleVisual } from '@core/campaign/campaign-visual.utils';
+import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
+import { TitleVisual } from '@core/campaign/titles/campaign-title-visual.model';
 import { StreakPip } from '@shared/streak-gauge/streak-gauge.model';
 
 /**
- * A title an operator holds on the board, with the icon and colour it is drawn in.
+ * Title held on the board, with its icon and colour.
  */
 export interface BoardTitle extends TitleVisual {
   /**
-   * Which weekly title.
+   * Weekly title.
    */
   readonly key: WeeklyTitle;
 
   /**
-   * The figure the title was awarded on, worded ("2 996 composants"), or `null` when the week
-   * kept no such figure.
+   * Worded figure the title was awarded on ("2 996 composants"), `null` if not kept.
    */
   readonly measure: string | null;
 }
 
 /**
- * An operator's attendance over the week, as the streak gauge draws it.
+ * Weekly attendance, as the streak gauge draws it.
  */
 export interface BoardStreak {
   /**
-   * The week from Monday to Sunday, or `null` when only the count is known (a closed week).
+   * Monday to Sunday pips, `null` when only the count is known (closed week).
    */
   readonly week: readonly StreakPip[] | null;
 
   /**
-   * Days of the week played.
+   * Days played this week.
    */
   readonly days: number;
 
   /**
-   * Streak bonus in percent: today's, or the one playing today would earn while not played yet.
+   * Streak bonus in percent: today's, or what playing today would earn.
    */
   readonly bonusPercent: number;
 }
 
 /**
- * One row of the board: where the operator stands and what got them there.
+ * Board row.
  */
 export interface BoardRow {
   /**
-   * Internal identifier of the player.
+   * Player id.
    */
   readonly playerId: number;
 
@@ -53,23 +52,22 @@ export interface BoardRow {
   readonly name: string;
 
   /**
-   * Bundled agent portrait name, or `null` when none was chosen.
+   * Portrait URL, `null` for the fallback icon.
    */
   readonly portrait: string | null;
 
   /**
-   * 1-based position, or `null` for an operator out of the campaign, who is tracked but never
-   * takes a slot.
+   * One-based position, `null` for an operator out of the campaign (tracked, never ranked).
    */
   readonly position: number | null;
 
   /**
-   * Places climbed since the last calculation, negative when lost. Zero on a closed week.
+   * Places climbed since the last calculation, negative when lost, zero on a closed week.
    */
   readonly variation: number;
 
   /**
-   * Whether the operator holds the reigning Champion title.
+   * Whether the operator is the reigning champion.
    */
   readonly isChampion: boolean;
 
@@ -84,13 +82,12 @@ export interface BoardRow {
   readonly damage: number;
 
   /**
-   * Ranking points earned from challenges.
+   * Ranking points from challenges.
    */
   readonly challengePoints: number;
 
   /**
-   * The one title this operator is decorated with, the highest-priority one held, or `null` when
-   * they hold none.
+   * Highest-priority title held, `null` when none.
    */
   readonly title: BoardTitle | null;
 
@@ -100,12 +97,12 @@ export interface BoardRow {
   readonly matchCount: number;
 
   /**
-   * Attendance over the week.
+   * Weekly attendance.
    */
   readonly streak: BoardStreak;
 
   /**
-   * Challenges validated this week, weekly and daily alike.
+   * Challenges validated this week, weekly and daily.
    */
   readonly challengesCompleted: number;
 
@@ -116,11 +113,11 @@ export interface BoardRow {
 }
 
 /**
- * One week the board can show: the live one, or a closed one browsed back to.
+ * Week the board shows: the live one or a closed one.
  */
 export interface BoardWeek {
   /**
-   * Monday identifying the week, as an ISO-8601 date (`YYYY-MM-DD`).
+   * Monday of the week (`YYYY-MM-DD`).
    */
   readonly weekStart: string;
 
@@ -130,7 +127,7 @@ export interface BoardWeek {
   readonly live: boolean;
 
   /**
-   * Position in the campaign, or `null` for a week outside one.
+   * One-based week in the campaign, `null` outside one.
    */
   readonly weekIndex: number | null;
 
@@ -140,13 +137,13 @@ export interface BoardWeek {
   readonly ranked: readonly BoardRow[];
 
   /**
-   * Rows without a position yet.
+   * Rows without a position.
    */
   readonly unranked: readonly BoardRow[];
 }
 
 /**
- * The operator who finished a closed week first, as the week picker names it.
+ * Winner of a closed week, as the picker names it.
  */
 export interface WeekWinner {
   /**
@@ -155,33 +152,32 @@ export interface WeekWinner {
   readonly name: string;
 
   /**
-   * Bundled agent portrait name, or `null` when none was chosen.
+   * Portrait URL, `null` for the fallback icon.
    */
   readonly portrait: string | null;
 }
 
 /**
- * One week the picker offers, newest first.
+ * Week offered by the picker.
  */
 export interface WeekOption {
   /**
-   * Monday of the week, ISO date.
+   * Monday of the week (`YYYY-MM-DD`).
    */
   readonly weekStart: string;
 
   /**
-   * Monday to Sunday, the month spelled once when both days share it.
+   * Formatted Monday to Sunday span.
    */
   readonly label: string;
 
   /**
-   * Position in its campaign, or `null` for a week outside one.
+   * One-based week in its campaign, `null` outside one.
    */
   readonly index: number | null;
 
   /**
-   * What the option belongs to — a campaign's id, or `null` outside one — so the picker can rule
-   * off one run of weeks from the next without naming them.
+   * Campaign id, `null` outside one, so the picker can rule off each run.
    */
   readonly group: number | null;
 
@@ -191,7 +187,7 @@ export interface WeekOption {
   readonly live: boolean;
 
   /**
-   * Who won the week; `null` while it is still running or when nobody was ranked.
+   * Week winner, `null` while running or when nobody was ranked.
    */
   readonly winner: WeekWinner | null;
 }

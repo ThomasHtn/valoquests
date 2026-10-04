@@ -1,6 +1,7 @@
-import { CampaignWeek } from '@core/campaign/campaign.model';
-import { campaignMidnight } from '@core/date/campaign-time-zone.utils';
-import { CAMPAIGN_TIME_ZONE, WEEK_DAYS } from '@core/date/date-time.constants';
+import { CampaignWeek } from '@core/campaign/campaign-week.model';
+import { campaignMidnight } from '@core/campaign/calendar/campaign-calendar.utils';
+import { CAMPAIGN_TIME_ZONE } from '@core/campaign/calendar/campaign-calendar.constants';
+import { WEEK_DAYS } from '@core/date/date.constants';
 import { Language } from '@core/i18n/translation.model';
 import {
   DAY_MS,
@@ -16,6 +17,7 @@ import {
   HOUR_MS,
 } from './fall-forecast.constants';
 import {
+  FallBounds,
   FallChart,
   FallChartPoint,
   FallPointer,
@@ -25,25 +27,34 @@ import {
 } from './fall-forecast.model';
 
 /**
- * Rebuilds the week's descent from its daily damage and projects it at the pace held since Monday.
- *
- * The played part only knows each finished day's close: within a day the curve is smoothed, never
- * read. Today is pinned on the week's own total, the figure the duel shows.
- *
- * @param week - The week in progress, or `null` outside one.
- * @param now - The current instant, in epoch milliseconds.
- * @returns The descent, or `null` while nobody has hit the guardian yet.
+ * The week's descent from its daily closes, projected at Monday's pace; `null` before any hit.
+ * Today is pinned on the week's total, the figure the duel shows.
  */
 export function buildGuardianFall(week: CampaignWeek | null, now: number): GuardianFall | null {
   if (!week || week.guardianHitPoints <= 0) {
     return null;
   }
-  const hitPoints = week.guardianHitPoints;
-  const weekStart = campaignMidnight(week.weekStart).getTime();
-  const deadline = campaignMidnight(week.weekStart, WEEK_DAYS).getTime();
+  const bounds: FallBounds = {
+    hitPoints: week.guardianHitPoints,
+    weekStart: campaignMidnight(week.weekStart).getTime(),
+    deadline: campaignMidnight(week.weekStart, WEEK_DAYS).getTime(),
+  };
   const killAt = week.defeated && week.defeatedAt ? Date.parse(week.defeatedAt) : null;
-  const until = killAt ?? Math.min(Math.max(now, weekStart), deadline);
+  // Stops at the kill, or at now clamped to the week.
+  const until = killAt ?? Math.min(Math.max(now, bounds.weekStart), bounds.deadline);
+  const readings = closedDayReadings(week, bounds, until);
 
+  if (killAt !== null) {
+    return fallenGuardian(bounds, readings, killAt);
+  }
+  return projectFall(bounds, readings, week.damageDealt, until);
+}
+
+/**
+ * Monday's full pool, then the close of every day finished before `until`.
+ */
+function closedDayReadings(week: CampaignWeek, bounds: FallBounds, until: number): FallReading[] {
+  const { hitPoints, weekStart } = bounds;
   const readings: FallReading[] = [{ kind: 'start', time: weekStart, left: hitPoints }];
   let dealt = 0;
   for (const [index, damage] of week.dailyDamage.entries()) {
@@ -54,33 +65,50 @@ export function buildGuardianFall(week: CampaignWeek | null, now: number): Guard
     dealt += damage;
     readings.push({ kind: 'dayEnd', time: close, left: Math.max(0, hitPoints - dealt) });
   }
+  return readings;
+}
 
-  const shape = { hitPoints, weekStart, deadline };
-  if (killAt !== null) {
-    readings.push({ kind: 'kill', time: killAt, left: 0 });
-    return {
-      ...shape,
-      outcome: 'down',
-      readings,
-      pace: hitPoints / Math.max(1, killAt - weekStart),
-      fallAt: killAt,
-      leftAtDeadline: 0,
-    };
-  }
+/**
+ * A guardian already down: the curve ends on the fatal blow.
+ */
+function fallenGuardian(
+  bounds: FallBounds,
+  readings: readonly FallReading[],
+  killAt: number,
+): GuardianFall {
+  return {
+    ...bounds,
+    outcome: 'down',
+    readings: [...readings, { kind: 'kill', time: killAt, left: 0 }],
+    pace: bounds.hitPoints / Math.max(1, killAt - bounds.weekStart),
+    fallAt: killAt,
+    leftAtDeadline: 0,
+  };
+}
 
-  const total = Math.min(hitPoints, week.damageDealt);
+/**
+ * A standing guardian: now pinned on the week's total, pace extended; `null` before any hit.
+ */
+function projectFall(
+  bounds: FallBounds,
+  closedDays: readonly FallReading[],
+  damageDealt: number,
+  until: number,
+): GuardianFall | null {
+  const { hitPoints, weekStart, deadline } = bounds;
+  const total = Math.min(hitPoints, damageDealt);
   if (total <= 0 || until <= weekStart) {
     return null;
   }
   const left = hitPoints - total;
-  readings.push({ kind: 'now', time: until, left });
+  const readings: FallReading[] = [...closedDays, { kind: 'now', time: until, left }];
   const pace = total / (until - weekStart);
   const fallAt = until + left / pace;
   if (fallAt <= deadline) {
-    return { ...shape, outcome: 'ahead', readings, pace, fallAt, leftAtDeadline: 0 };
+    return { ...bounds, outcome: 'ahead', readings, pace, fallAt, leftAtDeadline: 0 };
   }
   return {
-    ...shape,
+    ...bounds,
     outcome: 'short',
     readings,
     pace,
@@ -90,12 +118,7 @@ export function buildGuardianFall(week: CampaignWeek | null, now: number): Guard
 }
 
 /**
- * Lays the descent out for one width: tinted columns, the played curve, the projection and its
- * markers.
- *
- * @param fall - The descent.
- * @param width - Width of the drawing, in pixels.
- * @returns The chart's geometry.
+ * Chart geometry for one drawing width, in pixels.
  */
 export function layoutFallChart(fall: GuardianFall, width: number): FallChart {
   const narrow = width < FALL_NARROW_WIDTH;
@@ -104,79 +127,100 @@ export function layoutFallChart(fall: GuardianFall, width: number): FallChart {
   const y = (left: number): number => fallY(fall, plotHeight, left);
 
   const last = fall.readings[fall.readings.length - 1];
-  const reaches = fall.fallAt !== null;
+  const stillStanding = fall.outcome !== 'down';
   const projectionEnd = fall.fallAt ?? fall.deadline;
-
-  const zones: FallZone[] = [{ kind: 'past', x: 0, width: x(last.time) }];
-  if (fall.outcome !== 'down') {
-    zones.push({
-      kind: reaches ? 'ahead' : 'short',
-      x: x(last.time),
-      width: x(projectionEnd) - x(last.time),
-    });
-  }
-  if (fall.fallAt !== null) {
-    zones.push({ kind: 'spare', x: x(fall.fallAt), width: width - x(fall.fallAt) });
-  }
-
   const pastLine = smoothPath(
     fall.readings.map((reading) => point(x(reading.time), y(reading.left))),
   );
-  const floorPath = (from: number, to: number): string =>
-    ` L${round(to)},${plotHeight} L${round(from)},${plotHeight} Z`;
-
-  let projectionLine: string | null = null;
-  let projectionArea: string | null = null;
-  if (fall.outcome !== 'down') {
-    const endLeft = reaches ? 0 : fall.leftAtDeadline;
-    projectionLine = `M${round(x(last.time))},${round(y(last.left))} L${round(x(projectionEnd))},${round(y(endLeft))}`;
-    projectionArea = projectionLine + floorPath(x(last.time), x(projectionEnd));
-  }
-
+  const projectionLine = stillStanding ? straightProjection(fall, last, x, y) : null;
   const markX = fall.fallAt === null ? null : x(fall.fallAt);
+
   return {
     width,
     plotHeight,
     height: plotHeight + FALL_TICK_ROW,
-    zones,
+    zones: fallZones(fall, width, x),
     pastLine,
-    pastArea: pastLine + floorPath(0, x(last.time)),
+    pastArea: pastLine + floorPath(0, x(last.time), plotHeight),
     projectionLine,
-    projectionArea,
-    now: fall.outcome === 'down' ? null : point(x(last.time), y(last.left)),
-    // Pinned a little inside the edge so its dot is not cut in half.
+    projectionArea:
+      projectionLine === null
+        ? null
+        : projectionLine + floorPath(x(last.time), x(projectionEnd), plotHeight),
+    now: stillStanding ? point(x(last.time), y(last.left)) : null,
+    // Inset so its dot is not cut in half.
     end: fall.outcome === 'short' ? point(width - 10, y(fall.leftAtDeadline)) : null,
     fall: markX === null ? null : point(markX, y(0)),
-    fallAnchor:
-      markX === null || (markX >= FALL_LABEL_EDGE && markX <= width - FALL_LABEL_EDGE)
-        ? 'middle'
-        : markX < FALL_LABEL_EDGE
-          ? 'start'
-          : 'end',
+    fallAnchor: fallLabelAnchor(markX, width),
     gutter: narrow ? FALL_GUTTER_NARROW : FALL_GUTTER,
   };
 }
 
 /**
- * Places an instant across the chart.
- *
- * @param fall - The descent.
- * @param width - Width of the drawing, in pixels.
- * @param time - The instant, in epoch milliseconds.
- * @returns Its horizontal position, in pixels.
+ * Tinted columns: played part, projection while standing, spare time after the fall.
+ */
+function fallZones(fall: GuardianFall, width: number, x: (time: number) => number): FallZone[] {
+  const lastX = x(fall.readings[fall.readings.length - 1].time);
+  const zones: FallZone[] = [{ kind: 'past', x: 0, width: lastX }];
+  if (fall.outcome !== 'down') {
+    zones.push({
+      kind: fall.fallAt !== null ? 'ahead' : 'short',
+      x: lastX,
+      width: x(fall.fallAt ?? fall.deadline) - lastX,
+    });
+  }
+  if (fall.fallAt !== null) {
+    zones.push({ kind: 'spare', x: x(fall.fallAt), width: width - x(fall.fallAt) });
+  }
+  return zones;
+}
+
+/**
+ * Straight line from the last reading to the fall, or to what stands at Sunday midnight.
+ */
+function straightProjection(
+  fall: GuardianFall,
+  last: FallReading,
+  x: (time: number) => number,
+  y: (left: number) => number,
+): string {
+  const endTime = fall.fallAt ?? fall.deadline;
+  const endLeft = fall.fallAt !== null ? 0 : fall.leftAtDeadline;
+  return `M${round(x(last.time))},${round(y(last.left))} L${round(x(endTime))},${round(y(endLeft))}`;
+}
+
+/**
+ * Closes a line into an area by dropping to the plot's floor between `from` and `to`.
+ */
+function floorPath(from: number, to: number, plotHeight: number): string {
+  return ` L${round(to)},${plotHeight} L${round(from)},${plotHeight} Z`;
+}
+
+/**
+ * Anchors the fall's label to a nearby edge, centred otherwise.
+ */
+function fallLabelAnchor(markX: number | null, width: number): FallChart['fallAnchor'] {
+  if (markX === null) {
+    return 'middle';
+  }
+  if (markX < FALL_LABEL_EDGE) {
+    return 'start';
+  }
+  if (markX <= width - FALL_LABEL_EDGE) {
+    return 'middle';
+  }
+  return 'end';
+}
+
+/**
+ * Horizontal position of an epoch-millisecond instant, in pixels.
  */
 export function fallX(fall: GuardianFall, width: number, time: number): number {
   return ((time - fall.weekStart) / (fall.deadline - fall.weekStart)) * width;
 }
 
 /**
- * Places a hit point count up the chart: the full pool under the labels' room, zero just above
- * the floor.
- *
- * @param fall - The descent.
- * @param plotHeight - Height of the plot, in pixels.
- * @param left - Hit points left.
- * @returns Its vertical position, in pixels.
+ * Vertical position of a hit point count, in pixels; zero sits just above the floor.
  */
 export function fallY(fall: GuardianFall, plotHeight: number, left: number): number {
   const floor = plotHeight - FALL_FLOOR_ROOM;
@@ -184,24 +228,14 @@ export function fallY(fall: GuardianFall, plotHeight: number, left: number): num
 }
 
 /**
- * Turns a horizontal position on the chart back into an instant.
- *
- * @param fall - The descent.
- * @param width - Width of the drawing, in pixels.
- * @param x - The position, in pixels.
- * @returns The instant, in epoch milliseconds.
+ * Epoch-millisecond instant at a horizontal position, in pixels.
  */
 export function fallTimeAt(fall: GuardianFall, width: number, x: number): number {
   return fall.weekStart + (x / width) * (fall.deadline - fall.weekStart);
 }
 
 /**
- * Reads the descent at one instant: the nearest known reading over the played part, the
- * projection beyond it.
- *
- * @param fall - The descent.
- * @param time - The instant pointed at, in epoch milliseconds.
- * @returns What the chart says there.
+ * Reading at an instant: nearest known reading over the played part, projection beyond.
  */
 export function readFallAt(fall: GuardianFall, time: number): FallPointer {
   const last = fall.readings[fall.readings.length - 1];
@@ -219,10 +253,7 @@ export function readFallAt(fall: GuardianFall, time: number): FallPointer {
 }
 
 /**
- * Splits a duration into whole days and hours, as the fold row spells it.
- *
- * @param duration - The duration, in milliseconds.
- * @returns Its whole days and the hours left over.
+ * Splits a duration in milliseconds into whole days and leftover hours.
  */
 export function splitSpan(duration: number): { readonly days: number; readonly hours: number } {
   const safe = Math.max(0, duration);
@@ -230,22 +261,14 @@ export function splitSpan(duration: number): { readonly days: number; readonly h
 }
 
 /**
- * Rounds an estimated instant to the nearest hour: the pace is an average, its minutes mean nothing.
- *
- * @param time - The instant, in epoch milliseconds.
- * @returns The instant on the nearest hour.
+ * Rounds an estimate to the hour: the pace is an average, its minutes mean nothing.
  */
 export function toNearestHour(time: number): number {
   return Math.round(time / HOUR_MS) * HOUR_MS;
 }
 
 /**
- * Formats an instant in the campaign time zone, the one the week's days are cut in.
- *
- * @param time - The instant, in epoch milliseconds.
- * @param language - The reader's language.
- * @param options - Which fields to show.
- * @returns The formatted instant.
+ * Formats an epoch-millisecond instant in the campaign time zone.
  */
 export function formatCampaignTime(
   time: number,
@@ -258,11 +281,7 @@ export function formatCampaignTime(
 }
 
 /**
- * Draws a monotone cubic through the points (Fritsch-Carlson), so the curve never rises between
- * two readings of a guardian that only loses hit points.
- *
- * @param points - The points, left to right.
- * @returns The SVG path.
+ * Monotone cubic SVG path (Fritsch-Carlson): the curve never rises between two readings.
  */
 export function smoothPath(points: readonly FallChartPoint[]): string {
   const kept = points.filter((current, index) => index === 0 || current.x > points[index - 1].x);
@@ -304,17 +323,14 @@ function point(x: number, y: number): FallChartPoint {
 }
 
 /**
- * Rounds a coordinate to a tenth of a pixel, enough for a crisp path and a short string.
+ * Rounds a coordinate to a tenth of a pixel, keeping paths crisp and short.
  */
 function round(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
 /**
- * Capitalizes a sentence that opens on a weekday, which French writes in lower case.
- *
- * @param text - The sentence.
- * @returns The sentence with its first letter in upper case.
+ * Capitalizes a sentence opening on a weekday, which French writes in lower case.
  */
 export function capitalizeFirst(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);

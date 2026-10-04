@@ -1,8 +1,4 @@
-/*
- * The fold row sits on the stakes' sunken ground; the chart under it runs edge to edge on its own
- * tinted columns, its ticks back on the row's ground, in the manner of the patch notes'
- * performance chart: flat tints, each curve in its column's colour, one white pin, three ticks.
- */
+/* Patch-notes chart style: flat tints, curves in their column's colour, one pin, three ticks. */
 .fall {
   --squad: var(--color-accent-violet);
   --squad-light: color-mix(in srgb, var(--color-accent-violet) 45%, white);
@@ -261,7 +257,7 @@
   touch-action: pan-y;
 }
 
-/* Beside the crosshair, flipped to its left past the middle so it never leaves the panel. */
+/* Flipped left past the middle so it never leaves the panel. */
 .fall-tip {
   position: absolute;
   z-index: 3;
@@ -281,7 +277,7 @@
   --tip-x: calc(-100% - 12px);
 }
 
-/* Near the top it would be clipped by the fold: it drops under the pointer instead. */
+/* Drops under the pointer near the top, or the fold clips it. */
 .fall-tip--below {
   --tip-y: 12px;
 }
@@ -293,7 +289,7 @@
   color: var(--color-text-primary);
 }
 
-/* Unfolding draws the played curve, then lets the projection in. */
+/* Unfolding draws the played curve, then the projection. */
 @media (prefers-reduced-motion: no-preference) {
   .fall-body.is-open .fall-line--past {
     stroke-dasharray: 1;
@@ -319,7 +315,7 @@
     padding: 1rem 1.1rem;
   }
 
-  /* Literal size, as the stakes' keys: Tailwind only emits theme variables a utility uses. */
+  /* Literal size: Tailwind drops theme variables no utility uses. */
   .fall-key {
     font-size: 0.5625rem;
     letter-spacing: 0.12em;

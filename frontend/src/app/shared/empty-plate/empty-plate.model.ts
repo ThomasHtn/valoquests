@@ -1,29 +1,25 @@
 /**
- * Drawings an empty plate can carry, one per situation the public pages run into.
- *
- * - `radar` — a scan with nothing on it yet: the overview before a campaign exists.
- * - `podium` — three empty steps: a week nobody is ranked in.
- * - `draw` — a target and the five weekly slots: a week whose draw has not run.
- * - `matches` — a day's header over match rows still to be played: a day nobody has played yet.
+ * Empty plate drawing: `radar` no campaign, `podium` nobody ranked, `draw` draw not run,
+ * `matches` nobody played today.
  */
 export type EmptyIllustration = 'radar' | 'podium' | 'draw' | 'matches';
 
 /**
- * How a readout's dot reads: `live` is running now, `todo` waits on someone, `info` is a plain fact.
+ * Readout dot: `live` running now, `todo` waits on someone, `info` plain fact.
  */
 export type ReadoutTone = 'live' | 'todo' | 'info';
 
 /**
- * One line of the plate's status strip: a label and its value, already translated.
+ * Translated line of the plate's status strip.
  */
 export interface EmptyReadout {
   /**
-   * How the readout’s dot reads.
+   * Dot tone.
    */
   readonly tone: ReadoutTone;
 
   /**
-   * Text shown to the reader, already translated.
+   * Translated label.
    */
   readonly label: string;
 
@@ -34,24 +30,21 @@ export interface EmptyReadout {
 }
 
 /**
- * Everything an empty plate shows, already translated.
- *
- * Built by the page, which knows the situation, and handed to `app-resource-state` (or rendered
- * straight through `app-empty-plate` where the empty case sits inside loaded content).
+ * Translated empty plate content, built by the page that knows the situation.
  */
 export interface EmptyPlate {
   /**
-   * Drawing shown above the text.
+   * Drawing above the text.
    */
   readonly illustration: EmptyIllustration;
 
   /**
-   * Small caption over the title, omitted when the title says enough.
+   * Caption over the title, optional.
    */
   readonly eyebrow?: string;
 
   /**
-   * Title of the plate.
+   * Plate title.
    */
   readonly title: string;
 

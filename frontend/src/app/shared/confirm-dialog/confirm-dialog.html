@@ -1,6 +1,5 @@
 @if (open()) {
-  <!-- Scrim. Decorative: the dialog is dismissed from its own button and from Escape too, so this
-       is a convenience rather than the only way out. -->
+  <!-- Decorative scrim: the cancel button and Escape also dismiss. -->
   <div
     (click)="busy() ? null : dismissed.emit()"
     animate.enter="fx-scrim-in"
@@ -9,9 +8,7 @@
     class="fixed inset-0 z-50 bg-surface-950/80"
   ></div>
 
-  <!-- Panel. Outer notch is 0.875rem, matching the cards this dialog is opened from; the inner
-       surfaces below step down to 0.5rem so nested corners stay concentric rather than pinched.
-       It takes focus only to pull it inside the dialog, so it draws no focus ring. -->
+  <!-- Notch 0.875rem outside, 0.5rem inside for concentric corners; focused only to trap focus. -->
   <div
     #panel
     appFocusTrap

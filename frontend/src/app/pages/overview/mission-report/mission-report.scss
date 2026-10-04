@@ -1,4 +1,4 @@
-/* One inner margin for every block, so banner, loot, honours and footer share their edges. */
+/* One inner margin so every block shares its edges. */
 .rep {
   --pad: 2rem;
   --tone: var(--color-brand-500);
@@ -16,7 +16,7 @@
   border: 1.5px solid var(--tone);
 }
 
-/* The panel takes focus only to pull it inside the dialog; a ring there would double the frame. */
+/* Focused only to move focus into the dialog; a ring would double the frame. */
 .rep:focus {
   outline: none;
 }
@@ -80,8 +80,7 @@
   background: rgb(236 232 225 / 10%);
 }
 
-/* Verdict. */
-/* Clips the verdict's stamp-in scale, which would otherwise push a horizontal scrollbar. */
+/* Verdict: clips the stamp-in scale, which would push a horizontal scrollbar. */
 .rep-banner {
   overflow: clip;
   padding: 1.75rem var(--pad) 1.5rem;
@@ -126,8 +125,7 @@
   color: var(--color-text-primary);
 }
 
-/* A pointy-top hexagon outlined in its own colour, in the proportions of a regular hexagon so the
-   shape and its glyph never read as stretched. `--hex` sets the width, `--glyph` the icon. */
+/* Regular pointy-top hexagon: `--hex` sets the width, `--glyph` the icon. */
 .rep-hex {
   --hex: 3rem;
   --glyph: 1.25rem;
@@ -243,7 +241,7 @@
   --glyph: 1.125rem;
 }
 
-/* The challenge card's treatment: its tint as it lands on the page ground, not on the sunken dialog. */
+/* Challenge card tint as on the page ground, not the sunken dialog. */
 .rep-gain {
   background: color-mix(in srgb, var(--color-text-primary) 4%, var(--color-surface-950));
   box-shadow: inset 3px 0 0 currentcolor;
@@ -411,13 +409,13 @@
   color: var(--color-text-primary);
 }
 
-/* The fill and notch come from `appButton="primary"`; only its place in the row is set here. */
+/* Fill and notch come from `appButton="primary"`; only placement here. */
 .rep-continue {
   flex: none;
   margin-left: auto;
 }
 
-/* Short desktop screens (768px laptops): tighter rhythm so the report still fits without scrolling. */
+/* Short desktop screens (768px laptops): tighter so the report fits without scrolling. */
 @media (width >= 48rem) and (height < 50rem) {
   .rep-head {
     padding-block: 0.625rem;
@@ -459,7 +457,7 @@
     padding-block: 1rem;
   }
 
-  /* Side by side, the champion no longer outgrows the two rows of medals next to it. */
+  /* Side by side, the champion must not outgrow the two rows of medals. */
   .rep-champ {
     grid-template-columns: auto minmax(0, 1fr);
     justify-items: start;
@@ -486,7 +484,7 @@
   }
 }
 
-/* Phone: a full-screen sheet, everything in one column. */
+/* Phone: full-screen sheet, one column. */
 @media (width < 48rem) {
   .rep {
     --pad: 1.25rem;
@@ -495,7 +493,7 @@
     width: 100%;
     max-height: none;
     translate: none;
-    /* Full-screen sheet: only the top edge keeps the frame. */
+    /* Only the top edge keeps the frame. */
     border-width: 1.5px 0 0;
   }
 
@@ -551,7 +549,7 @@
   }
 }
 
-/* One orchestrated reveal on open: the verdict lands, the loot follows, the honours close it. */
+/* One reveal on open: verdict, then loot, then honours. */
 @media (prefers-reduced-motion: no-preference) {
   .rep-verdict {
     animation: rep-stamp 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;

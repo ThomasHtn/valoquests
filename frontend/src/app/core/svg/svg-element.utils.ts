@@ -1,22 +1,8 @@
-/**
- * SVG DOM helpers shared by every drawing built by script (rocket, planets, skies, callout wires).
- *
- * Kept free of Angular so a drawing module stays a plain function of its inputs.
- */
+import { SVG_NS } from './svg-element.constants';
+import { SvgAttrs } from './svg-element.model';
 
 /**
- * XML namespace every SVG node must be created under; `document.createElement` would yield an
- * inert HTML element instead.
- */
-export const SVG_NS = 'http://www.w3.org/2000/svg';
-
-/**
- * Attribute bag accepted by {@link svgElement}; numbers are stringified on the way in.
- */
-export type SvgAttrs = Readonly<Record<string, string | number>>;
-
-/**
- * Creates one SVG element with its attributes set.
+ * Creates an SVG element with its attributes.
  */
 export function svgElement<K extends keyof SVGElementTagNameMap>(
   name: K,

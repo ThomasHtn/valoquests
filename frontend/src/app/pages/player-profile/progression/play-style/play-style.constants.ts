@@ -1,5 +1,4 @@
 /**
- * Faintest a zone is drawn, so a zone that takes almost nothing still reads as part of the figure
- * rather than as a hole in it.
+ * Faintest zone opacity, so a near-empty zone still reads as part of the figure.
  */
 export const MINIMUM_OPACITY = 0.16;

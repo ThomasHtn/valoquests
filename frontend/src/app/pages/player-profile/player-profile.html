@@ -1,10 +1,4 @@
-<!-- Context bar, carrying the way back and nothing else. The registry this profile was reached from
-     names the context *and* is the route out of it, in the bar — so the way back reads as part of the chrome instead of a chip floating over the
-     content. No title: the identity banner right below opens on the player's name as this page's
-     `<h1>`, and repeating it here would only be a second source of the same fact.
-
-     Outside the resource state on purpose: it is chrome, so it has to stand while the profile
-     loads or fails, and below `lg` it carries the only way into the navigation. -->
+<!-- Outside the resource state: the way back must stand while the profile loads or fails. -->
 <app-page-header
   [backLink]="'/players'"
   [backLabel]="'playerProfile.breadcrumb.players' | translate"
@@ -19,10 +13,7 @@
     </span>
   }
 
-  <!-- The season scope, in the bar's trailing slot like the leaderboard's week picker: it frames
-       everything the page below shows, whichever view is open. One season at a time for the
-       matches; several for progression, whose charts compare them. A block of its own, apart from
-       the one above: a projected block must keep a single root for `[backAside]` to match it. -->
+  <!-- Season scope of both views; its own block since `[backAside]` needs a single root. -->
   @if (details()) {
     @if (viewMode() === 'MATCHES') {
       <app-season-picker
@@ -69,8 +60,7 @@
       {{ 'playerProfile.notFound.back' | translate }}
     </a>
 
-    <!-- Skeleton shaped like the loaded banner — same silhouette — so data arriving does not shift
-       the page. -->
+    <!-- Same silhouette as the loaded banner so arriving data does not shift the page. -->
     <div
       class="flex items-center gap-5 border-l-2 border-surface-700 bg-text-primary/4 p-5"
       skeleton
@@ -83,9 +73,7 @@
     </div>
 
     @if (details(); as playerDetails) {
-      <!-- Identity banner: same surface as a row of the registry this page is reached from — flat
-         tint, leading rule — so the profile reads as that row opened up rather than as
-         a separate kind of panel. -->
+      <!-- Identity banner: same surface as a registry row, read as that row opened up. -->
       <section
         class="flex flex-col gap-5 border-l-2 border-text-primary/15 bg-text-primary/4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
       >
@@ -93,12 +81,7 @@
           <app-avatar [priority]="true" [src]="avatarUrl()" size="lg" />
 
           <div class="min-w-0">
-            <!-- The page's `<h1>`: the context bar above carries only the way back, so the name is
-               stated once, here, where the portrait and the rank already are.
-
-               Wraps rather than truncates: this is the hero the page opens on, and a name cut
-               short would be the one thing the screen exists to name. -->
-            <!-- The title beside the name, outside the heading, dropping under only when too narrow. -->
+            <!-- The page's `<h1>`; wraps rather than truncates. The title sits beside it. -->
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
               <h1
                 [class.text-accent-gold]="isChampion()"
@@ -145,33 +128,20 @@
         }
       </section>
 
-      <!-- Filter bar. Every control narrowing the view is its own block (the season scope lives in
-         the page header above, since it frames both views),
-         each wearing the identity banner's surface rather than sharing one continuous band with hairline rules: a group reads as one instrument, not as a stretch of
-         a longer one. The display switch is a block of its own too, pushed to the trailing edge
-         since it governs what the page shows, not what it counts.
-
-         Single line from `sm` up: `flex-nowrap` plus `overflow-x-auto` scrolls the row sideways
-         rather than stacking a filter's caption above its options, which is what wrapping inside a
-         block would otherwise do. Below `sm` there isn't enough width for every block to fit
-         without clipping the trailing ones out of view with no visible affordance that they're
-         still there, so the row wraps onto as many lines as it needs instead. -->
+      <!-- Filter bar: one scrolling line from `sm`, wrapping below so no block hides. -->
       <div
         #filterRow
         class="scroll-subtle flex flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto sm:pb-1"
       >
         @if (viewMode() === 'MATCHES') {
-          <!-- Game-mode filter, as a segmented control: the most important modes sit right in view,
-             as many as the bar has room for (see `GAME_MODE_BUTTON_COUNTS`), the rest stay one
-             tap away behind the trailing dropdown. -->
+          <!-- As many modes as fit (`GAME_MODE_BUTTON_COUNTS`), the rest in the dropdown. -->
           <div
             [attr.aria-label]="'playerProfile.filters.gameModeLabel' | translate"
             class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 max-sm:w-full"
             role="group"
           >
             <div class="flex items-center">
-              <!-- Every mode at once, first and default: the page opens on the latest matches
-                 whatever their queue, which is where the damage just dealt is read. -->
+              <!-- Default: the page opens on the latest matches whatever their queue. -->
               <button
                 (click)="onGameModeFilterChange(null)"
                 [attr.aria-pressed]="gameModeFilter() === null"
@@ -201,9 +171,7 @@
                 </button>
               }
 
-              <!-- The remaining modes, as the shared select rather than a menu of this page's own.
-                 Vertical-dots trigger — see `Select` — since it never carries a label of its own,
-                 the mode picked from it being shown by the segmented control above instead. -->
+              <!-- Remaining modes; dots trigger since the picked mode shows in the segments. -->
               <app-select
                 [ariaLabel]="'playerProfile.filters.moreGameModes' | translate"
                 [class]="
@@ -227,9 +195,7 @@
           }
         }
 
-        <!-- Display switch, pushed to the trailing edge: it governs what the page shows, not what
-           it counts. On a phone it leads the stack as a full-width switch, since it changes the
-           whole page below while the filters only narrow it. -->
+        <!-- Display switch; first and full width on a phone since it changes the whole page. -->
         <div
           [attr.aria-label]="'playerProfile.display.label' | translate"
           class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 max-sm:order-first max-sm:w-full sm:ms-auto"
@@ -267,18 +233,14 @@
       </div>
 
       @if (viewMode() === 'MATCHES') {
-        <!-- Stat strip, for one mode at a time: an every-mode aggregate would mix incomparable
-           queues, so it is dropped while "all" is selected. The win rate leads with the wide tile,
-           the bar and the win/loss split; the rest stay uniform. -->
+        <!-- One mode at a time: an every-mode aggregate would mix incomparable queues. -->
         @if (gameModeFilter() !== null) {
           @if (statistics(); as stats) {
             <section [class]="statStripGridClass" animate.enter="fx-swap-in">
-              <!-- With nothing in scope every figure is a zero the backend had to send, not a
-                 record: judged as `null` so the strip greys out rather than reading "needs work". -->
+              <!-- Without matches every figure is judged `null` so the strip greys out. -->
               @let hasSample = stats.matchesPlayed > 0;
               @let winRate = winRateVisual(hasSample ? stats.winRate : null);
-              <!-- `border-current`, driven by the tile's text colour: `StatVisual` has no border
-                 utility. -->
+              <!-- `border-current` since `StatVisual` has no border utility. -->
               <div
                 [class]="winRate.textClass"
                 class="col-span-2 border-t-2 border-current bg-text-primary/4 px-4 py-3.5 sm:col-span-3 lg:col-span-1"
@@ -343,8 +305,7 @@
                 [value]="formatScore(hasSample ? stats.acs : null)"
               />
 
-              <!-- Spans the trailing gap on the two- and three-column grids, where it would
-                 otherwise sit alone against an empty cell. -->
+              <!-- Fills the trailing gap of the two- and three-column grids. -->
               <app-stat-tile
                 [label]="'playerProfile.stats.matchesPlayed' | translate"
                 [tooltip]="'playerProfile.stats.tooltip.matchesPlayed' | translate"
@@ -353,7 +314,7 @@
               />
             </section>
           } @else if (scopedDetailsResource.isLoading()) {
-            <!-- Same silhouette as the strip, so the figures arriving do not shift the history. -->
+            <!-- Same silhouette as the strip so arriving figures do not shift the history. -->
             <div [class]="statStripGridClass" aria-hidden="true">
               @for (span of statSkeletonTileSpans; track $index) {
                 <div
@@ -368,11 +329,7 @@
           }
         }
 
-        <!-- Where today stands on the diminishing-returns ladder, above the matches it prices.
-             The rule was only ever legible after the fact, in a tooltip on a match already played;
-             said here it can still change what the next one is. Dropped once the day is untouched
-             and the ladder has nothing to warn about yet — an opening line of "the first match
-             counts in full" is noise on every quiet day. -->
+        <!-- Today's place on the diminishing-returns ladder, hidden on an untouched day. -->
         @if (details()?.dailyYield; as yield) {
           @if (yield.matchesToday > 0) {
             <section

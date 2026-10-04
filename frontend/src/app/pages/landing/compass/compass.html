@@ -1,12 +1,10 @@
-<!-- Layers are stacked in a single grid cell rather than absolutely positioned, so that centering
-     costs no `transform` and leaves each layer's own transform free for its animation. -->
+<!-- Layers share one grid cell, leaving each `transform` free for its animation. -->
 <button
   class="focus-ring relative grid h-[var(--compass-size)] w-[var(--compass-size)] cursor-pointer place-items-center rounded-full transition-transform duration-200 hover:scale-[1.03]"
   type="button"
   (click)="entered.emit()"
 >
-  <!-- Sonar rings pulsing out of the core. Invisible at rest, so that reduced motion leaves two
-       static discs stacked on the core instead of a pair of frozen halos. -->
+  <!-- Sonar rings, invisible at rest so reduced motion shows no frozen halos. -->
   <span
     aria-hidden="true"
     class="col-start-1 row-start-1 h-[calc(var(--compass-size)*0.62)] w-[calc(var(--compass-size)*0.62)] rounded-full border border-brand-500 opacity-0 motion-safe:animate-compass-ripple"
@@ -16,7 +14,7 @@
     class="col-start-1 row-start-1 h-[calc(var(--compass-size)*0.62)] w-[calc(var(--compass-size)*0.62)] rounded-full border border-brand-500 opacity-0 [animation-delay:1.5s] motion-safe:animate-compass-ripple"
   ></span>
 
-  <!-- Outer bezel and its cardinal ticks, north picked out in brand amber. -->
+  <!-- Outer bezel and cardinal ticks, north in amber. -->
   <span
     aria-hidden="true"
     class="relative col-start-1 row-start-1 h-[var(--compass-size)] w-[var(--compass-size)] rounded-full border border-dashed border-brand-500/40 motion-safe:animate-compass-spin"
@@ -35,7 +33,7 @@
     ></span>
   </span>
 
-  <!-- Inner bezel, counter-rotating so the two never look locked together. -->
+  <!-- Inner bezel, counter-rotating. -->
   <span
     aria-hidden="true"
     class="relative col-start-1 row-start-1 h-[calc(var(--compass-size)*0.8)] w-[calc(var(--compass-size)*0.8)] rounded-full border border-brand-500/55 motion-safe:animate-compass-spin-reverse"
@@ -52,8 +50,7 @@
     <span class="tracking-label font-display text-sm/none font-bold uppercase sm:text-base">
       {{ 'landing.compass.action' | translate }}
     </span>
-    <!-- Tracked one step tighter than the label default: this caption has to fit inside a fixed
-         disc, and at `tracking-label` it runs past its edge on the small viewport. -->
+    <!-- Tighter than `tracking-label` to fit inside the disc on small viewports. -->
     <span class="font-mono text-2xs font-semibold tracking-wider uppercase">
       {{ 'landing.compass.caption' | translate }}
     </span>

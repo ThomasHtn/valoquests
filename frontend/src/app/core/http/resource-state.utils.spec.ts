@@ -5,11 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { anyError, anyLoading, isNotFound, reloadAll, resourceValue } from './resource-state.utils';
 
 /**
- * Builds a minimal stand-in for a {@link Resource}, implementing only the members these utilities
- * read.
- *
- * @param options - The state the fake resource reports.
- * @returns A fake resource cast to the real type.
+ * Fake {@link Resource} implementing only the members these utilities read.
  */
 function fakeResource<T>(options: {
   isLoading?: boolean;

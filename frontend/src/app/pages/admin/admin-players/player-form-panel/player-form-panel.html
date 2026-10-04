@@ -42,8 +42,7 @@
       />
     </app-text-field>
 
-    <!-- Avatar association, offered on creation as on edit: the portrait is chosen by hand, no
-         synchronization step resolves it. -->
+    <!-- Portrait is chosen by hand; no synchronization resolves it. -->
     <div>
       <p class="label-caption text-text-muted">
         {{ 'admin.players.form.portrait' | translate }}
@@ -62,8 +61,7 @@
     </div>
 
     @if (!editedPlayer()) {
-      <!-- Only on creation: an existing player's status is changed from its own row, so offering
-           it here too would give the same state two owners. -->
+      <!-- Creation only: an existing player's status is changed from its row. -->
       <fieldset>
         <legend class="label-caption text-text-muted">
           {{ 'admin.players.form.status' | translate }}

@@ -3,15 +3,14 @@
 <div class="page-body">
   <app-section-label [label]="'admin.operations.statusLabel' | translate" />
 
-  <!-- State of the latest run. Sits above the commands because it answers the question that decides
-     whether any of them should be triggered at all. -->
+  <!-- Latest run first: it decides whether any command should run. -->
   <div class="notch-tr panel p-5 [--notch:0.875rem]">
     <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
       <h2 class="tracking-label font-display text-base font-bold text-text-primary uppercase">
         {{ 'admin.operations.lastRun' | translate }}
       </h2>
 
-      <!-- Status is stated in words and coloured, never coloured alone. -->
+      <!-- Status in words, never colour alone. -->
       <app-status-badge
         [label]="statusLabel()"
         [tone]="synchronizing() ? 'brand' : 'neutral'"
@@ -26,8 +25,7 @@
     }
 
     @if (synchronization(); as execution) {
-      <!-- Counters move while the run is polled, so they use tabular figures: proportional digits
-         would jiggle the whole row on every refresh. -->
+      <!-- Tabular figures so polled counters do not jiggle. -->
       <dl class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div>
           <dt class="label-caption text-text-muted">
@@ -70,10 +68,7 @@
     }
   </div>
 
-  <!-- The operations, split in two rather than laid out as one undifferentiated grid: the routine
-       gestures of a week on one side, the commands that rewrite history already written on the
-       other. Each one is the whole scheduled job it stands for, never a fragment of it: the
-       fragments duplicated what the synchronization and the tick already run on their own. -->
+  <!-- Routine jobs, then commands rewriting history; each card is a whole scheduled job. -->
   <app-section-label [label]="'admin.operations.groups.routine' | translate" class="mt-12" />
   <p class="-mt-1 text-prose text-text-secondary">
     {{ 'admin.operations.groups.routineHint' | translate }}
@@ -128,8 +123,7 @@
       [state]="rolloverState()"
     />
 
-    <!-- The only command here that destroys rather than rebuilds, hence the danger tones and the
-       confirmation: every other one can be triggered twice with no consequence. -->
+    <!-- The only destructive command, hence danger tones and confirmation. -->
     <app-admin-action-card
       (triggered)="askForRedraw()"
       [actionLabel]="'admin.operations.redraw.action' | translate"
@@ -151,9 +145,7 @@
     [open]="redrawDialogOpen()"
   />
 
-  <!-- History: every past execution, most recent first, each expandable into its own per-player
-       breakdown — fetched only once a reader actually opens it, so browsing the list costs
-       nothing past the one page request. -->
+  <!-- History, most recent first; per-player details fetched on expand. -->
   <app-section-label [label]="'admin.operations.history.title' | translate" class="mt-12" />
 
   <app-resource-state

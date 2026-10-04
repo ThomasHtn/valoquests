@@ -1,11 +1,11 @@
 import { Plugin } from 'chart.js';
 
-import { formatLocalDayMonth } from '@core/date/date-time.utils';
+import { formatLocalDayMonth } from '@core/date/date-format.utils';
 import { Language, TranslateFn } from '@core/i18n/translation.model';
-import { formatSeasonName } from '@core/matches/season-name.utils';
-import { resolveMatchScore } from '@core/matches/match-format.utils';
+import { formatSeasonName } from '@core/seasons/season-name.utils';
+import { resolveMatchScore } from '@core/matches/display/match-format.utils';
 import { formatScore } from '@core/players/player-format.utils';
-import { ConsistencySummary } from '@core/players/player-progression.model';
+import { ConsistencySummary } from '@core/players/progression/player-progression.model';
 import { AXIS_TICK_FONT } from '@shared/chart/chart-theme.constants';
 import { KeyFigure } from '../key-figures/key-figures.model';
 import {
@@ -18,21 +18,20 @@ import {
   CONSISTENCY_RESULT_FALLBACK_CLASS,
   CONSISTENCY_RULE_COLOR,
   CONSISTENCY_STEADY_MARGIN,
+  CONSISTENCY_TREND_ICONS,
+  CONSISTENCY_TREND_TONES,
 } from './consistency.constants';
 import {
   ConsistencyAxis,
   ConsistencyBandLabels,
   ConsistencyDot,
   ConsistencyTooltip,
+  ConsistencyTrend,
   ConsistencyZone,
 } from './consistency.model';
 
 /**
- * Builds the combat-score axis: round ends around the scores, and a grid of columns starting on
- * the lowest one.
- *
- * @param summary - The spread to draw, never empty.
- * @returns The axis ends and the column grid.
+ * Combat-score axis: round ends around the scores, columns starting on the lowest.
  */
 export function buildConsistencyAxis(summary: ConsistencySummary): ConsistencyAxis {
   const scores = summary.matches.map((match) => match.acs);
@@ -50,11 +49,7 @@ export function buildConsistencyAxis(summary: ConsistencySummary): ConsistencyAx
 }
 
 /**
- * Places where a combat score falls against a floor and a ceiling.
- *
- * @param acs - The combat score.
- * @param season - The spread it belongs to.
- * @returns Below the floor, inside the zone, or above the ceiling.
+ * Where a combat score falls against the season's floor and ceiling.
  */
 export function resolveConsistencyZone(acs: number, season: ConsistencySummary): ConsistencyZone {
   if (acs < season.floor) {
@@ -64,11 +59,7 @@ export function resolveConsistencyZone(acs: number, season: ConsistencySummary):
 }
 
 /**
- * Stacks a spread's matches into their combat-score columns, lowest score first.
- *
- * @param season - The spread to draw.
- * @param axis - The shared axis.
- * @returns One dot per match.
+ * Stacks the matches into their combat-score columns, lowest score first.
  */
 export function stackConsistencyDots(
   season: ConsistencySummary,
@@ -93,11 +84,8 @@ export function stackConsistencyDots(
 }
 
 /**
- * Top of the vertical axis for one entry: its tallest stack plus a free level, rounded to the step
- * Chart.js picks for its ticks (2 up to ten, 5 beyond), so the axis ends on a labelled line.
- *
- * @param dots - The entry's dots.
- * @returns The axis maximum, in matches.
+ * Top of the vertical axis, in matches: tallest stack plus one free level, rounded to the
+ * Chart.js tick step (2 up to ten, 5 beyond) so the axis ends on a labelled line.
  */
 export function resolveConsistencyStackHeight(dots: readonly ConsistencyDot[]): number {
   const tallest = Math.max(0, ...dots.map((dot) => dot.y + 0.5)) + 1;
@@ -106,12 +94,7 @@ export function resolveConsistencyStackHeight(dots: readonly ConsistencyDot[]): 
 }
 
 /**
- * Builds the strip of figures under the chart: floor, median, ceiling, the sample, and the trend
- * against the previous season when the selection is a single season that has one.
- *
- * @param summary - The spread shown.
- * @param translate - Dictionary lookup.
- * @returns The key figures, in reading order.
+ * Figures under the chart: floor, median, ceiling, sample, and the trend when one applies.
  */
 export function buildConsistencyFigures(
   summary: ConsistencySummary,
@@ -152,35 +135,53 @@ export function buildConsistencyFigures(
   ];
 
   if (summary.previousSpread !== null && summary.previousSeasonName !== null) {
-    const ratio = summary.previousSpread > 0 ? summary.spread / summary.previousSpread : 1;
-    const trend =
-      ratio < 1 - CONSISTENCY_STEADY_MARGIN
-        ? 'tighter'
-        : ratio > 1 + CONSISTENCY_STEADY_MARGIN
-          ? 'looser'
-          : 'steady';
-    figures.push({
-      caption: translate(`${KEYS}.figures.trend`),
-      value: translate(`${KEYS}.figures.${trend}`),
-      detail: translate(`${KEYS}.figures.trendDetail`, {
-        spread: formatScore(summary.spread),
-        previous: formatScore(summary.previousSpread),
-        season: formatSeasonName(summary.previousSeasonName, translate),
-      }),
-      icon: trend === 'steady' ? 'flat' : trend,
-      tone: trend === 'tighter' ? 'good' : trend === 'looser' ? 'bad' : 'neutral',
-    });
+    figures.push(
+      buildTrendFigure(summary, summary.previousSpread, summary.previousSeasonName, translate),
+    );
   }
   return figures;
 }
 
 /**
- * Builds the tooltip of one match.
- *
- * @param dot - The hovered dot.
- * @param translate - Dictionary lookup.
- * @param language - Active language, for the date.
- * @returns The tooltip content.
+ * Trend figure: tighter, looser or steady spread against the previous season.
+ */
+function buildTrendFigure(
+  summary: ConsistencySummary,
+  previousSpread: number,
+  previousSeasonName: string,
+  translate: TranslateFn,
+): KeyFigure {
+  const trend = resolveSpreadTrend(summary.spread, previousSpread);
+  return {
+    caption: translate(`${KEYS}.figures.trend`),
+    value: translate(`${KEYS}.figures.${trend}`),
+    detail: translate(`${KEYS}.figures.trendDetail`, {
+      spread: formatScore(summary.spread),
+      previous: formatScore(previousSpread),
+      season: formatSeasonName(previousSeasonName, translate),
+    }),
+    icon: CONSISTENCY_TREND_ICONS[trend],
+    tone: CONSISTENCY_TREND_TONES[trend],
+  };
+}
+
+/**
+ * Compares two spreads, a change within the steady margin counting as no change.
+ */
+function resolveSpreadTrend(spread: number, previousSpread: number): ConsistencyTrend {
+  // No previous spread to divide by: steady.
+  const ratio = previousSpread > 0 ? spread / previousSpread : 1;
+  if (ratio < 1 - CONSISTENCY_STEADY_MARGIN) {
+    return 'tighter';
+  }
+  if (ratio > 1 + CONSISTENCY_STEADY_MARGIN) {
+    return 'looser';
+  }
+  return 'steady';
+}
+
+/**
+ * Tooltip of one match.
  */
 export function buildConsistencyTooltip(
   dot: ConsistencyDot,
@@ -203,12 +204,7 @@ export function buildConsistencyTooltip(
 }
 
 /**
- * Builds the plugin drawing the floor and ceiling as dashed rules, captioned above the plot.
- *
- * @param season - Returns the spread shown.
- * @param labels - Returns the captions of both rules.
- * @param color - Colour of the captions.
- * @returns The band plugin.
+ * Plugin drawing the floor and ceiling as dashed rules, captioned above the plot.
  */
 export function createConsistencyBandPlugin(
   season: () => ConsistencySummary | null,

@@ -5,18 +5,17 @@
   gap: 0.25rem;
 }
 
-/* The page column, not the viewport, decides: the sidebar takes its share on a desktop. */
+/* The page column, not the viewport, decides. */
 .board {
   container-type: inline-size;
 }
 
-/* Column names exist only from the width where a row really holds columns; below it the cells
-   each keep their own caption. */
+/* Column names only once a row holds columns. */
 .head {
   display: none;
 }
 
-/* The squad page's row height, so the two boards read as one system. */
+/* Same row height as the squad page. */
 .row-link {
   display: grid;
   grid-template-columns: 3.5rem minmax(0, 1fr);
@@ -30,8 +29,7 @@
     border-color var(--duration-fast) var(--ease-out-quart);
 }
 
-/* Same answer to the pointer as the squad's rows: this stylesheet's fill outranks the template's
-   `hover:` utility, so the hover has to be stated here or it never shows. */
+/* Stated here: this fill outranks the template's `hover:` utility. */
 .row-link:hover {
   background: rgb(217 149 74 / 12%);
   border-left-color: rgb(217 149 74 / 60%);
@@ -41,7 +39,6 @@
   background: rgb(217 149 74 / 18%);
 }
 
-/* The place and its move side by side, on a shared baseline. */
 .cell-pos {
   display: flex;
   align-items: baseline;
@@ -49,8 +46,7 @@
   white-space: nowrap;
 }
 
-/* Inline rather than flex: a flex box takes its baseline from the chevron, whose bottom edge sat
-   the figure above the place's own baseline. */
+/* Inline, not flex: a flex box would take its baseline from the chevron. */
 .variation {
   display: inline;
   font-family: var(--font-mono);
@@ -116,7 +112,7 @@
   text-transform: uppercase;
 }
 
-/* Under a light rule and across the whole card, two figures a line like the squad's rows. */
+/* Two figures per line, like the squad's rows. */
 .cell-figs {
   grid-column: 1 / -1;
   display: grid;
@@ -133,7 +129,7 @@
   white-space: nowrap;
 }
 
-/* The gauge at its widest (+10 %) outgrows half a phone's card: it takes its own line. */
+/* The gauge at its widest (+10 %) needs its own line on a phone. */
 .cell-fig--start {
   grid-column: 1 / -1;
 }
@@ -150,14 +146,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* The ceiling steps back so the count reads first. */
 .fig-max {
   font-size: 0.8125rem;
   font-weight: 600;
 }
 
-/* Until the header's columns open, the operator leads the card and the place closes it on the
-   right, as the squad's rows put the rank. */
+/* Operator leads, the place closes the row on the right. */
 @container (width < 59rem) {
   .row-link {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -175,7 +169,7 @@
   }
 }
 
-/* Wide enough for the six figures on one line. */
+/* Six figures on one line. */
 @container (width >= 36rem) {
   .cell-figs {
     grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
@@ -186,18 +180,13 @@
   }
 }
 
-/* Opens once the name keeps room beside the six figures: the fixed tracks, seven gaps and the
-   padding need about 58rem of board at the widest gap this width brings. */
+/* About 58rem of board keeps the name room beside the six figures. */
 @container (width >= 59rem) {
   .head,
   .row-link {
     display: grid;
-    /* The five figure tracks are the width of their labels, the widest thing in them, and the
-       figures sit on the labels' trailing edge. Fixed rather than `auto`: the header and the
-       rows are separate grids, and `auto` would size each to its own content. The streak track
-       holds the gauge: seven pips and the widest bonus. */
+    /* Fixed tracks: header and rows are separate grids that must align. */
     grid-template-columns: 3rem minmax(8rem, 1fr) 5rem 4.5rem 5rem 4rem 4.5rem 10rem;
-    /* 1.25rem at the breakpoint, where the name keeps its 8rem, up to 2.75rem on a wide screen. */
     column-gap: clamp(1.25rem, 4vw - 1.5rem, 2.75rem);
     align-items: center;
   }
@@ -210,13 +199,11 @@
     padding: 0.6rem 1.25rem;
   }
 
-  /* Centered on the position column below it, whose place reads the same way. */
   .bar-count {
     justify-self: center;
   }
 
-  /* The place centred under the count's glyph, its move hung in the free track on its right, so
-     a move never pushes the place off the column's axis. */
+  /* The move hangs in its own track so the place stays centred. */
   .cell-pos {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -246,7 +233,7 @@
     align-items: flex-end;
   }
 
-  /* Left-aligned so the pips hold still whatever width the bonus beside them takes. */
+  /* Left-aligned so the pips hold still whatever the bonus width. */
   .head-fig--start {
     justify-self: start;
   }

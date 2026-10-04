@@ -1,14 +1,10 @@
 import { TranslateFn } from '@core/i18n/translation.model';
-import { Season } from '@core/matches/season.model';
-import { formatSeasonName, splitSeasonName } from '@core/matches/season-name.utils';
+import { Season } from '@core/seasons/season.model';
+import { formatSeasonName, splitSeasonName } from '@core/seasons/season-name.utils';
 import { SeasonPickerOption } from './season-picker.model';
 
 /**
- * Turns the seasons into picker options, keeping their order (newest first).
- *
- * @param seasons - Every known season, newest first.
- * @param translate - Dictionary lookup.
- * @returns One option per season.
+ * Picker options of the seasons, newest first as given.
  */
 export function buildSeasonPickerOptions(
   seasons: readonly Season[],

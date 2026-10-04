@@ -1,5 +1,5 @@
 <app-page-header [heading]="'overview.header.heading' | translate">
-  <!-- The way back to the Monday report, at the bar's trailing end, once a Sunday has settled. -->
+  <!-- Reopens the Monday report once a Sunday has settled. -->
   @if (missionReport()) {
     <button
       (click)="openReport()"
@@ -18,8 +18,7 @@
 }
 
 <div class="page-body !gap-0 !pt-0">
-  <!-- The state of the campaign, drawn. The city is the score; the rocket in its middle gains a
-       stage per guardian defeated. -->
+  <!-- The city is the score; the rocket gains a stage per guardian defeated. -->
   <section
     [attr.aria-label]="'overview.scene.section' | translate"
     class="scene relative !max-w-none shrink-0 overflow-hidden bg-[#040a11] !px-0"
@@ -69,7 +68,7 @@
                 }}</small>
               </p>
             }
-            <!-- What changed while the reader was away, the day's delta aside. -->
+            <!-- Change since the last visit, apart from the day's delta. -->
             @if (sinceLastVisit() !== 0) {
               <p class="mt-2 text-sm text-text-secondary">
                 {{ 'overview.scene.sinceVisit' | translate: { count: signed(sinceLastVisit()) } }}
@@ -81,9 +80,7 @@
     }
   </section>
 
-  <!-- The frieze: ten planets in order, what is won, what is lost, where the week stands. The only
-       object on the page whose order carries meaning. Full-bleed and untitled: the current week is
-       already legible from the --now cell itself, so a repeating label would only be noise. -->
+  <!-- Frieze: untitled, the --now cell already marks the current week. -->
   @if (frieze().length > 0) {
     <div
       class="frieze-bar !max-w-none shrink-0 border-t-2 border-b border-edge bg-surface-sunken/55 !px-0"
@@ -91,7 +88,7 @@
       <ul [attr.aria-label]="'overview.frieze.aria' | translate" class="frieze flex w-full">
         @for (week of frieze(); track week.index) {
           <li class="week-slot">
-            <!-- A settled week opens its mission report; the others only describe themselves. -->
+            <!-- Only a settled week opens its mission report. -->
             @if (week.settled) {
               <button
                 (click)="openReport(week.index)"
@@ -120,8 +117,7 @@
   }
 
   <ng-template #cell let-week>
-    <!-- The planet inside the guardian's ring: the arc is the share of hit points still standing,
-         drained from full on arrival. -->
+    <!-- The ring's arc is the guardian's hit points left. -->
     <span aria-hidden="true" class="orb">
       <img [ngSrc]="week.art" alt="" class="orb-art" decoding="async" height="28" width="28" />
       <svg class="orb-ring" viewBox="0 0 40 40">
@@ -164,8 +160,7 @@
     <main
       class="body flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)] pt-[clamp(2.5rem,4vw,3.5rem)] pb-24"
     >
-      <!-- The mission: the planet of the week on the left, the situation report on the right.
-           A single scan wire ties the planet to the row it points at. -->
+      <!-- A scan wire ties the planet to the row it points at. -->
       @if (mission(); as mission) {
         <section aria-labelledby="mission-title">
           <app-section-rule
@@ -206,7 +201,7 @@
         </section>
       }
 
-      <!-- The tabs stand as the heading of what follows them, in place of a section rule. -->
+      <!-- The tabs replace a section rule as heading. -->
       <div class="tab-deck flex flex-col gap-7">
         <app-overview-tabs
           (favoriteChange)="pinTab($event)"
@@ -216,8 +211,7 @@
           panelId="overview-panel"
         />
 
-        <!-- The challenges tab is the day's recap: its challenge and its gains. The matches tab lists
-             the roster's matches of the day, fetched only once opened. -->
+        <!-- The matches tab fetches only once opened. -->
         <div
           [attr.aria-labelledby]="'overview-tab-' + selectedTab()"
           id="overview-panel"
@@ -243,8 +237,7 @@
     </main>
   </app-resource-state>
 
-  <!-- A settled or closed campaign has no mission left, but its result does: the rocket, the
-       reserves and the history stay readable under the plate that says why. -->
+  <!-- Without a mission, a settled or closed campaign still shows its result. -->
   @if (!isRunning() && hasBase() && !isLoading() && !isError()) {
     <section [attr.aria-label]="'overview.tabs.campaign.label' | translate" class="pb-24">
       <app-campaign-panel [campaign]="campaign()" />

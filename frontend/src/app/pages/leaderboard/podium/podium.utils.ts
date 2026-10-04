@@ -2,11 +2,7 @@ import { BoardRow } from '../leaderboard.model';
 import { PodiumPlace } from './podium.model';
 
 /**
- * Groups the ranked rows on the three plinths. Ties share a plinth and leave the places they skip
- * empty (1, 1, 3 has no 2nd), as the ranking itself does.
- *
- * @param rows - The ranked rows, in order.
- * @returns The occupied places, 1st first.
+ * Groups ranked rows on the three plinths; ties leave the skipped place empty (1, 1, 3).
  */
 export function groupPodium(rows: readonly BoardRow[]): PodiumPlace[] {
   const places: PodiumPlace[] = [];

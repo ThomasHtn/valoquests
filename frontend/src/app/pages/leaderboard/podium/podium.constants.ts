@@ -14,16 +14,16 @@ export const HEIGHT = 280;
 export const STAR_COUNT = 140;
 
 /**
- * Colour of the stars.
+ * Star colour.
  */
 export const STAR = '#ece8e1';
 
 /**
- * Warm accent of the first plinth.
+ * Warm star accent.
  */
 export const EMBER = '#e8ab6b';
 
 /**
- * Seed of the star field, so the same sky comes back on every visit.
+ * Star field seed, so the same sky comes back on every visit.
  */
 export const SKY_SEED = 20260905;

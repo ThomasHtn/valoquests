@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildSeasonPickerOptions } from './season-picker.utils';
 
 /**
- * Stands in for the translation service, echoing the key and its parameters.
+ * Fake translation echoing the key and its parameters.
  */
 function translate(key: string, params?: Readonly<Record<string, string | number>>): string {
   const suffix = Object.entries(params ?? {})

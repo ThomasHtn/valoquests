@@ -3,18 +3,8 @@ import { NavChipVariant } from './nav-chip.model';
 import { VARIANT_CLASS } from './nav-chip.constants';
 
 /**
- * The "way back / way on" chip: the guided tour's skip, previous and next controls, the player
- * profile's link back to the registry, the rulebook's link into the tour.
- *
- * Deliberately not an `appButton` variant, and square-edged where those are notched: this family
- * reads as navigation rather than as an action, and folding the two together would blur a
- * distinction the direction makes on purpose (see `button.ts`).
- *
- * Unlike `appButton`, this one owns its own height. Every call site had written the chrome out by
- * hand and they had drifted to two different heights for the same affordance — the tour's controls
- * one step taller than the back link on the profile it sends you to. The height is part of what
- * makes these one family, so it is not left to the call site; anything positional (`ml-auto`,
- * `w-fit`) still is.
+ * Square navigation chip (tour controls, back links), kept apart from notched `appButton` actions.
+ * Owns its height so every chip matches; positioning stays with the caller.
  */
 @Directive({
   selector: '[appNavChip]',
@@ -26,18 +16,14 @@ import { VARIANT_CLASS } from './nav-chip.constants';
 })
 export class NavChip {
   /**
-   * Which treatment this chip renders.
-   *
-   * Transformed rather than plainly defaulted so the directive can be applied bare (`appNavChip`),
-   * which is what most call sites want: written that way the attribute's value is the empty
-   * string, not an absent one.
+   * Chip variant; the transform lets a bare `appNavChip` (empty string) mean `outline`.
    */
   public readonly appNavChip = input('outline' as NavChipVariant, {
     transform: (variant: NavChipVariant | '') => variant || 'outline',
   });
 
   /**
-   * Resolved Tailwind classes for the current variant.
+   * Tailwind classes of the current variant.
    */
   protected readonly variantClass = computed(() => VARIANT_CLASS[this.appNavChip()]);
 }

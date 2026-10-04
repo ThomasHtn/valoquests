@@ -15,16 +15,8 @@ import { TextField, TextFieldInput } from '@shared/text-field/text-field';
 import { FocusTrap } from '@shared/focus-trap/focus-trap';
 
 /**
- * Modal confirmation for an action that cannot be undone.
- *
- * Exists because the backoffice is the one place in this application where a click destroys data
- * the API cannot give back. The dialog is deliberately not reusable as a generic "are you sure":
- * it can demand that a phrase be typed out, which is what separates an action the operator meant
- * from one they reached by muscle memory.
- *
- * Rendered as a plain overlay rather than through the CDK: it is always centred, always modal, and
- * never needs to be positioned against a trigger, so an overlay container would add a dependency
- * for behaviour this does not use. Focus is moved into the dialog on open and Escape dismisses it.
+ * Modal confirmation for an irreversible backoffice action, optionally gated by a typed phrase.
+ * Plain overlay rather than the CDK: always centred, never positioned against a trigger.
  */
 @Component({
   selector: 'app-confirm-dialog',
@@ -42,40 +34,37 @@ export class ConfirmDialog {
   public readonly open = input.required<boolean>();
 
   /**
-   * Already-translated dialog title.
+   * Translated dialog title.
    */
   public readonly heading = input.required<string>();
 
   /**
-   * Already-translated explanation of what confirming will do.
+   * Translated explanation of what confirming does.
    */
   public readonly body = input.required<string>();
 
   /**
-   * Already-translated label of the confirming button.
+   * Translated label of the confirming button.
    */
   public readonly confirmLabel = input.required<string>();
 
   /**
-   * Already-translated label of the dismissing button.
+   * Translated label of the dismissing button.
    */
   public readonly cancelLabel = input.required<string>();
 
   /**
-   * Phrase the operator must type before confirming, or `''` when a click is enough.
-   *
-   * Reserved for the irreversible operations: typing the phrase cannot be done by accident, which
-   * a second click can.
+   * Phrase to type before confirming, `''` when a click is enough.
    */
   public readonly confirmationPhrase = input('');
 
   /**
-   * Already-translated hint naming the phrase to type, shown only when one is required.
+   * Translated hint naming the phrase to type.
    */
   public readonly confirmationHint = input('');
 
   /**
-   * Whether the confirmed action is currently running, which locks both buttons.
+   * Whether the confirmed action runs, which locks both buttons.
    */
   public readonly busy = input(false);
 
@@ -90,18 +79,17 @@ export class ConfirmDialog {
   public readonly dismissed = output<void>();
 
   /**
-   * Dialog panel, focused on open so the keyboard lands inside the dialog rather than on the page
-   * behind it.
+   * Panel focused on open so the keyboard lands inside the dialog.
    */
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
 
   /**
-   * What the operator has typed so far, when a phrase is required.
+   * Phrase typed so far.
    */
   protected readonly typedPhrase = signal('');
 
   /**
-   * Whether confirming is currently allowed.
+   * Whether confirming is allowed.
    */
   protected readonly canConfirm = computed(() => {
     if (this.busy()) {
@@ -114,10 +102,7 @@ export class ConfirmDialog {
   });
 
   /**
-   * Moves focus into the dialog when it opens, and clears the typed phrase when it closes.
-   *
-   * Clearing on close rather than on open matters for the failure path: a dialog dismissed and
-   * reopened must ask again, and one left open by a failed action must keep what was typed.
+   * Focuses the panel on open; clears the phrase on close so a failed action keeps it.
    */
   constructor() {
     effect(() => {
@@ -130,16 +115,14 @@ export class ConfirmDialog {
   }
 
   /**
-   * Records what the operator typed into the confirmation field.
-   *
-   * @param event - The input event carrying the field's current value.
+   * Records the typed confirmation phrase.
    */
   protected onPhraseInput(event: Event): void {
     this.typedPhrase.set((event.target as HTMLInputElement).value);
   }
 
   /**
-   * Dismisses the dialog on Escape, unless the confirmed action is already running.
+   * Dismisses on Escape unless the action is running.
    */
   protected onEscape(): void {
     if (this.open() && !this.busy()) {

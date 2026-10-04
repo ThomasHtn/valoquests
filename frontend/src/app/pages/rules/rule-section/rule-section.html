@@ -1,6 +1,4 @@
-<!-- `scroll-mt` clears the context bar a jump would otherwise land the heading under: the page's
-     own scroller is `page-body`, which starts below that bar, so a section scrolled to its top sits
-     flush against it. -->
+<!-- `scroll-mt` keeps a jumped-to heading clear of the context bar. -->
 <section
   [class.border-t]="bordered()"
   [class.pt-0]="!bordered()"

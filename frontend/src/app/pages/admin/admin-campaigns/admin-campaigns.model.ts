@@ -1,7 +1,7 @@
 import { CampaignDifficulty, CampaignStatus } from '@core/campaign/campaign.model';
 
 /**
- * A campaign the operator can act on, with the figures the decision is made against.
+ * Live campaign the operator can act on, with its key figures.
  */
 export interface LiveCampaign {
   /**
@@ -10,22 +10,22 @@ export interface LiveCampaign {
   readonly id: number;
 
   /**
-   * Ordinal of the campaign, first one being 1.
+   * One-based campaign ordinal.
    */
   readonly number: number;
 
   /**
-   * Lifecycle status of the campaign.
+   * Lifecycle status.
    */
   readonly status: CampaignStatus;
 
   /**
-   * Difficulty the campaign is played at.
+   * Difficulty.
    */
   readonly difficulty: CampaignDifficulty;
 
   /**
-   * Reference the difficulty carries, every figure of the campaign being a multiple of it.
+   * Difficulty reference, every campaign figure being a multiple of it.
    */
   readonly reference: number;
 
@@ -35,22 +35,22 @@ export interface LiveCampaign {
   readonly rosterSize: number;
 
   /**
-   * First and last Monday, formatted.
+   * Formatted span, last Sunday included.
    */
   readonly range: string;
 
   /**
-   * Date the campaign starts, formatted.
+   * Formatted start date.
    */
   readonly startsOn: string;
 
   /**
-   * Week in progress, one-based.
+   * One-based week in progress.
    */
   readonly weekIndex: number;
 
   /**
-   * One-based index of the day in the week.
+   * One-based day of the campaign.
    */
   readonly dayIndex: number;
 

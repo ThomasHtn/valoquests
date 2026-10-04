@@ -1,0 +1,34 @@
+/* Global because Angular renames keyframes declared in a component stylesheet. */
+
+/* Building growing from `--rise-from`, its previous height ratio. */
+@keyframes town-rise {
+  from {
+    transform: scaleY(var(--rise-from, 0));
+  }
+}
+
+/* Overview scan wires drawing themselves. */
+@keyframes scan-wire {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Campaign drawer or fold opening under its band. */
+@keyframes campaign-open {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+
+/* Snackbar timebar; scales so it never triggers layout. */
+@keyframes snackbar-timebar {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
+}

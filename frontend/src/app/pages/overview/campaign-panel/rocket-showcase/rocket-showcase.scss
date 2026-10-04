@@ -1,4 +1,4 @@
-/* The drawing on the left, the ten parts on the right; stacked on a phone. */
+/* Drawing left, parts right; stacked on a phone. */
 .showcase {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -13,9 +13,7 @@
   }
 }
 
-/* The plan takes the height of the parts list: the drawing frames itself inside. */
-/* Blueprint grid on the container itself, so it covers the full box regardless of aspect ratio
-   (the SVG inside letterboxes and would otherwise leave plain bands top or bottom). */
+/* Grid on the container: the letterboxed SVG would leave plain bands. */
 .viewer {
   position: relative;
   min-height: clamp(20rem, 60vw, 30rem);

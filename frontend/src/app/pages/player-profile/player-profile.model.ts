@@ -1,31 +1,31 @@
-import { GameMode } from '@core/matches/game-mode.model';
+import { GameMode } from '@core/matches/game-mode/match-game-mode.model';
 
 /**
- * The profile's two views: the match history and the multi-season progression.
+ * Profile views: match history and multi-season progression.
  */
 export type ProfileView = 'MATCHES' | 'PROGRESS';
 
 /**
- * Season scope read from the address: a season, every season, or nothing said (the current one).
+ * Season scope from the address: a season id, every season, or `null` for the current one.
  */
 export type SeasonParam = number | 'ALL' | null;
 
 /**
- * The profile's state as kept in the address, so a reload or a step back restores it.
+ * Profile state kept in the address, so a reload or a step back restores it.
  */
 export interface ProfileQuery {
   /**
-   * The open view.
+   * Open view.
    */
   readonly view: ProfileView;
 
   /**
-   * The match history's game mode, `null` for every mode.
+   * History game mode, `null` for every mode.
    */
   readonly mode: GameMode | null;
 
   /**
-   * The match history's season scope.
+   * History season scope.
    */
   readonly season: SeasonParam;
 }

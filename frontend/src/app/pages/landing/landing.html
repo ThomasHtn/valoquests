@@ -1,36 +1,20 @@
-<!-- `h-dvh` rather than `h-full`: this page renders straight under the root outlet, with no
-     sized ancestor to inherit a height from. `dvh` tracks the mobile browser's dynamic toolbar
-     instead of the larger static viewport, so the bottom of the page isn't hidden behind it.
-     `overflow-y-auto` is the safety valve for viewports too short to hold the composition, which
-     `body { overflow: hidden }` would otherwise trap.
-
-     `scrollbar-gutter: stable` is what keeps that valve from fighting the compass. The composition
-     is sized to fill the viewport exactly, so on a window whose height lands on the boundary the
-     compass's hover growth was enough to summon the scrollbar; the scrollbar then narrowed the
-     page, the row re-centred, the pointer fell off the compass, the growth was undone and the
-     scrollbar left again — a loop, several times a second. Reserving the gutter unconditionally
-     means its arrival costs no reflow and the loop has nothing to feed on. -->
+<!-- `h-dvh`: no sized ancestor. Stable gutter: compass hover would toggle the scrollbar. -->
 <main
   class="scroll-subtle relative flex h-dvh flex-col overflow-y-auto overscroll-y-contain bg-surface-950 px-6 py-7 text-text-primary [scrollbar-gutter:stable] sm:px-20 sm:py-15"
 >
   <div aria-hidden="true" class="landing-sky pointer-events-none absolute inset-0"></div>
 
-  <!-- Read as a poster: what the visitor is promised at the top, the door below it, and a horizon
-       line drawn between them. The block's own height is set in the stylesheet, where it can be
-       stated as a share of the viewport — see `landing-poster` there. -->
+  <!-- Poster: promise on top, door below; its height is set in the stylesheet. -->
   <div class="landing-poster relative flex flex-col justify-between gap-12 sm:gap-16">
     <div class="flex flex-col items-start gap-3.5 sm:gap-5">
-      <!-- The wordmark, not a heading and not translated: it carries the logo's own two amber stops
-           through `bg-clip-text`. -->
+      <!-- Wordmark: not a heading, not translated. -->
       <p
         class="font-display tracking-label-wide bg-linear-to-br from-brand-400 to-brand-500 bg-clip-text text-xs font-bold text-transparent uppercase"
       >
         ValoQuests
       </p>
 
-      <!-- Leading spelled out, and well above the tight setting a condensed uppercase display face
-           invites: Oswald's capital accents reach about 0.95em over the baseline, so anything under
-           1 makes the É of "écran" collide with the line above it, and 1.04 only just clears it. -->
+      <!-- Leading above 1: Oswald's capital accents would hit the line above. -->
       <h1
         class="landing-title font-display max-w-[18.5rem] text-4xl/[1.12] sm:max-w-[31rem] lg:max-w-[37rem] font-bold uppercase sm:text-6xl/[1.12] lg:text-7xl/[1.12]"
       >
@@ -38,22 +22,16 @@
         <span class="text-brand-500">{{ 'landing.accroche.highlight' | translate }}</span>
       </h1>
 
-      <!-- Measure in `rem`, not in `ch`: Barlow Condensed is a condensed face, so a `ch`-based
-           column comes out a third narrower than the same count gives in any other body face — this
-           line broke after five words under a headline five times its size. -->
-      <!-- `text-balance` so the two lines come out even: left to itself the break landed between
-           "match" and "après match", splitting the emphasised clause across the two. -->
+      <!-- Measure in `rem`: `ch` is a third narrower in a condensed face. -->
       <p class="text-lead max-w-[32rem] text-balance text-text-secondary">
         {{ 'landing.body.lead' | translate }}
         <span class="text-text-primary">{{ 'landing.body.emphasis' | translate }}</span>
       </p>
     </div>
 
-    <!-- The horizon. Below `lg` the row folds into a column — the marks keep their line, the second
-         rule drops out and the first one becomes the full-width bar the compass sits under. -->
+    <!-- Horizon; below `lg` it folds into a column and the second rule drops out. -->
     <div class="flex flex-col items-center gap-7 lg:flex-row lg:gap-10">
-      <!-- Written out rather than looped over a list of keys: three entries is not a collection, and
-           a key assembled by concatenation is a key `grep` no longer finds in the dictionaries. -->
+      <!-- Written out so every translation key stays greppable. -->
       <ul class="flex shrink-0 flex-wrap justify-center gap-x-7 gap-y-3 sm:gap-x-9">
         <li class="flex flex-col gap-1.5">
           <span class="font-display text-2xl/none font-bold text-brand-500">

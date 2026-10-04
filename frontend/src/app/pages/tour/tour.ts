@@ -2,17 +2,18 @@ import { Component, computed, ElementRef, inject, signal, viewChild } from '@ang
 import { Router } from '@angular/router';
 import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
-import { resolveLocale } from '@core/i18n/locale.utils';
+import { resolveLocale } from '@core/i18n/format/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { TourVisit } from '@core/tour/tour-visit';
 import { Breakpoint } from '@core/viewport/breakpoint';
-import { BoardRow, DayCell } from '@pages/challenges/challenges.model';
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
+import { DayCell } from '@pages/challenges/challenges.model';
 import { DailyWeek } from '@pages/challenges/daily-week/daily-week';
-import { DeckCard } from '@pages/challenges/deck-card/deck-card';
+import { DeckCard } from '@shared/deck-card/deck-card';
 import { Podium } from '@pages/leaderboard/podium/podium';
 import { MissionReadings } from '@pages/overview/mission-readings/mission-readings';
-import { Mission } from '@pages/overview/overview.model';
+import { Mission } from '@pages/overview/mission-readings/mission-readings.model';
 import { NavChip } from '@shared/nav-chip/nav-chip';
 
 import { TourBasePreview } from './tour-base-preview/tour-base-preview';
@@ -45,19 +46,7 @@ import { TourTracker } from './tour-tracker/tour-tracker';
 import { buildTourDailyRow, buildTourWeek, endOfDay, startOfWeek } from './tour.utils';
 
 /**
- * Guided tour.
- *
- * The briefing a first-time visitor gets between the landing page and the overview: six steps
- * covering what the squad is playing for, each pairing one claim and three figures with a reading
- * of the screen it stands for. It stays at the level of the broad strokes on purpose; `/rules` is
- * the reference for the numbers, and the closing step points there.
- *
- * Like `Landing`, it renders outside `Shell`: navigation chrome would invite the visitor to
- * wander off mid-briefing. `tourEntryGuard` keeps it to a single showing, with the replay
- * escape hatch behind the rules page's replay link.
- *
- * The illustrations are the pages' own components, fed a fixed sample campaign: the live one is
- * empty between two campaigns and thin on a Monday, and a briefing has to show the game playing.
+ * Chrome-free first-visit tour; real components fed a sample, the live campaign may be empty.
  */
 @Component({
   selector: 'app-tour',
@@ -77,49 +66,85 @@ import { buildTourDailyRow, buildTourWeek, endOfDay, startOfWeek } from './tour.
   ],
   templateUrl: './tour.html',
   styleUrl: './tour.scss',
-  // Diverges from `PAGE_LAYOUT_CLASS`, same rationale as `Landing`: a full-viewport composition
-  // under the root outlet, not a stack of blocks inside the application shell.
+  // Not `PAGE_LAYOUT_CLASS`: a full-viewport composition outside the shell.
   host: {
     class: 'block',
     '(document:keydown)': 'onKeydown($event)',
   },
 })
 export class Tour {
+  /**
+   * Tour visit record, marked completed on leaving so the tour shows once.
+   */
   private readonly tourVisit = inject(TourVisit);
 
+  /**
+   * Router, to land on the overview once the tour ends.
+   */
   private readonly router = inject(Router);
 
+  /**
+   * Translation, to build the sample daily row and week in the current language.
+   */
   private readonly translation = inject(Translation);
 
   /**
-   * The scrolling content region, reset to its top on every step change.
+   * Scrolling content region, reset to its top on every step change.
    */
   private readonly content = viewChild.required<ElementRef<HTMLElement>>('content');
 
+  /**
+   * Zero-based index of the shown step.
+   */
   private readonly stepIndex = signal(0);
 
+  /**
+   * Tour steps in display order.
+   */
   protected readonly steps = TOUR_STEPS;
 
+  /**
+   * Translation sub-keys of the figures closing a step.
+   */
   protected readonly specKeys = TOUR_SPEC_KEYS;
 
+  /**
+   * Steps that skip the closing figures.
+   */
   protected readonly stepsWithoutSpecs = TOUR_STEPS_WITHOUT_SPECS;
 
+  /**
+   * Title key of the page each step's illustration comes from.
+   */
   protected readonly sources = TOUR_STEP_SOURCES;
 
+  /**
+   * Population of a full campaign, the scale of the base preview.
+   */
   protected readonly fullCampaignPopulation = FULL_CAMPAIGN_POPULATION;
 
+  /**
+   * Identifier of the shown step, which picks its illustration and copy.
+   */
   protected readonly currentStep = computed<TourStepId>(() => this.steps[this.stepIndex()]);
 
+  /**
+   * One-based position of the shown step, for the counter.
+   */
   protected readonly currentPosition = computed(() => this.stepIndex() + 1);
 
+  /**
+   * Whether the first step is shown, which disables the back button.
+   */
   protected readonly isFirst = computed(() => this.stepIndex() === 0);
 
+  /**
+   * Whether the last step is shown, where next finishes the tour.
+   */
   protected readonly isLast = computed(() => this.stepIndex() === this.steps.length - 1);
 
   /**
-   * The current step, as a single-item list: iterating it with `track` is what makes Angular tear
-   * the step's blocks down and build them back up when the step changes, which replays their entry
-   * animation.
+   * Current step as a one-item list: `track` rebuilds the blocks and replays their entry.
    */
   protected readonly stepFrames = computed<readonly TourStepId[]>(() => [this.currentStep()]);
 
@@ -131,27 +156,47 @@ export class Tour {
   );
 
   /**
-   * Whether the viewport holds the week's clock too: below `md`, the report drops it so the step
-   * fits a phone without scrolling.
+   * Whether the week's clock fits; below `md` it is dropped so a step fits a phone.
    */
   protected readonly isMedium = inject(Breakpoint).isMedium;
 
+  /**
+   * Sample evening of matches for the tracker step.
+   */
   protected readonly sampleMatches = TOUR_SAMPLE_MATCHES;
 
+  /**
+   * Sample population the base preview opens on.
+   */
   protected readonly samplePopulation = TOUR_SAMPLE_POPULATION;
 
+  /**
+   * Sample rocket stages, for the base preview and the campaign track.
+   */
   protected readonly sampleStagesDone = TOUR_SAMPLE_STAGES_DONE;
 
+  /**
+   * Sample dials for the resources step.
+   */
   protected readonly sampleCapacity = TOUR_SAMPLE_CAPACITY;
 
+  /**
+   * Sample squad damage for the mission readings.
+   */
   protected readonly sampleContribution = TOUR_SAMPLE_CONTRIBUTION;
 
+  /**
+   * Sample Sunday stakes for the mission readings.
+   */
   protected readonly sampleStakes = TOUR_SAMPLE_STAKES;
 
+  /**
+   * Sample leaders for the ranking step.
+   */
   protected readonly samplePodium = TOUR_SAMPLE_PODIUM;
 
   /**
-   * The sample week, its countdown set from the clock so it always reads as a Friday evening.
+   * Sample week, its countdown set from the clock to always read as a Friday evening.
    */
   protected readonly sampleMission: Mission = {
     ...TOUR_SAMPLE_MISSION,
@@ -159,8 +204,7 @@ export class Tour {
   };
 
   /**
-   * The sample day's challenge, laid out as the challenges page lays it out on a phone. Still
-   * running: it closes at the end of the visitor's day.
+   * Sample daily challenge, still running until the end of the visitor's day.
    */
   protected readonly sampleDailyRow = computed<BoardRow>(() => {
     return buildTourDailyRow(
@@ -192,11 +236,7 @@ export class Tour {
   protected readonly sampleToday = TOUR_SAMPLE_DAILY_TALLY.length;
 
   /**
-   * Splits a step's translated claim into plain and emphasized runs, marked `*so*` in the
-   * dictionary. Runs carry their own spaces and the template renders them as adjacent elements.
-   *
-   * @param claim - The step's translated claim.
-   * @returns The claim's runs, in order, each flagged for emphasis.
+   * Splits a translated claim into plain and `*emphasized*` runs, spaces kept.
    */
   protected claimRuns(claim: string): readonly { text: string; strong: boolean }[] {
     return claim
@@ -205,6 +245,9 @@ export class Tour {
       .filter((run) => run.text.length > 0);
   }
 
+  /**
+   * Moves to the next step, or finishes the tour on the last one.
+   */
   protected next(): void {
     if (this.isLast()) {
       this.finish();
@@ -215,6 +258,9 @@ export class Tour {
     this.resetScroll();
   }
 
+  /**
+   * Moves back one step, ignored on the first one.
+   */
   protected previous(): void {
     if (this.isFirst()) {
       return;
@@ -225,19 +271,14 @@ export class Tour {
   }
 
   /**
-   * Leaves the tour early. Records the completion just like walking it through does: a visitor who
-   * skipped it asked not to see it, and the rules page keeps a way back to it.
+   * Leaves early, recorded as completed: the rules page keeps a way back.
    */
   protected skip(): void {
     this.finish();
   }
 
   /**
-   * Keyboard shortcuts covering the on-screen controls: the arrow keys walk the tour, `Escape`
-   * leaves it. Ignored while a modifier is held, so browser and OS shortcuts keep their meaning,
-   * and while a field has focus, so the base's sliders keep their arrows.
-   *
-   * @param event - The keyboard event to interpret.
+   * Arrows walk the tour, `Escape` leaves; skipped with modifiers or a focused input.
    */
   protected onKeydown(event: KeyboardEvent): void {
     if (
@@ -266,11 +307,17 @@ export class Tour {
     event.preventDefault();
   }
 
+  /**
+   * Records the tour as completed and replaces it with the overview.
+   */
   private finish(): void {
     this.tourVisit.markCompleted();
     void this.router.navigate(['/overview'], { replaceUrl: true });
   }
 
+  /**
+   * Brings the new step's content back to its top.
+   */
   private resetScroll(): void {
     this.content().nativeElement.scrollTo({ top: 0 });
   }

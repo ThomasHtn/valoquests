@@ -1,5 +1,5 @@
 /**
- * Elements a keyboard can land on, the ones Tab cycles through inside a trapped layer.
+ * Elements Tab cycles through inside a trapped layer.
  */
 export const FOCUSABLE_SELECTOR = [
   'a[href]',

@@ -1,0 +1,5 @@
+/* Micro-label over a value; typography only, the color stays at the call site. */
+
+@utility label-caption {
+  @apply tracking-label font-mono text-xs font-medium uppercase;
+}

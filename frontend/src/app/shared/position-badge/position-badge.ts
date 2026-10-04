@@ -3,10 +3,7 @@ import { Component, computed, input } from '@angular/core';
 import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
 
 /**
- * Text badge displaying a ranking position (e.g. "#1"), colored by podium tier.
- *
- * Shared by the podium, the weekly ranking and the ranking history page so a position reads the
- * same everywhere it appears.
+ * Ranking position ("#1") colored by podium tier.
  */
 @Component({
   selector: 'app-position-badge',
@@ -15,13 +12,12 @@ import { resolvePositionBadgeClass } from '@core/ranking/ranking-visual.utils';
 })
 export class PositionBadge {
   /**
-   * 1-based ranking position to display, or {@code null} for an inactive player who never
-   * consumes a ranking slot.
+   * 1-based position, `null` for an inactive player (renders nothing).
    */
   public readonly position = input.required<number | null>();
 
   /**
-   * Tailwind text color utility applied to the position number.
+   * Tailwind text color of the position.
    */
   protected readonly colorClass = computed(() => resolvePositionBadgeClass(this.position()));
 }

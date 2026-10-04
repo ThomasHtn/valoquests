@@ -4,19 +4,27 @@ import { SnackbarService } from '@core/snackbar/snackbar';
 import { Translation } from '@core/i18n/translation';
 
 /**
- * Tracks whether the device is online and tells the reader when that changes.
- *
- * Mostly read on a phone, on mobile data: a lost connection must say so once, in plain words,
- * rather than surface as every screen failing one after the other.
+ * Tracks the online state and announces each change once, rather than every screen failing.
  */
 @Service()
 export class Connectivity {
+  /**
+   * Browser window whose online and offline events drive the state.
+   */
   private readonly window = inject(DOCUMENT).defaultView;
+
+  /**
+   * Snackbar queue, to announce each connectivity change once.
+   */
   private readonly snackbar = inject(SnackbarService);
+
+  /**
+   * Translation service, to word the connectivity announcements.
+   */
   private readonly translation = inject(Translation);
 
   /**
-   * Whether the browser currently reports a network connection.
+   * Whether the browser reports a network connection.
    */
   public readonly online = signal(this.window?.navigator.onLine ?? true);
 

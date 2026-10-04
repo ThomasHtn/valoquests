@@ -1,0 +1,11 @@
+<!-- Canvas pinned out of flow: inline descender space made Chart.js mis-size it. -->
+<div [class]="heightClass()" class="relative">
+  <canvas
+    #canvas
+    [attr.aria-label]="ariaLabel()"
+    class="absolute inset-0 block"
+    role="img"
+  ></canvas>
+</div>
+
+<p class="sr-only">{{ summary() }}</p>

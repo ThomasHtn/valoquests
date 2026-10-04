@@ -10,8 +10,7 @@ import { InView } from '@shared/in-view/in-view';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
- * The base's reserves: the two stocks and what they pay for, the wounded brought home since the
- * campaign opened, and what capped each settled Sunday.
+ * Base stocks, wounded brought home, and what capped each settled Sunday.
  */
 @Component({
   selector: 'app-base-reserves',
@@ -22,18 +21,30 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 })
 export class BaseReserves {
   /**
-   * The one icon of each concept, read by the template's `svg[lucideIcon]`.
+   * Concept icons for the template.
    */
   protected readonly concepts = CONCEPT_ICONS;
 
+  /**
+   * Stocks, rescue totals and Sunday limits the panel lays out.
+   */
   public readonly reserves = input.required<Reserves>();
 
+  /**
+   * Active language, to format figures with its separators.
+   */
   private readonly translation = inject(Translation);
 
+  /**
+   * Formats an amount in the active language for the tanks and legends.
+   */
   protected format(amount: number): string {
     return formatDamage(amount, this.translation.language());
   }
 
+  /**
+   * Turns a fill fraction into the CSS level of a tank bar.
+   */
   protected percent(fraction: number): string {
     return `${Math.round(fraction * 100)}%`;
   }

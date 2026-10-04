@@ -1,5 +1,4 @@
 /**
- * Weight a navigation chip carries: the bordered default, or the one filled control that moves the
- * reader forward (the guided tour's next/finish).
+ * Chip weight: bordered default, or filled for the control moving forward (tour next).
  */
 export type NavChipVariant = 'outline' | 'solid';

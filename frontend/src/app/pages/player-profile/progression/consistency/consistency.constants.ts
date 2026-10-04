@@ -1,3 +1,6 @@
+import { KeyFigureIcon, KeyFigureTone } from '../key-figures/key-figures.model';
+import { ConsistencyTrend } from './consistency.model';
+
 /**
  * Width of one column of dots, in combat score.
  */
@@ -34,10 +37,27 @@ export const CONSISTENCY_OUTSIDE_COLOR = 'rgb(236 232 225 / 0.22)';
 export const CONSISTENCY_RULE_COLOR = 'rgb(217 149 74 / 0.6)';
 
 /**
- * Spread change, as a share of the previous spread, under which two seasons count as equally
- * steady: a few points either way is noise, not a trend.
+ * Spread change, as a share of the previous one, under which seasons count as equally steady.
  */
 export const CONSISTENCY_STEADY_MARGIN = 0.1;
+
+/**
+ * Pictogram of the trend figure, per trend.
+ */
+export const CONSISTENCY_TREND_ICONS: Readonly<Record<ConsistencyTrend, KeyFigureIcon>> = {
+  tighter: 'tighter',
+  looser: 'looser',
+  steady: 'flat',
+};
+
+/**
+ * Tone of the trend figure: a tighter spread is progress, a looser one a setback.
+ */
+export const CONSISTENCY_TREND_TONES: Readonly<Record<ConsistencyTrend, KeyFigureTone>> = {
+  tighter: 'good',
+  looser: 'bad',
+  steady: 'neutral',
+};
 
 /**
  * Prefix of every translation key the consistency block reads.
@@ -58,7 +78,6 @@ export const CONSISTENCY_RESULT_CLASSES: Readonly<Record<string, string>> = {
 export const CONSISTENCY_RESULT_FALLBACK_CLASS = 'bg-text-primary/4 text-text-secondary';
 
 /**
- * Matches with a combat score a season needs before the backend reports its spread, quoted in the
- * empty state.
+ * Matches with a combat score a season needs before the backend reports its spread.
  */
 export const CONSISTENCY_MIN_SAMPLE = 8;

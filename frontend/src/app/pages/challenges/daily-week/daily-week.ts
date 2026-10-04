@@ -5,12 +5,7 @@ import { Tooltip } from '@shared/tooltip/tooltip';
 import { DayCell } from '../challenges.model';
 
 /**
- * The seven days of the week as the bottom band of the day's challenge: each day that had a
- * challenge shows how many operators finished it, and opens it in place. Today is in the daily's
- * cyan; the day on screen is tinted and underlined. The days ahead have nothing to open.
- *
- * Laid flush by its caller, which knows the padding to cancel; slim, it is a row of initials
- * under the rule instead.
+ * Seven-day strip under the daily challenge; a drawn day shows its tally and opens in place.
  */
 @Component({
   selector: 'app-daily-week',
@@ -29,12 +24,12 @@ export class DailyWeek {
   public readonly days = input.required<readonly DayCell[]>();
 
   /**
-   * Whether each day is labelled by its initial alone, where seven full labels would crowd.
+   * Whether each day shows its initial only, where full labels would crowd.
    */
   public readonly initials = input(false);
 
   /**
-   * Whether the strip shrinks to a row of underlined initials, the scores left to each tooltip.
+   * Whether the strip shrinks to underlined initials, scores left to tooltips.
    */
   public readonly slim = input(false);
 

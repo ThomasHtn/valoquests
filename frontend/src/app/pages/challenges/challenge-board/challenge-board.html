@@ -1,5 +1,4 @@
-<!-- Only when the squad outgrows the board: which operators are shown, and arrows to bring the
-     others in, above the table's right end. -->
+<!-- Range and arrows, only when the squad outgrows the board. -->
 @if (slidable()) {
   @let shown = range();
   <div class="nav">
@@ -45,7 +44,7 @@
   <thead>
     <tr>
       <th class="lead" scope="col">
-        <!-- The column is still named for assistive tech; the eye gets the week it covers. -->
+        <!-- Named for assistive tech; the eye gets the week it covers. -->
         <span class="sr-only">{{ 'challenges.board.challenge' | translate }}</span>
         <span aria-hidden="true" class="period">{{ period() }}</span>
       </th>
@@ -53,8 +52,7 @@
         @let label =
           (operator.pinned ? 'challenges.board.unpin' : 'challenges.board.pin')
             | translate: { name: operator.name };
-        <!-- The whole tile stars the operator: the star shows on hover and stays filled once starred.
-             The name stays the button's, and the column's, accessible name; the title describes the press. -->
+        <!-- The whole tile pins; the name is the accessible name, the title the action. -->
         <th [attr.data-column]="i" [style.--i]="i" class="op slide" scope="col">
           <button
             (click)="pinOperator(operator.playerId)"

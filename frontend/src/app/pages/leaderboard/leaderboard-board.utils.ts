@@ -1,15 +1,13 @@
-import { Campaign, CampaignHistory, WeeklyTitle } from '@core/campaign/campaign.model';
-import { WEEK_DAYS } from '@core/date/date-time.constants';
-import { daysBetween, localMidnight } from '@core/date/date-time.utils';
+import { Campaign } from '@core/campaign/campaign.model';
+import { CampaignHistory } from '@core/campaign/campaign-history.model';
+import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
+import { WEEK_DAYS } from '@core/date/date.constants';
+import { daysBetween, localMidnight } from '@core/date/date.utils';
 import { RankingEntry } from '@core/ranking/ranking.model';
 import { WeekOption } from './leaderboard.model';
 
 /**
- * Pure helpers of the leaderboard: figures, dates and campaign placement, with no i18n service.
- */
-
-/**
- * The figure each title is awarded on, the way the backend awards them.
+ * Figure each title is awarded on, as the backend awards them.
  */
 export function resolveTitleMeasures(entry: RankingEntry): Partial<Record<WeeklyTitle, number>> {
   return {
@@ -21,15 +19,14 @@ export function resolveTitleMeasures(entry: RankingEntry): Partial<Record<Weekly
 }
 
 /**
- * Challenges a week draws: its weekly ones plus a daily every morning.
+ * Challenges a week draws: its weekly ones plus a daily each day.
  */
 export function weekChallengeCeiling(weeklyCount: number): number {
   return weeklyCount + WEEK_DAYS;
 }
 
 /**
- * Where a Monday falls: the running campaign's own week list first, then every closed campaign
- * by its first and last Mondays. Outside all of them, no index and no group.
+ * Campaign index and group of a Monday: the running campaign first, then closed ones.
  */
 export function placeWeekInCampaign(
   weekStart: string,
@@ -53,11 +50,7 @@ export function placeWeekInCampaign(
 }
 
 /**
- * Keeps the week the reader picked across a background reload; a new live week resets to it.
- *
- * @param weekStarts - Mondays the page can show, the live week first.
- * @param previous - The previous list and pick, absent on the first resolution.
- * @returns The Monday on screen.
+ * Keeps the picked week across reloads; a new live week resets to it.
  */
 export function resolveSelectedWeek(
   weekStarts: readonly string[],
@@ -71,7 +64,7 @@ export function resolveSelectedWeek(
 }
 
 /**
- * Monday to Sunday, the month spelled once when both days share it (`31 août – 6 sept.`).
+ * Monday to Sunday, the month spelled once when shared (`31 août – 6 sept.`).
  */
 export function formatWeekSpan(weekStart: string, locale: string): string {
   const monday = localMidnight(weekStart);

@@ -1,0 +1,60 @@
+/* Report sheet header bar and `hex-mark`, global because several pages share them. */
+
+.bar-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.6rem 1rem 0.6rem 0.5rem;
+  /* Transparent, not removed: the rows below keep a 2px edge the columns align on. */
+  border-left: 2px solid transparent;
+  background: rgb(236 232 225 / 8%);
+}
+
+.bar-count {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: rgb(217 149 74 / 50%);
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.bar-count > span {
+  width: calc(100% - 3px);
+  height: calc(100% - 3px);
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-950);
+}
+
+/* `--tone` hex rim around a dark core; use `clip-hex` on both spans. */
+.hex-mark {
+  width: 3rem;
+  height: 3.4rem;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--tone, var(--color-text-secondary)) 55%, transparent);
+}
+
+.hex-mark > span {
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-950);
+  color: var(--tone, var(--color-text-secondary));
+}
+
+/* Column names: hidden by default, shown by the wide sheets in their own stylesheet. */
+.bar-col {
+  display: none;
+}
+
+.bar-head--cols {
+  display: none;
+}

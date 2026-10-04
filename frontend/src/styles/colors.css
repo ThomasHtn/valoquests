@@ -1,13 +1,4 @@
-/*
- * Color palette, following the "Expédition" design direction.
- * Defines Tailwind v4 theme tokens (`@theme`), exposed as utilities such as
- * `bg-surface-800`, `text-accent-purple`, `border-brand-500`.
- *
- * `static` because Tailwind only emits the tokens it sees used, and it never sees the component
- * stylesheets: Angular compiles those on its own, so a token read there as `var(--color-x)` and
- * nowhere else as a utility was dropped from the bundle and every rule using it rendered colourless.
- * That is exactly how the boss health bar lost its red fill and the squad segments their violet.
- */
+/* Palette. `static`: Tailwind never sees component stylesheets, so it must emit every token. */
 
 @theme static {
   /* Brand (Expédition amber). */
@@ -16,65 +7,26 @@
   /* Hover step of a brand-400 link, never a fill. */
   --color-brand-300: #f0c493;
 
-  /*
-   * Surfaces (dark teal-navy scale, darkest to lightest). `surface-950` is the direction's page
-   * background; the lighter steps keep its hue and saturation and only climb in lightness, so the
-   * scale stays teal-navy instead of drifting grey as it lifts.
-   *
-   * `surface-sunken` sits outside that scale on purpose: it is a *role*, not a step. The
-   * navigation rail and inset wells (a health bar's track, a segmented bar's empty slots) read as
-   * carved *below* the page ground, so they need a value darker than `surface-950` without
-   * inverting the meaning of the scale's numbering. Dialogs and panels use it directly too.
-   */
+  /* Surfaces, darkest to lightest; `surface-sunken` is a role (rail, wells), not a step. */
   --color-surface-sunken: #0a151d;
   --color-surface-950: #0f1c26;
   --color-surface-800: #1b2c3a;
   --color-surface-700: #253645;
   --color-surface-600: #33495b;
 
-  /*
-   * Edge of a panel, as one token instead of the two dozen hand-written opacities the templates had
-   * drifted into (`border-text-primary/10` on twenty-eight elements, `/15` on twenty, plus ten
-   * distinct amber steps). The value sits between the two greys it replaces.
-   *
-   * Deliberately translucent rather than the flat hex it briefly was: like the panel fills below,
-   * an opaque edge blocks the shell's `ambient-field` glow and the whole interface goes a shade
-   * colder and darker for it.
-   */
+  /* Panel edges; translucent so the shell's `ambient-field` shows through. */
   --color-edge: --alpha(var(--color-text-primary) / 12%);
   --color-edge-strong: --alpha(var(--color-text-primary) / 20%);
 
-  /*
-   * Text. The direction's cream, plus its 55% and 45% body opacities — but lifted rather than
-   * flattened literally onto `surface-950`: a straight flatten lands `text-muted` near 3.9:1,
-   * under the 4.5:1 AA floor for body copy. These values keep the direction's warm grey cast and
-   * clear it (~7:1 and ~5.6:1). `text-muted` was lifted once more so it also clears AA on the
-   * `surface-800` panels (4.7:1), where it used to fall to 4.1:1.
-   */
+  /* Text; secondary and muted clear WCAG AA on both `surface-950` and `surface-800`. */
   --color-text-primary: #ece8e1;
   --color-text-secondary: #a4a7a6;
   --color-text-muted: #8f9496;
 
-  /*
-   * Category accents (challenges, stats, ranking rows). `accent-red` stays red on purpose: it
-   * marks damage and boss health, which must remain distinguishable from the amber brand color
-   * now that the latter is no longer red itself.
-   */
+  /* Category accents; `accent-red` marks damage and boss health, apart from the amber brand. */
   --color-accent-red: #ff4655;
 
-  /*
-   * The boss health bar's own two steps, deliberately not `accent-red` itself.
-   *
-   * A boss gauge drains, like in any game — that reading is never inverted. But `accent-red` at full
-   * strength across a bar the width of the content column is the single loudest object on three
-   * screens, and it is loudest precisely on Monday, when the squad has done nothing yet and the
-   * block has the least to say. These two steps drop it out of that register without taking it out
-   * of red: `boss-hp` fills the body, `boss-hp-edge` lifts the leading edge, so the eye lands where
-   * the value is moving rather than spreading over the whole band.
-   *
-   * `accent-red` keeps the marks that must stay at full strength beside them — the remaining-hit-
-   * point figure, the threat badge, the skull.
-   */
+  /* Boss health fill and leading edge, quieter than a full-width `accent-red` bar. */
   --color-boss-hp: #c9333f;
   --color-boss-hp-edge: #e0404e;
   --color-accent-purple: #a78bfa;
@@ -83,31 +35,13 @@
   --color-accent-green: #5fb88a;
   --color-accent-cyan: #2dd4bf;
 
-  /*
-   * Morale, on the campaign's resource band. Deliberately not `accent-purple`, which the note under
-   * the chart series below explains: the accent violets sit above this ground's lightness band and
-   * glare rather than read, which a fourteen-pixel filled bar makes very visible beside the muted
-   * amber and cyan it stands with. This is the value the direction's own mock-up settled on.
-   */
+  /* Morale; not `accent-purple`, which glares as a filled bar on this ground. */
   --color-accent-violet: #8c6fdc;
   --color-accent-pink: #ec4899;
 
   /*
-   * Chart series (the progression view's multi-season curves).
-   *
-   * Deliberately not the accent tokens above. Run through the data-viz palette validator against
-   * `surface-950`, those sit above the dark lightness band — a line drawn in them glares rather
-   * than reads — and `accent-blue` falls under the chroma floor, coming out grey. These are the
-   * same hue families re-stepped for plotting: amber, cyan, purple, pink, blue.
-   *
-   * Validated as an *ordered set*: the order is what clears the colorblind-separation check (worst
-   * adjacent pair ΔE 9.9), so slots are assigned in sequence, by the entity's own rank and never
-   * by its position in the current selection. Reordering or extending this list without re-running
-   * the validator breaks that guarantee, which is also why the progression view caps a selection
-   * at five seasons.
-   *
-   * `accent-green` and `accent-red` stay out: they carry state (a win, a loss, a player's best
-   * time slot) everywhere else in the application and must not also mean "series 6".
+   * Chart series, validated as an ordered set for colorblind separation: never reorder or extend
+   * without re-running the palette validator (hence the five-season cap).
    */
   --color-series-1: #c48235;
   --color-series-2: #009f8c;
@@ -115,11 +49,7 @@
   --color-series-4: #ec4899;
   --color-series-5: #418ad1;
 
-  /*
-   * Podium (ranking positions). Gold is `accent-gold` above, already the 1st-place color everywhere
-   * else. Silver is neutral rather than cool: a blue-grey reads as foreign against this ground's
-   * warm cast, and it has to stay clearly apart from the cream `text-primary` beside it.
-   */
+  /* Podium; gold is `accent-gold`, silver stays neutral against the warm ground. */
   --color-podium-silver: #bdbcb6;
   --color-podium-bronze: #a07850;
 

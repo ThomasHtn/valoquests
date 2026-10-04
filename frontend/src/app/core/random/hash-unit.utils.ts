@@ -1,15 +1,5 @@
 /**
- * Stateless randomness: the same keys always give the same draw, whatever was drawn before.
- *
- * A seeded sequence shifts every later draw as soon as one more is taken; a drawing whose content
- * grows (a building more, a window more) would then reshuffle everything else on screen.
- */
-
-/**
- * Hashes a list of integers into a draw in [0, 1).
- *
- * @param keys - Integers identifying the draw (an id, an index, a salt...).
- * @returns A value in [0, 1), stable for the same keys.
+ * Stable draw in [0, 1) for the same keys; unlike a sequence, an extra draw reshuffles nothing.
  */
 export function hashUnit(...keys: readonly number[]): number {
   let h = 0x811c9dc5;

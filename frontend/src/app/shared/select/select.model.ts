@@ -1,5 +1,5 @@
 /**
- * A selectable option in an {@link Select}, generic over the value's domain type.
+ * One option of an `app-select`.
  */
 export interface SelectOption<T> {
   /**
@@ -8,7 +8,7 @@ export interface SelectOption<T> {
   readonly value: T;
 
   /**
-   * Already-translated label shown for this option.
+   * Translated label.
    */
   readonly label: string;
 }

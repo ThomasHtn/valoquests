@@ -3,18 +3,17 @@
  */
 export interface BackTarget {
   /**
-   * The URL it leads to.
+   * Target URL.
    */
   readonly link: string;
 
   /**
-   * Already-translated name of that page.
+   * Translated name of the target page.
    */
   readonly label: string;
 
   /**
-   * Whether it is the page the reader came from, reached through the browser's own history so its
-   * filters and scroll come back with it.
+   * Whether it goes back through history, restoring the previous page's filters and scroll.
    */
   readonly viaHistory: boolean;
 }

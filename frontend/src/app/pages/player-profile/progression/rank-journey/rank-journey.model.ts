@@ -1,4 +1,4 @@
-import { CompetitiveTier } from '@core/players/competitive-tier.model';
+import { CompetitiveTier } from '@core/players/competitive-tier/player-competitive-tier.model';
 import { KeyFigureIcon, KeyFigureTone } from '../key-figures/key-figures.model';
 
 /**
@@ -37,8 +37,7 @@ export interface RankLabel {
 }
 
 /**
- * What one point of the chart stands for: a season of a multi-season selection, or a match of a
- * single-season one.
+ * What a point stands for: a season (multi-season selection) or a match (single season).
  */
 export type RankJourneyMode = 'seasons' | 'matches';
 
@@ -122,12 +121,12 @@ export interface RankJourneyTooltip {
   readonly deltaCaption: string;
 
   /**
-   * Lowest rank held during a season, or `null` when it never left one rank or the point is a match.
+   * Lowest rank of a season, `null` for a single rank or a match.
    */
   readonly lowest: RankLabel | null;
 
   /**
-   * Highest rank held during a season, or `null` when it never left one rank or the point is a match.
+   * Highest rank of a season, `null` for a single rank or a match.
    */
   readonly highest: RankLabel | null;
 

@@ -1,6 +1,4 @@
-<!-- The page's one command rides in the context bar rather than above the roster: it is what this
-     screen is for, and from the bar it stays reachable however far down the list the operator is.
-     Label dropped below `sm`, where the bar is at its tightest. -->
+<!-- Main command in the context bar, reachable however far down; label hidden below `sm`. -->
 <app-page-header [heading]="'admin.players.heading' | translate">
   <button
     appButton="primary"
@@ -15,10 +13,7 @@
 </app-page-header>
 
 <div class="page-body">
-  <!-- The only place the product tells a manager how to start. It used to live in the developer
-       README, which is the one document the person running the roster will never open. Open by
-       itself while the roster is empty and folded away once it is not: this is a first-day
-       instruction, not a permanent banner. -->
+  <!-- Getting started, open only while the roster is empty. -->
   <details
     [open]="players().length === 0"
     class="notch-tr group border border-brand-500/25 bg-brand-500/6 [--notch:0.875rem]"
@@ -37,8 +32,7 @@
       ></svg>
     </summary>
 
-    <!-- Numbered because the order is the instruction: nothing can be synchronized before a player
-         exists, and nothing is worth sharing before a synchronization has run. -->
+    <!-- Numbered: the order is the instruction. -->
     <ol class="flex flex-col gap-3.5 border-t border-brand-500/20 px-4 py-4">
       <li class="flex gap-3">
         <span
@@ -83,10 +77,7 @@
 
   <app-section-label [label]="'admin.players.rosterSection' | translate" />
 
-  <!-- What the roster is worth to the run in progress. Editing it here does not change that run:
-       its size was frozen when it opened, and the change lands on the next one. Without this line an
-       operator deactivating somebody in week eight would expect the base to react tonight, and
-       nothing at all would happen. -->
+  <!-- Roster edits only apply to the next run: the live one froze its size. -->
   @if (frozenRosterLabel(); as frozenRoster) {
     <p
       class="notch-tr mb-3 border-l-2 border-l-brand-500/50 bg-brand-500/8 px-4 py-2.5 text-sm text-text-secondary [--notch:0.625rem]"
@@ -119,9 +110,7 @@
       }
     </div>
 
-    <!-- Rows rather than a `<table>`: each entry is an identity plus its own controls, which reads
-       as a list of cards on a phone and lines up into columns from `lg` up. The row scrolls
-       horizontally inside itself if it ever has to, so the page body never does. -->
+    <!-- Rows, not a table: cards on a phone, columns from `lg` up. -->
     <ul class="flex flex-col gap-2">
       @for (player of players(); track player.id) {
         <li
@@ -163,9 +152,7 @@
               {{ formatLastSync(player.lastSuccessfulSynchronizationAt) }}
             </p>
 
-            <!-- A forgotten account is not a cosmetic problem: it widens the town without feeding
-                 it, and the score follows the lower of the two ceilings. Flagged where the operator
-                 is already looking, beside the button that fixes it. -->
+            <!-- An idle active account widens the town without feeding it. -->
             @if (player.status === 'ACTIVE' && !player.hasRecentMatch) {
               <p class="mt-1.5 flex items-center gap-1.5 text-xs text-danger">
                 <svg aria-hidden="true" class="size-3.5 shrink-0" lucideTriangleAlert></svg>

@@ -1,26 +1,26 @@
 import { ElementRef, Signal } from '@angular/core';
 
 /**
- * Viewport-relative coordinates a dropdown panel is pinned to while open.
+ * Viewport coordinates of an open dropdown panel.
  */
 export interface DropdownPanelPosition {
   /**
-   * Distance from the viewport top, in pixels, or `null` when the panel opens upwards.
+   * Px from the viewport top, `null` when opening upwards.
    */
   top: number | null;
 
   /**
-   * Distance from the viewport bottom, in pixels, set only when the panel opens upwards.
+   * Px from the viewport bottom, set only when opening upwards.
    */
   bottom: number | null;
 
   /**
-   * Distance from the viewport right edge, in pixels.
+   * Px from the viewport right edge.
    */
   right: number;
 
   /**
-   * Minimum panel width, in pixels.
+   * Minimum panel width in px.
    */
   minWidth: number;
 }
@@ -30,7 +30,7 @@ export interface DropdownPanelPosition {
  */
 export interface PositionedDropdownRefs {
   /**
-   * Host element of the trigger, used to detect a click landing outside the whole control.
+   * Host element, to detect clicks outside the whole control.
    */
   host: ElementRef<HTMLElement>;
 
@@ -58,13 +58,24 @@ export interface PositionedDropdown {
    * Where the panel is pinned while open.
    */
   readonly panelPosition: Signal<DropdownPanelPosition>;
+
+  /**
+   * Opens the panel under the trigger, or above it when only that side has room.
+   */
   open(): void;
+
+  /**
+   * Closes the panel, leaving focus where it is.
+   */
   close(): void;
+
+  /**
+   * Opens the panel when closed, closes it when open.
+   */
   toggle(): void;
 
   /**
-   * Closes the panel and returns focus to the trigger, for a caller-driven dismissal (Escape, a
-   * confirmed selection) as opposed to one detected from the outside (a click, a resize, a scroll).
+   * Closes and refocuses the trigger, for a caller-driven dismissal (Escape, selection).
    */
   closeAndRefocus(): void;
 }

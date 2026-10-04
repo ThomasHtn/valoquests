@@ -1,25 +1,23 @@
-import { WeeklyTitle } from '@core/campaign/campaign.model';
+import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
 import { ChallengeCadence, ChallengeDifficulty } from '@core/challenges/challenge.model';
-import { CompetitiveTier } from '@core/players/competitive-tier.model';
+import { CompetitiveTier } from '@core/players/competitive-tier/player-competitive-tier.model';
 
 /**
- * Player identity and rank data attached to a ranking entry.
- *
- * Mirrors `CurrentRankingResponse.PlayerRankingResponse` from the backend.
+ * Player identity and rank of a ranking entry. Mirrors the backend `PlayerRankingResponse`.
  */
 export interface PlayerRanking {
   /**
-   * Internal identifier of the player.
+   * Player identifier.
    */
   readonly id: number;
 
   /**
-   * Name shown across the application.
+   * Display name.
    */
   readonly displayName: string;
 
   /**
-   * Relative path or URL of the player portrait, or `null` when not yet synchronized.
+   * Portrait path or URL, `null` until synchronized.
    */
   readonly portrait: string | null;
 
@@ -29,16 +27,13 @@ export interface PlayerRanking {
   readonly competitiveTier: CompetitiveTier;
 
   /**
-   * Rank rating points within the tier, or `null` when unranked.
+   * Rank rating within the tier, `null` when unranked.
    */
   readonly rankRating: number | null;
 }
 
 /**
- * A player's exact progress toward one challenge on the week's board: one of the five weekly
- * ones, or today's daily.
- *
- * Mirrors `CurrentRankingResponse.ChallengeProgressResponse` from the backend.
+ * Progress on one board challenge, weekly or daily. Mirrors `ChallengeProgressResponse`.
  */
 export interface RankingChallengeProgress {
   /**
@@ -67,7 +62,7 @@ export interface RankingChallengeProgress {
   readonly difficulty: ChallengeDifficulty | null;
 
   /**
-   * Day the daily is decided on, as an ISO-8601 date (`YYYY-MM-DD`); `null` for a weekly.
+   * Day of a daily (`YYYY-MM-DD`), `null` for a weekly.
    */
   readonly day: string | null;
 
@@ -82,7 +77,7 @@ export interface RankingChallengeProgress {
   readonly currentValue: number;
 
   /**
-   * Value to reach, or `null` for an open-ended challenge.
+   * Value to reach, `null` when open-ended.
    */
   readonly targetValue: number | null;
 
@@ -103,25 +98,21 @@ export interface RankingChallengeProgress {
 }
 
 /**
- * Single row of the current weekly ranking: a player's position, what they produced this week,
- * and their exact progress toward every challenge on the board.
- *
- * Mirrors `CurrentRankingResponse.RankingEntryResponse` from the backend.
+ * One row of the current weekly ranking. Mirrors the backend `RankingEntryResponse`.
  */
 export interface RankingEntry {
   /**
-   * 1-based ranking position, shared on equal points, or `null` when the player has no points
-   * yet or is inactive and therefore never consumes a ranking slot.
+   * 1-based position, shared on ties, `null` without points or when inactive.
    */
   readonly position: number | null;
 
   /**
-   * Whether the player takes part in the ranking at all: `false` for an inactive player.
+   * `false` for an inactive player, out of the ranking.
    */
   readonly competing: boolean;
 
   /**
-   * Position at the previous calculation, or `null` when new.
+   * Position at the previous calculation, `null` when new.
    */
   readonly previousPosition: number | null;
 
@@ -136,7 +127,7 @@ export interface RankingEntry {
   readonly player: PlayerRanking;
 
   /**
-   * Damage dealt to the week's guardian by the matches that counted, streak bonus included.
+   * Damage to the week's guardian, streak bonus included.
    */
   readonly guardianDamage: number;
 
@@ -166,12 +157,12 @@ export interface RankingEntry {
   readonly streakDays: number;
 
   /**
-   * Points banked by the challenges validated this week, weekly and daily alike.
+   * Points from this week's validated challenges, weekly and daily.
    */
   readonly challengePoints: number;
 
   /**
-   * Weekly challenges validated, over {@link totalChallenges}.
+   * Weekly challenges validated, out of `totalChallenges`.
    */
   readonly completedChallenges: number;
 
@@ -186,7 +177,7 @@ export interface RankingEntry {
   readonly completedDailyChallenges: number;
 
   /**
-   * {@link guardianDamage} + {@link challengePoints}: what the ranking is ordered on.
+   * Guardian damage plus challenge points, the ranking order.
    */
   readonly totalPoints: number;
 
@@ -196,35 +187,32 @@ export interface RankingEntry {
   readonly titles: readonly WeeklyTitle[];
 
   /**
-   * One line per challenge on the board: the five weekly ones and today's daily.
+   * One line per board challenge: the five weeklies and today's daily.
    */
   readonly challengeProgress: readonly RankingChallengeProgress[];
 }
 
 /**
- * Current weekly ranking, with each player's exact progress toward every active challenge.
- *
- * Mirrors the backend `CurrentRankingResponse` returned by `GET /api/rankings/current`.
+ * Current weekly ranking with challenge progress. Mirrors the backend `CurrentRankingResponse`.
  */
 export interface CurrentRanking {
   /**
-   * Monday identifying the active week, as an ISO-8601 date (`YYYY-MM-DD`).
+   * Monday of the active week (`YYYY-MM-DD`).
    */
   readonly weekStart: string;
 
   /**
-   * Sunday identifying the active week, as an ISO-8601 date (`YYYY-MM-DD`).
+   * Sunday of the active week (`YYYY-MM-DD`).
    */
   readonly weekEnd: string;
 
   /**
-   * The day in progress, as an ISO-8601 date (`YYYY-MM-DD`).
+   * Day in progress (`YYYY-MM-DD`).
    */
   readonly today: string;
 
   /**
-   * Instant at which this ranking was last calculated, as an ISO-8601 instant, or `null` before
-   * the week's first calculation.
+   * Last calculation instant (ISO-8601), `null` before the week's first one.
    */
   readonly calculatedAt: string | null;
 
@@ -235,39 +223,36 @@ export interface CurrentRanking {
 }
 
 /**
- * Single player's day: what they brought in, and how that compares to the day before.
- *
- * Mirrors `DailyRankingResponse.DailyRankingEntryResponse` from the backend.
+ * One player's day against the day before. Mirrors the backend `DailyRankingEntryResponse`.
  */
 export interface DailyRankingEntry {
   /**
-   * 1-based rank on the day, shared on equal damage, or `null` when the player dealt none or is
-   * inactive — same rule as {@link RankingEntry.position}.
+   * 1-based rank, shared on ties, `null` without damage or when inactive.
    */
   readonly position: number | null;
 
   /**
-   * Whether the player takes part in the ranking at all: `false` for an inactive player.
+   * `false` for an inactive player, out of the ranking.
    */
   readonly competing: boolean;
 
   /**
-   * Internal identifier of the player.
+   * Player identifier.
    */
   readonly playerId: number;
 
   /**
-   * Name shown across the application.
+   * Display name.
    */
   readonly displayName: string;
 
   /**
-   * Relative path or URL of the player portrait, or `null` when not yet synchronized.
+   * Portrait path or URL, `null` until synchronized.
    */
   readonly portrait: string | null;
 
   /**
-   * Damage dealt by the day's valued matches, diminishing returns and streak bonus applied.
+   * Day damage, diminishing returns and streak bonus applied.
    */
   readonly damage: number;
 
@@ -287,12 +272,12 @@ export interface DailyRankingEntry {
   readonly matchCount: number;
 
   /**
-   * Matches priced below their full value by the day's diminishing returns.
+   * Matches reduced by the day's diminishing returns.
    */
   readonly reducedMatchCount: number;
 
   /**
-   * Days of the week played up to this day, this day included; zero when not played.
+   * Week days played up to this day included, `0` when not played.
    */
   readonly streakDays: number;
 
@@ -302,7 +287,7 @@ export interface DailyRankingEntry {
   readonly streakBonusPercent: number;
 
   /**
-   * Days of the week played from Monday up to this day included, ISO dates in ascending order.
+   * Week days played up to this day included, ascending ISO dates.
    */
   readonly weekPlayedDays: readonly string[];
 
@@ -312,24 +297,22 @@ export interface DailyRankingEntry {
   readonly previousDamage: number;
 
   /**
-   * {@link damage} minus {@link previousDamage} — what the day's board is really for.
+   * Damage minus previous damage, what the daily board is for.
    */
   readonly damageVariation: number;
 }
 
 /**
- * One day's ranking, priced on demand from the matches that day holds.
- *
- * Mirrors the backend `DailyRankingResponse` returned by `GET /api/rankings/daily`.
+ * One day's ranking, priced on demand. Mirrors the backend `DailyRankingResponse`.
  */
 export interface DailyRanking {
   /**
-   * The day on the board, as an ISO-8601 date (`YYYY-MM-DD`).
+   * Day on the board (`YYYY-MM-DD`).
    */
   readonly day: string;
 
   /**
-   * The day the variation is measured against, as an ISO-8601 date (`YYYY-MM-DD`).
+   * Day the variation is measured against (`YYYY-MM-DD`).
    */
   readonly previousDay: string;
 
@@ -339,21 +322,18 @@ export interface DailyRanking {
   readonly playedPlayerCount: number;
 
   /**
-   * Competing players, the denominator {@link playedPlayerCount} is read against.
+   * Competing players, the denominator of `playedPlayerCount`.
    */
   readonly rosterPlayerCount: number;
 
   /**
-   * One entry per player of the roster, archived ones aside — deactivated players included, at a
-   * `null` position.
+   * One entry per non-archived roster player, deactivated ones at a `null` position.
    */
   readonly ranking: readonly DailyRankingEntry[];
 }
 
 /**
- * Single player's finalized result within one historical week.
- *
- * Mirrors `RankingHistoryWeekResponse.FinalRankingEntryResponse` from the backend.
+ * A player's final result in a past week. Mirrors the backend `FinalRankingEntryResponse`.
  */
 export interface RankingHistoryEntry {
   /**
@@ -362,12 +342,12 @@ export interface RankingHistoryEntry {
   readonly position: number;
 
   /**
-   * Internal identifier of the player.
+   * Player identifier.
    */
   readonly playerId: number;
 
   /**
-   * Name shown across the application.
+   * Display name.
    */
   readonly displayName: string;
 
@@ -382,7 +362,7 @@ export interface RankingHistoryEntry {
   readonly challengePoints: number;
 
   /**
-   * The player's frozen weekly total, what the finalized position was ordered on.
+   * Frozen weekly total the final position was ordered on.
    */
   readonly totalPoints: number;
 
@@ -418,28 +398,26 @@ export interface RankingHistoryEntry {
 }
 
 /**
- * Finalized, immutable ranking for one completed calendar week.
- *
- * Mirrors `RankingHistoryWeekResponse` from the backend.
+ * Frozen ranking of a completed week. Mirrors the backend `RankingHistoryWeekResponse`.
  */
 export interface RankingHistoryWeek {
   /**
-   * Monday identifying the week, as an ISO-8601 date (`YYYY-MM-DD`).
+   * Monday of the week (`YYYY-MM-DD`).
    */
   readonly weekStart: string;
 
   /**
-   * Sunday identifying the week, as an ISO-8601 date (`YYYY-MM-DD`).
+   * Sunday of the week (`YYYY-MM-DD`).
    */
   readonly weekEnd: string;
 
   /**
-   * Instant the week was frozen at, as an ISO-8601 instant.
+   * Freeze instant, ISO-8601.
    */
   readonly finalizedAt: string;
 
   /**
-   * Who finished first, or `null` on a week nobody was ranked.
+   * Winner, `null` when nobody was ranked.
    */
   readonly winnerPlayerId: number | null;
 

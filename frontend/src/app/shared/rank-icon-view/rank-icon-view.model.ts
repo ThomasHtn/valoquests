@@ -1,10 +1,10 @@
 /**
- * Size preset for a rank icon.
+ * Size preset of a rank icon.
  */
 export type RankIconSize = 'sm' | 'md' | 'lg';
 
 /**
- * Rendering metrics for a rank icon at a given size: CSS class and pixel dimensions.
+ * Rendering metrics of a rank icon size.
  */
 export interface RankIconSizeMetrics {
   /**
@@ -13,7 +13,7 @@ export interface RankIconSizeMetrics {
   readonly containerClass: string;
 
   /**
-   * Rendered size, in pixels.
+   * Rendered size in pixels.
    */
   readonly pixels: number;
 }

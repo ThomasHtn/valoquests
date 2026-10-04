@@ -1,0 +1,39 @@
+/* Menus over the page; their motion is in `motion/menus-motion.css`. */
+
+/* Full border: the sunken fill alone would blend into the page. */
+@utility menu-panel {
+  @apply notch-tr notch-tr-edge border border-brand-500/50 bg-surface-sunken [--notch:0.5rem];
+}
+
+/* Menu row, tall enough for a phone; no display or colors so a selected row keeps its own. */
+@utility menu-option {
+  @apply min-h-10 w-full cursor-pointer px-4 py-2.5 text-left text-base whitespace-nowrap transition-[background-color,scale] motion-safe:active:scale-[0.96];
+}
+
+/* Listbox colors; hover skips the selected row so it keeps its amber. */
+@utility listbox-option {
+  @apply relative text-text-secondary before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:content-[''] not-aria-selected:hover:bg-surface-800 not-aria-selected:hover:text-text-primary not-aria-selected:data-active:bg-surface-800 not-aria-selected:data-active:text-text-primary aria-selected:bg-brand-500/10 aria-selected:text-brand-500 aria-selected:before:bg-brand-500 aria-selected:hover:bg-brand-500/15 aria-selected:data-active:bg-brand-500/15;
+}
+
+/* Option list capped to stay inside the viewport. */
+@utility menu-scroll {
+  @apply max-h-96 overflow-y-auto;
+
+  /* Chrome ignores `::-webkit-scrollbar` while the base layer's `scrollbar-*` are set. */
+  @supports selector(::-webkit-scrollbar) {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+
+  &::-webkit-scrollbar {
+    width: 14px;
+  }
+
+  &::-webkit-scrollbar-track {
+    margin-block: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 5px solid transparent;
+  }
+}

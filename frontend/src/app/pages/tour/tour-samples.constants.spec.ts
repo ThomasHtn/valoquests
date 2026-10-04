@@ -7,7 +7,7 @@ import {
   GROUP_FACTOR,
   GUARDIAN_FACTOR,
   PROGRESSION_PER_WEEK,
-} from '../rules/rules.constants';
+} from '@pages/rules/rules.constants';
 import {
   TOUR_SAMPLE_CAPACITY,
   TOUR_SAMPLE_CONTRIBUTION,
@@ -16,8 +16,7 @@ import {
   TOUR_SAMPLE_STAKES,
 } from './tour-samples.constants';
 
-// The tour quotes these figures as the real screens would show them: they must follow the rules
-// page's constants, which follow the backend. A changed constant fails here before it misleads.
+// The samples must follow the rules constants, so a changed constant fails here first.
 describe('tour samples', () => {
   const week = CAMPAIGN_WEEKS[TOUR_SAMPLE_MISSION.weekIndex - 1];
   const crew = TOUR_SAMPLE_MISSION.crew;

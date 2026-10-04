@@ -1,16 +1,14 @@
 /**
- * Outcome a snackbar communicates. Colour and icon both derive from this, so the message never
- * relies on colour alone.
+ * Snackbar outcome, driving both colour and icon so colour never stands alone.
  */
 export type SnackbarType = 'success' | 'error';
 
 /**
- * One snackbar queued for display.
+ * Queued snackbar.
  */
 export interface SnackbarMessage {
   /**
-   * Identity used to key the timebar animation so it restarts on every new message, including one
-   * with the same text and type as the last.
+   * Keys the timebar animation so it restarts on every message.
    */
   readonly id: number;
 
@@ -20,7 +18,7 @@ export interface SnackbarMessage {
   readonly type: SnackbarType;
 
   /**
-   * Already-translated message text.
+   * Translated text.
    */
   readonly text: string;
 }

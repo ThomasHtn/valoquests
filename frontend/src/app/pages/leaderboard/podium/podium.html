@@ -7,14 +7,12 @@
     viewBox="0 0 1600 280"
   ></svg>
 
-  <!-- 1st rendered larger and centred via `order`, so the DOM keeps its reading order (1st, 2nd,
-       3rd) for assistive technology while the layout reads as a podium. Tied operators share the
-       plinth of their place. -->
+  <!-- 1st centred via CSS `order`, so the DOM keeps reading order for AT. -->
   <ol [attr.aria-label]="'leaderboard.podium.label' | translate" class="plinths">
     @for (place of places(); track place.position) {
       <li [class.place--tied]="place.rows.length > 1" [class]="'place place--' + place.position">
         @if (place.rows.length === 1) {
-          <!-- One holder: the whole column, plinth included, is the link and rises on hover. -->
+          <!-- One holder: the whole column is the link. -->
           @let row = place.rows[0];
           <a [routerLink]="['/players', row.playerId]" class="focus-ring link">
             <ng-container
@@ -27,9 +25,9 @@
             />
           </a>
         } @else {
-          <!-- A tie: one link per holder over a shared plinth; the column still rises as a whole. -->
+          <!-- A tie: one link per holder over a shared plinth. -->
           <div class="holders">
-            <!-- Keyed on the place too: NgOptimizedImage throws when a moved player's avatar resizes. -->
+            <!-- Keyed on the place too: NgOptimizedImage throws when a moved avatar resizes. -->
             @for (row of place.rows; track row.playerId + ':' + row.position) {
               <a [routerLink]="['/players', row.playerId]" class="focus-ring holder-link">
                 <ng-container
@@ -57,7 +55,6 @@
     [src]="row.portrait"
   />
 
-  <!-- The title rides beside the name, dropping under only when the plinth is too narrow. -->
   <span class="identity">
     <span class="name">
       {{ row.name }}

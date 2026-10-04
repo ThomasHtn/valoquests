@@ -1,5 +1,4 @@
-<!-- Bypass block (WCAG 2.4.1): the sidebar repeats on every route, so keyboard users get a way
-     to jump straight to the routed content. Visible only while focused. -->
+<!-- Skip link (WCAG 2.4.1), visible only while focused. -->
 <a
   class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:border focus:border-brand-500/45 focus:bg-surface-800 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-text-primary"
   (click)="skipToContent($event)"
@@ -8,21 +7,11 @@
   {{ 'skipToContent' | translate }}
 </a>
 
-<!-- Navigation sits beside the content on desktop and overlays it on small screens, hence the
-     direction switch: from `lg` up the rail is a column of this row, and below it the same panel
-     becomes a drawer sliding over the page, summoned from the burger the routed page's context bar
-     carries. -->
+<!-- Sidebar is a column from `lg` up, a drawer over the page below it. -->
 <div class="ambient-field flex h-dvh flex-col overflow-hidden bg-surface-950 lg:flex-row">
-  <!-- Persistent navigation, shown on every route nested under this shell. -->
   <app-sidebar />
 
-  <!-- Routed page content. Deliberately not the scroll container: that's the page's own
-       `page-body` (see `styles.css`), kept out of this box so its scrollbar never runs behind the
-       page's context bar. No padding or width cap here: that bar spans this column edge to edge,
-       so the gutter rides on the page's own blocks instead. `relative` gives a page a positioning
-       context to anchor anything full-bleed against. -->
-  <!-- Inert behind the open drawer, so Tab and screen readers stay in it; the drawer only opens
-       below `lg`, from the burger. -->
+  <!-- Not the scroll container (`page-body` is); inert behind the open drawer to trap focus. -->
   <main
     #main
     [attr.inert]="navigationPanel.isOpen() && !breakpoint.isLarge() ? '' : null"

@@ -1,10 +1,10 @@
 /**
- * Side of the host the tooltip is rendered on.
+ * Side of the host the tooltip sits on.
  */
 export type TooltipPosition = 'above' | 'below' | 'left' | 'right';
 
 /**
- * One SVG element of an icon drawn by hand inside a tooltip.
+ * One SVG element of a hand-built tooltip icon.
  */
 export interface TooltipIconNode {
   /**
@@ -13,12 +13,12 @@ export interface TooltipIconNode {
   readonly tag: 'path' | 'circle';
 
   /**
-   * Geometry attributes of the element.
+   * Geometry attributes.
    */
   readonly attributes: Readonly<Record<string, string>>;
 }
 
 /**
- * What opens the tooltip: resting on or focusing the host, or mouse hover plus tap for an info button.
+ * `hover` for hover and focus, `click` for an info button (mouse hover plus tap).
  */
 export type TooltipTrigger = 'hover' | 'click';

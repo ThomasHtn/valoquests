@@ -1,7 +1,7 @@
 import { ShipStage } from './rocket-drawing.model';
 
 /**
- * Palette of the ship, in the colours of the rest of the site.
+ * Ship palette, in the site's colours.
  */
 export const ROCKET_PALETTE = {
   mast: '#2b3a45',
@@ -22,12 +22,12 @@ export const ROCKET_PALETTE = {
 } as const;
 
 /**
- * Number of parts the finished launcher has: one per guardian of the campaign.
+ * Parts of the finished launcher, one per guardian.
  */
 export const ROCKET_PART_COUNT = 10;
 
 /**
- * The ten stages of the ship, index zero being nothing built.
+ * Ship stages, index zero being nothing built.
  */
 export const SHIP: readonly ShipStage[] = [
   { w: 0, h: 0, fins: 0, boost: 0, nose: 'none', eng: 0, gantry: 0, ports: 0, bands: 0 },
@@ -44,6 +44,24 @@ export const SHIP: readonly ShipStage[] = [
 ];
 
 /**
- * Engine skirt, under the hull.
+ * Height of the engine skirt under the hull.
  */
 export const SKIRT = 14;
+
+/**
+ * Gap between the ship's widest point and the service gantry.
+ */
+export const GANTRY_GAP = 22;
+
+/**
+ * Vertical spacing of the gantry's cross braces.
+ */
+export const GANTRY_BRACE_STEP = 14;
+
+/**
+ * Heights of the service arms reaching the hull, per gantry stage.
+ */
+export const GANTRY_ARM_HEIGHTS: Readonly<Record<number, readonly number[]>> = {
+  1: [26, 78],
+  2: [26, 74, 122, 170],
+};

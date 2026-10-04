@@ -1,11 +1,10 @@
-/* The squad page's fills: rows at 4%, header and footer bands at 8%. One gap, the rows' own,
-   sets every column apart. */
+/* The squad page's fills; one gap, the rows' own, sets every column apart. */
 :host {
   --cell: rgb(236 232 225 / 4%);
   --head: rgb(236 232 225 / 8%);
   --gap: 0.375rem;
   display: block;
-  /* The operator columns that do not fit run past the right edge: clipped, not scrolled. */
+  /* Operator columns that do not fit are clipped, not scrolled. */
   overflow-x: clip;
 }
 
@@ -30,16 +29,14 @@ td {
   vertical-align: middle;
 }
 
-/* Every operator column opens on a transparent border as wide as the row gap, which the column
-   widths already count: the first one sets the challenge column apart, and a column slid in
-   brings its own gap. */
+/* Each operator column opens on a gap-wide transparent border, counted in `--col`. */
 .slide {
   position: relative;
   border-left: var(--gap) solid transparent;
   background-clip: padding-box;
 }
 
-/* Not sticky: its fill is translucent, and six operators fit without scrolling. */
+/* Not sticky: its fill is translucent. */
 .lead {
   text-align: left;
 }
@@ -49,32 +46,31 @@ tbody .lead {
   box-shadow: inset 2px 0 0 color-mix(in srgb, var(--tone) 75%, transparent);
 }
 
-/* Every weekly row takes the room of a two-line rule; a longer one still grows its row. */
+/* Weekly rows hold a two-line rule; a longer one still grows its row. */
 .row--weekly > .lead {
   height: 8.5rem;
 }
 
-/* The day's tally sits under the rule, as a row of initials, indented like it (board-head's
-   hexagon plus its gap). */
+/* Indented like the rule (board-head's hexagon plus its gap). */
 .tally {
   margin: 0.9rem 0 0 3.6rem;
 }
 
 /* ---------- Header and footer bands ---------- */
 
-/* Header and footer bands at 8%, as on the squad page. The longhand keeps the lead's clip. */
+/* The longhand keeps the lead's clip. */
 thead th,
 tfoot th,
 tfoot td {
   background-color: var(--head);
 }
 
-/* Inset like the rows' leads, so the heading lines up with their emblems. */
+/* Inset like the rows' leads to line up with their emblems. */
 thead .lead {
   padding: 0.6rem 1.5rem 0.6rem 1.35rem;
 }
 
-/* A quiet caption over the column, so the rules below stay the first thing read. */
+/* Quiet caption, so the rules below are read first. */
 .period {
   font-family: var(--font-display);
   font-size: 0.9375rem;
@@ -83,7 +79,7 @@ thead .lead {
   color: var(--color-text-muted);
 }
 
-/* The tile lights as a whole on hover, whatever height the row gives it. */
+/* The whole tile lights on hover. */
 thead .op:hover {
   background-color: rgb(236 232 225 / 12%);
 }
@@ -102,7 +98,7 @@ thead .op:hover {
   color: inherit;
   cursor: pointer;
 
-  /* Spreads the press and the focus ring over the whole tile, the cell's padding box. */
+  /* Spreads the press and focus ring over the whole cell. */
   &::before {
     content: '';
     position: absolute;
@@ -130,7 +126,7 @@ thead .op:hover {
   white-space: nowrap;
 }
 
-/* As on the overview tabs: outlined on hover, filled once starred, absent from the other tiles. */
+/* Outlined on hover, filled once pinned, as on the overview tabs. */
 .op-star {
   position: absolute;
   top: 0.4rem;
@@ -155,7 +151,7 @@ thead .op:hover {
   fill: currentColor;
 }
 
-/* Ruled in brand like the challenge rows in their tone, so the tally reads as the board's last row. */
+/* Ruled in brand so the totals read as the board's last row. */
 tfoot .lead {
   padding: 0.9rem 1.5rem 0.9rem 1.35rem;
   box-shadow: inset 2px 0 0 color-mix(in srgb, var(--color-brand-400) 75%, transparent);
@@ -192,7 +188,7 @@ tfoot td {
   font-weight: 600;
 }
 
-/* Nothing brought back yet: a dash, as a not-started cell shows. */
+/* Nothing brought back yet: a dash, like a not-started cell. */
 .sum-dash {
   font-family: var(--font-display);
   font-size: 1.125rem;
@@ -202,18 +198,14 @@ tfoot td {
 
 /* ---------- Sliding operator columns ---------- */
 
-/* Registered so the slide itself animates: transform and clip then read the same value each frame,
-   and the cut stays pinned to the challenge column instead of drifting across the cells. */
+/* Registered so transform and clip animate from one value and the cut stays pinned. */
 @property --shift {
   syntax: '<length>';
   inherits: true;
   initial-value: 0px;
 }
 
-/* Every operator cell slides left by the same amount, and is cut one gap past the challenge
-   column, so nothing ever passes under that column's translucent fill and a column halfway in
-   still keeps its gap. */
-/* Only while columns are off the board: a still table keeps its cells untransformed. */
+/* Cells are cut one gap past the challenge column so nothing passes under its translucent fill. */
 :host(.board--sliding) .slide {
   transform: translateX(calc(-1 * var(--shift, 0px)));
   clip-path: inset(
@@ -237,7 +229,7 @@ tfoot td {
   }
 }
 
-/* The arrows, above the table's right end, over the operator columns they slide. */
+/* The arrows, above the operator columns they slide. */
 .nav {
   display: flex;
   align-items: center;

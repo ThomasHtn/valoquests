@@ -1,24 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { ApiProblem } from './admin-error.model';
 
 /**
- * Shape of the backend's RFC 7807 problem response.
- */
-interface ApiProblem {
-  readonly detail?: string;
-  readonly errors?: Record<string, string>;
-}
-
-/**
- * Extracts a message worth showing from a failed administration request.
- *
- * The backend writes `detail` for the caller — "a synchronization is already in progress", "the
- * Riot identity is already tracked" — and it is always more useful than anything the frontend could
- * infer from a status code. Validation failures carry their explanation per field instead, so those
- * are joined rather than dropped.
- *
- * @param error - The rejected request's error.
- * @param fallback - Already-translated message used when the response carries nothing readable.
- * @returns The message to show.
+ * Failed admin request message: field errors, else the backend `detail`, else `fallback`.
  */
 export function resolveAdminErrorMessage(error: unknown, fallback: string): string {
   if (!(error instanceof HttpErrorResponse)) {

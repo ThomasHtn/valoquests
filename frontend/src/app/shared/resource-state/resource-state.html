@@ -1,12 +1,9 @@
 @if (isLoading()) {
-  <!-- Loading state. The projected skeleton mirrors the loaded layout so arriving data does not
-       shift the page; the status text carries the same information non-visually. -->
+  <!-- Projected skeleton mirrors the loaded layout so arriving data does not shift the page. -->
   <div aria-busy="true" class="resource-loading">
     <ng-content select="[skeleton]" />
 
-    <!-- Fallback for a call site that projects no skeleton: a generic page silhouette under a
-         visible caption, so a slow network never shows a blank column. Hidden by CSS as soon as a
-         `[skeleton]` sibling exists. -->
+    <!-- Fallback silhouette, hidden by CSS when a `[skeleton]` sibling exists. -->
     <div [class]="padding()" aria-hidden="true" class="resource-loading-fallback flex-col gap-5">
       <p class="label-caption flex items-center gap-3 text-text-muted">
         <span class="loader-hex clip-hex"></span>
@@ -23,7 +20,7 @@
     <p class="sr-only" role="status">{{ loadingText() }}</p>
   </div>
 } @else if (isError()) {
-  <!-- Error state, with the retry affordance the backing resource exposes through `reload()`. -->
+  <!-- Error state with retry. -->
   <div
     [class]="padding()"
     class="resource-settle flex flex-col items-center gap-3 text-center"
@@ -47,9 +44,7 @@
     </button>
   </div>
 } @else if (isEmpty()) {
-  <!-- Empty state, in the shape its `emptyKind` calls for — see that input for why one shape did
-       not fit twelve situations. `anomaly` is an alert, so it is announced; the other three are
-       ordinary page content and are not. -->
+  <!-- Empty state shaped by `emptyKind`; only `anomaly` is announced as an alert. -->
   <div
     [attr.role]="emptyKind() === 'anomaly' ? 'alert' : null"
     [class]="padding()"
@@ -83,9 +78,7 @@
       <p class="text-prose text-text-secondary">{{ emptyText() }}</p>
     }
 
-    <!-- The way out of the empty state, projected by the caller: the filter to clear, the record to
-         create, the operation to run. An empty screen is an invitation to act, and eleven of these
-         used to end on a full stop. -->
+    <!-- Caller-projected way out: filter to clear, record to create, operation to run. -->
     <ng-content select="[emptyAction]" />
   </div>
 } @else {

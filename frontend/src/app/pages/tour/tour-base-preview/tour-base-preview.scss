@@ -1,4 +1,4 @@
-/* The overview's scrim under the population figure: dark, not a light wash. */
+/* Dark scrim under the population figure. */
 .preview-wash {
   pointer-events: none;
   background: linear-gradient(
@@ -9,7 +9,7 @@
   );
 }
 
-/* The overview's population figure, a size down for the narrower column, and without its halo. */
+/* The overview's population figure, a size down for the narrower column. */
 .preview-pop {
   font-family: var(--font-display);
   font-size: clamp(2.5rem, 1.75rem + 3vw, 4.25rem);
@@ -19,7 +19,7 @@
   color: var(--color-brand-400);
 }
 
-/* A flat track filled in amber up to the value, with a hard stop, and a square amber thumb. */
+/* Flat track filled up to `--fill` with a hard stop, square thumb. */
 .preview-slider {
   --track: 6px;
   width: 100%;

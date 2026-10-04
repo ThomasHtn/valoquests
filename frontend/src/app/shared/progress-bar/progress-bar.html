@@ -1,14 +1,11 @@
-<!-- Fill. Every moving part of the track shares one transition, so a value arriving from a refresh
-     glides to its new level instead of snapping there: on a screen read as a set of gauges, a bar
-     that jumps reads as a redraw rather than as a change. -->
+<!-- Fill; every moving part shares one transition so a refresh glides instead of snapping. -->
 <div
   [class]="colorClass() + ' ' + (live() ? 'gauge-sheen relative overflow-hidden' : '')"
   [style.width.%]="percentage()"
   class="fx-grow h-full transition-[width] duration-600 ease-(--ease-gauge) motion-reduce:transition-none"
 ></div>
 
-<!-- Second band, starting where the fill ends. Absolutely positioned rather than laid out beside
-     the fill so a single-band caller renders exactly the markup it used to. -->
+<!-- Second band, starting where the fill ends. -->
 @if (secondaryWidth(); as width) {
   <span
     [class]="secondaryColorClass()"
@@ -18,15 +15,12 @@
   ></span>
 }
 
-<!-- Target tick, under the leading edge so the two never fight when the fill sits on its mark.
-     Muted and hairline-thin: it is a reference the eye checks the fill against, not a value. -->
+<!-- Target tick, under the leading edge so the two never fight when they coincide. -->
 @if (visibleTargetMarker(); as target) {
   <span [style.left.%]="target" class="absolute inset-y-0 -ml-px w-px bg-text-primary/70"></span>
 }
 
-<!-- Leading-edge marker, pulled fully inside the fill by `-ml-0.5`. Skipped at 0 %, where it would
-     otherwise sit on an empty track and read as a value of its own, and at 100 %, where it merges
-     with the track's own edge and marks nothing. -->
+<!-- Leading-edge marker inside the fill; skipped at 0 % and 100 % where it marks nothing. -->
 @if (edgeMarker() && percentage() > 0 && percentage() < 100) {
   <span
     [style.left.%]="percentage()"

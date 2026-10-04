@@ -33,13 +33,7 @@ import {
 } from './fall-forecast.utils';
 
 /**
- * The guardian's fall, folded under the stakes: one line that already answers when it falls, and
- * a chart unfolded under it.
- *
- * The chart starts from the guardian's full pool on Monday and runs down to zero. The played part
- * is tinted blue; beyond now the pace held since Monday is projected, violet up to the fall and
- * gold for the time it leaves before the extraction, or red when it does not get there by Sunday
- * midnight. Only three ticks sit under it; the rest is read by pointing at it.
+ * When the guardian falls: one answer line, with a foldable chart projecting Monday's pace.
  */
 @Component({
   selector: 'app-fall-forecast',
@@ -55,7 +49,7 @@ export class FallForecast {
   public readonly fall = input.required<GuardianFall>();
 
   /**
-   * Whether the chart is unfolded. Folded on arrival: the line already gives the answer.
+   * Whether the chart is unfolded; folded on arrival since the line already answers.
    */
   protected readonly open = signal(false);
 
@@ -94,7 +88,7 @@ export class FallForecast {
   });
 
   /**
-   * How much time the fall leaves before the extraction, or what would still stand at its hour.
+   * Time left before the extraction, or hit points still standing at the deadline.
    */
   protected readonly margin = computed(() => {
     const fall = this.fall();
@@ -112,14 +106,14 @@ export class FallForecast {
   });
 
   /**
-   * The chart laid out for the panel's current width, `null` until it has been measured.
+   * Chart laid out for the panel's width, `null` until measured.
    */
   protected readonly chart = computed<FallChart | null>(() =>
     this.width() > 0 ? layoutFallChart(this.fall(), this.width()) : null,
   );
 
   /**
-   * The fall's label over its dashed post.
+   * Label over the fall's dashed post.
    */
   protected readonly fallLabel = computed(() => {
     const fall = this.fall();
@@ -160,7 +154,7 @@ export class FallForecast {
   }));
 
   /**
-   * The chart in one sentence, for assistive technology.
+   * The chart in one sentence, for screen readers.
    */
   protected readonly summary = computed(() => {
     const fall = this.fall();
@@ -209,15 +203,18 @@ export class FallForecast {
   private readonly width = signal(0);
 
   /**
-   * Horizontal position of the pointer over the chart, in pixels, `null` while it is away.
+   * Pointer x over the chart, in pixels, `null` while away.
    */
   private readonly pointer = signal<number | null>(null);
 
   /**
-   * The panel, measured to lay the chart out at its real width.
+   * Panel measured to lay the chart out at its real width.
    */
   private readonly panel = viewChild.required<ElementRef<HTMLElement>>('panel');
 
+  /**
+   * Translation service, to word the forecast and format its figures.
+   */
   private readonly translation = inject(Translation);
 
   constructor() {
@@ -229,15 +226,24 @@ export class FallForecast {
     });
   }
 
+  /**
+   * Folds or unfolds the chart.
+   */
   protected toggle(): void {
     this.open.update((open) => !open);
   }
 
+  /**
+   * Tracks the pointer across the chart, clamped to its width.
+   */
   protected point(event: PointerEvent): void {
     const bounds = (event.currentTarget as SVGElement).getBoundingClientRect();
     this.pointer.set(Math.min(bounds.width, Math.max(0, event.clientX - bounds.left)));
   }
 
+  /**
+   * Clears the reading once the pointer leaves the chart.
+   */
   protected leave(): void {
     this.pointer.set(null);
   }
@@ -250,6 +256,9 @@ export class FallForecast {
     return readings[readings.length - 1];
   }
 
+  /**
+   * Names the instant under the pointer, by its kind of reading.
+   */
   private pointerWhen(kind: FallPointer['kind'], time: number): string {
     switch (kind) {
       case 'start':
@@ -267,6 +276,9 @@ export class FallForecast {
     }
   }
 
+  /**
+   * Words the hit points under the pointer, rounded when estimated.
+   */
   private pointerValue(kind: FallPointer['kind'], left: number): string {
     switch (kind) {
       case 'after':
@@ -285,6 +297,9 @@ export class FallForecast {
     }
   }
 
+  /**
+   * Words a duration in days and hours, or hours alone under a day.
+   */
   private span(duration: number): string {
     const { days, hours } = splitSpan(duration);
     return days > 0
@@ -292,10 +307,16 @@ export class FallForecast {
       : this.translation.translate('overview.report.forecast.spanHours', { hours });
   }
 
+  /**
+   * Formats hit points in the active language.
+   */
   private hitPoints(amount: number): string {
     return formatDamage(amount, this.translation.language());
   }
 
+  /**
+   * Formats an instant in the campaign time zone and the active language.
+   */
   private at(time: number, options: Intl.DateTimeFormatOptions): string {
     return formatCampaignTime(time, this.translation.language(), options);
   }
